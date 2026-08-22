@@ -9,24 +9,25 @@ describe("login redirect helpers", () => {
   });
 
   it("blocks protocol-relative destinations", () => {
-    expect(resolveSafePostLoginPath("//evil.com/phish")).toBe("/");
+    expect(resolveSafePostLoginPath("//evil.com/phish")).toBe("/calendar");
   });
 
   it("blocks backslash-normalized external destinations", () => {
-    expect(resolveSafePostLoginPath("/\\evil.com/phish")).toBe("/");
+    expect(resolveSafePostLoginPath("/\\evil.com/phish")).toBe("/calendar");
   });
 
   it("blocks absolute external URLs", () => {
-    expect(resolveSafePostLoginPath("https://evil.com/phish")).toBe("/");
+    expect(resolveSafePostLoginPath("https://evil.com/phish")).toBe("/calendar");
   });
 
   it("blocks redirects back into login routes", () => {
-    expect(resolveSafePostLoginPath("/login")).toBe("/");
-    expect(resolveSafePostLoginPath("/login/reset")).toBe("/");
+    expect(resolveSafePostLoginPath("/login")).toBe("/calendar");
+    expect(resolveSafePostLoginPath("/login/reset")).toBe("/calendar");
+    expect(resolveSafePostLoginPath("/")).toBe("/calendar");
   });
 
   it("builds login href with sanitized next parameter", () => {
-    expect(buildLoginHref("/\\evil.com")).toBe("/login?next=%2F");
+    expect(buildLoginHref("/\\evil.com")).toBe("/login?next=%2Fcalendar");
     expect(buildLoginHref("/settings?tab=profile")).toBe(
       "/login?next=%2Fsettings%3Ftab%3Dprofile"
     );

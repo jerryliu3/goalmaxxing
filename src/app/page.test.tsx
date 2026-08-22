@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import TodayPage from "./page";
+import MarketingLandingPage from "./page";
 
 const redirectMock = vi.fn();
 
@@ -7,21 +7,25 @@ vi.mock("next/navigation", () => ({
   redirect: (destination: string) => redirectMock(destination),
 }));
 
-describe("app root page routing", () => {
+vi.mock("@/components/landing/landing-page", () => ({
+  LandingPage: () => null,
+}));
+
+describe("public root page routing", () => {
   beforeEach(() => {
     redirectMock.mockReset();
   });
 
-  it("redirects to calendar when no tab is specified", async () => {
-    await TodayPage({
+  it("renders the landing page when no app search params are present", async () => {
+    await MarketingLandingPage({
       searchParams: Promise.resolve({}),
     });
 
-    expect(redirectMock).toHaveBeenCalledWith("/calendar");
+    expect(redirectMock).not.toHaveBeenCalled();
   });
 
   it("redirects legacy day links into calendar day view", async () => {
-    await TodayPage({
+    await MarketingLandingPage({
       searchParams: Promise.resolve({ day: "2026-08-04" }),
     });
 
@@ -31,7 +35,7 @@ describe("app root page routing", () => {
   });
 
   it("redirects legacy past tab links into checklist", async () => {
-    await TodayPage({
+    await MarketingLandingPage({
       searchParams: Promise.resolve({ tab: "past" }),
     });
 

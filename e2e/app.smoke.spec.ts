@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 test("loads the seeded authenticated planner shell", async ({ page }, testInfo) => {
-  await page.goto("/");
+  await page.goto("/calendar");
 
   const mainNav = page.getByRole("navigation", { name: "Main navigation" });
   await expect(
@@ -52,6 +52,22 @@ test("legacy day links redirect into calendar route", async ({
   await page.goto("/?day=2026-08-04");
   await expect(page).toHaveURL(/\/calendar/);
   await expect(page).toHaveURL(/month=2026-08/);
+});
+
+test("public root route renders landing page", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: /plan your goals/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Create account" }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Go to app" })).toBeVisible();
+});
+
+test("goal creation entry stays on the app shell", async ({ page }) => {
+  await page.goto("/calendar");
+  await page.getByRole("link", { name: /new goal \+/i }).first().click();
+  await expect(page).toHaveURL(/\/goals\/new/);
+  await expect(page.getByRole("heading", { name: "Create goal" }).first()).toBeVisible();
 });
 
 test("login surface has no detectable WCAG A/AA violations", async ({

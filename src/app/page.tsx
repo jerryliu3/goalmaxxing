@@ -1,9 +1,25 @@
+import type { Metadata, Viewport } from "next";
 import { redirect } from "next/navigation";
+import { LandingPage } from "@/components/landing/landing-page";
 import {
   isValidCalendarViewMode,
   isValidDate,
   isValidMonth,
 } from "@/features/today/checklist-shell-routing";
+
+export const metadata: Metadata = {
+  title: "Goalmaxxing - Plan goals and build consistency",
+  description:
+    "Goalmaxxing helps you plan goals, complete daily checklists, and track momentum with insights and accountability.",
+};
+
+export const viewport: Viewport = {
+  maximumScale: 5,
+  minimumScale: 1,
+  userScalable: true,
+  viewportFit: "cover",
+  themeColor: "#2563eb",
+};
 
 function firstParam(value: string | string[] | undefined) {
   if (Array.isArray(value)) {
@@ -12,7 +28,7 @@ function firstParam(value: string | string[] | undefined) {
   return value;
 }
 
-export default async function HomePage({
+export default async function MarketingLandingPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -29,13 +45,11 @@ export default async function HomePage({
     nextParams.set("day", day);
     nextParams.set("month", day.slice(0, 7));
     redirect(`/calendar?${nextParams.toString()}`);
-    return;
   }
 
   if (tab === "today" || tab === "not-today" || tab === "past") {
     const normalizedTab = tab === "past" ? "not-today" : tab;
     redirect(`/checklist?tab=${normalizedTab}`);
-    return;
   }
 
   const nextParams = new URLSearchParams();
@@ -48,8 +62,7 @@ export default async function HomePage({
   const query = nextParams.toString();
   if (query.length > 0) {
     redirect(`/calendar?${query}`);
-    return;
   }
 
-  redirect("/calendar");
+  return <LandingPage />;
 }

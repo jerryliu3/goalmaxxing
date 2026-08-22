@@ -170,7 +170,7 @@ async function dispatchNotifications(request: Request, correlationId: string) {
             payload: {
               title: "Goalmaxxing",
               body: schedule.message,
-              url: "/",
+              url: "/calendar",
               tag: `cadence-${schedule.id}-${localDate}`,
             },
           });

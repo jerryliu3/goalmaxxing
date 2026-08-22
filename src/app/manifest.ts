@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Goalmaxxing",
     short_name: "Goalmaxxing",
     description: "Personal goal tracking with insights and social accountability.",
-    start_url: "/",
+    start_url: "/calendar",
     scope: "/",
     display: "standalone",
     background_color: "#fafafa",
