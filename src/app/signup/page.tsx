@@ -13,7 +13,7 @@ export default async function SignupPage() {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/");
+    redirect("/calendar");
   }
 
   const flags = getFeatureFlags();

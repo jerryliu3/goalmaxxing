@@ -1,4 +1,4 @@
-const DEFAULT_POST_LOGIN_PATH = "/";
+const DEFAULT_POST_LOGIN_PATH = "/calendar";
 const LOGIN_PATH = "/login";
 const SENTINEL_BASE_URL = "http://resolution.local";
 
@@ -32,7 +32,8 @@ export function resolveSafePostLoginPath(candidatePath?: string | null) {
     return DEFAULT_POST_LOGIN_PATH;
   }
   const safePath = normalizeSafePath(normalized);
-  if (isLoginPath(new URL(safePath, SENTINEL_BASE_URL).pathname)) {
+  const pathname = new URL(safePath, SENTINEL_BASE_URL).pathname;
+  if (pathname === "/" || isLoginPath(pathname)) {
     return DEFAULT_POST_LOGIN_PATH;
   }
   return safePath;

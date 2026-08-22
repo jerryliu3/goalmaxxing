@@ -81,7 +81,9 @@ pnpm install
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) for the public landing page,
+or go directly to [http://localhost:3000/calendar](http://localhost:3000/calendar)
+for the authenticated app.
 
 ## Demo Accounts (Seeded)
 
