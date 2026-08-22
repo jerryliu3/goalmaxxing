@@ -5,7 +5,7 @@ test("reduced motion keeps navigation functional without panel animation", async
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/app");
-  await page.waitForURL(/\/app\//);
+  await page.waitForURL(/\/app\/(calendar|checklist)/);
   await expect(
     page.getByRole("navigation", { name: "Main navigation" })
   ).toBeVisible();
@@ -34,6 +34,7 @@ test("motion overlays do not create mobile viewport overflow", async ({
   test.skip(testInfo.project.name !== "mobile-webkit");
 
   await page.goto("/app");
+  await page.waitForURL(/\/app\/(calendar|checklist)/);
   await expect(
     page.getByRole("navigation", { name: "Main navigation" })
   ).toBeVisible();

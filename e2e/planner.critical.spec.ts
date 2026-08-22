@@ -76,7 +76,7 @@ async function openCalendar(page: Page, scopeMonth?: string) {
   const query = scopeMonth
     ? `/app/calendar?surface=calendar&view=month&month=${scopeMonth}`
     : "/app/calendar?surface=calendar&view=month";
-  await page.goto(query);
+  await page.goto(query, { waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(/\/calendar/);
   await waitForCalendarReady(page);
   await ensureMonthCalendarDensity(page);
@@ -483,7 +483,10 @@ test.describe("planner critical rails", () => {
 
   // Serial retries restart the whole group; keep each attempt free of leftover draft UI.
   test.beforeEach(async ({ page }) => {
-    await page.goto("/app/checklist?tab=today");
+    await page.goto("/app/checklist?tab=today", {
+      waitUntil: "domcontentloaded",
+    });
+    await page.waitForURL(/\/app\/calendar/);
     await expect(
       page.getByRole("navigation", { name: "Main navigation" })
     ).toBeVisible();

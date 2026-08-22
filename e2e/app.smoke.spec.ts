@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 
 test("loads the seeded authenticated planner shell", async ({ page }, testInfo) => {
   await page.goto("/app");
+  await page.waitForURL(/\/app\/(calendar|checklist)/);
 
   const mainNav = page.getByRole("navigation", { name: "Main navigation" });
   await expect(
@@ -57,9 +58,7 @@ test("legacy day links redirect into calendar route", async ({
 test("login surface has no detectable WCAG A/AA violations", async ({
   page,
 }) => {
-  await page.goto("/app");
   await page.context().clearCookies();
-  await page.evaluate(() => window.localStorage.clear());
   await page.goto("/login");
   await expect(page.getByText("Welcome back")).toBeVisible();
 

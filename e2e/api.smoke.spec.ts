@@ -7,10 +7,16 @@ import { expect, test, type Page } from "@playwright/test";
 test.describe.configure({ mode: "serial" });
 
 async function gotoAuthenticatedApp(page: Page) {
-  await page.goto("/app");
+  await page.goto("/app/calendar");
   await expect(
     page.getByRole("navigation", { name: "Main navigation" })
   ).toBeVisible();
+}
+
+async function gotoUnauthenticatedPage(page: Page) {
+  await page.context().clearCookies();
+  await page.goto("/login");
+  await expect(page.getByText("Welcome back")).toBeVisible();
 }
 
 async function postInvalidPushSubscription(page: Page) {
@@ -65,9 +71,7 @@ test("API integration preserves authenticated validation order", async ({
 });
 
 test("API integration rejects an unauthenticated mutation", async ({ page }) => {
-  await page.goto("/login");
-  await page.context().clearCookies();
-  await page.evaluate(() => window.localStorage.clear());
+  await gotoUnauthenticatedPage(page);
 
   const response = await postInvalidPushSubscription(page);
 
@@ -126,9 +130,7 @@ test("bounded progress context returns explicit non-truncated data", async ({
 });
 
 test("planner bridge APIs reject unauthenticated callers", async ({ page }) => {
-  await page.goto("/login");
-  await page.context().clearCookies();
-  await page.evaluate(() => window.localStorage.clear());
+  await gotoUnauthenticatedPage(page);
 
   const bulkParser = await postJson(page, "/api/bulk-goals/parse", null);
   const exactCompletion = await postJson(
