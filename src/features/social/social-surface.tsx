@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   resolveSocialSurfaceTab,
 } from "@/features/social/social-surface-tab";
+import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
 import { cn } from "@/lib/utils";
 import { subscribeXpRefresh } from "@/lib/xp/events";
@@ -40,6 +41,24 @@ export function SocialSurface() {
   const activeTab = resolveSocialSurfaceTab(searchParams.get("tab") ?? undefined);
   const [refreshToken, setRefreshToken] = useState(0);
   const lastFocusRefreshAtRef = useRef(0);
+  const requestedOnboardingKey = searchParams.get("onboarding");
+  const onboardingKey = `social.${activeTab}` as const;
+  const onboardingTitle =
+    activeTab === "challenges"
+      ? "Challenges guide"
+      : activeTab === "leaderboards"
+      ? "Leaderboards guide"
+      : activeTab === "team"
+      ? "Team guide"
+      : "Feed guide";
+  const onboardingDescription =
+    activeTab === "challenges"
+      ? "Join a challenge to turn your goal progress into shared competition."
+      : activeTab === "leaderboards"
+      ? "Leaderboards summarize consistent progress so you can benchmark your momentum."
+      : activeTab === "team"
+      ? "Use Team to invite a partner and build accountability together."
+      : "Feed highlights recent progress so you can stay connected with community momentum.";
 
   const refreshActiveTab = useCallback(() => {
     setRefreshToken((token) => token + 1);
@@ -103,102 +122,110 @@ export function SocialSurface() {
   }, [handleVisibilityOrFocus]);
 
   return (
-    <Tabs
-      value={activeTab}
-      onValueChange={(value) => {
-        const nextTab = resolveSocialSurfaceTab(value);
-        applySearchParams((params) => {
-          if (nextTab === "feed") {
-            params.delete("tab");
-          } else {
-            params.set("tab", nextTab);
-          }
-        }, "push");
-      }}
-      className="flex flex-col gap-4"
-    >
-      <TabsList
-        variant="line"
-        className="grid w-full grid-cols-4 gap-1.5 rounded-2xl bg-transparent p-0"
+    <>
+      <TabOnboardingOverlay
+        onboardingKey={onboardingKey}
+        title={onboardingTitle}
+        description={onboardingDescription}
+        forceOpen={requestedOnboardingKey === onboardingKey}
+      />
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => {
+          const nextTab = resolveSocialSurfaceTab(value);
+          applySearchParams((params) => {
+            if (nextTab === "feed") {
+              params.delete("tab");
+            } else {
+              params.set("tab", nextTab);
+            }
+          }, "push");
+        }}
+        className="flex flex-col gap-4"
       >
-        <TabsTrigger
-          value="feed"
-          className={cn(
-            socialSurfaceTriggerBaseClass,
-            socialSurfaceTriggerToneClass
-          )}
-          style={
-            activeTab === "feed" ? { boxShadow: selectedChipShadow } : undefined
-          }
+        <TabsList
+          variant="line"
+          className="grid w-full grid-cols-4 gap-1.5 rounded-2xl bg-transparent p-0"
         >
-          <Newspaper className="size-3.5" />
-          <span className="truncate">Feed</span>
-        </TabsTrigger>
-        <TabsTrigger
-          value="challenges"
-          className={cn(
-            socialSurfaceTriggerBaseClass,
-            socialSurfaceTriggerToneClass
-          )}
-          style={
-            activeTab === "challenges"
-              ? { boxShadow: selectedChipShadow }
-              : undefined
-          }
-        >
-          <Trophy className="size-3.5" />
-          <span className="truncate">Challenges</span>
-        </TabsTrigger>
-        <TabsTrigger
-          value="leaderboards"
-          className={cn(
-            socialSurfaceTriggerBaseClass,
-            socialSurfaceTriggerToneClass
-          )}
-          style={
-            activeTab === "leaderboards"
-              ? { boxShadow: selectedChipShadow }
-              : undefined
-          }
-        >
-          <Flag className="size-3.5" />
-          <span className="truncate">Leaderboards</span>
-        </TabsTrigger>
-        <TabsTrigger
-          value="team"
-          className={cn(
-            socialSurfaceTriggerBaseClass,
-            socialSurfaceTriggerToneClass
-          )}
-          style={
-            activeTab === "team" ? { boxShadow: selectedChipShadow } : undefined
-          }
-        >
-          <Users className="size-3.5" />
-          <span className="truncate">Team</span>
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="feed" className="space-y-4">
-        <FeedList isActive={activeTab === "feed"} refreshToken={refreshToken} />
-      </TabsContent>
-      <TabsContent value="challenges" className="space-y-4">
-        <GroupJoinCard />
-        <ChallengeList
-          isActive={activeTab === "challenges"}
-          refreshToken={refreshToken}
-          onRefreshRequested={triggerGlobalRefresh}
-        />
-      </TabsContent>
-      <TabsContent value="leaderboards" className="space-y-4">
-        <LeaderboardsPanel
-          isActive={activeTab === "leaderboards"}
-          refreshToken={refreshToken}
-          onRefreshRequested={triggerGlobalRefresh}
-        />
-      </TabsContent>
-      <TabsContent value="team" className="space-y-4">
-        <TeamPanel isActive={activeTab === "team"} refreshToken={refreshToken} />
-      </TabsContent>
-    </Tabs>
+          <TabsTrigger
+            value="feed"
+            className={cn(
+              socialSurfaceTriggerBaseClass,
+              socialSurfaceTriggerToneClass
+            )}
+            style={
+              activeTab === "feed" ? { boxShadow: selectedChipShadow } : undefined
+            }
+          >
+            <Newspaper className="size-3.5" />
+            <span className="truncate">Feed</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="challenges"
+            className={cn(
+              socialSurfaceTriggerBaseClass,
+              socialSurfaceTriggerToneClass
+            )}
+            style={
+              activeTab === "challenges"
+                ? { boxShadow: selectedChipShadow }
+                : undefined
+            }
+          >
+            <Trophy className="size-3.5" />
+            <span className="truncate">Challenges</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="leaderboards"
+            className={cn(
+              socialSurfaceTriggerBaseClass,
+              socialSurfaceTriggerToneClass
+            )}
+            style={
+              activeTab === "leaderboards"
+                ? { boxShadow: selectedChipShadow }
+                : undefined
+            }
+          >
+            <Flag className="size-3.5" />
+            <span className="truncate">Leaderboards</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="team"
+            className={cn(
+              socialSurfaceTriggerBaseClass,
+              socialSurfaceTriggerToneClass
+            )}
+            style={
+              activeTab === "team" ? { boxShadow: selectedChipShadow } : undefined
+            }
+          >
+            <Users className="size-3.5" />
+            <span className="truncate">Team</span>
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="feed" className="space-y-4">
+          <FeedList isActive={activeTab === "feed"} refreshToken={refreshToken} />
+        </TabsContent>
+        <TabsContent value="challenges" className="space-y-4">
+          <GroupJoinCard />
+          <ChallengeList
+            isActive={activeTab === "challenges"}
+            refreshToken={refreshToken}
+            onRefreshRequested={triggerGlobalRefresh}
+          />
+        </TabsContent>
+        <TabsContent value="leaderboards" className="space-y-4">
+          <LeaderboardsPanel
+            isActive={activeTab === "leaderboards"}
+            refreshToken={refreshToken}
+            onRefreshRequested={triggerGlobalRefresh}
+          />
+        </TabsContent>
+        <TabsContent value="team" className="space-y-4">
+          <TeamPanel isActive={activeTab === "team"} refreshToken={refreshToken} />
+        </TabsContent>
+      </Tabs>
+    </>
   );
 }
