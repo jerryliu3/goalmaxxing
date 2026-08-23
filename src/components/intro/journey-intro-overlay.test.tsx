@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   JourneyIntroOverlay,
@@ -25,6 +25,10 @@ vi.mock("@/components/xp/xp-profile-provider", () => ({
   useXpProfile: () => useXpProfileMock(),
 }));
 
+vi.mock("@/features/planner/calendar-page-shell", () => ({
+  CalendarPageShell: () => null,
+}));
+
 describe("JourneyIntroOverlay", () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -42,8 +46,10 @@ describe("JourneyIntroOverlay", () => {
   it("prefetches calendar when intro opens", async () => {
     render(<JourneyIntroOverlay userId={TEST_USER_ID} />);
     expect(await screen.findByRole("dialog", { name: "Welcome to Goalmaxxing" })).toBeInTheDocument();
-    expect(routerMock.prefetch).toHaveBeenCalledWith("/calendar");
-    expect(routerMock.prefetch).toHaveBeenCalledWith("/calendar?surface=calendar");
+    await waitFor(() => {
+      expect(routerMock.prefetch).toHaveBeenCalledWith("/calendar");
+      expect(routerMock.prefetch).toHaveBeenCalledWith("/calendar?surface=calendar");
+    });
   });
 
   it("shows intro when unseen", async () => {
