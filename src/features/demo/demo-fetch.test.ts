@@ -162,7 +162,6 @@ describe("demo fetch router", () => {
     expect(
       planDraftMove({
         entry: buildPlannerDayEntry({
-          scheduledDate: "2026-08-22",
           creditState: "uncredited",
         }),
         nextDate: "2026-08-23",
