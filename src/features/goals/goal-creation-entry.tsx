@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +11,7 @@ import {
   isStarterPacksSeen,
   markStarterPacksSeen,
   resolveStarterPackKey,
+  subscribeStarterPacksSeen,
 } from "@/features/goals/starter-packs";
 import { TrainingPlanImportEntry } from "@/features/goals/training-plan-import-entry";
 import { BulkGoalForm } from "@/features/today/bulk-goal-form";
@@ -53,18 +54,22 @@ export function GoalCreationEntry({ onExit }: GoalCreationEntryProps) {
     () => resolveMode(searchParams.get("mode"), allowTrainingPlan),
     [allowTrainingPlan, searchParams]
   );
+  const starterPacksSeen = useSyncExternalStore(
+    subscribeStarterPacksSeen,
+    () => isStarterPacksSeen(viewerUserId),
+    () => true
+  );
   const [offerStarterPacks, setOfferStarterPacks] = useState(false);
+  if (mode === "multi" && !starterPacksSeen && !offerStarterPacks) {
+    setOfferStarterPacks(true);
+  }
 
   useEffect(() => {
-    if (mode !== "multi") {
+    if (!offerStarterPacks) {
       return;
     }
-    if (isStarterPacksSeen(viewerUserId)) {
-      return;
-    }
-    setOfferStarterPacks(true);
     markStarterPacksSeen(viewerUserId);
-  }, [mode, viewerUserId]);
+  }, [offerStarterPacks, viewerUserId]);
 
   const modeHref = (nextMode: CreationMode) => {
     const params = new URLSearchParams(searchParams.toString());
