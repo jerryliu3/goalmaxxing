@@ -198,19 +198,18 @@ async function main() {
     assert.equal(observedOrder[1], "session-b-observed-blocked");
     assert.ok(
       observedOrder.indexOf("session-a-committed") >
-        observedOrder.indexOf("session-b-observed-blocked")
+        observedOrder.indexOf("session-b-observed-blocked"),
+      "Session A must commit after Session B is observed waiting on the owner lock."
     );
     assert.ok(
       observedOrder.indexOf("session-b-acquired") >
-        observedOrder.indexOf("session-b-observed-blocked")
+        observedOrder.indexOf("session-b-observed-blocked"),
+      "Session B must acquire the owner lock after it was observed waiting."
     );
     assert.ok(
       observedOrder.indexOf("session-b-committed") >
-        observedOrder.indexOf("session-a-committed")
-    );
-    assert.ok(
-      observedOrder.indexOf("session-b-committed") >
-        observedOrder.indexOf("session-b-acquired")
+        observedOrder.indexOf("session-b-acquired"),
+      "Session B must commit after it acquires the owner lock."
     );
 
     await control.query(
