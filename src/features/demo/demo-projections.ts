@@ -32,7 +32,7 @@ import {
 import { addDaysIso, isoDateTime } from "@/features/demo/demo-dates";
 import type { DemoSnapshot } from "@/features/demo/demo-snapshot";
 import { getDemoStore } from "@/features/demo/demo-store";
-import type { Completion } from "@/lib/goals/types";
+import type { Completion, Goal } from "@/lib/goals/types";
 
 const WEEKLY_ANCHOR = { weekStartsOn: DEMO_WEEK_STARTS_ON };
 
