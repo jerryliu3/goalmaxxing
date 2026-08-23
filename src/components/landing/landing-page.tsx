@@ -4,6 +4,7 @@ import { LandingFeatureBento } from "@/components/landing/landing-feature-bento"
 import { LandingFeatureNarrative } from "@/components/landing/landing-feature-narrative";
 import { LandingPlannerPreview } from "@/components/landing/landing-planner-preview";
 import { LandingProductTour } from "@/components/landing/landing-product-tour";
+import { LandingWowChapter } from "@/components/landing/landing-wow-chapter";
 import { Button } from "@/components/ui/button";
 
 const primaryCtaClassName =
@@ -79,6 +80,7 @@ export function LandingPage() {
         </section>
 
         <LandingProductTour />
+        <LandingWowChapter />
         <LandingFeatureBento />
         <LandingFeatureNarrative />
 
