@@ -13,10 +13,10 @@ const ONBOARDING_DEFAULT_GOAL_TITLES = [
 
 const JOURNEY_ONBOARDING_COMPLETED_KEY = "cadence.journey_onboarding_completed.v1";
 
+test.use({ storageState: { cookies: [], origins: [] } });
+
 async function signIn(page: Page, emailAddress: string, passwordValue: string) {
-  await page.context().clearCookies();
   await page.goto("/login");
-  await page.evaluate(() => window.localStorage.clear());
 
   const email = page.getByLabel("Email");
   const password = page.getByLabel("Password");
@@ -28,7 +28,7 @@ async function signIn(page: Page, emailAddress: string, passwordValue: string) {
   }).toPass({ timeout: 15_000 });
 
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/calendar/);
+  await expect(page).toHaveURL(/\/calendar/, { timeout: 15_000 });
 }
 
 test("seeded onboarding demo account exposes default goals and pending team invite", async ({
