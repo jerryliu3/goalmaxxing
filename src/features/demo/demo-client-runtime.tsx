@@ -5,7 +5,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { DemoBanner } from "@/features/demo/demo-banner";
 import { DemoClickGuard } from "@/features/demo/demo-click-guard";
 import { DemoNewGoalDialog } from "@/features/demo/demo-new-goal-dialog";
-import { DEMO_ALEX_ID } from "@/features/demo/demo-ids";
+import { DEMO_ALEX_ID, DEMO_AVATAR_URLS } from "@/features/demo/demo-ids";
 import { installDemoRuntime } from "@/features/demo/demo-runtime";
 import { toLocalDateString } from "@/lib/dates/day";
 import { DEMO_PATH_PREFIX } from "@/lib/navigation/demo-path";
@@ -32,6 +32,7 @@ export function DemoClientRuntime({ children }: { children: ReactNode }) {
           <AppShell
             userId={DEMO_ALEX_ID}
             viewerLabel="Alex"
+            viewerAvatarUrl={DEMO_AVATAR_URLS.alex}
             hrefPrefix={DEMO_PATH_PREFIX}
             showJourneyIntro={false}
             onNewGoalClick={() => setNewGoalOpen(true)}

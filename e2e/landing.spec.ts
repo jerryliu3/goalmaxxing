@@ -27,6 +27,9 @@ test.describe("marketing landing", () => {
       "href",
       "#why-goalmaxxing"
     );
+    const tryDemo = page.getByRole("link", { name: "Try demo" }).first();
+    await expect(tryDemo).toHaveAttribute("href", "/demo");
+    await expect(tryDemo).toHaveAttribute("target", "_blank");
     await expect(
       page.getByRole("heading", {
         name: "Most productivity apps stop at today.",
