@@ -42,14 +42,7 @@ setup("authenticate seeded Alice account", async ({ page }) => {
     for (const onboardingKey of [
       "insights.main",
       "planner.calendar",
-      "planner.checklist",
-      "planner.tasks",
       "social.main",
-      "social.feed",
-      "social.challenges",
-      "social.leaderboards",
-      "social.team",
-      "settings.profile",
     ]) {
       window.localStorage.setItem(
         `cadence.tab_onboarding_completed.v1:${onboardingKey}`,

@@ -118,6 +118,18 @@ function readOnboardingTargetRect(targets: readonly string[]) {
   return null;
 }
 
+function subscribeNoop() {
+  return () => {};
+}
+
+function getBrowserSnapshot() {
+  return true;
+}
+
+function getServerSnapshot() {
+  return false;
+}
+
 function firstOnboardingElement(targets: readonly string[]) {
   for (const target of targets) {
     const [element] = queryOnboardingElements(target);
@@ -172,9 +184,9 @@ function TabOnboardingTourBody({
   }, [targetCandidates]);
 
   const isBrowser = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false
+    subscribeNoop,
+    getBrowserSnapshot,
+    getServerSnapshot
   );
 
   if (!isBrowser) {

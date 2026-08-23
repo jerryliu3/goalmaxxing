@@ -68,7 +68,12 @@ export function GoalCreationEntry({ onExit }: GoalCreationEntryProps) {
     if (!offerStarterPacks) {
       return;
     }
-    markStarterPacksSeen(viewerUserId);
+    const timeoutId = window.setTimeout(() => {
+      markStarterPacksSeen(viewerUserId);
+    }, 0);
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [offerStarterPacks, viewerUserId]);
 
   const modeHref = (nextMode: CreationMode) => {
