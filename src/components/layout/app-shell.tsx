@@ -16,6 +16,7 @@ import { DuoProvider } from "@/features/social/duo/duo-context";
 import { DuoScopeToggle } from "@/features/social/duo/duo-scope-toggle";
 import { PublicProfileSheetProvider } from "@/features/social/public-profile/public-profile-sheet-provider";
 import { setTabDataCacheScope } from "@/lib/cache/tab-data-cache";
+import { withHrefPrefix } from "@/lib/navigation/demo-path";
 import type {
   DuoAvailability,
   DuoContextState,
@@ -34,6 +35,9 @@ interface AppShellProps {
   initialDuoScopePreference: DuoScope | null;
   plannerPrimaryTabPreference: PlannerPrimaryTabPreference;
   journeyFlags: JourneyFeatureFlags;
+  hrefPrefix?: string;
+  showJourneyIntro?: boolean;
+  onNewGoalClick?: () => void;
 }
 
 export function AppShell({
@@ -47,13 +51,16 @@ export function AppShell({
   initialDuoScopePreference,
   plannerPrimaryTabPreference,
   journeyFlags,
+  hrefPrefix,
+  showJourneyIntro = true,
+  onNewGoalClick,
 }: AppShellProps) {
   setTabDataCacheScope(userId);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = searchParams.toString();
   const returnTo = search.length > 0 ? `${pathname}?${search}` : pathname;
-  const newGoalHref = `/goals/new?returnTo=${encodeURIComponent(returnTo)}`;
+  const newGoalHref = `${withHrefPrefix("/goals/new", hrefPrefix)}?returnTo=${encodeURIComponent(returnTo)}`;
   const mainContent = (
     <main className="relative z-10 pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-0">
       {children}
@@ -67,7 +74,7 @@ export function AppShell({
       <XpProfileProvider>
         <JourneyProvider flags={journeyFlags}>
           <AltitudeBackdrop journeyFlags={journeyFlags} />
-          <JourneyIntroOverlay userId={userId} />
+          {showJourneyIntro ? <JourneyIntroOverlay userId={userId} /> : null}
           <DuoProvider
             key={`${duoAvailability}:${duoState.activePartner?.partnerId ?? "none"}`}
             viewerUserId={userId}
@@ -91,20 +98,28 @@ export function AppShell({
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <Button
-                          asChild
+                          asChild={!onNewGoalClick}
                           size="sm"
                           className="h-8 bg-primary text-white hover:bg-primary/80 hover:text-white"
                           title="New Goal +"
+                          onClick={onNewGoalClick}
                         >
-                          <Link href={newGoalHref}>
-                            New Goal +
-                          </Link>
+                          {onNewGoalClick ? (
+                            "New Goal +"
+                          ) : (
+                            <Link href={newGoalHref}>
+                              New Goal +
+                            </Link>
+                          )}
                         </Button>
                         <DuoScopeToggle />
                       </div>
                     </div>
                     <div className="mt-4 hidden md:block">
-                      <TabNav plannerPrimaryTabPreference={plannerPrimaryTabPreference} />
+                      <TabNav
+                        plannerPrimaryTabPreference={plannerPrimaryTabPreference}
+                        hrefPrefix={hrefPrefix}
+                      />
                     </div>
                   </header>
 
@@ -134,6 +149,7 @@ export function AppShell({
                 <TabNav
                   mobile
                   plannerPrimaryTabPreference={plannerPrimaryTabPreference}
+                  hrefPrefix={hrefPrefix}
                 />
               </div>
               {goalSheet}

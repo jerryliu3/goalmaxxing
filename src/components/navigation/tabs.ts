@@ -27,9 +27,10 @@ function withIcon(tab: AppTabDefinition): AppTab {
 }
 
 export function buildAppTabs(
-  plannerPrimaryTab?: PlannerPrimaryTabPreference
+  plannerPrimaryTab?: PlannerPrimaryTabPreference,
+  options?: { hrefPrefix?: string }
 ): AppTab[] {
-  return buildSharedAppTabs(plannerPrimaryTab).map(withIcon);
+  return buildSharedAppTabs(plannerPrimaryTab, options).map(withIcon);
 }
 
 export const APP_TABS: AppTab[] = SHARED_APP_TABS.map(withIcon);

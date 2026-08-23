@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/lib/navigation/use-app-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildLoginHref } from "@/lib/auth/login-redirect";
 import { withAbortSignal } from "@/lib/async/abort";
@@ -56,7 +56,7 @@ export function useInsightsData({
   const supabase = useMemo(() => createClient(), []);
   const { viewerUserId, state: duoState } = useDuo();
   const partnerId = duoState.activePartner?.partnerId ?? null;
-  const router = useRouter();
+  const router = useAppRouter();
   const [state, setState] = useState<InsightsData>(emptyInsights);
   const [loading, setLoading] = useState(true);
   const loadRequestIdRef = useRef(0);

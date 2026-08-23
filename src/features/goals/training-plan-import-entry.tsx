@@ -1,7 +1,6 @@
 "use client";
 
 import { LoaderCircle, Sparkles } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { getApiErrorMessage, postJson } from "@/lib/api/client";
 import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
+import { useAppRouter } from "@/lib/navigation/use-app-router";
 
 interface TrainingPlanSessionDraft {
   scheduled_date: string;
@@ -37,7 +37,7 @@ interface TrainingPlanImportEntryProps {
 }
 
 export function TrainingPlanImportEntry({ onExit }: TrainingPlanImportEntryProps) {
-  const router = useRouter();
+  const router = useAppRouter();
   const completeAndExit = useCallback(() => {
     if (onExit) {
       onExit();

@@ -14,7 +14,7 @@ import {
 import { endOfMonth, endOfYear, format, startOfMonth, startOfYear } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/lib/navigation/use-app-router";
 import {
   type FormEvent,
   type ReactNode,
@@ -153,7 +153,7 @@ export function GoalForm({
   onExit,
 }: GoalFormProps) {
   const supabase = useMemo(() => createClient(), []);
-  const router = useRouter();
+  const router = useAppRouter();
   const [state, setState] = useState<GoalFormState>(defaultState);
   const [selectedLinkTarget, setSelectedLinkTarget] = useState<string>("none");
   const [photoFile, setPhotoFile] = useState<File | null>(null);

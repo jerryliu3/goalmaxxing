@@ -26,6 +26,11 @@ describe("login redirect helpers", () => {
     expect(resolveSafePostLoginPath("/")).toBe("/calendar");
   });
 
+  it("blocks demo sandbox destinations after a real login", () => {
+    expect(resolveSafePostLoginPath("/demo")).toBe("/calendar");
+    expect(resolveSafePostLoginPath("/demo/calendar")).toBe("/calendar");
+  });
+
   it("builds login href with sanitized next parameter", () => {
     expect(buildLoginHref("/\\evil.com")).toBe("/login?next=%2Fcalendar");
     expect(buildLoginHref("/settings?tab=profile")).toBe(

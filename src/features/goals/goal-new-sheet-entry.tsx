@@ -1,13 +1,14 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import { GoalCreationEntry } from "@/features/goals/goal-creation-entry";
 import { GoalRouteSheet } from "@/features/goals/goal-route-sheet";
 import { resolveSafePostLoginPath } from "@/lib/auth/login-redirect";
+import { useAppRouter } from "@/lib/navigation/use-app-router";
 
 export function GoalNewSheetEntry() {
-  const router = useRouter();
+  const router = useAppRouter();
   const searchParams = useSearchParams();
   const returnTo = useMemo(() => {
     const candidate = searchParams.get("returnTo");

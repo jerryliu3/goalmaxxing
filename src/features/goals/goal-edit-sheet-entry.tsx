@@ -1,16 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { GoalRouteSheet } from "@/features/goals/goal-route-sheet";
 import { GoalForm } from "@/features/today/goal-form";
+import { useAppRouter } from "@/lib/navigation/use-app-router";
 
 interface GoalEditSheetEntryProps {
   goalId: string;
 }
 
 export function GoalEditSheetEntry({ goalId }: GoalEditSheetEntryProps) {
-  const router = useRouter();
+  const router = useAppRouter();
   const handleDismiss = useCallback(() => {
     router.back();
   }, [router]);
