@@ -67,13 +67,10 @@ describe("LandingCoachDemo", () => {
   });
 
   it("does not play the conversation until the card intersects", () => {
-    let observer: DeferredIntersectionObserver | undefined;
+    let notify: IntersectionObserverCallback | undefined;
     class DeferredIntersectionObserver {
-      callback: IntersectionObserverCallback;
-
       constructor(callback: IntersectionObserverCallback) {
-        this.callback = callback;
-        observer = this;
+        notify = callback;
       }
 
       observe() {}
@@ -81,18 +78,6 @@ describe("LandingCoachDemo", () => {
       unobserve() {}
       takeRecords() {
         return [];
-      }
-
-      trigger() {
-        this.callback(
-          [
-            {
-              isIntersecting: true,
-              target: document.createElement("div"),
-            } as unknown as IntersectionObserverEntry,
-          ],
-          this as unknown as IntersectionObserver
-        );
       }
     }
 
@@ -106,7 +91,15 @@ describe("LandingCoachDemo", () => {
     expect(screen.queryByTestId("landing-coach-reply")).not.toBeInTheDocument();
 
     act(() => {
-      observer?.trigger();
+      notify?.(
+        [
+          {
+            isIntersecting: true,
+            target: document.createElement("div"),
+          } as unknown as IntersectionObserverEntry,
+        ],
+        {} as IntersectionObserver
+      );
     });
     expect(screen.queryByTestId("landing-coach-user")).not.toBeInTheDocument();
 
