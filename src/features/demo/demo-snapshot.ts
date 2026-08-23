@@ -345,7 +345,6 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
   ];
 
   const goalById = new Map(goals.map((goal) => [goal.id, goal]));
-  const alexGoals = goals.filter((goal) => goal.owner_id === DEMO_ALEX_ID);
   const weeklyWeekday: Record<string, number> = {
     [DEMO_GOAL_IDS.strength]: 3,
     [DEMO_GOAL_IDS.tempoRun]: 6,

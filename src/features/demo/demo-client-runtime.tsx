@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState, type ReactNode } from "react";
+import { Suspense, useState, useSyncExternalStore, type ReactNode } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { DemoBanner } from "@/features/demo/demo-banner";
 import { DemoClickGuard } from "@/features/demo/demo-click-guard";
@@ -10,15 +10,18 @@ import { installDemoRuntime } from "@/features/demo/demo-runtime";
 import { toLocalDateString } from "@/lib/dates/day";
 import { DEMO_PATH_PREFIX } from "@/lib/navigation/demo-path";
 
+function subscribeToClient() {
+  return () => {};
+}
+
 export function DemoClientRuntime({ children }: { children: ReactNode }) {
-  const [mounted, setMounted] = useState(false);
+  const isClient = useSyncExternalStore(
+    subscribeToClient,
+    () => true,
+    () => false
+  );
   const [newGoalOpen, setNewGoalOpen] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const snapshot = mounted ? installDemoRuntime(toLocalDateString()) : null;
+  const snapshot = isClient ? installDemoRuntime(toLocalDateString()) : null;
 
   return (
     <div className="min-h-screen bg-background">
