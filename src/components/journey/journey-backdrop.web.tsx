@@ -28,13 +28,7 @@ function isAuthRoute(pathname: string) {
 }
 
 function allowJourneyVideoForPathname(pathname: string) {
-  if (pathname.startsWith("/social")) {
-    return true;
-  }
-  if (isAuthRoute(pathname)) {
-    return true;
-  }
-  return false;
+  return isAuthRoute(pathname);
 }
 
 function useDocumentVisibility() {
