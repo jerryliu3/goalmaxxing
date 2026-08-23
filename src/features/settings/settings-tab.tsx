@@ -6,7 +6,8 @@ import {
   LogOut,
 } from "lucide-react";
 import type { PlannerPrimaryTabPreference } from "@cadence/shared/navigation/tabs";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingCard } from "@/components/ui/loading-card";
@@ -29,11 +30,23 @@ import { requestJourneyIntroOpen } from "@/components/intro/journey-intro-overla
 import { IntegrationsSettings } from "@/features/settings/integrations-settings";
 import { PlannerPreferencesSettings } from "@/features/settings/planner-preferences-settings";
 import { ReportIssueSettings } from "@/features/settings/report-issue-settings";
+import {
+  resolveSettingsSection,
+  type SettingsSection,
+} from "@/features/settings/settings-section";
 import { NotificationsSection } from "@/features/social/notifications-section";
 import { ProfileSection } from "@/features/social/profile-section";
 import { useSocialTabData } from "@/features/social/use-social-tab-data";
+import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
 
-export function SocialTab() {
+const SETTINGS_SECTION_ITEMS: { key: SettingsSection; label: string }[] = [
+  { key: "preferences", label: "Preferences" },
+  { key: "notifications", label: "Notifications" },
+  { key: "integrations", label: "Integrations" },
+  { key: "report-issue", label: "Report an issue" },
+];
+
+export function SettingsTab() {
   const {
     state,
     loading,
@@ -52,10 +65,28 @@ export function SocialTab() {
     savePreferences,
     signOut,
   } = useSocialTabData();
-  const [settingsSection, setSettingsSection] = useState<
-    "preferences" | "notifications" | "integrations" | "report-issue"
-  >("preferences");
-  const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const { applySearchParams } = useClientSearchParamsUpdater();
+  const requestedSection = resolveSettingsSection(searchParams.get("tab"));
+  const settingsSection = requestedSection ?? "preferences";
+  const settingsPanelOpen = requestedSection !== null;
+
+  const writeSettingsSection = useCallback(
+    (section: SettingsSection | null) => {
+      applySearchParams((params) => {
+        if (section) {
+          params.set("tab", section);
+        } else {
+          params.delete("tab");
+        }
+      }, "push");
+    },
+    [applySearchParams]
+  );
+
+  const closeSettingsPanel = useCallback(() => {
+    writeSettingsSection(null);
+  }, [writeSettingsSection]);
 
   const settingsSectionTitle =
     settingsSection === "preferences"
@@ -105,26 +136,12 @@ export function SocialTab() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-0 p-0">
-          {[
-            { key: "preferences", label: "Preferences" },
-            { key: "notifications", label: "Notifications" },
-            { key: "integrations", label: "Integrations" },
-            { key: "report-issue", label: "Report an issue" },
-          ].map((item) => (
+          {SETTINGS_SECTION_ITEMS.map((item) => (
             <button
               key={item.key}
               type="button"
               className="flex w-full items-center justify-between border-t px-4 py-3 text-left text-base font-medium transition-colors hover:bg-muted/30 first:border-t-0"
-              onClick={() => {
-                setSettingsSection(
-                  item.key as
-                    | "preferences"
-                    | "notifications"
-                    | "integrations"
-                    | "report-issue"
-                );
-                setSettingsPanelOpen(true);
-              }}
+              onClick={() => writeSettingsSection(item.key)}
             >
               <span>{item.label}</span>
               <ChevronRight className="size-4 text-muted-foreground" />
@@ -155,7 +172,15 @@ export function SocialTab() {
         </CardContent>
       </Card>
 
-      <Dialog modal={false} open={settingsPanelOpen} onOpenChange={setSettingsPanelOpen}>
+      <Dialog
+        modal={false}
+        open={settingsPanelOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeSettingsPanel();
+          }
+        }}
+      >
         <DialogContent
           className="!top-0 !right-0 !left-auto !translate-x-0 !translate-y-0 inset-y-0 h-dvh w-[min(100vw,72rem)] max-w-none overflow-hidden rounded-none border-l p-0"
           showCloseButton={false}
@@ -166,7 +191,7 @@ export function SocialTab() {
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => setSettingsPanelOpen(false)}
+                onClick={closeSettingsPanel}
               >
                 <ArrowLeft className="size-4" />
                 Back
