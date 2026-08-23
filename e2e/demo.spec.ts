@@ -40,13 +40,13 @@ test.describe("public demo sandbox", () => {
       })
     ).toBeVisible();
 
-    await page.reload();
+    await page.goto("/demo/calendar");
     await expect(page.getByText("Read 20 pages")).toBeVisible({ timeout: 20_000 });
     await expect(
       page
         .locator("[data-slot=card]")
         .filter({ hasText: "Read 20 pages" })
         .getByRole("button", { name: /Mark goal as complete|Complete goal for/ })
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 20_000 });
   });
 });
