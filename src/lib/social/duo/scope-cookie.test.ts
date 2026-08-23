@@ -23,4 +23,11 @@ describe("duo scope cookie", () => {
     writeDuoScopeCookie(null);
     expect(document.cookie).not.toContain("duo_scope=both");
   });
+
+  it("does not write a site-wide cookie on demo paths", () => {
+    window.history.replaceState({}, "", "/demo/calendar");
+    writeDuoScopeCookie("both");
+    expect(document.cookie).not.toContain("duo_scope=both");
+    window.history.replaceState({}, "", "/");
+  });
 });

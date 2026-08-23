@@ -24,6 +24,7 @@ describe("SocialFreshnessIndicator", () => {
     cleanup();
     vi.clearAllMocks();
     vi.useRealTimers();
+    window.history.replaceState({}, "", "/");
   });
 
   it("renders freshness summary after loading", async () => {
@@ -106,5 +107,12 @@ describe("SocialFreshnessIndicator", () => {
     expect(screen.getByTestId("social-freshness-status-dot")).toHaveClass(
       "bg-destructive"
     );
+  });
+
+  it("stays hidden on the demo sandbox path", () => {
+    window.history.replaceState({}, "", "/demo/social?tab=challenges");
+    render(<SocialFreshnessIndicator refreshToken={0} />);
+    expect(screen.queryByTestId("social-freshness-indicator")).toBeNull();
+    expect(fetchSocialFreshness).not.toHaveBeenCalled();
   });
 });

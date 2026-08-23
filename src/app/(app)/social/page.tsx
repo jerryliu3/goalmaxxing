@@ -1,8 +1,8 @@
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SocialSurface } from "@/features/social/social-surface";
+import { SocialPageBody } from "@/features/social/social-page-body";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 
-export default async function SocialPage() {
+export default function SocialPage() {
   if (!isFeatureEnabled("socialEnabled")) {
     return (
       <Card className="shadow-sm">
@@ -16,5 +16,5 @@ export default async function SocialPage() {
     );
   }
 
-  return <SocialSurface />;
+  return <SocialPageBody />;
 }
