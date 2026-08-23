@@ -1,3 +1,4 @@
+import { APP_TABS } from "@cadence/shared/navigation/tabs";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { JourneyBackdrop } from "@/components/journey/journey-backdrop.web";
@@ -6,7 +7,7 @@ vi.mock("motion/react", () => ({
   useReducedMotion: () => false,
 }));
 
-const pathnameMock = vi.fn(() => "/social");
+const pathnameMock = vi.fn(() => "/login");
 vi.mock("next/navigation", () => ({
   usePathname: () => pathnameMock(),
 }));
@@ -26,7 +27,7 @@ const enabledFlags = {
 describe("JourneyBackdrop", () => {
   afterEach(() => {
     cleanup();
-    pathnameMock.mockReturnValue("/social");
+    pathnameMock.mockReturnValue("/login");
   });
 
   it("renders poster-first fallback immediately", () => {
@@ -41,7 +42,7 @@ describe("JourneyBackdrop", () => {
     expect(posterLayer).toHaveClass("opacity-100");
   });
 
-  it("fades poster after video can play on community routes", () => {
+  it("fades poster after video can play on auth routes", () => {
     render(<JourneyBackdrop flags={enabledFlags} />);
     const video = document.querySelector("video");
     expect(video).not.toBeNull();
@@ -53,8 +54,30 @@ describe("JourneyBackdrop", () => {
     expect(posterLayer).toHaveClass("opacity-0");
   });
 
-  it("prefers poster and skips video outside community and auth routes", () => {
-    pathnameMock.mockReturnValue("/calendar");
+  it.each(["/login", "/signup", "/reset-password"])(
+    "renders journey video on auth route %s",
+    (pathname) => {
+      pathnameMock.mockReturnValue(pathname);
+
+      render(<JourneyBackdrop flags={enabledFlags} />);
+      const video = document.querySelector("video");
+      expect(video).not.toBeNull();
+    }
+  );
+
+  it.each(APP_TABS.map((tab) => tab.href))(
+    "prefers poster and skips video on in-app tab %s",
+    (pathname) => {
+      pathnameMock.mockReturnValue(pathname);
+
+      render(<JourneyBackdrop flags={enabledFlags} />);
+      const video = document.querySelector("video");
+      expect(video).toBeNull();
+    }
+  );
+
+  it("prefers poster and skips video on nested in-app routes", () => {
+    pathnameMock.mockReturnValue("/goals/new");
 
     render(<JourneyBackdrop flags={enabledFlags} />);
     const video = document.querySelector("video");
