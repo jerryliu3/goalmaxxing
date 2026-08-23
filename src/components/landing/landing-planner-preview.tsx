@@ -502,8 +502,14 @@ export function LandingPlannerPreview() {
     }
 
     const observer = new IntersectionObserver(
-      ([entry]) => setIsVisible(Boolean(entry?.isIntersecting)),
-      { threshold: 0.35 }
+      ([entry]) => {
+        if (!entry?.isIntersecting) {
+          return;
+        }
+        setIsVisible(true);
+        observer.disconnect();
+      },
+      { threshold: 0.1, rootMargin: "120px 0px" }
     );
     observer.observe(preview);
     return () => observer.disconnect();
