@@ -12,6 +12,13 @@ vi.mock("motion/react", async (importOriginal) => {
 
 afterEach(cleanup);
 
+function primaryCtaLinks() {
+  return [
+    ...screen.getAllByRole("link", { name: "Create account" }),
+    screen.getByRole("link", { name: /go to app/i }),
+  ];
+}
+
 describe("LandingPage", () => {
   it("places the climb chapter after Inside Goalmaxxing", () => {
     render(<LandingPage />);
@@ -28,5 +35,17 @@ describe("LandingPage", () => {
 
     expect(root.className).not.toMatch(/overflow-x-hidden/);
     expect(root.className).toMatch(/overflow-x-clip/);
+  });
+
+  it("keeps filled blue backgrounds in dark mode instead of outline grey", () => {
+    render(<LandingPage />);
+
+    for (const link of primaryCtaLinks()) {
+      expect(link.className).toContain("bg-blue-700");
+      expect(link.className).toContain("dark:bg-blue-700");
+      expect(link.className).toContain("text-white");
+      expect(link.className).toContain("dark:text-white");
+      expect(link.className).not.toContain("dark:bg-input");
+    }
   });
 });

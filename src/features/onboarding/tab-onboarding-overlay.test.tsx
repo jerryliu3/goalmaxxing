@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
 
@@ -9,6 +9,7 @@ describe("TabOnboardingOverlay", () => {
 
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
   });
 
   it("walks through in-page targets without blurring the background", async () => {
@@ -82,16 +83,6 @@ describe("TabOnboardingOverlay", () => {
   });
 
   it("prefers today's calendar cell over the full board on the last step", async () => {
-    render(
-      <>
-        <div data-onboarding="planner.surfaces">Planner tabs</div>
-        <div data-onboarding="planner.calendar.controls">Calendar controls</div>
-        <div data-onboarding="planner.calendar.today">Today</div>
-        <div data-onboarding="planner.calendar.board">Calendar board</div>
-        <TabOnboardingOverlay onboardingKey="planner.calendar" />
-      </>
-    );
-
     const rectFor = (target: string): DOMRect => {
       if (target === "planner.calendar.today") {
         return {
@@ -120,14 +111,14 @@ describe("TabOnboardingOverlay", () => {
         } as DOMRect;
       }
       return {
-        top: 0,
-        left: 0,
-        width: 0,
-        height: 0,
-        bottom: 0,
-        right: 0,
-        x: 0,
-        y: 0,
+        top: 20,
+        left: 20,
+        width: 80,
+        height: 24,
+        bottom: 44,
+        right: 100,
+        x: 20,
+        y: 20,
         toJSON: () => ({}),
       } as DOMRect;
     };
@@ -137,14 +128,26 @@ describe("TabOnboardingOverlay", () => {
       }
     );
 
+    render(
+      <>
+        <div data-onboarding="planner.surfaces">Planner tabs</div>
+        <div data-onboarding="planner.calendar.controls">Calendar controls</div>
+        <div data-onboarding="planner.calendar.today">Today</div>
+        <div data-onboarding="planner.calendar.board">Calendar board</div>
+        <TabOnboardingOverlay onboardingKey="planner.calendar" />
+      </>
+    );
+
     fireEvent.click(await screen.findByRole("button", { name: "Next" }));
     fireEvent.click(await screen.findByRole("button", { name: "Next" }));
     expect(await screen.findByRole("dialog", { name: "Try the board" })).toBeInTheDocument();
-    expect(screen.getByTestId("onboarding-highlight")).toHaveStyle({
-      top: "6px",
-      left: "6px",
-      width: "48px",
-      height: "48px",
+    await waitFor(() => {
+      expect(screen.getByTestId("onboarding-highlight")).toHaveStyle({
+        top: "6px",
+        left: "6px",
+        width: "48px",
+        height: "48px",
+      });
     });
   });
 

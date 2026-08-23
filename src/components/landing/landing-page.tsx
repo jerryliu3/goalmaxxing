@@ -8,8 +8,7 @@ import { LandingWowChapter } from "@/components/landing/landing-wow-chapter";
 import { Button } from "@/components/ui/button";
 
 const primaryCtaClassName =
-  "border-blue-700 bg-blue-700 hover:border-blue-800 hover:bg-blue-800";
-const primaryCtaTextStyle = { color: "#ffffff" } as const;
+  "border-blue-700 bg-blue-700 text-white hover:border-blue-800 hover:bg-blue-800 dark:border-blue-700 dark:bg-blue-700 dark:text-white dark:hover:border-blue-800 dark:hover:bg-blue-800";
 
 export function LandingPage() {
   return (
@@ -24,13 +23,7 @@ export function LandingPage() {
             Goalmaxxing
           </Link>
           <nav className="flex items-center gap-2">
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className={primaryCtaClassName}
-              style={primaryCtaTextStyle}
-            >
+            <Button asChild size="sm" className={primaryCtaClassName}>
               <Link href="/signup">Create account</Link>
             </Button>
           </nav>
@@ -52,13 +45,7 @@ export function LandingPage() {
             </p>
             <div className="flex flex-col items-start gap-3">
               <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  asChild
-                  variant="outline"
-                  size="lg"
-                  className={primaryCtaClassName}
-                  style={primaryCtaTextStyle}
-                >
+                <Button asChild size="lg" className={primaryCtaClassName}>
                   <Link href="/calendar">
                     Go to app
                     <ArrowRight className="size-4" />
@@ -93,13 +80,7 @@ export function LandingPage() {
             keep long-term goals in view.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className={primaryCtaClassName}
-              style={primaryCtaTextStyle}
-            >
+            <Button asChild size="lg" className={primaryCtaClassName}>
               <Link href="/signup">Create account</Link>
             </Button>
             <Button asChild size="lg" variant="ghost">
