@@ -179,7 +179,7 @@ describe("demo fetch router", () => {
     const strengthItem = before.activePlan.items.find(
       (item) =>
         item.plan_goal_id === "10000000-0000-4000-8000-000000000001" &&
-        item.scheduled_date === "2026-08-19"
+        item.scheduled_date === "2026-08-15"
     );
     expect(strengthItem).toBeTruthy();
 
@@ -200,8 +200,8 @@ describe("demo fetch router", () => {
               kind: "move_item",
               goalId: strengthItem?.plan_goal_id,
               unitKey: strengthItem?.unit_key,
-              scheduledDate: "2026-08-20",
-              sourceDate: "2026-08-19",
+              scheduledDate: "2026-08-16",
+              sourceDate: "2026-08-15",
             },
           ],
         }),
@@ -221,7 +221,7 @@ describe("demo fetch router", () => {
     expect(
       afterPayload.activePlan.items.find((item) => item.id === strengthItem?.id)
         ?.scheduled_date
-    ).toBe("2026-08-20");
+    ).toBe("2026-08-16");
   });
 
   it("keeps unsupported writes from pretending to succeed", async () => {

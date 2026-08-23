@@ -33,9 +33,11 @@ test.describe("public demo sandbox", () => {
     await expect(page.getByText("Read 20 pages")).toBeVisible({ timeout: 20_000 });
 
     const card = page.locator("[data-slot=card]").filter({ hasText: "Read 20 pages" });
-    await card.getByRole("button", { name: "Mark goal as complete" }).click();
+    await card.getByRole("button", { name: /Mark goal as complete|Complete goal for/ }).click();
     await expect(
-      card.getByRole("button", { name: "Unmark goal completion for current period" })
+      card.getByRole("button", {
+        name: /Unmark goal completion for current period|Remove completion for/,
+      })
     ).toBeVisible();
 
     await page.reload();
@@ -44,7 +46,7 @@ test.describe("public demo sandbox", () => {
       page
         .locator("[data-slot=card]")
         .filter({ hasText: "Read 20 pages" })
-        .getByRole("button", { name: "Mark goal as complete" })
+        .getByRole("button", { name: /Mark goal as complete|Complete goal for/ })
     ).toBeVisible();
   });
 });
