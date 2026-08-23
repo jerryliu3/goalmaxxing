@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, NotebookPen, Plus } from "lucide-react";
+import { useReducedMotion } from "motion/react";
 
 type PlannerSurface = "calendar" | "checklist" | "tasks";
 
@@ -85,6 +86,17 @@ function CalendarOutline() {
 }
 
 function ChecklistOutline() {
+  const reducedMotion = Boolean(useReducedMotion());
+  const [readChecked, setReadChecked] = useState(reducedMotion);
+
+  useEffect(() => {
+    if (reducedMotion || readChecked) {
+      return;
+    }
+    const timeoutId = window.setTimeout(() => setReadChecked(true), 900);
+    return () => window.clearTimeout(timeoutId);
+  }, [readChecked, reducedMotion]);
+
   return (
     <div data-testid="planner-surface-checklist" className="space-y-3 p-4">
       <div>
@@ -109,9 +121,23 @@ function ChecklistOutline() {
             </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border p-2.5">
-            <span className="size-5 rounded-md border border-slate-300 bg-white" />
+            <span
+              className={`inline-flex size-5 items-center justify-center rounded-md border ${
+                readChecked
+                  ? "border-emerald-600 bg-emerald-600 text-white"
+                  : "border-slate-300 bg-white text-transparent"
+              }`}
+            >
+              <Check className="size-3" />
+            </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[11px] font-medium">Read 10 pages</p>
+              <p
+                className={`truncate text-[11px] font-medium ${
+                  readChecked ? "line-through opacity-70" : ""
+                }`}
+              >
+                Read 10 pages
+              </p>
               <p className="text-[9px] text-muted-foreground">
                 Personal · Daily recurring
               </p>

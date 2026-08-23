@@ -12,8 +12,12 @@ const primaryCtaTextStyle = { color: "#ffffff" } as const;
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
+    <div className="relative min-h-screen overflow-x-clip bg-slate-50 text-foreground">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1200px_circle_at_12%_-8%,rgba(191,219,254,0.7),transparent_55%),radial-gradient(900px_circle_at_92%_6%,rgba(219,234,254,0.8),transparent_52%),radial-gradient(800px_circle_at_78%_88%,rgba(224,231,255,0.45),transparent_50%)]"
+      />
+      <header className="sticky top-0 z-40 border-b border-blue-100/80 bg-slate-50/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           <Link href="/" className="text-base font-semibold tracking-tight">
             Goalmaxxing
@@ -33,7 +37,7 @@ export function LandingPage() {
       </header>
 
       <main>
-        <section className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-16 sm:px-6 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:items-center md:py-24">
+        <section className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:items-center md:py-10">
           <div className="space-y-6">
             <p className="inline-flex items-center rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
               Short-term execution, long-term outcomes

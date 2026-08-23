@@ -39,7 +39,7 @@ test.describe("marketing landing", () => {
       page.getByRole("heading", { name: "Built for the full loop" })
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Start in one sentence" })
+      page.getByRole("heading", { name: "Intuitive goal setup" })
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Execute your way" })

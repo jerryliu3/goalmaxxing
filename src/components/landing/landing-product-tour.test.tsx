@@ -12,7 +12,7 @@ describe("LandingProductTour", () => {
     expect(
       screen.getByRole("heading", { name: "Built for the full loop" })
     ).toBeInTheDocument();
-    expect(screen.getByText("Start in one sentence")).toBeInTheDocument();
+    expect(screen.getByText("Intuitive goal setup")).toBeInTheDocument();
     expect(screen.getByText("Execute your way")).toBeInTheDocument();
     expect(screen.getByText("See your patterns")).toBeInTheDocument();
     expect(screen.getByText("Progress together")).toBeInTheDocument();

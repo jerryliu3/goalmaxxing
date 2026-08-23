@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
 
 describe("TabOnboardingOverlay", () => {
@@ -92,32 +92,50 @@ describe("TabOnboardingOverlay", () => {
       </>
     );
 
-    const today = screen.getByText("Today");
-    const board = screen.getByText("Calendar board");
-    today.getBoundingClientRect = () =>
-      ({
-        top: 10,
-        left: 10,
-        width: 40,
-        height: 40,
-        bottom: 50,
-        right: 50,
-        x: 10,
-        y: 10,
+    const rectFor = (target: string): DOMRect => {
+      if (target === "planner.calendar.today") {
+        return {
+          top: 10,
+          left: 10,
+          width: 40,
+          height: 40,
+          bottom: 50,
+          right: 50,
+          x: 10,
+          y: 10,
+          toJSON: () => ({}),
+        } as DOMRect;
+      }
+      if (target === "planner.calendar.board") {
+        return {
+          top: 100,
+          left: 100,
+          width: 400,
+          height: 400,
+          bottom: 500,
+          right: 500,
+          x: 100,
+          y: 100,
+          toJSON: () => ({}),
+        } as DOMRect;
+      }
+      return {
+        top: 0,
+        left: 0,
+        width: 0,
+        height: 0,
+        bottom: 0,
+        right: 0,
+        x: 0,
+        y: 0,
         toJSON: () => ({}),
-      }) as DOMRect;
-    board.getBoundingClientRect = () =>
-      ({
-        top: 100,
-        left: 100,
-        width: 400,
-        height: 400,
-        bottom: 500,
-        right: 500,
-        x: 100,
-        y: 100,
-        toJSON: () => ({}),
-      }) as DOMRect;
+      } as DOMRect;
+    };
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+      function mockClientRect(this: HTMLElement) {
+        return rectFor(this.getAttribute("data-onboarding") ?? "");
+      }
+    );
 
     fireEvent.click(await screen.findByRole("button", { name: "Next" }));
     fireEvent.click(await screen.findByRole("button", { name: "Next" }));
