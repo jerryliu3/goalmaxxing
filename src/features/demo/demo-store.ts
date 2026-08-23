@@ -1,3 +1,4 @@
+import { buildDemoSnapshot, type DemoSnapshot } from "@/features/demo/demo-snapshot";
 import { sha256Hex } from "@/lib/planner/canonical";
 import type { PlannerDraftCommand } from "@/lib/planner/draft-commands";
 
