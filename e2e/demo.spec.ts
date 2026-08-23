@@ -40,6 +40,7 @@ test.describe("public demo sandbox", () => {
       })
     ).toBeVisible();
 
+    await page.goto("about:blank");
     await page.goto("/demo/calendar");
     await expect(page.getByText("Read 20 pages")).toBeVisible({ timeout: 20_000 });
     await expect(
