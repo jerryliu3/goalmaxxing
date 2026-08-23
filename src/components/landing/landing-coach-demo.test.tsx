@@ -89,7 +89,7 @@ describe("LandingCoachDemo", () => {
             {
               isIntersecting: true,
               target: document.createElement("div"),
-            } as IntersectionObserverEntry,
+            } as unknown as IntersectionObserverEntry,
           ],
           this as unknown as IntersectionObserver
         );
