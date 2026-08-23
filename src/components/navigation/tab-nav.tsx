@@ -41,6 +41,9 @@ export function TabNav({
     from: string;
     to: string;
   } | null>(null);
+  if (optimisticNav && pathname !== optimisticNav.from) {
+    setOptimisticNav(null);
+  }
   const activePath =
     optimisticNav && optimisticNav.from === pathname
       ? optimisticNav.to

@@ -2,17 +2,21 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   STARTER_PACKS,
   type StarterPackKey,
+  isStarterPacksSeen,
+  markStarterPacksSeen,
   resolveStarterPackKey,
+  subscribeStarterPacksSeen,
 } from "@/features/goals/starter-packs";
 import { TrainingPlanImportEntry } from "@/features/goals/training-plan-import-entry";
 import { BulkGoalForm } from "@/features/today/bulk-goal-form";
 import { GoalForm } from "@/features/today/goal-form";
+import { useDuo } from "@/features/social/duo/duo-context";
 import { cn } from "@/lib/utils";
 
 type CreationMode = "single" | "multi" | "training";
@@ -43,12 +47,34 @@ function resolveMode(
 export function GoalCreationEntry({ onExit }: GoalCreationEntryProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { viewerUserId } = useDuo();
   const allowTrainingPlan = process.env.NODE_ENV !== "production";
 
   const mode = useMemo(
     () => resolveMode(searchParams.get("mode"), allowTrainingPlan),
     [allowTrainingPlan, searchParams]
   );
+  const starterPacksSeen = useSyncExternalStore(
+    subscribeStarterPacksSeen,
+    () => isStarterPacksSeen(viewerUserId),
+    () => true
+  );
+  const [offerStarterPacks, setOfferStarterPacks] = useState(false);
+  if (mode === "multi" && !starterPacksSeen && !offerStarterPacks) {
+    setOfferStarterPacks(true);
+  }
+
+  useEffect(() => {
+    if (!offerStarterPacks) {
+      return;
+    }
+    const timeoutId = window.setTimeout(() => {
+      markStarterPacksSeen(viewerUserId);
+    }, 0);
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [offerStarterPacks, viewerUserId]);
 
   const modeHref = (nextMode: CreationMode) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -66,14 +92,10 @@ export function GoalCreationEntry({ onExit }: GoalCreationEntryProps) {
   };
 
   const starterPack = resolveStarterPackKey(searchParams.get("starterPack"));
-  const starterPackHref = (pack: StarterPackKey | null) => {
+  const starterPackHref = (pack: StarterPackKey) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("mode", "multi");
-    if (pack) {
-      params.set("starterPack", pack);
-    } else {
-      params.delete("starterPack");
-    }
+    params.set("starterPack", pack);
     const query = params.toString();
     return query.length > 0 ? `${pathname}?${query}` : pathname;
   };
@@ -124,7 +146,7 @@ export function GoalCreationEntry({ onExit }: GoalCreationEntryProps) {
         </div>
       </div>
       <div className="w-full">
-        {mode === "multi" ? (
+        {mode === "multi" && offerStarterPacks ? (
           <div className="mb-4 rounded-xl border bg-muted/20 p-3">
             <div className="mb-2 flex items-center justify-between gap-2">
               <p className="text-sm font-medium">Starter packs (optional)</p>
@@ -144,13 +166,6 @@ export function GoalCreationEntry({ onExit }: GoalCreationEntryProps) {
                   </Link>
                 </Button>
               ))}
-              {starterPack ? (
-                <Button type="button" variant="ghost" size="sm" asChild>
-                  <Link href={starterPackHref(null)} replace>
-                    Clear starter pack
-                  </Link>
-                </Button>
-              ) : null}
             </div>
           </div>
         ) : null}

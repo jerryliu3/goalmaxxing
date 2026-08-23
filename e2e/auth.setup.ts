@@ -42,14 +42,7 @@ setup("authenticate seeded Alice account", async ({ page }) => {
     for (const onboardingKey of [
       "insights.main",
       "planner.calendar",
-      "planner.checklist",
-      "planner.tasks",
       "social.main",
-      "social.feed",
-      "social.challenges",
-      "social.leaderboards",
-      "social.team",
-      "settings.profile",
     ]) {
       window.localStorage.setItem(
         `cadence.tab_onboarding_completed.v1:${onboardingKey}`,
@@ -57,11 +50,6 @@ setup("authenticate seeded Alice account", async ({ page }) => {
       );
     }
   });
-  const startJourney = page.getByRole("button", { name: "Start journey" });
-  if (await startJourney.isVisible()) {
-    await startJourney.click();
-  }
-
   await mkdir(path.dirname(authStatePath), { recursive: true });
   await page.context().storageState({ path: authStatePath });
 });

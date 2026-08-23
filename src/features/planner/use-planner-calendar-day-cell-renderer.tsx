@@ -27,6 +27,28 @@ interface PlannerCalendarCell {
   inMonth: boolean;
 }
 
+export function selectOnboardingCalendarItemDay({
+  calendarToday,
+  visibleCells,
+  getEntryCount,
+}: {
+  calendarToday: string;
+  visibleCells: PlannerCalendarCell[];
+  getEntryCount: (day: string) => number;
+}) {
+  const todayIsVisible = visibleCells.some((cell) => cell.date === calendarToday);
+  if (todayIsVisible && getEntryCount(calendarToday) > 0) {
+    return calendarToday;
+  }
+  return (
+    visibleCells.find(
+      (cell) => cell.inMonth && getEntryCount(cell.date) > 0
+    )?.date ??
+    visibleCells.find((cell) => getEntryCount(cell.date) > 0)?.date ??
+    null
+  );
+}
+
 interface UsePlannerCalendarDayCellRendererArgs {
   viewMode: PlannerCalendarViewMode;
   expandedMonthRows: boolean;
@@ -45,6 +67,7 @@ interface UsePlannerCalendarDayCellRendererArgs {
   canMutateEntryOnDay: (entry: PlannerDayDetailEntry, day: string) => boolean;
   getOrderedEntriesForDay: (day: string | null) => PlannerDayDetailEntry[];
   getCompletionFactMarkersForDay: (day: string | null) => PlannerCompletionFactMarker[];
+  visibleCells: PlannerCalendarCell[];
   dayPreviewInteractions: Pick<
     PlannerDayPreviewInteractions,
     | "clearHoverPreviewTimer"
@@ -77,6 +100,7 @@ export function usePlannerCalendarDayCellRenderer({
   canMutateEntryOnDay,
   getOrderedEntriesForDay,
   getCompletionFactMarkersForDay,
+  visibleCells,
   dayPreviewInteractions,
 }: UsePlannerCalendarDayCellRendererArgs) {
   const {
@@ -94,6 +118,11 @@ export function usePlannerCalendarDayCellRenderer({
     lastTouchTapRef,
     suppressDayCellClickRef,
   } = dayPreviewInteractions;
+  const onboardingItemDay = selectOnboardingCalendarItemDay({
+    calendarToday,
+    visibleCells,
+    getEntryCount: (day) => getOrderedEntriesForDay(day).length,
+  });
 
   return useCallback(
     (cell: PlannerCalendarCell) => {
@@ -262,6 +291,7 @@ export function usePlannerCalendarDayCellRenderer({
           onEntryPointerEnd={() => {
             pointerPressActiveRef.current = false;
           }}
+          onboardingFirstEntry={cell.date === onboardingItemDay}
         />
       );
     },
@@ -292,6 +322,7 @@ export function usePlannerCalendarDayCellRenderer({
       suppressDayCellClickRef,
       lastTouchTapRef,
       viewMode,
+      onboardingItemDay,
     ]
   );
 }

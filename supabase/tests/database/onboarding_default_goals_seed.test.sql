@@ -2,7 +2,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
 
-select plan(9);
+select plan(12);
 
 insert into auth.users (id, email, raw_user_meta_data)
 values (
@@ -125,6 +125,54 @@ select is(
   ),
   3,
   'seeded defaults use canonical category keys'
+);
+
+insert into auth.users (id, email, raw_user_meta_data)
+values (
+  '7a444444-4444-4444-8444-444444444444',
+  'timezone-onboarding@example.com',
+  '{"username":"tz_onboarding","seed_default_goals":true,"timezone":"Pacific/Kiritimati"}'::jsonb
+)
+on conflict (id) do nothing;
+
+select is(
+  (
+    select profile.timezone
+    from public.profiles profile
+    where profile.id = '7a444444-4444-4444-8444-444444444444'
+  ),
+  'Pacific/Kiritimati',
+  'signup timezone metadata is stored on the new profile'
+);
+
+select is(
+  (
+    select goal.start_date
+    from public.goals goal
+    where goal.owner_id = '7a444444-4444-4444-8444-444444444444'
+      and goal.title = 'Create your Goalmaxxing account'
+  ),
+  (clock_timestamp() at time zone 'Pacific/Kiritimati')::date,
+  'seeded start dates use the device timezone local date'
+);
+
+insert into auth.users (id, email, raw_user_meta_data)
+values (
+  '7a555555-5555-4555-8555-555555555555',
+  'invalid-timezone-onboarding@example.com',
+  '{"username":"bad_tz_onboarding","seed_default_goals":true,"timezone":"Mars/Olympus_Mons"}'::jsonb
+)
+on conflict (id) do nothing;
+
+select is(
+  (
+    select count(*)::integer
+    from public.goals goal
+    where goal.owner_id = '7a555555-5555-4555-8555-555555555555'
+      and goal.is_deleted = false
+  ),
+  3,
+  'invalid signup timezone still seeds default goals'
 );
 
 select * from finish();

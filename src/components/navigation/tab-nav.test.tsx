@@ -134,4 +134,32 @@ describe("TabNav", () => {
       "aria-current"
     );
   });
+
+  it("clears a stale optimistic highlight after leaving and returning without a tab click", () => {
+    mockPathname = "/calendar";
+    const { rerender } = render(<TabNav />);
+
+    fireEvent.click(screen.getByRole("link", { name: "Profile" }));
+    expect(screen.getByRole("link", { name: "Profile" })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
+
+    mockPathname = "/settings";
+    rerender(<TabNav />);
+    expect(screen.getByRole("link", { name: "Profile" })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
+
+    mockPathname = "/calendar";
+    rerender(<TabNav />);
+    expect(screen.getByRole("link", { name: "Planner" })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
+    expect(screen.getByRole("link", { name: "Profile" })).not.toHaveAttribute(
+      "aria-current"
+    );
+  });
 });

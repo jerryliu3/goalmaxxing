@@ -689,7 +689,7 @@ export function InsightsTab({
       ) : null}
 
       {showGoalStatsSection ? (
-        <Card className="shadow-sm">
+        <Card className="shadow-sm" data-onboarding="insights.goal-stats">
           <CardHeader className="pb-3">
             <div
               data-title-date-row="true"
@@ -760,7 +760,7 @@ export function InsightsTab({
             {visiblePerGoalHeatmaps.length === 0 ? (
               <p className="text-sm text-muted-foreground">No goals match these controls.</p>
             ) : (
-              visiblePerGoalHeatmaps.map((goal) => {
+              visiblePerGoalHeatmaps.map((goal, index) => {
               const goalMonthCursor = goalMonthOverrides[goal.id] ?? monthCursor;
               const completions = completionsByGoal.get(goal.id) ?? [];
               const progress = progressByGoal.get(goal.id);
@@ -815,7 +815,13 @@ export function InsightsTab({
                 goal.category_key
               );
               return (
-                <Card key={goal.id} className="border shadow-none">
+                <Card
+                  key={goal.id}
+                  className="border shadow-none"
+                  data-onboarding={
+                    index === 0 && !readOnly ? "insights.goal" : undefined
+                  }
+                >
                   <CardContent className="space-y-3 py-4">
                     <InsightsGoalCardHeader
                       title={goal.title}

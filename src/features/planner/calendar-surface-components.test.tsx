@@ -83,6 +83,9 @@ describe("calendar surface extracted components", () => {
 
     expect(screen.getByText("Easy run")).toBeInTheDocument();
     expect(screen.getByText("Stretch")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /thursday, august 6/i })).not.toHaveAttribute(
+      "data-onboarding"
+    );
 
     await user.click(screen.getByRole("button", { name: /thursday, august 6/i }));
     expect(onCellClick).toHaveBeenCalledTimes(1);

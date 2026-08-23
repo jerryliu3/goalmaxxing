@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toLocalDateString } from "@/lib/dates/day";
@@ -10,6 +10,8 @@ import { useXpProfile } from "@/components/xp/xp-profile-provider";
 export const JOURNEY_INTRO_SEEN_KEY = "cadence.journey_intro_seen.v1";
 export const JOURNEY_ONBOARDING_COMPLETED_KEY =
   "cadence.journey_onboarding_completed.v1";
+export const JOURNEY_INTRO_FORCE_USER_ID_KEY =
+  "cadence.journey_intro_force_user_id.v1";
 export const JOURNEY_INTRO_OPEN_EVENT = "cadence.journey_intro.open";
 
 export function requestJourneyIntroOpen() {
@@ -19,14 +21,15 @@ export function requestJourneyIntroOpen() {
   window.dispatchEvent(new Event(JOURNEY_INTRO_OPEN_EVENT));
 }
 
-export function JourneyIntroOverlay() {
+interface JourneyIntroOverlayProps {
+  userId: string;
+}
+
+export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
   const router = useRouter();
-  const { profile, band } = useXpProfile();
+  const { band } = useXpProfile();
   const [open, setOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
-
-  const currentLevel = profile?.currentLevel ?? 1;
-  const totalXp = profile?.totalXp ?? 0;
 
   const steps = [
     {
@@ -34,27 +37,25 @@ export function JourneyIntroOverlay() {
       body: (
         <>
           <p className="text-muted-foreground">
-            Every check-in moves you upward. Your current camp is{" "}
-            <span className="font-medium text-foreground">{band.name}</span>.
+            Goalmaxxing helps you set short-term and long-term goals, then follow
+            through with a plan you can execute.
           </p>
           <p className="text-muted-foreground">
-            Level {currentLevel} · {totalXp} XP
+            Create goals, track progress, and stay accountable with community.
           </p>
         </>
       ),
     },
     {
-      title: "Your starter goals are ready",
+      title: "Create different types of goals",
       body: (
         <>
           <p className="text-muted-foreground">
-            We added a few one-milestone starter goals so you can get a quick first win.
+            Create repeating goals for habits, and milestone goals for projects
+            with a finish line.
           </p>
           <p className="text-muted-foreground">
-            You can edit or delete these anytime as you shape your own system.
-          </p>
-          <p className="text-muted-foreground">
-            Optional category starter packs are available in multi-goal creation.
+            Each goal can have its own schedule, targets, and dates.
           </p>
         </>
       ),
@@ -64,36 +65,42 @@ export function JourneyIntroOverlay() {
       body: (
         <>
           <p className="text-muted-foreground">
-            Use Calendar to place sessions and lock must-do days ahead of time.
+            Use Calendar to plan individual sessions across the coming
+            days/weeks/months.
           </p>
           <p className="text-muted-foreground">
-            Checklist keeps today focused, and Tasks captures one-off work that should not become long-lived goals.
-          </p>
-        </>
-      ),
-    },
-    {
-      title: "Build momentum with community",
-      body: (
-        <>
-          <p className="text-muted-foreground">
-            Open Community Team to invite a partner when you are ready for accountability.
-          </p>
-          <p className="text-muted-foreground">
-            You can replay this intro and page guides anytime from Profile settings.
+            Use Checklist to focus on specific days, and Tasks to capture small
+            one-off items.
           </p>
         </>
       ),
     },
     {
-      title: "Create your first real goal",
+      title: "Stay accountable",
       body: (
         <>
           <p className="text-muted-foreground">
-            Finish this intro by creating your first personalized goal.
+            Check the Community tab to interact with others, or participate in
+            group challenges and events.
           </p>
           <p className="text-muted-foreground">
-            We will take you to the goal creation page now.
+            You can also invite a friend to partner up, see each other&apos;s
+            progress and keep accountability.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: "Your goals are ready",
+      body: (
+        <>
+          <p className="text-muted-foreground">
+            We&apos;ve added some initial goals to get you familiar. You can
+            edit these anytime as you shape your own system.
+          </p>
+          <p className="text-muted-foreground">
+            Every check-in moves you upward. Your current camp is{" "}
+            <span className="font-medium text-foreground">{band.name}</span>.
           </p>
         </>
       ),
@@ -102,6 +109,14 @@ export function JourneyIntroOverlay() {
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
+      const forcedIntroUserId = window.localStorage.getItem(
+        JOURNEY_INTRO_FORCE_USER_ID_KEY
+      );
+      if (forcedIntroUserId === userId) {
+        window.localStorage.removeItem(JOURNEY_INTRO_FORCE_USER_ID_KEY);
+        setOpen(true);
+        return;
+      }
       const completed = window.localStorage.getItem(JOURNEY_ONBOARDING_COMPLETED_KEY);
       const lastSeen = window.localStorage.getItem(JOURNEY_INTRO_SEEN_KEY);
       if (completed !== "done" && lastSeen === null) {
@@ -111,7 +126,7 @@ export function JourneyIntroOverlay() {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     const handleOpenRequest = () => {
@@ -123,6 +138,15 @@ export function JourneyIntroOverlay() {
       window.removeEventListener(JOURNEY_INTRO_OPEN_EVENT, handleOpenRequest);
     };
   }, []);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    void router.prefetch("/calendar");
+    void router.prefetch("/calendar?surface=calendar");
+    void import("@/features/planner/calendar-page-shell");
+  }, [open, router]);
 
   if (!open) {
     return null;
@@ -176,13 +200,12 @@ export function JourneyIntroOverlay() {
                 onClick={() => {
                   if (isLastStep) {
                     closeAndPersist();
-                    router.push("/goals/new?onboarding=intro");
                     return;
                   }
                   setStepIndex((current) => Math.min(steps.length - 1, current + 1));
                 }}
               >
-                {isLastStep ? "Create first goal" : "Next"}
+                {isLastStep ? "Done" : "Next"}
               </Button>
             </div>
           </div>
