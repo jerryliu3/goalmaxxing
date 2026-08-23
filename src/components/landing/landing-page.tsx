@@ -45,21 +45,28 @@ export function LandingPage() {
               Plan beyond daily habits. Connect today&apos;s actions to the weeks and
               months ahead.
             </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className={primaryCtaClassName}
-                style={primaryCtaTextStyle}
-              >
-                <Link href="/calendar">
-                  Go to app
-                  <ArrowRight className="size-4" />
-                </Link>
-              </Button>
+            <div className="flex flex-col items-start gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className={primaryCtaClassName}
+                  style={primaryCtaTextStyle}
+                >
+                  <Link href="/calendar">
+                    Go to app
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link href="#why-goalmaxxing">Read why</Link>
+                </Button>
+              </div>
               <Button asChild variant="outline" size="lg">
-                <Link href="#why-goalmaxxing">Read why</Link>
+                <Link href="/demo" target="_blank" rel="noopener noreferrer">
+                  Try demo
+                </Link>
               </Button>
             </div>
           </div>
@@ -91,6 +98,11 @@ export function LandingPage() {
             </Button>
             <Button asChild size="lg" variant="ghost">
               <Link href="/login">Log in</Link>
+            </Button>
+            <Button asChild size="lg" variant="ghost">
+              <Link href="/demo" target="_blank" rel="noopener noreferrer">
+                Try demo
+              </Link>
             </Button>
           </div>
         </section>
