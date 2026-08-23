@@ -1,7 +1,5 @@
-"use client";
-
-import { SocialTab } from "@/features/social/social-tab";
+import { SettingsTab } from "@/features/settings/settings-tab";
 
 export default function DemoSettingsPage() {
-  return <SocialTab />;
+  return <SettingsTab />;
 }
