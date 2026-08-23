@@ -11,6 +11,10 @@ const insightsTabMock = vi.fn((props: unknown) => (
   />
 ));
 
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 vi.mock("@/features/social/duo/use-duo-surface", () => ({
   useDuoSurface: (...args: unknown[]) => useDuoSurfaceMock(...args),
 }));
