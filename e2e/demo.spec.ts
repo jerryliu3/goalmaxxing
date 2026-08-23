@@ -27,4 +27,17 @@ test.describe("public demo sandbox", () => {
     ).toBeVisible();
     expect(leaked).toEqual([]);
   });
+
+  test("completing a goal updates this tab", async ({ page }) => {
+    await page.goto("/demo/calendar");
+    await expect(page.getByText("Read 20 pages")).toBeVisible({ timeout: 20_000 });
+
+    const card = page.locator("[data-slot=card]").filter({ hasText: "Read 20 pages" });
+    await card.getByRole("button", { name: /Mark goal as complete|Complete goal for/ }).click();
+    await expect(
+      card.getByRole("button", {
+        name: /Unmark goal completion for current period|Remove completion for/,
+      })
+    ).toBeVisible();
+  });
 });

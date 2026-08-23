@@ -1,4 +1,5 @@
 import {
+  DEMO_ALEX_ID,
   DEMO_CHALLENGE_ID,
   DEMO_CORRELATION_ID,
   DEMO_SEASON_ID,
@@ -14,7 +15,8 @@ import {
   buildDemoProgressContext,
   buildDemoXpProfile,
 } from "@/features/demo/demo-projections";
-import { getDemoStore, hasDemoStore } from "@/features/demo/demo-store";
+import { getDemoStore, hasDemoStore, applyDemoDraftCommands, setCompletionFact } from "@/features/demo/demo-store";
+import { plannerDraftCommandSchema } from "@/lib/planner/draft-commands";
 import { mapTeamStateRpcRow, type TeamStateRpcRow } from "@cadence/shared/social/team";
 
 const DEMO_ORIGIN = "http://demo.local";
@@ -265,6 +267,65 @@ export async function handleDemoFetch(
   }
   if (pathname === "/api/social/team" && method === "GET") {
     return jsonResponse(socialTeamPayload());
+  }
+
+  if (pathname === "/api/completions" && method === "POST") {
+    const snapshot = requireStore();
+    const body = await readJsonBody(init);
+    const goalId = typeof body.goalId === "string" ? body.goalId : "";
+    const date = typeof body.date === "string" ? body.date : "";
+    const desiredFactState =
+      body.desiredFactState === "present" || body.desiredFactState === "absent"
+        ? body.desiredFactState
+        : null;
+    if (!goalId || !date || !desiredFactState) {
+      return jsonResponse(
+        {
+          code: "validation_failed",
+          message: "Provide a goal, date, and completion state.",
+          correlationId: DEMO_CORRELATION_ID,
+        },
+        400
+      );
+    }
+    if (desiredFactState === "present" && date > snapshot.asOfDate) {
+      return jsonResponse(
+        {
+          code: "future_completion_not_allowed",
+          message: "Completions can only be added for today or a past date.",
+          correlationId: DEMO_CORRELATION_ID,
+        },
+        422
+      );
+    }
+    setCompletionFact({
+      goalId,
+      date,
+      userId: DEMO_ALEX_ID,
+      desiredFactState,
+    });
+    return jsonResponse({
+      schemaVersion: "1",
+      goalId,
+      date,
+      factState: desiredFactState,
+      correlationId: DEMO_CORRELATION_ID,
+    });
+  }
+
+  if (pathname === "/api/planner/save" && method === "POST") {
+    const body = await readJsonBody(init);
+    const parsedCommands = plannerDraftCommandSchema.array().safeParse(
+      body.draftCommands ?? []
+    );
+    if (parsedCommands.success) {
+      applyDemoDraftCommands(parsedCommands.data);
+    }
+    return jsonResponse({
+      schemaVersion: "1",
+      replayed: false,
+      correlationId: DEMO_CORRELATION_ID,
+    });
   }
 
   return demoUnsupportedResponse();

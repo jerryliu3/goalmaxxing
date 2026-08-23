@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { PlannerWorkUnit } from "@cadence/shared/planner/context";
 import { DEMO_ALEX_ID, DEMO_UNSUPPORTED_CODE } from "@/features/demo/demo-ids";
 import { handleDemoFetch } from "@/features/demo/demo-fetch";
 import { buildDemoSnapshot } from "@/features/demo/demo-snapshot";
@@ -7,6 +8,8 @@ import {
   initDemoStore,
   setCompletionFact,
 } from "@/features/demo/demo-store";
+import { planDraftMove } from "@/features/planner/plan-draft-move";
+import { buildPlannerDayEntry } from "@/features/planner/test-fixtures";
 
 describe("demo fetch router", () => {
   afterEach(() => {
@@ -120,7 +123,57 @@ describe("demo fetch router", () => {
     expect(payload.conversations).toEqual([]);
   });
 
-  it("keeps unsupported writes from pretending to succeed", async () => {
+  it("gives uncredited demo sessions a movable window", async () => {
+    initDemoStore(buildDemoSnapshot("2026-08-22"));
+    const originalFetch = vi.fn();
+    const response = await handleDemoFetch(
+      "/api/planner/context?scopeMonth=2026-08",
+      { method: "GET" },
+      originalFetch as unknown as typeof fetch
+    );
+    const payload = (await response.json()) as {
+      preview: { workUnits: PlannerWorkUnit[] };
+    };
+    const uncredited = payload.preview.workUnits.filter(
+      (unit) => unit.creditState === "uncredited" && unit.scheduledDate
+    );
+    const credited = payload.preview.workUnits.filter(
+      (unit) => unit.creditState === "credited"
+    );
+    const asOfSession = uncredited.find((unit) => unit.scheduledDate === "2026-08-22");
+
+    expect(uncredited.length).toBeGreaterThan(0);
+    expect(credited.length).toBeGreaterThan(0);
+    expect(
+      uncredited.every(
+        (unit) =>
+          unit.draftMoveWindow != null &&
+          unit.scheduledDate != null &&
+          unit.scheduledDate >= unit.draftMoveWindow.start &&
+          unit.scheduledDate <= unit.draftMoveWindow.end
+      )
+    ).toBe(true);
+    expect(
+      credited.every(
+        (unit) => unit.draftMoveWindow == null && unit.placementWindow == null
+      )
+    ).toBe(true);
+    expect(asOfSession).toBeDefined();
+    expect(
+      planDraftMove({
+        entry: buildPlannerDayEntry({
+          creditState: "uncredited",
+        }),
+        nextDate: "2026-08-23",
+        scopeMonth: "2026-08",
+        previewUnit: asOfSession,
+        conflictKeys: undefined,
+        completionFactConflict: undefined,
+      })
+    ).toEqual({ ok: true, scheduledDate: "2026-08-23" });
+  });
+
+  it("applies completion writes to the in-memory snapshot", async () => {
     initDemoStore(buildDemoSnapshot("2026-08-22"));
     const originalFetch = vi.fn();
     const response = await handleDemoFetch(
@@ -128,11 +181,110 @@ describe("demo fetch router", () => {
       {
         method: "POST",
         body: JSON.stringify({
-          goalId: "10000000-0000-4000-8000-000000000001",
+          goalId: "10000000-0000-4000-8000-000000000003",
           date: "2026-08-22",
           desiredFactState: "present",
           timezone: "America/New_York",
         }),
+      },
+      originalFetch as unknown as typeof fetch
+    );
+    const payload = (await response.json()) as { factState: string };
+    const progress = await handleDemoFetch(
+      "/api/progress/context?asOfDate=2026-08-22&timezone=America%2FNew_York&viewDate=2026-08-22",
+      { method: "GET" },
+      originalFetch as unknown as typeof fetch
+    );
+    const progressPayload = (await progress.json()) as {
+      facts: Array<{ goal_id: string; completed_on: string }>;
+    };
+
+    expect(originalFetch).not.toHaveBeenCalled();
+    expect(response.ok).toBe(true);
+    expect(payload.factState).toBe("present");
+    expect(
+      progressPayload.facts.some(
+        (fact) =>
+          fact.goal_id === "10000000-0000-4000-8000-000000000003" &&
+          fact.completed_on === "2026-08-22"
+      )
+    ).toBe(true);
+  });
+
+  it("applies calendar move commands on local save", async () => {
+    initDemoStore(buildDemoSnapshot("2026-08-22"));
+    const originalFetch = vi.fn();
+    const context = await handleDemoFetch(
+      "/api/planner/context?scopeMonth=2026-08",
+      { method: "GET" },
+      originalFetch as unknown as typeof fetch
+    );
+    const before = (await context.json()) as {
+      activePlan: {
+        items: Array<{
+          id: string;
+          unit_key: string;
+          scheduled_date: string | null;
+          plan_goal_id: string;
+        }>;
+      };
+    };
+    const strengthItem = before.activePlan.items.find(
+      (item) =>
+        item.plan_goal_id === "10000000-0000-4000-8000-000000000001" &&
+        item.scheduled_date === "2026-08-15"
+    );
+    expect(strengthItem).toBeTruthy();
+
+    const save = await handleDemoFetch(
+      "/api/planner/save",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          expectedDigest: "a".repeat(64),
+          startDate: "2026-08-01",
+          endDate: "2026-08-31",
+          previewHash: "b".repeat(64),
+          confirmationHash: null,
+          draftCommands: [
+            {
+              id: "80000000-0000-4000-8000-000000000001",
+              sequence: 0,
+              kind: "move_item",
+              goalId: strengthItem?.plan_goal_id,
+              unitKey: strengthItem?.unit_key,
+              scheduledDate: "2026-08-16",
+              sourceDate: "2026-08-15",
+            },
+          ],
+        }),
+      },
+      originalFetch as unknown as typeof fetch
+    );
+    expect(save.ok).toBe(true);
+
+    const after = await handleDemoFetch(
+      "/api/planner/context?scopeMonth=2026-08",
+      { method: "GET" },
+      originalFetch as unknown as typeof fetch
+    );
+    const afterPayload = (await after.json()) as {
+      activePlan: { items: Array<{ id: string; scheduled_date: string | null }> };
+    };
+    expect(
+      afterPayload.activePlan.items.find((item) => item.id === strengthItem?.id)
+        ?.scheduled_date
+    ).toBe("2026-08-16");
+  });
+
+  it("keeps unsupported writes from pretending to succeed", async () => {
+    initDemoStore(buildDemoSnapshot("2026-08-22"));
+    const originalFetch = vi.fn();
+    const response = await handleDemoFetch(
+      "/api/goals",
+      {
+        method: "POST",
+        body: JSON.stringify({ title: "New goal" }),
       },
       originalFetch as unknown as typeof fetch
     );
