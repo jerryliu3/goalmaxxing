@@ -204,7 +204,7 @@ export async function handleDemoFetch(
       correlationId: DEMO_CORRELATION_ID,
       freshness: {
         serverNow,
-        nextExpectedRefreshAt: serverNow,
+        nextExpectedRefreshAt: `${snapshot.asOfDate}T23:59:59.000Z`,
         leaderboardRefreshedAt: serverNow,
         challengesRefreshedAt: serverNow,
       },

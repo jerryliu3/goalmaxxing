@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchSocialFreshness } from "@/features/social/data";
 import type { SocialFreshness } from "@/features/social/types";
+import { isBrowserDemoPath } from "@/lib/navigation/demo-path";
 import { cn } from "@/lib/utils";
 
 const SOCIAL_REFRESH_INTERVAL_MS = 60 * 1000;
@@ -50,6 +51,7 @@ export function SocialFreshnessIndicator({
   refreshToken = 0,
   onRefreshRequested,
 }: SocialFreshnessIndicatorProps) {
+  const hidden = isBrowserDemoPath();
   const [snapshot, setSnapshot] = useState<FreshnessSnapshot | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [clientNowMs, setClientNowMs] = useState(() => Date.now());
@@ -69,22 +71,28 @@ export function SocialFreshnessIndicator({
   }, []);
 
   useEffect(() => {
+    if (hidden) {
+      return;
+    }
     const timeoutId = window.setTimeout(() => {
       void loadFreshness();
     }, 0);
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [loadFreshness, refreshToken]);
+  }, [hidden, loadFreshness, refreshToken]);
 
   useEffect(() => {
+    if (hidden) {
+      return;
+    }
     const intervalId = window.setInterval(() => {
       setClientNowMs(Date.now());
     }, 1000);
     return () => {
       window.clearInterval(intervalId);
     };
-  }, []);
+  }, [hidden]);
 
   const secondsUntilNextRefresh = useMemo(() => {
     if (!snapshot) {
@@ -101,7 +109,12 @@ export function SocialFreshnessIndicator({
   }, [clientNowMs, snapshot]);
 
   useEffect(() => {
-    if (!snapshot || secondsUntilNextRefresh === null || secondsUntilNextRefresh > 0) {
+    if (
+      hidden ||
+      !snapshot ||
+      secondsUntilNextRefresh === null ||
+      secondsUntilNextRefresh > 0
+    ) {
       return;
     }
     if (
@@ -116,7 +129,7 @@ export function SocialFreshnessIndicator({
     void loadFreshness().finally(() => {
       refreshInFlightRef.current = false;
     });
-  }, [loadFreshness, onRefreshRequested, secondsUntilNextRefresh, snapshot]);
+  }, [hidden, loadFreshness, onRefreshRequested, secondsUntilNextRefresh, snapshot]);
 
   const indicatorClassName = useMemo(
     () =>
@@ -130,6 +143,10 @@ export function SocialFreshnessIndicator({
       ),
     [errorMessage, snapshot]
   );
+
+  if (hidden) {
+    return null;
+  }
 
   if (!snapshot) {
     return (

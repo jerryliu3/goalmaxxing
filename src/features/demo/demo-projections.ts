@@ -25,7 +25,7 @@ import {
   DEMO_TIMEZONE,
   DEMO_WEEK_STARTS_ON,
 } from "@/features/demo/demo-ids";
-import { isoDateTime } from "@/features/demo/demo-dates";
+import { addDaysIso, isoDateTime } from "@/features/demo/demo-dates";
 import type { DemoSnapshot } from "@/features/demo/demo-snapshot";
 import { getDemoStore } from "@/features/demo/demo-store";
 import type { Completion } from "@/lib/goals/types";
@@ -86,8 +86,14 @@ export function buildDemoPlannerContext(
     start_date: goal.start_date,
     end_date: goal.end_date,
   }));
-  const monthItems = snapshot.plannerItems.filter((item) =>
-    alexGoals.some((goal) => goal.id === item.goal_id)
+  const monthStart = `${scopeMonth}-01`;
+  const windowStart = addDaysIso(monthStart, -40);
+  const windowEnd = addDaysIso(monthStart, 70);
+  const monthItems = snapshot.plannerItems.filter(
+    (item) =>
+      item.scheduled_date >= windowStart &&
+      item.scheduled_date <= windowEnd &&
+      alexGoals.some((goal) => goal.id === item.goal_id)
   );
   const activeItems: PlannerActiveItemSnapshot[] = monthItems.map((item) => {
     const credited = creditedCompletionForItem(snapshot, item);

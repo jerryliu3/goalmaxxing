@@ -32,8 +32,50 @@ describe("buildDemoSnapshot", () => {
     ).toBeTruthy();
   });
 
+  it("keeps one in-progress checklist goal per category", () => {
+    const activeAlexGoals = alexGoalsFromSnapshot(snapshot).filter(
+      (goal) => goal.end_date === null || goal.end_date >= "2026-08-22"
+    );
+    expect(activeAlexGoals.map((goal) => goal.title).sort()).toEqual([
+      "Conference proposal",
+      "Neighborhood cleanup",
+      "Read 20 pages",
+      "Strength",
+    ]);
+    expect(new Set(activeAlexGoals.map((goal) => goal.category_key)).size).toBe(4);
+  });
+
+  it("keeps daily habits sparse and targeted below half the date span", () => {
+    const dailyGoals = snapshot.goals.filter(
+      (goal) => goal.frequency_type === "recurring" && goal.recurrence_interval === "daily"
+    );
+    expect(dailyGoals).toHaveLength(1);
+    const reading = dailyGoals[0];
+    expect(reading?.title).toBe("Read 20 pages");
+    expect(reading?.end_date).toBeTruthy();
+    const span =
+      reading && reading.end_date
+        ? Math.floor(
+            (Date.parse(`${reading.end_date}T00:00:00Z`) -
+              Date.parse(`${reading.start_date}T00:00:00Z`)) /
+              86_400_000
+          ) + 1
+        : 0;
+    expect(reading?.target_count).toBeGreaterThan(0);
+    expect(reading?.target_count ?? 0).toBeLessThan(span / 2);
+    expect(
+      snapshot.plannerItems.filter(
+        (item) =>
+          item.goal_id === DEMO_GOAL_IDS.readPages && item.scheduled_date === "2026-08-22"
+      )
+    ).toHaveLength(1);
+  });
+
   it("includes history, a duo, one challenge, and a leaderboard Alex does not lead", () => {
+    const completionDates = snapshot.completions.map((completion) => completion.completed_on);
     expect(snapshot.completions.length).toBeGreaterThan(20);
+    expect(completionDates.some((date) => date <= "2025-09-22")).toBe(true);
+    expect(completionDates.some((date) => date >= "2026-07-01")).toBe(true);
     expect(
       snapshot.completions.some(
         (completion) =>

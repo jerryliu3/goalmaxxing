@@ -7,7 +7,14 @@ import type {
   SocialFeedEvent,
 } from "@/features/social/types";
 import type { DuoContextState } from "@cadence/shared/social/duo";
-import { addDaysIso, eachDateInclusive, isoDateTime, weekdayUtc } from "@/features/demo/demo-dates";
+import {
+  addDaysIso,
+  countDaysInclusive,
+  eachDateInclusive,
+  isoDateTime,
+  spreadIsoDates,
+  weekdayUtc,
+} from "@/features/demo/demo-dates";
 import {
   DEMO_ALEX_ID,
   DEMO_CHALLENGE_ID,
@@ -164,7 +171,9 @@ function makeItem(
   const unitKey =
     kind === "milestone_sequence"
       ? `milestone:${scheduledDate}`
-      : `cadence:${scheduledDate}`;
+      : kind === "deadline_total"
+        ? `deadline:${scheduledDate}`
+        : `cadence:${scheduledDate}`;
   return {
     id: itemId(goal.id, unitKey),
     goal_id: goal.id,
@@ -178,13 +187,39 @@ function makeItem(
   };
 }
 
+function includeAsOfDate(dates: string[], asOfDate: string) {
+  if (dates.includes(asOfDate)) {
+    return dates;
+  }
+  if (dates.length === 0) {
+    return [asOfDate];
+  }
+  const swapAt = Math.min(
+    dates.length - 1,
+    Math.max(
+      0,
+      dates.findIndex((date) => date >= asOfDate) === -1
+        ? dates.length - 1
+        : dates.findIndex((date) => date >= asOfDate)
+    )
+  );
+  const next = [...dates];
+  next[swapAt] = asOfDate;
+  return [...new Set(next)].sort();
+}
+
 export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
-  const createdDate = addDaysIso(asOfDate, -56);
-  const createdAt = isoDateTime(createdDate, 9);
-  const historyStart = addDaysIso(asOfDate, -56);
-  const itemStart = addDaysIso(asOfDate, -70);
+  const yearStart = addDaysIso(asOfDate, -365);
+  const createdAt = isoDateTime(yearStart, 9);
+  const historyStart = yearStart;
+  const itemStart = yearStart;
   const itemEnd = addDaysIso(asOfDate, 40);
+  const historicalEnd = addDaysIso(asOfDate, -21);
+  const readEnd = addDaysIso(asOfDate, 28);
   const windowDates = eachDateInclusive(itemStart, itemEnd);
+  const asOfWeekday = weekdayUtc(asOfDate);
+  const readSpanDays = countDaysInclusive(yearStart, readEnd);
+  const readTarget = Math.max(18, Math.floor((readSpanDays - 1) / 8));
 
   const alex = makeProfile({
     id: DEMO_ALEX_ID,
@@ -209,8 +244,8 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       color: "#10b981",
       frequencyType: "recurring",
       recurrenceInterval: "weekly",
-      targetCount: 1,
-      startDate: createdDate,
+      targetCount: null,
+      startDate: yearStart,
       endDate: null,
       createdAt,
     }),
@@ -223,9 +258,9 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       color: "#10b981",
       frequencyType: "recurring",
       recurrenceInterval: "weekly",
-      targetCount: 1,
-      startDate: createdDate,
-      endDate: null,
+      targetCount: null,
+      startDate: yearStart,
+      endDate: historicalEnd,
       createdAt,
     }),
     makeGoal({
@@ -237,9 +272,9 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       color: "#6366f1",
       frequencyType: "recurring",
       recurrenceInterval: "daily",
-      targetCount: 1,
-      startDate: createdDate,
-      endDate: null,
+      targetCount: readTarget,
+      startDate: yearStart,
+      endDate: readEnd,
       createdAt,
     }),
     makeGoal({
@@ -251,9 +286,9 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       color: "#8b5cf6",
       frequencyType: "recurring",
       recurrenceInterval: "weekly",
-      targetCount: 1,
-      startDate: createdDate,
-      endDate: null,
+      targetCount: null,
+      startDate: yearStart,
+      endDate: historicalEnd,
       createdAt,
     }),
     makeGoal({
@@ -265,9 +300,9 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       color: "#8b5cf6",
       frequencyType: "recurring",
       recurrenceInterval: "weekly",
-      targetCount: 1,
-      startDate: createdDate,
-      endDate: null,
+      targetCount: null,
+      startDate: yearStart,
+      endDate: historicalEnd,
       createdAt,
     }),
     makeGoal({
@@ -281,7 +316,7 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       recurrenceInterval: null,
       targetCount: 3,
       milestoneNames: ["Outline talk", "Draft abstract", "Submit proposal"],
-      startDate: createdDate,
+      startDate: yearStart,
       endDate: addDaysIso(asOfDate, 21),
       createdAt,
     }),
@@ -294,9 +329,9 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       color: "#6366f1",
       frequencyType: "recurring",
       recurrenceInterval: "monthly",
-      targetCount: 1,
-      startDate: addDaysIso(asOfDate, -120),
-      endDate: null,
+      targetCount: null,
+      startDate: yearStart,
+      endDate: historicalEnd,
       createdAt,
     }),
     makeGoal({
@@ -308,8 +343,8 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       color: "#f43f5e",
       frequencyType: "recurring",
       recurrenceInterval: "weekly",
-      targetCount: 1,
-      startDate: createdDate,
+      targetCount: null,
+      startDate: yearStart,
       endDate: null,
       teamId: DEMO_TEAM_ID,
       createdAt,
@@ -323,8 +358,8 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       color: "#10b981",
       frequencyType: "recurring",
       recurrenceInterval: "weekly",
-      targetCount: 1,
-      startDate: createdDate,
+      targetCount: null,
+      startDate: yearStart,
       endDate: null,
       createdAt,
     }),
@@ -336,9 +371,9 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       categoryLabel: "Personal",
       color: "#6366f1",
       frequencyType: "recurring",
-      recurrenceInterval: "daily",
-      targetCount: 1,
-      startDate: createdDate,
+      recurrenceInterval: "weekly",
+      targetCount: null,
+      startDate: yearStart,
       endDate: null,
       createdAt,
     }),
@@ -346,12 +381,13 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
 
   const goalById = new Map(goals.map((goal) => [goal.id, goal]));
   const weeklyWeekday: Record<string, number> = {
-    [DEMO_GOAL_IDS.strength]: 3,
+    [DEMO_GOAL_IDS.strength]: asOfWeekday,
     [DEMO_GOAL_IDS.tempoRun]: 6,
     [DEMO_GOAL_IDS.launchCopy]: 2,
     [DEMO_GOAL_IDS.weeklyReview]: 0,
-    [DEMO_GOAL_IDS.neighborhoodCleanup]: 4,
+    [DEMO_GOAL_IDS.neighborhoodCleanup]: (asOfWeekday + 4) % 7,
     [DEMO_GOAL_IDS.jordanYoga]: 1,
+    [DEMO_GOAL_IDS.jordanJournal]: 3,
   };
 
   const plannerItems: DemoPlannerItem[] = [];
@@ -370,15 +406,27 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       });
       continue;
     }
-    if (goal.recurrence_interval === "daily") {
-      for (const date of windowDates) {
-        plannerItems.push(makeItem(goal, date, "cadence", null));
+    if (typeof goal.target_count === "number" && goal.target_count > 0) {
+      const rangeEnd = goal.end_date ?? itemEnd;
+      let dates = spreadIsoDates(goal.start_date, rangeEnd, goal.target_count);
+      if (goal.id === DEMO_GOAL_IDS.readPages) {
+        dates = includeAsOfDate(dates, asOfDate);
+        goal.target_count = dates.length;
+      }
+      for (const date of dates) {
+        plannerItems.push(makeItem(goal, date, "deadline_total", null));
       }
       continue;
     }
     if (goal.recurrence_interval === "weekly") {
       const weekday = weeklyWeekday[goal.id] ?? 3;
       for (const date of windowDates) {
+        if (date < goal.start_date) {
+          continue;
+        }
+        if (goal.end_date && date > goal.end_date) {
+          continue;
+        }
         if (weekdayUtc(date) === weekday) {
           plannerItems.push(makeItem(goal, date, "cadence", null));
         }
@@ -387,6 +435,12 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
     }
     if (goal.recurrence_interval === "monthly") {
       for (const date of windowDates) {
+        if (date < goal.start_date) {
+          continue;
+        }
+        if (goal.end_date && date > goal.end_date) {
+          continue;
+        }
         if (date.endsWith("-15")) {
           plannerItems.push(makeItem(goal, date, "cadence", null));
         }
@@ -395,19 +449,6 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
   }
 
   const completions: Completion[] = [];
-  const shouldCompleteDaily = (date: string, userId: string) => {
-    if (date >= asOfDate) {
-      return false;
-    }
-    const weekday = weekdayUtc(date);
-    if (weekday === 0) {
-      return false;
-    }
-    if (date.endsWith("3") || date.endsWith("7")) {
-      return userId === DEMO_JORDAN_ID;
-    }
-    return true;
-  };
   const shouldCompleteWeekly = (date: string, goalId: string) => {
     if (date >= asOfDate) {
       return false;
@@ -433,8 +474,8 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       }
       continue;
     }
-    if (goal.recurrence_interval === "daily") {
-      if (shouldCompleteDaily(item.scheduled_date, goal.owner_id)) {
+    if (item.requirement_kind === "deadline_total") {
+      if (item.scheduled_date < asOfDate && weekdayUtc(item.scheduled_date) !== 0) {
         completions.push(makeCompletion(goal.id, goal.owner_id, item.scheduled_date));
       }
       continue;

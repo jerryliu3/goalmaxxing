@@ -33,6 +33,28 @@ export function eachDateInclusive(start: string, end: string) {
   return dates;
 }
 
+export function countDaysInclusive(start: string, end: string) {
+  if (!ISO_DATE.test(start) || !ISO_DATE.test(end) || end < start) {
+    throw new RangeError(`Invalid ISO date range: ${start}..${end}`);
+  }
+  const startMs = Date.parse(`${start}T00:00:00Z`);
+  const endMs = Date.parse(`${end}T00:00:00Z`);
+  return Math.floor((endMs - startMs) / 86_400_000) + 1;
+}
+
+export function spreadIsoDates(start: string, end: string, count: number) {
+  if (count <= 0) {
+    return [];
+  }
+  if (count === 1) {
+    return [start];
+  }
+  const span = countDaysInclusive(start, end) - 1;
+  return Array.from({ length: count }, (_, index) =>
+    addDaysIso(start, Math.round((span * index) / (count - 1)))
+  );
+}
+
 export function monthKey(date: string) {
   return date.slice(0, 7);
 }
