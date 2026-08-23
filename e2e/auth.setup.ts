@@ -57,11 +57,6 @@ setup("authenticate seeded Alice account", async ({ page }) => {
       );
     }
   });
-  const startJourney = page.getByRole("button", { name: "Start journey" });
-  if (await startJourney.isVisible()) {
-    await startJourney.click();
-  }
-
   await mkdir(path.dirname(authStatePath), { recursive: true });
   await page.context().storageState({ path: authStatePath });
 });

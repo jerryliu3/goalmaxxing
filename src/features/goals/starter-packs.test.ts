@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   STARTER_PACKS,
+  type StarterPackKey,
   buildStarterPackRows,
+  clearAllStarterPacksSeen,
   isStarterPacksSeen,
   markStarterPacksSeen,
   resolveStarterPackKey,
@@ -84,5 +86,25 @@ describe("starter packs", () => {
     markStarterPacksSeen("user-1");
     expect(isStarterPacksSeen("user-1")).toBe(true);
     expect(isStarterPacksSeen("user-2")).toBe(false);
+  });
+
+  it("clears every starter-pack seen key", () => {
+    window.localStorage.clear();
+    markStarterPacksSeen("user-1");
+    markStarterPacksSeen("user-2");
+    clearAllStarterPacksSeen();
+    expect(isStarterPacksSeen("user-1")).toBe(false);
+    expect(isStarterPacksSeen("user-2")).toBe(false);
+  });
+
+  it("keeps pack end dates on civil-day arithmetic across DST", () => {
+    const rows = buildStarterPackRows("health", "2026-03-08");
+    expect(rows[0]?.end_date).toBe("2026-06-06");
+  });
+
+  it("rejects unknown starter pack keys", () => {
+    expect(() =>
+      buildStarterPackRows("finance" as StarterPackKey, "2026-08-01")
+    ).toThrow(/Unsupported starter pack/);
   });
 });
