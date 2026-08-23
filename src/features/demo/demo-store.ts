@@ -1,4 +1,4 @@
-import { buildDemoSnapshot, type DemoSnapshot } from "@/features/demo/demo-snapshot";
+import { sha256Hex } from "@/lib/planner/canonical";
 import type { PlannerDraftCommand } from "@/lib/planner/draft-commands";
 
 let seed: DemoSnapshot | null = null;
@@ -66,7 +66,7 @@ export function setCompletionFact({
     return;
   }
   current.completions.push({
-    id: `30000000-0000-4000-8000-${goalId.slice(-8)}${date.replaceAll("-", "").slice(-4)}`,
+    id: `30000000-0000-4000-8000-${sha256Hex(`${goalId}:${date}`).slice(0, 12)}`,
     goal_id: goalId,
     user_id: userId,
     completed_on: date,

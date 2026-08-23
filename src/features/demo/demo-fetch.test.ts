@@ -120,7 +120,7 @@ describe("demo fetch router", () => {
     expect(payload.conversations).toEqual([]);
   });
 
-  it("keeps unsupported writes from pretending to succeed", async () => {
+  it("applies completion writes to the in-memory snapshot", async () => {
     initDemoStore(buildDemoSnapshot("2026-08-22"));
     const originalFetch = vi.fn();
     const response = await handleDemoFetch(
@@ -128,11 +128,110 @@ describe("demo fetch router", () => {
       {
         method: "POST",
         body: JSON.stringify({
-          goalId: "10000000-0000-4000-8000-000000000001",
+          goalId: "10000000-0000-4000-8000-000000000003",
           date: "2026-08-22",
           desiredFactState: "present",
           timezone: "America/New_York",
         }),
+      },
+      originalFetch as unknown as typeof fetch
+    );
+    const payload = (await response.json()) as { factState: string };
+    const progress = await handleDemoFetch(
+      "/api/progress/context?asOfDate=2026-08-22&timezone=America%2FNew_York&viewDate=2026-08-22",
+      { method: "GET" },
+      originalFetch as unknown as typeof fetch
+    );
+    const progressPayload = (await progress.json()) as {
+      facts: Array<{ goal_id: string; completed_on: string }>;
+    };
+
+    expect(originalFetch).not.toHaveBeenCalled();
+    expect(response.ok).toBe(true);
+    expect(payload.factState).toBe("present");
+    expect(
+      progressPayload.facts.some(
+        (fact) =>
+          fact.goal_id === "10000000-0000-4000-8000-000000000003" &&
+          fact.completed_on === "2026-08-22"
+      )
+    ).toBe(true);
+  });
+
+  it("applies calendar move commands on local save", async () => {
+    initDemoStore(buildDemoSnapshot("2026-08-22"));
+    const originalFetch = vi.fn();
+    const context = await handleDemoFetch(
+      "/api/planner/context?scopeMonth=2026-08",
+      { method: "GET" },
+      originalFetch as unknown as typeof fetch
+    );
+    const before = (await context.json()) as {
+      activePlan: {
+        items: Array<{
+          id: string;
+          unit_key: string;
+          scheduled_date: string | null;
+          plan_goal_id: string;
+        }>;
+      };
+    };
+    const strengthItem = before.activePlan.items.find(
+      (item) =>
+        item.plan_goal_id === "10000000-0000-4000-8000-000000000001" &&
+        item.scheduled_date === "2026-08-19"
+    );
+    expect(strengthItem).toBeTruthy();
+
+    const save = await handleDemoFetch(
+      "/api/planner/save",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          expectedDigest: "a".repeat(64),
+          startDate: "2026-08-01",
+          endDate: "2026-08-31",
+          previewHash: "b".repeat(64),
+          confirmationHash: null,
+          draftCommands: [
+            {
+              id: "80000000-0000-4000-8000-000000000001",
+              sequence: 0,
+              kind: "move_item",
+              goalId: strengthItem?.plan_goal_id,
+              unitKey: strengthItem?.unit_key,
+              scheduledDate: "2026-08-20",
+              sourceDate: "2026-08-19",
+            },
+          ],
+        }),
+      },
+      originalFetch as unknown as typeof fetch
+    );
+    expect(save.ok).toBe(true);
+
+    const after = await handleDemoFetch(
+      "/api/planner/context?scopeMonth=2026-08",
+      { method: "GET" },
+      originalFetch as unknown as typeof fetch
+    );
+    const afterPayload = (await after.json()) as {
+      activePlan: { items: Array<{ id: string; scheduled_date: string | null }> };
+    };
+    expect(
+      afterPayload.activePlan.items.find((item) => item.id === strengthItem?.id)
+        ?.scheduled_date
+    ).toBe("2026-08-20");
+  });
+
+  it("keeps unsupported writes from pretending to succeed", async () => {
+    initDemoStore(buildDemoSnapshot("2026-08-22"));
+    const originalFetch = vi.fn();
+    const response = await handleDemoFetch(
+      "/api/goals",
+      {
+        method: "POST",
+        body: JSON.stringify({ title: "New goal" }),
       },
       originalFetch as unknown as typeof fetch
     );
