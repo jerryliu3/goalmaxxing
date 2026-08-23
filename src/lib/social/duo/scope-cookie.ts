@@ -1,4 +1,5 @@
 import type { DuoScope } from "@cadence/shared/social/duo";
+import { isBrowserDemoPath } from "@/lib/navigation/demo-path";
 
 export const DUO_SCOPE_COOKIE_NAME = "duo_scope";
 const DUO_SCOPE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 90;
@@ -11,7 +12,7 @@ export function parseDuoScopeCookieValue(value: string | null | undefined): DuoS
 }
 
 export function writeDuoScopeCookie(scope: DuoScope | null) {
-  if (typeof document === "undefined") {
+  if (typeof document === "undefined" || isBrowserDemoPath()) {
     return;
   }
   if (!scope) {

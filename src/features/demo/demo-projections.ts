@@ -1,0 +1,410 @@
+import { buildCompletableGoalIds, selectCompletableGoals } from "@cadence/shared/goals/completable-goals";
+import { selectViewerVisibleGoals } from "@cadence/shared/goals/visible-goals";
+import { defaultNotificationPreferences } from "@cadence/shared/notifications/preferences";
+import type { ProgressContextResponse } from "@cadence/shared/goals/progress-context";
+import type {
+  PlannerActiveGoalSnapshot,
+  PlannerActiveItemSnapshot,
+  PlannerContextPayload,
+  PlannerWorkUnit,
+} from "@cadence/shared/planner/context";
+import type { InsightsStatsResponse } from "@/lib/insights/types";
+import { buildInsightsStatsGroup } from "@/lib/insights/metrics";
+import { getGoalProgressSnapshot } from "@/lib/goals/progress";
+import { getAnchoredPeriod } from "@/lib/goals/periods";
+import { isTargetedRecurringGoal } from "@/lib/planner/requirements";
+import { sha256Hex } from "@/lib/planner/canonical";
+import { createDefaultPlannerPolicy } from "@/lib/planner/policy";
+import { progressionForTotalXp } from "@/lib/xp/progression";
+import {
+  DEMO_ALEX_ID,
+  DEMO_CORRELATION_ID,
+  DEMO_JORDAN_ID,
+  DEMO_PLAN_ID,
+  DEMO_TEAM_ID,
+  DEMO_TIMEZONE,
+  DEMO_WEEK_STARTS_ON,
+} from "@/features/demo/demo-ids";
+import { isoDateTime } from "@/features/demo/demo-dates";
+import type { DemoSnapshot } from "@/features/demo/demo-snapshot";
+import { getDemoStore } from "@/features/demo/demo-store";
+import type { Completion } from "@/lib/goals/types";
+
+const WEEKLY_ANCHOR = { weekStartsOn: DEMO_WEEK_STARTS_ON };
+
+function goalsForSubject(snapshot: DemoSnapshot, subjectUserId: string) {
+  if (subjectUserId === DEMO_ALEX_ID) {
+    return selectViewerVisibleGoals({
+      goals: snapshot.goals.filter((goal) => !goal.is_deleted),
+      partnerId: DEMO_JORDAN_ID,
+      memberTeamIds: [DEMO_TEAM_ID],
+    });
+  }
+  return snapshot.goals.filter(
+    (goal) => goal.owner_id === subjectUserId && goal.team_id == null && !goal.is_deleted
+  );
+}
+
+function completionsForSubject(snapshot: DemoSnapshot, subjectUserId: string) {
+  return snapshot.completions.filter((completion) => completion.user_id === subjectUserId);
+}
+
+function groupCompletions(completions: Completion[]) {
+  const grouped = new Map<string, Completion[]>();
+  for (const completion of completions) {
+    const existing = grouped.get(completion.goal_id) ?? [];
+    existing.push(completion);
+    grouped.set(completion.goal_id, existing);
+  }
+  return grouped;
+}
+
+function creditedCompletionForItem(snapshot: DemoSnapshot, item: DemoSnapshot["plannerItems"][number]) {
+  return snapshot.completions.find(
+    (completion) =>
+      completion.goal_id === item.goal_id && completion.completed_on === item.scheduled_date
+  );
+}
+
+export function buildDemoPlannerContext(
+  scopeMonth: string,
+  snapshot = getDemoStore()
+): PlannerContextPayload {
+  const alexGoals = goalsForSubject(snapshot, DEMO_ALEX_ID);
+  const policy = createDefaultPlannerPolicy(
+    DEMO_TIMEZONE,
+    isoDateTime(snapshot.asOfDate)
+  );
+  const activeGoals: PlannerActiveGoalSnapshot[] = alexGoals.map((goal) => ({
+    id: goal.id,
+    goal_id: goal.id,
+    original_goal_id: goal.id,
+    requirement_fingerprint: `${goal.frequency_type}:${goal.recurrence_interval ?? "fixed"}`,
+    title: goal.title,
+    category: goal.category,
+    color: goal.color,
+    start_date: goal.start_date,
+    end_date: goal.end_date,
+  }));
+  const monthItems = snapshot.plannerItems.filter((item) =>
+    alexGoals.some((goal) => goal.id === item.goal_id)
+  );
+  const activeItems: PlannerActiveItemSnapshot[] = monthItems.map((item) => {
+    const credited = creditedCompletionForItem(snapshot, item);
+    return {
+      id: item.id,
+      plan_goal_id: item.goal_id,
+      unit_key: item.unit_key,
+      requirement_kind: item.requirement_kind,
+      scheduled_date: item.scheduled_date,
+      original_scheduled_date: item.original_scheduled_date,
+      classification: "planned",
+      credit_state: credited ? "credited" : "uncredited",
+      locked: item.locked,
+      revision: item.revision,
+      credited_completion_id: credited?.id ?? null,
+      credited_completion_date: credited?.completed_on ?? null,
+    };
+  });
+  const workUnits: PlannerWorkUnit[] = activeItems.map((item) => {
+    const goal = alexGoals.find((candidate) => candidate.id === item.plan_goal_id);
+    const snapshotItem = monthItems.find((candidate) => candidate.id === item.id);
+    return {
+      originalGoalId: item.plan_goal_id,
+      unitKey: item.unit_key,
+      kind: item.requirement_kind,
+      label: snapshotItem?.label ?? goal?.title ?? null,
+      scheduledDate: item.scheduled_date,
+      classification: item.classification,
+      creditState: item.credit_state,
+      creditedCompletionDate: item.credited_completion_date,
+    };
+  });
+  const digest = sha256Hex(
+    activeItems
+      .map(
+        (item) =>
+          `${item.id}:${item.scheduled_date}:${item.credit_state}:${item.revision}`
+      )
+      .join("|")
+  );
+  const goalTitles = Object.fromEntries(alexGoals.map((goal) => [goal.id, goal.title]));
+
+  return {
+    schemaVersion: "1",
+    scopeMonth,
+    asOfDate: snapshot.asOfDate,
+    timezone: DEMO_TIMEZONE,
+    goalTitles,
+    links: [],
+    preferences: {
+      timezone: DEMO_TIMEZONE,
+      timezoneConfirmedAt: isoDateTime(snapshot.asOfDate),
+      policyRevision: 1,
+      defaultPolicy: policy,
+    },
+    capabilities: {
+      crossMonthMovesEnabled: true,
+    },
+    activePlan: {
+      plan: {
+        id: DEMO_PLAN_ID,
+        version: 1,
+        status: "active",
+      },
+      goals: activeGoals,
+      items: activeItems,
+    },
+    preview: {
+      eligibilityMode: "overlap_v1",
+      preserveExistingAssignments: true,
+      generationInputHash: digest,
+      solver: {
+        placementStatus: "complete",
+        searchStatus: "all_units_placed",
+        capacityStatus: "unverified",
+        issueCodes: [],
+        invalidGoalIds: [],
+        publishable: true,
+        confirmationRequired: false,
+      },
+      workUnits,
+      eligibility: alexGoals.map((goal) => ({
+        goalId: goal.id,
+        eligible: true,
+        reason: "eligible",
+      })),
+    },
+    revisions: {
+      canonicalRevision: 1,
+      executionRevision: 1,
+      scheduleDigest: digest,
+    },
+    staleness: {
+      stale: false,
+      reasons: [],
+    },
+    unplaceableGoals: [],
+  };
+}
+
+export function buildDemoProgressContext({
+  asOfDate,
+  viewDate,
+  factsFrom,
+  factsTo,
+  subjectUserId,
+}: {
+  asOfDate: string;
+  viewDate?: string;
+  factsFrom?: string;
+  factsTo?: string;
+  subjectUserId?: string;
+}): ProgressContextResponse {
+  const snapshot = getDemoStore();
+  const subject = subjectUserId ?? DEMO_ALEX_ID;
+  const goals = goalsForSubject(snapshot, subject);
+  const completions = completionsForSubject(snapshot, subject);
+  const completionsByGoal = groupCompletions(completions);
+  const summaries = goals.map((goal) =>
+    getGoalProgressSnapshot(goal, completionsByGoal.get(goal.id) ?? [], asOfDate, {
+      weeklyAnchor: WEEKLY_ANCHOR,
+    })
+  );
+
+  let facts: Completion[] = completions;
+  if (viewDate) {
+    facts = goals.flatMap((goal) => {
+      const goalCompletions = completionsByGoal.get(goal.id) ?? [];
+      if (goal.frequency_type !== "recurring" || isTargetedRecurringGoal(goal)) {
+        return goalCompletions.filter((completion) => completion.completed_on === viewDate);
+      }
+      const period = getAnchoredPeriod(
+        goal.start_date,
+        goal.recurrence_interval ?? "daily",
+        viewDate,
+        WEEKLY_ANCHOR
+      );
+      return goalCompletions.filter(
+        (completion) =>
+          completion.completed_on >= period.start && completion.completed_on <= period.end
+      );
+    });
+  } else if (factsFrom && factsTo) {
+    facts = completions.filter(
+      (completion) => completion.completed_on >= factsFrom && completion.completed_on <= factsTo
+    );
+  }
+
+  return {
+    schemaVersion: "1",
+    asOfDate,
+    timezone: snapshot.timezone,
+    weekStartsOn: DEMO_WEEK_STARTS_ON,
+    summaries,
+    facts: facts.map((fact) => ({
+      goal_id: fact.goal_id,
+      completed_on: fact.completed_on,
+      source: fact.source,
+    })),
+    truncated: false,
+    correlationId: DEMO_CORRELATION_ID,
+  };
+}
+
+export function buildDemoInsightsStats(subjectUserId?: string): InsightsStatsResponse {
+  const snapshot = getDemoStore();
+  const subject = subjectUserId ?? DEMO_ALEX_ID;
+  const goals = goalsForSubject(snapshot, subject);
+  const completions = completionsForSubject(snapshot, subject);
+  const memberTeamIds = snapshot.teamMembers
+    .filter((member) => member.user_id === subject)
+    .map((member) => member.team_id);
+  const completableGoalIds = buildCompletableGoalIds({
+    goals,
+    userId: subject,
+    memberTeamIds,
+  });
+  const completableGoals = selectCompletableGoals(goals, completableGoalIds);
+  const completionsByGoal = groupCompletions(completions);
+  const summariesByGoal = new Map(
+    completableGoals.map((goal) => [
+      goal.id,
+      getGoalProgressSnapshot(
+        goal,
+        completionsByGoal.get(goal.id) ?? [],
+        snapshot.asOfDate,
+        { weeklyAnchor: WEEKLY_ANCHOR }
+      ),
+    ])
+  );
+  const overall = buildInsightsStatsGroup({
+    goals: completableGoals,
+    completions,
+    summariesByGoal,
+    asOfDate: snapshot.asOfDate,
+    weekStartsOn: DEMO_WEEK_STARTS_ON,
+    accountCreatedDate: snapshot.profiles[0]?.created_at.slice(0, 10) ?? snapshot.asOfDate,
+  });
+  const teamGoals = completableGoals.filter((goal) => goal.team_id === DEMO_TEAM_ID);
+  const team =
+    subject === DEMO_ALEX_ID && teamGoals.length > 0
+      ? buildInsightsStatsGroup({
+          goals: teamGoals,
+          completions: completions.filter((completion) =>
+            teamGoals.some((goal) => goal.id === completion.goal_id)
+          ),
+          summariesByGoal: new Map(
+            teamGoals.flatMap((goal) => {
+              const summary = summariesByGoal.get(goal.id);
+              return summary ? [[goal.id, summary] as const] : [];
+            })
+          ),
+          asOfDate: snapshot.asOfDate,
+          weekStartsOn: DEMO_WEEK_STARTS_ON,
+          accountCreatedDate: snapshot.asOfDate,
+        })
+      : null;
+
+  return {
+    schemaVersion: "1",
+    asOfDate: snapshot.asOfDate,
+    weekStartsOn: DEMO_WEEK_STARTS_ON,
+    accountCreatedDate: snapshot.profiles[0]?.created_at.slice(0, 10) ?? snapshot.asOfDate,
+    overall,
+    team,
+    correlationId: DEMO_CORRELATION_ID,
+  };
+}
+
+export function buildDemoXpProfile() {
+  const totalXp = 2460;
+  const progression = progressionForTotalXp(totalXp);
+  return {
+    schemaVersion: "1" as const,
+    correlationId: DEMO_CORRELATION_ID,
+    profile: {
+      totalXp,
+      currentLevel: progression.currentLevel,
+      currentLevelMinXp: progression.currentLevelMinXp,
+      nextLevel: progression.nextLevel,
+      nextLevelMinXp: progression.nextLevelMinXp,
+      xpToNextLevel: progression.xpToNextLevel,
+    },
+    tracks: [
+      {
+        trackKey: "health",
+        label: "Health",
+        totalXp: 980,
+        currentLevel: progressionForTotalXp(980).currentLevel,
+      },
+      {
+        trackKey: "career",
+        label: "Career",
+        totalXp: 720,
+        currentLevel: progressionForTotalXp(720).currentLevel,
+      },
+    ],
+    nextReward: {
+      level: (progression.nextLevel ?? progression.currentLevel + 1),
+      code: "altitude_band",
+      title: "Next altitude",
+      description: "Keep completing planned work to climb.",
+    },
+    pendingAwards: [] as Array<{
+      awardId: string;
+      trackKey: string;
+      level: number;
+      title: string;
+      description: string;
+    }>,
+  };
+}
+
+export function buildDemoAchievements() {
+  const snapshot = getDemoStore();
+  const goals = goalsForSubject(snapshot, DEMO_ALEX_ID);
+  const completions = completionsForSubject(snapshot, DEMO_ALEX_ID);
+  const completionsByGoal = groupCompletions(completions);
+  const achievedGoals = goals
+    .map((goal) => ({
+      goal,
+      summary: getGoalProgressSnapshot(
+        goal,
+        completionsByGoal.get(goal.id) ?? [],
+        snapshot.asOfDate,
+        { weeklyAnchor: WEEKLY_ANCHOR }
+      ),
+    }))
+    .filter((entry) => entry.summary.outcome === "achieved")
+    .map((entry) => ({
+      goalId: entry.goal.id,
+      title: entry.goal.title,
+      rewardText: entry.goal.reward_text,
+      achievedOn: entry.summary.milestoneDates.at(-1) ?? null,
+    }));
+
+  return {
+    achievedGoals,
+    globalAchievements: [
+      {
+        id: "70000000-0000-4000-8000-000000000001",
+        title: "First climb",
+        level: 5,
+        description: "Reached a lived-in altitude in the demo world.",
+        unlockedAt: isoDateTime(snapshot.asOfDate, 8),
+        revokedAt: null,
+      },
+    ],
+    truncated: {
+      goals: false,
+      completions: false,
+    },
+  };
+}
+
+export function buildDemoNotificationPreferences() {
+  return {
+    notificationPreferences: defaultNotificationPreferences,
+  };
+}
