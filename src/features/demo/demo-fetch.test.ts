@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { PlannerWorkUnit } from "@cadence/shared/planner/context";
 import { DEMO_ALEX_ID, DEMO_UNSUPPORTED_CODE } from "@/features/demo/demo-ids";
 import { handleDemoFetch } from "@/features/demo/demo-fetch";
 import { buildDemoSnapshot } from "@/features/demo/demo-snapshot";
@@ -7,6 +8,8 @@ import {
   initDemoStore,
   setCompletionFact,
 } from "@/features/demo/demo-store";
+import { planDraftMove } from "@/features/planner/plan-draft-move";
+import { buildPlannerDayEntry } from "@/features/planner/test-fixtures";
 
 describe("demo fetch router", () => {
   afterEach(() => {
@@ -118,6 +121,57 @@ describe("demo fetch router", () => {
     expect(originalFetch).not.toHaveBeenCalled();
     expect(response.ok).toBe(true);
     expect(payload.conversations).toEqual([]);
+  });
+
+  it("gives uncredited demo sessions a movable window", async () => {
+    initDemoStore(buildDemoSnapshot("2026-08-22"));
+    const originalFetch = vi.fn();
+    const response = await handleDemoFetch(
+      "/api/planner/context?scopeMonth=2026-08",
+      { method: "GET" },
+      originalFetch as unknown as typeof fetch
+    );
+    const payload = (await response.json()) as {
+      preview: { workUnits: PlannerWorkUnit[] };
+    };
+    const uncredited = payload.preview.workUnits.filter(
+      (unit) => unit.creditState === "uncredited" && unit.scheduledDate
+    );
+    const credited = payload.preview.workUnits.filter(
+      (unit) => unit.creditState === "credited"
+    );
+    const asOfSession = uncredited.find((unit) => unit.scheduledDate === "2026-08-22");
+
+    expect(uncredited.length).toBeGreaterThan(0);
+    expect(credited.length).toBeGreaterThan(0);
+    expect(
+      uncredited.every(
+        (unit) =>
+          unit.draftMoveWindow != null &&
+          unit.scheduledDate != null &&
+          unit.scheduledDate >= unit.draftMoveWindow.start &&
+          unit.scheduledDate <= unit.draftMoveWindow.end
+      )
+    ).toBe(true);
+    expect(
+      credited.every(
+        (unit) => unit.draftMoveWindow == null && unit.placementWindow == null
+      )
+    ).toBe(true);
+    expect(asOfSession).toBeDefined();
+    expect(
+      planDraftMove({
+        entry: buildPlannerDayEntry({
+          scheduledDate: "2026-08-22",
+          creditState: "uncredited",
+        }),
+        nextDate: "2026-08-23",
+        scopeMonth: "2026-08",
+        previewUnit: asOfSession,
+        conflictKeys: undefined,
+        completionFactConflict: undefined,
+      })
+    ).toEqual({ ok: true, scheduledDate: "2026-08-23" });
   });
 
   it("applies completion writes to the in-memory snapshot", async () => {

@@ -16,6 +16,7 @@ import { buildInsightsStatsGroup } from "@/lib/insights/metrics";
 import { getGoalLifecycleOutcome } from "@/lib/goals/lifecycle";
 import { getGoalProgressSnapshot } from "@/lib/goals/progress";
 import { getAnchoredPeriod } from "@/lib/goals/periods";
+import type { Completion, Goal } from "@/lib/goals/types";
 import { isTargetedRecurringGoal } from "@/lib/planner/requirements";
 import { sha256Hex } from "@/lib/planner/canonical";
 import { createDefaultPlannerPolicy } from "@/lib/planner/policy";
@@ -35,6 +36,64 @@ import { getDemoStore } from "@/features/demo/demo-store";
 import type { Completion, Goal } from "@/lib/goals/types";
 
 const WEEKLY_ANCHOR = { weekStartsOn: DEMO_WEEK_STARTS_ON };
+
+function laterDate(left: string, right: string) {
+  return left > right ? left : right;
+}
+
+function earlierDate(left: string, right: string) {
+  return left < right ? left : right;
+}
+
+function demoSessionWindows({
+  goal,
+  item,
+  asOfDate,
+  visibleStart,
+  visibleEnd,
+}: {
+  goal: Goal;
+  item: PlannerActiveItemSnapshot;
+  asOfDate: string;
+  visibleStart: string;
+  visibleEnd: string;
+}): Pick<
+  PlannerWorkUnit,
+  "creditWindow" | "placementWindow" | "draftMoveWindow" | "classification"
+> {
+  const lifetimeEnd = goal.end_date ?? visibleEnd;
+  const creditWindow = {
+    start: goal.start_date,
+    end: laterDate(lifetimeEnd, item.scheduled_date ?? lifetimeEnd),
+  };
+  if (item.credit_state === "credited") {
+    return {
+      creditWindow,
+      placementWindow: null,
+      draftMoveWindow: null,
+      classification: "fulfilled",
+    };
+  }
+  const moveWindow = {
+    start: laterDate(goal.start_date, visibleStart),
+    end: earlierDate(lifetimeEnd, laterDate(visibleEnd, item.scheduled_date ?? visibleEnd)),
+  };
+  if (moveWindow.start > moveWindow.end) {
+    return {
+      creditWindow,
+      placementWindow: null,
+      draftMoveWindow: null,
+      classification: item.scheduled_date && item.scheduled_date > asOfDate ? "future" : "open",
+    };
+  }
+  return {
+    creditWindow,
+    placementWindow: moveWindow,
+    draftMoveWindow: moveWindow,
+    classification:
+      item.scheduled_date && item.scheduled_date > asOfDate ? "future" : "open",
+  };
+}
 
 function goalsForSubject(snapshot: DemoSnapshot, subjectUserId: string) {
   if (subjectUserId === DEMO_ALEX_ID) {
@@ -154,7 +213,7 @@ export function buildDemoPlannerContext(
       requirement_kind: item.requirement_kind,
       scheduled_date: item.scheduled_date,
       original_scheduled_date: item.original_scheduled_date,
-      classification: "planned",
+      classification: credited ? "fulfilled" : "open",
       credit_state: credited ? "credited" : "uncredited",
       locked: item.locked,
       revision: item.revision,
@@ -165,15 +224,30 @@ export function buildDemoPlannerContext(
   const workUnits: PlannerWorkUnit[] = activeItems.map((item) => {
     const goal = alexGoals.find((candidate) => candidate.id === item.plan_goal_id);
     const snapshotItem = monthItems.find((candidate) => candidate.id === item.id);
+    const windows = goal
+      ? demoSessionWindows({
+          goal,
+          item,
+          asOfDate: snapshot.asOfDate,
+          visibleStart: windowStart,
+          visibleEnd: windowEnd,
+        })
+      : {
+          creditWindow: undefined,
+          placementWindow: null,
+          draftMoveWindow: null,
+          classification: item.classification,
+        };
     return {
       originalGoalId: item.plan_goal_id,
       unitKey: item.unit_key,
       kind: item.requirement_kind,
       label: snapshotItem?.label ?? goal?.title ?? null,
       scheduledDate: item.scheduled_date,
-      classification: item.classification,
       creditState: item.credit_state,
       creditedCompletionDate: item.credited_completion_date,
+      locked: item.locked,
+      ...windows,
     };
   });
   const digest = sha256Hex(
