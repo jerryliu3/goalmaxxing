@@ -109,6 +109,9 @@ describe("SettingsTab", () => {
     mockSearch = "tab=profile";
     render(<SettingsTab />);
 
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+    expect(
+      screen.queryByRole("dialog", { name: "Preferences" })
+    ).toBeNull();
   });
 });
