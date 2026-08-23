@@ -2,18 +2,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { SocialSurface } from "@/features/social/social-surface";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 
-function firstParam(value: string | string[] | undefined) {
-  if (Array.isArray(value)) {
-    return value[0];
-  }
-  return value;
-}
-
-export default async function SocialPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+export default async function SocialPage() {
   if (!isFeatureEnabled("socialEnabled")) {
     return (
       <Card className="shadow-sm">
@@ -27,6 +16,5 @@ export default async function SocialPage({
     );
   }
 
-  const params = await searchParams;
-  return <SocialSurface initialTab={firstParam(params.tab)} />;
+  return <SocialSurface />;
 }

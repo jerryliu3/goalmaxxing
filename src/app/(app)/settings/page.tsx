@@ -1,5 +1,5 @@
-import { SocialTab } from "@/features/social/social-tab";
+import { SettingsTab } from "@/features/settings/settings-tab";
 
 export default function SettingsPage() {
-  return <SocialTab />;
+  return <SettingsTab />;
 }

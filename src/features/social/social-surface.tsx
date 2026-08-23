@@ -1,6 +1,7 @@
 "use client";
 
 import { Flag, Newspaper, Trophy, Users } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChallengeList } from "@/features/social/challenges/challenge-list";
 import {
@@ -14,8 +15,8 @@ import { LeaderboardsPanel } from "@/features/social/leaderboards/leaderboards-p
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   resolveSocialSurfaceTab,
-  type SocialSurfaceTab,
 } from "@/features/social/social-surface-tab";
+import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
 import { cn } from "@/lib/utils";
 import { subscribeXpRefresh } from "@/lib/xp/events";
 
@@ -33,13 +34,10 @@ const selectedChipShadow =
 const SOCIAL_SURFACE_FOCUS_REFRESH_COOLDOWN_MS = 15 * 1000;
 const SOCIAL_SURFACE_POLL_INTERVAL_MS = 60 * 1000;
 
-export function SocialSurface({
-  initialTab,
-}: {
-  initialTab?: string;
-}) {
-  const defaultTab: SocialSurfaceTab = resolveSocialSurfaceTab(initialTab);
-  const [activeTab, setActiveTab] = useState<SocialSurfaceTab>(defaultTab);
+export function SocialSurface() {
+  const searchParams = useSearchParams();
+  const { applySearchParams } = useClientSearchParamsUpdater();
+  const activeTab = resolveSocialSurfaceTab(searchParams.get("tab") ?? undefined);
   const [refreshToken, setRefreshToken] = useState(0);
   const lastFocusRefreshAtRef = useRef(0);
 
@@ -107,7 +105,16 @@ export function SocialSurface({
   return (
     <Tabs
       value={activeTab}
-      onValueChange={(value) => setActiveTab(value as SocialSurfaceTab)}
+      onValueChange={(value) => {
+        const nextTab = resolveSocialSurfaceTab(value);
+        applySearchParams((params) => {
+          if (nextTab === "feed") {
+            params.delete("tab");
+          } else {
+            params.set("tab", nextTab);
+          }
+        }, "push");
+      }}
       className="flex flex-col gap-4"
     >
       <TabsList
