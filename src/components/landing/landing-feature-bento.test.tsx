@@ -1,6 +1,14 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { LandingFeatureBento } from "@/components/landing/landing-feature-bento";
+
+vi.mock("motion/react", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("motion/react")>();
+  return {
+    ...actual,
+    useReducedMotion: () => true,
+  };
+});
 
 describe("LandingFeatureBento", () => {
   it("shows reviewed coach proposals and recovery without overstating behavior", () => {
