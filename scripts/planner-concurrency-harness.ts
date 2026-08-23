@@ -10,7 +10,9 @@ const statementTimeoutMs = 10_000;
 const observationTimeoutMs = 5_000;
 const ownerId = "11111111-1111-4111-8111-111111111111";
 const quotaOwnerId = "22222222-2222-4222-8222-222222222222";
-const raceOwnerId = "44444444-4444-4444-8444-444444444444";
+// Disposable auth.users rows. These ids are deleted and recreated during the
+// harness, so they must never reuse seeded demo accounts (Alice/Bob/Carla/Dana).
+const raceOwnerId = "99999999-9999-4999-8999-999999999999";
 const raceGoalId = "44000000-0000-4000-8000-000000000001";
 const xpRaceOwnerId = "55555555-5555-4555-8555-555555555555";
 const xpRaceGoalId = "55000000-0000-4000-8000-000000000001";
@@ -20,6 +22,27 @@ const teamRacePartnerBId = "77777777-7777-4777-8777-777777777777";
 const teamRacePartnerCId = "88888888-8888-4888-8888-888888888888";
 const teamRaceTeamOneId = "66000000-0000-4000-8000-000000000001";
 const teamRaceTeamTwoId = "66000000-0000-4000-8000-000000000002";
+
+const seededDemoUserIds = new Set([
+  "11111111-1111-4111-8111-111111111111",
+  "22222222-2222-4222-8222-222222222222",
+  "33333333-3333-4333-8333-333333333333",
+  "44444444-4444-4444-8444-444444444444",
+]);
+
+for (const ephemeralUserId of [
+  raceOwnerId,
+  xpRaceOwnerId,
+  teamRacePrimaryId,
+  teamRacePartnerBId,
+  teamRacePartnerCId,
+]) {
+  assert.equal(
+    seededDemoUserIds.has(ephemeralUserId),
+    false,
+    `Concurrency harness ephemeral user ${ephemeralUserId} collides with a seeded demo account.`
+  );
+}
 
 class NamedBarriers {
   private readonly barriers = new Map<
