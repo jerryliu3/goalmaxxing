@@ -45,6 +45,7 @@ export default function SignupScreen() {
             options: {
               data: {
                 seed_default_goals: true,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
               },
             },
           });

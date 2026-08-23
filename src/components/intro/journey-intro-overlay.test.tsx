@@ -10,7 +10,16 @@ import {
 import { toLocalDateString } from "@/lib/dates/day";
 
 const useXpProfileMock = vi.hoisted(() => vi.fn());
+const routerMock = vi.hoisted(() => ({
+  prefetch: vi.fn(),
+  replace: vi.fn(),
+  refresh: vi.fn(),
+}));
 const TEST_USER_ID = "user-1";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => routerMock,
+}));
 
 vi.mock("@/components/xp/xp-profile-provider", () => ({
   useXpProfile: () => useXpProfileMock(),
@@ -28,6 +37,13 @@ describe("JourneyIntroOverlay", () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+  });
+
+  it("prefetches calendar when intro opens", async () => {
+    render(<JourneyIntroOverlay userId={TEST_USER_ID} />);
+    expect(await screen.findByRole("dialog", { name: "Welcome to Goalmaxxing" })).toBeInTheDocument();
+    expect(routerMock.prefetch).toHaveBeenCalledWith("/calendar");
+    expect(routerMock.prefetch).toHaveBeenCalledWith("/calendar?surface=calendar");
   });
 
   it("shows intro when unseen", async () => {

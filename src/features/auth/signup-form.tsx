@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { JOURNEY_INTRO_FORCE_USER_ID_KEY } from "@/components/intro/journey-intro-overlay";
 import { clearAllTabOnboardingProgress } from "@/features/onboarding/tab-onboarding";
+import { resolveUserTimezone } from "@/lib/dates/timezone";
 import { createClient } from "@/lib/supabase/client";
 import { resolveAuthRedirectBaseUrl } from "@/lib/supabase/public-app-url";
 
@@ -114,6 +115,7 @@ export function SignupForm() {
           username: normalizedUsername,
           display_name: displayName || normalizedUsername,
           seed_default_goals: true,
+          timezone: resolveUserTimezone(),
         },
       },
     });
@@ -131,7 +133,7 @@ export function SignupForm() {
 
     if (data.session) {
       toast.success("Account created.");
-      router.replace("/");
+      router.replace("/calendar");
       router.refresh();
     } else {
       toast.success("Account created. Check your email to confirm if required.");

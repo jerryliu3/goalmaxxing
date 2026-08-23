@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toLocalDateString } from "@/lib/dates/day";
@@ -25,6 +26,7 @@ interface JourneyIntroOverlayProps {
 }
 
 export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
+  const router = useRouter();
   const { band } = useXpProfile();
   const [open, setOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
@@ -136,6 +138,15 @@ export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
       window.removeEventListener(JOURNEY_INTRO_OPEN_EVENT, handleOpenRequest);
     };
   }, []);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    void router.prefetch("/calendar");
+    void router.prefetch("/calendar?surface=calendar");
+    void import("@/features/planner/calendar-page-shell");
+  }, [open, router]);
 
   if (!open) {
     return null;
