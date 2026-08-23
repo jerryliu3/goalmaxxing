@@ -59,7 +59,7 @@ export default defineConfig({
       ? `pnpm exec next start --hostname 127.0.0.1 --port ${port}`
       : `pnpm exec next dev --hostname 127.0.0.1 --port ${port}`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
     env: {
       NEXT_PUBLIC_APP_URL: baseURL,
