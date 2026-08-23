@@ -1,3 +1,5 @@
+"use client";
+
 import type { ReactNode } from "react";
 import {
   Bell,
@@ -12,8 +14,11 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { LandingGoalCreationDemo } from "@/components/landing/landing-goal-creation-demo";
 import { LandingPlannerSurfaceTour } from "@/components/landing/landing-planner-surface-tour";
+import { LandingReveal, useInViewOnce } from "@/components/landing/landing-reveal";
+import { LandingTryMeHint } from "@/components/landing/landing-try-me-hint";
 
 const heatmapLevels = Array.from({ length: 140 }, (_, index) => {
   const pattern = [0, 1, 0, 2, 3, 0, 1, 2, 4, 3, 1, 2, 0, 3, 4, 2] as const;
@@ -34,34 +39,43 @@ function TourPanel({
   description,
   visual,
   reverse = false,
+  interactive = false,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   visual: ReactNode;
   reverse?: boolean;
+  interactive?: boolean;
 }) {
   return (
-    <article className="grid items-center gap-8 rounded-3xl border bg-background p-5 shadow-sm sm:p-8 md:grid-cols-2 md:gap-12">
-      <div className={reverse ? "md:order-2" : ""}>
-        <p className="text-xs font-semibold tracking-[0.16em] text-blue-700 uppercase">
-          {eyebrow}
-        </p>
-        <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
-          {title}
-        </h3>
-        <p className="mt-4 max-w-xl leading-relaxed text-muted-foreground">
-          {description}
-        </p>
-      </div>
-      <div className={reverse ? "md:order-1" : ""}>{visual}</div>
-    </article>
+    <LandingReveal>
+      <article className="grid items-center gap-8 rounded-3xl border border-blue-100/80 bg-white/80 p-5 shadow-sm sm:p-8 md:grid-cols-2 md:gap-12">
+        <div className={reverse ? "md:order-2" : ""}>
+          <p className="text-xs font-semibold tracking-[0.16em] text-blue-700 uppercase">
+            {eyebrow}
+          </p>
+          <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+            {title}
+          </h3>
+          <p className="mt-4 max-w-xl leading-relaxed text-muted-foreground">
+            {description}
+          </p>
+        </div>
+        <div className={`relative ${reverse ? "md:order-1" : ""}`}>
+          {interactive ? <LandingTryMeHint /> : null}
+          {visual}
+        </div>
+      </article>
+    </LandingReveal>
   );
 }
 
 function InsightsVisual() {
+  const reducedMotion = Boolean(useReducedMotion());
+  const { ref, inView } = useInViewOnce(0.4);
   return (
-    <div className="rounded-2xl border bg-card p-4 shadow-[0_18px_55px_-35px_rgba(5,150,105,0.5)]">
+    <div ref={ref} className="rounded-2xl border bg-card p-4 shadow-[0_18px_55px_-35px_rgba(5,150,105,0.5)]">
       <div>
         <p className="text-xs font-semibold">Morning run</p>
         <p className="text-[10px] text-muted-foreground">
@@ -132,12 +146,15 @@ function InsightsVisual() {
           role="img"
           aria-label="Completion rate trending upward over thirty days"
         >
-          <path
+          <motion.path
             d="M2 58 C35 54, 44 60, 70 45 S112 50, 138 31 S180 36, 210 20 S246 26, 278 8"
             fill="none"
             stroke="rgb(5 150 105)"
             strokeWidth="3"
             strokeLinecap="round"
+            initial={false}
+            animate={{ pathLength: reducedMotion || inView ? 1 : 0 }}
+            transition={{ duration: 1.1, ease: "easeInOut" }}
           />
           <path
             d="M2 58 C35 54, 44 60, 70 45 S112 50, 138 31 S180 36, 210 20 S246 26, 278 8 L278 70 L2 70 Z"
@@ -274,8 +291,8 @@ function PersonalizationStrip() {
 
 export function LandingProductTour() {
   return (
-    <section className="border-b bg-slate-50/60">
-      <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-16 sm:px-6 md:py-24">
+    <section className="border-b border-blue-100/70">
+      <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pt-4 pb-16 sm:px-6 md:pt-6 md:pb-20">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-xs font-semibold tracking-[0.16em] text-blue-700 uppercase">
             Inside Goalmaxxing
@@ -291,9 +308,10 @@ export function LandingProductTour() {
 
         <TourPanel
           eyebrow="Create"
-          title="Start in one sentence"
-          description="Describe the plan in natural language, or configure every field yourself. Review the drafts, then create them in one click."
+          title="Intuitive goal setup"
+          description="Configure the goal exactly the way you want, or let AI take care of it. Review the drafts, then create them in one click."
           visual={<LandingGoalCreationDemo />}
+          interactive
         />
         <TourPanel
           eyebrow="Planner"
@@ -301,6 +319,7 @@ export function LandingProductTour() {
           description="Use the visual calendar when timing matters, then switch to a focused checklist when it is time to work. Recurring goals and one-time tasks stay distinct."
           visual={<LandingPlannerSurfaceTour />}
           reverse
+          interactive
         />
         <TourPanel
           eyebrow="Insights"

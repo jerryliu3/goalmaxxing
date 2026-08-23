@@ -130,6 +130,21 @@ export const monthEntries = [
   tone: TaskTone;
 }>;
 
+export const WEEK_TODAY_TASKS = [
+  { id: "tempo-run", label: "Tempo run", tone: "emerald" },
+  { id: "deep-work", label: "Deep work", tone: "blue" },
+  { id: "launch-notes", label: "Launch notes", tone: "amber" },
+  { id: "strength-thu", label: "Strength", tone: "violet" },
+  { id: "weekly-reset", label: "Weekly reset", tone: "blue" },
+] as const satisfies ReadonlyArray<SeededTask>;
+
+export const WEEK_CELL_VISIBLE_COUNT = 2;
+export const WEEK_PREVIEW_VISIBLE_COUNT = 4;
+
+export function moreCountLabel(hiddenCount: number) {
+  return hiddenCount > 0 ? `+${hiddenCount} more` : null;
+}
+
 const seededDays: ReadonlyArray<{
   id: string;
   day: string;
@@ -163,7 +178,7 @@ const seededDays: ReadonlyArray<{
     day: "Thu",
     date: String(SEEDED_TODAY),
     isToday: true,
-    tasks: [{ id: "tempo-run", label: "Tempo run", tone: "emerald" }],
+    tasks: WEEK_TODAY_TASKS,
   },
   {
     id: "fri",
@@ -833,7 +848,7 @@ export function LandingPlannerPreview() {
                       </span>
                     </div>
                     <div className="space-y-1">
-                      {day.tasks.map((task) => (
+                      {day.tasks.slice(0, day.isToday ? WEEK_CELL_VISIBLE_COUNT : day.tasks.length).map((task) => (
                         <TaskTile
                           key={task.id}
                           task={task}
@@ -842,6 +857,17 @@ export function LandingPlannerPreview() {
                           }
                         />
                       ))}
+                      {day.isToday
+                        ? moreCountLabel(
+                            day.tasks.length - WEEK_CELL_VISIBLE_COUNT
+                          ) && (
+                            <p className="text-[10px] text-muted-foreground">
+                              {moreCountLabel(
+                                day.tasks.length - WEEK_CELL_VISIBLE_COUNT
+                              )}
+                            </p>
+                          )
+                        : null}
                     </div>
                   </div>
                 ))}
@@ -862,24 +888,42 @@ export function LandingPlannerPreview() {
                       Today
                     </span>
                   </div>
-                  <div className="mt-2 flex items-center gap-2 rounded-lg border border-emerald-200 bg-white p-2">
-                    <span
-                      className={`inline-flex size-5 shrink-0 items-center justify-center rounded-md border transition ${
-                        weekSessionCompleted
-                          ? "border-emerald-600 bg-emerald-600 text-white"
-                          : "border-slate-300 text-transparent"
-                      }`}
-                    >
-                      <Check className="size-3" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-[10px] font-medium">
-                        Tempo run
+                  <div className="mt-2 space-y-1.5">
+                    {WEEK_TODAY_TASKS.slice(0, WEEK_PREVIEW_VISIBLE_COUNT).map(
+                      (task) => (
+                        <div
+                          key={task.id}
+                          className="flex items-center gap-2 rounded-lg border border-emerald-200/70 bg-white p-2"
+                        >
+                          <span
+                            className={`inline-flex size-5 shrink-0 items-center justify-center rounded-md border transition ${
+                              task.id === "tempo-run" && weekSessionCompleted
+                                ? "border-emerald-600 bg-emerald-600 text-white"
+                                : "border-slate-300 text-transparent"
+                            }`}
+                          >
+                            <Check className="size-3" />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-[10px] font-medium">
+                              {task.label}
+                            </p>
+                            <p className="text-[8px] text-muted-foreground">
+                              Weekly recurring · Health
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    )}
+                    {moreCountLabel(
+                      WEEK_TODAY_TASKS.length - WEEK_PREVIEW_VISIBLE_COUNT
+                    ) ? (
+                      <p className="text-[10px] text-muted-foreground">
+                        {moreCountLabel(
+                          WEEK_TODAY_TASKS.length - WEEK_PREVIEW_VISIBLE_COUNT
+                        )}
                       </p>
-                      <p className="text-[8px] text-muted-foreground">
-                        Weekly recurring · Health
-                      </p>
-                    </div>
+                    ) : null}
                   </div>
                 </motion.div>
               ) : null}

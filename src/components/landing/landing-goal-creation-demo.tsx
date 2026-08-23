@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Loader2, Sparkles } from "lucide-react";
 import { useReducedMotion } from "motion/react";
+import { useInViewOnce } from "@/components/landing/landing-reveal";
 
 export type CreationDemoMode = "manual" | "natural";
 export type CreationDemoPhase =
@@ -133,37 +134,81 @@ function ChoiceRow({
   );
 }
 
-function ManualGoalForm() {
+function EmptyField({ label }: { label: string }) {
+  return (
+    <div>
+      <p className="text-[8px] font-semibold tracking-wide text-muted-foreground uppercase">
+        {label}
+      </p>
+      <div className="mt-1 h-8 rounded-md border border-dashed bg-muted/30" />
+    </div>
+  );
+}
+
+function ManualGoalForm({ filledRows }: { filledRows: number }) {
+  const showName = filledRows >= 1;
+  const showCategoryTimes = filledRows >= 2;
+  const showTypeCadence = filledRows >= 3;
+  const showDates = filledRows >= 4;
+
   return (
     <div data-testid="goal-creation-manual" className="space-y-3 p-4">
-      <SeededField label="Goal name" value="Easy run" />
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <p className="text-[8px] font-semibold tracking-wide text-muted-foreground uppercase">
-            Category
-          </p>
-          <div className="mt-1 flex items-center gap-1.5 rounded-md border bg-background px-2 py-1.5 text-[11px] font-medium">
-            <span className="size-2 rounded-full bg-emerald-500" />
-            Health
+      {showName ? (
+        <SeededField label="Goal name" value="Easy run" />
+      ) : (
+        <EmptyField label="Goal name" />
+      )}
+      {showCategoryTimes ? (
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className="text-[8px] font-semibold tracking-wide text-muted-foreground uppercase">
+              Category
+            </p>
+            <div className="mt-1 flex items-center gap-1.5 rounded-md border bg-background px-2 py-1.5 text-[11px] font-medium">
+              <span className="size-2 rounded-full bg-emerald-500" />
+              Health
+            </div>
           </div>
+          <SeededField label="Times / period" value="3" />
         </div>
-        <SeededField label="Times / period" value="3" />
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          <EmptyField label="Category" />
+          <EmptyField label="Times / period" />
+        </div>
+      )}
+      <div data-testid="goal-creation-type-cadence" className="grid grid-cols-2 gap-2">
+        {showTypeCadence ? (
+          <>
+            <ChoiceRow
+              label="Type"
+              options={["Repeated", "Milestones"]}
+              selected="Repeated"
+            />
+            <ChoiceRow
+              label="Repeat"
+              options={["Daily", "Weekly", "Monthly"]}
+              selected="Weekly"
+            />
+          </>
+        ) : (
+          <>
+            <EmptyField label="Type" />
+            <EmptyField label="Repeat" />
+          </>
+        )}
       </div>
-      <ChoiceRow
-        label="Type"
-        options={["Repeated", "Milestones"]}
-        selected="Repeated"
-      />
-      <ChoiceRow
-        label="Repeat"
-        options={["Daily", "Weekly", "Monthly"]}
-        selected="Weekly"
-      />
-      <div className="grid grid-cols-2 gap-2">
-        <SeededField label="Start date" value="Aug 15" />
-        <SeededField label="End date" value="Nov 15" />
-      </div>
-      <SeededField label="Default time" value="7:00 AM" />
+      {showDates ? (
+        <div className="grid grid-cols-2 gap-2">
+          <SeededField label="Start date" value="Aug 15" />
+          <SeededField label="End date" value="Nov 15" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          <EmptyField label="Start date" />
+          <EmptyField label="End date" />
+        </div>
+      )}
     </div>
   );
 }
@@ -245,11 +290,11 @@ function NaturalLanguageDemo({
 
 export function LandingGoalCreationDemo() {
   const reducedMotion = Boolean(useReducedMotion());
-  const [mode, setMode] = useState<CreationDemoMode>("natural");
+  const [mode, setMode] = useState<CreationDemoMode>("manual");
   const [phase, setPhase] = useState<CreationDemoPhase>("typing");
   const [typedLength, setTypedLength] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
-  const previewRef = useRef<HTMLDivElement | null>(null);
+  const [manualFilledRows, setManualFilledRows] = useState(reducedMotion ? 4 : 0);
+  const { ref: previewRef, inView: isVisible } = useInViewOnce(0.28);
 
   const animationActive = isVisible && mode === "natural";
   const displayPhase = reducedMotion ? "created" : phase;
@@ -262,21 +307,6 @@ export function LandingGoalCreationDemo() {
     : creationDemoPrompt.slice(0, typedLength);
   const showCaret =
     displayPhase === "typing" && typedLength < creationDemoPrompt.length;
-
-  useEffect(() => {
-    const preview = previewRef.current;
-    if (!preview || typeof IntersectionObserver === "undefined") {
-      setIsVisible(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsVisible(Boolean(entry?.isIntersecting)),
-      { threshold: 0.35 }
-    );
-    observer.observe(preview);
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if (!animationActive || reducedMotion || displayPhase !== "typing") {
@@ -295,6 +325,16 @@ export function LandingGoalCreationDemo() {
     }, 18);
     return () => window.clearTimeout(timeoutId);
   }, [animationActive, displayPhase, reducedMotion, typedLength]);
+
+  useEffect(() => {
+    if (!isVisible || reducedMotion || mode !== "manual" || manualFilledRows >= 4) {
+      return;
+    }
+    const timeoutId = window.setTimeout(() => {
+      setManualFilledRows((current) => Math.min(4, current + 1));
+    }, 420);
+    return () => window.clearTimeout(timeoutId);
+  }, [isVisible, manualFilledRows, mode, reducedMotion]);
 
   useEffect(() => {
     if (!animationActive || reducedMotion || displayPhase === "typing") {
@@ -356,7 +396,7 @@ export function LandingGoalCreationDemo() {
           style={{ visibility: mode === "manual" ? "visible" : "hidden" }}
           aria-hidden={mode !== "manual"}
         >
-          <ManualGoalForm />
+          <ManualGoalForm filledRows={reducedMotion ? 4 : manualFilledRows} />
         </div>
       </div>
 

@@ -4,11 +4,15 @@ import {
   getMonthDemoEntries,
   isBusyPlannerDemoPhase,
   LandingPlannerPreview,
+  moreCountLabel,
   monthEntries,
   nextPlannerDemoPhase,
   phaseDurationMs,
   plannerDemoViewOptions,
   SEEDED_TODAY,
+  WEEK_CELL_VISIBLE_COUNT,
+  WEEK_PREVIEW_VISIBLE_COUNT,
+  WEEK_TODAY_TASKS,
   type PlannerDemoPhase,
 } from "@/components/landing/landing-planner-preview";
 
@@ -131,5 +135,15 @@ describe("LandingPlannerPreview copy", () => {
     for (const label of screen.getAllByText("Tempo run")) {
       expect(label).not.toHaveClass("line-through");
     }
+  });
+
+  it("gives the selected week day a dense list with an elegant overflow", () => {
+    expect(WEEK_TODAY_TASKS.length).toBeGreaterThanOrEqual(5);
+    expect(
+      moreCountLabel(WEEK_TODAY_TASKS.length - WEEK_PREVIEW_VISIBLE_COUNT)
+    ).toBe("+1 more");
+    expect(
+      moreCountLabel(WEEK_TODAY_TASKS.length - WEEK_CELL_VISIBLE_COUNT)
+    ).toBe("+3 more");
   });
 });

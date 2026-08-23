@@ -45,40 +45,45 @@ describe("nextCreationDemoPhase", () => {
 });
 
 describe("LandingGoalCreationDemo", () => {
-  it("shows a seeded prompt, drafts, and a create confirmation", () => {
+  it("defaults to a filled manual form without a default time", () => {
     render(<LandingGoalCreationDemo />);
 
     expect(screen.getByTestId("goal-creation-demo")).toBeInTheDocument();
-    const natural = screen.getByTestId("goal-creation-natural");
-    expect(natural).toBeVisible();
-    expect(screen.getByText(creationDemoPrompt)).toBeInTheDocument();
-    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
-    for (const draft of creationDemoDrafts) {
-      expect(within(natural).getByText(draft.title)).toBeInTheDocument();
-    }
-    expect(screen.getByText("Create multiple goals")).toBeInTheDocument();
-    expect(screen.getAllByText("4 goals created")).toHaveLength(2);
+    expect(screen.getByTestId("goal-creation-manual")).toBeVisible();
+    expect(screen.getByTestId("goal-creation-natural")).not.toBeVisible();
+    expect(
+      within(screen.getByTestId("goal-creation-manual")).getByText("Easy run")
+    ).toBeVisible();
+    expect(screen.getByTestId("goal-creation-type-cadence")).toBeInTheDocument();
+    expect(screen.queryByText("Default time")).not.toBeInTheDocument();
+    expect(screen.queryByText("7:00 AM")).not.toBeInTheDocument();
+    expect(screen.getByText("Create a goal")).toBeInTheDocument();
+    expect(screen.getByText("Create goal")).toBeVisible();
   });
 
   it("lets visitors preview Manual configuration and Natural language", async () => {
     const user = userEvent.setup();
     render(<LandingGoalCreationDemo />);
 
-    expect(screen.getByTestId("goal-creation-natural")).toBeVisible();
-
-    await user.click(screen.getByRole("tab", { name: "Manual" }));
     expect(screen.getByTestId("goal-creation-manual")).toBeVisible();
-    expect(screen.getByTestId("goal-creation-natural")).not.toBeVisible();
-    expect(
-      within(screen.getByTestId("goal-creation-manual")).getByText("Easy run")
-    ).toBeVisible();
-    expect(screen.getByText("Create goal")).toBeVisible();
-    expect(screen.getByText("Repeated")).toBeVisible();
-    expect(
-      within(screen.getByTestId("goal-creation-manual")).getByText("Weekly")
-    ).toBeVisible();
 
     await user.click(screen.getByRole("tab", { name: "Natural language" }));
     expect(screen.getByTestId("goal-creation-natural")).toBeVisible();
+    expect(screen.getByTestId("goal-creation-manual")).not.toBeVisible();
+    expect(screen.getByText(creationDemoPrompt)).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    for (const draft of creationDemoDrafts) {
+      expect(
+        within(screen.getByTestId("goal-creation-natural")).getByText(draft.title)
+      ).toBeInTheDocument();
+    }
+    expect(screen.getByText("Create multiple goals")).toBeInTheDocument();
+    expect(screen.getAllByText("4 goals created")).toHaveLength(2);
+
+    await user.click(screen.getByRole("tab", { name: "Manual" }));
+    expect(screen.getByTestId("goal-creation-manual")).toBeVisible();
+    expect(
+      within(screen.getByTestId("goal-creation-manual")).getByText("Weekly")
+    ).toBeVisible();
   });
 });
