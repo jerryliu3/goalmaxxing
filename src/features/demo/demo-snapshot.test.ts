@@ -89,5 +89,9 @@ describe("buildDemoSnapshot", () => {
     expect(
       snapshot.standings.find((standing) => standing.subjectId === DEMO_ALEX_ID)?.rank
     ).toBeGreaterThan(1);
+    expect(snapshot.profiles.every((profile) => Boolean(profile.avatar_url))).toBe(true);
+    expect(snapshot.standings.every((standing) => Boolean(standing.avatarUrl))).toBe(true);
+    expect(snapshot.feed.every((event) => Boolean(event.actor.avatarUrl))).toBe(true);
+    expect(snapshot.duoState.activePartner?.partnerAvatarUrl).toBeTruthy();
   });
 });

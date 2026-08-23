@@ -176,6 +176,20 @@ export async function handleDemoFetch(
       preview: buildDemoPlannerContext(monthKey(snapshot.asOfDate)).preview,
     });
   }
+  if (pathname === "/api/planner/coach/conversations" && method === "GET") {
+    return jsonResponse({
+      schemaVersion: "1",
+      conversations: [],
+      correlationId: DEMO_CORRELATION_ID,
+    });
+  }
+  if (pathname === "/api/xp/rewards/acknowledge" && method === "POST") {
+    return jsonResponse({
+      schemaVersion: "1",
+      acknowledged: true,
+      correlationId: DEMO_CORRELATION_ID,
+    });
+  }
 
   if (pathname === "/api/progress/context" && method === "GET") {
     const asOfDate = url.searchParams.get("asOfDate") ?? requireStore().asOfDate;

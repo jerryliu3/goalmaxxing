@@ -1,7 +1,10 @@
 import { buildCompletableGoalIds, selectCompletableGoals } from "@cadence/shared/goals/completable-goals";
 import { selectViewerVisibleGoals } from "@cadence/shared/goals/visible-goals";
 import { defaultNotificationPreferences } from "@cadence/shared/notifications/preferences";
-import type { ProgressContextResponse } from "@cadence/shared/goals/progress-context";
+import type {
+  ProgressContextResponse,
+  ProgressContextSummary,
+} from "@cadence/shared/goals/progress-context";
 import type {
   PlannerActiveGoalSnapshot,
   PlannerActiveItemSnapshot,
@@ -10,6 +13,7 @@ import type {
 } from "@cadence/shared/planner/context";
 import type { InsightsStatsResponse } from "@/lib/insights/types";
 import { buildInsightsStatsGroup } from "@/lib/insights/metrics";
+import { getGoalLifecycleOutcome } from "@/lib/goals/lifecycle";
 import { getGoalProgressSnapshot } from "@/lib/goals/progress";
 import { getAnchoredPeriod } from "@/lib/goals/periods";
 import { isTargetedRecurringGoal } from "@/lib/planner/requirements";
@@ -47,6 +51,52 @@ function goalsForSubject(snapshot: DemoSnapshot, subjectUserId: string) {
 
 function completionsForSubject(snapshot: DemoSnapshot, subjectUserId: string) {
   return snapshot.completions.filter((completion) => completion.user_id === subjectUserId);
+}
+
+function firstAchievedOn(
+  goal: Goal,
+  completions: Completion[],
+  asOfDate: string
+): string | null {
+  const dates = [
+    ...new Set(
+      completions
+        .map((completion) => completion.completed_on)
+        .filter((date) => date <= asOfDate)
+    ),
+  ].sort();
+  for (const date of dates) {
+    const outcome = getGoalLifecycleOutcome(goal, completions, {
+      asOfDate: date,
+      weeklyAnchor: WEEKLY_ANCHOR,
+    }).outcome;
+    if (outcome === "achieved") {
+      return date;
+    }
+  }
+  return null;
+}
+
+function demoProgressSummary(
+  goal: Goal,
+  completions: Completion[],
+  asOfDate: string
+): ProgressContextSummary {
+  const summary = getGoalProgressSnapshot(goal, completions, asOfDate, {
+    weeklyAnchor: WEEKLY_ANCHOR,
+  });
+  if (summary.outcome !== "achieved") {
+    return summary;
+  }
+  const achievedOn = firstAchievedOn(goal, completions, asOfDate);
+  if (achievedOn === asOfDate) {
+    return {
+      ...summary,
+      outcome: "in_progress",
+      placementTerminal: false,
+    };
+  }
+  return summary;
 }
 
 function groupCompletions(completions: Completion[]) {
@@ -213,9 +263,7 @@ export function buildDemoProgressContext({
   const completions = completionsForSubject(snapshot, subject);
   const completionsByGoal = groupCompletions(completions);
   const summaries = goals.map((goal) =>
-    getGoalProgressSnapshot(goal, completionsByGoal.get(goal.id) ?? [], asOfDate, {
-      weeklyAnchor: WEEKLY_ANCHOR,
-    })
+    demoProgressSummary(goal, completionsByGoal.get(goal.id) ?? [], asOfDate)
   );
 
   let facts: Completion[] = completions;

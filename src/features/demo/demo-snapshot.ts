@@ -17,6 +17,7 @@ import {
 } from "@/features/demo/demo-dates";
 import {
   DEMO_ALEX_ID,
+  DEMO_AVATAR_URLS,
   DEMO_CHALLENGE_ID,
   DEMO_GOAL_IDS,
   DEMO_JORDAN_ID,
@@ -74,18 +75,20 @@ function makeProfile({
   id,
   username,
   displayName,
+  avatarUrl,
   createdAt,
 }: {
   id: string;
   username: string;
   displayName: string;
+  avatarUrl: string;
   createdAt: string;
 }): Profile {
   return {
     id,
     username,
     display_name: displayName,
-    avatar_url: null,
+    avatar_url: avatarUrl,
     planner_primary_tab: "calendar",
     week_starts_on: 1,
     social_activity_visible: true,
@@ -225,12 +228,14 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
     id: DEMO_ALEX_ID,
     username: "alex",
     displayName: "Alex",
+    avatarUrl: DEMO_AVATAR_URLS.alex,
     createdAt,
   });
   const jordan = makeProfile({
     id: DEMO_JORDAN_ID,
     username: "jordan",
     displayName: "Jordan",
+    avatarUrl: DEMO_AVATAR_URLS.jordan,
     createdAt,
   });
 
@@ -491,7 +496,7 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       partnerId: DEMO_JORDAN_ID,
       partnerUsername: "jordan",
       partnerDisplayName: "Jordan",
-      partnerAvatarUrl: null,
+      partnerAvatarUrl: DEMO_AVATAR_URLS.jordan,
       teamXp: 1860,
       teamXpSince: createdAt,
     },
@@ -542,7 +547,7 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       subjectKind: "user",
       subjectId: "20000000-0000-4000-8000-000000000001",
       displayName: "Maya",
-      avatarUrl: null,
+      avatarUrl: DEMO_AVATAR_URLS.maya,
       score: 4120,
       rank: 1,
       tieBreakAt: null,
@@ -553,7 +558,7 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       subjectKind: "user",
       subjectId: "20000000-0000-4000-8000-000000000002",
       displayName: "Chris",
-      avatarUrl: null,
+      avatarUrl: DEMO_AVATAR_URLS.chris,
       score: 3875,
       rank: 2,
       tieBreakAt: null,
@@ -564,7 +569,7 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       subjectKind: "user",
       subjectId: DEMO_ALEX_ID,
       displayName: "Alex",
-      avatarUrl: null,
+      avatarUrl: DEMO_AVATAR_URLS.alex,
       score: 2460,
       rank: 3,
       tieBreakAt: null,
@@ -575,7 +580,7 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       subjectKind: "user",
       subjectId: DEMO_JORDAN_ID,
       displayName: "Jordan",
-      avatarUrl: null,
+      avatarUrl: DEMO_AVATAR_URLS.jordan,
       score: 1980,
       rank: 4,
       tieBreakAt: null,
@@ -586,7 +591,7 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       subjectKind: "user",
       subjectId: "20000000-0000-4000-8000-000000000003",
       displayName: "Sam",
-      avatarUrl: null,
+      avatarUrl: DEMO_AVATAR_URLS.sam,
       score: 1640,
       rank: 5,
       tieBreakAt: null,
@@ -598,13 +603,13 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
     id: DEMO_ALEX_ID,
     username: "alex",
     displayName: "Alex",
-    avatarUrl: null,
+    avatarUrl: DEMO_AVATAR_URLS.alex,
   };
   const jordanActor = {
     id: DEMO_JORDAN_ID,
     username: "jordan",
     displayName: "Jordan",
-    avatarUrl: null,
+    avatarUrl: DEMO_AVATAR_URLS.jordan,
   };
   const feed: SocialFeedEvent[] = [
     {

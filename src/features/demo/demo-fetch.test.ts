@@ -1,8 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEMO_UNSUPPORTED_CODE } from "@/features/demo/demo-ids";
+import { DEMO_ALEX_ID, DEMO_UNSUPPORTED_CODE } from "@/features/demo/demo-ids";
 import { handleDemoFetch } from "@/features/demo/demo-fetch";
 import { buildDemoSnapshot } from "@/features/demo/demo-snapshot";
-import { clearDemoStore, initDemoStore } from "@/features/demo/demo-store";
+import {
+  clearDemoStore,
+  initDemoStore,
+  setCompletionFact,
+} from "@/features/demo/demo-store";
 
 describe("demo fetch router", () => {
   afterEach(() => {
@@ -43,6 +47,77 @@ describe("demo fetch router", () => {
     );
     expect(progress.ok).toBe(true);
     expect(originalFetch).not.toHaveBeenCalled();
+  });
+
+  it("keeps a goal in progress summaries on the day it hits its target", async () => {
+    initDemoStore(buildDemoSnapshot("2026-08-22"));
+    setCompletionFact({
+      goalId: "10000000-0000-4000-8000-000000000006",
+      date: "2026-08-22",
+      userId: DEMO_ALEX_ID,
+      desiredFactState: "present",
+    });
+    const originalFetch = vi.fn();
+    const progress = await handleDemoFetch(
+      "/api/progress/context?asOfDate=2026-08-22&timezone=America%2FNew_York&viewDate=2026-08-22",
+      { method: "GET" },
+      originalFetch as unknown as typeof fetch
+    );
+    const payload = (await progress.json()) as {
+      summaries: Array<{ goalId: string; outcome: string }>;
+      facts: Array<{ goal_id: string; completed_on: string }>;
+    };
+    const conference = payload.summaries.find(
+      (summary) => summary.goalId === "10000000-0000-4000-8000-000000000006"
+    );
+
+    expect(conference?.outcome).toBe("in_progress");
+    expect(
+      payload.facts.some(
+        (fact) =>
+          fact.goal_id === "10000000-0000-4000-8000-000000000006" &&
+          fact.completed_on === "2026-08-22"
+      )
+    ).toBe(true);
+  });
+
+  it("still treats a target hit before today as achieved", async () => {
+    initDemoStore(buildDemoSnapshot("2026-08-22"));
+    setCompletionFact({
+      goalId: "10000000-0000-4000-8000-000000000006",
+      date: "2026-08-21",
+      userId: DEMO_ALEX_ID,
+      desiredFactState: "present",
+    });
+    const originalFetch = vi.fn();
+    const progress = await handleDemoFetch(
+      "/api/progress/context?asOfDate=2026-08-22&timezone=America%2FNew_York",
+      { method: "GET" },
+      originalFetch as unknown as typeof fetch
+    );
+    const payload = (await progress.json()) as {
+      summaries: Array<{ goalId: string; outcome: string }>;
+    };
+    expect(
+      payload.summaries.find(
+        (summary) => summary.goalId === "10000000-0000-4000-8000-000000000006"
+      )?.outcome
+    ).toBe("achieved");
+  });
+
+  it("returns an empty coach conversation list instead of failing", async () => {
+    initDemoStore(buildDemoSnapshot("2026-08-22"));
+    const originalFetch = vi.fn();
+    const response = await handleDemoFetch(
+      "/api/planner/coach/conversations?scopeMonth=2026-08&limit=20",
+      { method: "GET" },
+      originalFetch as unknown as typeof fetch
+    );
+    const payload = (await response.json()) as { conversations: unknown[] };
+
+    expect(originalFetch).not.toHaveBeenCalled();
+    expect(response.ok).toBe(true);
+    expect(payload.conversations).toEqual([]);
   });
 
   it("keeps unsupported writes from pretending to succeed", async () => {

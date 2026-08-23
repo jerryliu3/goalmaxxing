@@ -25,3 +25,11 @@ export const DEMO_GOAL_IDS = {
 export const DEMO_UNSUPPORTED_CODE = "demo_unsupported";
 export const DEMO_UNSUPPORTED_MESSAGE =
   "This action isn't available in the demo. Create an account to use it.";
+
+export const DEMO_AVATAR_URLS = {
+  alex: "https://randomuser.me/api/portraits/men/32.jpg",
+  jordan: "https://randomuser.me/api/portraits/women/44.jpg",
+  maya: "https://randomuser.me/api/portraits/women/65.jpg",
+  chris: "https://randomuser.me/api/portraits/men/75.jpg",
+  sam: "https://randomuser.me/api/portraits/men/11.jpg",
+} as const;
