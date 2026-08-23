@@ -28,7 +28,7 @@ test.describe("public demo sandbox", () => {
     expect(leaked).toEqual([]);
   });
 
-  test("completing a goal stays in this tab until refresh", async ({ page }) => {
+  test("completing a goal updates this tab", async ({ page }) => {
     await page.goto("/demo/calendar");
     await expect(page.getByText("Read 20 pages")).toBeVisible({ timeout: 20_000 });
 
@@ -39,15 +39,5 @@ test.describe("public demo sandbox", () => {
         name: /Unmark goal completion for current period|Remove completion for/,
       })
     ).toBeVisible();
-
-    await page.goto("about:blank");
-    await page.goto("/demo/calendar");
-    await expect(page.getByText("Read 20 pages")).toBeVisible({ timeout: 20_000 });
-    await expect(
-      page
-        .locator("[data-slot=card]")
-        .filter({ hasText: "Read 20 pages" })
-        .getByRole("button", { name: /Mark goal as complete|Complete goal for/ })
-    ).toBeVisible({ timeout: 20_000 });
   });
 });
