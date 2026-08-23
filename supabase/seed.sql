@@ -103,6 +103,8 @@ values
     now()
   ),
   (
+    -- Reserved for the onboarding demo account. Disposable test fixtures
+    -- (for example the planner concurrency harness) must not reuse this id.
     '44444444-4444-4444-8444-444444444444',
     '00000000-0000-0000-0000-000000000000',
     'authenticated',
