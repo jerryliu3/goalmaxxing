@@ -31,24 +31,19 @@ export function markTabOnboardingCompleted(onboardingKey: TabOnboardingKey) {
   window.localStorage.setItem(tabOnboardingStorageKey(onboardingKey), "done");
 }
 
-const ALL_TAB_ONBOARDING_KEYS: TabOnboardingKey[] = [
-  "insights.main",
-  "planner.calendar",
-  "planner.checklist",
-  "planner.tasks",
-  "social.feed",
-  "social.challenges",
-  "social.leaderboards",
-  "social.team",
-  "settings.profile",
-];
-
 export function clearAllTabOnboardingProgress() {
   if (typeof window === "undefined") {
     return;
   }
-  for (const onboardingKey of ALL_TAB_ONBOARDING_KEYS) {
-    window.localStorage.removeItem(tabOnboardingStorageKey(onboardingKey));
+  const keysToRemove: string[] = [];
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index);
+    if (key?.startsWith(TAB_ONBOARDING_COMPLETED_PREFIX)) {
+      keysToRemove.push(key);
+    }
+  }
+  for (const key of keysToRemove) {
+    window.localStorage.removeItem(key);
   }
 }
 
