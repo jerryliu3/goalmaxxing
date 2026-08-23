@@ -162,4 +162,25 @@ describe("TabNav", () => {
       "aria-current"
     );
   });
+
+  it("highlights planner under a demo href prefix", () => {
+    mockPathname = "/demo/calendar";
+    render(<TabNav hrefPrefix="/demo" />);
+
+    expect(screen.getByRole("link", { name: /Planner/i })).toHaveAttribute(
+      "href",
+      "/demo/calendar"
+    );
+    expect(screen.getByRole("link", { name: /Planner/i })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
+    expect(screen.getByRole("link", { name: /Insights/i })).toHaveAttribute(
+      "href",
+      "/demo/insights"
+    );
+    expect(screen.getByRole("link", { name: /Insights/i })).not.toHaveAttribute(
+      "aria-current"
+    );
+  });
 });

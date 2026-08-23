@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { PublicProfileTrigger } from "@/components/public-profile-trigger";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +19,7 @@ import {
 } from "@cadence/shared/social/team";
 import { NudgeButton } from "@/features/social/team/nudge-button";
 import { TeamXpSummary } from "@/features/social/team/team-xp-summary";
+import { useAppRouter } from "@/lib/navigation/use-app-router";
 
 interface TeamPanelProps {
   isActive?: boolean;
@@ -27,7 +27,7 @@ interface TeamPanelProps {
 }
 
 export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps) {
-  const router = useRouter();
+  const router = useAppRouter();
   const [rows, setRows] = useState<TeamStateRow[]>([]);
   const [partnerUsername, setPartnerUsername] = useState("");
   const [message, setMessage] = useState("");

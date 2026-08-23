@@ -7,7 +7,8 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useAppRouter } from "@/lib/navigation/use-app-router";
 import {
   type ChangeEvent,
   type ReactNode,
@@ -133,7 +134,7 @@ export function BulkGoalForm({
   onExit,
 }: BulkGoalFormProps) {
   const supabase = useMemo(() => createClient(), []);
-  const router = useRouter();
+  const router = useAppRouter();
   const searchParams = useSearchParams();
   const completeAndExit = useCallback(() => {
     if (onExit) {

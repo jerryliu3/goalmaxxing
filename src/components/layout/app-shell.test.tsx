@@ -96,6 +96,30 @@ describe("AppShell", () => {
     );
   });
 
+  it("prefixes the new goal href when a demo base path is provided", () => {
+    mockPathname = "/demo/calendar";
+    render(
+      <AppShell userId="user-1" hrefPrefix="/demo" {...emptyDuoProps}>
+        <div>Child content</div>
+      </AppShell>
+    );
+
+    expect(screen.getByRole("link", { name: /new goal \+/i })).toHaveAttribute(
+      "href",
+      "/demo/goals/new?returnTo=%2Fdemo%2Fcalendar"
+    );
+  });
+
+  it("hides the journey intro when asked", () => {
+    render(
+      <AppShell userId="user-1" showJourneyIntro={false} {...emptyDuoProps}>
+        <div>Child content</div>
+      </AppShell>
+    );
+
+    expect(screen.queryByTestId("journey-intro-overlay")).not.toBeInTheDocument();
+  });
+
   it("scopes tab data cache by authenticated user", () => {
     render(
       <AppShell userId="user-1" {...emptyDuoProps}>

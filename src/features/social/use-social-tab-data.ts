@@ -1,7 +1,6 @@
 "use client";
 
 import { format } from "date-fns";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -26,6 +25,7 @@ import type {
 import { createDefaultPlannerPolicy, type PlannerPolicy } from "@/lib/planner/policy";
 import { unsubscribeCurrentBrowser } from "@/lib/push/client";
 import { createClient } from "@/lib/supabase/client";
+import { useAppRouter } from "@/lib/navigation/use-app-router";
 import type { PlannerPreferencesDraft } from "@/features/settings/planner-preferences-settings";
 import { buildProfilePreferencesUpdate } from "@/features/social/profile-preferences";
 import {
@@ -89,7 +89,7 @@ const defaultPlannerPreferencesState: PlannerPreferencesState = {
 
 export function useSocialTabData() {
   const supabase = useMemo(() => createClient(), []);
-  const router = useRouter();
+  const router = useAppRouter();
   const [state, setState] = useState<SocialState>(initialState);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

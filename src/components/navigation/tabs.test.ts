@@ -19,4 +19,15 @@ describe("navigation tab preferences", () => {
       "settings",
     ]);
   });
+
+  it("forwards a demo href prefix onto planner tabs", () => {
+    expect(
+      buildAppTabs("calendar", { hrefPrefix: "/demo" }).map((tab) => tab.href)
+    ).toEqual([
+      "/demo/insights",
+      "/demo/calendar",
+      "/demo/social",
+      "/demo/settings",
+    ]);
+  });
 });

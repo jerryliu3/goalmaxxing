@@ -4,7 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { useMemo, useState } from "react";
-import type { PlannerPrimaryTabPreference } from "@cadence/shared/navigation/tabs";
+import {
+  isAppTabActive,
+  type PlannerPrimaryTabPreference,
+} from "@cadence/shared/navigation/tabs";
 import { buildAppTabs } from "@/components/navigation/tabs";
 import { cn } from "@/lib/utils";
 
@@ -15,27 +18,26 @@ const GRID_BY_COUNT: Record<number, string> = {
   6: "grid-cols-6",
 };
 
-function isActive(pathname: string, href: string) {
-  if (href === "/") {
-    return pathname === "/";
-  }
-  return pathname.startsWith(href);
-}
-
 interface TabNavProps {
   mobile?: boolean;
   plannerPrimaryTabPreference?: PlannerPrimaryTabPreference;
+  hrefPrefix?: string;
 }
 
 export function TabNav({
   mobile = false,
   plannerPrimaryTabPreference,
+  hrefPrefix,
 }: TabNavProps) {
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
   const tabs = useMemo(
-    () => buildAppTabs(plannerPrimaryTabPreference),
-    [plannerPrimaryTabPreference]
+    () =>
+      buildAppTabs(
+        plannerPrimaryTabPreference,
+        hrefPrefix ? { hrefPrefix } : undefined
+      ),
+    [hrefPrefix, plannerPrimaryTabPreference]
   );
   const [optimisticNav, setOptimisticNav] = useState<{
     from: string;
@@ -49,7 +51,9 @@ export function TabNav({
       ? optimisticNav.to
       : pathname;
   const gridClass = GRID_BY_COUNT[tabs.length] ?? "grid-cols-4";
-  const currentIndex = tabs.findIndex((tab) => isActive(activePath, tab.href));
+  const currentIndex = tabs.findIndex((tab) =>
+    isAppTabActive(activePath, tab.href)
+  );
   const highlightLayoutId = mobile ? "mobile-tab-highlight" : "desktop-tab-highlight";
 
   return (
@@ -71,14 +75,14 @@ export function TabNav({
         )}
       >
         {tabs.map((tab, targetIndex) => {
-          const active = isActive(activePath, tab.href);
+          const active = isAppTabActive(activePath, tab.href);
           const Icon = tab.icon;
           return (
             <li key={tab.href} className="relative">
               <Link
                 href={tab.href}
                 onClick={() => {
-                  if (!isActive(pathname, tab.href)) {
+                  if (!isAppTabActive(pathname, tab.href)) {
                     setOptimisticNav({ from: pathname, to: tab.href });
                   }
                 }}
