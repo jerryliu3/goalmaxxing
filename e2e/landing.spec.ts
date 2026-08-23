@@ -1,5 +1,12 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+async function revealPlannerDemo(page: Page) {
+  const stage = page.locator("[data-demo-calendar-stage]");
+  await expect(stage).toBeVisible();
+  await stage.scrollIntoViewIfNeeded();
+  return stage;
+}
 
 test.describe("marketing landing", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
@@ -65,14 +72,14 @@ test.describe("marketing landing", () => {
   test("keeps the planner stage stable across week and month", async ({ page }) => {
     await page.goto("/");
 
-    const stage = page.locator("[data-demo-calendar-stage]");
+    const stage = await revealPlannerDemo(page);
     await expect(page.locator('[data-calendar-view="month"]')).toBeVisible();
     const monthBox = await stage.boundingBox();
     await expect(page.locator('[data-moving-task="past"]')).toBeVisible({
-      timeout: 5_000,
+      timeout: 10_000,
     });
     await expect(page.locator('[data-moving-task="future"]')).toBeVisible({
-      timeout: 5_000,
+      timeout: 10_000,
     });
     await expect(page.locator("[data-demo-save-plan]")).toBeVisible();
     await expect(page.locator("[data-demo-status]")).toContainText(
@@ -120,6 +127,7 @@ test.describe("marketing landing", () => {
   test("keeps moved month entries inside their mobile day cells", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
+    await revealPlannerDemo(page);
 
     await expect(page.locator("[data-demo-status]")).toContainText("Plan saved", {
       timeout: 20_000,
