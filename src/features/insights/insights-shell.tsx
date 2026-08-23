@@ -66,8 +66,6 @@ export function InsightsShell() {
     <div className="space-y-4">
       <TabOnboardingOverlay
         onboardingKey="insights.main"
-        title="Insights guide"
-        description="Use Insights to review streaks, consistency, and where your effort is compounding over time."
         forceOpen={searchParams.get("onboarding") === "insights.main"}
       />
       {sharePeriodControls ? (

@@ -42,23 +42,6 @@ export function SocialSurface() {
   const [refreshToken, setRefreshToken] = useState(0);
   const lastFocusRefreshAtRef = useRef(0);
   const requestedOnboardingKey = searchParams.get("onboarding");
-  const onboardingKey = `social.${activeTab}` as const;
-  const onboardingTitle =
-    activeTab === "challenges"
-      ? "Challenges guide"
-      : activeTab === "leaderboards"
-      ? "Leaderboards guide"
-      : activeTab === "team"
-      ? "Team guide"
-      : "Feed guide";
-  const onboardingDescription =
-    activeTab === "challenges"
-      ? "Join a challenge to turn your goal progress into shared competition."
-      : activeTab === "leaderboards"
-      ? "Leaderboards summarize consistent progress so you can benchmark your momentum."
-      : activeTab === "team"
-      ? "Use Team to invite a partner and build accountability together."
-      : "Feed highlights recent progress so you can stay connected with community momentum.";
 
   const refreshActiveTab = useCallback(() => {
     setRefreshToken((token) => token + 1);
@@ -124,10 +107,8 @@ export function SocialSurface() {
   return (
     <>
       <TabOnboardingOverlay
-        onboardingKey={onboardingKey}
-        title={onboardingTitle}
-        description={onboardingDescription}
-        forceOpen={requestedOnboardingKey === onboardingKey}
+        onboardingKey="social.main"
+        forceOpen={requestedOnboardingKey === "social.main"}
       />
       <Tabs
         value={activeTab}
@@ -156,6 +137,7 @@ export function SocialSurface() {
             style={
               activeTab === "feed" ? { boxShadow: selectedChipShadow } : undefined
             }
+            data-onboarding="social.feed"
           >
             <Newspaper className="size-3.5" />
             <span className="truncate">Feed</span>
@@ -171,6 +153,7 @@ export function SocialSurface() {
                 ? { boxShadow: selectedChipShadow }
                 : undefined
             }
+            data-onboarding="social.compete"
           >
             <Trophy className="size-3.5" />
             <span className="truncate">Challenges</span>
@@ -186,6 +169,7 @@ export function SocialSurface() {
                 ? { boxShadow: selectedChipShadow }
                 : undefined
             }
+            data-onboarding="social.compete"
           >
             <Flag className="size-3.5" />
             <span className="truncate">Leaderboards</span>
@@ -199,6 +183,7 @@ export function SocialSurface() {
             style={
               activeTab === "team" ? { boxShadow: selectedChipShadow } : undefined
             }
+            data-onboarding="social.team"
           >
             <Users className="size-3.5" />
             <span className="truncate">Team</span>

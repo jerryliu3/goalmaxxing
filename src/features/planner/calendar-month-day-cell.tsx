@@ -71,6 +71,7 @@ interface CalendarMonthDayCellProps<
   onCellPointerLeave: () => void;
   onEntryPointerStart: (immovable: boolean) => void;
   onEntryPointerEnd: () => void;
+  onboardingFirstEntry?: boolean;
 }
 
 const DEFAULT_MAX_VISIBLE_ITEMS_PER_DAY_CELL = 2;
@@ -103,6 +104,7 @@ export function CalendarMonthDayCell<
   onCellPointerLeave,
   onEntryPointerStart,
   onEntryPointerEnd,
+  onboardingFirstEntry = false,
 }: CalendarMonthDayCellProps<TEntry, TCompletionFactMarker>) {
   const hasVisibleContent =
     entriesForDay.length > 0 || completionFactMarkersForDay.length > 0;
@@ -124,7 +126,7 @@ export function CalendarMonthDayCell<
     visibleEntries.length -
     visibleCompletionFactMarkers.length;
 
-  const renderEntry = (entry: TEntry): ReactNode => {
+  const renderEntry = (entry: TEntry, entryIndex: number): ReactNode => {
     const visual = getGoalVisual({
       goalId: entry.originalGoalId,
       color: entry.activeGoal?.color ?? null,
@@ -180,6 +182,11 @@ export function CalendarMonthDayCell<
               }`
             }
             data-calendar-day-entry="true"
+            data-onboarding={
+              onboardingFirstEntry && entryIndex === 0
+                ? "planner.calendar.item"
+                : undefined
+            }
             data-planner-entry-key={entry.key}
             data-planner-goal-id={entry.originalGoalId}
             data-planner-unit-key={entry.unitKey}
@@ -248,6 +255,7 @@ export function CalendarMonthDayCell<
           data-no-swipe="true"
           data-day-cell="true"
           data-day={day}
+          data-onboarding={isToday ? "planner.calendar.today" : undefined}
         >
           <div className="pointer-events-none absolute top-2 left-2 flex items-center gap-1.5">
             <p
@@ -272,7 +280,9 @@ export function CalendarMonthDayCell<
           </div>
           {hasVisibleContent ? (
             <div className="mt-4 space-y-1">
-              {visibleEntries.map(renderEntry)}
+              {visibleEntries.map((entry, entryIndex) =>
+                renderEntry(entry, entryIndex)
+              )}
               {visibleCompletionFactMarkers.map((marker) => {
                 const partnerOwned = marker.owner === "partner";
                 const statusCopy = partnerOwned

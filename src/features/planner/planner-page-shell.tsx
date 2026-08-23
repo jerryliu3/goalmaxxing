@@ -68,28 +68,15 @@ export function PlannerPageShell() {
       : surfaceParam === "tasks"
         ? "tasks"
         : "checklist";
-  const onboardingKey = `planner.${surface}` as const;
-  const onboardingTitle =
-    surface === "calendar"
-      ? "Calendar guide"
-      : surface === "tasks"
-      ? "Tasks guide"
-      : "Checklist guide";
-  const onboardingDescription =
-    surface === "calendar"
-      ? "Use Calendar to place sessions and lock must-do days before the week starts."
-      : surface === "tasks"
-      ? "Use Tasks for one-off work that should not become long-lived goals."
-      : "Use Checklist to focus today's execution while your longer plan stays in Calendar.";
 
   return (
     <>
-      <TabOnboardingOverlay
-        onboardingKey={onboardingKey}
-        title={onboardingTitle}
-        description={onboardingDescription}
-        forceOpen={requestedOnboardingKey === onboardingKey}
-      />
+      {surface === "calendar" ? (
+        <TabOnboardingOverlay
+          onboardingKey="planner.calendar"
+          forceOpen={requestedOnboardingKey === "planner.calendar"}
+        />
+      ) : null}
       <Tabs
         value={surface}
         onValueChange={(value) => {
@@ -118,6 +105,7 @@ export function PlannerPageShell() {
         <TabsList
           variant="line"
           className="grid w-full grid-cols-3 gap-1.5 rounded-2xl bg-transparent p-0"
+          data-onboarding="planner.surfaces"
         >
           <TabsTrigger
             value="calendar"

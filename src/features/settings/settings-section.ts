@@ -2,6 +2,7 @@ export const SETTINGS_SECTIONS = [
   "preferences",
   "notifications",
   "integrations",
+  "onboarding",
   "report-issue",
 ] as const;
 
@@ -14,6 +15,7 @@ export function resolveSettingsSection(
     value === "preferences" ||
     value === "notifications" ||
     value === "integrations" ||
+    value === "onboarding" ||
     value === "report-issue"
   ) {
     return value;

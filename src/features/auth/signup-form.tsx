@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { JOURNEY_INTRO_FORCE_USER_ID_KEY } from "@/components/intro/journey-intro-overlay";
+import { clearAllTabOnboardingProgress } from "@/features/onboarding/tab-onboarding";
 import { createClient } from "@/lib/supabase/client";
 import { resolveAuthRedirectBaseUrl } from "@/lib/supabase/public-app-url";
 
@@ -120,6 +122,11 @@ export function SignupForm() {
       toast.error(error.message);
       setIsSubmitting(false);
       return;
+    }
+
+    if (data.user?.id) {
+      window.localStorage.setItem(JOURNEY_INTRO_FORCE_USER_ID_KEY, data.user.id);
+      clearAllTabOnboardingProgress();
     }
 
     if (data.session) {

@@ -24,6 +24,13 @@ describe("PlannerPageShell", () => {
     mockSearch = "";
   });
 
+  it("does not show a first-visit guide on the default Checklist surface", () => {
+    render(<PlannerPageShell />);
+
+    expect(screen.getByText("Checklist surface")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Checklist guide" })).toBeNull();
+  });
+
   it("defaults to Checklist and switches to Calendar in one route", async () => {
     const pushStateSpy = vi.spyOn(window.history, "pushState");
     const user = userEvent.setup();

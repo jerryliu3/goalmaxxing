@@ -6,10 +6,8 @@ import {
   LogOut,
 } from "lucide-react";
 import type { PlannerPrimaryTabPreference } from "@cadence/shared/navigation/tabs";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingCard } from "@/components/ui/loading-card";
@@ -28,13 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { requestJourneyIntroOpen } from "@/components/intro/journey-intro-overlay";
-import { STARTER_PACKS } from "@/features/goals/starter-packs";
-import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
-import {
-  TAB_ONBOARDING_REPLAY_LINKS,
-  clearAllTabOnboardingProgress,
-} from "@/features/onboarding/tab-onboarding";
+import { OnboardingGuidesSettings } from "@/features/onboarding/onboarding-guides-settings";
 import { IntegrationsSettings } from "@/features/settings/integrations-settings";
 import { PlannerPreferencesSettings } from "@/features/settings/planner-preferences-settings";
 import { ReportIssueSettings } from "@/features/settings/report-issue-settings";
@@ -51,6 +43,7 @@ const SETTINGS_SECTION_ITEMS: { key: SettingsSection; label: string }[] = [
   { key: "preferences", label: "Preferences" },
   { key: "notifications", label: "Notifications" },
   { key: "integrations", label: "Integrations" },
+  { key: "onboarding", label: "Onboarding guides" },
   { key: "report-issue", label: "Report an issue" },
 ];
 
@@ -103,7 +96,9 @@ export function SettingsTab() {
         ? "Notifications"
         : settingsSection === "integrations"
           ? "Integrations"
-          : "Report an issue";
+          : settingsSection === "onboarding"
+            ? "Onboarding guides"
+            : "Report an issue";
   const settingsSectionDescription =
     settingsSection === "preferences"
       ? "Manage planner defaults and checklist/calendar ordering."
@@ -111,7 +106,9 @@ export function SettingsTab() {
         ? "Configure push access and reminder schedules."
         : settingsSection === "integrations"
           ? "Connect Apple Health or Health Connect and opt into auto-complete."
-          : "Send product bugs or UX friction details directly to support.";
+          : settingsSection === "onboarding"
+            ? "Replay the app intro and page guides."
+            : "Send product bugs or UX friction details directly to support.";
 
   if (loading) {
     return (
@@ -124,12 +121,6 @@ export function SettingsTab() {
 
   return (
     <div className="space-y-5">
-      <TabOnboardingOverlay
-        onboardingKey="settings.profile"
-        title="Profile and settings guide"
-        description="Use this page to update profile details, replay onboarding guides, and configure planner, notifications, and integrations."
-        forceOpen={searchParams.get("onboarding") === "settings.profile"}
-      />
       <ProfileSection
         userId={state.userId}
         profile={state.profile}
@@ -162,58 +153,16 @@ export function SettingsTab() {
             </button>
           ))}
           <div className="border-t p-4">
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Onboarding guides
-                </p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={requestJourneyIntroOpen}
-                  >
-                    Replay app intro
-                  </Button>
-                  {TAB_ONBOARDING_REPLAY_LINKS.map((link) => (
-                    <Button key={link.key} type="button" variant="outline" size="sm" asChild>
-                      <Link href={link.href}>{link.label}</Link>
-                    </Button>
-                  ))}
-                  {STARTER_PACKS.map((pack) => (
-                    <Button key={pack.key} type="button" variant="outline" size="sm" asChild>
-                      <Link href={`/goals/new?mode=multi&starterPack=${pack.key}`}>
-                        Open {pack.label} starter pack
-                      </Link>
-                    </Button>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      clearAllTabOnboardingProgress();
-                      toast.success("Page onboarding progress reset.");
-                    }}
-                  >
-                    Reset page guides
-                  </Button>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void signOut()}
-                  disabled={signingOut}
-                >
-                  <LogOut className="size-4" />
-                  {signingOut ? "Signing out..." : "Sign out"}
-                </Button>
-              </div>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void signOut()}
+              disabled={signingOut}
+            >
+              <LogOut className="size-4" />
+              {signingOut ? "Signing out..." : "Sign out"}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -333,6 +282,10 @@ export function SettingsTab() {
 
             {settingsSection === "notifications" ? (
               <NotificationsSection />
+            ) : null}
+
+            {settingsSection === "onboarding" ? (
+              <OnboardingGuidesSettings />
             ) : null}
 
             {settingsSection === "integrations" ? (
