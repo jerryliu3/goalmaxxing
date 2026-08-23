@@ -31,13 +31,25 @@ setup("authenticate seeded Alice account", async ({ page }) => {
     const yyyy = String(now.getFullYear());
     const mm = String(now.getMonth() + 1).padStart(2, "0");
     const dd = String(now.getDate()).padStart(2, "0");
-    window.localStorage.setItem("cadence.journey_intro_seen.v1", `${yyyy}-${mm}-${dd}`);
+    window.localStorage.setItem(
+      "cadence.journey_intro_seen.v1",
+      `${yyyy}-${mm}-${dd}`
+    );
+    window.localStorage.setItem(
+      "cadence.journey_onboarding_completed.v1",
+      "done"
+    );
+    for (const onboardingKey of [
+      "insights.main",
+      "planner.calendar",
+      "social.main",
+    ]) {
+      window.localStorage.setItem(
+        `cadence.tab_onboarding_completed.v1:${onboardingKey}`,
+        "done"
+      );
+    }
   });
-  const startJourney = page.getByRole("button", { name: "Start journey" });
-  if (await startJourney.isVisible()) {
-    await startJourney.click();
-  }
-
   await mkdir(path.dirname(authStatePath), { recursive: true });
   await page.context().storageState({ path: authStatePath });
 });

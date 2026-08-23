@@ -67,7 +67,7 @@ export function AppShell({
       <XpProfileProvider>
         <JourneyProvider flags={journeyFlags}>
           <AltitudeBackdrop journeyFlags={journeyFlags} />
-          <JourneyIntroOverlay />
+          <JourneyIntroOverlay userId={userId} />
           <DuoProvider
             key={`${duoAvailability}:${duoState.activePartner?.partnerId ?? "none"}`}
             viewerUserId={userId}

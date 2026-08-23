@@ -113,6 +113,15 @@ async function openCalendar(page: Page, scopeMonth?: string) {
   }
 }
 
+async function dismissTabOnboardingIfPresent(page: Page) {
+  const onboardingDialog = page.locator('[aria-labelledby^="tab-onboarding-"]');
+  if (!(await onboardingDialog.first().isVisible().catch(() => false))) {
+    return;
+  }
+  await onboardingDialog.getByRole("button", { name: "Dismiss" }).click();
+  await expect(onboardingDialog.first()).toBeHidden();
+}
+
 async function waitForCalendarReady(page: Page) {
   const loadingLocator = page.getByText("Loading planner month context...");
   const setupHeading = page.getByRole("heading", { name: "Plan setup" });
@@ -127,6 +136,7 @@ async function waitForCalendarReady(page: Page) {
       { timeout: 20_000 }
     )
     .not.toBe("loading");
+  await dismissTabOnboardingIfPresent(page);
 }
 
 async function ensureMonthCalendarDensity(page: Page) {

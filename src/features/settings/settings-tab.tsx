@@ -26,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { requestJourneyIntroOpen } from "@/components/intro/journey-intro-overlay";
+import { OnboardingGuidesSettings } from "@/features/onboarding/onboarding-guides-settings";
 import { IntegrationsSettings } from "@/features/settings/integrations-settings";
 import { PlannerPreferencesSettings } from "@/features/settings/planner-preferences-settings";
 import { ReportIssueSettings } from "@/features/settings/report-issue-settings";
@@ -43,6 +43,7 @@ const SETTINGS_SECTION_ITEMS: { key: SettingsSection; label: string }[] = [
   { key: "preferences", label: "Preferences" },
   { key: "notifications", label: "Notifications" },
   { key: "integrations", label: "Integrations" },
+  { key: "onboarding", label: "Onboarding guides" },
   { key: "report-issue", label: "Report an issue" },
 ];
 
@@ -95,7 +96,9 @@ export function SettingsTab() {
         ? "Notifications"
         : settingsSection === "integrations"
           ? "Integrations"
-          : "Report an issue";
+          : settingsSection === "onboarding"
+            ? "Onboarding guides"
+            : "Report an issue";
   const settingsSectionDescription =
     settingsSection === "preferences"
       ? "Manage planner defaults and checklist/calendar ordering."
@@ -103,7 +106,9 @@ export function SettingsTab() {
         ? "Configure push access and reminder schedules."
         : settingsSection === "integrations"
           ? "Connect Apple Health or Health Connect and opt into auto-complete."
-          : "Send product bugs or UX friction details directly to support.";
+          : settingsSection === "onboarding"
+            ? "Replay the app intro and page guides."
+            : "Send product bugs or UX friction details directly to support.";
 
   if (loading) {
     return (
@@ -148,26 +153,16 @@ export function SettingsTab() {
             </button>
           ))}
           <div className="border-t p-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={requestJourneyIntroOpen}
-              >
-                Replay onboarding
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => void signOut()}
-                disabled={signingOut}
-              >
-                <LogOut className="size-4" />
-                {signingOut ? "Signing out..." : "Sign out"}
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void signOut()}
+              disabled={signingOut}
+            >
+              <LogOut className="size-4" />
+              {signingOut ? "Signing out..." : "Sign out"}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -287,6 +282,10 @@ export function SettingsTab() {
 
             {settingsSection === "notifications" ? (
               <NotificationsSection />
+            ) : null}
+
+            {settingsSection === "onboarding" ? (
+              <OnboardingGuidesSettings />
             ) : null}
 
             {settingsSection === "integrations" ? (

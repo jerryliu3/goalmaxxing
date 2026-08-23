@@ -6,6 +6,7 @@ describe("resolveSettingsSection", () => {
     expect(resolveSettingsSection("preferences")).toBe("preferences");
     expect(resolveSettingsSection("notifications")).toBe("notifications");
     expect(resolveSettingsSection("integrations")).toBe("integrations");
+    expect(resolveSettingsSection("onboarding")).toBe("onboarding");
     expect(resolveSettingsSection("report-issue")).toBe("report-issue");
   });
 

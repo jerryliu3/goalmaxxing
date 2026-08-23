@@ -1193,6 +1193,7 @@ export function CalendarSurface({
     canMutateEntryOnDay,
     getOrderedEntriesForDay,
     getCompletionFactMarkersForDay,
+    visibleCells: viewMode === "month" ? cells : focusedWeekCells,
     dayPreviewInteractions,
   });
   const rollingWeekStrip = (
@@ -1310,7 +1311,10 @@ export function CalendarSurface({
         </div>
       ) : month ? (
         <>
-          <div className="rounded-xl border bg-card p-4 shadow-sm">
+          <div
+            className="rounded-xl border bg-card p-4 shadow-sm"
+            data-onboarding="planner.calendar.board"
+          >
             <PlannerViewWindowHeader
               loading={loading}
               viewMode={viewMode}

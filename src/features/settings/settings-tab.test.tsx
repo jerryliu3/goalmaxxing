@@ -67,6 +67,10 @@ vi.mock("@/features/settings/report-issue-settings", () => ({
   ReportIssueSettings: () => <div>Report issue body</div>,
 }));
 
+vi.mock("@/features/onboarding/onboarding-guides-settings", () => ({
+  OnboardingGuidesSettings: () => <div>Onboarding guides body</div>,
+}));
+
 vi.mock("@/components/intro/journey-intro-overlay", () => ({
   requestJourneyIntroOpen: vi.fn(),
 }));
@@ -105,10 +109,23 @@ describe("SettingsTab", () => {
     expect(screen.getByRole("dialog", { name: "Integrations" })).toBeInTheDocument();
   });
 
+  it("opens onboarding guides from the tab query", () => {
+    mockSearch = "tab=onboarding";
+    render(<SettingsTab />);
+
+    expect(
+      screen.getByRole("dialog", { name: "Onboarding guides" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Onboarding guides body")).toBeInTheDocument();
+  });
+
   it("keeps the panel closed for unknown tab values", () => {
     mockSearch = "tab=profile";
     render(<SettingsTab />);
 
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+    expect(
+      screen.queryByRole("dialog", { name: "Preferences" })
+    ).toBeNull();
   });
 });

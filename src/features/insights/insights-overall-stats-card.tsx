@@ -59,7 +59,7 @@ export function InsightsOverallStatsCard({
   showMoreLink?: boolean;
 }) {
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-sm" data-onboarding="insights.overall">
       <CardHeader>
         <div className="flex items-center gap-2">
           <Layers3 className="size-4 text-primary" />

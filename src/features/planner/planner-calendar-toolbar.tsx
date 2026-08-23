@@ -154,7 +154,10 @@ export function PlannerCalendarToolbar({
               disabled={loading}
             />
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div
+            className="flex shrink-0 items-center gap-2"
+            data-onboarding="planner.calendar.controls"
+          >
             <Select
               value={viewMode}
               onValueChange={(value) => onViewModeChange(value as PlannerCalendarViewMode)}
