@@ -97,7 +97,7 @@ export function LandingWowProductStage({
           </p>
           <p className="text-sm font-semibold">{sceneTitle(productScene)}</p>
         </div>
-        <span className="rounded-full bg-[#E8DFD2] px-2.5 py-1 text-[10px] text-[#6F6A64]">
+        <span className="rounded-full bg-[#E8DFD2] px-2.5 py-1 text-[10px] font-medium text-[#3F3B36]">
           Live story
         </span>
       </div>

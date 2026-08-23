@@ -42,8 +42,12 @@ describe("getSceneState", () => {
   });
 
   it("plays August plan only once without resetting local progress", () => {
-    expect(COMBINED_SCENE_STOPS.filter((stop) => stop.scene === "month")).toHaveLength(1);
-    expect(COMBINED_SCENE_STOPS.some((stop) => stop.scene === "emerge")).toBe(false);
+    expect(COMBINED_SCENE_STOPS.map((stop) => stop.scene)).toEqual([
+      "month",
+      "checks",
+      "insights",
+      "rank",
+    ]);
 
     const early = getSceneState(0.04, COMBINED_SCENE_STOPS);
     const later = getSceneState(0.1, COMBINED_SCENE_STOPS);
