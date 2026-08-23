@@ -13,7 +13,9 @@ export function createClient() {
     if (!hasDemoStore()) {
       installDemoRuntime();
     }
-    return getDemoSupabaseClient() as ReturnType<typeof createBrowserClient<Database>>;
+    return getDemoSupabaseClient() as unknown as ReturnType<
+      typeof createBrowserClient<Database>
+    >;
   }
 
   const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();

@@ -7,6 +7,11 @@ import type { TeamStateRpcRow } from "@cadence/shared/social/team";
 
 type DemoRow = Record<string, unknown>;
 
+type DemoQueryResult = {
+  data: unknown;
+  error: { message: string; code?: string } | null;
+};
+
 const WRITE_ERROR = {
   message: DEMO_UNSUPPORTED_MESSAGE,
   code: "demo_unsupported",
@@ -56,7 +61,8 @@ class DemoQuery {
 
   constructor(private readonly table: string) {}
 
-  select() {
+  select(..._args: unknown[]) {
+    void _args;
     return this;
   }
   eq(column: string, value: unknown) {
@@ -104,24 +110,28 @@ class DemoQuery {
     this.resultMode = "single";
     return this;
   }
-  insert() {
+  insert(..._args: unknown[]) {
+    void _args;
     this.write = true;
     return this;
   }
-  update() {
+  update(..._args: unknown[]) {
+    void _args;
     this.write = true;
     return this;
   }
-  upsert() {
+  upsert(..._args: unknown[]) {
+    void _args;
     this.write = true;
     return this;
   }
-  delete() {
+  delete(..._args: unknown[]) {
+    void _args;
     this.write = true;
     return this;
   }
 
-  private resolve() {
+  private resolve(): DemoQueryResult {
     if (this.write) {
       return { data: null, error: WRITE_ERROR };
     }
@@ -149,10 +159,8 @@ class DemoQuery {
     return { data: rows, error: null };
   }
 
-  then<TResult1 = { data: unknown; error: unknown }, TResult2 = never>(
-    onfulfilled?:
-      | ((value: { data: unknown; error: unknown }) => TResult1 | PromiseLike<TResult1>)
-      | null,
+  then<TResult1 = DemoQueryResult, TResult2 = never>(
+    onfulfilled?: ((value: DemoQueryResult) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
   ) {
     return Promise.resolve(this.resolve()).then(onfulfilled, onrejected);
@@ -199,7 +207,8 @@ export function getDemoSupabaseClient() {
     from(table: string) {
       return new DemoQuery(table);
     },
-    rpc(name: string) {
+    rpc(name: string, _args?: unknown) {
+      void _args;
       if (name === "get_team_state") {
         return Promise.resolve({ data: teamStateRows(), error: null });
       }
