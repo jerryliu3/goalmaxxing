@@ -2,7 +2,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
 
-select plan(12);
+select plan(10);
 
 insert into auth.users (id, email, raw_user_meta_data)
 values (
@@ -47,35 +47,13 @@ select is(
 
 select is(
   (
-    select (goal.end_date - goal.start_date)::integer
+    select count(*)::integer
     from public.goals goal
     where goal.owner_id = '7a111111-1111-4111-8111-111111111111'
-      and goal.title = 'Create your Goalmaxxing account'
+      and (goal.end_date - goal.start_date)::integer = 7
   ),
-  0,
-  'account setup starter goal is due on creation date'
-);
-
-select is(
-  (
-    select (goal.end_date - goal.start_date)::integer
-    from public.goals goal
-    where goal.owner_id = '7a111111-1111-4111-8111-111111111111'
-      and goal.title = 'Create your first goal'
-  ),
-  1,
-  'first goal starter item is due the next day'
-);
-
-select is(
-  (
-    select (goal.end_date - goal.start_date)::integer
-    from public.goals goal
-    where goal.owner_id = '7a111111-1111-4111-8111-111111111111'
-      and goal.title = 'Invite your first teammate'
-  ),
-  7,
-  'team invite starter item is due within the first week'
+  3,
+  'starter goals are due seven days after their start date'
 );
 
 insert into auth.users (id, email, raw_user_meta_data)

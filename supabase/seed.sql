@@ -573,7 +573,7 @@ with onboarding_defaults as (
         'personal'::text,
         '#6366f1'::text,
         current_date,
-        current_date,
+        current_date + 7,
         array['Account setup complete']::text[]
       ),
       (
@@ -584,7 +584,7 @@ with onboarding_defaults as (
         'personal'::text,
         '#6366f1'::text,
         current_date,
-        current_date + 1,
+        current_date + 7,
         array['First goal created']::text[]
       ),
       (
@@ -648,13 +648,20 @@ select
   'easy'::public.goal_difficulty,
   false
 from onboarding_defaults defaults
-where not exists (
-  select 1
-  from public.goals goal
-  where goal.owner_id = '44444444-4444-4444-8444-444444444444'
-    and goal.title = defaults.title
-    and goal.is_deleted = false
-);
+on conflict (id) do update
+set
+  title = excluded.title,
+  description = excluded.description,
+  category = excluded.category,
+  category_key = excluded.category_key,
+  color = excluded.color,
+  frequency_type = excluded.frequency_type,
+  recurrence_interval = excluded.recurrence_interval,
+  target_count = excluded.target_count,
+  milestone_names = excluded.milestone_names,
+  start_date = excluded.start_date,
+  end_date = excluded.end_date,
+  updated_at = now();
 
 insert into public.goal_links (owner_id, source_goal_id, target_goal_id)
 values
