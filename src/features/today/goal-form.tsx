@@ -476,7 +476,7 @@ export function GoalForm({
 
     if (state.frequency_type === "recurring" && !state.recurrence_interval) {
       return {
-        validationError: "Cadence goals require a cadence.",
+        validationError: "Repeated goals require a cadence.",
         validationWarning: null,
       };
     }

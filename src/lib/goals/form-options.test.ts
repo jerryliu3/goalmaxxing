@@ -9,7 +9,7 @@ import {
 describe("goal create kinds", () => {
   it("labels cadence and milestone types for the create form", () => {
     expect(GOAL_TYPE_OPTIONS).toEqual([
-      { value: "recurring", label: "Cadence" },
+      { value: "recurring", label: "Repeated" },
       { value: "fixed_milestones", label: "Milestones" },
     ]);
     expect(PLANNER_TASK_TYPE_OPTION).toEqual({
@@ -19,7 +19,7 @@ describe("goal create kinds", () => {
   });
 
   it("explains each create kind in plain language", () => {
-    expect(GOAL_CREATE_KIND_HELP.recurring).toMatch(/approximate frequency/i);
+    expect(GOAL_CREATE_KIND_HELP.recurring).toMatch(/not rigid/i);
     expect(GOAL_CREATE_KIND_HELP.fixed_milestones).toMatch(/unique steps/i);
     expect(GOAL_CREATE_KIND_HELP.planner_task).toMatch(/Planner → Tasks/i);
     expect(isPlannerTaskCreateKind("planner_task")).toBe(true);

@@ -709,7 +709,7 @@ export function BulkGoalForm({
                         <Label className="inline-flex items-center gap-1">
                           <span>Goal type</span>
                           <TooltipIcon
-                            content="Cadence keeps the same action pattern over time. Milestones are unique steps that move you toward a final outcome."
+                            content="Repeated keeps the same action pattern over time. Milestones are unique steps that move you toward a final outcome."
                             label="Goal type help"
                           />
                         </Label>

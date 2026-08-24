@@ -48,11 +48,11 @@ describe("GoalTypeToggle", () => {
     render(<GoalTypeToggle value="recurring" onValueChange={vi.fn()} />);
 
     const trigger = screen.getByRole("combobox");
-    expect(trigger).toHaveTextContent("Cadence");
+    expect(trigger).toHaveTextContent("Repeated");
 
     await user.click(trigger);
     const listbox = screen.getByRole("listbox");
-    expect(within(listbox).getByRole("option", { name: "Cadence" })).toBeInTheDocument();
+    expect(within(listbox).getByRole("option", { name: "Repeated" })).toBeInTheDocument();
     expect(within(listbox).getByRole("option", { name: "Milestones" })).toBeInTheDocument();
     expect(within(listbox).queryByRole("option", { name: "Task" })).not.toBeInTheDocument();
   });
@@ -69,7 +69,7 @@ describe("GoalTypeToggle", () => {
 
     await user.click(screen.getByRole("combobox"));
     const listbox = screen.getByRole("listbox");
-    expect(within(listbox).getByRole("option", { name: "Cadence" })).toBeInTheDocument();
+    expect(within(listbox).getByRole("option", { name: "Repeated" })).toBeInTheDocument();
     expect(within(listbox).getByRole("option", { name: "Milestones" })).toBeInTheDocument();
     expect(within(listbox).getByRole("option", { name: "Task" })).toBeInTheDocument();
   });
