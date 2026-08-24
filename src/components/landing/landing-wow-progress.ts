@@ -29,7 +29,7 @@ type TrailCubic = {
 };
 
 const CLIMB_TRAIL_CUBICS = [
-  { p0: { x: 150, y: 740 }, p1: { x: 250, y: 720 }, p2: { x: 330, y: 530 }, p3: { x: 430, y: 415 } },
+  { p0: { x: 150, y: 560 }, p1: { x: 250, y: 720 }, p2: { x: 330, y: 530 }, p3: { x: 430, y: 415 } },
   { p0: { x: 430, y: 415 }, p1: { x: 510, y: 330 }, p2: { x: 610, y: 350 }, p3: { x: 730, y: 430 } },
   { p0: { x: 730, y: 430 }, p1: { x: 850, y: 500 }, p2: { x: 990, y: 250 }, p3: { x: 1120, y: 175 } },
   { p0: { x: 1120, y: 175 }, p1: { x: 1155, y: 145 }, p2: { x: 1172, y: 148 }, p3: { x: 1180, y: 150 } },
@@ -49,7 +49,7 @@ export function getClimbTrailPoint(progress: number): TrailPoint {
   const t = clamp01(progress);
   const last = CLIMB_TRAIL_CUBICS[CLIMB_TRAIL_CUBICS.length - 1];
   if (!last) {
-    return { x: 150, y: 740 };
+    return { x: 150, y: 560 };
   }
   if (t >= 1) {
     return last.p3;

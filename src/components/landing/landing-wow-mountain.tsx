@@ -168,18 +168,6 @@ export function LandingWowMountain({ progress }: { progress: number }) {
             filter={`url(#${reactId}-glow)`}
           />
 
-          <g>
-            <path
-              d="M -80 760 L 40 640 L 170 710 L 310 490 L 470 680 L 640 500 L 810 640 L 980 470 L 1180 620 L 1360 510 L 1520 600 L 1520 900 L -80 900 Z"
-              fill={`url(#${reactId}-near)`}
-            />
-            <path
-              d="M 640 500 L 810 640 L 720 575 Z"
-              fill={`url(#${reactId}-sage)`}
-              opacity="0.4"
-            />
-          </g>
-
           <g
             data-testid="wow-climb-indicator"
             data-climb-biome={biome}
@@ -217,6 +205,18 @@ export function LandingWowMountain({ progress }: { progress: number }) {
             >
               {biome.toUpperCase()}
             </text>
+          </g>
+
+          <g>
+            <path
+              d="M -80 760 L 40 640 L 170 710 L 310 490 L 470 680 L 640 500 L 810 640 L 980 470 L 1180 620 L 1360 510 L 1520 600 L 1520 900 L -80 900 Z"
+              fill={`url(#${reactId}-near)`}
+            />
+            <path
+              d="M 640 500 L 810 640 L 720 575 Z"
+              fill={`url(#${reactId}-sage)`}
+              opacity="0.4"
+            />
           </g>
         </svg>
       </div>

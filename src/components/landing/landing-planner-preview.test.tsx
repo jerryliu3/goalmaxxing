@@ -1,15 +1,27 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getMonthDemoEntries,
+  getDuoMonthTodayLayout,
+  getSeededTaskDetail,
+  getWeekTodayCellLayout,
+  isStrengthInFlightToToday,
   isBusyPlannerDemoPhase,
   LandingPlannerPreview,
   moreCountLabel,
   monthEntries,
   nextPlannerDemoPhase,
+  PARTNER_WEEK_TODAY,
+  partnerCompletions,
   phaseDurationMs,
   plannerDemoViewOptions,
   SEEDED_TODAY,
+  STRENGTH_MOVE_SOURCE_DAY,
+  STRENGTH_RECURRING_DAYS,
+  TEMPO_MOVE_DEST_DAY,
+  visibleMonthGoalIds,
+  visibleWeekGoalIds,
   WEEK_CELL_VISIBLE_COUNT,
   WEEK_PREVIEW_VISIBLE_COUNT,
   WEEK_TODAY_TASKS,
@@ -23,6 +35,8 @@ vi.mock("motion/react", async (importOriginal) => {
     useReducedMotion: () => true,
   };
 });
+
+afterEach(cleanup);
 
 describe("nextPlannerDemoPhase", () => {
   it("starts on month, saves through a clicked Save plan control, then completes a week session", () => {
@@ -108,8 +122,14 @@ describe("getMonthDemoEntries", () => {
       }))
     ).toEqual([
       { id: "review", variant: "default" },
-      { id: "tempo", variant: "new" },
+      { id: "strength", variant: "default" },
     ]);
+    expect(
+      getMonthDemoEntries(TEMPO_MOVE_DEST_DAY, "saving").map((entry) => ({
+        id: entry.id,
+        variant: entry.variant,
+      }))
+    ).toEqual([{ id: "tempo", variant: "new" }]);
 
     expect(getMonthDemoEntries(8, "saved")).toEqual([]);
     expect(
@@ -119,8 +139,19 @@ describe("getMonthDemoEntries", () => {
       }))
     ).toEqual([
       { id: "review", variant: "default" },
-      { id: "tempo", variant: "default" },
+      { id: "strength", variant: "default" },
     ]);
+    expect(
+      getMonthDemoEntries(TEMPO_MOVE_DEST_DAY, "saved").map((entry) => ({
+        id: entry.id,
+        variant: entry.variant,
+      }))
+    ).toEqual([{ id: "tempo", variant: "default" }]);
+    expect(
+      getMonthDemoEntries(STRENGTH_MOVE_SOURCE_DAY, "saved").map(
+        (entry) => entry.id
+      )
+    ).toEqual([]);
     expect(
       getMonthDemoEntries(SEEDED_TODAY, "saved").map((entry) => entry.id)
     ).toEqual(["launch", "strength"]);
@@ -137,13 +168,161 @@ describe("LandingPlannerPreview copy", () => {
     }
   });
 
-  it("gives the selected week day a dense list with an elegant overflow", () => {
-    expect(WEEK_TODAY_TASKS.length).toBeGreaterThanOrEqual(5);
+  it("gives the selected week day a compact today list", () => {
+    expect(WEEK_TODAY_TASKS).toHaveLength(4);
     expect(
       moreCountLabel(WEEK_TODAY_TASKS.length - WEEK_PREVIEW_VISIBLE_COUNT)
     ).toBe("+1 more");
     expect(
       moreCountLabel(WEEK_TODAY_TASKS.length - WEEK_CELL_VISIBLE_COUNT)
-    ).toBe("+3 more");
+    ).toBe("+1 more");
+  });
+});
+
+describe("seeded task details", () => {
+  it("uses goal-specific schedule and category labels", () => {
+    expect(getSeededTaskDetail(WEEK_TODAY_TASKS[0])).toBe(
+      "Weekly recurring · Health"
+    );
+    expect(getSeededTaskDetail(WEEK_TODAY_TASKS[1])).toBe("Daily · Career");
+    expect(getSeededTaskDetail(WEEK_TODAY_TASKS[3])).toBe(
+      "Weekly recurring · Relationships"
+    );
+    expect(getSeededTaskDetail(PARTNER_WEEK_TODAY)).toBe(
+      "Weekly recurring · Health"
+    );
+  });
+});
+
+describe("duo month today overflow", () => {
+  it("folds the partner goal into +1 more when today has three items", () => {
+    const layout = getDuoMonthTodayLayout(
+      [
+        { id: "launch", label: "Launch notes", tone: "amber", variant: "default" },
+        { id: "strength", label: "Strength", tone: "emerald", variant: "default" },
+      ],
+      [{ id: "yoga", day: 15, label: "Yoga" }]
+    );
+
+    expect(layout.viewerVisible.map((entry) => entry.id)).toEqual([
+      "launch",
+      "strength",
+    ]);
+    expect(layout.partnerVisible).toEqual([]);
+    expect(layout.hiddenCount).toBe(1);
+    expect(moreCountLabel(layout.hiddenCount)).toBe("+1 more");
+  });
+
+  it("hides the partner goal only after strength lands on today", () => {
+    const layout = getDuoMonthTodayLayout(
+      [{ id: "launch", label: "Launch notes", tone: "amber", variant: "default" }],
+      [{ id: "yoga", day: 15, label: "Yoga" }],
+      { strengthLandedOnToday: true }
+    );
+
+    expect(layout.viewerVisible.map((entry) => entry.id)).toEqual(["launch"]);
+    expect(layout.partnerVisible).toEqual([]);
+    expect(layout.hiddenCount).toBe(1);
+  });
+
+  it("keeps the partner goal visible while strength is still in flight", () => {
+    const layout = getDuoMonthTodayLayout(
+      [{ id: "launch", label: "Launch notes", tone: "amber", variant: "default" }],
+      [{ id: "yoga", day: 15, label: "Yoga" }],
+      { strengthLandedOnToday: false }
+    );
+
+    expect(layout.partnerVisible.map((entry) => entry.id)).toEqual(["yoga"]);
+    expect(layout.hiddenCount).toBe(0);
+  });
+});
+
+describe("duo strength flight", () => {
+  it("treats the partner pill as the in-flight drop target on today", () => {
+    expect(
+      isStrengthInFlightToToday("month-moving-future", false, false)
+    ).toBe(true);
+    expect(
+      isStrengthInFlightToToday("month-moving-future", true, false)
+    ).toBe(false);
+    expect(isStrengthInFlightToToday("month", false, false)).toBe(false);
+  });
+});
+
+describe("week today overflow", () => {
+  it("shows +1 more in solo and +2 more in duo", () => {
+    expect(getWeekTodayCellLayout("solo").hiddenCount).toBe(1);
+    expect(getWeekTodayCellLayout("duo").hiddenCount).toBe(2);
+    expect(getWeekTodayCellLayout("partner").showPartnerInCell).toBe(true);
+  });
+});
+
+describe("strength recurring demo", () => {
+  it("shows strength on every Saturday before one occurrence moves", () => {
+    for (const day of STRENGTH_RECURRING_DAYS) {
+      expect(
+        getMonthDemoEntries(day, "month").some((entry) => entry.id === "strength")
+      ).toBe(true);
+    }
+  });
+});
+
+describe("planner demo modes", () => {
+  it("makes Duo the exact union of Solo and Partner goals", () => {
+    const soloMonth = visibleMonthGoalIds("solo");
+    const partnerMonth = visibleMonthGoalIds("partner");
+    const duoMonth = visibleMonthGoalIds("duo");
+    const soloWeek = visibleWeekGoalIds("solo");
+    const partnerWeek = visibleWeekGoalIds("partner");
+    const duoWeek = visibleWeekGoalIds("duo");
+
+    expect(soloMonth.length).toBeGreaterThan(0);
+    expect(partnerMonth.length).toBeGreaterThan(0);
+    expect(soloMonth.filter((id) => partnerMonth.includes(id))).toEqual([]);
+    expect(duoMonth).toEqual([...soloMonth, ...partnerMonth]);
+    expect(duoWeek).toEqual([...soloWeek, ...partnerWeek]);
+    expect(partnerCompletions.every((entry) => entry.label.trim().length > 0)).toBe(
+      true
+    );
+  });
+
+  it("jump-cuts Solo, Partner, and Duo without mixing ownership", async () => {
+    const user = userEvent.setup();
+    render(<LandingPlannerPreview />);
+
+    expect(
+      screen.getByText(
+        "Your plan, your goals. Organized exactly the way you want."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("landing-try-me")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Solo" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(screen.getByText("Deep work")).toBeInTheDocument();
+    expect(screen.queryByText("Yoga")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("radio", { name: "Partner" }));
+    expect(screen.getByRole("radio", { name: "Partner" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(
+      screen.getByText(
+        "See a teammate's progress and keep them motivated."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText("Yoga")).toBeInTheDocument();
+    expect(screen.queryByText("Deep work")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("radio", { name: "Duo" }));
+    expect(
+      screen.getByText(
+        "Shared interfaces to work on team goals and coordinate plans together."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText("Deep work")).toBeInTheDocument();
+    expect(screen.getByText("Yoga")).toBeInTheDocument();
   });
 });
