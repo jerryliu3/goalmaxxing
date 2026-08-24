@@ -1,6 +1,8 @@
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+const mockSocialActivityVisible = vi.hoisted(() => ({ value: true as boolean }));
 import {
   invalidateSocialFeedCache,
   invalidateSocialTabCache,
@@ -66,9 +68,30 @@ vi.mock("@/features/social/group-join-card", () => ({
   GroupJoinCard: () => <div data-testid="group-join-card" />,
 }));
 
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    auth: {
+      getUser: () =>
+        Promise.resolve({ data: { user: { id: "user-1" } }, error: null }),
+    },
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: () =>
+            Promise.resolve({
+              data: { social_activity_visible: mockSocialActivityVisible.value },
+              error: null,
+            }),
+        }),
+      }),
+    }),
+  }),
+}));
+
 afterEach(() => {
   cleanup();
   mockSearch = "";
+  mockSocialActivityVisible.value = true;
   vi.useRealTimers();
   vi.clearAllMocks();
 });
@@ -183,28 +206,37 @@ describe("SocialSurface refresh behavior", () => {
     expect(invalidateSocialTabCache).toHaveBeenCalledTimes(initialRefreshCount + 1);
   });
 
-  it("shows freshness indicator only for cron-backed tabs", () => {
+  it("shows freshness indicator only for cron-backed tabs", async () => {
     mockSearch = "";
     const { rerender } = render(<SocialSurface />);
+    await waitFor(() => {
+      expect(screen.getByTestId("feed-list")).toBeInTheDocument();
+    });
     expect(screen.queryByTestId("social-freshness-indicator")).not.toBeInTheDocument();
 
     mockSearch = "tab=challenges";
     rerender(<SocialSurface />);
-    expect(screen.getByTestId("social-freshness-indicator")).toHaveAttribute(
-      "data-source",
-      "challenges"
-    );
+    await waitFor(() => {
+      expect(screen.getByTestId("social-freshness-indicator")).toHaveAttribute(
+        "data-source",
+        "challenges"
+      );
+    });
 
     mockSearch = "tab=leaderboards";
     rerender(<SocialSurface />);
-    expect(screen.getByTestId("social-freshness-indicator")).toHaveAttribute(
-      "data-source",
-      "leaderboards"
-    );
+    await waitFor(() => {
+      expect(screen.getByTestId("social-freshness-indicator")).toHaveAttribute(
+        "data-source",
+        "leaderboards"
+      );
+    });
 
     mockSearch = "tab=team";
     rerender(<SocialSurface />);
-    expect(screen.queryByTestId("social-freshness-indicator")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByTestId("social-freshness-indicator")).not.toBeInTheDocument();
+    });
   });
 });
 
@@ -214,6 +246,9 @@ describe("SocialSurface tab URL", () => {
     const user = userEvent.setup();
     render(<SocialSurface />);
 
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Challenges" })).toBeInTheDocument();
+    });
     await user.click(screen.getByRole("tab", { name: "Challenges" }));
     expect(pushStateSpy.mock.calls.at(-1)?.[2]).toBe("/social?tab=challenges");
   });
@@ -224,6 +259,9 @@ describe("SocialSurface tab URL", () => {
     const user = userEvent.setup();
     render(<SocialSurface />);
 
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Feed" })).toBeInTheDocument();
+    });
     await user.click(screen.getByRole("tab", { name: "Feed" }));
     expect(pushStateSpy.mock.calls.at(-1)?.[2]).toBe("/social");
   });
@@ -234,19 +272,54 @@ describe("SocialSurface tab URL", () => {
     const user = userEvent.setup();
     render(<SocialSurface />);
 
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
+    });
     await user.click(screen.getByRole("tab", { name: "Team" }));
     expect(pushStateSpy.mock.calls.at(-1)?.[2]).toBe(
       "/social?onboarding=social.main&tab=team"
     );
   });
 
-  it("opens the tab from the query string on refresh", () => {
+  it("opens the tab from the query string on refresh", async () => {
     mockSearch = "tab=leaderboards";
     render(<SocialSurface />);
 
-    expect(screen.getByRole("tab", { name: "Leaderboards" })).toHaveAttribute(
-      "data-state",
-      "active"
-    );
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Leaderboards" })).toHaveAttribute(
+        "data-state",
+        "active"
+      );
+    });
+  });
+});
+
+describe("SocialSurface private accounts", () => {
+  it("shows disabled public tabs but never mounts their panels", async () => {
+    mockSocialActivityVisible.value = false;
+    render(<SocialSurface />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Feed" })).toBeDisabled();
+    });
+    expect(screen.getByRole("tab", { name: "Challenges" })).toBeDisabled();
+    expect(screen.getByRole("tab", { name: "Leaderboards" })).toBeDisabled();
+    expect(screen.getByRole("tab", { name: "Team" })).toHaveAttribute("data-state", "active");
+    expect(screen.getByRole("tab", { name: "Team" })).not.toBeDisabled();
+    expect(screen.queryByTestId("feed-list")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("challenge-list")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("leaderboards-panel")).not.toBeInTheDocument();
+    expect(screen.getByTestId("team-panel")).toBeInTheDocument();
+  });
+
+  it("rewrites public community tab links to Team", async () => {
+    mockSocialActivityVisible.value = false;
+    mockSearch = "tab=feed";
+    const replaceStateSpy = vi.spyOn(window.history, "replaceState");
+    render(<SocialSurface />);
+
+    await waitFor(() => {
+      expect(replaceStateSpy.mock.calls.at(-1)?.[2]).toBe("/social?tab=team");
+    });
   });
 });

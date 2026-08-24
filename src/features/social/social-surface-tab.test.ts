@@ -10,4 +10,12 @@ describe("resolveSocialSurfaceTab", () => {
     expect(resolveSocialSurfaceTab(undefined)).toBe("feed");
     expect(resolveSocialSurfaceTab("unknown")).toBe("feed");
   });
+
+  it("sends private accounts to team regardless of the requested tab", () => {
+    expect(resolveSocialSurfaceTab(undefined, { socialActivityVisible: false })).toBe("team");
+    expect(resolveSocialSurfaceTab("feed", { socialActivityVisible: false })).toBe("team");
+    expect(resolveSocialSurfaceTab("challenges", { socialActivityVisible: false })).toBe("team");
+    expect(resolveSocialSurfaceTab("leaderboards", { socialActivityVisible: false })).toBe("team");
+    expect(resolveSocialSurfaceTab("team", { socialActivityVisible: false })).toBe("team");
+  });
 });
