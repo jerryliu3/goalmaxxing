@@ -41,10 +41,13 @@ export function SocialSurface() {
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();
   const [socialActivityVisible, setSocialActivityVisible] = useState<boolean | null>(null);
-  const activeTab = resolveSocialSurfaceTab(searchParams.get("tab") ?? undefined, {
-    socialActivityVisible: socialActivityVisible ?? true,
-  });
+  const visibilityResolved = socialActivityVisible !== null;
   const publicSocialLocked = socialActivityVisible === false;
+  const activeTab = visibilityResolved
+    ? resolveSocialSurfaceTab(searchParams.get("tab") ?? undefined, {
+        socialActivityVisible,
+      })
+    : "team";
   const [refreshToken, setRefreshToken] = useState(0);
   const lastFocusRefreshAtRef = useRef(0);
   const requestedOnboardingKey = searchParams.get("onboarding");
@@ -81,13 +84,16 @@ export function SocialSurface() {
   }, [activeTab, refreshActiveTab]);
 
   useEffect(() => {
+    if (!visibilityResolved) {
+      return;
+    }
     const timeoutId = window.setTimeout(() => {
       triggerGlobalRefresh();
     }, 0);
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [triggerGlobalRefresh]);
+  }, [triggerGlobalRefresh, visibilityResolved]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -152,9 +158,12 @@ export function SocialSurface() {
     };
   }, [handleVisibilityOrFocus]);
 
+  if (!visibilityResolved) {
+    return null;
+  }
+
   return (
     <>
-      {socialActivityVisible === null ? null : (
       <TabOnboardingOverlay
         onboardingKey="social.main"
         forceOpen={requestedOnboardingKey === "social.main"}
@@ -164,12 +173,11 @@ export function SocialSurface() {
             : undefined
         }
       />
-      )}
       <Tabs
         value={activeTab}
         onValueChange={(value) => {
           const nextTab = resolveSocialSurfaceTab(value, {
-            socialActivityVisible: socialActivityVisible ?? true,
+            socialActivityVisible,
           });
           applySearchParams((params) => {
             if (nextTab === "feed") {
@@ -183,60 +191,61 @@ export function SocialSurface() {
       >
         <TabsList
           variant="line"
-          className="grid w-full grid-cols-4 gap-1.5 rounded-2xl bg-transparent p-0"
+          className={cn(
+            "grid w-full gap-1.5 rounded-2xl bg-transparent p-0",
+            publicSocialLocked ? "grid-cols-1" : "grid-cols-4"
+          )}
         >
-          <TabsTrigger
-            value="feed"
-            className={cn(
-              socialSurfaceTriggerBaseClass,
-              socialSurfaceTriggerToneClass
-            )}
-            style={
-              activeTab === "feed" ? { boxShadow: selectedChipShadow } : undefined
-            }
-            data-onboarding="social.feed"
-            disabled={publicSocialLocked}
-            title={publicSocialLocked ? "Private accounts use Team only." : undefined}
-          >
-            <Newspaper className="size-3.5" />
-            <span className="truncate">Feed</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="challenges"
-            className={cn(
-              socialSurfaceTriggerBaseClass,
-              socialSurfaceTriggerToneClass
-            )}
-            style={
-              activeTab === "challenges"
-                ? { boxShadow: selectedChipShadow }
-                : undefined
-            }
-            data-onboarding="social.compete"
-            disabled={publicSocialLocked}
-            title={publicSocialLocked ? "Private accounts use Team only." : undefined}
-          >
-            <Trophy className="size-3.5" />
-            <span className="truncate">Challenges</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="leaderboards"
-            className={cn(
-              socialSurfaceTriggerBaseClass,
-              socialSurfaceTriggerToneClass
-            )}
-            style={
-              activeTab === "leaderboards"
-                ? { boxShadow: selectedChipShadow }
-                : undefined
-            }
-            data-onboarding="social.compete"
-            disabled={publicSocialLocked}
-            title={publicSocialLocked ? "Private accounts use Team only." : undefined}
-          >
-            <Flag className="size-3.5" />
-            <span className="truncate">Leaderboards</span>
-          </TabsTrigger>
+          {!publicSocialLocked ? (
+            <>
+              <TabsTrigger
+                value="feed"
+                className={cn(
+                  socialSurfaceTriggerBaseClass,
+                  socialSurfaceTriggerToneClass
+                )}
+                style={
+                  activeTab === "feed" ? { boxShadow: selectedChipShadow } : undefined
+                }
+                data-onboarding="social.feed"
+              >
+                <Newspaper className="size-3.5" />
+                <span className="truncate">Feed</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="challenges"
+                className={cn(
+                  socialSurfaceTriggerBaseClass,
+                  socialSurfaceTriggerToneClass
+                )}
+                style={
+                  activeTab === "challenges"
+                    ? { boxShadow: selectedChipShadow }
+                    : undefined
+                }
+                data-onboarding="social.compete"
+              >
+                <Trophy className="size-3.5" />
+                <span className="truncate">Challenges</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="leaderboards"
+                className={cn(
+                  socialSurfaceTriggerBaseClass,
+                  socialSurfaceTriggerToneClass
+                )}
+                style={
+                  activeTab === "leaderboards"
+                    ? { boxShadow: selectedChipShadow }
+                    : undefined
+                }
+                data-onboarding="social.compete"
+              >
+                <Flag className="size-3.5" />
+                <span className="truncate">Leaderboards</span>
+              </TabsTrigger>
+            </>
+          ) : null}
           <TabsTrigger
             value="team"
             className={cn(
@@ -252,24 +261,28 @@ export function SocialSurface() {
             <span className="truncate">Team</span>
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="feed" className="space-y-4">
-          <FeedList isActive={activeTab === "feed"} refreshToken={refreshToken} />
-        </TabsContent>
-        <TabsContent value="challenges" className="space-y-4">
-          <GroupJoinCard />
-          <ChallengeList
-            isActive={activeTab === "challenges"}
-            refreshToken={refreshToken}
-            onRefreshRequested={triggerGlobalRefresh}
-          />
-        </TabsContent>
-        <TabsContent value="leaderboards" className="space-y-4">
-          <LeaderboardsPanel
-            isActive={activeTab === "leaderboards"}
-            refreshToken={refreshToken}
-            onRefreshRequested={triggerGlobalRefresh}
-          />
-        </TabsContent>
+        {!publicSocialLocked ? (
+          <>
+            <TabsContent value="feed" className="space-y-4">
+              <FeedList isActive={activeTab === "feed"} refreshToken={refreshToken} />
+            </TabsContent>
+            <TabsContent value="challenges" className="space-y-4">
+              <GroupJoinCard />
+              <ChallengeList
+                isActive={activeTab === "challenges"}
+                refreshToken={refreshToken}
+                onRefreshRequested={triggerGlobalRefresh}
+              />
+            </TabsContent>
+            <TabsContent value="leaderboards" className="space-y-4">
+              <LeaderboardsPanel
+                isActive={activeTab === "leaderboards"}
+                refreshToken={refreshToken}
+                onRefreshRequested={triggerGlobalRefresh}
+              />
+            </TabsContent>
+          </>
+        ) : null}
         <TabsContent value="team" className="space-y-4">
           <TeamPanel isActive={activeTab === "team"} refreshToken={refreshToken} />
         </TabsContent>

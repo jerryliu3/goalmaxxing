@@ -206,28 +206,37 @@ describe("SocialSurface refresh behavior", () => {
     expect(invalidateSocialTabCache).toHaveBeenCalledTimes(initialRefreshCount + 1);
   });
 
-  it("shows freshness indicator only for cron-backed tabs", () => {
+  it("shows freshness indicator only for cron-backed tabs", async () => {
     mockSearch = "";
     const { rerender } = render(<SocialSurface />);
+    await waitFor(() => {
+      expect(screen.getByTestId("feed-list")).toBeInTheDocument();
+    });
     expect(screen.queryByTestId("social-freshness-indicator")).not.toBeInTheDocument();
 
     mockSearch = "tab=challenges";
     rerender(<SocialSurface />);
-    expect(screen.getByTestId("social-freshness-indicator")).toHaveAttribute(
-      "data-source",
-      "challenges"
-    );
+    await waitFor(() => {
+      expect(screen.getByTestId("social-freshness-indicator")).toHaveAttribute(
+        "data-source",
+        "challenges"
+      );
+    });
 
     mockSearch = "tab=leaderboards";
     rerender(<SocialSurface />);
-    expect(screen.getByTestId("social-freshness-indicator")).toHaveAttribute(
-      "data-source",
-      "leaderboards"
-    );
+    await waitFor(() => {
+      expect(screen.getByTestId("social-freshness-indicator")).toHaveAttribute(
+        "data-source",
+        "leaderboards"
+      );
+    });
 
     mockSearch = "tab=team";
     rerender(<SocialSurface />);
-    expect(screen.queryByTestId("social-freshness-indicator")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByTestId("social-freshness-indicator")).not.toBeInTheDocument();
+    });
   });
 });
 
@@ -237,6 +246,9 @@ describe("SocialSurface tab URL", () => {
     const user = userEvent.setup();
     render(<SocialSurface />);
 
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Challenges" })).toBeInTheDocument();
+    });
     await user.click(screen.getByRole("tab", { name: "Challenges" }));
     expect(pushStateSpy.mock.calls.at(-1)?.[2]).toBe("/social?tab=challenges");
   });
@@ -247,6 +259,9 @@ describe("SocialSurface tab URL", () => {
     const user = userEvent.setup();
     render(<SocialSurface />);
 
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Feed" })).toBeInTheDocument();
+    });
     await user.click(screen.getByRole("tab", { name: "Feed" }));
     expect(pushStateSpy.mock.calls.at(-1)?.[2]).toBe("/social");
   });
@@ -257,35 +272,43 @@ describe("SocialSurface tab URL", () => {
     const user = userEvent.setup();
     render(<SocialSurface />);
 
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
+    });
     await user.click(screen.getByRole("tab", { name: "Team" }));
     expect(pushStateSpy.mock.calls.at(-1)?.[2]).toBe(
       "/social?onboarding=social.main&tab=team"
     );
   });
 
-  it("opens the tab from the query string on refresh", () => {
+  it("opens the tab from the query string on refresh", async () => {
     mockSearch = "tab=leaderboards";
     render(<SocialSurface />);
 
-    expect(screen.getByRole("tab", { name: "Leaderboards" })).toHaveAttribute(
-      "data-state",
-      "active"
-    );
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Leaderboards" })).toHaveAttribute(
+        "data-state",
+        "active"
+      );
+    });
   });
 });
 
 describe("SocialSurface private accounts", () => {
-  it("disables Feed, Challenges, and Leaderboards and stays on Team", async () => {
+  it("shows only Team and never mounts public community tabs", async () => {
     mockSocialActivityVisible.value = false;
     render(<SocialSurface />);
 
     await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "Feed" })).toBeDisabled();
+      expect(screen.getByRole("tab", { name: "Team" })).toHaveAttribute("data-state", "active");
     });
-    expect(screen.getByRole("tab", { name: "Challenges" })).toBeDisabled();
-    expect(screen.getByRole("tab", { name: "Leaderboards" })).toBeDisabled();
-    expect(screen.getByRole("tab", { name: "Team" })).toHaveAttribute("data-state", "active");
-    expect(screen.getByRole("tab", { name: "Team" })).not.toBeDisabled();
+    expect(screen.queryByRole("tab", { name: "Feed" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Challenges" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Leaderboards" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("feed-list")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("challenge-list")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("leaderboards-panel")).not.toBeInTheDocument();
+    expect(screen.getByTestId("team-panel")).toBeInTheDocument();
   });
 
   it("rewrites public community tab links to Team", async () => {
