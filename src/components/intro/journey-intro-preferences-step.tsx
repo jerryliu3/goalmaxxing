@@ -229,14 +229,14 @@ export function useJourneyIntroPreferences(userId: string, active: boolean) {
   const [value, setValue] = useState<JourneyIntroPreferencesValue>(
     createDefaultJourneyIntroPreferences
   );
-  const [loading, setLoading] = useState(false);
+  const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
+  const loading = active && loadedUserId !== userId;
 
   useEffect(() => {
     if (!active) {
       return;
     }
     let cancelled = false;
-    setLoading(true);
     void loadJourneyIntroPreferences(userId)
       .then((next) => {
         if (!cancelled) {
@@ -252,7 +252,7 @@ export function useJourneyIntroPreferences(userId: string, active: boolean) {
       })
       .finally(() => {
         if (!cancelled) {
-          setLoading(false);
+          setLoadedUserId(userId);
         }
       });
     return () => {
