@@ -3,7 +3,7 @@ import type { GoalFrequencyType, RecurrenceInterval } from "@/lib/goals/types";
 export type GoalCreateKind = GoalFrequencyType | "planner_task";
 
 export const GOAL_TYPE_OPTIONS: Array<{ value: GoalFrequencyType; label: string }> = [
-  { value: "recurring", label: "Repeated" },
+  { value: "recurring", label: "Recurring" },
   { value: "fixed_milestones", label: "Milestones" },
 ];
 

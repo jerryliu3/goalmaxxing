@@ -476,7 +476,7 @@ export function GoalForm({
 
     if (state.frequency_type === "recurring" && !state.recurrence_interval) {
       return {
-        validationError: "Repeated goals require a cadence.",
+        validationError: "Recurring goals require a cadence.",
         validationWarning: null,
       };
     }
@@ -850,7 +850,7 @@ export function GoalForm({
                   <span>Total target #</span>
                   {state.frequency_type === "recurring" ? (
                     <TooltipIcon
-                      content="Optional for repeated goals: set how many completions you want by the end date."
+                      content="Optional for recurring goals: set how many completions you want by the end date."
                       label="Total target help"
                     />
                   ) : null}
