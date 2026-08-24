@@ -30,7 +30,7 @@ test.describe("marketing landing", () => {
       "href",
       "/calendar"
     );
-    await expect(page.getByRole("link", { name: "Read why" })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "Read why this was built" })).toHaveAttribute(
       "href",
       "#why-goalmaxxing"
     );

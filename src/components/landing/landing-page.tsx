@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowDown, ArrowRight, SquareArrowOutUpRight } from "lucide-react";
 import { LandingFeatureBento } from "@/components/landing/landing-feature-bento";
 import { LandingFeatureNarrative } from "@/components/landing/landing-feature-narrative";
 import { LandingPlannerPreview } from "@/components/landing/landing-planner-preview";
@@ -32,16 +32,13 @@ export function LandingPage() {
 
       <main>
         <section className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:items-center md:py-10">
-          <div className="space-y-6">
-            <p className="inline-flex items-center rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-              Short-term execution, long-term outcomes
-            </p>
-            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-              Achieve your goals using one focused system.
+          <div className="max-w-xl space-y-6">
+            <h1 className="text-[2rem] font-semibold leading-[1.1] tracking-tight sm:text-[2.75rem]">
+              Achieve your goals using one focused system
             </h1>
-            <p className="max-w-md text-base text-muted-foreground sm:text-lg">
-              Plan beyond daily habits. Connect today&apos;s actions to the weeks and
-              months ahead.
+            <p className="text-base text-muted-foreground sm:text-lg">
+              Deeply customizable goals beyond basic habits. Fully adjustable
+              sessions for when plans and priorities change.
             </p>
             <div className="flex flex-col items-start gap-3">
               <div className="flex flex-wrap items-center gap-3">
@@ -52,12 +49,16 @@ export function LandingPage() {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
-                  <Link href="#why-goalmaxxing">Read why</Link>
+                  <Link href="/demo" target="_blank" rel="noopener noreferrer">
+                    Try demo
+                    <SquareArrowOutUpRight className="size-4" />
+                  </Link>
                 </Button>
               </div>
               <Button asChild variant="outline" size="lg">
-                <Link href="/demo" target="_blank" rel="noopener noreferrer">
-                  Try demo
+                <Link href="#why-goalmaxxing">
+                  Read why this was built
+                  <ArrowDown className="size-4" />
                 </Link>
               </Button>
             </div>
