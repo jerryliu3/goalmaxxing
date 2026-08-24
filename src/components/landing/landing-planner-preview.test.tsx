@@ -13,7 +13,6 @@ import {
   moreCountLabel,
   monthEntries,
   nextPlannerDemoPhase,
-  PARTNER_WEEK_TODAY,
   partnerCompletions,
   phaseDurationMs,
   plannerDemoViewOptions,
@@ -198,7 +197,7 @@ describe("seeded task details", () => {
     expect(getSeededTaskDetail(WEEK_TODAY_TASKS[3])).toBe(
       "Weekly recurring · Relationships"
     );
-    expect(getSeededTaskDetail(PARTNER_WEEK_TODAY)).toBeNull();
+    expect(getSeededTaskDetail({})).toBeNull();
   });
 });
 
