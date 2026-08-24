@@ -13,7 +13,12 @@ import {
   type CategorySelection,
   getCategorySwatchColor,
 } from "@/lib/goals/category";
-import { GOAL_TYPE_OPTIONS, RECURRENCE_INTERVAL_OPTIONS } from "@/lib/goals/form-options";
+import {
+  GOAL_TYPE_OPTIONS,
+  PLANNER_TASK_TYPE_OPTION,
+  RECURRENCE_INTERVAL_OPTIONS,
+  type GoalCreateKind,
+} from "@/lib/goals/form-options";
 import type { GoalFrequencyType, RecurrenceInterval } from "@/lib/goals/types";
 import { MAX_GOAL_TARGET_COUNT } from "@/lib/planner/contracts/bounds";
 import { cn } from "@/lib/utils";
@@ -63,23 +68,32 @@ export function CategorySelect({
 }
 
 interface GoalTypeToggleProps {
-  value: GoalFrequencyType;
-  onValueChange: (value: GoalFrequencyType) => void;
+  value: GoalCreateKind;
+  onValueChange: (value: GoalCreateKind) => void;
+  includePlannerTask?: boolean;
   triggerClassName?: string;
 }
 
 export function GoalTypeToggle({
   value,
   onValueChange,
+  includePlannerTask = false,
   triggerClassName,
 }: GoalTypeToggleProps) {
+  const options = includePlannerTask
+    ? [...GOAL_TYPE_OPTIONS, PLANNER_TASK_TYPE_OPTION]
+    : GOAL_TYPE_OPTIONS;
+
   return (
-    <Select value={value} onValueChange={(nextValue) => onValueChange(nextValue as GoalFrequencyType)}>
+    <Select
+      value={value}
+      onValueChange={(nextValue) => onValueChange(nextValue as GoalCreateKind)}
+    >
       <SelectTrigger className={cn("h-9 w-full", triggerClassName)}>
         <SelectValue placeholder="Select goal type" />
       </SelectTrigger>
       <SelectContent>
-        {GOAL_TYPE_OPTIONS.map((option) => (
+        {options.map((option) => (
           <SelectItem key={option.value} value={option.value}>
             {option.label}
           </SelectItem>

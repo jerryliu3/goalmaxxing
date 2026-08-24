@@ -182,8 +182,8 @@ function ManualGoalForm({ filledRows }: { filledRows: number }) {
           <>
             <ChoiceRow
               label="Type"
-              options={["Repeated", "Milestones"]}
-              selected="Repeated"
+              options={["Cadence", "Milestones"]}
+              selected="Cadence"
             />
             <ChoiceRow
               label="Repeat"

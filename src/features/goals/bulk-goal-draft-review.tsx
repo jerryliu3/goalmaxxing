@@ -66,6 +66,7 @@ import {
   getLinkedGoalDeadlineLabel,
   getLinkedGoalRecurrenceLabel,
 } from "@/lib/goals/linked-goal-labels";
+import { isPlannerTaskCreateKind } from "@/lib/goals/form-options";
 import { buildMilestoneNameDrafts } from "@/lib/goals/milestones";
 import type { Goal } from "@/lib/goals/types";
 import { cn } from "@/lib/utils";
@@ -369,13 +370,16 @@ export function BulkGoalDraftReview({
                           <Label className="inline-flex items-center gap-1">
                             <span>Goal type</span>
                             <TooltipIcon
-                              content="Repeated keeps the same action pattern over time. Milestones are unique steps that move you toward a final outcome."
+                              content="Cadence keeps the same action pattern over time. Milestones are unique steps that move you toward a final outcome."
                               label="Goal type help"
                             />
                           </Label>
                           <GoalTypeToggle
                             value={draft.frequency_type}
-                            onValueChange={(value) =>
+                            onValueChange={(value) => {
+                              if (isPlannerTaskCreateKind(value)) {
+                                return;
+                              }
                               updateDraft(draft.id, (previous) => {
                                 const nextTargetCount =
                                   value === "fixed_milestones" &&
@@ -396,8 +400,8 @@ export function BulkGoalDraftReview({
                                         )
                                       : previous.milestone_names,
                                 };
-                              })
-                            }
+                              });
+                            }}
                           />
                         </div>
                         {draft.frequency_type === "recurring" ? (
