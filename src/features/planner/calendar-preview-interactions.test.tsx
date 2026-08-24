@@ -11,7 +11,10 @@ import {
   buildPlannerPreview,
   buildPlannerWorkUnit,
 } from "@/features/planner/test-fixtures";
-import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
+import {
+  invalidatePlannerRelatedTabCaches,
+  resetPlannerTabCacheInvalidationForTests,
+} from "@/lib/cache/planner-tab-cache";
 
 const getJsonMock = vi.fn();
 const postJsonMock = vi.fn();
@@ -131,6 +134,7 @@ async function flushCalendarInit() {
 
 describe("CalendarSurface preview interactions (fake timers)", () => {
   beforeEach(() => {
+    resetPlannerTabCacheInvalidationForTests();
     document.body.innerHTML = "";
     invalidatePlannerRelatedTabCaches();
     getJsonMock.mockReset();

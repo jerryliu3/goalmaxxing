@@ -18,7 +18,10 @@ import {
   buildPlannerPreview,
   buildPlannerWorkUnit,
 } from "@/features/planner/test-fixtures";
-import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
+import {
+  invalidatePlannerRelatedTabCaches,
+  resetPlannerTabCacheInvalidationForTests,
+} from "@/lib/cache/planner-tab-cache";
 import { summarizePlannerGoalUnplaceableRecords } from "@/lib/planner/unplaceable";
 
 const getJsonMock = vi.fn();
@@ -179,6 +182,7 @@ function buildDomRect({
 
 describe("CalendarSurface characterization", () => {
   beforeEach(() => {
+    resetPlannerTabCacheInvalidationForTests();
     document.body.innerHTML = "";
     invalidatePlannerRelatedTabCaches();
     getJsonMock.mockReset();

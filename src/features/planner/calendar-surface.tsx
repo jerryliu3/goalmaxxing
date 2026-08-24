@@ -164,6 +164,7 @@ export function CalendarSurface({
   const lastTouchTapRef = useRef<{ day: string; at: number } | null>(null);
   const suppressDayCellClickRef = useRef<{ day: string; active: boolean } | null>(null);
   const calendarPreparedRef = useRef(false);
+  const skipInvalidationReloadRef = useRef(false);
   const dayPreviewRef = useRef<HTMLDivElement | null>(null);
   const rollingWeekStripRef = useRef<HTMLDivElement | null>(null);
   const calendarGridViewportRef = useRef<HTMLDivElement | null>(null);
@@ -212,6 +213,7 @@ export function CalendarSurface({
   }, [loadContext]);
 
   const handlePlannerMutation = useCallback(() => {
+    skipInvalidationReloadRef.current = true;
     invalidatePlannerRelatedTabCaches();
     onPlannerMutation();
   }, [onPlannerMutation]);
@@ -285,6 +287,10 @@ export function CalendarSurface({
   } = draftSession;
   usePlannerTabCacheInvalidation(() => {
     if (activeTab !== "calendar") {
+      return;
+    }
+    if (skipInvalidationReloadRef.current) {
+      skipInvalidationReloadRef.current = false;
       return;
     }
     void loadContext({
