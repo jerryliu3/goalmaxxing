@@ -102,6 +102,7 @@ export function AppShell({
                           size="sm"
                           className="h-8 bg-primary text-white hover:bg-primary/80 hover:text-white"
                           title="New Goal +"
+                          data-onboarding="nav.new-goal"
                           onClick={onNewGoalClick}
                         >
                           {onNewGoalClick ? (

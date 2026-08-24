@@ -47,6 +47,22 @@ describe("TabNav", () => {
       "aria-current",
       "page"
     );
+    expect(screen.getByRole("link", { name: /Insights/i })).toHaveAttribute(
+      "data-onboarding",
+      "nav.insights"
+    );
+    expect(screen.getByRole("link", { name: /Planner/i })).toHaveAttribute(
+      "data-onboarding",
+      "nav.calendar"
+    );
+    expect(screen.getByRole("link", { name: /Community/i })).toHaveAttribute(
+      "data-onboarding",
+      "nav.social"
+    );
+    expect(screen.getByRole("link", { name: /Profile/i })).toHaveAttribute(
+      "data-onboarding",
+      "nav.settings"
+    );
     expect(screen.getByRole("link", { name: /Community/i })).toHaveClass(
       "text-white"
     );

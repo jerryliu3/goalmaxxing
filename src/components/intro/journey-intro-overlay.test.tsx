@@ -9,61 +9,150 @@ import {
 } from "@/components/intro/journey-intro-overlay";
 import { toLocalDateString } from "@/lib/dates/day";
 
-const useXpProfileMock = vi.hoisted(() => vi.fn());
 const routerMock = vi.hoisted(() => ({
   prefetch: vi.fn(),
   replace: vi.fn(),
   refresh: vi.fn(),
 }));
+const getJsonMock = vi.hoisted(() => vi.fn());
+const putJsonMock = vi.hoisted(() => vi.fn());
+const profileUpdateEqMock = vi.hoisted(() => vi.fn());
 const TEST_USER_ID = "user-1";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => routerMock,
 }));
 
-vi.mock("@/components/xp/xp-profile-provider", () => ({
-  useXpProfile: () => useXpProfileMock(),
-}));
-
 vi.mock("@/features/planner/calendar-page-shell", () => ({
   CalendarPageShell: () => null,
 }));
 
+vi.mock("@/lib/api/client", () => ({
+  getJson: (...args: unknown[]) => getJsonMock(...args),
+  putJson: (...args: unknown[]) => putJsonMock(...args),
+  getApiErrorMessage: (_error: unknown, fallback: string) => fallback,
+}));
+
+vi.mock("@/lib/cache/planner-tab-cache", () => ({
+  invalidatePlannerRelatedTabCaches: vi.fn(),
+}));
+
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: () =>
+            Promise.resolve({
+              data: { social_activity_visible: true },
+              error: null,
+            }),
+        }),
+      }),
+      update: () => ({
+        eq: (...args: unknown[]) => profileUpdateEqMock(...args),
+      }),
+    }),
+  }),
+}));
+
+vi.mock("@/features/settings/planner-preferences-settings", () => ({
+  PlannerPreferencesSettings: ({
+    value,
+  }: {
+    value: { timezone: string; weekStartsOn: number };
+  }) => (
+    <div>
+      Timezone {value.timezone}, week starts {value.weekStartsOn}
+    </div>
+  ),
+}));
+
+function mockVisibleOnboardingTargets() {
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+    function mockClientRect(this: HTMLElement) {
+      const target = this.getAttribute("data-onboarding") ?? "unknown";
+      const index = [
+        "nav.insights",
+        "nav.calendar",
+        "nav.social",
+        "nav.settings",
+        "nav.new-goal",
+      ].indexOf(target);
+      const left = 20 + Math.max(index, 0) * 80;
+      return {
+        top: 12,
+        left,
+        width: 72,
+        height: 40,
+        bottom: 52,
+        right: left + 72,
+        x: left,
+        y: 12,
+        toJSON: () => ({}),
+      } as DOMRect;
+    }
+  );
+}
+
+function renderIntro() {
+  return render(
+    <>
+      <button type="button" data-onboarding="nav.insights">
+        Insights
+      </button>
+      <button type="button" data-onboarding="nav.calendar">
+        Planner
+      </button>
+      <button type="button" data-onboarding="nav.social">
+        Community
+      </button>
+      <button type="button" data-onboarding="nav.settings">
+        Profile
+      </button>
+      <button type="button" data-onboarding="nav.new-goal">
+        New Goal +
+      </button>
+      <JourneyIntroOverlay userId={TEST_USER_ID} />
+    </>
+  );
+}
+
 describe("JourneyIntroOverlay", () => {
   beforeEach(() => {
     window.localStorage.clear();
-    useXpProfileMock.mockReturnValue({
-      band: { name: "Trailhead" },
-      profile: { currentLevel: 1, totalXp: 0 },
+    getJsonMock.mockResolvedValue({
+      preferences: {
+        timezone: "UTC",
+        defaultPolicy: { weekStartsOn: 1, restWeekdays: [] },
+      },
     });
+    putJsonMock.mockResolvedValue({});
+    profileUpdateEqMock.mockResolvedValue({ error: null });
+    mockVisibleOnboardingTargets();
   });
 
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
     vi.clearAllMocks();
   });
 
   it("prefetches calendar when intro opens", async () => {
-    render(<JourneyIntroOverlay userId={TEST_USER_ID} />);
-    expect(await screen.findByRole("dialog", { name: "Welcome to Goalmaxxing" })).toBeInTheDocument();
+    renderIntro();
+    expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
     await waitFor(() => {
       expect(routerMock.prefetch).toHaveBeenCalledWith("/calendar");
       expect(routerMock.prefetch).toHaveBeenCalledWith("/calendar?surface=calendar");
     });
   });
 
-  it("shows intro when unseen", async () => {
-    render(<JourneyIntroOverlay userId={TEST_USER_ID} />);
-    expect(await screen.findByRole("dialog", { name: "Welcome to Goalmaxxing" })).toBeInTheDocument();
-  });
-
-  it("keeps the intro modal vertically centered", async () => {
-    render(<JourneyIntroOverlay userId={TEST_USER_ID} />);
-    const overlay = await screen.findByRole("dialog", {
-      name: "Welcome to Goalmaxxing",
-    });
-    expect(overlay).toHaveClass("items-center");
-    expect(overlay).not.toHaveClass("items-end");
+  it("shows a spotlight intro without blurring the background", async () => {
+    renderIntro();
+    const dialog = await screen.findByRole("dialog", { name: "Insights" });
+    expect(dialog).not.toHaveClass("backdrop-blur-sm");
+    expect(dialog.parentElement).toHaveClass("z-[80]");
+    expect(screen.getByTestId("onboarding-highlight")).toBeInTheDocument();
   });
 
   it("stays hidden once onboarding is completed", () => {
@@ -83,8 +172,8 @@ describe("JourneyIntroOverlay", () => {
     window.localStorage.setItem(JOURNEY_INTRO_SEEN_KEY, toLocalDateString());
     window.localStorage.setItem(JOURNEY_INTRO_FORCE_USER_ID_KEY, TEST_USER_ID);
 
-    render(<JourneyIntroOverlay userId={TEST_USER_ID} />);
-    expect(await screen.findByRole("dialog", { name: "Welcome to Goalmaxxing" })).toBeInTheDocument();
+    renderIntro();
+    expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
     expect(window.localStorage.getItem(JOURNEY_INTRO_FORCE_USER_ID_KEY)).toBeNull();
   });
 
@@ -100,54 +189,49 @@ describe("JourneyIntroOverlay", () => {
 
   it("reopens intro when settings triggers the revisit event", async () => {
     window.localStorage.setItem(JOURNEY_ONBOARDING_COMPLETED_KEY, "done");
-    render(<JourneyIntroOverlay userId={TEST_USER_ID} />);
-    expect(screen.queryByRole("dialog", { name: "Welcome to Goalmaxxing" })).toBeNull();
+    renderIntro();
+    expect(screen.queryByRole("dialog", { name: "Insights" })).toBeNull();
 
     window.dispatchEvent(new Event(JOURNEY_INTRO_OPEN_EVENT));
 
-    expect(
-      await screen.findByRole("dialog", { name: "Welcome to Goalmaxxing" })
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
   });
 
-  it("advances through steps, persists completion, and stays on the current tab", async () => {
-    render(<JourneyIntroOverlay userId={TEST_USER_ID} />);
-    expect(await screen.findByRole("dialog", { name: "Welcome to Goalmaxxing" })).toBeInTheDocument();
-    expect(
-      screen.getByText(/Goalmaxxing helps you set short-term and long-term goals/i)
-    ).toBeInTheDocument();
+  it("walks through nav highlights and saves preferences on the last step", async () => {
+    renderIntro();
+    expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(
-      await screen.findByRole("dialog", { name: "Create different types of goals" })
-    ).toBeInTheDocument();
-
+    expect(await screen.findByRole("dialog", { name: "Planner" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(
-      await screen.findByRole("dialog", { name: "Plan and execute" })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Use Calendar to plan individual sessions across the coming days\/weeks\/months/i)
-    ).toBeInTheDocument();
-
+    expect(await screen.findByRole("dialog", { name: "Community" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Stay accountable" })).toBeInTheDocument();
-    expect(
-      screen.getByText(/Check the Community tab to interact with others/i)
-    ).toBeInTheDocument();
-
+    expect(await screen.findByRole("dialog", { name: "Profile" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Your goals are ready" })).toBeInTheDocument();
-    expect(
-      screen.getByText(/We've added some initial goals to get you familiar/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Every check-in moves you upward. Your current camp is/i)
-    ).toBeInTheDocument();
-    expect(screen.getByText("Trailhead")).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "New Goal +" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+    expect(await screen.findByRole("dialog", { name: "Your preferences" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Private/ }));
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Done" })).toBeEnabled();
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
-    expect(screen.queryByRole("dialog", { name: "Your goals are ready" })).toBeNull();
+    await waitFor(() => {
+      expect(putJsonMock).toHaveBeenCalled();
+      expect(profileUpdateEqMock).toHaveBeenCalled();
+      expect(screen.queryByRole("dialog", { name: "Your preferences" })).toBeNull();
+    });
+    expect(window.localStorage.getItem(JOURNEY_ONBOARDING_COMPLETED_KEY)).toBe("done");
+  });
+
+  it("skips intro without saving preferences", async () => {
+    renderIntro();
+    expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Skip intro" }));
+    expect(screen.queryByRole("dialog", { name: "Insights" })).toBeNull();
+    expect(putJsonMock).not.toHaveBeenCalled();
     expect(window.localStorage.getItem(JOURNEY_ONBOARDING_COMPLETED_KEY)).toBe("done");
   });
 });
