@@ -157,21 +157,44 @@ export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
     if (!open) {
       return;
     }
+    let cancelled = false;
+    const settleTimeoutIds: number[] = [];
+
     const readTarget = () => {
+      if (cancelled) {
+        return;
+      }
       setTargetRect(readOnboardingTargetRect(targetCandidates));
+      setHasMeasured(true);
     };
-    const timeoutId = window.setTimeout(() => {
+
+    const scheduleSettledMeasure = () => {
       const firstTarget = firstOnboardingElement(targetCandidates);
       if (firstTarget) {
         firstTarget.scrollIntoView({ block: "nearest", inline: "nearest" });
       }
-      readTarget();
-      setHasMeasured(true);
-    }, 0);
+
+      // Layout can shift after signup (XP bar, fonts, nav). Re-measure after paint.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (cancelled) {
+            return;
+          }
+          readTarget();
+          settleTimeoutIds.push(window.setTimeout(readTarget, 120));
+          settleTimeoutIds.push(window.setTimeout(readTarget, 320));
+        });
+      });
+    };
+
+    scheduleSettledMeasure();
     window.addEventListener("resize", readTarget);
     window.addEventListener("scroll", readTarget, true);
     return () => {
-      window.clearTimeout(timeoutId);
+      cancelled = true;
+      for (const timeoutId of settleTimeoutIds) {
+        window.clearTimeout(timeoutId);
+      }
       window.removeEventListener("resize", readTarget);
       window.removeEventListener("scroll", readTarget, true);
     };

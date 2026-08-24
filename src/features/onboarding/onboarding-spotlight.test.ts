@@ -39,4 +39,21 @@ describe("onboarding spotlight targeting", () => {
 
     window.getComputedStyle = originalGetComputedStyle;
   });
+
+  it("prefers the narrowest visible tab when mobile and desktop nav both mount", () => {
+    const mobile = document.createElement("a");
+    mobile.setAttribute("data-onboarding", "nav.insights");
+    mobile.getBoundingClientRect = () => new DOMRect(12, 700, 72, 48);
+
+    const desktop = document.createElement("a");
+    desktop.setAttribute("data-onboarding", "nav.insights");
+    desktop.getBoundingClientRect = () => new DOMRect(12, 120, 320, 56);
+
+    document.body.append(mobile, desktop);
+
+    expect(readOnboardingTargetRect(["nav.insights"])).toEqual(
+      new DOMRect(12, 700, 72, 48)
+    );
+    expect(firstOnboardingElement(["nav.insights"])).toBe(mobile);
+  });
 });

@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import {
-  PlannerPreferencesSettings,
-  type PlannerPreferencesDraft,
-} from "@/features/settings/planner-preferences-settings";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getApiErrorMessage, getJson, putJson } from "@/lib/api/client";
 import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
+import { buildTimezoneOptions } from "@/lib/dates/timezone-options";
+import { weekStartOptions } from "@/lib/dates/weekday-options";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
 import { createDefaultPlannerPolicy, type PlannerPolicy } from "@/lib/planner/policy";
@@ -110,27 +115,69 @@ export function JourneyIntroPreferencesStep({
   onChange,
   loading = false,
 }: JourneyIntroPreferencesStepProps) {
-  const plannerDraft: PlannerPreferencesDraft = {
-    timezone: value.timezone,
-    weekStartsOn: value.weekStartsOn,
-  };
+  const timezoneOptions = useMemo(
+    () => buildTimezoneOptions(value.timezone),
+    [value.timezone]
+  );
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
         Set your planner defaults now. You can change these anytime under Profile.
       </p>
-      <PlannerPreferencesSettings
-        value={plannerDraft}
-        disabled={loading}
-        onChange={(next) =>
-          onChange({
-            ...value,
-            timezone: next.timezone,
-            weekStartsOn: next.weekStartsOn,
-          })
-        }
-      />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="block space-y-1">
+          <Label className="text-xs text-muted-foreground">Timezone</Label>
+          <Select
+            value={value.timezone}
+            onValueChange={(nextTimezone) =>
+              onChange({
+                ...value,
+                timezone: nextTimezone,
+              })
+            }
+            disabled={loading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select timezone" />
+            </SelectTrigger>
+            <SelectContent className="max-h-80">
+              {timezoneOptions.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </label>
+
+        <label className="block space-y-1">
+          <Label className="text-xs text-muted-foreground">First day of week</Label>
+          <Select
+            value={`${value.weekStartsOn}`}
+            onValueChange={(nextValue) =>
+              onChange({
+                ...value,
+                weekStartsOn: normalizeWeekStartsOn(
+                  Number.parseInt(nextValue, 10)
+                ),
+              })
+            }
+            disabled={loading}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {weekStartOptions.map((option) => (
+                <SelectItem key={option.value} value={`${option.value}`}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </label>
+      </div>
       <div className="space-y-2">
         <Label className="text-xs text-muted-foreground">Account visibility</Label>
         <div className="grid grid-cols-2 gap-2">
@@ -148,7 +195,7 @@ export function JourneyIntroPreferencesStep({
           >
             <span className="font-medium">Public</span>
             <span className="mt-1 block text-xs text-muted-foreground">
-              Feed, Challenges, and Leaderboards
+              Participate in Feed, Challenges, and Leaderboards
             </span>
           </button>
           <button
@@ -165,13 +212,13 @@ export function JourneyIntroPreferencesStep({
           >
             <span className="font-medium">Private</span>
             <span className="mt-1 block text-xs text-muted-foreground">
-              Community stays on Team only
+              Your profile and goals are private
             </span>
           </button>
         </div>
         <p className="text-xs text-muted-foreground">
-          A private account can still form a private team. Public Community tabs stay
-          disabled until you switch this under Profile.
+          A private account can still form a private team. Other Community tabs are
+          disabled unless switched later.
         </p>
       </div>
     </div>

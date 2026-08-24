@@ -4,8 +4,24 @@ const VIEWPORT_MARGIN_PX = 16;
 const TARGET_GAP_PX = 12;
 
 export function isVisibleOnboardingElement(element: HTMLElement) {
+  if (typeof element.checkVisibility === "function") {
+    return element.checkVisibility({
+      checkOpacity: true,
+      checkVisibilityCSS: true,
+    });
+  }
+
   const style = window.getComputedStyle(element);
-  return style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
+  if (
+    style.display === "none" ||
+    style.visibility === "hidden" ||
+    Number(style.opacity) === 0
+  ) {
+    return false;
+  }
+
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
 }
 
 export function queryOnboardingElements(target: string) {
@@ -32,20 +48,37 @@ export function unionClientRects(elements: HTMLElement[]) {
   return new DOMRect(left, top, right - left, bottom - top);
 }
 
+function pickOnboardingTargetElement(elements: HTMLElement[]) {
+  if (elements.length === 0) {
+    return null;
+  }
+  if (elements.length === 1) {
+    return elements[0];
+  }
+
+  // Mobile and desktop nav both mount tab links; prefer the narrowest visible match.
+  return elements.reduce((narrowest, element) => {
+    const rect = element.getBoundingClientRect();
+    const narrowestRect = narrowest.getBoundingClientRect();
+    return rect.width < narrowestRect.width ? element : narrowest;
+  });
+}
+
 export function readOnboardingTargetRect(targets: readonly string[]) {
   for (const target of targets) {
     const elements = queryOnboardingElements(target);
-    if (elements.length === 0) {
+    const element = pickOnboardingTargetElement(elements);
+    if (!element) {
       continue;
     }
-    return unionClientRects(elements);
+    return element.getBoundingClientRect();
   }
   return null;
 }
 
 export function firstOnboardingElement(targets: readonly string[]) {
   for (const target of targets) {
-    const [element] = queryOnboardingElements(target);
+    const element = pickOnboardingTargetElement(queryOnboardingElements(target));
     if (element) {
       return element;
     }
