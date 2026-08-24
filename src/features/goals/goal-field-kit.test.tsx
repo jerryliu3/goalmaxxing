@@ -48,12 +48,30 @@ describe("GoalTypeToggle", () => {
     render(<GoalTypeToggle value="recurring" onValueChange={vi.fn()} />);
 
     const trigger = screen.getByRole("combobox");
-    expect(trigger).toHaveTextContent("Repeated");
+    expect(trigger).toHaveTextContent("Recurring");
 
     await user.click(trigger);
     const listbox = screen.getByRole("listbox");
-    expect(within(listbox).getByRole("option", { name: "Repeated" })).toBeInTheDocument();
+    expect(within(listbox).getByRole("option", { name: "Recurring" })).toBeInTheDocument();
     expect(within(listbox).getByRole("option", { name: "Milestones" })).toBeInTheDocument();
+    expect(within(listbox).queryByRole("option", { name: "Task" })).not.toBeInTheDocument();
+  });
+
+  it("includes Task when creating from New Goal", async () => {
+    const user = userEvent.setup();
+    render(
+      <GoalTypeToggle
+        value="recurring"
+        includePlannerTask
+        onValueChange={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox"));
+    const listbox = screen.getByRole("listbox");
+    expect(within(listbox).getByRole("option", { name: "Recurring" })).toBeInTheDocument();
+    expect(within(listbox).getByRole("option", { name: "Milestones" })).toBeInTheDocument();
+    expect(within(listbox).getByRole("option", { name: "Task" })).toBeInTheDocument();
   });
 
   it("calls onValueChange with the clicked option's value", async () => {

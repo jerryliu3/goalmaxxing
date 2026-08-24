@@ -75,6 +75,11 @@ import {
   buildMilestoneNameDrafts,
   normalizeMilestoneNamesForSave,
 } from "@/lib/goals/milestones";
+import {
+  GOAL_CREATE_KIND_HELP,
+  isPlannerTaskCreateKind,
+  type GoalCreateKind,
+} from "@/lib/goals/form-options";
 import type {
   Goal,
   GoalDifficulty,
@@ -115,6 +120,7 @@ interface GoalFormState {
   default_local_time: string;
   team_id: string | null;
   is_private: boolean;
+  task_scheduled_date: string;
 }
 
 const defaultState: GoalFormState = {
@@ -134,6 +140,7 @@ const defaultState: GoalFormState = {
   default_local_time: "",
   team_id: null,
   is_private: false,
+  task_scheduled_date: toLocalDateString(),
 };
 
 const localTimePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -169,6 +176,7 @@ export function GoalForm({
   const [milestoneNamesOpen, setMilestoneNamesOpen] = useState(false);
   const [linkTargetSearch, setLinkTargetSearch] = useState("");
   const [linkTargetOpen, setLinkTargetOpen] = useState(false);
+  const [createKind, setCreateKind] = useState<GoalCreateKind>("recurring");
   const isEditing = Boolean(goalId);
   const goalFormId = isEditing ? "goal-form-edit" : "goal-form-create";
   const exitHref = "/";
@@ -306,7 +314,9 @@ export function GoalForm({
           default_local_time: goal.default_local_time ?? "",
           team_id: goal.team_id ?? null,
           is_private: goal.is_private ?? false,
+          task_scheduled_date: toLocalDateString(),
         });
+        setCreateKind(goal.frequency_type);
 
         const existingLinks = (linksResponse.data ?? []) as GoalLink[];
         if (existingLinks.length > 0 && linkableGoalIdSet.has(existingLinks[0].target_goal_id)) {
@@ -338,9 +348,11 @@ export function GoalForm({
     });
   }, [goalId, router, supabase]);
 
-  const canShowRecurrenceFields = state.frequency_type === "recurring";
+  const isPlannerTask = !isEditing && isPlannerTaskCreateKind(createKind);
+  const canShowRecurrenceFields = !isPlannerTask && state.frequency_type === "recurring";
   const canShowTargetCount =
-    state.frequency_type === "fixed_milestones" || state.frequency_type === "recurring";
+    !isPlannerTask &&
+    (state.frequency_type === "fixed_milestones" || state.frequency_type === "recurring");
   const parsedTargetCount = parsePositiveTargetCount(state.target_count);
   const definitionTargetCount =
     state.frequency_type === "fixed_milestones"
@@ -380,6 +392,13 @@ export function GoalForm({
     [availableGoals, selectedLinkTarget]
   );
   const hasLinkedTarget = selectedLinkTarget !== "none";
+
+  const updateCreateKind = (nextKind: GoalCreateKind) => {
+    setCreateKind(nextKind);
+    if (nextKind !== "planner_task") {
+      updateFrequencyType(nextKind);
+    }
+  };
 
   const updateFrequencyType = (nextFrequency: GoalFrequencyType) => {
     setMilestoneNamesOpen(false);
@@ -451,9 +470,13 @@ export function GoalForm({
       return { validationError: "Title is required.", validationWarning: null };
     }
 
+    if (isPlannerTask) {
+      return { validationError: null, validationWarning: null };
+    }
+
     if (state.frequency_type === "recurring" && !state.recurrence_interval) {
       return {
-        validationError: "Repeated goals require a cadence.",
+        validationError: "Recurring goals require a cadence.",
         validationWarning: null,
       };
     }
@@ -517,7 +540,7 @@ export function GoalForm({
       validationError: null,
       validationWarning: warningIssue?.message ?? null,
     };
-  }, [state, parsedTargetCount, definitionTargetCount, goalCapacityInput]);
+  }, [state, parsedTargetCount, definitionTargetCount, goalCapacityInput, isPlannerTask]);
   const submitDisabled = saving || validationError !== null;
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -528,6 +551,23 @@ export function GoalForm({
     }
 
     setSaving(true);
+
+    if (isPlannerTask) {
+      const { error } = await supabase.rpc("create_planner_task", {
+        p_title: state.title.trim(),
+        p_scheduled_date: state.task_scheduled_date.trim() || undefined,
+      });
+      if (error) {
+        toast.error(error.message ?? "Failed to save task.");
+        setSaving(false);
+        return;
+      }
+      invalidatePlannerRelatedTabCaches();
+      toast.success("Task created.");
+      completeAndExit();
+      setSaving(false);
+      return;
+    }
     const parsedTargetCountForSave = parsePositiveTargetCount(state.target_count);
     const milestoneNames =
       state.frequency_type === "fixed_milestones" && parsedTargetCountForSave !== null
@@ -723,7 +763,7 @@ export function GoalForm({
               ) : null}
               <Button type="submit" form={goalFormId} disabled={submitDisabled}>
                 {saving ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
-                {isEditing ? "Save changes" : "Save"}
+                {isEditing ? "Save changes" : isPlannerTask ? "Create task" : "Save"}
               </Button>
             </div>
           </div>
@@ -743,11 +783,12 @@ export function GoalForm({
                 id="goal-title"
                 value={state.title}
                 onChange={(event) => setState((prev) => ({ ...prev, title: event.target.value }))}
-                placeholder="Run 20 times by Dec 31"
+                placeholder={isPlannerTask ? "Write your top priority for today" : "Run 20 times by Dec 31"}
                 className="h-8 text-sm"
                 required
               />
             </div>
+            {isPlannerTask ? null : (
             <div className="space-y-2 sm:justify-self-end">
               <Label>Category</Label>
               <CategorySelect
@@ -762,9 +803,10 @@ export function GoalForm({
                 }
               />
             </div>
+            )}
           </div>
 
-          {state.category_selection === "custom" ? (
+          {!isPlannerTask && state.category_selection === "custom" ? (
             <div className="space-y-2">
               <Label htmlFor="custom-category">Custom category label</Label>
               <Input
@@ -790,16 +832,16 @@ export function GoalForm({
             <div className="min-w-0 space-y-2">
               <Label className="inline-flex items-center gap-1">
                 <span>Goal type</span>
-                <TooltipIcon
-                  content="Repeated keeps the same action pattern over time. Milestones are unique steps that move you toward a final outcome."
-                  label="Goal type help"
-                />
               </Label>
               <GoalTypeToggle
-                value={state.frequency_type}
-                onValueChange={updateFrequencyType}
+                value={isEditing ? state.frequency_type : createKind}
+                includePlannerTask={!isEditing}
+                onValueChange={updateCreateKind}
                 triggerClassName="h-8"
               />
+              <p className="text-xs text-muted-foreground">
+                {GOAL_CREATE_KIND_HELP[isEditing ? state.frequency_type : createKind]}
+              </p>
             </div>
 
             {canShowTargetCount ? (
@@ -808,7 +850,7 @@ export function GoalForm({
                   <span>Total target #</span>
                   {state.frequency_type === "recurring" ? (
                     <TooltipIcon
-                      content="Optional for repeated goals: set how many completions you want by the end date."
+                      content="Optional for recurring goals: set how many completions you want by the end date."
                       label="Total target help"
                     />
                   ) : null}
@@ -844,8 +886,27 @@ export function GoalForm({
                 />
               </div>
             ) : null}
+
+            {isPlannerTask ? (
+              <div className="min-w-0 space-y-2">
+                <Label htmlFor="task-scheduled-date">Date (optional)</Label>
+                <Input
+                  id="task-scheduled-date"
+                  type="date"
+                  value={state.task_scheduled_date}
+                  onChange={(event) =>
+                    setState((previous) => ({
+                      ...previous,
+                      task_scheduled_date: event.target.value,
+                    }))
+                  }
+                  className="h-8 min-h-8 w-full min-w-0 py-0 text-sm leading-none [&::-webkit-calendar-picker-indicator]:size-3.5 [&::-webkit-datetime-edit]:p-0"
+                />
+              </div>
+            ) : null}
           </div>
 
+          {isPlannerTask ? null : (
           <GoalDateRangeFields
             startDate={state.start_date}
             endDate={state.end_date}
@@ -896,6 +957,7 @@ export function GoalForm({
               </>
             }
           />
+          )}
 
           <div className="flex flex-wrap items-center gap-2">
             {isEditing && editingGoal?.archived_at ? (
@@ -933,6 +995,7 @@ export function GoalForm({
             ) : null}
           </div>
 
+          {isPlannerTask ? null : (
           <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
             <div className="rounded-xl border bg-muted/20">
               <CollapsibleTrigger asChild>
@@ -1142,6 +1205,7 @@ export function GoalForm({
               </CollapsibleContent>
             </div>
           </Collapsible>
+          )}
         </form>
       </CardContent>
     </Card>
