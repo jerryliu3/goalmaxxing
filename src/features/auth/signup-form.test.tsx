@@ -30,9 +30,13 @@ vi.mock("@/lib/supabase/client", () => ({
   }),
 }));
 
-vi.mock("@/lib/dates/timezone", () => ({
-  resolveUserTimezone: () => "America/Los_Angeles",
-}));
+vi.mock("@/lib/dates/timezone", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/dates/timezone")>();
+  return {
+    ...actual,
+    resolveUserTimezone: () => "America/Los_Angeles",
+  };
+});
 
 vi.mock("sonner", () => ({
   toast: {
