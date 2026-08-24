@@ -28,6 +28,7 @@ import {
   recurrenceFilterOptions,
   selectActiveGoals,
   selectArchivedGoals,
+  selectCompletedTargetGoalIds,
   selectEndedGoals,
   selectFilteredTodayGoals,
   selectUpcomingGoals,
@@ -257,12 +258,13 @@ export function TodayTab({
   );
   const completedTargetGoalIds = useMemo(
     () =>
-      new Set(
-        activeGoals
-          .filter((goal) => progressByGoal.get(goal.id)?.outcome === "achieved")
-          .map((goal) => goal.id)
-      ),
-    [activeGoals, progressByGoal]
+      selectCompletedTargetGoalIds({
+        goals: activeGoals,
+        progressByGoal,
+        completionsByGoal,
+        asOfDate: viewDate,
+      }),
+    [activeGoals, completionsByGoal, progressByGoal, viewDate]
   );
 
   const filteredTodayGoals = useMemo(

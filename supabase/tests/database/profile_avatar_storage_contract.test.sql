@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(11);
+select plan(14);
 
 select ok(
   exists(select 1 from storage.buckets where id = 'avatars'),
@@ -67,7 +67,7 @@ select is(
   (
     select convalidated
     from pg_constraint
-    where conname = 'profiles_avatar_url_storage_public_prefix'
+    where conname = 'profiles_avatar_url_allowed_origin'
       and conrelid = 'public.profiles'::regclass
   ),
   false,
@@ -112,8 +112,35 @@ select throws_ok(
     where id = '44444444-4444-4444-8444-444444444444'
   $$,
   '23514',
-  'new row for relation "profiles" violates check constraint "profiles_avatar_url_storage_public_prefix"',
-  'profile avatar_url rejects non-storage external URLs'
+  'new row for relation "profiles" violates check constraint "profiles_avatar_url_allowed_origin"',
+  'profile avatar_url rejects unknown external URLs'
+);
+
+select lives_ok(
+  $$
+    update public.profiles
+    set avatar_url = 'https://randomuser.me/api/portraits/women/12.jpg'
+    where id = '44444444-4444-4444-8444-444444444444'
+  $$,
+  'profile avatar_url allows randomuser portraits'
+);
+
+select lives_ok(
+  $$
+    update public.profiles
+    set avatar_url = 'https://api.dicebear.com/9.x/lorelei/png?seed=carla-diaz'
+    where id = '44444444-4444-4444-8444-444444444444'
+  $$,
+  'profile avatar_url allows dicebear cartoons'
+);
+
+select lives_ok(
+  $$
+    update public.profiles
+    set avatar_url = 'https://placedog.net/200/200?id=7'
+    where id = '44444444-4444-4444-8444-444444444444'
+  $$,
+  'profile avatar_url allows placedog animal photos'
 );
 
 select lives_ok(

@@ -52,7 +52,7 @@ describe("demo fetch router", () => {
     expect(originalFetch).not.toHaveBeenCalled();
   });
 
-  it("keeps a goal in progress summaries on the day it hits its target", async () => {
+  it("marks a goal achieved on the day it hits its target", async () => {
     initDemoStore(buildDemoSnapshot("2026-08-22"));
     setCompletionFact({
       goalId: "10000000-0000-4000-8000-000000000006",
@@ -74,7 +74,7 @@ describe("demo fetch router", () => {
       (summary) => summary.goalId === "10000000-0000-4000-8000-000000000006"
     );
 
-    expect(conference?.outcome).toBe("in_progress");
+    expect(conference?.outcome).toBe("achieved");
     expect(
       payload.facts.some(
         (fact) =>

@@ -3,6 +3,9 @@ export function normalizeAvatarUrlDraft(rawValue: string): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+const ALLOWED_PUBLIC_AVATAR_URL =
+  /^https:\/\/randomuser\.me\/api\/portraits\/(men|women)\/[0-9]+\.jpg$|^https:\/\/api\.dicebear\.com\/[0-9]+\.x\/[a-z0-9-]+\/png\?seed=[A-Za-z0-9_-]+$|^https:\/\/placedog\.net\/[0-9]+\/[0-9]+\?id=[0-9]+$/;
+
 function configuredSupabaseOrigin() {
   const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "";
   if (!rawSupabaseUrl) {
@@ -31,6 +34,10 @@ export function getAvatarUrlValidationError(
 
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
     return "Avatar URL must start with http:// or https://.";
+  }
+
+  if (ALLOWED_PUBLIC_AVATAR_URL.test(avatarUrl)) {
+    return null;
   }
 
   if (!parsed.pathname.startsWith("/storage/v1/object/public/avatars/")) {
