@@ -8,6 +8,7 @@ import {
   getWeekTodayCellLayout,
   isStrengthInFlightToToday,
   isBusyPlannerDemoPhase,
+  isPartnerPlannerWeekViewPhase,
   LandingPlannerPreview,
   moreCountLabel,
   monthEntries,
@@ -95,6 +96,15 @@ describe("nextPlannerDemoPhase", () => {
       "3 Day",
       "Day",
     ]);
+  });
+});
+
+describe("isPartnerPlannerWeekViewPhase", () => {
+  it("keeps week view through the open menu step, then switches on month select", () => {
+    expect(isPartnerPlannerWeekViewPhase("week-completed")).toBe(true);
+    expect(isPartnerPlannerWeekViewPhase("opening-month-menu")).toBe(true);
+    expect(isPartnerPlannerWeekViewPhase("selecting-month")).toBe(false);
+    expect(isPartnerPlannerWeekViewPhase("month")).toBe(false);
   });
 });
 
@@ -188,9 +198,7 @@ describe("seeded task details", () => {
     expect(getSeededTaskDetail(WEEK_TODAY_TASKS[3])).toBe(
       "Weekly recurring · Relationships"
     );
-    expect(getSeededTaskDetail(PARTNER_WEEK_TODAY)).toBe(
-      "Weekly recurring · Health"
-    );
+    expect(getSeededTaskDetail(PARTNER_WEEK_TODAY)).toBeNull();
   });
 });
 
@@ -308,6 +316,7 @@ describe("planner demo modes", () => {
       "aria-checked",
       "true"
     );
+    expect(screen.queryByText("Alex's phone")).not.toBeInTheDocument();
     expect(
       screen.getByText(
         "See a teammate's progress and keep them motivated."

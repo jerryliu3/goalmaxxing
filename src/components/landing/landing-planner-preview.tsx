@@ -10,6 +10,11 @@ import {
 import { Check, CheckCircle2, ChevronDown, Loader2 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  LandingPartnerPhonePreview,
+  shouldShowPartnerPhone,
+  shouldShowPartnerPhoneNotification,
+} from "@/components/landing/landing-partner-phone-preview";
 import { LandingTryMeHint } from "@/components/landing/landing-try-me-hint";
 
 export type PlannerDemoPhase =
@@ -169,8 +174,6 @@ export const PARTNER_WEEK_TODAY = {
   id: "yoga",
   day: SEEDED_TODAY,
   label: "Yoga",
-  schedule: "Weekly recurring",
-  category: "Health",
 } as const;
 
 export function visibleMonthGoalIds(mode: PlannerDemoMode) {
@@ -417,6 +420,21 @@ function isPartnerWeekPreviewPhase(phase: PlannerDemoPhase) {
     phase === "week-typing" ||
     phase === "week-completing" ||
     phase === "week-completed"
+  );
+}
+
+export function isPartnerPlannerWeekViewPhase(phase: PlannerDemoPhase) {
+  return (
+    phase === "week" ||
+    phase === "week-tapping" ||
+    isPartnerWeekPreviewPhase(phase) ||
+    phase === "opening-month-menu"
+  );
+}
+
+function isPartnerWeekSurfacePhase(phase: PlannerDemoPhase) {
+  return (
+    isPartnerWeekPreviewPhase(phase) || phase === "opening-month-menu"
   );
 }
 
@@ -898,7 +916,7 @@ export function LandingPlannerPreview() {
     mode === "partner" && displayPhase === "month-opening-week";
   const showWeekPreview =
     mode === "partner"
-      ? isPartnerWeekPreviewPhase(displayPhase)
+      ? isPartnerWeekSurfacePhase(displayPhase)
       : soloPhaseIndex >= phaseOrder.indexOf("week-preview") &&
         soloPhaseIndex <= phaseOrder.indexOf("selecting-month");
   const showPartnerWeekPreview = mode === "partner" && showWeekPreview;
@@ -912,13 +930,16 @@ export function LandingPlannerPreview() {
     soloPhaseIndex <= phaseOrder.indexOf("selecting-month");
   const isWeekView =
     mode === "partner"
-      ? displayPhase === "week" ||
-        displayPhase === "week-tapping" ||
-        isPartnerWeekPreviewPhase(displayPhase)
+      ? isPartnerPlannerWeekViewPhase(displayPhase)
       : displayPhase.startsWith("week") ||
         displayPhase === "opening-month-menu" ||
         displayPhase === "selecting-month";
   const isMonthView = !isWeekView;
+  const showPartnerPhone = shouldShowPartnerPhone(mode, isWeekView);
+  const showPartnerPhoneNotification = shouldShowPartnerPhoneNotification(
+    mode,
+    displayPhase
+  );
   const isViewMenuOpen =
     displayPhase === "opening-month-menu" ||
     displayPhase === "selecting-month" ||
@@ -1166,7 +1187,11 @@ export function LandingPlannerPreview() {
                   {plannerDemoViewOptions.map(({ value, label }) => {
                     const selected =
                       (value === "month" && isSelectingMonth) ||
-                      (value === "week" && isSelectingWeek);
+                      (value === "week" && isSelectingWeek) ||
+                      (value === "week" &&
+                        isViewMenuOpen &&
+                        isWeekView &&
+                        !isSelectingMonth);
                     return (
                       <div
                         key={value}
@@ -1416,9 +1441,9 @@ export function LandingPlannerPreview() {
               data-calendar-view="week"
               initial={false}
               animate={{ y: 0 }}
-              className="h-full"
+              className="flex h-full min-h-0 flex-col"
             >
-              <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+              <div className="grid shrink-0 grid-cols-7 gap-1.5 sm:gap-2">
                 {seededDays.map((day) => (
                   <div
                     key={day.id}
@@ -1505,40 +1530,76 @@ export function LandingPlannerPreview() {
                 ))}
               </div>
 
-              {showPartnerWeekPreview ? (
-                <motion.div
-                  data-demo-partner-day-preview
-                  initial={reducedMotion ? false : { y: 6 }}
-                  animate={{ y: 0 }}
-                  className="mt-3 ml-auto max-w-sm rounded-xl border border-sky-200 bg-sky-50/70 p-3 shadow-sm"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-[10px] font-semibold text-sky-950">
-                      Thursday, August 15 · Alex
-                    </p>
-                    <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[8px] font-semibold text-white">
-                      Today
-                    </span>
-                  </div>
-                  <div className="mt-2">
-                    <PartnerPill
-                      label={PARTNER_WEEK_TODAY.label}
-                      completed={false}
+              {showPartnerPhone ? (
+                <div className="relative mt-1 min-h-0 flex-1">
+                  {showPartnerWeekPreview ? (
+                    <motion.div
+                      data-demo-partner-day-preview
+                      initial={reducedMotion ? false : { y: 6 }}
+                      animate={{ y: 0 }}
+                      className="absolute top-0 right-0 z-10 max-w-sm rounded-xl border border-sky-200 bg-sky-50/70 p-3 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[10px] font-semibold text-sky-950">
+                          Thursday, August 15 · Alex
+                        </p>
+                        <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[8px] font-semibold text-white">
+                          Today
+                        </span>
+                      </div>
+                      <div className="mt-2">
+                        <PartnerPill
+                          label={PARTNER_WEEK_TODAY.label}
+                          completed={false}
+                        />
+                      </div>
+                      <PartnerNudgeComposer
+                        key={displayPhase}
+                        phase={displayPhase}
+                        reducedMotion={reducedMotion}
+                        sent={partnerWeekNudgeSent}
+                      />
+                    </motion.div>
+                  ) : null}
+                  <div className="absolute inset-x-0 bottom-0 z-0 flex justify-center">
+                    <LandingPartnerPhonePreview
+                      notificationEligible={showPartnerPhoneNotification}
+                      reducedMotion={reducedMotion}
+                      nudgeMessage={PARTNER_NUDGE_MESSAGE}
                     />
-                    {getSeededTaskDetail(PARTNER_WEEK_TODAY) ? (
-                      <p className="mt-1 text-[8px] text-muted-foreground">
-                        {getSeededTaskDetail(PARTNER_WEEK_TODAY)}
-                      </p>
-                    ) : null}
                   </div>
-                  <PartnerNudgeComposer
-                    key={displayPhase}
-                    phase={displayPhase}
-                    reducedMotion={reducedMotion}
-                    sent={partnerWeekNudgeSent}
-                  />
-                </motion.div>
-              ) : null}
+                </div>
+              ) : (
+                <>
+                  {showPartnerWeekPreview ? (
+                    <motion.div
+                      data-demo-partner-day-preview
+                      initial={reducedMotion ? false : { y: 6 }}
+                      animate={{ y: 0 }}
+                      className="mt-3 ml-auto max-w-sm rounded-xl border border-sky-200 bg-sky-50/70 p-3 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[10px] font-semibold text-sky-950">
+                          Thursday, August 15 · Alex
+                        </p>
+                        <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[8px] font-semibold text-white">
+                          Today
+                        </span>
+                      </div>
+                      <div className="mt-2">
+                        <PartnerPill
+                          label={PARTNER_WEEK_TODAY.label}
+                          completed={false}
+                        />
+                      </div>
+                      <PartnerNudgeComposer
+                        key={displayPhase}
+                        phase={displayPhase}
+                        reducedMotion={reducedMotion}
+                        sent={partnerWeekNudgeSent}
+                      />
+                    </motion.div>
+                  ) : null}
 
               {showViewerPlan && showWeekPreview && !showDuoWeekPreview ? (
                 <motion.div
@@ -1599,15 +1660,12 @@ export function LandingPlannerPreview() {
                         label={PARTNER_WEEK_TODAY.label}
                         completed={false}
                       />
-                      {getSeededTaskDetail(PARTNER_WEEK_TODAY) ? (
-                        <p className="mt-1 text-[8px] text-muted-foreground">
-                          {getSeededTaskDetail(PARTNER_WEEK_TODAY)}
-                        </p>
-                      ) : null}
                     </div>
                   </div>
                 </motion.div>
               ) : null}
+                </>
+              )}
             </motion.div>
           )}
         </div>
