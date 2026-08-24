@@ -750,6 +750,77 @@ function WeekPreviewTaskRow({
   );
 }
 
+function PartnerNudgeComposer({
+  phase,
+  reducedMotion,
+  sent,
+}: {
+  phase: PlannerDemoPhase;
+  reducedMotion: boolean;
+  sent: boolean;
+}) {
+  const [typedText, setTypedText] = useState("");
+
+  useEffect(() => {
+    if (phase !== "week-typing" || reducedMotion) {
+      return;
+    }
+
+    let index = 0;
+    const intervalId = window.setInterval(() => {
+      index += 1;
+      setTypedText(PARTNER_NUDGE_MESSAGE.slice(0, index));
+      if (index >= PARTNER_NUDGE_MESSAGE.length) {
+        window.clearInterval(intervalId);
+      }
+    }, 85);
+
+    return () => window.clearInterval(intervalId);
+  }, [phase, reducedMotion]);
+
+  const message =
+    sent || phase === "week-completing" || phase === "week-completed"
+      ? PARTNER_NUDGE_MESSAGE
+      : phase === "week-typing"
+        ? reducedMotion
+          ? PARTNER_NUDGE_MESSAGE
+          : typedText
+        : "";
+
+  return (
+    <div className="mt-3 flex items-center gap-2">
+      <div
+        className={`min-w-0 flex-1 rounded-lg border bg-white px-2 py-1.5 text-[10px] ${
+          message ? "font-medium text-sky-950" : "text-muted-foreground"
+        }`}
+      >
+        {message || "Send a nudge..."}
+      </div>
+      <div
+        data-demo-send-nudge
+        className={`inline-flex h-8 shrink-0 items-center gap-1 rounded-md px-2.5 text-[10px] font-semibold text-white shadow-sm transition ${
+          phase === "week-completing"
+            ? "scale-95 bg-sky-800"
+            : sent
+              ? "bg-sky-600"
+              : "bg-sky-700"
+        }`}
+      >
+        {phase === "week-completing" ? (
+          <Loader2 className="size-3 animate-spin" />
+        ) : sent ? (
+          <Check className="size-3" />
+        ) : null}
+        {phase === "week-completing"
+          ? "Sending..."
+          : sent
+            ? "Sent"
+            : "Send nudge"}
+      </div>
+    </div>
+  );
+}
+
 function PartnerPill({
   label,
   completed = false,
@@ -809,7 +880,6 @@ export function LandingPlannerPreview() {
   const [phase, setPhase] = useState<PlannerDemoPhase>("month");
   const [isVisible, setIsVisible] = useState(false);
   const [flight, setFlight] = useState<FlightGeometry | null>(null);
-  const [partnerNudgeText, setPartnerNudgeText] = useState("");
   const previewRef = useRef<HTMLDivElement | null>(null);
   const monthCalendarRef = useRef<HTMLDivElement | null>(null);
   const pastSourceRef = useRef<HTMLDivElement | null>(null);
@@ -925,39 +995,6 @@ export function LandingPlannerPreview() {
 
     return () => window.clearTimeout(timeoutId);
   }, [isVisible, mode, phase, reducedMotion]);
-
-  useEffect(() => {
-    if (mode !== "partner") {
-      return;
-    }
-
-    if (displayPhase === "week-preview" || displayPhase === "week-tapping") {
-      setPartnerNudgeText("");
-      return;
-    }
-
-    if (displayPhase === "week-completing" || displayPhase === "week-completed") {
-      setPartnerNudgeText(PARTNER_NUDGE_MESSAGE);
-      return;
-    }
-
-    if (displayPhase !== "week-typing" || reducedMotion) {
-      return;
-    }
-
-    setPartnerNudgeText("");
-    const intervalId = window.setInterval(() => {
-      setPartnerNudgeText((current) => {
-        if (current.length >= PARTNER_NUDGE_MESSAGE.length) {
-          window.clearInterval(intervalId);
-          return current;
-        }
-        return PARTNER_NUDGE_MESSAGE.slice(0, current.length + 1);
-      });
-    }, 85);
-
-    return () => window.clearInterval(intervalId);
-  }, [displayPhase, mode, reducedMotion]);
 
   useLayoutEffect(() => {
     if (!travelPhase || !activeMove) {
@@ -1494,39 +1531,12 @@ export function LandingPlannerPreview() {
                       </p>
                     ) : null}
                   </div>
-                  <div className="mt-3 flex items-center gap-2">
-                    <div
-                      className={`min-w-0 flex-1 rounded-lg border bg-white px-2 py-1.5 text-[10px] ${
-                        partnerNudgeText || partnerWeekNudgeSent
-                          ? "font-medium text-sky-950"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {partnerNudgeText ||
-                        (partnerWeekNudgeSent ? PARTNER_NUDGE_MESSAGE : "Send a nudge...")}
-                    </div>
-                    <div
-                      data-demo-send-nudge
-                      className={`inline-flex h-8 shrink-0 items-center gap-1 rounded-md px-2.5 text-[10px] font-semibold text-white shadow-sm transition ${
-                        displayPhase === "week-completing"
-                          ? "scale-95 bg-sky-800"
-                          : partnerWeekNudgeSent
-                            ? "bg-sky-600"
-                            : "bg-sky-700"
-                      }`}
-                    >
-                      {displayPhase === "week-completing" ? (
-                        <Loader2 className="size-3 animate-spin" />
-                      ) : partnerWeekNudgeSent ? (
-                        <Check className="size-3" />
-                      ) : null}
-                      {displayPhase === "week-completing"
-                        ? "Sending..."
-                        : partnerWeekNudgeSent
-                          ? "Sent"
-                          : "Send nudge"}
-                    </div>
-                  </div>
+                  <PartnerNudgeComposer
+                    key={displayPhase}
+                    phase={displayPhase}
+                    reducedMotion={reducedMotion}
+                    sent={partnerWeekNudgeSent}
+                  />
                 </motion.div>
               ) : null}
 
