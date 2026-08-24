@@ -1,5 +1,5 @@
--- Seed new accounts with one planner task, daily and weekly cadences,
--- a one-step milestone, and a two-step teammate milestone.
+-- Restore the original three onboarding starter goals and give each a
+-- seven-day deadline from the signup anchor date.
 
 create or replace function private.seed_default_onboarding_goals()
 returns trigger
@@ -41,21 +41,6 @@ begin
     v_anchor_date := (clock_timestamp() at time zone 'UTC')::date;
   end if;
 
-  insert into public.planner_tasks (
-    owner_id,
-    title,
-    scheduled_date,
-    completed_at,
-    is_deleted
-  )
-  values (
-    new.id,
-    'Write your top priority for today',
-    v_anchor_date,
-    null,
-    false
-  );
-
   insert into public.goals (
     id,
     owner_id,
@@ -78,52 +63,16 @@ begin
     (
       gen_random_uuid(),
       new.id,
-      'Move for 10 minutes',
-      'A small daily movement habit to get you on the calendar.',
-      'Personal',
-      'personal',
-      'recurring'::public.goal_frequency_type,
-      'daily'::public.recurrence_interval,
-      null,
-      null,
-      v_anchor_date,
-      null,
-      null,
-      false,
-      'easy'::public.goal_difficulty,
-      false
-    ),
-    (
-      gen_random_uuid(),
-      new.id,
-      'Review the week',
-      'A weekly check-in to notice what worked and what to change.',
-      'Personal',
-      'personal',
-      'recurring'::public.goal_frequency_type,
-      'weekly'::public.recurrence_interval,
-      null,
-      null,
-      v_anchor_date,
-      null,
-      null,
-      false,
-      'easy'::public.goal_difficulty,
-      false
-    ),
-    (
-      gen_random_uuid(),
-      new.id,
-      'Set up your profile',
-      'Add a name and photo so teammates can recognize you.',
+      'Create your Goalmaxxing account',
+      'Complete profile basics and confirm your planner preferences.',
       'Personal',
       'personal',
       'fixed_milestones'::public.goal_frequency_type,
       null,
       1,
-      array['Profile basics complete'],
+      array['Account setup complete'],
       v_anchor_date,
-      v_anchor_date,
+      v_anchor_date + 7,
       null,
       false,
       'easy'::public.goal_difficulty,
@@ -132,14 +81,32 @@ begin
     (
       gen_random_uuid(),
       new.id,
-      'Invite a teammate',
+      'Create your first goal',
+      'Use New Goal + to add one real goal you want to complete this week.',
+      'Personal',
+      'personal',
+      'fixed_milestones'::public.goal_frequency_type,
+      null,
+      1,
+      array['First goal created'],
+      v_anchor_date,
+      v_anchor_date + 7,
+      null,
+      false,
+      'easy'::public.goal_difficulty,
+      false
+    ),
+    (
+      gen_random_uuid(),
+      new.id,
+      'Invite your first teammate',
       'Open Community Team and send one partner invite.',
       'Relationships',
       'relationships',
       'fixed_milestones'::public.goal_frequency_type,
       null,
-      2,
-      array['Send the invite', 'They join'],
+      1,
+      array['Team invite sent'],
       v_anchor_date,
       v_anchor_date + 7,
       null,

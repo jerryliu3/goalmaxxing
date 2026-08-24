@@ -567,59 +567,36 @@ with onboarding_defaults as (
     values
       (
         '10000000-0000-4000-8000-000000000031'::uuid,
-        'Set up your profile'::text,
-        'Add a name and photo so teammates can recognize you.'::text,
+        'Create your Goalmaxxing account'::text,
+        'Complete profile basics and confirm your planner preferences.'::text,
         'Personal'::text,
         'personal'::text,
         '#6366f1'::text,
-        'fixed_milestones'::public.goal_frequency_type,
-        null::public.recurrence_interval,
-        1,
-        array['Profile basics complete']::text[],
         current_date,
-        current_date
+        current_date + 7,
+        array['Account setup complete']::text[]
       ),
       (
         '10000000-0000-4000-8000-000000000032'::uuid,
-        'Move for 10 minutes'::text,
-        'A small daily movement habit to get you on the calendar.'::text,
+        'Create your first goal'::text,
+        'Use New Goal + to add one real goal you want to complete this week.'::text,
         'Personal'::text,
         'personal'::text,
         '#6366f1'::text,
-        'recurring'::public.goal_frequency_type,
-        'daily'::public.recurrence_interval,
-        null::integer,
-        null::text[],
         current_date,
-        null::date
+        current_date + 7,
+        array['First goal created']::text[]
       ),
       (
         '10000000-0000-4000-8000-000000000033'::uuid,
-        'Invite a teammate'::text,
+        'Invite your first teammate'::text,
         'Open Community Team and send one partner invite.'::text,
         'Relationships'::text,
         'relationships'::text,
         '#f43f5e'::text,
-        'fixed_milestones'::public.goal_frequency_type,
-        null::public.recurrence_interval,
-        2,
-        array['Send the invite', 'They join']::text[],
         current_date,
-        current_date + 7
-      ),
-      (
-        '10000000-0000-4000-8000-000000000034'::uuid,
-        'Review the week'::text,
-        'A weekly check-in to notice what worked and what to change.'::text,
-        'Personal'::text,
-        'personal'::text,
-        '#6366f1'::text,
-        'recurring'::public.goal_frequency_type,
-        'weekly'::public.recurrence_interval,
-        null::integer,
-        null::text[],
-        current_date,
-        null::date
+        current_date + 7,
+        array['Team invite sent']::text[]
       )
   ) as defaults (
     id,
@@ -628,12 +605,9 @@ with onboarding_defaults as (
     category,
     category_key,
     color,
-    frequency_type,
-    recurrence_interval,
-    target_count,
-    milestone_names,
     start_date,
-    end_date
+    end_date,
+    milestone_names
   )
 )
 insert into public.goals (
@@ -663,9 +637,9 @@ select
   defaults.category,
   defaults.category_key,
   defaults.color,
-  defaults.frequency_type,
-  defaults.recurrence_interval,
-  defaults.target_count,
+  'fixed_milestones'::public.goal_frequency_type,
+  null,
+  1,
   defaults.milestone_names,
   defaults.start_date,
   defaults.end_date,
@@ -687,29 +661,6 @@ set
   milestone_names = excluded.milestone_names,
   start_date = excluded.start_date,
   end_date = excluded.end_date,
-  updated_at = now();
-
-insert into public.planner_tasks (
-  id,
-  owner_id,
-  title,
-  scheduled_date,
-  completed_at,
-  is_deleted
-)
-values (
-  '10000000-0000-4000-8000-000000000035'::uuid,
-  '44444444-4444-4444-8444-444444444444',
-  'Write your top priority for today',
-  current_date,
-  null,
-  false
-)
-on conflict (id) do update
-set
-  title = excluded.title,
-  scheduled_date = excluded.scheduled_date,
-  is_deleted = false,
   updated_at = now();
 
 insert into public.goal_links (owner_id, source_goal_id, target_goal_id)

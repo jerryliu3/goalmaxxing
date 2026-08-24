@@ -2,7 +2,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
 
-select plan(14);
+select plan(12);
 
 insert into auth.users (id, email, raw_user_meta_data)
 values (
@@ -28,20 +28,8 @@ select is(
     where goal.owner_id = '7a111111-1111-4111-8111-111111111111'
       and goal.is_deleted = false
   ),
-  4,
-  'seeded account receives four onboarding default goals'
-);
-
-select is(
-  (
-    select count(*)::integer
-    from public.planner_tasks task
-    where task.owner_id = '7a111111-1111-4111-8111-111111111111'
-      and task.is_deleted = false
-      and task.title = 'Write your top priority for today'
-  ),
-  1,
-  'seeded account receives one planner task'
+  3,
+  'seeded account receives exactly three onboarding default goals'
 );
 
 select is(
@@ -49,12 +37,12 @@ select is(
     select count(*)::integer
     from public.goals goal
     where goal.owner_id = '7a111111-1111-4111-8111-111111111111'
-      and goal.frequency_type = 'recurring'::public.goal_frequency_type
-      and goal.recurrence_interval = 'daily'::public.recurrence_interval
-      and goal.title = 'Move for 10 minutes'
+      and goal.frequency_type = 'fixed_milestones'::public.goal_frequency_type
+      and coalesce(goal.target_count, 0) = 1
+      and goal.recurrence_interval is null
   ),
-  1,
-  'seeded defaults include a daily cadence goal'
+  3,
+  'seeded defaults are lightweight one-milestone goals'
 );
 
 select is(
@@ -62,46 +50,10 @@ select is(
     select count(*)::integer
     from public.goals goal
     where goal.owner_id = '7a111111-1111-4111-8111-111111111111'
-      and goal.frequency_type = 'recurring'::public.goal_frequency_type
-      and goal.recurrence_interval = 'weekly'::public.recurrence_interval
-      and goal.title = 'Review the week'
+      and (goal.end_date - goal.start_date)::integer = 7
   ),
-  1,
-  'seeded defaults include a weekly cadence goal'
-);
-
-select is(
-  (
-    select (goal.end_date - goal.start_date)::integer
-    from public.goals goal
-    where goal.owner_id = '7a111111-1111-4111-8111-111111111111'
-      and goal.title = 'Set up your profile'
-  ),
-  0,
-  'profile setup starter goal is due on creation date'
-);
-
-select is(
-  (
-    select goal.target_count
-    from public.goals goal
-    where goal.owner_id = '7a111111-1111-4111-8111-111111111111'
-      and goal.title = 'Invite a teammate'
-      and goal.milestone_names = array['Send the invite', 'They join']::text[]
-  ),
-  2,
-  'team invite starter goal has two subgoals'
-);
-
-select is(
-  (
-    select (goal.end_date - goal.start_date)::integer
-    from public.goals goal
-    where goal.owner_id = '7a111111-1111-4111-8111-111111111111'
-      and goal.title = 'Invite a teammate'
-  ),
-  7,
-  'team invite starter item is due within the first week'
+  3,
+  'starter goals are due seven days after their start date'
 );
 
 insert into auth.users (id, email, raw_user_meta_data)
@@ -149,7 +101,7 @@ select is(
     where goal.owner_id = '7a111111-1111-4111-8111-111111111111'
       and goal.category_key in ('personal', 'relationships')
   ),
-  4,
+  3,
   'seeded defaults use canonical category keys'
 );
 
@@ -176,7 +128,7 @@ select is(
     select goal.start_date
     from public.goals goal
     where goal.owner_id = '7a444444-4444-4444-8444-444444444444'
-      and goal.title = 'Set up your profile'
+      and goal.title = 'Create your Goalmaxxing account'
   ),
   (clock_timestamp() at time zone 'Pacific/Kiritimati')::date,
   'seeded start dates use the device timezone local date'
@@ -197,7 +149,7 @@ select is(
     where goal.owner_id = '7a555555-5555-4555-8555-555555555555'
       and goal.is_deleted = false
   ),
-  4,
+  3,
   'invalid signup timezone still seeds default goals'
 );
 
