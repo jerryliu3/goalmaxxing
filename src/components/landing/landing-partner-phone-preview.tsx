@@ -40,26 +40,6 @@ export function LandingPartnerPhonePreview({
   reducedMotion: boolean;
   nudgeMessage: string;
 }) {
-  const [notificationVisible, setNotificationVisible] = useState(false);
-
-  useEffect(() => {
-    if (!notificationEligible) {
-      setNotificationVisible(false);
-      return;
-    }
-
-    if (reducedMotion) {
-      setNotificationVisible(true);
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setNotificationVisible(true);
-    }, PARTNER_PHONE_NOTIFICATION_DELAY_MS);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [notificationEligible, reducedMotion]);
-
   return (
     <div
       data-demo-partner-phone
@@ -108,9 +88,48 @@ export function LandingPartnerPhonePreview({
 
           <div className="absolute inset-x-3 top-9 z-30">
             <AnimatePresence initial={false}>
-              {notificationVisible ? (
-                <motion.div
+              {notificationEligible ? (
+                <PartnerPhonePushNotification
                   key="partner-nudge-notification"
+                  reducedMotion={reducedMotion}
+                  nudgeMessage={nudgeMessage}
+                />
+              ) : null}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PartnerPhonePushNotification({
+  reducedMotion,
+  nudgeMessage,
+}: {
+  reducedMotion: boolean;
+  nudgeMessage: string;
+}) {
+  const [visible, setVisible] = useState(reducedMotion);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setVisible(true);
+    }, PARTNER_PHONE_NOTIFICATION_DELAY_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [reducedMotion]);
+
+  if (!visible) {
+    return null;
+  }
+
+  return (
+                <motion.div
                   data-demo-partner-phone-notification
                   data-testid="partner-phone-notification"
                   initial={
@@ -149,11 +168,5 @@ export function LandingPartnerPhonePreview({
                     </p>
                   </div>
                 </motion.div>
-              ) : null}
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
