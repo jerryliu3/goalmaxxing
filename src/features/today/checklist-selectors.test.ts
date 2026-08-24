@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getRecurrenceGroup,
   groupGoalsByRecurrence,
+  selectCompletedTargetGoalIds,
   selectFilteredTodayGoals,
 } from "@/features/today/checklist-selectors";
 import type { Goal } from "@/lib/goals/types";
@@ -115,5 +116,55 @@ describe("checklist selectors", () => {
         endMonths: ["2026-08", "2026-09"],
       }).map((row) => row.id)
     ).toEqual(["health-daily", "career-weekly"]);
+  });
+
+  it("hides target-hit goals only when they were completed before the viewed day", () => {
+    const goals = [
+      goal({ id: "hit-today", owner_id: "me", title: "Hit today", start_date: "2026-08-01" }),
+      goal({
+        id: "hit-yesterday",
+        owner_id: "me",
+        title: "Hit yesterday",
+        start_date: "2026-08-01",
+      }),
+    ];
+    const completedTargetGoalIds = selectCompletedTargetGoalIds({
+      goals: [
+        ...goals,
+        goal({
+          id: "hit-earlier-missing-facts",
+          owner_id: "me",
+          title: "Hit earlier",
+          start_date: "2026-08-01",
+        }),
+      ],
+      progressByGoal: new Map([
+        ["hit-today", { outcome: "achieved" }],
+        ["hit-yesterday", { outcome: "achieved" }],
+        ["hit-earlier-missing-facts", { outcome: "achieved" }],
+      ]),
+      completionsByGoal: new Map([
+        ["hit-today", [{ completed_on: "2026-08-13" }]],
+        ["hit-yesterday", [{ completed_on: "2026-08-12" }]],
+      ]),
+      asOfDate: "2026-08-13",
+    });
+
+    expect([...completedTargetGoalIds].sort()).toEqual([
+      "hit-earlier-missing-facts",
+      "hit-yesterday",
+    ]);
+    expect(
+      selectFilteredTodayGoals({
+        activeGoals: goals,
+        todayDate: "2026-08-13",
+        categoryFilters: [],
+        recurrenceFilters: [],
+        searchQuery: "",
+        endMonths: [],
+        completedTargetGoalIds,
+        showCompletedGoals: false,
+      }).map((row) => row.id)
+    ).toEqual(["hit-today"]);
   });
 });

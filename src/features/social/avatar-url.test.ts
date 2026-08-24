@@ -33,6 +33,19 @@ describe("avatar URL helpers", () => {
           "https://project.supabase.co/storage/v1/object/public/goal-photos/123/avatar.jpg"
         )
       ).toBe("Avatar URL must point to the public avatars storage path.");
+      expect(
+        getAvatarUrlValidationError(
+          "https://randomuser.me/api/portraits/women/12.jpg"
+        )
+      ).toBeNull();
+      expect(
+        getAvatarUrlValidationError(
+          "https://api.dicebear.com/9.x/lorelei/png?seed=carla-diaz"
+        )
+      ).toBeNull();
+      expect(
+        getAvatarUrlValidationError("https://placedog.net/200/200?id=7")
+      ).toBeNull();
     } finally {
       if (previousSupabaseUrl === undefined) {
         delete process.env.NEXT_PUBLIC_SUPABASE_URL;

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   readTabDataCache,
   resetTabDataCacheForTests,
@@ -9,12 +9,15 @@ import {
   INSIGHTS_DATA_CACHE_PREFIX,
   PLANNER_CONTEXT_CACHE_PREFIX,
   invalidatePlannerRelatedTabCaches,
+  resetPlannerTabCacheInvalidationForTests,
+  subscribePlannerTabCacheInvalidation,
 } from "@/lib/cache/planner-tab-cache";
 import { INSIGHTS_STATS_CACHE_PREFIX } from "@/lib/insights/stats";
 
 describe("invalidatePlannerRelatedTabCaches", () => {
   afterEach(() => {
     resetTabDataCacheForTests();
+    resetPlannerTabCacheInvalidationForTests();
     window.sessionStorage.clear();
   });
 
@@ -42,5 +45,17 @@ describe("invalidatePlannerRelatedTabCaches", () => {
       readTabDataCache(`${INSIGHTS_STATS_CACHE_PREFIX}:viewer:viewer`)
     ).toBeNull();
     expect(readTabDataCache("progress-context:test")).toBeNull();
+  });
+
+  it("notifies subscribers after cache invalidation", async () => {
+    const listener = vi.fn();
+    const unsubscribe = subscribePlannerTabCacheInvalidation(listener);
+
+    invalidatePlannerRelatedTabCaches();
+    invalidatePlannerRelatedTabCaches();
+    await Promise.resolve();
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    unsubscribe();
   });
 });

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
+import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 
 interface PlannerTaskRow {
   task_id: string;
@@ -83,6 +84,10 @@ export function PlannerTasksPanel({
       window.clearTimeout(timer);
     };
   }, [loadTasks, scheduledDate]);
+
+  usePlannerTabCacheInvalidation(() => {
+    void loadTasks(scheduledDateRef.current);
+  });
 
   useEffect(
     () => () => {

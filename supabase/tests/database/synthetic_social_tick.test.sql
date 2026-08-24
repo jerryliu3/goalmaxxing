@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(9);
+select plan(10);
 
 select is(
   public.provision_synthetic_users_service(6, 3),
@@ -22,6 +22,18 @@ select is(
   ),
   6,
   'synthetic_users table contains expected user count'
+);
+
+select cmp_ok(
+  (
+    select count(distinct coalesce(profile.avatar_url, ''))::integer
+    from public.synthetic_users synthetic
+    join public.profiles profile
+      on profile.id = synthetic.user_id
+  ),
+  '>=',
+  2,
+  'provisioned synthetic users get a mix of avatars including empty photos'
 );
 
 update public.synthetic_config

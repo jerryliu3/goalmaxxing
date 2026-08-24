@@ -46,6 +46,7 @@ import { resolveUserTimezone } from "@/lib/dates/timezone";
 import {
   invalidatePlannerRelatedTabCaches,
 } from "@/lib/cache/planner-tab-cache";
+import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import {
   type PlannerPolicy,
 } from "@/lib/planner/policy";
@@ -163,6 +164,7 @@ export function CalendarSurface({
   const lastTouchTapRef = useRef<{ day: string; at: number } | null>(null);
   const suppressDayCellClickRef = useRef<{ day: string; active: boolean } | null>(null);
   const calendarPreparedRef = useRef(false);
+  const skipInvalidationReloadRef = useRef(false);
   const dayPreviewRef = useRef<HTMLDivElement | null>(null);
   const rollingWeekStripRef = useRef<HTMLDivElement | null>(null);
   const calendarGridViewportRef = useRef<HTMLDivElement | null>(null);
@@ -211,6 +213,7 @@ export function CalendarSurface({
   }, [loadContext]);
 
   const handlePlannerMutation = useCallback(() => {
+    skipInvalidationReloadRef.current = true;
     invalidatePlannerRelatedTabCaches();
     onPlannerMutation();
   }, [onPlannerMutation]);
@@ -282,6 +285,19 @@ export function CalendarSurface({
     draftSaveWindowResult,
     draftSaveWindow,
   } = draftSession;
+  usePlannerTabCacheInvalidation(() => {
+    if (activeTab !== "calendar") {
+      return;
+    }
+    if (skipInvalidationReloadRef.current) {
+      skipInvalidationReloadRef.current = false;
+      return;
+    }
+    void loadContext({
+      showLoading: false,
+      forcePrepare: !hasDraftSession,
+    });
+  });
   const {
     entriesByDate,
     entryByKey,

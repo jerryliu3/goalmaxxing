@@ -4,7 +4,10 @@ import { useAppRouter } from "@/lib/navigation/use-app-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildLoginHref } from "@/lib/auth/login-redirect";
 import { withAbortSignal } from "@/lib/async/abort";
-import { CHECKLIST_DATA_CACHE_PREFIX } from "@/lib/cache/planner-tab-cache";
+import {
+  CHECKLIST_DATA_CACHE_PREFIX,
+} from "@/lib/cache/planner-tab-cache";
+import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import { readTabDataCache, writeTabDataCache } from "@/lib/cache/tab-data-cache";
 import { toLocalDateString } from "@/lib/dates/day";
 import {
@@ -47,13 +50,11 @@ const TODAY_REQUEST_TIMEOUT_MS = 15_000;
 export function useChecklistData({
   subjectUserId,
   isActive,
-  refreshToken,
   viewDate,
   failClosed = false,
 }: {
   subjectUserId?: string;
   isActive: boolean;
-  refreshToken: number;
   viewDate: string;
   failClosed?: boolean;
 }) {
@@ -67,7 +68,6 @@ export function useChecklistData({
   const loadRequestIdRef = useRef(0);
   const viewDateProgressRequestIdRef = useRef(0);
   const visibleLoadCountRef = useRef(0);
-  const refreshTokenRef = useRef(refreshToken);
   const pendingRefreshRef = useRef(false);
   const authRedirectStartedRef = useRef(false);
   const currentViewDateRef = useRef(viewDate);
@@ -325,26 +325,13 @@ export function useChecklistData({
     return () => window.clearTimeout(timer);
   }, [isActive, reportLoadError, subjectUserId, todayLocalDate, viewDate]);
 
-  useEffect(() => {
-    if (refreshToken === refreshTokenRef.current) {
-      return;
-    }
-
-    refreshTokenRef.current = refreshToken;
-    if (isActive) {
-      const timer = window.setTimeout(() => {
-        void loadData({ showLoading: false, forceRefresh: true }).catch(
-          (error: unknown) => {
-            reportLoadError(error);
-          }
-        );
-      }, 0);
-      pendingRefreshRef.current = false;
-      return () => window.clearTimeout(timer);
-    }
-
-    pendingRefreshRef.current = true;
-  }, [isActive, loadData, refreshToken, reportLoadError]);
+  const refreshInBackground = useCallback(() => {
+    void loadData({ showLoading: false, forceRefresh: true }).catch(
+      (error: unknown) => {
+        reportLoadError(error);
+      }
+    );
+  }, [loadData, reportLoadError]);
 
   useEffect(() => {
     if (!isActive || !pendingRefreshRef.current) {
@@ -352,14 +339,18 @@ export function useChecklistData({
     }
     pendingRefreshRef.current = false;
     const timer = window.setTimeout(() => {
-      void loadData({ showLoading: false, forceRefresh: true }).catch(
-        (error: unknown) => {
-          reportLoadError(error);
-        }
-      );
+      refreshInBackground();
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [isActive, loadData, reportLoadError]);
+  }, [isActive, refreshInBackground]);
+
+  usePlannerTabCacheInvalidation(() => {
+    if (!isActive) {
+      pendingRefreshRef.current = true;
+      return;
+    }
+    refreshInBackground();
+  });
 
   return {
     data,

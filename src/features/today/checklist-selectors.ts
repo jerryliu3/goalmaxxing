@@ -1,4 +1,5 @@
 import { resolveCategoryKey } from "@/lib/goals/category";
+import { getSortedCompletionDates } from "@/lib/goals/completion-grouping";
 import { getGoalLifecycle } from "@/lib/goals/lifecycle";
 import {
   filterGoalsByEndMonths,
@@ -101,6 +102,34 @@ export function selectActiveGoals({
       !isGoalManuallyArchived(goal)
     );
   });
+}
+
+export function selectCompletedTargetGoalIds({
+  goals,
+  progressByGoal,
+  completionsByGoal,
+  asOfDate,
+}: {
+  goals: Array<{ id: string }>;
+  progressByGoal: ReadonlyMap<string, { outcome: string } | undefined>;
+  completionsByGoal: ReadonlyMap<string, Array<{ completed_on: string }>>;
+  asOfDate: string;
+}): Set<string> {
+  const ids = new Set<string>();
+  for (const goal of goals) {
+    if (progressByGoal.get(goal.id)?.outcome !== "achieved") {
+      continue;
+    }
+    const lastCompletedOn = getSortedCompletionDates(
+      completionsByGoal.get(goal.id) ?? []
+    ).at(-1);
+    // Checklist facts are usually just the viewed day. An achieved goal with
+    // no fact on that day was therefore hit on an earlier date.
+    if (lastCompletedOn == null || lastCompletedOn < asOfDate) {
+      ids.add(goal.id);
+    }
+  }
+  return ids;
 }
 
 export function selectFilteredTodayGoals({
