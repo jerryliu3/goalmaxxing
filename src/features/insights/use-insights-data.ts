@@ -214,6 +214,16 @@ export function useInsightsData({
     [clearLaneError, partnerId, redirectToLogin, selectedYear, subjectUserId, supabase, viewerUserId]
   );
 
+  const refreshInBackground = useCallback(() => {
+    void loadData({ showLoading: false, forceRefresh: true }).catch((error) => {
+      if (error instanceof InsightsStatsAuthenticationError) {
+        redirectToLogin();
+        return;
+      }
+      reportLoadError(error);
+    });
+  }, [loadData, redirectToLogin, reportLoadError]);
+
   useEffect(() => {
     const run = async () => {
       try {
@@ -231,26 +241,10 @@ export function useInsightsData({
   }, [loadData, redirectToLogin, reportLoadError]);
 
   useEffect(() => {
-    return subscribeXpRefresh(() => {
-      void loadData({ showLoading: false, forceRefresh: true }).catch((error) => {
-        if (error instanceof InsightsStatsAuthenticationError) {
-          redirectToLogin();
-          return;
-        }
-        reportLoadError(error);
-      });
-    });
-  }, [loadData, redirectToLogin, reportLoadError]);
+    return subscribeXpRefresh(refreshInBackground);
+  }, [refreshInBackground]);
 
-  usePlannerTabCacheInvalidation(() => {
-    void loadData({ showLoading: false, forceRefresh: true }).catch((error) => {
-      if (error instanceof InsightsStatsAuthenticationError) {
-        redirectToLogin();
-        return;
-      }
-      reportLoadError(error);
-    });
-  });
+  usePlannerTabCacheInvalidation(refreshInBackground);
 
   return {
     state,

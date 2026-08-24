@@ -5,7 +5,10 @@ import { subscribePlannerTabCacheInvalidation } from "@/lib/cache/planner-tab-ca
 
 export function usePlannerTabCacheInvalidation(onInvalidate: () => void) {
   const onInvalidateRef = useRef(onInvalidate);
-  onInvalidateRef.current = onInvalidate;
+
+  useEffect(() => {
+    onInvalidateRef.current = onInvalidate;
+  });
 
   useEffect(() => {
     return subscribePlannerTabCacheInvalidation(() => {
