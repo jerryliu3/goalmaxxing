@@ -129,10 +129,19 @@ describe("checklist selectors", () => {
       }),
     ];
     const completedTargetGoalIds = selectCompletedTargetGoalIds({
-      goals,
+      goals: [
+        ...goals,
+        goal({
+          id: "hit-earlier-missing-facts",
+          owner_id: "me",
+          title: "Hit earlier",
+          start_date: "2026-08-01",
+        }),
+      ],
       progressByGoal: new Map([
         ["hit-today", { outcome: "achieved" }],
         ["hit-yesterday", { outcome: "achieved" }],
+        ["hit-earlier-missing-facts", { outcome: "achieved" }],
       ]),
       completionsByGoal: new Map([
         ["hit-today", [{ completed_on: "2026-08-13" }]],
@@ -141,7 +150,10 @@ describe("checklist selectors", () => {
       asOfDate: "2026-08-13",
     });
 
-    expect([...completedTargetGoalIds]).toEqual(["hit-yesterday"]);
+    expect([...completedTargetGoalIds].sort()).toEqual([
+      "hit-earlier-missing-facts",
+      "hit-yesterday",
+    ]);
     expect(
       selectFilteredTodayGoals({
         activeGoals: goals,

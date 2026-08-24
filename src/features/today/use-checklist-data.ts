@@ -4,7 +4,10 @@ import { useAppRouter } from "@/lib/navigation/use-app-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildLoginHref } from "@/lib/auth/login-redirect";
 import { withAbortSignal } from "@/lib/async/abort";
-import { CHECKLIST_DATA_CACHE_PREFIX } from "@/lib/cache/planner-tab-cache";
+import {
+  CHECKLIST_DATA_CACHE_PREFIX,
+} from "@/lib/cache/planner-tab-cache";
+import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import { readTabDataCache, writeTabDataCache } from "@/lib/cache/tab-data-cache";
 import { toLocalDateString } from "@/lib/dates/day";
 import {
@@ -360,6 +363,18 @@ export function useChecklistData({
     }, 0);
     return () => window.clearTimeout(timer);
   }, [isActive, loadData, reportLoadError]);
+
+  usePlannerTabCacheInvalidation(() => {
+    if (!isActive) {
+      pendingRefreshRef.current = true;
+      return;
+    }
+    void loadData({ showLoading: false, forceRefresh: true }).catch(
+      (error: unknown) => {
+        reportLoadError(error);
+      }
+    );
+  });
 
   return {
     data,

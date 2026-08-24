@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildLoginHref } from "@/lib/auth/login-redirect";
 import { withAbortSignal } from "@/lib/async/abort";
 import { INSIGHTS_DATA_CACHE_PREFIX } from "@/lib/cache/planner-tab-cache";
+import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import { readTabDataCache, writeTabDataCache } from "@/lib/cache/tab-data-cache";
 import { toLocalDateString } from "@/lib/dates/day";
 import {
@@ -240,6 +241,16 @@ export function useInsightsData({
       });
     });
   }, [loadData, redirectToLogin, reportLoadError]);
+
+  usePlannerTabCacheInvalidation(() => {
+    void loadData({ showLoading: false, forceRefresh: true }).catch((error) => {
+      if (error instanceof InsightsStatsAuthenticationError) {
+        redirectToLogin();
+        return;
+      }
+      reportLoadError(error);
+    });
+  });
 
   return {
     state,

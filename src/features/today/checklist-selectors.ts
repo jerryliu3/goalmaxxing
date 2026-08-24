@@ -123,7 +123,9 @@ export function selectCompletedTargetGoalIds({
     const lastCompletedOn = getSortedCompletionDates(
       completionsByGoal.get(goal.id) ?? []
     ).at(-1);
-    if (lastCompletedOn != null && lastCompletedOn < asOfDate) {
+    // Checklist facts are usually just the viewed day. An achieved goal with
+    // no fact on that day was therefore hit on an earlier date.
+    if (lastCompletedOn == null || lastCompletedOn < asOfDate) {
       ids.add(goal.id);
     }
   }

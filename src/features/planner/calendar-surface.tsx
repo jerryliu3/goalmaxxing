@@ -46,6 +46,7 @@ import { resolveUserTimezone } from "@/lib/dates/timezone";
 import {
   invalidatePlannerRelatedTabCaches,
 } from "@/lib/cache/planner-tab-cache";
+import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import {
   type PlannerPolicy,
 } from "@/lib/planner/policy";
@@ -282,6 +283,15 @@ export function CalendarSurface({
     draftSaveWindowResult,
     draftSaveWindow,
   } = draftSession;
+  usePlannerTabCacheInvalidation(() => {
+    if (activeTab !== "calendar") {
+      return;
+    }
+    void loadContext({
+      showLoading: false,
+      forcePrepare: !hasDraftSession,
+    });
+  });
   const {
     entriesByDate,
     entryByKey,
