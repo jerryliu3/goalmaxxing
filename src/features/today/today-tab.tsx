@@ -104,7 +104,6 @@ export type ChecklistTabContentMode = "full" | "filters-only" | "goals-only";
 
 interface TodayTabProps {
   isActive?: boolean;
-  refreshToken?: number;
   subjectUserId?: string;
   readOnly?: boolean;
   sharedFilters?: ChecklistSharedFilters;
@@ -114,7 +113,6 @@ interface TodayTabProps {
 
 export function TodayTab({
   isActive = true,
-  refreshToken = 0,
   subjectUserId,
   readOnly = false,
   sharedFilters,
@@ -171,7 +169,6 @@ export function TodayTab({
   const { data, loading, laneError, loadData, redirectToLogin, todayLocalDate } = useChecklistData({
     subjectUserId,
     isActive,
-    refreshToken,
     viewDate,
     failClosed: Boolean(readOnly && subjectUserId),
   });
