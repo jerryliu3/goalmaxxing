@@ -17,7 +17,9 @@ import {
   resolveSocialSurfaceTab,
 } from "@/features/social/social-surface-tab";
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
+import { TAB_ONBOARDING_TOURS } from "@/features/onboarding/tab-onboarding";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { subscribeXpRefresh } from "@/lib/xp/events";
 
@@ -38,7 +40,11 @@ const SOCIAL_SURFACE_POLL_INTERVAL_MS = 60 * 1000;
 export function SocialSurface() {
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();
-  const activeTab = resolveSocialSurfaceTab(searchParams.get("tab") ?? undefined);
+  const [socialActivityVisible, setSocialActivityVisible] = useState<boolean | null>(null);
+  const activeTab = resolveSocialSurfaceTab(searchParams.get("tab") ?? undefined, {
+    socialActivityVisible: socialActivityVisible ?? true,
+  });
+  const publicSocialLocked = socialActivityVisible === false;
   const [refreshToken, setRefreshToken] = useState(0);
   const lastFocusRefreshAtRef = useRef(0);
   const requestedOnboardingKey = searchParams.get("onboarding");
@@ -96,6 +102,48 @@ export function SocialSurface() {
   }, [triggerGlobalRefresh]);
 
   useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+
+    void supabase.auth.getUser().then(async ({ data }) => {
+      const userId = data.user?.id;
+      if (!userId) {
+        if (!cancelled) {
+          setSocialActivityVisible(true);
+        }
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("social_activity_visible")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (!cancelled) {
+        setSocialActivityVisible(profile?.social_activity_visible !== false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!publicSocialLocked) {
+      return;
+    }
+    const requestedTab = searchParams.get("tab");
+    if (requestedTab === "team" || requestedTab === null) {
+      return;
+    }
+    applySearchParams((params) => {
+      params.set("tab", "team");
+    }, "replace");
+  }, [applySearchParams, publicSocialLocked, searchParams]);
+
+  useEffect(() => {
     window.addEventListener("focus", handleVisibilityOrFocus);
     document.addEventListener("visibilitychange", handleVisibilityOrFocus);
     return () => {
@@ -106,14 +154,23 @@ export function SocialSurface() {
 
   return (
     <>
+      {socialActivityVisible === null ? null : (
       <TabOnboardingOverlay
         onboardingKey="social.main"
         forceOpen={requestedOnboardingKey === "social.main"}
+        steps={
+          publicSocialLocked
+            ? TAB_ONBOARDING_TOURS["social.main"].filter((step) => step.target === "social.team")
+            : undefined
+        }
       />
+      )}
       <Tabs
         value={activeTab}
         onValueChange={(value) => {
-          const nextTab = resolveSocialSurfaceTab(value);
+          const nextTab = resolveSocialSurfaceTab(value, {
+            socialActivityVisible: socialActivityVisible ?? true,
+          });
           applySearchParams((params) => {
             if (nextTab === "feed") {
               params.delete("tab");
@@ -138,6 +195,8 @@ export function SocialSurface() {
               activeTab === "feed" ? { boxShadow: selectedChipShadow } : undefined
             }
             data-onboarding="social.feed"
+            disabled={publicSocialLocked}
+            title={publicSocialLocked ? "Private accounts use Team only." : undefined}
           >
             <Newspaper className="size-3.5" />
             <span className="truncate">Feed</span>
@@ -154,6 +213,8 @@ export function SocialSurface() {
                 : undefined
             }
             data-onboarding="social.compete"
+            disabled={publicSocialLocked}
+            title={publicSocialLocked ? "Private accounts use Team only." : undefined}
           >
             <Trophy className="size-3.5" />
             <span className="truncate">Challenges</span>
@@ -170,6 +231,8 @@ export function SocialSurface() {
                 : undefined
             }
             data-onboarding="social.compete"
+            disabled={publicSocialLocked}
+            title={publicSocialLocked ? "Private accounts use Team only." : undefined}
           >
             <Flag className="size-3.5" />
             <span className="truncate">Leaderboards</span>

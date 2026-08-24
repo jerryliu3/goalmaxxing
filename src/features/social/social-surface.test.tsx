@@ -1,6 +1,8 @@
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+const mockSocialActivityVisible = vi.hoisted(() => ({ value: true as boolean }));
 import {
   invalidateSocialFeedCache,
   invalidateSocialTabCache,
@@ -66,9 +68,30 @@ vi.mock("@/features/social/group-join-card", () => ({
   GroupJoinCard: () => <div data-testid="group-join-card" />,
 }));
 
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    auth: {
+      getUser: () =>
+        Promise.resolve({ data: { user: { id: "user-1" } }, error: null }),
+    },
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: () =>
+            Promise.resolve({
+              data: { social_activity_visible: mockSocialActivityVisible.value },
+              error: null,
+            }),
+        }),
+      }),
+    }),
+  }),
+}));
+
 afterEach(() => {
   cleanup();
   mockSearch = "";
+  mockSocialActivityVisible.value = true;
   vi.useRealTimers();
   vi.clearAllMocks();
 });
@@ -248,5 +271,31 @@ describe("SocialSurface tab URL", () => {
       "data-state",
       "active"
     );
+  });
+});
+
+describe("SocialSurface private accounts", () => {
+  it("disables Feed, Challenges, and Leaderboards and stays on Team", async () => {
+    mockSocialActivityVisible.value = false;
+    render(<SocialSurface />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Feed" })).toBeDisabled();
+    });
+    expect(screen.getByRole("tab", { name: "Challenges" })).toBeDisabled();
+    expect(screen.getByRole("tab", { name: "Leaderboards" })).toBeDisabled();
+    expect(screen.getByRole("tab", { name: "Team" })).toHaveAttribute("data-state", "active");
+    expect(screen.getByRole("tab", { name: "Team" })).not.toBeDisabled();
+  });
+
+  it("rewrites public community tab links to Team", async () => {
+    mockSocialActivityVisible.value = false;
+    mockSearch = "tab=feed";
+    const replaceStateSpy = vi.spyOn(window.history, "replaceState");
+    render(<SocialSurface />);
+
+    await waitFor(() => {
+      expect(replaceStateSpy.mock.calls.at(-1)?.[2]).toBe("/social?tab=team");
+    });
   });
 });
