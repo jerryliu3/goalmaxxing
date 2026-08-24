@@ -2,6 +2,19 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
 
+function mockOnboardingTargetRects(
+  rect: DOMRect = new DOMRect(20, 20, 80, 24)
+) {
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+    function mockClientRect(this: HTMLElement) {
+      if (this.hasAttribute("data-onboarding")) {
+        return rect;
+      }
+      return new DOMRect(0, 0, 0, 0);
+    }
+  );
+}
+
 describe("TabOnboardingOverlay", () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -13,6 +26,7 @@ describe("TabOnboardingOverlay", () => {
   });
 
   it("walks through in-page targets without blurring the background", async () => {
+    mockOnboardingTargetRects();
     render(
       <>
         <div data-onboarding="planner.surfaces">Planner tabs</div>

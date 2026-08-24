@@ -72,11 +72,25 @@ function shiftScopeMonth(scopeMonth: string, delta: number) {
   return `${nextYear}-${nextMonth}`;
 }
 
+async function gotoAppPath(page: Page, path: string) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.goto(path, { waitUntil: "domcontentloaded" });
+      return;
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
+      }
+      await page.waitForTimeout(250 * (attempt + 1));
+    }
+  }
+}
+
 async function openCalendar(page: Page, scopeMonth?: string) {
   const query = scopeMonth
     ? `/calendar?surface=calendar&view=month&month=${scopeMonth}`
     : "/calendar?surface=calendar&view=month";
-  await page.goto(query);
+  await gotoAppPath(page, query);
   await expect(page).toHaveURL(/\/calendar/);
   await waitForCalendarReady(page);
   await ensureMonthCalendarDensity(page);
@@ -106,7 +120,7 @@ async function openCalendar(page: Page, scopeMonth?: string) {
         `Planner setup bootstrap failed (${lastSetupStatus ?? "unknown"}).`
       );
     }
-    await page.goto(query);
+    await gotoAppPath(page, query);
     await expect(page).toHaveURL(/\/calendar/);
     await waitForCalendarReady(page);
     await ensureMonthCalendarDensity(page);
@@ -632,7 +646,7 @@ test.describe("planner critical rails", () => {
 
   test("completion toggle dispatches from today surface", async ({ page }) => {
     test.setTimeout(120_000);
-    await page.goto("/checklist?tab=today");
+    await gotoAppPath(page, "/checklist?tab=today");
     const initialButton = page.locator(COMPLETION_TOGGLE_SELECTOR).first();
     await expect(initialButton).toBeVisible();
     await expect(initialButton).toBeEnabled();
@@ -645,7 +659,8 @@ test.describe("planner critical rails", () => {
 
   test("completion toggle dispatches from past tab surface", async ({ page }) => {
     test.setTimeout(120_000);
-    await page.goto("/checklist?tab=past");
+    await dismissTabOnboardingIfPresent(page);
+    await gotoAppPath(page, "/checklist?tab=past");
     const pastToggle = page.locator(COMPLETION_TOGGLE_SELECTOR).first();
     await expect(pastToggle).toBeVisible({ timeout: 10_000 });
     await expect(pastToggle).toBeEnabled();

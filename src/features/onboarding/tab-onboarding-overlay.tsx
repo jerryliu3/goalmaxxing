@@ -6,51 +6,28 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   type TabOnboardingKey,
+  type TabOnboardingStep,
   TAB_ONBOARDING_TOURS,
   isTabOnboardingCompleted,
   markTabOnboardingCompleted,
   subscribeTabOnboarding,
 } from "@/features/onboarding/tab-onboarding";
+import {
+  firstOnboardingElement,
+  placeOnboardingCard,
+  readOnboardingTargetRect,
+} from "@/features/onboarding/onboarding-spotlight";
 
 interface TabOnboardingOverlayProps {
   onboardingKey: TabOnboardingKey;
   forceOpen?: boolean;
-}
-
-const CARD_WIDTH_PX = 320;
-const CARD_ESTIMATED_HEIGHT_PX = 176;
-const VIEWPORT_MARGIN_PX = 16;
-const TARGET_GAP_PX = 12;
-
-function placeCard(rect: DOMRect | null) {
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-  if (!rect) {
-    return {
-      top: VIEWPORT_MARGIN_PX + 72,
-      left: Math.max(VIEWPORT_MARGIN_PX, (viewportWidth - CARD_WIDTH_PX) / 2),
-    };
-  }
-
-  const canPlaceBelow =
-    rect.bottom + TARGET_GAP_PX + CARD_ESTIMATED_HEIGHT_PX <=
-    viewportHeight - VIEWPORT_MARGIN_PX;
-  const top = canPlaceBelow
-    ? rect.bottom + TARGET_GAP_PX
-    : Math.max(
-        VIEWPORT_MARGIN_PX,
-        rect.top - TARGET_GAP_PX - CARD_ESTIMATED_HEIGHT_PX
-      );
-  const left = Math.min(
-    Math.max(rect.left, VIEWPORT_MARGIN_PX),
-    viewportWidth - CARD_WIDTH_PX - VIEWPORT_MARGIN_PX
-  );
-  return { top, left };
+  steps?: TabOnboardingStep[];
 }
 
 export function TabOnboardingOverlay({
   onboardingKey,
   forceOpen = false,
+  steps: stepsOverride,
 }: TabOnboardingOverlayProps) {
   const sessionToken = useMemo(
     () => `${forceOpen ? "force" : "default"}:${onboardingKey}`,
@@ -65,7 +42,7 @@ export function TabOnboardingOverlay({
   const open =
     dismissedToken !== sessionToken &&
     (forceOpen || !completed);
-  const steps = TAB_ONBOARDING_TOURS[onboardingKey];
+  const steps = stepsOverride ?? TAB_ONBOARDING_TOURS[onboardingKey];
 
   if (!open || steps.length === 0) {
     return null;
@@ -86,38 +63,6 @@ export function TabOnboardingOverlay({
   );
 }
 
-function unionClientRects(elements: HTMLElement[]) {
-  let top = Number.POSITIVE_INFINITY;
-  let left = Number.POSITIVE_INFINITY;
-  let right = Number.NEGATIVE_INFINITY;
-  let bottom = Number.NEGATIVE_INFINITY;
-  for (const element of elements) {
-    const rect = element.getBoundingClientRect();
-    top = Math.min(top, rect.top);
-    left = Math.min(left, rect.left);
-    right = Math.max(right, rect.right);
-    bottom = Math.max(bottom, rect.bottom);
-  }
-  return new DOMRect(left, top, right - left, bottom - top);
-}
-
-function queryOnboardingElements(target: string) {
-  return Array.from(
-    document.querySelectorAll(`[data-onboarding="${target}"]`)
-  ).filter((element): element is HTMLElement => element instanceof HTMLElement);
-}
-
-function readOnboardingTargetRect(targets: readonly string[]) {
-  for (const target of targets) {
-    const elements = queryOnboardingElements(target);
-    if (elements.length === 0) {
-      continue;
-    }
-    return unionClientRects(elements);
-  }
-  return null;
-}
-
 function subscribeNoop() {
   return () => {};
 }
@@ -130,23 +75,13 @@ function getServerSnapshot() {
   return false;
 }
 
-function firstOnboardingElement(targets: readonly string[]) {
-  for (const target of targets) {
-    const [element] = queryOnboardingElements(target);
-    if (element) {
-      return element;
-    }
-  }
-  return null;
-}
-
 function TabOnboardingTourBody({
   onboardingKey,
   steps,
   onClose,
 }: {
   onboardingKey: TabOnboardingKey;
-  steps: (typeof TAB_ONBOARDING_TOURS)[TabOnboardingKey];
+  steps: TabOnboardingStep[];
   onClose: () => void;
 }) {
   const [stepIndex, setStepIndex] = useState(0);
@@ -154,7 +89,7 @@ function TabOnboardingTourBody({
   const [hasMeasured, setHasMeasured] = useState(false);
   const step = steps[stepIndex];
   const isLastStep = stepIndex >= steps.length - 1;
-  const cardPosition = hasMeasured ? placeCard(targetRect) : null;
+  const cardPosition = hasMeasured ? placeOnboardingCard(targetRect) : null;
   const targetCandidates = useMemo(
     () => [step.target, ...(step.fallbackTargets ?? [])],
     [step.fallbackTargets, step.target]

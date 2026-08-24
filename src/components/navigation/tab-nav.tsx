@@ -104,6 +104,7 @@ export function TabNav({
                     ? "text-white"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
+                data-onboarding={`nav.${tab.key}`}
                 aria-current={active ? "page" : undefined}
               >
                 {active ? (
