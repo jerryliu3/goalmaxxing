@@ -6,9 +6,10 @@ const ONBOARDING_DEMO_USER = {
 };
 
 const ONBOARDING_DEFAULT_GOAL_TITLES = [
-  "Create your Goalmaxxing account",
-  "Create your first goal",
-  "Invite your first teammate",
+  "Set up your profile",
+  "Move for 10 minutes",
+  "Review the week",
+  "Invite a teammate",
 ] as const;
 
 const JOURNEY_ONBOARDING_COMPLETED_KEY = "cadence.journey_onboarding_completed.v1";
