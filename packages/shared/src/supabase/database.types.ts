@@ -285,6 +285,7 @@ export type Database = {
         }
         Returns: string[]
       }
+      synthetic_avatar_url: { Args: { p_user_id: string }; Returns: string }
       synthetic_uuid_from_text: { Args: { p_value: string }; Returns: string }
       team_all_members_socially_visible: {
         Args: { p_team_id: string }
