@@ -295,16 +295,17 @@ describe("SocialSurface tab URL", () => {
 });
 
 describe("SocialSurface private accounts", () => {
-  it("shows only Team and never mounts public community tabs", async () => {
+  it("shows disabled public tabs but never mounts their panels", async () => {
     mockSocialActivityVisible.value = false;
     render(<SocialSurface />);
 
     await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "Team" })).toHaveAttribute("data-state", "active");
+      expect(screen.getByRole("tab", { name: "Feed" })).toBeDisabled();
     });
-    expect(screen.queryByRole("tab", { name: "Feed" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("tab", { name: "Challenges" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("tab", { name: "Leaderboards" })).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Challenges" })).toBeDisabled();
+    expect(screen.getByRole("tab", { name: "Leaderboards" })).toBeDisabled();
+    expect(screen.getByRole("tab", { name: "Team" })).toHaveAttribute("data-state", "active");
+    expect(screen.getByRole("tab", { name: "Team" })).not.toBeDisabled();
     expect(screen.queryByTestId("feed-list")).not.toBeInTheDocument();
     expect(screen.queryByTestId("challenge-list")).not.toBeInTheDocument();
     expect(screen.queryByTestId("leaderboards-panel")).not.toBeInTheDocument();

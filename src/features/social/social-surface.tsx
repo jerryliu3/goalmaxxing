@@ -191,61 +191,60 @@ export function SocialSurface() {
       >
         <TabsList
           variant="line"
-          className={cn(
-            "grid w-full gap-1.5 rounded-2xl bg-transparent p-0",
-            publicSocialLocked ? "grid-cols-1" : "grid-cols-4"
-          )}
+          className="grid w-full grid-cols-4 gap-1.5 rounded-2xl bg-transparent p-0"
         >
-          {!publicSocialLocked ? (
-            <>
-              <TabsTrigger
-                value="feed"
-                className={cn(
-                  socialSurfaceTriggerBaseClass,
-                  socialSurfaceTriggerToneClass
-                )}
-                style={
-                  activeTab === "feed" ? { boxShadow: selectedChipShadow } : undefined
-                }
-                data-onboarding="social.feed"
-              >
-                <Newspaper className="size-3.5" />
-                <span className="truncate">Feed</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="challenges"
-                className={cn(
-                  socialSurfaceTriggerBaseClass,
-                  socialSurfaceTriggerToneClass
-                )}
-                style={
-                  activeTab === "challenges"
-                    ? { boxShadow: selectedChipShadow }
-                    : undefined
-                }
-                data-onboarding="social.compete"
-              >
-                <Trophy className="size-3.5" />
-                <span className="truncate">Challenges</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="leaderboards"
-                className={cn(
-                  socialSurfaceTriggerBaseClass,
-                  socialSurfaceTriggerToneClass
-                )}
-                style={
-                  activeTab === "leaderboards"
-                    ? { boxShadow: selectedChipShadow }
-                    : undefined
-                }
-                data-onboarding="social.compete"
-              >
-                <Flag className="size-3.5" />
-                <span className="truncate">Leaderboards</span>
-              </TabsTrigger>
-            </>
-          ) : null}
+          <TabsTrigger
+            value="feed"
+            className={cn(
+              socialSurfaceTriggerBaseClass,
+              socialSurfaceTriggerToneClass
+            )}
+            style={
+              activeTab === "feed" ? { boxShadow: selectedChipShadow } : undefined
+            }
+            data-onboarding="social.feed"
+            disabled={publicSocialLocked}
+            title={publicSocialLocked ? "Private accounts use Team only." : undefined}
+          >
+            <Newspaper className="size-3.5" />
+            <span className="truncate">Feed</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="challenges"
+            className={cn(
+              socialSurfaceTriggerBaseClass,
+              socialSurfaceTriggerToneClass
+            )}
+            style={
+              activeTab === "challenges"
+                ? { boxShadow: selectedChipShadow }
+                : undefined
+            }
+            data-onboarding="social.compete"
+            disabled={publicSocialLocked}
+            title={publicSocialLocked ? "Private accounts use Team only." : undefined}
+          >
+            <Trophy className="size-3.5" />
+            <span className="truncate">Challenges</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="leaderboards"
+            className={cn(
+              socialSurfaceTriggerBaseClass,
+              socialSurfaceTriggerToneClass
+            )}
+            style={
+              activeTab === "leaderboards"
+                ? { boxShadow: selectedChipShadow }
+                : undefined
+            }
+            data-onboarding="social.compete"
+            disabled={publicSocialLocked}
+            title={publicSocialLocked ? "Private accounts use Team only." : undefined}
+          >
+            <Flag className="size-3.5" />
+            <span className="truncate">Leaderboards</span>
+          </TabsTrigger>
           <TabsTrigger
             value="team"
             className={cn(
