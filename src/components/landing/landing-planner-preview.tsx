@@ -55,7 +55,12 @@ type SeededTask = {
   category?: string;
 };
 
-export function getSeededTaskDetail(task: SeededTask) {
+type SeededTaskDetail = {
+  schedule?: string;
+  category?: string;
+};
+
+export function getSeededTaskDetail(task: SeededTaskDetail) {
   if (!task.schedule || !task.category) {
     return null;
   }
