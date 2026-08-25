@@ -115,22 +115,22 @@ describe("starter packs", () => {
     > = {
       health: [
         { title: "Hydration check-ins", target_basis: "lifetime", target_count: "6" },
-        { title: "Meal prep session", target_basis: "period", target_count: "1" },
+        { title: "Meal prep session", target_basis: "lifetime", target_count: "10" },
       ],
       fitness: [
-        { title: "Strength training", target_basis: "period", target_count: "3" },
-        { title: "Mobility sessions", target_basis: "period", target_count: "1" },
+        { title: "Strength training", target_basis: "lifetime", target_count: "12" },
+        { title: "Mobility sessions", target_basis: "lifetime", target_count: "8" },
       ],
       career: [
-        { title: "Weekly deep work block", target_basis: "period", target_count: "2" },
-        { title: "Portfolio update cadence", target_basis: "period", target_count: "1" },
+        { title: "Weekly deep work block", target_basis: "lifetime", target_count: "14" },
+        { title: "Portfolio update cadence", target_basis: "lifetime", target_count: "4" },
       ],
       personal: [
-        { title: "Weekly planning reset", target_basis: "period", target_count: "1" },
-        { title: "Life admin sweep", target_basis: "period", target_count: "1" },
+        { title: "Weekly planning reset", target_basis: "lifetime", target_count: "8" },
+        { title: "Life admin sweep", target_basis: "lifetime", target_count: "6" },
       ],
       relationships: [
-        { title: "Weekly partner check-in", target_basis: "period", target_count: "1" },
+        { title: "Weekly partner check-in", target_basis: "lifetime", target_count: "10" },
         { title: "Appreciation notes", target_basis: "lifetime", target_count: "8" },
       ],
     };

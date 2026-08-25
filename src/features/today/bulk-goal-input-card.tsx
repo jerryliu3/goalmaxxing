@@ -149,7 +149,7 @@ export function BulkGoalInputCard({
                 id="bulk-csv-input"
                 value={csvInput}
                 onChange={(event) => onCsvInputChange(event.target.value)}
-                placeholder="title,description,category,color,frequency_type,recurrence_interval,target_count,milestone_names,start_date,end_date,default_local_time"
+                placeholder="title,description,category,color,frequency_type,recurrence_interval,target_basis,target_count,milestone_names,start_date,end_date,default_local_time"
                 className="min-h-36"
               />
               <div className="flex flex-wrap items-center gap-2">
@@ -195,8 +195,9 @@ export function BulkGoalInputCard({
               </div>
               <p className="text-xs text-muted-foreground">
                 Supported columns: title, description, category, color,
-                frequency_type, recurrence_interval, target_count, milestone_names, start_date,
-                end_date, default_local_time.
+                frequency_type, recurrence_interval, target_basis (period or lifetime),
+                target_count (per-period count or lifetime total), milestone_names,
+                start_date, end_date, default_local_time.
               </p>
             </section>
           </>
