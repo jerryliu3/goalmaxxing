@@ -141,10 +141,16 @@ function applyTargetBasisChange(
   fields: GoalCreationFields,
   nextBasis: GoalTargetBasis
 ): GoalCreationFields {
+  const targetCount =
+    fields.frequency_type === "recurring" &&
+    fields.target_basis === "lifetime" &&
+    nextBasis === "period"
+      ? "1"
+      : resolveTargetCountOnBasisSwitch(fields.target_count, nextBasis);
   return {
     ...fields,
     target_basis: nextBasis,
-    target_count: resolveTargetCountOnBasisSwitch(fields.target_count, nextBasis),
+    target_count: targetCount,
   };
 }
 
