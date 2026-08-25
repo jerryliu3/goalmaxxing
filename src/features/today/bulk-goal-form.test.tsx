@@ -200,114 +200,117 @@ describe("BulkGoalForm", () => {
 
   it("parses drafts into the shared editor and persists exact goal/link payloads", async () => {
     const randomUuidSpy = vi.spyOn(globalThis.crypto, "randomUUID");
-    randomUuidSpy
-      .mockReturnValueOnce("draft-1")
-      .mockReturnValueOnce("draft-2")
-      .mockReturnValueOnce("goal-1")
-      .mockReturnValueOnce("goal-2");
-    rpcMock.mockResolvedValueOnce({ error: null }).mockResolvedValueOnce({
-      error: null,
-    });
+    try {
+      randomUuidSpy
+        .mockReturnValueOnce("draft-1")
+        .mockReturnValueOnce("draft-2")
+        .mockReturnValueOnce("goal-1")
+        .mockReturnValueOnce("goal-2");
+      rpcMock.mockResolvedValueOnce({ error: null }).mockResolvedValueOnce({
+        error: null,
+      });
 
-    const user = userEvent.setup();
-    render(<BulkGoalForm showBackButton={false} />);
-    await screen.findByText("Create multiple goals");
+      const user = userEvent.setup();
+      render(<BulkGoalForm showBackButton={false} />);
+      await screen.findByText("Create multiple goals");
 
-    await parseNaturalLanguageGoals(
-      [
-        {
-          title: "Strength sessions",
-          description: "Base work",
-          category: "Health",
-          frequency_type: "recurring",
-          recurrence_interval: "weekly",
-          target_basis: "period",
-          target_count: 2,
-          start_date: "2026-08-17",
-          end_date: "2026-09-28",
-        },
-        {
-          title: "Practice talks",
-          category: "Personal",
-          frequency_type: "recurring",
-          recurrence_interval: "weekly",
-          target_basis: "lifetime",
-          target_count: 12,
-          start_date: "2026-08-17",
-          end_date: "2026-10-15",
-        },
-      ],
-      user
-    );
+      await parseNaturalLanguageGoals(
+        [
+          {
+            title: "Strength sessions",
+            description: "Base work",
+            category: "Health",
+            frequency_type: "recurring",
+            recurrence_interval: "weekly",
+            target_basis: "period",
+            target_count: 2,
+            start_date: "2026-08-17",
+            end_date: "2026-09-28",
+          },
+          {
+            title: "Practice talks",
+            category: "Personal",
+            frequency_type: "recurring",
+            recurrence_interval: "weekly",
+            target_basis: "lifetime",
+            target_count: 12,
+            start_date: "2026-08-17",
+            end_date: "2026-10-15",
+          },
+        ],
+        user
+      );
 
-    expect(screen.getByText("Strength sessions")).toBeInTheDocument();
-    expect(screen.getByText("Practice talks")).toBeInTheDocument();
+      expect(screen.getByText("Strength sessions")).toBeInTheDocument();
+      expect(screen.getByText("Practice talks")).toBeInTheDocument();
 
-    await user.click(firstTapToEditButton());
-    const dialog = await screen.findByRole("dialog");
-    await user.click(
-      within(dialog).getByRole("button", { name: /advanced settings/i })
-    );
-    await user.click(
-      within(dialog).getByRole("button", { name: "Select link target" })
-    );
-    await user.click(screen.getByRole("button", { name: "Close" }));
+      await user.click(firstTapToEditButton());
+      const dialog = await screen.findByRole("dialog");
+      await user.click(
+        within(dialog).getByRole("button", { name: /advanced settings/i })
+      );
+      await user.click(
+        within(dialog).getByRole("button", { name: "Select link target" })
+      );
+      await user.click(screen.getByRole("button", { name: "Close" }));
 
-    await user.click(
-      screen.getByRole("button", { name: "Create selected goals" })
-    );
+      await user.click(
+        screen.getByRole("button", { name: "Create selected goals" })
+      );
 
-    await waitFor(() => {
-      expect(rpcMock).toHaveBeenCalledTimes(2);
-    });
-    expect(rpcMock).toHaveBeenNthCalledWith(1, "create_goals", {
-      p_goals: [
-        {
-          id: "goal-1",
-          title: "Strength sessions",
-          description: "Base work",
-          category_key: "health",
-          category: "Health",
-          color: "#10b981",
-          frequency_type: "recurring",
-          recurrence_interval: "weekly",
-          target_count: 2,
-          target_basis: "period",
-          milestone_names: null,
-          start_date: "2026-08-17",
-          end_date: "2026-09-28",
-          default_local_time: null,
-        },
-        {
-          id: "goal-2",
-          title: "Practice talks",
-          description: null,
-          category_key: "personal",
-          category: "Personal",
-          color: "#6366f1",
-          frequency_type: "recurring",
-          recurrence_interval: "weekly",
-          target_count: 12,
-          target_basis: "lifetime",
-          milestone_names: null,
-          start_date: "2026-08-17",
-          end_date: "2026-10-15",
-          default_local_time: null,
-        },
-      ],
-    });
-    expect(rpcMock).toHaveBeenNthCalledWith(2, "create_goal_links", {
-      p_links: [
-        {
-          source_goal_id: "goal-1",
-          target_goal_id: "goal-main-1",
-        },
-      ],
-    });
-    expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(1);
-    expect(routerReplaceMock).toHaveBeenCalledWith("/");
-    expect(routerRefreshMock).toHaveBeenCalledTimes(1);
-    randomUuidSpy.mockRestore();
+      await waitFor(() => {
+        expect(rpcMock).toHaveBeenCalledTimes(2);
+      });
+      expect(rpcMock).toHaveBeenNthCalledWith(1, "create_goals", {
+        p_goals: [
+          {
+            id: "goal-1",
+            title: "Strength sessions",
+            description: "Base work",
+            category_key: "health",
+            category: "Health",
+            color: "#10b981",
+            frequency_type: "recurring",
+            recurrence_interval: "weekly",
+            target_count: 2,
+            target_basis: "period",
+            milestone_names: null,
+            start_date: "2026-08-17",
+            end_date: "2026-09-28",
+            default_local_time: null,
+          },
+          {
+            id: "goal-2",
+            title: "Practice talks",
+            description: null,
+            category_key: "personal",
+            category: "Personal",
+            color: "#6366f1",
+            frequency_type: "recurring",
+            recurrence_interval: "weekly",
+            target_count: 12,
+            target_basis: "lifetime",
+            milestone_names: null,
+            start_date: "2026-08-17",
+            end_date: "2026-10-15",
+            default_local_time: null,
+          },
+        ],
+      });
+      expect(rpcMock).toHaveBeenNthCalledWith(2, "create_goal_links", {
+        p_links: [
+          {
+            source_goal_id: "goal-1",
+            target_goal_id: "goal-main-1",
+          },
+        ],
+      });
+      expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(1);
+      expect(routerReplaceMock).toHaveBeenCalledWith("/");
+      expect(routerRefreshMock).toHaveBeenCalledTimes(1);
+    } finally {
+      randomUuidSpy.mockRestore();
+    }
   });
 
   it("keeps parsed drafts intact when create_goals fails", async () => {
