@@ -59,12 +59,13 @@ describe("goal progress calculations", () => {
     expect(getGoalCompletionPercentage(goal, completions)).toBe(30);
   });
 
-  it("calculates recurring adherence as completed periods / expected periods", () => {
+  it("calculates cadence progress as closed-period hit rate", () => {
     const goal = buildGoal({
       id: "daily-id",
       frequency_type: "recurring",
       recurrence_interval: "daily",
       start_date: "2026-05-01",
+      target_basis: "period",
     });
     const completions = [
       completion("daily-id", "2026-05-01"),
@@ -73,15 +74,16 @@ describe("goal progress calculations", () => {
     ];
 
     const percent = getGoalCompletionPercentage(goal, completions, new Date(2026, 4, 5));
-    expect(percent).toBe(60);
+    expect(percent).toBe(50);
   });
 
-  it("uses target count when recurring goal defines one", () => {
+  it("uses target count when recurring goal defines a lifetime total", () => {
     const goal = buildGoal({
       id: "targeted-recurring-id",
       frequency_type: "recurring",
       recurrence_interval: "weekly",
       target_count: 5,
+      target_basis: "lifetime",
     });
     const completions = [
       completion("targeted-recurring-id", "2026-05-01"),
@@ -91,12 +93,13 @@ describe("goal progress calculations", () => {
     expect(getGoalCompletionPercentage(goal, completions)).toBe(40);
   });
 
-  it("anchors monthly expected periods to calendar-month boundaries", () => {
+  it("anchors monthly cadence hit rate to calendar-month boundaries", () => {
     const goal = buildGoal({
       id: "monthly-anchored-id",
       frequency_type: "recurring",
       recurrence_interval: "monthly",
       start_date: "2026-01-31",
+      target_basis: "period",
     });
     const completions = [
       completion("monthly-anchored-id", "2026-01-31"),
@@ -104,7 +107,7 @@ describe("goal progress calculations", () => {
     ];
 
     const percent = getGoalCompletionPercentage(goal, completions, new Date("2026-03-30T12:00:00.000Z"));
-    expect(percent).toBeCloseTo(66.6667, 3);
+    expect(percent).toBe(100);
   });
 
   it("computes overall completion as average across goals", () => {
