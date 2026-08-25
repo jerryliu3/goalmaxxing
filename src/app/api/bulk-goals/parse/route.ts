@@ -12,6 +12,7 @@ import { getDateInTimezone, isValidIanaTimezone } from "@/lib/dates/timezone";
 import { getServerEnv } from "@/lib/env";
 import { DEFAULT_GOAL_CATEGORIES, resolveCategoryKey } from "@/lib/goals/category";
 import { validateGoalDefinition } from "@/lib/goals/definition-validation";
+import { resolveGoalTargetBasisFromInput } from "@/lib/goals/target-basis";
 import { MAX_GOAL_TARGET_COUNT } from "@/lib/planner/contracts/bounds";
 import {
   consumePlannerAiQuota,
@@ -166,26 +167,6 @@ function toIsoDate(value: string | undefined): string | undefined {
     return undefined;
   }
   return z.iso.date().safeParse(trimmed).success ? trimmed : undefined;
-}
-
-function resolveGeneratedTargetBasis(
-  frequency: "recurring" | "fixed_milestones",
-  targetCount: number | null,
-  recurrence: "daily" | "weekly" | "monthly" | undefined,
-  explicit?: "period" | "lifetime"
-): "period" | "lifetime" | undefined {
-  if (frequency !== "recurring") {
-    return undefined;
-  }
-  if (explicit === "period" || explicit === "lifetime") {
-    return explicit;
-  }
-  if (targetCount === null) {
-    return "period";
-  }
-  const periodMax =
-    recurrence === "weekly" ? 7 : recurrence === "monthly" ? 31 : 1;
-  return targetCount <= periodMax ? "period" : "lifetime";
 }
 
 function buildPrompt(userPrompt: string, today: string, categoryKeys: string[]): string {
@@ -538,12 +519,14 @@ function normalizeGeneratedPayload(
       frequency === "recurring"
         ? goal.recurrence_interval ?? "daily"
         : undefined;
-    const targetBasis = resolveGeneratedTargetBasis(
-      frequency,
+    const targetBasisResolution = resolveGoalTargetBasisFromInput({
+      targetBasis: goal.target_basis,
+      frequencyType: frequency,
+      recurrenceInterval: recurrence,
       targetCount,
-      recurrence,
-      goal.target_basis
-    );
+    });
+    const targetBasis =
+      frequency === "recurring" ? targetBasisResolution.basis : undefined;
     const normalizedTargetCount =
       frequency === "recurring" && targetBasis === "period" && targetCount === null
         ? 1

@@ -41,6 +41,7 @@ import {
 } from "@/features/planner/coach/coach-message-state";
 import { validateUndoProposal } from "@/features/planner/coach/coach-proposal-utils";
 import { useCoachConversationPersistence } from "@/features/planner/coach/use-coach-conversation-persistence";
+import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 import type {
   CoachGoalDraftRuntimeState,
   PlannerCoachModel,
@@ -651,11 +652,16 @@ export function usePlannerCoach({
         if (draftState.pendingLinkRecovery) {
           await retryCoachGoalDraftLinks({
             linkRows: draftState.pendingLinkRecovery.linkRows,
+            onLinksPersisted: invalidatePlannerRelatedTabCaches,
           });
           createdCount = draftState.pendingLinkRecovery.createdCount;
         } else {
           const result = await persistCoachGoalDrafts({
-            drafts: draftState.drafts,
+            drafts:
+              draftState.pendingCreateRecovery?.preparedRows.map(
+                ({ draft }) => draft
+              ) ?? draftState.drafts,
+            onGoalsPersisted: invalidatePlannerRelatedTabCaches,
           });
           if (result.status === "partial_success") {
             setCoachGoalRefreshStatus("idle");
@@ -666,6 +672,7 @@ export function usePlannerCoach({
                 status: "error",
                 errorCode: "links_failed",
                 errorMessage: result.linkErrorMessage,
+                pendingCreateRecovery: undefined,
                 pendingLinkRecovery: {
                   createdCount: result.createdCount,
                   linkRows: result.linkRows,
@@ -696,6 +703,7 @@ export function usePlannerCoach({
           [runtimeKey]: {
             ...draftState,
             status: "created",
+            pendingCreateRecovery: undefined,
             pendingLinkRecovery: undefined,
           },
         }));
@@ -730,6 +738,15 @@ export function usePlannerCoach({
             errorCode,
             errorMessage:
               error instanceof Error ? error.message : "Could not create goals.",
+            pendingCreateRecovery:
+              errorCode === "create_ambiguous" &&
+              error &&
+              typeof error === "object" &&
+              "preparedRows" in error &&
+              Array.isArray(error.preparedRows)
+                ? { preparedRows: error.preparedRows }
+                : draftState.pendingCreateRecovery,
+            pendingLinkRecovery: undefined,
           },
         }));
       }

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type PreparedBulkGoalRow,
   type BulkGoalDraft,
   type LlmGoalDraftPayload,
   buildBulkGoalDraftsFromLlmGoals,
@@ -19,11 +20,17 @@ const COACH_GOAL_DRAFT_PARSE_TIMEOUT_MS = 45_000;
 
 export class CoachGoalDraftServiceError extends Error {
   readonly code: string;
+  readonly preparedRows?: PreparedBulkGoalRow[];
 
-  constructor(code: string, message: string) {
+  constructor(
+    code: string,
+    message: string,
+    preparedRows?: PreparedBulkGoalRow[]
+  ) {
     super(message);
     this.name = "CoachGoalDraftServiceError";
     this.code = code;
+    this.preparedRows = preparedRows;
   }
 }
 
@@ -90,8 +97,10 @@ export async function parseCoachGoalDrafts({
 
 export async function createCoachGoalDrafts({
   drafts,
+  onGoalsPersisted,
 }: {
   drafts: BulkGoalDraft[];
+  onGoalsPersisted?: (preparedRows: PreparedBulkGoalRow[]) => void;
 }) {
   const selectedDrafts = drafts.filter((draft) => draft.include);
   if (selectedDrafts.length === 0) {
@@ -123,6 +132,7 @@ export async function createCoachGoalDrafts({
       drafts: selectedDrafts,
       currentUserId: user?.id ?? null,
       supabase,
+      onGoalsPersisted,
     });
     if (result.status === "partial_success") {
       return {
@@ -139,7 +149,11 @@ export async function createCoachGoalDrafts({
     } satisfies CoachGoalDraftCreationResult;
   } catch (error) {
     if (error instanceof BulkGoalPersistenceError) {
-      throw new CoachGoalDraftServiceError(error.code, error.message);
+      throw new CoachGoalDraftServiceError(
+        error.code,
+        error.message,
+        error.preparedRows
+      );
     }
     throw error;
   }
@@ -147,14 +161,18 @@ export async function createCoachGoalDrafts({
 
 export async function retryCoachGoalDraftLinks({
   linkRows,
+  onLinksPersisted,
 }: {
   linkRows: BulkGoalLinkRow[];
+  onLinksPersisted?: () => void;
 }): Promise<{ status: "created" }> {
   try {
-    return await retryBulkGoalLinks({
+    const result = await retryBulkGoalLinks({
       linkRows,
       supabase: createClient(),
     });
+    onLinksPersisted?.();
+    return result;
   } catch (error) {
     if (error instanceof BulkGoalPersistenceError) {
       throw new CoachGoalDraftServiceError(error.code, error.message);

@@ -17,6 +17,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { toast } from "sonner";
@@ -77,6 +78,54 @@ interface GoalFormState extends GoalCreationFields {
   reward_text: string;
   team_id: string | null;
   task_scheduled_date: string;
+}
+
+interface GoalFormGoalArgs {
+  p_id: string;
+  p_title: string;
+  p_description?: string;
+  p_reward_text?: string;
+  p_category: string;
+  p_category_key: string;
+  p_color: string;
+  p_frequency_type: GoalFormState["frequency_type"];
+  p_recurrence_interval?: GoalFormState["recurrence_interval"];
+  p_difficulty: GoalFormState["difficulty"];
+  p_target_count?: number;
+  p_target_basis?: GoalFormState["target_basis"];
+  p_milestone_names?: string[];
+  p_start_date: string;
+  p_end_date?: string;
+  p_default_local_time?: string;
+  p_team_id?: string;
+  p_is_private: boolean;
+}
+
+type GoalFormRecovery =
+  | {
+      kind: "create";
+      goalArgs: GoalFormGoalArgs;
+    }
+  | {
+      kind: "link";
+      savedGoalId: string;
+      targetGoalId: string | undefined;
+    };
+
+function rpcErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string" &&
+    error.message.trim()
+  ) {
+    return error.message;
+  }
+  return fallback;
 }
 
 export function getGoalFormTargetValidationError(
@@ -213,11 +262,13 @@ export function GoalForm({
   const [saving, setSaving] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [recovery, setRecovery] = useState<GoalFormRecovery | null>(null);
   const [goalCapacityInput, setGoalCapacityInput] =
     useState<GoalCapacityInput | null>(null);
   const [linkTargetSearch, setLinkTargetSearch] = useState("");
   const [linkTargetOpen, setLinkTargetOpen] = useState(false);
   const [createKind, setCreateKind] = useState<GoalCreateKind>("recurring");
+  const stableCreateGoalIdRef = useRef<string | null>(null);
   const isEditing = Boolean(goalId);
   const goalFormId = isEditing ? "goal-form-edit" : "goal-form-create";
   const exitHref = "/";
@@ -502,12 +553,16 @@ export function GoalForm({
     });
     return resolveGoalDefinitionValidationFeedback(definitionIssues);
   }, [state, definitionTargetCount, goalCapacityInput, isPlannerTask]);
-  const submitDisabled = saving || validationError !== null;
+  const submitDisabled =
+    saving || validationError !== null || recovery !== null;
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (validationError) {
+      return;
+    }
+    if (recovery?.kind === "link") {
       return;
     }
 
@@ -547,8 +602,13 @@ export function GoalForm({
       state.custom_category
     );
 
-    const goalArgs = {
-      p_id: goalId ?? crypto.randomUUID(),
+    const goalArgs: GoalFormGoalArgs = recovery?.kind === "create"
+      ? recovery.goalArgs
+      : {
+      p_id:
+        goalId ??
+        stableCreateGoalIdRef.current ??
+        crypto.randomUUID(),
       p_title: state.title.trim(),
       p_description: state.description.trim() || undefined,
       p_reward_text: state.reward_text.trim() || undefined,
@@ -571,7 +631,11 @@ export function GoalForm({
       p_default_local_time: state.default_local_time.trim() || undefined,
       p_team_id: state.team_id ?? undefined,
       p_is_private: state.team_id ? false : state.is_private,
-    };
+      };
+
+    if (!goalId && !stableCreateGoalIdRef.current) {
+      stableCreateGoalIdRef.current = goalArgs.p_id;
+    }
 
     const savedGoalId = goalArgs.p_id;
 
@@ -584,10 +648,23 @@ export function GoalForm({
         return;
       }
     } else {
-      const { error } = await supabase.rpc("create_goal", goalArgs);
+      let error: { message?: string | null } | null = null;
+      try {
+        ({ error } = await supabase.rpc("create_goal", goalArgs));
+      } catch (cause) {
+        setRecovery({ kind: "create", goalArgs });
+        toast.error(
+          rpcErrorMessage(cause, "Could not confirm goal creation. Try again.")
+        );
+        setSaving(false);
+        return;
+      }
 
       if (error) {
-        toast.error(error.message ?? "Failed to save goal.");
+        setRecovery({ kind: "create", goalArgs });
+        toast.error(
+          rpcErrorMessage(error, "Could not confirm goal creation. Try again.")
+        );
         setSaving(false);
         return;
       }
@@ -616,17 +693,74 @@ export function GoalForm({
       }
     }
 
-    {
-      const { error: linkError } = await supabase.rpc("replace_goal_source_link", {
+    const targetGoalId =
+      selectedLinkTarget !== "none" ? selectedLinkTarget : undefined;
+    let linkError: { message?: string | null } | null = null;
+    try {
+      ({ error: linkError } = await supabase.rpc("replace_goal_source_link", {
         p_source_goal_id: savedGoalId,
-        p_target_goal_id:
-          selectedLinkTarget !== "none" ? selectedLinkTarget : undefined,
-      });
-      if (linkError) {
-        toast.error(linkError.message);
-      }
+        p_target_goal_id: targetGoalId,
+      }));
+    } catch (cause) {
+      setRecovery({ kind: "link", savedGoalId, targetGoalId });
+      toast.error(
+        rpcErrorMessage(cause, "Could not save the selected goal link. Try again.")
+      );
+      setSaving(false);
+      return;
+    }
+    if (linkError) {
+      setRecovery({ kind: "link", savedGoalId, targetGoalId });
+      toast.error(
+        rpcErrorMessage(
+          linkError,
+          "Could not save the selected goal link. Try again."
+        )
+      );
+      setSaving(false);
+      return;
     }
 
+    setRecovery(null);
+    invalidatePlannerRelatedTabCaches();
+    toast.success(isEditing ? "Goal updated." : "Goal created.");
+    requestXpRefresh();
+    completeAndExit();
+    setSaving(false);
+  };
+
+  const retryGoalLink = async () => {
+    if (recovery?.kind !== "link") {
+      return;
+    }
+
+    setSaving(true);
+    let linkError: { message?: string | null } | null = null;
+    try {
+      ({ error: linkError } = await supabase.rpc("replace_goal_source_link", {
+        p_source_goal_id: recovery.savedGoalId,
+        p_target_goal_id: recovery.targetGoalId,
+      }));
+    } catch (cause) {
+      toast.error(
+        rpcErrorMessage(cause, "Could not save the selected goal link. Try again.")
+      );
+      setSaving(false);
+      return;
+    }
+
+    if (linkError) {
+      toast.error(
+        rpcErrorMessage(
+          linkError,
+          "Could not save the selected goal link. Try again."
+        )
+      );
+      setSaving(false);
+      return;
+    }
+
+    setRecovery(null);
     invalidatePlannerRelatedTabCaches();
     toast.success(isEditing ? "Goal updated." : "Goal created.");
     requestXpRefresh();
@@ -739,6 +873,35 @@ export function GoalForm({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {recovery ? (
+          <div
+            role="alert"
+            className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+          >
+            <p>
+              {recovery.kind === "link"
+                ? "The goal was saved, but its selected link was not. Retry to finish saving it."
+                : "Goal creation could not be confirmed. Retry to safely reconcile this draft."}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-2"
+              onClick={() =>
+                recovery.kind === "link"
+                  ? void retryGoalLink()
+                  : void (
+                      document.getElementById(goalFormId) as HTMLFormElement | null
+                    )?.requestSubmit()
+              }
+              disabled={saving}
+            >
+              {recovery.kind === "link"
+                ? "Retry saving link"
+                : "Retry creating goal"}
+            </Button>
+          </div>
+        ) : null}
         <form id={goalFormId} className="space-y-4" onSubmit={onSubmit}>
           {validationWarning ? (
             <div className="rounded-md border border-yellow-300 bg-yellow-100 px-3 py-2 text-xs text-orange-900 dark:border-yellow-300 dark:bg-yellow-100 dark:text-orange-900">
@@ -752,6 +915,7 @@ export function GoalForm({
             }
             onPatch={(patch) => setState((previous) => ({ ...previous, ...patch }))}
             definitionFieldsLocked={definitionFieldsLocked}
+            disabled={recovery !== null}
             includePlannerTask={!isEditing}
             createKind={createKind}
             onCreateKindChange={updateCreateKind}

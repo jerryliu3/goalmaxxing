@@ -5,6 +5,7 @@ import {
 } from "@/lib/goals/category";
 import { validateGoalDefinition } from "@/lib/goals/definition-validation";
 import { buildMilestoneNameDrafts } from "@/lib/goals/milestones";
+import { getGoalPeriodTargetMax } from "@/lib/goals/target-basis";
 import type {
   GoalDifficulty,
   GoalFrequencyType,
@@ -145,7 +146,13 @@ function applyTargetBasisChange(
     fields.frequency_type === "recurring" &&
     fields.target_basis === "lifetime" &&
     nextBasis === "period"
-      ? "1"
+      ? (() => {
+          const parsedTarget = parsePositiveTargetCount(fields.target_count);
+          const periodMax = getGoalPeriodTargetMax(fields.recurrence_interval);
+          return parsedTarget !== null && parsedTarget <= periodMax
+            ? fields.target_count
+            : "1";
+        })()
       : resolveTargetCountOnBasisSwitch(fields.target_count, nextBasis);
   return {
     ...fields,

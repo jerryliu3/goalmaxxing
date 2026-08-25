@@ -28,6 +28,7 @@ interface CategorySelectProps {
   onValueChange: (value: CategorySelection) => void;
   placeholder?: string;
   triggerClassName?: string;
+  disabled?: boolean;
 }
 
 export function CategorySelect({
@@ -35,9 +36,14 @@ export function CategorySelect({
   onValueChange,
   placeholder = "Select category",
   triggerClassName,
+  disabled = false,
 }: CategorySelectProps) {
   return (
-    <Select value={value} onValueChange={(nextValue) => onValueChange(nextValue as CategorySelection)}>
+    <Select
+      value={value}
+      onValueChange={(nextValue) => onValueChange(nextValue as CategorySelection)}
+      disabled={disabled}
+    >
       <SelectTrigger className={cn(triggerClassName)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>

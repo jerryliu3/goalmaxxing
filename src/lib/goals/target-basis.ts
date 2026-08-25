@@ -1,4 +1,79 @@
-import type { Goal, GoalTargetBasis } from "@/lib/goals/types";
+import type {
+  Goal,
+  GoalFrequencyType,
+  GoalTargetBasis,
+  RecurrenceInterval,
+} from "@/lib/goals/types";
+
+export const INVALID_GOAL_TARGET_BASIS_MESSAGE =
+  "Target basis must be period or lifetime.";
+
+export function getGoalPeriodTargetMax(
+  interval: RecurrenceInterval
+): number {
+  if (interval === "weekly") {
+    return 7;
+  }
+  if (interval === "monthly") {
+    return 31;
+  }
+  return 1;
+}
+
+export interface GoalTargetBasisInput {
+  frequencyType: GoalFrequencyType;
+  recurrenceInterval: RecurrenceInterval | null | undefined;
+  targetCount: number | null;
+  targetBasis: unknown;
+}
+
+export interface GoalTargetBasisResolution {
+  basis: GoalTargetBasis;
+  error: string | null;
+}
+
+export function resolveGoalTargetBasisFromInput({
+  frequencyType,
+  recurrenceInterval,
+  targetCount,
+  targetBasis,
+}: GoalTargetBasisInput): GoalTargetBasisResolution {
+  const normalizedBasis =
+    typeof targetBasis === "string" ? targetBasis.trim().toLowerCase() : "";
+  const hasInvalidExplicitBasis =
+    normalizedBasis.length > 0 &&
+    normalizedBasis !== "period" &&
+    normalizedBasis !== "lifetime";
+
+  if (frequencyType === "fixed_milestones") {
+    return {
+      basis: "lifetime",
+      error: hasInvalidExplicitBasis ? INVALID_GOAL_TARGET_BASIS_MESSAGE : null,
+    };
+  }
+
+  if (normalizedBasis === "period" || normalizedBasis === "lifetime") {
+    return { basis: normalizedBasis, error: null };
+  }
+
+  if (hasInvalidExplicitBasis) {
+    return {
+      basis: "period",
+      error: INVALID_GOAL_TARGET_BASIS_MESSAGE,
+    };
+  }
+
+  const periodMax = getGoalPeriodTargetMax(recurrenceInterval ?? "daily");
+  return {
+    basis:
+      typeof targetCount === "number" &&
+      Number.isFinite(targetCount) &&
+      targetCount > periodMax
+        ? "lifetime"
+        : "period",
+    error: null,
+  };
+}
 
 export function resolveGoalTargetBasis(goal: Goal): GoalTargetBasis {
   if (goal.target_basis) {

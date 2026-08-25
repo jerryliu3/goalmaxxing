@@ -105,6 +105,7 @@ export interface GoalCreationFieldControlsProps {
   middleSlot?: ReactNode;
   startDateId?: string;
   endDateId?: string;
+  disabled?: boolean;
 }
 
 export function GoalCreationFieldControls({
@@ -125,6 +126,7 @@ export function GoalCreationFieldControls({
   middleSlot,
   startDateId = "start-date",
   endDateId = "end-date",
+  disabled = false,
 }: GoalCreationFieldControlsProps) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [milestoneNamesOpen, setMilestoneNamesOpen] = useState(false);
@@ -169,7 +171,7 @@ export function GoalCreationFieldControls({
   };
 
   return (
-    <>
+    <fieldset disabled={disabled} className="contents">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="space-y-2">
           <Label htmlFor="goal-title">Name</Label>
@@ -188,6 +190,7 @@ export function GoalCreationFieldControls({
             <CategorySelect
               value={fields.category_selection}
               triggerClassName="h-8"
+              disabled={disabled}
               onValueChange={(value: CategorySelection) =>
                 onPatch({
                   category_selection: value,
@@ -343,6 +346,7 @@ export function GoalCreationFieldControls({
           startDateId={startDateId}
           endDateId={endDateId}
           startDateDisabled={definitionFieldsLocked}
+          endDateDisabled={disabled}
           showSoftHorizonHint={showSoftHorizonHint}
           startDateActions={
             <>
@@ -370,6 +374,7 @@ export function GoalCreationFieldControls({
                 type="button"
                 className="text-primary hover:underline"
                 onClick={applyThisMonthEndDate}
+                disabled={disabled}
               >
                 month end
               </button>
@@ -377,6 +382,7 @@ export function GoalCreationFieldControls({
                 type="button"
                 className="text-primary hover:underline"
                 onClick={applyThisYearEndDate}
+                disabled={disabled}
               >
                 year end
               </button>
@@ -402,6 +408,7 @@ export function GoalCreationFieldControls({
                 type="button"
                 variant="ghost"
                 className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm"
+                disabled={disabled}
               >
                 <span className="inline-flex items-center gap-2">
                   <span>Advanced settings (optional)</span>
@@ -466,6 +473,7 @@ export function GoalCreationFieldControls({
                           type="button"
                           variant="ghost"
                           className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm"
+                          disabled={disabled}
                         >
                           <span>Milestone names (optional)</span>
                           {milestoneNamesOpen ? (
@@ -546,6 +554,7 @@ export function GoalCreationFieldControls({
                         showLabel={false}
                         showHelperText={false}
                         showLinkedNotice={false}
+                        disabled={disabled}
                       />
                     ) : null}
 
@@ -563,6 +572,7 @@ export function GoalCreationFieldControls({
                       onValueChange={(value: GoalDifficulty) =>
                         onPatch({ difficulty: value })
                       }
+                      disabled={disabled}
                     >
                       <SelectTrigger id="goal-difficulty" className="h-8 w-full">
                         <SelectValue />
@@ -604,6 +614,6 @@ export function GoalCreationFieldControls({
           </div>
         </Collapsible>
       )}
-    </>
+    </fieldset>
   );
 }

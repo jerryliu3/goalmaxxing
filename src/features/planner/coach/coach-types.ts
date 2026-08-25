@@ -1,5 +1,8 @@
 import type { SetStateAction } from "react";
-import type { BulkGoalDraft } from "@/features/goals/bulk-goal-drafts";
+import type {
+  BulkGoalDraft,
+  PreparedBulkGoalRow,
+} from "@/features/goals/bulk-goal-drafts";
 import type { BulkGoalLinkRow } from "@/features/goals/bulk-goal-persistence";
 import type {
   CalendarTab,
@@ -63,6 +66,9 @@ export interface CoachGoalDraftRuntimeState {
   warnings: string[];
   errorCode?: string;
   errorMessage?: string;
+  pendingCreateRecovery?: {
+    preparedRows: PreparedBulkGoalRow[];
+  };
   pendingLinkRecovery?: {
     createdCount: number;
     linkRows: BulkGoalLinkRow[];

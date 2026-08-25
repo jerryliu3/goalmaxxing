@@ -203,9 +203,7 @@ describe("BulkGoalForm", () => {
     try {
       randomUuidSpy
         .mockReturnValueOnce("draft-1")
-        .mockReturnValueOnce("draft-2")
-        .mockReturnValueOnce("goal-1")
-        .mockReturnValueOnce("goal-2");
+        .mockReturnValueOnce("draft-2");
       rpcMock.mockResolvedValueOnce({ error: null }).mockResolvedValueOnce({
         error: null,
       });
@@ -275,7 +273,7 @@ describe("BulkGoalForm", () => {
       expect(rpcMock).toHaveBeenNthCalledWith(1, "create_goals", {
         p_goals: [
           {
-            id: "goal-1",
+            id: "draft-1",
             title: "Strength sessions",
             description: "Base work",
             category_key: "health",
@@ -293,7 +291,7 @@ describe("BulkGoalForm", () => {
             is_private: true,
           },
           {
-            id: "goal-2",
+            id: "draft-2",
             title: "Practice talks",
             description: null,
             category_key: "personal",
@@ -315,7 +313,7 @@ describe("BulkGoalForm", () => {
       expect(rpcMock).toHaveBeenNthCalledWith(2, "create_goal_links", {
         p_links: [
           {
-            source_goal_id: "goal-1",
+            source_goal_id: "draft-1",
             target_goal_id: "goal-main-1",
           },
         ],
@@ -328,10 +326,8 @@ describe("BulkGoalForm", () => {
     }
   });
 
-  it("keeps parsed drafts intact when create_goals fails", async () => {
-    rpcMock.mockResolvedValueOnce({
-      error: { message: "create_goals exploded" },
-    });
+  it("keeps drafts frozen with a reconciliation action when create_goals is ambiguous", async () => {
+    rpcMock.mockRejectedValueOnce(new Error("create request timed out"));
     const user = userEvent.setup();
     render(<BulkGoalForm showBackButton={false} />);
     await screen.findByText("Create multiple goals");
@@ -355,14 +351,25 @@ describe("BulkGoalForm", () => {
     );
 
     await waitFor(() => {
-      expect(toastErrorMock).toHaveBeenCalledWith("create_goals exploded");
+      expect(toastErrorMock).toHaveBeenCalledWith("create request timed out");
     });
     expect(screen.getByText("Mobility")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Create selected goals" })
-    ).toBeEnabled();
+    const retryCreationButton = screen
+      .getAllByRole("button", { name: "Retry creating goals" })
+      .find((button) => !button.hasAttribute("disabled"));
+    expect(retryCreationButton).toBeDefined();
+    expect(retryCreationButton).toBeEnabled();
+    expect(firstTapToEditButton()).toHaveAttribute("aria-disabled", "true");
     expect(invalidatePlannerRelatedTabCachesMock).not.toHaveBeenCalled();
     expect(routerReplaceMock).not.toHaveBeenCalled();
+
+    rpcMock.mockResolvedValueOnce({ error: null });
+    await user.click(retryCreationButton!);
+
+    await waitFor(() => {
+      expect(routerReplaceMock).toHaveBeenCalledWith("/");
+    });
+    expect(rpcMock).toHaveBeenCalledTimes(2);
   });
 
   it("keeps linked drafts actionable when link persistence partially fails", async () => {
@@ -414,6 +421,9 @@ describe("BulkGoalForm", () => {
     expect(
       screen.getByRole("button", { name: "Retry saving links" })
     ).toBeInTheDocument();
+    expect(firstTapToEditButton()).toHaveAttribute("aria-disabled", "true");
+    await user.click(firstTapToEditButton());
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Retry saving links" }));
 

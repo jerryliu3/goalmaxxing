@@ -438,6 +438,75 @@ describe("bulk goal drafts", () => {
     });
   });
 
+  it("resolves omitted spreadsheet target basis with the canonical period thresholds", () => {
+    const cases = [
+      { interval: "daily", target: "", expected: "period" },
+      { interval: "daily", target: "2", expected: "lifetime" },
+      { interval: "weekly", target: "7", expected: "period" },
+      { interval: "weekly", target: "8", expected: "lifetime" },
+      { interval: "monthly", target: "31", expected: "period" },
+      { interval: "monthly", target: "32", expected: "lifetime" },
+    ] as const;
+
+    for (const testCase of cases) {
+      const draft = buildBulkGoalDraftFromRow(
+        {
+          title: `${testCase.interval} ${testCase.target || "empty"}`,
+          frequency_type: "recurring",
+          recurrence_interval: testCase.interval,
+          target_count: testCase.target,
+          start_date: "2026-08-17",
+        },
+        0
+      );
+
+      expect(draft.target_basis, testCase.interval).toBe(testCase.expected);
+      expect(draft.errors, testCase.interval).toEqual([]);
+    }
+  });
+
+  it("preserves explicit target basis and rejects invalid spreadsheet values", () => {
+    const explicitPeriod = buildBulkGoalDraftFromRow(
+      {
+        title: "Explicit period",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "period",
+        target_count: "2",
+        start_date: "2026-08-17",
+      },
+      0
+    );
+    const explicitLifetime = buildBulkGoalDraftFromRow(
+      {
+        title: "Explicit lifetime",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "lifetime",
+        target_count: "2",
+        start_date: "2026-08-17",
+      },
+      1
+    );
+    const invalid = buildBulkGoalDraftFromRow(
+      {
+        title: "Invalid basis",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "forever",
+        target_count: "2",
+        start_date: "2026-08-17",
+      },
+      2
+    );
+
+    expect(explicitPeriod.target_basis).toBe("period");
+    expect(explicitPeriod.errors).toEqual([]);
+    expect(explicitLifetime.target_basis).toBe("lifetime");
+    expect(explicitLifetime.errors).toEqual([]);
+    expect(invalid.errors).toContain("Target basis must be period or lifetime.");
+  });
+
   it("prepares the existing create_goals row shape", () => {
     const [draft] = buildBulkGoalDraftsFromLlmGoals([
       {

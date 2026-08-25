@@ -532,12 +532,12 @@ shared editor and persistence module.
 Use existing Supabase/client mocks and navigation/cache mocks. Assert user
 visible state and request payloads rather than implementation details.
 
-- [ ] **Step 4: Keep deterministic parser route coverage authoritative**
+- [x] **Step 4: Keep deterministic parser route coverage authoritative**
 
 The deterministic parser route tests are the authoritative coverage for explicit
-period and lifetime target-basis preservation. The live Gemini semantic smoke
-assertion was removed because provider output is nondeterministic; no
-provider-dependent E2E semantic assertion is required for this feature.
+period and lifetime target-basis preservation. No live-provider Gemini semantic
+E2E assertion is required because provider output is nondeterministic; the
+deterministic parser route unit tests are authoritative for this contract.
 
 - [ ] **Step 5: Run focused integration tests**
 
