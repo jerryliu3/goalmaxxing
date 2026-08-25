@@ -217,6 +217,7 @@ git commit -m "refactor(goals): share create-mode field controls"
 - Modify: `src/features/goals/bulk-goal-drafts.ts`
 - Test: `src/features/goals/bulk-goal-drafts.test.ts`
 - Modify: `src/features/goals/goal-creation-model.ts`
+- Modify: `src/features/today/goal-form.tsx`
 
 **Interfaces:**
 - `validateGoalDefinition` always reports a weekly target above `7` or a
@@ -258,6 +259,11 @@ emit a positive normalized target, lifetime recurring rows emit a positive
 target, and fixed milestones emit lifetime basis plus normalized milestone
 names. Keep description and existing persistence fields in the row contract
 without adding their removed UI controls.
+
+Update the single-goal validation adapter so period-limit errors block creation
+while profile-capacity warnings remain warnings. Use a distinct stable issue
+code for the period-limit branch rather than making the form infer severity
+from user-facing message text.
 
 - [ ] **Step 5: Run the focused validation and draft tests**
 
