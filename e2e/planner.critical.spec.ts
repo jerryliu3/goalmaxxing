@@ -153,37 +153,66 @@ async function waitForCalendarReady(page: Page) {
   await dismissTabOnboardingIfPresent(page);
 }
 
-async function ensureMonthCalendarDensity(page: Page) {
+async function ensureCalendarMonthView(page: Page) {
+  const viewModeSelect = page.getByRole("combobox", { name: "Calendar view mode" });
+  if (await viewModeSelect.isVisible().catch(() => false)) {
+    const selectedLabel = (await viewModeSelect.textContent())?.trim() ?? "";
+    if (!selectedLabel.startsWith("Month")) {
+      await viewModeSelect.click();
+      await page.getByRole("option", { name: "Month", exact: true }).click();
+      await waitForCalendarReady(page);
+    }
+    return;
+  }
+
   const monthViewButton = page.getByRole("button", { name: "Month", exact: true });
   if (await monthViewButton.isVisible().catch(() => false)) {
     await monthViewButton.click();
+    await waitForCalendarReady(page);
   }
+}
 
+async function resolveMonthRowDensityState(page: Page) {
   const compactRowsButton = page.getByRole("button", { name: "Compact rows", exact: true });
   const expandRowsButton = page.getByRole("button", { name: "Expand rows", exact: true });
+
   if (await compactRowsButton.isVisible().catch(() => false)) {
+    return "compact" as const;
+  }
+  if (await expandRowsButton.isVisible().catch(() => false)) {
+    return (await expandRowsButton.isEnabled().catch(() => false))
+      ? ("expand" as const)
+      : ("expand-disabled" as const);
+  }
+  return "pending" as const;
+}
+
+async function ensureMonthCalendarDensity(page: Page) {
+  await ensureCalendarMonthView(page);
+
+  if ((await resolveMonthRowDensityState(page)) === "compact") {
     return;
   }
 
   await expect
-    .poll(
-      async () => {
-        if (await compactRowsButton.isVisible().catch(() => false)) {
-          return "compact";
-        }
-        if (await expandRowsButton.isVisible().catch(() => false)) {
-          return "expand";
-        }
-        return "pending";
-      },
-      { timeout: 10_000 }
-    )
+    .poll(async () => resolveMonthRowDensityState(page), {
+      timeout: 20_000,
+    })
     .not.toBe("pending");
 
-  if (await expandRowsButton.isVisible().catch(() => false)) {
-    await expandRowsButton.click();
+  if ((await resolveMonthRowDensityState(page)) === "compact") {
+    return;
   }
-  await expect(compactRowsButton).toBeVisible();
+
+  const expandRowsButton = page.getByRole("button", { name: "Expand rows", exact: true });
+  await expect(expandRowsButton).toBeEnabled({ timeout: 20_000 });
+  await expandRowsButton.click();
+
+  await expect
+    .poll(async () => resolveMonthRowDensityState(page), {
+      timeout: 20_000,
+    })
+    .toBe("compact");
 }
 
 async function ensureDragFixtureEntryAvailable(page: Page, maxMonthJumps = 12) {
