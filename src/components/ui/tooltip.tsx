@@ -40,8 +40,13 @@ export function Tooltip({
 }: TooltipProps) {
   const wrapperRef = useRef<HTMLSpanElement | null>(null)
   const tooltipRef = useRef<HTMLSpanElement | null>(null)
+  const [mounted, setMounted] = useState(false)
   const [open, setOpen] = useState(false)
   const [position, setPosition] = useState<TooltipPosition | null>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const updatePosition = useCallback(() => {
     const wrapper = wrapperRef.current
@@ -118,7 +123,7 @@ export function Tooltip({
       }}
     >
       {children}
-      {typeof document !== "undefined"
+      {mounted
         ? createPortal(
             <span
               ref={tooltipRef}
