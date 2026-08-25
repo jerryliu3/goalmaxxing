@@ -561,6 +561,15 @@ set
   archived_at = excluded.archived_at,
   updated_at = now();
 
+-- The target_basis trigger classifies a NULL target as period, but period
+-- goals should be explicit in the local fixture so their persisted shape
+-- matches newly created goals.
+update public.goals
+set target_count = 1
+where frequency_type = 'recurring'::public.goal_frequency_type
+  and target_basis = 'period'::public.goal_target_basis
+  and target_count is null;
+
 with onboarding_defaults as (
   select *
   from (
@@ -866,6 +875,7 @@ insert into public.goals (
   frequency_type,
   recurrence_interval,
   target_count,
+  target_basis,
   start_date,
   end_date,
   team_id,
@@ -881,7 +891,8 @@ values (
   '#10b981',
   'recurring',
   'daily',
-  null,
+  1,
+  'period'::public.goal_target_basis,
   current_date - 14,
   null,
   '71000000-0000-4000-8000-000000000001',

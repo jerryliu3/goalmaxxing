@@ -149,6 +149,10 @@ const defaultState: GoalFormState = {
 };
 
 const localTimePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+const lifetimeTargetLabel = "Total target completions";
+const lifetimeTargetOptionalLabel = `${lifetimeTargetLabel} (optional)`;
+const lifetimeTargetTooltip =
+  "The target for the entire lifetime of this goal. Each completion counts independently.";
 
 function perPeriodTargetLabel(interval: RecurrenceInterval): string {
   if (interval === "weekly") {
@@ -165,7 +169,7 @@ function recurringTargetLabel(
   targetBasis: GoalTargetBasis
 ): string {
   if (targetBasis === "lifetime") {
-    return "Total completions by end date";
+    return lifetimeTargetOptionalLabel;
   }
   return perPeriodTargetLabel(interval);
 }
@@ -378,6 +382,8 @@ export function GoalForm({
   const canShowRecurrenceFields = !isPlannerTask && state.frequency_type === "recurring";
   const isLifetimeRecurringTarget =
     state.frequency_type === "recurring" && state.target_basis === "lifetime";
+  const isPeriodRecurringTarget =
+    state.frequency_type === "recurring" && state.target_basis === "period";
   const canShowRecurringTargetInMain =
     !isPlannerTask &&
     state.frequency_type === "recurring" &&
@@ -395,13 +401,9 @@ export function GoalForm({
   const definitionTargetCount =
     state.frequency_type === "fixed_milestones" || isLifetimeRecurringTarget
       ? parsedTargetCount
-      : canShowRecurringTargetInMain && state.target_count.trim().length > 0
-        ? parsedTargetCount
-        : canShowRecurringTargetInMain
-          ? parsedTargetCount ?? 1
-          : canShowDailyLifetimeTarget
-            ? parsedTargetCount
-            : null;
+      : isPeriodRecurringTarget
+        ? parsedTargetCount ?? 1
+        : null;
   const fixedMilestoneCount =
     state.frequency_type === "fixed_milestones"
       ? parsedTargetCount ?? 0
@@ -464,7 +466,12 @@ export function GoalForm({
   const updateTargetCount = (nextTargetCount: string) => {
     setState((previous) => ({
       ...previous,
-      target_count: nextTargetCount,
+      target_count:
+        previous.frequency_type === "recurring" &&
+        previous.target_basis === "period" &&
+        nextTargetCount.trim().length === 0
+          ? "1"
+          : nextTargetCount,
       milestone_names:
         previous.frequency_type === "fixed_milestones"
           ? buildMilestoneNameDrafts(
@@ -525,6 +532,31 @@ export function GoalForm({
     ) {
       return {
         validationError: "Milestone goals require a positive target count.",
+        validationWarning: null,
+      };
+    }
+
+    if (
+      state.frequency_type === "recurring" &&
+      state.target_basis === "period" &&
+      state.recurrence_interval !== "daily" &&
+      parsedTargetCount === null
+    ) {
+      return {
+        validationError: "Recurring period goals require a target of at least 1.",
+        validationWarning: null,
+      };
+    }
+
+    if (
+      state.frequency_type === "recurring" &&
+      state.target_basis === "lifetime" &&
+      state.target_count.trim().length > 0 &&
+      parsedTargetCount === null
+    ) {
+      return {
+        validationError:
+          "Total target completions must be at least 1 when provided.",
         validationWarning: null,
       };
     }
@@ -616,10 +648,10 @@ export function GoalForm({
     const recurringTargetForSave =
       state.frequency_type === "recurring" && isLifetimeRecurringTarget
         ? parsedTargetCountForSave ?? undefined
-        : state.frequency_type === "recurring" &&
-            state.target_basis === "period" &&
-            state.recurrence_interval !== "daily"
-          ? parsedTargetCountForSave ?? 1
+        : state.frequency_type === "recurring" && state.target_basis === "period"
+          ? state.recurrence_interval === "daily"
+            ? 1
+            : parsedTargetCountForSave ?? 1
           : undefined;
     const categoryValue = getCategoryValueForWrite(
       state.category_selection,
@@ -907,6 +939,7 @@ export function GoalForm({
                   frequencyType={state.frequency_type}
                   value={state.target_count}
                   onValueChange={updateTargetCount}
+                  disabled={definitionFieldsLocked}
                   showRecurringHelperText={false}
                 />
                 <p className="text-xs text-muted-foreground">
@@ -936,6 +969,12 @@ export function GoalForm({
                     setState((prev) => ({
                       ...prev,
                       recurrence_interval: value,
+                      target_count:
+                        prev.target_basis === "period" &&
+                        value !== "daily" &&
+                        prev.target_count.trim().length === 0
+                          ? "1"
+                          : prev.target_count,
                     }))
                   }
                 />
@@ -954,7 +993,7 @@ export function GoalForm({
                   <TooltipIcon
                     content={
                       state.target_basis === "lifetime"
-                        ? "Total completions required before the end date. Each completion counts independently."
+                        ? lifetimeTargetTooltip
                         : "How many distinct days you want to complete this goal in each week or month."
                     }
                     label="Recurring target help"
@@ -965,6 +1004,9 @@ export function GoalForm({
                   frequencyType={state.frequency_type}
                   value={state.target_count}
                   onValueChange={updateTargetCount}
+                  minValue={1}
+                  required={state.target_basis === "period"}
+                  disabled={definitionFieldsLocked}
                   showRecurringHelperText={false}
                 />
               </div>
@@ -973,13 +1015,16 @@ export function GoalForm({
             {canShowDailyLifetimeTarget ? (
               <div className="space-y-2">
                 <Label htmlFor="daily-lifetime-target-count" className="inline-flex items-center gap-1">
-                  <span>Total completions by end date</span>
+                  <span>{lifetimeTargetOptionalLabel}</span>
+                  <TooltipIcon content={lifetimeTargetTooltip} label="Lifetime target help" />
                 </Label>
                 <TargetCountField
                   id="daily-lifetime-target-count"
                   frequencyType={state.frequency_type}
                   value={state.target_count}
                   onValueChange={updateTargetCount}
+                  minValue={1}
+                  disabled={definitionFieldsLocked}
                   showRecurringHelperText={false}
                 />
               </div>
@@ -1142,7 +1187,9 @@ export function GoalForm({
                                 ? previous.target_count.trim().length > 0
                                   ? previous.target_count
                                   : "3"
-                                : previous.target_count,
+                                : previous.target_count.trim().length > 0
+                                  ? previous.target_count
+                                  : "1",
                             }))
                           }
                         />
