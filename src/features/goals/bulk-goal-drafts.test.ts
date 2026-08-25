@@ -6,7 +6,6 @@ import {
   buildBulkGoalDraftsFromLlmGoals,
   prepareBulkGoalRows,
   summarizeBulkGoalDraftSchedule,
-  validateBulkGoalDraft,
   withValidatedBulkGoalDraft,
   type BulkGoalDraft,
 } from "@/features/goals/bulk-goal-drafts";
@@ -271,6 +270,20 @@ describe("bulk goal drafts", () => {
         },
       },
       {
+        name: "daily period hidden target",
+        draft: bulkDraft({
+          frequency_type: "recurring",
+          recurrence_interval: "daily",
+          target_basis: "period",
+          target_count: "4",
+        }),
+        row: {
+          target_count: 1,
+          target_basis: "period",
+          milestone_names: null,
+        },
+      },
+      {
         name: "weekly period empty target",
         draft: bulkDraft({
           frequency_type: "recurring",
@@ -378,6 +391,8 @@ describe("bulk goal drafts", () => {
       start_date: "2026-08-01",
       end_date: "2026-10-30",
       default_local_time: null,
+      difficulty: "medium",
+      is_private: false,
     });
   });
 
@@ -418,6 +433,8 @@ describe("bulk goal drafts", () => {
       start_date: "2026-08-17",
       end_date: "2026-10-26",
       default_local_time: null,
+      difficulty: "medium",
+      is_private: false,
     });
   });
 
@@ -457,7 +474,26 @@ describe("bulk goal drafts", () => {
         start_date: "2026-08-17",
         end_date: "2026-09-13",
         default_local_time: null,
+        difficulty: "medium",
+        is_private: false,
       },
+    });
+  });
+
+  it("preserves edited difficulty and privacy in prepared rows", () => {
+    const [prepared] = prepareBulkGoalRows(
+      [
+        bulkDraft({
+          difficulty: "hard",
+          is_private: true,
+        }),
+      ],
+      { createId: vi.fn(() => "33333333-3333-4333-8333-333333333333") }
+    );
+
+    expect(prepared?.row).toMatchObject({
+      difficulty: "hard",
+      is_private: true,
     });
   });
 });

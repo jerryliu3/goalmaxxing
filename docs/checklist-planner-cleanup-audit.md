@@ -597,6 +597,16 @@ type ChecklistLoadMode = "initial" | "viewDate" | "completionRefresh" | "force";
 Each successful operation should update the same normalized cache shape. Add tests
 for stale response cancellation and cache invalidation.
 
+#### Resolved: bulk-editor duplication and semantic drift
+
+The bulk goal editor duplication finding is resolved for the current creation
+workflow. Bulk and planner-coach drafts now use the shared
+`src/features/goals/goal-creation-fields.tsx` component, the canonical
+`BulkGoalDraftReview` shell, and the shared
+`src/features/goals/bulk-goal-persistence.ts` contract. Target transitions,
+validation normalization, metadata fields, and link persistence therefore share
+one prepared-row boundary instead of diverging across the two callers.
+
 ### P2: migration and database maintenance
 
 #### P2.1 Function-body string patching is fragile

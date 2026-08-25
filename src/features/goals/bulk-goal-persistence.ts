@@ -4,9 +4,15 @@ import {
   prepareBulkGoalRows,
 } from "@/features/goals/bulk-goal-drafts";
 
-type RpcResult = Promise<{
+type RpcResult = PromiseLike<{
   error: { message?: string | null } | null;
 }>;
+
+export interface BulkGoalLinkRow {
+  [key: string]: string;
+  source_goal_id: string;
+  target_goal_id: string;
+}
 
 export interface BulkGoalPersistenceClient {
   rpc: (
@@ -16,22 +22,38 @@ export interface BulkGoalPersistenceClient {
           p_goals: PreparedBulkGoalRow["row"][];
         }
       | {
-          p_links: Array<{ source_goal_id: string; target_goal_id: string }>;
+          p_links: BulkGoalLinkRow[];
         }
   ) => RpcResult;
 }
 
-export interface PersistBulkGoalDraftsResult {
-  createdCount: number;
+export interface BulkGoalLinkRecovery {
   preparedRows: PreparedBulkGoalRow[];
-  linkErrorMessage: string | null;
+  linkRows: BulkGoalLinkRow[];
 }
+
+export type PersistBulkGoalDraftsResult =
+  | {
+      status: "created";
+      createdCount: number;
+      preparedRows: PreparedBulkGoalRow[];
+      linkErrorMessage: null;
+      linkRecovery: null;
+    }
+  | {
+      status: "partial_success";
+      createdCount: number;
+      preparedRows: PreparedBulkGoalRow[];
+      linkErrorMessage: string;
+      linkRecovery: BulkGoalLinkRecovery;
+    };
 
 type BulkGoalPersistenceErrorCode =
   | "authentication_required"
   | "no_selected_goals"
   | "invalid_goals"
-  | "create_failed";
+  | "create_failed"
+  | "links_failed";
 
 export class BulkGoalPersistenceError extends Error {
   readonly code: BulkGoalPersistenceErrorCode;
@@ -94,20 +116,54 @@ export async function persistBulkGoalDrafts({
     }));
   if (linkRows.length === 0) {
     return {
+      status: "created",
       createdCount: preparedRows.length,
       preparedRows,
       linkErrorMessage: null,
+      linkRecovery: null,
     };
   }
 
   const { error: linkError } = await supabase.rpc("create_goal_links", {
     p_links: linkRows,
   });
+  if (linkError) {
+    return {
+      status: "partial_success",
+      createdCount: preparedRows.length,
+      preparedRows,
+      linkErrorMessage: `Some linked goals were not saved: ${linkError.message}`,
+      linkRecovery: {
+        preparedRows,
+        linkRows,
+      },
+    };
+  }
+
   return {
+    status: "created",
     createdCount: preparedRows.length,
     preparedRows,
-    linkErrorMessage: linkError
-      ? `Some linked goals were not saved: ${linkError.message}`
-      : null,
+    linkErrorMessage: null,
+    linkRecovery: null,
   };
+}
+
+export async function retryBulkGoalLinks({
+  linkRows,
+  supabase,
+}: {
+  linkRows: BulkGoalLinkRow[];
+  supabase: BulkGoalPersistenceClient;
+}): Promise<{ status: "created" }> {
+  const { error } = await supabase.rpc("create_goal_links", {
+    p_links: linkRows,
+  });
+  if (error) {
+    throw new BulkGoalPersistenceError(
+      "links_failed",
+      `Some linked goals were not saved: ${error.message}`
+    );
+  }
+  return { status: "created" };
 }

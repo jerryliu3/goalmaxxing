@@ -55,6 +55,8 @@ function goalDraftErrorMessage(code?: string, fallback?: string) {
       return "Goal drafts are being generated too quickly. Wait a moment, then try again.";
     case "too_many_goals":
       return "The coach proposed more than five goals. Ask it to simplify the plan and send again.";
+    case "links_failed":
+      return "Goals were created, but their selected links were not saved. Retry saving links.";
     default:
       return fallback ?? "Could not generate goal drafts.";
   }
@@ -124,9 +126,15 @@ function CoachGoalDraftProposal({
               size="sm"
               variant="outline"
               className="mt-2"
-              onClick={() => void actions.generateCoachGoalDrafts(messageIndex)}
+              onClick={() =>
+                void (draftState.errorCode === "links_failed"
+                  ? actions.createCoachGoalDrafts(messageIndex)
+                  : actions.generateCoachGoalDrafts(messageIndex))
+              }
             >
-              Generate again
+              {draftState.errorCode === "links_failed"
+                ? "Retry saving links"
+                : "Generate again"}
             </Button>
           ) : null}
         </div>
@@ -163,7 +171,6 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
   useEffect(() => {
     let cancelled = false;
     if (!state.canUseCoach) {
-      setAvailableGoals([]);
       return () => {
         cancelled = true;
       };

@@ -21,8 +21,10 @@ import {
 } from "@/features/goals/bulk-goal-drafts";
 import { BulkGoalDraftReview } from "@/features/goals/bulk-goal-draft-review";
 import {
+  type BulkGoalLinkRecovery,
   BulkGoalPersistenceError,
   persistBulkGoalDrafts,
+  retryBulkGoalLinks,
 } from "@/features/goals/bulk-goal-persistence";
 import {
   buildStarterPackRows,
@@ -109,6 +111,7 @@ export function BulkGoalForm({
   const [parsing, setParsing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [drafts, setDrafts] = useState<BulkGoalDraft[]>([]);
+  const [linkRecovery, setLinkRecovery] = useState<BulkGoalLinkRecovery | null>(null);
   const [availableGoals, setAvailableGoals] = useState<Goal[]>([]);
   const appliedStarterPackRef = useRef<string | null>(null);
 
@@ -292,6 +295,51 @@ export function BulkGoalForm({
     setUploadedFile(event.target.files?.[0] ?? null);
   };
 
+  const finishCreatedGoals = async (
+    createdCount: number,
+    preparedRows: Awaited<ReturnType<typeof persistBulkGoalDrafts>>["preparedRows"]
+  ) => {
+    let failedPhotoUploads = 0;
+    for (const { draft, goalId } of preparedRows) {
+      if (!draft.photo_file) {
+        continue;
+      }
+
+      const fileName = `${Date.now()}-${draft.photo_file.name.replace(/\s+/g, "-")}`;
+      const objectPath = `${currentUserId}/${goalId}/${fileName}`;
+      const uploadResponse = await supabase.storage.from("goal-photos").upload(objectPath, draft.photo_file, {
+        cacheControl: "3600",
+        upsert: true,
+      });
+
+      if (uploadResponse.error) {
+        failedPhotoUploads += 1;
+        continue;
+      }
+
+      const { error: updateError } = await supabase.rpc("set_goal_photo_path", {
+        p_goal_id: goalId,
+        p_photo_path: objectPath,
+      });
+
+      if (updateError) {
+        failedPhotoUploads += 1;
+      }
+    }
+
+    if (failedPhotoUploads > 0) {
+      toast.error(
+        `${failedPhotoUploads} photo upload${failedPhotoUploads === 1 ? "" : "s"} could not be saved.`
+      );
+    }
+
+    invalidatePlannerRelatedTabCaches();
+    toast.success(
+      `Created ${createdCount} goal${createdCount === 1 ? "" : "s"}.`
+    );
+    completeAndExit();
+  };
+
   const createSelectedGoals = async () => {
     if (!currentUserId) {
       toast.error("You must be logged in.");
@@ -310,55 +358,32 @@ export function BulkGoalForm({
 
     setSaving(true);
     try {
-      const { createdCount, preparedRows, linkErrorMessage } =
-        await persistBulkGoalDrafts({
+      if (linkRecovery) {
+        await retryBulkGoalLinks({
+          linkRows: linkRecovery.linkRows,
+          supabase,
+        });
+        setLinkRecovery(null);
+        await finishCreatedGoals(
+          linkRecovery.preparedRows.length,
+          linkRecovery.preparedRows
+        );
+        return;
+      }
+
+      const result = await persistBulkGoalDrafts({
           drafts: selectedDrafts,
           currentUserId,
           supabase,
         });
-      if (linkErrorMessage) {
-        toast.error(linkErrorMessage);
+
+      if (result.status === "partial_success") {
+        setLinkRecovery(result.linkRecovery);
+        toast.error(result.linkErrorMessage);
+        return;
       }
 
-      let failedPhotoUploads = 0;
-      for (const { draft, goalId } of preparedRows) {
-        if (!draft.photo_file) {
-          continue;
-        }
-
-        const fileName = `${Date.now()}-${draft.photo_file.name.replace(/\s+/g, "-")}`;
-        const objectPath = `${currentUserId}/${goalId}/${fileName}`;
-        const uploadResponse = await supabase.storage.from("goal-photos").upload(objectPath, draft.photo_file, {
-          cacheControl: "3600",
-          upsert: true,
-        });
-
-        if (uploadResponse.error) {
-          failedPhotoUploads += 1;
-          continue;
-        }
-
-        const { error: updateError } = await supabase.rpc("set_goal_photo_path", {
-          p_goal_id: goalId,
-          p_photo_path: objectPath,
-        });
-
-        if (updateError) {
-          failedPhotoUploads += 1;
-        }
-      }
-
-      if (failedPhotoUploads > 0) {
-        toast.error(
-          `${failedPhotoUploads} photo upload${failedPhotoUploads === 1 ? "" : "s"} could not be saved.`
-        );
-      }
-
-      invalidatePlannerRelatedTabCaches();
-      toast.success(
-        `Created ${createdCount} goal${createdCount === 1 ? "" : "s"}.`
-      );
-      completeAndExit();
+      await finishCreatedGoals(result.createdCount, result.preparedRows);
     } catch (error) {
       if (error instanceof BulkGoalPersistenceError) {
         toast.error(error.message);
@@ -403,6 +428,23 @@ export function BulkGoalForm({
         uploadedFileName={uploadedFile?.name ?? null}
       />
 
+      {linkRecovery ? (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+          <p>
+            The goals were created, but the selected links were not saved. Your
+            draft selections are retained while you retry.
+          </p>
+          <button
+            type="button"
+            className="mt-2 rounded-md border border-amber-500 px-3 py-1.5 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/50"
+            onClick={() => void createSelectedGoals()}
+            disabled={saving}
+          >
+            Retry saving links
+          </button>
+        </div>
+      ) : null}
+
       <BulkGoalDraftReview
         variant="full"
         drafts={drafts}
@@ -410,6 +452,11 @@ export function BulkGoalForm({
         saving={saving}
         onCreate={createSelectedGoals}
         availableGoals={availableGoals}
+        createDisabledMessage={
+          linkRecovery
+            ? "Goals were created, but their links still need to be saved."
+            : null
+        }
         emptyMessage={
           inputMode === "natural_language"
             ? "Parse natural language input to generate drafts."

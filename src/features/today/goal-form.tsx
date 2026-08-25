@@ -33,7 +33,6 @@ import { toLocalDateString } from "@/lib/dates/day";
 import {
   DEFAULT_GOAL_CATEGORIES,
   getCategorySelectionFromValue,
-  getCategorySwatchColor,
   getCategoryValueForWrite,
 } from "@/lib/goals/category";
 import {
@@ -46,6 +45,8 @@ import {
 } from "@/lib/goals/linked-goal-labels";
 import {
   createDefaultGoalCreationFields,
+  parseGoalCreationTargetCount,
+  resolveGoalCreationColor,
   updateGoalCreationFields,
   type GoalCreationFieldChange,
   type GoalCreationFields,
@@ -76,6 +77,59 @@ interface GoalFormState extends GoalCreationFields {
   reward_text: string;
   team_id: string | null;
   task_scheduled_date: string;
+}
+
+export function getGoalFormTargetValidationError(
+  fields: Pick<
+    GoalCreationFields,
+    "frequency_type" | "recurrence_interval" | "target_basis" | "target_count"
+  >
+): string | null {
+  const parsedTargetCount = parseGoalCreationTargetCount(fields.target_count);
+
+  if (
+    fields.frequency_type === "fixed_milestones" &&
+    parsedTargetCount === null
+  ) {
+    return "Milestone goals require a positive target count.";
+  }
+
+  if (
+    fields.frequency_type === "recurring" &&
+    fields.target_basis === "period" &&
+    fields.target_count.trim().length > 0 &&
+    parsedTargetCount === null
+  ) {
+    return "Per-period target must be a positive whole number.";
+  }
+
+  if (
+    fields.frequency_type === "recurring" &&
+    fields.target_basis === "period" &&
+    fields.recurrence_interval !== "daily" &&
+    parsedTargetCount === null
+  ) {
+    return "Recurring period goals require a target of at least 1.";
+  }
+
+  if (
+    fields.frequency_type === "recurring" &&
+    fields.target_basis === "lifetime" &&
+    fields.target_count.trim().length > 0 &&
+    parsedTargetCount === null
+  ) {
+    return "Total target completions must be at least 1 when provided.";
+  }
+
+  if (
+    fields.frequency_type === "recurring" &&
+    fields.target_basis === "lifetime" &&
+    fields.target_count.trim().length === 0
+  ) {
+    return "Total target completions requires a positive target.";
+  }
+
+  return null;
 }
 
 const defaultState: GoalFormState = {
@@ -141,14 +195,6 @@ function applyGoalCreationChange(
 }
 
 const localTimePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
-
-function parsePositiveTargetCount(value: string): number | null {
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return null;
-  }
-  return parsed;
-}
 
 export function GoalForm({
   goalId,
@@ -295,7 +341,7 @@ export function GoalForm({
           reward_text: goal.reward_text ?? "",
           category_selection: categoryState.selection,
           custom_category: categoryState.customValue,
-          color: getCategorySwatchColor(categoryState.selection),
+          color: resolveGoalCreationColor(goal.color, categoryState.selection),
           frequency_type: goal.frequency_type,
           recurrence_interval: goal.recurrence_interval ?? "daily",
           difficulty: goal.difficulty ?? "medium",
@@ -351,7 +397,7 @@ export function GoalForm({
   const isPeriodRecurringTarget =
     state.frequency_type === "recurring" && state.target_basis === "period";
   const definitionFieldsLocked = isEditing;
-  const parsedTargetCount = parsePositiveTargetCount(state.target_count);
+  const parsedTargetCount = parseGoalCreationTargetCount(state.target_count);
   const definitionTargetCount =
     state.frequency_type === "fixed_milestones" || isLifetimeRecurringTarget
       ? parsedTargetCount
@@ -406,37 +452,12 @@ export function GoalForm({
       };
     }
 
-    if (
-      state.frequency_type === "fixed_milestones" &&
-      parsedTargetCount === null
-    ) {
+    const targetValidationError = getGoalFormTargetValidationError(
+      toGoalCreationFields(state)
+    );
+    if (targetValidationError) {
       return {
-        validationError: "Milestone goals require a positive target count.",
-        validationWarning: null,
-      };
-    }
-
-    if (
-      state.frequency_type === "recurring" &&
-      state.target_basis === "period" &&
-      state.recurrence_interval !== "daily" &&
-      parsedTargetCount === null
-    ) {
-      return {
-        validationError: "Recurring period goals require a target of at least 1.",
-        validationWarning: null,
-      };
-    }
-
-    if (
-      state.frequency_type === "recurring" &&
-      state.target_basis === "lifetime" &&
-      state.target_count.trim().length > 0 &&
-      parsedTargetCount === null
-    ) {
-      return {
-        validationError:
-          "Total target completions must be at least 1 when provided.",
+        validationError: targetValidationError,
         validationWarning: null,
       };
     }
@@ -480,7 +501,7 @@ export function GoalForm({
       capacity: goalCapacityInput ?? undefined,
     });
     return resolveGoalDefinitionValidationFeedback(definitionIssues);
-  }, [state, parsedTargetCount, definitionTargetCount, goalCapacityInput, isPlannerTask]);
+  }, [state, definitionTargetCount, goalCapacityInput, isPlannerTask]);
   const submitDisabled = saving || validationError !== null;
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -508,7 +529,7 @@ export function GoalForm({
       setSaving(false);
       return;
     }
-    const parsedTargetCountForSave = parsePositiveTargetCount(state.target_count);
+    const parsedTargetCountForSave = parseGoalCreationTargetCount(state.target_count);
     const milestoneNames =
       state.frequency_type === "fixed_milestones" && parsedTargetCountForSave !== null
         ? normalizeMilestoneNamesForSave(parsedTargetCountForSave, state.milestone_names)

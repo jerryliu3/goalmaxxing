@@ -86,6 +86,8 @@ export interface PreparedBulkGoalRow {
     start_date: string;
     end_date: string | null;
     default_local_time: string | null;
+    difficulty: GoalCreationFields["difficulty"];
+    is_private: boolean;
   };
 }
 
@@ -375,6 +377,8 @@ export function prepareBulkGoalRows(
         start_date: draft.start_date,
         end_date: draft.end_date || null,
         default_local_time: draft.default_local_time.trim() || null,
+        difficulty: draft.difficulty,
+        is_private: draft.is_private,
       },
     };
   });

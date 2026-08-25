@@ -92,6 +92,7 @@ function applyFrequencyTypeChange(
     ...fields,
     frequency_type: nextFrequency,
     target_basis: "period",
+    target_count: defaultTargetCountForBasis("period"),
     milestone_names: [],
   };
 }
@@ -103,8 +104,7 @@ function applyRecurrenceIntervalChange(
   const shouldDefaultPeriodTarget =
     fields.frequency_type === "recurring" &&
     fields.target_basis === "period" &&
-    nextInterval !== "daily" &&
-    fields.target_count.trim().length === 0;
+    (nextInterval === "daily" || fields.target_count.trim().length === 0);
 
   return {
     ...fields,
@@ -186,7 +186,10 @@ export function normalizeGoalCreationTarget(
   }
 
   if (fields.target_basis === "period") {
-    return fields.target_count.trim().length === 0 ? "1" : fields.target_count;
+    return fields.recurrence_interval === "daily" ||
+      fields.target_count.trim().length === 0
+      ? "1"
+      : fields.target_count;
   }
 
   return fields.target_count.trim().length === 0 ? "" : fields.target_count;
@@ -312,4 +315,14 @@ export function validateGoalCreationFields(fields: GoalCreationFields): string[]
 
 export function parseGoalCreationTargetCount(raw: string): number | null {
   return parsePositiveTargetCount(raw);
+}
+
+export function resolveGoalCreationColor(
+  color: string | null | undefined,
+  categorySelection: CategorySelection
+): string {
+  const trimmed = typeof color === "string" ? color.trim() : "";
+  return hexColorPattern.test(trimmed)
+    ? trimmed
+    : getCategorySwatchColor(categorySelection);
 }

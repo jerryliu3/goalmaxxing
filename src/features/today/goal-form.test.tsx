@@ -2,6 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GoalCreationFieldControls } from "@/features/goals/goal-creation-fields";
 import { createDefaultGoalCreationFields } from "@/features/goals/goal-creation-model";
+import { getGoalFormTargetValidationError } from "@/features/today/goal-form";
 import { resolveGoalDefinitionValidationFeedback } from "@/features/today/goal-form-validation";
 import { validateGoalDefinition } from "@/lib/goals/definition-validation";
 
@@ -125,5 +126,31 @@ describe("goal form definition validation adapter", () => {
     expect(targetField).toBeDisabled();
     expect(screen.getByLabelText("Start date")).toBeDisabled();
     expect(screen.getByLabelText("End date (optional)")).not.toBeDisabled();
+  });
+});
+
+describe("GoalForm target validation", () => {
+  it("uses strict target parsing instead of truncating fractional input", () => {
+    expect(
+      getGoalFormTargetValidationError({
+        ...createDefaultGoalCreationFields(),
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "period",
+        target_count: "1.5",
+      })
+    ).toBe("Per-period target must be a positive whole number.");
+  });
+
+  it("blocks an empty lifetime recurring target", () => {
+    expect(
+      getGoalFormTargetValidationError({
+        ...createDefaultGoalCreationFields(),
+        frequency_type: "recurring",
+        recurrence_interval: "daily",
+        target_basis: "lifetime",
+        target_count: "",
+      })
+    ).toBe("Total target completions requires a positive target.");
   });
 });

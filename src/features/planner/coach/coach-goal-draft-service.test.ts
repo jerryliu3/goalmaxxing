@@ -97,6 +97,8 @@ describe("coach goal draft service", () => {
     drafts[1] = { ...drafts[1]!, include: false };
     drafts[0] = {
       ...drafts[0]!,
+      difficulty: "hard",
+      is_private: true,
       linked_target_goal_id: "goal-main-1",
     };
     rpcMock
@@ -104,22 +106,67 @@ describe("coach goal draft service", () => {
       .mockResolvedValueOnce({ error: null });
 
     await expect(createCoachGoalDrafts({ drafts })).resolves.toEqual({
+      status: "created",
       createdCount: 1,
       linkErrorMessage: null,
     });
     expect(rpcMock).toHaveBeenNthCalledWith(1, "create_goals", {
       p_goals: [
-        expect.objectContaining({
+        {
+          id: expect.any(String),
           title: "Easy run",
+          description: null,
+          category_key: "personal",
+          category: "Personal",
+          color: "#6366f1",
+          frequency_type: "recurring",
           recurrence_interval: "weekly",
-        }),
+          target_count: 1,
+          target_basis: "period",
+          milestone_names: null,
+          start_date: "2026-08-17",
+          end_date: null,
+          default_local_time: null,
+          difficulty: "hard",
+          is_private: true,
+        },
       ],
     });
     expect(rpcMock).toHaveBeenNthCalledWith(2, "create_goal_links", {
       p_links: [
-        expect.objectContaining({
+        {
+          source_goal_id: expect.any(String),
           target_goal_id: "goal-main-1",
-        }),
+        },
+      ],
+    });
+  });
+
+  it("returns retryable partial success when coach link persistence fails", async () => {
+    const drafts = buildBulkGoalDraftsFromLlmGoals([
+      {
+        title: "Mobility",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        start_date: "2026-08-17",
+      },
+    ]);
+    drafts[0] = {
+      ...drafts[0]!,
+      linked_target_goal_id: "goal-main-1",
+    };
+    rpcMock
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: { message: "link save failed" } });
+
+    await expect(createCoachGoalDrafts({ drafts })).resolves.toMatchObject({
+      status: "partial_success",
+      createdCount: 1,
+      linkErrorMessage: "Some linked goals were not saved: link save failed",
+      linkRows: [
+        {
+          target_goal_id: "goal-main-1",
+        },
       ],
     });
   });

@@ -492,7 +492,6 @@ git commit -m "test(goals): cover bulk target input variants"
 - Modify: `src/features/today/goal-form.test.tsx`
 - Modify: `src/features/goals/bulk-goal-draft-review.test.tsx`
 - Modify: `src/features/planner/coach/use-planner-coach.test.tsx`
-- Modify: `e2e/api.smoke.spec.ts`
 
 **Interfaces:**
 - Covers parse-to-review-to-create behavior without introducing a second
@@ -533,10 +532,12 @@ shared editor and persistence module.
 Use existing Supabase/client mocks and navigation/cache mocks. Assert user
 visible state and request payloads rather than implementation details.
 
-- [ ] **Step 4: Add the API smoke assertion for target-basis preservation**
+- [ ] **Step 4: Keep deterministic parser route coverage authoritative**
 
-Extend the existing authenticated parse smoke coverage with an assertion that
-the normalized response preserves explicit period and lifetime target basis.
+The deterministic parser route tests are the authoritative coverage for explicit
+period and lifetime target-basis preservation. The live Gemini semantic smoke
+assertion was removed because provider output is nondeterministic; no
+provider-dependent E2E semantic assertion is required for this feature.
 
 - [ ] **Step 5: Run focused integration tests**
 
@@ -548,8 +549,7 @@ Run the same command from Step 2. Expected: PASS.
 git add src/features/today/bulk-goal-form.test.tsx \
   src/features/today/goal-form.test.tsx \
   src/features/goals/bulk-goal-draft-review.test.tsx \
-  src/features/planner/coach/use-planner-coach.test.tsx \
-  e2e/api.smoke.spec.ts
+  src/features/planner/coach/use-planner-coach.test.tsx
 git commit -m "test(goals): cover bulk creation workflows"
 ```
 
