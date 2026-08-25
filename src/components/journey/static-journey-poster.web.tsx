@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 interface StaticJourneyPosterProps {
   mobileSrc: string;
   desktopSrc: string;
@@ -11,6 +13,13 @@ export function StaticJourneyPoster({
   desktopSrc,
   visible,
 }: StaticJourneyPosterProps) {
+  const posterKey = `${mobileSrc}::${desktopSrc}`;
+  const [failedPosterKey, setFailedPosterKey] = useState<string | null>(null);
+
+  if (failedPosterKey === posterKey) {
+    return null;
+  }
+
   return (
     <div
       aria-hidden="true"
@@ -26,6 +35,9 @@ export function StaticJourneyPoster({
           alt=""
           className="h-full w-full object-cover"
           decoding="async"
+          onError={() => {
+            setFailedPosterKey(posterKey);
+          }}
         />
       </picture>
     </div>
