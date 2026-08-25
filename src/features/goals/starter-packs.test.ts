@@ -107,4 +107,43 @@ describe("starter packs", () => {
       buildStarterPackRows("finance" as StarterPackKey, "2026-08-01")
     ).toThrow(/Unsupported starter pack/);
   });
+
+  it("uses explicit target basis and counts for every recurring starter-pack row", () => {
+    const expectedRecurringTargets: Record<
+      StarterPackKey,
+      Array<{ title: string; target_basis: string; target_count: string }>
+    > = {
+      health: [
+        { title: "Hydration check-ins", target_basis: "lifetime", target_count: "6" },
+        { title: "Meal prep session", target_basis: "period", target_count: "1" },
+      ],
+      fitness: [
+        { title: "Strength training", target_basis: "period", target_count: "3" },
+        { title: "Mobility sessions", target_basis: "period", target_count: "1" },
+      ],
+      career: [
+        { title: "Weekly deep work block", target_basis: "period", target_count: "2" },
+        { title: "Portfolio update cadence", target_basis: "period", target_count: "1" },
+      ],
+      personal: [
+        { title: "Weekly planning reset", target_basis: "period", target_count: "1" },
+        { title: "Life admin sweep", target_basis: "period", target_count: "1" },
+      ],
+      relationships: [
+        { title: "Weekly partner check-in", target_basis: "period", target_count: "1" },
+        { title: "Appreciation notes", target_basis: "lifetime", target_count: "8" },
+      ],
+    };
+
+    for (const pack of STARTER_PACKS) {
+      const rows = buildStarterPackRows(pack.key, "2026-08-01");
+      const recurringRows = rows.filter((row) => row.frequency_type === "recurring");
+      const expectedRows = expectedRecurringTargets[pack.key];
+
+      expect(recurringRows).toHaveLength(expectedRows.length);
+      for (const [index, expected] of expectedRows.entries()) {
+        expect(recurringRows[index]).toMatchObject(expected);
+      }
+    }
+  });
 });

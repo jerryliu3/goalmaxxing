@@ -544,6 +544,10 @@ function normalizeGeneratedPayload(
       recurrence,
       goal.target_basis
     );
+    const normalizedTargetCount =
+      frequency === "recurring" && targetBasis === "period" && targetCount === null
+        ? 1
+        : targetCount;
     const startDate = toIsoDate(goal.start_date) ?? today;
     const endDate = toIsoDate(goal.end_date ?? undefined) ?? null;
     const milestoneNames =
@@ -564,7 +568,7 @@ function normalizeGeneratedPayload(
       frequency_type: frequency,
       recurrence_interval: recurrence,
       target_basis: targetBasis,
-      target_count: targetCount,
+      target_count: normalizedTargetCount,
       milestone_names:
         milestoneNames && milestoneNames.length > 0 ? milestoneNames : undefined,
       start_date: startDate,
@@ -582,6 +586,16 @@ function normalizeGeneratedPayload(
     if (validationIssues.length > 0) {
       warnings.push(
         `Draft ${index + 1} (${normalized.title}): ${validationIssues[0]!.message}`
+      );
+    }
+    if (
+      normalized.frequency_type === "recurring" &&
+      normalized.target_basis === "lifetime" &&
+      (normalized.target_count === null ||
+        (typeof normalized.target_count === "number" && normalized.target_count <= 0))
+    ) {
+      warnings.push(
+        `Draft ${index + 1} (${normalized.title}): Total target completions requires a positive target.`
       );
     }
     return normalized;

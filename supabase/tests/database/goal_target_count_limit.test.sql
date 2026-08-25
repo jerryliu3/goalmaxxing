@@ -85,6 +85,7 @@ select lives_ok(
       frequency_type,
       recurrence_interval,
       target_count,
+      target_basis,
       start_date,
       end_date
     ) values (
@@ -94,12 +95,13 @@ select lives_ok(
       'test',
       'recurring',
       'weekly',
-      null,
+      1,
+      'period'::public.goal_target_basis,
       '2026-01-01',
       null
     )
   $$,
-  'goal target_count allows null for cadence goals'
+  'goal target_count allows explicit period target of 1 for cadence goals'
 );
 
 select throws_ok(
