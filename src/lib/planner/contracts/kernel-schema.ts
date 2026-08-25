@@ -47,7 +47,10 @@ export const plannerGoalSchema = z
     frequency_type: z.enum(["fixed_milestones", "recurring"]),
     recurrence_interval: z.enum(["daily", "weekly", "monthly"]).nullable(),
     target_count: z.number().int().nonnegative().nullable(),
-    target_basis: z.enum(["period", "lifetime"]).nullable().optional(),
+    target_basis: z
+      .enum(["period", "lifetime"])
+      .nullish()
+      .transform((value) => value ?? undefined),
     milestone_names: z.array(z.string().max(1_000)).nullable(),
     start_date: dateSchema,
     end_date: nullableDateSchema,
