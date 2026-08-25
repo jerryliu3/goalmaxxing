@@ -218,6 +218,7 @@ git commit -m "refactor(goals): share create-mode field controls"
 - Test: `src/features/goals/bulk-goal-drafts.test.ts`
 - Modify: `src/features/goals/goal-creation-model.ts`
 - Modify: `src/features/today/goal-form.tsx`
+- Create: `src/features/today/goal-form.test.tsx`
 
 **Interfaces:**
 - `validateGoalDefinition` always reports a weekly target above `7` or a
@@ -483,7 +484,7 @@ git commit -m "test(goals): cover bulk target input variants"
 
 **Files:**
 - Create: `src/features/today/bulk-goal-form.test.tsx`
-- Create: `src/features/today/goal-form.test.tsx`
+- Modify: `src/features/today/goal-form.test.tsx`
 - Modify: `src/features/goals/bulk-goal-draft-review.test.tsx`
 - Modify: `src/features/planner/coach/use-planner-coach.test.tsx`
 - Modify: `e2e/api.smoke.spec.ts`
