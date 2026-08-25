@@ -7,15 +7,15 @@ describe("navigation tab preferences", () => {
     const checklistFirst = buildAppTabs("checklist");
 
     expect(calendarFirst.map((tab) => tab.key)).toEqual([
-      "insights",
       "calendar",
       "social",
+      "insights",
       "settings",
     ]);
     expect(checklistFirst.map((tab) => tab.key)).toEqual([
-      "insights",
       "calendar",
       "social",
+      "insights",
       "settings",
     ]);
   });
@@ -24,9 +24,9 @@ describe("navigation tab preferences", () => {
     expect(
       buildAppTabs("calendar", { hrefPrefix: "/demo" }).map((tab) => tab.href)
     ).toEqual([
-      "/demo/insights",
       "/demo/calendar",
       "/demo/social",
+      "/demo/insights",
       "/demo/settings",
     ]);
   });
