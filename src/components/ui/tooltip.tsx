@@ -6,6 +6,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react"
 import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
@@ -29,6 +30,9 @@ interface TooltipPosition {
 
 const TOOLTIP_MARGIN_PX = 8
 const TOOLTIP_GAP_PX = 6
+const subscribeToNothing = () => () => {}
+const getServerMountedSnapshot = () => false
+const getClientMountedSnapshot = () => true
 
 export function Tooltip({
   content,
@@ -40,13 +44,13 @@ export function Tooltip({
 }: TooltipProps) {
   const wrapperRef = useRef<HTMLSpanElement | null>(null)
   const tooltipRef = useRef<HTMLSpanElement | null>(null)
-  const [mounted, setMounted] = useState(false)
+  const mounted = useSyncExternalStore(
+    subscribeToNothing,
+    getClientMountedSnapshot,
+    getServerMountedSnapshot
+  )
   const [open, setOpen] = useState(false)
   const [position, setPosition] = useState<TooltipPosition | null>(null)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const updatePosition = useCallback(() => {
     const wrapper = wrapperRef.current
