@@ -264,6 +264,84 @@ describe("BulkGoalDraftReview", () => {
     }
   );
 
+  it("lets users switch recurring period goals to lifetime and set a total target", async () => {
+    const user = userEvent.setup();
+    const periodDraft = makeDraft({
+      sourceRowLabel: "Row 1",
+      title: "Strength sessions",
+      frequency_type: "recurring",
+      recurrence_interval: "weekly",
+      target_basis: "period",
+      target_count: "3",
+      include: true,
+    });
+    render(
+      <ReviewHarness
+        variant="full"
+        saving={false}
+        onCreate={vi.fn()}
+        initialDrafts={[periodDraft]}
+      />
+    );
+
+    const dialog = await openFirstDraftEditor(user);
+    await user.click(
+      within(dialog).getByRole("button", { name: /advanced settings/i })
+    );
+    await user.click(
+      within(dialog).getByRole("checkbox", {
+        name: /total completion target instead of per-period/i,
+      })
+    );
+    expect(
+      within(dialog).getByText("Total target completions")
+    ).toBeInTheDocument();
+
+    const lifetimeTargetInput = dialog.querySelector<HTMLInputElement>(
+      "#recurring-target-count"
+    );
+    expect(lifetimeTargetInput).toBeTruthy();
+    fireEvent.change(lifetimeTargetInput!, { target: { value: "9" } });
+    expect(lifetimeTargetInput).toHaveValue(9);
+  });
+
+  it("resets lifetime recurring targets to period defaults when toggled back", async () => {
+    const user = userEvent.setup();
+    const lifetimeDraft = makeDraft({
+      sourceRowLabel: "Row 1",
+      title: "Practice talks",
+      frequency_type: "recurring",
+      recurrence_interval: "weekly",
+      target_basis: "lifetime",
+      target_count: "12",
+      include: true,
+    });
+    render(
+      <ReviewHarness
+        variant="full"
+        saving={false}
+        onCreate={vi.fn()}
+        initialDrafts={[lifetimeDraft]}
+      />
+    );
+
+    const dialog = await openFirstDraftEditor(user);
+    await user.click(
+      within(dialog).getByRole("button", { name: /advanced settings/i })
+    );
+    await user.click(
+      within(dialog).getByRole("checkbox", {
+        name: /total completion target instead of per-period/i,
+      })
+    );
+    expect(within(dialog).getByText("Target per week")).toBeInTheDocument();
+    const periodTargetInput = dialog.querySelector<HTMLInputElement>(
+      "#recurring-target-count"
+    );
+    expect(periodTargetInput).toBeTruthy();
+    expect(periodTargetInput).toHaveValue(1);
+  });
+
   it("disables create only when selected drafts are invalid", async () => {
     const user = userEvent.setup();
     const validDraft = makeDraft({

@@ -706,6 +706,72 @@ describe("usePlannerCoach", () => {
     expect(createCoachGoalDraftsMock).toHaveBeenCalledTimes(1);
   });
 
+  it("preserves edited linked targets when persisting coach drafts", async () => {
+    requestPlannerCoachReplyMock.mockResolvedValue({
+      schemaVersion: "1",
+      phase: "ready",
+      reply: "I drafted a mobility goal.",
+      proposal: {
+        policyPatches: [],
+        unresolvedQuestions: [],
+        goalDraftPrompt: "Mobility weekly starting 2026-08-17.",
+      },
+      recommendations: [],
+      warnings: [],
+    });
+    const drafts = buildBulkGoalDraftsFromLlmGoals([
+      {
+        title: "Mobility",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        start_date: "2026-08-17",
+      },
+    ]);
+    parseCoachGoalDraftsMock.mockResolvedValue({ drafts, warnings: [] });
+    createCoachGoalDraftsMock.mockResolvedValue({ createdCount: 1 });
+    const context = buildContext();
+    const { result } = renderHook(() =>
+      usePlannerCoach(
+        buildArgs({
+          activeTab: "calendar",
+          context,
+          effectivePreview: context.preview,
+        })
+      )
+    );
+
+    await waitFor(() => expect(loadCoachSessionMock).toHaveBeenCalled());
+    act(() => {
+      result.current.actions.setCoachInput("Make a mobility goal");
+    });
+    await act(async () => {
+      await result.current.actions.sendCoachMessage();
+    });
+    await waitFor(() => {
+      expect(result.current.state.coachGoalDraftStates[1]?.status).toBe("ready");
+    });
+
+    act(() => {
+      result.current.actions.setCoachGoalDrafts(1, (previousDrafts) =>
+        previousDrafts.map((draft, index) =>
+          index === 0 ? { ...draft, linked_target_goal_id: "goal-main-1" } : draft
+        )
+      );
+    });
+    await act(async () => {
+      await result.current.actions.createCoachGoalDrafts(1);
+    });
+
+    expect(createCoachGoalDraftsMock).toHaveBeenCalledWith({
+      drafts: [
+        expect.objectContaining({
+          title: "Mobility",
+          linked_target_goal_id: "goal-main-1",
+        }),
+      ],
+    });
+  });
+
   it("uses refreshed created-goal work units on the next coach turn", async () => {
     requestPlannerCoachReplyMock
       .mockResolvedValueOnce({
