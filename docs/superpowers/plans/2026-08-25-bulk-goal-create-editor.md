@@ -159,7 +159,7 @@ Cover:
 - `min=1`, `max=7`, and `max=31` attributes;
 - lifetime target required state;
 - create mode has enabled definition controls;
-- locked mode disables goal type, cadence, target fields, and dates;
+- locked mode disables goal type, cadence, target fields, and the start date; the end date remains editable;
 - custom category, default time, difficulty, privacy, links, and milestone
   controls call the supplied update callbacks;
 - photo, reward-text, and obsolete bulk-only advanced controls are absent.

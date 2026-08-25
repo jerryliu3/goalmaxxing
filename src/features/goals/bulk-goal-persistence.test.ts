@@ -2,10 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 import {
   type BulkGoalDraft,
   buildBulkGoalDraftsFromLlmGoals,
+  type PreparedBulkGoalRow,
   withValidatedBulkGoalDraft,
 } from "@/features/goals/bulk-goal-drafts";
 import {
   persistBulkGoalDrafts,
+  retryBulkGoalCreation,
   retryBulkGoalLinks,
 } from "@/features/goals/bulk-goal-persistence";
 
@@ -200,7 +202,7 @@ describe("persistBulkGoalDrafts", () => {
     });
   });
 
-  it("returns a typed recovery payload for create_goals error responses", async () => {
+  it("keeps returned create_goals errors definitive and editable", async () => {
     const draft = makeDraft();
 
     await expect(
@@ -214,55 +216,52 @@ describe("persistBulkGoalDrafts", () => {
         },
       })
     ).rejects.toMatchObject({
-      code: "create_ambiguous",
+      code: "create_failed",
       message: "create_goals exploded",
-      preparedRows: [{ goalId: draft.id }],
     });
   });
 
-  it("returns explicit link persistence warnings without dropping created counts", async () => {
+  it("keeps returned link errors retryable with prepared recovery rows", async () => {
     const rpcMock = vi
       .fn()
       .mockResolvedValueOnce({ error: null })
       .mockResolvedValueOnce({ error: { message: "link save failed" } });
 
-    const result = await persistBulkGoalDrafts({
-      drafts: [makeDraft({ linked_target_goal_id: "goal-main-a" })],
-      currentUserId: "user-1",
-      supabase: { rpc: rpcMock },
-      createId: () => "10000000-0000-4000-8000-000000000021",
-    });
-
-    expect(result).toMatchObject({
-      status: "partial_success",
-      createdCount: 1,
-      linkErrorMessage: "Some linked goals were not saved: link save failed",
+    await expect(
+      persistBulkGoalDrafts({
+        drafts: [makeDraft({ linked_target_goal_id: "goal-main-a" })],
+        currentUserId: "user-1",
+        supabase: { rpc: rpcMock },
+        createId: () => "10000000-0000-4000-8000-000000000021",
+      })
+    ).rejects.toMatchObject({
+      code: "links_failed",
+      message: "Some linked goals were not saved: link save failed",
       linkRecovery: {
-        linkRows: [
-          {
-            target_goal_id: "goal-main-a",
-          },
-        ],
+        preparedRows: [{ goalId: "10000000-0000-4000-8000-000000000021" }],
       },
     });
   });
 
-  it("uses a stable fallback for link errors without messages", async () => {
+  it("uses a stable fallback for returned link errors without messages", async () => {
     const rpcMock = vi
       .fn()
       .mockResolvedValueOnce({ error: null })
       .mockResolvedValueOnce({ error: {} });
 
-    const result = await persistBulkGoalDrafts({
-      drafts: [makeDraft({ linked_target_goal_id: "goal-main-a" })],
-      currentUserId: "user-1",
-      supabase: { rpc: rpcMock },
-    });
-
-    expect(result).toMatchObject({
-      status: "partial_success",
-      linkErrorMessage:
+    await expect(
+      persistBulkGoalDrafts({
+        drafts: [makeDraft({ linked_target_goal_id: "goal-main-a" })],
+        currentUserId: "user-1",
+        supabase: { rpc: rpcMock },
+      })
+    ).rejects.toMatchObject({
+      code: "links_failed",
+      message:
         "Some linked goals were not saved: Could not save goal links. Try again.",
+      linkRecovery: {
+        preparedRows: expect.any(Array),
+      },
     });
   });
 
@@ -296,17 +295,90 @@ describe("persistBulkGoalDrafts", () => {
       .mockResolvedValueOnce({ error: null })
       .mockResolvedValueOnce({ error: { message: "link save failed" } });
 
-    await persistBulkGoalDrafts({
-      drafts: [makeDraft({ linked_target_goal_id: "goal-main-a" })],
-      currentUserId: "user-1",
-      supabase: { rpc: rpcMock },
-      onGoalsPersisted,
+    await expect(
+      persistBulkGoalDrafts({
+        drafts: [makeDraft({ linked_target_goal_id: "goal-main-a" })],
+        currentUserId: "user-1",
+        supabase: { rpc: rpcMock },
+        onGoalsPersisted,
+      })
+    ).rejects.toMatchObject({
+      code: "links_failed",
+      message: "Some linked goals were not saved: link save failed",
     });
 
     expect(onGoalsPersisted).toHaveBeenCalledTimes(1);
     expect(onGoalsPersisted.mock.invocationCallOrder[0]).toBeLessThan(
       rpcMock.mock.invocationCallOrder[1]!
     );
+  });
+
+  it("notifies the caller again only after linked goals finish persisting", async () => {
+    const onGoalsPersisted = vi.fn();
+    const onLinksPersisted = vi.fn();
+    const rpcMock = vi
+      .fn()
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null });
+
+    await persistBulkGoalDrafts({
+      drafts: [makeDraft({ linked_target_goal_id: "goal-main-a" })],
+      currentUserId: "user-1",
+      supabase: { rpc: rpcMock },
+      onGoalsPersisted,
+      onLinksPersisted,
+    });
+
+    expect(onGoalsPersisted).toHaveBeenCalledTimes(1);
+    expect(onLinksPersisted).toHaveBeenCalledTimes(1);
+    expect(onGoalsPersisted.mock.invocationCallOrder[0]).toBeLessThan(
+      rpcMock.mock.invocationCallOrder[1]!
+    );
+    expect(onLinksPersisted.mock.invocationCallOrder[0]).toBeGreaterThan(
+      rpcMock.mock.invocationCallOrder[1]!
+    );
+  });
+
+  it("retries goal creation with the exact prepared rows after an ambiguous create", async () => {
+    const draft = makeDraft({ linked_target_goal_id: "goal-main-a" });
+    let preparedRows: PreparedBulkGoalRow[] | undefined;
+
+    try {
+      await persistBulkGoalDrafts({
+        drafts: [draft],
+        currentUserId: "user-1",
+        supabase: {
+          rpc: vi.fn().mockRejectedValue(new Error("create timed out")),
+        },
+      });
+    } catch (error) {
+      preparedRows = (
+        error as { preparedRows?: PreparedBulkGoalRow[] }
+      ).preparedRows;
+    }
+
+    expect(preparedRows).toBeDefined();
+    const rpcMock = vi
+      .fn()
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null });
+
+    await retryBulkGoalCreation({
+      preparedRows: preparedRows!,
+      supabase: { rpc: rpcMock },
+    });
+
+    expect(rpcMock).toHaveBeenNthCalledWith(1, "create_goals", {
+      p_goals: [preparedRows![0]!.row],
+    });
+    expect(rpcMock).toHaveBeenNthCalledWith(2, "create_goal_links", {
+      p_links: [
+        {
+          source_goal_id: preparedRows![0]!.goalId,
+          target_goal_id: "goal-main-a",
+        },
+      ],
+    });
   });
 
   it("retries only failed link rows without creating duplicate goals", async () => {
@@ -345,8 +417,28 @@ describe("persistBulkGoalDrafts", () => {
         },
       })
     ).rejects.toMatchObject({
-      code: "links_failed",
+      code: "links_ambiguous",
       message: "Some linked goals were not saved: retry timed out",
+    });
+  });
+
+  it("uses the stable fallback for link retry errors without messages", async () => {
+    await expect(
+      retryBulkGoalLinks({
+        linkRows: [
+          {
+            source_goal_id: "10000000-0000-4000-8000-000000000031",
+            target_goal_id: "goal-main-a",
+          },
+        ],
+        supabase: {
+          rpc: vi.fn().mockResolvedValue({ error: {} }),
+        },
+      })
+    ).rejects.toMatchObject({
+      code: "links_failed",
+      message:
+        "Some linked goals were not saved: Could not save goal links. Try again.",
     });
   });
 });

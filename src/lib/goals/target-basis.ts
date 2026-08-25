@@ -79,17 +79,12 @@ export function resolveGoalTargetBasis(goal: Goal): GoalTargetBasis {
   if (goal.target_basis) {
     return goal.target_basis;
   }
-  if (goal.frequency_type === "fixed_milestones") {
-    return "lifetime";
-  }
-  if (
-    goal.frequency_type === "recurring" &&
-    typeof goal.target_count === "number" &&
-    goal.target_count > 0
-  ) {
-    return "lifetime";
-  }
-  return "period";
+  return resolveGoalTargetBasisFromInput({
+    frequencyType: goal.frequency_type,
+    recurrenceInterval: goal.recurrence_interval,
+    targetCount: goal.target_count,
+    targetBasis: null,
+  }).basis;
 }
 
 export function isPeriodCadenceGoal(goal: Goal) {

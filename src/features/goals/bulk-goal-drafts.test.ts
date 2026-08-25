@@ -21,7 +21,6 @@ function bulkDraft(overrides: Partial<BulkGoalDraft> = {}): BulkGoalDraft {
     link_target_search: "",
     link_target_open: false,
     advanced_open: false,
-    photo_file: null,
     ...overrides,
   });
 }
@@ -170,6 +169,28 @@ describe("bulk goal drafts", () => {
     expect(
       summarizeBulkGoalDraftSchedule({ ...draft, start_date: "" })
     ).toBe("Weekly · Start date required");
+  });
+
+  it("retains non-empty invalid imported dates and reports validation errors", () => {
+    const draft = buildBulkGoalDraftFromRow(
+      {
+        title: "Imported goal",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        start_date: "not-a-date",
+        end_date: "2026-02-30",
+      },
+      0
+    );
+
+    expect(draft.start_date).toBe("not-a-date");
+    expect(draft.end_date).toBe("2026-02-30");
+    expect(draft.errors).toEqual(
+      expect.arrayContaining([
+        "Start date must be a valid date.",
+        "End date must be a valid date.",
+      ])
+    );
   });
 
   it("rejects lifetime drafts with empty targets and over-max period targets", () => {

@@ -89,7 +89,12 @@ export function BulkGoalInputCard({
               </Button>
             </div>
             {showBackButton ? (
-              onExit ? (
+              disabled ? (
+                <Button type="button" variant="outline" disabled>
+                  <ArrowLeft className="size-4" />
+                  Back
+                </Button>
+              ) : onExit ? (
                 <Button type="button" variant="outline" onClick={onExit}>
                   <ArrowLeft className="size-4" />
                   Back

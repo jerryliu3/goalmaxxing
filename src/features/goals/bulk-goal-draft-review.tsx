@@ -279,6 +279,9 @@ export function BulkGoalDraftReview(props: BulkGoalDraftReviewProps) {
                           size="icon-sm"
                           onClick={(event) => {
                             event.stopPropagation();
+                            if (editingDisabled) {
+                              return;
+                            }
                             setDrafts((previous) =>
                               previous.filter(
                                 (entry) => entry.id !== draft.id

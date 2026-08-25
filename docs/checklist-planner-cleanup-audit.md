@@ -496,9 +496,9 @@ domain-level interface and a focused test.
 
 #### P1.7 `goal-form.tsx` is both page, state machine, validator, and RPC client
 
-The form handles loading, edit-state hydration, category/link/photo selection,
+The form handles loading, edit-state hydration, category/link selection,
 validation, capacity warnings, archive/delete, planner-task creation, goal creation,
-goal update, photo upload, and navigation.
+goal update, and navigation.
 
 **Recommendation**
 

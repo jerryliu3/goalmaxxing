@@ -24,6 +24,7 @@ import {
   type BulkGoalLinkRecovery,
   BulkGoalPersistenceError,
   persistBulkGoalDrafts,
+  retryBulkGoalCreation,
   retryBulkGoalLinks,
 } from "@/features/goals/bulk-goal-persistence";
 import type { PreparedBulkGoalRow } from "@/features/goals/bulk-goal-drafts";
@@ -299,44 +300,7 @@ export function BulkGoalForm({
     setUploadedFile(event.target.files?.[0] ?? null);
   };
 
-  const finishCreatedGoals = async (
-    createdCount: number,
-    preparedRows: Awaited<ReturnType<typeof persistBulkGoalDrafts>>["preparedRows"]
-  ) => {
-    let failedPhotoUploads = 0;
-    for (const { draft, goalId } of preparedRows) {
-      if (!draft.photo_file) {
-        continue;
-      }
-
-      const fileName = `${Date.now()}-${draft.photo_file.name.replace(/\s+/g, "-")}`;
-      const objectPath = `${currentUserId}/${goalId}/${fileName}`;
-      const uploadResponse = await supabase.storage.from("goal-photos").upload(objectPath, draft.photo_file, {
-        cacheControl: "3600",
-        upsert: true,
-      });
-
-      if (uploadResponse.error) {
-        failedPhotoUploads += 1;
-        continue;
-      }
-
-      const { error: updateError } = await supabase.rpc("set_goal_photo_path", {
-        p_goal_id: goalId,
-        p_photo_path: objectPath,
-      });
-
-      if (updateError) {
-        failedPhotoUploads += 1;
-      }
-    }
-
-    if (failedPhotoUploads > 0) {
-      toast.error(
-        `${failedPhotoUploads} photo upload${failedPhotoUploads === 1 ? "" : "s"} could not be saved.`
-      );
-    }
-
+  const finishCreatedGoals = (createdCount: number) => {
     toast.success(
       `Created ${createdCount} goal${createdCount === 1 ? "" : "s"}.`
     );
@@ -365,23 +329,27 @@ export function BulkGoalForm({
         await retryBulkGoalLinks({
           linkRows: linkRecovery.linkRows,
           supabase,
+          onLinksPersisted: invalidatePlannerRelatedTabCaches,
         });
         setLinkRecovery(null);
-        invalidatePlannerRelatedTabCaches();
-        await finishCreatedGoals(
-          linkRecovery.preparedRows.length,
-          linkRecovery.preparedRows
-        );
+        await finishCreatedGoals(linkRecovery.preparedRows.length);
         return;
       }
 
-      const recoveryDrafts = createRecovery?.preparedRows.map(({ draft }) => draft);
-      const result = await persistBulkGoalDrafts({
-        drafts: recoveryDrafts ?? selectedDrafts,
-        currentUserId,
-        supabase,
-        onGoalsPersisted: invalidatePlannerRelatedTabCaches,
-      });
+      const result = createRecovery
+        ? await retryBulkGoalCreation({
+            preparedRows: createRecovery.preparedRows,
+            supabase,
+            onGoalsPersisted: invalidatePlannerRelatedTabCaches,
+            onLinksPersisted: invalidatePlannerRelatedTabCaches,
+          })
+        : await persistBulkGoalDrafts({
+            drafts: selectedDrafts,
+            currentUserId,
+            supabase,
+            onGoalsPersisted: invalidatePlannerRelatedTabCaches,
+            onLinksPersisted: invalidatePlannerRelatedTabCaches,
+          });
 
       if (result.status === "partial_success") {
         setCreateRecovery(null);
@@ -391,11 +359,17 @@ export function BulkGoalForm({
       }
 
       setCreateRecovery(null);
-      await finishCreatedGoals(result.createdCount, result.preparedRows);
+      await finishCreatedGoals(result.createdCount);
     } catch (error) {
       if (error instanceof BulkGoalPersistenceError) {
         if (error.code === "create_ambiguous" && error.preparedRows) {
           setCreateRecovery({ preparedRows: error.preparedRows });
+        } else if (error.code === "links_failed" && error.linkRecovery) {
+          setCreateRecovery(null);
+          setLinkRecovery(error.linkRecovery);
+        } else if (error.code === "create_failed") {
+          setCreateRecovery(null);
+          setLinkRecovery(null);
         }
         toast.error(error.message);
       } else {
@@ -437,7 +411,7 @@ export function BulkGoalForm({
         onFileChange={onFileChange}
         onParseUploadedFile={parseUploadedFile}
         uploadedFileName={uploadedFile?.name ?? null}
-        disabled={Boolean(linkRecovery || createRecovery)}
+        disabled={Boolean(saving || linkRecovery || createRecovery)}
       />
 
       {createRecovery ? (
@@ -481,7 +455,7 @@ export function BulkGoalForm({
         saving={saving}
         onCreate={createSelectedGoals}
         availableGoals={availableGoals}
-        editingDisabled={Boolean(linkRecovery || createRecovery)}
+        editingDisabled={Boolean(saving || linkRecovery || createRecovery)}
         createLabel={createRecovery ? "Retry creating goals" : undefined}
         createDisabledMessage={
           linkRecovery

@@ -1,9 +1,13 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { usePlannerCoach } from "@/features/planner/coach/use-planner-coach";
+import { CoachGoalDraftServiceError } from "@/features/planner/coach/coach-goal-draft-service";
 import type { UsePlannerCoachArgs } from "@/features/planner/coach/coach-types";
 import { isCoachPolicyProposal } from "@/features/planner/coach/coach-message-state";
-import { buildBulkGoalDraftsFromLlmGoals } from "@/features/goals/bulk-goal-drafts";
+import {
+  buildBulkGoalDraftsFromLlmGoals,
+  prepareBulkGoalRows,
+} from "@/features/goals/bulk-goal-drafts";
 import type {
   CoachMessage,
   PlannerContextPayload,
@@ -64,6 +68,23 @@ vi.mock("@/features/planner/coach-policy", () => ({
 }));
 
 vi.mock("@/features/planner/coach/coach-goal-draft-service", () => ({
+  CoachGoalDraftServiceError: class extends Error {
+    code: string;
+    preparedRows?: unknown;
+    linkRecovery?: unknown;
+
+    constructor(
+      code: string,
+      message: string,
+      preparedRows?: unknown,
+      linkRecovery?: unknown
+    ) {
+      super(message);
+      this.code = code;
+      this.preparedRows = preparedRows;
+      this.linkRecovery = linkRecovery;
+    }
+  },
   parseCoachGoalDrafts: (...args: unknown[]) =>
     parseCoachGoalDraftsMock(...args),
   createCoachGoalDrafts: (...args: unknown[]) =>
@@ -628,6 +649,13 @@ describe("usePlannerCoach", () => {
       expect(result.current.state.coachGoalRefreshStatus).toBe("refreshing");
       expect(createCoachGoalDraftsMock).toHaveBeenCalledTimes(1);
     });
+    const draftsBeforePersistence = result.current.state.coachGoalDraftStates[0]?.drafts;
+    act(() => {
+      result.current.actions.setCoachGoalDrafts(0, []);
+    });
+    expect(result.current.state.coachGoalDraftStates[0]?.drafts).toEqual(
+      draftsBeforePersistence
+    );
     act(() => {
       result.current.actions.startNewCoachConversation();
     });
@@ -743,6 +771,7 @@ describe("usePlannerCoach", () => {
       ...drafts[0]!,
       linked_target_goal_id: "goal-main-1",
     };
+    const [preparedRow] = prepareBulkGoalRows(drafts);
     parseCoachGoalDraftsMock.mockResolvedValue({ drafts, warnings: [] });
     createCoachGoalDraftsMock.mockImplementation(
       async ({
@@ -751,22 +780,33 @@ describe("usePlannerCoach", () => {
         onGoalsPersisted?: () => void;
       }) => {
         onGoalsPersisted?.();
-        return {
-          status: "partial_success",
-          createdCount: 1,
-          linkErrorMessage: "Some linked goals were not saved: link save failed",
-          linkRows: [
-            {
-              source_goal_id: "goal-created-1",
-              target_goal_id: "goal-main-1",
-            },
-          ],
-        };
+        throw new CoachGoalDraftServiceError(
+          "links_ambiguous",
+          "Some linked goals were not saved: link save failed",
+          undefined,
+          {
+            preparedRows: [preparedRow!],
+            linkRows: [
+              {
+                source_goal_id: "goal-created-1",
+                target_goal_id: "goal-main-1",
+              },
+            ],
+          }
+        );
       }
     );
     retryCoachGoalDraftLinksMock
-      .mockRejectedValueOnce(new Error("second link save failed"))
-      .mockResolvedValueOnce({ status: "created" });
+      .mockRejectedValueOnce(
+        new CoachGoalDraftServiceError(
+          "links_ambiguous",
+          "second link save failed"
+        )
+      )
+      .mockImplementationOnce(async ({ onLinksPersisted }) => {
+        onLinksPersisted?.();
+        return { status: "created" };
+      });
     const onGoalsCreated = vi.fn().mockResolvedValue(undefined);
     const context = buildContext();
     const { result } = renderHook(() =>
@@ -799,8 +839,18 @@ describe("usePlannerCoach", () => {
     expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(1);
     expect(result.current.state.coachGoalDraftStates[1]).toMatchObject({
       status: "error",
-      errorCode: "links_failed",
+      errorCode: "links_ambiguous",
       drafts,
+      pendingLinkRecovery: {
+        createdCount: 1,
+        preparedRows: [preparedRow!],
+        linkRows: [
+          {
+            source_goal_id: "goal-created-1",
+            target_goal_id: "goal-main-1",
+          },
+        ],
+      },
     });
     expect(result.current.state.coachMessages[1]?.proposal).toMatchObject({
       kind: "goal_draft",
@@ -823,10 +873,11 @@ describe("usePlannerCoach", () => {
     );
     expect(result.current.state.coachGoalDraftStates[1]).toMatchObject({
       status: "error",
-      errorCode: "links_failed",
+      errorCode: "links_ambiguous",
       errorMessage: "second link save failed",
       pendingLinkRecovery: {
         createdCount: 1,
+        preparedRows: [preparedRow!],
         linkRows: [
           {
             source_goal_id: "goal-created-1",
@@ -858,6 +909,7 @@ describe("usePlannerCoach", () => {
       })
     );
     expect(onGoalsCreated).toHaveBeenCalledTimes(1);
+    expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(2);
     expect(result.current.state.coachGoalDraftStates[1]?.status).toBe("created");
     expect(result.current.state.coachMessages[1]?.proposal).toMatchObject({
       kind: "goal_draft",

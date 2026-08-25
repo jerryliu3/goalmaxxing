@@ -172,6 +172,40 @@ describe("updateGoalCreationFields", () => {
     expect(next.target_count).toBe("1");
   });
 
+  it("normalizes period targets across daily, weekly, and monthly cadence changes", () => {
+    const daily = updateGoalCreationFields(
+      baseFields({
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "period",
+        target_count: "1",
+      }),
+      { type: "recurrence_interval", value: "daily" }
+    );
+    const weekly = updateGoalCreationFields(
+      baseFields({
+        frequency_type: "recurring",
+        recurrence_interval: "monthly",
+        target_basis: "period",
+        target_count: "31",
+      }),
+      { type: "recurrence_interval", value: "weekly" }
+    );
+    const monthly = updateGoalCreationFields(
+      baseFields({
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "period",
+        target_count: "7",
+      }),
+      { type: "recurrence_interval", value: "monthly" }
+    );
+
+    expect(daily.target_count).toBe("1");
+    expect(weekly.target_count).toBe("1");
+    expect(monthly.target_count).toBe("7");
+  });
+
   it("preserves a valid count when switching target basis", () => {
     const next = updateGoalCreationFields(
       baseFields({

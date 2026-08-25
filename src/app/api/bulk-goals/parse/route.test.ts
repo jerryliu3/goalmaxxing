@@ -1119,6 +1119,30 @@ describe("bulk goal parser route", () => {
     );
   });
 
+  it("preserves non-empty invalid generated dates and reports warnings", async () => {
+    const payload = await parseMockGoals([
+      {
+        title: "Bad dates",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_count: 2,
+        start_date: "not-a-date",
+        end_date: "2026-02-30",
+      },
+    ]);
+
+    expect(payload.goals[0]).toMatchObject({
+      start_date: "not-a-date",
+      end_date: "2026-02-30",
+    });
+    expect(payload.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("Start date must be a valid date."),
+        expect.stringContaining("End date must be a valid date."),
+      ])
+    );
+  });
+
   it("applies fixed-milestone defaults when target_count is omitted", async () => {
     const payload = await parseMockGoals([
       {

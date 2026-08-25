@@ -12,6 +12,7 @@ import type {
   GoalTargetBasis,
   RecurrenceInterval,
 } from "@/lib/goals/types";
+import { compareDateStrings } from "@/lib/goals/periods";
 
 export interface GoalCreationFields {
   title: string;
@@ -102,10 +103,12 @@ function applyRecurrenceIntervalChange(
   fields: GoalCreationFields,
   nextInterval: RecurrenceInterval
 ): GoalCreationFields {
+  const parsedTarget = parsePositiveTargetCount(fields.target_count);
+  const nextPeriodMax = getGoalPeriodTargetMax(nextInterval);
   const shouldDefaultPeriodTarget =
     fields.frequency_type === "recurring" &&
     fields.target_basis === "period" &&
-    (nextInterval === "daily" || fields.target_count.trim().length === 0);
+    (parsedTarget === null || parsedTarget > nextPeriodMax);
 
   return {
     ...fields,
@@ -293,6 +296,20 @@ export function validateGoalCreationFields(fields: GoalCreationFields): string[]
 
   if (!fields.start_date) {
     errors.push("Start date is required.");
+  } else {
+    try {
+      compareDateStrings(fields.start_date, fields.start_date);
+    } catch {
+      errors.push("Start date must be a valid date.");
+    }
+  }
+
+  if (fields.end_date.trim().length > 0) {
+    try {
+      compareDateStrings(fields.end_date, fields.end_date);
+    } catch {
+      errors.push("End date must be a valid date.");
+    }
   }
 
   const definitionTargetCount =

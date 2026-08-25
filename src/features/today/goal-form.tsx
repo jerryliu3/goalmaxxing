@@ -259,13 +259,10 @@ export function GoalForm({
   const router = useAppRouter();
   const [state, setState] = useState<GoalFormState>(defaultState);
   const [selectedLinkTarget, setSelectedLinkTarget] = useState<string>("none");
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string>("");
   const [availableGoals, setAvailableGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string>("");
   const [recovery, setRecovery] = useState<GoalFormRecovery | null>(null);
   const [linkTargetsReady, setLinkTargetsReady] = useState(false);
   const [linkTargetsError, setLinkTargetsError] = useState<string | null>(null);
@@ -303,8 +300,6 @@ export function GoalForm({
         router.replace(buildLoginHref(nextPath));
         return;
       }
-
-      setCurrentUserId(user.id);
 
       const [goalOptionsResponse, goalResponse, linksResponse, progress, profileResponse] =
         await Promise.all([
@@ -443,14 +438,6 @@ export function GoalForm({
           }
         }
 
-        if (goal.photo_path) {
-          const { data: signedUrlData } = await supabase.storage
-            .from("goal-photos")
-            .createSignedUrl(goal.photo_path, 60 * 60);
-          if (signedUrlData?.signedUrl) {
-            setPhotoPreview(signedUrlData.signedUrl);
-          }
-        }
       }
 
       setLoading(false);
@@ -505,6 +492,9 @@ export function GoalForm({
     [availableGoals, selectedLinkTarget]
   );
   const updateCreateKind = (nextKind: GoalCreateKind) => {
+    if (saving || recovery !== null) {
+      return;
+    }
     setCreateKind(nextKind);
     if (nextKind !== "planner_task") {
       setState((previous) =>
@@ -694,7 +684,7 @@ export function GoalForm({
       }
 
       if (error) {
-        setRecovery({ kind: "update", goalArgs });
+        setRecovery(null);
         toast.error(
           rpcErrorMessage(error, "Could not confirm goal update. Try again.")
         );
@@ -715,9 +705,9 @@ export function GoalForm({
       }
 
       if (error) {
-        setRecovery({ kind: "create", goalArgs });
+        setRecovery(null);
         toast.error(
-          rpcErrorMessage(error, "Could not confirm goal creation. Try again.")
+          rpcErrorMessage(error, "Could not save goal. Try again.")
         );
         setSaving(false);
         return;
@@ -725,29 +715,6 @@ export function GoalForm({
     }
 
     invalidatePlannerRelatedTabCaches();
-
-    if (photoFile) {
-      const fileName = `${Date.now()}-${photoFile.name.replace(/\s+/g, "-")}`;
-      const objectPath = `${currentUserId}/${savedGoalId}/${fileName}`;
-      const uploadResponse = await supabase.storage
-        .from("goal-photos")
-        .upload(objectPath, photoFile, {
-          cacheControl: "3600",
-          upsert: true,
-        });
-
-      if (uploadResponse.error) {
-        toast.error(uploadResponse.error.message);
-      } else {
-        const { error: photoError } = await supabase.rpc("set_goal_photo_path", {
-          p_goal_id: savedGoalId,
-          p_photo_path: objectPath,
-        });
-        if (photoError) {
-          toast.error(photoError.message);
-        }
-      }
-    }
 
     const targetGoalId =
       selectedLinkTarget !== "none" ? selectedLinkTarget : undefined;
@@ -766,7 +733,7 @@ export function GoalForm({
       return;
     }
     if (linkError) {
-      setRecovery({ kind: "link", savedGoalId, targetGoalId });
+      setRecovery(null);
       toast.error(
         rpcErrorMessage(
           linkError,
@@ -777,6 +744,7 @@ export function GoalForm({
       return;
     }
 
+    invalidatePlannerRelatedTabCaches();
     setRecovery(null);
     toast.success(isEditing ? "Goal updated." : "Goal created.");
     requestXpRefresh();
@@ -805,6 +773,7 @@ export function GoalForm({
     }
 
     if (linkError) {
+      setRecovery(null);
       toast.error(
         rpcErrorMessage(
           linkError,
@@ -891,7 +860,12 @@ export function GoalForm({
           </div>
           <div className="flex items-center gap-2">
             {showBackButton ? (
-              onExit ? (
+              saving || recovery !== null ? (
+                <Button type="button" variant="outline" disabled>
+                  <ArrowLeft className="size-4" />
+                  Back
+                </Button>
+              ) : onExit ? (
                 <Button type="button" variant="outline" onClick={onExit}>
                   <ArrowLeft className="size-4" />
                   Back
@@ -972,7 +946,7 @@ export function GoalForm({
               variant="outline"
               className="mt-2"
               onClick={() => setLinkLoadAttempt((attempt) => attempt + 1)}
-              disabled={loading}
+              disabled={loading || saving || recovery !== null}
             >
               Retry loading link targets
             </Button>
@@ -986,12 +960,20 @@ export function GoalForm({
           ) : null}
           <GoalCreationFieldControls
             fields={toGoalCreationFields(state)}
-            onFieldChange={(change) =>
-              setState((previous) => applyGoalCreationChange(previous, change))
-            }
-            onPatch={(patch) => setState((previous) => ({ ...previous, ...patch }))}
+            onFieldChange={(change) => {
+              if (saving || recovery !== null) {
+                return;
+              }
+              setState((previous) => applyGoalCreationChange(previous, change));
+            }}
+            onPatch={(patch) => {
+              if (saving || recovery !== null) {
+                return;
+              }
+              setState((previous) => ({ ...previous, ...patch }));
+            }}
             definitionFieldsLocked={definitionFieldsLocked}
-            disabled={recovery !== null}
+            disabled={saving || recovery !== null}
             includePlannerTask={!isEditing}
             createKind={createKind}
             onCreateKindChange={updateCreateKind}
@@ -1003,7 +985,12 @@ export function GoalForm({
             teamId={state.team_id}
             linkTarget={{
               value: selectedLinkTarget,
-              onValueChange: setSelectedLinkTarget,
+              onValueChange: (value) => {
+                if (saving || recovery !== null) {
+                  return;
+                }
+                setSelectedLinkTarget(value);
+              },
               open: linkTargetOpen,
               onOpenChange: (open) => {
                 setLinkTargetOpen(open);
@@ -1015,7 +1002,7 @@ export function GoalForm({
               onSearchQueryChange: setLinkTargetSearch,
               filteredLinkTargets,
               selectedTargetGoal: selectedLinkTargetGoal,
-              disabled: !linkTargetsReady,
+              disabled: !linkTargetsReady || saving || recovery !== null,
             }}
             extraGridSlot={
               isPlannerTask ? (
@@ -1025,12 +1012,16 @@ export function GoalForm({
                     id="task-scheduled-date"
                     type="date"
                     value={state.task_scheduled_date}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      if (saving || recovery !== null) {
+                        return;
+                      }
                       setState((previous) => ({
                         ...previous,
                         task_scheduled_date: event.target.value,
-                      }))
-                    }
+                      }));
+                    }}
+                    disabled={saving || recovery !== null}
                     className="h-8 min-h-8 w-full min-w-0 py-0 text-sm leading-none [&::-webkit-calendar-picker-indicator]:size-3.5 [&::-webkit-datetime-edit]:p-0"
                   />
                 </div>
@@ -1042,7 +1033,7 @@ export function GoalForm({
                   <Button
                     type="button"
                     variant="outline"
-                    disabled={saving}
+                    disabled={saving || recovery !== null}
                     onClick={() => toggleArchive(true)}
                   >
                     <Undo2 className="size-4" />
@@ -1053,7 +1044,7 @@ export function GoalForm({
                   <Button
                     type="button"
                     variant="outline"
-                    disabled={saving}
+                    disabled={saving || recovery !== null}
                     onClick={() => toggleArchive(false)}
                   >
                     <Archive className="size-4" />
@@ -1064,7 +1055,7 @@ export function GoalForm({
                   <Button
                     type="button"
                     variant="destructive"
-                    disabled={saving}
+                    disabled={saving || recovery !== null}
                     onClick={softDeleteGoal}
                   >
                     <Trash2 className="size-4" />
