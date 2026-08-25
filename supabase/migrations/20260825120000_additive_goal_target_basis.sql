@@ -175,6 +175,48 @@ drop function if exists private.planner_schedule_item_matches_requirement(
   smallint
 );
 
+-- Patch prepare_planner_schedule_core: inject goal.target_basis into all 4
+-- inlined planner_schedule_item_matches_requirement call sites.
+do $migration$
+declare
+  v_definition text;
+  v_old_pattern text := 'private.planner_schedule_item_matches_requirement(';
+  v_call_count integer;
+begin
+  select pg_catalog.pg_get_functiondef(
+    'public.prepare_planner_schedule_core(jsonb,jsonb,text)'::regprocedure
+  )
+  into v_definition;
+
+  v_call_count := (
+    pg_catalog.length(v_definition)
+    - pg_catalog.length(pg_catalog.replace(v_definition, v_old_pattern, ''))
+  ) / pg_catalog.length(v_old_pattern);
+
+  if v_call_count <> 4 then
+    raise exception using
+      errcode = '55000',
+      message = 'unexpected_prepare_requirement_call_count: expected 4, got ' || v_call_count;
+  end if;
+
+  v_definition := pg_catalog.replace(
+    v_definition,
+    'goal.target_count,',
+    'goal.target_count, goal.target_basis,'
+  );
+
+  execute v_definition;
+end;
+$migration$;
+
+revoke all
+on function public.prepare_planner_schedule_core(jsonb, jsonb, text)
+from public, anon;
+
+grant execute
+on function public.prepare_planner_schedule_core(jsonb, jsonb, text)
+to service_role;
+
 create or replace function private.goal_xp_credited_units(
   p_user_id uuid,
   p_goal_id uuid,
@@ -409,6 +451,8 @@ revoke all on function private.goal_xp_credited_units(uuid, uuid, date)
 from public, anon, authenticated;
 grant execute on function private.goal_xp_credited_units(uuid, uuid, date)
 to service_role;
+
+drop function if exists private.goal_xp_credited_units(uuid, uuid);
 
 drop function if exists public.create_goal(
   uuid,
