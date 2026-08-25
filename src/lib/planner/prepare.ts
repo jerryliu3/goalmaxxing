@@ -1,5 +1,6 @@
 import { compareDateStrings, getAnchoredPeriod } from "@/lib/goals/periods";
 import type { Completion, Goal } from "@/lib/goals/types";
+import { matchesCadenceUnitKey } from "@/lib/goals/target-basis";
 import { reportError } from "@/lib/observability/report-error";
 import { createDefaultAssessment } from "@/lib/planner/assessment";
 import { canonicalHash } from "@/lib/planner/canonical";
@@ -136,7 +137,11 @@ function itemMatchesCurrentRequirement({
     item.scheduled_date,
     { weekStartsOn }
   );
-  return item.unit_key === `cadence:${period.periodKey}`;
+  return matchesCadenceUnitKey(
+    item.unit_key,
+    period.periodKey,
+    requirement.targetCount
+  );
 }
 
 function computeRequiredUnitKeys({
@@ -178,7 +183,9 @@ function computeRequiredUnitKeys({
       date,
       { weekStartsOn }
     );
-    requiredUnitKeys.add(`cadence:${period.periodKey}`);
+    for (let slot = 1; slot <= requirement.targetCount; slot += 1) {
+      requiredUnitKeys.add(`cadence:${period.periodKey}:${slot}`);
+    }
   }
   return requiredUnitKeys;
 }
