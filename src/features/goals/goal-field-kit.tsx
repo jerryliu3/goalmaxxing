@@ -72,6 +72,7 @@ interface GoalTypeToggleProps {
   onValueChange: (value: GoalCreateKind) => void;
   includePlannerTask?: boolean;
   triggerClassName?: string;
+  disabled?: boolean;
 }
 
 export function GoalTypeToggle({
@@ -79,6 +80,7 @@ export function GoalTypeToggle({
   onValueChange,
   includePlannerTask = false,
   triggerClassName,
+  disabled = false,
 }: GoalTypeToggleProps) {
   const options = includePlannerTask
     ? [...GOAL_TYPE_OPTIONS, PLANNER_TASK_TYPE_OPTION]
@@ -88,6 +90,7 @@ export function GoalTypeToggle({
     <Select
       value={value}
       onValueChange={(nextValue) => onValueChange(nextValue as GoalCreateKind)}
+      disabled={disabled}
     >
       <SelectTrigger className={cn("h-9 w-full", triggerClassName)}>
         <SelectValue placeholder="Select goal type" />
@@ -107,15 +110,21 @@ interface RecurrenceIntervalToggleProps {
   value: RecurrenceInterval;
   onValueChange: (value: RecurrenceInterval) => void;
   triggerClassName?: string;
+  disabled?: boolean;
 }
 
 export function RecurrenceIntervalToggle({
   value,
   onValueChange,
   triggerClassName,
+  disabled = false,
 }: RecurrenceIntervalToggleProps) {
   return (
-    <Select value={value} onValueChange={(nextValue) => onValueChange(nextValue as RecurrenceInterval)}>
+    <Select
+      value={value}
+      onValueChange={(nextValue) => onValueChange(nextValue as RecurrenceInterval)}
+      disabled={disabled}
+    >
       <SelectTrigger className={cn("h-9 w-full", triggerClassName)}>
         <SelectValue placeholder="Select frequency" />
       </SelectTrigger>
@@ -138,6 +147,7 @@ interface TargetCountFieldProps {
   showRecurringHelperText?: boolean;
   recurringHelperText?: string;
   minValue?: number;
+  maxValue?: number;
   required?: boolean;
   disabled?: boolean;
 }
@@ -150,6 +160,7 @@ export function TargetCountField({
   showRecurringHelperText = true,
   recurringHelperText = "Optional total by end date. Edit the target above; each completion counts independently.",
   minValue,
+  maxValue,
   required,
   disabled = false,
 }: TargetCountFieldProps) {
@@ -159,7 +170,7 @@ export function TargetCountField({
         id={id}
         type="number"
         min={minValue ?? (frequencyType === "fixed_milestones" ? 1 : 0)}
-        max={MAX_GOAL_TARGET_COUNT}
+        max={maxValue ?? MAX_GOAL_TARGET_COUNT}
         value={value}
         onChange={(event) => onValueChange(event.target.value)}
         required={required ?? (frequencyType === "fixed_milestones")}
