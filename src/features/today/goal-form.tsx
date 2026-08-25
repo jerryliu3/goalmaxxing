@@ -3,18 +3,13 @@
 import {
   ArrowLeft,
   Archive,
-  ChevronDown,
-  ChevronUp,
   CircleAlert,
-  Link2,
   LoaderCircle,
   Save,
   Trash2,
   Undo2,
 } from "lucide-react";
-import { endOfMonth, endOfYear, format, startOfMonth, startOfYear } from "date-fns";
 import Link from "next/link";
-import Image from "next/image";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
 import {
   type FormEvent,
@@ -25,41 +20,18 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingCard } from "@/components/ui/loading-card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { TooltipIcon } from "@/components/ui/tooltip-icon";
 import { Tooltip } from "@/components/ui/tooltip";
-import {
-  CategorySelect,
-  GoalTypeToggle,
-  RecurrenceIntervalToggle,
-  TargetCountField,
-} from "@/features/goals/goal-field-kit";
-import { GoalLinkTargetSelect } from "@/features/goals/goal-link-target-select";
-import { MilestoneNameFields } from "@/features/goals/milestone-name-fields";
+import { GoalCreationFieldControls } from "@/features/goals/goal-creation-fields";
 import { buildLoginHref } from "@/lib/auth/login-redirect";
 import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
-import {
-  GoalDateRangeFields,
-  GoalDefaultTimeField,
-} from "@/features/goals/goal-schedule-fields";
 import { toLocalDateString } from "@/lib/dates/day";
 import {
   DEFAULT_GOAL_CATEGORIES,
-  type CategorySelection,
   getCategorySelectionFromValue,
   getCategorySwatchColor,
   getCategoryValueForWrite,
@@ -71,7 +43,6 @@ import {
 import {
   getLinkedGoalDeadlineLabel,
   getLinkedGoalRecurrenceLabel,
-  getLinkedTargetSchedulingNotice,
 } from "@/lib/goals/linked-goal-labels";
 import {
   createDefaultGoalCreationFields,
@@ -83,26 +54,14 @@ import {
   buildMilestoneNameDrafts,
   normalizeMilestoneNamesForSave,
 } from "@/lib/goals/milestones";
-import {
-  GOAL_CREATE_KIND_HELP,
-  isPlannerTaskCreateKind,
-  type GoalCreateKind,
-} from "@/lib/goals/form-options";
-import type {
-  Goal,
-  GoalDifficulty,
-  GoalFrequencyType,
-  GoalLink,
-  GoalTargetBasis,
-  RecurrenceInterval,
-} from "@/lib/goals/types";
+import { isPlannerTaskCreateKind, type GoalCreateKind } from "@/lib/goals/form-options";
+import type { Goal, GoalLink } from "@/lib/goals/types";
 import { resolveGoalTargetBasis } from "@/lib/goals/target-basis";
 import {
   type GoalCapacityInput,
   validateGoalDefinition,
 } from "@/lib/goals/definition-validation";
 import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
 import { requestXpRefresh } from "@/lib/xp/events";
 
 interface GoalFormProps {
@@ -181,30 +140,6 @@ function applyGoalCreationChange(
 }
 
 const localTimePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
-const lifetimeTargetLabel = "Total target completions";
-const lifetimeTargetOptionalLabel = `${lifetimeTargetLabel} (optional)`;
-const lifetimeTargetTooltip =
-  "The target for the entire lifetime of this goal. Each completion counts independently.";
-
-function perPeriodTargetLabel(interval: RecurrenceInterval): string {
-  if (interval === "weekly") {
-    return "Target per week";
-  }
-  if (interval === "monthly") {
-    return "Target per month";
-  }
-  return "Target per period";
-}
-
-function recurringTargetLabel(
-  interval: RecurrenceInterval,
-  targetBasis: GoalTargetBasis
-): string {
-  if (targetBasis === "lifetime") {
-    return lifetimeTargetOptionalLabel;
-  }
-  return perPeriodTargetLabel(interval);
-}
 
 function parsePositiveTargetCount(value: string): number | null {
   const parsed = Number.parseInt(value, 10);
@@ -233,8 +168,6 @@ export function GoalForm({
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [goalCapacityInput, setGoalCapacityInput] =
     useState<GoalCapacityInput | null>(null);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [milestoneNamesOpen, setMilestoneNamesOpen] = useState(false);
   const [linkTargetSearch, setLinkTargetSearch] = useState("");
   const [linkTargetOpen, setLinkTargetOpen] = useState(false);
   const [createKind, setCreateKind] = useState<GoalCreateKind>("recurring");
@@ -412,23 +345,10 @@ export function GoalForm({
   }, [goalId, router, supabase]);
 
   const isPlannerTask = !isEditing && isPlannerTaskCreateKind(createKind);
-  const canShowRecurrenceFields = !isPlannerTask && state.frequency_type === "recurring";
   const isLifetimeRecurringTarget =
     state.frequency_type === "recurring" && state.target_basis === "lifetime";
   const isPeriodRecurringTarget =
     state.frequency_type === "recurring" && state.target_basis === "period";
-  const canShowRecurringTargetInMain =
-    !isPlannerTask &&
-    state.frequency_type === "recurring" &&
-    state.recurrence_interval !== "daily" &&
-    (state.target_basis === "period" || state.target_basis === "lifetime");
-  const canShowDailyLifetimeTarget =
-    !isPlannerTask &&
-    state.frequency_type === "recurring" &&
-    state.recurrence_interval === "daily" &&
-    state.target_basis === "lifetime";
-  const canShowMilestoneTarget =
-    !isPlannerTask && state.frequency_type === "fixed_milestones";
   const definitionFieldsLocked = isEditing;
   const parsedTargetCount = parsePositiveTargetCount(state.target_count);
   const definitionTargetCount =
@@ -437,10 +357,6 @@ export function GoalForm({
       : isPeriodRecurringTarget
         ? parsedTargetCount ?? 1
         : null;
-  const fixedMilestoneCount =
-    state.frequency_type === "fixed_milestones"
-      ? parsedTargetCount ?? 0
-      : 0;
   const filteredLinkTargets = useMemo(() => {
     const query = linkTargetSearch.trim().toLowerCase();
     if (query.length === 0) {
@@ -464,54 +380,13 @@ export function GoalForm({
         : availableGoals.find((goal) => goal.id === selectedLinkTarget) ?? null,
     [availableGoals, selectedLinkTarget]
   );
-  const hasLinkedTarget = selectedLinkTarget !== "none";
-
   const updateCreateKind = (nextKind: GoalCreateKind) => {
     setCreateKind(nextKind);
     if (nextKind !== "planner_task") {
-      updateFrequencyType(nextKind);
+      setState((previous) =>
+        applyGoalCreationChange(previous, { type: "frequency_type", value: nextKind })
+      );
     }
-  };
-
-  const updateFrequencyType = (nextFrequency: GoalFrequencyType) => {
-    setMilestoneNamesOpen(false);
-    setState((previous) =>
-      applyGoalCreationChange(previous, { type: "frequency_type", value: nextFrequency })
-    );
-  };
-
-  const updateTargetCount = (nextTargetCount: string) => {
-    setState((previous) =>
-      applyGoalCreationChange(previous, { type: "target_count", value: nextTargetCount })
-    );
-  };
-
-  const applyThisMonthEndDate = () => {
-    setState((previous) => ({
-      ...previous,
-      end_date: format(endOfMonth(new Date()), "yyyy-MM-dd"),
-    }));
-  };
-
-  const applyThisMonthStartDate = () => {
-    setState((previous) => ({
-      ...previous,
-      start_date: format(startOfMonth(new Date()), "yyyy-MM-dd"),
-    }));
-  };
-
-  const applyThisYearStartDate = () => {
-    setState((previous) => ({
-      ...previous,
-      start_date: format(startOfYear(new Date()), "yyyy-MM-dd"),
-    }));
-  };
-
-  const applyThisYearEndDate = () => {
-    setState((previous) => ({
-      ...previous,
-      end_date: format(endOfYear(new Date()), "yyyy-MM-dd"),
-    }));
   };
 
   const { validationError, validationWarning } = useMemo(() => {
@@ -860,590 +735,96 @@ export function GoalForm({
               {validationWarning}
             </div>
           ) : null}
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="goal-title">Name</Label>
-              <Input
-                id="goal-title"
-                value={state.title}
-                onChange={(event) => setState((prev) => ({ ...prev, title: event.target.value }))}
-                placeholder={isPlannerTask ? "Write your top priority for today" : "Run 20 times by Dec 31"}
-                className="h-8 text-sm"
-                required
-              />
-            </div>
-            {isPlannerTask ? null : (
-            <div className="space-y-2 sm:justify-self-end">
-              <Label>Category</Label>
-              <CategorySelect
-                value={state.category_selection}
-                triggerClassName="h-8"
-                onValueChange={(value: CategorySelection) =>
-                  setState((prev) => ({
-                    ...prev,
-                    category_selection: value,
-                    color: getCategorySwatchColor(value),
-                  }))
+          <GoalCreationFieldControls
+            fields={toGoalCreationFields(state)}
+            onFieldChange={(change) =>
+              setState((previous) => applyGoalCreationChange(previous, change))
+            }
+            onPatch={(patch) => setState((previous) => ({ ...previous, ...patch }))}
+            definitionFieldsLocked={definitionFieldsLocked}
+            includePlannerTask={!isEditing}
+            createKind={createKind}
+            onCreateKindChange={updateCreateKind}
+            isEditing={isEditing}
+            isPlannerTask={isPlannerTask}
+            titlePlaceholder={
+              isPlannerTask ? "Write your top priority for today" : "Run 20 times by Dec 31"
+            }
+            teamId={state.team_id}
+            linkTarget={{
+              value: selectedLinkTarget,
+              onValueChange: setSelectedLinkTarget,
+              open: linkTargetOpen,
+              onOpenChange: (open) => {
+                setLinkTargetOpen(open);
+                if (!open) {
+                  setLinkTargetSearch("");
                 }
-              />
-            </div>
-            )}
-          </div>
-
-          {!isPlannerTask && state.category_selection === "custom" ? (
-            <div className="space-y-2">
-              <Label htmlFor="custom-category">Custom category label</Label>
-              <Input
-                id="custom-category"
-                value={state.custom_category}
-                onChange={(event) =>
-                  setState((prev) => ({ ...prev, custom_category: event.target.value }))
-                }
-                placeholder="Your custom category"
-                required
-              />
-            </div>
-          ) : null}
-
-          <div
-            className={cn(
-              "grid items-start gap-3",
-              canShowRecurrenceFields
-                ? "grid-cols-2 sm:grid-cols-3"
-                : "grid-cols-2"
-            )}
-          >
-            <div
-              className={cn(
-                "min-w-0 space-y-2",
-                definitionFieldsLocked && "pointer-events-none opacity-60"
-              )}
-            >
-              <Label className="inline-flex items-center gap-1">
-                <span>Goal type</span>
-              </Label>
-              <GoalTypeToggle
-                value={isEditing ? state.frequency_type : createKind}
-                includePlannerTask={!isEditing}
-                onValueChange={updateCreateKind}
-                triggerClassName="h-8"
-              />
-              <p className="text-xs text-muted-foreground">
-                {GOAL_CREATE_KIND_HELP[isEditing ? state.frequency_type : createKind]}
-              </p>
-            </div>
-
-            {canShowMilestoneTarget ? (
-              <div className="space-y-2">
-                <Label htmlFor="target-count" className="inline-flex items-center gap-1">
-                  <span>Total milestones</span>
-                </Label>
-                <TargetCountField
-                  id="target-count"
-                  frequencyType={state.frequency_type}
-                  value={state.target_count}
-                  onValueChange={updateTargetCount}
-                  disabled={definitionFieldsLocked}
-                  showRecurringHelperText={false}
-                />
-                <p className="text-xs text-muted-foreground">
-                  You can optionally name individual milestones under advanced settings.
-                </p>
-              </div>
-            ) : null}
-
-            {canShowRecurrenceFields ? (
-              <div
-                className={cn(
-                  "min-w-0 space-y-2",
-                  definitionFieldsLocked && "pointer-events-none opacity-60"
-                )}
-              >
-                <Label className="inline-flex items-center gap-1">
-                  <span>Frequency</span>
-                  <TooltipIcon
-                    content="How often you want to work on this goal. Weekly and monthly goals can set a target number of completions per period."
-                    label="Frequency help"
-                  />
-                </Label>
-                <RecurrenceIntervalToggle
-                  value={state.recurrence_interval}
-                  triggerClassName="h-8"
-                  onValueChange={(value) =>
-                    setState((prev) =>
-                      applyGoalCreationChange(prev, {
-                        type: "recurrence_interval",
-                        value,
-                      })
-                    )
-                  }
-                />
-              </div>
-            ) : null}
-
-            {canShowRecurringTargetInMain ? (
-              <div className="space-y-2">
-                <Label htmlFor="recurring-target-count" className="inline-flex items-center gap-1">
-                  <span>
-                    {recurringTargetLabel(
-                      state.recurrence_interval,
-                      state.target_basis
-                    )}
-                  </span>
-                  <TooltipIcon
-                    content={
-                      state.target_basis === "lifetime"
-                        ? lifetimeTargetTooltip
-                        : "How many distinct days you want to complete this goal in each week or month."
+              },
+              searchQuery: linkTargetSearch,
+              onSearchQueryChange: setLinkTargetSearch,
+              filteredLinkTargets,
+              selectedTargetGoal: selectedLinkTargetGoal,
+            }}
+            extraGridSlot={
+              isPlannerTask ? (
+                <div className="min-w-0 space-y-2">
+                  <Label htmlFor="task-scheduled-date">Date (optional)</Label>
+                  <Input
+                    id="task-scheduled-date"
+                    type="date"
+                    value={state.task_scheduled_date}
+                    onChange={(event) =>
+                      setState((previous) => ({
+                        ...previous,
+                        task_scheduled_date: event.target.value,
+                      }))
                     }
-                    label="Recurring target help"
+                    className="h-8 min-h-8 w-full min-w-0 py-0 text-sm leading-none [&::-webkit-calendar-picker-indicator]:size-3.5 [&::-webkit-datetime-edit]:p-0"
                   />
-                </Label>
-                <TargetCountField
-                  id="recurring-target-count"
-                  frequencyType={state.frequency_type}
-                  value={state.target_count}
-                  onValueChange={updateTargetCount}
-                  minValue={1}
-                  required={state.target_basis === "period"}
-                  disabled={definitionFieldsLocked}
-                  showRecurringHelperText={false}
-                />
-              </div>
-            ) : null}
-
-            {canShowDailyLifetimeTarget ? (
-              <div className="space-y-2">
-                <Label htmlFor="daily-lifetime-target-count" className="inline-flex items-center gap-1">
-                  <span>{lifetimeTargetOptionalLabel}</span>
-                  <TooltipIcon content={lifetimeTargetTooltip} label="Lifetime target help" />
-                </Label>
-                <TargetCountField
-                  id="daily-lifetime-target-count"
-                  frequencyType={state.frequency_type}
-                  value={state.target_count}
-                  onValueChange={updateTargetCount}
-                  minValue={1}
-                  disabled={definitionFieldsLocked}
-                  showRecurringHelperText={false}
-                />
-              </div>
-            ) : null}
-
-            {isPlannerTask ? (
-              <div className="min-w-0 space-y-2">
-                <Label htmlFor="task-scheduled-date">Date (optional)</Label>
-                <Input
-                  id="task-scheduled-date"
-                  type="date"
-                  value={state.task_scheduled_date}
-                  onChange={(event) =>
-                    setState((previous) => ({
-                      ...previous,
-                      task_scheduled_date: event.target.value,
-                    }))
-                  }
-                  className="h-8 min-h-8 w-full min-w-0 py-0 text-sm leading-none [&::-webkit-calendar-picker-indicator]:size-3.5 [&::-webkit-datetime-edit]:p-0"
-                />
-              </div>
-            ) : null}
-          </div>
-
-          {isPlannerTask ? null : (
-          <div
-            className={cn(
-              definitionFieldsLocked && "pointer-events-none opacity-60"
-            )}
-          >
-          <GoalDateRangeFields
-            startDate={state.start_date}
-            endDate={state.end_date}
-            onStartDateChange={(value) =>
-              setState((previous) => ({ ...previous, start_date: value }))
+                </div>
+              ) : null
             }
-            onEndDateChange={(value) =>
-              setState((previous) => ({ ...previous, end_date: value }))
+            middleSlot={
+              <div className="flex flex-wrap items-center gap-2">
+                {isEditing && editingGoal?.archived_at ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={saving}
+                    onClick={() => toggleArchive(true)}
+                  >
+                    <Undo2 className="size-4" />
+                    Restore goal
+                  </Button>
+                ) : null}
+                {isEditing && !editingGoal?.archived_at ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={saving}
+                    onClick={() => toggleArchive(false)}
+                  >
+                    <Archive className="size-4" />
+                    Archive goal
+                  </Button>
+                ) : null}
+                {isEditing ? (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={saving}
+                    onClick={softDeleteGoal}
+                  >
+                    <Trash2 className="size-4" />
+                    Delete goal
+                  </Button>
+                ) : null}
+              </div>
             }
-            requiresEndDate={false}
             startDateId="start-date"
             endDateId="end-date"
-            startDateActions={
-              <>
-                <button
-                  type="button"
-                  className="text-primary hover:underline"
-                  onClick={applyThisMonthStartDate}
-                >
-                  month start
-                </button>
-                <button
-                  type="button"
-                  className="text-primary hover:underline"
-                  onClick={applyThisYearStartDate}
-                >
-                  year start
-                </button>
-              </>
-            }
-            endDateActions={
-              <>
-                <button
-                  type="button"
-                  className="text-primary hover:underline"
-                  onClick={applyThisMonthEndDate}
-                >
-                  month end
-                </button>
-                <button
-                  type="button"
-                  className="text-primary hover:underline"
-                  onClick={applyThisYearEndDate}
-                >
-                  year end
-                </button>
-              </>
-            }
           />
-          </div>
-          )}
-
-          {definitionFieldsLocked ? (
-            <p className="text-xs text-muted-foreground">
-              Goal type, frequency, target, and start date are fixed after creation.
-              Archive this goal and create a new one to change them.
-            </p>
-          ) : null}
-
-          <div className="flex flex-wrap items-center gap-2">
-            {isEditing && editingGoal?.archived_at ? (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={saving}
-                onClick={() => toggleArchive(true)}
-              >
-                <Undo2 className="size-4" />
-                Restore goal
-              </Button>
-            ) : null}
-            {isEditing && !editingGoal?.archived_at ? (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={saving}
-                onClick={() => toggleArchive(false)}
-              >
-                <Archive className="size-4" />
-                Archive goal
-              </Button>
-            ) : null}
-            {isEditing ? (
-              <Button
-                type="button"
-                variant="destructive"
-                disabled={saving}
-                onClick={softDeleteGoal}
-              >
-                <Trash2 className="size-4" />
-                Delete goal
-              </Button>
-            ) : null}
-          </div>
-
-          {isPlannerTask ? null : (
-          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-            <div className="rounded-xl border bg-muted/20">
-              <CollapsibleTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm"
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <span>Advanced settings (optional)</span>
-                    {hasLinkedTarget ? <Badge variant="secondary">Linked</Badge> : null}
-                  </span>
-                  {advancedOpen ? (
-                    <ChevronUp className="size-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="size-4 text-muted-foreground" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="space-y-4 border-t px-3 py-3">
-                  <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
-                    {state.frequency_type === "recurring" && !definitionFieldsLocked ? (
-                      <label className="flex items-start gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          className="mt-1"
-                          checked={state.target_basis === "lifetime"}
-                          onChange={(event) =>
-                            setState((previous) =>
-                              applyGoalCreationChange(previous, {
-                                type: "target_basis",
-                                value: event.target.checked ? "lifetime" : "period",
-                              })
-                            )
-                          }
-                        />
-                        <span>Use a total completion target instead of per-period.</span>
-                      </label>
-                    ) : null}
-
-                    {state.team_id === null ? (
-                      <label className="flex items-start gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          className="mt-1"
-                          checked={state.is_private}
-                          onChange={(event) =>
-                            setState((prev) => ({ ...prev, is_private: event.target.checked }))
-                          }
-                        />
-                        <span>Make this goal private (except for team).</span>
-                      </label>
-                    ) : null}
-                  </div>
-
-                  {isLifetimeRecurringTarget && !definitionFieldsLocked ? (
-                    <p className="text-xs text-muted-foreground">
-                      Total by end date — edit the target above. Each completion counts
-                      independently; no per-period streak semantics.
-                    </p>
-                  ) : null}
-
-                  {fixedMilestoneCount > 0 ? (
-                    <Collapsible
-                      open={fixedMilestoneCount > 0 ? milestoneNamesOpen : false}
-                      onOpenChange={setMilestoneNamesOpen}
-                    >
-                      <div className="rounded-xl border bg-background/70">
-                        <CollapsibleTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm"
-                          >
-                            <span>Milestone names (optional)</span>
-                            {milestoneNamesOpen ? (
-                              <ChevronUp className="size-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronDown className="size-4 text-muted-foreground" />
-                            )}
-                          </Button>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <div className="space-y-3 border-t px-3 py-3">
-                            <MilestoneNameFields
-                              count={fixedMilestoneCount}
-                              values={state.milestone_names}
-                              onValueChange={(index, value) =>
-                                setState((previous) =>
-                                  applyGoalCreationChange(previous, {
-                                    type: "milestone_name",
-                                    index,
-                                    value,
-                                  })
-                                )
-                              }
-                              showLabel={false}
-                              keyPrefix="milestone-name"
-                            />
-                          </div>
-                        </CollapsibleContent>
-                      </div>
-                    </Collapsible>
-                  ) : null}
-
-                  <div className="space-y-2">
-                    <div
-                      className={cn(
-                        "grid gap-x-3 gap-y-2",
-                        state.team_id === null
-                          ? "grid-cols-1 sm:grid-cols-3"
-                          : "grid-cols-1 sm:grid-cols-2"
-                      )}
-                    >
-                      {state.team_id === null ? (
-                        <Label className="inline-flex min-h-8 items-center gap-2 self-start">
-                          <Link2 className="size-4 shrink-0 text-muted-foreground" />
-                          <span>Make this a subgoal linked to...</span>
-                        </Label>
-                      ) : null}
-
-                      <div className="flex min-h-8 items-center justify-between gap-2 self-start">
-                        <Label htmlFor="default-local-time">Default time of day</Label>
-                        {state.default_local_time.trim().length > 0 ? (
-                          <button
-                            type="button"
-                            className="text-xs text-primary hover:underline"
-                            onClick={() =>
-                              setState((previous) => ({ ...previous, default_local_time: "" }))
-                            }
-                          >
-                            clear
-                          </button>
-                        ) : null}
-                      </div>
-
-                      <Label
-                        htmlFor="goal-difficulty"
-                        className="inline-flex min-h-8 items-center gap-1 self-start"
-                      >
-                        <span>Difficulty</span>
-                        <TooltipIcon
-                          content="Set the perceived effort level for this goal."
-                          label="Goal difficulty help"
-                        />
-                      </Label>
-
-                      {state.team_id === null ? (
-                        <GoalLinkTargetSelect
-                          value={selectedLinkTarget}
-                          onValueChange={setSelectedLinkTarget}
-                          open={linkTargetOpen}
-                          onOpenChange={(open) => {
-                            setLinkTargetOpen(open);
-                            if (!open) {
-                              setLinkTargetSearch("");
-                            }
-                          }}
-                          searchQuery={linkTargetSearch}
-                          onSearchQueryChange={setLinkTargetSearch}
-                          filteredLinkTargets={filteredLinkTargets}
-                          selectedTargetGoal={selectedLinkTargetGoal}
-                          sourceEndDate={state.end_date.trim() || null}
-                          showLabel={false}
-                          showHelperText={false}
-                          showLinkedNotice={false}
-                        />
-                      ) : null}
-
-                      <GoalDefaultTimeField
-                        id="default-local-time"
-                        showLabel={false}
-                        showHelperText={false}
-                        value={state.default_local_time}
-                        onValueChange={(value) =>
-                          setState((previous) => ({
-                            ...previous,
-                            default_local_time: value,
-                          }))
-                        }
-                      />
-
-                      <Select
-                        value={state.difficulty}
-                        onValueChange={(value: GoalDifficulty) =>
-                          setState((previous) => ({ ...previous, difficulty: value }))
-                        }
-                      >
-                        <SelectTrigger id="goal-difficulty" className="h-8 w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="easy">Easy</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="hard">Hard</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {state.team_id === null ? (
-                      <>
-                        <p className="text-xs text-muted-foreground">
-                          Completing this subgoal also counts toward its linked main goal for that
-                          day.
-                        </p>
-                        {selectedLinkTarget !== "none" && selectedLinkTargetGoal ? (
-                          <div
-                            className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-400/50 dark:bg-amber-500/10 dark:text-amber-100"
-                          >
-                            <p className="font-medium">
-                              Linking this subgoal to {selectedLinkTargetGoal.title} may hide that
-                              main goal in some calendar months.
-                            </p>
-                            <p className="mt-1">
-                              {getLinkedTargetSchedulingNotice({
-                                sourceEndDate: state.end_date.trim() || null,
-                              })}
-                            </p>
-                          </div>
-                        ) : null}
-                      </>
-                    ) : null}
-                  </div>
-
-                  <div className="hidden space-y-2">
-                    <Label htmlFor="goal-color">Color accent</Label>
-                    <Input
-                      id="goal-color"
-                      type="color"
-                      value={state.color}
-                      onChange={(event) =>
-                        setState((prev) => ({ ...prev, color: event.target.value }))
-                      }
-                      className="h-10 p-1"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Auto-set from category selection. You can still override it here.
-                    </p>
-                  </div>
-
-                  <div className="hidden space-y-2">
-                    <Label htmlFor="goal-description">Description</Label>
-                    <Textarea
-                      id="goal-description"
-                      value={state.description}
-                      onChange={(event) =>
-                        setState((prev) => ({ ...prev, description: event.target.value }))
-                      }
-                      placeholder="Why this goal matters"
-                    />
-                  </div>
-
-                  <div className="hidden space-y-2">
-                    <Label htmlFor="goal-reward-text">Achievement reward text</Label>
-                    <Textarea
-                      id="goal-reward-text"
-                      value={state.reward_text}
-                      onChange={(event) =>
-                        setState((prev) => ({ ...prev, reward_text: event.target.value }))
-                      }
-                      placeholder="How you will celebrate when this goal is achieved"
-                      maxLength={500}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Shown only on your achieved goal cards. Not shared to social feeds.
-                    </p>
-                  </div>
-
-                  <div className="hidden space-y-2">
-                    <Label htmlFor="goal-photo">Photo</Label>
-                    <Input
-                      id="goal-photo"
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      onChange={(event) => setPhotoFile(event.target.files?.[0] ?? null)}
-                    />
-                    {photoPreview ? (
-                      <Image
-                        src={photoPreview}
-                        alt="Goal preview"
-                        width={112}
-                        height={112}
-                        unoptimized
-                        className="h-28 w-28 rounded-xl object-cover"
-                      />
-                    ) : null}
-                  </div>
-                </div>
-              </CollapsibleContent>
-            </div>
-          </Collapsible>
-          )}
         </form>
       </CardContent>
     </Card>
