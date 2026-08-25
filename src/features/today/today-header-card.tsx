@@ -47,7 +47,7 @@ export function TodayHeaderCard({
           <div className="flex w-full flex-col gap-2">
             <div
               data-title-date-row="true"
-              className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 sm:gap-2"
+              className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-2"
             >
               <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                 <Sparkles className="size-4 shrink-0 text-primary" />

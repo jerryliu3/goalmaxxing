@@ -173,7 +173,7 @@ export function PlannerTasksPanel({
     [allowDelete]
   );
 
-  if (hideWhenEmpty && !loading && tasks.length === 0) {
+  if (hideWhenEmpty && (loading || tasks.length === 0)) {
     return null;
   }
 

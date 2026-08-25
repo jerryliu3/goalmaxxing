@@ -219,6 +219,67 @@ describe("bounded progress context route", () => {
     expect(body.summaries[0]?.admissibleCompletionCount).toBe(1_005);
   });
 
+  it("returns all selected-period facts, including later dates in that period", async () => {
+    mocks.socialEnabled = true;
+    const periodGoal = {
+      ...goal(),
+      id: "10000000-0000-4000-8000-000000000004",
+      recurrence_interval: "weekly" as const,
+      target_basis: "period" as const,
+      target_count: 2,
+      start_date: "2026-08-01",
+      end_date: "2026-08-31",
+    };
+    const completionRows = completions(2).map((completion, index) => ({
+      ...completion,
+      goal_id: periodGoal.id,
+      completed_on: index === 0 ? "2026-08-10" : "2026-08-13",
+    }));
+    mocks.client = {
+      auth: {
+        getUser: async () => ({
+          data: {
+            user: { id: "11111111-1111-4111-8111-111111111111" },
+          },
+          error: null,
+        }),
+      },
+      rpc: async () => ({ data: [], error: null }),
+      from: (table: string) =>
+        new FakeQuery(
+          (
+            table === "goals"
+              ? [periodGoal]
+              : table === "completions"
+                ? completionRows
+                : table === "profiles"
+                  ? [
+                      {
+                        id: "11111111-1111-4111-8111-111111111111",
+                        week_starts_on: 1,
+                      },
+                    ]
+                  : []
+          ) as unknown as Array<Record<string, unknown>>
+        ),
+    };
+
+    const response = await GET(
+      new Request(
+        "http://localhost/api/progress/context?asOfDate=2026-08-14&viewDate=2026-08-12&timezone=UTC"
+      )
+    );
+    const body = (await response.json()) as {
+      facts: Array<{ completed_on: string }>;
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.facts.map((fact) => fact.completed_on)).toEqual([
+      "2026-08-10",
+      "2026-08-13",
+    ]);
+  });
+
   it("keeps partner-created active-team goals in viewer progress", async () => {
     mocks.socialEnabled = true;
     const teamId = "44444444-4444-4444-8444-444444444444";

@@ -114,6 +114,32 @@ describe("CompletionToggle", () => {
     expect(toggle).toHaveAttribute("data-visual-completed", "false");
   });
 
+  it("clears optimistic state when the click handler settles", async () => {
+    let resolveMutation!: () => void;
+    const mutation = new Promise<void>((resolve) => {
+      resolveMutation = resolve;
+    });
+
+    render(
+      <CompletionToggle
+        completed={false}
+        aria-label="Mark session done"
+        onClick={() => mutation}
+      />
+    );
+
+    const toggle = screen.getByRole("button", { name: "Mark session done" });
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("data-visual-completed", "true");
+
+    await act(async () => {
+      resolveMutation();
+      await mutation;
+    });
+
+    expect(toggle).toHaveAttribute("data-visual-completed", "false");
+  });
+
   it("clears optimistic state with a long fallback timer", () => {
     vi.useFakeTimers();
 
