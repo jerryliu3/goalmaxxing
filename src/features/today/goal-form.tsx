@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronUp,
   CircleAlert,
+  Link2,
   LoaderCircle,
   Save,
   Trash2,
@@ -70,6 +71,7 @@ import {
 import {
   getLinkedGoalDeadlineLabel,
   getLinkedGoalRecurrenceLabel,
+  getLinkedTargetSchedulingNotice,
 } from "@/lib/goals/linked-goal-labels";
 import {
   buildMilestoneNameDrafts,
@@ -1214,9 +1216,49 @@ export function GoalForm({
                     </Collapsible>
                   ) : null}
 
-                  <div className="flex flex-wrap items-end gap-3">
-                    {state.team_id === null ? (
-                      <div className="min-w-[12rem] flex-1 space-y-2">
+                  <div className="space-y-2">
+                    <div
+                      className={cn(
+                        "grid gap-x-3 gap-y-2",
+                        state.team_id === null
+                          ? "grid-cols-1 sm:grid-cols-3"
+                          : "grid-cols-1 sm:grid-cols-2"
+                      )}
+                    >
+                      {state.team_id === null ? (
+                        <Label className="inline-flex min-h-8 items-center gap-2 self-start">
+                          <Link2 className="size-4 shrink-0 text-muted-foreground" />
+                          <span>Make this a subgoal linked to...</span>
+                        </Label>
+                      ) : null}
+
+                      <div className="flex min-h-8 items-center justify-between gap-2 self-start">
+                        <Label htmlFor="default-local-time">Default time of day</Label>
+                        {state.default_local_time.trim().length > 0 ? (
+                          <button
+                            type="button"
+                            className="text-xs text-primary hover:underline"
+                            onClick={() =>
+                              setState((previous) => ({ ...previous, default_local_time: "" }))
+                            }
+                          >
+                            clear
+                          </button>
+                        ) : null}
+                      </div>
+
+                      <Label
+                        htmlFor="goal-difficulty"
+                        className="inline-flex min-h-8 items-center gap-1 self-start"
+                      >
+                        <span>Difficulty</span>
+                        <TooltipIcon
+                          content="Set the perceived effort level for this goal."
+                          label="Goal difficulty help"
+                        />
+                      </Label>
+
+                      {state.team_id === null ? (
                         <GoalLinkTargetSelect
                           value={selectedLinkTarget}
                           onValueChange={setSelectedLinkTarget}
@@ -1232,14 +1274,15 @@ export function GoalForm({
                           filteredLinkTargets={filteredLinkTargets}
                           selectedTargetGoal={selectedLinkTargetGoal}
                           sourceEndDate={state.end_date.trim() || null}
+                          showLabel={false}
+                          showHelperText={false}
+                          showLinkedNotice={false}
                         />
-                      </div>
-                    ) : null}
+                      ) : null}
 
-                    <div className="min-w-[10rem] flex-1">
                       <GoalDefaultTimeField
                         id="default-local-time"
-                        label="Default time of day"
+                        showLabel={false}
                         showHelperText={false}
                         value={state.default_local_time}
                         onValueChange={(value) =>
@@ -1248,20 +1291,8 @@ export function GoalForm({
                             default_local_time: value,
                           }))
                         }
-                        onClear={() =>
-                          setState((previous) => ({ ...previous, default_local_time: "" }))
-                        }
                       />
-                    </div>
 
-                    <div className="min-w-[8rem] flex-1 space-y-2">
-                      <Label htmlFor="goal-difficulty" className="inline-flex items-center gap-1">
-                        <span>Difficulty</span>
-                        <TooltipIcon
-                          content="Set the perceived effort level for this goal."
-                          label="Goal difficulty help"
-                        />
-                      </Label>
                       <Select
                         value={state.difficulty}
                         onValueChange={(value: GoalDifficulty) =>
@@ -1278,6 +1309,30 @@ export function GoalForm({
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {state.team_id === null ? (
+                      <>
+                        <p className="text-xs text-muted-foreground">
+                          Completing this subgoal also counts toward its linked main goal for that
+                          day.
+                        </p>
+                        {selectedLinkTarget !== "none" && selectedLinkTargetGoal ? (
+                          <div
+                            className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-400/50 dark:bg-amber-500/10 dark:text-amber-100"
+                          >
+                            <p className="font-medium">
+                              Linking this subgoal to {selectedLinkTargetGoal.title} may hide that
+                              main goal in some calendar months.
+                            </p>
+                            <p className="mt-1">
+                              {getLinkedTargetSchedulingNotice({
+                                sourceEndDate: state.end_date.trim() || null,
+                              })}
+                            </p>
+                          </div>
+                        ) : null}
+                      </>
+                    ) : null}
                   </div>
 
                   <div className="hidden space-y-2">
