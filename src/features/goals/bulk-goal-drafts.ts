@@ -29,6 +29,7 @@ const columnAliases = {
   frequency_type: ["frequency_type", "frequency", "type"],
   recurrence_interval: ["recurrence_interval", "recurrence", "interval"],
   target_count: ["target_count", "target", "count", "milestones"],
+  target_basis: ["target_basis"],
   milestone_names: ["milestone_names", "milestones_list", "steps", "step_names"],
   start_date: ["start_date", "start", "startdate"],
   end_date: ["end_date", "end", "enddate", "due_date", "due"],
@@ -67,6 +68,7 @@ export interface LlmGoalDraftPayload {
   category_key?: string | null;
   frequency_type?: GoalFrequencyType;
   recurrence_interval?: RecurrenceInterval | null;
+  target_basis?: GoalTargetBasis | null;
   target_count?: number | null;
   milestone_names?: string[] | null;
   start_date?: string | null;
@@ -309,6 +311,7 @@ export function buildBulkGoalDraftsFromLlmGoals(
           goal.target_count === null || goal.target_count === undefined
             ? ""
             : String(goal.target_count),
+        target_basis: goal.target_basis ?? "",
         start_date: goal.start_date ?? "",
         end_date: goal.end_date ?? "",
         default_local_time: goal.default_local_time ?? "",

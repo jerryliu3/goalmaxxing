@@ -388,6 +388,7 @@ describe("bulk goal parser route", () => {
     expect(payload.goals[0]).toMatchObject({
       title: "5k training plan",
       frequency_type: "recurring",
+      target_basis: "period",
       target_count: 3,
     });
     expect(payload.goals[0]?.milestone_names).toBeUndefined();
