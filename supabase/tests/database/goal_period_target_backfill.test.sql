@@ -31,6 +31,12 @@ select is(
   'migration backfills existing recurring period goals with null targets'
 );
 
+-- The migration has already run by the time pgTAP executes. Temporarily
+-- bypass the current-row default trigger to establish the legacy shape that
+-- the migration had to repair; this cannot replay pre-migration state.
+reset role;
+alter table public.goals disable trigger goals_default_target_basis;
+
 insert into public.goals (
   id,
   owner_id,
@@ -53,6 +59,9 @@ values (
   'period'::public.goal_target_basis,
   '2026-08-01'
 );
+
+alter table public.goals enable trigger goals_default_target_basis;
+set local role service_role;
 
 select is(
   (

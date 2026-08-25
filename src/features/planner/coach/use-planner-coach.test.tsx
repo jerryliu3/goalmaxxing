@@ -764,7 +764,9 @@ describe("usePlannerCoach", () => {
         };
       }
     );
-    retryCoachGoalDraftLinksMock.mockResolvedValue({ status: "created" });
+    retryCoachGoalDraftLinksMock
+      .mockRejectedValueOnce(new Error("second link save failed"))
+      .mockResolvedValueOnce({ status: "created" });
     const onGoalsCreated = vi.fn().mockResolvedValue(undefined);
     const context = buildContext();
     const { result } = renderHook(() =>
@@ -810,6 +812,42 @@ describe("usePlannerCoach", () => {
     });
 
     expect(retryCoachGoalDraftLinksMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        linkRows: [
+          {
+            source_goal_id: "goal-created-1",
+            target_goal_id: "goal-main-1",
+          },
+        ],
+      })
+    );
+    expect(result.current.state.coachGoalDraftStates[1]).toMatchObject({
+      status: "error",
+      errorCode: "links_failed",
+      errorMessage: "second link save failed",
+      pendingLinkRecovery: {
+        createdCount: 1,
+        linkRows: [
+          {
+            source_goal_id: "goal-created-1",
+            target_goal_id: "goal-main-1",
+          },
+        ],
+      },
+    });
+    expect(result.current.state.coachMessages[1]?.proposal).toMatchObject({
+      kind: "goal_draft",
+      creationStatus: "not_created",
+    });
+    expect(onGoalsCreated).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await result.current.actions.createCoachGoalDrafts(1);
+    });
+
+    expect(retryCoachGoalDraftLinksMock).toHaveBeenCalledTimes(2);
+    expect(retryCoachGoalDraftLinksMock).toHaveBeenNthCalledWith(
+      2,
       expect.objectContaining({
         linkRows: [
           {

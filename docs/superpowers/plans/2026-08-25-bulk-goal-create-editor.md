@@ -534,10 +534,9 @@ visible state and request payloads rather than implementation details.
 
 - [x] **Step 4: Keep deterministic parser route coverage authoritative**
 
-The deterministic parser route tests are the authoritative coverage for explicit
-period and lifetime target-basis preservation. No live-provider Gemini semantic
-E2E assertion is required because provider output is nondeterministic; the
-deterministic parser route unit tests are authoritative for this contract.
+Deterministic parser route unit tests are authoritative for explicit period and
+lifetime target-basis preservation. No live-provider Gemini semantic E2E assertion
+is required or should be reintroduced because provider output is nondeterministic.
 
 - [ ] **Step 5: Run focused integration tests**
 
@@ -588,7 +587,8 @@ pnpm test:sql
 ```
 
 Expected: pgTAP fixtures pass, including normalized period target and planner
-move coverage.
+move coverage. The harness runs after migrations, so the backfill fixture
+simulates a legacy-shaped row and cannot replay pre-migration state.
 
 - [ ] **Step 3: Run the final diff review**
 

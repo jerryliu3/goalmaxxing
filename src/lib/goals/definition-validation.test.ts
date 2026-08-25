@@ -301,4 +301,73 @@ describe("goal definition validation", () => {
     );
     expect(capacityIssue?.message).toContain("Only 5 available days");
   });
+
+  it("checks lifetime totals against the full available-day window", () => {
+    const issues = validateGoalDefinition({
+      frequencyType: "recurring",
+      targetBasis: "lifetime",
+      recurrenceInterval: "daily",
+      targetCount: 6,
+      startDate: "2026-08-01",
+      endDate: "2026-08-07",
+      asOfDate: "2026-08-01",
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [],
+      },
+    });
+
+    expect(issues).toContainEqual(
+      expect.objectContaining({ code: "target_exceeds_capacity" })
+    );
+    expect(issues.find((issue) => issue.code === "target_exceeds_capacity")?.message).toContain(
+      "Only 5 available days"
+    );
+  });
+
+  it("checks weekly period targets against each weekly period's available days", () => {
+    const issues = validateGoalDefinition({
+      frequencyType: "recurring",
+      targetBasis: "period",
+      recurrenceInterval: "weekly",
+      targetCount: 6,
+      startDate: "2026-08-03",
+      endDate: "2026-08-09",
+      asOfDate: "2026-08-03",
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [],
+      },
+    });
+
+    expect(issues).toContainEqual(
+      expect.objectContaining({ code: "target_exceeds_capacity" })
+    );
+    expect(issues.find((issue) => issue.code === "target_exceeds_capacity")?.message).toContain(
+      "5 available days in at least one weekly period"
+    );
+  });
+
+  it("checks monthly period targets against each monthly period's available days", () => {
+    const issues = validateGoalDefinition({
+      frequencyType: "recurring",
+      targetBasis: "period",
+      recurrenceInterval: "monthly",
+      targetCount: 22,
+      startDate: "2026-08-01",
+      endDate: "2026-08-31",
+      asOfDate: "2026-08-01",
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [],
+      },
+    });
+
+    expect(issues).toContainEqual(
+      expect.objectContaining({ code: "target_exceeds_capacity" })
+    );
+    expect(issues.find((issue) => issue.code === "target_exceeds_capacity")?.message).toContain(
+      "21 available days in at least one monthly period"
+    );
+  });
 });
