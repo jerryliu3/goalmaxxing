@@ -457,6 +457,11 @@ period defaults of `1`, required lifetime target errors, and fixed-milestone
 defaults. Update CSV example text to document `target_basis` and the
 period/lifetime meaning of `target_count`.
 
+Preserve the existing target basis and count for starter-pack rows that already
+declare lifetime semantics; add explicit basis only where it is omitted. Do not
+convert an existing lifetime total into a per-period target as part of this
+normalization.
+
 - [ ] **Step 4: Confirm database fixtures express explicit period targets**
 
 Update only fixtures that create recurring period goals with omitted targets so
