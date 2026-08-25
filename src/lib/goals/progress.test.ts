@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   getGoalCompletionPercentage,
+  getGoalProgressSnapshot,
   getOverallCompletionPercentage,
   getRecurringStreaks,
   getRecurringStreaksAtDate,
@@ -91,6 +92,24 @@ describe("goal progress calculations", () => {
     ];
 
     expect(getGoalCompletionPercentage(goal, completions)).toBe(40);
+  });
+
+  it("records the date a lifetime target was achieved", () => {
+    const goal = buildGoal({
+      id: "achievement-date-id",
+      recurrence_interval: "weekly",
+      target_count: 3,
+      target_basis: "lifetime",
+    });
+    const completions = [
+      completion("achievement-date-id", "2026-05-01"),
+      completion("achievement-date-id", "2026-05-03"),
+      completion("achievement-date-id", "2026-05-07"),
+    ];
+
+    expect(
+      getGoalProgressSnapshot(goal, completions, "2026-05-10").achievementDate
+    ).toBe("2026-05-07");
   });
 
   it("anchors monthly cadence hit rate to calendar-month boundaries", () => {

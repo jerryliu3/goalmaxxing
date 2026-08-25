@@ -167,4 +167,117 @@ describe("checklist selectors", () => {
       }).map((row) => row.id)
     ).toEqual(["hit-today"]);
   });
+
+  it("keeps lifetime goals visible before their actual achievement date", () => {
+    const lifetimeGoal = goal({
+      id: "lifetime-goal",
+      owner_id: "me",
+      title: "Lifetime target",
+      recurrence_interval: "weekly",
+      target_basis: "lifetime",
+      target_count: 3,
+      start_date: "2026-08-01",
+    });
+    const progressByGoal = new Map([
+      [
+        "lifetime-goal",
+        { outcome: "achieved", achievementDate: "2026-08-13" },
+      ],
+    ]);
+
+    expect(
+      selectCompletedTargetGoalIds({
+        goals: [lifetimeGoal],
+        progressByGoal,
+        completionsByGoal: new Map(),
+        asOfDate: "2026-08-12",
+      })
+    ).toEqual(new Set());
+    expect(
+      selectCompletedTargetGoalIds({
+        goals: [lifetimeGoal],
+        progressByGoal,
+        completionsByGoal: new Map(),
+        asOfDate: "2026-08-14",
+      })
+    ).toEqual(new Set(["lifetime-goal"]));
+  });
+
+  it("hides period cadence goals after the achieved day", () => {
+    const periodGoal = goal({
+      id: "period-goal",
+      owner_id: "me",
+      title: "Weekly 2x",
+      recurrence_interval: "weekly",
+      target_basis: "period",
+      target_count: 2,
+      start_date: "2026-08-01",
+    });
+
+    const idsOnAchievedDay = selectCompletedTargetGoalIds({
+      goals: [periodGoal],
+      progressByGoal: new Map([["period-goal", { outcome: "in_progress" }]]),
+      completionsByGoal: new Map([
+        [
+          "period-goal",
+          [
+            { completed_on: "2026-08-12" },
+            { completed_on: "2026-08-13" },
+          ],
+        ],
+      ]),
+      asOfDate: "2026-08-13",
+    });
+    expect([...idsOnAchievedDay]).toEqual([]);
+
+    const idsAfterAchievedDay = selectCompletedTargetGoalIds({
+      goals: [periodGoal],
+      progressByGoal: new Map([["period-goal", { outcome: "in_progress" }]]),
+      completionsByGoal: new Map([
+        [
+          "period-goal",
+          [
+            { completed_on: "2026-08-12" },
+            { completed_on: "2026-08-13" },
+          ],
+        ],
+      ]),
+      asOfDate: "2026-08-14",
+    });
+    expect([...idsAfterAchievedDay]).toEqual(["period-goal"]);
+  });
+
+  it("treats an empty period target as one completion for filter timing", () => {
+    const periodGoal = goal({
+      id: "period-goal-default-target",
+      owner_id: "me",
+      title: "Daily default target",
+      target_basis: "period",
+      target_count: null,
+      start_date: "2026-08-01",
+    });
+    const completionsByGoal = new Map([
+      ["period-goal-default-target", [{ completed_on: "2026-08-13" }]],
+    ]);
+    const progressByGoal = new Map([
+      ["period-goal-default-target", { outcome: "in_progress" }],
+    ]);
+
+    expect(
+      selectCompletedTargetGoalIds({
+        goals: [periodGoal],
+        progressByGoal,
+        completionsByGoal,
+        asOfDate: "2026-08-13",
+      })
+    ).toEqual(new Set());
+    expect(
+      selectCompletedTargetGoalIds({
+        goals: [periodGoal],
+        progressByGoal,
+        completionsByGoal,
+        asOfDate: "2026-08-14",
+      })
+    ).toEqual(new Set(["period-goal-default-target"]));
+  });
 });

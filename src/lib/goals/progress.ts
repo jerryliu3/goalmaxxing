@@ -15,7 +15,6 @@ import {
   getAnchoredPeriod,
   type WeeklyAnchorContext,
 } from "@/lib/goals/periods";
-import { cadencePeriodTarget } from "@/lib/goals/target-basis";
 import type { Completion, Goal } from "@/lib/goals/types";
 import {
   getGoalRequirement,
@@ -225,6 +224,10 @@ export function getGoalProgressSnapshot(
     requirement.kind === "cadence"
       ? getCadenceHitRatePercent(goal, completions, context)
       : null;
+  const achievementDate =
+    lifecycleOutcome.outcome === "achieved" && requirement.kind !== "cadence"
+      ? admissible[requirement.targetCount - 1]?.completed_on ?? null
+      : null;
 
   const percent =
     requirement.kind === "cadence"
@@ -242,6 +245,7 @@ export function getGoalProgressSnapshot(
     lifecycle: lifecycleOutcome.lifecycle,
     outcome: lifecycleOutcome.outcome,
     placementTerminal: lifecycleOutcome.placementTerminal,
+    achievementDate,
     periodSatisfied,
     currentPeriodCompletionCount,
     currentPeriodTarget,

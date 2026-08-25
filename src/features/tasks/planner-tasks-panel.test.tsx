@@ -81,4 +81,32 @@ describe("PlannerTasksPanel", () => {
       screen.queryByText("Track simple one-time tasks separately from recurring goals.")
     ).toBeNull();
   });
+
+  it("stays hidden while loading when hideWhenEmpty is enabled", async () => {
+    let resolveRpc: (value: { data: unknown[]; error: null }) => void = () => {};
+    rpcMock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveRpc = resolve;
+        })
+    );
+
+    render(
+      <PlannerTasksPanel
+        title="Tasks"
+        description={null}
+        scheduledDate="2026-08-22"
+        allowCreate={false}
+        hideWhenEmpty
+      />
+    );
+
+    expect(screen.queryByText("Tasks")).toBeNull();
+
+    resolveRpc({ data: [], error: null });
+
+    await waitFor(() => {
+      expect(screen.queryByText("Tasks")).toBeNull();
+    });
+  });
 });
