@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  ChevronDown,
-  ChevronUp,
-  LoaderCircle,
-  Sparkles,
-  Trash2,
-} from "lucide-react";
+import { LoaderCircle, Sparkles, Trash2 } from "lucide-react";
 import {
   type Dispatch,
   type SetStateAction,
@@ -23,51 +17,28 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { TooltipIcon } from "@/components/ui/tooltip-icon";
 import {
   type BulkGoalDraft,
   bulkGoalDraftRequiresEndDate,
-  normalizeBulkGoalLocalTime,
-  parseBulkGoalTargetCount,
   summarizeBulkGoalDraftSchedule,
   withValidatedBulkGoalDraft,
 } from "@/features/goals/bulk-goal-drafts";
+import { GoalCreationFieldControls } from "@/features/goals/goal-creation-fields";
 import {
-  CategorySelect,
-  GoalTypeToggle,
-  RecurrenceIntervalToggle,
-  TargetCountField,
-} from "@/features/goals/goal-field-kit";
-import { GoalLinkTargetSelect } from "@/features/goals/goal-link-target-select";
-import { MilestoneNameFields } from "@/features/goals/milestone-name-fields";
-import {
-  GoalDateRangeFields,
-  GoalDefaultTimeField,
-} from "@/features/goals/goal-schedule-fields";
-import {
-  type CategorySelection,
-  getCategorySwatchColor,
-} from "@/lib/goals/category";
+  type GoalCreationFieldChange,
+  updateGoalCreationFields,
+} from "@/features/goals/goal-creation-model";
+import type { GoalCreateKind } from "@/lib/goals/form-options";
 import {
   getLinkedGoalDeadlineLabel,
   getLinkedGoalRecurrenceLabel,
 } from "@/lib/goals/linked-goal-labels";
-import { isPlannerTaskCreateKind } from "@/lib/goals/form-options";
-import { buildMilestoneNameDrafts } from "@/lib/goals/milestones";
 import type { Goal } from "@/lib/goals/types";
 import { cn } from "@/lib/utils";
 
@@ -84,18 +55,41 @@ export interface BulkGoalDraftReviewProps {
   createDisabledMessage?: string | null;
 }
 
-export function BulkGoalDraftReview({
-  variant,
-  drafts,
-  setDrafts,
-  saving,
-  onCreate,
-  availableGoals = [],
-  warnings = [],
-  emptyMessage = "Generate drafts to review and edit them.",
-  createLabel = "Create selected goals",
-  createDisabledMessage = null,
-}: BulkGoalDraftReviewProps) {
+function applyGoalCreationChange(
+  draft: Omit<BulkGoalDraft, "errors">,
+  change: GoalCreationFieldChange
+): Omit<BulkGoalDraft, "errors"> {
+  return {
+    ...draft,
+    ...updateGoalCreationFields(draft, change),
+  };
+}
+
+function applyCreateKindChange(
+  draft: Omit<BulkGoalDraft, "errors">,
+  kind: GoalCreateKind
+): Omit<BulkGoalDraft, "errors"> {
+  if (kind === "planner_task") {
+    return draft;
+  }
+  return applyGoalCreationChange(draft, {
+    type: "frequency_type",
+    value: kind,
+  });
+}
+
+export function BulkGoalDraftReview(props: BulkGoalDraftReviewProps) {
+  const {
+    drafts,
+    setDrafts,
+    saving,
+    onCreate,
+    availableGoals = [],
+    warnings = [],
+    emptyMessage = "Generate drafts to review and edit them.",
+    createLabel = "Create selected goals",
+    createDisabledMessage = null,
+  } = props;
   const [expandedDraftId, setExpandedDraftId] = useState<string | null>(null);
   const selectedDrafts = useMemo(
     () => drafts.filter((draft) => draft.include),
@@ -173,13 +167,6 @@ export function BulkGoalDraftReview({
           <p className="text-sm text-muted-foreground">{emptyMessage}</p>
         ) : (
           drafts.map((draft) => {
-            const parsedTargetCount = parseBulkGoalTargetCount(
-              draft.target_count
-            );
-            const fixedMilestoneCount =
-              draft.frequency_type === "fixed_milestones"
-                ? parsedTargetCount ?? 0
-                : 0;
             const linkQuery = draft.link_target_search.trim().toLowerCase();
             const filteredLinkTargets = availableGoals.filter((goal) => {
               if (!linkQuery) return true;
@@ -193,6 +180,12 @@ export function BulkGoalDraftReview({
                   .includes(linkQuery)
               );
             });
+            const selectedTargetGoal =
+              draft.linked_target_goal_id === "none"
+                ? null
+                : availableGoals.find(
+                    (goal) => goal.id === draft.linked_target_goal_id
+                  ) ?? null;
             const expanded = expandedDraftId === draft.id;
             const toggleDraftEditor = () =>
               setExpandedDraftId((previous) =>
@@ -319,306 +312,57 @@ export function BulkGoalDraftReview({
                         </DialogDescription>
                       </DialogHeader>
 
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor={`${draft.id}-title`}>Title</Label>
-                          <Input
-                            id={`${draft.id}-title`}
-                            value={draft.title}
-                            onChange={(event) =>
-                              updateDraft(draft.id, (previous) => ({
-                                ...previous,
-                                title: event.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Category</Label>
-                          <CategorySelect
-                            value={draft.category_selection}
-                            onValueChange={(value: CategorySelection) =>
-                              updateDraft(draft.id, (previous) => ({
-                                ...previous,
-                                category_selection: value,
-                                color: getCategorySwatchColor(value),
-                              }))
-                            }
-                          />
-                        </div>
-                        {draft.category_selection === "custom" ? (
-                          <div className="space-y-2">
-                            <Label htmlFor={`${draft.id}-custom-category`}>
-                              Custom category
-                            </Label>
-                            <Input
-                              id={`${draft.id}-custom-category`}
-                              value={draft.custom_category}
-                              onChange={(event) =>
-                                updateDraft(draft.id, (previous) => ({
-                                  ...previous,
-                                  custom_category: event.target.value,
-                                }))
-                              }
-                            />
-                          </div>
-                        ) : null}
-                      </div>
-
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label className="inline-flex items-center gap-1">
-                            <span>Goal type</span>
-                            <TooltipIcon
-                              content="Recurring keeps the same action pattern over time. Milestones are unique steps that move you toward a final outcome."
-                              label="Goal type help"
-                            />
-                          </Label>
-                          <GoalTypeToggle
-                            value={draft.frequency_type}
-                            onValueChange={(value) => {
-                              if (isPlannerTaskCreateKind(value)) {
-                                return;
-                              }
-                              updateDraft(draft.id, (previous) => {
-                                const nextTargetCount =
-                                  value === "fixed_milestones" &&
-                                  !previous.target_count.trim()
-                                    ? "3"
-                                    : previous.target_count;
-                                return {
-                                  ...previous,
-                                  frequency_type: value,
-                                  target_count: nextTargetCount,
-                                  milestone_names:
-                                    value === "fixed_milestones"
-                                      ? buildMilestoneNameDrafts(
-                                          parseBulkGoalTargetCount(
-                                            nextTargetCount
-                                          ) ?? 0,
-                                          previous.milestone_names
-                                        )
-                                      : previous.milestone_names,
-                                };
-                              });
-                            }}
-                          />
-                        </div>
-                        {draft.frequency_type === "recurring" ? (
-                          <div className="space-y-2">
-                            <Label className="inline-flex items-center gap-1">
-                              <span>Cadence</span>
-                              <TooltipIcon
-                                content="Cadence controls how often the goal appears in your routine."
-                                label="Cadence help"
-                              />
-                            </Label>
-                            <RecurrenceIntervalToggle
-                              value={draft.recurrence_interval}
-                              onValueChange={(value) =>
-                                updateDraft(draft.id, (previous) => ({
-                                  ...previous,
-                                  recurrence_interval: value,
-                                }))
-                              }
-                            />
-                          </div>
-                        ) : null}
-                        <div className="space-y-2">
-                          <Label>
-                            {draft.frequency_type === "fixed_milestones"
-                              ? "Total target #"
-                              : "Total target # (optional)"}
-                          </Label>
-                          <TargetCountField
-                            frequencyType={draft.frequency_type}
-                            value={draft.target_count}
-                            onValueChange={(value) =>
-                              updateDraft(draft.id, (previous) => ({
-                                ...previous,
-                                target_count: value,
-                                milestone_names:
-                                  previous.frequency_type ===
-                                  "fixed_milestones"
-                                    ? buildMilestoneNameDrafts(
-                                        parseBulkGoalTargetCount(value) ?? 0,
-                                        previous.milestone_names
-                                      )
-                                    : previous.milestone_names,
-                              }))
-                            }
-                          />
-                        </div>
-                        <GoalDateRangeFields
-                          startDate={draft.start_date}
-                          endDate={draft.end_date}
-                          onStartDateChange={(value) =>
+                      <GoalCreationFieldControls
+                        fields={draft}
+                        onFieldChange={(change) =>
+                          updateDraft(draft.id, (previous) =>
+                            applyGoalCreationChange(previous, change)
+                          )
+                        }
+                        onPatch={(patch) =>
+                          updateDraft(draft.id, (previous) => ({
+                            ...previous,
+                            ...patch,
+                          }))
+                        }
+                        definitionFieldsLocked={false}
+                        createKind={draft.frequency_type}
+                        onCreateKindChange={(kind) =>
+                          updateDraft(draft.id, (previous) =>
+                            applyCreateKindChange(previous, kind)
+                          )
+                        }
+                        isEditing={false}
+                        isPlannerTask={false}
+                        linkTarget={{
+                          value: draft.linked_target_goal_id,
+                          onValueChange: (value) =>
                             updateDraft(draft.id, (previous) => ({
                               ...previous,
-                              start_date: value,
-                            }))
-                          }
-                          onEndDateChange={(value) =>
+                              linked_target_goal_id: value,
+                            })),
+                          open: draft.link_target_open,
+                          onOpenChange: (open) =>
                             updateDraft(draft.id, (previous) => ({
                               ...previous,
-                              end_date: value,
-                            }))
-                          }
-                          requiresEndDate={bulkGoalDraftRequiresEndDate(draft)}
-                        />
-                        <GoalDefaultTimeField
-                          value={draft.default_local_time}
-                          onValueChange={(value) =>
+                              link_target_open: open,
+                              link_target_search: open
+                                ? previous.link_target_search
+                                : "",
+                            })),
+                          searchQuery: draft.link_target_search,
+                          onSearchQueryChange: (value) =>
                             updateDraft(draft.id, (previous) => ({
                               ...previous,
-                              default_local_time:
-                                normalizeBulkGoalLocalTime(value),
-                            }))
-                          }
-                          label="Default time of day"
-                          helperText="Optional fallback planner time when no item override is set."
-                        />
-                      </div>
-
-                      {fixedMilestoneCount > 0 ? (
-                        <MilestoneNameFields
-                          count={fixedMilestoneCount}
-                          values={draft.milestone_names}
-                          onValueChange={(index, value) =>
-                            updateDraft(draft.id, (previous) => {
-                              const milestoneNames = [
-                                ...previous.milestone_names,
-                              ];
-                              milestoneNames[index] = value;
-                              return {
-                                ...previous,
-                                milestone_names: milestoneNames,
-                              };
-                            })
-                          }
-                          keyPrefix={`${draft.id}-milestone`}
-                        />
-                      ) : null}
-
-                      {variant === "full" ? (
-                        <Collapsible
-                          open={draft.advanced_open}
-                          onOpenChange={(open) =>
-                            updateDraft(draft.id, (previous) => ({
-                              ...previous,
-                              advanced_open: open,
-                            }))
-                          }
-                        >
-                          <div className="rounded-xl border bg-muted/20">
-                            <CollapsibleTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                className="flex h-auto w-full items-center justify-between rounded-xl px-3 py-2 text-sm"
-                              >
-                                <span>Advanced settings (optional)</span>
-                                {draft.advanced_open ? (
-                                  <ChevronUp className="size-4 text-muted-foreground" />
-                                ) : (
-                                  <ChevronDown className="size-4 text-muted-foreground" />
-                                )}
-                              </Button>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                              <div className="space-y-4 border-t px-3 py-3">
-                                <div className="space-y-2">
-                                  <Label
-                                    htmlFor={`${draft.id}-description`}
-                                  >
-                                    Description
-                                  </Label>
-                                  <Textarea
-                                    id={`${draft.id}-description`}
-                                    value={draft.description}
-                                    onChange={(event) =>
-                                      updateDraft(draft.id, (previous) => ({
-                                        ...previous,
-                                        description: event.target.value,
-                                      }))
-                                    }
-                                    placeholder="Why this goal matters"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label>Color accent</Label>
-                                  <Input
-                                    type="color"
-                                    value={draft.color}
-                                    onChange={(event) =>
-                                      updateDraft(draft.id, (previous) => ({
-                                        ...previous,
-                                        color: event.target.value,
-                                      }))
-                                    }
-                                    className="h-10 p-1"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label>Photo</Label>
-                                  <Input
-                                    type="file"
-                                    accept="image/png,image/jpeg,image/webp"
-                                    onChange={(event) =>
-                                      updateDraft(draft.id, (previous) => ({
-                                        ...previous,
-                                        photo_file:
-                                          event.target.files?.[0] ?? null,
-                                      }))
-                                    }
-                                  />
-                                  {draft.photo_file ? (
-                                    <Badge variant="secondary">
-                                      {draft.photo_file.name}
-                                    </Badge>
-                                  ) : null}
-                                </div>
-                                <GoalLinkTargetSelect
-                                  value={draft.linked_target_goal_id}
-                                  onValueChange={(value) =>
-                                    updateDraft(draft.id, (previous) => ({
-                                      ...previous,
-                                      linked_target_goal_id: value,
-                                    }))
-                                  }
-                                  open={draft.link_target_open}
-                                  onOpenChange={(open) =>
-                                    updateDraft(draft.id, (previous) => ({
-                                      ...previous,
-                                      link_target_open: open,
-                                      link_target_search: open
-                                        ? previous.link_target_search
-                                        : "",
-                                    }))
-                                  }
-                                  searchQuery={draft.link_target_search}
-                                  onSearchQueryChange={(value) =>
-                                    updateDraft(draft.id, (previous) => ({
-                                      ...previous,
-                                      link_target_search: value,
-                                    }))
-                                  }
-                                  filteredLinkTargets={filteredLinkTargets}
-                                  selectedTargetGoal={
-                                    draft.linked_target_goal_id === "none"
-                                      ? null
-                                      : availableGoals.find(
-                                          (goal) => goal.id === draft.linked_target_goal_id
-                                        ) ?? null
-                                  }
-                                  sourceEndDate={draft.end_date.trim() || null}
-                                  keyPrefix={draft.id}
-                                />
-                              </div>
-                            </CollapsibleContent>
-                          </div>
-                        </Collapsible>
-                      ) : null}
+                              link_target_search: value,
+                            })),
+                          filteredLinkTargets,
+                          selectedTargetGoal,
+                        }}
+                        showSoftHorizonHint={bulkGoalDraftRequiresEndDate(draft)}
+                        startDateId={`${draft.id}-start-date`}
+                        endDateId={`${draft.id}-end-date`}
+                      />
                     </DialogContent>
                   </Dialog>
                 ) : null}
