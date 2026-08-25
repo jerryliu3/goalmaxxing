@@ -57,6 +57,8 @@ function goalDraftErrorMessage(code?: string, fallback?: string) {
       return "The coach proposed more than five goals. Ask it to simplify the plan and send again.";
     case "links_failed":
       return "Goals were created, but their selected links were not saved. Retry saving links.";
+    case "create_ambiguous":
+      return "Goal creation could not be confirmed. Retry to safely reconcile the retained drafts.";
     default:
       return fallback ?? "Could not generate goal drafts.";
   }
@@ -127,13 +129,16 @@ function CoachGoalDraftProposal({
               variant="outline"
               className="mt-2"
               onClick={() =>
-                void (draftState.errorCode === "links_failed"
+                void (draftState.errorCode === "links_failed" ||
+                draftState.errorCode === "create_ambiguous"
                   ? actions.createCoachGoalDrafts(messageIndex)
                   : actions.generateCoachGoalDrafts(messageIndex))
               }
             >
               {draftState.errorCode === "links_failed"
                 ? "Retry saving links"
+                : draftState.errorCode === "create_ambiguous"
+                  ? "Retry creating goals"
                 : "Generate again"}
             </Button>
           ) : null}
@@ -150,6 +155,9 @@ function CoachGoalDraftProposal({
           onCreate={() => actions.createCoachGoalDrafts(messageIndex)}
           availableGoals={availableGoals}
           warnings={draftState.warnings}
+          editingDisabled={Boolean(
+            draftState.pendingLinkRecovery || draftState.pendingCreateRecovery
+          )}
           createDisabledMessage={
             state.hasPendingCalendarEdits
               ? "Save or discard calendar edits first."

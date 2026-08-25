@@ -53,15 +53,23 @@ export interface BulkGoalDraftReviewProps {
   emptyMessage?: string;
   createLabel?: string;
   createDisabledMessage?: string | null;
+  editingDisabled?: boolean;
 }
 
 function applyGoalCreationChange(
   draft: Omit<BulkGoalDraft, "errors">,
   change: GoalCreationFieldChange
 ): Omit<BulkGoalDraft, "errors"> {
+  const clearsTargetBasisError =
+    change.type === "target_basis" ||
+    change.type === "frequency_type" ||
+    (change.type === "patch" &&
+      (Object.prototype.hasOwnProperty.call(change.value, "target_basis") ||
+        Object.prototype.hasOwnProperty.call(change.value, "frequency_type")));
   return {
     ...draft,
     ...updateGoalCreationFields(draft, change),
+    ...(clearsTargetBasisError ? { target_basis_error: undefined } : {}),
   };
 }
 
@@ -89,6 +97,7 @@ export function BulkGoalDraftReview(props: BulkGoalDraftReviewProps) {
     emptyMessage = "Generate drafts to review and edit them.",
     createLabel = "Create selected goals",
     createDisabledMessage = null,
+    editingDisabled = false,
   } = props;
   const [expandedDraftId, setExpandedDraftId] = useState<string | null>(null);
   const selectedDrafts = useMemo(
@@ -106,6 +115,9 @@ export function BulkGoalDraftReview(props: BulkGoalDraftReviewProps) {
       draft: Omit<BulkGoalDraft, "errors">
     ) => Omit<BulkGoalDraft, "errors">
   ) => {
+    if (editingDisabled) {
+      return;
+    }
     setDrafts((previous) =>
       previous.map((draft) =>
         draft.id === draftId
@@ -187,10 +199,14 @@ export function BulkGoalDraftReview(props: BulkGoalDraftReviewProps) {
                     (goal) => goal.id === draft.linked_target_goal_id
                   ) ?? null;
             const expanded = expandedDraftId === draft.id;
-            const toggleDraftEditor = () =>
+            const toggleDraftEditor = () => {
+              if (editingDisabled) {
+                return;
+              }
               setExpandedDraftId((previous) =>
                 previous === draft.id ? null : draft.id
               );
+            };
 
             return (
               <div key={draft.id} className="space-y-2">
@@ -199,6 +215,7 @@ export function BulkGoalDraftReview(props: BulkGoalDraftReviewProps) {
                     <input
                       type="checkbox"
                       checked={draft.include}
+                      disabled={editingDisabled}
                       onChange={(event) =>
                         updateDraft(draft.id, (previous) => ({
                           ...previous,
@@ -216,7 +233,8 @@ export function BulkGoalDraftReview(props: BulkGoalDraftReviewProps) {
                         "border-destructive/50"
                     )}
                     role="button"
-                    tabIndex={0}
+                    aria-disabled={editingDisabled}
+                    tabIndex={editingDisabled ? -1 : 0}
                     onClick={toggleDraftEditor}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
@@ -251,6 +269,7 @@ export function BulkGoalDraftReview(props: BulkGoalDraftReviewProps) {
                             event.stopPropagation();
                             toggleDraftEditor();
                           }}
+                          disabled={editingDisabled}
                         >
                           {expanded ? "close" : "tap to edit"}
                         </button>
@@ -270,6 +289,7 @@ export function BulkGoalDraftReview(props: BulkGoalDraftReviewProps) {
                             );
                           }}
                           aria-label={`Remove ${draft.title || "draft"}`}
+                          disabled={editingDisabled}
                         >
                           <Trash2 className="size-4" />
                         </Button>
@@ -326,6 +346,7 @@ export function BulkGoalDraftReview(props: BulkGoalDraftReviewProps) {
                           }))
                         }
                         definitionFieldsLocked={false}
+                        disabled={editingDisabled}
                         createKind={draft.frequency_type}
                         onCreateKindChange={(kind) =>
                           updateDraft(draft.id, (previous) =>

@@ -26,6 +26,7 @@ import type {
   GoalTargetBasis,
   RecurrenceInterval,
 } from "@/lib/goals/types";
+import { resolveGoalTargetBasisFromInput } from "@/lib/goals/target-basis";
 
 const columnAliases = {
   title: ["title", "goal", "goal_title", "name"],
@@ -50,6 +51,7 @@ export interface BulkGoalDraft extends GoalCreationFields {
   link_target_open: boolean;
   advanced_open: boolean;
   photo_file: File | null;
+  target_basis_error?: string;
   errors: string[];
 }
 
@@ -170,7 +172,10 @@ function parseMilestoneNames(raw: string): string[] {
 }
 
 export function validateBulkGoalDraft(draft: BulkGoalDraft): string[] {
-  return validateGoalCreationFields(draft);
+  return [
+    ...(draft.target_basis_error ? [draft.target_basis_error] : []),
+    ...validateGoalCreationFields(draft),
+  ];
 }
 
 export function withValidatedBulkGoalDraft(
@@ -203,8 +208,15 @@ export function buildBulkGoalDraftFromRow(
   );
   const parsedColor = extractText(normalizedRow, columnAliases.color);
   const targetBasisRaw = String(normalizedRow.target_basis ?? "").trim().toLowerCase();
-  const targetBasis: GoalTargetBasis =
-    targetBasisRaw === "lifetime" ? "lifetime" : "period";
+  const targetBasisResolution = resolveGoalTargetBasisFromInput({
+    frequencyType,
+    recurrenceInterval: parseRecurrenceInterval(
+      extractText(normalizedRow, columnAliases.recurrence_interval)
+    ),
+    targetCount: parsedTarget,
+    targetBasis: targetBasisRaw,
+  });
+  const targetBasis: GoalTargetBasis = targetBasisResolution.basis;
 
   return withValidatedBulkGoalDraft({
     ...createDefaultGoalCreationFields(),
@@ -224,6 +236,8 @@ export function buildBulkGoalDraftFromRow(
     ),
     target_count: targetRaw || (frequencyType === "fixed_milestones" ? "3" : ""),
     target_basis: frequencyType === "recurring" ? targetBasis : "lifetime",
+    target_basis_error:
+      targetBasisResolution.error ?? undefined,
     milestone_names:
       frequencyType === "fixed_milestones"
         ? buildMilestoneNameDrafts(parsedTarget ?? 0, parsedMilestoneNames)
@@ -331,7 +345,7 @@ export function summarizeBulkGoalDraftSchedule(draft: BulkGoalDraft): string {
 
 export function prepareBulkGoalRows(
   drafts: BulkGoalDraft[],
-  { createId = () => crypto.randomUUID() }: { createId?: () => string } = {}
+  { createId }: { createId?: () => string } = {}
 ): PreparedBulkGoalRow[] {
   return drafts.map((draft) => {
     const targetBasis =
@@ -344,7 +358,7 @@ export function prepareBulkGoalRows(
         : draft.frequency_type === "recurring" && targetBasis === "period"
           ? parseBulkGoalTargetCount(normalizeGoalCreationTarget(draft)) ?? 1
           : parseBulkGoalTargetCount(draft.target_count);
-    const goalId = createId();
+    const goalId = createId ? createId() : draft.id;
     return {
       draft,
       goalId,

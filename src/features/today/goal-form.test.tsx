@@ -1,10 +1,162 @@
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GoalCreationFieldControls } from "@/features/goals/goal-creation-fields";
 import { createDefaultGoalCreationFields } from "@/features/goals/goal-creation-model";
-import { getGoalFormTargetValidationError } from "@/features/today/goal-form";
+import {
+  GoalForm,
+  getGoalFormTargetValidationError,
+} from "@/features/today/goal-form";
 import { resolveGoalDefinitionValidationFeedback } from "@/features/today/goal-form-validation";
 import { validateGoalDefinition } from "@/lib/goals/definition-validation";
+import type { Goal } from "@/lib/goals/types";
+
+const authGetUserMock = vi.hoisted(() => vi.fn());
+const goalsOrderMock = vi.hoisted(() => vi.fn());
+const profileMaybeSingleMock = vi.hoisted(() => vi.fn());
+const rpcMock = vi.hoisted(() => vi.fn());
+const routerReplaceMock = vi.hoisted(() => vi.fn());
+const routerRefreshMock = vi.hoisted(() => vi.fn());
+const appRouterMock = vi.hoisted(() => ({
+  replace: routerReplaceMock,
+  refresh: routerRefreshMock,
+  push: vi.fn(),
+  prefetch: vi.fn(),
+  back: vi.fn(),
+  forward: vi.fn(),
+}));
+const invalidatePlannerRelatedTabCachesMock = vi.hoisted(() => vi.fn());
+const fetchProgressContextMock = vi.hoisted(() => vi.fn());
+const requestXpRefreshMock = vi.hoisted(() => vi.fn());
+const toastSuccessMock = vi.hoisted(() => vi.fn());
+const toastErrorMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/navigation/use-app-router", () => ({
+  useAppRouter: () => appRouterMock,
+}));
+
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    auth: { getUser: authGetUserMock },
+    from: (table: string) => {
+      if (table === "profiles") {
+        const query = {
+          eq: vi.fn().mockReturnThis(),
+          maybeSingle: profileMaybeSingleMock,
+        };
+        return { select: vi.fn(() => query) };
+      }
+      const query = {
+        eq: vi.fn().mockReturnThis(),
+        order: goalsOrderMock,
+      };
+      return { select: vi.fn(() => query) };
+    },
+    rpc: rpcMock,
+    storage: {
+      from: () => ({
+        createSignedUrl: vi.fn().mockResolvedValue({ data: null }),
+        upload: vi.fn(),
+      }),
+    },
+  }),
+}));
+
+vi.mock("@/lib/goals/progress-context", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/goals/progress-context")>(
+    "@/lib/goals/progress-context"
+  );
+  return { ...actual, fetchProgressContext: fetchProgressContextMock };
+});
+
+vi.mock("@/lib/cache/planner-tab-cache", () => ({
+  invalidatePlannerRelatedTabCaches: invalidatePlannerRelatedTabCachesMock,
+}));
+
+vi.mock("@/lib/xp/events", () => ({
+  requestXpRefresh: requestXpRefreshMock,
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    success: toastSuccessMock,
+    error: toastErrorMock,
+    warning: vi.fn(),
+  },
+}));
+
+vi.mock("@/features/goals/goal-link-target-select", () => ({
+  GoalLinkTargetSelect: ({
+    value,
+    onValueChange,
+    filteredLinkTargets,
+  }: {
+    value: string;
+    onValueChange: (value: string) => void;
+    filteredLinkTargets: Array<{ id: string }>;
+  }) => (
+    <button
+      type="button"
+      aria-label="Select link target"
+      onClick={() => onValueChange(filteredLinkTargets[0]?.id ?? "none")}
+    >
+      {value}
+    </button>
+  ),
+}));
+
+const activeLinkTarget: Goal = {
+  id: "goal-main-1",
+  owner_id: "user-1",
+  title: "Main goal",
+  description: null,
+  category: "Health",
+  category_key: "health",
+  color: "#16a34a",
+  frequency_type: "recurring",
+  recurrence_interval: "weekly",
+  target_count: 2,
+  target_basis: "period",
+  milestone_names: null,
+  start_date: "2026-08-01",
+  end_date: "2026-12-31",
+  reward_text: null,
+  default_local_time: null,
+  photo_path: null,
+  team_id: null,
+  is_deleted: false,
+  archived_at: null,
+  is_private: false,
+  difficulty: "medium",
+  created_at: "2026-08-01T00:00:00.000Z",
+  updated_at: "2026-08-01T00:00:00.000Z",
+};
+
+beforeEach(() => {
+  authGetUserMock.mockReset().mockResolvedValue({
+    data: { user: { id: "user-1" } },
+  });
+  goalsOrderMock.mockReset().mockResolvedValue({
+    data: [activeLinkTarget],
+    error: null,
+  });
+  profileMaybeSingleMock.mockReset().mockResolvedValue({
+    data: { rest_weekdays: [], blackout_ranges: [] },
+    error: null,
+  });
+  fetchProgressContextMock.mockReset().mockResolvedValue({
+    summaries: [{ goalId: "goal-main-1", lifecycle: "active" }],
+    facts: [],
+    truncated: false,
+  });
+  rpcMock.mockReset();
+  routerReplaceMock.mockReset();
+  routerRefreshMock.mockReset();
+  invalidatePlannerRelatedTabCachesMock.mockReset();
+  requestXpRefreshMock.mockReset();
+  toastSuccessMock.mockReset();
+  toastErrorMock.mockReset();
+});
 
 describe("goal form definition validation adapter", () => {
   afterEach(() => {
@@ -152,5 +304,117 @@ describe("GoalForm target validation", () => {
         target_count: "",
       })
     ).toBe("Total target completions requires a positive target.");
+  });
+});
+
+describe("GoalForm persistence recovery", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("retains a saved goal and retries a rejected link without reporting success", async () => {
+    const randomUuidSpy = vi
+      .spyOn(globalThis.crypto, "randomUUID")
+      .mockReturnValue("99000000-0000-4000-8000-000000000001");
+    const onExit = vi.fn();
+    rpcMock
+      .mockResolvedValueOnce({ error: null })
+      .mockRejectedValueOnce(new Error("link request timed out"))
+      .mockResolvedValueOnce({ error: null });
+    const user = userEvent.setup();
+
+    try {
+      render(<GoalForm showBackButton={false} onExit={onExit} />);
+      await screen.findByText("New goal");
+      await user.type(screen.getByLabelText("Name"), "Daily reset");
+      await user.click(
+        screen.getByRole("button", { name: /advanced settings/i })
+      );
+      await user.click(screen.getByRole("button", { name: "Select link target" }));
+      await user.click(screen.getByRole("button", { name: "Save" }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "Retry saving link" })).toBeInTheDocument();
+      });
+      expect(toastSuccessMock).not.toHaveBeenCalled();
+      expect(onExit).not.toHaveBeenCalled();
+      expect(invalidatePlannerRelatedTabCachesMock).not.toHaveBeenCalled();
+
+      await user.click(screen.getByRole("button", { name: "Retry saving link" }));
+
+      await waitFor(() => {
+        expect(onExit).toHaveBeenCalledTimes(1);
+      });
+      expect(rpcMock).toHaveBeenNthCalledWith(
+        1,
+        "create_goal",
+        expect.objectContaining({
+          p_id: "99000000-0000-4000-8000-000000000001",
+        })
+      );
+      expect(rpcMock).toHaveBeenNthCalledWith(2, "replace_goal_source_link", {
+        p_source_goal_id: "99000000-0000-4000-8000-000000000001",
+        p_target_goal_id: "goal-main-1",
+      });
+      expect(rpcMock).toHaveBeenNthCalledWith(3, "replace_goal_source_link", {
+        p_source_goal_id: "99000000-0000-4000-8000-000000000001",
+        p_target_goal_id: "goal-main-1",
+      });
+      expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(1);
+      expect(requestXpRefreshMock).toHaveBeenCalledTimes(1);
+      expect(toastSuccessMock).toHaveBeenCalledWith("Goal created.");
+    } finally {
+      randomUuidSpy.mockRestore();
+    }
+  });
+
+  it("retains a stable goal id when create_goal rejects ambiguously", async () => {
+    const randomUuidSpy = vi
+      .spyOn(globalThis.crypto, "randomUUID")
+      .mockReturnValue("99000000-0000-4000-8000-000000000002");
+    const onExit = vi.fn();
+    rpcMock
+      .mockRejectedValueOnce(new Error("create request timed out"))
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null });
+    const user = userEvent.setup();
+
+    try {
+      render(<GoalForm showBackButton={false} onExit={onExit} />);
+      await screen.findByText("New goal");
+      await user.type(screen.getByLabelText("Name"), "Stable goal");
+      await user.click(screen.getByRole("button", { name: "Save" }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "Retry creating goal" })).toBeInTheDocument();
+      });
+      expect(onExit).not.toHaveBeenCalled();
+
+      await user.click(screen.getByRole("button", { name: "Retry creating goal" }));
+
+      await waitFor(() => {
+        expect(onExit).toHaveBeenCalledTimes(1);
+      });
+      expect(rpcMock).toHaveBeenNthCalledWith(
+        1,
+        "create_goal",
+        expect.objectContaining({
+          p_id: "99000000-0000-4000-8000-000000000002",
+        })
+      );
+      expect(rpcMock).toHaveBeenNthCalledWith(
+        2,
+        "create_goal",
+        expect.objectContaining({
+          p_id: "99000000-0000-4000-8000-000000000002",
+        })
+      );
+      expect(rpcMock).toHaveBeenNthCalledWith(3, "replace_goal_source_link", {
+        p_source_goal_id: "99000000-0000-4000-8000-000000000002",
+        p_target_goal_id: undefined,
+      });
+    } finally {
+      randomUuidSpy.mockRestore();
+    }
   });
 });

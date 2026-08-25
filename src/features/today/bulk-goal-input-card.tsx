@@ -29,6 +29,7 @@ interface BulkGoalInputCardProps {
   onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onParseUploadedFile: () => void;
   uploadedFileName: string | null;
+  disabled?: boolean;
 }
 
 export function BulkGoalInputCard({
@@ -49,6 +50,7 @@ export function BulkGoalInputCard({
   onFileChange,
   onParseUploadedFile,
   uploadedFileName,
+  disabled = false,
 }: BulkGoalInputCardProps) {
   return (
     <Card className="shadow-sm">
@@ -71,6 +73,7 @@ export function BulkGoalInputCard({
                 variant={inputMode === "natural_language" ? "secondary" : "ghost"}
                 className="h-8 rounded-md px-3"
                 onClick={() => onInputModeChange("natural_language")}
+                disabled={disabled}
               >
                 Natural language
               </Button>
@@ -80,6 +83,7 @@ export function BulkGoalInputCard({
                 variant={inputMode === "csv" ? "secondary" : "ghost"}
                 className="h-8 rounded-md px-3"
                 onClick={() => onInputModeChange("csv")}
+                disabled={disabled}
               >
                 CSV
               </Button>
@@ -113,13 +117,14 @@ export function BulkGoalInputCard({
               maxLength={8000}
               placeholder="Example: I want to run 4 times per week, read 20 books this year, and call my parents every Sunday."
               className="min-h-28"
+              disabled={disabled}
             />
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onParseNaturalLanguage}
-                disabled={parsing}
+                disabled={parsing || disabled}
               >
                 {parsing ? (
                   <LoaderCircle className="size-4 animate-spin" />
@@ -139,7 +144,13 @@ export function BulkGoalInputCard({
                   {csvExample}
                 </pre>
                 <div className="mt-2">
-                  <Button type="button" size="sm" variant="outline" onClick={onUseCsvExample}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={onUseCsvExample}
+                    disabled={disabled}
+                  >
                     Use this example
                   </Button>
                 </div>
@@ -151,9 +162,15 @@ export function BulkGoalInputCard({
                 onChange={(event) => onCsvInputChange(event.target.value)}
                 placeholder="title,description,category,color,frequency_type,recurrence_interval,target_basis,target_count,milestone_names,start_date,end_date,default_local_time"
                 className="min-h-36"
+                disabled={disabled}
               />
               <div className="flex flex-wrap items-center gap-2">
-                <Button type="button" variant="outline" onClick={onParseCsv} disabled={parsing}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onParseCsv}
+                  disabled={parsing || disabled}
+                >
                   {parsing ? (
                     <LoaderCircle className="size-4 animate-spin" />
                   ) : (
@@ -171,13 +188,14 @@ export function BulkGoalInputCard({
                 type="file"
                 accept=".csv,.xlsx,.xls"
                 onChange={onFileChange}
+                disabled={disabled}
               />
               <div className="flex flex-wrap items-center gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={onParseUploadedFile}
-                  disabled={parsing}
+                  disabled={parsing || disabled}
                 >
                   {parsing ? (
                     <LoaderCircle className="size-4 animate-spin" />

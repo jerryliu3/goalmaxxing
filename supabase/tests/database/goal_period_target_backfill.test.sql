@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(4);
+select plan(7);
 
 insert into auth.users (id, email)
 values (
@@ -54,6 +54,19 @@ values (
   '2026-08-01'
 );
 
+select is(
+  (
+    select target_count
+    from public.goals
+    where id = '97000000-0000-4000-8000-000000000002'
+  ),
+  null::integer,
+  'fixture starts in the legacy recurring-period shape'
+);
+
+-- Migrations are applied before this test transaction, so pgTAP cannot replay
+-- this migration against a pre-migration row. The fixture below exercises the
+-- exact legacy predicate and verifies the resulting immutable edit contract.
 select lives_ok(
   $$
     update public.goals
@@ -109,6 +122,44 @@ select lives_ok(
     )
   $$,
   'normalized legacy period goal can use the immutable edit path'
+);
+
+select throws_ok(
+  $$
+    select public.update_goal(
+      '97000000-0000-4000-8000-000000000002',
+      'Invalid target edit',
+      null,
+      null,
+      'test',
+      'test',
+      '#6366f1',
+      'recurring',
+      'weekly',
+      2,
+      null,
+      '2026-08-01',
+      null,
+      null,
+      null,
+      false,
+      'medium',
+      'period'
+    )
+  $$,
+  '22023',
+  'goal definition fields are immutable after creation',
+  'normalized legacy period goal still rejects definition edits'
+);
+
+select is(
+  (
+    select target_count
+    from public.goals
+    where id = '97000000-0000-4000-8000-000000000002'
+  ),
+  1,
+  'rejected immutable edit leaves normalized target unchanged'
 );
 
 reset role;

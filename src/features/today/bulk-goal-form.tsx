@@ -26,6 +26,7 @@ import {
   persistBulkGoalDrafts,
   retryBulkGoalLinks,
 } from "@/features/goals/bulk-goal-persistence";
+import type { PreparedBulkGoalRow } from "@/features/goals/bulk-goal-drafts";
 import {
   buildStarterPackRows,
   resolveStarterPackKey,
@@ -112,6 +113,9 @@ export function BulkGoalForm({
   const [saving, setSaving] = useState(false);
   const [drafts, setDrafts] = useState<BulkGoalDraft[]>([]);
   const [linkRecovery, setLinkRecovery] = useState<BulkGoalLinkRecovery | null>(null);
+  const [createRecovery, setCreateRecovery] = useState<{
+    preparedRows: PreparedBulkGoalRow[];
+  } | null>(null);
   const [availableGoals, setAvailableGoals] = useState<Goal[]>([]);
   const appliedStarterPackRef = useRef<string | null>(null);
 
@@ -333,7 +337,6 @@ export function BulkGoalForm({
       );
     }
 
-    invalidatePlannerRelatedTabCaches();
     toast.success(
       `Created ${createdCount} goal${createdCount === 1 ? "" : "s"}.`
     );
@@ -364,6 +367,7 @@ export function BulkGoalForm({
           supabase,
         });
         setLinkRecovery(null);
+        invalidatePlannerRelatedTabCaches();
         await finishCreatedGoals(
           linkRecovery.preparedRows.length,
           linkRecovery.preparedRows
@@ -371,21 +375,28 @@ export function BulkGoalForm({
         return;
       }
 
+      const recoveryDrafts = createRecovery?.preparedRows.map(({ draft }) => draft);
       const result = await persistBulkGoalDrafts({
-          drafts: selectedDrafts,
-          currentUserId,
-          supabase,
-        });
+        drafts: recoveryDrafts ?? selectedDrafts,
+        currentUserId,
+        supabase,
+        onGoalsPersisted: invalidatePlannerRelatedTabCaches,
+      });
 
       if (result.status === "partial_success") {
+        setCreateRecovery(null);
         setLinkRecovery(result.linkRecovery);
         toast.error(result.linkErrorMessage);
         return;
       }
 
+      setCreateRecovery(null);
       await finishCreatedGoals(result.createdCount, result.preparedRows);
     } catch (error) {
       if (error instanceof BulkGoalPersistenceError) {
+        if (error.code === "create_ambiguous" && error.preparedRows) {
+          setCreateRecovery({ preparedRows: error.preparedRows });
+        }
         toast.error(error.message);
       } else {
         toast.error(
@@ -426,7 +437,25 @@ export function BulkGoalForm({
         onFileChange={onFileChange}
         onParseUploadedFile={parseUploadedFile}
         uploadedFileName={uploadedFile?.name ?? null}
+        disabled={Boolean(linkRecovery || createRecovery)}
       />
+
+      {createRecovery ? (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+          <p>
+            Goal creation could not be confirmed. Your drafts are retained while
+            you retry safely.
+          </p>
+          <button
+            type="button"
+            className="mt-2 rounded-md border border-amber-500 px-3 py-1.5 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/50"
+            onClick={() => void createSelectedGoals()}
+            disabled={saving}
+          >
+            Retry creating goals
+          </button>
+        </div>
+      ) : null}
 
       {linkRecovery ? (
         <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
@@ -452,9 +481,13 @@ export function BulkGoalForm({
         saving={saving}
         onCreate={createSelectedGoals}
         availableGoals={availableGoals}
+        editingDisabled={Boolean(linkRecovery || createRecovery)}
+        createLabel={createRecovery ? "Retry creating goals" : undefined}
         createDisabledMessage={
           linkRecovery
             ? "Goals were created, but their links still need to be saved."
+            : createRecovery
+              ? "Goal creation was not confirmed; retry to reconcile the retained draft."
             : null
         }
         emptyMessage={

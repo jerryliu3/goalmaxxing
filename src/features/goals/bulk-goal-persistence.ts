@@ -8,6 +8,24 @@ type RpcResult = PromiseLike<{
   error: { message?: string | null } | null;
 }>;
 
+const LINK_FAILURE_FALLBACK = "Could not save goal links. Try again.";
+
+function rpcErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string" &&
+    error.message.trim()
+  ) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export interface BulkGoalLinkRow {
   [key: string]: string;
   source_goal_id: string;
@@ -52,16 +70,22 @@ type BulkGoalPersistenceErrorCode =
   | "authentication_required"
   | "no_selected_goals"
   | "invalid_goals"
-  | "create_failed"
+  | "create_ambiguous"
   | "links_failed";
 
 export class BulkGoalPersistenceError extends Error {
   readonly code: BulkGoalPersistenceErrorCode;
+  readonly preparedRows?: PreparedBulkGoalRow[];
 
-  constructor(code: BulkGoalPersistenceErrorCode, message: string) {
+  constructor(
+    code: BulkGoalPersistenceErrorCode,
+    message: string,
+    preparedRows?: PreparedBulkGoalRow[]
+  ) {
     super(message);
     this.name = "BulkGoalPersistenceError";
     this.code = code;
+    this.preparedRows = preparedRows;
   }
 }
 
@@ -70,11 +94,13 @@ export async function persistBulkGoalDrafts({
   currentUserId,
   supabase,
   createId,
+  onGoalsPersisted,
 }: {
   drafts: BulkGoalDraft[];
   currentUserId: string | null;
   supabase: BulkGoalPersistenceClient;
   createId?: () => string;
+  onGoalsPersisted?: (preparedRows: PreparedBulkGoalRow[]) => void;
 }): Promise<PersistBulkGoalDraftsResult> {
   if (!currentUserId) {
     throw new BulkGoalPersistenceError(
@@ -96,15 +122,26 @@ export async function persistBulkGoalDrafts({
   }
 
   const preparedRows = prepareBulkGoalRows(drafts, createId ? { createId } : undefined);
-  const { error } = await supabase.rpc("create_goals", {
-    p_goals: preparedRows.map(({ row }) => row),
-  });
-  if (error) {
+  let error: { message?: string | null } | null = null;
+  try {
+    ({ error } = await supabase.rpc("create_goals", {
+      p_goals: preparedRows.map(({ row }) => row),
+    }));
+  } catch (cause) {
     throw new BulkGoalPersistenceError(
-      "create_failed",
-      error.message ?? "Failed to create goals."
+      "create_ambiguous",
+      rpcErrorMessage(cause, "Could not confirm goal creation. Try again."),
+      preparedRows
     );
   }
+  if (error) {
+    throw new BulkGoalPersistenceError(
+      "create_ambiguous",
+      rpcErrorMessage(error, "Could not confirm goal creation. Try again."),
+      preparedRows
+    );
+  }
+  onGoalsPersisted?.(preparedRows);
 
   const linkRows = preparedRows
     .filter(
@@ -124,15 +161,31 @@ export async function persistBulkGoalDrafts({
     };
   }
 
-  const { error: linkError } = await supabase.rpc("create_goal_links", {
-    p_links: linkRows,
-  });
-  if (linkError) {
+  let linkError: { message?: string | null } | null = null;
+  try {
+    ({ error: linkError } = await supabase.rpc("create_goal_links", {
+      p_links: linkRows,
+    }));
+  } catch (cause) {
+    const message = rpcErrorMessage(cause, LINK_FAILURE_FALLBACK);
     return {
       status: "partial_success",
       createdCount: preparedRows.length,
       preparedRows,
-      linkErrorMessage: `Some linked goals were not saved: ${linkError.message}`,
+      linkErrorMessage: `Some linked goals were not saved: ${message}`,
+      linkRecovery: {
+        preparedRows,
+        linkRows,
+      },
+    };
+  }
+  if (linkError) {
+    const message = rpcErrorMessage(linkError, LINK_FAILURE_FALLBACK);
+    return {
+      status: "partial_success",
+      createdCount: preparedRows.length,
+      preparedRows,
+      linkErrorMessage: `Some linked goals were not saved: ${message}`,
       linkRecovery: {
         preparedRows,
         linkRows,
@@ -156,13 +209,27 @@ export async function retryBulkGoalLinks({
   linkRows: BulkGoalLinkRow[];
   supabase: BulkGoalPersistenceClient;
 }): Promise<{ status: "created" }> {
-  const { error } = await supabase.rpc("create_goal_links", {
-    p_links: linkRows,
-  });
+  let error: { message?: string | null } | null = null;
+  try {
+    ({ error } = await supabase.rpc("create_goal_links", {
+      p_links: linkRows,
+    }));
+  } catch (cause) {
+    throw new BulkGoalPersistenceError(
+      "links_failed",
+      `Some linked goals were not saved: ${rpcErrorMessage(
+        cause,
+        LINK_FAILURE_FALLBACK
+      )}`
+    );
+  }
   if (error) {
     throw new BulkGoalPersistenceError(
       "links_failed",
-      `Some linked goals were not saved: ${error.message}`
+      `Some linked goals were not saved: ${rpcErrorMessage(
+        error,
+        LINK_FAILURE_FALLBACK
+      )}`
     );
   }
   return { status: "created" };

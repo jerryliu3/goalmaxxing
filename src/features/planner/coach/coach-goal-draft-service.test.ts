@@ -170,4 +170,22 @@ describe("coach goal draft service", () => {
       ],
     });
   });
+
+  it("preserves deterministic create recovery when the rpc promise rejects", async () => {
+    const [draft] = buildBulkGoalDraftsFromLlmGoals([
+      {
+        title: "Mobility",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        start_date: "2026-08-17",
+      },
+    ]);
+    rpcMock.mockRejectedValue(new Error("create request timed out"));
+
+    await expect(createCoachGoalDrafts({ drafts: [draft!] })).rejects.toMatchObject({
+      code: "create_ambiguous",
+      message: "create request timed out",
+      preparedRows: [{ goalId: draft!.id }],
+    });
+  });
 });

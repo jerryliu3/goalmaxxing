@@ -31,6 +31,7 @@ const toastErrorMock = vi.fn();
 const parseCoachGoalDraftsMock = vi.fn();
 const createCoachGoalDraftsMock = vi.fn();
 const retryCoachGoalDraftLinksMock = vi.fn();
+const invalidatePlannerRelatedTabCachesMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/features/planner/coach/coach-client", () => ({
   listPlannerCoachConversations: (...args: unknown[]) =>
@@ -69,6 +70,10 @@ vi.mock("@/features/planner/coach/coach-goal-draft-service", () => ({
     createCoachGoalDraftsMock(...args),
   retryCoachGoalDraftLinks: (...args: unknown[]) =>
     retryCoachGoalDraftLinksMock(...args),
+}));
+
+vi.mock("@/lib/cache/planner-tab-cache", () => ({
+  invalidatePlannerRelatedTabCaches: invalidatePlannerRelatedTabCachesMock,
 }));
 
 vi.mock("sonner", () => ({
@@ -133,6 +138,7 @@ describe("usePlannerCoach", () => {
     parseCoachGoalDraftsMock.mockReset();
     createCoachGoalDraftsMock.mockReset();
     retryCoachGoalDraftLinksMock.mockReset();
+    invalidatePlannerRelatedTabCachesMock.mockReset();
   });
 
   it("reports coach unavailable without context", () => {
@@ -696,7 +702,9 @@ describe("usePlannerCoach", () => {
       await result.current.actions.createCoachGoalDrafts(1);
     });
 
-    expect(createCoachGoalDraftsMock).toHaveBeenCalledWith({ drafts });
+    expect(createCoachGoalDraftsMock).toHaveBeenCalledWith(
+      expect.objectContaining({ drafts })
+    );
     expect(onGoalsCreated).toHaveBeenCalledTimes(1);
     expect(result.current.state.coachMessages[1]?.proposal).toMatchObject({
       kind: "goal_draft",
@@ -736,17 +744,26 @@ describe("usePlannerCoach", () => {
       linked_target_goal_id: "goal-main-1",
     };
     parseCoachGoalDraftsMock.mockResolvedValue({ drafts, warnings: [] });
-    createCoachGoalDraftsMock.mockResolvedValue({
-      status: "partial_success",
-      createdCount: 1,
-      linkErrorMessage: "Some linked goals were not saved: link save failed",
-      linkRows: [
-        {
-          source_goal_id: "goal-created-1",
-          target_goal_id: "goal-main-1",
-        },
-      ],
-    });
+    createCoachGoalDraftsMock.mockImplementation(
+      async ({
+        onGoalsPersisted,
+      }: {
+        onGoalsPersisted?: () => void;
+      }) => {
+        onGoalsPersisted?.();
+        return {
+          status: "partial_success",
+          createdCount: 1,
+          linkErrorMessage: "Some linked goals were not saved: link save failed",
+          linkRows: [
+            {
+              source_goal_id: "goal-created-1",
+              target_goal_id: "goal-main-1",
+            },
+          ],
+        };
+      }
+    );
     retryCoachGoalDraftLinksMock.mockResolvedValue({ status: "created" });
     const onGoalsCreated = vi.fn().mockResolvedValue(undefined);
     const context = buildContext();
@@ -777,6 +794,7 @@ describe("usePlannerCoach", () => {
     });
 
     expect(onGoalsCreated).not.toHaveBeenCalled();
+    expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(1);
     expect(result.current.state.coachGoalDraftStates[1]).toMatchObject({
       status: "error",
       errorCode: "links_failed",
@@ -791,14 +809,16 @@ describe("usePlannerCoach", () => {
       await result.current.actions.createCoachGoalDrafts(1);
     });
 
-    expect(retryCoachGoalDraftLinksMock).toHaveBeenCalledWith({
-      linkRows: [
-        {
-          source_goal_id: "goal-created-1",
-          target_goal_id: "goal-main-1",
-        },
-      ],
-    });
+    expect(retryCoachGoalDraftLinksMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        linkRows: [
+          {
+            source_goal_id: "goal-created-1",
+            target_goal_id: "goal-main-1",
+          },
+        ],
+      })
+    );
     expect(onGoalsCreated).toHaveBeenCalledTimes(1);
     expect(result.current.state.coachGoalDraftStates[1]?.status).toBe("created");
     expect(result.current.state.coachMessages[1]?.proposal).toMatchObject({
@@ -863,14 +883,16 @@ describe("usePlannerCoach", () => {
       await result.current.actions.createCoachGoalDrafts(1);
     });
 
-    expect(createCoachGoalDraftsMock).toHaveBeenCalledWith({
-      drafts: [
-        expect.objectContaining({
-          title: "Mobility",
-          linked_target_goal_id: "goal-main-1",
-        }),
-      ],
-    });
+    expect(createCoachGoalDraftsMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        drafts: [
+          expect.objectContaining({
+            title: "Mobility",
+            linked_target_goal_id: "goal-main-1",
+          }),
+        ],
+      })
+    );
   });
 
   it("uses refreshed created-goal work units on the next coach turn", async () => {

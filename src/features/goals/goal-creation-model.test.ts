@@ -208,6 +208,60 @@ describe("updateGoalCreationFields", () => {
     expect(toPeriod.target_count).toBe("1");
   });
 
+  it("preserves valid lifetime counts only when they fit the destination period", () => {
+    const weekly = updateGoalCreationFields(
+      baseFields({
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "lifetime",
+        target_count: "7",
+      }),
+      { type: "target_basis", value: "period" }
+    );
+    const monthly = updateGoalCreationFields(
+      baseFields({
+        frequency_type: "recurring",
+        recurrence_interval: "monthly",
+        target_basis: "lifetime",
+        target_count: "31",
+      }),
+      { type: "target_basis", value: "period" }
+    );
+    const weeklyOverLimit = updateGoalCreationFields(
+      baseFields({
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "lifetime",
+        target_count: "8",
+      }),
+      { type: "target_basis", value: "period" }
+    );
+    const monthlyOverLimit = updateGoalCreationFields(
+      baseFields({
+        frequency_type: "recurring",
+        recurrence_interval: "monthly",
+        target_basis: "lifetime",
+        target_count: "32",
+      }),
+      { type: "target_basis", value: "period" }
+    );
+    const daily = updateGoalCreationFields(
+      baseFields({
+        frequency_type: "recurring",
+        recurrence_interval: "daily",
+        target_basis: "lifetime",
+        target_count: "1",
+      }),
+      { type: "target_basis", value: "period" }
+    );
+
+    expect(weekly.target_count).toBe("7");
+    expect(monthly.target_count).toBe("31");
+    expect(weeklyOverLimit.target_count).toBe("1");
+    expect(monthlyOverLimit.target_count).toBe("1");
+    expect(daily.target_count).toBe("1");
+  });
+
   it("defaults empty lifetime targets to 3 and empty period targets to 1", () => {
     const toLifetime = updateGoalCreationFields(
       baseFields({

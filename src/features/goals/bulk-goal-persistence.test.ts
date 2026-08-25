@@ -182,10 +182,30 @@ describe("persistBulkGoalDrafts", () => {
     expect(rpcMock).not.toHaveBeenCalled();
   });
 
-  it("returns actionable create_goals rpc failures", async () => {
+  it("returns a typed recovery payload for rejected create_goals calls", async () => {
+    const draft = makeDraft();
+
     await expect(
       persistBulkGoalDrafts({
-        drafts: [makeDraft()],
+        drafts: [draft],
+        currentUserId: "user-1",
+        supabase: {
+          rpc: vi.fn().mockRejectedValue(new Error("network timeout")),
+        },
+      })
+    ).rejects.toMatchObject({
+      code: "create_ambiguous",
+      message: "network timeout",
+      preparedRows: [{ goalId: draft.id }],
+    });
+  });
+
+  it("returns a typed recovery payload for create_goals error responses", async () => {
+    const draft = makeDraft();
+
+    await expect(
+      persistBulkGoalDrafts({
+        drafts: [draft],
         currentUserId: "user-1",
         supabase: {
           rpc: vi.fn().mockResolvedValue({
@@ -194,8 +214,9 @@ describe("persistBulkGoalDrafts", () => {
         },
       })
     ).rejects.toMatchObject({
-      code: "create_failed",
+      code: "create_ambiguous",
       message: "create_goals exploded",
+      preparedRows: [{ goalId: draft.id }],
     });
   });
 
@@ -226,6 +247,68 @@ describe("persistBulkGoalDrafts", () => {
     });
   });
 
+  it("uses a stable fallback for link errors without messages", async () => {
+    const rpcMock = vi
+      .fn()
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: {} });
+
+    const result = await persistBulkGoalDrafts({
+      drafts: [makeDraft({ linked_target_goal_id: "goal-main-a" })],
+      currentUserId: "user-1",
+      supabase: { rpc: rpcMock },
+    });
+
+    expect(result).toMatchObject({
+      status: "partial_success",
+      linkErrorMessage:
+        "Some linked goals were not saved: Could not save goal links. Try again.",
+    });
+  });
+
+  it("recovers rejected link calls without rerunning goal creation", async () => {
+    const rpcMock = vi
+      .fn()
+      .mockResolvedValueOnce({ error: null })
+      .mockRejectedValueOnce(new Error("link request timed out"));
+    const draft = makeDraft({ linked_target_goal_id: "goal-main-a" });
+
+    const result = await persistBulkGoalDrafts({
+      drafts: [draft],
+      currentUserId: "user-1",
+      supabase: { rpc: rpcMock },
+    });
+
+    expect(result).toMatchObject({
+      status: "partial_success",
+      linkErrorMessage: "Some linked goals were not saved: link request timed out",
+      linkRecovery: {
+        preparedRows: [{ goalId: draft.id }],
+      },
+    });
+    expect(rpcMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("notifies the caller immediately after create_goals succeeds", async () => {
+    const onGoalsPersisted = vi.fn();
+    const rpcMock = vi
+      .fn()
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: { message: "link save failed" } });
+
+    await persistBulkGoalDrafts({
+      drafts: [makeDraft({ linked_target_goal_id: "goal-main-a" })],
+      currentUserId: "user-1",
+      supabase: { rpc: rpcMock },
+      onGoalsPersisted,
+    });
+
+    expect(onGoalsPersisted).toHaveBeenCalledTimes(1);
+    expect(onGoalsPersisted.mock.invocationCallOrder[0]).toBeLessThan(
+      rpcMock.mock.invocationCallOrder[1]!
+    );
+  });
+
   it("retries only failed link rows without creating duplicate goals", async () => {
     const rpcMock = vi.fn().mockResolvedValue({ error: null });
     const linkRows = [
@@ -245,6 +328,25 @@ describe("persistBulkGoalDrafts", () => {
     expect(rpcMock).toHaveBeenCalledTimes(1);
     expect(rpcMock).toHaveBeenCalledWith("create_goal_links", {
       p_links: linkRows,
+    });
+  });
+
+  it("keeps link retry failures typed when the rpc promise rejects", async () => {
+    await expect(
+      retryBulkGoalLinks({
+        linkRows: [
+          {
+            source_goal_id: "10000000-0000-4000-8000-000000000031",
+            target_goal_id: "goal-main-a",
+          },
+        ],
+        supabase: {
+          rpc: vi.fn().mockRejectedValue(new Error("retry timed out")),
+        },
+      })
+    ).rejects.toMatchObject({
+      code: "links_failed",
+      message: "Some linked goals were not saved: retry timed out",
     });
   });
 });
