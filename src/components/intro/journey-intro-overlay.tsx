@@ -104,12 +104,13 @@ export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
   const isLastStep = stepIndex >= JOURNEY_INTRO_STEPS.length - 1;
   const isPreferencesStep = step.kind === "preferences";
   const preferences = useJourneyIntroPreferences(userId, open && isPreferencesStep);
-  const cardPosition = hasMeasured
-    ? placeOnboardingCard(targetRect, {
-        cardWidthPx: isPreferencesStep ? 420 : 320,
-        estimatedHeightPx: isPreferencesStep ? 360 : 176,
-      })
-    : null;
+  const cardPosition =
+    isPreferencesStep || !hasMeasured
+      ? null
+      : placeOnboardingCard(targetRect, {
+          cardWidthPx: 320,
+          estimatedHeightPx: 176,
+        });
   const targetCandidates = useMemo(() => [step.target], [step.target]);
 
   useEffect(() => {
@@ -154,7 +155,7 @@ export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
   }, [open, router]);
 
   useEffect(() => {
-    if (!open) {
+    if (!open || isPreferencesStep) {
       return;
     }
     let cancelled = false;
@@ -198,7 +199,7 @@ export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
       window.removeEventListener("resize", readTarget);
       window.removeEventListener("scroll", readTarget, true);
     };
-  }, [open, targetCandidates]);
+  }, [open, isPreferencesStep, targetCandidates]);
 
   const isBrowser = useSyncExternalStore(
     subscribeNoop,
@@ -234,9 +235,96 @@ export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
     return null;
   }
 
+  const introDialog = (
+    <Card
+      className={
+        isPreferencesStep
+          ? "w-[min(26rem,calc(100vw-2rem))] max-h-[calc(100vh-2rem)] overflow-y-auto shadow-lg"
+          : "pointer-events-auto absolute w-[min(20rem,calc(100vw-2rem))] shadow-lg"
+      }
+      role="dialog"
+      aria-modal={isPreferencesStep}
+      aria-labelledby="journey-intro-title"
+      style={
+        cardPosition
+          ? {
+              top: cardPosition.top,
+              left: cardPosition.left,
+            }
+          : undefined
+      }
+    >
+      <CardHeader className="pb-2">
+        <CardTitle id="journey-intro-title" className="text-base">
+          {step.title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        <p className="text-xs text-muted-foreground">
+          Step {stepIndex + 1} of {JOURNEY_INTRO_STEPS.length}
+        </p>
+        {isPreferencesStep ? (
+          <JourneyIntroPreferencesStep
+            value={preferences.value}
+            loading={preferences.loading || saving}
+            onChange={preferences.setValue}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">{step.description}</p>
+        )}
+        <div className="flex flex-wrap justify-between gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={saving}
+            onClick={() => {
+              void finishIntro(false);
+            }}
+          >
+            Skip intro
+          </Button>
+          <div className="flex gap-2">
+            {stepIndex > 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={saving}
+                onClick={() => {
+                  setHasMeasured(false);
+                  setStepIndex((current) => Math.max(0, current - 1));
+                }}
+              >
+                Back
+              </Button>
+            ) : null}
+            <Button
+              type="button"
+              size="sm"
+              disabled={saving || (isPreferencesStep && preferences.loading)}
+              onClick={() => {
+                if (isLastStep) {
+                  void finishIntro(true);
+                  return;
+                }
+                setHasMeasured(false);
+                setStepIndex((current) =>
+                  Math.min(JOURNEY_INTRO_STEPS.length - 1, current + 1)
+                );
+              }}
+            >
+              {isLastStep ? "Done" : "Next"}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return createPortal(
     <div className="pointer-events-none fixed inset-0 z-[80]">
-      {targetRect ? (
+      {!isPreferencesStep && targetRect ? (
         <div
           data-testid="onboarding-highlight"
           className="absolute rounded-xl ring-2 ring-primary ring-offset-2 ring-offset-background"
@@ -248,87 +336,15 @@ export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
           }}
         />
       ) : null}
-      {cardPosition ? (
-        <Card
-          className={
-            isPreferencesStep
-              ? "pointer-events-auto absolute w-[min(26rem,calc(100vw-2rem))] shadow-lg"
-              : "pointer-events-auto absolute w-[min(20rem,calc(100vw-2rem))] shadow-lg"
-          }
-          role="dialog"
-          aria-modal="false"
-          aria-labelledby="journey-intro-title"
-          style={{
-            top: cardPosition.top,
-            left: cardPosition.left,
-          }}
+      {isPreferencesStep ? (
+        <div
+          data-testid="journey-intro-preferences-shell"
+          className="pointer-events-auto fixed inset-0 flex items-center justify-center p-4"
         >
-          <CardHeader className="pb-2">
-            <CardTitle id="journey-intro-title" className="text-base">
-              {step.title}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <p className="text-xs text-muted-foreground">
-              Step {stepIndex + 1} of {JOURNEY_INTRO_STEPS.length}
-            </p>
-            {isPreferencesStep ? (
-              <JourneyIntroPreferencesStep
-                value={preferences.value}
-                loading={preferences.loading || saving}
-                onChange={preferences.setValue}
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">{step.description}</p>
-            )}
-            <div className="flex flex-wrap justify-between gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={saving}
-                onClick={() => {
-                  void finishIntro(false);
-                }}
-              >
-                Skip intro
-              </Button>
-              <div className="flex gap-2">
-                {stepIndex > 0 ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={saving}
-                    onClick={() => {
-                      setHasMeasured(false);
-                      setStepIndex((current) => Math.max(0, current - 1));
-                    }}
-                  >
-                    Back
-                  </Button>
-                ) : null}
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={saving || (isPreferencesStep && preferences.loading)}
-                  onClick={() => {
-                    if (isLastStep) {
-                      void finishIntro(true);
-                      return;
-                    }
-                    setHasMeasured(false);
-                    setStepIndex((current) =>
-                      Math.min(JOURNEY_INTRO_STEPS.length - 1, current + 1)
-                    );
-                  }}
-                >
-                  {isLastStep ? "Done" : "Next"}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          {introDialog}
+        </div>
+      ) : cardPosition ? (
+        introDialog
       ) : null}
     </div>,
     document.body

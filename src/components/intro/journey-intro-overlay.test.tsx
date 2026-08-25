@@ -226,6 +226,81 @@ describe("JourneyIntroOverlay", () => {
     expect(window.localStorage.getItem(JOURNEY_ONBOARDING_COMPLETED_KEY)).toBe("done");
   });
 
+  it("centers the preferences step so actions stay reachable on small screens", async () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+      function mockClientRect(this: HTMLElement) {
+        const target = this.getAttribute("data-onboarding") ?? "unknown";
+        if (target === "nav.settings") {
+          return {
+            top: 720,
+            left: 280,
+            width: 72,
+            height: 48,
+            bottom: 768,
+            right: 352,
+            x: 280,
+            y: 720,
+            toJSON: () => ({}),
+          } as DOMRect;
+        }
+        const index = [
+          "nav.insights",
+          "nav.calendar",
+          "nav.social",
+          "nav.settings",
+          "nav.new-goal",
+        ].indexOf(target);
+        const left = 20 + Math.max(index, 0) * 80;
+        return {
+          top: 12,
+          left,
+          width: 72,
+          height: 40,
+          bottom: 52,
+          right: left + 72,
+          x: left,
+          y: 12,
+          toJSON: () => ({}),
+        } as DOMRect;
+      }
+    );
+    Object.defineProperty(window, "innerHeight", {
+      configurable: true,
+      value: 800,
+    });
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 390,
+    });
+
+    renderIntro();
+    expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(await screen.findByRole("dialog", { name: "Planner" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(await screen.findByRole("dialog", { name: "Community" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(await screen.findByRole("dialog", { name: "Profile" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(await screen.findByRole("dialog", { name: "New Goal +" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+    const preferencesDialog = await screen.findByRole("dialog", {
+      name: "Your preferences",
+    });
+    expect(screen.getByTestId("journey-intro-preferences-shell")).toBeInTheDocument();
+    expect(screen.queryByTestId("onboarding-highlight")).not.toBeInTheDocument();
+    expect(preferencesDialog).not.toHaveStyle({ top: "768px" });
+
+    const doneButton = screen.getByRole("button", { name: "Done" });
+    expect(doneButton).toBeVisible();
+    fireEvent.click(doneButton);
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Your preferences" })).toBeNull();
+    });
+  });
+
   it("skips intro without saving preferences", async () => {
     renderIntro();
     expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
