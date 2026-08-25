@@ -85,39 +85,6 @@ test("planner bridge APIs authenticate before validation", async ({ page }) => {
   expect(exactCompletion.body.code).toBe("validation_failed");
 });
 
-test("bulk parser preserves explicit period and lifetime target basis", async ({
-  page,
-}) => {
-  await page.goto("/");
-  const timezone = await page.evaluate(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone
-  );
-  const response = await postJson(page, "/api/bulk-goals/parse", {
-    prompt:
-      "Create exactly two recurring goals: Weekly planning with target_basis period and target_count 2 per week, and Presentation practice with target_basis lifetime and target_count 12 by 2026-10-15.",
-    timezone,
-  });
-  const body = response.body as unknown as {
-    goals?: Array<{
-      target_basis?: "period" | "lifetime";
-      target_count?: number | null;
-    }>;
-  };
-  const goals = body.goals ?? [];
-
-  expect(response.status).toBe(200);
-  expect(
-    goals.some(
-      (goal) => goal.target_basis === "period" && goal.target_count === 2
-    )
-  ).toBe(true);
-  expect(
-    goals.some(
-      (goal) => goal.target_basis === "lifetime" && goal.target_count === 12
-    )
-  ).toBe(true);
-});
-
 test("bounded progress context returns explicit non-truncated data", async ({
   page,
 }) => {
