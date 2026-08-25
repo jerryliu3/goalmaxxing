@@ -814,3 +814,31 @@ grant execute on function public.update_goal(
   public.goal_difficulty,
   public.goal_target_basis
 ) to authenticated, service_role;
+
+create or replace function private.goals_default_target_basis()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.target_basis is null then
+    new.target_basis := private.resolve_goal_target_basis(
+      new.frequency_type,
+      new.target_count,
+      null
+    );
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function private.goals_default_target_basis()
+from public, anon, authenticated;
+grant execute on function private.goals_default_target_basis()
+to service_role;
+
+drop trigger if exists goals_default_target_basis on public.goals;
+create trigger goals_default_target_basis
+  before insert on public.goals
+  for each row
+  execute function private.goals_default_target_basis();
