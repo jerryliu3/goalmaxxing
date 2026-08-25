@@ -908,6 +908,7 @@ export type Database = {
             | null
           reward_text: string | null
           start_date: string
+          target_basis: Database["public"]["Enums"]["goal_target_basis"]
           target_count: number | null
           team_id: string | null
           title: string
@@ -935,6 +936,7 @@ export type Database = {
             | null
           reward_text?: string | null
           start_date?: string
+          target_basis?: Database["public"]["Enums"]["goal_target_basis"]
           target_count?: number | null
           team_id?: string | null
           title: string
@@ -962,6 +964,7 @@ export type Database = {
             | null
           reward_text?: string | null
           start_date?: string
+          target_basis?: Database["public"]["Enums"]["goal_target_basis"]
           target_count?: number | null
           team_id?: string | null
           title?: string
@@ -2605,6 +2608,7 @@ export type Database = {
           p_recurrence_interval?: Database["public"]["Enums"]["recurrence_interval"]
           p_reward_text?: string
           p_start_date?: string
+          p_target_basis?: Database["public"]["Enums"]["goal_target_basis"]
           p_target_count?: number
           p_team_id?: string
           p_title: string
@@ -3070,6 +3074,7 @@ export type Database = {
           p_recurrence_interval?: Database["public"]["Enums"]["recurrence_interval"]
           p_reward_text?: string
           p_start_date?: string
+          p_target_basis?: Database["public"]["Enums"]["goal_target_basis"]
           p_target_count?: number
           p_team_id?: string
           p_title: string
@@ -3107,6 +3112,7 @@ export type Database = {
         | "team_formed"
       goal_difficulty: "easy" | "medium" | "hard"
       goal_frequency_type: "fixed_milestones" | "recurring"
+      goal_target_basis: "period" | "lifetime"
       health_metric_key:
         | "steps"
         | "active_energy_kcal"
@@ -3302,6 +3308,7 @@ export const Constants = {
       ],
       goal_difficulty: ["easy", "medium", "hard"],
       goal_frequency_type: ["fixed_milestones", "recurring"],
+      goal_target_basis: ["period", "lifetime"],
       health_metric_key: [
         "steps",
         "active_energy_kcal",
