@@ -1,5 +1,7 @@
 name: Post-Merge Verify
 
+# Temporary: route to repo self-hosted Mac runner (self-hosted, macOS, cadence-ci).
+
 on:
   push:
     branches:
@@ -16,7 +18,7 @@ concurrency:
 jobs:
   verify-static-full:
     name: verify-static-full
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, cadence-ci]
     timeout-minutes: 20
 
     steps:
@@ -49,7 +51,7 @@ jobs:
 
   verify-integration-full:
     name: verify-integration-full
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, cadence-ci]
     timeout-minutes: 40
 
     steps:
@@ -208,7 +210,7 @@ jobs:
     needs:
       - verify-static-full
       - verify-integration-full
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, cadence-ci]
     timeout-minutes: 5
 
     steps:
@@ -225,7 +227,7 @@ jobs:
     if: ${{ always() && !cancelled() }}
     needs:
       - verify-full
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, cadence-ci]
     permissions:
       contents: read
       issues: write

@@ -1,5 +1,8 @@
 name: CI
 
+# Temporary: private repo billing blocks GitHub-hosted runners; route CI to the
+# repo self-hosted Mac runner (labels: self-hosted, macOS, cadence-ci).
+
 on:
   pull_request:
 
@@ -13,7 +16,7 @@ concurrency:
 jobs:
   verify-static:
     name: verify-static
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, cadence-ci]
     timeout-minutes: 30
 
     steps:
@@ -46,7 +49,7 @@ jobs:
 
   verify-mobile-static:
     name: verify-mobile-static
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, cadence-ci]
     timeout-minutes: 15
 
     steps:
@@ -85,7 +88,7 @@ jobs:
 
   verify-pr-db:
     name: verify-pr-db
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, cadence-ci]
     timeout-minutes: 35
 
     steps:
@@ -206,7 +209,7 @@ jobs:
 
   verify-pr-e2e:
     name: verify-pr-e2e
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, cadence-ci]
     timeout-minutes: 25
 
     steps:
@@ -377,7 +380,7 @@ jobs:
     needs:
       - verify-pr-db
       - verify-pr-e2e
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, cadence-ci]
     timeout-minutes: 5
 
     steps:
@@ -396,7 +399,7 @@ jobs:
       - verify-static
       - verify-mobile-static
       - verify-pr-smoke
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, cadence-ci]
     timeout-minutes: 5
 
     steps:
