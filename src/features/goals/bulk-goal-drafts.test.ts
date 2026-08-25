@@ -1,10 +1,30 @@
 import { describe, expect, it, vi } from "vitest";
+import { createDefaultGoalCreationFields } from "@/features/goals/goal-creation-model";
 import {
   buildBulkGoalDraftFromRow,
   buildBulkGoalDraftsFromLlmGoals,
   prepareBulkGoalRows,
   summarizeBulkGoalDraftSchedule,
+  validateBulkGoalDraft,
+  withValidatedBulkGoalDraft,
+  type BulkGoalDraft,
 } from "@/features/goals/bulk-goal-drafts";
+
+function bulkDraft(overrides: Partial<BulkGoalDraft> = {}): BulkGoalDraft {
+  return withValidatedBulkGoalDraft({
+    ...createDefaultGoalCreationFields(),
+    id: "draft-1",
+    sourceRowLabel: "Row 1",
+    include: true,
+    title: "Sample goal",
+    start_date: "2026-08-17",
+    link_target_search: "",
+    link_target_open: false,
+    advanced_open: false,
+    photo_file: null,
+    ...overrides,
+  });
+}
 
 describe("bulk goal drafts", () => {
   it("normalizes parser goals through the canonical draft model", () => {
@@ -150,6 +170,171 @@ describe("bulk goal drafts", () => {
     expect(
       summarizeBulkGoalDraftSchedule({ ...draft, start_date: "" })
     ).toBe("Weekly · Start date required");
+  });
+
+  it("rejects lifetime drafts with empty targets and over-max period targets", () => {
+    const lifetimeEmpty = bulkDraft({
+      frequency_type: "recurring",
+      recurrence_interval: "weekly",
+      target_basis: "lifetime",
+      target_count: "",
+    });
+    expect(lifetimeEmpty.errors).toContain(
+      "Total target completions requires a positive target."
+    );
+
+    const weeklyOverMax = bulkDraft({
+      frequency_type: "recurring",
+      recurrence_interval: "weekly",
+      target_basis: "period",
+      target_count: "8",
+    });
+    expect(weeklyOverMax.errors).toContain(
+      "Target cannot exceed 7 completions for this period length."
+    );
+
+    const monthlyOverMax = bulkDraft({
+      frequency_type: "recurring",
+      recurrence_interval: "monthly",
+      target_basis: "period",
+      target_count: "32",
+    });
+    expect(monthlyOverMax.errors).toContain(
+      "Target cannot exceed 31 completions for this period length."
+    );
+
+    const invalidLifetime = bulkDraft({
+      frequency_type: "recurring",
+      recurrence_interval: "daily",
+      target_basis: "lifetime",
+      target_count: "0",
+    });
+    expect(invalidLifetime.errors).toContain(
+      "Total target completions must be at least 1 when provided."
+    );
+  });
+
+  it("accepts max period targets and rejects invalid fractional targets once", () => {
+    const weeklyMax = bulkDraft({
+      frequency_type: "recurring",
+      recurrence_interval: "weekly",
+      target_basis: "period",
+      target_count: "7",
+    });
+    expect(weeklyMax.errors).toEqual([]);
+
+    const monthlyMax = bulkDraft({
+      frequency_type: "recurring",
+      recurrence_interval: "monthly",
+      target_basis: "period",
+      target_count: "31",
+    });
+    expect(monthlyMax.errors).toEqual([]);
+
+    const fractional = bulkDraft({
+      frequency_type: "recurring",
+      recurrence_interval: "weekly",
+      target_basis: "period",
+      target_count: "1.5",
+    });
+    expect(fractional.errors).toContain(
+      "Per-period target must be a positive whole number."
+    );
+  });
+
+  it("prepares normalized target basis and counts for every draft shape", () => {
+    const createId = vi.fn(() => "11111111-1111-4111-8111-111111111111");
+    const cases = [
+      {
+        name: "daily period empty target",
+        draft: bulkDraft({
+          frequency_type: "recurring",
+          recurrence_interval: "daily",
+          target_basis: "period",
+          target_count: "",
+        }),
+        row: {
+          target_count: 1,
+          target_basis: "period",
+          milestone_names: null,
+        },
+      },
+      {
+        name: "weekly period empty target",
+        draft: bulkDraft({
+          frequency_type: "recurring",
+          recurrence_interval: "weekly",
+          target_basis: "period",
+          target_count: "",
+        }),
+        row: {
+          target_count: 1,
+          target_basis: "period",
+          milestone_names: null,
+        },
+      },
+      {
+        name: "weekly period explicit target",
+        draft: bulkDraft({
+          frequency_type: "recurring",
+          recurrence_interval: "weekly",
+          target_basis: "period",
+          target_count: "4",
+        }),
+        row: {
+          target_count: 4,
+          target_basis: "period",
+          milestone_names: null,
+        },
+      },
+      {
+        name: "monthly period max target",
+        draft: bulkDraft({
+          frequency_type: "recurring",
+          recurrence_interval: "monthly",
+          target_basis: "period",
+          target_count: "31",
+        }),
+        row: {
+          target_count: 31,
+          target_basis: "period",
+          milestone_names: null,
+        },
+      },
+      {
+        name: "lifetime recurring target",
+        draft: bulkDraft({
+          frequency_type: "recurring",
+          recurrence_interval: "weekly",
+          target_basis: "lifetime",
+          target_count: "12",
+        }),
+        row: {
+          target_count: 12,
+          target_basis: "lifetime",
+          milestone_names: null,
+        },
+      },
+      {
+        name: "fixed milestones with normalized names",
+        draft: bulkDraft({
+          frequency_type: "fixed_milestones",
+          target_basis: "lifetime",
+          target_count: "2",
+          milestone_names: ["Alpha", ""],
+        }),
+        row: {
+          target_count: 2,
+          target_basis: "lifetime",
+          milestone_names: ["Alpha", "Milestone 2"],
+        },
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      const [prepared] = prepareBulkGoalRows([testCase.draft], { createId });
+      expect(prepared.row, testCase.name).toMatchObject(testCase.row);
+    }
   });
 
   it("prepares the existing create_goals row shape", () => {

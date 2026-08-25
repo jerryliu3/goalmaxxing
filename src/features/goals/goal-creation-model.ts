@@ -43,7 +43,11 @@ const localTimePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 const hexColorPattern = /^#[0-9a-f]{6}$/i;
 
 function parsePositiveTargetCount(value: string): number | null {
-  const parsed = Number.parseInt(value, 10);
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    return null;
+  }
+  const parsed = Number.parseInt(trimmed, 10);
   if (!Number.isFinite(parsed) || parsed <= 0) {
     return null;
   }
@@ -260,6 +264,15 @@ export function validateGoalCreationFields(fields: GoalCreationFields): string[]
     parsedTarget === null
   ) {
     errors.push("Total target completions must be at least 1 when provided.");
+  }
+
+  if (
+    fields.frequency_type === "recurring" &&
+    fields.target_basis === "period" &&
+    fields.target_count.trim().length > 0 &&
+    parsedTarget === null
+  ) {
+    errors.push("Per-period target must be a positive whole number.");
   }
 
   if (!fields.start_date) {

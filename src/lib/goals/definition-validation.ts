@@ -206,7 +206,7 @@ export function validateGoalDefinition(
     return issues;
   }
 
-  if (periodTarget !== null && input.capacity) {
+  if (periodTarget !== null) {
     const periodMax = maxPeriodTarget(input.recurrenceInterval);
     if (periodTarget > periodMax) {
       issues.push({

@@ -2,6 +2,7 @@ import { format, isValid, parseISO } from "date-fns";
 import { toLocalDateString } from "@/lib/dates/day";
 import {
   createDefaultGoalCreationFields,
+  normalizeGoalCreationTarget,
   parseGoalCreationTargetCount,
   type GoalCreationFields,
   validateGoalCreationFields,
@@ -331,13 +332,16 @@ export function prepareBulkGoalRows(
   { createId = () => crypto.randomUUID() }: { createId?: () => string } = {}
 ): PreparedBulkGoalRow[] {
   return drafts.map((draft) => {
-    const parsedTargetCount = parseBulkGoalTargetCount(draft.target_count);
+    const targetBasis =
+      draft.frequency_type === "recurring"
+        ? resolveBulkGoalTargetBasis(draft)
+        : "lifetime";
     const normalizedTargetCount =
       draft.frequency_type === "fixed_milestones"
-        ? parsedTargetCount
-        : parsedTargetCount !== null && parsedTargetCount > 0
-          ? parsedTargetCount
-          : null;
+        ? parseBulkGoalTargetCount(draft.target_count)
+        : draft.frequency_type === "recurring" && targetBasis === "period"
+          ? parseBulkGoalTargetCount(normalizeGoalCreationTarget(draft)) ?? 1
+          : parseBulkGoalTargetCount(draft.target_count);
     const goalId = createId();
     return {
       draft,
@@ -360,14 +364,11 @@ export function prepareBulkGoalRows(
             ? draft.recurrence_interval
             : null,
         target_count: normalizedTargetCount,
-        target_basis:
-          draft.frequency_type === "recurring"
-            ? resolveBulkGoalTargetBasis(draft)
-            : "lifetime",
+        target_basis: targetBasis,
         milestone_names:
-          draft.frequency_type === "fixed_milestones" && parsedTargetCount
+          draft.frequency_type === "fixed_milestones" && normalizedTargetCount
             ? normalizeMilestoneNamesForSave(
-                parsedTargetCount,
+                normalizedTargetCount,
                 draft.milestone_names
               )
             : null,
