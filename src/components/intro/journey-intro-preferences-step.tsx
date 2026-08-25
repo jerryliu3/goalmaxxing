@@ -38,12 +38,18 @@ export interface JourneyIntroPreferencesValue {
   socialActivityVisible: boolean;
 }
 
+export function resolveJourneyIntroSocialActivityVisible(
+  value: boolean | null | undefined
+): boolean {
+  return value !== false;
+}
+
 export function createDefaultJourneyIntroPreferences(): JourneyIntroPreferencesValue {
   return {
     timezone: resolveUserTimezone(),
     weekStartsOn: 1,
     restWeekdays: [],
-    socialActivityVisible: true,
+    socialActivityVisible: resolveJourneyIntroSocialActivityVisible(undefined),
   };
 }
 
@@ -73,8 +79,9 @@ export async function loadJourneyIntroPreferences(
       ...(plannerContext?.preferences?.defaultPolicy.restWeekdays ??
         defaults.restWeekdays),
     ],
-    socialActivityVisible:
-      profileResult.data?.social_activity_visible ?? defaults.socialActivityVisible,
+    socialActivityVisible: resolveJourneyIntroSocialActivityVisible(
+      profileResult.data?.social_activity_visible
+    ),
   };
 }
 
@@ -184,10 +191,10 @@ export function JourneyIntroPreferencesStep({
           <button
             type="button"
             disabled={loading}
-            aria-pressed={value.socialActivityVisible}
+            aria-pressed={value.socialActivityVisible !== false}
             className={cn(
               "rounded-lg border px-3 py-2 text-left text-sm",
-              value.socialActivityVisible
+              value.socialActivityVisible !== false
                 ? "border-primary bg-primary/10"
                 : "border-border bg-background"
             )}
@@ -201,10 +208,10 @@ export function JourneyIntroPreferencesStep({
           <button
             type="button"
             disabled={loading}
-            aria-pressed={!value.socialActivityVisible}
+            aria-pressed={value.socialActivityVisible === false}
             className={cn(
               "rounded-lg border px-3 py-2 text-left text-sm",
-              !value.socialActivityVisible
+              value.socialActivityVisible === false
                 ? "border-primary bg-primary/10"
                 : "border-border bg-background"
             )}
