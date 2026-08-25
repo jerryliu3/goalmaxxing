@@ -1,4 +1,9 @@
 import type { Goal, RecurrenceInterval } from "@/lib/goals/types";
+import {
+  cadencePeriodTarget,
+  isDeadlineTotalGoal,
+  resolveGoalTargetBasis,
+} from "@/lib/goals/target-basis";
 import { canonicalHash } from "@/lib/planner/canonical";
 import { REQUIREMENT_SCHEMA_VERSION } from "@/lib/planner/contracts/bounds";
 
@@ -12,6 +17,7 @@ export type GoalRequirement =
   | {
       kind: "cadence";
       interval: RecurrenceInterval;
+      targetCount: number;
       maxPerDay: 1;
     }
   | {
@@ -31,11 +37,7 @@ export function positiveTarget(goal: Goal) {
 }
 
 export function isTargetedRecurringGoal(goal: Goal) {
-  return (
-    goal.frequency_type === "recurring" &&
-    typeof goal.target_count === "number" &&
-    goal.target_count > 0
-  );
+  return isDeadlineTotalGoal(goal);
 }
 
 export function getGoalRequirement(goal: Goal): GoalRequirement {
@@ -53,7 +55,7 @@ export function getGoalRequirement(goal: Goal): GoalRequirement {
   }
 
   const interval = goal.recurrence_interval ?? "daily";
-  if (isTargetedRecurringGoal(goal)) {
+  if (isDeadlineTotalGoal(goal)) {
     return {
       kind: "deadline_total",
       targetCount: positiveTarget(goal),
@@ -64,6 +66,7 @@ export function getGoalRequirement(goal: Goal): GoalRequirement {
   return {
     kind: "cadence",
     interval,
+    targetCount: cadencePeriodTarget(goal),
     maxPerDay: 1,
   };
 }
@@ -73,6 +76,7 @@ export function computeRequirementFingerprint(goal: Goal) {
   return canonicalHash({
     schemaVersion: REQUIREMENT_SCHEMA_VERSION,
     requirement,
+    targetBasis: resolveGoalTargetBasis(goal),
     startDate: goal.start_date,
     endDate: goal.end_date,
   });

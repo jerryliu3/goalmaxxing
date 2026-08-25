@@ -1,4 +1,4 @@
-import type { GoalFrequencyType } from "@/lib/goals/types";
+import type { GoalFrequencyType, GoalTargetBasis, RecurrenceInterval } from "@/lib/goals/types";
 import { compareDateStrings } from "@/lib/goals/periods";
 import {
   MAX_GOAL_TARGET_COUNT,
@@ -9,6 +9,8 @@ import { enumerateDates, enumerateMonthsInWindow, getUtcWeekday } from "@/lib/pl
 export interface GoalDefinitionValidationInput {
   frequencyType: GoalFrequencyType;
   targetCount: number | null;
+  targetBasis?: GoalTargetBasis | null;
+  recurrenceInterval?: RecurrenceInterval | null;
   startDate: string;
   endDate: string | null;
   asOfDate?: string;
@@ -69,15 +71,45 @@ function isIsoDate(value: string | null): value is string {
   }
 }
 
-export function isOrdinalGoalDefinition({
-  frequencyType,
-  targetCount,
-}: Pick<GoalDefinitionValidationInput, "frequencyType" | "targetCount">) {
+function resolveTargetBasis(input: GoalDefinitionValidationInput): GoalTargetBasis {
+  if (input.targetBasis) {
+    return input.targetBasis;
+  }
+  if (input.frequencyType === "fixed_milestones") {
+    return "lifetime";
+  }
+  if (
+    input.frequencyType === "recurring" &&
+    typeof input.targetCount === "number" &&
+    input.targetCount > 0
+  ) {
+    return "lifetime";
+  }
+  return "period";
+}
+
+function maxPeriodTarget(interval: RecurrenceInterval | null | undefined) {
+  if (interval === "weekly") {
+    return 7;
+  }
+  if (interval === "monthly") {
+    return 31;
+  }
+  return 1;
+}
+
+export function isOrdinalGoalDefinition(
+  input: Pick<
+    GoalDefinitionValidationInput,
+    "frequencyType" | "targetCount" | "targetBasis"
+  >
+) {
+  if (input.frequencyType === "fixed_milestones") {
+    return true;
+  }
   return (
-    frequencyType === "fixed_milestones" ||
-    (frequencyType === "recurring" &&
-      typeof targetCount === "number" &&
-      targetCount > 0)
+    input.frequencyType === "recurring" &&
+    resolveTargetBasis(input) === "lifetime"
   );
 }
 
@@ -98,36 +130,27 @@ export function getGoalHorizonEndDate(startDate: string): string | null {
   return `${endYear}-${String(endMonth).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
 }
 
-export function resolveGoalPlanningEndDate({
-  frequencyType,
-  targetCount,
-  startDate,
-  endDate,
-  asOfDate,
-}: Pick<
-  GoalDefinitionValidationInput,
-  "frequencyType" | "targetCount" | "startDate" | "endDate" | "asOfDate"
->) {
-  if (isIsoDate(endDate)) {
-    return endDate;
+export function resolveGoalPlanningEndDate(
+  input: Pick<
+    GoalDefinitionValidationInput,
+    "frequencyType" | "targetCount" | "targetBasis" | "startDate" | "endDate" | "asOfDate"
+  >
+) {
+  if (isIsoDate(input.endDate)) {
+    return input.endDate;
   }
-  if (
-    !isOrdinalGoalDefinition({
-      frequencyType,
-      targetCount,
-    })
-  ) {
+  if (!isOrdinalGoalDefinition(input)) {
     return null;
   }
-  if (!isIsoDate(startDate)) {
+  if (!isIsoDate(input.startDate)) {
     return null;
   }
-  const normalizedAsOfDate = asOfDate ?? null;
+  const normalizedAsOfDate = input.asOfDate ?? null;
   const horizonAnchor =
     isIsoDate(normalizedAsOfDate) &&
-    compareDateStrings(normalizedAsOfDate, startDate) > 0
+    compareDateStrings(normalizedAsOfDate, input.startDate) > 0
       ? normalizedAsOfDate
-      : startDate;
+      : input.startDate;
   return getGoalHorizonEndDate(horizonAnchor);
 }
 
@@ -148,7 +171,13 @@ export function validateGoalDefinition(
   input: GoalDefinitionValidationInput
 ): GoalDefinitionValidationIssue[] {
   const issues: GoalDefinitionValidationIssue[] = [];
-  const isOrdinalGoal = isOrdinalGoalDefinition(input);
+  const targetBasis = resolveTargetBasis(input);
+  const isOrdinalGoal = isOrdinalGoalDefinition({ ...input, targetBasis });
+  const periodTarget =
+    input.frequencyType === "recurring" && targetBasis === "period"
+      ? input.targetCount ?? 1
+      : null;
+
   const exceedsTargetLimit =
     isOrdinalGoal &&
     typeof input.targetCount === "number" &&
@@ -159,8 +188,34 @@ export function validateGoalDefinition(
       message: `Target count cannot exceed ${MAX_GOAL_TARGET_COUNT}.`,
     });
   }
-  const planningEndDate = resolveGoalPlanningEndDate(input);
-  if (!isIsoDate(input.startDate) || !isIsoDate(planningEndDate)) {
+
+  if (
+    isIsoDate(input.startDate) &&
+    isIsoDate(input.endDate) &&
+    compareDateStrings(input.startDate, input.endDate) > 0
+  ) {
+    issues.push({
+      code: "invalid_date_range",
+      message: "End date cannot be before start date.",
+    });
+    return issues;
+  }
+
+  if (periodTarget !== null && input.capacity) {
+    const periodMax = maxPeriodTarget(input.recurrenceInterval);
+    if (periodTarget > periodMax) {
+      issues.push({
+        code: "target_exceeds_capacity",
+        message: `Target cannot exceed ${periodMax} completions for this period length.`,
+      });
+    }
+  }
+
+  const planningEndDate = resolveGoalPlanningEndDate({ ...input, targetBasis });
+  if (!isIsoDate(input.startDate) || !isOrdinalGoal) {
+    return issues;
+  }
+  if (!isIsoDate(planningEndDate)) {
     return issues;
   }
   if (compareDateStrings(input.startDate, planningEndDate) > 0) {
@@ -183,7 +238,6 @@ export function validateGoalDefinition(
   if (
     input.capacity &&
     !exceedsTargetLimit &&
-    isOrdinalGoal &&
     typeof input.targetCount === "number"
   ) {
     const windowStart =

@@ -1,4 +1,5 @@
 import { getAnchoredPeriod } from "@/lib/goals/periods";
+import { matchesCadenceUnitKey } from "@/lib/goals/target-basis";
 import { getAdmissibleCompletions } from "@/lib/goals/admissible";
 import type {
   PlannerCanonicalSnapshot,
@@ -236,8 +237,8 @@ export function buildDirectDraftPersistence({
           : null;
     const identityIsCurrent =
       requirement.kind === "cadence"
-        ? command.unitKey ===
-          `cadence:${
+        ? matchesCadenceUnitKey(
+            command.unitKey,
             getAnchoredPeriod(
               goal.start_date,
               requirement.interval,
@@ -246,8 +247,9 @@ export function buildDirectDraftPersistence({
                 weekStartsOn:
                   snapshot.preferences?.default_policy.weekStartsOn,
               }
-            ).periodKey
-          }`
+            ).periodKey,
+            requirement.targetCount
+          )
         : Boolean(
             ordinalMatch &&
               Number(ordinalMatch[1]) <= requirement.targetCount
