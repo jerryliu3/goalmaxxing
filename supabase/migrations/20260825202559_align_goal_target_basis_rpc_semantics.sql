@@ -119,6 +119,14 @@ begin
     0,
     'n'
   );
+  v_definition := pg_catalog.regexp_replace(
+    v_definition,
+    'private[.]resolve_goal_target_basis[(][[:space:]]*p_frequency_type,[[:space:]]*p_recurrence_interval,[[:space:]]*p_target_count,[[:space:]]*p_target_basis[[:space:]]*[)]',
+    'private.resolve_goal_target_basis(p_frequency_type, p_recurrence_interval, p_target_count, p_target_basis)',
+    1,
+    0,
+    'n'
+  );
   if pg_catalog.strpos(
     v_definition,
     'private.resolve_goal_target_basis(p_frequency_type, p_recurrence_interval, p_target_count, p_target_basis)'
@@ -137,6 +145,14 @@ begin
   v_definition := pg_catalog.regexp_replace(
     v_definition,
     'private[.]resolve_goal_target_basis[(][[:space:]]*p_frequency_type,[[:space:]]*p_target_count,[[:space:]]*p_target_basis[[:space:]]*[)]',
+    'private.resolve_goal_target_basis(p_frequency_type, p_recurrence_interval, p_target_count, p_target_basis)',
+    1,
+    0,
+    'n'
+  );
+  v_definition := pg_catalog.regexp_replace(
+    v_definition,
+    'private[.]resolve_goal_target_basis[(][[:space:]]*p_frequency_type,[[:space:]]*p_recurrence_interval,[[:space:]]*p_target_count,[[:space:]]*p_target_basis[[:space:]]*[)]',
     'private.resolve_goal_target_basis(p_frequency_type, p_recurrence_interval, p_target_count, p_target_basis)',
     1,
     0,

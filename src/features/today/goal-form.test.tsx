@@ -440,7 +440,7 @@ describe("GoalForm persistence recovery", () => {
     }
   });
 
-  it("retains a stable goal id after a resolved create error", async () => {
+  it("keeps a returned create error editable instead of creating recovery state", async () => {
     const randomUuidSpy = vi
       .spyOn(globalThis.crypto, "randomUUID")
       .mockReturnValue("99000000-0000-4000-8000-000000000003");
@@ -457,17 +457,16 @@ describe("GoalForm persistence recovery", () => {
       await user.type(screen.getByLabelText("Name"), "Resolved error goal");
       await user.click(screen.getByRole("button", { name: "Save" }));
 
-      await waitFor(() => {
-        expect(
-          screen.getByRole("button", { name: "Retry creating goal" })
-        ).toBeInTheDocument();
-      });
       expect(toastErrorMock).toHaveBeenCalledWith(
-        "Could not confirm goal creation. Try again."
+        "Could not save goal. Try again."
       );
       expect(onExit).not.toHaveBeenCalled();
+      expect(
+        screen.queryByRole("button", { name: "Retry creating goal" })
+      ).not.toBeInTheDocument();
+      expect(screen.getByLabelText("Name")).toBeEnabled();
 
-      await user.click(screen.getByRole("button", { name: "Retry creating goal" }));
+      await user.click(screen.getByRole("button", { name: "Save" }));
 
       await waitFor(() => expect(onExit).toHaveBeenCalledTimes(1));
       expect(rpcMock).toHaveBeenNthCalledWith(
@@ -542,6 +541,93 @@ describe("GoalForm persistence recovery", () => {
     expect(rpcMock).not.toHaveBeenCalled();
   });
 
+  it("keeps the form editable after a definitive link error", async () => {
+    rpcMock
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: { message: "link rejected" } });
+    const onExit = vi.fn();
+    const user = userEvent.setup();
+
+    render(<GoalForm showBackButton={false} onExit={onExit} />);
+    await screen.findByText("New goal");
+    await user.type(screen.getByLabelText("Name"), "Editable link failure");
+    await user.click(screen.getByRole("button", { name: /advanced settings/i }));
+    await user.click(screen.getByRole("button", { name: "Select link target" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith("link rejected");
+      expect(screen.getByLabelText("Name")).toBeEnabled();
+    });
+    expect(
+      screen.queryByRole("button", { name: "Retry saving link" })
+    ).not.toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+    expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("clears link recovery after a definitive retry error but retains it after rejected retries", async () => {
+    rpcMock
+      .mockResolvedValueOnce({ error: null })
+      .mockRejectedValueOnce(new Error("link request timed out"))
+      .mockResolvedValueOnce({ error: { message: "link no longer allowed" } });
+    const onExit = vi.fn();
+    const user = userEvent.setup();
+
+    render(<GoalForm showBackButton={false} onExit={onExit} />);
+    await screen.findByText("New goal");
+    await user.type(screen.getByLabelText("Name"), "Retryable link failure");
+    await user.click(screen.getByRole("button", { name: /advanced settings/i }));
+    await user.click(screen.getByRole("button", { name: "Select link target" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Retry saving link" })
+      ).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText("Name")).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "Retry saving link" }));
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith("link no longer allowed");
+      expect(screen.getByLabelText("Name")).toBeEnabled();
+    });
+    expect(
+      screen.queryByRole("button", { name: "Retry saving link" })
+    ).not.toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it("freezes fields and navigation while create persistence is pending", async () => {
+    let resolveCreate: ((value: { error: null }) => void) | undefined;
+    rpcMock.mockImplementationOnce(
+      () =>
+        new Promise<{ error: null }>((resolve) => {
+          resolveCreate = resolve;
+        })
+    );
+    rpcMock.mockResolvedValue({ error: null });
+    const onExit = vi.fn();
+    const user = userEvent.setup();
+
+    render(<GoalForm onExit={onExit} />);
+    await screen.findByText("New goal");
+    await user.type(screen.getByLabelText("Name"), "Pending goal");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Name")).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Back" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    });
+    expect(onExit).not.toHaveBeenCalled();
+
+    resolveCreate?.({ error: null });
+    await waitFor(() => expect(onExit).toHaveBeenCalledTimes(1));
+  });
+
   it("retains recovery after a rejected update and retries the same update", async () => {
     const existingGoal: Goal = {
       ...activeLinkTarget,
@@ -580,6 +666,7 @@ describe("GoalForm persistence recovery", () => {
     await user.click(screen.getByRole("button", { name: "Retry saving goal" }));
 
     await waitFor(() => expect(onExit).toHaveBeenCalledTimes(1));
+    expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(2);
     expect(rpcMock).toHaveBeenNthCalledWith(
       1,
       "update_goal",

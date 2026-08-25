@@ -50,7 +50,6 @@ export interface BulkGoalDraft extends GoalCreationFields {
   link_target_search: string;
   link_target_open: boolean;
   advanced_open: boolean;
-  photo_file: File | null;
   target_basis_error?: string;
   errors: string[];
 }
@@ -129,14 +128,14 @@ function parseRecurrenceInterval(raw: string): RecurrenceInterval {
 }
 
 function normalizeDateValue(raw: unknown): string {
-  if (raw instanceof Date && !Number.isNaN(raw.getTime())) {
-    return format(raw, "yyyy-MM-dd");
+  if (raw instanceof Date) {
+    return Number.isNaN(raw.getTime()) ? "Invalid date" : format(raw, "yyyy-MM-dd");
   }
   const text = String(raw ?? "").trim();
   if (!text) return "";
   if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
   const parsed = new Date(text);
-  return Number.isNaN(parsed.getTime()) ? "" : format(parsed, "yyyy-MM-dd");
+  return Number.isNaN(parsed.getTime()) ? text : format(parsed, "yyyy-MM-dd");
 }
 
 export function parseBulkGoalTargetCount(raw: string): number | null {
@@ -256,7 +255,6 @@ export function buildBulkGoalDraftFromRow(
     link_target_search: "",
     link_target_open: false,
     advanced_open: false,
-    photo_file: null,
   });
 }
 

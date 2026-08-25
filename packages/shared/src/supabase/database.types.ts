@@ -119,6 +119,12 @@ export type Database = {
         }
         Returns: string
       }
+      goal_period_target_max: {
+        Args: {
+          p_recurrence_interval: Database["public"]["Enums"]["recurrence_interval"]
+        }
+        Returns: number
+      }
       goal_xp_credited_units: {
         Args: { p_as_of?: string; p_goal_id: string; p_user_id: string }
         Returns: {
@@ -220,6 +226,15 @@ export type Database = {
           category_key: string
         }[]
       }
+      normalize_goal_target_count: {
+        Args: {
+          p_frequency_type: Database["public"]["Enums"]["goal_frequency_type"]
+          p_recurrence_interval: Database["public"]["Enums"]["recurrence_interval"]
+          p_target_basis: Database["public"]["Enums"]["goal_target_basis"]
+          p_target_count: number
+        }
+        Returns: number
+      }
       planner_cadence_period_key: {
         Args: {
           p_recurrence_interval: Database["public"]["Enums"]["recurrence_interval"]
@@ -281,6 +296,7 @@ export type Database = {
       resolve_goal_target_basis: {
         Args: {
           p_frequency_type: Database["public"]["Enums"]["goal_frequency_type"]
+          p_recurrence_interval: Database["public"]["Enums"]["recurrence_interval"]
           p_target_basis?: Database["public"]["Enums"]["goal_target_basis"]
           p_target_count: number
         }

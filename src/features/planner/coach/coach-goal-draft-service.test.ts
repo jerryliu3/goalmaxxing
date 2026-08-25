@@ -3,6 +3,7 @@ import { buildBulkGoalDraftsFromLlmGoals } from "@/features/goals/bulk-goal-draf
 import {
   createCoachGoalDrafts,
   parseCoachGoalDrafts,
+  retryCoachGoalDraftLinks,
 } from "@/features/planner/coach/coach-goal-draft-service";
 
 const postJsonMock = vi.hoisted(() => vi.fn());
@@ -142,7 +143,7 @@ describe("coach goal draft service", () => {
     });
   });
 
-  it("returns retryable partial success when coach link persistence fails", async () => {
+  it("surfaces definitive link failures with retryable link recovery", async () => {
     const drafts = buildBulkGoalDraftsFromLlmGoals([
       {
         title: "Mobility",
@@ -159,15 +160,34 @@ describe("coach goal draft service", () => {
       .mockResolvedValueOnce({ error: null })
       .mockResolvedValueOnce({ error: { message: "link save failed" } });
 
-    await expect(createCoachGoalDrafts({ drafts })).resolves.toMatchObject({
-      status: "partial_success",
-      createdCount: 1,
-      linkErrorMessage: "Some linked goals were not saved: link save failed",
-      linkRows: [
-        {
-          target_goal_id: "goal-main-1",
-        },
-      ],
+    await expect(createCoachGoalDrafts({ drafts })).rejects.toMatchObject({
+      code: "links_failed",
+      message: "Some linked goals were not saved: link save failed",
+      linkRecovery: {
+        preparedRows: [{ goalId: drafts[0]!.id }],
+        linkRows: [
+          {
+            target_goal_id: "goal-main-1",
+          },
+        ],
+      },
+    });
+  });
+
+  it("keeps returned create errors definitive without a recovery payload", async () => {
+    const drafts = buildBulkGoalDraftsFromLlmGoals([
+      {
+        title: "Mobility",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        start_date: "2026-08-17",
+      },
+    ]);
+    rpcMock.mockResolvedValue({ error: { message: "invalid goal payload" } });
+
+    await expect(createCoachGoalDrafts({ drafts })).rejects.toMatchObject({
+      code: "create_failed",
+      message: "invalid goal payload",
     });
   });
 
@@ -186,6 +206,25 @@ describe("coach goal draft service", () => {
       code: "create_ambiguous",
       message: "create request timed out",
       preparedRows: [{ goalId: draft!.id }],
+    });
+  });
+
+  it("uses the stable fallback for coach link errors without messages", async () => {
+    rpcMock.mockResolvedValue({ error: {} });
+
+    await expect(
+      retryCoachGoalDraftLinks({
+        linkRows: [
+          {
+            source_goal_id: "goal-created-1",
+            target_goal_id: "goal-main-1",
+          },
+        ],
+      })
+    ).rejects.toMatchObject({
+      code: "links_failed",
+      message:
+        "Some linked goals were not saved: Could not save goal links. Try again.",
     });
   });
 });

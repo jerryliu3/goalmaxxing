@@ -27,10 +27,10 @@ select is(
   (
     select p.provolatile
     from pg_proc p
-    where p.oid = 'private.goal_xp_credited_units(uuid, uuid)'::regprocedure
+    where p.oid = 'private.goal_xp_credited_units(uuid, uuid, date)'::regprocedure
   ),
-  'v',
-  'goal_xp_credited_units remains VOLATILE'
+  's',
+  'goal_xp_credited_units remains STABLE'
 );
 
 -- Completion RPCs are the only remaining XP accrual entry point now that the

@@ -56,7 +56,9 @@ function goalDraftErrorMessage(code?: string, fallback?: string) {
     case "too_many_goals":
       return "The coach proposed more than five goals. Ask it to simplify the plan and send again.";
     case "links_failed":
-      return "Goals were created, but their selected links were not saved. Retry saving links.";
+      return "Goals were created, but their selected links were not saved. Review the draft and try again.";
+    case "links_ambiguous":
+      return "Goal links could not be confirmed. Retry saving the retained links.";
     case "create_ambiguous":
       return "Goal creation could not be confirmed. Retry to safely reconcile the retained drafts.";
     default:
@@ -77,6 +79,14 @@ function CoachGoalDraftProposal({
 }) {
   const { state, actions } = coach;
   const draftState = state.coachGoalDraftStates[messageIndex];
+  const hasPendingGoalDraftPersistence = Object.values(
+    state.coachGoalDraftStates
+  ).some(
+    (entry) =>
+      entry.status === "saving" ||
+      entry.pendingCreateRecovery !== undefined ||
+      entry.pendingLinkRecovery !== undefined
+  );
   if (proposal.creationStatus === "created" || draftState?.status === "created") {
     return (
       <p className="mt-2 rounded border border-emerald-300 bg-emerald-50 p-2 text-xs text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100">
@@ -98,6 +108,7 @@ function CoachGoalDraftProposal({
           variant="outline"
           className="mt-2"
           onClick={() => void actions.generateCoachGoalDrafts(messageIndex)}
+          disabled={hasPendingGoalDraftPersistence}
         >
           Generate editable drafts
         </Button>
@@ -122,7 +133,11 @@ function CoachGoalDraftProposal({
               draftState.errorMessage
             )}
           </p>
-          {draftState.errorCode !== "too_many_goals" ? (
+          {draftState.errorCode !== "too_many_goals" &&
+          (draftState.errorCode === "links_failed" ||
+            draftState.errorCode === "links_ambiguous" ||
+            draftState.errorCode === "create_ambiguous" ||
+            draftState.errorCode !== "links_failed") ? (
             <Button
               type="button"
               size="sm"
@@ -130,12 +145,14 @@ function CoachGoalDraftProposal({
               className="mt-2"
               onClick={() =>
                 void (draftState.errorCode === "links_failed" ||
+                draftState.errorCode === "links_ambiguous" ||
                 draftState.errorCode === "create_ambiguous"
                   ? actions.createCoachGoalDrafts(messageIndex)
                   : actions.generateCoachGoalDrafts(messageIndex))
               }
             >
-              {draftState.errorCode === "links_failed"
+              {draftState.errorCode === "links_failed" ||
+              draftState.errorCode === "links_ambiguous"
                 ? "Retry saving links"
                 : draftState.errorCode === "create_ambiguous"
                   ? "Retry creating goals"
@@ -155,9 +172,12 @@ function CoachGoalDraftProposal({
           onCreate={() => actions.createCoachGoalDrafts(messageIndex)}
           availableGoals={availableGoals}
           warnings={draftState.warnings}
-          editingDisabled={Boolean(
-            draftState.pendingLinkRecovery || draftState.pendingCreateRecovery
-          )}
+          editingDisabled={
+            draftState.status === "saving" ||
+            Boolean(
+              draftState.pendingLinkRecovery || draftState.pendingCreateRecovery
+            )
+          }
           createDisabledMessage={
             state.hasPendingCalendarEdits
               ? "Save or discard calendar edits first."
@@ -173,6 +193,14 @@ function CoachGoalDraftProposal({
 
 export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
   const { state, actions } = coach;
+  const hasPendingGoalDraftPersistence = Object.values(
+    state.coachGoalDraftStates
+  ).some(
+    (entry) =>
+      entry.status === "saving" ||
+      entry.pendingCreateRecovery !== undefined ||
+      entry.pendingLinkRecovery !== undefined
+  );
   const supabase = useMemo(() => createClient(), []);
   const [availableGoals, setAvailableGoals] = useState<Goal[]>([]);
 
@@ -265,6 +293,7 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
           disabled={
             state.coachConversationSaving ||
             state.coachGoalRefreshStatus === "refreshing" ||
+            hasPendingGoalDraftPersistence ||
             state.coachMessages.length === 0
           }
         >
@@ -279,6 +308,7 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
             state.coachLoading ||
             state.coachPolicyApplying ||
             state.coachGoalRefreshStatus === "refreshing" ||
+            hasPendingGoalDraftPersistence ||
             !state.hasCoachConversationState
           }
         >
@@ -298,7 +328,8 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
             disabled={
               state.coachConversationsLoading ||
               state.coachConversationRestoring ||
-              state.coachGoalRefreshStatus === "refreshing"
+              state.coachGoalRefreshStatus === "refreshing" ||
+              hasPendingGoalDraftPersistence
             }
             aria-label="Saved conversations"
             className="h-8 w-[min(100%,16.25rem)] appearance-none rounded-lg border border-input bg-background/90 px-3 pr-8 text-xs text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
@@ -375,7 +406,11 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
                         type="button"
                         size="sm"
                         onClick={() => void actions.applyCoachProposal(index)}
-                        disabled={state.coachPolicyApplying || !canApplyProposal}
+                        disabled={
+                          state.coachPolicyApplying ||
+                          hasPendingGoalDraftPersistence ||
+                          !canApplyProposal
+                        }
                       >
                         {state.coachPolicyApplying
                           ? "Applying..."
@@ -388,7 +423,11 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
                         size="sm"
                         variant="outline"
                         onClick={() => void actions.undoCoachProposal(index)}
-                        disabled={state.coachPolicyApplying || !canUndoProposal}
+                        disabled={
+                          state.coachPolicyApplying ||
+                          hasPendingGoalDraftPersistence ||
+                          !canUndoProposal
+                        }
                       >
                         {state.coachPolicyApplying ? "Undoing..." : "Undo proposal"}
                       </Button>
@@ -441,6 +480,7 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
           placeholder="Ask the coach for a specific plan..."
           rows={4}
           maxLength={4000}
+          disabled={hasPendingGoalDraftPersistence}
         />
         <div className="flex justify-end gap-2">
           <Button
@@ -449,6 +489,7 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
             disabled={
               state.coachLoading ||
               state.coachGoalRefreshStatus !== "idle" ||
+              hasPendingGoalDraftPersistence ||
               state.coachInput.trim().length === 0
             }
           >

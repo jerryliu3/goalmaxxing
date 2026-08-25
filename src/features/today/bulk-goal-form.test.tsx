@@ -318,7 +318,7 @@ describe("BulkGoalForm", () => {
           },
         ],
       });
-      expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(1);
+      expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(2);
       expect(routerReplaceMock).toHaveBeenCalledWith("/");
       expect(routerRefreshMock).toHaveBeenCalledTimes(1);
     } finally {

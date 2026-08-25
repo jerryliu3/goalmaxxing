@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(7);
+select plan(8);
 
 insert into auth.users (id, email)
 values
@@ -177,6 +177,28 @@ select is(
   ),
   1,
   'exact deterministic link replay does not duplicate'
+);
+
+select public.create_goal(
+  p_id => '98000000-0000-4000-8000-000000000005',
+  p_title => 'Null period target',
+  p_category => 'health',
+  p_category_key => 'health',
+  p_frequency_type => 'recurring',
+  p_recurrence_interval => 'weekly',
+  p_target_count => null,
+  p_target_basis => 'period'::public.goal_target_basis,
+  p_start_date => current_date
+);
+
+select is(
+  (
+    select target_count
+    from public.goals
+    where id = '98000000-0000-4000-8000-000000000005'
+  ),
+  1,
+  'create_goal normalizes explicit period null targets to one'
 );
 
 reset role;

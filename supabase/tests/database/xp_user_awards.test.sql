@@ -24,6 +24,7 @@ insert into public.goals (
   frequency_type,
   recurrence_interval,
   target_count,
+  target_basis,
   start_date,
   end_date
 )
@@ -38,6 +39,7 @@ values
     'recurring',
     'daily',
     1,
+    'lifetime',
     current_date - 7,
     current_date + 7
   )

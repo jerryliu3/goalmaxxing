@@ -169,6 +169,20 @@ function toIsoDate(value: string | undefined): string | undefined {
   return z.iso.date().safeParse(trimmed).success ? trimmed : undefined;
 }
 
+function preserveImportedDate(
+  value: string | undefined | null,
+  fallback: string | null
+): string | null {
+  if (value === null || value === undefined) {
+    return fallback;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return fallback;
+  }
+  return toIsoDate(trimmed) ?? trimmed;
+}
+
 function buildPrompt(userPrompt: string, today: string, categoryKeys: string[]): string {
   return [
     "Convert the following user text into goal drafts.",
@@ -531,8 +545,8 @@ function normalizeGeneratedPayload(
       frequency === "recurring" && targetBasis === "period" && targetCount === null
         ? 1
         : targetCount;
-    const startDate = toIsoDate(goal.start_date) ?? today;
-    const endDate = toIsoDate(goal.end_date ?? undefined) ?? null;
+    const startDate = preserveImportedDate(goal.start_date, today) ?? today;
+    const endDate = preserveImportedDate(goal.end_date, null);
     const milestoneNames =
       frequency === "fixed_milestones"
         ? typeof targetCount === "number" && targetCount > 0
@@ -558,6 +572,16 @@ function normalizeGeneratedPayload(
       end_date: endDate,
       default_local_time: normalizeLocalTime(goal.default_local_time),
     };
+    if (goal.start_date?.trim() && !toIsoDate(goal.start_date)) {
+      warnings.push(
+        `Draft ${index + 1} (${normalized.title}): Start date must be a valid date.`
+      );
+    }
+    if (goal.end_date?.trim() && !toIsoDate(goal.end_date)) {
+      warnings.push(
+        `Draft ${index + 1} (${normalized.title}): End date must be a valid date.`
+      );
+    }
     const validationIssues = validateGoalDefinition({
       frequencyType: normalized.frequency_type,
       targetCount: normalized.target_count,

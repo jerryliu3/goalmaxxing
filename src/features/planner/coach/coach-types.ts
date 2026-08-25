@@ -71,6 +71,7 @@ export interface CoachGoalDraftRuntimeState {
   };
   pendingLinkRecovery?: {
     createdCount: number;
+    preparedRows: PreparedBulkGoalRow[];
     linkRows: BulkGoalLinkRow[];
   };
 }

@@ -8,8 +8,10 @@ import {
 } from "@/features/goals/bulk-goal-drafts";
 import {
   type BulkGoalLinkRow,
+  type BulkGoalLinkRecovery,
   BulkGoalPersistenceError,
   persistBulkGoalDrafts,
+  retryBulkGoalCreation,
   retryBulkGoalLinks,
 } from "@/features/goals/bulk-goal-persistence";
 import { ApiClientError, postJson } from "@/lib/api/client";
@@ -21,31 +23,28 @@ const COACH_GOAL_DRAFT_PARSE_TIMEOUT_MS = 45_000;
 export class CoachGoalDraftServiceError extends Error {
   readonly code: string;
   readonly preparedRows?: PreparedBulkGoalRow[];
+  readonly linkRecovery?: BulkGoalLinkRecovery;
 
   constructor(
     code: string,
     message: string,
-    preparedRows?: PreparedBulkGoalRow[]
+    preparedRows?: PreparedBulkGoalRow[],
+    linkRecovery?: BulkGoalLinkRecovery
   ) {
     super(message);
     this.name = "CoachGoalDraftServiceError";
     this.code = code;
     this.preparedRows = preparedRows;
+    this.linkRecovery = linkRecovery;
   }
 }
 
 export type CoachGoalDraftCreationResult =
-  | {
-      status: "created";
-      createdCount: number;
-      linkErrorMessage: null;
-    }
-  | {
-      status: "partial_success";
-      createdCount: number;
-      linkErrorMessage: string;
-      linkRows: BulkGoalLinkRow[];
-    };
+  {
+    status: "created";
+    createdCount: number;
+    linkErrorMessage: null;
+  };
 
 export async function parseCoachGoalDrafts({
   parserPrompt,
@@ -97,10 +96,14 @@ export async function parseCoachGoalDrafts({
 
 export async function createCoachGoalDrafts({
   drafts,
+  preparedRows,
   onGoalsPersisted,
+  onLinksPersisted,
 }: {
   drafts: BulkGoalDraft[];
+  preparedRows?: PreparedBulkGoalRow[];
   onGoalsPersisted?: (preparedRows: PreparedBulkGoalRow[]) => void;
+  onLinksPersisted?: (preparedRows: PreparedBulkGoalRow[]) => void;
 }) {
   const selectedDrafts = drafts.filter((draft) => draft.include);
   if (selectedDrafts.length === 0) {
@@ -128,20 +131,20 @@ export async function createCoachGoalDrafts({
   } = await supabase.auth.getUser();
 
   try {
-    const result = await persistBulkGoalDrafts({
-      drafts: selectedDrafts,
-      currentUserId: user?.id ?? null,
-      supabase,
-      onGoalsPersisted,
-    });
-    if (result.status === "partial_success") {
-      return {
-        status: "partial_success",
-        createdCount: result.createdCount,
-        linkErrorMessage: result.linkErrorMessage,
-        linkRows: result.linkRecovery.linkRows,
-      } satisfies CoachGoalDraftCreationResult;
-    }
+    const result = preparedRows
+      ? await retryBulkGoalCreation({
+          preparedRows,
+          supabase,
+          onGoalsPersisted,
+          onLinksPersisted,
+        })
+      : await persistBulkGoalDrafts({
+          drafts: selectedDrafts,
+          currentUserId: user?.id ?? null,
+          supabase,
+          onGoalsPersisted,
+          onLinksPersisted,
+        });
     return {
       status: "created",
       createdCount: result.createdCount,
@@ -152,7 +155,8 @@ export async function createCoachGoalDrafts({
       throw new CoachGoalDraftServiceError(
         error.code,
         error.message,
-        error.preparedRows
+        error.preparedRows,
+        error.linkRecovery
       );
     }
     throw error;

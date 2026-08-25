@@ -540,10 +540,11 @@ describe("planner coach panel", () => {
             },
           ]),
           warnings: [],
-          errorCode: "links_failed",
+          errorCode: "links_ambiguous",
           errorMessage: "Some linked goals were not saved: link save failed",
           pendingLinkRecovery: {
             createdCount: 1,
+            preparedRows: [],
             linkRows: [
               {
                 source_goal_id: "goal-created-1",
@@ -558,7 +559,7 @@ describe("planner coach panel", () => {
 
     render(<PlannerCoachPanel coach={coach} />);
 
-    expect(screen.getByText(/selected links were not saved/i)).toBeInTheDocument();
+    expect(screen.getByText(/links could not be confirmed/i)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Retry saving links" }));
     expect(coach.actions.createCoachGoalDrafts).toHaveBeenCalledWith(0);
   });
