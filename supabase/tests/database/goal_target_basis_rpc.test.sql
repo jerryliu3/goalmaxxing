@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(13);
+select plan(14);
 
 insert into auth.users (id, email)
 values (
@@ -55,6 +55,33 @@ select is(
   (select target_count from public.goals where id = '97000000-0000-4000-8000-000000000021'),
   1,
   'omitted daily period target normalizes null to one'
+);
+
+select public.create_goal(
+  '97000000-0000-4000-8000-000000000022',
+  'Daily lifetime threshold',
+  null,
+  null,
+  'test',
+  'test',
+  null,
+  'recurring',
+  'daily',
+  2,
+  null,
+  '2026-08-01',
+  null,
+  null,
+  null,
+  false,
+  'medium',
+  null
+);
+
+select is(
+  (select target_basis from public.goals where id = '97000000-0000-4000-8000-000000000022'),
+  'lifetime'::public.goal_target_basis,
+  'omitted daily basis above one resolves to lifetime'
 );
 
 select public.create_goal(
