@@ -85,6 +85,7 @@ export interface GoalCreationLinkTargetProps {
   onSearchQueryChange: (value: string) => void;
   filteredLinkTargets: Goal[];
   selectedTargetGoal: Goal | null;
+  disabled?: boolean;
 }
 
 export interface GoalCreationFieldControlsProps {
@@ -303,7 +304,11 @@ export function GoalCreationFieldControls({
               value={fields.target_count}
               onValueChange={(value) => onFieldChange({ type: "target_count", value })}
               minValue={1}
-              maxValue={maxPeriodTarget(fields.recurrence_interval)}
+              maxValue={
+                fields.target_basis === "period"
+                  ? maxPeriodTarget(fields.recurrence_interval)
+                  : undefined
+              }
               required={fields.target_basis === "period" || fields.target_basis === "lifetime"}
               disabled={definitionFieldsLocked}
               showRecurringHelperText={false}
@@ -554,7 +559,7 @@ export function GoalCreationFieldControls({
                         showLabel={false}
                         showHelperText={false}
                         showLinkedNotice={false}
-                        disabled={disabled}
+                        disabled={disabled || linkTarget.disabled}
                       />
                     ) : null}
 

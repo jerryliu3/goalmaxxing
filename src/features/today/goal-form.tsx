@@ -107,6 +107,10 @@ type GoalFormRecovery =
       goalArgs: GoalFormGoalArgs;
     }
   | {
+      kind: "update";
+      goalArgs: GoalFormGoalArgs;
+    }
+  | {
       kind: "link";
       savedGoalId: string;
       targetGoalId: string | undefined;
@@ -263,6 +267,9 @@ export function GoalForm({
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [recovery, setRecovery] = useState<GoalFormRecovery | null>(null);
+  const [linkTargetsReady, setLinkTargetsReady] = useState(false);
+  const [linkTargetsError, setLinkTargetsError] = useState<string | null>(null);
+  const [linkLoadAttempt, setLinkLoadAttempt] = useState(0);
   const [goalCapacityInput, setGoalCapacityInput] =
     useState<GoalCapacityInput | null>(null);
   const [linkTargetSearch, setLinkTargetSearch] = useState("");
@@ -284,6 +291,8 @@ export function GoalForm({
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+      setLinkTargetsReady(false);
+      setLinkTargetsError(null);
 
       const {
         data: { user },
@@ -338,8 +347,21 @@ export function GoalForm({
           goal.team_id === null &&
           progressByGoal.get(goal.id)?.lifecycle === "active"
       );
-      const linkableGoalIdSet = new Set(linkableGoals.map((goal) => goal.id));
-      setAvailableGoals(linkableGoals);
+      if (goalOptionsResponse.error) {
+        setAvailableGoals([]);
+      } else {
+        setAvailableGoals(linkableGoals);
+      }
+      const linkLoadError =
+        goalOptionsResponse.error ??
+        (goalId ? linksResponse.error : null);
+      if (linkLoadError) {
+        setLinkTargetsError(
+          rpcErrorMessage(linkLoadError, "Could not load linkable goals.")
+        );
+      } else {
+        setLinkTargetsReady(true);
+      }
       if (profileResponse.error) {
         setGoalCapacityInput(null);
       } else {
@@ -412,11 +434,13 @@ export function GoalForm({
         });
         setCreateKind(goal.frequency_type);
 
-        const existingLinks = (linksResponse.data ?? []) as GoalLink[];
-        if (existingLinks.length > 0 && linkableGoalIdSet.has(existingLinks[0].target_goal_id)) {
-          setSelectedLinkTarget(existingLinks[0].target_goal_id);
-        } else {
-          setSelectedLinkTarget("none");
+        if (!linksResponse.error) {
+          const existingLinks = (linksResponse.data ?? []) as GoalLink[];
+          if (existingLinks.length > 0) {
+            setSelectedLinkTarget(existingLinks[0].target_goal_id);
+          } else {
+            setSelectedLinkTarget("none");
+          }
         }
 
         if (goal.photo_path) {
@@ -434,13 +458,15 @@ export function GoalForm({
 
     void load().catch((error: unknown) => {
       setLoading(false);
+      setLinkTargetsReady(false);
+      setLinkTargetsError(
+        rpcErrorMessage(error, "Could not load linkable goals.")
+      );
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Could not load linkable goals."
+        rpcErrorMessage(error, "Could not load linkable goals.")
       );
     });
-  }, [goalId, router, supabase]);
+  }, [goalId, linkLoadAttempt, router, supabase]);
 
   const isPlannerTask = !isEditing && isPlannerTaskCreateKind(createKind);
   const isLifetimeRecurringTarget =
@@ -554,7 +580,10 @@ export function GoalForm({
     return resolveGoalDefinitionValidationFeedback(definitionIssues);
   }, [state, definitionTargetCount, goalCapacityInput, isPlannerTask]);
   const submitDisabled =
-    saving || validationError !== null || recovery !== null;
+    saving ||
+    validationError !== null ||
+    recovery !== null ||
+    (!isPlannerTask && !linkTargetsReady);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -565,16 +594,27 @@ export function GoalForm({
     if (recovery?.kind === "link") {
       return;
     }
+    if (!isPlannerTask && !linkTargetsReady) {
+      toast.error(linkTargetsError ?? "Link targets are still loading. Try again.");
+      return;
+    }
 
     setSaving(true);
 
     if (isPlannerTask) {
-      const { error } = await supabase.rpc("create_planner_task", {
-        p_title: state.title.trim(),
-        p_scheduled_date: state.task_scheduled_date.trim() || undefined,
-      });
+      let error: { message?: string | null } | null = null;
+      try {
+        ({ error } = await supabase.rpc("create_planner_task", {
+          p_title: state.title.trim(),
+          p_scheduled_date: state.task_scheduled_date.trim() || undefined,
+        }));
+      } catch (cause) {
+        toast.error(rpcErrorMessage(cause, "Could not save task. Try again."));
+        setSaving(false);
+        return;
+      }
       if (error) {
-        toast.error(error.message ?? "Failed to save task.");
+        toast.error(rpcErrorMessage(error, "Could not save task. Try again."));
         setSaving(false);
         return;
       }
@@ -602,7 +642,8 @@ export function GoalForm({
       state.custom_category
     );
 
-    const goalArgs: GoalFormGoalArgs = recovery?.kind === "create"
+    const goalArgs: GoalFormGoalArgs =
+      recovery?.kind === "create" || recovery?.kind === "update"
       ? recovery.goalArgs
       : {
       p_id:
@@ -640,10 +681,23 @@ export function GoalForm({
     const savedGoalId = goalArgs.p_id;
 
     if (goalId) {
-      const { error } = await supabase.rpc("update_goal", goalArgs);
+      let error: { message?: string | null } | null = null;
+      try {
+        ({ error } = await supabase.rpc("update_goal", goalArgs));
+      } catch (cause) {
+        setRecovery({ kind: "update", goalArgs });
+        toast.error(
+          rpcErrorMessage(cause, "Could not confirm goal update. Try again.")
+        );
+        setSaving(false);
+        return;
+      }
 
       if (error) {
-        toast.error(error.message ?? "Failed to save goal.");
+        setRecovery({ kind: "update", goalArgs });
+        toast.error(
+          rpcErrorMessage(error, "Could not confirm goal update. Try again.")
+        );
         setSaving(false);
         return;
       }
@@ -669,6 +723,8 @@ export function GoalForm({
         return;
       }
     }
+
+    invalidatePlannerRelatedTabCaches();
 
     if (photoFile) {
       const fileName = `${Date.now()}-${photoFile.name.replace(/\s+/g, "-")}`;
@@ -722,7 +778,6 @@ export function GoalForm({
     }
 
     setRecovery(null);
-    invalidatePlannerRelatedTabCaches();
     toast.success(isEditing ? "Goal updated." : "Goal created.");
     requestXpRefresh();
     completeAndExit();
@@ -881,7 +936,9 @@ export function GoalForm({
             <p>
               {recovery.kind === "link"
                 ? "The goal was saved, but its selected link was not. Retry to finish saving it."
-                : "Goal creation could not be confirmed. Retry to safely reconcile this draft."}
+                : recovery.kind === "update"
+                  ? "The goal update could not be confirmed. Retry to safely reconcile it."
+                  : "Goal creation could not be confirmed. Retry to safely reconcile this draft."}
             </p>
             <Button
               type="button"
@@ -898,7 +955,26 @@ export function GoalForm({
             >
               {recovery.kind === "link"
                 ? "Retry saving link"
-                : "Retry creating goal"}
+                : recovery.kind === "update"
+                  ? "Retry saving goal"
+                  : "Retry creating goal"}
+            </Button>
+          </div>
+        ) : null}
+        {linkTargetsError ? (
+          <div
+            role="alert"
+            className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+          >
+            <p>{linkTargetsError}</p>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-2"
+              onClick={() => setLinkLoadAttempt((attempt) => attempt + 1)}
+              disabled={loading}
+            >
+              Retry loading link targets
             </Button>
           </div>
         ) : null}
@@ -939,6 +1015,7 @@ export function GoalForm({
               onSearchQueryChange: setLinkTargetSearch,
               filteredLinkTargets,
               selectedTargetGoal: selectedLinkTargetGoal,
+              disabled: !linkTargetsReady,
             }}
             extraGridSlot={
               isPlannerTask ? (

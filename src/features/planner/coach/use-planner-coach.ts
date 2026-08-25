@@ -727,7 +727,9 @@ export function usePlannerCoach({
       } catch (error) {
         setCoachGoalRefreshStatus("idle");
         const errorCode =
-          error && typeof error === "object" && "code" in error
+          draftState.pendingLinkRecovery
+            ? "links_failed"
+            : error && typeof error === "object" && "code" in error
             ? String(error.code)
             : "create_failed";
         setCoachGoalDraftStatesByKey((previous) => ({
@@ -746,9 +748,14 @@ export function usePlannerCoach({
               Array.isArray(error.preparedRows)
                 ? { preparedRows: error.preparedRows }
                 : draftState.pendingCreateRecovery,
-            pendingLinkRecovery: undefined,
+            pendingLinkRecovery: draftState.pendingLinkRecovery,
           },
         }));
+        toast.error(
+          error instanceof Error && error.message.trim()
+            ? error.message
+            : "Could not create goals. Try again."
+        );
       }
     },
     [

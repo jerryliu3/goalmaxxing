@@ -54,23 +54,22 @@ They should become explicit contracts before deeper refactoring.
 | Recurring lifetime target | `target_basis = "lifetime"` and requirement kind `deadline_total` | Total credited completions across the goal lifetime |
 | Fixed milestones | requirement kind `milestone_sequence` | Total ordered milestone completions |
 
-Period goals should have a target of at least `1`. The current UI now defaults
-period targets to `1`, but the database shape still permits `NULL` and interprets
-it with `coalesce(..., 1)`. Fixed milestones must always have a positive target.
-The current database shape requires a recurring lifetime target to be positive,
-while the current form labels that field as optional and allows it to be cleared.
-Those are contract mismatches, not settled product semantics.
+Period goals have a target of at least `1`. The UI defaults
+period targets to `1`, and the write boundary plus database trigger normalize a
+missing recurring period target to `1` before persistence. Fixed milestones and
+recurring lifetime targets require a positive target; lifetime targets are not an
+optional-target mode.
 
-The simplest consistent choice is to make “lifetime target” an optional mode, but
-require a positive value once that mode is selected. If the product instead wants a
-recurring lifetime goal with no total target, that needs an explicit representation
-and corresponding planner/progress semantics; it should not silently fall through to
-`positiveTarget(... ?? 1)` and behave as a one-completion deadline.
+If the product ever wants a recurring lifetime goal with no total target, that
+needs an explicit representation and corresponding planner/progress semantics; it
+should not silently fall through to `positiveTarget(... ?? 1)` and behave as a
+one-completion deadline.
 
 The current product decision is that target basis, frequency, target count, goal
 type, and start date are immutable after creation. Users change those semantics by
-ending/archiving the old goal and creating a new one. The database enforces this
-decision, but the edit form does not fully communicate or enforce it yet.
+ending/archiving the old goal and creating a new one. The edit form disables those
+definition controls and explains the replacement workflow; the database guard
+remains the authoritative defense.
 
 ### Checklist state
 
@@ -353,9 +352,9 @@ API checks should remain for early, actionable errors.
 
 **User-visible result**
 
-The edit form permits typing a new target, but save fails with the database
-immutability error. This is a UI/API contract mismatch, not evidence that target
-changes are currently supported.
+The edit form disables definition controls and explains that the goal must be
+archived and recreated to change its semantics. The database guard remains in
+place as the authoritative defense for direct or stale clients.
 
 **Historical behavior**
 
@@ -367,11 +366,11 @@ change and requiring archive/end plus a new goal.
 
 **Recommendation**
 
-Make all immutable definition controls genuinely disabled in edit mode, add concise
-copy explaining “Archive and create a new goal to change the target or frequency,”
-and retain the database guard. Supporting mutable targets requires a separate
-versioned-goal-definition design with an effective date and historical progress
-replay; it should not be implemented as a client-only relaxation.
+Keep all immutable definition controls disabled in edit mode, retain the concise
+replacement guidance, and keep the database guard. Supporting mutable targets
+would require a separate versioned-goal-definition design with an effective date
+and historical progress replay; it should not be implemented as a client-only
+relaxation.
 
 ### P1: duplicated domain logic
 

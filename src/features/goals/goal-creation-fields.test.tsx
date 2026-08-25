@@ -233,6 +233,56 @@ describe("GoalCreationFieldControls create mode", () => {
     expect(monthlyInput).toHaveAttribute("max", "31");
   });
 
+  it("uses the global target maximum for lifetime weekly and monthly targets", () => {
+    const { rerender } = render(
+      <GoalCreationFieldControls
+        fields={baseFields({
+          recurrence_interval: "weekly",
+          target_basis: "lifetime",
+          target_count: "20",
+        })}
+        onFieldChange={vi.fn()}
+        onPatch={vi.fn()}
+        definitionFieldsLocked={false}
+        createKind="recurring"
+        onCreateKindChange={vi.fn()}
+        isEditing={false}
+        isPlannerTask={false}
+        linkTarget={baseLinkProps()}
+        teamId={null}
+      />
+    );
+
+    expect(document.getElementById("recurring-target-count")).toHaveAttribute(
+      "max",
+      "1000"
+    );
+
+    rerender(
+      <GoalCreationFieldControls
+        fields={baseFields({
+          recurrence_interval: "monthly",
+          target_basis: "lifetime",
+          target_count: "40",
+        })}
+        onFieldChange={vi.fn()}
+        onPatch={vi.fn()}
+        definitionFieldsLocked={false}
+        createKind="recurring"
+        onCreateKindChange={vi.fn()}
+        isEditing={false}
+        isPlannerTask={false}
+        linkTarget={baseLinkProps()}
+        teamId={null}
+      />
+    );
+
+    expect(document.getElementById("recurring-target-count")).toHaveAttribute(
+      "max",
+      "1000"
+    );
+  });
+
   it("requires a positive lifetime target", () => {
     renderControls(
       baseFields({
