@@ -1,6 +1,12 @@
 import { format, isValid, parseISO } from "date-fns";
 import { toLocalDateString } from "@/lib/dates/day";
 import {
+  createDefaultGoalCreationFields,
+  parseGoalCreationTargetCount,
+  type GoalCreationFields,
+  validateGoalCreationFields,
+} from "@/features/goals/goal-creation-model";
+import {
   type CategorySelection,
   getCategoryKeyForSelection,
   getCategoryLabel,
@@ -9,7 +15,6 @@ import {
 } from "@/lib/goals/category";
 import {
   isOrdinalGoalDefinition,
-  validateGoalDefinition,
 } from "@/lib/goals/definition-validation";
 import {
   buildMilestoneNameDrafts,
@@ -36,24 +41,10 @@ const columnAliases = {
   default_local_time: ["default_local_time", "default_time", "time_of_day", "local_time"],
 } as const;
 
-export interface BulkGoalDraft {
+export interface BulkGoalDraft extends GoalCreationFields {
   id: string;
   sourceRowLabel: string;
   include: boolean;
-  title: string;
-  description: string;
-  category_selection: CategorySelection;
-  custom_category: string;
-  color: string;
-  frequency_type: GoalFrequencyType;
-  recurrence_interval: RecurrenceInterval;
-  target_count: string;
-  target_basis: GoalTargetBasis;
-  milestone_names: string[];
-  start_date: string;
-  end_date: string;
-  default_local_time: string;
-  linked_target_goal_id: string;
   link_target_search: string;
   link_target_open: boolean;
   advanced_open: boolean;
@@ -144,10 +135,7 @@ function normalizeDateValue(raw: unknown): string {
 }
 
 export function parseBulkGoalTargetCount(raw: string): number | null {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  const parsed = Number.parseInt(trimmed, 10);
-  return Number.isNaN(parsed) ? null : parsed;
+  return parseGoalCreationTargetCount(raw);
 }
 
 export function resolveBulkGoalTargetBasis(draft: BulkGoalDraft): GoalTargetBasis {
@@ -179,49 +167,7 @@ function parseMilestoneNames(raw: string): string[] {
 }
 
 export function validateBulkGoalDraft(draft: BulkGoalDraft): string[] {
-  const errors: string[] = [];
-  const parsedTarget = parseBulkGoalTargetCount(draft.target_count);
-  if (!draft.title.trim()) errors.push("Title is required.");
-  if (draft.category_selection === "custom" && !draft.custom_category.trim()) {
-    errors.push("Custom category name is required.");
-  }
-  if (!isValidBulkGoalHexColor(draft.color)) {
-    errors.push("Color accent must be a valid hex color.");
-  }
-  if (
-    draft.default_local_time.trim().length > 0 &&
-    !isValidBulkGoalLocalTime(draft.default_local_time)
-  ) {
-    errors.push("Default time must be a valid 24-hour HH:MM value.");
-  }
-  if (draft.frequency_type === "fixed_milestones") {
-    if (parsedTarget === null || parsedTarget <= 0) {
-      errors.push("Milestone goals require a positive target count.");
-    }
-    if (parsedTarget !== null && draft.milestone_names.length !== parsedTarget) {
-      errors.push("Milestone names must align with target count.");
-    }
-  }
-  if (!draft.start_date) errors.push("Start date is required.");
-
-  const definitionTargetCount =
-    draft.frequency_type === "fixed_milestones"
-      ? parsedTarget
-      : draft.target_count.trim()
-        ? parsedTarget
-        : null;
-  for (const issue of validateGoalDefinition({
-    frequencyType: draft.frequency_type,
-    targetCount: definitionTargetCount,
-    targetBasis: resolveBulkGoalTargetBasis(draft),
-    recurrenceInterval:
-      draft.frequency_type === "recurring" ? draft.recurrence_interval : null,
-    startDate: draft.start_date,
-    endDate: draft.end_date || null,
-  })) {
-    errors.push(issue.message);
-  }
-  return errors;
+  return validateGoalCreationFields(draft);
 }
 
 export function withValidatedBulkGoalDraft(
@@ -258,6 +204,7 @@ export function buildBulkGoalDraftFromRow(
     targetBasisRaw === "lifetime" ? "lifetime" : "period";
 
   return withValidatedBulkGoalDraft({
+    ...createDefaultGoalCreationFields(),
     id: crypto.randomUUID(),
     sourceRowLabel: `Row ${rowIndex + 1}`,
     include: true,

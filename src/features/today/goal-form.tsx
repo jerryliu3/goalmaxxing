@@ -74,6 +74,12 @@ import {
   getLinkedTargetSchedulingNotice,
 } from "@/lib/goals/linked-goal-labels";
 import {
+  createDefaultGoalCreationFields,
+  updateGoalCreationFields,
+  type GoalCreationFieldChange,
+  type GoalCreationFields,
+} from "@/features/goals/goal-creation-model";
+import {
   buildMilestoneNameDrafts,
   normalizeMilestoneNamesForSave,
 } from "@/lib/goals/milestones";
@@ -106,47 +112,73 @@ interface GoalFormProps {
   onExit?: () => void;
 }
 
-interface GoalFormState {
-  title: string;
-  description: string;
+interface GoalFormState extends GoalCreationFields {
   reward_text: string;
-  category_selection: CategorySelection;
-  custom_category: string;
-  color: string;
-  frequency_type: GoalFrequencyType;
-  recurrence_interval: RecurrenceInterval;
-  difficulty: GoalDifficulty;
-  target_basis: GoalTargetBasis;
-  target_count: string;
-  milestone_names: string[];
-  start_date: string;
-  end_date: string;
-  default_local_time: string;
   team_id: string | null;
-  is_private: boolean;
   task_scheduled_date: string;
 }
 
 const defaultState: GoalFormState = {
-  title: "",
-  description: "",
+  ...createDefaultGoalCreationFields(),
   reward_text: "",
-  category_selection: "personal",
-  custom_category: "",
-  color: getCategorySwatchColor("personal"),
-  frequency_type: "recurring",
-  recurrence_interval: "daily",
-  difficulty: "medium",
-  target_basis: "period",
-  target_count: "",
-  milestone_names: [],
-  start_date: toLocalDateString(),
-  end_date: "",
-  default_local_time: "",
   team_id: null,
-  is_private: false,
   task_scheduled_date: toLocalDateString(),
 };
+
+function toGoalCreationFields(state: GoalFormState): GoalCreationFields {
+  return {
+    title: state.title,
+    description: state.description,
+    category_selection: state.category_selection,
+    custom_category: state.custom_category,
+    color: state.color,
+    frequency_type: state.frequency_type,
+    recurrence_interval: state.recurrence_interval,
+    target_count: state.target_count,
+    target_basis: state.target_basis,
+    milestone_names: state.milestone_names,
+    start_date: state.start_date,
+    end_date: state.end_date,
+    default_local_time: state.default_local_time,
+    difficulty: state.difficulty,
+    is_private: state.is_private,
+    linked_target_goal_id: "none",
+  };
+}
+
+function mergeGoalCreationFields(
+  state: GoalFormState,
+  fields: GoalCreationFields
+): GoalFormState {
+  return {
+    ...state,
+    title: fields.title,
+    description: fields.description,
+    category_selection: fields.category_selection,
+    custom_category: fields.custom_category,
+    color: fields.color,
+    frequency_type: fields.frequency_type,
+    recurrence_interval: fields.recurrence_interval,
+    target_count: fields.target_count,
+    target_basis: fields.target_basis,
+    milestone_names: fields.milestone_names,
+    start_date: fields.start_date,
+    end_date: fields.end_date,
+    default_local_time: fields.default_local_time,
+    difficulty: fields.difficulty,
+    is_private: fields.is_private,
+  };
+}
+
+function applyGoalCreationChange(
+  state: GoalFormState,
+  change: GoalCreationFieldChange
+): GoalFormState {
+  return mergeGoalCreationFields(
+    state,
+    updateGoalCreationFields(toGoalCreationFields(state), change)
+  );
+}
 
 const localTimePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 const lifetimeTargetLabel = "Total target completions";
@@ -342,6 +374,7 @@ export function GoalForm({
           start_date: goal.start_date,
           end_date: goal.end_date ?? "",
           default_local_time: goal.default_local_time ?? "",
+          linked_target_goal_id: "none",
           team_id: goal.team_id ?? null,
           is_private: goal.is_private ?? false,
           task_scheduled_date: toLocalDateString(),
@@ -442,44 +475,15 @@ export function GoalForm({
 
   const updateFrequencyType = (nextFrequency: GoalFrequencyType) => {
     setMilestoneNamesOpen(false);
-    setState((previous) => ({
-      ...previous,
-      frequency_type: nextFrequency,
-      target_count:
-        nextFrequency === "fixed_milestones" && previous.target_count.trim().length === 0
-          ? "3"
-          : previous.target_count,
-      milestone_names:
-        nextFrequency === "fixed_milestones"
-          ? buildMilestoneNameDrafts(
-              parsePositiveTargetCount(
-                nextFrequency === "fixed_milestones" && previous.target_count.trim().length === 0
-                  ? "3"
-                  : previous.target_count
-              ) ?? 0,
-              previous.milestone_names
-            )
-          : previous.milestone_names,
-    }));
+    setState((previous) =>
+      applyGoalCreationChange(previous, { type: "frequency_type", value: nextFrequency })
+    );
   };
 
   const updateTargetCount = (nextTargetCount: string) => {
-    setState((previous) => ({
-      ...previous,
-      target_count:
-        previous.frequency_type === "recurring" &&
-        previous.target_basis === "period" &&
-        nextTargetCount.trim().length === 0
-          ? "1"
-          : nextTargetCount,
-      milestone_names:
-        previous.frequency_type === "fixed_milestones"
-          ? buildMilestoneNameDrafts(
-              parsePositiveTargetCount(nextTargetCount) ?? 0,
-              previous.milestone_names
-            )
-          : previous.milestone_names,
-    }));
+    setState((previous) =>
+      applyGoalCreationChange(previous, { type: "target_count", value: nextTargetCount })
+    );
   };
 
   const applyThisMonthEndDate = () => {
@@ -966,16 +970,12 @@ export function GoalForm({
                   value={state.recurrence_interval}
                   triggerClassName="h-8"
                   onValueChange={(value) =>
-                    setState((prev) => ({
-                      ...prev,
-                      recurrence_interval: value,
-                      target_count:
-                        prev.target_basis === "period" &&
-                        value !== "daily" &&
-                        prev.target_count.trim().length === 0
-                          ? "1"
-                          : prev.target_count,
-                    }))
+                    setState((prev) =>
+                      applyGoalCreationChange(prev, {
+                        type: "recurrence_interval",
+                        value,
+                      })
+                    )
                   }
                 />
               </div>
@@ -1180,17 +1180,12 @@ export function GoalForm({
                           className="mt-1"
                           checked={state.target_basis === "lifetime"}
                           onChange={(event) =>
-                            setState((previous) => ({
-                              ...previous,
-                              target_basis: event.target.checked ? "lifetime" : "period",
-                              target_count: event.target.checked
-                                ? previous.target_count.trim().length > 0
-                                  ? previous.target_count
-                                  : "3"
-                                : previous.target_count.trim().length > 0
-                                  ? previous.target_count
-                                  : "1",
-                            }))
+                            setState((previous) =>
+                              applyGoalCreationChange(previous, {
+                                type: "target_basis",
+                                value: event.target.checked ? "lifetime" : "period",
+                              })
+                            )
                           }
                         />
                         <span>Use a total completion target instead of per-period.</span>
@@ -1245,14 +1240,13 @@ export function GoalForm({
                               count={fixedMilestoneCount}
                               values={state.milestone_names}
                               onValueChange={(index, value) =>
-                                setState((previous) => {
-                                  const nextMilestoneNames = [...previous.milestone_names];
-                                  nextMilestoneNames[index] = value;
-                                  return {
-                                    ...previous,
-                                    milestone_names: nextMilestoneNames,
-                                  };
-                                })
+                                setState((previous) =>
+                                  applyGoalCreationChange(previous, {
+                                    type: "milestone_name",
+                                    index,
+                                    value,
+                                  })
+                                )
                               }
                               showLabel={false}
                               keyPrefix="milestone-name"
