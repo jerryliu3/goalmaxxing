@@ -748,26 +748,6 @@ revoke execute on function public.create_goal(
   text,
   uuid,
   boolean,
-  public.goal_difficulty
-) from public, anon;
-
-revoke execute on function public.create_goal(
-  uuid,
-  text,
-  text,
-  text,
-  text,
-  text,
-  text,
-  public.goal_frequency_type,
-  public.recurrence_interval,
-  integer,
-  text[],
-  date,
-  date,
-  text,
-  uuid,
-  boolean,
   public.goal_difficulty,
   public.goal_target_basis
 ) from public, anon;
@@ -792,26 +772,6 @@ grant execute on function public.create_goal(
   public.goal_difficulty,
   public.goal_target_basis
 ) to authenticated, service_role;
-
-revoke execute on function public.update_goal(
-  uuid,
-  text,
-  text,
-  text,
-  text,
-  text,
-  text,
-  public.goal_frequency_type,
-  public.recurrence_interval,
-  integer,
-  text[],
-  date,
-  date,
-  text,
-  uuid,
-  boolean,
-  public.goal_difficulty
-) from public, anon;
 
 revoke execute on function public.update_goal(
   uuid,
