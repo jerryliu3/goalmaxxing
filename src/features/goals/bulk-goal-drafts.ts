@@ -17,6 +17,7 @@ import {
 } from "@/lib/goals/milestones";
 import type {
   GoalFrequencyType,
+  GoalTargetBasis,
   RecurrenceInterval,
 } from "@/lib/goals/types";
 
@@ -46,6 +47,7 @@ export interface BulkGoalDraft {
   frequency_type: GoalFrequencyType;
   recurrence_interval: RecurrenceInterval;
   target_count: string;
+  target_basis: GoalTargetBasis;
   milestone_names: string[];
   start_date: string;
   end_date: string;
@@ -85,6 +87,7 @@ export interface PreparedBulkGoalRow {
     frequency_type: GoalFrequencyType;
     recurrence_interval: RecurrenceInterval | null;
     target_count: number | null;
+    target_basis: GoalTargetBasis | null;
     milestone_names: string[] | null;
     start_date: string;
     end_date: string | null;
@@ -145,6 +148,13 @@ export function parseBulkGoalTargetCount(raw: string): number | null {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
+export function resolveBulkGoalTargetBasis(draft: BulkGoalDraft): GoalTargetBasis {
+  if (draft.frequency_type !== "recurring") {
+    return "lifetime";
+  }
+  return draft.target_basis;
+}
+
 export function isValidBulkGoalHexColor(raw: string): boolean {
   return /^#[0-9a-f]{6}$/i.test(raw.trim());
 }
@@ -201,6 +211,9 @@ export function validateBulkGoalDraft(draft: BulkGoalDraft): string[] {
   for (const issue of validateGoalDefinition({
     frequencyType: draft.frequency_type,
     targetCount: definitionTargetCount,
+    targetBasis: resolveBulkGoalTargetBasis(draft),
+    recurrenceInterval:
+      draft.frequency_type === "recurring" ? draft.recurrence_interval : null,
     startDate: draft.start_date,
     endDate: draft.end_date || null,
   })) {
@@ -238,6 +251,9 @@ export function buildBulkGoalDraftFromRow(
     extractText(normalizedRow, columnAliases.milestone_names)
   );
   const parsedColor = extractText(normalizedRow, columnAliases.color);
+  const targetBasisRaw = String(normalizedRow.target_basis ?? "").trim().toLowerCase();
+  const targetBasis: GoalTargetBasis =
+    targetBasisRaw === "lifetime" ? "lifetime" : "period";
 
   return withValidatedBulkGoalDraft({
     id: crypto.randomUUID(),
@@ -255,6 +271,7 @@ export function buildBulkGoalDraftFromRow(
       extractText(normalizedRow, columnAliases.recurrence_interval)
     ),
     target_count: targetRaw || (frequencyType === "fixed_milestones" ? "3" : ""),
+    target_basis: frequencyType === "recurring" ? targetBasis : "lifetime",
     milestone_names:
       frequencyType === "fixed_milestones"
         ? buildMilestoneNameDrafts(parsedTarget ?? 0, parsedMilestoneNames)
@@ -336,6 +353,7 @@ export function bulkGoalDraftRequiresEndDate(draft: BulkGoalDraft): boolean {
         : draft.target_count.trim()
           ? parsedTargetCount
           : null,
+    targetBasis: resolveBulkGoalTargetBasis(draft),
   });
 }
 
@@ -392,6 +410,10 @@ export function prepareBulkGoalRows(
             ? draft.recurrence_interval
             : null,
         target_count: normalizedTargetCount,
+        target_basis:
+          draft.frequency_type === "recurring"
+            ? resolveBulkGoalTargetBasis(draft)
+            : "lifetime",
         milestone_names:
           draft.frequency_type === "fixed_milestones" && parsedTargetCount
             ? normalizeMilestoneNamesForSave(

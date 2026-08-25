@@ -183,6 +183,7 @@ describe("bulk goal drafts", () => {
         frequency_type: "recurring",
         recurrence_interval: "weekly",
         target_count: 4,
+        target_basis: "period",
         milestone_names: null,
         start_date: "2026-08-17",
         end_date: "2026-09-13",
