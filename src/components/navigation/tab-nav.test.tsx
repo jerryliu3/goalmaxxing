@@ -98,14 +98,14 @@ describe("TabNav", () => {
     mockPathname = "/calendar";
     render(<TabNav />);
 
-    expect(screen.getByRole("link", { name: "Insights" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Community" })).toHaveAttribute(
       "data-transition-types",
-      "nav-back"
+      "nav-forward"
     );
     expect(screen.getByRole("link", { name: "Planner" })).not.toHaveAttribute(
       "data-transition-types"
     );
-    expect(screen.getByRole("link", { name: "Profile" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Insights" })).toHaveAttribute(
       "data-transition-types",
       "nav-forward"
     );

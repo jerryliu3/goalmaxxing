@@ -45,9 +45,9 @@ export function buildAppTabs(
   void plannerPrimaryTab;
   const prefix = normalizeHrefPrefix(options?.hrefPrefix);
   const orderedKeys: AppTabKey[] = [
-    "insights",
     "calendar",
     "social",
+    "insights",
     "settings",
   ];
   return orderedKeys.map((key) => {

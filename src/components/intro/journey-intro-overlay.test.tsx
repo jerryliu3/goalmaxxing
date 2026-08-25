@@ -74,9 +74,9 @@ function mockVisibleOnboardingTargets() {
     function mockClientRect(this: HTMLElement) {
       const target = this.getAttribute("data-onboarding") ?? "unknown";
       const index = [
-        "nav.insights",
         "nav.calendar",
         "nav.social",
+        "nav.insights",
         "nav.settings",
         "nav.new-goal",
       ].indexOf(target);
@@ -99,14 +99,14 @@ function mockVisibleOnboardingTargets() {
 function renderIntro() {
   return render(
     <>
-      <button type="button" data-onboarding="nav.insights">
-        Insights
-      </button>
       <button type="button" data-onboarding="nav.calendar">
         Planner
       </button>
       <button type="button" data-onboarding="nav.social">
         Community
+      </button>
+      <button type="button" data-onboarding="nav.insights">
+        Insights
       </button>
       <button type="button" data-onboarding="nav.settings">
         Profile
@@ -141,7 +141,7 @@ describe("JourneyIntroOverlay", () => {
 
   it("prefetches calendar when intro opens", async () => {
     renderIntro();
-    expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Planner" })).toBeInTheDocument();
     await waitFor(() => {
       expect(routerMock.prefetch).toHaveBeenCalledWith("/calendar");
       expect(routerMock.prefetch).toHaveBeenCalledWith("/calendar?surface=calendar");
@@ -150,7 +150,7 @@ describe("JourneyIntroOverlay", () => {
 
   it("shows a spotlight intro without blurring the background", async () => {
     renderIntro();
-    const dialog = await screen.findByRole("dialog", { name: "Insights" });
+    const dialog = await screen.findByRole("dialog", { name: "Planner" });
     expect(dialog).not.toHaveClass("backdrop-blur-sm");
     expect(dialog.parentElement).toHaveClass("z-[80]");
     expect(screen.getByTestId("onboarding-highlight")).toBeInTheDocument();
@@ -174,7 +174,7 @@ describe("JourneyIntroOverlay", () => {
     window.localStorage.setItem(JOURNEY_INTRO_FORCE_USER_ID_KEY, TEST_USER_ID);
 
     renderIntro();
-    expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Planner" })).toBeInTheDocument();
     expect(window.localStorage.getItem(JOURNEY_INTRO_FORCE_USER_ID_KEY)).toBeNull();
   });
 
@@ -191,23 +191,23 @@ describe("JourneyIntroOverlay", () => {
   it("reopens intro when settings triggers the revisit event", async () => {
     window.localStorage.setItem(JOURNEY_ONBOARDING_COMPLETED_KEY, "done");
     renderIntro();
-    expect(screen.queryByRole("dialog", { name: "Insights" })).toBeNull();
+    expect(screen.queryByRole("dialog", { name: "Planner" })).toBeNull();
 
     window.dispatchEvent(new Event(JOURNEY_INTRO_OPEN_EVENT));
 
-    expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Planner" })).toBeInTheDocument();
   });
 
   it(
     "walks through nav highlights and saves preferences on the last step",
     async () => {
     renderIntro();
-    expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Planner" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Planner" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(await screen.findByRole("dialog", { name: "Community" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(await screen.findByRole("dialog", { name: "Profile" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
@@ -259,9 +259,9 @@ describe("JourneyIntroOverlay", () => {
           } as DOMRect;
         }
         const index = [
-          "nav.insights",
           "nav.calendar",
           "nav.social",
+          "nav.insights",
           "nav.settings",
           "nav.new-goal",
         ].indexOf(target);
@@ -289,12 +289,12 @@ describe("JourneyIntroOverlay", () => {
     });
 
     renderIntro();
-    expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Planner" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Planner" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(await screen.findByRole("dialog", { name: "Community" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(await screen.findByRole("dialog", { name: "Profile" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
@@ -320,9 +320,9 @@ describe("JourneyIntroOverlay", () => {
 
   it("skips intro without saving preferences", async () => {
     renderIntro();
-    expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Planner" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Skip intro" }));
-    expect(screen.queryByRole("dialog", { name: "Insights" })).toBeNull();
+    expect(screen.queryByRole("dialog", { name: "Planner" })).toBeNull();
     expect(putJsonMock).not.toHaveBeenCalled();
     expect(window.localStorage.getItem(JOURNEY_ONBOARDING_COMPLETED_KEY)).toBe("done");
   });
