@@ -17,6 +17,7 @@ import {
   getLinkedTargetSchedulingNotice,
 } from "@/lib/goals/linked-goal-labels";
 import type { Goal } from "@/lib/goals/types";
+import { cn } from "@/lib/utils";
 
 interface GoalLinkTargetSelectProps {
   value: string;
@@ -29,6 +30,10 @@ interface GoalLinkTargetSelectProps {
   selectedTargetGoal: Goal | null;
   sourceEndDate: string | null;
   keyPrefix?: string;
+  showLabel?: boolean;
+  showHelperText?: boolean;
+  showLinkedNotice?: boolean;
+  triggerClassName?: string;
 }
 
 export function GoalLinkTargetSelect({
@@ -42,23 +47,29 @@ export function GoalLinkTargetSelect({
   selectedTargetGoal,
   sourceEndDate,
   keyPrefix = "",
+  showLabel = true,
+  showHelperText = true,
+  showLinkedNotice = true,
+  triggerClassName,
 }: GoalLinkTargetSelectProps) {
   const linkedTargetSchedulingNotice = getLinkedTargetSchedulingNotice({
     sourceEndDate,
   });
   return (
     <div className="space-y-2">
-      <Label className="inline-flex items-center gap-2">
-        <Link2 className="size-4 text-muted-foreground" />
-        Make this a subgoal linked to...
-      </Label>
+      {showLabel ? (
+        <Label className="inline-flex items-center gap-2">
+          <Link2 className="size-4 text-muted-foreground" />
+          Make this a subgoal linked to...
+        </Label>
+      ) : null}
       <Select
         value={value}
         onValueChange={onValueChange}
         open={open}
         onOpenChange={onOpenChange}
       >
-        <SelectTrigger>
+        <SelectTrigger className={cn("w-full", triggerClassName)}>
           <SelectValue placeholder="None" />
         </SelectTrigger>
         <SelectContent>
@@ -89,10 +100,12 @@ export function GoalLinkTargetSelect({
           ) : null}
         </SelectContent>
       </Select>
-      <p className="text-xs text-muted-foreground">
-        Completing this subgoal also counts toward its linked main goal for that day.
-      </p>
-      {value !== "none" && selectedTargetGoal ? (
+      {showHelperText ? (
+        <p className="text-xs text-muted-foreground">
+          Completing this subgoal also counts toward its linked main goal for that day.
+        </p>
+      ) : null}
+      {showLinkedNotice && value !== "none" && selectedTargetGoal ? (
         <div className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-400/50 dark:bg-amber-500/10 dark:text-amber-100">
           <p className="font-medium">
             Linking this subgoal to {selectedTargetGoal.title} may hide that main goal in

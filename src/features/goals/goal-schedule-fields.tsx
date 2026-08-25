@@ -87,6 +87,7 @@ interface GoalDefaultTimeFieldProps {
   label?: string;
   helperText?: string;
   showHelperText?: boolean;
+  showLabel?: boolean;
   onClear?: () => void;
 }
 
@@ -97,18 +98,21 @@ export function GoalDefaultTimeField({
   label = "Default time of day (optional)",
   helperText = "Used as the default planner time when an item-level override is not set.",
   showHelperText = true,
+  showLabel = true,
   onClear,
 }: GoalDefaultTimeFieldProps) {
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <Label htmlFor={id}>{label}</Label>
-        {onClear && value ? (
-          <button type="button" className="text-xs text-primary hover:underline" onClick={onClear}>
-            clear
-          </button>
-        ) : null}
-      </div>
+      {showLabel ? (
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor={id}>{label}</Label>
+          {onClear && value ? (
+            <button type="button" className="text-xs text-primary hover:underline" onClick={onClear}>
+              clear
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       <Input id={id} type="time" value={value} onChange={(event) => onValueChange(event.target.value)} className="h-8" />
       {showHelperText ? (
         <p className="text-xs text-muted-foreground">{helperText}</p>
