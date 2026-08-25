@@ -249,6 +249,17 @@ describe("BulkGoalForm", () => {
       await user.click(
         within(dialog).getByRole("button", { name: /advanced settings/i })
       );
+      const difficultyTrigger = within(dialog)
+        .getAllByRole("combobox")
+        .find((element) => element.textContent?.includes("Medium"));
+      expect(difficultyTrigger).toBeTruthy();
+      await user.click(difficultyTrigger!);
+      await user.click(screen.getByRole("option", { name: "Hard" }));
+      await user.click(
+        within(dialog).getByRole("checkbox", {
+          name: /make this goal private/i,
+        })
+      );
       await user.click(
         within(dialog).getByRole("button", { name: "Select link target" })
       );
@@ -278,6 +289,8 @@ describe("BulkGoalForm", () => {
             start_date: "2026-08-17",
             end_date: "2026-09-28",
             default_local_time: null,
+            difficulty: "hard",
+            is_private: true,
           },
           {
             id: "goal-2",
@@ -294,6 +307,8 @@ describe("BulkGoalForm", () => {
             start_date: "2026-08-17",
             end_date: "2026-10-15",
             default_local_time: null,
+            difficulty: "medium",
+            is_private: false,
           },
         ],
       });
@@ -348,6 +363,71 @@ describe("BulkGoalForm", () => {
     ).toBeEnabled();
     expect(invalidatePlannerRelatedTabCachesMock).not.toHaveBeenCalled();
     expect(routerReplaceMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps linked drafts actionable when link persistence partially fails", async () => {
+    rpcMock
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: { message: "link save failed" } })
+      .mockResolvedValueOnce({ error: null });
+    const user = userEvent.setup();
+    render(<BulkGoalForm showBackButton={false} />);
+    await screen.findByText("Create multiple goals");
+
+    await parseNaturalLanguageGoals(
+      [
+        {
+          title: "Mobility",
+          frequency_type: "recurring",
+          recurrence_interval: "weekly",
+          target_basis: "period",
+          target_count: 2,
+          start_date: "2026-08-17",
+        },
+      ],
+      user
+    );
+
+    await user.click(firstTapToEditButton());
+    const dialog = await screen.findByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: /advanced settings/i })
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "Select link target" })
+    );
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    await user.click(
+      screen.getByRole("button", { name: "Create selected goals" })
+    );
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        "Some linked goals were not saved: link save failed"
+      );
+    });
+    expect(toastSuccessMock).not.toHaveBeenCalledWith(
+      expect.stringContaining("Created")
+    );
+    expect(routerReplaceMock).not.toHaveBeenCalled();
+    expect(screen.getByText("Mobility")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Retry saving links" })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Retry saving links" }));
+
+    await waitFor(() => {
+      expect(routerReplaceMock).toHaveBeenCalledWith("/");
+    });
+    expect(rpcMock).toHaveBeenNthCalledWith(3, "create_goal_links", {
+      p_links: [
+        {
+          source_goal_id: expect.any(String),
+          target_goal_id: "goal-main-1",
+        },
+      ],
+    });
   });
 
   it("blocks creation while selected drafts remain invalid", async () => {

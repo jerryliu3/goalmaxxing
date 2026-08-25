@@ -6,8 +6,10 @@ import {
   buildBulkGoalDraftsFromLlmGoals,
 } from "@/features/goals/bulk-goal-drafts";
 import {
+  type BulkGoalLinkRow,
   BulkGoalPersistenceError,
   persistBulkGoalDrafts,
+  retryBulkGoalLinks,
 } from "@/features/goals/bulk-goal-persistence";
 import { ApiClientError, postJson } from "@/lib/api/client";
 import { createClient } from "@/lib/supabase/client";
@@ -24,6 +26,19 @@ export class CoachGoalDraftServiceError extends Error {
     this.code = code;
   }
 }
+
+export type CoachGoalDraftCreationResult =
+  | {
+      status: "created";
+      createdCount: number;
+      linkErrorMessage: null;
+    }
+  | {
+      status: "partial_success";
+      createdCount: number;
+      linkErrorMessage: string;
+      linkRows: BulkGoalLinkRow[];
+    };
 
 export async function parseCoachGoalDrafts({
   parserPrompt,
@@ -109,10 +124,37 @@ export async function createCoachGoalDrafts({
       currentUserId: user?.id ?? null,
       supabase,
     });
+    if (result.status === "partial_success") {
+      return {
+        status: "partial_success",
+        createdCount: result.createdCount,
+        linkErrorMessage: result.linkErrorMessage,
+        linkRows: result.linkRecovery.linkRows,
+      } satisfies CoachGoalDraftCreationResult;
+    }
     return {
+      status: "created",
       createdCount: result.createdCount,
-      linkErrorMessage: result.linkErrorMessage,
-    };
+      linkErrorMessage: null,
+    } satisfies CoachGoalDraftCreationResult;
+  } catch (error) {
+    if (error instanceof BulkGoalPersistenceError) {
+      throw new CoachGoalDraftServiceError(error.code, error.message);
+    }
+    throw error;
+  }
+}
+
+export async function retryCoachGoalDraftLinks({
+  linkRows,
+}: {
+  linkRows: BulkGoalLinkRow[];
+}): Promise<{ status: "created" }> {
+  try {
+    return await retryBulkGoalLinks({
+      linkRows,
+      supabase: createClient(),
+    });
   } catch (error) {
     if (error instanceof BulkGoalPersistenceError) {
       throw new CoachGoalDraftServiceError(error.code, error.message);

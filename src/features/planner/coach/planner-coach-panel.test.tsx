@@ -512,6 +512,57 @@ describe("planner coach panel", () => {
     expect(coach.actions.generateCoachGoalDrafts).toHaveBeenCalledWith(0);
   });
 
+  it("offers link recovery without marking the coach proposal created", async () => {
+    const coach = buildCoachModel({
+      coachMessages: [
+        {
+          role: "assistant",
+          content: "I drafted a plan.",
+          createdAt: 123,
+          proposal: {
+            schemaVersion: "1",
+            kind: "goal_draft",
+            proposalId: "32000000-0000-4000-8000-000000000012",
+            parserPrompt: "Mobility weekly.",
+            creationStatus: "not_created",
+          },
+        },
+      ],
+      coachGoalDraftStates: {
+        0: {
+          status: "error",
+          drafts: buildBulkGoalDraftsFromLlmGoals([
+            {
+              title: "Mobility",
+              frequency_type: "recurring",
+              recurrence_interval: "weekly",
+              start_date: "2026-08-17",
+            },
+          ]),
+          warnings: [],
+          errorCode: "links_failed",
+          errorMessage: "Some linked goals were not saved: link save failed",
+          pendingLinkRecovery: {
+            createdCount: 1,
+            linkRows: [
+              {
+                source_goal_id: "goal-created-1",
+                target_goal_id: "goal-main-1",
+              },
+            ],
+          },
+        },
+      },
+    });
+    const user = userEvent.setup();
+
+    render(<PlannerCoachPanel coach={coach} />);
+
+    expect(screen.getByText(/selected links were not saved/i)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Retry saving links" }));
+    expect(coach.actions.createCoachGoalDrafts).toHaveBeenCalledWith(0);
+  });
+
   it("does not offer retry when parser returns too many goals", () => {
     const coach = buildCoachModel({
       coachMessages: [

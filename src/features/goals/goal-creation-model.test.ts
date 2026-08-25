@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   createDefaultGoalCreationFields,
   normalizeGoalCreationTarget,
+  parseGoalCreationTargetCount,
+  resolveGoalCreationColor,
   updateGoalCreationFields,
   validateGoalCreationFields,
   type GoalCreationFields,
@@ -17,6 +19,7 @@ function baseFields(overrides: Partial<GoalCreationFields> = {}): GoalCreationFi
 describe("normalizeGoalCreationTarget", () => {
   const targetCases = [
     { interval: "daily", basis: "period", rawTarget: "", expected: "1" },
+    { interval: "daily", basis: "period", rawTarget: "4", expected: "1" },
     { interval: "weekly", basis: "period", rawTarget: "", expected: "1" },
     { interval: "monthly", basis: "period", rawTarget: "", expected: "1" },
     { interval: "daily", basis: "lifetime", rawTarget: "", expected: "" },
@@ -43,6 +46,11 @@ describe("normalizeGoalCreationTarget", () => {
         target_count: "4",
       })
     ).toBe("4");
+  });
+
+  it("rejects fractional and partially numeric target input", () => {
+    expect(parseGoalCreationTargetCount("1.5")).toBeNull();
+    expect(parseGoalCreationTargetCount("4abc")).toBeNull();
   });
 
   it("requires a positive lifetime target during validation", () => {
@@ -108,6 +116,28 @@ describe("updateGoalCreationFields", () => {
     expect(next).toMatchObject({
       frequency_type: "recurring",
       target_basis: "period",
+      target_count: "1",
+      milestone_names: [],
+    });
+  });
+
+  it("restores the daily recurring default after leaving fixed milestones", () => {
+    const next = updateGoalCreationFields(
+      baseFields({
+        frequency_type: "fixed_milestones",
+        recurrence_interval: "daily",
+        target_basis: "lifetime",
+        target_count: "3",
+        milestone_names: ["Alpha", "Beta", "Gamma"],
+      }),
+      { type: "frequency_type", value: "recurring" }
+    );
+
+    expect(next).toMatchObject({
+      frequency_type: "recurring",
+      recurrence_interval: "daily",
+      target_basis: "period",
+      target_count: "1",
       milestone_names: [],
     });
   });
@@ -124,6 +154,21 @@ describe("updateGoalCreationFields", () => {
     );
 
     expect(next.recurrence_interval).toBe("weekly");
+    expect(next.target_count).toBe("1");
+  });
+
+  it("normalizes a hidden weekly target when changing to daily cadence", () => {
+    const next = updateGoalCreationFields(
+      baseFields({
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "period",
+        target_count: "4",
+      }),
+      { type: "recurrence_interval", value: "daily" }
+    );
+
+    expect(next.recurrence_interval).toBe("daily");
     expect(next.target_count).toBe("1");
   });
 
@@ -236,5 +281,16 @@ describe("createDefaultGoalCreationFields", () => {
       is_private: false,
       linked_target_goal_id: "none",
     });
+  });
+});
+
+describe("resolveGoalCreationColor", () => {
+  it("preserves a valid persisted accent color during hydration", () => {
+    expect(resolveGoalCreationColor("#abc123", "health")).toBe("#abc123");
+  });
+
+  it("falls back to the category swatch for missing or invalid colors", () => {
+    expect(resolveGoalCreationColor(null, "health")).toBe("#10b981");
+    expect(resolveGoalCreationColor("#abc12", "health")).toBe("#10b981");
   });
 });

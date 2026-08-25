@@ -30,6 +30,7 @@ const toastSuccessMock = vi.fn();
 const toastErrorMock = vi.fn();
 const parseCoachGoalDraftsMock = vi.fn();
 const createCoachGoalDraftsMock = vi.fn();
+const retryCoachGoalDraftLinksMock = vi.fn();
 
 vi.mock("@/features/planner/coach/coach-client", () => ({
   listPlannerCoachConversations: (...args: unknown[]) =>
@@ -66,6 +67,8 @@ vi.mock("@/features/planner/coach/coach-goal-draft-service", () => ({
     parseCoachGoalDraftsMock(...args),
   createCoachGoalDrafts: (...args: unknown[]) =>
     createCoachGoalDraftsMock(...args),
+  retryCoachGoalDraftLinks: (...args: unknown[]) =>
+    retryCoachGoalDraftLinksMock(...args),
 }));
 
 vi.mock("sonner", () => ({
@@ -129,6 +132,7 @@ describe("usePlannerCoach", () => {
     toastErrorMock.mockReset();
     parseCoachGoalDraftsMock.mockReset();
     createCoachGoalDraftsMock.mockReset();
+    retryCoachGoalDraftLinksMock.mockReset();
   });
 
   it("reports coach unavailable without context", () => {
@@ -704,6 +708,103 @@ describe("usePlannerCoach", () => {
       await result.current.actions.createCoachGoalDrafts(1);
     });
     expect(createCoachGoalDraftsMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps coach proposals pending after link failure and retries only links", async () => {
+    requestPlannerCoachReplyMock.mockResolvedValue({
+      schemaVersion: "1",
+      phase: "ready",
+      reply: "I drafted a running goal.",
+      proposal: {
+        policyPatches: [],
+        unresolvedQuestions: [],
+        goalDraftPrompt: "Easy run weekly starting 2026-08-17.",
+      },
+      recommendations: [],
+      warnings: [],
+    });
+    const drafts = buildBulkGoalDraftsFromLlmGoals([
+      {
+        title: "Easy run",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        start_date: "2026-08-17",
+      },
+    ]);
+    drafts[0] = {
+      ...drafts[0]!,
+      linked_target_goal_id: "goal-main-1",
+    };
+    parseCoachGoalDraftsMock.mockResolvedValue({ drafts, warnings: [] });
+    createCoachGoalDraftsMock.mockResolvedValue({
+      status: "partial_success",
+      createdCount: 1,
+      linkErrorMessage: "Some linked goals were not saved: link save failed",
+      linkRows: [
+        {
+          source_goal_id: "goal-created-1",
+          target_goal_id: "goal-main-1",
+        },
+      ],
+    });
+    retryCoachGoalDraftLinksMock.mockResolvedValue({ status: "created" });
+    const onGoalsCreated = vi.fn().mockResolvedValue(undefined);
+    const context = buildContext();
+    const { result } = renderHook(() =>
+      usePlannerCoach(
+        buildArgs({
+          activeTab: "calendar",
+          context,
+          effectivePreview: context.preview,
+          onGoalsCreated,
+        })
+      )
+    );
+
+    await waitFor(() => expect(loadCoachSessionMock).toHaveBeenCalled());
+    act(() => {
+      result.current.actions.setCoachInput("Make a running goal");
+    });
+    await act(async () => {
+      await result.current.actions.sendCoachMessage();
+    });
+    await waitFor(() => {
+      expect(result.current.state.coachGoalDraftStates[1]?.status).toBe("ready");
+    });
+
+    await act(async () => {
+      await result.current.actions.createCoachGoalDrafts(1);
+    });
+
+    expect(onGoalsCreated).not.toHaveBeenCalled();
+    expect(result.current.state.coachGoalDraftStates[1]).toMatchObject({
+      status: "error",
+      errorCode: "links_failed",
+      drafts,
+    });
+    expect(result.current.state.coachMessages[1]?.proposal).toMatchObject({
+      kind: "goal_draft",
+      creationStatus: "not_created",
+    });
+
+    await act(async () => {
+      await result.current.actions.createCoachGoalDrafts(1);
+    });
+
+    expect(retryCoachGoalDraftLinksMock).toHaveBeenCalledWith({
+      linkRows: [
+        {
+          source_goal_id: "goal-created-1",
+          target_goal_id: "goal-main-1",
+        },
+      ],
+    });
+    expect(onGoalsCreated).toHaveBeenCalledTimes(1);
+    expect(result.current.state.coachGoalDraftStates[1]?.status).toBe("created");
+    expect(result.current.state.coachMessages[1]?.proposal).toMatchObject({
+      kind: "goal_draft",
+      creationStatus: "created",
+    });
   });
 
   it("preserves edited linked targets when persisting coach drafts", async () => {

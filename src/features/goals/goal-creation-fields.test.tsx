@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createDefaultGoalCreationFields,
+  type GoalCreationFieldChange,
   type GoalCreationFields,
 } from "@/features/goals/goal-creation-model";
 import {
@@ -59,8 +60,8 @@ function renderControls(
   fields: GoalCreationFields,
   options: {
     definitionFieldsLocked?: boolean;
-    onFieldChange?: ReturnType<typeof vi.fn>;
-    onPatch?: ReturnType<typeof vi.fn>;
+    onFieldChange?: (change: GoalCreationFieldChange) => void;
+    onPatch?: (patch: Partial<GoalCreationFields>) => void;
     linkTarget?: Partial<GoalCreationLinkTargetProps>;
     createKind?: "recurring" | "fixed_milestones" | "planner_task";
     isEditing?: boolean;

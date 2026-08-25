@@ -4,7 +4,10 @@ import {
   buildBulkGoalDraftsFromLlmGoals,
   withValidatedBulkGoalDraft,
 } from "@/features/goals/bulk-goal-drafts";
-import { persistBulkGoalDrafts } from "@/features/goals/bulk-goal-persistence";
+import {
+  persistBulkGoalDrafts,
+  retryBulkGoalLinks,
+} from "@/features/goals/bulk-goal-persistence";
 
 function makeDraft(
   overrides: Partial<Omit<BulkGoalDraft, "errors">> = {}
@@ -35,6 +38,8 @@ describe("persistBulkGoalDrafts", () => {
       recurrence_interval: "daily",
       target_basis: "period",
       target_count: "",
+      difficulty: "hard",
+      is_private: true,
       linked_target_goal_id: "goal-main-a",
     });
     const lifetimeDraft = makeDraft({
@@ -71,6 +76,7 @@ describe("persistBulkGoalDrafts", () => {
     });
 
     expect(result).toMatchObject({
+      status: "created",
       createdCount: 3,
       linkErrorMessage: null,
     });
@@ -84,6 +90,8 @@ describe("persistBulkGoalDrafts", () => {
           target_basis: "period",
           target_count: 1,
           milestone_names: null,
+          difficulty: "hard",
+          is_private: true,
         }),
         expect.objectContaining({
           id: "10000000-0000-4000-8000-000000000002",
@@ -130,6 +138,7 @@ describe("persistBulkGoalDrafts", () => {
     });
 
     expect(result).toMatchObject({
+      status: "created",
       createdCount: 1,
       linkErrorMessage: null,
     });
@@ -204,8 +213,38 @@ describe("persistBulkGoalDrafts", () => {
     });
 
     expect(result).toMatchObject({
+      status: "partial_success",
       createdCount: 1,
       linkErrorMessage: "Some linked goals were not saved: link save failed",
+      linkRecovery: {
+        linkRows: [
+          {
+            target_goal_id: "goal-main-a",
+          },
+        ],
+      },
+    });
+  });
+
+  it("retries only failed link rows without creating duplicate goals", async () => {
+    const rpcMock = vi.fn().mockResolvedValue({ error: null });
+    const linkRows = [
+      {
+        source_goal_id: "10000000-0000-4000-8000-000000000031",
+        target_goal_id: "goal-main-a",
+      },
+    ];
+
+    await expect(
+      retryBulkGoalLinks({
+        linkRows,
+        supabase: { rpc: rpcMock },
+      })
+    ).resolves.toEqual({ status: "created" });
+
+    expect(rpcMock).toHaveBeenCalledTimes(1);
+    expect(rpcMock).toHaveBeenCalledWith("create_goal_links", {
+      p_links: linkRows,
     });
   });
 });

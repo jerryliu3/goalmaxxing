@@ -31,6 +31,7 @@ import {
 import {
   createCoachGoalDrafts as persistCoachGoalDrafts,
   parseCoachGoalDrafts,
+  retryCoachGoalDraftLinks,
 } from "@/features/planner/coach/coach-goal-draft-service";
 import {
   markAppliedProposalsUndone,
@@ -646,11 +647,35 @@ export function usePlannerCoach({
         },
       }));
       try {
-        const { createdCount, linkErrorMessage } = await persistCoachGoalDrafts({
-          drafts: draftState.drafts,
-        });
-        if (linkErrorMessage) {
-          toast.error(linkErrorMessage);
+        let createdCount: number;
+        if (draftState.pendingLinkRecovery) {
+          await retryCoachGoalDraftLinks({
+            linkRows: draftState.pendingLinkRecovery.linkRows,
+          });
+          createdCount = draftState.pendingLinkRecovery.createdCount;
+        } else {
+          const result = await persistCoachGoalDrafts({
+            drafts: draftState.drafts,
+          });
+          if (result.status === "partial_success") {
+            setCoachGoalRefreshStatus("idle");
+            setCoachGoalDraftStatesByKey((previous) => ({
+              ...previous,
+              [runtimeKey]: {
+                ...draftState,
+                status: "error",
+                errorCode: "links_failed",
+                errorMessage: result.linkErrorMessage,
+                pendingLinkRecovery: {
+                  createdCount: result.createdCount,
+                  linkRows: result.linkRows,
+                },
+              },
+            }));
+            toast.error(result.linkErrorMessage);
+            return;
+          }
+          createdCount = result.createdCount;
         }
         const nextMessages: CoachMessage[] = coachMessages.map(
           (entry, index) =>
@@ -671,6 +696,7 @@ export function usePlannerCoach({
           [runtimeKey]: {
             ...draftState,
             status: "created",
+            pendingLinkRecovery: undefined,
           },
         }));
         toast.success(
