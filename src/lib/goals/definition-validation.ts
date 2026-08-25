@@ -71,7 +71,12 @@ function isIsoDate(value: string | null): value is string {
   }
 }
 
-function resolveTargetBasis(input: GoalDefinitionValidationInput): GoalTargetBasis {
+function resolveTargetBasis(
+  input: Pick<
+    GoalDefinitionValidationInput,
+    "frequencyType" | "targetCount" | "targetBasis"
+  >
+): GoalTargetBasis {
   if (input.targetBasis) {
     return input.targetBasis;
   }
