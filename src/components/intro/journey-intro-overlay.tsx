@@ -35,13 +35,6 @@ export function requestJourneyIntroOpen() {
 
 const JOURNEY_INTRO_STEPS = [
   {
-    title: "Insights",
-    description:
-      "See progress, streaks, and stats for the goals you are working on.",
-    target: "nav.insights",
-    kind: "copy" as const,
-  },
-  {
     title: "Planner",
     description:
       "Use Calendar, Checklist, and Tasks to plan sessions and capture one-off work.",
@@ -53,6 +46,13 @@ const JOURNEY_INTRO_STEPS = [
     description:
       "Feed, Challenges, and Leaderboards are for public accounts. Team stays available so you can still partner privately.",
     target: "nav.social",
+    kind: "copy" as const,
+  },
+  {
+    title: "Insights",
+    description:
+      "See progress, streaks, and stats for the goals you are working on.",
+    target: "nav.insights",
     kind: "copy" as const,
   },
   {
