@@ -205,6 +205,18 @@ begin
     'goal.target_count, goal.target_basis,'
   );
 
+  -- The has_target_cap_violation check counts total items across all periods.
+  -- For period-basis goals the total naturally exceeds the per-period target_count,
+  -- so restrict this check to lifetime-basis goals only.
+  v_definition := pg_catalog.replace(
+    v_definition,
+    'and goal.target_count is not null
+          and goal.target_count > 0',
+    'and goal.target_count is not null
+          and goal.target_count > 0
+          and goal.target_basis = ''lifetime''::public.goal_target_basis'
+  );
+
   execute v_definition;
 end;
 $migration$;
