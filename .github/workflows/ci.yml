@@ -1,7 +1,7 @@
 name: CI
 
-# Temporary: private repo billing blocks GitHub-hosted runners; route CI to the
-# repo self-hosted Mac runner (labels: self-hosted, macOS, cadence-ci).
+# Run required checks on GitHub-hosted runners now that the repo is public again.
+# Also run the same jobs on the self-hosted Mac runner for supplemental signal.
 
 on:
   pull_request:
@@ -14,9 +14,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  verify-static:
-    name: verify-static
-    runs-on: [self-hosted, macOS, cadence-ci]
+  verify-static-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: github
+            runs-on: ubuntu-latest
+          - runner: self-hosted
+            runs-on: [self-hosted, macOS, cadence-ci]
+    continue-on-error: ${{ matrix.runner == 'self-hosted' }}
+    name: verify-static (${{ matrix.runner }})
+    runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 30
 
     steps:
@@ -47,9 +56,33 @@ jobs:
       - name: Run timezone process matrix
         run: pnpm test:tz
 
-  verify-mobile-static:
-    name: verify-mobile-static
-    runs-on: [self-hosted, macOS, cadence-ci]
+  verify-static:
+    name: verify-static
+    needs: verify-static-matrix
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Assert GitHub-hosted verify-static passed
+        run: |
+          if [[ "${{ needs.verify-static-matrix.result }}" != "success" ]]; then
+            echo "verify-static-matrix result: ${{ needs.verify-static-matrix.result }}"
+            exit 1
+          fi
+
+  verify-mobile-static-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: github
+            runs-on: ubuntu-latest
+          - runner: self-hosted
+            runs-on: [self-hosted, macOS, cadence-ci]
+    continue-on-error: ${{ matrix.runner == 'self-hosted' }}
+    name: verify-mobile-static (${{ matrix.runner }})
+    runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 15
 
     steps:
@@ -86,9 +119,33 @@ jobs:
       - name: Run mobile unit tests
         run: pnpm --filter @cadence/mobile test
 
-  verify-pr-db:
-    name: verify-pr-db
-    runs-on: [self-hosted, macOS, cadence-ci]
+  verify-mobile-static:
+    name: verify-mobile-static
+    needs: verify-mobile-static-matrix
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Assert GitHub-hosted verify-mobile-static passed
+        run: |
+          if [[ "${{ needs.verify-mobile-static-matrix.result }}" != "success" ]]; then
+            echo "verify-mobile-static-matrix result: ${{ needs.verify-mobile-static-matrix.result }}"
+            exit 1
+          fi
+
+  verify-pr-db-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: github
+            runs-on: ubuntu-latest
+          - runner: self-hosted
+            runs-on: [self-hosted, macOS, cadence-ci]
+    continue-on-error: ${{ matrix.runner == 'self-hosted' }}
+    name: verify-pr-db (${{ matrix.runner }})
+    runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 35
 
     steps:
@@ -212,9 +269,33 @@ jobs:
       - name: Run two-session concurrency harness
         run: pnpm test:concurrency
 
-  verify-pr-e2e:
-    name: verify-pr-e2e
-    runs-on: [self-hosted, macOS, cadence-ci]
+  verify-pr-db:
+    name: verify-pr-db
+    needs: verify-pr-db-matrix
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Assert GitHub-hosted verify-pr-db passed
+        run: |
+          if [[ "${{ needs.verify-pr-db-matrix.result }}" != "success" ]]; then
+            echo "verify-pr-db-matrix result: ${{ needs.verify-pr-db-matrix.result }}"
+            exit 1
+          fi
+
+  verify-pr-e2e-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: github
+            runs-on: ubuntu-latest
+          - runner: self-hosted
+            runs-on: [self-hosted, macOS, cadence-ci]
+    continue-on-error: ${{ matrix.runner == 'self-hosted' }}
+    name: verify-pr-e2e (${{ matrix.runner }})
+    runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 25
 
     steps:
@@ -378,10 +459,25 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.runner }}
           path: playwright-report/
           if-no-files-found: ignore
           retention-days: 7
+
+  verify-pr-e2e:
+    name: verify-pr-e2e
+    needs: verify-pr-e2e-matrix
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Assert GitHub-hosted verify-pr-e2e passed
+        run: |
+          if [[ "${{ needs.verify-pr-e2e-matrix.result }}" != "success" ]]; then
+            echo "verify-pr-e2e-matrix result: ${{ needs.verify-pr-e2e-matrix.result }}"
+            exit 1
+          fi
 
   # Keep this exact job name for GitHub required-check compatibility.
   verify-pr-smoke:
@@ -390,7 +486,7 @@ jobs:
     needs:
       - verify-pr-db
       - verify-pr-e2e
-    runs-on: [self-hosted, macOS, cadence-ci]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
@@ -409,7 +505,7 @@ jobs:
       - verify-static
       - verify-mobile-static
       - verify-pr-smoke
-    runs-on: [self-hosted, macOS, cadence-ci]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
