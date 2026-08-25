@@ -332,7 +332,7 @@ describe("GoalCreationFieldControls create mode", () => {
 });
 
 describe("GoalCreationFieldControls locked mode", () => {
-  it("disables goal type, cadence, target fields, and dates when definition fields are locked", () => {
+  it("disables goal type, cadence, target fields, and start date when definition fields are locked", () => {
     renderControls(
       baseFields({
         recurrence_interval: "weekly",
@@ -351,9 +351,36 @@ describe("GoalCreationFieldControls locked mode", () => {
     const targetInput = document.getElementById("recurring-target-count");
     expect(targetInput).toBeDisabled();
     expect(screen.getByLabelText("Start date")).toBeDisabled();
-    expect(screen.getByLabelText("End date (optional)")).toBeDisabled();
+    expect(screen.getByLabelText("End date (optional)")).not.toBeDisabled();
     expect(
       screen.getByText(/goal type, frequency, target, and start date are fixed/i)
     ).toBeInTheDocument();
+  });
+
+  it("keeps end date editable and end-date quick actions usable in locked mode", async () => {
+    const user = userEvent.setup();
+    const onPatch = vi.fn<(patch: Partial<GoalCreationFields>) => void>();
+    renderControls(
+      baseFields({
+        recurrence_interval: "weekly",
+        target_basis: "period",
+        target_count: "3",
+        end_date: "",
+      }),
+      {
+        definitionFieldsLocked: true,
+        isEditing: true,
+        createKind: "recurring",
+        onPatch,
+      }
+    );
+
+    await user.type(screen.getByLabelText("End date (optional)"), "2026-12-31");
+    expect(onPatch).toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "month end" }));
+    expect(onPatch).toHaveBeenCalledWith(
+      expect.objectContaining({ end_date: expect.any(String) })
+    );
   });
 });

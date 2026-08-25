@@ -21,7 +21,8 @@ interface GoalDateRangeFieldsProps {
   startDateActions?: ReactNode;
   endDateActions?: ReactNode;
   showSoftHorizonHint?: boolean;
-  disabled?: boolean;
+  startDateDisabled?: boolean;
+  endDateDisabled?: boolean;
 }
 
 export function GoalDateRangeFields({
@@ -37,7 +38,8 @@ export function GoalDateRangeFields({
   startDateActions,
   endDateActions,
   showSoftHorizonHint = false,
-  disabled = false,
+  startDateDisabled = false,
+  endDateDisabled = false,
 }: GoalDateRangeFieldsProps) {
   const maxEndDate = startDate ? getGoalHorizonEndDate(startDate) ?? undefined : undefined;
   return (
@@ -50,7 +52,7 @@ export function GoalDateRangeFields({
           value={startDate}
           onChange={(event) => onStartDateChange(event.target.value)}
           required
-          disabled={disabled}
+          disabled={startDateDisabled}
           className={GOAL_DATE_INPUT_CLASS}
         />
         {startDateActions ? (
@@ -68,7 +70,7 @@ export function GoalDateRangeFields({
           max={maxEndDate}
           onChange={(event) => onEndDateChange(event.target.value)}
           required={requiresEndDate}
-          disabled={disabled}
+          disabled={endDateDisabled}
           className={GOAL_DATE_INPUT_CLASS}
         />
         {endDateActions ? (

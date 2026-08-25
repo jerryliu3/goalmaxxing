@@ -342,7 +342,7 @@ export function GoalCreationFieldControls({
           requiresEndDate={false}
           startDateId={startDateId}
           endDateId={endDateId}
-          disabled={definitionFieldsLocked}
+          startDateDisabled={definitionFieldsLocked}
           showSoftHorizonHint={showSoftHorizonHint}
           startDateActions={
             <>
@@ -370,7 +370,6 @@ export function GoalCreationFieldControls({
                 type="button"
                 className="text-primary hover:underline"
                 onClick={applyThisMonthEndDate}
-                disabled={definitionFieldsLocked}
               >
                 month end
               </button>
@@ -378,7 +377,6 @@ export function GoalCreationFieldControls({
                 type="button"
                 className="text-primary hover:underline"
                 onClick={applyThisYearEndDate}
-                disabled={definitionFieldsLocked}
               >
                 year end
               </button>
