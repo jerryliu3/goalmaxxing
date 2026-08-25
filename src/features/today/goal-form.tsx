@@ -91,7 +91,6 @@ import type {
 import { resolveGoalTargetBasis } from "@/lib/goals/target-basis";
 import {
   type GoalCapacityInput,
-  isOrdinalGoalDefinition,
   validateGoalDefinition,
 } from "@/lib/goals/definition-validation";
 import { createClient } from "@/lib/supabase/client";
@@ -148,6 +147,26 @@ const defaultState: GoalFormState = {
 };
 
 const localTimePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function perPeriodTargetLabel(interval: RecurrenceInterval): string {
+  if (interval === "weekly") {
+    return "Target per week";
+  }
+  if (interval === "monthly") {
+    return "Target per month";
+  }
+  return "Target per period";
+}
+
+function recurringTargetLabel(
+  interval: RecurrenceInterval,
+  targetBasis: GoalTargetBasis
+): string {
+  if (targetBasis === "lifetime") {
+    return "Total completions by end date";
+  }
+  return perPeriodTargetLabel(interval);
+}
 
 function parsePositiveTargetCount(value: string): number | null {
   const parsed = Number.parseInt(value, 10);
@@ -357,30 +376,30 @@ export function GoalForm({
   const canShowRecurrenceFields = !isPlannerTask && state.frequency_type === "recurring";
   const isLifetimeRecurringTarget =
     state.frequency_type === "recurring" && state.target_basis === "lifetime";
-  const canShowPerPeriodTarget =
+  const canShowRecurringTargetInMain =
     !isPlannerTask &&
     state.frequency_type === "recurring" &&
-    state.target_basis === "period" &&
-    state.recurrence_interval !== "daily";
+    state.recurrence_interval !== "daily" &&
+    (state.target_basis === "period" || state.target_basis === "lifetime");
+  const canShowDailyLifetimeTarget =
+    !isPlannerTask &&
+    state.frequency_type === "recurring" &&
+    state.recurrence_interval === "daily" &&
+    state.target_basis === "lifetime";
   const canShowMilestoneTarget =
     !isPlannerTask && state.frequency_type === "fixed_milestones";
-  const canShowLifetimeTarget =
-    !isPlannerTask && isLifetimeRecurringTarget;
   const definitionFieldsLocked = isEditing;
   const parsedTargetCount = parsePositiveTargetCount(state.target_count);
   const definitionTargetCount =
     state.frequency_type === "fixed_milestones" || isLifetimeRecurringTarget
       ? parsedTargetCount
-      : canShowPerPeriodTarget && state.target_count.trim().length > 0
+      : canShowRecurringTargetInMain && state.target_count.trim().length > 0
         ? parsedTargetCount
-        : canShowPerPeriodTarget
+        : canShowRecurringTargetInMain
           ? parsedTargetCount ?? 1
-          : null;
-  const usesSoftHorizon = isOrdinalGoalDefinition({
-    frequencyType: state.frequency_type,
-    targetCount: definitionTargetCount,
-    targetBasis: state.target_basis,
-  });
+          : canShowDailyLifetimeTarget
+            ? parsedTargetCount
+            : null;
   const fixedMilestoneCount =
     state.frequency_type === "fixed_milestones"
       ? parsedTargetCount ?? 0
@@ -493,7 +512,7 @@ export function GoalForm({
 
     if (state.frequency_type === "recurring" && !state.recurrence_interval) {
       return {
-        validationError: "Recurring goals require a cadence.",
+        validationError: "Recurring goals require a frequency.",
         validationWarning: null,
       };
     }
@@ -888,25 +907,9 @@ export function GoalForm({
                   onValueChange={updateTargetCount}
                   showRecurringHelperText={false}
                 />
-              </div>
-            ) : null}
-
-            {canShowPerPeriodTarget ? (
-              <div className="space-y-2">
-                <Label htmlFor="target-count" className="inline-flex items-center gap-1">
-                  <span>Completions per period</span>
-                  <TooltipIcon
-                    content="How many times you want to complete this goal each week or month."
-                    label="Per-period target help"
-                  />
-                </Label>
-                <TargetCountField
-                  id="target-count"
-                  frequencyType={state.frequency_type}
-                  value={state.target_count}
-                  onValueChange={updateTargetCount}
-                  showRecurringHelperText={false}
-                />
+                <p className="text-xs text-muted-foreground">
+                  You can optionally name individual milestones under advanced settings.
+                </p>
               </div>
             ) : null}
 
@@ -918,10 +921,10 @@ export function GoalForm({
                 )}
               >
                 <Label className="inline-flex items-center gap-1">
-                  <span>Cadence</span>
+                  <span>Frequency</span>
                   <TooltipIcon
-                    content="Cadence controls how often the goal appears in your routine: every day, every week, or every month."
-                    label="Cadence help"
+                    content="How often you want to work on this goal. Weekly and monthly goals can set a target number of completions per period."
+                    label="Frequency help"
                   />
                 </Label>
                 <RecurrenceIntervalToggle
@@ -933,6 +936,49 @@ export function GoalForm({
                       recurrence_interval: value,
                     }))
                   }
+                />
+              </div>
+            ) : null}
+
+            {canShowRecurringTargetInMain ? (
+              <div className="space-y-2">
+                <Label htmlFor="recurring-target-count" className="inline-flex items-center gap-1">
+                  <span>
+                    {recurringTargetLabel(
+                      state.recurrence_interval,
+                      state.target_basis
+                    )}
+                  </span>
+                  <TooltipIcon
+                    content={
+                      state.target_basis === "lifetime"
+                        ? "Total completions required before the end date. Each completion counts independently."
+                        : "How many distinct days you want to complete this goal in each week or month."
+                    }
+                    label="Recurring target help"
+                  />
+                </Label>
+                <TargetCountField
+                  id="recurring-target-count"
+                  frequencyType={state.frequency_type}
+                  value={state.target_count}
+                  onValueChange={updateTargetCount}
+                  showRecurringHelperText={false}
+                />
+              </div>
+            ) : null}
+
+            {canShowDailyLifetimeTarget ? (
+              <div className="space-y-2">
+                <Label htmlFor="daily-lifetime-target-count" className="inline-flex items-center gap-1">
+                  <span>Total completions by end date</span>
+                </Label>
+                <TargetCountField
+                  id="daily-lifetime-target-count"
+                  frequencyType={state.frequency_type}
+                  value={state.target_count}
+                  onValueChange={updateTargetCount}
+                  showRecurringHelperText={false}
                 />
               </div>
             ) : null}
@@ -972,7 +1018,6 @@ export function GoalForm({
               setState((previous) => ({ ...previous, end_date: value }))
             }
             requiresEndDate={false}
-            showSoftHorizonHint={usesSoftHorizon}
             startDateId="start-date"
             endDateId="end-date"
             startDateActions={
@@ -1017,7 +1062,7 @@ export function GoalForm({
 
           {definitionFieldsLocked ? (
             <p className="text-xs text-muted-foreground">
-              Goal type, cadence, target, and start date are fixed after creation.
+              Goal type, frequency, target, and start date are fixed after creation.
               Archive this goal and create a new one to change them.
             </p>
           ) : null}
@@ -1080,22 +1125,8 @@ export function GoalForm({
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <div className="space-y-4 border-t px-3 py-3">
-                  <GoalDefaultTimeField
-                    id="default-local-time"
-                    value={state.default_local_time}
-                    onValueChange={(value) =>
-                      setState((previous) => ({
-                        ...previous,
-                        default_local_time: value,
-                      }))
-                    }
-                    onClear={() =>
-                      setState((previous) => ({ ...previous, default_local_time: "" }))
-                    }
-                  />
-
-                  {state.frequency_type === "recurring" && !definitionFieldsLocked ? (
-                    <div className="space-y-3">
+                  <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
+                    {state.frequency_type === "recurring" && !definitionFieldsLocked ? (
                       <label className="flex items-start gap-2 text-sm">
                         <input
                           type="checkbox"
@@ -1113,52 +1144,31 @@ export function GoalForm({
                             }))
                           }
                         />
-                        <span>
-                          Use a total completion target by end date instead of a per-period
-                          target.
-                        </span>
+                        <span>Use a total completion target instead of per-period.</span>
                       </label>
-                      {canShowLifetimeTarget ? (
-                        <div className="space-y-2">
-                          <Label htmlFor="lifetime-target-count">
-                            Total completions by end date
-                          </Label>
-                          <TargetCountField
-                            id="lifetime-target-count"
-                            frequencyType="recurring"
-                            value={state.target_count}
-                            onValueChange={updateTargetCount}
-                            showRecurringHelperText
-                          />
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
+                    ) : null}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="goal-difficulty" className="inline-flex items-center gap-1">
-                      <span>Difficulty</span>
-                      <TooltipIcon
-                        content="Set the perceived effort level for this goal."
-                        label="Goal difficulty help"
-                      />
-                    </Label>
-                    <Select
-                      value={state.difficulty}
-                      onValueChange={(value: GoalDifficulty) =>
-                        setState((previous) => ({ ...previous, difficulty: value }))
-                      }
-                    >
-                      <SelectTrigger id="goal-difficulty" className="h-8 w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="easy">Easy</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="hard">Hard</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {state.team_id === null ? (
+                      <label className="flex items-start gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          className="mt-1"
+                          checked={state.is_private}
+                          onChange={(event) =>
+                            setState((prev) => ({ ...prev, is_private: event.target.checked }))
+                          }
+                        />
+                        <span>Make this goal private (except for team).</span>
+                      </label>
+                    ) : null}
                   </div>
+
+                  {isLifetimeRecurringTarget && !definitionFieldsLocked ? (
+                    <p className="text-xs text-muted-foreground">
+                      Total by end date — edit the target above. Each completion counts
+                      independently; no per-period streak semantics.
+                    </p>
+                  ) : null}
 
                   {fixedMilestoneCount > 0 ? (
                     <Collapsible
@@ -1204,35 +1214,73 @@ export function GoalForm({
                     </Collapsible>
                   ) : null}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="goal-description">Description</Label>
-                    <Textarea
-                      id="goal-description"
-                      value={state.description}
-                      onChange={(event) =>
-                        setState((prev) => ({ ...prev, description: event.target.value }))
-                      }
-                      placeholder="Why this goal matters"
-                    />
+                  <div className="flex flex-wrap items-end gap-3">
+                    {state.team_id === null ? (
+                      <div className="min-w-[12rem] flex-1 space-y-2">
+                        <GoalLinkTargetSelect
+                          value={selectedLinkTarget}
+                          onValueChange={setSelectedLinkTarget}
+                          open={linkTargetOpen}
+                          onOpenChange={(open) => {
+                            setLinkTargetOpen(open);
+                            if (!open) {
+                              setLinkTargetSearch("");
+                            }
+                          }}
+                          searchQuery={linkTargetSearch}
+                          onSearchQueryChange={setLinkTargetSearch}
+                          filteredLinkTargets={filteredLinkTargets}
+                          selectedTargetGoal={selectedLinkTargetGoal}
+                          sourceEndDate={state.end_date.trim() || null}
+                        />
+                      </div>
+                    ) : null}
+
+                    <div className="min-w-[10rem] flex-1">
+                      <GoalDefaultTimeField
+                        id="default-local-time"
+                        label="Default time of day"
+                        showHelperText={false}
+                        value={state.default_local_time}
+                        onValueChange={(value) =>
+                          setState((previous) => ({
+                            ...previous,
+                            default_local_time: value,
+                          }))
+                        }
+                        onClear={() =>
+                          setState((previous) => ({ ...previous, default_local_time: "" }))
+                        }
+                      />
+                    </div>
+
+                    <div className="min-w-[8rem] flex-1 space-y-2">
+                      <Label htmlFor="goal-difficulty" className="inline-flex items-center gap-1">
+                        <span>Difficulty</span>
+                        <TooltipIcon
+                          content="Set the perceived effort level for this goal."
+                          label="Goal difficulty help"
+                        />
+                      </Label>
+                      <Select
+                        value={state.difficulty}
+                        onValueChange={(value: GoalDifficulty) =>
+                          setState((previous) => ({ ...previous, difficulty: value }))
+                        }
+                      >
+                        <SelectTrigger id="goal-difficulty" className="h-8 w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="easy">Easy</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="hard">Hard</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="goal-reward-text">Achievement reward text</Label>
-                    <Textarea
-                      id="goal-reward-text"
-                      value={state.reward_text}
-                      onChange={(event) =>
-                        setState((prev) => ({ ...prev, reward_text: event.target.value }))
-                      }
-                      placeholder="How you will celebrate when this goal is achieved"
-                      maxLength={500}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Shown only on your achieved goal cards. Not shared to social feeds.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
+                  <div className="hidden space-y-2">
                     <Label htmlFor="goal-color">Color accent</Label>
                     <Input
                       id="goal-color"
@@ -1248,7 +1296,35 @@ export function GoalForm({
                     </p>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="hidden space-y-2">
+                    <Label htmlFor="goal-description">Description</Label>
+                    <Textarea
+                      id="goal-description"
+                      value={state.description}
+                      onChange={(event) =>
+                        setState((prev) => ({ ...prev, description: event.target.value }))
+                      }
+                      placeholder="Why this goal matters"
+                    />
+                  </div>
+
+                  <div className="hidden space-y-2">
+                    <Label htmlFor="goal-reward-text">Achievement reward text</Label>
+                    <Textarea
+                      id="goal-reward-text"
+                      value={state.reward_text}
+                      onChange={(event) =>
+                        setState((prev) => ({ ...prev, reward_text: event.target.value }))
+                      }
+                      placeholder="How you will celebrate when this goal is achieved"
+                      maxLength={500}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Shown only on your achieved goal cards. Not shared to social feeds.
+                    </p>
+                  </div>
+
+                  <div className="hidden space-y-2">
                     <Label htmlFor="goal-photo">Photo</Label>
                     <Input
                       id="goal-photo"
@@ -1267,44 +1343,6 @@ export function GoalForm({
                       />
                     ) : null}
                   </div>
-
-                  {state.team_id === null ? (
-                    <div className="rounded-xl border bg-background/70 p-3">
-                      <label className="flex items-start gap-3 text-sm">
-                        <input
-                          type="checkbox"
-                          className="mt-1"
-                          checked={state.is_private}
-                          onChange={(event) =>
-                            setState((prev) => ({ ...prev, is_private: event.target.checked }))
-                          }
-                        />
-                        <span>
-                          Keep this goal private (hidden from the public activity feed and from
-                          anyone you share goals with). An active team partner still sees it.
-                        </span>
-                      </label>
-                    </div>
-                  ) : null}
-
-                  {state.team_id === null ? (
-                    <GoalLinkTargetSelect
-                      value={selectedLinkTarget}
-                      onValueChange={setSelectedLinkTarget}
-                      open={linkTargetOpen}
-                      onOpenChange={(open) => {
-                        setLinkTargetOpen(open);
-                        if (!open) {
-                          setLinkTargetSearch("");
-                        }
-                      }}
-                      searchQuery={linkTargetSearch}
-                      onSearchQueryChange={setLinkTargetSearch}
-                      filteredLinkTargets={filteredLinkTargets}
-                      selectedTargetGoal={selectedLinkTargetGoal}
-                      sourceEndDate={state.end_date.trim() || null}
-                    />
-                  ) : null}
                 </div>
               </CollapsibleContent>
             </div>

@@ -16,7 +16,7 @@ export const GOAL_CREATE_KIND_HELP: Record<GoalCreateKind, string> = {
   recurring:
     "Performing the same action on an approximate frequency (not rigid).",
   fixed_milestones:
-    "A larger goal made of unique steps toward a finish line.",
+    "A goal made of smaller steps or irregular frequencies.",
   planner_task:
     "A small one-time item. Saved to Planner → Tasks, not as a scheduled goal.",
 };
