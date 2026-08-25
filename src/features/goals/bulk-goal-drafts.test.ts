@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createDefaultGoalCreationFields } from "@/features/goals/goal-creation-model";
+import { buildStarterPackRows } from "@/features/goals/starter-packs";
 import {
   buildBulkGoalDraftFromRow,
   buildBulkGoalDraftsFromLlmGoals,
@@ -345,6 +346,79 @@ describe("bulk goal drafts", () => {
       const [prepared] = prepareBulkGoalRows([testCase.draft], { createId });
       expect(prepared.row, testCase.name).toMatchObject(testCase.row);
     }
+  });
+
+  it("preserves explicit lifetime starter-pack rows through prepareBulkGoalRows", () => {
+    const starterRow = buildStarterPackRows("relationships", "2026-08-01").find(
+      (row) => row.title === "Weekly partner check-in"
+    );
+    expect(starterRow).toMatchObject({
+      target_basis: "lifetime",
+      target_count: "10",
+    });
+
+    const draft = buildBulkGoalDraftFromRow(starterRow!, 0);
+    const [prepared] = prepareBulkGoalRows([draft], {
+      createId: vi.fn(() => "11111111-1111-4111-8111-111111111111"),
+    });
+
+    expect(prepared.row).toEqual({
+      id: "11111111-1111-4111-8111-111111111111",
+      title: "Weekly partner check-in",
+      description:
+        "Set intentional check-ins to align on goals and support.",
+      category_key: "relationships",
+      category: "Relationships",
+      color: "#f43f5e",
+      frequency_type: "recurring",
+      recurrence_interval: "weekly",
+      target_count: 10,
+      target_basis: "lifetime",
+      milestone_names: null,
+      start_date: "2026-08-01",
+      end_date: "2026-10-30",
+      default_local_time: null,
+    });
+  });
+
+  it("normalizes omitted period targets to 1 through prepareBulkGoalRows", () => {
+    const draft = buildBulkGoalDraftFromRow(
+      {
+        title: "Weekly planning reset",
+        category: "Personal",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        start_date: "2026-08-17",
+        end_date: "2026-10-26",
+      },
+      0
+    );
+
+    expect(draft).toMatchObject({
+      target_basis: "period",
+      target_count: "",
+    });
+
+    const [prepared] = prepareBulkGoalRows([draft], {
+      createId: vi.fn(() => "22222222-2222-4222-8222-222222222222"),
+    });
+
+    expect(prepared.row).toEqual({
+      id: "22222222-2222-4222-8222-222222222222",
+      title: "Weekly planning reset",
+      description: null,
+      category_key: "personal",
+      category: "Personal",
+      color: "#6366f1",
+      frequency_type: "recurring",
+      recurrence_interval: "weekly",
+      target_count: 1,
+      target_basis: "period",
+      milestone_names: null,
+      start_date: "2026-08-17",
+      end_date: "2026-10-26",
+      default_local_time: null,
+    });
   });
 
   it("prepares the existing create_goals row shape", () => {
