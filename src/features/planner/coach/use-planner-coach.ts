@@ -646,9 +646,12 @@ export function usePlannerCoach({
         },
       }));
       try {
-        const { createdCount } = await persistCoachGoalDrafts({
+        const { createdCount, linkErrorMessage } = await persistCoachGoalDrafts({
           drafts: draftState.drafts,
         });
+        if (linkErrorMessage) {
+          toast.error(linkErrorMessage);
+        }
         const nextMessages: CoachMessage[] = coachMessages.map(
           (entry, index) =>
             index === messageIndex

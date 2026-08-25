@@ -4,8 +4,11 @@ import {
   type BulkGoalDraft,
   type LlmGoalDraftPayload,
   buildBulkGoalDraftsFromLlmGoals,
-  prepareBulkGoalRows,
 } from "@/features/goals/bulk-goal-drafts";
+import {
+  BulkGoalPersistenceError,
+  persistBulkGoalDrafts,
+} from "@/features/goals/bulk-goal-persistence";
 import { ApiClientError, postJson } from "@/lib/api/client";
 import { createClient } from "@/lib/supabase/client";
 
@@ -95,15 +98,25 @@ export async function createCoachGoalDrafts({
     );
   }
 
-  const preparedRows = prepareBulkGoalRows(selectedDrafts);
-  const { error } = await createClient().rpc("create_goals", {
-    p_goals: preparedRows.map(({ row }) => row),
-  });
-  if (error) {
-    throw new CoachGoalDraftServiceError(
-      "create_failed",
-      error.message ?? "Failed to create goals."
-    );
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  try {
+    const result = await persistBulkGoalDrafts({
+      drafts: selectedDrafts,
+      currentUserId: user?.id ?? null,
+      supabase,
+    });
+    return {
+      createdCount: result.createdCount,
+      linkErrorMessage: result.linkErrorMessage,
+    };
+  } catch (error) {
+    if (error instanceof BulkGoalPersistenceError) {
+      throw new CoachGoalDraftServiceError(error.code, error.message);
+    }
+    throw error;
   }
-  return { createdCount: preparedRows.length };
 }
