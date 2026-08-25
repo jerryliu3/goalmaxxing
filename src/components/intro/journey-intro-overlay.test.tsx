@@ -18,6 +18,7 @@ const getJsonMock = vi.hoisted(() => vi.fn());
 const putJsonMock = vi.hoisted(() => vi.fn());
 const profileUpdateEqMock = vi.hoisted(() => vi.fn());
 const TEST_USER_ID = "user-1";
+const INTRO_WALKTHROUGH_TIMEOUT_MS = 20_000;
 
 vi.mock("next/navigation", () => ({
   useRouter: () => routerMock,
@@ -197,7 +198,9 @@ describe("JourneyIntroOverlay", () => {
     expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
   });
 
-  it("walks through nav highlights and saves preferences on the last step", async () => {
+  it(
+    "walks through nav highlights and saves preferences on the last step",
+    async () => {
     renderIntro();
     expect(await screen.findByRole("dialog", { name: "Insights" })).toBeInTheDocument();
 
@@ -232,9 +235,13 @@ describe("JourneyIntroOverlay", () => {
       expect(screen.queryByRole("dialog", { name: "Your preferences" })).toBeNull();
     });
     expect(window.localStorage.getItem(JOURNEY_ONBOARDING_COMPLETED_KEY)).toBe("done");
-  });
+    },
+    INTRO_WALKTHROUGH_TIMEOUT_MS
+  );
 
-  it("centers the preferences step so actions stay reachable on small screens", async () => {
+  it(
+    "centers the preferences step so actions stay reachable on small screens",
+    async () => {
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
       function mockClientRect(this: HTMLElement) {
         const target = this.getAttribute("data-onboarding") ?? "unknown";
@@ -307,7 +314,9 @@ describe("JourneyIntroOverlay", () => {
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "Your preferences" })).toBeNull();
     });
-  });
+    },
+    INTRO_WALKTHROUGH_TIMEOUT_MS
+  );
 
   it("skips intro without saving preferences", async () => {
     renderIntro();

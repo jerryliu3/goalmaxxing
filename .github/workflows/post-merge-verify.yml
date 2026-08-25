@@ -70,6 +70,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Ensure Docker is running (macOS self-hosted)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: bash .github/scripts/ensure-docker-macos.sh
+
       - name: Disable Mailpit in CI Supabase config
         run: |
           python3 - <<'PY'
