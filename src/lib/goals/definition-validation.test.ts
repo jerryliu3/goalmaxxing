@@ -244,7 +244,7 @@ describe("goal definition validation", () => {
     });
     expect(weeklyOverMax).toContainEqual(
       expect.objectContaining({
-        code: "target_exceeds_capacity",
+        code: "target_exceeds_period_limit",
         message: "Target cannot exceed 7 completions for this period length.",
       })
     );
@@ -256,7 +256,7 @@ describe("goal definition validation", () => {
     });
     expect(monthlyOverMax).toContainEqual(
       expect.objectContaining({
-        code: "target_exceeds_capacity",
+        code: "target_exceeds_period_limit",
         message: "Target cannot exceed 31 completions for this period length.",
       })
     );
@@ -268,7 +268,7 @@ describe("goal definition validation", () => {
     });
     expect(dailyOverMax).toContainEqual(
       expect.objectContaining({
-        code: "target_exceeds_capacity",
+        code: "target_exceeds_period_limit",
         message: "Target cannot exceed 1 completions for this period length.",
       })
     );
@@ -282,7 +282,7 @@ describe("goal definition validation", () => {
       targetCount: 8,
       startDate: "2026-08-01",
       endDate: "2026-08-31",
-    }).find((issue) => issue.code === "target_exceeds_capacity");
+    }).find((issue) => issue.code === "target_exceeds_period_limit");
 
     const capacityIssue = validateGoalDefinition({
       frequencyType: "fixed_milestones",

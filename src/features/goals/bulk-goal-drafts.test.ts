@@ -203,6 +203,16 @@ describe("bulk goal drafts", () => {
       "Target cannot exceed 31 completions for this period length."
     );
 
+    const dailyOverMax = bulkDraft({
+      frequency_type: "recurring",
+      recurrence_interval: "daily",
+      target_basis: "period",
+      target_count: "2",
+    });
+    expect(dailyOverMax.errors).toContain(
+      "Target cannot exceed 1 completions for this period length."
+    );
+
     const invalidLifetime = bulkDraft({
       frequency_type: "recurring",
       recurrence_interval: "daily",

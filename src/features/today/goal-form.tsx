@@ -61,6 +61,7 @@ import {
   type GoalCapacityInput,
   validateGoalDefinition,
 } from "@/lib/goals/definition-validation";
+import { resolveGoalDefinitionValidationFeedback } from "@/features/today/goal-form-validation";
 import { createClient } from "@/lib/supabase/client";
 import { requestXpRefresh } from "@/lib/xp/events";
 
@@ -478,19 +479,7 @@ export function GoalForm({
       asOfDate: toLocalDateString(),
       capacity: goalCapacityInput ?? undefined,
     });
-    const blockingIssue = definitionIssues.find(
-      (issue) => issue.code !== "target_exceeds_capacity"
-    );
-    if (blockingIssue) {
-      return { validationError: blockingIssue.message, validationWarning: null };
-    }
-    const warningIssue = definitionIssues.find(
-      (issue) => issue.code === "target_exceeds_capacity"
-    );
-    return {
-      validationError: null,
-      validationWarning: warningIssue?.message ?? null,
-    };
+    return resolveGoalDefinitionValidationFeedback(definitionIssues);
   }, [state, parsedTargetCount, definitionTargetCount, goalCapacityInput, isPlannerTask]);
   const submitDisabled = saving || validationError !== null;
 

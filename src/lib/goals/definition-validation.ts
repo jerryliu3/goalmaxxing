@@ -26,6 +26,7 @@ export type GoalDefinitionValidationCode =
   | "invalid_date_range"
   | "horizon_too_long"
   | "target_exceeds_limit"
+  | "target_exceeds_period_limit"
   | "target_exceeds_capacity";
 
 export interface GoalDefinitionValidationIssue {
@@ -210,7 +211,7 @@ export function validateGoalDefinition(
     const periodMax = maxPeriodTarget(input.recurrenceInterval);
     if (periodTarget > periodMax) {
       issues.push({
-        code: "target_exceeds_capacity",
+        code: "target_exceeds_period_limit",
         message: `Target cannot exceed ${periodMax} completions for this period length.`,
       });
     }
