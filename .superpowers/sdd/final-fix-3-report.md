@@ -97,7 +97,7 @@ Result: passed. All migrations replayed, including
 The focused changed fixtures passed during the full run:
 
 - `goal_period_target_backfill.test.sql`: 7 assertions
-- `goal_target_basis_rpc.test.sql`: 13 assertions
+- `goal_target_basis_rpc.test.sql`: 14 assertions
 - `goal_write_idempotency.test.sql`: 7 assertions
 
 The backfill fixture documents that pgTAP runs after migrations. It temporarily
