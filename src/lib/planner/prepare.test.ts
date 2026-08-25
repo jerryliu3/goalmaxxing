@@ -2334,7 +2334,7 @@ describe("preparePlannerSchedule", () => {
     ).periodKey;
     const existingCadenceUnit = persistedItem({
       goal_id: cadenceGoal.id,
-      unit_key: `cadence:${augustPeriodKey}`,
+      unit_key: `cadence:${augustPeriodKey}:1`,
       scheduled_date: "2026-08-03",
       original_scheduled_date: "2026-08-03",
       locked: false,
@@ -2729,12 +2729,12 @@ describe("preparePlannerSchedule", () => {
       completions: [completion],
       asOfDate: "2026-08-15",
       weekStartsOn: 1,
-      requiredUnitKeys: new Set([`cadence:${augustPeriodKey}`]),
+      requiredUnitKeys: new Set([`cadence:${augustPeriodKey}:1`]),
       persistedItems: [],
       window: { start: "2026-08-15", end: "2026-08-31" },
     });
 
-    expect(Array.from(credited)).toEqual([`cadence:${augustPeriodKey}`]);
+    expect(Array.from(credited)).toEqual([`cadence:${augustPeriodKey}:1`]);
   });
 
   it("uses the canonical snapshot digest for preparation", async () => {
