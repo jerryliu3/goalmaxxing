@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Image, StyleSheet } from "react-native";
 
 interface StaticJourneyPosterProps {
@@ -10,13 +10,9 @@ export function StaticJourneyPoster({
   sourceUri,
   visible,
 }: StaticJourneyPosterProps) {
-  const [loadFailed, setLoadFailed] = useState(false);
+  const [failedSourceUri, setFailedSourceUri] = useState<string | null>(null);
 
-  useEffect(() => {
-    setLoadFailed(false);
-  }, [sourceUri]);
-
-  if (loadFailed) {
+  if (failedSourceUri === sourceUri) {
     return null;
   }
 
@@ -29,7 +25,7 @@ export function StaticJourneyPoster({
       style={[StyleSheet.absoluteFill, styles.image, { opacity: visible ? 1 : 0 }]}
       resizeMode="cover"
       onError={() => {
-        setLoadFailed(true);
+        setFailedSourceUri(sourceUri);
       }}
     />
   );

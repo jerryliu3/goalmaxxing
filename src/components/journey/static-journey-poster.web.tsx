@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface StaticJourneyPosterProps {
   mobileSrc: string;
@@ -13,13 +13,10 @@ export function StaticJourneyPoster({
   desktopSrc,
   visible,
 }: StaticJourneyPosterProps) {
-  const [loadFailed, setLoadFailed] = useState(false);
+  const posterKey = `${mobileSrc}::${desktopSrc}`;
+  const [failedPosterKey, setFailedPosterKey] = useState<string | null>(null);
 
-  useEffect(() => {
-    setLoadFailed(false);
-  }, [mobileSrc, desktopSrc]);
-
-  if (loadFailed) {
+  if (failedPosterKey === posterKey) {
     return null;
   }
 
@@ -39,7 +36,7 @@ export function StaticJourneyPoster({
           className="h-full w-full object-cover"
           decoding="async"
           onError={() => {
-            setLoadFailed(true);
+            setFailedPosterKey(posterKey);
           }}
         />
       </picture>
