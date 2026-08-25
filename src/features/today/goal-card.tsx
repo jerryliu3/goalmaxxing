@@ -132,7 +132,7 @@ export function GoalCard({
     <Card
       className={cn(
         "shadow-sm",
-        progress?.outcome === "achieved" &&
+        (progress?.periodSatisfied || progress?.outcome === "achieved") &&
           "border-emerald-200 bg-emerald-50 dark:border-emerald-800/60 dark:bg-emerald-950/40"
       )}
     >
