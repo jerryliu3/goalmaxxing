@@ -137,6 +137,9 @@ interface TargetCountFieldProps {
   onValueChange: (value: string) => void;
   showRecurringHelperText?: boolean;
   recurringHelperText?: string;
+  minValue?: number;
+  required?: boolean;
+  disabled?: boolean;
 }
 
 export function TargetCountField({
@@ -146,17 +149,21 @@ export function TargetCountField({
   onValueChange,
   showRecurringHelperText = true,
   recurringHelperText = "Optional total by end date. Edit the target above; each completion counts independently.",
+  minValue,
+  required,
+  disabled = false,
 }: TargetCountFieldProps) {
   return (
     <>
       <Input
         id={id}
         type="number"
-        min={frequencyType === "fixed_milestones" ? 1 : 0}
+        min={minValue ?? (frequencyType === "fixed_milestones" ? 1 : 0)}
         max={MAX_GOAL_TARGET_COUNT}
         value={value}
         onChange={(event) => onValueChange(event.target.value)}
-        required={frequencyType === "fixed_milestones"}
+        required={required ?? (frequencyType === "fixed_milestones")}
+        disabled={disabled}
       />
       {frequencyType === "recurring" && showRecurringHelperText ? (
         <p className="text-xs text-muted-foreground">{recurringHelperText}</p>

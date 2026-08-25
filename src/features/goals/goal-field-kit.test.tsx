@@ -142,6 +142,50 @@ describe("TargetCountField", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("supports a positive required target while keeping lifetime targets optional", () => {
+    const { rerender } = render(
+      <TargetCountField
+        frequencyType="recurring"
+        value=""
+        onValueChange={vi.fn()}
+        minValue={1}
+        required
+        showRecurringHelperText={false}
+      />
+    );
+
+    const input = screen.getByRole("spinbutton");
+    expect(input).toBeRequired();
+    expect(input).toHaveAttribute("min", "1");
+
+    rerender(
+      <TargetCountField
+        frequencyType="recurring"
+        value=""
+        onValueChange={vi.fn()}
+        minValue={1}
+        required={false}
+        showRecurringHelperText={false}
+      />
+    );
+
+    expect(screen.getByRole("spinbutton")).not.toBeRequired();
+    expect(screen.getByRole("spinbutton")).toHaveAttribute("min", "1");
+  });
+
+  it("disables the target input when the goal definition is locked", () => {
+    render(
+      <TargetCountField
+        frequencyType="recurring"
+        value="2"
+        onValueChange={vi.fn()}
+        disabled
+      />
+    );
+
+    expect(screen.getByRole("spinbutton")).toBeDisabled();
+  });
+
   it("calls onValueChange with the raw input value", async () => {
     const onValueChange = vi.fn();
     const user = userEvent.setup();
