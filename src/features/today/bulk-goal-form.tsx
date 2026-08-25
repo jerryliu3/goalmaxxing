@@ -18,9 +18,12 @@ import {
   type LlmGoalDraftPayload,
   buildBulkGoalDraftFromRow,
   buildBulkGoalDraftsFromLlmGoals,
-  prepareBulkGoalRows,
 } from "@/features/goals/bulk-goal-drafts";
 import { BulkGoalDraftReview } from "@/features/goals/bulk-goal-draft-review";
+import {
+  BulkGoalPersistenceError,
+  persistBulkGoalDrafts,
+} from "@/features/goals/bulk-goal-persistence";
 import {
   buildStarterPackRows,
   resolveStarterPackKey,
@@ -307,32 +310,14 @@ export function BulkGoalForm({
 
     setSaving(true);
     try {
-      const preparedRows = prepareBulkGoalRows(selectedDrafts);
-
-      const { error } = await supabase.rpc("create_goals", {
-        p_goals: preparedRows.map((entry) => entry.row),
-      });
-      if (error) {
-        toast.error(error.message ?? "Failed to create bulk goals.");
-        return;
-      }
-
-      const linkRows = preparedRows
-        .filter(
-          ({ draft }) => draft.linked_target_goal_id && draft.linked_target_goal_id !== "none"
-        )
-        .map(({ draft, goalId }) => ({
-          source_goal_id: goalId,
-          target_goal_id: draft.linked_target_goal_id,
-        }));
-
-      if (linkRows.length > 0) {
-        const { error: linkError } = await supabase.rpc("create_goal_links", {
-          p_links: linkRows,
+      const { createdCount, preparedRows, linkErrorMessage } =
+        await persistBulkGoalDrafts({
+          drafts: selectedDrafts,
+          currentUserId,
+          supabase,
         });
-        if (linkError) {
-          toast.error(`Some linked goals were not saved: ${linkError.message}`);
-        }
+      if (linkErrorMessage) {
+        toast.error(linkErrorMessage);
       }
 
       let failedPhotoUploads = 0;
@@ -371,9 +356,17 @@ export function BulkGoalForm({
 
       invalidatePlannerRelatedTabCaches();
       toast.success(
-        `Created ${preparedRows.length} goal${preparedRows.length === 1 ? "" : "s"}.`
+        `Created ${createdCount} goal${createdCount === 1 ? "" : "s"}.`
       );
       completeAndExit();
+    } catch (error) {
+      if (error instanceof BulkGoalPersistenceError) {
+        toast.error(error.message);
+      } else {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to create bulk goals."
+        );
+      }
     } finally {
       setSaving(false);
     }

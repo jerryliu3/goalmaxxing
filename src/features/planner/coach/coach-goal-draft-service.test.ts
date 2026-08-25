@@ -7,6 +7,7 @@ import {
 
 const postJsonMock = vi.hoisted(() => vi.fn());
 const rpcMock = vi.hoisted(() => vi.fn());
+const authGetUserMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/api/client", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api/client")>(
@@ -16,13 +17,20 @@ vi.mock("@/lib/api/client", async () => {
 });
 
 vi.mock("@/lib/supabase/client", () => ({
-  createClient: () => ({ rpc: rpcMock }),
+  createClient: () => ({
+    auth: { getUser: authGetUserMock },
+    rpc: rpcMock,
+  }),
 }));
 
 describe("coach goal draft service", () => {
   beforeEach(() => {
     postJsonMock.mockReset();
     rpcMock.mockReset();
+    authGetUserMock.mockReset();
+    authGetUserMock.mockResolvedValue({
+      data: { user: { id: "coach-user-1" } },
+    });
   });
 
   it("uses the confirmed planner timezone when parsing", async () => {
@@ -70,7 +78,7 @@ describe("coach goal draft service", () => {
     ).rejects.toMatchObject({ code: "too_many_goals" });
   });
 
-  it("persists only selected validated drafts through create_goals", async () => {
+  it("persists selected validated drafts through shared goal and link contracts", async () => {
     const drafts = buildBulkGoalDraftsFromLlmGoals([
       {
         title: "Easy run",
@@ -83,19 +91,34 @@ describe("coach goal draft service", () => {
         frequency_type: "recurring",
         recurrence_interval: "weekly",
         start_date: "2026-08-17",
+        target_count: 2,
       },
     ]);
     drafts[1] = { ...drafts[1]!, include: false };
-    rpcMock.mockResolvedValue({ error: null });
+    drafts[0] = {
+      ...drafts[0]!,
+      linked_target_goal_id: "goal-main-1",
+    };
+    rpcMock
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null });
 
     await expect(createCoachGoalDrafts({ drafts })).resolves.toEqual({
       createdCount: 1,
+      linkErrorMessage: null,
     });
-    expect(rpcMock).toHaveBeenCalledWith("create_goals", {
+    expect(rpcMock).toHaveBeenNthCalledWith(1, "create_goals", {
       p_goals: [
         expect.objectContaining({
           title: "Easy run",
           recurrence_interval: "weekly",
+        }),
+      ],
+    });
+    expect(rpcMock).toHaveBeenNthCalledWith(2, "create_goal_links", {
+      p_links: [
+        expect.objectContaining({
+          target_goal_id: "goal-main-1",
         }),
       ],
     });

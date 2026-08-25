@@ -2,6 +2,8 @@
 
 import { format } from "date-fns";
 import { ChevronDown } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +14,13 @@ import {
 } from "@/features/planner/coach/coach-message-state";
 import type { PlannerCoachModel } from "@/features/planner/coach/coach-types";
 import type { CoachGoalDraftMessageProposal } from "@/features/planner/calendar-surface.types";
+import { toLocalDateString } from "@/lib/dates/day";
+import {
+  fetchProgressContext,
+  progressSummaryMap,
+} from "@/lib/goals/progress-context";
+import type { Goal } from "@/lib/goals/types";
+import { createClient } from "@/lib/supabase/client";
 
 interface PlannerCoachPanelProps {
   coach: PlannerCoachModel;
@@ -55,10 +64,12 @@ function CoachGoalDraftProposal({
   coach,
   messageIndex,
   proposal,
+  availableGoals,
 }: {
   coach: PlannerCoachModel;
   messageIndex: number;
   proposal: CoachGoalDraftMessageProposal;
+  availableGoals: Goal[];
 }) {
   const { state, actions } = coach;
   const draftState = state.coachGoalDraftStates[messageIndex];
@@ -129,6 +140,7 @@ function CoachGoalDraftProposal({
           }
           saving={draftState.status === "saving"}
           onCreate={() => actions.createCoachGoalDrafts(messageIndex)}
+          availableGoals={availableGoals}
           warnings={draftState.warnings}
           createDisabledMessage={
             state.hasPendingCalendarEdits
@@ -145,6 +157,75 @@ function CoachGoalDraftProposal({
 
 export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
   const { state, actions } = coach;
+  const supabase = useMemo(() => createClient(), []);
+  const [availableGoals, setAvailableGoals] = useState<Goal[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!state.canUseCoach) {
+      setAvailableGoals([]);
+      return () => {
+        cancelled = true;
+      };
+    }
+    const loadLinkableGoals = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        if (!cancelled) {
+          setAvailableGoals([]);
+        }
+        return;
+      }
+
+      const [goalOptionsResponse, progress] = await Promise.all([
+        supabase
+          .from("goals")
+          .select("*")
+          .eq("owner_id", user.id)
+          .eq("is_deleted", false)
+          .order("title"),
+        fetchProgressContext({ asOfDate: toLocalDateString() }),
+      ]);
+      if (cancelled) {
+        return;
+      }
+
+      if (goalOptionsResponse.error) {
+        toast.error("Could not load linkable goals.");
+        setAvailableGoals([]);
+        return;
+      }
+
+      const progressByGoal = progressSummaryMap(progress);
+      const goals = (goalOptionsResponse.data ?? []) as Goal[];
+      setAvailableGoals(
+        goals.filter(
+          (goal) =>
+            goal.team_id === null &&
+            progressByGoal.get(goal.id)?.lifecycle === "active"
+        )
+      );
+    };
+
+    void loadLinkableGoals().catch((error: unknown) => {
+      if (cancelled) {
+        return;
+      }
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not load linkable goals."
+      );
+      setAvailableGoals([]);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [state.canUseCoach, supabase]);
+
   if (!state.canUseCoach) {
     return null;
   }
@@ -306,6 +387,7 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
                     coach={coach}
                     messageIndex={index}
                     proposal={message.proposal}
+                    availableGoals={availableGoals}
                   />
                 ) : null}
               </div>
