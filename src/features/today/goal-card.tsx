@@ -10,10 +10,8 @@ import { getCategoryBadgeClass, getGoalCategoryLabel } from "@/lib/goals/categor
 import type { GoalProgressSnapshot } from "@/lib/goals/progress";
 import {
   getFrequencySummary,
-  isGoalDoneForCurrentPeriod,
 } from "@/lib/goals/schedule";
 import type { CompletionDateFact, Goal } from "@/lib/goals/types";
-import { isTargetedRecurringGoal } from "@/lib/planner/requirements";
 import { cn } from "@/lib/utils";
 
 interface GoalCardProps {
@@ -58,12 +56,8 @@ export function GoalCard({
     progress?.admissibleCompletionCount ?? completions.length;
   const displayCompletionCount = totalCompletionCount;
   const hasNoEndDate = goal.end_date === null;
-  const targetedRecurring = isTargetedRecurringGoal(goal);
-  const doneForCurrentPeriod = isGoalDoneForCurrentPeriod(
-    goal,
-    completions,
-    referenceDate,
-    { weeklyAnchor }
+  const completedOnSelectedDate = completions.some(
+    (completion) => completion.completed_on === selectedDate
   );
   const completionSourceForSelectedDate = completions.find(
     (completion) => completion.completed_on === selectedDate
@@ -141,26 +135,22 @@ export function GoalCard({
           <span
             aria-hidden
             className={`size-4 shrink-0 rounded-full border ${
-              doneForCurrentPeriod
+              completedOnSelectedDate
                 ? "border-primary bg-primary"
                 : "border-muted-foreground/40 bg-transparent"
             }`}
           />
         ) : (
           <CompletionToggle
-            completed={doneForCurrentPeriod}
+            completed={completedOnSelectedDate}
             pending={disabled && !archived}
             size="lg"
             onClick={(event) => onToggle?.(event.currentTarget)}
             disabled={disabled || archived}
             aria-label={
-              doneForCurrentPeriod
-                ? targetedRecurring
-                  ? `Remove completion for ${selectedDate}`
-                  : "Unmark goal completion for current period"
-                : targetedRecurring
-                  ? `Complete goal for ${selectedDate}`
-                  : "Mark goal as complete"
+              completedOnSelectedDate
+                ? `Remove completion for ${selectedDate}`
+                : `Complete goal for ${selectedDate}`
             }
           />
         )}

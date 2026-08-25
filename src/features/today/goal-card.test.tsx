@@ -72,7 +72,7 @@ describe("GoalCard", () => {
       "/goals/10000000-0000-4000-8000-000000000001"
     );
     expect(
-      screen.getByRole("button", { name: "Mark goal as complete" })
+      screen.getByRole("button", { name: "Complete goal for 2026-08-13" })
     ).toBeDisabled();
   });
 
@@ -91,7 +91,7 @@ describe("GoalCard", () => {
 
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Mark goal as complete" })
+      screen.queryByRole("button", { name: "Complete goal for 2026-08-13" })
     ).not.toBeInTheDocument();
   });
 

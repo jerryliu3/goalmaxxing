@@ -74,6 +74,7 @@ import {
   getGoalRequirement,
   isTargetedRecurringGoal,
 } from "@/lib/planner/requirements";
+import { isPeriodCadenceGoal } from "@/lib/goals/target-basis";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import { reportDuoTelemetry } from "@/lib/social/duo/telemetry";
 
@@ -380,7 +381,7 @@ export function TodayTab({
     const completionToUnmark = completedOnViewDate
       ? completions.find((completion) => completion.completed_on === viewDate)
       : latestCompletionInCurrentPeriod;
-    const targetedRecurring = isTargetedRecurringGoal(goal);
+    const targetedRecurring = isTargetedRecurringGoal(goal) || isPeriodCadenceGoal(goal);
     const requirement = getGoalRequirement(goal);
     const desiredFactState = completedOnViewDate ? "absent" : "present";
     const decision = resolveCompletionDispatch({
