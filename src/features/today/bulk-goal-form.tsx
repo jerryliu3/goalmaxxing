@@ -15,10 +15,10 @@ import { toast } from "sonner";
 import { LoadingCard } from "@/components/ui/loading-card";
 import {
   type BulkGoalDraft,
-  type LlmGoalDraftPayload,
   buildBulkGoalDraftFromRow,
   buildBulkGoalDraftsFromLlmGoals,
 } from "@/features/goals/bulk-goal-drafts";
+import { parseLlmGoalDraftsFromPrompt } from "@/features/goals/bulk-goal-parse";
 import { BulkGoalDraftReview } from "@/features/goals/bulk-goal-draft-review";
 import {
   type BulkGoalLinkRecovery,
@@ -34,7 +34,7 @@ import {
 } from "@/features/goals/starter-packs";
 import { BulkGoalInputCard } from "@/features/today/bulk-goal-input-card";
 import { type BulkInputMode } from "@/features/today/bulk-goal-types";
-import { getApiErrorMessage, postJson } from "@/lib/api/client";
+import { getApiErrorMessage } from "@/lib/api/client";
 import { buildLoginHref } from "@/lib/auth/login-redirect";
 import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 import { toLocalDateString } from "@/lib/dates/day";
@@ -55,7 +55,6 @@ interface BulkGoalFormProps {
 const csvExample = `title,description,category,color,frequency_type,recurrence_interval,target_basis,target_count,milestone_names,start_date,end_date,default_local_time
 Morning run,Train for a half marathon,Health,#16a34a,recurring,weekly,period,3,,2026-06-01,2026-12-31,06:45
 Read 12 books,One book per month,Personal,#6366f1,fixed,,lifetime,12,Book 1|Book 2|Book 3,2026-06-01,2026-12-31,`;
-const BULK_GOAL_PARSE_TIMEOUT_MS = 45_000;
 
 async function parseRowsFromCsvText(csvText: string): Promise<Record<string, unknown>[]> {
   const XLSX = await import("xlsx");
@@ -235,24 +234,11 @@ export function BulkGoalForm({
 
     setParsing(true);
     try {
-      const payload = await postJson<{
-        goals?: LlmGoalDraftPayload[];
-        warnings?: string[];
-        code?: string;
-        message?: string;
-        correlationId?: string;
-      }>(
-        "/api/bulk-goals/parse",
-        {
-          prompt: trimmed,
-          timezone: resolveUserTimezone(),
-        },
-        {
-          timeoutMs: BULK_GOAL_PARSE_TIMEOUT_MS,
-        }
-      );
+      const { goals, warnings } = await parseLlmGoalDraftsFromPrompt({
+        prompt: trimmed,
+        timezone: resolveUserTimezone(),
+      });
 
-      const goals = payload.goals ?? [];
       if (goals.length === 0) {
         toast.error("No goals found in that prompt. Try adding more detail.");
         return;
@@ -263,11 +249,11 @@ export function BulkGoalForm({
       toast.success(
         `Loaded ${nextDrafts.length} goal draft${nextDrafts.length === 1 ? "" : "s"}.`
       );
-      if (payload.warnings && payload.warnings.length > 0) {
+      if (warnings.length > 0) {
         toast.warning(
-          payload.warnings.length === 1
-            ? payload.warnings[0]
-            : `${payload.warnings.length} generated drafts need edits before saving.`
+          warnings.length === 1
+            ? warnings[0]
+            : `${warnings.length} generated drafts need edits before saving.`
         );
       }
     } catch (error) {

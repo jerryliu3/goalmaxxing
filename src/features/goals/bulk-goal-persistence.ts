@@ -3,28 +3,13 @@ import {
   type PreparedBulkGoalRow,
   prepareBulkGoalRows,
 } from "@/features/goals/bulk-goal-drafts";
+import { getRpcErrorMessage } from "@/lib/supabase/rpc-error";
 
 type RpcResult = PromiseLike<{
   error: { message?: string | null } | null;
 }>;
 
 const LINK_FAILURE_FALLBACK = "Could not save goal links. Try again.";
-
-function rpcErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message.trim()) {
-    return error.message;
-  }
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "message" in error &&
-    typeof error.message === "string" &&
-    error.message.trim()
-  ) {
-    return error.message;
-  }
-  return fallback;
-}
 
 export interface BulkGoalLinkRow {
   [key: string]: string;
@@ -118,14 +103,14 @@ async function persistPreparedBulkGoalRows({
   } catch (cause) {
     throw new BulkGoalPersistenceError(
       "create_ambiguous",
-      rpcErrorMessage(cause, "Could not confirm goal creation. Try again."),
+      getRpcErrorMessage(cause, "Could not confirm goal creation. Try again."),
       { preparedRows }
     );
   }
   if (error) {
     throw new BulkGoalPersistenceError(
       "create_failed",
-      rpcErrorMessage(error, "Could not save goals. Try again.")
+      getRpcErrorMessage(error, "Could not save goals. Try again.")
     );
   }
   onGoalsPersisted?.(preparedRows);
@@ -154,7 +139,7 @@ async function persistPreparedBulkGoalRows({
       p_links: linkRows,
     }));
   } catch (cause) {
-    const message = rpcErrorMessage(cause, LINK_FAILURE_FALLBACK);
+    const message = getRpcErrorMessage(cause, LINK_FAILURE_FALLBACK);
     return {
       status: "partial_success",
       createdCount: preparedRows.length,
@@ -169,7 +154,7 @@ async function persistPreparedBulkGoalRows({
   if (linkError) {
     throw new BulkGoalPersistenceError(
       "links_failed",
-      `Some linked goals were not saved: ${rpcErrorMessage(
+      `Some linked goals were not saved: ${getRpcErrorMessage(
         linkError,
         LINK_FAILURE_FALLBACK
       )}`,
@@ -267,7 +252,7 @@ export async function retryBulkGoalLinks({
   } catch (cause) {
     throw new BulkGoalPersistenceError(
       "links_ambiguous",
-      `Some linked goals were not saved: ${rpcErrorMessage(
+      `Some linked goals were not saved: ${getRpcErrorMessage(
         cause,
         LINK_FAILURE_FALLBACK
       )}`
@@ -276,7 +261,7 @@ export async function retryBulkGoalLinks({
   if (error) {
     throw new BulkGoalPersistenceError(
       "links_failed",
-      `Some linked goals were not saved: ${rpcErrorMessage(
+      `Some linked goals were not saved: ${getRpcErrorMessage(
         error,
         LINK_FAILURE_FALLBACK
       )}`

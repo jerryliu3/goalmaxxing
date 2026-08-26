@@ -3,22 +3,21 @@
 import {
   type PreparedBulkGoalRow,
   type BulkGoalDraft,
-  type LlmGoalDraftPayload,
   buildBulkGoalDraftsFromLlmGoals,
 } from "@/features/goals/bulk-goal-drafts";
+import { parseLlmGoalDraftsFromPrompt } from "@/features/goals/bulk-goal-parse";
 import {
-  type BulkGoalLinkRow,
   type BulkGoalLinkRecovery,
+  type BulkGoalLinkRow,
   BulkGoalPersistenceError,
   persistBulkGoalDrafts,
   retryBulkGoalCreation,
   retryBulkGoalLinks,
 } from "@/features/goals/bulk-goal-persistence";
-import { ApiClientError, postJson } from "@/lib/api/client";
+import { ApiClientError } from "@/lib/api/client";
 import { createClient } from "@/lib/supabase/client";
 
 export const MAX_COACH_GOAL_DRAFTS = 5;
-const COACH_GOAL_DRAFT_PARSE_TIMEOUT_MS = 45_000;
 
 export class CoachGoalDraftServiceError extends Error {
   readonly code: string;
@@ -54,16 +53,10 @@ export async function parseCoachGoalDrafts({
   timezone: string;
 }) {
   try {
-    const payload = await postJson<{
-      goals?: LlmGoalDraftPayload[];
-      warnings?: string[];
-    }>("/api/bulk-goals/parse", {
+    const { goals, warnings } = await parseLlmGoalDraftsFromPrompt({
       prompt: parserPrompt,
       timezone,
-    }, {
-      timeoutMs: COACH_GOAL_DRAFT_PARSE_TIMEOUT_MS,
     });
-    const goals = payload.goals ?? [];
     if (goals.length === 0) {
       throw new CoachGoalDraftServiceError(
         "no_goals",
@@ -78,7 +71,7 @@ export async function parseCoachGoalDrafts({
     }
     return {
       drafts: buildBulkGoalDraftsFromLlmGoals(goals),
-      warnings: payload.warnings ?? [],
+      warnings,
     };
   } catch (error) {
     if (error instanceof CoachGoalDraftServiceError) {
@@ -106,22 +99,10 @@ export async function createCoachGoalDrafts({
   onLinksPersisted?: (preparedRows: PreparedBulkGoalRow[]) => void;
 }) {
   const selectedDrafts = drafts.filter((draft) => draft.include);
-  if (selectedDrafts.length === 0) {
-    throw new CoachGoalDraftServiceError(
-      "no_selected_goals",
-      "Select at least one goal draft to create."
-    );
-  }
   if (selectedDrafts.length > MAX_COACH_GOAL_DRAFTS) {
     throw new CoachGoalDraftServiceError(
       "too_many_goals",
       `Create no more than ${MAX_COACH_GOAL_DRAFTS} goals at once.`
-    );
-  }
-  if (selectedDrafts.some((draft) => draft.errors.length > 0)) {
-    throw new CoachGoalDraftServiceError(
-      "invalid_goals",
-      "Fix validation issues before creating these goals."
     );
   }
 

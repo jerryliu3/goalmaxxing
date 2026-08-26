@@ -4,6 +4,7 @@ import {
   normalizeGoalCreationTarget,
   parseGoalCreationTargetCount,
   resolveGoalCreationColor,
+  resolveGoalCreationTargetCountForSave,
   updateGoalCreationFields,
   validateGoalCreationFields,
   type GoalCreationFields,
@@ -65,6 +66,54 @@ describe("normalizeGoalCreationTarget", () => {
     );
 
     expect(errors).toContain("Total target completions requires a positive target.");
+  });
+});
+
+describe("resolveGoalCreationTargetCountForSave", () => {
+  it("normalizes recurring period targets for save", () => {
+    expect(
+      resolveGoalCreationTargetCountForSave({
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "period",
+        target_count: "",
+      })
+    ).toBe(1);
+    expect(
+      resolveGoalCreationTargetCountForSave({
+        frequency_type: "recurring",
+        recurrence_interval: "daily",
+        target_basis: "period",
+        target_count: "4",
+      })
+    ).toBe(1);
+    expect(
+      resolveGoalCreationTargetCountForSave({
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "period",
+        target_count: "4",
+      })
+    ).toBe(4);
+  });
+
+  it("preserves lifetime and milestone targets for save", () => {
+    expect(
+      resolveGoalCreationTargetCountForSave({
+        frequency_type: "recurring",
+        recurrence_interval: "daily",
+        target_basis: "lifetime",
+        target_count: "12",
+      })
+    ).toBe(12);
+    expect(
+      resolveGoalCreationTargetCountForSave({
+        frequency_type: "fixed_milestones",
+        recurrence_interval: "daily",
+        target_basis: "lifetime",
+        target_count: "3",
+      })
+    ).toBe(3);
   });
 });
 

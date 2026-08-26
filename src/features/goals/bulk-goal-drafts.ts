@@ -2,8 +2,8 @@ import { format, isValid, parseISO } from "date-fns";
 import { toLocalDateString } from "@/lib/dates/day";
 import {
   createDefaultGoalCreationFields,
-  normalizeGoalCreationTarget,
   parseGoalCreationTargetCount,
+  resolveGoalCreationTargetCountForSave,
   type GoalCreationFields,
   validateGoalCreationFields,
 } from "@/features/goals/goal-creation-model";
@@ -350,12 +350,7 @@ export function prepareBulkGoalRows(
       draft.frequency_type === "recurring"
         ? resolveBulkGoalTargetBasis(draft)
         : "lifetime";
-    const normalizedTargetCount =
-      draft.frequency_type === "fixed_milestones"
-        ? parseBulkGoalTargetCount(draft.target_count)
-        : draft.frequency_type === "recurring" && targetBasis === "period"
-          ? parseBulkGoalTargetCount(normalizeGoalCreationTarget(draft)) ?? 1
-          : parseBulkGoalTargetCount(draft.target_count);
+    const normalizedTargetCount = resolveGoalCreationTargetCountForSave(draft);
     const goalId = createId ? createId() : draft.id;
     return {
       draft,

@@ -3,7 +3,12 @@ import {
   type CategorySelection,
   getCategorySwatchColor,
 } from "@/lib/goals/category";
-import { validateGoalDefinition } from "@/lib/goals/definition-validation";
+import {
+  type GoalCapacityInput,
+  type GoalDefinitionValidationIssue,
+  resolveGoalDefinitionValidationFeedback,
+  validateGoalDefinition,
+} from "@/lib/goals/definition-validation";
 import { buildMilestoneNameDrafts } from "@/lib/goals/milestones";
 import { getGoalPeriodTargetMax } from "@/lib/goals/target-basis";
 import type {
@@ -233,12 +238,75 @@ export function updateGoalCreationFields(
   }
 }
 
-export function validateGoalCreationFields(fields: GoalCreationFields): string[] {
+export function applyGoalCreationFieldChange<T extends GoalCreationFields>(
+  fields: T,
+  change: GoalCreationFieldChange
+): T {
+  return {
+    ...fields,
+    ...updateGoalCreationFields(fields, change),
+  };
+}
+
+function resolveDefinitionTargetCount(
+  fields: GoalCreationFields
+): number | null {
+  const parsedTarget = parsePositiveTargetCount(fields.target_count);
+
+  if (fields.frequency_type === "fixed_milestones") {
+    return parsedTarget;
+  }
+
+  if (fields.target_count.trim()) {
+    return parsedTarget;
+  }
+
+  if (
+    fields.frequency_type === "recurring" &&
+    fields.target_basis === "period"
+  ) {
+    return parsePositiveTargetCount(normalizeGoalCreationTarget(fields));
+  }
+
+  return null;
+}
+
+function collectGoalCreationDefinitionIssues(
+  fields: GoalCreationFields,
+  options?: {
+    capacity?: GoalCapacityInput;
+    asOfDate?: string;
+  }
+): GoalDefinitionValidationIssue[] {
+  return validateGoalDefinition({
+    frequencyType: fields.frequency_type,
+    targetCount: resolveDefinitionTargetCount(fields),
+    targetBasis:
+      fields.frequency_type === "recurring" ? fields.target_basis : "lifetime",
+    recurrenceInterval:
+      fields.frequency_type === "recurring" ? fields.recurrence_interval : null,
+    startDate: fields.start_date,
+    endDate: fields.end_date || null,
+    asOfDate: options?.asOfDate ?? toLocalDateString(),
+    capacity: options?.capacity,
+  });
+}
+
+export function validateGoalCreationFieldErrors(
+  fields: GoalCreationFields
+): string[] {
   const errors: string[] = [];
   const parsedTarget = parsePositiveTargetCount(fields.target_count);
 
   if (!fields.title.trim()) {
     errors.push("Title is required.");
+  }
+
+  if (
+    fields.frequency_type === "recurring" &&
+    !fields.recurrence_interval
+  ) {
+    errors.push("Recurring goals require a frequency.");
   }
 
   if (
@@ -312,25 +380,57 @@ export function validateGoalCreationFields(fields: GoalCreationFields): string[]
     }
   }
 
-  const definitionTargetCount =
-    fields.frequency_type === "fixed_milestones"
-      ? parsedTarget
-      : fields.target_count.trim()
-        ? parsedTarget
-        : fields.frequency_type === "recurring" && fields.target_basis === "period"
-          ? parsePositiveTargetCount(normalizeGoalCreationTarget(fields))
-          : null;
+  return errors;
+}
 
-  for (const issue of validateGoalDefinition({
-    frequencyType: fields.frequency_type,
-    targetCount: definitionTargetCount,
-    targetBasis:
-      fields.frequency_type === "recurring" ? fields.target_basis : "lifetime",
-    recurrenceInterval:
-      fields.frequency_type === "recurring" ? fields.recurrence_interval : null,
-    startDate: fields.start_date,
-    endDate: fields.end_date || null,
-  })) {
+export function getGoalCreationValidationFeedback(
+  fields: GoalCreationFields,
+  options?: {
+    capacity?: GoalCapacityInput;
+    asOfDate?: string;
+  }
+): { validationError: string | null; validationWarning: string | null } {
+  const fieldErrors = validateGoalCreationFieldErrors(fields);
+  if (fieldErrors.length > 0) {
+    return { validationError: fieldErrors[0] ?? null, validationWarning: null };
+  }
+
+  return resolveGoalDefinitionValidationFeedback(
+    collectGoalCreationDefinitionIssues(fields, options)
+  );
+}
+
+export function resolveGoalCreationTargetCountForSave(
+  fields: Pick<
+    GoalCreationFields,
+    "frequency_type" | "recurrence_interval" | "target_basis" | "target_count"
+  >
+): number | null {
+  if (fields.frequency_type === "fixed_milestones") {
+    return parsePositiveTargetCount(fields.target_count);
+  }
+
+  if (fields.frequency_type !== "recurring") {
+    return null;
+  }
+
+  if (fields.target_basis === "lifetime") {
+    return parsePositiveTargetCount(fields.target_count);
+  }
+
+  if (fields.recurrence_interval === "daily") {
+    return 1;
+  }
+
+  return (
+    parsePositiveTargetCount(normalizeGoalCreationTarget(fields)) ?? 1
+  );
+}
+
+export function validateGoalCreationFields(fields: GoalCreationFields): string[] {
+  const errors = validateGoalCreationFieldErrors(fields);
+
+  for (const issue of collectGoalCreationDefinitionIssues(fields)) {
     errors.push(issue.message);
   }
 

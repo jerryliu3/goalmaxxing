@@ -45,10 +45,11 @@ import {
   getLinkedGoalRecurrenceLabel,
 } from "@/lib/goals/linked-goal-labels";
 import {
+  applyGoalCreationFieldChange,
   createDefaultGoalCreationFields,
-  parseGoalCreationTargetCount,
+  getGoalCreationValidationFeedback,
   resolveGoalCreationColor,
-  updateGoalCreationFields,
+  resolveGoalCreationTargetCountForSave,
   type GoalCreationFieldChange,
   type GoalCreationFields,
 } from "@/features/goals/goal-creation-model";
@@ -59,12 +60,9 @@ import {
 import { isPlannerTaskCreateKind, type GoalCreateKind } from "@/lib/goals/form-options";
 import type { Goal, GoalLink } from "@/lib/goals/types";
 import { resolveGoalTargetBasis } from "@/lib/goals/target-basis";
-import {
-  type GoalCapacityInput,
-  validateGoalDefinition,
-} from "@/lib/goals/definition-validation";
-import { resolveGoalDefinitionValidationFeedback } from "@/features/today/goal-form-validation";
+import { type GoalCapacityInput } from "@/lib/goals/definition-validation";
 import { createClient } from "@/lib/supabase/client";
+import { getRpcErrorMessage } from "@/lib/supabase/rpc-error";
 import { requestXpRefresh } from "@/lib/xp/events";
 
 interface GoalFormProps {
@@ -115,75 +113,6 @@ type GoalFormRecovery =
       savedGoalId: string;
       targetGoalId: string | undefined;
     };
-
-function rpcErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message.trim()) {
-    return error.message;
-  }
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "message" in error &&
-    typeof error.message === "string" &&
-    error.message.trim()
-  ) {
-    return error.message;
-  }
-  return fallback;
-}
-
-export function getGoalFormTargetValidationError(
-  fields: Pick<
-    GoalCreationFields,
-    "frequency_type" | "recurrence_interval" | "target_basis" | "target_count"
-  >
-): string | null {
-  const parsedTargetCount = parseGoalCreationTargetCount(fields.target_count);
-
-  if (
-    fields.frequency_type === "fixed_milestones" &&
-    parsedTargetCount === null
-  ) {
-    return "Milestone goals require a positive target count.";
-  }
-
-  if (
-    fields.frequency_type === "recurring" &&
-    fields.target_basis === "period" &&
-    fields.target_count.trim().length > 0 &&
-    parsedTargetCount === null
-  ) {
-    return "Per-period target must be a positive whole number.";
-  }
-
-  if (
-    fields.frequency_type === "recurring" &&
-    fields.target_basis === "period" &&
-    fields.recurrence_interval !== "daily" &&
-    parsedTargetCount === null
-  ) {
-    return "Recurring period goals require a target of at least 1.";
-  }
-
-  if (
-    fields.frequency_type === "recurring" &&
-    fields.target_basis === "lifetime" &&
-    fields.target_count.trim().length > 0 &&
-    parsedTargetCount === null
-  ) {
-    return "Total target completions must be at least 1 when provided.";
-  }
-
-  if (
-    fields.frequency_type === "recurring" &&
-    fields.target_basis === "lifetime" &&
-    fields.target_count.trim().length === 0
-  ) {
-    return "Total target completions requires a positive target.";
-  }
-
-  return null;
-}
 
 const defaultState: GoalFormState = {
   ...createDefaultGoalCreationFields(),
@@ -243,11 +172,9 @@ function applyGoalCreationChange(
 ): GoalFormState {
   return mergeGoalCreationFields(
     state,
-    updateGoalCreationFields(toGoalCreationFields(state), change)
+    applyGoalCreationFieldChange(toGoalCreationFields(state), change)
   );
 }
-
-const localTimePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export function GoalForm({
   goalId,
@@ -352,7 +279,7 @@ export function GoalForm({
         (goalId ? linksResponse.error : null);
       if (linkLoadError) {
         setLinkTargetsError(
-          rpcErrorMessage(linkLoadError, "Could not load linkable goals.")
+          getRpcErrorMessage(linkLoadError, "Could not load linkable goals.")
         );
       } else {
         setLinkTargetsReady(true);
@@ -447,27 +374,16 @@ export function GoalForm({
       setLoading(false);
       setLinkTargetsReady(false);
       setLinkTargetsError(
-        rpcErrorMessage(error, "Could not load linkable goals.")
+        getRpcErrorMessage(error, "Could not load linkable goals.")
       );
       toast.error(
-        rpcErrorMessage(error, "Could not load linkable goals.")
+        getRpcErrorMessage(error, "Could not load linkable goals.")
       );
     });
   }, [goalId, linkLoadAttempt, router, supabase]);
 
   const isPlannerTask = !isEditing && isPlannerTaskCreateKind(createKind);
-  const isLifetimeRecurringTarget =
-    state.frequency_type === "recurring" && state.target_basis === "lifetime";
-  const isPeriodRecurringTarget =
-    state.frequency_type === "recurring" && state.target_basis === "period";
   const definitionFieldsLocked = isEditing;
-  const parsedTargetCount = parseGoalCreationTargetCount(state.target_count);
-  const definitionTargetCount =
-    state.frequency_type === "fixed_milestones" || isLifetimeRecurringTarget
-      ? parsedTargetCount
-      : isPeriodRecurringTarget
-        ? parsedTargetCount ?? 1
-        : null;
   const filteredLinkTargets = useMemo(() => {
     const query = linkTargetSearch.trim().toLowerCase();
     if (query.length === 0) {
@@ -504,49 +420,19 @@ export function GoalForm({
   };
 
   const { validationError, validationWarning } = useMemo(() => {
-    if (!state.title.trim()) {
-      return { validationError: "Title is required.", validationWarning: null };
-    }
-
     if (isPlannerTask) {
+      if (!state.title.trim()) {
+        return { validationError: "Title is required.", validationWarning: null };
+      }
       return { validationError: null, validationWarning: null };
     }
 
-    if (state.frequency_type === "recurring" && !state.recurrence_interval) {
-      return {
-        validationError: "Recurring goals require a frequency.",
-        validationWarning: null,
-      };
-    }
-
-    const targetValidationError = getGoalFormTargetValidationError(
-      toGoalCreationFields(state)
-    );
-    if (targetValidationError) {
-      return {
-        validationError: targetValidationError,
-        validationWarning: null,
-      };
-    }
-
-    if (
-      state.default_local_time.trim().length > 0 &&
-      !localTimePattern.test(state.default_local_time.trim())
-    ) {
-      return {
-        validationError: "Default time must be a valid 24-hour HH:MM value.",
-        validationWarning: null,
-      };
-    }
-
-    if (
-      state.category_selection === "custom" &&
-      state.custom_category.trim().length === 0
-    ) {
-      return {
-        validationError: "Custom category name is required.",
-        validationWarning: null,
-      };
+    const feedback = getGoalCreationValidationFeedback(toGoalCreationFields(state), {
+      capacity: goalCapacityInput ?? undefined,
+      asOfDate: toLocalDateString(),
+    });
+    if (feedback.validationError) {
+      return feedback;
     }
 
     if (state.reward_text.trim().length > 500) {
@@ -557,18 +443,8 @@ export function GoalForm({
       };
     }
 
-    const definitionIssues = validateGoalDefinition({
-      frequencyType: state.frequency_type,
-      targetCount: definitionTargetCount,
-      targetBasis: state.target_basis,
-      recurrenceInterval: state.recurrence_interval,
-      startDate: state.start_date,
-      endDate: state.end_date || null,
-      asOfDate: toLocalDateString(),
-      capacity: goalCapacityInput ?? undefined,
-    });
-    return resolveGoalDefinitionValidationFeedback(definitionIssues);
-  }, [state, definitionTargetCount, goalCapacityInput, isPlannerTask]);
+    return feedback;
+  }, [state, goalCapacityInput, isPlannerTask]);
   const submitDisabled =
     saving ||
     validationError !== null ||
@@ -599,12 +475,12 @@ export function GoalForm({
           p_scheduled_date: state.task_scheduled_date.trim() || undefined,
         }));
       } catch (cause) {
-        toast.error(rpcErrorMessage(cause, "Could not save task. Try again."));
+        toast.error(getRpcErrorMessage(cause, "Could not save task. Try again."));
         setSaving(false);
         return;
       }
       if (error) {
-        toast.error(rpcErrorMessage(error, "Could not save task. Try again."));
+        toast.error(getRpcErrorMessage(error, "Could not save task. Try again."));
         setSaving(false);
         return;
       }
@@ -614,19 +490,16 @@ export function GoalForm({
       setSaving(false);
       return;
     }
-    const parsedTargetCountForSave = parseGoalCreationTargetCount(state.target_count);
+    const resolvedTargetCountForSave = resolveGoalCreationTargetCountForSave(state);
+    const targetCountForSave =
+      resolvedTargetCountForSave === null ? undefined : resolvedTargetCountForSave;
     const milestoneNames =
-      state.frequency_type === "fixed_milestones" && parsedTargetCountForSave !== null
-        ? normalizeMilestoneNamesForSave(parsedTargetCountForSave, state.milestone_names)
+      state.frequency_type === "fixed_milestones" && resolvedTargetCountForSave !== null
+        ? normalizeMilestoneNamesForSave(
+            resolvedTargetCountForSave,
+            state.milestone_names
+          )
         : undefined;
-    const recurringTargetForSave =
-      state.frequency_type === "recurring" && isLifetimeRecurringTarget
-        ? parsedTargetCountForSave ?? undefined
-        : state.frequency_type === "recurring" && state.target_basis === "period"
-          ? state.recurrence_interval === "daily"
-            ? 1
-            : parsedTargetCountForSave ?? 1
-          : undefined;
     const categoryValue = getCategoryValueForWrite(
       state.category_selection,
       state.custom_category
@@ -651,9 +524,10 @@ export function GoalForm({
         state.frequency_type === "recurring" ? state.recurrence_interval : undefined,
       p_difficulty: state.difficulty,
       p_target_count:
-        state.frequency_type === "fixed_milestones"
-          ? parsedTargetCountForSave ?? undefined
-          : recurringTargetForSave,
+        state.frequency_type === "fixed_milestones" ||
+        state.frequency_type === "recurring"
+          ? targetCountForSave
+          : undefined,
       p_target_basis:
         state.frequency_type === "recurring" ? state.target_basis : undefined,
       p_milestone_names: milestoneNames,
@@ -677,7 +551,7 @@ export function GoalForm({
       } catch (cause) {
         setRecovery({ kind: "update", goalArgs });
         toast.error(
-          rpcErrorMessage(cause, "Could not confirm goal update. Try again.")
+          getRpcErrorMessage(cause, "Could not confirm goal update. Try again.")
         );
         setSaving(false);
         return;
@@ -686,7 +560,7 @@ export function GoalForm({
       if (error) {
         setRecovery(null);
         toast.error(
-          rpcErrorMessage(error, "Could not confirm goal update. Try again.")
+          getRpcErrorMessage(error, "Could not confirm goal update. Try again.")
         );
         setSaving(false);
         return;
@@ -698,7 +572,7 @@ export function GoalForm({
       } catch (cause) {
         setRecovery({ kind: "create", goalArgs });
         toast.error(
-          rpcErrorMessage(cause, "Could not confirm goal creation. Try again.")
+          getRpcErrorMessage(cause, "Could not confirm goal creation. Try again.")
         );
         setSaving(false);
         return;
@@ -707,7 +581,7 @@ export function GoalForm({
       if (error) {
         setRecovery(null);
         toast.error(
-          rpcErrorMessage(error, "Could not save goal. Try again.")
+          getRpcErrorMessage(error, "Could not save goal. Try again.")
         );
         setSaving(false);
         return;
@@ -727,7 +601,7 @@ export function GoalForm({
     } catch (cause) {
       setRecovery({ kind: "link", savedGoalId, targetGoalId });
       toast.error(
-        rpcErrorMessage(cause, "Could not save the selected goal link. Try again.")
+        getRpcErrorMessage(cause, "Could not save the selected goal link. Try again.")
       );
       setSaving(false);
       return;
@@ -735,7 +609,7 @@ export function GoalForm({
     if (linkError) {
       setRecovery(null);
       toast.error(
-        rpcErrorMessage(
+        getRpcErrorMessage(
           linkError,
           "Could not save the selected goal link. Try again."
         )
@@ -766,7 +640,7 @@ export function GoalForm({
       }));
     } catch (cause) {
       toast.error(
-        rpcErrorMessage(cause, "Could not save the selected goal link. Try again.")
+        getRpcErrorMessage(cause, "Could not save the selected goal link. Try again.")
       );
       setSaving(false);
       return;
@@ -775,7 +649,7 @@ export function GoalForm({
     if (linkError) {
       setRecovery(null);
       toast.error(
-        rpcErrorMessage(
+        getRpcErrorMessage(
           linkError,
           "Could not save the selected goal link. Try again."
         )

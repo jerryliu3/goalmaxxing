@@ -31,8 +31,8 @@ import {
 } from "@/features/goals/bulk-goal-drafts";
 import { GoalCreationFieldControls } from "@/features/goals/goal-creation-fields";
 import {
+  applyGoalCreationFieldChange,
   type GoalCreationFieldChange,
-  updateGoalCreationFields,
 } from "@/features/goals/goal-creation-model";
 import type { GoalCreateKind } from "@/lib/goals/form-options";
 import {
@@ -67,8 +67,7 @@ function applyGoalCreationChange(
       (Object.prototype.hasOwnProperty.call(change.value, "target_basis") ||
         Object.prototype.hasOwnProperty.call(change.value, "frequency_type")));
   return {
-    ...draft,
-    ...updateGoalCreationFields(draft, change),
+    ...applyGoalCreationFieldChange(draft, change),
     ...(clearsTargetBasisError ? { target_basis_error: undefined } : {}),
   };
 }

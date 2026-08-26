@@ -2,12 +2,12 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GoalCreationFieldControls } from "@/features/goals/goal-creation-fields";
-import { createDefaultGoalCreationFields } from "@/features/goals/goal-creation-model";
 import {
-  GoalForm,
-  getGoalFormTargetValidationError,
-} from "@/features/today/goal-form";
-import { resolveGoalDefinitionValidationFeedback } from "@/features/today/goal-form-validation";
+  createDefaultGoalCreationFields,
+  getGoalCreationValidationFeedback,
+} from "@/features/goals/goal-creation-model";
+import { GoalForm } from "@/features/today/goal-form";
+import { resolveGoalDefinitionValidationFeedback } from "@/lib/goals/definition-validation";
 import { validateGoalDefinition } from "@/lib/goals/definition-validation";
 import type { Goal } from "@/lib/goals/types";
 
@@ -302,27 +302,33 @@ describe("goal form definition validation adapter", () => {
 
 describe("GoalForm target validation", () => {
   it("uses strict target parsing instead of truncating fractional input", () => {
-    expect(
-      getGoalFormTargetValidationError({
-        ...createDefaultGoalCreationFields(),
-        frequency_type: "recurring",
-        recurrence_interval: "weekly",
-        target_basis: "period",
-        target_count: "1.5",
-      })
-    ).toBe("Per-period target must be a positive whole number.");
+    const feedback = getGoalCreationValidationFeedback({
+      ...createDefaultGoalCreationFields(),
+      title: "Weekly goal",
+      frequency_type: "recurring",
+      recurrence_interval: "weekly",
+      target_basis: "period",
+      target_count: "1.5",
+      start_date: "2026-08-17",
+    });
+    expect(feedback.validationError).toBe(
+      "Per-period target must be a positive whole number."
+    );
   });
 
   it("blocks an empty lifetime recurring target", () => {
-    expect(
-      getGoalFormTargetValidationError({
-        ...createDefaultGoalCreationFields(),
-        frequency_type: "recurring",
-        recurrence_interval: "daily",
-        target_basis: "lifetime",
-        target_count: "",
-      })
-    ).toBe("Total target completions requires a positive target.");
+    const feedback = getGoalCreationValidationFeedback({
+      ...createDefaultGoalCreationFields(),
+      title: "Daily lifetime goal",
+      frequency_type: "recurring",
+      recurrence_interval: "daily",
+      target_basis: "lifetime",
+      target_count: "",
+      start_date: "2026-08-17",
+    });
+    expect(feedback.validationError).toBe(
+      "Total target completions requires a positive target."
+    );
   });
 });
 
