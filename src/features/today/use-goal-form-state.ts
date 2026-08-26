@@ -5,14 +5,12 @@ import { toast } from "sonner";
 import {
   getGoalCreationValidationFeedback,
   resolveGoalCreationColor,
-  resolveGoalCreationTargetCountForSave,
 } from "@/features/goals/goal-creation-model";
 import { buildLoginHref } from "@/lib/auth/login-redirect";
 import { toLocalDateString } from "@/lib/dates/day";
 import {
   DEFAULT_GOAL_CATEGORIES,
   getCategorySelectionFromValue,
-  getCategoryValueForWrite,
 } from "@/lib/goals/category";
 import {
   fetchProgressContext,
@@ -24,7 +22,6 @@ import {
 } from "@/lib/goals/linked-goal-labels";
 import {
   buildMilestoneNameDrafts,
-  normalizeMilestoneNamesForSave,
 } from "@/lib/goals/milestones";
 import { isPlannerTaskCreateKind, type GoalCreateKind } from "@/lib/goals/form-options";
 import type { Goal, GoalLink } from "@/lib/goals/types";
@@ -37,7 +34,6 @@ import {
   applyGoalFormCreateKindChange,
   defaultGoalFormState,
   toGoalCreationFields,
-  type GoalFormGoalArgs,
   type GoalFormState,
 } from "@/features/today/goal-form-model";
 
@@ -307,63 +303,5 @@ export function useGoalFormState(goalId?: string) {
     validationError,
     validationWarning,
     supabase,
-  };
-}
-
-export function buildGoalMutationArgs({
-  state,
-  goalId,
-  stableCreateGoalId,
-  recoveryGoalArgs,
-}: {
-  state: GoalFormState;
-  goalId?: string;
-  stableCreateGoalId: string | null;
-  recoveryGoalArgs?: GoalFormGoalArgs;
-}): GoalFormGoalArgs {
-  if (recoveryGoalArgs) {
-    return recoveryGoalArgs;
-  }
-
-  const resolvedTargetCountForSave = resolveGoalCreationTargetCountForSave(state);
-  const targetCountForSave =
-    resolvedTargetCountForSave === null ? undefined : resolvedTargetCountForSave;
-  const milestoneNames =
-    state.frequency_type === "fixed_milestones" && resolvedTargetCountForSave !== null
-      ? normalizeMilestoneNamesForSave(
-          resolvedTargetCountForSave,
-          state.milestone_names
-        )
-      : undefined;
-  const categoryValue = getCategoryValueForWrite(
-    state.category_selection,
-    state.custom_category
-  );
-
-  return {
-    p_id: goalId ?? stableCreateGoalId ?? crypto.randomUUID(),
-    p_title: state.title.trim(),
-    p_description: state.description.trim() || undefined,
-    p_reward_text: state.reward_text.trim() || undefined,
-    p_category: categoryValue.category,
-    p_category_key: categoryValue.categoryKey,
-    p_color: state.color,
-    p_frequency_type: state.frequency_type,
-    p_recurrence_interval:
-      state.frequency_type === "recurring" ? state.recurrence_interval : undefined,
-    p_difficulty: state.difficulty,
-    p_target_count:
-      state.frequency_type === "fixed_milestones" ||
-      state.frequency_type === "recurring"
-        ? targetCountForSave
-        : undefined,
-    p_target_basis:
-      state.frequency_type === "recurring" ? state.target_basis : undefined,
-    p_milestone_names: milestoneNames,
-    p_start_date: state.start_date,
-    p_end_date: state.end_date || undefined,
-    p_default_local_time: state.default_local_time.trim() || undefined,
-    p_team_id: state.team_id ?? undefined,
-    p_is_private: state.team_id ? false : state.is_private,
   };
 }
