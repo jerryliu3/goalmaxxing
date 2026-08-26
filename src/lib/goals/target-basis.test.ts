@@ -34,6 +34,11 @@ function goal(
 }
 
 describe("resolveGoalTargetBasis", () => {
+  it("prefers stored target_basis over legacy inference", () => {
+    expect(resolveGoalTargetBasis(goal("weekly", 8, "period"))).toBe("period");
+    expect(resolveGoalTargetBasis(goal("daily", 2, "lifetime"))).toBe("lifetime");
+  });
+
   it("uses recurrence-aware period thresholds for legacy goals without a basis", () => {
     const cases = [
       ["daily", 1, "period"],
