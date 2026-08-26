@@ -23,10 +23,6 @@ interface GoalCardProps {
   linkedCount: number;
   imageUrl?: string;
   selectedDate: string;
-  referenceDate: Date;
-  weeklyAnchor: {
-    weekStartsOn: number;
-  };
   disabled?: boolean;
   archived?: boolean;
 }
@@ -48,7 +44,6 @@ export function GoalCard({
   linkedCount,
   imageUrl,
   selectedDate,
-  referenceDate,
   disabled = false,
   archived = false,
   readOnly = false,
