@@ -768,9 +768,9 @@ export function InsightsTab({
               onMonthCursorChange={setMonthCursor}
               viewMode={perGoalViewMode}
               onViewModeChange={setPerGoalViewMode}
-              showPastGoals={showHistoricalGoals}
-              pastGoalCount={historicalGoals.length}
-              onShowPastGoalsChange={setShowHistoricalGoals}
+              showEndedGoals={showHistoricalGoals}
+              endedGoalCount={historicalGoals.length}
+              onShowEndedGoalsChange={setShowHistoricalGoals}
               open={goalStatsFiltersOpen}
               onOpenChange={setGoalStatsFiltersOpen}
             />

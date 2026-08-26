@@ -19,9 +19,9 @@ describe("InsightsGoalStatsFilters", () => {
         onMonthCursorChange={vi.fn()}
         viewMode="month"
         onViewModeChange={onViewModeChange}
-        showPastGoals={false}
-        pastGoalCount={3}
-        onShowPastGoalsChange={vi.fn()}
+        showEndedGoals={false}
+        endedGoalCount={3}
+        onShowEndedGoalsChange={vi.fn()}
         open
         onOpenChange={vi.fn()}
       />
