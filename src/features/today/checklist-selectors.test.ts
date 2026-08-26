@@ -6,6 +6,7 @@ import {
   selectFilteredTodayGoals,
 } from "@/features/today/checklist-selectors";
 import type { Goal } from "@/lib/goals/types";
+import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 
 function goal(overrides: Partial<Goal> & Pick<Goal, "id" | "owner_id" | "title">): Goal {
   return {
@@ -178,7 +179,10 @@ describe("checklist selectors", () => {
       target_count: 3,
       start_date: "2026-08-01",
     });
-    const progressByGoal = new Map([
+    const progressByGoal = new Map<
+      string,
+      Pick<ProgressContextSummary, "outcome" | "achievementDate">
+    >([
       [
         "lifetime-goal",
         { outcome: "achieved", achievementDate: "2026-08-13" },
@@ -259,9 +263,10 @@ describe("checklist selectors", () => {
     const completionsByGoal = new Map([
       ["period-goal-default-target", [{ completed_on: "2026-08-13" }]],
     ]);
-    const progressByGoal = new Map([
-      ["period-goal-default-target", { outcome: "in_progress" }],
-    ]);
+    const progressByGoal = new Map<
+      string,
+      Pick<ProgressContextSummary, "outcome">
+    >([["period-goal-default-target", { outcome: "in_progress" }]]);
 
     expect(
       selectCompletedTargetGoalIds({

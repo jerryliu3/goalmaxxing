@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 import {
   projectChecklistPresentationsByGoalId,
-  type ChecklistGoalPresentation,
 } from "@/lib/goals/checklist-presentation";
 import { createChecklistTemporalContext } from "@/lib/goals/period-domain";
 import type { CompletionDateFact, Goal } from "@/lib/goals/types";
@@ -47,7 +46,7 @@ export function useChecklistProjection({
   const greenGoalIds = useMemo(() => {
     const ids = new Set<string>();
     for (const [goalId, presentation] of presentationByGoalId) {
-      if (presentation.shouldSortToBottom) {
+      if (presentation.isGreen) {
         ids.add(goalId);
       }
     }
@@ -55,12 +54,7 @@ export function useChecklistProjection({
   }, [presentationByGoalId]);
 
   return {
-    temporal,
     presentationByGoalId,
     greenGoalIds,
-  } satisfies {
-    temporal: ReturnType<typeof createChecklistTemporalContext>;
-    presentationByGoalId: Map<string, ChecklistGoalPresentation>;
-    greenGoalIds: Set<string>;
   };
 }

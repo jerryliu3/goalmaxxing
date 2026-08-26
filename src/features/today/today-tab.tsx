@@ -420,6 +420,15 @@ export function TodayTab({
       weeklyAnchor,
     });
 
+    if (!intent.allowed) {
+      toast.error(
+        intent.disabledReason === "future_creation"
+          ? "You can only complete goals for today or past dates."
+          : "This completion cannot be changed from this date."
+      );
+      return;
+    }
+
     setSavingGoalId(goal.id);
     const currentScrollY = window.scrollY;
     const { decision, mutation } = intent;
@@ -481,8 +490,6 @@ export function TodayTab({
           disabled={archived || savingGoalId === goal.id}
           archived={archived}
           selectedDate={viewDate}
-          referenceDate={viewDateObj}
-          weeklyAnchor={weeklyAnchor}
           {...(readOnly
             ? { readOnly: true as const }
             : {
@@ -503,7 +510,6 @@ export function TodayTab({
       savingGoalId,
       toggleCompletion,
       viewDate,
-      viewDateObj,
       weeklyAnchor,
     ]
   );
