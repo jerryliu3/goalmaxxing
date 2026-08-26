@@ -31,6 +31,7 @@ insert into public.goals (
   frequency_type,
   recurrence_interval,
   target_count,
+  target_basis,
   start_date,
   end_date
 )
@@ -45,6 +46,7 @@ values
     'recurring',
     'weekly',
     1,
+    'lifetime',
     date_trunc('month', current_date)::date,
     (date_trunc('month', current_date) + interval '2 month - 1 day')::date
   );

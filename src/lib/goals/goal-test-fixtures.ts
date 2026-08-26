@@ -1,5 +1,21 @@
 import type { Goal } from "@/lib/goals/types";
 
+export function withLifetimeTargetBasisForTests(
+  goal: Goal,
+  overrides: Partial<Goal> = {}
+): Goal {
+  if (
+    goal.frequency_type === "recurring" &&
+    typeof goal.target_count === "number" &&
+    goal.target_count > 0 &&
+    overrides.target_basis === undefined &&
+    goal.target_basis === undefined
+  ) {
+    return { ...goal, target_basis: "lifetime" };
+  }
+  return goal;
+}
+
 export function buildGoal(overrides: Partial<Goal> = {}): Goal {
   return {
     id: "goal-1",

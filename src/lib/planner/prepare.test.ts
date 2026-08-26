@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Completion, Goal } from "@/lib/goals/types";
+import { withLifetimeTargetBasisForTests } from "@/lib/goals/goal-test-fixtures";
 import { getAnchoredPeriod } from "@/lib/goals/periods";
 import { canonicalHash } from "@/lib/planner/canonical";
 import { MAX_GOAL_TARGET_COUNT } from "@/lib/planner/contracts/bounds";
@@ -66,7 +67,7 @@ import {
 } from "@/lib/planner/prepare";
 
 function goal(overrides: Partial<Goal> = {}): Goal {
-  return {
+  const built = {
     id: "22222222-2222-4222-8222-222222222222",
     owner_id: OWNER_ID,
     title: "Launch",
@@ -87,7 +88,8 @@ function goal(overrides: Partial<Goal> = {}): Goal {
     created_at: "2026-08-01T00:00:00.000Z",
     updated_at: "2026-08-01T00:00:00.000Z",
     ...overrides,
-  };
+  } as Goal;
+  return withLifetimeTargetBasisForTests(built, overrides);
 }
 
 function persistedItem(

@@ -1,10 +1,18 @@
 import type { GoalFrequencyType, GoalTargetBasis, RecurrenceInterval } from "@/lib/goals/types";
-import { compareDateStrings } from "@/lib/goals/periods";
+import {
+  compareDateStrings,
+  getAnchoredPeriod,
+} from "@/lib/goals/periods";
 import {
   MAX_GOAL_TARGET_COUNT,
   MAX_HORIZON_MONTHS,
 } from "@/lib/planner/contracts/bounds";
-import { enumerateDates, enumerateMonthsInWindow, getUtcWeekday } from "@/lib/planner/dates";
+import {
+  enumerateDates,
+  enumerateMonthsInWindow,
+  getUtcWeekday,
+} from "@/lib/planner/dates";
+import { resolveGoalTargetBasisFromInput } from "@/lib/goals/target-basis";
 
 export interface GoalDefinitionValidationInput {
   frequencyType: GoalFrequencyType;
@@ -26,6 +34,7 @@ export type GoalDefinitionValidationCode =
   | "invalid_date_range"
   | "horizon_too_long"
   | "target_exceeds_limit"
+  | "target_exceeds_period_limit"
   | "target_exceeds_capacity";
 
 export interface GoalDefinitionValidationIssue {
@@ -59,6 +68,44 @@ export function countAvailableDays(
   return available;
 }
 
+function countMinimumAvailableDaysPerPeriod(
+  {
+    start,
+    end,
+  }: {
+    start: string;
+    end: string;
+  },
+  interval: RecurrenceInterval,
+  capacity: GoalCapacityInput
+) {
+  const availableByPeriod = new Map<string, number>();
+  const restWeekdays = new Set(capacity.restWeekdays);
+
+  for (const date of enumerateDates({ start, end })) {
+    const period = getAnchoredPeriod(start, interval, date);
+    if (!availableByPeriod.has(period.periodKey)) {
+      availableByPeriod.set(period.periodKey, 0);
+    }
+    if (restWeekdays.has(getUtcWeekday(date))) {
+      continue;
+    }
+    const blocked = capacity.blackoutRanges.some(
+      (range) =>
+        compareDateStrings(date, range.start) >= 0 &&
+        compareDateStrings(date, range.end) <= 0
+    );
+    if (!blocked) {
+      availableByPeriod.set(
+        period.periodKey,
+        (availableByPeriod.get(period.periodKey) ?? 0) + 1
+      );
+    }
+  }
+
+  return Math.min(...availableByPeriod.values());
+}
+
 function isIsoDate(value: string | null): value is string {
   if (typeof value !== "string") {
     return false;
@@ -74,23 +121,15 @@ function isIsoDate(value: string | null): value is string {
 function resolveTargetBasis(
   input: Pick<
     GoalDefinitionValidationInput,
-    "frequencyType" | "targetCount" | "targetBasis"
+    "frequencyType" | "recurrenceInterval" | "targetCount" | "targetBasis"
   >
 ): GoalTargetBasis {
-  if (input.targetBasis) {
-    return input.targetBasis;
-  }
-  if (input.frequencyType === "fixed_milestones") {
-    return "lifetime";
-  }
-  if (
-    input.frequencyType === "recurring" &&
-    typeof input.targetCount === "number" &&
-    input.targetCount > 0
-  ) {
-    return "lifetime";
-  }
-  return "period";
+  return resolveGoalTargetBasisFromInput({
+    frequencyType: input.frequencyType,
+    recurrenceInterval: input.recurrenceInterval,
+    targetCount: input.targetCount,
+    targetBasis: input.targetBasis,
+  }).basis;
 }
 
 function maxPeriodTarget(interval: RecurrenceInterval | null | undefined) {
@@ -106,7 +145,7 @@ function maxPeriodTarget(interval: RecurrenceInterval | null | undefined) {
 export function isOrdinalGoalDefinition(
   input: Pick<
     GoalDefinitionValidationInput,
-    "frequencyType" | "targetCount" | "targetBasis"
+    "frequencyType" | "recurrenceInterval" | "targetCount" | "targetBasis"
   >
 ) {
   if (input.frequencyType === "fixed_milestones") {
@@ -206,21 +245,18 @@ export function validateGoalDefinition(
     return issues;
   }
 
-  if (periodTarget !== null && input.capacity) {
+  if (periodTarget !== null) {
     const periodMax = maxPeriodTarget(input.recurrenceInterval);
     if (periodTarget > periodMax) {
       issues.push({
-        code: "target_exceeds_capacity",
+        code: "target_exceeds_period_limit",
         message: `Target cannot exceed ${periodMax} completions for this period length.`,
       });
     }
   }
 
   const planningEndDate = resolveGoalPlanningEndDate({ ...input, targetBasis });
-  if (!isIsoDate(input.startDate) || !isOrdinalGoal) {
-    return issues;
-  }
-  if (!isIsoDate(planningEndDate)) {
+  if (!isIsoDate(input.startDate) || !isIsoDate(planningEndDate)) {
     return issues;
   }
   if (compareDateStrings(input.startDate, planningEndDate) > 0) {
@@ -230,6 +266,37 @@ export function validateGoalDefinition(
     });
     return issues;
   }
+
+  const windowStart =
+    input.asOfDate &&
+    isIsoDate(input.asOfDate) &&
+    compareDateStrings(input.asOfDate, input.startDate) > 0
+      ? input.asOfDate
+      : input.startDate;
+  if (
+    input.capacity &&
+    periodTarget !== null &&
+    input.recurrenceInterval &&
+    isIsoDate(windowStart) &&
+    compareDateStrings(windowStart, planningEndDate) <= 0
+  ) {
+    const available = countMinimumAvailableDaysPerPeriod(
+      { start: windowStart, end: planningEndDate },
+      input.recurrenceInterval,
+      input.capacity
+    );
+    if (periodTarget > available) {
+      issues.push({
+        code: "target_exceeds_capacity",
+        message: `Only ${available} available days in at least one ${input.recurrenceInterval} period before ${planningEndDate} with your current rest days and blackout ranges — ${periodTarget} sessions likely won't all fit.`,
+      });
+    }
+  }
+
+  if (!isOrdinalGoal) {
+    return issues;
+  }
+
   const monthSpan = enumerateMonthsInWindow({
     start: input.startDate,
     end: planningEndDate,
@@ -245,10 +312,6 @@ export function validateGoalDefinition(
     !exceedsTargetLimit &&
     typeof input.targetCount === "number"
   ) {
-    const windowStart =
-      input.asOfDate && compareDateStrings(input.asOfDate, input.startDate) > 0
-        ? input.asOfDate
-        : input.startDate;
     const available = countAvailableDays(
       { start: windowStart, end: planningEndDate },
       input.capacity
@@ -261,4 +324,23 @@ export function validateGoalDefinition(
     }
   }
   return issues;
+}
+
+export function resolveGoalDefinitionValidationFeedback(
+  issues: GoalDefinitionValidationIssue[]
+): { validationError: string | null; validationWarning: string | null } {
+  const blockingIssue = issues.find(
+    (issue) => issue.code !== "target_exceeds_capacity"
+  );
+  if (blockingIssue) {
+    return { validationError: blockingIssue.message, validationWarning: null };
+  }
+
+  const warningIssue = issues.find(
+    (issue) => issue.code === "target_exceeds_capacity"
+  );
+  return {
+    validationError: null,
+    validationWarning: warningIssue?.message ?? null,
+  };
 }

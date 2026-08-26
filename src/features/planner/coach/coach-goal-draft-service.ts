@@ -1,26 +1,49 @@
 "use client";
 
 import {
+  type PreparedBulkGoalRow,
   type BulkGoalDraft,
-  type LlmGoalDraftPayload,
   buildBulkGoalDraftsFromLlmGoals,
-  prepareBulkGoalRows,
 } from "@/features/goals/bulk-goal-drafts";
-import { ApiClientError, postJson } from "@/lib/api/client";
+import { parseLlmGoalDraftsFromPrompt } from "@/features/goals/bulk-goal-parse";
+import {
+  type BulkGoalLinkRecovery,
+  type BulkGoalLinkRow,
+  BulkGoalPersistenceError,
+  persistBulkGoalDrafts,
+  retryBulkGoalCreation,
+  retryBulkGoalLinks,
+} from "@/features/goals/bulk-goal-persistence";
+import { ApiClientError } from "@/lib/api/client";
 import { createClient } from "@/lib/supabase/client";
 
 export const MAX_COACH_GOAL_DRAFTS = 5;
-const COACH_GOAL_DRAFT_PARSE_TIMEOUT_MS = 45_000;
 
 export class CoachGoalDraftServiceError extends Error {
   readonly code: string;
+  readonly preparedRows?: PreparedBulkGoalRow[];
+  readonly linkRecovery?: BulkGoalLinkRecovery;
 
-  constructor(code: string, message: string) {
+  constructor(
+    code: string,
+    message: string,
+    preparedRows?: PreparedBulkGoalRow[],
+    linkRecovery?: BulkGoalLinkRecovery
+  ) {
     super(message);
     this.name = "CoachGoalDraftServiceError";
     this.code = code;
+    this.preparedRows = preparedRows;
+    this.linkRecovery = linkRecovery;
   }
 }
+
+export type CoachGoalDraftCreationResult =
+  {
+    status: "created";
+    createdCount: number;
+    linkErrorMessage: null;
+  };
 
 export async function parseCoachGoalDrafts({
   parserPrompt,
@@ -30,16 +53,10 @@ export async function parseCoachGoalDrafts({
   timezone: string;
 }) {
   try {
-    const payload = await postJson<{
-      goals?: LlmGoalDraftPayload[];
-      warnings?: string[];
-    }>("/api/bulk-goals/parse", {
+    const { goals, warnings } = await parseLlmGoalDraftsFromPrompt({
       prompt: parserPrompt,
       timezone,
-    }, {
-      timeoutMs: COACH_GOAL_DRAFT_PARSE_TIMEOUT_MS,
     });
-    const goals = payload.goals ?? [];
     if (goals.length === 0) {
       throw new CoachGoalDraftServiceError(
         "no_goals",
@@ -54,7 +71,7 @@ export async function parseCoachGoalDrafts({
     }
     return {
       drafts: buildBulkGoalDraftsFromLlmGoals(goals),
-      warnings: payload.warnings ?? [],
+      warnings,
     };
   } catch (error) {
     if (error instanceof CoachGoalDraftServiceError) {
@@ -72,38 +89,79 @@ export async function parseCoachGoalDrafts({
 
 export async function createCoachGoalDrafts({
   drafts,
+  preparedRows,
+  onGoalsPersisted,
+  onLinksPersisted,
 }: {
   drafts: BulkGoalDraft[];
+  preparedRows?: PreparedBulkGoalRow[];
+  onGoalsPersisted?: (preparedRows: PreparedBulkGoalRow[]) => void;
+  onLinksPersisted?: (preparedRows: PreparedBulkGoalRow[]) => void;
 }) {
   const selectedDrafts = drafts.filter((draft) => draft.include);
-  if (selectedDrafts.length === 0) {
-    throw new CoachGoalDraftServiceError(
-      "no_selected_goals",
-      "Select at least one goal draft to create."
-    );
-  }
   if (selectedDrafts.length > MAX_COACH_GOAL_DRAFTS) {
     throw new CoachGoalDraftServiceError(
       "too_many_goals",
       `Create no more than ${MAX_COACH_GOAL_DRAFTS} goals at once.`
     );
   }
-  if (selectedDrafts.some((draft) => draft.errors.length > 0)) {
-    throw new CoachGoalDraftServiceError(
-      "invalid_goals",
-      "Fix validation issues before creating these goals."
-    );
-  }
 
-  const preparedRows = prepareBulkGoalRows(selectedDrafts);
-  const { error } = await createClient().rpc("create_goals", {
-    p_goals: preparedRows.map(({ row }) => row),
-  });
-  if (error) {
-    throw new CoachGoalDraftServiceError(
-      "create_failed",
-      error.message ?? "Failed to create goals."
-    );
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  try {
+    const result = preparedRows
+      ? await retryBulkGoalCreation({
+          preparedRows,
+          supabase,
+          onGoalsPersisted,
+          onLinksPersisted,
+        })
+      : await persistBulkGoalDrafts({
+          drafts: selectedDrafts,
+          currentUserId: user?.id ?? null,
+          supabase,
+          onGoalsPersisted,
+          onLinksPersisted,
+        });
+    return {
+      status: "created",
+      createdCount: result.createdCount,
+      linkErrorMessage: null,
+    } satisfies CoachGoalDraftCreationResult;
+  } catch (error) {
+    if (error instanceof BulkGoalPersistenceError) {
+      throw new CoachGoalDraftServiceError(
+        error.code,
+        error.message,
+        error.preparedRows,
+        error.linkRecovery
+      );
+    }
+    throw error;
   }
-  return { createdCount: preparedRows.length };
+}
+
+export async function retryCoachGoalDraftLinks({
+  linkRows,
+  onLinksPersisted,
+}: {
+  linkRows: BulkGoalLinkRow[];
+  onLinksPersisted?: () => void;
+}): Promise<{ status: "created" }> {
+  try {
+    const result = await retryBulkGoalLinks({
+      linkRows,
+      supabase: createClient(),
+    });
+    onLinksPersisted?.();
+    return result;
+  } catch (error) {
+    if (error instanceof BulkGoalPersistenceError) {
+      throw new CoachGoalDraftServiceError(error.code, error.message);
+    }
+    throw error;
+  }
 }

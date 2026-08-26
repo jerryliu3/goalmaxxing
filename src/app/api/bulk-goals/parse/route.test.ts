@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { resetRateLimitBucketsForTests } from "@/lib/api/rate-limit";
 import { resetEnvCacheForTests } from "@/lib/env";
 
 const mocks = vi.hoisted(() => ({
@@ -42,6 +43,7 @@ function request(body: unknown) {
 
 describe("bulk goal parser route", () => {
   beforeEach(() => {
+    resetRateLimitBucketsForTests();
     mocks.getUser.mockResolvedValue({
       data: { user: { id: "11111111-1111-4111-8111-111111111111" } },
       error: null,
@@ -816,34 +818,10 @@ describe("bulk goal parser route", () => {
     expect(JSON.stringify(body)).not.toContain("provider-secret");
   });
 
-  it("retries without response schema when provider rejects schema arguments", async () => {
+  it("skips provider response schema and relies on prompt plus Zod validation", async () => {
     const fetchSpy = vi
       .fn()
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            error: {
-              code: 400,
-              message: "Request contains an invalid argument.",
-              status: "INVALID_ARGUMENT",
-            },
-          }),
-          { status: 400 }
-        )
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            error: {
-              code: 400,
-              message: "Request contains an invalid argument.",
-              status: "INVALID_ARGUMENT",
-            },
-          }),
-          { status: 400 }
-        )
-      )
-      .mockResolvedValueOnce(
+      .mockResolvedValue(
         new Response(
           JSON.stringify({
             candidates: [
@@ -873,16 +851,12 @@ describe("bulk goal parser route", () => {
     await expect(response.json()).resolves.toMatchObject({
       goals: [{ title: "Read every day" }],
     });
-    expect(fetchSpy).toHaveBeenCalledTimes(3);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
 
     const firstBody = JSON.parse(
       String((fetchSpy.mock.calls[0]?.[1] as RequestInit | undefined)?.body ?? "")
     ) as { generationConfig?: { responseSchema?: unknown } };
-    const thirdBody = JSON.parse(
-      String((fetchSpy.mock.calls[2]?.[1] as RequestInit | undefined)?.body ?? "")
-    ) as { generationConfig?: { responseSchema?: unknown } };
-    expect(firstBody.generationConfig?.responseSchema).toBeDefined();
-    expect(thirdBody.generationConfig?.responseSchema).toBeUndefined();
+    expect(firstBody.generationConfig?.responseSchema).toBeUndefined();
   });
 
   it("guides training-plan prompts toward milestones in schema and instructions", async () => {
@@ -942,10 +916,220 @@ describe("bulk goal parser route", () => {
     expect(promptText).toContain(
       "Never create one goal per workout, session, or date."
     );
-    expect(
-      firstBody.generationConfig?.responseSchema?.properties?.goals?.items
-        ?.properties
-    ).toHaveProperty("milestone_names");
+    expect(promptText).toContain('\"milestone_names\"');
+    expect(firstBody.generationConfig?.responseSchema).toBeUndefined();
+  });
+
+  async function parseMockGoals(goals: unknown[]) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            candidates: [
+              {
+                content: {
+                  parts: [{ text: JSON.stringify({ goals }) }],
+                },
+              },
+            ],
+          }),
+          { status: 200 }
+        )
+      )
+    );
+
+    const response = await POST(
+      request({ prompt: "Create goals from fixture.", timezone: "UTC" })
+    );
+    expect(response.status).toBe(200);
+    return (await response.json()) as {
+      goals: Array<Record<string, unknown>>;
+      warnings?: string[];
+    };
+  }
+
+  it("infers period basis when target_basis is omitted for per-period counts", async () => {
+    const payload = await parseMockGoals([
+      {
+        title: "Strength training",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_count: 3,
+        start_date: "2026-08-17",
+        end_date: "2026-10-12",
+      },
+    ]);
+
+    expect(payload.goals[0]).toMatchObject({
+      target_basis: "period",
+      target_count: 3,
+    });
+    expect(payload.warnings ?? []).toEqual([]);
+  });
+
+  it("preserves explicit period and lifetime target_basis from model output", async () => {
+    const periodPayload = await parseMockGoals([
+      {
+        title: "Weekly planning",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "period",
+        target_count: 2,
+        start_date: "2026-08-17",
+      },
+    ]);
+    const lifetimePayload = await parseMockGoals([
+      {
+        title: "Presentation practice",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "lifetime",
+        target_count: 12,
+        start_date: "2026-08-17",
+        end_date: "2026-10-15",
+      },
+    ]);
+
+    expect(periodPayload.goals[0]).toMatchObject({
+      target_basis: "period",
+      target_count: 2,
+    });
+    expect(lifetimePayload.goals[0]).toMatchObject({
+      target_basis: "lifetime",
+      target_count: 12,
+    });
+  });
+
+  it("defaults empty recurring period targets to 1", async () => {
+    const payload = await parseMockGoals([
+      {
+        title: "Daily meditation",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "period",
+        target_count: null,
+        start_date: "2026-08-17",
+      },
+    ]);
+
+    expect(payload.goals[0]).toMatchObject({
+      target_basis: "period",
+      target_count: 1,
+    });
+  });
+
+  it("accepts max weekly and monthly period targets without warnings", async () => {
+    const weeklyPayload = await parseMockGoals([
+      {
+        title: "Weekly max",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "period",
+        target_count: 7,
+        start_date: "2026-08-17",
+      },
+    ]);
+    const monthlyPayload = await parseMockGoals([
+      {
+        title: "Monthly max",
+        frequency_type: "recurring",
+        recurrence_interval: "monthly",
+        target_basis: "period",
+        target_count: 31,
+        start_date: "2026-08-17",
+      },
+    ]);
+
+    expect(weeklyPayload.warnings ?? []).toEqual([]);
+    expect(monthlyPayload.warnings ?? []).toEqual([]);
+  });
+
+  it("warns on over-limit period targets and missing lifetime totals", async () => {
+    const weeklyOver = await parseMockGoals([
+      {
+        title: "Too many weekly sessions",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "period",
+        target_count: 8,
+        start_date: "2026-08-17",
+      },
+    ]);
+    const monthlyOver = await parseMockGoals([
+      {
+        title: "Too many monthly sessions",
+        frequency_type: "recurring",
+        recurrence_interval: "monthly",
+        target_basis: "period",
+        target_count: 32,
+        start_date: "2026-08-17",
+      },
+    ]);
+    const missingLifetime = await parseMockGoals([
+      {
+        title: "Lifetime without target",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "lifetime",
+        target_count: null,
+        start_date: "2026-08-17",
+        end_date: "2026-10-15",
+      },
+    ]);
+
+    expect(weeklyOver.warnings?.[0]).toContain(
+      "Target cannot exceed 7 completions for this period length."
+    );
+    expect(monthlyOver.warnings?.[0]).toContain(
+      "Target cannot exceed 31 completions for this period length."
+    );
+    expect(missingLifetime.warnings?.[0]).toContain(
+      "Total target completions requires a positive target."
+    );
+  });
+
+  it("preserves non-empty invalid generated dates and reports warnings", async () => {
+    const payload = await parseMockGoals([
+      {
+        title: "Bad dates",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_count: 2,
+        start_date: "not-a-date",
+        end_date: "2026-02-30",
+      },
+    ]);
+
+    expect(payload.goals[0]).toMatchObject({
+      start_date: "not-a-date",
+      end_date: "2026-02-30",
+    });
+    expect(payload.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("Start date must be a valid date."),
+        expect.stringContaining("End date must be a valid date."),
+      ])
+    );
+  });
+
+  it("applies fixed-milestone defaults when target_count is omitted", async () => {
+    const payload = await parseMockGoals([
+      {
+        title: "Launch checklist",
+        frequency_type: "fixed_milestones",
+        start_date: "2026-08-17",
+        end_date: "2026-09-13",
+        milestone_names: ["Scope", "Build", "Ship"],
+      },
+    ]);
+
+    expect(payload.goals[0]).toMatchObject({
+      frequency_type: "fixed_milestones",
+      target_count: 3,
+      milestone_names: ["Scope", "Build", "Ship"],
+    });
+    expect(payload.goals[0]?.target_basis).toBeUndefined();
   });
 
   it("uses DB-backed category keys in generated output validation", async () => {

@@ -1,12 +1,5 @@
 "use client";
 
-import {
-  ChevronDown,
-  ChevronUp,
-  LoaderCircle,
-  Sparkles,
-  Trash2,
-} from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
 import {
@@ -19,73 +12,39 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { LoadingCard } from "@/components/ui/loading-card";
-import { Textarea } from "@/components/ui/textarea";
-import { TooltipIcon } from "@/components/ui/tooltip-icon";
 import {
   type BulkGoalDraft,
-  type LlmGoalDraftPayload,
   buildBulkGoalDraftFromRow,
   buildBulkGoalDraftsFromLlmGoals,
-  bulkGoalDraftRequiresEndDate,
-  normalizeBulkGoalLocalTime,
-  parseBulkGoalTargetCount,
-  prepareBulkGoalRows,
-  withValidatedBulkGoalDraft,
 } from "@/features/goals/bulk-goal-drafts";
+import { parseLlmGoalDraftsFromPrompt } from "@/features/goals/bulk-goal-parse";
+import { BulkGoalDraftReview } from "@/features/goals/bulk-goal-draft-review";
 import {
-  CategorySelect,
-  GoalTypeToggle,
-  RecurrenceIntervalToggle,
-  TargetCountField,
-} from "@/features/goals/goal-field-kit";
-import { GoalLinkTargetSelect } from "@/features/goals/goal-link-target-select";
-import { MilestoneNameFields } from "@/features/goals/milestone-name-fields";
+  type BulkGoalLinkRecovery,
+  BulkGoalPersistenceError,
+  persistBulkGoalDrafts,
+  retryBulkGoalCreation,
+  retryBulkGoalLinks,
+} from "@/features/goals/bulk-goal-persistence";
+import type { PreparedBulkGoalRow } from "@/features/goals/bulk-goal-drafts";
 import {
   buildStarterPackRows,
   resolveStarterPackKey,
 } from "@/features/goals/starter-packs";
-import {
-  GoalDateRangeFields,
-  GoalDefaultTimeField,
-} from "@/features/goals/goal-schedule-fields";
 import { BulkGoalInputCard } from "@/features/today/bulk-goal-input-card";
 import { type BulkInputMode } from "@/features/today/bulk-goal-types";
-import { getApiErrorMessage, postJson } from "@/lib/api/client";
+import { getApiErrorMessage } from "@/lib/api/client";
 import { buildLoginHref } from "@/lib/auth/login-redirect";
 import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 import { toLocalDateString } from "@/lib/dates/day";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
 import {
-  type CategorySelection,
-  getCategorySwatchColor,
-} from "@/lib/goals/category";
-import {
   fetchProgressContext,
   progressSummaryMap,
 } from "@/lib/goals/progress-context";
-import {
-  getLinkedGoalDeadlineLabel,
-  getLinkedGoalRecurrenceLabel,
-} from "@/lib/goals/linked-goal-labels";
-import { isPlannerTaskCreateKind } from "@/lib/goals/form-options";
-import { buildMilestoneNameDrafts } from "@/lib/goals/milestones";
 import type { Goal } from "@/lib/goals/types";
 import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
 
 interface BulkGoalFormProps {
   showBackButton?: boolean;
@@ -93,10 +52,9 @@ interface BulkGoalFormProps {
   onExit?: () => void;
 }
 
-const csvExample = `title,description,category,color,frequency_type,recurrence_interval,target_count,milestone_names,start_date,end_date,default_local_time
-Morning run,Train for a half marathon,Health,#16a34a,recurring,daily,20,,2026-06-01,2026-12-31,06:45
-Read 12 books,One book per month,Personal,#6366f1,fixed,,12,Book 1|Book 2|Book 3,2026-06-01,2026-12-31,`;
-const BULK_GOAL_PARSE_TIMEOUT_MS = 45_000;
+const csvExample = `title,description,category,color,frequency_type,recurrence_interval,target_basis,target_count,milestone_names,start_date,end_date,default_local_time
+Morning run,Train for a half marathon,Health,#16a34a,recurring,weekly,period,3,,2026-06-01,2026-12-31,06:45
+Read 12 books,One book per month,Personal,#6366f1,fixed,,lifetime,12,Book 1|Book 2|Book 3,2026-06-01,2026-12-31,`;
 
 async function parseRowsFromCsvText(csvText: string): Promise<Record<string, unknown>[]> {
   const XLSX = await import("xlsx");
@@ -154,7 +112,10 @@ export function BulkGoalForm({
   const [parsing, setParsing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [drafts, setDrafts] = useState<BulkGoalDraft[]>([]);
-  const [expandedDraftId, setExpandedDraftId] = useState<string | null>(null);
+  const [linkRecovery, setLinkRecovery] = useState<BulkGoalLinkRecovery | null>(null);
+  const [createRecovery, setCreateRecovery] = useState<{
+    preparedRows: PreparedBulkGoalRow[];
+  } | null>(null);
   const [availableGoals, setAvailableGoals] = useState<Goal[]>([]);
   const appliedStarterPackRef = useRef<string | null>(null);
 
@@ -216,21 +177,6 @@ export function BulkGoalForm({
     [selectedDrafts]
   );
 
-  const updateDraft = (
-    draftId: string,
-    updater: (draft: Omit<BulkGoalDraft, "errors">) => Omit<BulkGoalDraft, "errors">
-  ) => {
-    setDrafts((previous) =>
-      previous.map((draft) => {
-        if (draft.id !== draftId) {
-          return draft;
-        }
-
-        return withValidatedBulkGoalDraft(updater(draft));
-      })
-    );
-  };
-
   const loadDraftsFromRows = useCallback((rows: Record<string, unknown>[]) => {
     if (rows.length === 0) {
       toast.error("No rows found. Include a header row and at least one goal.");
@@ -241,7 +187,6 @@ export function BulkGoalForm({
       buildBulkGoalDraftFromRow(row, index)
     );
     setDrafts(nextDrafts);
-    setExpandedDraftId(null);
     toast.success(`Loaded ${nextDrafts.length} goal draft${nextDrafts.length === 1 ? "" : "s"}.`);
   }, []);
 
@@ -289,24 +234,11 @@ export function BulkGoalForm({
 
     setParsing(true);
     try {
-      const payload = await postJson<{
-        goals?: LlmGoalDraftPayload[];
-        warnings?: string[];
-        code?: string;
-        message?: string;
-        correlationId?: string;
-      }>(
-        "/api/bulk-goals/parse",
-        {
-          prompt: trimmed,
-          timezone: resolveUserTimezone(),
-        },
-        {
-          timeoutMs: BULK_GOAL_PARSE_TIMEOUT_MS,
-        }
-      );
+      const { goals, warnings } = await parseLlmGoalDraftsFromPrompt({
+        prompt: trimmed,
+        timezone: resolveUserTimezone(),
+      });
 
-      const goals = payload.goals ?? [];
       if (goals.length === 0) {
         toast.error("No goals found in that prompt. Try adding more detail.");
         return;
@@ -314,15 +246,14 @@ export function BulkGoalForm({
 
       const nextDrafts = buildBulkGoalDraftsFromLlmGoals(goals);
       setDrafts(nextDrafts);
-      setExpandedDraftId(null);
       toast.success(
         `Loaded ${nextDrafts.length} goal draft${nextDrafts.length === 1 ? "" : "s"}.`
       );
-      if (payload.warnings && payload.warnings.length > 0) {
+      if (warnings.length > 0) {
         toast.warning(
-          payload.warnings.length === 1
-            ? payload.warnings[0]
-            : `${payload.warnings.length} generated drafts need edits before saving.`
+          warnings.length === 1
+            ? warnings[0]
+            : `${warnings.length} generated drafts need edits before saving.`
         );
       }
     } catch (error) {
@@ -355,6 +286,13 @@ export function BulkGoalForm({
     setUploadedFile(event.target.files?.[0] ?? null);
   };
 
+  const finishCreatedGoals = (createdCount: number) => {
+    toast.success(
+      `Created ${createdCount} goal${createdCount === 1 ? "" : "s"}.`
+    );
+    completeAndExit();
+  };
+
   const createSelectedGoals = async () => {
     if (!currentUserId) {
       toast.error("You must be logged in.");
@@ -373,73 +311,58 @@ export function BulkGoalForm({
 
     setSaving(true);
     try {
-      const preparedRows = prepareBulkGoalRows(selectedDrafts);
-
-      const { error } = await supabase.rpc("create_goals", {
-        p_goals: preparedRows.map((entry) => entry.row),
-      });
-      if (error) {
-        toast.error(error.message ?? "Failed to create bulk goals.");
+      if (linkRecovery) {
+        await retryBulkGoalLinks({
+          linkRows: linkRecovery.linkRows,
+          supabase,
+          onLinksPersisted: invalidatePlannerRelatedTabCaches,
+        });
+        setLinkRecovery(null);
+        await finishCreatedGoals(linkRecovery.preparedRows.length);
         return;
       }
 
-      const linkRows = preparedRows
-        .filter(
-          ({ draft }) => draft.linked_target_goal_id && draft.linked_target_goal_id !== "none"
-        )
-        .map(({ draft, goalId }) => ({
-          source_goal_id: goalId,
-          target_goal_id: draft.linked_target_goal_id,
-        }));
+      const result = createRecovery
+        ? await retryBulkGoalCreation({
+            preparedRows: createRecovery.preparedRows,
+            supabase,
+            onGoalsPersisted: invalidatePlannerRelatedTabCaches,
+            onLinksPersisted: invalidatePlannerRelatedTabCaches,
+          })
+        : await persistBulkGoalDrafts({
+            drafts: selectedDrafts,
+            currentUserId,
+            supabase,
+            onGoalsPersisted: invalidatePlannerRelatedTabCaches,
+            onLinksPersisted: invalidatePlannerRelatedTabCaches,
+          });
 
-      if (linkRows.length > 0) {
-        const { error: linkError } = await supabase.rpc("create_goal_links", {
-          p_links: linkRows,
-        });
-        if (linkError) {
-          toast.error(`Some linked goals were not saved: ${linkError.message}`);
-        }
+      if (result.status === "partial_success") {
+        setCreateRecovery(null);
+        setLinkRecovery(result.linkRecovery);
+        toast.error(result.linkErrorMessage);
+        return;
       }
 
-      let failedPhotoUploads = 0;
-      for (const { draft, goalId } of preparedRows) {
-        if (!draft.photo_file) {
-          continue;
+      setCreateRecovery(null);
+      await finishCreatedGoals(result.createdCount);
+    } catch (error) {
+      if (error instanceof BulkGoalPersistenceError) {
+        if (error.code === "create_ambiguous" && error.preparedRows) {
+          setCreateRecovery({ preparedRows: error.preparedRows });
+        } else if (error.code === "links_failed" && error.linkRecovery) {
+          setCreateRecovery(null);
+          setLinkRecovery(error.linkRecovery);
+        } else if (error.code === "create_failed") {
+          setCreateRecovery(null);
+          setLinkRecovery(null);
         }
-
-        const fileName = `${Date.now()}-${draft.photo_file.name.replace(/\s+/g, "-")}`;
-        const objectPath = `${currentUserId}/${goalId}/${fileName}`;
-        const uploadResponse = await supabase.storage.from("goal-photos").upload(objectPath, draft.photo_file, {
-          cacheControl: "3600",
-          upsert: true,
-        });
-
-        if (uploadResponse.error) {
-          failedPhotoUploads += 1;
-          continue;
-        }
-
-        const { error: updateError } = await supabase.rpc("set_goal_photo_path", {
-          p_goal_id: goalId,
-          p_photo_path: objectPath,
-        });
-
-        if (updateError) {
-          failedPhotoUploads += 1;
-        }
-      }
-
-      if (failedPhotoUploads > 0) {
+        toast.error(error.message);
+      } else {
         toast.error(
-          `${failedPhotoUploads} photo upload${failedPhotoUploads === 1 ? "" : "s"} could not be saved.`
+          error instanceof Error ? error.message : "Failed to create bulk goals."
         );
       }
-
-      invalidatePlannerRelatedTabCaches();
-      toast.success(
-        `Created ${preparedRows.length} goal${preparedRows.length === 1 ? "" : "s"}.`
-      );
-      completeAndExit();
     } finally {
       setSaving(false);
     }
@@ -474,493 +397,65 @@ export function BulkGoalForm({
         onFileChange={onFileChange}
         onParseUploadedFile={parseUploadedFile}
         uploadedFileName={uploadedFile?.name ?? null}
+        disabled={Boolean(saving || linkRecovery || createRecovery)}
       />
 
-      <Card className="shadow-sm">
-        <CardHeader>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <CardTitle>Preview drafts</CardTitle>
-              <CardDescription>
-                Review and edit parsed goals before creating them.
-              </CardDescription>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline">
-                {selectedDrafts.length} selected
-              </Badge>
-              <Badge variant="outline">
-                {selectedInvalidCount} selected with errors
-              </Badge>
-              <Button
-                type="button"
-                onClick={createSelectedGoals}
-                disabled={saving || selectedDrafts.length === 0}
-              >
-                {saving ? <LoaderCircle className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-                Create selected goals
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {drafts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {inputMode === "natural_language"
-                ? "Parse natural language input to generate drafts."
-                : "Parse CSV input or upload a file to generate drafts."}
-            </p>
-          ) : (
-            drafts.map((draft) => {
-              const parsedTargetCount = parseBulkGoalTargetCount(
-                draft.target_count
-              );
-              const fixedMilestoneCount =
-                draft.frequency_type === "fixed_milestones"
-                  ? parsedTargetCount ?? 0
-                  : 0;
-              const usesSoftHorizon = bulkGoalDraftRequiresEndDate(draft);
-              const linkQuery = draft.link_target_search.trim().toLowerCase();
-              const filteredLinkTargets = availableGoals.filter((goal) => {
-                if (linkQuery.length === 0) {
-                  return true;
-                }
+      {createRecovery ? (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+          <p>
+            Goal creation could not be confirmed. Your drafts are retained while
+            you retry safely.
+          </p>
+          <button
+            type="button"
+            className="mt-2 rounded-md border border-amber-500 px-3 py-1.5 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/50"
+            onClick={() => void createSelectedGoals()}
+            disabled={saving}
+          >
+            Retry creating goals
+          </button>
+        </div>
+      ) : null}
 
-                const recurrenceLabel = getLinkedGoalRecurrenceLabel(goal).toLowerCase();
-                const deadlineLabel = getLinkedGoalDeadlineLabel(goal).toLowerCase();
-                return (
-                  goal.title.toLowerCase().includes(linkQuery) ||
-                  recurrenceLabel.includes(linkQuery) ||
-                  deadlineLabel.includes(linkQuery)
-                );
-              });
-              const expanded = expandedDraftId === draft.id;
-              const scheduleSummary = draft.end_date
-                ? `${draft.start_date} to ${draft.end_date}`
-                : `Starts ${draft.start_date}`;
-              const recurrenceSummary =
-                draft.frequency_type === "recurring"
-                  ? `Recurring · ${draft.recurrence_interval}`
-                  : `Milestones · ${draft.target_count || "0"} target`;
-              const toggleDraftEditor = () =>
-                setExpandedDraftId((previous) =>
-                  previous === draft.id ? null : draft.id
-                );
+      {linkRecovery ? (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+          <p>
+            The goals were created, but the selected links were not saved. Your
+            draft selections are retained while you retry.
+          </p>
+          <button
+            type="button"
+            className="mt-2 rounded-md border border-amber-500 px-3 py-1.5 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/50"
+            onClick={() => void createSelectedGoals()}
+            disabled={saving}
+          >
+            Retry saving links
+          </button>
+        </div>
+      ) : null}
 
-              return (
-                <div key={draft.id} className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <label className="inline-flex shrink-0 items-center gap-2 text-sm font-medium">
-                      <input
-                        type="checkbox"
-                        checked={draft.include}
-                        onChange={(event) =>
-                          updateDraft(draft.id, (previous) => ({
-                            ...previous,
-                            include: event.target.checked,
-                          }))
-                        }
-                      />
-                      {draft.sourceRowLabel}
-                    </label>
-                    <div
-                      className={cn(
-                        "min-w-0 flex-1 cursor-pointer rounded-lg border bg-muted/10 px-3 py-2 transition-colors hover:bg-muted/20",
-                        draft.include && draft.errors.length > 0 && "border-destructive/50"
-                      )}
-                      role="button"
-                      tabIndex={0}
-                      onClick={toggleDraftEditor}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          toggleDraftEditor();
-                        }
-                      }}
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex flex-wrap items-center gap-2 text-sm">
-                          <span className="font-medium">
-                            {draft.title.trim().length > 0 ? draft.title : "Untitled goal"}
-                          </span>
-                          <Badge variant="outline">{draft.category_selection}</Badge>
-                          <Badge variant="outline">{recurrenceSummary}</Badge>
-                          <Badge variant="outline">{scheduleSummary}</Badge>
-                          {draft.errors.length > 0 ? (
-                            <Badge variant="destructive">
-                              {draft.errors.length} error{draft.errors.length === 1 ? "" : "s"}
-                            </Badge>
-                          ) : null}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            className="px-1 text-xs text-muted-foreground hover:text-foreground hover:underline"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              toggleDraftEditor();
-                            }}
-                          >
-                            {expanded ? "close" : "tap to edit"}
-                          </button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setDrafts((previous) =>
-                                previous.filter((entry) => entry.id !== draft.id)
-                              );
-                              setExpandedDraftId((previous) =>
-                                previous === draft.id ? null : previous
-                              );
-                            }}
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {expanded && draft.errors.length > 0 ? (
-                    <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2">
-                      <ul className="space-y-1 text-xs text-destructive">
-                        {draft.errors.map((error) => (
-                          <li key={`${draft.id}-${error}`}>- {error}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-
-                  {expanded ? (
-                    <Dialog
-                      open
-                      onOpenChange={(open) => {
-                        if (!open) {
-                          setExpandedDraftId(null);
-                        }
-                      }}
-                    >
-                      <DialogContent
-                        overlayClassName="z-[115] bg-black/15"
-                        className="z-[120] max-h-[88vh] overflow-y-auto sm:!max-w-none"
-                        style={{
-                          width: "min(calc(100vw - 1.5rem), 62rem)",
-                          maxWidth: "min(calc(100vw - 1.5rem), 62rem)",
-                        }}
-                      >
-                        <DialogHeader>
-                          <DialogTitle>
-                            {draft.title.trim().length > 0 ? draft.title : "Edit goal draft"}
-                          </DialogTitle>
-                          <DialogDescription>
-                            Update this draft before creating goals.
-                          </DialogDescription>
-                        </DialogHeader>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label>Title</Label>
-                        <Input
-                          value={draft.title}
-                          onChange={(event) =>
-                            updateDraft(draft.id, (previous) => ({
-                              ...previous,
-                              title: event.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Category</Label>
-                        <CategorySelect
-                          value={draft.category_selection}
-                          onValueChange={(value: CategorySelection) =>
-                            updateDraft(draft.id, (previous) => ({
-                              ...previous,
-                              category_selection: value,
-                              color: getCategorySwatchColor(value),
-                            }))
-                          }
-                        />
-                      </div>
-
-                      {draft.category_selection === "custom" ? (
-                        <div className="space-y-2">
-                          <Label>Custom category</Label>
-                          <Input
-                            value={draft.custom_category}
-                            onChange={(event) =>
-                              updateDraft(draft.id, (previous) => ({
-                                ...previous,
-                                custom_category: event.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-                      ) : null}
-
-                    </div>
-
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label className="inline-flex items-center gap-1">
-                          <span>Goal type</span>
-                          <TooltipIcon
-                            content="Recurring keeps the same action pattern over time. Milestones are unique steps that move you toward a final outcome."
-                            label="Goal type help"
-                          />
-                        </Label>
-                        <GoalTypeToggle
-                          value={draft.frequency_type}
-                          onValueChange={(value) => {
-                            if (isPlannerTaskCreateKind(value)) {
-                              return;
-                            }
-                            updateDraft(draft.id, (previous) => {
-                              const nextTargetCount =
-                                value === "fixed_milestones" &&
-                                previous.target_count.trim().length === 0
-                                  ? "3"
-                                  : previous.target_count;
-                              return {
-                                ...previous,
-                                frequency_type: value,
-                                target_count: nextTargetCount,
-                                milestone_names:
-                                  value === "fixed_milestones"
-                                    ? buildMilestoneNameDrafts(
-                                        parseBulkGoalTargetCount(
-                                          nextTargetCount
-                                        ) ?? 0,
-                                        previous.milestone_names
-                                      )
-                                    : previous.milestone_names,
-                              };
-                            });
-                          }}
-                        />
-                      </div>
-                      {draft.frequency_type === "recurring" ? (
-                        <div className="space-y-2">
-                          <Label className="inline-flex items-center gap-1">
-                            <span>Cadence</span>
-                            <TooltipIcon
-                              content="Cadence controls how often the goal appears in your routine: every day, every week, or every month."
-                              label="Cadence help"
-                            />
-                          </Label>
-                          <RecurrenceIntervalToggle
-                            value={draft.recurrence_interval}
-                            onValueChange={(value) =>
-                              updateDraft(draft.id, (previous) => ({
-                                ...previous,
-                                recurrence_interval: value,
-                              }))
-                            }
-                          />
-                        </div>
-                      ) : null}
-
-                      <div className="space-y-2">
-                        <Label>
-                          {draft.frequency_type === "fixed_milestones"
-                            ? "Total target #"
-                            : "Total target # (optional)"}
-                        </Label>
-                        <TargetCountField
-                          frequencyType={draft.frequency_type}
-                          value={draft.target_count}
-                          onValueChange={(value) =>
-                            updateDraft(draft.id, (previous) => ({
-                              ...previous,
-                              target_count: value,
-                              milestone_names:
-                                previous.frequency_type === "fixed_milestones"
-                                  ? buildMilestoneNameDrafts(
-                                      parseBulkGoalTargetCount(value) ?? 0,
-                                      previous.milestone_names
-                                    )
-                                  : previous.milestone_names,
-                            }))
-                          }
-                        />
-                      </div>
-
-                      <GoalDateRangeFields
-                        startDate={draft.start_date}
-                        endDate={draft.end_date}
-                        onStartDateChange={(value) =>
-                          updateDraft(draft.id, (previous) => ({
-                            ...previous,
-                            start_date: value,
-                          }))
-                        }
-                        onEndDateChange={(value) =>
-                          updateDraft(draft.id, (previous) => ({
-                            ...previous,
-                            end_date: value,
-                          }))
-                        }
-                        requiresEndDate={false}
-                        showSoftHorizonHint={usesSoftHorizon}
-                      />
-
-                      <GoalDefaultTimeField
-                        value={draft.default_local_time}
-                        onValueChange={(value) =>
-                          updateDraft(draft.id, (previous) => ({
-                            ...previous,
-                            default_local_time: normalizeBulkGoalLocalTime(value),
-                          }))
-                        }
-                        label="Default time of day"
-                        helperText="Optional fallback planner time when no item override is set."
-                      />
-                    </div>
-
-                    {fixedMilestoneCount > 0 ? (
-                      <MilestoneNameFields
-                        count={fixedMilestoneCount}
-                        values={draft.milestone_names}
-                        onValueChange={(index, value) =>
-                          updateDraft(draft.id, (previous) => {
-                            const nextMilestones = [...previous.milestone_names];
-                            nextMilestones[index] = value;
-                            return {
-                              ...previous,
-                              milestone_names: nextMilestones,
-                            };
-                          })
-                        }
-                        keyPrefix={`${draft.id}-milestone`}
-                      />
-                    ) : null}
-
-                    <Collapsible
-                      open={draft.advanced_open}
-                      onOpenChange={(open) =>
-                        updateDraft(draft.id, (previous) => ({
-                          ...previous,
-                          advanced_open: open,
-                        }))
-                      }
-                    >
-                      <div className="rounded-xl border bg-muted/20">
-                        <CollapsibleTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            className="flex h-auto w-full items-center justify-between rounded-xl px-3 py-2 text-sm"
-                          >
-                            <span>Advanced settings (optional)</span>
-                            {draft.advanced_open ? (
-                              <ChevronUp className="size-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronDown className="size-4 text-muted-foreground" />
-                            )}
-                          </Button>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <div className="space-y-4 border-t px-3 py-3">
-                            <div className="space-y-2">
-                              <Label>Description</Label>
-                              <Textarea
-                                value={draft.description}
-                                onChange={(event) =>
-                                  updateDraft(draft.id, (previous) => ({
-                                    ...previous,
-                                    description: event.target.value,
-                                  }))
-                                }
-                                placeholder="Why this goal matters"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Color accent</Label>
-                              <Input
-                                type="color"
-                                value={draft.color}
-                                onChange={(event) =>
-                                  updateDraft(draft.id, (previous) => ({
-                                    ...previous,
-                                    color: event.target.value,
-                                  }))
-                                }
-                                className="h-10 p-1"
-                              />
-                              <p className="text-xs text-muted-foreground">
-                                Auto-set from category selection. You can still override it here.
-                              </p>
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Photo</Label>
-                              <Input
-                                type="file"
-                                accept="image/png,image/jpeg,image/webp"
-                                onChange={(event) =>
-                                  updateDraft(draft.id, (previous) => ({
-                                    ...previous,
-                                    photo_file: event.target.files?.[0] ?? null,
-                                  }))
-                                }
-                              />
-                              {draft.photo_file ? (
-                                <Badge variant="secondary">{draft.photo_file.name}</Badge>
-                              ) : null}
-                            </div>
-
-                            <GoalLinkTargetSelect
-                                value={draft.linked_target_goal_id}
-                                onValueChange={(value) =>
-                                  updateDraft(draft.id, (previous) => ({
-                                    ...previous,
-                                    linked_target_goal_id: value,
-                                  }))
-                                }
-                                open={draft.link_target_open}
-                                onOpenChange={(open) =>
-                                  updateDraft(draft.id, (previous) => ({
-                                    ...previous,
-                                    link_target_open: open,
-                                    link_target_search: open ? previous.link_target_search : "",
-                                  }))
-                                }
-                                searchQuery={draft.link_target_search}
-                                onSearchQueryChange={(value) =>
-                                  updateDraft(draft.id, (previous) => ({
-                                    ...previous,
-                                    link_target_search: value,
-                                  }))
-                                }
-                                filteredLinkTargets={filteredLinkTargets}
-                                selectedTargetGoal={
-                                  draft.linked_target_goal_id === "none"
-                                    ? null
-                                    : availableGoals.find(
-                                        (goal) => goal.id === draft.linked_target_goal_id
-                                      ) ?? null
-                                }
-                                sourceEndDate={draft.end_date.trim() || null}
-                                keyPrefix={draft.id}
-                              />
-                          </div>
-                        </CollapsibleContent>
-                      </div>
-                    </Collapsible>
-                      </DialogContent>
-                    </Dialog>
-                  ) : null}
-                </div>
-              );
-            })
-          )}
-        </CardContent>
-      </Card>
+      <BulkGoalDraftReview
+        variant="full"
+        drafts={drafts}
+        setDrafts={setDrafts}
+        saving={saving}
+        onCreate={createSelectedGoals}
+        availableGoals={availableGoals}
+        editingDisabled={Boolean(saving || linkRecovery || createRecovery)}
+        createLabel={createRecovery ? "Retry creating goals" : undefined}
+        createDisabledMessage={
+          linkRecovery
+            ? "Goals were created, but their links still need to be saved."
+            : createRecovery
+              ? "Goal creation was not confirmed; retry to reconcile the retained draft."
+            : null
+        }
+        emptyMessage={
+          inputMode === "natural_language"
+            ? "Parse natural language input to generate drafts."
+            : "Parse CSV input or upload a file to generate drafts."
+        }
+      />
     </div>
   );
 }

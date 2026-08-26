@@ -12,6 +12,7 @@ import { getDateInTimezone, isValidIanaTimezone } from "@/lib/dates/timezone";
 import { getServerEnv } from "@/lib/env";
 import { DEFAULT_GOAL_CATEGORIES, resolveCategoryKey } from "@/lib/goals/category";
 import { validateGoalDefinition } from "@/lib/goals/definition-validation";
+import { resolveGoalTargetBasisFromInput } from "@/lib/goals/target-basis";
 import { MAX_GOAL_TARGET_COUNT } from "@/lib/planner/contracts/bounds";
 import {
   consumePlannerAiQuota,
@@ -24,7 +25,7 @@ export const runtime = "nodejs";
 const MAX_GOALS_PER_REQUEST = 50;
 const MAX_REQUEST_BYTES = 32 * 1024;
 const MAX_PROVIDER_RESPONSE_BYTES = 256 * 1024;
-const PROVIDER_TIMEOUT_MS = 12_000;
+const PROVIDER_TIMEOUT_MS = 20_000;
 const MAX_PROVIDER_ATTEMPTS = 2;
 const BULK_PARSER_RATE_LIMIT_PER_MINUTE = 20;
 const MAX_MILESTONE_NAMES_PER_GOAL = 366;
@@ -110,53 +111,6 @@ function buildGeneratedPayloadSchema(categoryKeySet: Set<string>) {
   });
 }
 
-function buildBulkGoalResponseSchema(categoryKeys: string[]) {
-  return {
-    type: "object",
-    properties: {
-      goals: {
-        type: "array",
-        maxItems: MAX_GOALS_PER_REQUEST,
-        items: {
-          type: "object",
-          properties: {
-            title: { type: "string" },
-            description: { type: "string" },
-            category: { type: "string" },
-            category_key: {
-              type: "string",
-              enum: categoryKeys,
-            },
-            frequency_type: {
-              type: "string",
-              enum: ["recurring", "fixed_milestones"],
-            },
-            recurrence_interval: {
-              type: "string",
-              enum: ["daily", "weekly", "monthly"],
-            },
-            target_basis: {
-              type: "string",
-              enum: ["period", "lifetime"],
-            },
-            target_count: { type: "number", maximum: MAX_GOAL_TARGET_COUNT },
-            milestone_names: {
-              type: "array",
-              maxItems: MAX_MILESTONE_NAMES_PER_GOAL,
-              items: { type: "string" },
-            },
-            start_date: { type: "string" },
-            end_date: { type: "string" },
-            default_local_time: { type: "string" },
-          },
-          required: ["title"],
-        },
-      },
-    },
-    required: ["goals"],
-  } as const;
-}
-
 function toIsoDate(value: string | undefined): string | undefined {
   if (!value) {
     return undefined;
@@ -168,24 +122,18 @@ function toIsoDate(value: string | undefined): string | undefined {
   return z.iso.date().safeParse(trimmed).success ? trimmed : undefined;
 }
 
-function resolveGeneratedTargetBasis(
-  frequency: "recurring" | "fixed_milestones",
-  targetCount: number | null,
-  recurrence: "daily" | "weekly" | "monthly" | undefined,
-  explicit?: "period" | "lifetime"
-): "period" | "lifetime" | undefined {
-  if (frequency !== "recurring") {
-    return undefined;
+function preserveImportedDate(
+  value: string | undefined | null,
+  fallback: string | null
+): string | null {
+  if (value === null || value === undefined) {
+    return fallback;
   }
-  if (explicit === "period" || explicit === "lifetime") {
-    return explicit;
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return fallback;
   }
-  if (targetCount === null) {
-    return "period";
-  }
-  const periodMax =
-    recurrence === "weekly" ? 7 : recurrence === "monthly" ? 31 : 1;
-  return targetCount <= periodMax ? "period" : "lifetime";
+  return toIsoDate(trimmed) ?? trimmed;
 }
 
 function buildPrompt(userPrompt: string, today: string, categoryKeys: string[]): string {
@@ -538,14 +486,20 @@ function normalizeGeneratedPayload(
       frequency === "recurring"
         ? goal.recurrence_interval ?? "daily"
         : undefined;
-    const targetBasis = resolveGeneratedTargetBasis(
-      frequency,
+    const targetBasisResolution = resolveGoalTargetBasisFromInput({
+      targetBasis: goal.target_basis,
+      frequencyType: frequency,
+      recurrenceInterval: recurrence,
       targetCount,
-      recurrence,
-      goal.target_basis
-    );
-    const startDate = toIsoDate(goal.start_date) ?? today;
-    const endDate = toIsoDate(goal.end_date ?? undefined) ?? null;
+    });
+    const targetBasis =
+      frequency === "recurring" ? targetBasisResolution.basis : undefined;
+    const normalizedTargetCount =
+      frequency === "recurring" && targetBasis === "period" && targetCount === null
+        ? 1
+        : targetCount;
+    const startDate = preserveImportedDate(goal.start_date, today) ?? today;
+    const endDate = preserveImportedDate(goal.end_date, null);
     const milestoneNames =
       frequency === "fixed_milestones"
         ? typeof targetCount === "number" && targetCount > 0
@@ -564,13 +518,23 @@ function normalizeGeneratedPayload(
       frequency_type: frequency,
       recurrence_interval: recurrence,
       target_basis: targetBasis,
-      target_count: targetCount,
+      target_count: normalizedTargetCount,
       milestone_names:
         milestoneNames && milestoneNames.length > 0 ? milestoneNames : undefined,
       start_date: startDate,
       end_date: endDate,
       default_local_time: normalizeLocalTime(goal.default_local_time),
     };
+    if (goal.start_date?.trim() && !toIsoDate(goal.start_date)) {
+      warnings.push(
+        `Draft ${index + 1} (${normalized.title}): Start date must be a valid date.`
+      );
+    }
+    if (goal.end_date?.trim() && !toIsoDate(goal.end_date)) {
+      warnings.push(
+        `Draft ${index + 1} (${normalized.title}): End date must be a valid date.`
+      );
+    }
     const validationIssues = validateGoalDefinition({
       frequencyType: normalized.frequency_type,
       targetCount: normalized.target_count,
@@ -582,6 +546,16 @@ function normalizeGeneratedPayload(
     if (validationIssues.length > 0) {
       warnings.push(
         `Draft ${index + 1} (${normalized.title}): ${validationIssues[0]!.message}`
+      );
+    }
+    if (
+      normalized.frequency_type === "recurring" &&
+      normalized.target_basis === "lifetime" &&
+      (normalized.target_count === null ||
+        (typeof normalized.target_count === "number" && normalized.target_count <= 0))
+    ) {
+      warnings.push(
+        `Draft ${index + 1} (${normalized.title}): Total target completions requires a positive target.`
       );
     }
     return normalized;
@@ -695,7 +669,6 @@ export async function POST(request: Request) {
     const categoryKeys = categoryCatalog.map((category) => category.key);
     const categoryKeySet = new Set(categoryKeys);
     const generatedPayloadSchema = buildGeneratedPayloadSchema(categoryKeySet);
-    const responseSchema = buildBulkGoalResponseSchema(categoryKeys);
 
     const today = getDateInTimezone(new Date(), parsedRequest.timezone);
     const estimatedInputTokens = Math.max(
@@ -737,31 +710,16 @@ export async function POST(request: Request) {
     const prompt = buildPrompt(parsedRequest.prompt, today, categoryKeys);
     let candidateJson: unknown;
     try {
-      let result: Awaited<ReturnType<typeof generateGeminiJson>>;
-      try {
-        result = await generateGeminiJson({
-          apiKey,
-          prompt,
-          responseSchema: responseSchema as unknown as Record<string, unknown>,
-          maxResponseBytes: MAX_PROVIDER_RESPONSE_BYTES,
-          totalTimeoutMs: PROVIDER_TIMEOUT_MS,
-          maxAttempts: MAX_PROVIDER_ATTEMPTS,
-          signal: request.signal,
-        });
-      } catch (error) {
-        if (error instanceof GeminiRequestError && shouldRetryWithoutResponseSchema(error)) {
-          result = await generateGeminiJson({
-            apiKey,
-            prompt,
-            maxResponseBytes: MAX_PROVIDER_RESPONSE_BYTES,
-            totalTimeoutMs: PROVIDER_TIMEOUT_MS,
-            maxAttempts: MAX_PROVIDER_ATTEMPTS,
-            signal: request.signal,
-          });
-        } else {
-          throw error;
-        }
-      }
+      // Gemini rejects our full goal-draft responseSchema (400 INVALID_ARGUMENT).
+      // Rely on the prompt contract plus Zod validation instead of provider schemas.
+      const result = await generateGeminiJson({
+        apiKey,
+        prompt,
+        maxResponseBytes: MAX_PROVIDER_RESPONSE_BYTES,
+        totalTimeoutMs: PROVIDER_TIMEOUT_MS,
+        maxAttempts: MAX_PROVIDER_ATTEMPTS,
+        signal: request.signal,
+      });
       candidateJson = result.candidateJson;
     } catch (error) {
       if (error instanceof GeminiRequestError) {
