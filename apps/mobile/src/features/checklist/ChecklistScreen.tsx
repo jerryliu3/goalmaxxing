@@ -53,10 +53,10 @@ export function ChecklistScreen({
   const { openPublicProfile } = usePublicProfileSheet();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<ChecklistVisibilityFilters>({
-    showPastGoals: false,
+    showEndedGoals: false,
     showUpcomingGoals: false,
     showArchivedGoals: false,
-    showCompletedGoals: false,
+    showTargetAchievedGoals: false,
   });
   const { width: viewportWidth } = useWindowDimensions();
   const { ready, scope, hasActivePartner } =
@@ -112,7 +112,7 @@ export function ChecklistScreen({
           ...viewerLane,
           goals: filterMobileChecklistGoals({
             goals: viewerLane.goals,
-            completedGoalIds: viewerLane.completedForView,
+            targetAchievedGoalIds: viewerLane.completedForView,
             asOfDate,
             filters,
           }),
@@ -121,7 +121,7 @@ export function ChecklistScreen({
           ...partnerLane,
           goals: filterMobileChecklistGoals({
             goals: partnerLane.goals,
-            completedGoalIds: partnerLane.completedForView,
+            targetAchievedGoalIds: partnerLane.completedForView,
             asOfDate,
             filters,
           }),
@@ -136,7 +136,7 @@ export function ChecklistScreen({
           const laneData = laneDataById[lane.id];
           const counts = countMobileChecklistGoalVisibility({
             goals: laneData.goals,
-            completedGoalIds: laneData.completedForView,
+            targetAchievedGoalIds: laneData.completedForView,
             asOfDate,
           });
           return {
@@ -289,7 +289,7 @@ export function ChecklistScreen({
     count: number;
   }> = [
     {
-      key: "showPastGoals",
+      key: "showEndedGoals",
       label: "Show past goals",
       count: visibilityCounts.past,
     },
@@ -304,7 +304,7 @@ export function ChecklistScreen({
       count: visibilityCounts.archived,
     },
     {
-      key: "showCompletedGoals",
+      key: "showTargetAchievedGoals",
       label: "Show completed goals",
       count: visibilityCounts.completed,
     },

@@ -72,14 +72,14 @@ import { reportDuoTelemetry } from "@/lib/social/duo/telemetry";
 export interface ChecklistSharedFilters {
   viewDate: string;
   setViewDate: (value: string) => void;
-  showPastGoals: boolean;
-  setShowPastGoals: (value: boolean) => void;
+  showEndedGoals: boolean;
+  setShowEndedGoals: (value: boolean) => void;
   showUpcomingGoals: boolean;
   setShowUpcomingGoals: (value: boolean) => void;
   showArchivedGoals: boolean;
   setShowArchivedGoals: (value: boolean) => void;
-  showCompletedGoals: boolean;
-  setShowCompletedGoals: (value: boolean) => void;
+  showTargetAchievedGoals: boolean;
+  setShowTargetAchievedGoals: (value: boolean) => void;
   categoryFilters: string[];
   setCategoryFilters: (value: string[]) => void;
   recurrenceFilters: RecurrenceGroup[];
@@ -115,12 +115,12 @@ export function TodayTab({
   const [expandedGroups, setExpandedGroups] =
     useState<Record<RecurrenceGroup, boolean>>(INITIAL_GROUP_EXPANDED);
   const [upcomingOpen, setUpcomingOpen] = useState(true);
-  const [completedOpen, setCompletedOpen] = useState(false);
+  const [pastPanelOpen, setPastPanelOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
-  const [internalShowPastGoals, setInternalShowPastGoals] = useState(false);
+  const [internalShowEndedGoals, setInternalShowEndedGoals] = useState(false);
   const [internalShowUpcomingGoals, setInternalShowUpcomingGoals] = useState(false);
   const [internalShowArchivedGoals, setInternalShowArchivedGoals] = useState(false);
-  const [internalShowCompletedGoals, setInternalShowCompletedGoals] = useState(false);
+  const [internalShowTargetAchievedGoals, setInternalShowTargetAchievedGoals] = useState(false);
   const [internalCategoryFilters, setInternalCategoryFilters] = useState<string[]>([]);
   const [internalRecurrenceFilters, setInternalRecurrenceFilters] = useState<
     RecurrenceGroup[]
@@ -132,18 +132,18 @@ export function TodayTab({
   const [internalTodaySort, setInternalTodaySort] = useState<GoalDateSort>("earliest_end");
   const [recentlyCompletedGoalId, setRecentlyCompletedGoalId] = useState<string | null>(null);
   const recentlyCompletedTimerRef = useRef<number | null>(null);
-  const showPastGoals = sharedFilters?.showPastGoals ?? internalShowPastGoals;
-  const setShowPastGoals = sharedFilters?.setShowPastGoals ?? setInternalShowPastGoals;
+  const showEndedGoals = sharedFilters?.showEndedGoals ?? internalShowEndedGoals;
+  const setShowEndedGoals = sharedFilters?.setShowEndedGoals ?? setInternalShowEndedGoals;
   const showUpcomingGoals = sharedFilters?.showUpcomingGoals ?? internalShowUpcomingGoals;
   const setShowUpcomingGoals =
     sharedFilters?.setShowUpcomingGoals ?? setInternalShowUpcomingGoals;
   const showArchivedGoals = sharedFilters?.showArchivedGoals ?? internalShowArchivedGoals;
   const setShowArchivedGoals =
     sharedFilters?.setShowArchivedGoals ?? setInternalShowArchivedGoals;
-  const showCompletedGoals =
-    sharedFilters?.showCompletedGoals ?? internalShowCompletedGoals;
-  const setShowCompletedGoals =
-    sharedFilters?.setShowCompletedGoals ?? setInternalShowCompletedGoals;
+  const showTargetAchievedGoals =
+    sharedFilters?.showTargetAchievedGoals ?? internalShowTargetAchievedGoals;
+  const setShowTargetAchievedGoals =
+    sharedFilters?.setShowTargetAchievedGoals ?? setInternalShowTargetAchievedGoals;
   const categoryFilters = sharedFilters?.categoryFilters ?? internalCategoryFilters;
   const setCategoryFilters = sharedFilters?.setCategoryFilters ?? setInternalCategoryFilters;
   const recurrenceFilters = sharedFilters?.recurrenceFilters ?? internalRecurrenceFilters;
@@ -266,16 +266,16 @@ export function TodayTab({
         recurrenceFilters,
         searchQuery: todayGoalSearchQuery,
         endMonths: effectiveTodayEndMonths,
-        completedTargetGoalIds: targetAchievedGoalIds,
-        showCompletedGoals,
+        targetAchievedGoalIds,
+        showTargetAchievedGoals,
       }),
     [
       activeGoals,
       categoryFilters,
+      targetAchievedGoalIds,
       effectiveTodayEndMonths,
       recurrenceFilters,
-      showCompletedGoals,
-      targetAchievedGoalIds,
+      showTargetAchievedGoals,
       todayDate,
       todayGoalSearchQuery,
     ]
@@ -651,8 +651,8 @@ export function TodayTab({
                         {
                           label: "Show past goals",
                           count: pastGoals.length,
-                          checked: showPastGoals,
-                          onChange: setShowPastGoals,
+                          checked: showEndedGoals,
+                          onChange: setShowEndedGoals,
                         },
                         {
                           label: "Show upcoming goals",
@@ -669,8 +669,8 @@ export function TodayTab({
                         {
                           label: "Show completed goals",
                           count: targetAchievedGoalIds.size,
-                          checked: showCompletedGoals,
-                          onChange: setShowCompletedGoals,
+                          checked: showTargetAchievedGoals,
+                          onChange: setShowTargetAchievedGoals,
                         },
                       ].map((option) => (
                         <label
@@ -790,19 +790,19 @@ export function TodayTab({
         </div>
       ) : null}
 
-      {showGoalSections && (showUpcomingGoals || showPastGoals || showArchivedGoals) ? (
+      {showGoalSections && (showUpcomingGoals || showEndedGoals || showArchivedGoals) ? (
         <ChecklistPastPanels
           upcoming={upcoming}
           pastGoals={pastGoals}
           archivedGoals={archivedGoals}
           showUpcoming={showUpcomingGoals}
-          showPast={showPastGoals}
+          showEnded={showEndedGoals}
           showArchived={showArchivedGoals}
           upcomingOpen={upcomingOpen}
-          pastOpen={completedOpen}
+          pastPanelOpen={pastPanelOpen}
           archiveOpen={archiveOpen}
           onUpcomingOpenChange={setUpcomingOpen}
-          onPastOpenChange={setCompletedOpen}
+          onPastPanelOpenChange={setPastPanelOpen}
           onArchiveOpenChange={setArchiveOpen}
           renderGoal={renderGoalCard}
         />
