@@ -22,7 +22,7 @@ describe("TodayHeaderCard", () => {
       </TodayHeaderCard>
     );
 
-    const title = screen.getByText("Friday");
+    const title = screen.getByText("Fri");
     const dateField = screen.getByLabelText("Checklist date");
     const titleRow = title.closest("[data-title-date-row]");
     expect(title.closest("[data-title-date-row]")).toBe(
@@ -31,8 +31,7 @@ describe("TodayHeaderCard", () => {
     expect(titleRow).toHaveClass(
       "grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]"
     );
-    expect(title).not.toHaveClass("text-xl");
-    expect(title).toHaveClass("whitespace-nowrap");
+    expect(title.closest("[data-slot=card-title]")).toHaveClass("whitespace-nowrap");
     expect(dateField).toHaveAttribute("type", "date");
     expect(screen.queryByText("Today")).not.toBeInTheDocument();
     expect(screen.queryByText("Fri Aug 14, 2026")).not.toBeInTheDocument();
@@ -51,7 +50,7 @@ describe("TodayHeaderCard", () => {
       />
     );
 
-    const titleRow = screen.getByText("Thursday").closest("[data-title-date-row]");
+    const titleRow = screen.getByText("Thu").closest("[data-title-date-row]");
     const todayButton = screen.getByRole("button", { name: "Today" });
     const todayRow = todayButton.parentElement;
 

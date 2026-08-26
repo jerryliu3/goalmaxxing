@@ -39,6 +39,9 @@ export function TodayHeaderCard({
   const weekdayTitle = isValid(parsedViewDate)
     ? format(parsedViewDate, "EEEE")
     : "Today";
+  const weekdayTitleShort = isValid(parsedViewDate)
+    ? format(parsedViewDate, "EEE")
+    : "Today";
 
   return (
     <Card className="rounded-xl border bg-card py-3 shadow-sm sm:py-4 sm:ring-1">
@@ -51,7 +54,10 @@ export function TodayHeaderCard({
             >
               <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                 <Sparkles className="size-4 shrink-0 text-primary" />
-                <CardTitle className="whitespace-nowrap">{weekdayTitle}</CardTitle>
+                <CardTitle className="whitespace-nowrap">
+                  <span className="sm:hidden">{weekdayTitleShort}</span>
+                  <span className="hidden sm:inline">{weekdayTitle}</span>
+                </CardTitle>
               </div>
               <div className="min-w-0 justify-self-center">
                 <PeriodStepper

@@ -28,6 +28,11 @@ import { Label } from "@/components/ui/label";
 import { LoadingCard } from "@/components/ui/loading-card";
 import { Tooltip } from "@/components/ui/tooltip";
 import { GoalCreationFieldControls } from "@/features/goals/goal-creation-fields";
+import {
+  completeGoalEditor,
+  dismissGoalEditor,
+  goalEditorFallbackHref,
+} from "@/features/goals/goal-editor-navigation";
 import { buildLoginHref } from "@/lib/auth/login-redirect";
 import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 import { toLocalDateString } from "@/lib/dates/day";
@@ -70,6 +75,7 @@ interface GoalFormProps {
   showBackButton?: boolean;
   modeSwitchControl?: ReactNode;
   onExit?: () => void;
+  onDismiss?: () => void;
 }
 
 interface GoalFormState extends GoalCreationFields {
@@ -181,6 +187,7 @@ export function GoalForm({
   showBackButton = true,
   modeSwitchControl,
   onExit,
+  onDismiss,
 }: GoalFormProps) {
   const supabase = useMemo(() => createClient(), []);
   const router = useAppRouter();
@@ -202,22 +209,21 @@ export function GoalForm({
   const stableCreateGoalIdRef = useRef<string | null>(null);
   const isEditing = Boolean(goalId);
   const goalFormId = isEditing ? "goal-form-edit" : "goal-form-create";
-  const exitHref = "/";
+  const exitHref = goalEditorFallbackHref;
+  const dismissEditor = useCallback(() => {
+    if (onDismiss) {
+      onDismiss();
+      return;
+    }
+    dismissGoalEditor(router);
+  }, [onDismiss, router]);
   const completeAndExit = useCallback(() => {
     if (onExit) {
       onExit();
       return;
     }
-    router.replace(exitHref);
-    router.refresh();
-  }, [exitHref, onExit, router]);
-  const exitWithoutRefresh = useCallback(() => {
-    if (onExit) {
-      onExit();
-      return;
-    }
-    router.replace(exitHref);
-  }, [exitHref, onExit, router]);
+    completeGoalEditor(router);
+  }, [onExit, router]);
 
   useEffect(() => {
     const load = async () => {
@@ -700,7 +706,8 @@ export function GoalForm({
       return;
     }
 
-    exitWithoutRefresh();
+    dismissEditor();
+    setSaving(false);
   };
 
   const softDeleteGoal = async () => {
@@ -736,7 +743,7 @@ export function GoalForm({
   }
 
   return (
-    <Card className="shadow-sm">
+    <Card className="gap-6 shadow-sm">
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -750,8 +757,8 @@ export function GoalForm({
                   <ArrowLeft className="size-4" />
                   Back
                 </Button>
-              ) : onExit ? (
-                <Button type="button" variant="outline" onClick={onExit}>
+              ) : onExit || onDismiss ? (
+                <Button type="button" variant="outline" onClick={dismissEditor}>
                   <ArrowLeft className="size-4" />
                   Back
                 </Button>
@@ -837,7 +844,7 @@ export function GoalForm({
             </Button>
           </div>
         ) : null}
-        <form id={goalFormId} className="space-y-4" onSubmit={onSubmit}>
+        <form id={goalFormId} className="space-y-6" onSubmit={onSubmit}>
           {validationWarning ? (
             <div className="rounded-md border border-yellow-300 bg-yellow-100 px-3 py-2 text-xs text-orange-900 dark:border-yellow-300 dark:bg-yellow-100 dark:text-orange-900">
               {validationWarning}
