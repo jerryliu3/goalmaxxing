@@ -1,7 +1,7 @@
 # Checklist and Planner Cleanup Audit
 
-Status: Proposed cleanup backlog  
-Last updated: 2026-08-25 (stack delivery + PR #654 micro-cleanup notes)  
+Status: Complete (stack #655–#675)  
+Last updated: 2026-08-26 (definition-of-success closure on stack tip)  
 Scope: goals, completions, checklist, insights, planner/calendar, progress context, and related database boundaries
 
 ## Executive summary
