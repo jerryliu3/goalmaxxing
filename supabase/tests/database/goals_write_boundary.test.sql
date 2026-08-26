@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(33);
+select plan(34);
 
 -- Pin the five dropped client-PostgREST triggers.
 select hasnt_trigger(
