@@ -6,7 +6,7 @@ import { DuoLanes } from "@/features/social/duo/duo-lanes";
 import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
 import {
   type ChecklistSharedFilters,
-} from "@/features/today/today-tab";
+} from "@/features/today/use-checklist-filters";
 import { toLocalDateString } from "@/lib/dates/day";
 import type { RecurrenceGroup } from "@/features/today/checklist-selectors";
 import type { GoalDateSort } from "@/lib/goals/list-view";
