@@ -41,9 +41,7 @@ export function getDateFactDispatchForEntry({
         : "deadline_total");
   const targetedRecurring =
     requirementKind === "deadline_total" || !entry.activeGoal;
-  const currentlyCredited =
-    entry.creditState !== "uncredited" ||
-    Boolean(entry.activeItem?.credited_completion_id);
+  const currentlyCredited = entry.creditState !== "uncredited";
   const desiredFactState = currentlyCredited ? "absent" : "present";
   const matchingItemState =
     entry.classification === "satisfied_elsewhere"
