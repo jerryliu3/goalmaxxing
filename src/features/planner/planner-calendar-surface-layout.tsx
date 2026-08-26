@@ -11,29 +11,48 @@ import type { PlannerEventDetailDialogCallbacks } from "@/features/planner/plann
 import type {
   DayPreviewState,
   PlannerCalendarViewMode,
+  PlannerCompletionFactMarker,
   PlannerContextPayload,
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
-import type { PlannerMoveSourceOption } from "@/features/planner/planner-move-source-options";
+import type { GoalCategoryFilterOption } from "@/features/goals/goal-filters";
+import type { PlannerDragTarget } from "@/features/planner/planner-drag-target";
+import type { PlannerEligibilityNotices } from "@/features/planner/planner-eligibility-notices";
+import type { MoveSourceCandidate } from "@/features/planner/planner-move-source-options";
+import type { GoalMonthOption } from "@/lib/goals/list-view";
 import type { PlannerWorkUnit } from "@cadence/shared/planner/context";
-import type { ReactNode, RefObject } from "react";
+import type {
+  Dispatch,
+  MutableRefObject,
+  ReactNode,
+  SetStateAction,
+} from "react";
+
+interface PlannerCalendarCell {
+  date: string;
+  inMonth: boolean;
+}
 
 export interface PlannerCalendarSurfaceLayoutProps {
   hasPlannerWarnings: boolean;
   warningsDismissed: boolean;
+  setWarningsDismissed: Dispatch<SetStateAction<boolean>>;
   showBlockingLoading: boolean;
   error: string | null;
-  plannerWarningBannerCopy: string | null;
+  plannerWarningBannerCopy: string;
   warningsOpen: boolean;
   setWarningsOpen: (open: boolean) => void;
-  unplaceableGoalSummaries: Array<{ goalId: string; title: string }>;
+  unplaceableGoalSummaries: Array<{
+    goalId: string;
+    title: string;
+    unplacedCount: number;
+    reason: "capacity" | "invalid_lock";
+  }>;
   invalidLockGoalCount: number;
   capacityWarningGoalCount: number;
   totalUnplacedCount: number;
   warningSuggestedNextSteps: string[];
-  eligibilityNotices: {
-    linkedTargetDetails: unknown;
-  };
+  eligibilityNotices: PlannerEligibilityNotices;
   plannerReadOnly: boolean;
   canResetPlan: boolean;
   resetLoading: boolean;
@@ -66,63 +85,73 @@ export interface PlannerCalendarSurfaceLayoutProps {
   expandedMonthRows: boolean;
   moveViewWindow: (direction: -1 | 1) => void;
   jumpToToday: () => void;
-  setExpandedMonthRows: React.Dispatch<React.SetStateAction<boolean>>;
+  setExpandedMonthRows: Dispatch<SetStateAction<boolean>>;
   getDragEntryLabel: (entryKey: string) => string;
   getDragDayLabel: (day: string) => string;
-  renderEntryDragOverlay: () => ReactNode;
-  handleDndEntryDragStart: (entryKey: string, day: string) => void;
-  handleDndEntryDragEnd: (entryKey: string, day: string) => void;
-  handleDndEntryDragCancel: () => void;
+  renderEntryDragOverlay: (entryKey: string) => ReactNode;
+  handleDndEntryDragStart: (entryKey: string) => void;
+  handleDndEntryDragEnd: (entryKey: string, target: PlannerDragTarget) => void;
+  handleDndEntryDragCancel: (entryKey: string | null) => void;
   rollingWeekStrip: ReactNode;
   focusedDay: string;
   focusedDayEntries: PlannerDayDetailEntry[];
-  focusedDayCompletionFactMarkers: PlannerContextPayload["preview"] extends never
-    ? never
-    : unknown[];
+  focusedDayCompletionFactMarkers: PlannerCompletionFactMarker[];
   mutationLoadingKey: string | null;
   canMutatePlanItems: boolean;
-  canMutateEntryOnDay: (entry: PlannerDayDetailEntry, day: string) => boolean;
+  canMutateEntryOnDay: (
+    entry: PlannerDayDetailEntry,
+    day: string | null
+  ) => boolean;
   setLocalSelectedDay: (day: string | null) => void;
   setSelectedEventEntryKey: (key: string | null) => void;
   toggleDateFact: (
     entry: PlannerDayDetailEntry,
-    day: string,
-    sourceElement?: HTMLElement | null
+    selectedDateOverride?: string,
+    sourceElement?: HTMLElement
   ) => Promise<void>;
-  pointerPressActiveRef: RefObject<boolean>;
-  calendarGridViewportRef: RefObject<HTMLDivElement | null>;
+  pointerPressActiveRef: MutableRefObject<boolean>;
+  calendarGridViewportRef: MutableRefObject<HTMLDivElement | null>;
   handleCalendarGridViewportScroll: () => void;
   weekdayLabels: string[];
-  multiMonthGridScrollRef: RefObject<HTMLDivElement | null>;
+  multiMonthGridScrollRef: MutableRefObject<HTMLDivElement | null>;
   handleMonthScopedGridScroll: () => void;
-  cells: Array<{ date: string }>;
-  renderCalendarDayCell: (day: string) => ReactNode;
-  focusedWeekCells: Array<{ date: string }>;
+  cells: PlannerCalendarCell[];
+  renderCalendarDayCell: (cell: PlannerCalendarCell) => ReactNode;
+  focusedWeekCells: PlannerCalendarCell[];
   dayPreview: DayPreviewState | null;
-  dayPreviewRef: RefObject<HTMLDivElement | null>;
+  dayPreviewRef: MutableRefObject<HTMLDivElement | null>;
   previewDayEntries: PlannerDayDetailEntry[];
-  previewDayCompletionFactMarkers: unknown[];
+  previewDayCompletionFactMarkers: PlannerCompletionFactMarker[];
   openMoveDialogForDay: (day: string) => void;
   setExpandedPreviewDay: (day: string | null) => void;
-  setDayPreview: React.Dispatch<React.SetStateAction<DayPreviewState | null>>;
+  setDayPreview: Dispatch<SetStateAction<DayPreviewState | null>>;
   clearHoverPreviewTimer: () => void;
   clearHoverPreviewCloseTimer: () => void;
-  pointerInsideDayPreviewRef: RefObject<boolean>;
+  pointerInsideDayPreviewRef: MutableRefObject<boolean>;
   coach: ReturnType<typeof usePlannerCoach>;
   expandedPreviewDay: string | null;
   expandedPreviewEntries: PlannerDayDetailEntry[];
-  expandedPreviewCompletionFactMarkers: unknown[];
+  expandedPreviewCompletionFactMarkers: PlannerCompletionFactMarker[];
   contractExpandedPreview: () => void;
   moveDialogDay: string | null;
   effectiveMoveDialogSourceEntryKey: string;
-  moveDialogSourceOptions: PlannerMoveSourceOption[];
+  moveDialogSourceOptions: MoveSourceCandidate[];
   closeMoveDialog: () => void;
   setMoveDialogSourceEntryKey: (key: string) => void;
   submitMoveDialog: () => void;
   selectedEventEntry: PlannerDayDetailEntry | null;
-  selectedEventLinkedTargets: unknown[];
+  selectedEventLinkedTargets: Array<{
+    sourceGoalId: string;
+    targetGoalId: string;
+    targetSuppressionKind: "none" | "until" | "indefinite";
+    targetResumesOn: string | null;
+  }>;
   selectedEventDraftEdit:
-    | { scheduledDate?: string | null; scheduledTimeOverride?: string | null }
+    | {
+        label?: string | null;
+        scheduledDate?: string | null;
+        scheduledTimeOverride?: string | null;
+      }
     | undefined;
   selectedEventBaselineUnit: PlannerWorkUnit | null;
   selectedEventDraftScheduledDate: string | null;
@@ -135,10 +164,10 @@ export interface PlannerCalendarSurfaceLayoutProps {
   filtersOpen: boolean;
   categoryFilter: string;
   setCategoryFilter: (value: string) => void;
-  categoryOptions: string[];
+  categoryOptions: GoalCategoryFilterOption[];
   effectiveEndMonthFilter: string | null;
   setEndMonthFilter: (value: string | null) => void;
-  endMonthOptions: string[];
+  endMonthOptions: GoalMonthOption[];
   settingsOpen: boolean;
   plannerSettingsForm: ReactNode;
 }
@@ -153,6 +182,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
   const {
     hasPlannerWarnings,
     warningsDismissed,
+    setWarningsDismissed,
     showBlockingLoading,
     error,
     plannerWarningBannerCopy,
@@ -376,7 +406,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
               setSelectedEventEntryKey(entry.key);
             }}
             onToggleCompletion={(entry, day, sourceElement) => {
-              void toggleDateFact(entry, day, sourceElement);
+              void toggleDateFact(entry, day, sourceElement ?? undefined);
             }}
             onEntryPointerStart={(immovable) => {
               void immovable;
@@ -411,7 +441,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
               if (!canMutateEntryOnDay(entry, day)) {
                 return;
               }
-              void toggleDateFact(entry, day, sourceElement);
+              void toggleDateFact(entry, day, sourceElement ?? undefined);
             }}
             onMoveDay={openMoveDialogForDay}
             onExpandPreviewDay={(day) => {
@@ -475,7 +505,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
           if (!canMutateEntryOnDay(entry, day)) {
             return;
           }
-          void toggleDateFact(entry, day, sourceElement);
+          void toggleDateFact(entry, day, sourceElement ?? undefined);
         }}
         onExpandedPreviewEntryPointerStart={(immovable) => {
           void immovable;

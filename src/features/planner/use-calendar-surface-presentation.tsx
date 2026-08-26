@@ -51,7 +51,7 @@ type CalendarSurfacePresentationArgs = Omit<
   >;
   canMutateEntryOnDay: (
     entry: PlannerDayDetailEntry,
-    day: string
+    day: string | null
   ) => boolean;
   getOrderedEntriesForDay: (day: string | null) => PlannerDayDetailEntry[];
   getCompletionFactMarkersForDay: (
@@ -67,7 +67,7 @@ type CalendarSurfacePresentationArgs = Omit<
   setupLoading: boolean;
   recoverLoading: boolean;
   canRecoverPastSessions: boolean;
-  rebuildBlockedMessage: string | null;
+  rebuildBlockedMessage: string | undefined;
   fullResetLoading: boolean;
   submitSetup: () => Promise<void>;
   recoverPastSessions: () => Promise<void>;
