@@ -73,6 +73,12 @@ import {
   defaultMilestoneName,
 } from "@/lib/goals/milestones";
 import { getHeatmapScaleClass } from "@/lib/goals/heatmap";
+import type { GoalProgressSnapshot } from "@/lib/goals/progress";
+import {
+  cadencePeriodTarget,
+  isDeadlineTotalGoal,
+  isPeriodCadenceGoal,
+} from "@/lib/goals/target-basis";
 import {
   isProgressContextAuthenticationError,
   progressSummaryMap,
@@ -114,9 +120,23 @@ function getAggregateDrilldownDayClass(date: string | null | undefined): string 
   return date ? `${AGGREGATE_DRILLDOWN_DAY_CLASS_PREFIX}${date}` : "";
 }
 
-function getCompletionCountLabel(goal: Goal, completionCount: number): string {
-  if (typeof goal.target_count === "number" && goal.target_count > 0) {
-    return `${completionCount}/${goal.target_count} completions`;
+function getCompletionCountLabel(
+  goal: Goal,
+  completionCount: number,
+  progress?: GoalProgressSnapshot
+): string {
+  if (
+    goal.frequency_type === "fixed_milestones" ||
+    isDeadlineTotalGoal(goal)
+  ) {
+    return `${completionCount}/${goal.target_count ?? 0} completions`;
+  }
+
+  if (isPeriodCadenceGoal(goal) && progress) {
+    const target = progress.currentPeriodTarget ?? cadencePeriodTarget(goal);
+    if (target > 1) {
+      return `${progress.currentPeriodCompletionCount}/${target} this period · ${completionCount} total`;
+    }
   }
 
   return `${completionCount} completion${completionCount === 1 ? "" : "s"}`;
@@ -766,8 +786,17 @@ export function InsightsTab({
               const progress = progressByGoal.get(goal.id);
               const completionCount =
                 progress?.admissibleCompletionCount ?? 0;
-              const hasTargetCount = typeof goal.target_count === "number" && goal.target_count > 0;
-              const completionCountLabel = getCompletionCountLabel(goal, completionCount);
+              const hasTargetCount =
+                goal.frequency_type === "fixed_milestones" ||
+                isDeadlineTotalGoal(goal);
+              const hasCadenceHitRate =
+                isPeriodCadenceGoal(goal) &&
+                progress?.closedPeriodHitRatePercent !== null;
+              const completionCountLabel = getCompletionCountLabel(
+                goal,
+                completionCount,
+                progress
+              );
               const countsByDate = countCompletionsByDate(completions);
               const percent = progress?.percent ?? 0;
               const streaks = {
@@ -1060,10 +1089,14 @@ export function InsightsTab({
                           Completion
                         </span>
                         <span className="text-right">
-                          {hasTargetCount ? `${Math.round(percent)}% · ${completionCountLabel}` : completionCountLabel}
+                          {(hasTargetCount || hasCadenceHitRate)
+                            ? `${Math.round(percent)}% · ${completionCountLabel}`
+                            : completionCountLabel}
                         </span>
                       </div>
-                      {hasTargetCount ? <Progress value={percent} /> : null}
+                      {hasTargetCount || hasCadenceHitRate ? (
+                        <Progress value={percent} />
+                      ) : null}
                     </div>
 
                     {goal.frequency_type === "recurring" && !targetedRecurring ? (

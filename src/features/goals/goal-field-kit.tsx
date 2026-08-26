@@ -117,7 +117,7 @@ export function RecurrenceIntervalToggle({
   return (
     <Select value={value} onValueChange={(nextValue) => onValueChange(nextValue as RecurrenceInterval)}>
       <SelectTrigger className={cn("h-9 w-full", triggerClassName)}>
-        <SelectValue placeholder="Select cadence" />
+        <SelectValue placeholder="Select frequency" />
       </SelectTrigger>
       <SelectContent>
         {RECURRENCE_INTERVAL_OPTIONS.map((option) => (
@@ -136,6 +136,7 @@ interface TargetCountFieldProps {
   value: string;
   onValueChange: (value: string) => void;
   showRecurringHelperText?: boolean;
+  recurringHelperText?: string;
 }
 
 export function TargetCountField({
@@ -144,6 +145,7 @@ export function TargetCountField({
   value,
   onValueChange,
   showRecurringHelperText = true,
+  recurringHelperText = "Optional total by end date. Edit the target above; each completion counts independently.",
 }: TargetCountFieldProps) {
   return (
     <>
@@ -157,10 +159,7 @@ export function TargetCountField({
         required={frequencyType === "fixed_milestones"}
       />
       {frequencyType === "recurring" && showRecurringHelperText ? (
-        <p className="text-xs text-muted-foreground">
-          Optional: set a total due by the end date. Each date is checked independently;
-          target-total goals do not use current-period or streak semantics.
-        </p>
+        <p className="text-xs text-muted-foreground">{recurringHelperText}</p>
       ) : null}
     </>
   );
