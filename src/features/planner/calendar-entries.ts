@@ -14,6 +14,10 @@ import type {
   PlannerDayDetailEntry,
   PlannerWorkUnit,
 } from "@/features/planner/calendar-surface.types";
+import type {
+  PlannerWorkUnitClassification,
+  PlannerWorkUnitCreditState,
+} from "@cadence/shared/planner/context";
 import { buildPlannerDraftVisualDiff } from "@/lib/planner/diff";
 import {
   draftCommandEntryKey,
