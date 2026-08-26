@@ -89,7 +89,6 @@ describe("planner calendar entries", () => {
       workUnits: [
         {
           ...unit("2026-08-05"),
-          creditedCompletionId: "completion-a",
           creditedCompletionDate: "2026-08-05",
           creditState: "completed_as_scheduled",
         },

@@ -147,8 +147,7 @@ export function buildEntriesByDateProjection({
     const key = `${unit.originalGoalId}:${unit.unitKey}`;
     unitByEntryKey.set(key, unit);
     const displayDay = unit.scheduledDate ?? unit.creditedCompletionDate;
-    const isCreditedHistoricalUnit =
-      unit.creditedCompletionId !== null && unit.creditState !== "uncredited";
+    const isCreditedHistoricalUnit = unit.creditState !== "uncredited";
     if (
       !displayDay ||
       (!isCreditedHistoricalUnit && !persistedEntryKeys.has(key))
