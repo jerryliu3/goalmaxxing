@@ -394,8 +394,6 @@ export function InsightsTab({
         return;
       }
 
-      setPendingRetroDate(completionDate);
-      const currentScrollY = window.scrollY;
       const intent = resolveInsightsCompletionIntent({
         goal,
         completionDate,
@@ -405,6 +403,18 @@ export function InsightsTab({
           asOfDate: localToday,
         },
       });
+
+      if (!intent.allowed) {
+        toast.error(
+          intent.disabledReason === "future_creation"
+            ? "You can only select today or past dates."
+            : "This completion cannot be changed from this date."
+        );
+        return;
+      }
+
+      setPendingRetroDate(completionDate);
+      const currentScrollY = window.scrollY;
       const { decision, mutation } = intent;
 
       const result = await runCompletionMutation({
@@ -456,8 +466,6 @@ export function InsightsTab({
         return;
       }
 
-      setPendingRetroDate(completionDate);
-      const currentScrollY = window.scrollY;
       const intent = resolveInsightsCompletionIntent({
         goal,
         completionDate,
@@ -467,6 +475,18 @@ export function InsightsTab({
           asOfDate: localToday,
         },
       });
+
+      if (!intent.allowed) {
+        toast.error(
+          intent.disabledReason === "future_creation"
+            ? "You can only select today or past dates."
+            : "This completion cannot be changed from this date."
+        );
+        return;
+      }
+
+      setPendingRetroDate(completionDate);
+      const currentScrollY = window.scrollY;
       const { decision, mutation } = intent;
 
       const result = await runCompletionMutation({
