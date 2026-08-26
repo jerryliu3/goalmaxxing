@@ -39,7 +39,7 @@ export function buildPlannerSettingsForm({
   rebuildLoading: boolean;
   hasDraftSession: boolean;
   canShowSaveAction: boolean;
-  rebuildBlockedMessage: string | null;
+  rebuildBlockedMessage: string | undefined;
   fullResetLoading: boolean;
   submitSetup: () => Promise<void>;
   recoverPastSessions: () => Promise<void>;
@@ -94,9 +94,12 @@ export function usePlannerEventDetailCallbacks({
 }: {
   setSelectedEventEntryKey: (value: string | null) => void;
   setLocalSelectedDay: (value: string | null) => void;
-  updateDraftLabel: (entryKey: string, label: string) => void;
-  updateDraftScheduledDate: (entryKey: string, date: string | null) => void;
-  updateDraftScheduledTimeOverride: (entryKey: string, time: string | null) => void;
+  updateDraftLabel: (entry: PlannerDayDetailEntry, label: string) => void;
+  updateDraftScheduledDate: (entry: PlannerDayDetailEntry, date: string) => void;
+  updateDraftScheduledTimeOverride: (
+    entry: PlannerDayDetailEntry,
+    localTime: string
+  ) => void;
   toggleItemLock: (entry: PlannerDayDetailEntry) => Promise<void>;
   navigateToOpenInstance: (target: OpenGoalInstance | undefined) => void;
   selectedGoalOpenInstances: OpenGoalInstance[];

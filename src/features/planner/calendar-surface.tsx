@@ -638,6 +638,7 @@ export function CalendarSurface({
     selectedGoalOpenInstanceIndex,
     hasPlannerWarnings,
     warningsDismissed,
+    setWarningsDismissed,
     showBlockingLoading: loading && context === null,
     error,
     plannerWarningBannerCopy,
