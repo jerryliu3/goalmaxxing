@@ -79,8 +79,8 @@ describe("checklist presentation", () => {
     expect(
       shouldHideTargetAchievedGoal({
         goal: goal(),
-        completions: [fact("2026-08-12"), fact("2026-08-13")],
-        asOfDate: "2026-08-18",
+        completions: [fact("2026-08-19")],
+        asOfDate: "2026-08-20",
       })
     ).toBe(false);
   });

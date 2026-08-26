@@ -12,6 +12,7 @@ const periodCadenceGoal = {
   recurrence_interval: "weekly",
   target_count: 2,
   target_basis: "period",
+  start_date: "2026-08-01",
 } as Goal;
 
 describe("completion intent", () => {
