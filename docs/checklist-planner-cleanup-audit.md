@@ -1,7 +1,7 @@
 # Checklist and Planner Cleanup Audit
 
-Status: Complete (stack #655–#675)  
-Last updated: 2026-08-26 (definition-of-success closure on stack tip)  
+Status: Complete through Closure v2 (stack #655–#685 + closure-v2)  
+Last updated: 2026-08-26 (closure v2 definition-of-success)  
 Scope: goals, completions, checklist, insights, planner/calendar, progress context, and related database boundaries
 
 ## Executive summary
