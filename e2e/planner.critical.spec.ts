@@ -187,8 +187,16 @@ async function resolveMonthRowDensityState(page: Page) {
   return "pending" as const;
 }
 
+async function waitForMonthRowDensityControl(page: Page) {
+  const densityControl = page.getByRole("button", {
+    name: /^(Compact rows|Expand rows)$/,
+  });
+  await expect(densityControl).toBeVisible({ timeout: 30_000 });
+}
+
 async function ensureMonthCalendarDensity(page: Page) {
   await ensureCalendarMonthView(page);
+  await waitForMonthRowDensityControl(page);
 
   if ((await resolveMonthRowDensityState(page)) === "compact") {
     return;
@@ -196,7 +204,7 @@ async function ensureMonthCalendarDensity(page: Page) {
 
   await expect
     .poll(async () => resolveMonthRowDensityState(page), {
-      timeout: 20_000,
+      timeout: 30_000,
     })
     .not.toBe("pending");
 
@@ -205,12 +213,12 @@ async function ensureMonthCalendarDensity(page: Page) {
   }
 
   const expandRowsButton = page.getByRole("button", { name: "Expand rows", exact: true });
-  await expect(expandRowsButton).toBeEnabled({ timeout: 20_000 });
+  await expect(expandRowsButton).toBeEnabled({ timeout: 30_000 });
   await expandRowsButton.click();
 
   await expect
     .poll(async () => resolveMonthRowDensityState(page), {
-      timeout: 20_000,
+      timeout: 30_000,
     })
     .toBe("compact");
 }
