@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(14);
+select plan(17);
 
 insert into auth.users (id, email)
 values (
@@ -321,6 +321,42 @@ select is(
   ),
   0,
   'direct RPC writes leave no null recurring period target'
+);
+
+set local role service_role;
+
+select is(
+  private.resolve_goal_target_basis(
+    'recurring'::public.goal_frequency_type,
+    'weekly'::public.recurrence_interval,
+    2,
+    'period'::public.goal_target_basis
+  ),
+  'period'::public.goal_target_basis,
+  'resolve_goal_target_basis honors explicit stored period basis'
+);
+
+select is(
+  private.resolve_goal_target_basis(
+    'fixed_milestones'::public.goal_frequency_type,
+    'daily'::public.recurrence_interval,
+    3,
+    'period'::public.goal_target_basis
+  ),
+  'lifetime'::public.goal_target_basis,
+  'resolve_goal_target_basis returns structural lifetime for milestones'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from public.goals
+    where owner_id = '97000000-0000-4000-8000-000000000011'
+      and frequency_type = 'recurring'::public.goal_frequency_type
+      and target_basis is null
+  ),
+  0,
+  'persisted recurring goals have non-null target_basis after write RPCs'
 );
 
 reset role;
