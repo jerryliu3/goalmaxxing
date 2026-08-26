@@ -1,12 +1,8 @@
 import { resolveSelectedDateState } from "@/lib/dates/day";
-import {
-  getCompletionsForCurrentPeriod,
-  hasCompletionToday,
-} from "@/lib/goals/schedule";
+import { hasCompletionToday } from "@/lib/goals/schedule";
 import { isPeriodCadenceGoal } from "@/lib/goals/target-basis";
 import type { ChecklistTemporalContext } from "@/lib/goals/period-domain";
 import type { CompletionDateFact, Goal } from "@/lib/goals/types";
-import type { WeeklyAnchorContext } from "@/lib/goals/periods";
 import {
   resolveCompletionDispatch,
   type CompletionDispatchDecision,
@@ -73,53 +69,18 @@ function buildCompletionIntent({
   };
 }
 
-function resolveLegacyPeriodMutation({
-  completedForCurrentPeriod,
-  completionToUnmark,
-  viewDate,
-}: {
-  completedForCurrentPeriod: boolean;
-  completionToUnmark?: CompletionDateFact;
-  viewDate: string;
-}): Pick<CompletionIntentMutation, "date" | "desiredFactState"> {
-  const routeDesiredFactState = completedForCurrentPeriod ? "absent" : "present";
-  const dispatchDate =
-    routeDesiredFactState === "absent"
-      ? completionToUnmark?.completed_on ?? viewDate
-      : viewDate;
-  return {
-    date: dispatchDate,
-    desiredFactState: routeDesiredFactState,
-  };
-}
-
 export function resolveChecklistCompletionIntent({
   goal,
   completions,
   temporal,
-  weeklyAnchor,
 }: {
   goal: Goal;
   completions: CompletionDateFact[];
   temporal: CompletionTemporalContext;
-  weeklyAnchor?: WeeklyAnchorContext | null;
 }): CompletionIntent {
   const viewDate = temporal.selectedDate;
   const viewDateObj = new Date(`${viewDate}T12:00:00`);
   const completedOnViewDate = hasCompletionToday(completions, viewDateObj);
-  const completionsInCurrentPeriod = getCompletionsForCurrentPeriod(
-    goal,
-    completions,
-    viewDateObj,
-    { weeklyAnchor: weeklyAnchor ?? null }
-  );
-  const completedForCurrentPeriod = completionsInCurrentPeriod.length > 0;
-  const latestCompletionInCurrentPeriod = [...completionsInCurrentPeriod]
-    .sort((left, right) => left.completed_on.localeCompare(right.completed_on))
-    .at(-1);
-  const completionToUnmark = completedOnViewDate
-    ? completions.find((completion) => completion.completed_on === viewDate)
-    : latestCompletionInCurrentPeriod;
   const requirement = getGoalRequirement(goal);
   const desiredFactState: CompletionIntentMutation["desiredFactState"] =
     completedOnViewDate ? "absent" : "present";
@@ -136,22 +97,13 @@ export function resolveChecklistCompletionIntent({
     desiredFactState,
   });
 
-  const mutation =
-    decision.route === "legacy_period"
-      ? resolveLegacyPeriodMutation({
-          completedForCurrentPeriod,
-          completionToUnmark,
-          viewDate,
-        })
-      : {
-          date: viewDate,
-          desiredFactState,
-        };
-
   return buildCompletionIntent({
     goalId: goal.id,
     decision,
-    mutation,
+    mutation: {
+      date: viewDate,
+      desiredFactState,
+    },
   });
 }
 

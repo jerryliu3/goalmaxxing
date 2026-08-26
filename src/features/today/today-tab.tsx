@@ -194,7 +194,6 @@ export function TodayTab({
       readOnly,
       viewDate,
       todayLocalDate,
-      weeklyAnchor,
       completionsByGoal,
       loadData,
       redirectToLogin,
