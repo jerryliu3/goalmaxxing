@@ -1,7 +1,7 @@
 import type { PlannerActiveItemSnapshot } from "@cadence/shared/planner/context";
 import type { PlannerWorkUnit } from "@/lib/planner/work-units";
 
-export function buildWorkUnitIndex(workUnits: PlannerWorkUnit[]) {
+function buildWorkUnitIndex(workUnits: PlannerWorkUnit[]) {
   return new Map(
     workUnits.map((unit) => [
       `${unit.originalGoalId}:${unit.unitKey}`,
