@@ -84,6 +84,25 @@ describe("planner calendar entries", () => {
     expect(entriesByDate.size).toBe(0);
   });
 
+  it("renders credited archived sessions without persisted planner items", () => {
+    const entriesByDate = buildEntriesByDate({
+      workUnits: [
+        {
+          ...unit("2026-08-05"),
+          creditedCompletionDate: "2026-08-05",
+          creditState: "completed_as_scheduled",
+        },
+      ],
+      activeItems: [],
+      activeGoalsByPlanGoalId: new Map(),
+      activeGoalsByOriginalGoalId: new Map(),
+      goalTitles: { "goal-a": "Goal A" },
+      draftItemEdits: {},
+    });
+
+    expect(entriesByDate.get("2026-08-05")).toHaveLength(1);
+  });
+
   it("returns persisted entries and completion markers from one projection", () => {
     const marker = {
       key: "goal-a:total:1:2026-08-06",

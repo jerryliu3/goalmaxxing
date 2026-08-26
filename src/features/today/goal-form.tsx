@@ -211,6 +211,13 @@ export function GoalForm({
     router.replace(exitHref);
     router.refresh();
   }, [exitHref, onExit, router]);
+  const exitWithoutRefresh = useCallback(() => {
+    if (onExit) {
+      onExit();
+      return;
+    }
+    router.replace(exitHref);
+  }, [exitHref, onExit, router]);
 
   useEffect(() => {
     const load = async () => {
@@ -679,17 +686,21 @@ export function GoalForm({
 
     if (error) {
       toast.error(error.message);
-    } else {
-      invalidatePlannerRelatedTabCaches();
-      toast.success(archived ? "Goal restored to active." : "Goal archived.");
-      if (archived) {
-        router.refresh();
-      } else {
-        completeAndExit();
-      }
+      setSaving(false);
+      return;
     }
 
-    setSaving(false);
+    invalidatePlannerRelatedTabCaches();
+    requestXpRefresh();
+    toast.success(archived ? "Goal restored to active." : "Goal archived.");
+
+    if (archived) {
+      setSaving(false);
+      router.refresh();
+      return;
+    }
+
+    exitWithoutRefresh();
   };
 
   const softDeleteGoal = async () => {

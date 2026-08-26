@@ -38,6 +38,10 @@ import {
   type EligibilityReason,
 } from "@/lib/planner/eligibility";
 import {
+  buildArchivedGoalHistoricalWorkUnits,
+  isArchivedGoal,
+} from "@/lib/planner/archived-historical-work-units";
+import {
   buildLinkSuppressionInboundIndex,
   getLinkResumeDate,
   isSuppressedInWindow,
@@ -520,8 +524,14 @@ export function runPlannerKernel(
   );
 
   const eligibleGoalIds = new Set(eligibleGoals.map((goal) => goal.id));
+  const archivedGoals = goals.filter((goal) => isArchivedGoal(goal));
+  const archivedGoalIds = new Set(archivedGoals.map((goal) => goal.id));
   const completions = rawInput.completions
-    .filter((completion) => eligibleGoalIds.has(completion.goal_id))
+    .filter(
+      (completion) =>
+        eligibleGoalIds.has(completion.goal_id) ||
+        archivedGoalIds.has(completion.goal_id)
+    )
     .sort((left, right) => {
       const byGoal = compareCanonicalStrings(left.goal_id, right.goal_id);
       if (byGoal !== 0) return byGoal;
@@ -597,6 +607,7 @@ export function runPlannerKernel(
   const baseAssignments = rawInput.basePlan?.assignments ?? [];
   const previousCompletionToUnit = rawInput.basePlan?.completionToUnit ?? {};
   const workUnits: PlannerWorkUnit[] = [];
+  const archivedHistoricalUnits: PlannerWorkUnit[] = [];
   const completionToUnit: Record<
     string,
     PlannerCompletionUnitIdentity
@@ -739,10 +750,34 @@ export function runPlannerKernel(
       });
     }
   }
+
+  for (const goal of archivedGoals) {
+    const reconciled = buildArchivedGoalHistoricalWorkUnits({
+      goal,
+      window,
+      asOfDate: rawInput.asOfDate,
+      baseAssignments,
+      completions,
+      previousCompletionToUnit,
+      weeklyAnchor: weeklyAnchorContext,
+    });
+    throwBounds(
+      workUnits.length +
+        archivedHistoricalUnits.length +
+        reconciled.units.length >
+        MAX_WORK_UNITS,
+      "work units",
+      workUnits.length + archivedHistoricalUnits.length + reconciled.units.length,
+      MAX_WORK_UNITS
+    );
+    archivedHistoricalUnits.push(...reconciled.units);
+    Object.assign(completionToUnit, reconciled.completionToUnit);
+  }
+
   throwBounds(
-    workUnits.length > MAX_WORK_UNITS,
+    workUnits.length + archivedHistoricalUnits.length > MAX_WORK_UNITS,
     "work units",
-    workUnits.length,
+    workUnits.length + archivedHistoricalUnits.length,
     MAX_WORK_UNITS
   );
 
@@ -1047,7 +1082,18 @@ export function runPlannerKernel(
     generationInputHash,
     scopeState,
     solver,
-    workUnits: orderedWorkUnits,
+    workUnits: [...orderedWorkUnits, ...archivedHistoricalUnits].sort(
+      (left, right) => {
+        const byGoal = compareCanonicalStrings(
+          left.originalGoalId,
+          right.originalGoalId
+        );
+        return byGoal !== 0
+          ? byGoal
+          : left.ordinal - right.ordinal ||
+              compareCanonicalStrings(left.unitKey, right.unitKey);
+      }
+    ),
     completionToUnit,
     driftFacts: driftFacts.sort((left, right) => {
       const byDate = compareCanonicalStrings(
