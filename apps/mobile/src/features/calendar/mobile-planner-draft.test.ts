@@ -15,7 +15,7 @@ const unit: MobilePlannerWorkUnit = {
   unitKey: "total:1",
   scheduledDate: "2026-08-31",
   label: "Run",
-  classification: "scheduled",
+  classification: "open",
   creditState: "uncredited",
   placementWindow: { start: "2026-08-01", end: "2026-09-30" },
 };
