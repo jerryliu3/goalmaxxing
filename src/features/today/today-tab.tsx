@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingCard } from "@/components/ui/loading-card";
-import { resolveSelectedDateState, toLocalDateString } from "@/lib/dates/day";
+import { toLocalDateString } from "@/lib/dates/day";
 import { GoalListControls } from "@/features/goals/goal-list-controls";
 import { ChecklistPastPanels } from "@/features/today/checklist-past-panels";
 import {
@@ -60,24 +60,13 @@ import {
   type GoalDateSort,
 } from "@/lib/goals/list-view";
 import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
-import { countDistinctCompletionDays } from "@/lib/goals/admissible";
+import { useChecklistProjection } from "@/features/today/use-checklist-projection";
 import {
   isProgressContextAuthenticationError,
   progressSummaryMap,
 } from "@/lib/goals/progress-context";
-import {
-  getCompletionsForCurrentPeriod,
-  hasCompletionToday,
-} from "@/lib/goals/schedule";
 import type { Goal } from "@/lib/goals/types";
-import {
-  resolveCompletionDispatch,
-} from "@/lib/planner/completion-dispatch";
-import {
-  getGoalRequirement,
-  isTargetedRecurringGoal,
-} from "@/lib/planner/requirements";
-import { cadencePeriodTarget, isPeriodCadenceGoal } from "@/lib/goals/target-basis";
+import { resolveChecklistCompletionIntent } from "@/lib/planner/completion-intent";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import { reportDuoTelemetry } from "@/lib/social/duo/telemetry";
 
@@ -269,27 +258,14 @@ export function TodayTab({
       }),
     [activeGoals, completionsByGoal, progressByGoal, viewDate]
   );
-  const greenGoalIds = useMemo(() => {
-    const ids = new Set<string>();
-    for (const goal of activeGoals) {
-      if (progressByGoal.get(goal.id)?.outcome === "achieved") {
-        ids.add(goal.id);
-        continue;
-      }
-      if (!isPeriodCadenceGoal(goal)) {
-        continue;
-      }
-      const periodCount = countDistinctCompletionDays(
-        (completionsByGoal.get(goal.id) ?? []).map(
-          (completion) => completion.completed_on
-        )
-      );
-      if (periodCount >= cadencePeriodTarget(goal)) {
-        ids.add(goal.id);
-      }
-    }
-    return ids;
-  }, [activeGoals, completionsByGoal, progressByGoal]);
+  const { presentationByGoalId, greenGoalIds } = useChecklistProjection({
+    goals: activeGoals,
+    completionsByGoal,
+    progressByGoal,
+    selectedDate: viewDate,
+    asOfDate: todayLocalDate,
+    weeklyAnchor,
+  });
 
   const filteredTodayGoals = useMemo(
     () =>
@@ -434,50 +410,26 @@ export function TodayTab({
     }
     const sourceRect = captureViewportRect(sourceElement);
     const completions = completionsByGoal.get(goal.id) ?? [];
-    const completedOnViewDate = hasCompletionToday(completions, viewDateObj);
-    const completionsInCurrentPeriod = getCompletionsForCurrentPeriod(
+    const intent = resolveChecklistCompletionIntent({
       goal,
       completions,
-      viewDateObj,
-      { weeklyAnchor }
-    );
-    const completedForCurrentPeriod = completionsInCurrentPeriod.length > 0;
-    const latestCompletionInCurrentPeriod = [...completionsInCurrentPeriod]
-      .sort((left, right) => left.completed_on.localeCompare(right.completed_on))
-      .at(-1);
-    const completionToUnmark = completedOnViewDate
-      ? completions.find((completion) => completion.completed_on === viewDate)
-      : latestCompletionInCurrentPeriod;
-    const targetedRecurring = isTargetedRecurringGoal(goal) || isPeriodCadenceGoal(goal);
-    const requirement = getGoalRequirement(goal);
-    const desiredFactState = completedOnViewDate ? "absent" : "present";
-    const decision = resolveCompletionDispatch({
-      requirementKind: requirement.kind,
-      targetedRecurring,
-      activePlanMembership: false,
-      matchingItemState: "none",
-      selectedDateState: resolveSelectedDateState(viewDate, todayLocalDate),
-      existingExactFact: completedOnViewDate,
-      desiredFactState,
+      temporal: {
+        selectedDate: viewDate,
+        asOfDate: todayLocalDate,
+      },
+      weeklyAnchor,
     });
 
     setSavingGoalId(goal.id);
     const currentScrollY = window.scrollY;
-    const routeDesiredFactState =
-      decision.route === "legacy_period"
-        ? completedForCurrentPeriod
-          ? "absent"
-          : "present"
-        : desiredFactState;
-    const dispatchDate =
-      decision.route === "legacy_period" && routeDesiredFactState === "absent"
-        ? completionToUnmark?.completed_on ?? viewDate
-        : viewDate;
+    const { decision, mutation } = intent;
+    const routeDesiredFactState = mutation.desiredFactState;
+    const dispatchDate = mutation.date;
 
     const result = await runCompletionMutation({
       decision,
       desiredFactState: routeDesiredFactState,
-      goalId: goal.id,
+      goalId: mutation.goalId,
       date: dispatchDate,
       timezone: resolveUserTimezone(),
       sourceRect,
@@ -499,11 +451,7 @@ export function TodayTab({
       toast.success(`Great work. Goal completed for ${viewDate}.`);
       pinRecentlyCompletedGoal(goal.id);
     } else {
-      const removedDate =
-        decision.route === "legacy_period"
-          ? completionToUnmark?.completed_on ?? viewDate
-          : viewDate;
-      toast.success(`Marked as incomplete for ${removedDate}.`);
+      toast.success(`Marked as incomplete for ${dispatchDate}.`);
     }
 
     setSavingGoalId(null);
@@ -516,7 +464,6 @@ export function TodayTab({
     pinRecentlyCompletedGoal,
     todayLocalDate,
     viewDate,
-    viewDateObj,
     weeklyAnchor,
   ]);
   const renderGoalCard = useCallback(
@@ -528,6 +475,7 @@ export function TodayTab({
           goal={goal}
           completions={completionsByGoal.get(goal.id) ?? []}
           progress={progressByGoal.get(goal.id)}
+          presentation={presentationByGoalId.get(goal.id)}
           linkedCount={linkedCountByGoalId.get(goal.id) ?? 0}
           imageUrl={data.photoUrls[goal.id]}
           disabled={archived || savingGoalId === goal.id}
@@ -550,6 +498,7 @@ export function TodayTab({
       data.photoUrls,
       linkedCountByGoalId,
       progressByGoal,
+      presentationByGoalId,
       readOnly,
       savingGoalId,
       toggleCompletion,
