@@ -1943,4 +1943,42 @@ describe("solve intent and draft pins", () => {
       ).generationInputHash
     ).not.toBe(base);
   });
+
+  it("keeps credited work units for archived goals without scheduling new ones", () => {
+    const archivedGoal = goal({
+      archived_at: "2026-08-10T00:00:00.000Z",
+    });
+    const completions: Completion[] = [
+      {
+        id: "completion-1",
+        goal_id: archivedGoal.id,
+        user_id: archivedGoal.owner_id,
+        completed_on: "2026-08-05",
+        source: "manual",
+        created_at: "2026-08-05T00:00:00.000Z",
+      },
+    ];
+
+    const output = runPlannerKernel(
+      input({
+        goals: [archivedGoal],
+        completions,
+        asOfDate: "2026-08-10",
+      })
+    );
+
+    expect(output.eligibility).toEqual([
+      {
+        goalId: archivedGoal.id,
+        eligible: false,
+        reason: "archived",
+      },
+    ]);
+    expect(output.workUnits).toHaveLength(1);
+    expect(output.workUnits[0]).toMatchObject({
+      originalGoalId: archivedGoal.id,
+      creditedCompletionId: "completion-1",
+      creditedCompletionDate: "2026-08-05",
+    });
+  });
 });

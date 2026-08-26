@@ -146,13 +146,19 @@ export function buildEntriesByDateProjection({
   for (const unit of workUnits ?? []) {
     const key = `${unit.originalGoalId}:${unit.unitKey}`;
     unitByEntryKey.set(key, unit);
-    if (!unit.scheduledDate || !persistedEntryKeys.has(key)) {
+    const displayDay = unit.scheduledDate ?? unit.creditedCompletionDate;
+    const isCreditedHistoricalUnit =
+      unit.creditedCompletionId !== null && unit.creditState !== "uncredited";
+    if (
+      !displayDay ||
+      (!isCreditedHistoricalUnit && !persistedEntryKeys.has(key))
+    ) {
       continue;
     }
-    setEntryOnDay(unit.scheduledDate, key, {
+    setEntryOnDay(displayDay, key, {
       ...buildEntryFromUnit({
         key,
-        day: unit.scheduledDate,
+        day: displayDay,
         unit,
         activeItem: null,
       }),
