@@ -8,7 +8,7 @@ import type { Goal } from "@/lib/goals/types";
 function goal(
   recurrenceInterval: "daily" | "weekly" | "monthly",
   targetCount: number,
-  targetBasis?: Goal["target_basis"]
+  targetBasis: Goal["target_basis"]
 ): Goal {
   return {
     id: "goal-1",

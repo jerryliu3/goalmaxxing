@@ -140,6 +140,7 @@ function makeGoal({
     recurrence_interval: recurrenceInterval,
     difficulty: "medium",
     target_count: targetCount,
+    target_basis: frequencyType === "fixed_milestones" ? "lifetime" : "period",
     milestone_names: milestoneNames ?? null,
     start_date: startDate,
     end_date: endDate,

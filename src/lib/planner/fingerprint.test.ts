@@ -17,6 +17,7 @@ const goal: Goal = {
   frequency_type: "recurring",
   recurrence_interval: "weekly",
   target_count: 2,
+  target_basis: "period",
   milestone_names: null,
   start_date: "2026-08-01",
   end_date: "2026-08-31",

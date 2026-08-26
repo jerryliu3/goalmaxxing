@@ -41,6 +41,7 @@ describe("toLinkSuppressionSource", () => {
       frequency_type: "recurring",
       recurrence_interval: "weekly",
       target_count: 20,
+      target_basis: "lifetime",
       milestone_names: null,
       start_date: "2026-01-01",
       end_date: "2026-12-31",

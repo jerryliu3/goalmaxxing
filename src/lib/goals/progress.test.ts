@@ -29,6 +29,7 @@ function buildGoal(overrides: Partial<Goal>): Goal {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
+    target_basis: overrides.target_basis ?? "period",
   };
 }
 

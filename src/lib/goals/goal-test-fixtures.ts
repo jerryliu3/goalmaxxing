@@ -4,16 +4,22 @@ export function withLifetimeTargetBasisForTests(
   goal: Goal,
   overrides: Partial<Goal> = {}
 ): Goal {
-  if (
-    goal.frequency_type === "recurring" &&
-    typeof goal.target_count === "number" &&
-    goal.target_count > 0 &&
-    overrides.target_basis === undefined &&
-    goal.target_basis === undefined
-  ) {
-    return { ...goal, target_basis: "lifetime" };
+  const merged: Goal = {
+    ...goal,
+    ...overrides,
+    target_basis: overrides.target_basis ?? goal.target_basis,
+  };
+  if (overrides.target_basis !== undefined) {
+    return merged;
   }
-  return goal;
+  if (
+    merged.frequency_type === "recurring" &&
+    typeof merged.target_count === "number" &&
+    merged.target_count > 0
+  ) {
+    return { ...merged, target_basis: "lifetime" };
+  }
+  return merged;
 }
 
 export function buildGoal(overrides: Partial<Goal> = {}): Goal {
@@ -38,5 +44,6 @@ export function buildGoal(overrides: Partial<Goal> = {}): Goal {
     created_at: "2026-08-01T00:00:00.000Z",
     updated_at: "2026-08-01T00:00:00.000Z",
     ...overrides,
+    target_basis: overrides.target_basis ?? "period",
   };
 }

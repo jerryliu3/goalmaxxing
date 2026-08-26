@@ -24,6 +24,7 @@ const runningGoal: Goal = {
   frequency_type: "recurring",
   recurrence_interval: "weekly",
   target_count: 30,
+  target_basis: "lifetime",
   milestone_names: null,
   start_date: "2026-08-01",
   end_date: "2026-08-31",
