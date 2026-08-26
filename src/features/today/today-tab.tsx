@@ -30,7 +30,6 @@ import {
   recurrenceFilterOptions,
   selectActiveGoals,
   selectArchivedGoals,
-  selectCompletedTargetGoalIds,
   selectEndedGoals,
   selectFilteredTodayGoals,
   selectUpcomingGoals,
@@ -248,24 +247,15 @@ export function TodayTab({
     todayEndMonths,
     checklistFilterStartMonth
   );
-  const completedTargetGoalIds = useMemo(
-    () =>
-      selectCompletedTargetGoalIds({
-        goals: activeGoals,
-        progressByGoal,
-        completionsByGoal,
-        asOfDate: viewDate,
-      }),
-    [activeGoals, completionsByGoal, progressByGoal, viewDate]
-  );
-  const { presentationByGoalId, greenGoalIds } = useChecklistProjection({
-    goals: activeGoals,
-    completionsByGoal,
-    progressByGoal,
-    selectedDate: viewDate,
-    asOfDate: todayLocalDate,
-    weeklyAnchor,
-  });
+  const { presentationByGoalId, greenGoalIds, targetAchievedGoalIds } =
+    useChecklistProjection({
+      goals: activeGoals,
+      completionsByGoal,
+      progressByGoal,
+      selectedDate: viewDate,
+      asOfDate: todayLocalDate,
+      weeklyAnchor,
+    });
 
   const filteredTodayGoals = useMemo(
     () =>
@@ -276,16 +266,16 @@ export function TodayTab({
         recurrenceFilters,
         searchQuery: todayGoalSearchQuery,
         endMonths: effectiveTodayEndMonths,
-        completedTargetGoalIds,
+        completedTargetGoalIds: targetAchievedGoalIds,
         showCompletedGoals,
       }),
     [
       activeGoals,
       categoryFilters,
-      completedTargetGoalIds,
       effectiveTodayEndMonths,
       recurrenceFilters,
       showCompletedGoals,
+      targetAchievedGoalIds,
       todayDate,
       todayGoalSearchQuery,
     ]
@@ -678,7 +668,7 @@ export function TodayTab({
                         },
                         {
                           label: "Show completed goals",
-                          count: completedTargetGoalIds.size,
+                          count: targetAchievedGoalIds.size,
                           checked: showCompletedGoals,
                           onChange: setShowCompletedGoals,
                         },
