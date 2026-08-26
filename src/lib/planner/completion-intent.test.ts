@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { buildPlannerDayEntry } from "@/features/planner/test-fixtures";
 import {
   resolveChecklistCompletionIntent,
   resolveInsightsCompletionIntent,
+  resolvePlannerEntryCompletionIntent,
   resolveTargetedRecurring,
 } from "@/lib/planner/completion-intent";
 import type { Goal } from "@/lib/goals/types";
@@ -54,5 +56,20 @@ describe("completion intent", () => {
 
     expect(intent.decision.route).toBe("canonical_exact_date");
     expect(intent.mutation.date).toBe("2026-08-12");
+  });
+
+  it("routes planner deadline_total off-plan entries through exact-date semantics", () => {
+    const intent = resolvePlannerEntryCompletionIntent({
+      entry: buildPlannerDayEntry({
+        unitKey: "deadline:total",
+        activeGoal: null,
+        activeItem: null,
+        creditState: "uncredited",
+      }),
+      temporal: { selectedDate: "2026-08-12", asOfDate: "2026-08-25" },
+      canMutatePlanItems: false,
+    });
+
+    expect(intent.decision.route).toBe("canonical_exact_date");
   });
 });

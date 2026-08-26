@@ -2,11 +2,12 @@ import type {
   CompletionControlDisabledReason,
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
-import { resolveSelectedDateState } from "@/lib/dates/day";
+import type { CompletionTemporalContext } from "@/lib/planner/completion-intent";
 import {
-  resolveCompletionDispatch,
-  type CompletionDispatchDecision,
-} from "@/lib/planner/completion-dispatch";
+  getPlannerCompletionControlDisabledReason,
+  resolvePlannerEntryCompletionIntent,
+} from "@/lib/planner/completion-intent";
+import type { CompletionDispatchDecision } from "@/lib/planner/completion-dispatch";
 
 export interface DateFactDispatchForEntry {
   currentlyCredited: boolean;
@@ -33,40 +34,12 @@ export function getDateFactDispatchForEntry({
     return null;
   }
 
-  const requirementKind =
-    entry.activeItem?.requirement_kind ??
-    (entry.unitKey.startsWith("milestone:")
-      ? "milestone_sequence"
-      : entry.unitKey.startsWith("cadence:")
-        ? "cadence"
-        : "deadline_total");
-  const targetedRecurring =
-    requirementKind === "deadline_total" || !entry.activeGoal;
-  const currentlyCredited = entry.creditState !== "uncredited";
-  const desiredFactState = currentlyCredited ? "absent" : "present";
-  const matchingItemState =
-    entry.classification === "satisfied_elsewhere"
-      ? "satisfied_elsewhere"
-      : entry.classification.startsWith("historical")
-        ? "historical"
-        : entry.activeItem
-          ? "actionable"
-          : "none";
-  const decision = resolveCompletionDispatch({
-    requirementKind,
-    targetedRecurring,
-    activePlanMembership: Boolean(entry.activeGoal),
-    matchingItemState,
-    selectedDateState: resolveSelectedDateState(selectedDate, asOfDate),
-    existingExactFact: currentlyCredited,
-    desiredFactState,
+  const { controlState } = resolvePlannerEntryCompletionIntent({
+    entry,
+    temporal: { selectedDate, asOfDate },
+    canMutatePlanItems: true,
   });
-
-  return {
-    currentlyCredited,
-    desiredFactState,
-    decision,
-  };
+  return controlState.dispatch;
 }
 
 export function getCompletionControlDisabledReason({
@@ -78,37 +51,28 @@ export function getCompletionControlDisabledReason({
   dispatch: DateFactDispatchForEntry | null;
   canMutatePlanItems: boolean;
 }): CompletionControlDisabledReason | null {
-  if (entry.draftGhost) {
-    return "unsupported";
-  }
   if (!dispatch) {
     return "unsupported";
   }
-  if (!dispatch.decision.allowed) {
-    if (dispatch.decision.reason === "future_creation") {
-      return "future_creation";
-    }
-    if (dispatch.decision.reason === "satisfied_elsewhere") {
-      return "satisfied_elsewhere";
-    }
-    return "unsupported";
-  }
-  if (dispatch.decision.route === "canonical_exact_date") {
-    return null;
-  }
-  if (dispatch.decision.route === "item_date") {
-    if (!canMutatePlanItems || !entry.activeItem) {
-      return "out_of_scope_route";
-    }
-    return null;
-  }
-  if (dispatch.decision.route === "plan_goal_date") {
-    if (!canMutatePlanItems || !entry.activeGoal) {
-      return "out_of_scope_route";
-    }
-    return null;
-  }
-  return "out_of_scope_route";
+  return getPlannerCompletionControlDisabledReason({
+    entry,
+    intent: {
+      allowed: dispatch.decision.allowed,
+      disabledReason:
+        dispatch.decision.allowed
+          ? null
+          : dispatch.decision.reason === "future_creation"
+            ? "future_creation"
+            : "satisfied_elsewhere",
+      decision: dispatch.decision,
+      mutation: {
+        goalId: entry.originalGoalId,
+        date: "",
+        desiredFactState: dispatch.desiredFactState,
+      },
+    },
+    canMutatePlanItems,
+  });
 }
 
 export function getCompletionControlState({
@@ -122,19 +86,18 @@ export function getCompletionControlState({
   asOfDate: string | null;
   canMutatePlanItems: boolean;
 }): CompletionControlState {
-  const dispatch = getDateFactDispatchForEntry({
+  if (!asOfDate || !selectedDate) {
+    return {
+      currentlyCredited: entry.creditState !== "uncredited",
+      dispatch: null,
+      disabledReason: "unsupported",
+    };
+  }
+
+  const { controlState } = resolvePlannerEntryCompletionIntent({
     entry,
-    selectedDate,
-    asOfDate,
-  });
-  const disabledReason = getCompletionControlDisabledReason({
-    entry,
-    dispatch,
+    temporal: { selectedDate, asOfDate },
     canMutatePlanItems,
   });
-  return {
-    currentlyCredited: Boolean(dispatch?.currentlyCredited),
-    dispatch,
-    disabledReason,
-  };
+  return controlState;
 }
