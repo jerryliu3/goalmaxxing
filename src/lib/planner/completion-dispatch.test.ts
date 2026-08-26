@@ -64,6 +64,26 @@ describe("completion dispatch bridge", () => {
       }).route
     ).toBe("item_date");
   });
+
+  it("routes period-cadence goals through exact-date semantics on every surface", () => {
+    const periodCadenceInput = {
+      requirementKind: "cadence" as const,
+      activePlanMembership: false,
+      matchingItemState: "none" as const,
+      selectedDateState: "today" as const,
+      existingExactFact: false,
+      desiredFactState: "present" as const,
+    };
+
+    for (const targetedRecurring of [true, false]) {
+      expect(
+        resolveCompletionDispatch({
+          ...periodCadenceInput,
+          targetedRecurring,
+        }).route
+      ).toBe(targetedRecurring ? "canonical_exact_date" : "legacy_period");
+    }
+  });
 });
 
 describe("completion dispatch executor", () => {
