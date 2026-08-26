@@ -22,6 +22,13 @@ Target-achieved **hiding** (the "show completed goals" filter) uses the **browse
 its target was achieved; it hides only after that achieved day has passed relative to
 the browsed date. Period cadence goals reset hiding each new period.
 
+Contract cases covered by `checklist-presentation.test.ts`:
+
+- **Achieved-day visible:** when `selectedDate` equals the achievement day, `shouldHideWhenCompletedFilterOff` is false even if `asOfDate` is later.
+- **Hide after day passes:** once the browsed date moves past the achievement day, hide becomes true.
+- **Next-period reset:** a new period with fewer completions than the target does not hide.
+- **`selectedDate` vs `asOfDate` divergence:** hide follows `selectedDate`; green/outcome can follow `asOfDate` progress summaries independently.
+
 **Green** state (`isGreen`, period counts) and lifetime **outcome** badges use
 `asOfDate` progress summaries from `/api/progress/context`. Mid-period browsing can
 therefore show green while the hide filter still shows the goal on the achieved day,
