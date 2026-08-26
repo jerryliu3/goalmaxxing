@@ -1,4 +1,4 @@
-import { GoalForm } from "@/features/today/goal-form";
+import { GoalEditPageEntry } from "@/features/goals/goal-edit-page-entry";
 
 interface GoalEditPageProps {
   params: Promise<{ id: string }>;
@@ -7,9 +7,5 @@ interface GoalEditPageProps {
 export default async function GoalEditPage({ params }: GoalEditPageProps) {
   const { id } = await params;
 
-  return (
-    <div className="mx-auto w-full max-w-3xl">
-      <GoalForm goalId={id} />
-    </div>
-  );
+  return <GoalEditPageEntry goalId={id} />;
 }

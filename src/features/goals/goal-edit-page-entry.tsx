@@ -5,15 +5,14 @@ import {
   completeGoalEditor,
   dismissGoalEditor,
 } from "@/features/goals/goal-editor-navigation";
-import { GoalRouteSheet } from "@/features/goals/goal-route-sheet";
 import { GoalForm } from "@/features/today/goal-form";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
 
-interface GoalEditSheetEntryProps {
+interface GoalEditPageEntryProps {
   goalId: string;
 }
 
-export function GoalEditSheetEntry({ goalId }: GoalEditSheetEntryProps) {
+export function GoalEditPageEntry({ goalId }: GoalEditPageEntryProps) {
   const router = useAppRouter();
   const handleDismiss = useCallback(() => {
     dismissGoalEditor(router);
@@ -23,15 +22,12 @@ export function GoalEditSheetEntry({ goalId }: GoalEditSheetEntryProps) {
   }, [router]);
 
   return (
-    <GoalRouteSheet onClose={handleDismiss} title="Edit goal">
-      <div className="mx-auto w-full max-w-3xl">
-        <GoalForm
-          goalId={goalId}
-          onExit={handleComplete}
-          onDismiss={handleDismiss}
-          showBackButton={false}
-        />
-      </div>
-    </GoalRouteSheet>
+    <div className="mx-auto w-full max-w-3xl">
+      <GoalForm
+        goalId={goalId}
+        onExit={handleComplete}
+        onDismiss={handleDismiss}
+      />
+    </div>
   );
 }
