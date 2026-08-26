@@ -894,3 +894,4 @@ export function CalendarSurface({
   });
 
   return <PlannerCalendarSurfaceLayout {...layoutProps} />;
+}
