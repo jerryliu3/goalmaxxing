@@ -5,6 +5,7 @@ import {
 } from "@/lib/goals/checklist-presentation";
 import { createChecklistTemporalContext } from "@/lib/goals/period-domain";
 import type { CompletionDateFact, Goal } from "@/lib/goals/types";
+import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 
 function goal(overrides: Partial<Goal> = {}): Goal {
   return {
@@ -45,7 +46,7 @@ describe("checklist presentation", () => {
         goalId: "goal-1",
         outcome: "in_progress",
         admissibleCompletionCount: 2,
-      },
+      } as ProgressContextSummary,
       temporal: createChecklistTemporalContext({
         selectedDate: "2026-08-12",
         asOfDate: "2026-08-25",

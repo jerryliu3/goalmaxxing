@@ -14,11 +14,11 @@ export interface ChecklistGoalPresentation {
   lifetimeAchieved: boolean;
   isGreen: boolean;
   displayCompletionCount: number;
-  shouldHideWhenCompletedFilterOff: boolean;
-  shouldSortToBottom: boolean;
 }
 
-function getDistinctSortedCompletionDates(completions: CompletionDateFact[]) {
+function getDistinctSortedCompletionDates(
+  completions: Array<Pick<CompletionDateFact, "completed_on">>
+) {
   return Array.from(
     new Set(completions.map((completion) => completion.completed_on))
   ).sort((left, right) => left.localeCompare(right));
@@ -31,8 +31,8 @@ export function shouldHideTargetAchievedGoal({
   asOfDate,
 }: {
   goal: Goal;
-  progress?: ProgressContextSummary;
-  completions: CompletionDateFact[];
+  progress?: Pick<ProgressContextSummary, "outcome" | "achievementDate">;
+  completions: Array<Pick<CompletionDateFact, "completed_on">>;
   asOfDate: string;
 }): boolean {
   if (isPeriodCadenceGoal(goal)) {
@@ -104,13 +104,6 @@ export function projectChecklistGoalPresentation({
     lifetimeAchieved,
     isGreen,
     displayCompletionCount,
-    shouldHideWhenCompletedFilterOff: shouldHideTargetAchievedGoal({
-      goal,
-      progress,
-      completions,
-      asOfDate: selectedDate,
-    }),
-    shouldSortToBottom: isGreen,
   };
 }
 
