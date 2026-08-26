@@ -1,5 +1,4 @@
 import { resolveCategoryKey } from "@/lib/goals/category";
-import { getSortedCompletionDates } from "@/lib/goals/completion-grouping";
 import { getGoalLifecycle } from "@/lib/goals/lifecycle";
 import {
   filterGoalsByEndMonths,
@@ -7,6 +6,7 @@ import {
   type GoalDateSort,
 } from "@/lib/goals/list-view";
 import { isGoalManuallyArchived } from "@/lib/goals/schedule";
+import { cadencePeriodTarget, isPeriodCadenceGoal } from "@/lib/goals/target-basis";
 import type { Goal } from "@/lib/goals/types";
 
 export type RecurrenceFilter = "all" | "daily" | "weekly" | "monthly" | "fixed";
@@ -110,19 +110,51 @@ export function selectCompletedTargetGoalIds({
   completionsByGoal,
   asOfDate,
 }: {
-  goals: Array<{ id: string }>;
-  progressByGoal: ReadonlyMap<string, { outcome: string } | undefined>;
+  goals: Goal[];
+  progressByGoal: ReadonlyMap<
+    string,
+    { outcome: string; achievementDate?: string | null } | undefined
+  >;
   completionsByGoal: ReadonlyMap<string, Array<{ completed_on: string }>>;
   asOfDate: string;
 }): Set<string> {
   const ids = new Set<string>();
+  const getDistinctSortedCompletionDates = (goalId: string) =>
+    Array.from(
+      new Set((completionsByGoal.get(goalId) ?? []).map((completion) => completion.completed_on))
+    ).sort((left, right) => left.localeCompare(right));
+
   for (const goal of goals) {
-    if (progressByGoal.get(goal.id)?.outcome !== "achieved") {
+    if (isPeriodCadenceGoal(goal)) {
+      const distinctSortedDates = getDistinctSortedCompletionDates(goal.id);
+      const target = cadencePeriodTarget(goal);
+      if (distinctSortedDates.length < target) {
+        if (progressByGoal.get(goal.id)?.outcome === "achieved") {
+          ids.add(goal.id);
+        }
+        continue;
+      }
+      const achievedOn = distinctSortedDates[target - 1] ?? null;
+      if (achievedOn !== null && achievedOn < asOfDate) {
+        ids.add(goal.id);
+      }
       continue;
     }
-    const lastCompletedOn = getSortedCompletionDates(
-      completionsByGoal.get(goal.id) ?? []
-    ).at(-1);
+
+    const progress = progressByGoal.get(goal.id);
+    if (progress?.outcome !== "achieved") {
+      continue;
+    }
+    if (progress.achievementDate !== undefined) {
+      if (
+        progress.achievementDate !== null &&
+        progress.achievementDate < asOfDate
+      ) {
+        ids.add(goal.id);
+      }
+      continue;
+    }
+    const lastCompletedOn = getDistinctSortedCompletionDates(goal.id).at(-1);
     // Checklist facts are usually just the viewed day. An achieved goal with
     // no fact on that day was therefore hit on an earlier date.
     if (lastCompletedOn == null || lastCompletedOn < asOfDate) {

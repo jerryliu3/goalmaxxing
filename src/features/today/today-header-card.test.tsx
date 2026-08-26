@@ -24,8 +24,12 @@ describe("TodayHeaderCard", () => {
 
     const title = screen.getByText("Friday");
     const dateField = screen.getByLabelText("Checklist date");
+    const titleRow = title.closest("[data-title-date-row]");
     expect(title.closest("[data-title-date-row]")).toBe(
       dateField.closest("[data-title-date-row]")
+    );
+    expect(titleRow).toHaveClass(
+      "grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]"
     );
     expect(title).not.toHaveClass("text-xl");
     expect(title).toHaveClass("whitespace-nowrap");

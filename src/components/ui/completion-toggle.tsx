@@ -20,11 +20,16 @@ const sizeClasses = {
   },
 } as const;
 
+type CompletionToggleClickHandler = (
+  event: React.MouseEvent<HTMLButtonElement>
+) => void | PromiseLike<void>;
+
 interface CompletionToggleProps
-  extends Omit<React.ComponentProps<"button">, "children"> {
+  extends Omit<React.ComponentProps<"button">, "children" | "onClick"> {
   completed: boolean;
   pending?: boolean;
   size?: keyof typeof sizeClasses;
+  onClick?: CompletionToggleClickHandler;
 }
 
 export function CompletionToggle({
@@ -84,7 +89,10 @@ export function CompletionToggle({
       optimisticBaseStateRef.current = null;
       optimisticTimerRef.current = null;
     }, OPTIMISTIC_FALLBACK_MS);
-    onClick?.(event);
+    const mutation = onClick?.(event);
+    if (mutation) {
+      void Promise.resolve(mutation).then(clearOptimisticState, clearOptimisticState);
+    }
   };
 
   const visualCompleted = optimisticCompleted ?? completed;

@@ -119,6 +119,10 @@ export function isGoalManuallyArchived(goal: Goal): boolean {
   return goal.archived_at !== null;
 }
 
+interface FrequencySummaryOptions {
+  periodScopedCount?: boolean;
+}
+
 function getRecurringIntervalLabel(goal: Goal): string {
   if (goal.recurrence_interval === "weekly") {
     return "Weekly";
@@ -131,7 +135,11 @@ function getRecurringIntervalLabel(goal: Goal): string {
   return "Daily";
 }
 
-export function getFrequencySummary(goal: Goal, completionCount: number): string {
+export function getFrequencySummary(
+  goal: Goal,
+  completionCount: number,
+  options: FrequencySummaryOptions = {}
+): string {
   if (goal.frequency_type === "fixed_milestones") {
     return `${completionCount}/${goal.target_count ?? 0} milestones completed`;
   }
@@ -146,8 +154,14 @@ export function getFrequencySummary(goal: Goal, completionCount: number): string
 
   const intervalLabel = getRecurringIntervalLabel(goal);
   const perPeriodTarget = cadencePeriodTarget(goal);
+  const periodScopedCount = options.periodScopedCount === true;
   if (perPeriodTarget > 1) {
-    return `${intervalLabel} · ${completionCount} completions · ${perPeriodTarget} per period`;
+    return periodScopedCount
+      ? `${intervalLabel} · ${completionCount}/${perPeriodTarget} this period`
+      : `${intervalLabel} · ${completionCount} completions · ${perPeriodTarget} per period`;
+  }
+  if (periodScopedCount) {
+    return `${intervalLabel} · ${completionCount}/1 this period`;
   }
   return `${intervalLabel} recurring · ${completionCount} completions`;
 }
