@@ -163,7 +163,7 @@ export function GoalCreationFieldControls({
   };
 
   return (
-    <fieldset disabled={disabled} className="contents">
+    <fieldset disabled={disabled} className="m-0 min-w-0 space-y-6 border-0 p-0">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="space-y-2">
           <Label htmlFor="goal-title">Name</Label>
