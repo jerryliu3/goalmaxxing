@@ -314,62 +314,72 @@ async function fetchPlannerContextSnapshot(
   page: Page,
   scopeMonth: string
 ): Promise<PlannerContextSnapshot> {
-  return page.evaluate(async (month) => {
-    const response = await fetch(`/api/planner/context?scopeMonth=${month}`);
-    if (!response.ok) {
-      throw new Error(
-        `Planner context load failed (${response.status}) for scope ${month}.`
-      );
-    }
-    const body = (await response.json()) as {
-      scopeMonth: string;
-      activePlan: {
-        goals: Array<{ id: string; original_goal_id: string }>;
-        items: Array<{
-          plan_goal_id: string;
-          unit_key: string;
-          scheduled_date: string | null;
-        }>;
-      } | null;
-      preview: {
-        workUnits: Array<{
-          originalGoalId: string;
-          unitKey: string;
-          scheduledDate: string | null;
-        }>;
-      } | null;
-    };
-    const placementsByEntryKey: Record<string, string | null> = {};
-    if (body.activePlan) {
-      const goalIdByPlanGoalId = new Map(
-        body.activePlan.goals.map((goal) => [goal.id, goal.original_goal_id])
-      );
-      for (const item of body.activePlan.items) {
-        const originalGoalId = goalIdByPlanGoalId.get(item.plan_goal_id);
-        if (!originalGoalId || item.scheduled_date === null) {
-          continue;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await page.evaluate(async (month) => {
+        const response = await fetch(`/api/planner/context?scopeMonth=${month}`);
+        if (!response.ok) {
+          throw new Error(
+            `Planner context load failed (${response.status}) for scope ${month}.`
+          );
         }
-        placementsByEntryKey[`${originalGoalId}:${item.unit_key}`] =
-          item.scheduled_date;
-      }
-    } else if (body.preview) {
-      for (const unit of body.preview.workUnits) {
-        if (unit.scheduledDate === null) {
-          continue;
+        const body = (await response.json()) as {
+          scopeMonth: string;
+          activePlan: {
+            goals: Array<{ id: string; original_goal_id: string }>;
+            items: Array<{
+              plan_goal_id: string;
+              unit_key: string;
+              scheduled_date: string | null;
+            }>;
+          } | null;
+          preview: {
+            workUnits: Array<{
+              originalGoalId: string;
+              unitKey: string;
+              scheduledDate: string | null;
+            }>;
+          } | null;
+        };
+        const placementsByEntryKey: Record<string, string | null> = {};
+        if (body.activePlan) {
+          const goalIdByPlanGoalId = new Map(
+            body.activePlan.goals.map((goal) => [goal.id, goal.original_goal_id])
+          );
+          for (const item of body.activePlan.items) {
+            const originalGoalId = goalIdByPlanGoalId.get(item.plan_goal_id);
+            if (!originalGoalId || item.scheduled_date === null) {
+              continue;
+            }
+            placementsByEntryKey[`${originalGoalId}:${item.unit_key}`] =
+              item.scheduled_date;
+          }
+        } else if (body.preview) {
+          for (const unit of body.preview.workUnits) {
+            if (unit.scheduledDate === null) {
+              continue;
+            }
+            placementsByEntryKey[`${unit.originalGoalId}:${unit.unitKey}`] =
+              unit.scheduledDate;
+          }
+        } else {
+          throw new Error(
+            "Planner context has neither active plan nor preview; cannot snapshot placements."
+          );
         }
-        placementsByEntryKey[`${unit.originalGoalId}:${unit.unitKey}`] =
-          unit.scheduledDate;
+        return {
+          scopeMonth: body.scopeMonth,
+          placementsByEntryKey,
+        };
+      }, scopeMonth);
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
       }
-    } else {
-      throw new Error(
-        "Planner context has neither active plan nor preview; cannot snapshot placements."
-      );
+      await page.waitForTimeout(500 * (attempt + 1));
     }
-    return {
-      scopeMonth: body.scopeMonth,
-      placementsByEntryKey,
-    };
-  }, scopeMonth);
+  }
+  throw new Error(`Planner context snapshot failed for scope ${scopeMonth}.`);
 }
 
 // Keep in sync with MOUSE_PRESS_TO_DRAG_DELAY_MS in calendar-dnd.tsx (120ms).
@@ -687,8 +697,31 @@ test.describe("planner critical rails", () => {
       JSON.stringify(attempt.saveResult.responseBody)
     ).toBe(200);
 
+    const afterScopeMonth = moveCommand.scheduledDate.slice(0, 7);
+    const sourceDate =
+      attempt.before.placementsByEntryKey[movedEntryKey] ?? moveCommand.scheduledDate;
+    const sourceScopeMonth = sourceDate.slice(0, 7);
+
     await page.reload();
-    await openCalendar(page);
+    await openCalendar(page, afterScopeMonth);
+    await expect
+      .poll(
+        async () =>
+          (await fetchPlannerContextSnapshot(page, afterScopeMonth))
+            .placementsByEntryKey[movedEntryKey],
+        { timeout: 30_000 }
+      )
+      .toBe(moveCommand.scheduledDate);
+
+    if (sourceScopeMonth !== afterScopeMonth) {
+      const sourceMonthSnapshot = await fetchPlannerContextSnapshot(
+        page,
+        sourceScopeMonth
+      );
+      expect(sourceMonthSnapshot.placementsByEntryKey[movedEntryKey] ?? null).toBeNull();
+      return;
+    }
+
     const after = await fetchPlannerContextSnapshot(page, attempt.before.scopeMonth);
 
     const changedEntries = Array.from(
@@ -750,11 +783,9 @@ test.describe("planner critical rails", () => {
     await expect(dayCellWithEntry).toBeVisible({ timeout: 15_000 });
     await dayCellWithEntry.click();
     const calendarPayload = await runCompletionToggleAction(page, async () => {
-      const button = page
-        .locator(COMPLETION_TOGGLE_SELECTOR)
-        .first();
-      await expect(button).toBeVisible();
-      await expect(button).toBeEnabled();
+      const button = page.locator(COMPLETION_TOGGLE_SELECTOR).first();
+      await expect(button).toBeVisible({ timeout: 15_000 });
+      await expect(button).toBeEnabled({ timeout: 15_000 });
       await button.click();
     });
     expect(calendarPayload.goalId).toBeTruthy();
