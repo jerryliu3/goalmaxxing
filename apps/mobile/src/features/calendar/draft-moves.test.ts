@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
+import type { PlannerWorkUnit } from "@cadence/shared/planner/context";
 import { createEmptyMobilePlannerDraft } from "./mobile-planner-draft";
 import { DraftMoveError, planMobileDraftMove } from "./draft-moves";
 
-const unit = {
+const unit: PlannerWorkUnit = {
   originalGoalId: "22222222-2222-4222-8222-222222222222",
   unitKey: "total:1",
   scheduledDate: "2026-08-31",

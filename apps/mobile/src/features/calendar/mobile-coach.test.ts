@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { PlannerWorkUnit } from "@cadence/shared/planner/context";
 import {
   applyMobileCoachPatches,
   buildMobileCoachRequest,
@@ -9,7 +10,7 @@ import {
 } from "./mobile-planner-draft";
 import type { MobilePlannerContext } from "./planner-context-loader";
 
-const workUnits = [
+const workUnits: PlannerWorkUnit[] = [
   {
     originalGoalId: "goal-a",
     unitKey: "total:1",
