@@ -25,7 +25,7 @@ export const runtime = "nodejs";
 const MAX_GOALS_PER_REQUEST = 50;
 const MAX_REQUEST_BYTES = 32 * 1024;
 const MAX_PROVIDER_RESPONSE_BYTES = 256 * 1024;
-const PROVIDER_TIMEOUT_MS = 12_000;
+const PROVIDER_TIMEOUT_MS = 20_000;
 const MAX_PROVIDER_ATTEMPTS = 2;
 const BULK_PARSER_RATE_LIMIT_PER_MINUTE = 20;
 const MAX_MILESTONE_NAMES_PER_GOAL = 366;
@@ -109,53 +109,6 @@ function buildGeneratedPayloadSchema(categoryKeySet: Set<string>) {
   return z.object({
     goals: z.array(generatedGoalSchema).max(MAX_GOALS_PER_REQUEST),
   });
-}
-
-function buildBulkGoalResponseSchema(categoryKeys: string[]) {
-  return {
-    type: "object",
-    properties: {
-      goals: {
-        type: "array",
-        maxItems: MAX_GOALS_PER_REQUEST,
-        items: {
-          type: "object",
-          properties: {
-            title: { type: "string" },
-            description: { type: "string" },
-            category: { type: "string" },
-            category_key: {
-              type: "string",
-              enum: categoryKeys,
-            },
-            frequency_type: {
-              type: "string",
-              enum: ["recurring", "fixed_milestones"],
-            },
-            recurrence_interval: {
-              type: "string",
-              enum: ["daily", "weekly", "monthly"],
-            },
-            target_basis: {
-              type: "string",
-              enum: ["period", "lifetime"],
-            },
-            target_count: { type: "number", maximum: MAX_GOAL_TARGET_COUNT },
-            milestone_names: {
-              type: "array",
-              maxItems: MAX_MILESTONE_NAMES_PER_GOAL,
-              items: { type: "string" },
-            },
-            start_date: { type: "string" },
-            end_date: { type: "string" },
-            default_local_time: { type: "string" },
-          },
-          required: ["title"],
-        },
-      },
-    },
-    required: ["goals"],
-  } as const;
 }
 
 function toIsoDate(value: string | undefined): string | undefined {
@@ -716,7 +669,6 @@ export async function POST(request: Request) {
     const categoryKeys = categoryCatalog.map((category) => category.key);
     const categoryKeySet = new Set(categoryKeys);
     const generatedPayloadSchema = buildGeneratedPayloadSchema(categoryKeySet);
-    const responseSchema = buildBulkGoalResponseSchema(categoryKeys);
 
     const today = getDateInTimezone(new Date(), parsedRequest.timezone);
     const estimatedInputTokens = Math.max(
@@ -758,31 +710,16 @@ export async function POST(request: Request) {
     const prompt = buildPrompt(parsedRequest.prompt, today, categoryKeys);
     let candidateJson: unknown;
     try {
-      let result: Awaited<ReturnType<typeof generateGeminiJson>>;
-      try {
-        result = await generateGeminiJson({
-          apiKey,
-          prompt,
-          responseSchema: responseSchema as unknown as Record<string, unknown>,
-          maxResponseBytes: MAX_PROVIDER_RESPONSE_BYTES,
-          totalTimeoutMs: PROVIDER_TIMEOUT_MS,
-          maxAttempts: MAX_PROVIDER_ATTEMPTS,
-          signal: request.signal,
-        });
-      } catch (error) {
-        if (error instanceof GeminiRequestError && shouldRetryWithoutResponseSchema(error)) {
-          result = await generateGeminiJson({
-            apiKey,
-            prompt,
-            maxResponseBytes: MAX_PROVIDER_RESPONSE_BYTES,
-            totalTimeoutMs: PROVIDER_TIMEOUT_MS,
-            maxAttempts: MAX_PROVIDER_ATTEMPTS,
-            signal: request.signal,
-          });
-        } else {
-          throw error;
-        }
-      }
+      // Gemini rejects our full goal-draft responseSchema (400 INVALID_ARGUMENT).
+      // Rely on the prompt contract plus Zod validation instead of provider schemas.
+      const result = await generateGeminiJson({
+        apiKey,
+        prompt,
+        maxResponseBytes: MAX_PROVIDER_RESPONSE_BYTES,
+        totalTimeoutMs: PROVIDER_TIMEOUT_MS,
+        maxAttempts: MAX_PROVIDER_ATTEMPTS,
+        signal: request.signal,
+      });
       candidateJson = result.candidateJson;
     } catch (error) {
       if (error instanceof GeminiRequestError) {

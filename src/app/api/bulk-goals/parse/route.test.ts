@@ -818,34 +818,10 @@ describe("bulk goal parser route", () => {
     expect(JSON.stringify(body)).not.toContain("provider-secret");
   });
 
-  it("retries without response schema when provider rejects schema arguments", async () => {
+  it("skips provider response schema and relies on prompt plus Zod validation", async () => {
     const fetchSpy = vi
       .fn()
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            error: {
-              code: 400,
-              message: "Request contains an invalid argument.",
-              status: "INVALID_ARGUMENT",
-            },
-          }),
-          { status: 400 }
-        )
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            error: {
-              code: 400,
-              message: "Request contains an invalid argument.",
-              status: "INVALID_ARGUMENT",
-            },
-          }),
-          { status: 400 }
-        )
-      )
-      .mockResolvedValueOnce(
+      .mockResolvedValue(
         new Response(
           JSON.stringify({
             candidates: [
@@ -875,16 +851,12 @@ describe("bulk goal parser route", () => {
     await expect(response.json()).resolves.toMatchObject({
       goals: [{ title: "Read every day" }],
     });
-    expect(fetchSpy).toHaveBeenCalledTimes(3);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
 
     const firstBody = JSON.parse(
       String((fetchSpy.mock.calls[0]?.[1] as RequestInit | undefined)?.body ?? "")
     ) as { generationConfig?: { responseSchema?: unknown } };
-    const thirdBody = JSON.parse(
-      String((fetchSpy.mock.calls[2]?.[1] as RequestInit | undefined)?.body ?? "")
-    ) as { generationConfig?: { responseSchema?: unknown } };
-    expect(firstBody.generationConfig?.responseSchema).toBeDefined();
-    expect(thirdBody.generationConfig?.responseSchema).toBeUndefined();
+    expect(firstBody.generationConfig?.responseSchema).toBeUndefined();
   });
 
   it("guides training-plan prompts toward milestones in schema and instructions", async () => {
@@ -944,10 +916,8 @@ describe("bulk goal parser route", () => {
     expect(promptText).toContain(
       "Never create one goal per workout, session, or date."
     );
-    expect(
-      firstBody.generationConfig?.responseSchema?.properties?.goals?.items
-        ?.properties
-    ).toHaveProperty("milestone_names");
+    expect(promptText).toContain('\"milestone_names\"');
+    expect(firstBody.generationConfig?.responseSchema).toBeUndefined();
   });
 
   async function parseMockGoals(goals: unknown[]) {
