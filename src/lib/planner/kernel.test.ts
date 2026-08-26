@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Completion, Goal } from "@/lib/goals/types";
+import { withLifetimeTargetBasisForTests } from "@/lib/goals/goal-test-fixtures";
 import {
   runPlannerKernel,
   PlannerError,
@@ -10,7 +11,7 @@ import { computeRequirementFingerprint } from "@/lib/planner/requirements";
 import { toKernelWindow } from "@/lib/planner/dates";
 
 function goal(overrides: Partial<Goal> = {}): Goal {
-  return {
+  const built = {
     id: "goal-a",
     owner_id: "owner-a",
     title: "Practice",
@@ -31,6 +32,7 @@ function goal(overrides: Partial<Goal> = {}): Goal {
     updated_at: "2026-08-01T00:00:00Z",
     ...overrides,
   };
+  return withLifetimeTargetBasisForTests(built as Goal, overrides);
 }
 
 function input(overrides: Partial<PlannerKernelInput> = {}): PlannerKernelInput {

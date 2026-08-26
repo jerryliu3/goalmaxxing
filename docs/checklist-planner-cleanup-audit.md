@@ -1,7 +1,7 @@
 # Checklist and Planner Cleanup Audit
 
 Status: Proposed cleanup backlog  
-Last updated: 2026-08-25  
+Last updated: 2026-08-25 (stack delivery + PR #654 micro-cleanup notes)  
 Scope: goals, completions, checklist, insights, planner/calendar, progress context, and related database boundaries
 
 ## Executive summary
@@ -54,23 +54,22 @@ They should become explicit contracts before deeper refactoring.
 | Recurring lifetime target | `target_basis = "lifetime"` and requirement kind `deadline_total` | Total credited completions across the goal lifetime |
 | Fixed milestones | requirement kind `milestone_sequence` | Total ordered milestone completions |
 
-Period goals should have a target of at least `1`. The current UI now defaults
-period targets to `1`, but the database shape still permits `NULL` and interprets
-it with `coalesce(..., 1)`. Fixed milestones must always have a positive target.
-The current database shape requires a recurring lifetime target to be positive,
-while the current form labels that field as optional and allows it to be cleared.
-Those are contract mismatches, not settled product semantics.
+Period goals have a target of at least `1`. The UI defaults
+period targets to `1`, and the write boundary plus database trigger normalize a
+missing recurring period target to `1` before persistence. Fixed milestones and
+recurring lifetime targets require a positive target; lifetime targets are not an
+optional-target mode.
 
-The simplest consistent choice is to make “lifetime target” an optional mode, but
-require a positive value once that mode is selected. If the product instead wants a
-recurring lifetime goal with no total target, that needs an explicit representation
-and corresponding planner/progress semantics; it should not silently fall through to
-`positiveTarget(... ?? 1)` and behave as a one-completion deadline.
+If the product ever wants a recurring lifetime goal with no total target, that
+needs an explicit representation and corresponding planner/progress semantics; it
+should not silently fall through to `positiveTarget(... ?? 1)` and behave as a
+one-completion deadline.
 
 The current product decision is that target basis, frequency, target count, goal
 type, and start date are immutable after creation. Users change those semantics by
-ending/archiving the old goal and creating a new one. The database enforces this
-decision, but the edit form does not fully communicate or enforce it yet.
+ending/archiving the old goal and creating a new one. The edit form disables those
+definition controls and explains the replacement workflow; the database guard
+remains the authoritative defense.
 
 ### Checklist state
 
@@ -353,9 +352,9 @@ API checks should remain for early, actionable errors.
 
 **User-visible result**
 
-The edit form permits typing a new target, but save fails with the database
-immutability error. This is a UI/API contract mismatch, not evidence that target
-changes are currently supported.
+The edit form disables definition controls and explains that the goal must be
+archived and recreated to change its semantics. The database guard remains in
+place as the authoritative defense for direct or stale clients.
 
 **Historical behavior**
 
@@ -367,11 +366,11 @@ change and requiring archive/end plus a new goal.
 
 **Recommendation**
 
-Make all immutable definition controls genuinely disabled in edit mode, add concise
-copy explaining “Archive and create a new goal to change the target or frequency,”
-and retain the database guard. Supporting mutable targets requires a separate
-versioned-goal-definition design with an effective date and historical progress
-replay; it should not be implemented as a client-only relaxation.
+Keep all immutable definition controls disabled in edit mode, retain the concise
+replacement guidance, and keep the database guard. Supporting mutable targets
+would require a separate versioned-goal-definition design with an effective date
+and historical progress replay; it should not be implemented as a client-only
+relaxation.
 
 ### P1: duplicated domain logic
 
@@ -497,9 +496,9 @@ domain-level interface and a focused test.
 
 #### P1.7 `goal-form.tsx` is both page, state machine, validator, and RPC client
 
-The form handles loading, edit-state hydration, category/link/photo selection,
+The form handles loading, edit-state hydration, category/link selection,
 validation, capacity warnings, archive/delete, planner-task creation, goal creation,
-goal update, photo upload, and navigation.
+goal update, and navigation.
 
 **Recommendation**
 
@@ -513,6 +512,15 @@ Extract:
 
 The target-basis and requirement mapping should remain in domain modules, not be
 reconstructed in JSX handlers.
+
+**Partial progress (PR #654, `chore/goal-creation-micro-cleanup`):** creation-surface
+validation and save-time target normalization are further centralized in
+`src/features/goals/goal-creation-model.ts` (`getGoalCreationValidationFeedback`,
+`resolveGoalCreationTargetCountForSave`, `applyGoalCreationFieldChange`). Shared
+helpers also cover LLM draft parse (`src/features/goals/bulk-goal-parse.ts`) and RPC
+error shaping (`src/lib/supabase/rpc-error.ts`). `goal-form.tsx` is thinner but
+still owns load/hydrate, link targets, capacity warnings, reward text, planner-task
+creation, and RPC recovery — Phase 4 extraction remains the right next step.
 
 #### P1.8 `calendar-surface.tsx` is a second orchestration monolith
 
@@ -597,6 +605,42 @@ type ChecklistLoadMode = "initial" | "viewDate" | "completionRefresh" | "force";
 Each successful operation should update the same normalized cache shape. Add tests
 for stale response cancellation and cache invalidation.
 
+#### Resolved: bulk-editor duplication and semantic drift
+
+The bulk goal editor duplication finding is resolved for the current creation
+workflow. Bulk and planner-coach drafts now use the shared
+`src/features/goals/goal-creation-fields.tsx` component, the canonical
+`BulkGoalDraftReview` shell, and the shared
+`src/features/goals/bulk-goal-persistence.ts` contract. Target transitions,
+validation normalization, metadata fields, and link persistence therefore share
+one prepared-row boundary instead of diverging across the two callers.
+
+**Stack delivery (2026-08-25):** implementation lives on `feat/bulk-goal-create-editor`
+(stacked on `fix/planner-move-lifetime-target-cap` → per-period target PRs). Open
+follow-up micro-cleanup: PR #654. Bulk editor branch is pushed; open a PR against
+#653 when ready to merge the main consolidation slice.
+
+#### Partially addressed: creation-validation dedupe (PR #654)
+
+Bulk, coach, and single-goal create paths now share:
+
+- `getGoalCreationValidationFeedback` and field-level errors in `goal-creation-model.ts`
+  (replaces split `goal-form-validation.ts` / `getGoalFormTargetValidationError` paths),
+- `resolveGoalCreationTargetCountForSave` for submit and `prepareBulkGoalRows`,
+- `parseLlmGoalDraftsFromPrompt` for bulk and coach NL parse,
+- `getRpcErrorMessage` for goal-form and bulk persistence RPC failures.
+
+`goal-form.tsx` still adds planner-task and `reward_text` rules on top of the shared
+feedback helper. Full validation ownership documentation (P2.3) and `goal-form` shell
+split (P1.7) are still outstanding.
+
+#### Resolved: soft-delete XP zeroing (per-period stack, PR #650)
+
+`goals_write_boundary.test.sql` failed when `soft_delete_goal` left credited XP on
+deleted goals. Fixed in `feat/per-period-target-pr2-domain` via migration
+`20260825225040_normalize_goal_write_boundary.sql`, which passes `force_zero` into
+`recompute_goal_xp_service` when the canonical goal row is soft-deleted.
+
 ### P2: migration and database maintenance
 
 #### P2.1 Function-body string patching is fragile
@@ -647,7 +691,13 @@ For every invariant, document:
 - test location,
 - whether cascades and service-role writes are covered.
 
-### P2: test and observability gaps
+**Partial progress (PR #654):** create-mode field validation and target-count
+normalization for save now route through `goal-creation-model.ts`; bulk drafts use
+the same `validateGoalCreationFields` path as the shared feedback helper used by
+`goal-form.tsx`. Invariant cataloging, API/route ownership, exact-date handlers, and
+SQL RPC documentation remain open.
+
+### P3: test and observability gaps
 
 The repository has good focused tests for periods, reconciliation, exact-date
 dispatch, and several SQL write boundaries. The following gaps remain:
@@ -665,6 +715,8 @@ dispatch, and several SQL write boundaries. The following gaps remain:
 5. Cache update/invalidation tests in `use-checklist-data`.
 6. Tests proving all `target_basis` read paths use the stored column after backfill.
 7. pgTAP coverage for target-basis shape/backfill and completion lifetime enforcement.
+   Soft-delete XP zeroing is covered after PR #650; broader target-basis pgTAP
+   matrix remains.
 8. Golden vectors for planner, progress, and XP period domains.
 9. Tests for `external_sync` completion sources in planner schemas.
 10. Tests for per-entry, rather than global, mutation loading behavior.

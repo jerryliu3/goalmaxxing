@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { getCreditedUnitCount } from "@/lib/goals/admissible";
+import { withLifetimeTargetBasisForTests } from "@/lib/goals/goal-test-fixtures";
 import type { Completion, Goal } from "@/lib/goals/types";
 import { enumerateMonthsInWindow, toKernelWindow } from "@/lib/planner/dates";
 import { runPlannerKernel, type PlannerKernelInput } from "@/lib/planner/kernel";
 import { createDefaultPlannerPolicy } from "@/lib/planner/policy";
 
 function buildGoal(overrides: Partial<Goal> = {}): Goal {
-  return {
+  const built = {
     id: "goal-oracle",
     owner_id: "owner-oracle",
     title: "Oracle goal",
@@ -26,7 +27,8 @@ function buildGoal(overrides: Partial<Goal> = {}): Goal {
     created_at: "2026-08-01T00:00:00Z",
     updated_at: "2026-08-01T00:00:00Z",
     ...overrides,
-  };
+  } as Goal;
+  return withLifetimeTargetBasisForTests(built, overrides);
 }
 
 function buildCompletion(

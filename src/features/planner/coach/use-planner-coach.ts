@@ -29,8 +29,10 @@ import {
   countAssignmentChanges,
 } from "@/features/planner/coach/coach-state-utils";
 import {
+  CoachGoalDraftServiceError,
   createCoachGoalDrafts as persistCoachGoalDrafts,
   parseCoachGoalDrafts,
+  retryCoachGoalDraftLinks,
 } from "@/features/planner/coach/coach-goal-draft-service";
 import {
   markAppliedProposalsUndone,
@@ -40,6 +42,7 @@ import {
 } from "@/features/planner/coach/coach-message-state";
 import { validateUndoProposal } from "@/features/planner/coach/coach-proposal-utils";
 import { useCoachConversationPersistence } from "@/features/planner/coach/use-coach-conversation-persistence";
+import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 import type {
   CoachGoalDraftRuntimeState,
   PlannerCoachModel,
@@ -108,6 +111,14 @@ export function usePlannerCoach({
   >(null);
   const parsingGoalDraftMessagesRef = useRef(new Set<string>());
   const autoParseGoalDraftProposalIdsRef = useRef(new Set<string>());
+  const hasPendingGoalDraftPersistence = Object.values(
+    coachGoalDraftStatesByKey
+  ).some(
+    (draftState) =>
+      draftState.status === "saving" ||
+      draftState.pendingCreateRecovery !== undefined ||
+      draftState.pendingLinkRecovery !== undefined
+  );
 
   const resetCoachUiState = useCallback((messages: CoachMessage[] = []) => {
     setCoachMessages(messages);
@@ -147,6 +158,9 @@ export function usePlannerCoach({
         proposal.creationStatus === "created" ||
         !context?.timezone
       ) {
+        return;
+      }
+      if (hasPendingGoalDraftPersistence) {
         return;
       }
       const runtimeKey = coachGoalDraftRuntimeKey(proposal);
@@ -198,7 +212,7 @@ export function usePlannerCoach({
         parsingGoalDraftMessagesRef.current.delete(runtimeKey);
       }
     },
-    [coachMessages, context?.timezone]
+    [coachMessages, context?.timezone, hasPendingGoalDraftPersistence]
   );
 
   useEffect(() => {
@@ -227,6 +241,13 @@ export function usePlannerCoach({
       setCoachGoalDraftStatesByKey((previous) => {
         const state = previous[runtimeKey];
         if (!state) return previous;
+        if (
+          state.status === "saving" ||
+          state.pendingCreateRecovery !== undefined ||
+          state.pendingLinkRecovery !== undefined
+        ) {
+          return previous;
+        }
         return {
           ...previous,
           [runtimeKey]: {
@@ -266,22 +287,40 @@ export function usePlannerCoach({
   });
 
   const saveCoachConversation = useCallback(async () => {
-    if (coachGoalRefreshStatus === "refreshing") return;
+    if (coachGoalRefreshStatus === "refreshing" || hasPendingGoalDraftPersistence) {
+      return;
+    }
     await saveCoachConversationInternal();
-  }, [coachGoalRefreshStatus, saveCoachConversationInternal]);
+  }, [
+    coachGoalRefreshStatus,
+    hasPendingGoalDraftPersistence,
+    saveCoachConversationInternal,
+  ]);
 
   const restoreSavedCoachConversation = useCallback(
     async (conversationId: string) => {
-      if (coachGoalRefreshStatus === "refreshing") return;
+      if (coachGoalRefreshStatus === "refreshing" || hasPendingGoalDraftPersistence) {
+        return;
+      }
       await restoreSavedCoachConversationInternal(conversationId);
     },
-    [coachGoalRefreshStatus, restoreSavedCoachConversationInternal]
+    [
+      coachGoalRefreshStatus,
+      hasPendingGoalDraftPersistence,
+      restoreSavedCoachConversationInternal,
+    ]
   );
 
   const startNewCoachConversation = useCallback(() => {
-    if (coachGoalRefreshStatus === "refreshing") return;
+    if (coachGoalRefreshStatus === "refreshing" || hasPendingGoalDraftPersistence) {
+      return;
+    }
     startNewCoachConversationInternal();
-  }, [coachGoalRefreshStatus, startNewCoachConversationInternal]);
+  }, [
+    coachGoalRefreshStatus,
+    hasPendingGoalDraftPersistence,
+    startNewCoachConversationInternal,
+  ]);
 
   const coachSummaryWorkUnits = useMemo(
     () => buildCoachSummaryWorkUnits(entriesByDate),
@@ -459,6 +498,9 @@ export function usePlannerCoach({
   );
 
   const sendCoachMessage = useCallback(async () => {
+    if (hasPendingGoalDraftPersistence) {
+      return;
+    }
     if (!coachWindow || !context?.timezone) {
       toast.error("Planner coach is currently unavailable.");
       return;
@@ -572,6 +614,7 @@ export function usePlannerCoach({
     coachMessages,
     coachSummaryWorkUnits,
     context,
+    hasPendingGoalDraftPersistence,
     applyCoachPatchesToDraft,
     effectiveDraftPolicy,
     effectivePreview?.horizonSummary,
@@ -623,6 +666,15 @@ export function usePlannerCoach({
       ) {
         return;
       }
+      const isRecoveryRetry =
+        draftState.pendingCreateRecovery !== undefined ||
+        draftState.pendingLinkRecovery !== undefined;
+      if (hasPendingGoalDraftPersistence && !isRecoveryRetry) {
+        toast.error(
+          "Finish the pending goal recovery before creating another goal proposal."
+        );
+        return;
+      }
       if (coachGoalRefreshStatus !== "idle") {
         toast.error(
           "Finish refreshing the calendar before creating another goal proposal."
@@ -646,9 +698,25 @@ export function usePlannerCoach({
         },
       }));
       try {
-        const { createdCount } = await persistCoachGoalDrafts({
-          drafts: draftState.drafts,
-        });
+        let createdCount: number;
+        if (draftState.pendingLinkRecovery) {
+          await retryCoachGoalDraftLinks({
+            linkRows: draftState.pendingLinkRecovery.linkRows,
+            onLinksPersisted: invalidatePlannerRelatedTabCaches,
+          });
+          createdCount = draftState.pendingLinkRecovery.createdCount;
+        } else {
+          const result = await persistCoachGoalDrafts({
+            drafts:
+              draftState.pendingCreateRecovery?.preparedRows.map(
+                ({ draft }) => draft
+              ) ?? draftState.drafts,
+            preparedRows: draftState.pendingCreateRecovery?.preparedRows,
+            onGoalsPersisted: invalidatePlannerRelatedTabCaches,
+            onLinksPersisted: invalidatePlannerRelatedTabCaches,
+          });
+          createdCount = result.createdCount;
+        }
         const nextMessages: CoachMessage[] = coachMessages.map(
           (entry, index) =>
             index === messageIndex
@@ -668,6 +736,8 @@ export function usePlannerCoach({
           [runtimeKey]: {
             ...draftState,
             status: "created",
+            pendingCreateRecovery: undefined,
+            pendingLinkRecovery: undefined,
           },
         }));
         toast.success(
@@ -689,10 +759,21 @@ export function usePlannerCoach({
         }
       } catch (error) {
         setCoachGoalRefreshStatus("idle");
+        const serviceError =
+          error &&
+          typeof error === "object" &&
+          "code" in error &&
+          typeof error.code === "string"
+            ? (error as CoachGoalDraftServiceError)
+            : null;
         const errorCode =
-          error && typeof error === "object" && "code" in error
-            ? String(error.code)
-            : "create_failed";
+          draftState.pendingLinkRecovery
+            ? serviceError?.code === "links_failed"
+              ? "links_failed"
+              : serviceError?.code === "links_ambiguous"
+                ? "links_ambiguous"
+                : "links_ambiguous"
+            : serviceError?.code ?? "create_failed";
         setCoachGoalDraftStatesByKey((previous) => ({
           ...previous,
           [runtimeKey]: {
@@ -701,14 +782,39 @@ export function usePlannerCoach({
             errorCode,
             errorMessage:
               error instanceof Error ? error.message : "Could not create goals.",
+            pendingCreateRecovery:
+              errorCode === "create_failed" ||
+              errorCode === "links_failed" ||
+              errorCode === "links_ambiguous"
+                ? undefined
+                : errorCode === "create_ambiguous" &&
+                    serviceError?.preparedRows
+                  ? { preparedRows: serviceError.preparedRows }
+                  : draftState.pendingCreateRecovery,
+            pendingLinkRecovery:
+              errorCode === "links_ambiguous" && serviceError?.linkRecovery
+                ? {
+                    createdCount: serviceError.linkRecovery.preparedRows.length,
+                    preparedRows: serviceError.linkRecovery.preparedRows,
+                    linkRows: serviceError.linkRecovery.linkRows,
+                  }
+                : errorCode === "links_failed"
+                  ? undefined
+                  : draftState.pendingLinkRecovery,
           },
         }));
+        toast.error(
+          error instanceof Error && error.message.trim()
+            ? error.message
+            : "Could not create goals. Try again."
+        );
       }
     },
     [
       coachGoalDraftStatesByKey,
       coachGoalRefreshStatus,
       coachMessages,
+      hasPendingGoalDraftPersistence,
       hasDraftSession,
       onGoalsCreated,
       persistCoachMessages,

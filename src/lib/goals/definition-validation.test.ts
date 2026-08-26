@@ -204,4 +204,170 @@ describe("goal definition validation", () => {
       ])
     );
   });
+
+  it("enforces recurring period upper bounds without capacity context", () => {
+    const baseInput = {
+      frequencyType: "recurring" as const,
+      targetBasis: "period" as const,
+      startDate: "2026-08-01",
+      endDate: null,
+    };
+
+    expect(
+      validateGoalDefinition({
+        ...baseInput,
+        recurrenceInterval: "weekly",
+        targetCount: 7,
+      })
+    ).toEqual([]);
+
+    expect(
+      validateGoalDefinition({
+        ...baseInput,
+        recurrenceInterval: "monthly",
+        targetCount: 31,
+      })
+    ).toEqual([]);
+
+    expect(
+      validateGoalDefinition({
+        ...baseInput,
+        recurrenceInterval: "daily",
+        targetCount: 1,
+      })
+    ).toEqual([]);
+
+    const weeklyOverMax = validateGoalDefinition({
+      ...baseInput,
+      recurrenceInterval: "weekly",
+      targetCount: 8,
+    });
+    expect(weeklyOverMax).toContainEqual(
+      expect.objectContaining({
+        code: "target_exceeds_period_limit",
+        message: "Target cannot exceed 7 completions for this period length.",
+      })
+    );
+
+    const monthlyOverMax = validateGoalDefinition({
+      ...baseInput,
+      recurrenceInterval: "monthly",
+      targetCount: 32,
+    });
+    expect(monthlyOverMax).toContainEqual(
+      expect.objectContaining({
+        code: "target_exceeds_period_limit",
+        message: "Target cannot exceed 31 completions for this period length.",
+      })
+    );
+
+    const dailyOverMax = validateGoalDefinition({
+      ...baseInput,
+      recurrenceInterval: "daily",
+      targetCount: 2,
+    });
+    expect(dailyOverMax).toContainEqual(
+      expect.objectContaining({
+        code: "target_exceeds_period_limit",
+        message: "Target cannot exceed 1 completions for this period length.",
+      })
+    );
+  });
+
+  it("keeps profile-capacity warnings separate from period upper bounds", () => {
+    const periodBoundIssue = validateGoalDefinition({
+      frequencyType: "recurring",
+      targetBasis: "period",
+      recurrenceInterval: "weekly",
+      targetCount: 8,
+      startDate: "2026-08-01",
+      endDate: "2026-08-31",
+    }).find((issue) => issue.code === "target_exceeds_period_limit");
+
+    const capacityIssue = validateGoalDefinition({
+      frequencyType: "fixed_milestones",
+      targetCount: 6,
+      startDate: "2026-08-01",
+      endDate: "2026-08-07",
+      asOfDate: "2026-08-01",
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [],
+      },
+    }).find((issue) => issue.code === "target_exceeds_capacity");
+
+    expect(periodBoundIssue?.message).toBe(
+      "Target cannot exceed 7 completions for this period length."
+    );
+    expect(capacityIssue?.message).toContain("Only 5 available days");
+  });
+
+  it("checks lifetime totals against the full available-day window", () => {
+    const issues = validateGoalDefinition({
+      frequencyType: "recurring",
+      targetBasis: "lifetime",
+      recurrenceInterval: "daily",
+      targetCount: 6,
+      startDate: "2026-08-01",
+      endDate: "2026-08-07",
+      asOfDate: "2026-08-01",
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [],
+      },
+    });
+
+    expect(issues).toContainEqual(
+      expect.objectContaining({ code: "target_exceeds_capacity" })
+    );
+    expect(issues.find((issue) => issue.code === "target_exceeds_capacity")?.message).toContain(
+      "Only 5 available days"
+    );
+  });
+
+  it("checks weekly period targets against each weekly period's available days", () => {
+    const issues = validateGoalDefinition({
+      frequencyType: "recurring",
+      targetBasis: "period",
+      recurrenceInterval: "weekly",
+      targetCount: 6,
+      startDate: "2026-08-03",
+      endDate: "2026-08-09",
+      asOfDate: "2026-08-03",
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [],
+      },
+    });
+
+    expect(issues).toContainEqual(
+      expect.objectContaining({ code: "target_exceeds_capacity" })
+    );
+    expect(issues.find((issue) => issue.code === "target_exceeds_capacity")?.message).toContain(
+      "5 available days in at least one weekly period"
+    );
+  });
+
+  it("checks monthly period targets against each monthly period's available days", () => {
+    const issues = validateGoalDefinition({
+      frequencyType: "recurring",
+      targetBasis: "period",
+      recurrenceInterval: "monthly",
+      targetCount: 22,
+      startDate: "2026-08-01",
+      endDate: "2026-08-31",
+      asOfDate: "2026-08-01",
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [],
+      },
+    });
+
+    expect(issues).toContainEqual(
+      expect.objectContaining({ code: "target_exceeds_capacity" })
+    );
+    expect(issues.find((issue) => issue.code === "target_exceeds_capacity")?.message).toContain(
+      "21 available days in at least one monthly period"
+    );
+  });
 });

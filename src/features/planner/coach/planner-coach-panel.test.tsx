@@ -1,9 +1,41 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PlannerCoachPanel } from "@/features/planner/coach/planner-coach-panel";
 import type { PlannerCoachModel } from "@/features/planner/coach/coach-types";
 import { buildBulkGoalDraftsFromLlmGoals } from "@/features/goals/bulk-goal-drafts";
+import type { Goal } from "@/lib/goals/types";
+
+const authGetUserMock = vi.hoisted(() => vi.fn());
+const goalsOrderMock = vi.hoisted(() => vi.fn());
+const fetchProgressContextMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    auth: {
+      getUser: authGetUserMock,
+    },
+    from: () => {
+      const query = {
+        eq: vi.fn().mockReturnThis(),
+        order: goalsOrderMock,
+      };
+      return {
+        select: vi.fn(() => query),
+      };
+    },
+  }),
+}));
+
+vi.mock("@/lib/goals/progress-context", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/goals/progress-context")>(
+    "@/lib/goals/progress-context"
+  );
+  return {
+    ...actual,
+    fetchProgressContext: fetchProgressContextMock,
+  };
+});
 
 function buildCoachModel(
   overrides: Partial<PlannerCoachModel["state"]> = {}
@@ -54,6 +86,23 @@ function buildCoachModel(
 }
 
 describe("planner coach panel", () => {
+  beforeEach(() => {
+    authGetUserMock.mockReset();
+    goalsOrderMock.mockReset();
+    fetchProgressContextMock.mockReset();
+    authGetUserMock.mockResolvedValue({
+      data: {
+        user: { id: "user-1" },
+      },
+    });
+    goalsOrderMock.mockResolvedValue({ data: [], error: null });
+    fetchProgressContextMock.mockResolvedValue({
+      summaries: [],
+      facts: [],
+      truncated: false,
+    });
+  });
+
   afterEach(() => {
     cleanup();
   });
@@ -195,6 +244,144 @@ describe("planner coach panel", () => {
     expect(coach.actions.createCoachGoalDrafts).toHaveBeenCalledWith(0);
   });
 
+  it("passes active user-scoped linkable goals into the shared draft editor", async () => {
+    const drafts = buildBulkGoalDraftsFromLlmGoals([
+      {
+        title: "Easy run",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        start_date: "2026-08-17",
+      },
+    ]);
+    drafts[0] = {
+      ...drafts[0]!,
+      linked_target_goal_id: "goal-main-1",
+    };
+    const availableGoal: Goal = {
+      id: "goal-main-1",
+      owner_id: "user-1",
+      title: "Main Goal",
+      description: null,
+      category: "Health",
+      category_key: "health",
+      color: "#16a34a",
+      frequency_type: "recurring",
+      recurrence_interval: "weekly",
+      target_count: 2,
+      target_basis: "period",
+      milestone_names: null,
+      start_date: "2026-08-01",
+      end_date: "2026-12-31",
+      reward_text: null,
+      default_local_time: null,
+      photo_path: null,
+      team_id: null,
+      is_deleted: false,
+      archived_at: null,
+      created_at: "2026-08-01T00:00:00.000Z",
+      updated_at: "2026-08-01T00:00:00.000Z",
+    };
+    goalsOrderMock.mockResolvedValueOnce({
+      data: [availableGoal],
+      error: null,
+    });
+    fetchProgressContextMock.mockResolvedValueOnce({
+      summaries: [{ goalId: "goal-main-1", lifecycle: "active" }],
+      facts: [],
+      truncated: false,
+    });
+    const coach = buildCoachModel({
+      coachMessages: [
+        {
+          role: "assistant",
+          content: "I drafted your running plan.",
+          createdAt: 123,
+          proposal: {
+            schemaVersion: "1",
+            kind: "goal_draft",
+            proposalId: "32000000-0000-4000-8000-000000000101",
+            parserPrompt: "Easy run weekly.",
+            creationStatus: "not_created",
+          },
+        },
+      ],
+      coachGoalDraftStates: {
+        0: { status: "ready", drafts, warnings: [] },
+      },
+    });
+    const user = userEvent.setup();
+
+    render(<PlannerCoachPanel coach={coach} />);
+    await waitFor(() => expect(goalsOrderMock).toHaveBeenCalledTimes(1));
+
+    await user.click(screen.getAllByRole("button", { name: /tap to edit/i })[0]!);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: /advanced settings/i })
+    );
+    expect(
+      within(dialog).getByText(/Linking this subgoal to Main Goal may hide/i)
+    ).toBeInTheDocument();
+  });
+
+  it("passes an empty linkable-goal list to the shared draft editor", async () => {
+    const drafts = buildBulkGoalDraftsFromLlmGoals([
+      {
+        title: "Mobility",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        start_date: "2026-08-17",
+      },
+    ]);
+    drafts[0] = {
+      ...drafts[0]!,
+      linked_target_goal_id: "goal-main-1",
+    };
+    goalsOrderMock.mockResolvedValueOnce({
+      data: [],
+      error: null,
+    });
+    fetchProgressContextMock.mockResolvedValueOnce({
+      summaries: [],
+      facts: [],
+      truncated: false,
+    });
+    const coach = buildCoachModel({
+      coachMessages: [
+        {
+          role: "assistant",
+          content: "I drafted a mobility plan.",
+          createdAt: 456,
+          proposal: {
+            schemaVersion: "1",
+            kind: "goal_draft",
+            proposalId: "32000000-0000-4000-8000-000000000102",
+            parserPrompt: "Mobility weekly.",
+            creationStatus: "not_created",
+          },
+        },
+      ],
+      coachGoalDraftStates: {
+        0: { status: "ready", drafts, warnings: [] },
+      },
+    });
+    const user = userEvent.setup();
+
+    render(<PlannerCoachPanel coach={coach} />);
+    await waitFor(() => expect(goalsOrderMock).toHaveBeenCalledTimes(1));
+    await user.click(screen.getAllByRole("button", { name: /tap to edit/i })[0]!);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: /advanced settings/i })
+    );
+    expect(
+      within(dialog).getByText("Make this a subgoal linked to...")
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).queryByText(/Linking this subgoal to/i)
+    ).not.toBeInTheDocument();
+  });
+
   it("renders malformed proposal payloads without crashing", () => {
     const coach = buildCoachModel({
       coachMessages: [
@@ -323,6 +510,58 @@ describe("planner coach panel", () => {
     ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Generate again" }));
     expect(coach.actions.generateCoachGoalDrafts).toHaveBeenCalledWith(0);
+  });
+
+  it("offers link recovery without marking the coach proposal created", async () => {
+    const coach = buildCoachModel({
+      coachMessages: [
+        {
+          role: "assistant",
+          content: "I drafted a plan.",
+          createdAt: 123,
+          proposal: {
+            schemaVersion: "1",
+            kind: "goal_draft",
+            proposalId: "32000000-0000-4000-8000-000000000012",
+            parserPrompt: "Mobility weekly.",
+            creationStatus: "not_created",
+          },
+        },
+      ],
+      coachGoalDraftStates: {
+        0: {
+          status: "error",
+          drafts: buildBulkGoalDraftsFromLlmGoals([
+            {
+              title: "Mobility",
+              frequency_type: "recurring",
+              recurrence_interval: "weekly",
+              start_date: "2026-08-17",
+            },
+          ]),
+          warnings: [],
+          errorCode: "links_ambiguous",
+          errorMessage: "Some linked goals were not saved: link save failed",
+          pendingLinkRecovery: {
+            createdCount: 1,
+            preparedRows: [],
+            linkRows: [
+              {
+                source_goal_id: "goal-created-1",
+                target_goal_id: "goal-main-1",
+              },
+            ],
+          },
+        },
+      },
+    });
+    const user = userEvent.setup();
+
+    render(<PlannerCoachPanel coach={coach} />);
+
+    expect(screen.getByText(/links could not be confirmed/i)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Retry saving links" }));
+    expect(coach.actions.createCoachGoalDrafts).toHaveBeenCalledWith(0);
   });
 
   it("does not offer retry when parser returns too many goals", () => {

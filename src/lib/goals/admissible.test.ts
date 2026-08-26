@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Completion, Goal } from "@/lib/goals/types";
+import { withLifetimeTargetBasisForTests } from "@/lib/goals/goal-test-fixtures";
 import {
   getAdmissibleCompletions,
   getCreditedUnitCount,
@@ -7,7 +8,7 @@ import {
 } from "./admissible";
 
 function buildGoal(overrides: Partial<Goal> = {}): Goal {
-  return {
+  const built = {
     id: "goal-id",
     owner_id: "owner-id",
     title: "Goal",
@@ -27,7 +28,8 @@ function buildGoal(overrides: Partial<Goal> = {}): Goal {
     created_at: "2026-08-01T00:00:00Z",
     updated_at: "2026-08-01T00:00:00Z",
     ...overrides,
-  };
+  } as Goal;
+  return withLifetimeTargetBasisForTests(built, overrides);
 }
 
 function completion(date: string, index = 0): Completion {

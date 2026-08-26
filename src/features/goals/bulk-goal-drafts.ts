@@ -1,6 +1,13 @@
 import { format, isValid, parseISO } from "date-fns";
 import { toLocalDateString } from "@/lib/dates/day";
 import {
+  createDefaultGoalCreationFields,
+  parseGoalCreationTargetCount,
+  resolveGoalCreationTargetCountForSave,
+  type GoalCreationFields,
+  validateGoalCreationFields,
+} from "@/features/goals/goal-creation-model";
+import {
   type CategorySelection,
   getCategoryKeyForSelection,
   getCategoryLabel,
@@ -9,7 +16,6 @@ import {
 } from "@/lib/goals/category";
 import {
   isOrdinalGoalDefinition,
-  validateGoalDefinition,
 } from "@/lib/goals/definition-validation";
 import {
   buildMilestoneNameDrafts,
@@ -20,6 +26,7 @@ import type {
   GoalTargetBasis,
   RecurrenceInterval,
 } from "@/lib/goals/types";
+import { resolveGoalTargetBasisFromInput } from "@/lib/goals/target-basis";
 
 const columnAliases = {
   title: ["title", "goal", "goal_title", "name"],
@@ -36,28 +43,14 @@ const columnAliases = {
   default_local_time: ["default_local_time", "default_time", "time_of_day", "local_time"],
 } as const;
 
-export interface BulkGoalDraft {
+export interface BulkGoalDraft extends GoalCreationFields {
   id: string;
   sourceRowLabel: string;
   include: boolean;
-  title: string;
-  description: string;
-  category_selection: CategorySelection;
-  custom_category: string;
-  color: string;
-  frequency_type: GoalFrequencyType;
-  recurrence_interval: RecurrenceInterval;
-  target_count: string;
-  target_basis: GoalTargetBasis;
-  milestone_names: string[];
-  start_date: string;
-  end_date: string;
-  default_local_time: string;
-  linked_target_goal_id: string;
   link_target_search: string;
   link_target_open: boolean;
   advanced_open: boolean;
-  photo_file: File | null;
+  target_basis_error?: string;
   errors: string[];
 }
 
@@ -94,6 +87,8 @@ export interface PreparedBulkGoalRow {
     start_date: string;
     end_date: string | null;
     default_local_time: string | null;
+    difficulty: GoalCreationFields["difficulty"];
+    is_private: boolean;
   };
 }
 
@@ -133,21 +128,18 @@ function parseRecurrenceInterval(raw: string): RecurrenceInterval {
 }
 
 function normalizeDateValue(raw: unknown): string {
-  if (raw instanceof Date && !Number.isNaN(raw.getTime())) {
-    return format(raw, "yyyy-MM-dd");
+  if (raw instanceof Date) {
+    return Number.isNaN(raw.getTime()) ? "Invalid date" : format(raw, "yyyy-MM-dd");
   }
   const text = String(raw ?? "").trim();
   if (!text) return "";
   if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
   const parsed = new Date(text);
-  return Number.isNaN(parsed.getTime()) ? "" : format(parsed, "yyyy-MM-dd");
+  return Number.isNaN(parsed.getTime()) ? text : format(parsed, "yyyy-MM-dd");
 }
 
 export function parseBulkGoalTargetCount(raw: string): number | null {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  const parsed = Number.parseInt(trimmed, 10);
-  return Number.isNaN(parsed) ? null : parsed;
+  return parseGoalCreationTargetCount(raw);
 }
 
 export function resolveBulkGoalTargetBasis(draft: BulkGoalDraft): GoalTargetBasis {
@@ -179,49 +171,10 @@ function parseMilestoneNames(raw: string): string[] {
 }
 
 export function validateBulkGoalDraft(draft: BulkGoalDraft): string[] {
-  const errors: string[] = [];
-  const parsedTarget = parseBulkGoalTargetCount(draft.target_count);
-  if (!draft.title.trim()) errors.push("Title is required.");
-  if (draft.category_selection === "custom" && !draft.custom_category.trim()) {
-    errors.push("Custom category name is required.");
-  }
-  if (!isValidBulkGoalHexColor(draft.color)) {
-    errors.push("Color accent must be a valid hex color.");
-  }
-  if (
-    draft.default_local_time.trim().length > 0 &&
-    !isValidBulkGoalLocalTime(draft.default_local_time)
-  ) {
-    errors.push("Default time must be a valid 24-hour HH:MM value.");
-  }
-  if (draft.frequency_type === "fixed_milestones") {
-    if (parsedTarget === null || parsedTarget <= 0) {
-      errors.push("Milestone goals require a positive target count.");
-    }
-    if (parsedTarget !== null && draft.milestone_names.length !== parsedTarget) {
-      errors.push("Milestone names must align with target count.");
-    }
-  }
-  if (!draft.start_date) errors.push("Start date is required.");
-
-  const definitionTargetCount =
-    draft.frequency_type === "fixed_milestones"
-      ? parsedTarget
-      : draft.target_count.trim()
-        ? parsedTarget
-        : null;
-  for (const issue of validateGoalDefinition({
-    frequencyType: draft.frequency_type,
-    targetCount: definitionTargetCount,
-    targetBasis: resolveBulkGoalTargetBasis(draft),
-    recurrenceInterval:
-      draft.frequency_type === "recurring" ? draft.recurrence_interval : null,
-    startDate: draft.start_date,
-    endDate: draft.end_date || null,
-  })) {
-    errors.push(issue.message);
-  }
-  return errors;
+  return [
+    ...(draft.target_basis_error ? [draft.target_basis_error] : []),
+    ...validateGoalCreationFields(draft),
+  ];
 }
 
 export function withValidatedBulkGoalDraft(
@@ -254,10 +207,18 @@ export function buildBulkGoalDraftFromRow(
   );
   const parsedColor = extractText(normalizedRow, columnAliases.color);
   const targetBasisRaw = String(normalizedRow.target_basis ?? "").trim().toLowerCase();
-  const targetBasis: GoalTargetBasis =
-    targetBasisRaw === "lifetime" ? "lifetime" : "period";
+  const targetBasisResolution = resolveGoalTargetBasisFromInput({
+    frequencyType,
+    recurrenceInterval: parseRecurrenceInterval(
+      extractText(normalizedRow, columnAliases.recurrence_interval)
+    ),
+    targetCount: parsedTarget,
+    targetBasis: targetBasisRaw,
+  });
+  const targetBasis: GoalTargetBasis = targetBasisResolution.basis;
 
   return withValidatedBulkGoalDraft({
+    ...createDefaultGoalCreationFields(),
     id: crypto.randomUUID(),
     sourceRowLabel: `Row ${rowIndex + 1}`,
     include: true,
@@ -274,6 +235,8 @@ export function buildBulkGoalDraftFromRow(
     ),
     target_count: targetRaw || (frequencyType === "fixed_milestones" ? "3" : ""),
     target_basis: frequencyType === "recurring" ? targetBasis : "lifetime",
+    target_basis_error:
+      targetBasisResolution.error ?? undefined,
     milestone_names:
       frequencyType === "fixed_milestones"
         ? buildMilestoneNameDrafts(parsedTarget ?? 0, parsedMilestoneNames)
@@ -292,7 +255,6 @@ export function buildBulkGoalDraftFromRow(
     link_target_search: "",
     link_target_open: false,
     advanced_open: false,
-    photo_file: null,
   });
 }
 
@@ -381,17 +343,15 @@ export function summarizeBulkGoalDraftSchedule(draft: BulkGoalDraft): string {
 
 export function prepareBulkGoalRows(
   drafts: BulkGoalDraft[],
-  { createId = () => crypto.randomUUID() }: { createId?: () => string } = {}
+  { createId }: { createId?: () => string } = {}
 ): PreparedBulkGoalRow[] {
   return drafts.map((draft) => {
-    const parsedTargetCount = parseBulkGoalTargetCount(draft.target_count);
-    const normalizedTargetCount =
-      draft.frequency_type === "fixed_milestones"
-        ? parsedTargetCount
-        : parsedTargetCount !== null && parsedTargetCount > 0
-          ? parsedTargetCount
-          : null;
-    const goalId = createId();
+    const targetBasis =
+      draft.frequency_type === "recurring"
+        ? resolveBulkGoalTargetBasis(draft)
+        : "lifetime";
+    const normalizedTargetCount = resolveGoalCreationTargetCountForSave(draft);
+    const goalId = createId ? createId() : draft.id;
     return {
       draft,
       goalId,
@@ -413,20 +373,19 @@ export function prepareBulkGoalRows(
             ? draft.recurrence_interval
             : null,
         target_count: normalizedTargetCount,
-        target_basis:
-          draft.frequency_type === "recurring"
-            ? resolveBulkGoalTargetBasis(draft)
-            : "lifetime",
+        target_basis: targetBasis,
         milestone_names:
-          draft.frequency_type === "fixed_milestones" && parsedTargetCount
+          draft.frequency_type === "fixed_milestones" && normalizedTargetCount
             ? normalizeMilestoneNamesForSave(
-                parsedTargetCount,
+                normalizedTargetCount,
                 draft.milestone_names
               )
             : null,
         start_date: draft.start_date,
         end_date: draft.end_date || null,
         default_local_time: draft.default_local_time.trim() || null,
+        difficulty: draft.difficulty,
+        is_private: draft.is_private,
       },
     };
   });

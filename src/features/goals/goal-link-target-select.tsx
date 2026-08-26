@@ -34,6 +34,7 @@ interface GoalLinkTargetSelectProps {
   showHelperText?: boolean;
   showLinkedNotice?: boolean;
   triggerClassName?: string;
+  disabled?: boolean;
 }
 
 export function GoalLinkTargetSelect({
@@ -51,6 +52,7 @@ export function GoalLinkTargetSelect({
   showHelperText = true,
   showLinkedNotice = true,
   triggerClassName,
+  disabled = false,
 }: GoalLinkTargetSelectProps) {
   const linkedTargetSchedulingNotice = getLinkedTargetSchedulingNotice({
     sourceEndDate,
@@ -68,6 +70,7 @@ export function GoalLinkTargetSelect({
         onValueChange={onValueChange}
         open={open}
         onOpenChange={onOpenChange}
+        disabled={disabled}
       >
         <SelectTrigger className={cn("w-full", triggerClassName)}>
           <SelectValue placeholder="None" />
@@ -79,6 +82,7 @@ export function GoalLinkTargetSelect({
               onChange={(event) => onSearchQueryChange(event.target.value)}
               placeholder="Choose a main goal"
               className="h-8"
+              disabled={disabled}
               onKeyDown={(event) => event.stopPropagation()}
             />
           </div>
