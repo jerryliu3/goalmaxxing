@@ -34,18 +34,18 @@ describe("mobile checklist visibility", () => {
       goal("upcoming", { start_date: "2026-09-01" }),
       goal("archived", { archived_at: "2026-08-01T00:00:00Z" }),
     ];
-    const completedGoalIds = new Set(["completed"]);
+    const targetAchievedGoalIds = new Set(["completed"]);
 
     expect(
       filterMobileChecklistGoals({
         goals,
-        completedGoalIds,
+        targetAchievedGoalIds,
         asOfDate: "2026-08-15",
         filters: {
-          showPastGoals: true,
+          showEndedGoals: true,
           showUpcomingGoals: false,
           showArchivedGoals: true,
-          showCompletedGoals: false,
+          showTargetAchievedGoals: false,
         },
       }).map((item) => item.id)
     ).toEqual(["current", "past", "archived"]);
@@ -53,7 +53,7 @@ describe("mobile checklist visibility", () => {
     expect(
       countMobileChecklistGoalVisibility({
         goals,
-        completedGoalIds,
+        targetAchievedGoalIds,
         asOfDate: "2026-08-15",
       })
     ).toEqual({ past: 1, upcoming: 1, archived: 1, completed: 1 });
