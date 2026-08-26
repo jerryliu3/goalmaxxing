@@ -1,7 +1,7 @@
 name: Post-Merge Verify
 
-# Run required checks on GitHub-hosted runners now that the repo is public again.
-# Also run the same jobs on the self-hosted Mac runner for supplemental signal.
+# Run checks on one runner type per job. Default: GitHub-hosted ubuntu-latest.
+# Set repository variable CI_RUNNER=self-hosted to use the Mac runner instead.
 
 on:
   push:
@@ -17,18 +17,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  verify-static-full-matrix:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: github
-            runs-on: ubuntu-latest
-          - runner: self-hosted
-            runs-on: [self-hosted, macOS, cadence-ci]
-    continue-on-error: ${{ matrix.runner == 'self-hosted' }}
-    name: verify-static-full (${{ matrix.runner }})
-    runs-on: ${{ matrix.runs-on }}
+  verify-static-full:
+    name: verify-static-full
+    runs-on: ${{ vars.CI_RUNNER == 'self-hosted' && fromJSON('["self-hosted", "macOS", "cadence-ci"]') || 'ubuntu-latest' }}
     timeout-minutes: 20
 
     steps:
@@ -59,33 +50,9 @@ jobs:
       - name: Run timezone process matrix
         run: pnpm test:tz
 
-  verify-static-full:
-    name: verify-static-full
-    needs: verify-static-full-matrix
-    if: ${{ always() && !cancelled() }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - name: Assert GitHub-hosted verify-static-full passed
-        run: |
-          if [[ "${{ needs.verify-static-full-matrix.result }}" != "success" ]]; then
-            echo "verify-static-full-matrix result: ${{ needs.verify-static-full-matrix.result }}"
-            exit 1
-          fi
-
-  verify-integration-full-matrix:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: github
-            runs-on: ubuntu-latest
-          - runner: self-hosted
-            runs-on: [self-hosted, macOS, cadence-ci]
-    continue-on-error: ${{ matrix.runner == 'self-hosted' }}
-    name: verify-integration-full (${{ matrix.runner }})
-    runs-on: ${{ matrix.runs-on }}
+  verify-integration-full:
+    name: verify-integration-full
+    runs-on: ${{ vars.CI_RUNNER == 'self-hosted' && fromJSON('["self-hosted", "macOS", "cadence-ci"]') || 'ubuntu-latest' }}
     timeout-minutes: 40
 
     steps:
@@ -236,25 +203,10 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-${{ matrix.runner }}
+          name: playwright-report
           path: playwright-report/
           if-no-files-found: ignore
           retention-days: 7
-
-  verify-integration-full:
-    name: verify-integration-full
-    needs: verify-integration-full-matrix
-    if: ${{ always() && !cancelled() }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - name: Assert GitHub-hosted verify-integration-full passed
-        run: |
-          if [[ "${{ needs.verify-integration-full-matrix.result }}" != "success" ]]; then
-            echo "verify-integration-full-matrix result: ${{ needs.verify-integration-full-matrix.result }}"
-            exit 1
-          fi
 
   verify-full:
     name: verify-full
