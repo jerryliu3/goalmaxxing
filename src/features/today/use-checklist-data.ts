@@ -312,18 +312,26 @@ export function useChecklistData({
           if (requestId !== viewDateProgressRequestIdRef.current) {
             return;
           }
-          setData((previous) => ({
-            ...previous,
+          const nextData: TodayData = {
+            ...dataRef.current,
             completions: progress.facts,
             progress,
-          }));
+          };
+          dataRef.current = nextData;
+          setData(nextData);
+          const targetSubjectUserId = subjectUserId ?? dataRef.current.userId;
+          const targetIsViewer = targetSubjectUserId === viewerUserId;
+          const partnerCacheScope =
+            targetIsViewer && partnerId ? `partner:${partnerId}` : "partner:none";
+          const cacheKey = `${CHECKLIST_DATA_CACHE_PREFIX}${targetSubjectUserId}:${viewDate}:${todayLocalDate}:${partnerCacheScope}`;
+          writeTabDataCache(cacheKey, nextData);
         })
         .catch((error: unknown) => {
           reportLoadError(error);
         });
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [isActive, reportLoadError, subjectUserId, todayLocalDate, viewDate]);
+  }, [isActive, partnerId, reportLoadError, subjectUserId, todayLocalDate, viewDate, viewerUserId]);
 
   const refreshInBackground = useCallback(() => {
     void loadData({ showLoading: false, forceRefresh: true }).catch(

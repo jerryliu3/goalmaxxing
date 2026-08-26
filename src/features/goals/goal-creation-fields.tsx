@@ -39,6 +39,7 @@ import {
 } from "@/lib/goals/form-options";
 import { getCategorySwatchColor, type CategorySelection } from "@/lib/goals/category";
 import { getLinkedTargetSchedulingNotice } from "@/lib/goals/linked-goal-labels";
+import { getPerPeriodTargetLabel } from "@/lib/goals/recurrence-labels";
 import { getGoalPeriodTargetMax } from "@/lib/goals/target-basis";
 import type { Goal, GoalDifficulty } from "@/lib/goals/types";
 import { cn } from "@/lib/utils";
@@ -47,16 +48,6 @@ const lifetimeTargetLabel = "Total target completions";
 const lifetimeTargetTooltip =
   "The target for the entire lifetime of this goal. Each completion counts independently.";
 
-function perPeriodTargetLabel(interval: GoalCreationFields["recurrence_interval"]): string {
-  if (interval === "weekly") {
-    return "Target per week";
-  }
-  if (interval === "monthly") {
-    return "Target per month";
-  }
-  return "Target per period";
-}
-
 function recurringTargetLabel(
   interval: GoalCreationFields["recurrence_interval"],
   targetBasis: GoalCreationFields["target_basis"]
@@ -64,7 +55,7 @@ function recurringTargetLabel(
   if (targetBasis === "lifetime") {
     return lifetimeTargetLabel;
   }
-  return perPeriodTargetLabel(interval);
+  return getPerPeriodTargetLabel(interval);
 }
 
 export interface GoalCreationLinkTargetProps {
