@@ -17,13 +17,14 @@ describe("completion dispatch bridge", () => {
     );
   });
 
-  it("never routes a targeted recurring goal to legacy period semantics", () => {
-    for (const fixtureCase of fixture.cases.filter(
-      (candidate) => candidate.input.targetedRecurring
-    )) {
-      expect(resolveCompletionDispatch(fixtureCase.input).route).not.toBe(
-        "legacy_period"
-      );
+  it("routes all off-plan completion toggles through exact-date semantics", () => {
+    for (const fixtureCase of fixture.cases) {
+      if (
+        !fixtureCase.input.activePlanMembership &&
+        fixtureCase.expected.allowed
+      ) {
+        expect(fixtureCase.expected.route).toBe("canonical_exact_date");
+      }
     }
   });
 
@@ -50,7 +51,7 @@ describe("completion dispatch bridge", () => {
         existingExactFact: false,
         desiredFactState: "present",
       }).route
-    ).toBe("legacy_period");
+    ).toBe("canonical_exact_date");
 
     expect(
       resolveCompletionDispatch({
@@ -81,7 +82,7 @@ describe("completion dispatch bridge", () => {
           ...periodCadenceInput,
           targetedRecurring,
         }).route
-      ).toBe(targetedRecurring ? "canonical_exact_date" : "legacy_period");
+      ).toBe("canonical_exact_date");
     }
   });
 });
@@ -130,7 +131,7 @@ describe("completion dispatch executor", () => {
     ]);
   });
 
-  it("routes legacy period mutations through the completions API", async () => {
+  it("executes exact-date mutations through the completions API", async () => {
     const calls: Array<{ route: string; body: Record<string, unknown> }> = [];
     const fetcher = async (route: string, init?: RequestInit) => {
       calls.push({
@@ -145,10 +146,10 @@ describe("completion dispatch executor", () => {
 
     const result = await executeCompletionDispatch({
       decision: {
-        route: "legacy_period",
-        exactDateOnly: false,
+        route: "canonical_exact_date",
+        exactDateOnly: true,
         allowed: true,
-        reason: "legacy_period_semantics",
+        reason: "allowed",
       },
       desiredFactState: "absent",
       goalId: "12000000-0000-4000-8000-000000000001",
@@ -408,15 +409,15 @@ describe("completion dispatch executor", () => {
     }
   });
 
-  it("returns timeout when legacy completion API requests stall", async () => {
+  it("returns timeout when completion API requests stall", async () => {
     vi.useFakeTimers();
     try {
       const resultPromise = executeCompletionDispatch({
         decision: {
-          route: "legacy_period",
-          exactDateOnly: false,
+          route: "canonical_exact_date",
+          exactDateOnly: true,
           allowed: true,
-          reason: "legacy_period_semantics",
+          reason: "allowed",
         },
         desiredFactState: "present",
         goalId: "12000000-0000-4000-8000-000000000001",

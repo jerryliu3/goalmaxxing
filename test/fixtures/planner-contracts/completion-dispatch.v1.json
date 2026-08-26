@@ -156,7 +156,7 @@
     },
     {
       "id": "ordinary_cadence_without_plan",
-      "description": "A non-target cadence goal outside active plans retains legacy period behavior.",
+      "description": "A non-target cadence goal outside active plans uses exact-date semantics.",
       "input": {
         "requirementKind": "cadence",
         "targetedRecurring": false,
@@ -167,15 +167,15 @@
         "desiredFactState": "present"
       },
       "expected": {
-        "route": "legacy_period",
-        "exactDateOnly": false,
+        "route": "canonical_exact_date",
+        "exactDateOnly": true,
         "allowed": true,
-        "reason": "legacy_period_semantics"
+        "reason": "allowed"
       }
     },
     {
       "id": "fixed_goal_without_plan",
-      "description": "A fixed goal outside active plans retains its existing non-planner mutation.",
+      "description": "A fixed goal outside active plans uses exact-date completion semantics.",
       "input": {
         "requirementKind": "milestone_sequence",
         "targetedRecurring": false,
@@ -186,10 +186,10 @@
         "desiredFactState": "present"
       },
       "expected": {
-        "route": "legacy_period",
-        "exactDateOnly": false,
+        "route": "canonical_exact_date",
+        "exactDateOnly": true,
         "allowed": true,
-        "reason": "legacy_period_semantics"
+        "reason": "allowed"
       }
     }
   ]
