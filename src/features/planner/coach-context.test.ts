@@ -13,15 +13,15 @@ describe("buildCoachDeterministicSummary", () => {
           originalGoalId: "goal-1",
           label: "Run intervals",
           scheduledDate: "2026-08-05",
-          classification: "planned",
+          classification: "open",
           creditState: "uncredited",
         },
         {
           originalGoalId: "goal-1",
           label: "Run recovery",
           scheduledDate: "2026-08-06",
-          classification: "planned",
-          creditState: "credited",
+          classification: "open",
+          creditState: "completed_as_scheduled",
         },
       ],
       horizonSummary: [

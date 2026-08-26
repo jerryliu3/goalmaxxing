@@ -16,7 +16,7 @@ function unit(
     unitKey,
     label: null,
     scheduledDate,
-    classification: "scheduled",
+    classification: "open",
     creditState: "uncredited",
   } as PlannerWorkUnit;
 }
