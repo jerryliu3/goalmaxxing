@@ -1,7 +1,7 @@
 # Checklist and Planner Cleanup Audit
 
 Status: Proposed cleanup backlog  
-Last updated: 2026-08-25  
+Last updated: 2026-08-25 (stack delivery + PR #654 micro-cleanup notes)  
 Scope: goals, completions, checklist, insights, planner/calendar, progress context, and related database boundaries
 
 ## Executive summary
@@ -513,6 +513,15 @@ Extract:
 The target-basis and requirement mapping should remain in domain modules, not be
 reconstructed in JSX handlers.
 
+**Partial progress (PR #654, `chore/goal-creation-micro-cleanup`):** creation-surface
+validation and save-time target normalization are further centralized in
+`src/features/goals/goal-creation-model.ts` (`getGoalCreationValidationFeedback`,
+`resolveGoalCreationTargetCountForSave`, `applyGoalCreationFieldChange`). Shared
+helpers also cover LLM draft parse (`src/features/goals/bulk-goal-parse.ts`) and RPC
+error shaping (`src/lib/supabase/rpc-error.ts`). `goal-form.tsx` is thinner but
+still owns load/hydrate, link targets, capacity warnings, reward text, planner-task
+creation, and RPC recovery — Phase 4 extraction remains the right next step.
+
 #### P1.8 `calendar-surface.tsx` is a second orchestration monolith
 
 It coordinates month state, URL state, DnD, draft overlays, day previews, coach
@@ -606,6 +615,32 @@ workflow. Bulk and planner-coach drafts now use the shared
 validation normalization, metadata fields, and link persistence therefore share
 one prepared-row boundary instead of diverging across the two callers.
 
+**Stack delivery (2026-08-25):** implementation lives on `feat/bulk-goal-create-editor`
+(stacked on `fix/planner-move-lifetime-target-cap` → per-period target PRs). Open
+follow-up micro-cleanup: PR #654. Bulk editor branch is pushed; open a PR against
+#653 when ready to merge the main consolidation slice.
+
+#### Partially addressed: creation-validation dedupe (PR #654)
+
+Bulk, coach, and single-goal create paths now share:
+
+- `getGoalCreationValidationFeedback` and field-level errors in `goal-creation-model.ts`
+  (replaces split `goal-form-validation.ts` / `getGoalFormTargetValidationError` paths),
+- `resolveGoalCreationTargetCountForSave` for submit and `prepareBulkGoalRows`,
+- `parseLlmGoalDraftsFromPrompt` for bulk and coach NL parse,
+- `getRpcErrorMessage` for goal-form and bulk persistence RPC failures.
+
+`goal-form.tsx` still adds planner-task and `reward_text` rules on top of the shared
+feedback helper. Full validation ownership documentation (P2.3) and `goal-form` shell
+split (P1.7) are still outstanding.
+
+#### Resolved: soft-delete XP zeroing (per-period stack, PR #650)
+
+`goals_write_boundary.test.sql` failed when `soft_delete_goal` left credited XP on
+deleted goals. Fixed in `feat/per-period-target-pr2-domain` via migration
+`20260825225040_normalize_goal_write_boundary.sql`, which passes `force_zero` into
+`recompute_goal_xp_service` when the canonical goal row is soft-deleted.
+
 ### P2: migration and database maintenance
 
 #### P2.1 Function-body string patching is fragile
@@ -656,7 +691,13 @@ For every invariant, document:
 - test location,
 - whether cascades and service-role writes are covered.
 
-### P2: test and observability gaps
+**Partial progress (PR #654):** create-mode field validation and target-count
+normalization for save now route through `goal-creation-model.ts`; bulk drafts use
+the same `validateGoalCreationFields` path as the shared feedback helper used by
+`goal-form.tsx`. Invariant cataloging, API/route ownership, exact-date handlers, and
+SQL RPC documentation remain open.
+
+### P3: test and observability gaps
 
 The repository has good focused tests for periods, reconciliation, exact-date
 dispatch, and several SQL write boundaries. The following gaps remain:
@@ -674,6 +715,8 @@ dispatch, and several SQL write boundaries. The following gaps remain:
 5. Cache update/invalidation tests in `use-checklist-data`.
 6. Tests proving all `target_basis` read paths use the stored column after backfill.
 7. pgTAP coverage for target-basis shape/backfill and completion lifetime enforcement.
+   Soft-delete XP zeroing is covered after PR #650; broader target-basis pgTAP
+   matrix remains.
 8. Golden vectors for planner, progress, and XP period domains.
 9. Tests for `external_sync` completion sources in planner schemas.
 10. Tests for per-entry, rather than global, mutation loading behavior.
