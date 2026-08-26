@@ -15,7 +15,7 @@ const workUnits = [
     unitKey: "total:1",
     scheduledDate: "2026-08-20",
     label: "Run",
-    classification: "scheduled",
+    classification: "open",
     creditState: "uncredited",
   },
   {
@@ -23,7 +23,7 @@ const workUnits = [
     unitKey: "total:1",
     scheduledDate: "2026-08-21",
     label: "Lift",
-    classification: "scheduled",
+    classification: "open",
     creditState: "uncredited",
   },
 ];

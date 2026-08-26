@@ -34,7 +34,7 @@ const activePlan: NonNullable<PlannerContextPayload["activePlan"]> = {
       unit_key: "total:1",
       requirement_kind: "deadline_total",
       scheduled_date: "2026-08-20",
-      classification: "scheduled",
+      classification: "open",
       credit_state: "uncredited",
       locked: false,
       revision: 1,
@@ -47,7 +47,7 @@ const activePlan: NonNullable<PlannerContextPayload["activePlan"]> = {
       unit_key: "total:1",
       requirement_kind: "deadline_total",
       scheduled_date: "2026-08-21",
-      classification: "scheduled",
+      classification: "open",
       credit_state: "uncredited",
       locked: true,
       revision: 1,
@@ -64,7 +64,7 @@ describe("resolveActivePlanItem", () => {
       unitKey: "total:1",
       label: "Read",
       scheduledDate: "2026-08-21",
-      classification: "scheduled",
+      classification: "open",
       creditState: "uncredited",
     };
 
