@@ -14,10 +14,10 @@ import type { GoalDateSort } from "@/lib/goals/list-view";
 export function ChecklistShell() {
   const { scope, activePartner, viewer, partner } = useDuoSurface("checklist");
   const [viewDate, setViewDate] = useState(toLocalDateString());
-  const [showPastGoals, setShowPastGoals] = useState(false);
+  const [showEndedGoals, setShowEndedGoals] = useState(false);
   const [showUpcomingGoals, setShowUpcomingGoals] = useState(false);
   const [showArchivedGoals, setShowArchivedGoals] = useState(false);
-  const [showCompletedGoals, setShowCompletedGoals] = useState(false);
+  const [showTargetAchievedGoals, setShowTargetAchievedGoals] = useState(false);
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
   const [recurrenceFilters, setRecurrenceFilters] = useState<RecurrenceGroup[]>([]);
   const [todayGoalSearchQuery, setTodayGoalSearchQuery] = useState("");
@@ -30,14 +30,14 @@ export function ChecklistShell() {
         ? {
             viewDate,
             setViewDate,
-            showPastGoals,
-            setShowPastGoals,
+            showEndedGoals,
+            setShowEndedGoals,
             showUpcomingGoals,
             setShowUpcomingGoals,
             showArchivedGoals,
             setShowArchivedGoals,
-            showCompletedGoals,
-            setShowCompletedGoals,
+            showTargetAchievedGoals,
+            setShowTargetAchievedGoals,
             categoryFilters,
             setCategoryFilters,
             recurrenceFilters,
@@ -55,8 +55,8 @@ export function ChecklistShell() {
       recurrenceFilters,
       shareFilters,
       showArchivedGoals,
-      showCompletedGoals,
-      showPastGoals,
+      showTargetAchievedGoals,
+      showEndedGoals,
       showUpcomingGoals,
       todayEndMonths,
       todayGoalSearchQuery,
