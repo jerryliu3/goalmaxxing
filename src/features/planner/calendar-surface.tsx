@@ -33,6 +33,10 @@ import { MoveSessionDialog } from "@/features/planner/move-session-dialog";
 import { PlannerCoachPanel } from "@/features/planner/coach/planner-coach-panel";
 import { usePlannerCoach } from "@/features/planner/coach/use-planner-coach";
 import type { PlannerCoachBindings } from "@/features/planner/coach/coach-types";
+import {
+  buildPlannerCoachBindings,
+  refreshPlannerAfterCoachGoalsCreated,
+} from "@/features/planner/planner-coach-surface-bindings";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import {
   draftCommandReducer,
@@ -609,28 +613,21 @@ export function CalendarSurface({
     }) => boolean
   >(() => false);
   const handleCoachGoalsCreated = useCallback(async () => {
-    handlePlannerMutation();
-    const refreshed = await loadContext({
-      showLoading: false,
-      toastOnError: true,
-      forcePrepare: true,
+    await refreshPlannerAfterCoachGoalsCreated({
+      handlePlannerMutation,
+      loadContext,
     });
-    if (!refreshed) {
-      throw new Error("Planner preparation did not complete.");
-    }
   }, [handlePlannerMutation, loadContext]);
-  const coachBindings: PlannerCoachBindings = {
+  const coachBindings: PlannerCoachBindings = buildPlannerCoachBindings({
     refreshDraftPreview,
     applyPolicyReplanMoves,
     queueDraftMoveCommand: (args) => queueDraftMoveCommandRef.current(args),
     clearDraftMoveCommands,
-    applyDraftPolicy: (policy) => {
-      setDraftPolicy(policy);
-      setSetupRestWeekdays([...policy.restWeekdays].sort((left, right) => left - right));
-    },
-    coachWindow: draftSaveWindow,
-    getNonPublishablePreviewMessage: nonPublishablePreviewMessage,
-  };
+    setDraftPolicy,
+    setSetupRestWeekdays,
+    draftSaveWindow,
+    nonPublishablePreviewMessage,
+  });
   const coach = usePlannerCoach({
     activeTab,
     context,
