@@ -8,11 +8,9 @@ import { requestXpRefresh } from "@/lib/xp/events";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   buildGoalMutationArgs,
-} from "@/features/today/use-goal-form-state";
-import type {
-  GoalFormGoalArgs,
-  GoalFormRecovery,
-  GoalFormState,
+  type GoalFormGoalArgs,
+  type GoalFormRecovery,
+  type GoalFormState,
 } from "@/features/today/goal-form-model";
 
 interface UseGoalFormSubmitOptions {
