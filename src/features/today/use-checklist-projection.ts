@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 import {
   projectChecklistPresentationsByGoalId,
+  shouldHideTargetAchievedGoal,
 } from "@/lib/goals/checklist-presentation";
 import { createChecklistTemporalContext } from "@/lib/goals/period-domain";
 import type { CompletionDateFact, Goal } from "@/lib/goals/types";
@@ -53,8 +54,26 @@ export function useChecklistProjection({
     return ids;
   }, [presentationByGoalId]);
 
+  const targetAchievedGoalIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const goal of goals) {
+      if (
+        shouldHideTargetAchievedGoal({
+          goal,
+          progress: progressByGoal.get(goal.id),
+          completions: completionsByGoal.get(goal.id) ?? [],
+          asOfDate: selectedDate,
+        })
+      ) {
+        ids.add(goal.id);
+      }
+    }
+    return ids;
+  }, [completionsByGoal, goals, progressByGoal, selectedDate]);
+
   return {
     presentationByGoalId,
     greenGoalIds,
+    targetAchievedGoalIds,
   };
 }
