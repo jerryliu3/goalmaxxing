@@ -120,7 +120,7 @@ export type Database = {
         Returns: string
       }
       goal_xp_credited_units: {
-        Args: { p_goal_id: string; p_user_id: string }
+        Args: { p_as_of?: string; p_goal_id: string; p_user_id: string }
         Returns: {
           completion_id: string
           completion_source: Database["public"]["Enums"]["completion_source"]
@@ -237,6 +237,7 @@ export type Database = {
           p_recurrence_interval: Database["public"]["Enums"]["recurrence_interval"]
           p_scheduled_date: string
           p_start_date: string
+          p_target_basis: Database["public"]["Enums"]["goal_target_basis"]
           p_target_count: number
           p_unit_key: string
           p_week_starts_on: number
@@ -276,6 +277,14 @@ export type Database = {
       refresh_xp_profile: {
         Args: { p_track_keys?: string[]; p_user_id: string }
         Returns: undefined
+      }
+      resolve_goal_target_basis: {
+        Args: {
+          p_frequency_type: Database["public"]["Enums"]["goal_frequency_type"]
+          p_target_basis?: Database["public"]["Enums"]["goal_target_basis"]
+          p_target_count: number
+        }
+        Returns: Database["public"]["Enums"]["goal_target_basis"]
       }
       sha256_hex_digest: { Args: { p_value: string }; Returns: string }
       subject_member_ids: {
@@ -908,6 +917,7 @@ export type Database = {
             | null
           reward_text: string | null
           start_date: string
+          target_basis: Database["public"]["Enums"]["goal_target_basis"]
           target_count: number | null
           team_id: string | null
           title: string
@@ -935,6 +945,7 @@ export type Database = {
             | null
           reward_text?: string | null
           start_date?: string
+          target_basis: Database["public"]["Enums"]["goal_target_basis"]
           target_count?: number | null
           team_id?: string | null
           title: string
@@ -962,6 +973,7 @@ export type Database = {
             | null
           reward_text?: string | null
           start_date?: string
+          target_basis?: Database["public"]["Enums"]["goal_target_basis"]
           target_count?: number | null
           team_id?: string | null
           title?: string
@@ -2605,6 +2617,7 @@ export type Database = {
           p_recurrence_interval?: Database["public"]["Enums"]["recurrence_interval"]
           p_reward_text?: string
           p_start_date?: string
+          p_target_basis?: Database["public"]["Enums"]["goal_target_basis"]
           p_target_count?: number
           p_team_id?: string
           p_title: string
@@ -3070,6 +3083,7 @@ export type Database = {
           p_recurrence_interval?: Database["public"]["Enums"]["recurrence_interval"]
           p_reward_text?: string
           p_start_date?: string
+          p_target_basis?: Database["public"]["Enums"]["goal_target_basis"]
           p_target_count?: number
           p_team_id?: string
           p_title: string
@@ -3107,6 +3121,7 @@ export type Database = {
         | "team_formed"
       goal_difficulty: "easy" | "medium" | "hard"
       goal_frequency_type: "fixed_milestones" | "recurring"
+      goal_target_basis: "period" | "lifetime"
       health_metric_key:
         | "steps"
         | "active_energy_kcal"
@@ -3302,6 +3317,7 @@ export const Constants = {
       ],
       goal_difficulty: ["easy", "medium", "hard"],
       goal_frequency_type: ["fixed_milestones", "recurring"],
+      goal_target_basis: ["period", "lifetime"],
       health_metric_key: [
         "steps",
         "active_energy_kcal",
