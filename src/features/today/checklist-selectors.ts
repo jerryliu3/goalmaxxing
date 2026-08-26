@@ -6,15 +6,19 @@ import {
   type GoalDateSort,
 } from "@/lib/goals/list-view";
 import { isGoalManuallyArchived } from "@/lib/goals/schedule";
-import { shouldHideTargetAchievedGoal } from "@/lib/goals/checklist-presentation";
+import {
+  projectChecklistPresentationsByGoalId,
+  type ChecklistGoalPresentation,
+} from "@/lib/goals/checklist-presentation";
+import { createChecklistTemporalContext } from "@/lib/goals/period-domain";
+import type { CompletionDateFact, Goal } from "@/lib/goals/types";
+import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 import {
   getRecurrenceGroup,
   recurrenceGroupLabel,
   recurrenceGroupOrder,
   type RecurrenceGroup,
 } from "@/lib/goals/recurrence-labels";
-import type { CompletionDateFact, Goal } from "@/lib/goals/types";
-import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 
 export type { RecurrenceGroup };
 export { recurrenceGroupLabel, recurrenceGroupOrder, getRecurrenceGroup };
@@ -86,6 +90,18 @@ export function selectActiveGoals({
   });
 }
 
+export function selectTargetAchievedGoalIdsFromPresentations(
+  presentationByGoalId: ReadonlyMap<string, ChecklistGoalPresentation>
+): Set<string> {
+  const ids = new Set<string>();
+  for (const [goalId, presentation] of presentationByGoalId) {
+    if (presentation.shouldHideWhenCompletedFilterOff) {
+      ids.add(goalId);
+    }
+  }
+  return ids;
+}
+
 export function selectTargetAchievedGoalIds({
   goals,
   progressByGoal,
@@ -93,30 +109,22 @@ export function selectTargetAchievedGoalIds({
   asOfDate,
 }: {
   goals: Goal[];
-  progressByGoal: ReadonlyMap<
-    string,
-    Pick<ProgressContextSummary, "outcome" | "achievementDate"> | undefined
-  >;
-  completionsByGoal: ReadonlyMap<
-    string,
-    Array<Pick<CompletionDateFact, "completed_on">>
-  >;
+  progressByGoal: ReadonlyMap<string, ProgressContextSummary | undefined>;
+  completionsByGoal: ReadonlyMap<string, CompletionDateFact[]>;
   asOfDate: string;
 }): Set<string> {
-  const ids = new Set<string>();
-  for (const goal of goals) {
-    if (
-      shouldHideTargetAchievedGoal({
-        goal,
-        progress: progressByGoal.get(goal.id),
-        completions: completionsByGoal.get(goal.id) ?? [],
+  return selectTargetAchievedGoalIdsFromPresentations(
+    projectChecklistPresentationsByGoalId({
+      goals,
+      completionsByGoal,
+      progressByGoal,
+      temporal: createChecklistTemporalContext({
+        selectedDate: asOfDate,
         asOfDate,
-      })
-    ) {
-      ids.add(goal.id);
-    }
-  }
-  return ids;
+        weeklyAnchor: { weekStartsOn: 1 },
+      }),
+    })
+  );
 }
 
 export function selectFilteredTodayGoals({

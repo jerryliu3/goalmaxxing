@@ -12,6 +12,7 @@ import {
   groupGoalsByRecurrence,
   selectActiveGoals,
   selectArchivedGoals,
+  selectTargetAchievedGoalIdsFromPresentations,
   selectEndedGoals,
   selectFilteredTodayGoals,
   selectUpcomingGoals,
@@ -175,15 +176,19 @@ export function TodayTab({
     todayEndMonths,
     checklistFilterStartMonth
   );
-  const { presentationByGoalId, greenGoalIds, targetAchievedGoalIds } =
-    useChecklistProjection({
-      goals: activeGoals,
-      completionsByGoal,
-      progressByGoal,
-      selectedDate: viewDate,
-      asOfDate: todayLocalDate,
-      weeklyAnchor,
-    });
+  const { presentationByGoalId, greenGoalIds } = useChecklistProjection({
+    goals: activeGoals,
+    completionsByGoal,
+    progressByGoal,
+    selectedDate: viewDate,
+    asOfDate: todayLocalDate,
+    weeklyAnchor,
+  });
+  const targetAchievedGoalIds = useMemo(
+    () => selectTargetAchievedGoalIdsFromPresentations(presentationByGoalId),
+    [presentationByGoalId]
+  );
+
   const { savingGoalId, recentlyCompletedGoalId, toggleCompletion } =
     useChecklistCompletionActions({
       readOnly,
