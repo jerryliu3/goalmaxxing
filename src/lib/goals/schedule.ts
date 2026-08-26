@@ -1,11 +1,13 @@
 import { format, isAfter, isBefore, parseISO, startOfDay } from "date-fns";
 import { toLocalDateString } from "@/lib/dates/day";
+import { countDistinctCompletionDays } from "@/lib/goals/admissible";
 import {
   getAnchoredPeriod,
   type WeeklyAnchorContext,
 } from "@/lib/goals/periods";
+import { cadencePeriodTarget } from "@/lib/goals/target-basis";
 import type { CompletionDateFact, Goal } from "@/lib/goals/types";
-import { isTargetedRecurringGoal } from "@/lib/planner/requirements";
+import { getGoalRequirement, isTargetedRecurringGoal } from "@/lib/planner/requirements";
 
 function completionSet(completions: CompletionDateFact[]) {
   return new Set(completions.map((entry) => entry.completed_on));
@@ -87,12 +89,22 @@ export function isGoalDoneForCurrentPeriod(
     return completedDates.has(today);
   }
 
-  return getCompletionsForCurrentPeriod(
+  const periodCompletions = getCompletionsForCurrentPeriod(
     goal,
     completions,
     referenceDate,
     options
-  ).length > 0;
+  );
+  const requirement = getGoalRequirement(goal);
+  if (requirement.kind === "cadence") {
+    return (
+      countDistinctCompletionDays(
+        periodCompletions.map((entry) => entry.completed_on)
+      ) >= requirement.targetCount
+    );
+  }
+
+  return periodCompletions.length > 0;
 }
 
 export function hasCompletionToday(
@@ -133,5 +145,9 @@ export function getFrequencySummary(goal: Goal, completionCount: number): string
   }
 
   const intervalLabel = getRecurringIntervalLabel(goal);
+  const perPeriodTarget = cadencePeriodTarget(goal);
+  if (perPeriodTarget > 1) {
+    return `${intervalLabel} · ${completionCount} completions · ${perPeriodTarget} per period`;
+  }
   return `${intervalLabel} recurring · ${completionCount} completions`;
 }

@@ -9,7 +9,7 @@ import {
 } from "@/lib/planner/work-units";
 
 function buildGoal(overrides: Partial<Goal> = {}): Goal {
-  return {
+  const goal: Goal = {
     id: "goal-id",
     owner_id: "owner-id",
     title: "Goal",
@@ -19,6 +19,7 @@ function buildGoal(overrides: Partial<Goal> = {}): Goal {
     frequency_type: "recurring",
     recurrence_interval: "weekly",
     target_count: null,
+    target_basis: "period",
     milestone_names: null,
     start_date: "2026-07-29",
     end_date: "2026-08-31",
@@ -30,6 +31,15 @@ function buildGoal(overrides: Partial<Goal> = {}): Goal {
     updated_at: "2026-07-29T00:00:00Z",
     ...overrides,
   };
+  if (
+    goal.frequency_type === "recurring" &&
+    typeof goal.target_count === "number" &&
+    goal.target_count > 0 &&
+    overrides.target_basis === undefined
+  ) {
+    goal.target_basis = "lifetime";
+  }
+  return goal;
 }
 
 function completion(date: string, id = date): Completion {
@@ -73,10 +83,10 @@ describe("planner work units", () => {
     });
 
     expect(units.map((unit) => unit.unitKey)).toEqual([
-      "cadence:2026-08-03",
-      "cadence:2026-08-10",
-      "cadence:2026-08-17",
-      "cadence:2026-08-24",
+      "cadence:2026-08-03:1",
+      "cadence:2026-08-10:1",
+      "cadence:2026-08-17:1",
+      "cadence:2026-08-24:1",
     ]);
     expect(units.at(-1)?.creditWindow).toEqual({
       start: "2026-08-24",
@@ -99,10 +109,10 @@ describe("planner work units", () => {
       asOfDate: "2026-09-01",
     });
     const boundaryInAugust = august.find(
-      (unit) => unit.unitKey === "cadence:2026-08-31"
+      (unit) => unit.unitKey === "cadence:2026-08-31:1"
     );
     const boundaryInSeptember = september.find(
-      (unit) => unit.unitKey === "cadence:2026-08-31"
+      (unit) => unit.unitKey === "cadence:2026-08-31:1"
     );
 
     expect(boundaryInAugust).toBeUndefined();
@@ -148,10 +158,10 @@ describe("planner work units", () => {
     });
 
     expect(units.map((unit) => unit.unitKey)).toEqual([
-      "cadence:2026-08-03",
-      "cadence:2026-08-10",
-      "cadence:2026-08-17",
-      "cadence:2026-08-24",
+      "cadence:2026-08-03:1",
+      "cadence:2026-08-10:1",
+      "cadence:2026-08-17:1",
+      "cadence:2026-08-24:1",
     ]);
     expect(units[0]).toMatchObject({
       creditWindow: { start: "2026-08-03", end: "2026-08-09" },
@@ -178,8 +188,8 @@ describe("planner work units", () => {
       weeklyAnchor: { weekStartsOn: 4 },
     });
 
-    expect(units.some((unit) => unit.unitKey === "cadence:2026-11-26")).toBe(false);
-    expect(units[0]?.unitKey).toBe("cadence:2026-12-03");
+    expect(units.some((unit) => unit.unitKey === "cadence:2026-11-26:1")).toBe(false);
+    expect(units[0]?.unitKey).toBe("cadence:2026-12-03:1");
   });
 
   it("materializes every stable total ordinal, including shortfall rows", () => {
@@ -310,7 +320,7 @@ describe("planner draft move windows", () => {
       asOfDate: "2026-09-01",
     });
 
-    const boundaryUnit = units.find((unit) => unit.unitKey === "cadence:2026-08-31");
+    const boundaryUnit = units.find((unit) => unit.unitKey === "cadence:2026-08-31:1");
     expect(boundaryUnit?.placementWindow).toEqual({
       start: "2026-09-01",
       end: "2026-09-06",
@@ -655,7 +665,7 @@ describe("planner completion reconciliation", () => {
         {
           goalId: goal.id,
           requirementFingerprint: normalized.requirementFingerprint,
-          unitKey: "cadence:2026-08-03",
+          unitKey: "cadence:2026-08-03:1",
           scheduledDate: "2026-08-03",
           locked: false,
         },

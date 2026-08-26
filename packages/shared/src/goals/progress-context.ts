@@ -16,6 +16,10 @@ export interface ProgressContextSummary {
   lifecycle: "upcoming" | "active" | "ended" | "archived";
   outcome: "in_progress" | "achieved" | "ended_with_shortfall";
   placementTerminal: boolean;
+  periodSatisfied: boolean;
+  currentPeriodCompletionCount: number;
+  currentPeriodTarget: number | null;
+  closedPeriodHitRatePercent: number | null;
   currentStreak: number;
   longestStreak: number;
   milestoneDates: string[];

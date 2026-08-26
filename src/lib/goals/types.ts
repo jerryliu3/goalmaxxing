@@ -1,4 +1,5 @@
 export type GoalFrequencyType = "fixed_milestones" | "recurring";
+export type GoalTargetBasis = "period" | "lifetime";
 export type RecurrenceInterval = "daily" | "weekly" | "monthly";
 export type CompletionSource = "manual" | "linked_cascade" | "external_sync";
 export type GoalDifficulty = "easy" | "medium" | "hard";
@@ -17,6 +18,7 @@ export interface Goal {
   recurrence_interval: RecurrenceInterval | null;
   difficulty?: GoalDifficulty;
   target_count: number | null;
+  target_basis?: GoalTargetBasis;
   milestone_names: string[] | null;
   start_date: string;
   end_date: string | null;

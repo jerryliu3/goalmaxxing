@@ -6,6 +6,7 @@ import {
   type WeeklyAnchorContext,
 } from "@/lib/goals/periods";
 import type { Goal } from "@/lib/goals/types";
+import { cadenceUnitKey } from "@/lib/goals/target-basis";
 import { resolveGoalPlanningEndDate } from "@/lib/goals/definition-validation";
 import { compareCanonicalStrings } from "@/lib/planner/canonical";
 import {
@@ -358,28 +359,31 @@ export function materializeWorkUnits({
       classification = "future";
     }
 
-    units.push(
-      createUnitBase({
-        goal,
-        normalizedRequirement,
-        unitKey: `cadence:${period.periodKey}`,
-        kind: "cadence",
-        ordinal,
-        periodKey: period.periodKey,
-        label: null,
-        creditWindow,
-        placementWindow,
-        draftMoveWindow: resolveDraftMoveWindow({
+    for (let slot = 1; slot <= requirement.targetCount; slot += 1) {
+      units.push(
+        createUnitBase({
+          goal,
+          normalizedRequirement,
+          unitKey: cadenceUnitKey(period.periodKey, slot),
+          kind: "cadence",
+          ordinal,
+          periodKey: period.periodKey,
+          label: null,
           creditWindow,
           placementWindow,
-          asOfDate,
-        }),
-        classification,
-        missPolicy: "remain_missed",
-        restEligible: interval !== "daily",
-        baseAssignments: baseAssignmentMap,
-      })
-    );
+          draftMoveWindow: resolveDraftMoveWindow({
+            creditWindow,
+            placementWindow,
+            asOfDate,
+          }),
+          classification,
+          missPolicy: "remain_missed",
+          restEligible: interval !== "daily",
+          baseAssignments: baseAssignmentMap,
+        })
+      );
+      ordinal += 1;
+    }
   }
 
   return units.sort((left, right) => {
