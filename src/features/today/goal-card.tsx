@@ -6,14 +6,14 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
+import { countDistinctCompletionDays } from "@/lib/goals/admissible";
 import { getCategoryBadgeClass, getGoalCategoryLabel } from "@/lib/goals/category";
 import type { GoalProgressSnapshot } from "@/lib/goals/progress";
 import {
   getFrequencySummary,
-  isGoalDoneForCurrentPeriod,
 } from "@/lib/goals/schedule";
+import { cadencePeriodTarget, isPeriodCadenceGoal } from "@/lib/goals/target-basis";
 import type { CompletionDateFact, Goal } from "@/lib/goals/types";
-import { isTargetedRecurringGoal } from "@/lib/planner/requirements";
 import { cn } from "@/lib/utils";
 
 interface GoalCardProps {
@@ -37,7 +37,7 @@ type GoalCardInteractionProps =
     }
   | {
       readOnly?: false;
-      onToggle: (sourceElement: HTMLButtonElement) => void;
+      onToggle: (sourceElement: HTMLButtonElement) => void | PromiseLike<void>;
     };
 
 export function GoalCard({
@@ -47,23 +47,25 @@ export function GoalCard({
   linkedCount,
   imageUrl,
   selectedDate,
-  referenceDate,
-  weeklyAnchor,
   disabled = false,
   archived = false,
   readOnly = false,
   onToggle,
 }: GoalCardProps & GoalCardInteractionProps) {
+  const periodCadenceGoal = isPeriodCadenceGoal(goal);
+  const periodCompletionCount = periodCadenceGoal
+    ? countDistinctCompletionDays(completions.map((completion) => completion.completed_on))
+    : null;
   const totalCompletionCount =
     progress?.admissibleCompletionCount ?? completions.length;
-  const displayCompletionCount = totalCompletionCount;
+  const displayCompletionCount = periodCompletionCount ?? totalCompletionCount;
+  const periodSatisfiedOnSelectedDate =
+    periodCadenceGoal &&
+    periodCompletionCount !== null &&
+    periodCompletionCount >= cadencePeriodTarget(goal);
   const hasNoEndDate = goal.end_date === null;
-  const targetedRecurring = isTargetedRecurringGoal(goal);
-  const doneForCurrentPeriod = isGoalDoneForCurrentPeriod(
-    goal,
-    completions,
-    referenceDate,
-    { weeklyAnchor }
+  const completedOnSelectedDate = completions.some(
+    (completion) => completion.completed_on === selectedDate
   );
   const completionSourceForSelectedDate = completions.find(
     (completion) => completion.completed_on === selectedDate
@@ -107,7 +109,11 @@ export function GoalCard({
           ) : null}
         </div>
         <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-          <p className="truncate">{getFrequencySummary(goal, displayCompletionCount)}</p>
+          <p className="truncate">
+            {getFrequencySummary(goal, displayCompletionCount, {
+              periodScopedCount: periodCadenceGoal,
+            })}
+          </p>
           {linkedCount > 0 ? (
             <span
               className="inline-flex shrink-0 items-center gap-1"
@@ -132,7 +138,7 @@ export function GoalCard({
     <Card
       className={cn(
         "shadow-sm",
-        progress?.outcome === "achieved" &&
+        (periodSatisfiedOnSelectedDate || progress?.outcome === "achieved") &&
           "border-emerald-200 bg-emerald-50 dark:border-emerald-800/60 dark:bg-emerald-950/40"
       )}
     >
@@ -141,26 +147,22 @@ export function GoalCard({
           <span
             aria-hidden
             className={`size-4 shrink-0 rounded-full border ${
-              doneForCurrentPeriod
+              completedOnSelectedDate
                 ? "border-primary bg-primary"
                 : "border-muted-foreground/40 bg-transparent"
             }`}
           />
         ) : (
           <CompletionToggle
-            completed={doneForCurrentPeriod}
+            completed={completedOnSelectedDate}
             pending={disabled && !archived}
             size="lg"
             onClick={(event) => onToggle?.(event.currentTarget)}
             disabled={disabled || archived}
             aria-label={
-              doneForCurrentPeriod
-                ? targetedRecurring
-                  ? `Remove completion for ${selectedDate}`
-                  : "Unmark goal completion for current period"
-                : targetedRecurring
-                  ? `Complete goal for ${selectedDate}`
-                  : "Mark goal as complete"
+              completedOnSelectedDate
+                ? `Remove completion for ${selectedDate}`
+                : `Complete goal for ${selectedDate}`
             }
           />
         )}

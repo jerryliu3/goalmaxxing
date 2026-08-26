@@ -3,6 +3,8 @@
 import { addDays, format, parseISO, subDays } from "date-fns";
 import { SlidersHorizontal } from "lucide-react";
 import {
+  useEffect,
+  useRef,
   useCallback,
   useMemo,
   useState,
@@ -58,6 +60,7 @@ import {
   type GoalDateSort,
 } from "@/lib/goals/list-view";
 import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
+import { countDistinctCompletionDays } from "@/lib/goals/admissible";
 import {
   isProgressContextAuthenticationError,
   progressSummaryMap,
@@ -74,6 +77,7 @@ import {
   getGoalRequirement,
   isTargetedRecurringGoal,
 } from "@/lib/planner/requirements";
+import { cadencePeriodTarget, isPeriodCadenceGoal } from "@/lib/goals/target-basis";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import { reportDuoTelemetry } from "@/lib/social/duo/telemetry";
 
@@ -138,6 +142,8 @@ export function TodayTab({
   const [internalViewDate, setInternalViewDate] = useState(toLocalDateString());
   const [internalTodayEndMonths, setInternalTodayEndMonths] = useState<string[]>([]);
   const [internalTodaySort, setInternalTodaySort] = useState<GoalDateSort>("earliest_end");
+  const [recentlyCompletedGoalId, setRecentlyCompletedGoalId] = useState<string | null>(null);
+  const recentlyCompletedTimerRef = useRef<number | null>(null);
   const showPastGoals = sharedFilters?.showPastGoals ?? internalShowPastGoals;
   const setShowPastGoals = sharedFilters?.setShowPastGoals ?? setInternalShowPastGoals;
   const showUpcomingGoals = sharedFilters?.showUpcomingGoals ?? internalShowUpcomingGoals;
@@ -263,6 +269,27 @@ export function TodayTab({
       }),
     [activeGoals, completionsByGoal, progressByGoal, viewDate]
   );
+  const greenGoalIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const goal of activeGoals) {
+      if (progressByGoal.get(goal.id)?.outcome === "achieved") {
+        ids.add(goal.id);
+        continue;
+      }
+      if (!isPeriodCadenceGoal(goal)) {
+        continue;
+      }
+      const periodCount = countDistinctCompletionDays(
+        (completionsByGoal.get(goal.id) ?? []).map(
+          (completion) => completion.completed_on
+        )
+      );
+      if (periodCount >= cadencePeriodTarget(goal)) {
+        ids.add(goal.id);
+      }
+    }
+    return ids;
+  }, [activeGoals, completionsByGoal, progressByGoal]);
 
   const filteredTodayGoals = useMemo(
     () =>
@@ -288,17 +315,37 @@ export function TodayTab({
     ]
   );
 
+  const prioritizeIncompleteGoals = useCallback(
+    (goals: Goal[]) => {
+      const byDate = sortGoalsByDate(goals, todaySort);
+      return [...byDate].sort((left, right) => {
+        const leftCompleted =
+          greenGoalIds.has(left.id) && left.id !== recentlyCompletedGoalId;
+        const rightCompleted =
+          greenGoalIds.has(right.id) && right.id !== recentlyCompletedGoalId;
+        if (leftCompleted === rightCompleted) {
+          return 0;
+        }
+        return leftCompleted ? 1 : -1;
+      });
+    },
+    [greenGoalIds, recentlyCompletedGoalId, todaySort]
+  );
+
   const todayGoalsSorted = useMemo(
-    () => sortGoalsByDate(filteredTodayGoals, todaySort),
-    [filteredTodayGoals, todaySort]
+    () => prioritizeIncompleteGoals(filteredTodayGoals),
+    [filteredTodayGoals, prioritizeIncompleteGoals]
   );
 
   const groupedTodayGoalsForAll = useMemo(
     () =>
       recurrenceFilters.length === 0
-        ? groupGoalsByRecurrence(filteredTodayGoals, todaySort)
+        ? groupGoalsByRecurrence(filteredTodayGoals, todaySort).map((group) => ({
+            ...group,
+            goals: prioritizeIncompleteGoals(group.goals),
+          }))
         : [],
-    [filteredTodayGoals, recurrenceFilters, todaySort]
+    [filteredTodayGoals, prioritizeIncompleteGoals, recurrenceFilters, todaySort]
   );
 
   const prepareSupplementalGoals = useCallback(
@@ -356,6 +403,27 @@ export function TodayTab({
     },
     [loadData, redirectToLogin]
   );
+  const pinRecentlyCompletedGoal = useCallback((goalId: string) => {
+    setRecentlyCompletedGoalId(goalId);
+    if (recentlyCompletedTimerRef.current !== null) {
+      window.clearTimeout(recentlyCompletedTimerRef.current);
+    }
+    recentlyCompletedTimerRef.current = window.setTimeout(() => {
+      setRecentlyCompletedGoalId((current) =>
+        current === goalId ? null : current
+      );
+      recentlyCompletedTimerRef.current = null;
+    }, 1200);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (recentlyCompletedTimerRef.current !== null) {
+        window.clearTimeout(recentlyCompletedTimerRef.current);
+      }
+    },
+    []
+  );
 
   const toggleCompletion = useCallback(async (
     goal: Goal,
@@ -380,7 +448,7 @@ export function TodayTab({
     const completionToUnmark = completedOnViewDate
       ? completions.find((completion) => completion.completed_on === viewDate)
       : latestCompletionInCurrentPeriod;
-    const targetedRecurring = isTargetedRecurringGoal(goal);
+    const targetedRecurring = isTargetedRecurringGoal(goal) || isPeriodCadenceGoal(goal);
     const requirement = getGoalRequirement(goal);
     const desiredFactState = completedOnViewDate ? "absent" : "present";
     const decision = resolveCompletionDispatch({
@@ -429,6 +497,7 @@ export function TodayTab({
     if (routeDesiredFactState === "present") {
       reportDuoTelemetry("viewer_lane_completion", { surface: "checklist" });
       toast.success(`Great work. Goal completed for ${viewDate}.`);
+      pinRecentlyCompletedGoal(goal.id);
     } else {
       const removedDate =
         decision.route === "legacy_period"
@@ -444,6 +513,7 @@ export function TodayTab({
     readOnly,
     refreshChecklistInBackground,
     runCompletionMutation,
+    pinRecentlyCompletedGoal,
     todayLocalDate,
     viewDate,
     viewDateObj,

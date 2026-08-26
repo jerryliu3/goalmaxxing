@@ -17,6 +17,7 @@ function buildGoal(overrides: Partial<Goal> = {}): Goal {
     frequency_type: "recurring",
     recurrence_interval: "weekly",
     target_count: null,
+    target_basis: "period",
     milestone_names: null,
     start_date: "2026-08-01",
     end_date: "2026-08-31",
@@ -30,17 +31,33 @@ function buildGoal(overrides: Partial<Goal> = {}): Goal {
   };
 }
 
-describe("legacy goal requirement mapping", () => {
-  it("maps recurring goals without a target to cadence", () => {
+describe("goal requirement mapping", () => {
+  it("maps recurring period goals without a target to cadence with implicit 1", () => {
     expect(getGoalRequirement(buildGoal())).toEqual({
       kind: "cadence",
       interval: "weekly",
+      targetCount: 1,
       maxPerDay: 1,
     });
   });
 
-  it("maps every targeted recurring goal to deadline total", () => {
-    const goal = buildGoal({ target_count: 12 });
+  it("maps recurring period goals with a target to cadence with per-period count", () => {
+    const goal = buildGoal({ target_count: 3 });
+
+    expect(isTargetedRecurringGoal(goal)).toBe(false);
+    expect(getGoalRequirement(goal)).toEqual({
+      kind: "cadence",
+      interval: "weekly",
+      targetCount: 3,
+      maxPerDay: 1,
+    });
+  });
+
+  it("maps lifetime recurring goals to deadline total", () => {
+    const goal = buildGoal({
+      target_count: 12,
+      target_basis: "lifetime",
+    });
 
     expect(isTargetedRecurringGoal(goal)).toBe(true);
     expect(getGoalRequirement(goal)).toEqual({
@@ -57,6 +74,7 @@ describe("legacy goal requirement mapping", () => {
           frequency_type: "fixed_milestones",
           recurrence_interval: null,
           target_count: 3,
+          target_basis: "lifetime",
           milestone_names: ["Draft", "", "Ship"],
         })
       )
@@ -69,7 +87,10 @@ describe("legacy goal requirement mapping", () => {
   });
 
   it("keeps lineage stable for cosmetic edits and changes it for requirements", () => {
-    const base = buildGoal({ target_count: 12 });
+    const base = buildGoal({
+      target_count: 12,
+      target_basis: "lifetime",
+    });
     expect(
       computeRequirementFingerprint({
         ...base,
@@ -87,6 +108,7 @@ describe("legacy goal requirement mapping", () => {
       frequency_type: "fixed_milestones",
       recurrence_interval: null,
       target_count: null,
+      target_basis: "lifetime",
       milestone_names: null,
     });
 

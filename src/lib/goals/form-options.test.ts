@@ -20,7 +20,7 @@ describe("goal create kinds", () => {
 
   it("explains each create kind in plain language", () => {
     expect(GOAL_CREATE_KIND_HELP.recurring).toMatch(/not rigid/i);
-    expect(GOAL_CREATE_KIND_HELP.fixed_milestones).toMatch(/unique steps/i);
+    expect(GOAL_CREATE_KIND_HELP.fixed_milestones).toMatch(/smaller steps|irregular frequencies/i);
     expect(GOAL_CREATE_KIND_HELP.planner_task).toMatch(/Planner → Tasks/i);
     expect(isPlannerTaskCreateKind("planner_task")).toBe(true);
     expect(isPlannerTaskCreateKind("recurring")).toBe(false);

@@ -1,13 +1,15 @@
 import { toLocalDateString } from "@/lib/dates/day";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 import {
+  countDistinctCompletionDays,
   getAdmissibleCompletions,
+  getCadenceHitRatePercent,
   getCreditedUnitCount,
+  getCurrentPeriodCompletionCount,
   getExpectedCadencePeriodCount,
+  isCadencePeriodSatisfiedForCurrentPeriod,
 } from "@/lib/goals/admissible";
-import {
-  getGoalLifecycleOutcome,
-} from "@/lib/goals/lifecycle";
+import { getGoalLifecycleOutcome } from "@/lib/goals/lifecycle";
 import {
   compareDateStrings,
   getAnchoredPeriod,
@@ -36,12 +38,13 @@ export function getGoalCompletionPercentage(
     weeklyAnchor: options.weeklyAnchor ?? null,
   };
   const requirement = getGoalRequirement(goal);
-  const completedUnits = getCreditedUnitCount(goal, completions, context);
-  const expected =
-    requirement.kind === "cadence"
-      ? getExpectedCadencePeriodCount(goal, context)
-      : requirement.targetCount;
+  if (requirement.kind === "cadence") {
+    const hitRate = getCadenceHitRatePercent(goal, completions, context);
+    return hitRate ?? 0;
+  }
 
+  const completedUnits = getCreditedUnitCount(goal, completions, context);
+  const expected = requirement.targetCount;
   if (expected === 0) {
     return 0;
   }
@@ -67,6 +70,45 @@ export function getOverallCompletionPercentage(
   }, 0);
 
   return total / goals.length;
+}
+
+function getSatisfiedCadencePeriodIndices(
+  goal: Goal,
+  completions: Completion[],
+  asOfDate: string,
+  options: GoalWeeklyAnchorOptions = {}
+) {
+  const requirement = getGoalRequirement(goal);
+  if (requirement.kind !== "cadence") {
+    return [];
+  }
+
+  const admissible = getAdmissibleCompletions(goal, completions, {
+    asOfDate,
+    weeklyAnchor: options.weeklyAnchor ?? null,
+  });
+  const interval = requirement.interval;
+  const grouped = new Map<number, string[]>();
+
+  for (const entry of admissible) {
+    const index = getAnchoredPeriod(
+      goal.start_date,
+      interval,
+      entry.completed_on,
+      options.weeklyAnchor ?? null
+    ).index;
+    const existing = grouped.get(index) ?? [];
+    existing.push(entry.completed_on);
+    grouped.set(index, existing);
+  }
+
+  return Array.from(grouped.entries())
+    .filter(
+      ([, dates]) =>
+        countDistinctCompletionDays(dates) >= requirement.targetCount
+    )
+    .map(([index]) => index)
+    .sort((left, right) => left - right);
 }
 
 export function getRecurringStreaks(
@@ -96,24 +138,12 @@ export function getRecurringStreaksAtDate(
     return { current: 0, longest: 0 };
   }
 
-  const admissible = getAdmissibleCompletions(goal, completions, {
+  const uniqueIndices = getSatisfiedCadencePeriodIndices(
+    goal,
+    completions,
     asOfDate,
-    weeklyAnchor: options.weeklyAnchor ?? null,
-  });
-  const interval = goal.recurrence_interval ?? "daily";
-  const uniqueIndices = Array.from(
-    new Set(
-      admissible.map(
-        (entry) =>
-          getAnchoredPeriod(
-            goal.start_date,
-            interval,
-            entry.completed_on,
-            options.weeklyAnchor ?? null
-          ).index
-      )
-    )
-  ).sort((left, right) => left - right);
+    options
+  );
 
   if (uniqueIndices.length === 0) {
     return { current: 0, longest: 0 };
@@ -136,6 +166,7 @@ export function getRecurringStreaksAtDate(
     goal.end_date && compareDateStrings(asOfDate, goal.end_date) > 0
       ? goal.end_date
       : asOfDate;
+  const interval = goal.recurrence_interval ?? "daily";
   const currentPeriodIndex = getAnchoredPeriod(
     goal.start_date,
     interval,
@@ -177,25 +208,48 @@ export function getGoalProgressSnapshot(
     requirement.kind === "cadence"
       ? getExpectedCadencePeriodCount(goal, context)
       : requirement.targetCount;
-  const lifecycleOutcome = getGoalLifecycleOutcome(
-    goal,
-    completions,
-    context
-  );
+  const lifecycleOutcome = getGoalLifecycleOutcome(goal, completions, context);
   const streaks = getRecurringStreaksAtDate(goal, completions, asOfDate, options);
+  const periodSatisfied =
+    requirement.kind === "cadence"
+      ? isCadencePeriodSatisfiedForCurrentPeriod(goal, completions, context)
+      : false;
+  const currentPeriodCompletionCount =
+    requirement.kind === "cadence"
+      ? getCurrentPeriodCompletionCount(goal, completions, context)
+      : 0;
+  const currentPeriodTarget =
+    requirement.kind === "cadence" ? requirement.targetCount : null;
+  const hitRatePercent =
+    requirement.kind === "cadence"
+      ? getCadenceHitRatePercent(goal, completions, context)
+      : null;
+  const achievementDate =
+    lifecycleOutcome.outcome === "achieved" && requirement.kind !== "cadence"
+      ? admissible[requirement.targetCount - 1]?.completed_on ?? null
+      : null;
+
+  const percent =
+    requirement.kind === "cadence"
+      ? hitRatePercent ?? 0
+      : expectedUnitCount === 0
+        ? 0
+        : Math.min(100, (creditedUnitCount / expectedUnitCount) * 100);
 
   return {
     goalId: goal.id,
     admissibleCompletionCount: admissible.length,
     creditedUnitCount,
     expectedUnitCount,
-    percent:
-      expectedUnitCount === 0
-        ? 0
-        : Math.min(100, (creditedUnitCount / expectedUnitCount) * 100),
+    percent,
     lifecycle: lifecycleOutcome.lifecycle,
     outcome: lifecycleOutcome.outcome,
     placementTerminal: lifecycleOutcome.placementTerminal,
+    achievementDate,
+    periodSatisfied,
+    currentPeriodCompletionCount,
+    currentPeriodTarget,
+    closedPeriodHitRatePercent: hitRatePercent,
     currentStreak: streaks.current,
     longestStreak: streaks.longest,
     milestoneDates:

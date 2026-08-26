@@ -28,6 +28,13 @@ describe("goal definition validation", () => {
     expect(
       isOrdinalGoalDefinition({
         frequencyType: "recurring",
+        targetCount: 10,
+        targetBasis: "period",
+      })
+    ).toBe(false);
+    expect(
+      isOrdinalGoalDefinition({
+        frequencyType: "recurring",
         targetCount: null,
       })
     ).toBe(false);
@@ -81,7 +88,8 @@ describe("goal definition validation", () => {
     expect(
       validateGoalDefinition({
         frequencyType: "recurring",
-        targetCount: null,
+        targetCount: 12,
+        targetBasis: "lifetime",
         startDate: "2026-01-01",
         endDate: "2028-01-01",
       })[0]

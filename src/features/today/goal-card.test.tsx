@@ -72,7 +72,7 @@ describe("GoalCard", () => {
       "/goals/10000000-0000-4000-8000-000000000001"
     );
     expect(
-      screen.getByRole("button", { name: "Mark goal as complete" })
+      screen.getByRole("button", { name: "Complete goal for 2026-08-13" })
     ).toBeDisabled();
   });
 
@@ -91,7 +91,7 @@ describe("GoalCard", () => {
 
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Mark goal as complete" })
+      screen.queryByRole("button", { name: "Complete goal for 2026-08-13" })
     ).not.toBeInTheDocument();
   });
 
@@ -179,6 +179,10 @@ describe("GoalCard", () => {
       lifecycle: "ended",
       outcome: "achieved",
       placementTerminal: true,
+      periodSatisfied: true,
+      currentPeriodCompletionCount: 1,
+      currentPeriodTarget: 1,
+      closedPeriodHitRatePercent: null,
       currentStreak: 0,
       longestStreak: 0,
       milestoneDates: [],
@@ -199,5 +203,93 @@ describe("GoalCard", () => {
 
     expect(screen.queryByText("Achieved")).not.toBeInTheDocument();
     expect(container.firstChild).toHaveClass("bg-emerald-50");
+  });
+
+  it("shows period-scoped counts for cadence goals on the selected checklist period", () => {
+    const progress: GoalProgressSnapshot = {
+      goalId: goal.id,
+      admissibleCompletionCount: 14,
+      creditedUnitCount: 6,
+      expectedUnitCount: 8,
+      percent: 75,
+      lifecycle: "active",
+      outcome: "in_progress",
+      placementTerminal: false,
+      periodSatisfied: true,
+      currentPeriodCompletionCount: 2,
+      currentPeriodTarget: 2,
+      closedPeriodHitRatePercent: 50,
+      currentStreak: 2,
+      longestStreak: 3,
+      milestoneDates: [],
+    };
+
+    render(
+      <GoalCard
+        goal={{
+          ...goal,
+          archived_at: null,
+          recurrence_interval: "weekly",
+          target_basis: "period",
+          target_count: 2,
+        }}
+        completions={[
+          { goal_id: goal.id, completed_on: "2026-08-11", source: "manual" },
+          { goal_id: goal.id, completed_on: "2026-08-13", source: "manual" },
+        ]}
+        progress={progress}
+        linkedCount={0}
+        selectedDate="2026-08-13"
+        referenceDate={new Date("2026-08-13T12:00:00")}
+        weeklyAnchor={weeklyAnchor}
+        onToggle={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Weekly · 2/2 this period")).toBeInTheDocument();
+  });
+
+  it("does not mark cadence goal green solely from as-of-today period summary", () => {
+    const progress: GoalProgressSnapshot = {
+      goalId: goal.id,
+      admissibleCompletionCount: 14,
+      creditedUnitCount: 6,
+      expectedUnitCount: 8,
+      percent: 75,
+      lifecycle: "active",
+      outcome: "in_progress",
+      placementTerminal: false,
+      periodSatisfied: true,
+      currentPeriodCompletionCount: 2,
+      currentPeriodTarget: 2,
+      closedPeriodHitRatePercent: 50,
+      currentStreak: 2,
+      longestStreak: 3,
+      milestoneDates: [],
+    };
+
+    const { container } = render(
+      <GoalCard
+        goal={{
+          ...goal,
+          archived_at: null,
+          recurrence_interval: "weekly",
+          target_basis: "period",
+          target_count: 2,
+        }}
+        completions={[
+          { goal_id: goal.id, completed_on: "2026-08-13", source: "manual" },
+        ]}
+        progress={progress}
+        linkedCount={0}
+        selectedDate="2026-08-13"
+        referenceDate={new Date("2026-08-13T12:00:00")}
+        weeklyAnchor={weeklyAnchor}
+        onToggle={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Weekly · 1/2 this period")).toBeInTheDocument();
+    expect(container.firstChild).not.toHaveClass("bg-emerald-50");
   });
 });

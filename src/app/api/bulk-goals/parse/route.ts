@@ -51,6 +51,7 @@ type GeneratedGoal = {
   category_key?: string;
   frequency_type?: "recurring" | "fixed_milestones";
   recurrence_interval?: "daily" | "weekly" | "monthly";
+  target_basis?: "period" | "lifetime";
   target_count?: number | null;
   milestone_names?: string[];
   start_date?: string;
@@ -75,6 +76,7 @@ function buildGeneratedPayloadSchema(categoryKeySet: Set<string>) {
         .optional(),
       frequency_type: z.enum(["recurring", "fixed_milestones"]).optional(),
       recurrence_interval: z.enum(["daily", "weekly", "monthly"]).optional(),
+      target_basis: z.enum(["period", "lifetime"]).optional(),
       target_count: z
         .number()
         .int()
@@ -133,6 +135,10 @@ function buildBulkGoalResponseSchema(categoryKeys: string[]) {
               type: "string",
               enum: ["daily", "weekly", "monthly"],
             },
+            target_basis: {
+              type: "string",
+              enum: ["period", "lifetime"],
+            },
             target_count: { type: "number", maximum: MAX_GOAL_TARGET_COUNT },
             milestone_names: {
               type: "array",
@@ -162,6 +168,26 @@ function toIsoDate(value: string | undefined): string | undefined {
   return z.iso.date().safeParse(trimmed).success ? trimmed : undefined;
 }
 
+function resolveGeneratedTargetBasis(
+  frequency: "recurring" | "fixed_milestones",
+  targetCount: number | null,
+  recurrence: "daily" | "weekly" | "monthly" | undefined,
+  explicit?: "period" | "lifetime"
+): "period" | "lifetime" | undefined {
+  if (frequency !== "recurring") {
+    return undefined;
+  }
+  if (explicit === "period" || explicit === "lifetime") {
+    return explicit;
+  }
+  if (targetCount === null) {
+    return "period";
+  }
+  const periodMax =
+    recurrence === "weekly" ? 7 : recurrence === "monthly" ? 31 : 1;
+  return targetCount <= periodMax ? "period" : "lifetime";
+}
+
 function buildPrompt(userPrompt: string, today: string, categoryKeys: string[]): string {
   return [
     "Convert the following user text into goal drafts.",
@@ -174,6 +200,7 @@ function buildPrompt(userPrompt: string, today: string, categoryKeys: string[]):
     `- "category_key" (${categoryKeys.join(" | ")})`,
     '- "frequency_type" ("recurring" | "fixed_milestones")',
     '- "recurrence_interval" ("daily" | "weekly" | "monthly", only for recurring)',
+    '- "target_basis" ("period" | "lifetime", only for recurring)',
     '- "target_count" (positive integer or null)',
     '- "milestone_names" (array of short session names, only for fixed_milestones)',
     '- "start_date" (YYYY-MM-DD)',
@@ -191,16 +218,30 @@ function buildPrompt(userPrompt: string, today: string, categoryKeys: string[]):
     '- For fixed goals, include a positive target_count when possible.',
     '- For fixed goals, include milestone_names in order when session names are inferable.',
     '- For fixed goals with milestone_names, keep the list length aligned with target_count.',
-    "- For recurring goals, only set target_count when the user asks for a total count by a deadline.",
+    "- Recurring goals default to target_basis \"period\" unless the user clearly wants a lifetime total by a deadline.",
+    "- For recurring + target_basis \"period\": target_count is completions per week or month (distinct days). Daily recurring uses target_count null or 1.",
+    "- Weekly per-period target_count must be 1-7; monthly per-period target_count must be 1-31.",
+    "- For recurring + target_basis \"lifetime\": target_count is the total completions required by end_date.",
+    "- Use target_basis \"lifetime\" only when the user asks for a total count by a deadline (for example \"run 20 times by December\").",
+    "- Use target_basis \"period\" when the user asks for N times per week/month (for example \"strength 3x per week\" -> weekly, target_count 3, target_basis period).",
+    "- Do not use recurring + lifetime for progressive training plans with different sessions each week; use fixed_milestones instead.",
     "- Fixed milestones always require an end_date.",
-    "- Recurring goals with a positive target_count always require an end_date.",
-    "- Open-ended goals are only valid for recurring cadence goals (target_count null).",
+    "- Recurring goals with target_basis \"lifetime\" and a positive target_count always require an end_date.",
+    "- Open-ended recurring goals use target_basis \"period\" with target_count null (daily/weekly/monthly cadence only).",
     "- If end_date is present, keep the start_date..end_date window at 24 calendar months or less.",
     `- Return at most ${MAX_GOALS_PER_REQUEST} goals.`,
     "",
     "Few-shot example for progression plans:",
     'Input: "Create a 4-week 5k plan with 3 runs per week: easy, tempo, long."',
     'Output: {"goals":[{"title":"4-week 5k progression","frequency_type":"fixed_milestones","target_count":12,"milestone_names":["Week 1 - Easy run (conversational pace)","Week 1 - Tempo run (comfortably hard effort)","Week 1 - Long run (steady endurance)","Week 2 - Easy run (conversational pace)","Week 2 - Tempo run (comfortably hard effort)","Week 2 - Long run (steady endurance)","Week 3 - Easy run (conversational pace)","Week 3 - Tempo run (comfortably hard effort)","Week 3 - Long run (steady endurance)","Week 4 - Easy run (conversational pace)","Week 4 - Tempo run (comfortably hard effort)","Week 4 - Long run (steady endurance)"],"start_date":"2026-08-17","end_date":"2026-09-13"}]}',
+    "",
+    "Few-shot example for per-period recurring:",
+    'Input: "Strength training 3 times per week for the next 8 weeks."',
+    'Output: {"goals":[{"title":"Strength training","frequency_type":"recurring","recurrence_interval":"weekly","target_basis":"period","target_count":3,"start_date":"2026-08-17","end_date":"2026-10-12"}]}',
+    "",
+    "Few-shot example for lifetime total recurring:",
+    'Input: "Practice presentations 12 times before my review on Oct 15."',
+    'Output: {"goals":[{"title":"Practice presentations","frequency_type":"recurring","recurrence_interval":"weekly","target_basis":"lifetime","target_count":12,"start_date":"2026-08-17","end_date":"2026-10-15"}]}',
     "",
     "User input:",
     userPrompt,
@@ -497,6 +538,12 @@ function normalizeGeneratedPayload(
       frequency === "recurring"
         ? goal.recurrence_interval ?? "daily"
         : undefined;
+    const targetBasis = resolveGeneratedTargetBasis(
+      frequency,
+      targetCount,
+      recurrence,
+      goal.target_basis
+    );
     const startDate = toIsoDate(goal.start_date) ?? today;
     const endDate = toIsoDate(goal.end_date ?? undefined) ?? null;
     const milestoneNames =
@@ -516,6 +563,7 @@ function normalizeGeneratedPayload(
         : resolveCategoryKey(goal.category?.trim() ?? "Personal", categoryCatalog),
       frequency_type: frequency,
       recurrence_interval: recurrence,
+      target_basis: targetBasis,
       target_count: targetCount,
       milestone_names:
         milestoneNames && milestoneNames.length > 0 ? milestoneNames : undefined,
@@ -526,6 +574,8 @@ function normalizeGeneratedPayload(
     const validationIssues = validateGoalDefinition({
       frequencyType: normalized.frequency_type,
       targetCount: normalized.target_count,
+      targetBasis: normalized.target_basis,
+      recurrenceInterval: normalized.recurrence_interval,
       startDate: normalized.start_date,
       endDate: normalized.end_date,
     });

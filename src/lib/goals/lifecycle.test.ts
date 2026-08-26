@@ -13,6 +13,7 @@ function buildGoal(overrides: Partial<Goal> = {}): Goal {
     frequency_type: "recurring",
     recurrence_interval: "weekly",
     target_count: 3,
+    target_basis: "lifetime",
     milestone_names: null,
     start_date: "2026-08-01",
     end_date: "2026-08-31",
@@ -83,6 +84,7 @@ describe("goal lifecycle and outcome", () => {
   it("requires every clipped cadence period for an ended achievement", () => {
     const goal = buildGoal({
       target_count: null,
+      target_basis: "period",
       recurrence_interval: "weekly",
     });
     const completeCadence = [
@@ -100,7 +102,7 @@ describe("goal lifecycle and outcome", () => {
       }).outcome
     ).toBe("achieved");
     expect(
-      getGoalLifecycleOutcome(goal, completeCadence.slice(0, -1), {
+      getGoalLifecycleOutcome(goal, completeCadence.slice(0, -2), {
         asOfDate: "2026-09-01",
       }).outcome
     ).toBe("ended_with_shortfall");

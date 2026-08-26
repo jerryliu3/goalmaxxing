@@ -70,6 +70,7 @@ const PLANNER_GOAL_SELECT = [
   "frequency_type",
   "recurrence_interval",
   "target_count",
+  "target_basis",
   "milestone_names",
   "start_date",
   "end_date",

@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(33);
+select plan(34);
 
 -- Pin the five dropped client-PostgREST triggers.
 select hasnt_trigger(
@@ -397,7 +397,7 @@ select ok(
   'set_goal_archived definition includes explicit xp recompute call'
 );
 
--- XP recompute on target_count change via update_goal.
+-- Goal definition fields remain immutable after creation.
 select public.create_goal(
   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa6',
   'XP target change goal',
@@ -432,22 +432,29 @@ select is(
   'hitting target_count=1 accrues unit XP (20) plus achievement (100)'
 );
 
-select public.update_goal(
-  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa6',
-  'XP target change goal',
-  null,
-  null,
-  'health',
-  'health',
-  '#10b981',
-  'fixed_milestones',
-  null,
-  10,
-  null,
-  current_date - 7,
-  current_date + 30,
-  null,
-  null
+select throws_ok(
+  $$
+    select public.update_goal(
+      'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa6',
+      'XP target change goal',
+      null,
+      null,
+      'health',
+      'health',
+      '#10b981',
+      'fixed_milestones',
+      null,
+      10,
+      null,
+      current_date - 7,
+      current_date + 30,
+      null,
+      null
+    )
+  $$,
+  '22023',
+  'goal definition fields are immutable after creation',
+  'update_goal rejects target_count changes after creation'
 );
 
 select is(
@@ -457,8 +464,8 @@ select is(
     where l.user_id = '11111111-1111-4111-8111-111111111111'
       and l.goal_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa6'
   ),
-  20,
-  'update_goal target_count change recomputes and drops achievement XP'
+  120,
+  'rejected target_count changes preserve achievement XP'
 );
 
 reset role;

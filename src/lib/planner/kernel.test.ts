@@ -1888,7 +1888,7 @@ describe("solve intent and draft pins", () => {
                 goalId: cadenceGoal.id,
                 requirementFingerprint:
                   computeRequirementFingerprint(cadenceGoal),
-                unitKey: "cadence:2026-08-03",
+                unitKey: "cadence:2026-08-03:1",
                 scheduledDate: "2026-08-05",
                 locked: false,
               },
@@ -1897,7 +1897,7 @@ describe("solve intent and draft pins", () => {
         })
       );
       const lapsed = output.workUnits.find(
-        (unit) => unit.unitKey === "cadence:2026-08-03"
+        (unit) => unit.unitKey === "cadence:2026-08-03:1"
       );
       expect(lapsed?.classification).toBe("historical_miss");
       expect(lapsed?.scheduledDate).toBe("2026-08-05");
