@@ -1,7 +1,7 @@
 # Checklist and Planner Cleanup Design
 
-**Date:** 2026-08-25  
-**Status:** Approved  
+**Date:** 2026-08-25
+**Status:** Approved
 **Source:** `docs/checklist-planner-cleanup-audit.md`
 
 ## Goal
