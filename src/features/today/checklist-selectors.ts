@@ -13,7 +13,8 @@ import {
   recurrenceGroupOrder,
   type RecurrenceGroup,
 } from "@/lib/goals/recurrence-labels";
-import type { Goal } from "@/lib/goals/types";
+import type { CompletionDateFact, Goal } from "@/lib/goals/types";
+import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 
 export type { RecurrenceGroup };
 export { recurrenceGroupLabel, recurrenceGroupOrder, getRecurrenceGroup };
@@ -94,9 +95,12 @@ export function selectCompletedTargetGoalIds({
   goals: Goal[];
   progressByGoal: ReadonlyMap<
     string,
-    { outcome: string; achievementDate?: string | null } | undefined
+    Pick<ProgressContextSummary, "outcome" | "achievementDate"> | undefined
   >;
-  completionsByGoal: ReadonlyMap<string, Array<{ completed_on: string }>>;
+  completionsByGoal: ReadonlyMap<
+    string,
+    Array<Pick<CompletionDateFact, "completed_on">>
+  >;
   asOfDate: string;
 }): Set<string> {
   const ids = new Set<string>();
