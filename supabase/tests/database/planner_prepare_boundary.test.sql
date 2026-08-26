@@ -86,6 +86,13 @@ values
     (date_trunc('month', current_date) + interval '6 month - 1 day')::date
   );
 
+update public.goals
+set target_basis = 'lifetime'::public.goal_target_basis
+where id in (
+  'a2000000-0000-4000-8000-000000000001',
+  'a2000000-0000-4000-8000-000000000002'
+);
+
 insert into public.planner_items (
   owner_id,
   goal_id,
@@ -765,6 +772,7 @@ insert into public.goals (
   frequency_type,
   recurrence_interval,
   target_count,
+  target_basis,
   start_date,
   end_date
 )
@@ -776,6 +784,7 @@ values (
   'recurring',
   'weekly',
   2,
+  'lifetime',
   current_date - 10,
   (date_trunc('month', current_date) + interval '8 month - 1 day')::date
 );
@@ -1204,7 +1213,7 @@ select lives_ok(
                   extract(dow from weekly.start_date)::integer - 3 + 7
                 ) % 7
               )
-            )::text,
+            )::text || ':1',
             'scheduled_date', weekly.start_date
           ),
           jsonb_build_object(
@@ -1212,7 +1221,7 @@ select lives_ok(
             'unit_key', 'cadence:' || date_trunc(
               'month',
               monthly.start_date
-            )::date::text,
+            )::date::text || ':1',
             'scheduled_date', monthly.start_date + 5
           )
         )
@@ -1241,7 +1250,7 @@ select lives_ok(
 
 select ok(
   (
-    select substring(item.unit_key from '^cadence:(.*)$')::date < goal.start_date
+    select substring(item.unit_key from '^cadence:([0-9-]+):[0-9]+$')::date < goal.start_date
     from public.planner_items item
     join public.goals goal on goal.id = item.goal_id
     where item.goal_id = 'a2000000-0000-4000-8000-000000000009'
@@ -1251,7 +1260,7 @@ select ok(
 
 select is(
   (
-    select substring(item.unit_key from '^cadence:(.*)$')::date
+    select substring(item.unit_key from '^cadence:([0-9-]+):[0-9]+$')::date
     from public.planner_items item
     where item.goal_id = 'a2000000-0000-4000-8000-000000000010'
   ),
