@@ -856,13 +856,15 @@ provide the typed requirement kind directly.
 
 The cleanup is successful when:
 
-- one selector determines checklist period count, green state, and target-achieved
-  filter behavior;
-- one resolver determines completion route, date, desired state, and disabled reason
-  for all surfaces;
-- planner credit/classification has one reconciliation authority;
-- target basis is read from one canonical stored field;
-- selected-date and as-of-date semantics are visible in types and API contracts;
-- major UI files are composition shells rather than state/side-effect monoliths;
-- cross-surface and database boundary tests protect these contracts.
+- ✅ one selector determines checklist period count, green state, and target-achieved
+  filter behavior (Closure v2: hide ids from presentation map only);
+- ✅ one resolver determines completion route, date, desired state, and disabled reason
+  for all surfaces (Closure v2: `resolvePlannerEntryCompletionIntent`);
+- ✅ planner credit/classification has one reconciliation authority;
+- ✅ `reconciliation_mismatch` observability when snapshot diverges from kernel work units;
+- ✅ target basis is read from one canonical stored field (strict reads; repair inference only);
+- ✅ selected-date and as-of-date semantics are visible in types and API contracts;
+- ⚠️ major UI files are composition shells rather than state/side-effect monoliths
+  (`calendar-surface.tsx` ~738 LOC after closure v2 p8 extraction; mobile parity deferred);
+- ✅ cross-surface and database boundary tests protect these contracts (parity matrix + `goal_target_basis_rpc.test.sql` pgTAP slice).
 
