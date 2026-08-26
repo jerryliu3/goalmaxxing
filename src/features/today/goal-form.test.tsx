@@ -688,4 +688,45 @@ describe("GoalForm persistence recovery", () => {
       p_target_goal_id: undefined,
     });
   });
+
+  it("dismisses without using complete exit when archiving from the sheet", async () => {
+    const existingGoal: Goal = {
+      ...activeLinkTarget,
+      id: "goal-archive-1",
+      title: "Archive me",
+      archived_at: null,
+    };
+    goalSingleMock.mockResolvedValueOnce({
+      data: existingGoal,
+      error: null,
+    });
+    goalLinksMock.mockResolvedValueOnce({
+      data: [],
+      error: null,
+    });
+    rpcMock.mockResolvedValueOnce({ error: null });
+    const onExit = vi.fn();
+    const onDismiss = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <GoalForm
+        goalId="goal-archive-1"
+        showBackButton={false}
+        onExit={onExit}
+        onDismiss={onDismiss}
+      />
+    );
+    await screen.findByText("Edit goal");
+    await user.click(screen.getByRole("button", { name: "Archive goal" }));
+
+    await waitFor(() => {
+      expect(onDismiss).toHaveBeenCalledTimes(1);
+    });
+    expect(onExit).not.toHaveBeenCalled();
+    expect(rpcMock).toHaveBeenCalledWith("set_goal_archived", {
+      p_goal_id: "goal-archive-1",
+      p_archived: true,
+    });
+  });
 });
