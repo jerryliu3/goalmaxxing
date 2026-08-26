@@ -605,13 +605,6 @@ export function CalendarSurface({
   });
 
   const runCompletionMutation = useCompletionMutation();
-  const queueDraftMoveCommandRef = useRef<
-    (args: {
-      entry: PlannerDayDetailEntry;
-      nextDate: string;
-      source: "date_input" | "drag_drop" | "coach";
-    }) => boolean
-  >(() => false);
   const handleCoachGoalsCreated = useCallback(async () => {
     await refreshPlannerAfterCoachGoalsCreated({
       handlePlannerMutation,
@@ -621,7 +614,7 @@ export function CalendarSurface({
   const coachBindings: PlannerCoachBindings = buildPlannerCoachBindings({
     refreshDraftPreview,
     applyPolicyReplanMoves,
-    queueDraftMoveCommand: (args) => queueDraftMoveCommandRef.current(args),
+    queueDraftMoveCommand,
     clearDraftMoveCommands,
     setDraftPolicy,
     setSetupRestWeekdays,
@@ -646,10 +639,6 @@ export function CalendarSurface({
     const parsed = parse(value, "yyyy-MM-dd", new Date());
     return isValid(parsed) && format(parsed, "yyyy-MM-dd") === value;
   };
-
-  useEffect(() => {
-    queueDraftMoveCommandRef.current = queueDraftMoveCommand;
-  }, [queueDraftMoveCommand]);
 
   const {
     draggingEntryKey,
