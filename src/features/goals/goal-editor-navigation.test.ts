@@ -1,17 +1,25 @@
 import { describe, expect, it, vi } from "vitest";
+import type { useAppRouter } from "@/lib/navigation/use-app-router";
 import {
   completeGoalEditor,
   dismissGoalEditor,
   goalEditorFallbackHref,
 } from "@/features/goals/goal-editor-navigation";
 
+function createRouterMock() {
+  return {
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+  } satisfies ReturnType<typeof useAppRouter>;
+}
+
 describe("goal editor navigation", () => {
   it("falls back to the calendar when browser history is empty", () => {
-    const router = {
-      back: vi.fn(),
-      replace: vi.fn(),
-      refresh: vi.fn(),
-    };
+    const router = createRouterMock();
 
     dismissGoalEditor(router);
 
@@ -20,11 +28,7 @@ describe("goal editor navigation", () => {
   });
 
   it("uses browser back when history is available", () => {
-    const router = {
-      back: vi.fn(),
-      replace: vi.fn(),
-      refresh: vi.fn(),
-    };
+    const router = createRouterMock();
     window.history.pushState({}, "", "/calendar");
     window.history.pushState({}, "", "/goals/goal-1");
 
@@ -35,11 +39,7 @@ describe("goal editor navigation", () => {
   });
 
   it("refreshes after dismissing on complete", () => {
-    const router = {
-      back: vi.fn(),
-      replace: vi.fn(),
-      refresh: vi.fn(),
-    };
+    const router = createRouterMock();
     window.history.pushState({}, "", "/calendar");
     window.history.pushState({}, "", "/goals/goal-1");
 
