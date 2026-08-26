@@ -93,6 +93,22 @@ The checklist has three separate concepts and they should not be collapsed:
 The checkbox being checked does not by itself imply that the card should be green,
 hidden, or considered lifetime-achieved.
 
+### Temporal contract
+
+Checklist presentation uses two explicit dates:
+
+- `selectedDate` is the date the user is browsing or mutating. It controls
+  lifecycle placement, exact-date checkbox state, and the anchored period used
+  for checklist facts.
+- `asOfDate` is the progress reference date. It controls lifetime counts,
+  outcome badges, and current progress summaries.
+
+The current product contract intentionally keeps period facts scoped to the full
+selected period window, including later dates in that period. This is not a
+counterfactual “as of selected day” view. The cleanup makes that distinction
+visible in types and selectors without changing the API’s existing `facts` and
+`summaries` response shape.
+
 ### Planner/calendar state
 
 Planner entries expose at least two distinct facts:
