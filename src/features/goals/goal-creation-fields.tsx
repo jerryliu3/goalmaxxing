@@ -387,17 +387,18 @@ export function GoalCreationFieldControls({
         />
       )}
 
-      {definitionFieldsLocked ? (
-        <p className="text-xs text-muted-foreground">
-          Goal type, frequency, target, and start date are fixed after creation.
-          Archive this goal and create a new one to change them.
-        </p>
-      ) : null}
+      <div className="-mt-2 space-y-3">
+        {definitionFieldsLocked ? (
+          <p className="text-xs text-muted-foreground">
+            Goal type, frequency, target, and start date are fixed after creation.
+            Archive this goal and create a new one to change them.
+          </p>
+        ) : null}
 
-      {middleSlot}
+        {middleSlot}
 
-      {isPlannerTask ? null : (
-        <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+        {isPlannerTask ? null : (
+          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
           <div className="rounded-xl border bg-muted/20">
             <CollapsibleTrigger asChild>
               <Button
@@ -609,7 +610,8 @@ export function GoalCreationFieldControls({
             </CollapsibleContent>
           </div>
         </Collapsible>
-      )}
+        )}
+      </div>
     </fieldset>
   );
 }
