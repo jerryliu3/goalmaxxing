@@ -38,6 +38,10 @@ export type Database = {
         }
         Returns: number
       }
+      delete_incomplete_planner_items_for_goal: {
+        Args: { p_goal_id: string }
+        Returns: undefined
+      }
       elect_health_activities_for_key: {
         Args: {
           p_local_date: string
