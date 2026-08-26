@@ -1,5 +1,3 @@
-import type { CompletionControlDisabledReason } from "@/features/planner/calendar-surface.types";
-import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import { resolveSelectedDateState } from "@/lib/dates/day";
 import {
   getCompletionsForCurrentPeriod,
@@ -11,17 +9,15 @@ import type { WeeklyAnchorContext } from "@/lib/goals/periods";
 import {
   resolveCompletionDispatch,
   type CompletionDispatchDecision,
-  type PlannerGoalDateFactExpectation,
-  type PlannerItemDateFactExpectation,
 } from "@/lib/planner/completion-dispatch";
-import {
-  getCompletionControlDisabledReason,
-  getDateFactDispatchForEntry,
-} from "@/features/planner/completion-entry-dispatch";
 import {
   getGoalRequirement,
   isTargetedRecurringGoal,
 } from "@/lib/planner/requirements";
+
+export type CompletionDisabledReason =
+  | "future_creation"
+  | "satisfied_elsewhere";
 
 export interface CompletionTemporalContext {
   selectedDate: string;
@@ -36,11 +32,9 @@ export interface CompletionIntentMutation {
 
 export interface CompletionIntent {
   allowed: boolean;
-  disabledReason: CompletionControlDisabledReason | null;
+  disabledReason: CompletionDisabledReason | null;
   decision: CompletionDispatchDecision;
   mutation: CompletionIntentMutation;
-  plannerItemExpectation?: PlannerItemDateFactExpectation;
-  plannerGoalExpectation?: PlannerGoalDateFactExpectation;
 }
 
 export function resolveTargetedRecurring(goal: Goal): boolean {
@@ -51,12 +45,10 @@ function resolveLegacyPeriodMutation({
   completedForCurrentPeriod,
   completionToUnmark,
   viewDate,
-  desiredFactState,
 }: {
   completedForCurrentPeriod: boolean;
   completionToUnmark?: CompletionDateFact;
   viewDate: string;
-  desiredFactState: "present" | "absent";
 }): Pick<CompletionIntentMutation, "date" | "desiredFactState"> {
   const routeDesiredFactState = completedForCurrentPeriod ? "absent" : "present";
   const dispatchDate =
@@ -119,7 +111,6 @@ export function resolveChecklistCompletionIntent({
             completedForCurrentPeriod,
             completionToUnmark,
             viewDate,
-            desiredFactState,
           }),
         }
       : {
@@ -177,47 +168,6 @@ export function resolveInsightsCompletionIntent({
     mutation: {
       goalId: goal.id,
       date: completionDate,
-      desiredFactState,
-    },
-  };
-}
-
-export function resolvePlannerEntryCompletionIntent({
-  entry,
-  temporal,
-  canMutatePlanItems,
-}: {
-  entry: PlannerDayDetailEntry;
-  temporal: CompletionTemporalContext;
-  canMutatePlanItems: boolean;
-}): CompletionIntent {
-  const dispatch = getDateFactDispatchForEntry({
-    entry,
-    selectedDate: temporal.selectedDate,
-    asOfDate: temporal.asOfDate,
-  });
-  const disabledReason = getCompletionControlDisabledReason({
-    entry,
-    dispatch,
-    canMutatePlanItems,
-  });
-  const goalId = entry.activeGoal?.original_goal_id ?? entry.originalGoalId;
-  const desiredFactState = dispatch?.desiredFactState ?? "present";
-
-  return {
-    allowed: disabledReason === null && Boolean(dispatch?.decision.allowed),
-    disabledReason,
-    decision:
-      dispatch?.decision ??
-      ({
-        route: "disabled",
-        exactDateOnly: false,
-        allowed: false,
-        reason: "future_creation",
-      } as CompletionDispatchDecision),
-    mutation: {
-      goalId,
-      date: temporal.selectedDate,
       desiredFactState,
     },
   };
