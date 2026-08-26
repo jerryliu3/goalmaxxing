@@ -944,10 +944,11 @@ describe("bulk goal parser route", () => {
     expect(promptText).toContain(
       "Never create one goal per workout, session, or date."
     );
+    expect(promptText).toContain('"milestone_names"');
     expect(
       firstBody.generationConfig?.responseSchema?.properties?.goals?.items
         ?.properties
-    ).toHaveProperty("milestone_names");
+    ).toEqual({ title: { type: "string" } });
   });
 
   async function parseMockGoals(goals: unknown[]) {

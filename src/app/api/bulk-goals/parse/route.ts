@@ -111,44 +111,21 @@ function buildGeneratedPayloadSchema(categoryKeySet: Set<string>) {
   });
 }
 
-function buildBulkGoalResponseSchema(categoryKeys: string[]) {
+/**
+ * Gemini structured-output schemas reject our full goal draft shape (too many
+ * optional fields / nested limits). Keep the provider schema minimal and rely on
+ * the prompt plus Zod validation below for the full contract.
+ */
+function buildBulkGoalProviderResponseSchema() {
   return {
     type: "object",
     properties: {
       goals: {
         type: "array",
-        maxItems: MAX_GOALS_PER_REQUEST,
         items: {
           type: "object",
           properties: {
             title: { type: "string" },
-            description: { type: "string" },
-            category: { type: "string" },
-            category_key: {
-              type: "string",
-              enum: categoryKeys,
-            },
-            frequency_type: {
-              type: "string",
-              enum: ["recurring", "fixed_milestones"],
-            },
-            recurrence_interval: {
-              type: "string",
-              enum: ["daily", "weekly", "monthly"],
-            },
-            target_basis: {
-              type: "string",
-              enum: ["period", "lifetime"],
-            },
-            target_count: { type: "number", maximum: MAX_GOAL_TARGET_COUNT },
-            milestone_names: {
-              type: "array",
-              maxItems: MAX_MILESTONE_NAMES_PER_GOAL,
-              items: { type: "string" },
-            },
-            start_date: { type: "string" },
-            end_date: { type: "string" },
-            default_local_time: { type: "string" },
           },
           required: ["title"],
         },
@@ -614,7 +591,10 @@ function shouldRetryWithoutResponseSchema(error: GeminiRequestError) {
   if (error.code !== "provider_error") {
     return false;
   }
-  return INVALID_ARGUMENT_PROVIDER_RE.test(error.message);
+  return (
+    INVALID_ARGUMENT_PROVIDER_RE.test(error.message) ||
+    /Gemini request failed \(400\)/.test(error.message)
+  );
 }
 
 async function readCategoryCatalog(
@@ -716,7 +696,7 @@ export async function POST(request: Request) {
     const categoryKeys = categoryCatalog.map((category) => category.key);
     const categoryKeySet = new Set(categoryKeys);
     const generatedPayloadSchema = buildGeneratedPayloadSchema(categoryKeySet);
-    const responseSchema = buildBulkGoalResponseSchema(categoryKeys);
+    const responseSchema = buildBulkGoalProviderResponseSchema();
 
     const today = getDateInTimezone(new Date(), parsedRequest.timezone);
     const estimatedInputTokens = Math.max(
