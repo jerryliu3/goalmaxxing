@@ -26,7 +26,7 @@ const sampleEntry = {
   goalTitle: "Run",
   unitKey: "cadence:0",
   label: "Easy run",
-  classification: "planned",
+  classification: "open",
   creditState: "uncredited",
   activeGoal: {
     color: "#22c55e",

@@ -61,7 +61,7 @@ function demoSessionWindows({
     start: goal.start_date,
     end: laterDate(lifetimeEnd, item.scheduled_date ?? lifetimeEnd),
   };
-  if (item.credit_state === "credited") {
+  if (item.credit_state !== "uncredited") {
     return {
       creditWindow,
       placementWindow: null,
@@ -164,7 +164,7 @@ export function buildDemoPlannerContext(
       scheduled_date: item.scheduled_date,
       original_scheduled_date: item.original_scheduled_date,
       classification: credited ? "fulfilled" : "open",
-      credit_state: credited ? "credited" : "uncredited",
+      credit_state: credited ? "completed_as_scheduled" : "uncredited",
       locked: item.locked,
       revision: item.revision,
       credited_completion_id: credited?.id ?? null,
