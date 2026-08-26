@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getRecurrenceGroup,
   groupGoalsByRecurrence,
-  selectCompletedTargetGoalIds,
+  selectTargetAchievedGoalIds,
   selectFilteredTodayGoals,
 } from "@/features/today/checklist-selectors";
 import type { Goal } from "@/lib/goals/types";
@@ -70,8 +70,8 @@ describe("checklist selectors", () => {
         recurrenceFilters: [],
         searchQuery: "run",
         endMonths: [],
-        completedTargetGoalIds: new Set(["daily"]),
-        showCompletedGoals: false,
+        targetAchievedGoalIds: new Set(["daily"]),
+        showTargetAchievedGoals: false,
       }).map((row) => row.id)
     ).toEqual(["weekly"]);
   });
@@ -129,7 +129,7 @@ describe("checklist selectors", () => {
         start_date: "2026-08-01",
       }),
     ];
-    const completedTargetGoalIds = selectCompletedTargetGoalIds({
+    const targetAchievedGoalIds = selectTargetAchievedGoalIds({
       goals: [
         ...goals,
         goal({
@@ -151,7 +151,7 @@ describe("checklist selectors", () => {
       asOfDate: "2026-08-13",
     });
 
-    expect([...completedTargetGoalIds].sort()).toEqual([
+    expect([...targetAchievedGoalIds].sort()).toEqual([
       "hit-earlier-missing-facts",
       "hit-yesterday",
     ]);
@@ -163,8 +163,8 @@ describe("checklist selectors", () => {
         recurrenceFilters: [],
         searchQuery: "",
         endMonths: [],
-        completedTargetGoalIds,
-        showCompletedGoals: false,
+        targetAchievedGoalIds,
+        showTargetAchievedGoals: false,
       }).map((row) => row.id)
     ).toEqual(["hit-today"]);
   });
@@ -190,7 +190,7 @@ describe("checklist selectors", () => {
     ]);
 
     expect(
-      selectCompletedTargetGoalIds({
+      selectTargetAchievedGoalIds({
         goals: [lifetimeGoal],
         progressByGoal,
         completionsByGoal: new Map(),
@@ -198,7 +198,7 @@ describe("checklist selectors", () => {
       })
     ).toEqual(new Set());
     expect(
-      selectCompletedTargetGoalIds({
+      selectTargetAchievedGoalIds({
         goals: [lifetimeGoal],
         progressByGoal,
         completionsByGoal: new Map(),
@@ -218,7 +218,7 @@ describe("checklist selectors", () => {
       start_date: "2026-08-01",
     });
 
-    const idsOnAchievedDay = selectCompletedTargetGoalIds({
+    const idsOnAchievedDay = selectTargetAchievedGoalIds({
       goals: [periodGoal],
       progressByGoal: new Map([["period-goal", { outcome: "in_progress" }]]),
       completionsByGoal: new Map([
@@ -234,7 +234,7 @@ describe("checklist selectors", () => {
     });
     expect([...idsOnAchievedDay]).toEqual([]);
 
-    const idsAfterAchievedDay = selectCompletedTargetGoalIds({
+    const idsAfterAchievedDay = selectTargetAchievedGoalIds({
       goals: [periodGoal],
       progressByGoal: new Map([["period-goal", { outcome: "in_progress" }]]),
       completionsByGoal: new Map([
@@ -269,7 +269,7 @@ describe("checklist selectors", () => {
     >([["period-goal-default-target", { outcome: "in_progress" }]]);
 
     expect(
-      selectCompletedTargetGoalIds({
+      selectTargetAchievedGoalIds({
         goals: [periodGoal],
         progressByGoal,
         completionsByGoal,
@@ -277,7 +277,7 @@ describe("checklist selectors", () => {
       })
     ).toEqual(new Set());
     expect(
-      selectCompletedTargetGoalIds({
+      selectTargetAchievedGoalIds({
         goals: [periodGoal],
         progressByGoal,
         completionsByGoal,
