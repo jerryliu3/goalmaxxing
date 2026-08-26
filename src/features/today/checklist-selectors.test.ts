@@ -5,7 +5,7 @@ import {
   selectTargetAchievedGoalIds,
   selectFilteredTodayGoals,
 } from "@/features/today/checklist-selectors";
-import type { Goal } from "@/lib/goals/types";
+import type { CompletionDateFact, Goal } from "@/lib/goals/types";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 
 function goal(overrides: Partial<Goal> & Pick<Goal, "id" | "owner_id" | "title">): Goal {
@@ -139,14 +139,17 @@ describe("checklist selectors", () => {
           start_date: "2026-08-01",
         }),
       ],
-      progressByGoal: new Map([
-        ["hit-today", { outcome: "achieved" }],
-        ["hit-yesterday", { outcome: "achieved" }],
-        ["hit-earlier-missing-facts", { outcome: "achieved" }],
+      progressByGoal: new Map<string, ProgressContextSummary | undefined>([
+        ["hit-today", { outcome: "achieved" } as ProgressContextSummary],
+        ["hit-yesterday", { outcome: "achieved" } as ProgressContextSummary],
+        [
+          "hit-earlier-missing-facts",
+          { outcome: "achieved" } as ProgressContextSummary,
+        ],
       ]),
-      completionsByGoal: new Map([
-        ["hit-today", [{ completed_on: "2026-08-13" }]],
-        ["hit-yesterday", [{ completed_on: "2026-08-12" }]],
+      completionsByGoal: new Map<string, CompletionDateFact[]>([
+        ["hit-today", [{ completed_on: "2026-08-13", goal_id: "hit-today", source: "manual" }]],
+        ["hit-yesterday", [{ completed_on: "2026-08-12", goal_id: "hit-yesterday", source: "manual" }]],
       ]),
       asOfDate: "2026-08-13",
     });
@@ -179,13 +182,10 @@ describe("checklist selectors", () => {
       target_count: 3,
       start_date: "2026-08-01",
     });
-    const progressByGoal = new Map<
-      string,
-      Pick<ProgressContextSummary, "outcome" | "achievementDate">
-    >([
+    const progressByGoal = new Map<string, ProgressContextSummary | undefined>([
       [
         "lifetime-goal",
-        { outcome: "achieved", achievementDate: "2026-08-13" },
+        { outcome: "achieved", achievementDate: "2026-08-13" } as ProgressContextSummary,
       ],
     ]);
 
@@ -220,13 +220,15 @@ describe("checklist selectors", () => {
 
     const idsOnAchievedDay = selectTargetAchievedGoalIds({
       goals: [periodGoal],
-      progressByGoal: new Map([["period-goal", { outcome: "in_progress" }]]),
-      completionsByGoal: new Map([
+      progressByGoal: new Map<string, ProgressContextSummary | undefined>([
+        ["period-goal", { outcome: "in_progress" } as ProgressContextSummary],
+      ]),
+      completionsByGoal: new Map<string, CompletionDateFact[]>([
         [
           "period-goal",
           [
-            { completed_on: "2026-08-12" },
-            { completed_on: "2026-08-13" },
+            { completed_on: "2026-08-12", goal_id: "period-goal", source: "manual" },
+            { completed_on: "2026-08-13", goal_id: "period-goal", source: "manual" },
           ],
         ],
       ]),
@@ -236,13 +238,15 @@ describe("checklist selectors", () => {
 
     const idsAfterAchievedDay = selectTargetAchievedGoalIds({
       goals: [periodGoal],
-      progressByGoal: new Map([["period-goal", { outcome: "in_progress" }]]),
-      completionsByGoal: new Map([
+      progressByGoal: new Map<string, ProgressContextSummary | undefined>([
+        ["period-goal", { outcome: "in_progress" } as ProgressContextSummary],
+      ]),
+      completionsByGoal: new Map<string, CompletionDateFact[]>([
         [
           "period-goal",
           [
-            { completed_on: "2026-08-12" },
-            { completed_on: "2026-08-13" },
+            { completed_on: "2026-08-12", goal_id: "period-goal", source: "manual" },
+            { completed_on: "2026-08-13", goal_id: "period-goal", source: "manual" },
           ],
         ],
       ]),
@@ -260,13 +264,24 @@ describe("checklist selectors", () => {
       target_count: null,
       start_date: "2026-08-01",
     });
-    const completionsByGoal = new Map([
-      ["period-goal-default-target", [{ completed_on: "2026-08-13" }]],
+    const completionsByGoal = new Map<string, CompletionDateFact[]>([
+      [
+        "period-goal-default-target",
+        [
+          {
+            completed_on: "2026-08-13",
+            goal_id: "period-goal-default-target",
+            source: "manual",
+          },
+        ],
+      ],
     ]);
-    const progressByGoal = new Map<
-      string,
-      Pick<ProgressContextSummary, "outcome">
-    >([["period-goal-default-target", { outcome: "in_progress" }]]);
+    const progressByGoal = new Map<string, ProgressContextSummary | undefined>([
+      [
+        "period-goal-default-target",
+        { outcome: "in_progress" } as ProgressContextSummary,
+      ],
+    ]);
 
     expect(
       selectTargetAchievedGoalIds({
