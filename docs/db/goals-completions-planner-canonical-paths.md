@@ -7,6 +7,13 @@
 | Create-mode field validation | `src/features/goals/goal-creation-model.ts` | goal-form, bulk, coach | `goal-creation-model.test.ts` |
 | Period/lifetime target bounds | `src/lib/goals/definition-validation.ts` | creation model + API parse | `definition-validation.test.ts` |
 | Persisted definition immutability | `update_goal` SQL RPC | goal-form edit lock | `goals_write_boundary.test.sql` |
+| Stored `target_basis` reads | `src/lib/goals/target-basis.ts` | goal-form hydrate, planner | `target-basis.test.ts` |
+
+## Planner schedule writes
+
+| Invariant | Canonical layer | Early check | Tests |
+|---|---|---|---|
+| Lifetime target cap on schedule moves | `set_planner_schedule` SQL RPC | n/a | planner write-boundary tests |
 
 ## Completion writes
 
