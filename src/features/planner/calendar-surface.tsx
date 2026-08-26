@@ -14,22 +14,15 @@ import { allCategoriesValue } from "@/features/goals/goal-filters";
 import {
   buildWeekdayLabels,
   getEntryGoalFirstTitleWithTime,
-  getEntryMilestoneFirstTitleWithTime,
-  getEntrySubtitle,
-  isEntryCredited,
   isEntryImmovableForDraft,
   parseMonth,
 } from "@/features/planner/calendar-format";
-import {
-  PlannerDndProvider,
-} from "@/features/planner/calendar-dnd";
 import {
   getCalendarTargetScrollLeft,
   getCalendarTargetScrollTop,
   isCalendarDayVisible,
   getTopVisibleCalendarDay,
 } from "@/features/planner/calendar-scroll-position";
-import { MoveSessionDialog } from "@/features/planner/move-session-dialog";
 import { PlannerCoachPanel } from "@/features/planner/coach/planner-coach-panel";
 import { usePlannerCoach } from "@/features/planner/coach/use-planner-coach";
 import type { PlannerCoachBindings } from "@/features/planner/coach/coach-types";
@@ -42,10 +35,6 @@ import {
   draftCommandReducer,
   initialDraftCommandState,
 } from "@/features/planner/draft-command-reducer";
-import {
-  getCompletionControlDisabledReason,
-  getDateFactDispatchForEntry as resolveDateFactDispatchForEntry,
-} from "@/features/planner/completion-entry-dispatch";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
 import {
   invalidatePlannerRelatedTabCaches,
@@ -65,20 +54,16 @@ import type {
 import {
   getNonPublishablePreviewMessage,
 } from "@/features/planner/planner-save-availability";
-import { PlannerDayEntriesPanel } from "@/features/planner/planner-day-entries-panel";
 import { PlannerWarningsPanel } from "@/features/planner/planner-warnings-panel";
-import { PlannerEventDetailDialog } from "@/features/planner/planner-event-detail-dialog";
+import type { PlannerEventDetailDialogCallbacks } from "@/features/planner/planner-event-detail-dialog";
 import { buildMoveSourceOptions } from "@/features/planner/planner-move-source-options";
+import { PlannerCalendarBoard } from "@/features/planner/planner-calendar-board";
+import { PlannerCalendarOverlays } from "@/features/planner/planner-calendar-overlays";
 import { PlannerCalendarToolbar } from "@/features/planner/planner-calendar-toolbar";
-import { PlannerViewWindowHeader } from "@/features/planner/planner-view-window-header";
-import { PlannerFiltersDialog } from "@/features/planner/planner-filters-dialog";
-import { PlannerSettingsDialog } from "@/features/planner/planner-settings-dialog";
-import { PlannerDayPreviewPopover } from "@/features/planner/planner-day-preview-popover";
-import { PlannerExpandedPreviewDialog } from "@/features/planner/planner-expanded-preview-dialog";
 import { PlannerSettingsForm } from "@/features/planner/planner-settings-form";
 import { PlannerRollingWeekStrip } from "@/features/planner/planner-rolling-week-strip";
+import { useCalendarCompletionControls } from "@/features/planner/use-calendar-completion-controls";
 import { usePlannerCalendarModel } from "@/features/planner/use-planner-calendar-model";
-import { usePlannerEntryMutations } from "@/features/planner/use-planner-entry-mutations";
 import { usePlannerPersistenceActions } from "@/features/planner/use-planner-persistence-actions";
 import { usePlannerDraftCommands } from "@/features/planner/use-planner-draft-commands";
 import { usePlannerCalendarDnd } from "@/features/planner/use-planner-calendar-dnd";
@@ -88,7 +73,6 @@ import { usePlannerContextLoader } from "@/features/planner/use-planner-context-
 import { usePlannerSetup } from "@/features/planner/use-planner-setup";
 import { usePlannerPreviewSession } from "@/features/planner/use-planner-preview-session";
 import { usePlannerDayPreviewInteractions } from "@/features/planner/use-planner-day-preview-interactions";
-import styles from "@/features/planner/calendar-surface.module.css";
 interface OpenGoalInstance {
   entryKey: string;
   day: string;
@@ -97,10 +81,6 @@ interface OpenGoalInstance {
 function isMonthScopedCalendarViewMode(viewMode: PlannerCalendarViewMode) {
   return viewMode === "month";
 }
-
-const SEVEN_COLUMN_GRID_STYLE = {
-  gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-} as const;
 
 export function CalendarSurface({
   activeTab,
@@ -658,46 +638,20 @@ export function CalendarSurface({
     clearHoverPreviewTimer,
     pointerPressActiveRef,
   });
-  const canMutatePlanItems = Boolean(
-    context?.activePlan?.plan.status === "active"
-  );
-
-  const getDateFactDispatchForEntry = (
-    entry: PlannerDayDetailEntry,
-    selectedDate: string | null = effectiveSelectedDay
-  ) =>
-    resolveDateFactDispatchForEntry({
-      entry,
-      selectedDate,
-      asOfDate: context?.asOfDate ?? null,
+  const { canMutatePlanItems, toggleItemLock, toggleDateFact } =
+    useCalendarCompletionControls({
+      context,
+      hasDraftSession,
+      draftSaveCommands,
+      effectiveDraftPolicy,
+      effectiveDraftItemEdits,
+      effectiveSelectedDay,
+      setMutationLoadingKey,
+      runCompletionMutation,
+      handlePlannerMutation,
+      loadContext,
+      refreshDraftPreview,
     });
-
-  const completionControlDisabledReasonForEntry = (
-    entry: PlannerDayDetailEntry,
-    dispatch: ReturnType<typeof getDateFactDispatchForEntry>
-  ): CompletionControlDisabledReason | null => {
-    return getCompletionControlDisabledReason({
-      entry,
-      dispatch,
-      canMutatePlanItems,
-    });
-  };
-
-  const { toggleItemLock, toggleDateFact } = usePlannerEntryMutations({
-    context,
-    hasDraftSession,
-    draftSaveCommands,
-    effectiveDraftPolicy,
-    effectiveDraftItemEdits,
-    effectiveSelectedDay,
-    setMutationLoadingKey,
-    getDateFactDispatchForEntry,
-    completionControlDisabledReasonForEntry,
-    runCompletionMutation,
-    handlePlannerMutation,
-    loadContext,
-    refreshDraftPreview,
-  });
 
   const closeMoveDialog = () => {
     setMoveDialogDay(null);
@@ -1240,6 +1194,58 @@ export function CalendarSurface({
       }}
     />
   );
+  const eventDetailCallbacks = useMemo<PlannerEventDetailDialogCallbacks>(
+    () => ({
+      onOpenChange: (open) => {
+        if (!open) {
+          setSelectedEventEntryKey(null);
+          setLocalSelectedDay(null);
+        }
+      },
+      onUpdateDraftLabel: updateDraftLabel,
+      onUpdateDraftScheduledDate: updateDraftScheduledDate,
+      onUpdateDraftScheduledTimeOverride: updateDraftScheduledTimeOverride,
+      onToggleItemLock: (entry) => {
+        void toggleItemLock(entry);
+      },
+      onNavigateToFirstOpenInstance: () => {
+        navigateToOpenInstance(selectedGoalOpenInstances[0]);
+      },
+      onNavigateToPreviousOpenInstance: () => {
+        if (selectedGoalOpenInstanceIndex <= 0) {
+          return;
+        }
+        navigateToOpenInstance(
+          selectedGoalOpenInstances[selectedGoalOpenInstanceIndex - 1]
+        );
+      },
+      onNavigateToNextOpenInstance: () => {
+        if (
+          selectedGoalOpenInstanceIndex < 0 ||
+          selectedGoalOpenInstanceIndex >= selectedGoalOpenInstances.length - 1
+        ) {
+          return;
+        }
+        navigateToOpenInstance(
+          selectedGoalOpenInstances[selectedGoalOpenInstanceIndex + 1]
+        );
+      },
+      onNavigateToLastOpenInstance: () => {
+        navigateToOpenInstance(
+          selectedGoalOpenInstances[selectedGoalOpenInstances.length - 1]
+        );
+      },
+    }),
+    [
+      navigateToOpenInstance,
+      selectedGoalOpenInstanceIndex,
+      selectedGoalOpenInstances,
+      toggleItemLock,
+      updateDraftLabel,
+      updateDraftScheduledDate,
+      updateDraftScheduledTimeOverride,
+    ]
+  );
 
   return (
     <div className="space-y-4">
@@ -1313,245 +1319,45 @@ export function CalendarSurface({
         </div>
       ) : month ? (
         <>
-          <div
-            className="rounded-xl border bg-card p-4 shadow-sm"
-            data-onboarding="planner.calendar.board"
-          >
-            <PlannerViewWindowHeader
-              loading={loading}
-              viewMode={viewMode}
-              previousWindowAriaLabel={previousWindowAriaLabel}
-              nextWindowAriaLabel={nextWindowAriaLabel}
-              fixedViewHeadingWidthCh={fixedViewHeadingWidthCh}
-              viewHeading={viewHeading}
-              showTodayShortcut={showTodayShortcut}
-              expandedMonthRows={expandedMonthRows}
-              onMoveViewWindow={moveViewWindow}
-              onJumpToToday={jumpToToday}
-              onToggleExpandedMonthRows={() =>
-                setExpandedMonthRows((current) => !current)
-              }
-            />
-            <PlannerDndProvider
-              getEntryLabel={getDragEntryLabel}
-              getDayLabel={getDragDayLabel}
-              renderDragOverlay={renderEntryDragOverlay}
-              onEntryDragStart={handleDndEntryDragStart}
-              onEntryDragEnd={handleDndEntryDragEnd}
-              onEntryDragCancel={handleDndEntryDragCancel}
-            >
-              <div
-                className={`transition-opacity duration-150 motion-reduce:transition-none ${
-                  loading ? "opacity-70" : "opacity-100"
-                } ${isMonthScopedCalendarViewMode(viewMode) ? "min-h-[34rem]" : "min-h-[26rem]"}`}
-              >
-                {viewMode === "day" ? (
-                  <div className="space-y-2">
-                    {rollingWeekStrip}
-                    <div className="rounded-md border p-3">
-                      <p className="mb-2 text-sm font-medium">
-                        {format(parse(focusedDay, "yyyy-MM-dd", new Date()), "EEE MMM d, yyyy")}
-                      </p>
-                      <PlannerDayEntriesPanel
-                        day={focusedDay}
-                        entries={focusedDayEntries}
-                        completionFactMarkers={focusedDayCompletionFactMarkers}
-                        mutationLoading={Boolean(mutationLoadingKey)}
-                        asOfDate={context?.asOfDate ?? null}
-                        canMutatePlanItems={canMutatePlanItems}
-                        canMutateEntryOnDay={canMutateEntryOnDay}
-                        getEntryDisplayTitle={getEntryMilestoneFirstTitleWithTime}
-                        getEntrySubtitle={getEntrySubtitle}
-                        isEntryCredited={isEntryCredited}
-                        isEntryImmovableForDraft={isEntryImmovableForDraft}
-                        onEntryOpen={(entryKey) => {
-                          const entry = focusedDayEntries.find(
-                            (candidate) => candidate.key === entryKey
-                          );
-                          if (!entry || !canMutateEntryOnDay(entry, focusedDay)) {
-                            return;
-                          }
-                          setLocalSelectedDay(focusedDay);
-                          setSelectedEventEntryKey(entry.key);
-                        }}
-                        onToggleCompletion={(entry, day) => {
-                          if (!canMutateEntryOnDay(entry, day)) {
-                            return;
-                          }
-                          void toggleDateFact(entry, day);
-                        }}
-                        onEntryPointerStart={(immovable) => {
-                          void immovable;
-                          pointerPressActiveRef.current = true;
-                        }}
-                        onEntryPointerEnd={() => {
-                          pointerPressActiveRef.current = false;
-                        }}
-                        density="expanded"
-                        includeSourceElement={false}
-                      />
-                    </div>
-                  </div>
-                ) : viewMode === "three_day" ? (
-                  rollingWeekStrip
-                ) : (
-                  <div className="mx-auto w-full max-w-[56rem]">
-                    <div
-                      ref={calendarGridViewportRef}
-                      onScroll={handleCalendarGridViewportScroll}
-                      className="overflow-x-auto pb-1"
-                      data-calendar-horizontal-viewport="true"
-                    >
-                      {isMonthScopedCalendarViewMode(viewMode) ? (
-                        <div
-                          className={styles.monthGridTrack}
-                          data-calendar-grid-track="true"
-                        >
-                          <div
-                            className="grid gap-2 text-center text-xs text-muted-foreground"
-                            style={SEVEN_COLUMN_GRID_STYLE}
-                            data-calendar-weekday-grid="true"
-                          >
-                            {weekdayLabels.map((weekday) => (
-                              <span key={weekday}>{weekday}</span>
-                            ))}
-                          </div>
-                          <div
-                            ref={multiMonthGridScrollRef}
-                            onScroll={handleMonthScopedGridScroll}
-                            className="mt-2 max-h-[34rem] overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                            data-calendar-month-vertical-viewport="true"
-                          >
-                            <div
-                              className="grid gap-2"
-                              style={SEVEN_COLUMN_GRID_STYLE}
-                            >
-                              {cells.map(renderCalendarDayCell)}
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="grid min-w-[calc(7*((100%-1rem)/3))] grid-cols-[repeat(7,minmax(0,calc((100%-1rem)/3)))] gap-2 text-center text-xs text-muted-foreground md:min-w-0 md:grid-cols-7">
-                            {weekdayLabels.map((weekday) => (
-                              <span key={weekday}>{weekday}</span>
-                            ))}
-                          </div>
-                          <div className="mt-2 grid min-w-[calc(7*((100%-1rem)/3))] grid-cols-[repeat(7,minmax(0,calc((100%-1rem)/3)))] gap-2 md:min-w-0 md:grid-cols-7">
-                            {(viewMode === "week" ? focusedWeekCells : cells).map(
-                              renderCalendarDayCell
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {viewMode !== "day" && dayPreview ? (
-                  <PlannerDayPreviewPopover
-                    dayPreview={dayPreview}
-                    popupRef={dayPreviewRef}
-                    entries={previewDayEntries}
-                    completionFactMarkers={previewDayCompletionFactMarkers}
-                    mutationLoading={Boolean(mutationLoadingKey)}
-                    asOfDate={context?.asOfDate ?? null}
-                    canMutatePlanItems={canMutatePlanItems}
-                    canMutateEntryOnDay={canMutateEntryOnDay}
-                    getEntryDisplayTitle={getEntryGoalFirstTitleWithTime}
-                    getEntrySubtitle={getEntrySubtitle}
-                    isEntryCredited={isEntryCredited}
-                    isEntryImmovableForDraft={isEntryImmovableForDraft}
-                    onEntryOpen={(entryKey, day) => {
-                      const entry = previewDayEntries.find(
-                        (candidate) => candidate.key === entryKey
-                      );
-                      if (!entry || !canMutateEntryOnDay(entry, day)) {
-                        return;
-                      }
-                      setLocalSelectedDay(day);
-                      setSelectedEventEntryKey(entry.key);
-                    }}
-                    onToggleCompletion={(entry, day, sourceElement) => {
-                      if (!canMutateEntryOnDay(entry, day)) {
-                        return;
-                      }
-                      void toggleDateFact(entry, day, sourceElement);
-                    }}
-                    onEntryPointerStart={(immovable) => {
-                      void immovable;
-                      pointerPressActiveRef.current = true;
-                    }}
-                    onEntryPointerEnd={() => {
-                      pointerPressActiveRef.current = false;
-                    }}
-                    onMoveDay={openMoveDialogForDay}
-                    onExpandDay={(day) => {
-                      setExpandedPreviewDay(day);
-                      setDayPreview(null);
-                    }}
-                    onClose={() => setDayPreview(null)}
-                    onPointerDownCapture={() => {
-                      setDayPreview((current) =>
-                        current && !current.pinned ? { ...current, pinned: true } : current
-                      );
-                    }}
-                    onMouseEnter={() => {
-                      pointerInsideDayPreviewRef.current = true;
-                      clearHoverPreviewTimer();
-                      clearHoverPreviewCloseTimer();
-                    }}
-                    onMouseLeave={() => {
-                      pointerInsideDayPreviewRef.current = false;
-                      if (dayPreview.pinned) {
-                        return;
-                      }
-                      clearHoverPreviewTimer();
-                      clearHoverPreviewCloseTimer();
-                      setDayPreview(null);
-                    }}
-                  />
-                ) : null}
-              </div>
-            </PlannerDndProvider>
-          </div>
-
-          <PlannerCoachPanel coach={coach} />
-
-          <PlannerExpandedPreviewDialog
-            expandedPreviewDay={expandedPreviewDay}
-            entries={expandedPreviewEntries}
-            completionFactMarkers={expandedPreviewCompletionFactMarkers}
-            mutationLoading={Boolean(mutationLoadingKey)}
+          <PlannerCalendarBoard
+            loading={loading}
+            viewMode={viewMode}
+            previousWindowAriaLabel={previousWindowAriaLabel}
+            nextWindowAriaLabel={nextWindowAriaLabel}
+            fixedViewHeadingWidthCh={fixedViewHeadingWidthCh}
+            viewHeading={viewHeading}
+            showTodayShortcut={showTodayShortcut}
+            expandedMonthRows={expandedMonthRows}
+            onMoveViewWindow={moveViewWindow}
+            onJumpToToday={jumpToToday}
+            onToggleExpandedMonthRows={() =>
+              setExpandedMonthRows((current) => !current)
+            }
+            getDragEntryLabel={getDragEntryLabel}
+            getDragDayLabel={getDragDayLabel}
+            renderEntryDragOverlay={renderEntryDragOverlay}
+            onEntryDragStart={handleDndEntryDragStart}
+            onEntryDragEnd={handleDndEntryDragEnd}
+            onEntryDragCancel={handleDndEntryDragCancel}
+            rollingWeekStrip={rollingWeekStrip}
+            focusedDay={focusedDay}
+            focusedDayEntries={focusedDayEntries}
+            focusedDayCompletionFactMarkers={focusedDayCompletionFactMarkers}
+            mutationLoadingKey={mutationLoadingKey}
             asOfDate={context?.asOfDate ?? null}
             canMutatePlanItems={canMutatePlanItems}
             canMutateEntryOnDay={canMutateEntryOnDay}
-            getEntryDisplayTitle={getEntryGoalFirstTitleWithTime}
-            getEntrySubtitle={getEntrySubtitle}
-            isEntryCredited={isEntryCredited}
-            isEntryImmovableForDraft={isEntryImmovableForDraft}
-            onOpenChange={(open) => {
-              if (!open) {
-                setExpandedPreviewDay(null);
-              }
-            }}
-            onMoveDay={openMoveDialogForDay}
-            onContract={contractExpandedPreview}
-            onEntryOpen={(entryKey, day) => {
-              const entry = expandedPreviewEntries.find(
+            onFocusedDayEntryOpen={(entryKey) => {
+              const entry = focusedDayEntries.find(
                 (candidate) => candidate.key === entryKey
               );
-              if (!entry || !canMutateEntryOnDay(entry, day)) {
+              if (!entry || !canMutateEntryOnDay(entry, focusedDay)) {
                 return;
               }
-              setExpandedPreviewDay(null);
-              setLocalSelectedDay(day);
+              setLocalSelectedDay(focusedDay);
               setSelectedEventEntryKey(entry.key);
             }}
             onToggleCompletion={(entry, day, sourceElement) => {
-              if (!canMutateEntryOnDay(entry, day)) {
-                return;
-              }
               void toggleDateFact(entry, day, sourceElement);
             }}
             onEntryPointerStart={(immovable) => {
@@ -1561,106 +1367,141 @@ export function CalendarSurface({
             onEntryPointerEnd={() => {
               pointerPressActiveRef.current = false;
             }}
-          />
-
-          <MoveSessionDialog
-            open={Boolean(moveDialogDay)}
-            targetDate={moveDialogDay ?? ""}
-            selectedSourceEntryKey={effectiveMoveDialogSourceEntryKey}
-            sourceOptions={moveDialogSourceOptions.map(
-              (option) => ({
-                entryKey: option.entryKey,
-                sourceDay: option.sourceDay,
-                sourceLabel: option.sourceLabel,
-              })
-            )}
-            onOpenChange={(open) => {
-              if (!open) {
-                closeMoveDialog();
+            calendarGridViewportRef={calendarGridViewportRef}
+            onCalendarGridViewportScroll={handleCalendarGridViewportScroll}
+            weekdayLabels={weekdayLabels}
+            multiMonthGridScrollRef={multiMonthGridScrollRef}
+            onMonthScopedGridScroll={handleMonthScopedGridScroll}
+            cells={cells}
+            renderCalendarDayCell={renderCalendarDayCell}
+            focusedWeekCells={focusedWeekCells}
+            dayPreview={dayPreview}
+            dayPreviewRef={dayPreviewRef}
+            previewDayEntries={previewDayEntries}
+            previewDayCompletionFactMarkers={previewDayCompletionFactMarkers}
+            onPreviewEntryOpen={(entryKey, day) => {
+              const entry = previewDayEntries.find(
+                (candidate) => candidate.key === entryKey
+              );
+              if (!entry || !canMutateEntryOnDay(entry, day)) {
+                return;
               }
+              setLocalSelectedDay(day);
+              setSelectedEventEntryKey(entry.key);
             }}
-            onSourceChange={setMoveDialogSourceEntryKey}
-            onCancel={closeMoveDialog}
-            onSubmit={submitMoveDialog}
-            submitDisabled={!effectiveMoveDialogSourceEntryKey}
-          />
-
-          <PlannerEventDetailDialog
-            selectedEventEntry={selectedEventEntry}
-            selectedEventLinkedTargets={selectedEventLinkedTargets}
-            goalTitles={context?.goalTitles ?? {}}
-            scopeMonth={context?.scopeMonth ?? month ?? "1970-01"}
-            selectedEventDraftEdit={selectedEventDraftEdit}
-            selectedEventBaselineUnit={selectedEventBaselineUnit}
-            selectedEventDraftScheduledDate={selectedEventDraftScheduledDate}
-            selectedEventDraftTimeInputValue={selectedEventDraftTimeInputValue}
-            mutationLoadingKey={mutationLoadingKey}
-            canMutatePlanItems={canMutatePlanItems}
-            canNavigateToFirstOpenInstance={canNavigateToFirstOpenInstance}
-            canNavigateToPreviousOpenInstance={canNavigateToPreviousOpenInstance}
-            canNavigateToNextOpenInstance={canNavigateToNextOpenInstance}
-            canNavigateToLastOpenInstance={canNavigateToLastOpenInstance}
-            getEntryGoalFirstTitleWithTime={getEntryGoalFirstTitleWithTime}
-            callbacks={{
-              onOpenChange: (open) => {
-                if (!open) {
-                  setSelectedEventEntryKey(null);
-                  setLocalSelectedDay(null);
-                }
-              },
-              onUpdateDraftLabel: updateDraftLabel,
-              onUpdateDraftScheduledDate: updateDraftScheduledDate,
-              onUpdateDraftScheduledTimeOverride: updateDraftScheduledTimeOverride,
-              onToggleItemLock: (entry) => {
-                void toggleItemLock(entry);
-              },
-              onNavigateToFirstOpenInstance: () => {
-                navigateToOpenInstance(selectedGoalOpenInstances[0]);
-              },
-              onNavigateToPreviousOpenInstance: () => {
-                if (selectedGoalOpenInstanceIndex <= 0) {
-                  return;
-                }
-                navigateToOpenInstance(
-                  selectedGoalOpenInstances[selectedGoalOpenInstanceIndex - 1]
-                );
-              },
-              onNavigateToNextOpenInstance: () => {
-                if (
-                  selectedGoalOpenInstanceIndex < 0 ||
-                  selectedGoalOpenInstanceIndex >= selectedGoalOpenInstances.length - 1
-                ) {
-                  return;
-                }
-                navigateToOpenInstance(
-                  selectedGoalOpenInstances[selectedGoalOpenInstanceIndex + 1]
-                );
-              },
-              onNavigateToLastOpenInstance: () => {
-                navigateToOpenInstance(
-                  selectedGoalOpenInstances[selectedGoalOpenInstances.length - 1]
-                );
-              },
+            onPreviewToggleCompletion={(entry, day, sourceElement) => {
+              if (!canMutateEntryOnDay(entry, day)) {
+                return;
+              }
+              void toggleDateFact(entry, day, sourceElement);
+            }}
+            onMoveDay={openMoveDialogForDay}
+            onExpandPreviewDay={(day) => {
+              setExpandedPreviewDay(day);
+              setDayPreview(null);
+            }}
+            onCloseDayPreview={() => setDayPreview(null)}
+            onDayPreviewPointerDownCapture={() => {
+              setDayPreview((current) =>
+                current && !current.pinned ? { ...current, pinned: true } : current
+              );
+            }}
+            onDayPreviewMouseEnter={() => {
+              pointerInsideDayPreviewRef.current = true;
+              clearHoverPreviewTimer();
+              clearHoverPreviewCloseTimer();
+            }}
+            onDayPreviewMouseLeave={() => {
+              pointerInsideDayPreviewRef.current = false;
+              if (dayPreview?.pinned) {
+                return;
+              }
+              clearHoverPreviewTimer();
+              clearHoverPreviewCloseTimer();
+              setDayPreview(null);
             }}
           />
 
+          <PlannerCoachPanel coach={coach} />
         </>
       ) : null}
 
-      <PlannerFiltersDialog
-        open={filtersOpen}
-        onOpenChange={setFiltersOpen}
+      <PlannerCalendarOverlays
+        renderMonthScopedOverlays={Boolean(month)}
+        expandedPreviewDay={expandedPreviewDay}
+        expandedPreviewEntries={expandedPreviewEntries}
+        expandedPreviewCompletionFactMarkers={expandedPreviewCompletionFactMarkers}
+        mutationLoadingKey={mutationLoadingKey}
+        asOfDate={context?.asOfDate ?? null}
+        canMutatePlanItems={canMutatePlanItems}
+        canMutateEntryOnDay={canMutateEntryOnDay}
+        onExpandedPreviewOpenChange={(open) => {
+          if (!open) {
+            setExpandedPreviewDay(null);
+          }
+        }}
+        onExpandedPreviewMoveDay={openMoveDialogForDay}
+        onExpandedPreviewContract={contractExpandedPreview}
+        onExpandedPreviewEntryOpen={(entryKey, day) => {
+          const entry = expandedPreviewEntries.find(
+            (candidate) => candidate.key === entryKey
+          );
+          if (!entry || !canMutateEntryOnDay(entry, day)) {
+            return;
+          }
+          setExpandedPreviewDay(null);
+          setLocalSelectedDay(day);
+          setSelectedEventEntryKey(entry.key);
+        }}
+        onExpandedPreviewToggleCompletion={(entry, day, sourceElement) => {
+          if (!canMutateEntryOnDay(entry, day)) {
+            return;
+          }
+          void toggleDateFact(entry, day, sourceElement);
+        }}
+        onExpandedPreviewEntryPointerStart={(immovable) => {
+          void immovable;
+          pointerPressActiveRef.current = true;
+        }}
+        onExpandedPreviewEntryPointerEnd={() => {
+          pointerPressActiveRef.current = false;
+        }}
+        moveDialogDay={moveDialogDay}
+        effectiveMoveDialogSourceEntryKey={effectiveMoveDialogSourceEntryKey}
+        moveDialogSourceOptions={moveDialogSourceOptions}
+        onMoveDialogOpenChange={(open) => {
+          if (!open) {
+            closeMoveDialog();
+          }
+        }}
+        onMoveDialogSourceChange={setMoveDialogSourceEntryKey}
+        onMoveDialogCancel={closeMoveDialog}
+        onMoveDialogSubmit={submitMoveDialog}
+        selectedEventEntry={selectedEventEntry}
+        selectedEventLinkedTargets={selectedEventLinkedTargets}
+        goalTitles={context?.goalTitles ?? {}}
+        scopeMonth={context?.scopeMonth ?? month ?? "1970-01"}
+        selectedEventDraftEdit={selectedEventDraftEdit}
+        selectedEventBaselineUnit={selectedEventBaselineUnit}
+        selectedEventDraftScheduledDate={selectedEventDraftScheduledDate}
+        selectedEventDraftTimeInputValue={selectedEventDraftTimeInputValue}
+        canNavigateToFirstOpenInstance={canNavigateToFirstOpenInstance}
+        canNavigateToPreviousOpenInstance={canNavigateToPreviousOpenInstance}
+        canNavigateToNextOpenInstance={canNavigateToNextOpenInstance}
+        canNavigateToLastOpenInstance={canNavigateToLastOpenInstance}
+        eventDetailCallbacks={eventDetailCallbacks}
+        filtersOpen={filtersOpen}
+        onFiltersOpenChange={setFiltersOpen}
         categoryFilter={categoryFilter}
         onCategoryFilterChange={setCategoryFilter}
         categoryOptions={categoryOptions}
         endMonthFilter={effectiveEndMonthFilter}
         onEndMonthFilterChange={setEndMonthFilter}
         endMonthOptions={endMonthOptions}
+        settingsOpen={settingsOpen}
+        onSettingsOpenChange={setSettingsOpen}
+        plannerSettingsForm={plannerSettingsForm}
       />
-
-      <PlannerSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        {plannerSettingsForm}
-      </PlannerSettingsDialog>
     </div>
   );
 }
