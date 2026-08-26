@@ -121,7 +121,7 @@ describe("TargetCountField", () => {
     expect(input).not.toBeRequired();
     expect(input).toHaveAttribute("min", "0");
     expect(
-      screen.getByText(/each date is checked independently/i)
+      screen.getByText(/each completion counts independently/i)
     ).toBeInTheDocument();
   });
 
@@ -138,7 +138,7 @@ describe("TargetCountField", () => {
     expect(input).toBeRequired();
     expect(input).toHaveAttribute("min", "1");
     expect(
-      screen.queryByText(/each date is checked independently/i)
+      screen.queryByText(/each completion counts independently/i)
     ).not.toBeInTheDocument();
   });
 
