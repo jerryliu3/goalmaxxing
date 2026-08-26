@@ -26,7 +26,7 @@ export function buildPlannerWorkUnit(
     unitKey: "unit-1",
     label: "Easy run",
     scheduledDate: "2026-08-01",
-    classification: "planned",
+    classification: "open",
     creditState: "uncredited",
     ...overrides,
   };
@@ -41,7 +41,7 @@ export function buildPlannerDayEntry(
     goalTitle: "Running",
     unitKey: "unit-1",
     label: "Easy run",
-    classification: "planned",
+    classification: "open",
     creditState: "uncredited",
     activeGoal: null,
     activeItem: null,

@@ -83,7 +83,7 @@ describe("planDraftMove", () => {
           unit_key: "unit-1",
           requirement_kind: "deadline_total",
           scheduled_date: "2026-08-01",
-          classification: "planned",
+          classification: "open",
           credit_state: "uncredited",
           revision: 0,
           credited_completion_id: null,

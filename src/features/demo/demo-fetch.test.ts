@@ -138,7 +138,7 @@ describe("demo fetch router", () => {
       (unit) => unit.creditState === "uncredited" && unit.scheduledDate
     );
     const credited = payload.preview.workUnits.filter(
-      (unit) => unit.creditState === "credited"
+      (unit) => unit.creditState !== "uncredited"
     );
     const asOfSession = uncredited.find((unit) => unit.scheduledDate === "2026-08-22");
 
