@@ -18,7 +18,7 @@ export interface Goal {
   recurrence_interval: RecurrenceInterval | null;
   difficulty?: GoalDifficulty;
   target_count: number | null;
-  target_basis?: GoalTargetBasis;
+  target_basis: GoalTargetBasis;
   milestone_names: string[] | null;
   start_date: string;
   end_date: string | null;

@@ -34,12 +34,20 @@ function goal(
 }
 
 describe("resolveGoalTargetBasis", () => {
-  it("prefers stored target_basis over legacy inference", () => {
+  it("returns stored target_basis for recurring goals", () => {
     expect(resolveGoalTargetBasis(goal("weekly", 8, "period"))).toBe("period");
     expect(resolveGoalTargetBasis(goal("daily", 2, "lifetime"))).toBe("lifetime");
   });
 
-  it("uses recurrence-aware period thresholds for legacy goals without a basis", () => {
+  it("uses structural lifetime for fixed milestones regardless of stored basis", () => {
+    const milestoneGoal = {
+      ...goal("daily", 1, "period"),
+      frequency_type: "fixed_milestones" as const,
+    };
+    expect(resolveGoalTargetBasis(milestoneGoal)).toBe("lifetime");
+  });
+
+  it("keeps repair inference separate from product reads", () => {
     const cases = [
       ["daily", 1, "period"],
       ["weekly", 7, "period"],
@@ -50,7 +58,6 @@ describe("resolveGoalTargetBasis", () => {
     ] as const;
 
     for (const [interval, targetCount, expected] of cases) {
-      expect(resolveGoalTargetBasis(goal(interval, targetCount))).toBe(expected);
       expect(
         resolveGoalTargetBasisFromInput({
           frequencyType: "recurring",
