@@ -1,10 +1,13 @@
 import type { Goal } from "@/lib/goals/types";
 
+export type GoalTestInput = Omit<Goal, "target_basis"> &
+  Partial<Pick<Goal, "target_basis">>;
+
 export function withLifetimeTargetBasisForTests(
-  goal: Goal,
+  goal: GoalTestInput,
   overrides: Partial<Goal> = {}
 ): Goal {
-  const merged: Goal = {
+  const merged: GoalTestInput = {
     ...goal,
     ...overrides,
   };
@@ -12,7 +15,7 @@ export function withLifetimeTargetBasisForTests(
     return { ...merged, target_basis: overrides.target_basis };
   }
   if (merged.target_basis !== undefined) {
-    return merged;
+    return merged as Goal;
   }
   if (merged.frequency_type === "fixed_milestones") {
     return { ...merged, target_basis: "lifetime" };
@@ -28,7 +31,7 @@ export function withLifetimeTargetBasisForTests(
 }
 
 export function buildGoal(overrides: Partial<Goal> = {}): Goal {
-  const built: Goal = {
+  const built: GoalTestInput = {
     id: "goal-1",
     owner_id: "user-1",
     title: "Run 5k",
