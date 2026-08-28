@@ -7,10 +7,15 @@ export function withLifetimeTargetBasisForTests(
   const merged: Goal = {
     ...goal,
     ...overrides,
-    target_basis: overrides.target_basis ?? goal.target_basis,
   };
   if (overrides.target_basis !== undefined) {
+    return { ...merged, target_basis: overrides.target_basis };
+  }
+  if (merged.target_basis !== undefined) {
     return merged;
+  }
+  if (merged.frequency_type === "fixed_milestones") {
+    return { ...merged, target_basis: "lifetime" };
   }
   if (
     merged.frequency_type === "recurring" &&
@@ -19,11 +24,11 @@ export function withLifetimeTargetBasisForTests(
   ) {
     return { ...merged, target_basis: "lifetime" };
   }
-  return merged;
+  return { ...merged, target_basis: "period" };
 }
 
 export function buildGoal(overrides: Partial<Goal> = {}): Goal {
-  return {
+  const built: Goal = {
     id: "goal-1",
     owner_id: "user-1",
     title: "Run 5k",
@@ -44,6 +49,6 @@ export function buildGoal(overrides: Partial<Goal> = {}): Goal {
     created_at: "2026-08-01T00:00:00.000Z",
     updated_at: "2026-08-01T00:00:00.000Z",
     ...overrides,
-    target_basis: overrides.target_basis ?? "period",
   };
+  return withLifetimeTargetBasisForTests(built, overrides);
 }

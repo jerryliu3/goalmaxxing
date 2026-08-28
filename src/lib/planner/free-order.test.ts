@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Goal } from "@/lib/goals/types";
+import { withLifetimeTargetBasisForTests } from "@/lib/goals/goal-test-fixtures";
 import {
   PlannerError,
   runPlannerKernel,
@@ -10,7 +11,7 @@ import { computeRequirementFingerprint } from "@/lib/planner/requirements";
 import { toKernelWindow } from "@/lib/planner/dates";
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
-  return {
+  const built: Goal = {
     id: "goal-a",
     owner_id: "owner-a",
     title: "Practice presentation",
@@ -30,8 +31,8 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
     created_at: "2026-08-01T00:00:00Z",
     updated_at: "2026-08-01T00:00:00Z",
     ...overrides,
-    target_basis: overrides.target_basis ?? "period",
   };
+  return withLifetimeTargetBasisForTests(built, overrides);
 }
 
 function makeInput(
