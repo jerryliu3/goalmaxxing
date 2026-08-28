@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { plannerContractFixtureSchema } from "./fixture-schema";
+import {
+  completionDispatchFixtureSchema,
+  eligibilityFixtureSchema,
+  lifecycleOutcomeFixtureSchema,
+} from "@/lib/planner/contracts/fixture-schema";
 import completionDispatch from "../../../../test/fixtures/planner-contracts/completion-dispatch.v1.json";
 import eligibility from "../../../../test/fixtures/planner-contracts/eligibility.v1.json";
 import lifecycleOutcome from "../../../../test/fixtures/planner-contracts/lifecycle-outcome.v1.json";
@@ -79,35 +84,6 @@ describe("planner contract fixtures", () => {
     ).toBe("eligible");
   });
 
-  it("never dispatches targeted totals to legacy period unmarking", () => {
-    const fixture = fixtures.find(
-      (candidate) => candidate.contract === "completion_dispatch"
-    );
-    expect(fixture?.contract).toBe("completion_dispatch");
-    if (!fixture || fixture.contract !== "completion_dispatch") {
-      return;
-    }
-
-    const targetedCases = fixture.cases.filter(
-      (fixtureCase) => fixtureCase.input.targetedRecurring
-    );
-    expect(targetedCases).not.toHaveLength(0);
-    expect(
-      targetedCases.every(
-        (fixtureCase) => fixtureCase.expected.route !== "legacy_period"
-      )
-    ).toBe(true);
-
-    const repairCase = fixture.cases.find(
-      (fixtureCase) => fixtureCase.id === "targeted_total_future_repair"
-    );
-    expect(repairCase?.expected).toMatchObject({
-      route: "canonical_exact_date",
-      allowed: true,
-      exactDateOnly: true,
-    });
-  });
-
   it("keeps frozen solver outputs internally hard-feasible", () => {
     const fixture = fixtures.find(
       (candidate) => candidate.contract === "solver"
@@ -163,4 +139,51 @@ describe("planner contract fixtures", () => {
     }
   });
 
+  it("parses completion dispatch unions without legacy period routes", () => {
+    const fixture = completionDispatchFixtureSchema.parse(completionDispatch);
+    for (const fixtureCase of fixture.cases) {
+      expect(fixtureCase.expected.route).not.toBe("legacy_period");
+    }
+
+    const targetedOffPlanCases = fixture.cases.filter(
+      (fixtureCase) =>
+        fixtureCase.input.targetedRecurring &&
+        !fixtureCase.input.activePlanMembership
+    );
+    expect(targetedOffPlanCases).not.toHaveLength(0);
+    expect(
+      targetedOffPlanCases.every(
+        (fixtureCase) => fixtureCase.expected.route === "canonical_exact_date"
+      )
+    ).toBe(true);
+
+    const repairCase = fixture.cases.find(
+      (fixtureCase) => fixtureCase.id === "targeted_total_future_repair"
+    );
+    expect(repairCase?.expected).toMatchObject({
+      route: "canonical_exact_date",
+      allowed: true,
+      exactDateOnly: true,
+    });
+  });
+
+  it("parses eligibility reason unions", () => {
+    const fixture = eligibilityFixtureSchema.parse(eligibility);
+    expect(fixture.cases.length).toBeGreaterThan(0);
+    for (const fixtureCase of fixture.cases) {
+      expect(fixtureCase.expected.reason).toBeTruthy();
+    }
+  });
+
+  it("parses lifecycle outcome unions independently from lifecycle state", () => {
+    const fixture = lifecycleOutcomeFixtureSchema.parse(lifecycleOutcome);
+    const outcomes = new Set(
+      fixture.cases.map((fixtureCase) => fixtureCase.expected.outcome)
+    );
+    const lifecycles = new Set(
+      fixture.cases.map((fixtureCase) => fixtureCase.expected.lifecycle)
+    );
+    expect(outcomes.size).toBeGreaterThan(1);
+    expect(lifecycles.size).toBeGreaterThan(1);
+  });
 });

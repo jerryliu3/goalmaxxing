@@ -111,7 +111,6 @@ const dispatchRouteSchema = z.enum([
   "item_date",
   "plan_goal_date",
   "canonical_exact_date",
-  "legacy_period",
   "disabled",
 ]);
 
@@ -150,7 +149,6 @@ export const completionDispatchFixtureSchema = z
                   "allowed",
                   "satisfied_elsewhere",
                   "future_creation",
-                  "legacy_period_semantics",
                 ]),
               })
               .strict(),
