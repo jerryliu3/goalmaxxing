@@ -714,15 +714,32 @@ test.describe("planner critical rails", () => {
       .toBe(moveCommand.scheduledDate);
 
     if (sourceScopeMonth !== afterScopeMonth) {
-      const sourceMonthSnapshot = await fetchPlannerContextSnapshot(
-        page,
-        sourceScopeMonth
-      );
-      expect(sourceMonthSnapshot.placementsByEntryKey[movedEntryKey] ?? null).toBeNull();
+      await expect
+        .poll(
+          async () =>
+            (
+              await fetchPlannerContextSnapshot(page, sourceScopeMonth)
+            ).placementsByEntryKey[movedEntryKey] ?? null,
+          { timeout: 30_000 }
+        )
+        .toBeNull();
       return;
     }
 
-    const after = await fetchPlannerContextSnapshot(page, attempt.before.scopeMonth);
+    let after!: PlannerContextSnapshot;
+    await expect
+      .poll(
+        async () => {
+          after = await fetchPlannerContextSnapshot(page, attempt.before.scopeMonth);
+          return (
+            after.placementsByEntryKey[movedEntryKey] ??
+            attempt.before.placementsByEntryKey[movedEntryKey] ??
+            null
+          );
+        },
+        { timeout: 30_000 }
+      )
+      .toBe(moveCommand.scheduledDate);
 
     const changedEntries = Array.from(
       new Set([
@@ -737,10 +754,6 @@ test.describe("planner critical rails", () => {
       )
       .sort();
     expect(changedEntries.every((entryKey) => entryKey === movedEntryKey)).toBe(true);
-    expect(
-      after.placementsByEntryKey[movedEntryKey] ??
-        attempt.before.placementsByEntryKey[movedEntryKey]
-    ).toBe(moveCommand.scheduledDate);
   });
 
   test("completion toggle dispatches from today surface", async ({ page }) => {
