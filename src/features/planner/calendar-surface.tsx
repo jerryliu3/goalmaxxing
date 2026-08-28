@@ -1,86 +1,60 @@
 "use client";
 
-import { addDays, addMonths, format, isValid, parse } from "date-fns";
 import {
   useCallback,
   useEffect,
   useMemo,
-  useReducer,
-  useRef,
   useState,
 } from "react";
-import { LoadingCard } from "@/components/ui/loading-card";
 import { allCategoriesValue } from "@/features/goals/goal-filters";
 import {
   buildWeekdayLabels,
   getEntryGoalFirstTitleWithTime,
-  isEntryImmovableForDraft,
-  parseMonth,
 } from "@/features/planner/calendar-format";
-import {
-  getCalendarTargetScrollLeft,
-  getCalendarTargetScrollTop,
-  isCalendarDayVisible,
-  getTopVisibleCalendarDay,
-} from "@/features/planner/calendar-scroll-position";
-import { PlannerCoachPanel } from "@/features/planner/coach/planner-coach-panel";
-import { usePlannerCoach } from "@/features/planner/coach/use-planner-coach";
-import type { PlannerCoachBindings } from "@/features/planner/coach/coach-types";
-import {
-  buildPlannerCoachBindings,
-  refreshPlannerAfterCoachGoalsCreated,
-} from "@/features/planner/planner-coach-surface-bindings";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
+import { useCalendarDraftState } from "@/features/planner/use-calendar-draft-moves";
+import { useCalendarSurfaceCoachSession } from "@/features/planner/use-calendar-surface-coach-session";
 import {
-  draftCommandReducer,
-  initialDraftCommandState,
-} from "@/features/planner/draft-command-reducer";
+  useCalendarSurfaceDayEntryViews,
+  useCalendarSurfaceSelectedEventState,
+  useEffectiveMoveDialogSourceEntryKey,
+} from "@/features/planner/use-calendar-surface-derived-state";
+import { useCalendarSurfaceMoveSession } from "@/features/planner/use-calendar-surface-move-session";
+import { useCalendarSurfacePresentation } from "@/features/planner/use-calendar-surface-presentation";
+import {
+  useCalendarSurfaceInteractionRefs,
+  useCalendarSurfaceUiEffects,
+} from "@/features/planner/use-calendar-surface-ui-effects";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
 import {
   invalidatePlannerRelatedTabCaches,
 } from "@/lib/cache/planner-tab-cache";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
-import {
-  type PlannerPolicy,
-} from "@/lib/planner/policy";
 import type {
   CalendarSurfaceProps,
-  CompletionControlDisabledReason,
-  PlannerCalendarViewMode,
   DayPreviewState,
   PlannerContextPayload,
-  PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import {
   getNonPublishablePreviewMessage,
 } from "@/features/planner/planner-save-availability";
-import { PlannerWarningsPanel } from "@/features/planner/planner-warnings-panel";
-import type { PlannerEventDetailDialogCallbacks } from "@/features/planner/planner-event-detail-dialog";
 import { buildMoveSourceOptions } from "@/features/planner/planner-move-source-options";
-import { PlannerCalendarBoard } from "@/features/planner/planner-calendar-board";
-import { PlannerCalendarOverlays } from "@/features/planner/planner-calendar-overlays";
-import { PlannerCalendarToolbar } from "@/features/planner/planner-calendar-toolbar";
-import { PlannerSettingsForm } from "@/features/planner/planner-settings-form";
-import { PlannerRollingWeekStrip } from "@/features/planner/planner-rolling-week-strip";
 import { useCalendarCompletionControls } from "@/features/planner/use-calendar-completion-controls";
 import { usePlannerCalendarModel } from "@/features/planner/use-planner-calendar-model";
 import { usePlannerPersistenceActions } from "@/features/planner/use-planner-persistence-actions";
 import { usePlannerDraftCommands } from "@/features/planner/use-planner-draft-commands";
 import { usePlannerCalendarDnd } from "@/features/planner/use-planner-calendar-dnd";
-import { usePlannerMoveSessionDialog } from "@/features/planner/use-planner-move-session-dialog";
-import { usePlannerCalendarDayCellRenderer } from "@/features/planner/use-planner-calendar-day-cell-renderer";
 import { usePlannerContextLoader } from "@/features/planner/use-planner-context-loader";
 import { usePlannerSetup } from "@/features/planner/use-planner-setup";
 import { usePlannerPreviewSession } from "@/features/planner/use-planner-preview-session";
 import { usePlannerDayPreviewInteractions } from "@/features/planner/use-planner-day-preview-interactions";
-interface OpenGoalInstance {
-  entryKey: string;
-  day: string;
-}
+import { useCalendarScrollBehavior } from "@/features/planner/use-calendar-scroll-behavior";
+import {
+  useCalendarEventDetail,
+  useCalendarViewNavigation,
+} from "@/features/planner/use-calendar-view-navigation";
+import { PlannerCalendarSurfaceLayout } from "@/features/planner/planner-calendar-surface-layout";
 
-function isMonthScopedCalendarViewMode(viewMode: PlannerCalendarViewMode) {
-  return viewMode === "month";
-}
 
 export function CalendarSurface({
   activeTab,
@@ -101,18 +75,18 @@ export function CalendarSurface({
   const [categoryFilter, setCategoryFilter] = useState(allCategoriesValue);
   const [endMonthFilter, setEndMonthFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [draftPolicy, setDraftPolicy] = useState<PlannerPolicy | null>(null);
-  const [draftPreview, setDraftPreview] = useState<
-    NonNullable<PlannerContextPayload["preview"]> | null
-  >(null);
-  const [draftPreviewWindow, setDraftPreviewWindow] = useState<{
-    start: string;
-    end: string;
-  } | null>(null);
-  const [draftCommandState, dispatchDraftCommand] = useReducer(
-    draftCommandReducer,
-    initialDraftCommandState
-  );
+  const {
+    draftPolicy,
+    setDraftPolicy,
+    draftPreview,
+    setDraftPreview,
+    draftPreviewWindow,
+    setDraftPreviewWindow,
+    draftCommandState,
+    dispatchDraftCommand,
+    draftPolicyRef,
+    clearDraftSession,
+  } = useCalendarDraftState();
   const [selectedEventEntryKey, setSelectedEventEntryKey] = useState<string | null>(
     null
   );
@@ -125,11 +99,6 @@ export function CalendarSurface({
   const [warningsDismissed, setWarningsDismissed] = useState(false);
   const [localSelectedDay, setLocalSelectedDay] = useState<string | null>(null);
   const [expandedMonthRows, setExpandedMonthRows] = useState(false);
-  const [pendingMonthAlignment, setPendingMonthAlignment] = useState<{
-    rowStartDay: string;
-    focusDay: string;
-  } | null>(null);
-  const [showTodayShortcut, setShowTodayShortcut] = useState(false);
   const [previewEntryOrderByDay, setPreviewEntryOrderByDay] = useState<
     Record<string, string[]>
   >({});
@@ -138,32 +107,25 @@ export function CalendarSurface({
   const [setupTimezone, setSetupTimezone] = useState(resolveUserTimezone());
   const [setupWeekStartsOn, setSetupWeekStartsOn] = useState(1);
   const [setupRestWeekdays, setSetupRestWeekdays] = useState<number[]>([]);
-  const draftPolicyRef = useRef<PlannerPolicy | null>(null);
-  const hoverPreviewTimerRef = useRef<number | null>(null);
-  const hoverPreviewCloseTimerRef = useRef<number | null>(null);
-  const longPressTimerRef = useRef<number | null>(null);
-  const longPressTriggeredRef = useRef(false);
-  const pointerPressActiveRef = useRef(false);
-  const pointerInsideDayPreviewRef = useRef(false);
-  const lastTouchTapRef = useRef<{ day: string; at: number } | null>(null);
-  const suppressDayCellClickRef = useRef<{ day: string; active: boolean } | null>(null);
-  const calendarPreparedRef = useRef(false);
-  const skipInvalidationReloadRef = useRef(false);
-  const dayPreviewRef = useRef<HTMLDivElement | null>(null);
-  const rollingWeekStripRef = useRef<HTMLDivElement | null>(null);
-  const calendarGridViewportRef = useRef<HTMLDivElement | null>(null);
-  const multiMonthGridScrollRef = useRef<HTMLDivElement | null>(null);
-  const monthScrollAlignmentKeyRef = useRef<string | null>(null);
-  const calendarHorizontalAlignmentKeyRef = useRef<string | null>(null);
-  const monthScrollAnchorDayRef = useRef<string | null>(null);
-  const todayVisibilityFrameRef = useRef<number | null>(null);
-  const isDayPreviewSurfaceTarget = (target: Element) =>
-    Boolean(target.closest('[data-day-cell="true"]')) ||
-    Boolean(dayPreviewRef.current?.contains(target));
-
-  useEffect(() => {
-    draftPolicyRef.current = draftPolicy;
-  }, [draftPolicy]);
+  const {
+    hoverPreviewTimerRef,
+    hoverPreviewCloseTimerRef,
+    longPressTimerRef,
+    longPressTriggeredRef,
+    pointerPressActiveRef,
+    pointerInsideDayPreviewRef,
+    lastTouchTapRef,
+    suppressDayCellClickRef,
+    calendarPreparedRef,
+    skipInvalidationReloadRef,
+    dayPreviewRef,
+    rollingWeekStripRef,
+    calendarGridViewportRef,
+    multiMonthGridScrollRef,
+    monthScrollAlignmentKeyRef,
+    calendarHorizontalAlignmentKeyRef,
+    isDayPreviewSurfaceTarget,
+  } = useCalendarSurfaceInteractionRefs();
 
   const loadContext = usePlannerContextLoader({
     activeTab,
@@ -201,14 +163,7 @@ export function CalendarSurface({
     invalidatePlannerRelatedTabCaches();
     onPlannerMutation();
   }, [onPlannerMutation]);
-  const clearDraftSession = useCallback(() => {
-    setDraftPolicy(null);
-    setDraftPreview(null);
-    setDraftPreviewWindow(null);
-    dispatchDraftCommand({
-      type: "clear",
-    });
-  }, []);
+
   const additionalProjectionDays = useMemo(
     () =>
       [
@@ -301,95 +256,106 @@ export function CalendarSurface({
     plannerReadOnly,
   } = dayAccessors;
   const effectiveSelectedDay = localSelectedDay;
-  const selectedEventEntry = selectedEventEntryKey
-    ? entryByKey.get(selectedEventEntryKey) ?? null
-    : null;
-  const selectedEventDraftEdit = selectedEventEntry
-    ? effectiveDraftItemEdits[selectedEventEntry.key]
-    : undefined;
-  const selectedEventBaselineUnit = selectedEventEntry
-    ? draftWindowUnitByEntryKey.get(selectedEventEntry.key) ?? null
-    : null;
-  const selectedEventDraftScheduledDate =
-    selectedEventDraftEdit?.scheduledDate ??
-    selectedEventEntry?.activeItem?.scheduled_date ??
-    effectiveSelectedDay ??
-    null;
-  const selectedGoalOpenInstances = useMemo<OpenGoalInstance[]>(() => {
-    if (!selectedEventEntry) {
-      return [];
-    }
-    const nextInstances: OpenGoalInstance[] = [];
-    const targetGoalId = selectedEventEntry.originalGoalId;
-    const orderedDays = Array.from(entriesByDate.keys()).sort();
-    for (const day of orderedDays) {
-      const dayEntries = entriesByDate.get(day) ?? [];
-      for (const entry of dayEntries) {
-        if (entry.originalGoalId !== targetGoalId) {
-          continue;
-        }
-        if (!entry.activeItem) {
-          continue;
-        }
-        if (isEntryImmovableForDraft(entry)) {
-          continue;
-        }
-        nextInstances.push({ entryKey: entry.key, day });
-      }
-    }
-    return nextInstances;
-  }, [entriesByDate, selectedEventEntry]);
-  const selectedGoalOpenInstanceIndex = useMemo(
-    () =>
-      selectedEventEntryKey
-        ? selectedGoalOpenInstances.findIndex(
-            (instance) => instance.entryKey === selectedEventEntryKey
-          )
-        : -1,
-    [selectedEventEntryKey, selectedGoalOpenInstances]
-  );
-  const canNavigateToFirstOpenInstance = selectedGoalOpenInstanceIndex > 0;
-  const canNavigateToPreviousOpenInstance = selectedGoalOpenInstanceIndex > 0;
-  const canNavigateToNextOpenInstance =
-    selectedGoalOpenInstanceIndex >= 0 &&
-    selectedGoalOpenInstanceIndex < selectedGoalOpenInstances.length - 1;
-  const canNavigateToLastOpenInstance =
-    selectedGoalOpenInstanceIndex >= 0 &&
-    selectedGoalOpenInstanceIndex < selectedGoalOpenInstances.length - 1;
-  const selectedEventDraftTimeInputValue =
-    selectedEventDraftEdit?.scheduledTimeOverride === null
-      ? ""
-      : selectedEventDraftEdit?.scheduledTimeOverride ??
-        selectedEventBaselineUnit?.scheduledTimeOverride ??
-        "";
-  const focusedDayEntries = useMemo(
-    () => getOrderedEntriesForDay(focusedDay),
-    [focusedDay, getOrderedEntriesForDay]
-  );
-  const focusedDayCompletionFactMarkers = useMemo(
-    () => getCompletionFactMarkersForDay(focusedDay),
-    [focusedDay, getCompletionFactMarkersForDay]
-  );
-  const previewDayEntries = useMemo(
-    () => getOrderedEntriesForDay(dayPreview?.day ?? null),
-    [dayPreview?.day, getOrderedEntriesForDay]
-  );
-  const previewDayCompletionFactMarkers = useMemo(
-    () => getCompletionFactMarkersForDay(dayPreview?.day ?? null),
-    [dayPreview?.day, getCompletionFactMarkersForDay]
-  );
-  const expandedPreviewEntries = useMemo(
-    () => getOrderedEntriesForDay(expandedPreviewDay),
-    [expandedPreviewDay, getOrderedEntriesForDay]
-  );
-  const expandedPreviewCompletionFactMarkers = useMemo(
-    () => getCompletionFactMarkersForDay(expandedPreviewDay),
-    [expandedPreviewDay, getCompletionFactMarkersForDay]
-  );
-  const moveDialogEntriesForTargetDay = useMemo(
-    () => getOrderedEntriesForDay(moveDialogDay),
-    [getOrderedEntriesForDay, moveDialogDay]
-  );
+  const {
+    selectedEventEntry,
+    selectedEventDraftEdit,
+    selectedEventBaselineUnit,
+    selectedEventDraftScheduledDate,
+    selectedEventDraftTimeInputValue,
+    selectedEventLinkedTargets,
+  } = useCalendarSurfaceSelectedEventState({
+    selectedEventEntryKey,
+    entryByKey,
+    effectiveDraftItemEdits,
+    draftWindowUnitByEntryKey,
+    effectiveSelectedDay,
+    linkedTargetIndexes,
+  });
+
+  const {
+    pendingMonthAlignment,
+    setPendingMonthAlignment,
+    monthScrollAnchorDay,
+    resolveMonthScopedTopRowDay,
+    resolveWeekdayAlignedAnchorDay,
+    navigateToOpenInstance,
+    jumpToToday: jumpToTodayBase,
+    moveViewWindow: moveViewWindowBase,
+    setCalendarViewMode,
+  } = useCalendarViewNavigation({
+    viewMode,
+    month,
+    focusedDay,
+    focusedWeekDays,
+    calendarToday,
+    setupWeekStartsOn,
+    cellByDate,
+    cells,
+    onMonthChange,
+    onSelectedDayChange,
+    setDayPreview,
+    setSelectedEventEntryKey,
+    setLocalSelectedDay,
+    multiMonthGridScrollRef,
+    monthScrollAlignmentKeyRef,
+    calendarHorizontalAlignmentKeyRef,
+  });
+
+  const {
+    showTodayShortcut,
+    queueTodayShortcutVisibilitySync,
+    handleMonthScopedGridScroll,
+    handleCalendarGridViewportScroll,
+  } = useCalendarScrollBehavior({
+    viewMode,
+    month,
+    context,
+    calendarToday,
+    focusedDay,
+    focusedWeekDays,
+    cells,
+    cellByDate,
+    pendingMonthAlignment,
+    setPendingMonthAlignment,
+    monthScrollAnchorDay,
+    resolveWeekdayAlignedAnchorDay,
+    resolveMonthScopedTopRowDay,
+    multiMonthGridScrollRef,
+    calendarGridViewportRef,
+    rollingWeekStripRef,
+    monthScrollAlignmentKeyRef,
+    calendarHorizontalAlignmentKeyRef,
+  });
+
+  const {
+    selectedGoalOpenInstances,
+    selectedGoalOpenInstanceIndex,
+    canNavigateToFirstOpenInstance,
+    canNavigateToPreviousOpenInstance,
+    canNavigateToNextOpenInstance,
+    canNavigateToLastOpenInstance,
+  } = useCalendarEventDetail({
+    selectedEventEntry,
+    selectedEventEntryKey,
+    entriesByDate,
+  });
+
+  const {
+    focusedDayEntries,
+    focusedDayCompletionFactMarkers,
+    previewDayEntries,
+    previewDayCompletionFactMarkers,
+    expandedPreviewEntries,
+    expandedPreviewCompletionFactMarkers,
+    moveDialogEntriesForTargetDay,
+  } = useCalendarSurfaceDayEntryViews({
+    focusedDay,
+    dayPreviewDay: dayPreview?.day ?? null,
+    expandedPreviewDay,
+    moveDialogDay,
+    getOrderedEntriesForDay,
+    getCompletionFactMarkersForDay,
+  });
   const scopeMonth = context?.scopeMonth ?? null;
   const {
     queueDraftMoveCommand,
@@ -427,26 +393,10 @@ export function CalendarSurface({
       scopeMonth,
     ]
   );
-  const effectiveMoveDialogSourceEntryKey = useMemo(() => {
-    if (
-      moveDialogSourceEntryKey &&
-      moveDialogSourceOptions.some(
-        (option) => option.entryKey === moveDialogSourceEntryKey
-      )
-    ) {
-      return moveDialogSourceEntryKey;
-    }
-    return moveDialogSourceOptions[0]?.entryKey ?? "";
-  }, [moveDialogSourceEntryKey, moveDialogSourceOptions]);
-  const selectedEventLinkedTargets = useMemo(
-    () =>
-      selectedEventEntry
-        ? linkedTargetIndexes.linksBySourceGoalId.get(
-            selectedEventEntry.originalGoalId
-          ) ?? []
-        : [],
-    [linkedTargetIndexes.linksBySourceGoalId, selectedEventEntry]
-  );
+  const effectiveMoveDialogSourceEntryKey = useEffectiveMoveDialogSourceEntryKey({
+    moveDialogSourceEntryKey,
+    moveDialogSourceOptions,
+  });
   const {
     warningSuggestedNextSteps,
     hasPlannerWarnings,
@@ -470,50 +420,16 @@ export function CalendarSurface({
     nextWindowAriaLabel,
     stepDays,
   } = viewWindow;
-  const previousWarningSeverityRef = useRef(plannerWarningSeverity);
-  useEffect(() => {
-    if (
-      plannerWarningSeverity === "actionable" &&
-      previousWarningSeverityRef.current !== "actionable"
-    ) {
-      setWarningsDismissed(false);
-    }
-    previousWarningSeverityRef.current = plannerWarningSeverity;
-  }, [plannerWarningSeverity]);
-  useEffect(
-    () => () => {
-      if (hoverPreviewTimerRef.current) {
-        window.clearTimeout(hoverPreviewTimerRef.current);
-      }
-      if (hoverPreviewCloseTimerRef.current) {
-        window.clearTimeout(hoverPreviewCloseTimerRef.current);
-      }
-      if (longPressTimerRef.current) {
-        window.clearTimeout(longPressTimerRef.current);
-      }
-    },
-    []
-  );
-
-  useEffect(() => {
-    const clearPointerPress = () => {
-      pointerPressActiveRef.current = false;
-    };
-    window.addEventListener("pointerup", clearPointerPress);
-    window.addEventListener("pointercancel", clearPointerPress);
-    window.addEventListener("blur", clearPointerPress);
-    return () => {
-      window.removeEventListener("pointerup", clearPointerPress);
-      window.removeEventListener("pointercancel", clearPointerPress);
-      window.removeEventListener("blur", clearPointerPress);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!dayPreview) {
-      pointerInsideDayPreviewRef.current = false;
-    }
-  }, [dayPreview]);
+  useCalendarSurfaceUiEffects({
+    plannerWarningSeverity,
+    dayPreview,
+    hoverPreviewTimerRef,
+    hoverPreviewCloseTimerRef,
+    longPressTimerRef,
+    pointerPressActiveRef,
+    pointerInsideDayPreviewRef,
+    setWarningsDismissed,
+  });
 
   const dayPreviewInteractions = usePlannerDayPreviewInteractions({
     dayPreview,
@@ -585,13 +501,15 @@ export function CalendarSurface({
   });
 
   const runCompletionMutation = useCompletionMutation();
-  const handleCoachGoalsCreated = useCallback(async () => {
-    await refreshPlannerAfterCoachGoalsCreated({
-      handlePlannerMutation,
-      loadContext,
-    });
-  }, [handlePlannerMutation, loadContext]);
-  const coachBindings: PlannerCoachBindings = buildPlannerCoachBindings({
+  const coach = useCalendarSurfaceCoachSession({
+    activeTab,
+    context,
+    entriesByDate,
+    effectivePreview,
+    effectiveDraftPolicy,
+    hasDraftSession,
+    handlePlannerMutation,
+    loadContext,
     refreshDraftPreview,
     applyPolicyReplanMoves,
     queueDraftMoveCommand,
@@ -601,24 +519,6 @@ export function CalendarSurface({
     draftSaveWindow,
     nonPublishablePreviewMessage,
   });
-  const coach = usePlannerCoach({
-    activeTab,
-    context,
-    entriesByDate,
-    effectivePreview,
-    effectiveDraftPolicy,
-    hasDraftSession,
-    onGoalsCreated: handleCoachGoalsCreated,
-    ...coachBindings,
-  });
-
-  const isValidIsoDate = (value: string) => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      return false;
-    }
-    const parsed = parse(value, "yyyy-MM-dd", new Date());
-    return isValid(parsed) && format(parsed, "yyyy-MM-dd") === value;
-  };
 
   const {
     draggingEntryKey,
@@ -653,37 +553,18 @@ export function CalendarSurface({
       refreshDraftPreview,
     });
 
-  const closeMoveDialog = () => {
-    setMoveDialogDay(null);
-    setMoveDialogSourceEntryKey("");
-  };
-
-  const { submitMoveDialog } = usePlannerMoveSessionDialog({
-    moveDialogDay,
-    effectiveMoveDialogSourceEntryKey,
-    moveDialogSourceOptions,
-    queueDraftMoveCommand,
-    isValidIsoDate,
-    closeMoveDialog,
-  });
-
-  const contractExpandedPreview = () => {
-    if (!expandedPreviewDay) {
-      return;
-    }
-    const day = expandedPreviewDay;
-    const dayCell = document.querySelector(
-      `[data-day-cell="true"][data-day="${day}"]`
-    );
-    if (dayCell instanceof HTMLElement) {
-      dayPreviewInteractions.openDayPreview({
-        day,
-        pinned: true,
-        target: dayCell,
-      });
-    }
-    setExpandedPreviewDay(null);
-  };
+  const { closeMoveDialog, submitMoveDialog, contractExpandedPreview } =
+    useCalendarSurfaceMoveSession({
+      moveDialogDay,
+      setMoveDialogDay,
+      setMoveDialogSourceEntryKey,
+      effectiveMoveDialogSourceEntryKey,
+      moveDialogSourceOptions,
+      queueDraftMoveCommand,
+      expandedPreviewDay,
+      setExpandedPreviewDay,
+      dayPreviewInteractions,
+    });
 
   const {
     saveLoading,
@@ -714,433 +595,16 @@ export function CalendarSurface({
     });
 
   const showBlockingLoading = loading && context === null;
-  const navigateToOpenInstance = useCallback(
-    (target: OpenGoalInstance | undefined) => {
-      if (!target) {
-        return;
-      }
-      setSelectedEventEntryKey(target.entryKey);
-      setLocalSelectedDay(target.day);
-      if (viewMode === "month") {
-        onMonthChange(target.day.slice(0, 7), "replace");
-        return;
-      }
-      onSelectedDayChange(target.day, "replace", viewMode);
-    },
-    [onMonthChange, onSelectedDayChange, viewMode]
-  );
-  const resolveMonthScopedTopRowDay = useCallback(() => {
-    const container = multiMonthGridScrollRef.current;
-    return container ? getTopVisibleCalendarDay(container) : null;
-  }, []);
-  const resolveWeekStartDay = useCallback(
-    (day: string) => {
-      const parsedDay = parse(day, "yyyy-MM-dd", new Date());
-      if (!isValid(parsedDay)) {
-        return day;
-      }
-      const weekdayOffset = (parsedDay.getDay() - setupWeekStartsOn + 7) % 7;
-      return format(addDays(parsedDay, -weekdayOffset), "yyyy-MM-dd");
-    },
-    [setupWeekStartsOn]
-  );
-  const resolveWeekdayAlignedAnchorDay = useCallback(
-    (rowStartDay: string) => {
-      const rowWeekDays = Array.from({ length: 7 }, (_, index) =>
-        format(addDays(parse(rowStartDay, "yyyy-MM-dd", new Date()), index), "yyyy-MM-dd")
-      );
-      const parsedToday = parse(calendarToday, "yyyy-MM-dd", new Date());
-      if (!isValid(parsedToday)) {
-        return rowWeekDays[0] ?? rowStartDay;
-      }
-      const weekdayOffset = (parsedToday.getDay() - setupWeekStartsOn + 7) % 7;
-      return rowWeekDays[weekdayOffset] ?? rowWeekDays[0] ?? rowStartDay;
-    },
-    [calendarToday, setupWeekStartsOn]
-  );
-  const monthScrollAnchorDay = useMemo(() => {
-    if (!month || !isMonthScopedCalendarViewMode(viewMode)) {
-      return null;
-    }
-    const preservedTopRowDay = pendingMonthAlignment?.rowStartDay;
-    if (preservedTopRowDay && cellByDate.has(preservedTopRowDay)) {
-      return preservedTopRowDay;
-    }
-    for (const day of focusedWeekDays) {
-      if (cellByDate.has(day)) {
-        return day;
-      }
-    }
-    if (cellByDate.has(calendarToday)) {
-      return calendarToday;
-    }
-    return cells[0]?.date ?? null;
-  }, [
-    calendarToday,
-    cellByDate,
-    cells,
-    focusedWeekDays,
-    month,
-    pendingMonthAlignment?.rowStartDay,
-    viewMode,
-  ]);
-  const syncTodayShortcutVisibility = useCallback(() => {
-    let shouldShowShortcut = false;
-    if (viewMode === "month") {
-      const verticalContainer = multiMonthGridScrollRef.current;
-      const horizontalContainer = calendarGridViewportRef.current;
-      if (!cellByDate.has(calendarToday)) {
-        shouldShowShortcut = true;
-      } else if (!verticalContainer || !horizontalContainer) {
-        shouldShowShortcut = true;
-      } else {
-        const verticallyVisible = isCalendarDayVisible(verticalContainer, calendarToday, {
-          checkHorizontal: false,
-        });
-        const horizontallyVisible = isCalendarDayVisible(horizontalContainer, calendarToday, {
-          checkVertical: false,
-        });
-        shouldShowShortcut = !(verticallyVisible && horizontallyVisible);
-      }
-    } else if (viewMode === "week") {
-      const horizontalContainer = calendarGridViewportRef.current;
-      shouldShowShortcut = !(
-        focusedWeekDays.includes(calendarToday) &&
-        horizontalContainer &&
-        isCalendarDayVisible(horizontalContainer, calendarToday, {
-          checkVertical: false,
-        })
-      );
-    } else if (viewMode === "day" || viewMode === "three_day") {
-      const stripContainer = rollingWeekStripRef.current;
-      shouldShowShortcut = !(
-        focusedWeekDays.includes(calendarToday) &&
-        stripContainer &&
-        isCalendarDayVisible(stripContainer, calendarToday, {
-          checkVertical: false,
-        })
-      );
-    }
-    setShowTodayShortcut((current) =>
-      current === shouldShowShortcut ? current : shouldShowShortcut
-    );
-  }, [calendarToday, cellByDate, focusedWeekDays, viewMode]);
-  const queueTodayShortcutVisibilitySync = useCallback(() => {
-    if (todayVisibilityFrameRef.current !== null) {
-      return;
-    }
-    todayVisibilityFrameRef.current = window.requestAnimationFrame(() => {
-      todayVisibilityFrameRef.current = null;
-      syncTodayShortcutVisibility();
-    });
-  }, [syncTodayShortcutVisibility]);
-  const handleMonthScopedGridScroll = useCallback(() => {
-    if (!isMonthScopedCalendarViewMode(viewMode)) {
-      return;
-    }
-    const topRowDay = resolveMonthScopedTopRowDay();
-    if (topRowDay) {
-      monthScrollAnchorDayRef.current = topRowDay;
-    }
-    queueTodayShortcutVisibilitySync();
-  }, [queueTodayShortcutVisibilitySync, resolveMonthScopedTopRowDay, viewMode]);
-  const handleCalendarGridViewportScroll = useCallback(() => {
-    queueTodayShortcutVisibilitySync();
-  }, [queueTodayShortcutVisibilitySync]);
-  const jumpToToday = useCallback(() => {
-    setDayPreview(null);
-    monthScrollAlignmentKeyRef.current = null;
-    calendarHorizontalAlignmentKeyRef.current = null;
-    if (isMonthScopedCalendarViewMode(viewMode)) {
-      const todayRowStartDay = resolveWeekStartDay(calendarToday);
-      setPendingMonthAlignment({
-        rowStartDay: todayRowStartDay,
-        focusDay: calendarToday,
-      });
-      monthScrollAnchorDayRef.current = todayRowStartDay;
-      onMonthChange(calendarToday.slice(0, 7), "replace");
-      queueTodayShortcutVisibilitySync();
-      return;
-    }
-    onSelectedDayChange(calendarToday, "replace", viewMode);
-  }, [
-    calendarToday,
-    onMonthChange,
-    onSelectedDayChange,
+  const layoutProps = useCalendarSurfacePresentation({
+    saveLoading,
+    jumpToTodayBase,
     queueTodayShortcutVisibilitySync,
-    resolveWeekStartDay,
-    viewMode,
-  ]);
-  const moveViewWindow = (direction: -1 | 1) => {
-    if (isMonthScopedCalendarViewMode(viewMode)) {
-      if (!month) {
-        return;
-      }
-      onMonthChange(
-        format(addMonths(parseMonth(month), direction), "yyyy-MM"),
-        "push"
-      );
-      return;
-    }
-    const baseDay = parse(resolvedFocusedDay, "yyyy-MM-dd", new Date());
-    const nextDay = format(addDays(baseDay, direction * stepDays), "yyyy-MM-dd");
-    onSelectedDayChange(nextDay, "push", viewMode);
-  };
-  const setCalendarViewMode = (nextViewMode: PlannerCalendarViewMode) => {
-    if (nextViewMode === viewMode) {
-      return;
-    }
-    setDayPreview(null);
-    const monthScopedTopRowDay = isMonthScopedCalendarViewMode(viewMode)
-      ? resolveMonthScopedTopRowDay() ?? monthScrollAnchorDayRef.current
-      : null;
-    const rowAnchorDay =
-      monthScopedTopRowDay ??
-      focusedWeekDays[0] ??
-      focusedDay;
-    const anchorDay = resolveWeekdayAlignedAnchorDay(rowAnchorDay);
-    if (isMonthScopedCalendarViewMode(nextViewMode)) {
-      setPendingMonthAlignment({
-        rowStartDay: rowAnchorDay,
-        focusDay: anchorDay,
-      });
-    } else {
-      setPendingMonthAlignment(null);
-    }
-    monthScrollAlignmentKeyRef.current = null;
-    calendarHorizontalAlignmentKeyRef.current = null;
-    onSelectedDayChange(anchorDay, "push", nextViewMode);
-  };
-  const alignRollingWeekStripToFocusedDay = useCallback(() => {
-    if (viewMode !== "day" && viewMode !== "three_day") {
-      return;
-    }
-    const strip = rollingWeekStripRef.current;
-    if (!strip) {
-      return;
-    }
-    const weekGrid = strip.querySelector<HTMLElement>('[data-rolling-week-grid="cells"]');
-    const firstCell = weekGrid?.firstElementChild;
-    if (!(firstCell instanceof HTMLElement) || !weekGrid) {
-      return;
-    }
-    const focusedDayIndex = focusedWeekDays.indexOf(focusedDay);
-    if (focusedDayIndex < 0) {
-      return;
-    }
-    const gridStyles = window.getComputedStyle(weekGrid);
-    const columnGap = Number.parseFloat(gridStyles.columnGap || "0");
-    const columnWidth = firstCell.getBoundingClientRect().width;
-    if (!Number.isFinite(columnWidth) || columnWidth <= 0) {
-      return;
-    }
-    const visibleColumnCount = Math.max(
-      1,
-      Math.round((strip.clientWidth + columnGap) / (columnWidth + columnGap))
-    );
-    const leftMostVisibleIndex = Math.max(
-      0,
-      Math.min(
-        focusedDayIndex - Math.floor(visibleColumnCount / 2),
-        Math.max(0, focusedWeekDays.length - visibleColumnCount)
-      )
-    );
-    strip.scrollTo({
-      left: leftMostVisibleIndex * (columnWidth + columnGap),
-      behavior: "auto",
-    });
-    queueTodayShortcutVisibilitySync();
-  }, [focusedDay, focusedWeekDays, queueTodayShortcutVisibilitySync, viewMode]);
-  useEffect(() => {
-    if (viewMode !== "day" && viewMode !== "three_day") {
-      return;
-    }
-    const frame = window.requestAnimationFrame(alignRollingWeekStripToFocusedDay);
-    window.addEventListener("resize", alignRollingWeekStripToFocusedDay);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("resize", alignRollingWeekStripToFocusedDay);
-    };
-  }, [alignRollingWeekStripToFocusedDay, viewMode]);
-  useEffect(() => {
-    if (!isMonthScopedCalendarViewMode(viewMode)) {
-      monthScrollAlignmentKeyRef.current = null;
-      return;
-    }
-    if (!context) {
-      return;
-    }
-    const verticalContainer = multiMonthGridScrollRef.current;
-    const horizontalContainer = calendarGridViewportRef.current;
-    const rowStartDay =
-      pendingMonthAlignment?.rowStartDay ?? monthScrollAnchorDay;
-    const focusDay =
-      pendingMonthAlignment?.focusDay ??
-      (rowStartDay ? resolveWeekdayAlignedAnchorDay(rowStartDay) : null);
-    if (
-      !verticalContainer ||
-      !horizontalContainer ||
-      !rowStartDay ||
-      !focusDay ||
-      !month
-    ) {
-      return;
-    }
-    const verticalAlignmentKey = `${viewMode}:${month}:${rowStartDay}`;
-    const horizontalAlignmentKey = `${viewMode}:${month}:${focusDay}`;
-    if (
-      !pendingMonthAlignment &&
-      monthScrollAlignmentKeyRef.current === verticalAlignmentKey &&
-      calendarHorizontalAlignmentKeyRef.current === horizontalAlignmentKey
-    ) {
-      return;
-    }
-    const frame = window.requestAnimationFrame(() => {
-      const rowStartCell = verticalContainer.querySelector<HTMLElement>(
-        `[data-day-cell="true"][data-day="${rowStartDay}"]`
-      );
-      const focusCell = horizontalContainer.querySelector<HTMLElement>(
-        `[data-day-cell="true"][data-day="${focusDay}"]`
-      );
-      if (!rowStartCell || !focusCell) {
-        return;
-      }
-      monthScrollAlignmentKeyRef.current = verticalAlignmentKey;
-      calendarHorizontalAlignmentKeyRef.current = horizontalAlignmentKey;
-      monthScrollAnchorDayRef.current = rowStartDay;
-      const nextTop = getCalendarTargetScrollTop(verticalContainer, rowStartCell);
-      if (typeof verticalContainer.scrollTo === "function") {
-        verticalContainer.scrollTo({
-          top: nextTop,
-          behavior: "auto",
-        });
-      } else {
-        verticalContainer.scrollTop = nextTop;
-      }
-      const nextLeft = getCalendarTargetScrollLeft(horizontalContainer, focusCell);
-      if (typeof horizontalContainer.scrollTo === "function") {
-        horizontalContainer.scrollTo({
-          left: nextLeft,
-          behavior: "auto",
-        });
-      } else {
-        horizontalContainer.scrollLeft = nextLeft;
-      }
-      if (pendingMonthAlignment) {
-        setPendingMonthAlignment((current) =>
-          current === pendingMonthAlignment ? null : current
-        );
-      }
-      queueTodayShortcutVisibilitySync();
-    });
-    return () => {
-      window.cancelAnimationFrame(frame);
-    };
-  }, [
-    queueTodayShortcutVisibilitySync,
-    context,
-    month,
-    monthScrollAnchorDay,
-    pendingMonthAlignment,
-    resolveWeekdayAlignedAnchorDay,
-    viewMode,
-  ]);
-  useEffect(() => {
-    if (viewMode === "month") {
-      return;
-    }
-    if (viewMode !== "week") {
-      calendarHorizontalAlignmentKeyRef.current = null;
-      return;
-    }
-    const viewport = calendarGridViewportRef.current;
-    if (!viewport) {
-      return;
-    }
-    const focusDay = focusedWeekDays.includes(calendarToday)
-      ? calendarToday
-      : focusedDay;
-    if (!focusDay) {
-      return;
-    }
-    const alignmentKey = `${viewMode}:${month ?? "none"}:${focusDay}`;
-    if (calendarHorizontalAlignmentKeyRef.current === alignmentKey) {
-      return;
-    }
-    const frame = window.requestAnimationFrame(() => {
-      const focusCell = viewport.querySelector<HTMLElement>(
-        `[data-day-cell="true"][data-day="${focusDay}"]`
-      );
-      if (!focusCell) {
-        return;
-      }
-      calendarHorizontalAlignmentKeyRef.current = alignmentKey;
-      const nextLeft = getCalendarTargetScrollLeft(viewport, focusCell);
-      if (typeof viewport.scrollTo === "function") {
-        viewport.scrollTo({
-          left: nextLeft,
-          behavior: "auto",
-        });
-      } else {
-        viewport.scrollLeft = nextLeft;
-      }
-      queueTodayShortcutVisibilitySync();
-    });
-    return () => {
-      window.cancelAnimationFrame(frame);
-    };
-  }, [
-    calendarToday,
-    focusedDay,
-    focusedWeekDays,
-    month,
-    queueTodayShortcutVisibilitySync,
-    viewMode,
-  ]);
-  useEffect(() => {
-    queueTodayShortcutVisibilitySync();
-  }, [queueTodayShortcutVisibilitySync, month, viewMode, focusedDay, focusedWeekDays, cells]);
-  useEffect(() => {
-    const handleResize = () => {
-      queueTodayShortcutVisibilitySync();
-    };
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [queueTodayShortcutVisibilitySync]);
-  useEffect(() => {
-    if (viewMode !== "day" && viewMode !== "three_day") {
-      return;
-    }
-    const strip = rollingWeekStripRef.current;
-    if (!strip) {
-      return;
-    }
-    const handleStripScroll = () => {
-      queueTodayShortcutVisibilitySync();
-    };
-    strip.addEventListener("scroll", handleStripScroll, { passive: true });
-    return () => {
-      strip.removeEventListener("scroll", handleStripScroll);
-    };
-  }, [queueTodayShortcutVisibilitySync, viewMode]);
-  useEffect(
-    () => () => {
-      if (todayVisibilityFrameRef.current !== null) {
-        window.cancelAnimationFrame(todayVisibilityFrameRef.current);
-        todayVisibilityFrameRef.current = null;
-      }
-    },
-    []
-  );
-  const saveButtonLabel = saveLoading ? "Saving..." : "Save plan";
-  const renderCalendarDayCell = usePlannerCalendarDayCellRenderer({
-    viewMode,
+    moveViewWindowBase,
+    resolvedFocusedDay,
+    stepDays,
     expandedMonthRows,
     draggingEntryKey,
     calendarToday,
-    focusedDay,
     plannerReadOnly,
     onSelectedDayChange,
     setLocalSelectedDay,
@@ -1149,359 +613,128 @@ export function CalendarSurface({
     canMutateEntryOnDay,
     getOrderedEntriesForDay,
     getCompletionFactMarkersForDay,
-    visibleCells: viewMode === "month" ? cells : focusedWeekCells,
+    cells,
+    focusedWeekCells,
     dayPreviewInteractions,
+    rollingWeekStripRef,
+    focusedWeekDays,
+    setupRestWeekdays,
+    setSetupRestWeekdays,
+    setupLoading,
+    recoverLoading,
+    canRecoverPastSessions,
+    rebuildBlockedMessage,
+    fullResetLoading,
+    submitSetup,
+    recoverPastSessions,
+    rebuildSchedule,
+    resetPlanFully,
+    updateDraftLabel,
+    updateDraftScheduledDate,
+    updateDraftScheduledTimeOverride,
+    toggleItemLock,
+    navigateToOpenInstance,
+    selectedGoalOpenInstances,
+    selectedGoalOpenInstanceIndex,
+    hasPlannerWarnings,
+    warningsDismissed,
+    setWarningsDismissed,
+    showBlockingLoading: loading && context === null,
+    error,
+    plannerWarningBannerCopy,
+    warningsOpen,
+    setWarningsOpen,
+    unplaceableGoalSummaries,
+    invalidLockGoalCount,
+    capacityWarningGoalCount,
+    totalUnplacedCount,
+    warningSuggestedNextSteps,
+    eligibilityNotices,
+    canResetPlan,
+    resetLoading,
+    loading,
+    resetPlan,
+    setSettingsOpen,
+    hasDraftSession,
+    canShowSaveAction,
+    draftSaveBlockedMessage,
+    context,
+    draftSaveWindow,
+    hasUnsavedPlannerChanges,
+    draftSaveBlocked,
+    viewMode,
+    searchQuery,
+    savePlan,
+    discardDraftChanges,
+    setCalendarViewMode,
+    setFiltersOpen,
+    setSearchQuery,
+    partnerOverlayError,
+    month,
+    previousWindowAriaLabel,
+    nextWindowAriaLabel,
+    fixedViewHeadingWidthCh,
+    viewHeading,
+    showTodayShortcut,
+    setExpandedMonthRows,
+    getDragEntryLabel,
+    getDragDayLabel,
+    renderEntryDragOverlay,
+    handleDndEntryDragStart,
+    handleDndEntryDragEnd,
+    handleDndEntryDragCancel,
+    focusedDay,
+    focusedDayEntries,
+    focusedDayCompletionFactMarkers,
+    mutationLoadingKey,
+    canMutatePlanItems,
+    toggleDateFact,
+    pointerPressActiveRef,
+    calendarGridViewportRef,
+    handleCalendarGridViewportScroll,
+    weekdayLabels,
+    multiMonthGridScrollRef,
+    handleMonthScopedGridScroll,
+    dayPreview,
+    dayPreviewRef,
+    pointerInsideDayPreviewRef,
+    previewDayEntries,
+    previewDayCompletionFactMarkers,
+    openMoveDialogForDay,
+    setExpandedPreviewDay,
+    clearHoverPreviewTimer,
+    clearHoverPreviewCloseTimer,
+    coach,
+    expandedPreviewDay,
+    expandedPreviewEntries,
+    expandedPreviewCompletionFactMarkers,
+    contractExpandedPreview,
+    moveDialogDay,
+    effectiveMoveDialogSourceEntryKey,
+    moveDialogSourceOptions,
+    closeMoveDialog,
+    setMoveDialogSourceEntryKey,
+    submitMoveDialog,
+    selectedEventEntry,
+    selectedEventLinkedTargets,
+    selectedEventDraftEdit,
+    selectedEventBaselineUnit,
+    selectedEventDraftScheduledDate,
+    selectedEventDraftTimeInputValue,
+    canNavigateToFirstOpenInstance,
+    canNavigateToPreviousOpenInstance,
+    canNavigateToNextOpenInstance,
+    canNavigateToLastOpenInstance,
+    filtersOpen,
+    categoryFilter,
+    setCategoryFilter,
+    categoryOptions,
+    effectiveEndMonthFilter,
+    setEndMonthFilter,
+    endMonthOptions,
+    settingsOpen,
+    rebuildLoading,
   });
-  const rollingWeekStrip = (
-    <PlannerRollingWeekStrip
-      rollingWeekStripRef={rollingWeekStripRef}
-      viewMode={viewMode}
-      focusedWeekDays={focusedWeekDays}
-      focusedWeekCells={focusedWeekCells}
-      renderCalendarDayCell={renderCalendarDayCell}
-    />
-  );
 
-  const plannerSettingsForm = (
-    <PlannerSettingsForm
-      setupRestWeekdays={setupRestWeekdays}
-      onSetupRestWeekdaysChange={setSetupRestWeekdays}
-      setupLoading={setupLoading}
-      plannerReadOnly={plannerReadOnly}
-      recoverLoading={recoverLoading}
-      loading={loading}
-      saveLoading={saveLoading}
-      canRecoverPastSessions={canRecoverPastSessions}
-      canResetPlan={canResetPlan}
-      resetLoading={resetLoading}
-      rebuildLoading={rebuildLoading}
-      hasDraftSession={hasDraftSession}
-      canShowSaveAction={canShowSaveAction}
-      rebuildBlockedMessage={rebuildBlockedMessage}
-      fullResetLoading={fullResetLoading}
-      onSaveSettings={() => {
-        void submitSetup();
-      }}
-      onRecover={() => {
-        void recoverPastSessions();
-      }}
-      onUnlockAllGoals={resetPlan}
-      onRefreshCalendar={() => {
-        void rebuildSchedule();
-      }}
-      onFullReset={() => {
-        void resetPlanFully();
-      }}
-    />
-  );
-  const eventDetailCallbacks = useMemo<PlannerEventDetailDialogCallbacks>(
-    () => ({
-      onOpenChange: (open) => {
-        if (!open) {
-          setSelectedEventEntryKey(null);
-          setLocalSelectedDay(null);
-        }
-      },
-      onUpdateDraftLabel: updateDraftLabel,
-      onUpdateDraftScheduledDate: updateDraftScheduledDate,
-      onUpdateDraftScheduledTimeOverride: updateDraftScheduledTimeOverride,
-      onToggleItemLock: (entry) => {
-        void toggleItemLock(entry);
-      },
-      onNavigateToFirstOpenInstance: () => {
-        navigateToOpenInstance(selectedGoalOpenInstances[0]);
-      },
-      onNavigateToPreviousOpenInstance: () => {
-        if (selectedGoalOpenInstanceIndex <= 0) {
-          return;
-        }
-        navigateToOpenInstance(
-          selectedGoalOpenInstances[selectedGoalOpenInstanceIndex - 1]
-        );
-      },
-      onNavigateToNextOpenInstance: () => {
-        if (
-          selectedGoalOpenInstanceIndex < 0 ||
-          selectedGoalOpenInstanceIndex >= selectedGoalOpenInstances.length - 1
-        ) {
-          return;
-        }
-        navigateToOpenInstance(
-          selectedGoalOpenInstances[selectedGoalOpenInstanceIndex + 1]
-        );
-      },
-      onNavigateToLastOpenInstance: () => {
-        navigateToOpenInstance(
-          selectedGoalOpenInstances[selectedGoalOpenInstances.length - 1]
-        );
-      },
-    }),
-    [
-      navigateToOpenInstance,
-      selectedGoalOpenInstanceIndex,
-      selectedGoalOpenInstances,
-      toggleItemLock,
-      updateDraftLabel,
-      updateDraftScheduledDate,
-      updateDraftScheduledTimeOverride,
-    ]
-  );
-
-  return (
-    <div className="space-y-4">
-      <PlannerWarningsPanel
-        hasPlannerWarnings={hasPlannerWarnings}
-        warningsDismissed={warningsDismissed}
-        showBlockingLoading={showBlockingLoading}
-        error={error}
-        plannerWarningBannerCopy={plannerWarningBannerCopy}
-        warningsOpen={warningsOpen}
-        setWarningsOpen={setWarningsOpen}
-        onDismissBanner={() => setWarningsDismissed(true)}
-        unplaceableGoalSummaries={unplaceableGoalSummaries}
-        invalidLockGoalCount={invalidLockGoalCount}
-        capacityWarningGoalCount={capacityWarningGoalCount}
-        totalUnplacedCount={totalUnplacedCount}
-        warningSuggestedNextSteps={warningSuggestedNextSteps}
-        eligibilityNotices={eligibilityNotices}
-        plannerReadOnly={plannerReadOnly}
-        canResetPlan={canResetPlan}
-        resetLoading={resetLoading}
-        loading={loading}
-        onUnlockAllGoals={() => {
-          setWarningsOpen(false);
-          void resetPlan();
-        }}
-        onOpenPlannerSettings={() => {
-          setWarningsOpen(false);
-          setSettingsOpen(true);
-        }}
-      />
-      <PlannerCalendarToolbar
-        hasDraftSession={hasDraftSession}
-        plannerReadOnly={plannerReadOnly}
-        canShowSaveAction={canShowSaveAction}
-        saveButtonLabel={saveButtonLabel}
-        draftSaveBlockedMessage={draftSaveBlockedMessage}
-        saveDisabled={
-          saveLoading ||
-          loading ||
-          !context ||
-          !draftSaveWindow ||
-          !hasUnsavedPlannerChanges ||
-          draftSaveBlocked
-        }
-        undoDisabled={saveLoading || loading}
-        loading={loading}
-        viewMode={viewMode}
-        canOpenSettings={Boolean(context?.preferences)}
-        linkedTargetDetails={eligibilityNotices.linkedTargetDetails}
-        searchQuery={searchQuery}
-        onSave={savePlan}
-        onDiscardDraftChanges={discardDraftChanges}
-        onViewModeChange={setCalendarViewMode}
-        onOpenFilters={() => setFiltersOpen(true)}
-        onOpenSettings={() => setSettingsOpen(true)}
-        onSearchQueryChange={setSearchQuery}
-      />
-
-      {partnerOverlayError ? (
-        <p className="text-xs text-muted-foreground">{partnerOverlayError}</p>
-      ) : null}
-      {showBlockingLoading ? (
-        <LoadingCard
-          title="Loading planner context..."
-          description="Preparing your schedule and completion state."
-        />
-      ) : error ? (
-        <div className="rounded-xl border bg-card p-6 text-sm text-destructive">
-          {error}
-        </div>
-      ) : month ? (
-        <>
-          <PlannerCalendarBoard
-            loading={loading}
-            viewMode={viewMode}
-            previousWindowAriaLabel={previousWindowAriaLabel}
-            nextWindowAriaLabel={nextWindowAriaLabel}
-            fixedViewHeadingWidthCh={fixedViewHeadingWidthCh}
-            viewHeading={viewHeading}
-            showTodayShortcut={showTodayShortcut}
-            expandedMonthRows={expandedMonthRows}
-            onMoveViewWindow={moveViewWindow}
-            onJumpToToday={jumpToToday}
-            onToggleExpandedMonthRows={() =>
-              setExpandedMonthRows((current) => !current)
-            }
-            getDragEntryLabel={getDragEntryLabel}
-            getDragDayLabel={getDragDayLabel}
-            renderEntryDragOverlay={renderEntryDragOverlay}
-            onEntryDragStart={handleDndEntryDragStart}
-            onEntryDragEnd={handleDndEntryDragEnd}
-            onEntryDragCancel={handleDndEntryDragCancel}
-            rollingWeekStrip={rollingWeekStrip}
-            focusedDay={focusedDay}
-            focusedDayEntries={focusedDayEntries}
-            focusedDayCompletionFactMarkers={focusedDayCompletionFactMarkers}
-            mutationLoadingKey={mutationLoadingKey}
-            asOfDate={context?.asOfDate ?? null}
-            canMutatePlanItems={canMutatePlanItems}
-            canMutateEntryOnDay={canMutateEntryOnDay}
-            onFocusedDayEntryOpen={(entryKey) => {
-              const entry = focusedDayEntries.find(
-                (candidate) => candidate.key === entryKey
-              );
-              if (!entry || !canMutateEntryOnDay(entry, focusedDay)) {
-                return;
-              }
-              setLocalSelectedDay(focusedDay);
-              setSelectedEventEntryKey(entry.key);
-            }}
-            onToggleCompletion={(entry, day, sourceElement) => {
-              void toggleDateFact(entry, day, sourceElement);
-            }}
-            onEntryPointerStart={(immovable) => {
-              void immovable;
-              pointerPressActiveRef.current = true;
-            }}
-            onEntryPointerEnd={() => {
-              pointerPressActiveRef.current = false;
-            }}
-            calendarGridViewportRef={calendarGridViewportRef}
-            onCalendarGridViewportScroll={handleCalendarGridViewportScroll}
-            weekdayLabels={weekdayLabels}
-            multiMonthGridScrollRef={multiMonthGridScrollRef}
-            onMonthScopedGridScroll={handleMonthScopedGridScroll}
-            cells={cells}
-            renderCalendarDayCell={renderCalendarDayCell}
-            focusedWeekCells={focusedWeekCells}
-            dayPreview={dayPreview}
-            dayPreviewRef={dayPreviewRef}
-            previewDayEntries={previewDayEntries}
-            previewDayCompletionFactMarkers={previewDayCompletionFactMarkers}
-            onPreviewEntryOpen={(entryKey, day) => {
-              const entry = previewDayEntries.find(
-                (candidate) => candidate.key === entryKey
-              );
-              if (!entry || !canMutateEntryOnDay(entry, day)) {
-                return;
-              }
-              setLocalSelectedDay(day);
-              setSelectedEventEntryKey(entry.key);
-            }}
-            onPreviewToggleCompletion={(entry, day, sourceElement) => {
-              if (!canMutateEntryOnDay(entry, day)) {
-                return;
-              }
-              void toggleDateFact(entry, day, sourceElement);
-            }}
-            onMoveDay={openMoveDialogForDay}
-            onExpandPreviewDay={(day) => {
-              setExpandedPreviewDay(day);
-              setDayPreview(null);
-            }}
-            onCloseDayPreview={() => setDayPreview(null)}
-            onDayPreviewPointerDownCapture={() => {
-              setDayPreview((current) =>
-                current && !current.pinned ? { ...current, pinned: true } : current
-              );
-            }}
-            onDayPreviewMouseEnter={() => {
-              pointerInsideDayPreviewRef.current = true;
-              clearHoverPreviewTimer();
-              clearHoverPreviewCloseTimer();
-            }}
-            onDayPreviewMouseLeave={() => {
-              pointerInsideDayPreviewRef.current = false;
-              if (dayPreview?.pinned) {
-                return;
-              }
-              clearHoverPreviewTimer();
-              clearHoverPreviewCloseTimer();
-              setDayPreview(null);
-            }}
-          />
-
-          <PlannerCoachPanel coach={coach} />
-        </>
-      ) : null}
-
-      <PlannerCalendarOverlays
-        renderMonthScopedOverlays={Boolean(month)}
-        expandedPreviewDay={expandedPreviewDay}
-        expandedPreviewEntries={expandedPreviewEntries}
-        expandedPreviewCompletionFactMarkers={expandedPreviewCompletionFactMarkers}
-        mutationLoadingKey={mutationLoadingKey}
-        asOfDate={context?.asOfDate ?? null}
-        canMutatePlanItems={canMutatePlanItems}
-        canMutateEntryOnDay={canMutateEntryOnDay}
-        onExpandedPreviewOpenChange={(open) => {
-          if (!open) {
-            setExpandedPreviewDay(null);
-          }
-        }}
-        onExpandedPreviewMoveDay={openMoveDialogForDay}
-        onExpandedPreviewContract={contractExpandedPreview}
-        onExpandedPreviewEntryOpen={(entryKey, day) => {
-          const entry = expandedPreviewEntries.find(
-            (candidate) => candidate.key === entryKey
-          );
-          if (!entry || !canMutateEntryOnDay(entry, day)) {
-            return;
-          }
-          setExpandedPreviewDay(null);
-          setLocalSelectedDay(day);
-          setSelectedEventEntryKey(entry.key);
-        }}
-        onExpandedPreviewToggleCompletion={(entry, day, sourceElement) => {
-          if (!canMutateEntryOnDay(entry, day)) {
-            return;
-          }
-          void toggleDateFact(entry, day, sourceElement);
-        }}
-        onExpandedPreviewEntryPointerStart={(immovable) => {
-          void immovable;
-          pointerPressActiveRef.current = true;
-        }}
-        onExpandedPreviewEntryPointerEnd={() => {
-          pointerPressActiveRef.current = false;
-        }}
-        moveDialogDay={moveDialogDay}
-        effectiveMoveDialogSourceEntryKey={effectiveMoveDialogSourceEntryKey}
-        moveDialogSourceOptions={moveDialogSourceOptions}
-        onMoveDialogOpenChange={(open) => {
-          if (!open) {
-            closeMoveDialog();
-          }
-        }}
-        onMoveDialogSourceChange={setMoveDialogSourceEntryKey}
-        onMoveDialogCancel={closeMoveDialog}
-        onMoveDialogSubmit={submitMoveDialog}
-        selectedEventEntry={selectedEventEntry}
-        selectedEventLinkedTargets={selectedEventLinkedTargets}
-        goalTitles={context?.goalTitles ?? {}}
-        scopeMonth={context?.scopeMonth ?? month ?? "1970-01"}
-        selectedEventDraftEdit={selectedEventDraftEdit}
-        selectedEventBaselineUnit={selectedEventBaselineUnit}
-        selectedEventDraftScheduledDate={selectedEventDraftScheduledDate}
-        selectedEventDraftTimeInputValue={selectedEventDraftTimeInputValue}
-        canNavigateToFirstOpenInstance={canNavigateToFirstOpenInstance}
-        canNavigateToPreviousOpenInstance={canNavigateToPreviousOpenInstance}
-        canNavigateToNextOpenInstance={canNavigateToNextOpenInstance}
-        canNavigateToLastOpenInstance={canNavigateToLastOpenInstance}
-        eventDetailCallbacks={eventDetailCallbacks}
-        filtersOpen={filtersOpen}
-        onFiltersOpenChange={setFiltersOpen}
-        categoryFilter={categoryFilter}
-        onCategoryFilterChange={setCategoryFilter}
-        categoryOptions={categoryOptions}
-        endMonthFilter={effectiveEndMonthFilter}
-        onEndMonthFilterChange={setEndMonthFilter}
-        endMonthOptions={endMonthOptions}
-        settingsOpen={settingsOpen}
-        onSettingsOpenChange={setSettingsOpen}
-        plannerSettingsForm={plannerSettingsForm}
-      />
-    </div>
-  );
+  return <PlannerCalendarSurfaceLayout {...layoutProps} />;
 }
