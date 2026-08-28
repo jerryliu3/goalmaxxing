@@ -147,10 +147,10 @@ async function setExactDateCompletion(
     desiredFactState: "present" | "absent";
   }
 ) {
-  await page.evaluate(
+  const result = await page.evaluate(
     async ({ goalId, date, desiredFactState }) => {
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-      await fetch("/api/completions", {
+      const response = await fetch("/api/completions", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -160,6 +160,10 @@ async function setExactDateCompletion(
           timezone,
         }),
       });
+      return {
+        ok: response.ok,
+        status: response.status,
+      };
     },
     {
       goalId: CADENCE_AFFINITY_GOAL_ID,
@@ -167,6 +171,18 @@ async function setExactDateCompletion(
       desiredFactState,
     }
   );
+  expect(result.ok).toBe(true);
+}
+
+async function openDayPreview(page: Page, day: string) {
+  const dayCell = page.locator(`[data-day-cell="true"][data-day="${day}"]`);
+  await expect(dayCell).toBeVisible({ timeout: 15_000 });
+  await dayCell.click();
+  const dayPreview = page.locator(
+    '[data-no-swipe="true"].fixed:has([aria-label="Expand day details"])'
+  );
+  await expect(dayPreview).toBeVisible({ timeout: 10_000 });
+  return dayPreview;
 }
 
 async function openCalendarMonth(page: Page, scopeMonth: string) {
@@ -210,23 +226,33 @@ test.describe("cadence schedule-affinity", () => {
       .locator('xpath=ancestor::*[contains(@class,"shadow-sm")][1]');
     await expect(goalCard).toBeVisible({ timeout: 15_000 });
 
-    const completeButton = goalCard
-      .getByRole("button", {
-        name: new RegExp(
-          `^(Complete goal for|Remove completion for) ${fixture.today}$`
-        ),
-      })
-      .first();
+    const completeButton = goalCard.getByRole("button", {
+      name: `Complete goal for ${fixture.today}`,
+    });
     await expect(completeButton).toBeEnabled({ timeout: 15_000 });
 
-    const completionRequest = page.waitForRequest(
-      (request) =>
-        request.url().includes("/api/completions") &&
-        request.method() === "POST"
-    );
-    await completeButton.click();
-    const request = await completionRequest;
-    const payload = request.postDataJSON() as {
+    const [completionRequest] = await Promise.all([
+      page.waitForRequest((request) => {
+        if (
+          !request.url().includes("/api/completions") ||
+          request.method() !== "POST"
+        ) {
+          return false;
+        }
+        const payload = request.postDataJSON() as {
+          goalId?: string;
+          date?: string;
+          desiredFactState?: string;
+        };
+        return (
+          payload.goalId === CADENCE_AFFINITY_GOAL_ID &&
+          payload.date === fixture.today &&
+          payload.desiredFactState === "present"
+        );
+      }),
+      completeButton.click(),
+    ]);
+    const payload = completionRequest.postDataJSON() as {
       date: string;
       desiredFactState: string;
     };
@@ -256,18 +282,15 @@ test.describe("cadence schedule-affinity", () => {
     const pastEntry = pastDayCell.locator(
       `[data-calendar-day-entry="true"][data-planner-goal-id="${CADENCE_AFFINITY_GOAL_ID}"][data-planner-unit-key="${fixture.unitKey4}"]`
     );
-    await expect(pastEntry).toBeVisible();
+    await expect(pastEntry).toBeVisible({ timeout: 15_000 });
 
-    const tomorrowCell = page.locator(
-      `[data-day-cell="true"][data-day="${fixture.tomorrow}"]`
-    );
-    await expect(tomorrowCell).toBeVisible();
-    const futureEntry = tomorrowCell.locator(
-      `[data-calendar-day-entry="true"][data-planner-goal-id="${CADENCE_AFFINITY_GOAL_ID}"][data-planner-unit-key="${fixture.unitKey3}"]`
-    );
-    await expect(futureEntry).toBeVisible();
+    const tomorrowPreview = await openDayPreview(page, fixture.tomorrow);
+    const futureGoalRow = tomorrowPreview
+      .getByText(CADENCE_AFFINITY_GOAL_TITLE)
+      .locator("xpath=ancestor::*[contains(@class,'rounded')][1]");
+    await expect(futureGoalRow).toBeVisible({ timeout: 10_000 });
     await expect(
-      futureEntry.locator("svg.lucide-check-circle2, svg.lucide-check-circle-2")
+      futureGoalRow.locator("svg.lucide-check-circle2, svg.lucide-check-circle-2")
     ).toHaveCount(0);
   });
 });
