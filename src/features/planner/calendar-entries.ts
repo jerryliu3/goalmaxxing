@@ -1,3 +1,7 @@
+import type {
+  PlannerWorkUnitClassification,
+  PlannerWorkUnitCreditState,
+} from "@cadence/shared/planner/context";
 import {
   entryDisplayRank,
   getEntryGoalFirstTitle,
@@ -537,8 +541,8 @@ export function buildCoachSummaryWorkUnits(
         unitKey: entry.unitKey,
         label: entry.label,
         scheduledDate: day,
-        classification: entry.classification,
-        creditState: entry.creditState,
+        classification: entry.classification as PlannerWorkUnitClassification,
+        creditState: entry.creditState as PlannerWorkUnitCreditState,
       });
     }
   }

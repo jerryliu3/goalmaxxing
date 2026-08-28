@@ -21,6 +21,19 @@ export type EligibilityReason =
   | "horizon_too_long"
   | "target_exceeds_limit";
 
+export type PlannerWorkUnitClassification =
+  | "fulfilled"
+  | "open"
+  | "future"
+  | "historical_shortfall"
+  | "historical_miss"
+  | "satisfied_elsewhere";
+
+export type PlannerWorkUnitCreditState =
+  | "uncredited"
+  | "completed_as_scheduled"
+  | "completed_elsewhere";
+
 export interface PlannerWorkUnit {
   originalGoalId: string;
   requirementFingerprint?: string;
@@ -42,8 +55,8 @@ export interface PlannerWorkUnit {
   } | null;
   restEligible?: boolean;
   missPolicy?: "roll_forward" | "remain_missed";
-  classification: string;
-  creditState: string;
+  classification: PlannerWorkUnitClassification;
+  creditState: PlannerWorkUnitCreditState;
   creditedCompletionDate?: string | null;
   goalDefaultLocalTime?: string | null;
   scheduledTimeOverride?: string | null;
@@ -84,8 +97,8 @@ export interface PlannerActiveItemSnapshot {
   requirement_kind: "milestone_sequence" | "cadence" | "deadline_total";
   scheduled_date: string | null;
   original_scheduled_date?: string | null;
-  classification: string;
-  credit_state: string;
+  classification: PlannerWorkUnitClassification;
+  credit_state: PlannerWorkUnitCreditState;
   locked: boolean;
   revision: number;
   credited_completion_id: string | null;

@@ -58,7 +58,7 @@ function unit(overrides: Partial<PlannerWorkUnit>): PlannerWorkUnit {
     unitKey: "total:1",
     label: "Baseline",
     scheduledDate: "2026-08-31",
-    classification: "planned",
+    classification: "open",
     creditState: "uncredited",
     ...overrides,
   });

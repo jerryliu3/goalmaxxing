@@ -19,7 +19,7 @@ describe("applyCoachPatchesToMobileDraft", () => {
           unitKey: "total:1",
           scheduledDate: "2026-08-20",
           label: "Run",
-          classification: "scheduled",
+          classification: "open",
           creditState: "uncredited",
         },
       ],

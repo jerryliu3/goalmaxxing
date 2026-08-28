@@ -84,7 +84,7 @@ function unit(overrides: Partial<PlannerWorkUnit>): PlannerWorkUnit {
     unitKey: "total:1",
     label: "Baseline",
     scheduledDate: "2026-08-31",
-    classification: "planned",
+    classification: "open",
     creditState: "uncredited",
     ...overrides,
   });
@@ -1657,7 +1657,7 @@ describe("CalendarSurface characterization", () => {
           unitKey: "total:4",
           label: "Done",
           scheduledDate: "2026-09-04",
-          creditState: "completed",
+          creditState: "completed_as_scheduled",
         }),
         unit({
           originalGoalId: "goal-b",
@@ -1783,7 +1783,7 @@ describe("CalendarSurface characterization", () => {
           originalGoalId: "goal-a",
           unitKey: "total:1",
           scheduledDate: "2026-08-15",
-          classification: "planned",
+          classification: "open",
           creditState: "uncredited",
         }),
       ])
