@@ -52,6 +52,10 @@ import {
   indexCompletionsByGoalId,
 } from "@/lib/planner/linked-source-coverage";
 import type { PlannerBaseAssignment } from "@/lib/planner/work-units";
+import {
+  hydrateActivePlanItemsFromWorkUnits,
+  rebuildCompletionToUnitFromWorkUnits,
+} from "@/lib/planner/active-plan-reconciliation";
 import type { Database } from "@/lib/supabase/database.types";
 import type { createClient as createServerClient } from "@/lib/supabase/server";
 
@@ -473,13 +477,6 @@ async function loadActivePlanSnapshot(
   }
 
   const goalById = new Map(goals.map((goal) => [goal.id, goal]));
-  const completionByGoalDate = new Map<string, Completion>();
-  for (const completion of completions) {
-    completionByGoalDate.set(
-      `${completion.goal_id}:${completion.completed_on}`,
-      completion
-    );
-  }
 
   const activeGoalByGoalId = new Map<string, PlannerActiveGoalRow>();
   const requirementKindByGoalId = new Map<
@@ -488,7 +485,6 @@ async function loadActivePlanSnapshot(
   >();
   const items: PlannerActiveItemRow[] = [];
   const assignments: PlannerBaseAssignment[] = [];
-  const completionToUnit: Record<string, PlannerCompletionUnitIdentity> = {};
   for (const item of plannerItems) {
     const goal = goalById.get(item.goal_id);
     if (!goal) {
@@ -524,12 +520,6 @@ async function loadActivePlanSnapshot(
     if (!requirementKind) {
       continue;
     }
-    const completion = completionByGoalDate.get(
-      `${goal.id}:${item.scheduled_date}`
-    );
-    const creditState = completion
-      ? "completed_as_scheduled"
-      : "uncredited";
     const originalScheduledDate =
       item.original_scheduled_date ?? item.scheduled_date;
     items.push({
@@ -539,12 +529,12 @@ async function loadActivePlanSnapshot(
       requirement_kind: requirementKind,
       scheduled_date: item.scheduled_date,
       original_scheduled_date: originalScheduledDate,
-      classification: completion ? "fulfilled" : "open",
-      credit_state: creditState,
+      classification: "open",
+      credit_state: "uncredited",
       locked: item.locked,
       revision: 0,
-      credited_completion_id: completion?.id ?? null,
-      credited_completion_date: completion?.completed_on ?? null,
+      credited_completion_id: null,
+      credited_completion_date: null,
       scheduled_time_override: item.scheduled_time,
       effective_scheduled_local_time: item.scheduled_time,
     });
@@ -556,14 +546,6 @@ async function loadActivePlanSnapshot(
       locked: item.locked,
       scheduledTimeOverride: item.scheduled_time,
     });
-    if (completion) {
-      completionToUnit[completion.id] = {
-        goalId: goal.id,
-        requirementFingerprint: activeGoal.requirement_fingerprint,
-        unitKey: item.unit_key,
-        completedOn: completion.completed_on,
-      };
-    }
   }
 
   const timezone = preferences?.timezone ?? "UTC";
@@ -596,7 +578,7 @@ async function loadActivePlanSnapshot(
           left.goalId.localeCompare(right.goalId) ||
           left.unitKey.localeCompare(right.unitKey)
       ),
-      completionToUnit,
+      completionToUnit: {},
       issueCodes: [],
     },
   };
@@ -925,6 +907,30 @@ export async function loadPlannerContextPayload({
     asOfDate,
   });
 
+  const hydratedActivePlan = snapshot.activePlan
+    ? {
+        ...snapshot.activePlan,
+        items: hydrateActivePlanItemsFromWorkUnits(
+          snapshot.activePlan.items,
+          preview.workUnits,
+          new Map(
+            snapshot.activePlan.goals.map((goal) => [
+              goal.id,
+              goal.original_goal_id,
+            ])
+          )
+        ),
+        basePlan: snapshot.activePlan.basePlan
+          ? {
+              ...snapshot.activePlan.basePlan,
+              completionToUnit: rebuildCompletionToUnitFromWorkUnits(
+                preview.workUnits
+              ),
+            }
+          : snapshot.activePlan.basePlan,
+      }
+    : snapshot.activePlan;
+
   return {
     schemaVersion: "1" as const,
     scopeMonth,
@@ -944,7 +950,7 @@ export async function loadPlannerContextPayload({
           defaultPolicy: effectivePolicy,
         }
       : null,
-    activePlan: snapshot.activePlan,
+    activePlan: hydratedActivePlan,
     preview,
     staleness,
     unplaceableGoals: validUnplaceableGoals,

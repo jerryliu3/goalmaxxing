@@ -2,6 +2,7 @@ import type {
   CompletionControlDisabledReason,
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
+import { resolveSelectedDateState } from "@/lib/dates/day";
 import {
   resolveCompletionDispatch,
   type CompletionDispatchDecision,
@@ -41,9 +42,7 @@ export function getDateFactDispatchForEntry({
         : "deadline_total");
   const targetedRecurring =
     requirementKind === "deadline_total" || !entry.activeGoal;
-  const currentlyCredited =
-    entry.creditState !== "uncredited" ||
-    Boolean(entry.activeItem?.credited_completion_id);
+  const currentlyCredited = entry.creditState !== "uncredited";
   const desiredFactState = currentlyCredited ? "absent" : "present";
   const matchingItemState =
     entry.classification === "satisfied_elsewhere"
@@ -53,19 +52,12 @@ export function getDateFactDispatchForEntry({
         : entry.activeItem
           ? "actionable"
           : "none";
-  const selectedDateState =
-    selectedDate < asOfDate
-      ? "past"
-      : selectedDate > asOfDate
-        ? "future"
-        : "today";
-
   const decision = resolveCompletionDispatch({
     requirementKind,
     targetedRecurring,
     activePlanMembership: Boolean(entry.activeGoal),
     matchingItemState,
-    selectedDateState,
+    selectedDateState: resolveSelectedDateState(selectedDate, asOfDate),
     existingExactFact: currentlyCredited,
     desiredFactState,
   });
