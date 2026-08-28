@@ -105,7 +105,7 @@ export function projectChecklistGoalPresentation({
     lifetimeAchieved,
     isGreen,
     displayCompletionCount,
-    // Hide uses browsed selectedDate (not asOfDate); green/outcome use progress asOf summaries.
+    // Intentional: pass browsed selectedDate as shouldHideTargetAchievedGoal's asOfDate cutoff.
     shouldHideWhenCompletedFilterOff: shouldHideTargetAchievedGoal({
       goal,
       progress,

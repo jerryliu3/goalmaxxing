@@ -85,4 +85,41 @@ describe("checklist presentation", () => {
       })
     ).toBe(false);
   });
+
+  it("keeps achieved-day visible when selectedDate is the achievement day", () => {
+    const presentation = projectChecklistGoalPresentation({
+      goal: goal(),
+      completions: [fact("2026-08-12"), fact("2026-08-13")],
+      progress: {
+        goalId: "goal-1",
+        outcome: "achieved",
+        admissibleCompletionCount: 2,
+      } as ProgressContextSummary,
+      temporal: createChecklistTemporalContext({
+        selectedDate: "2026-08-13",
+        asOfDate: "2026-08-25",
+      }),
+    });
+
+    expect(presentation.shouldHideWhenCompletedFilterOff).toBe(false);
+    expect(presentation.isGreen).toBe(true);
+  });
+
+  it("hides using selectedDate cutoff even when asOfDate diverges", () => {
+    const presentation = projectChecklistGoalPresentation({
+      goal: goal(),
+      completions: [fact("2026-08-12"), fact("2026-08-13")],
+      progress: {
+        goalId: "goal-1",
+        outcome: "achieved",
+        admissibleCompletionCount: 2,
+      } as ProgressContextSummary,
+      temporal: createChecklistTemporalContext({
+        selectedDate: "2026-08-14",
+        asOfDate: "2026-08-13",
+      }),
+    });
+
+    expect(presentation.shouldHideWhenCompletedFilterOff).toBe(true);
+  });
 });
