@@ -3,6 +3,7 @@ import {
   isCompletionAdmissible,
 } from "@/lib/goals/admissible";
 import type { Completion, Goal } from "@/lib/goals/types";
+import { pickCadenceCreditUnit } from "@/lib/planner/cadence-credit-matching";
 import { compareCanonicalStrings } from "@/lib/planner/canonical";
 import {
   workUnitCanCreditDate,
@@ -104,6 +105,8 @@ export function reconcilePlannerCompletions({
       driftType: "inadmissible",
     }));
 
+  const unitByKey = new Map(units.map((unit) => [unit.unitKey, unit]));
+
   const credit = (unit: PlannerWorkUnit, completion: Completion) => {
     if (used.has(completion.id) || !admissibleById.has(completion.id)) {
       return;
@@ -119,27 +122,31 @@ export function reconcilePlannerCompletions({
     unit.creditedCompletionDate = completion.completed_on;
   };
 
+  const tryStickyCredit = (completion: Completion) => {
+    const previousIdentity = previousCompletionToUnit[completion.id];
+    if (
+      !previousIdentity ||
+      previousIdentity.goalId !== goal.id ||
+      previousIdentity.completedOn !== completion.completed_on
+    ) {
+      return false;
+    }
+    const unit = unitByKey.get(previousIdentity.unitKey);
+    if (
+      !unit ||
+      unit.creditedCompletionId !== null ||
+      unit.requirementFingerprint !== previousIdentity.requirementFingerprint ||
+      !workUnitCanCreditDate(unit, completion.completed_on)
+    ) {
+      return false;
+    }
+    credit(unit, completion);
+    return true;
+  };
+
   if (canUseDeadlineScheduleAnchoring) {
-    const unitByKey = new Map(units.map((unit) => [unit.unitKey, unit]));
     for (const completion of admissible) {
-      const previousIdentity = previousCompletionToUnit[completion.id];
-      if (
-        !previousIdentity ||
-        previousIdentity.goalId !== goal.id ||
-        previousIdentity.completedOn !== completion.completed_on
-      ) {
-        continue;
-      }
-      const unit = unitByKey.get(previousIdentity.unitKey);
-      if (
-        !unit ||
-        unit.creditedCompletionId !== null ||
-        unit.requirementFingerprint !== previousIdentity.requirementFingerprint ||
-        !workUnitCanCreditDate(unit, completion.completed_on)
-      ) {
-        continue;
-      }
-      credit(unit, completion);
+      tryStickyCredit(completion);
     }
   }
 
@@ -180,15 +187,24 @@ export function reconcilePlannerCompletions({
       factIndex += 1;
     }
   } else {
-    for (const unit of units) {
-      const match = admissible.find(
-        (completion) =>
-          !used.has(completion.id) &&
-          completion.completed_on >= unit.creditWindow.start &&
-          completion.completed_on <= unit.creditWindow.end
+    for (const completion of admissible) {
+      if (used.has(completion.id)) {
+        continue;
+      }
+      if (tryStickyCredit(completion)) {
+        continue;
+      }
+      const candidates = units.filter(
+        (unit) =>
+          unit.creditedCompletionId === null &&
+          workUnitCanCreditDate(unit, completion.completed_on)
       );
-      if (match) {
-        credit(unit, match);
+      const matchUnit = pickCadenceCreditUnit(
+        candidates,
+        completion.completed_on
+      );
+      if (matchUnit) {
+        credit(matchUnit, completion);
       }
     }
   }

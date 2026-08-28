@@ -1517,6 +1517,96 @@ describe("pure planner kernel", () => {
     expect(cadence.solver.issueCodes).toContain("historical_miss");
   });
 
+  it("credits cadence completions to the latest open past session before a future slot", () => {
+    const cadenceGoal = goal({
+      id: "goal-monthly-cadence",
+      recurrence_interval: "monthly",
+      target_count: 4,
+      target_basis: "period",
+      start_date: "2026-08-01",
+      end_date: "2026-08-31",
+    });
+    const fingerprint = computeRequirementFingerprint(cadenceGoal);
+    const completions: Completion[] = [
+      {
+        id: "completion-1",
+        goal_id: cadenceGoal.id,
+        user_id: cadenceGoal.owner_id,
+        completed_on: "2026-08-07",
+        source: "manual",
+        created_at: "2026-08-07T12:00:00Z",
+      },
+      {
+        id: "completion-2",
+        goal_id: cadenceGoal.id,
+        user_id: cadenceGoal.owner_id,
+        completed_on: "2026-08-14",
+        source: "manual",
+        created_at: "2026-08-14T12:00:00Z",
+      },
+      {
+        id: "completion-3",
+        goal_id: cadenceGoal.id,
+        user_id: cadenceGoal.owner_id,
+        completed_on: "2026-08-27",
+        source: "manual",
+        created_at: "2026-08-27T12:00:00Z",
+      },
+    ];
+    const output = runPlannerKernel(
+      input({
+        asOfDate: "2026-08-27",
+        goals: [cadenceGoal],
+        completions,
+        preserveExistingAssignments: true,
+        basePlan: {
+          planId: "plan-a",
+          version: 1,
+          assignments: [
+            {
+              goalId: cadenceGoal.id,
+              requirementFingerprint: fingerprint,
+              unitKey: "cadence:2026-08-01:1",
+              scheduledDate: "2026-08-07",
+              locked: false,
+            },
+            {
+              goalId: cadenceGoal.id,
+              requirementFingerprint: fingerprint,
+              unitKey: "cadence:2026-08-01:2",
+              scheduledDate: "2026-08-14",
+              locked: false,
+            },
+            {
+              goalId: cadenceGoal.id,
+              requirementFingerprint: fingerprint,
+              unitKey: "cadence:2026-08-01:3",
+              scheduledDate: "2026-08-28",
+              locked: false,
+            },
+            {
+              goalId: cadenceGoal.id,
+              requirementFingerprint: fingerprint,
+              unitKey: "cadence:2026-08-01:4",
+              scheduledDate: "2026-08-20",
+              locked: false,
+            },
+          ],
+          completionToUnit: {},
+        },
+      })
+    );
+
+    const slot3 = output.workUnits.find(
+      (unit) => unit.unitKey === "cadence:2026-08-01:3"
+    );
+    const slot4 = output.workUnits.find(
+      (unit) => unit.unitKey === "cadence:2026-08-01:4"
+    );
+    expect(slot4?.creditedCompletionId).toBe("completion-3");
+    expect(slot3?.creditedCompletionId).toBeNull();
+  });
+
   it("lets an earlier open total roll after a later fulfilled ordinal", () => {
     const rollingGoal = goal({ target_count: 2, end_date: "2026-08-06" });
     const fingerprint = computeRequirementFingerprint(rollingGoal);
