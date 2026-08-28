@@ -87,6 +87,7 @@ function goal(): Goal {
     frequency_type: "recurring",
     recurrence_interval: "daily",
     target_count: 2_000,
+    target_basis: "lifetime",
     milestone_names: null,
     start_date: "2026-01-01",
     end_date: "2026-12-31",

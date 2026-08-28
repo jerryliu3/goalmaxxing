@@ -17,6 +17,7 @@ const goal: Goal = {
   frequency_type: "fixed_milestones",
   recurrence_interval: null,
   target_count: 2,
+  target_basis: "lifetime",
   milestone_names: ["Draft", "Ship"],
   start_date: "2026-08-01",
   end_date: "2026-09-30",

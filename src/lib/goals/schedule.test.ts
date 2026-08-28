@@ -6,9 +6,10 @@ import {
   isGoalManuallyArchived,
 } from "@/lib/goals/schedule";
 import type { Completion, Goal } from "@/lib/goals/types";
+import { withLifetimeTargetBasisForTests, type GoalTestInput } from "@/lib/goals/goal-test-fixtures";
 
 function buildGoal(overrides: Partial<Goal>): Goal {
-  return {
+  const built: GoalTestInput = {
     id: "goal-id",
     owner_id: "user-id",
     title: "Test goal",
@@ -29,6 +30,7 @@ function buildGoal(overrides: Partial<Goal>): Goal {
     updated_at: new Date().toISOString(),
     ...overrides,
   };
+  return withLifetimeTargetBasisForTests(built, overrides);
 }
 
 function completion(date: string): Completion {

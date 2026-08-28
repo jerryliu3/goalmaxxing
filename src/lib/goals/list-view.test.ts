@@ -27,6 +27,7 @@ function buildGoal(
     frequency_type: "recurring",
     recurrence_interval: "daily",
     target_count: null,
+    target_basis: "period",
     milestone_names: null,
     start_date: startDate,
     end_date: endDate,

@@ -1,23 +1,37 @@
 import type { Goal } from "@/lib/goals/types";
 
+export type GoalTestInput = Omit<Goal, "target_basis"> &
+  Partial<Pick<Goal, "target_basis">>;
+
 export function withLifetimeTargetBasisForTests(
-  goal: Goal,
+  goal: GoalTestInput,
   overrides: Partial<Goal> = {}
 ): Goal {
-  if (
-    goal.frequency_type === "recurring" &&
-    typeof goal.target_count === "number" &&
-    goal.target_count > 0 &&
-    overrides.target_basis === undefined &&
-    goal.target_basis === undefined
-  ) {
-    return { ...goal, target_basis: "lifetime" };
+  const merged: GoalTestInput = {
+    ...goal,
+    ...overrides,
+  };
+  if (overrides.target_basis !== undefined) {
+    return { ...merged, target_basis: overrides.target_basis };
   }
-  return goal;
+  if (merged.target_basis !== undefined) {
+    return merged as Goal;
+  }
+  if (merged.frequency_type === "fixed_milestones") {
+    return { ...merged, target_basis: "lifetime" };
+  }
+  if (
+    merged.frequency_type === "recurring" &&
+    typeof merged.target_count === "number" &&
+    merged.target_count > 0
+  ) {
+    return { ...merged, target_basis: "lifetime" };
+  }
+  return { ...merged, target_basis: "period" };
 }
 
 export function buildGoal(overrides: Partial<Goal> = {}): Goal {
-  return {
+  const built: GoalTestInput = {
     id: "goal-1",
     owner_id: "user-1",
     title: "Run 5k",
@@ -39,4 +53,5 @@ export function buildGoal(overrides: Partial<Goal> = {}): Goal {
     updated_at: "2026-08-01T00:00:00.000Z",
     ...overrides,
   };
+  return withLifetimeTargetBasisForTests(built, overrides);
 }

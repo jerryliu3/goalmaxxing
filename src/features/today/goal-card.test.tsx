@@ -35,6 +35,7 @@ const goal: Goal = {
   frequency_type: "recurring",
   recurrence_interval: "daily",
   target_count: null,
+  target_basis: "period",
   milestone_names: null,
   start_date: "2026-01-01",
   end_date: "2026-12-31",
@@ -93,7 +94,7 @@ describe("GoalCard", () => {
   it("shows the category badge instead of a color dot and hides the deadline badge", () => {
     render(
       <GoalCard
-        goal={{ ...goal, archived_at: null, target_count: 10 }}
+        goal={{ ...goal, archived_at: null, target_count: 10, target_basis: "lifetime" }}
         completions={[]}
         linkedCount={0}
         selectedDate="2026-08-13"

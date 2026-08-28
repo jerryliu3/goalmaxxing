@@ -15,6 +15,7 @@ const monthlyGoal: Goal = {
   frequency_type: "recurring",
   recurrence_interval: "monthly",
   target_count: null,
+  target_basis: "period",
   milestone_names: null,
   start_date: "2026-01-31",
   end_date: null,

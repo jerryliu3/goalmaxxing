@@ -26,6 +26,7 @@ function goal(overrides: Partial<Goal> & Pick<Goal, "id" | "owner_id" | "title">
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
     ...overrides,
+    target_basis: overrides.target_basis ?? "period",
   };
 }
 

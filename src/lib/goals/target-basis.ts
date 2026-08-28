@@ -34,13 +34,16 @@ export interface GoalTargetBasisResolution {
 
 /**
  * Legacy inference for migration/repair tooling when `target_basis` is absent.
- * Product read paths should use stored `target_basis` via `resolveGoalTargetBasis`.
+ * Product read paths must use stored `target_basis` via `resolveGoalTargetBasis`.
  */
-export function inferLegacyGoalTargetBasis(
+export function inferLegacyGoalTargetBasisForRepair(
   input: GoalTargetBasisInput
 ): GoalTargetBasis {
   return resolveGoalTargetBasisFromInput(input).basis;
 }
+
+/** @deprecated Use `inferLegacyGoalTargetBasisForRepair` in repair/migration code only. */
+export const inferLegacyGoalTargetBasis = inferLegacyGoalTargetBasisForRepair;
 
 export function resolveGoalTargetBasisFromInput({
   frequencyType,
@@ -89,15 +92,7 @@ export function resolveGoalTargetBasis(goal: Goal): GoalTargetBasis {
   if (goal.frequency_type === "fixed_milestones") {
     return "lifetime";
   }
-  if (goal.target_basis === "period" || goal.target_basis === "lifetime") {
-    return goal.target_basis;
-  }
-  return inferLegacyGoalTargetBasis({
-    frequencyType: goal.frequency_type,
-    recurrenceInterval: goal.recurrence_interval,
-    targetCount: goal.target_count,
-    targetBasis: null,
-  });
+  return goal.target_basis;
 }
 
 export function isPeriodCadenceGoal(goal: Goal) {
