@@ -1,24 +1,23 @@
 "use client";
 
 import {
-  ArrowLeft,
   Archive,
-  CircleAlert,
-  LoaderCircle,
-  Save,
   Trash2,
   Undo2,
 } from "lucide-react";
-import Link from "next/link";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
 import { type ReactNode, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingCard } from "@/components/ui/loading-card";
-import { Tooltip } from "@/components/ui/tooltip";
 import { GoalCreationFieldControls } from "@/features/goals/goal-creation-fields";
+import {
+  GoalFormLinkTargetsErrorAlert,
+  GoalFormRecoveryAlert,
+} from "@/features/goals/goal-form-alerts";
+import { GoalFormHeader } from "@/features/goals/goal-form-header";
 import {
   completeGoalEditor,
   dismissGoalEditor,
@@ -126,109 +125,41 @@ export function GoalForm({
 
   return (
     <Card className="gap-6 shadow-sm">
-      <CardHeader>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <CardTitle>{isEditing ? "Edit goal" : "New goal"}</CardTitle>
-            {modeSwitchControl}
-          </div>
-          <div className="flex items-center gap-2">
-            {showBackButton ? (
-              saving || recovery !== null ? (
-                <Button type="button" variant="outline" disabled>
-                  <ArrowLeft className="size-4" />
-                  Back
-                </Button>
-              ) : onExit || onDismiss ? (
-                <Button type="button" variant="outline" onClick={dismissEditor}>
-                  <ArrowLeft className="size-4" />
-                  Back
-                </Button>
-              ) : (
-                <Button variant="outline" asChild>
-                  <Link href={exitHref}>
-                    <ArrowLeft className="size-4" />
-                    Back
-                  </Link>
-                </Button>
-              )
-            ) : null}
-            <div className="flex items-center gap-0">
-              {validationError ? (
-                <Tooltip content={validationError} side="bottom" align="end">
-                  <span
-                    className="inline-flex size-9 items-center justify-center text-destructive"
-                    title={validationError}
-                    tabIndex={0}
-                    aria-label={validationError}
-                  >
-                    <CircleAlert className="size-4" />
-                    <span className="sr-only">{validationError}</span>
-                  </span>
-                </Tooltip>
-              ) : null}
-              <Button type="submit" form={goalFormId} disabled={submitDisabled}>
-                {saving ? (
-                  <LoaderCircle className="size-4 animate-spin" />
-                ) : (
-                  <Save className="size-4" />
-                )}
-                {isEditing ? "Save changes" : isPlannerTask ? "Create task" : "Save"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </CardHeader>
+      <GoalFormHeader
+        isEditing={isEditing}
+        isPlannerTask={isPlannerTask}
+        saving={saving}
+        hasRecovery={recovery !== null}
+        showBackButton={showBackButton}
+        exitHref={exitHref}
+        validationError={validationError}
+        submitDisabled={submitDisabled}
+        goalFormId={goalFormId}
+        modeSwitchControl={modeSwitchControl}
+        onBack={onExit || onDismiss ? dismissEditor : undefined}
+      />
       <CardContent className="space-y-6">
         {recovery ? (
-          <div
-            role="alert"
-            className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
-          >
-            <p>
-              {recovery.kind === "link"
-                ? "The goal was saved, but its selected link was not. Retry to finish saving it."
-                : recovery.kind === "update"
-                  ? "The goal update could not be confirmed. Retry to safely reconcile it."
-                  : "Goal creation could not be confirmed. Retry to safely reconcile this draft."}
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-2"
-              onClick={() =>
-                recovery.kind === "link"
-                  ? void retryGoalLink()
-                  : void (
-                      document.getElementById(goalFormId) as HTMLFormElement | null
-                    )?.requestSubmit()
-              }
-              disabled={saving}
-            >
-              {recovery.kind === "link"
-                ? "Retry saving link"
-                : recovery.kind === "update"
-                  ? "Retry saving goal"
-                  : "Retry creating goal"}
-            </Button>
-          </div>
+          <GoalFormRecoveryAlert
+            kind={recovery.kind}
+            saving={saving}
+            onRetry={() =>
+              recovery.kind === "link"
+                ? void retryGoalLink()
+                : void (
+                    document.getElementById(goalFormId) as HTMLFormElement | null
+                  )?.requestSubmit()
+            }
+          />
         ) : null}
         {linkTargetsError ? (
-          <div
-            role="alert"
-            className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
-          >
-            <p>{linkTargetsError}</p>
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-2"
-              onClick={() => setLinkLoadAttempt((attempt) => attempt + 1)}
-              disabled={loading || saving || recovery !== null}
-            >
-              Retry loading link targets
-            </Button>
-          </div>
+          <GoalFormLinkTargetsErrorAlert
+            message={linkTargetsError}
+            loading={loading}
+            saving={saving}
+            hasRecovery={recovery !== null}
+            onRetry={() => setLinkLoadAttempt((attempt) => attempt + 1)}
+          />
         ) : null}
         <form id={goalFormId} className="space-y-6" onSubmit={onSubmit}>
           {validationWarning ? (
