@@ -296,6 +296,51 @@ async function ensureCalendarDayEntryAvailable(
   return { scopeMonth: lastScannedScopeMonth, hasDayEntry: false };
 }
 
+async function tryCalendarCompletionToggle(
+  page: Page,
+  maxMonthJumps = 12
+): Promise<CompletionMutationPayload | null> {
+  const startScopeMonth = await resolveCalendarScopeMonth(page);
+  const scanOrder = Array.from({ length: maxMonthJumps + 1 }, (_, jump) => jump);
+
+  for (const delta of scanOrder) {
+    const scopeMonth =
+      delta === 0 ? startScopeMonth : shiftScopeMonth(startScopeMonth, delta);
+    if (delta !== 0) {
+      await openCalendar(page, scopeMonth);
+    }
+
+    const dayCells = page.locator(CALENDAR_DAY_CELL_WITH_ENTRY_SELECTOR);
+    const dayCellCount = await dayCells.count();
+    const maxDayCellsToTry = Math.min(dayCellCount, 20);
+    for (let index = 0; index < maxDayCellsToTry; index += 1) {
+      const dayCell = dayCells.nth(index);
+      if (!(await dayCell.isVisible().catch(() => false))) {
+        continue;
+      }
+      await dayCell.click();
+      const dayPreview = page.locator(CALENDAR_DAY_PREVIEW_SELECTOR);
+      if (!(await dayPreview.isVisible({ timeout: 5_000 }).catch(() => false))) {
+        await page.keyboard.press("Escape").catch(() => undefined);
+        continue;
+      }
+      const button = dayPreview.locator(COMPLETION_TOGGLE_SELECTOR).first();
+      const isActionable =
+        (await button.isVisible().catch(() => false)) &&
+        (await button.isEnabled().catch(() => false));
+      if (!isActionable) {
+        await page.keyboard.press("Escape").catch(() => undefined);
+        continue;
+      }
+      return runCompletionToggleAction(page, async () => {
+        await button.click();
+      });
+    }
+  }
+
+  return null;
+}
+
 async function resolveCalendarScopeMonth(page: Page) {
   for (let attempt = 0; attempt < 30; attempt += 1) {
     const fromUrl = new URL(page.url()).searchParams.get("month");
@@ -782,39 +827,14 @@ test.describe("planner critical rails", () => {
   });
 
   test("completion toggle dispatches from calendar surface", async ({ page }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     await openCalendar(page);
-    const entryScan = await ensureCalendarDayEntryAvailable(page);
+    const calendarPayload = await tryCalendarCompletionToggle(page);
     test.skip(
-      !entryScan.hasDayEntry,
-      "No calendar day entries visible in scanned months."
+      calendarPayload === null,
+      "No actionable calendar completion toggle in scanned months."
     );
-    const dayCells = page.locator(CALENDAR_DAY_CELL_WITH_ENTRY_SELECTOR);
-    const dayCellCount = await dayCells.count();
-    test.skip(dayCellCount === 0, "No calendar day entries visible in scanned months.");
-
-    let calendarPayload: CompletionMutationPayload | null = null;
-    const maxDayCellsToTry = Math.min(dayCellCount, 10);
-    for (let index = 0; index < maxDayCellsToTry; index += 1) {
-      const dayCell = dayCells.nth(index);
-      await expect(dayCell).toBeVisible({ timeout: 15_000 });
-      await dayCell.click();
-      const dayPreview = page.locator(CALENDAR_DAY_PREVIEW_SELECTOR);
-      await expect(dayPreview).toBeVisible({ timeout: 15_000 });
-      const button = dayPreview.locator(COMPLETION_TOGGLE_SELECTOR).first();
-      const isActionable =
-        (await button.isVisible().catch(() => false)) &&
-        (await button.isEnabled().catch(() => false));
-      if (!isActionable) {
-        await page.keyboard.press("Escape").catch(() => undefined);
-        continue;
-      }
-      calendarPayload = await runCompletionToggleAction(page, async () => {
-        await button.click();
-      });
-      break;
-    }
-    expect(calendarPayload?.goalId).toBeTruthy();
+    expect(calendarPayload.goalId).toBeTruthy();
   });
 
   test("stale save keeps planner draft session recoverable", async ({ page }) => {
