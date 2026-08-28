@@ -27,9 +27,9 @@ interface InsightsGoalStatsFiltersProps {
   onMonthCursorChange: (next: Date) => void;
   viewMode: HeatmapViewMode;
   onViewModeChange: (mode: HeatmapViewMode) => void;
-  showPastGoals: boolean;
-  pastGoalCount: number;
-  onShowPastGoalsChange: (show: boolean) => void;
+  showEndedGoals: boolean;
+  endedGoalCount: number;
+  onShowEndedGoalsChange: (show: boolean) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -45,9 +45,9 @@ export function InsightsGoalStatsFilters({
   onMonthCursorChange,
   viewMode,
   onViewModeChange,
-  showPastGoals,
-  pastGoalCount,
-  onShowPastGoalsChange,
+  showEndedGoals,
+  endedGoalCount,
+  onShowEndedGoalsChange,
   open,
   onOpenChange,
 }: InsightsGoalStatsFiltersProps) {
@@ -155,18 +155,18 @@ export function InsightsGoalStatsFilters({
             />
             <label
               className={`flex min-h-8 items-center gap-2 text-sm ${
-                pastGoalCount === 0 ? "text-muted-foreground opacity-60" : ""
+                endedGoalCount === 0 ? "text-muted-foreground opacity-60" : ""
               }`}
             >
               <input
                 type="checkbox"
-                checked={showPastGoals}
-                disabled={pastGoalCount === 0}
-                onChange={(event) => onShowPastGoalsChange(event.target.checked)}
+                checked={showEndedGoals}
+                disabled={endedGoalCount === 0}
+                onChange={(event) => onShowEndedGoalsChange(event.target.checked)}
                 className="size-4 rounded border-input accent-primary"
               />
               Show past goals
-              <span>({pastGoalCount})</span>
+              <span>({endedGoalCount})</span>
             </label>
           </div>
         </DialogContent>
