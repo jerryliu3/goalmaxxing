@@ -62,7 +62,7 @@ import {
   filterCompletionsForGoalIds,
   selectCompletableGoals,
 } from "@cadence/shared/goals/completable-goals";
-import { resolveSelectedDateState, toLocalDateString } from "@/lib/dates/day";
+import { toLocalDateString } from "@/lib/dates/day";
 import {
   resolveEffectiveEndMonths,
   type GoalDateSort,
@@ -85,12 +85,9 @@ import {
 } from "@/lib/goals/progress-context";
 import type { Goal } from "@/lib/goals/types";
 import {
-  resolveCompletionDispatch,
-} from "@/lib/planner/completion-dispatch";
-import {
-  getGoalRequirement,
-  isTargetedRecurringGoal,
-} from "@/lib/planner/requirements";
+  resolveInsightsCompletionIntent,
+  resolveTargetedRecurring,
+} from "@/lib/planner/completion-intent";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import { withPlannerRefreshTimeout } from "@/lib/planner/refresh-timeout";
 import { useOutsidePointerDismiss } from "@/lib/ui/use-outside-pointer-dismiss";
@@ -397,25 +394,34 @@ export function InsightsTab({
         return;
       }
 
+      const intent = resolveInsightsCompletionIntent({
+        goal,
+        completionDate,
+        hasCompletionOnDate: isSelected,
+        temporal: {
+          selectedDate: completionDate,
+          asOfDate: localToday,
+        },
+      });
+
+      if (!intent.allowed) {
+        toast.error(
+          intent.disabledReason === "future_creation"
+            ? "You can only select today or past dates."
+            : "This completion cannot be changed from this date."
+        );
+        return;
+      }
+
       setPendingRetroDate(completionDate);
       const currentScrollY = window.scrollY;
-      const desiredFactState = isSelected ? "absent" : "present";
-      const requirement = getGoalRequirement(goal);
-      const decision = resolveCompletionDispatch({
-        requirementKind: requirement.kind,
-        targetedRecurring: isTargetedRecurringGoal(goal),
-        activePlanMembership: false,
-        matchingItemState: "none",
-        selectedDateState: resolveSelectedDateState(completionDate, localToday),
-        existingExactFact: isSelected,
-        desiredFactState,
-      });
+      const { decision, mutation } = intent;
 
       const result = await runCompletionMutation({
         decision,
-        desiredFactState,
-        goalId: goal.id,
-        date: completionDate,
+        desiredFactState: mutation.desiredFactState,
+        goalId: mutation.goalId,
+        date: mutation.date,
         timezone: resolveUserTimezone(),
         sourceRect: sourceElement
           ? captureViewportRect(sourceElement)
@@ -460,25 +466,34 @@ export function InsightsTab({
         return;
       }
 
+      const intent = resolveInsightsCompletionIntent({
+        goal,
+        completionDate,
+        hasCompletionOnDate,
+        temporal: {
+          selectedDate: completionDate,
+          asOfDate: localToday,
+        },
+      });
+
+      if (!intent.allowed) {
+        toast.error(
+          intent.disabledReason === "future_creation"
+            ? "You can only select today or past dates."
+            : "This completion cannot be changed from this date."
+        );
+        return;
+      }
+
       setPendingRetroDate(completionDate);
       const currentScrollY = window.scrollY;
-      const desiredFactState = hasCompletionOnDate ? "absent" : "present";
-      const requirement = getGoalRequirement(goal);
-      const decision = resolveCompletionDispatch({
-        requirementKind: requirement.kind,
-        targetedRecurring: isTargetedRecurringGoal(goal),
-        activePlanMembership: false,
-        matchingItemState: "none",
-        selectedDateState: resolveSelectedDateState(completionDate, localToday),
-        existingExactFact: hasCompletionOnDate,
-        desiredFactState,
-      });
+      const { decision, mutation } = intent;
 
       const result = await runCompletionMutation({
         decision,
-        desiredFactState,
-        goalId: goal.id,
-        date: completionDate,
+        desiredFactState: mutation.desiredFactState,
+        goalId: mutation.goalId,
+        date: mutation.date,
         timezone: resolveUserTimezone(),
         sourceRect: sourceElement
           ? captureViewportRect(sourceElement)
@@ -811,7 +826,7 @@ export function InsightsTab({
                     )
                   : null;
               const isRecurring = goal.frequency_type === "recurring";
-              const targetedRecurring = isTargetedRecurringGoal(goal);
+              const targetedRecurring = resolveTargetedRecurring(goal);
               const isMilestone = goal.frequency_type === "fixed_milestones";
               const canEditHistory = !readOnly && (isRecurring || isMilestone);
               const editingHistory = editingGoalId === goal.id;
