@@ -10,13 +10,13 @@ export function ChecklistPastPanels({
   pastGoals,
   archivedGoals,
   showUpcoming,
-  showPast,
+  showEnded,
   showArchived,
   upcomingOpen,
-  pastOpen,
+  pastPanelOpen,
   archiveOpen,
   onUpcomingOpenChange,
-  onPastOpenChange,
+  onPastPanelOpenChange,
   onArchiveOpenChange,
   renderGoal,
 }: {
@@ -24,13 +24,13 @@ export function ChecklistPastPanels({
   pastGoals: Goal[];
   archivedGoals: Goal[];
   showUpcoming: boolean;
-  showPast: boolean;
+  showEnded: boolean;
   showArchived: boolean;
   upcomingOpen: boolean;
-  pastOpen: boolean;
+  pastPanelOpen: boolean;
   archiveOpen: boolean;
   onUpcomingOpenChange: (open: boolean) => void;
-  onPastOpenChange: (open: boolean) => void;
+  onPastPanelOpenChange: (open: boolean) => void;
   onArchiveOpenChange: (open: boolean) => void;
   renderGoal: (goal: Goal, options?: { archived?: boolean; key?: string }) => ReactNode;
 }) {
@@ -49,10 +49,10 @@ export function ChecklistPastPanels({
         </CollapsibleGoalSection>
       ) : null}
 
-      {showPast ? (
+      {showEnded ? (
         <CollapsibleGoalSection
-          open={pastOpen}
-          onOpenChange={onPastOpenChange}
+          open={pastPanelOpen}
+          onOpenChange={onPastPanelOpenChange}
           title="Past"
           count={pastGoals.length}
           icon={<CheckCircle2 className="size-4 text-muted-foreground" />}

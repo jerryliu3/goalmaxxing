@@ -1,10 +1,10 @@
 import type { MobileGoal } from "./checklist-lane-data";
 
 export interface ChecklistVisibilityFilters {
-  showPastGoals: boolean;
+  showEndedGoals: boolean;
   showUpcomingGoals: boolean;
   showArchivedGoals: boolean;
-  showCompletedGoals: boolean;
+  showTargetAchievedGoals: boolean;
 }
 
 export interface ChecklistVisibilityCounts {
@@ -16,12 +16,12 @@ export interface ChecklistVisibilityCounts {
 
 export function filterMobileChecklistGoals({
   goals,
-  completedGoalIds,
+  targetAchievedGoalIds,
   asOfDate,
   filters,
 }: {
   goals: MobileGoal[];
-  completedGoalIds: ReadonlySet<string>;
+  targetAchievedGoalIds: ReadonlySet<string>;
   asOfDate: string;
   filters: ChecklistVisibilityFilters;
 }): MobileGoal[] {
@@ -33,19 +33,19 @@ export function filterMobileChecklistGoals({
       return filters.showUpcomingGoals;
     }
     if (goal.end_date && goal.end_date < asOfDate) {
-      return filters.showPastGoals;
+      return filters.showEndedGoals;
     }
-    return !completedGoalIds.has(goal.id) || filters.showCompletedGoals;
+    return !targetAchievedGoalIds.has(goal.id) || filters.showTargetAchievedGoals;
   });
 }
 
 export function countMobileChecklistGoalVisibility({
   goals,
-  completedGoalIds,
+  targetAchievedGoalIds,
   asOfDate,
 }: {
   goals: MobileGoal[];
-  completedGoalIds: ReadonlySet<string>;
+  targetAchievedGoalIds: ReadonlySet<string>;
   asOfDate: string;
 }): ChecklistVisibilityCounts {
   const counts: ChecklistVisibilityCounts = {
@@ -61,7 +61,7 @@ export function countMobileChecklistGoalVisibility({
       counts.upcoming += 1;
     } else if (goal.end_date && goal.end_date < asOfDate) {
       counts.past += 1;
-    } else if (completedGoalIds.has(goal.id)) {
+    } else if (targetAchievedGoalIds.has(goal.id)) {
       counts.completed += 1;
     }
   }
