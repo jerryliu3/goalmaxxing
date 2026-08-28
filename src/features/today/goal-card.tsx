@@ -139,7 +139,7 @@ export function GoalCard({
       className={cn(
         "shadow-sm",
         (periodSatisfiedOnSelectedDate || progress?.outcome === "achieved") &&
-          "border-emerald-200 bg-emerald-50 dark:border-emerald-800/60 dark:bg-emerald-950/40"
+          "border-emerald-200 bg-emerald-50"
       )}
     >
       <CardContent className="flex items-center gap-2 px-2 py-0.5">
