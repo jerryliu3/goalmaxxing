@@ -14,6 +14,7 @@ export interface ChecklistGoalPresentation {
   lifetimeAchieved: boolean;
   isGreen: boolean;
   displayCompletionCount: number;
+  shouldHideWhenCompletedFilterOff: boolean;
 }
 
 function getDistinctSortedCompletionDates(
@@ -104,6 +105,13 @@ export function projectChecklistGoalPresentation({
     lifetimeAchieved,
     isGreen,
     displayCompletionCount,
+    // Hide uses browsed selectedDate (not asOfDate); green/outcome use progress asOf summaries.
+    shouldHideWhenCompletedFilterOff: shouldHideTargetAchievedGoal({
+      goal,
+      progress,
+      completions,
+      asOfDate: selectedDate,
+    }),
   };
 }
 

@@ -9,7 +9,14 @@
 | Persisted definition immutability | `update_goal` SQL RPC | goal-form edit lock | `goals_write_boundary.test.sql` |
 | Stored `target_basis` reads | `src/lib/goals/target-basis.ts` | goal-form hydrate, planner | `target-basis.test.ts` |
 
-## Planner schedule writes
+## Goal archive
+
+| Invariant | Canonical layer | Early check | Tests |
+|---|---|---|---|
+| Archive stamps `archived_at` | `set_goal_archived` SQL RPC | goal-form archive action | `goals_write_boundary.test.sql` |
+| Incomplete planner rows removed on archive | `delete_incomplete_planner_items_for_goal` | n/a | `goal_archive_planner_cleanup.test.sql` |
+| Archived goals excluded from planner prepare | `prepare_planner_schedule_core` | n/a | `goal_archive_planner_cleanup.test.sql` |
+
 
 | Invariant | Canonical layer | Early check | Tests |
 |---|---|---|---|
