@@ -11,13 +11,11 @@ import type { CompletionDateFact, Goal } from "@/lib/goals/types";
 import { resolveChecklistCompletionIntent } from "@/lib/planner/completion-intent";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import { reportDuoTelemetry } from "@/lib/social/duo/telemetry";
-import type { WeeklyAnchorContext } from "@/lib/goals/periods";
 
 interface UseChecklistCompletionActionsOptions {
   readOnly: boolean;
   viewDate: string;
   todayLocalDate: string;
-  weeklyAnchor: WeeklyAnchorContext;
   completionsByGoal: ReadonlyMap<string, CompletionDateFact[]>;
   loadData: (options: {
     showLoading: boolean;
@@ -31,7 +29,6 @@ export function useChecklistCompletionActions({
   readOnly,
   viewDate,
   todayLocalDate,
-  weeklyAnchor,
   completionsByGoal,
   loadData,
   redirectToLogin,
@@ -105,7 +102,6 @@ export function useChecklistCompletionActions({
           selectedDate: viewDate,
           asOfDate: todayLocalDate,
         },
-        weeklyAnchor,
       });
 
       setSavingGoalId(goal.id);
@@ -153,7 +149,6 @@ export function useChecklistCompletionActions({
       pinRecentlyCompletedGoal,
       todayLocalDate,
       viewDate,
-      weeklyAnchor,
     ]
   );
 

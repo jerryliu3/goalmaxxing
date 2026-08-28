@@ -21,7 +21,6 @@ type CompletionDispatchRoute =
   | "item_date"
   | "plan_goal_date"
   | "canonical_exact_date"
-  | "legacy_period"
   | "disabled";
 
 export interface PlannerDigestExpectation {
@@ -58,7 +57,7 @@ export type ExecutableCompletionDispatchDecision = {
   route: ExecutableCompletionRoute;
   exactDateOnly: boolean;
   allowed: true;
-  reason: "allowed" | "legacy_period_semantics";
+  reason: "allowed";
 };
 
 type BlockedCompletionDispatchDecision = {
@@ -131,7 +130,6 @@ async function postJsonRoute({
 }
 
 export function resolveCompletionDispatch({
-  targetedRecurring,
   activePlanMembership,
   matchingItemState,
   selectedDateState,
@@ -156,17 +154,8 @@ export function resolveCompletionDispatch({
     route = "item_date";
   } else if (activePlanMembership) {
     route = "plan_goal_date";
-  } else if (targetedRecurring) {
-    // A target-total fact belongs to its selected date. Period unmarking could
-    // otherwise delete a different legitimate completion in the same period.
-    route = "canonical_exact_date";
   } else {
-    return {
-      route: "legacy_period",
-      exactDateOnly: false,
-      allowed: true,
-      reason: "legacy_period_semantics",
-    };
+    route = "canonical_exact_date";
   }
 
   const isFutureCreation =
@@ -222,9 +211,7 @@ export async function executeCompletionDispatch({
   const fallbackError =
     decision.route === "canonical_exact_date"
       ? "The exact-date completion could not be updated."
-      : decision.route === "legacy_period"
-        ? "The completion could not be updated."
-        : "Planner completion update failed.";
+      : "Planner completion update failed.";
   return postJsonRoute({
     fetcher,
     route: "/api/completions",
