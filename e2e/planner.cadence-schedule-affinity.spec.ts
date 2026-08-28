@@ -3,13 +3,6 @@ import { expect, test, type Page } from "@playwright/test";
 const CADENCE_AFFINITY_GOAL_ID = "10000000-0000-4000-8000-000000000024";
 const CADENCE_AFFINITY_GOAL_TITLE = "E2E cadence gym 4x";
 
-const COMPLETION_TOGGLE_SELECTOR = [
-  'button[aria-label^="Mark goal as complete"]',
-  'button[aria-label^="Complete goal for "]',
-  'button[aria-label^="Unmark goal completion"]',
-  'button[aria-label^="Remove completion for "]',
-].join(", ");
-
 interface CadenceAffinityFixture {
   available: boolean;
   scopeMonth: string;
@@ -214,11 +207,17 @@ test.describe("cadence schedule-affinity", () => {
     await gotoAppPath(page, "/calendar?surface=checklist");
     const goalCard = page
       .getByRole("heading", { name: CADENCE_AFFINITY_GOAL_TITLE })
-      .locator("xpath=ancestor::*[contains(@class,'rounded')][1]");
+      .locator('xpath=ancestor::*[contains(@class,"shadow-sm")][1]');
     await expect(goalCard).toBeVisible({ timeout: 15_000 });
 
-    const completeButton = goalCard.locator(COMPLETION_TOGGLE_SELECTOR).first();
-    await expect(completeButton).toBeEnabled();
+    const completeButton = goalCard
+      .getByRole("button", {
+        name: new RegExp(
+          `^(Complete goal for|Remove completion for) ${fixture.today}$`
+        ),
+      })
+      .first();
+    await expect(completeButton).toBeEnabled({ timeout: 15_000 });
 
     const completionRequest = page.waitForRequest(
       (request) =>
