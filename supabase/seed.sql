@@ -2103,3 +2103,89 @@ values
     null,
     now() - interval '70 minutes'
   );
+
+-- Cadence schedule-affinity E2E fixture: monthly gym 4x with out-of-order planner slots.
+do $$
+declare
+  v_goal_id constant uuid := '10000000-0000-4000-8000-000000000024';
+  v_owner_id constant uuid := '11111111-1111-4111-8111-111111111111';
+  v_month_start date := date_trunc('month', current_date)::date;
+  v_month_end date := (date_trunc('month', current_date) + interval '1 month - 1 day')::date;
+  v_period_key text := to_char(v_month_start, 'YYYY-MM-DD');
+  v_slot1 date := v_month_start + 6;
+  v_slot2 date := v_month_start + 13;
+  v_slot3 date := current_date + 1;
+  v_slot4 date := current_date - 7;
+begin
+  if v_slot3 > v_month_end or v_slot4 < v_month_start then
+    return;
+  end if;
+
+  insert into public.goals (
+    id,
+    owner_id,
+    title,
+    description,
+    category,
+    category_key,
+    color,
+    frequency_type,
+    recurrence_interval,
+    target_count,
+    target_basis,
+    start_date,
+    end_date,
+    team_id,
+    is_private
+  )
+  values (
+    v_goal_id,
+    v_owner_id,
+    'E2E cadence gym 4x',
+    'Monthly period-cadence fixture for checklist-to-calendar schedule-affinity rails.',
+    'Health',
+    'health',
+    '#10b981',
+    'recurring',
+    'monthly',
+    4,
+    'period'::public.goal_target_basis,
+    v_month_start,
+    v_month_end,
+    null,
+    false
+  )
+  on conflict (id) do update
+  set
+    title = excluded.title,
+    description = excluded.description,
+    category = excluded.category,
+    category_key = excluded.category_key,
+    target_count = excluded.target_count,
+    target_basis = excluded.target_basis,
+    start_date = excluded.start_date,
+    end_date = excluded.end_date,
+    updated_at = now();
+
+  delete from public.completions where goal_id = v_goal_id;
+  delete from public.planner_items where goal_id = v_goal_id;
+
+  insert into public.completions (goal_id, user_id, completed_on, source)
+  values
+    (v_goal_id, v_owner_id, v_slot1, 'manual'),
+    (v_goal_id, v_owner_id, v_slot2, 'manual');
+
+  insert into public.planner_items (
+    owner_id,
+    goal_id,
+    unit_key,
+    scheduled_date,
+    locked
+  )
+  values
+    (v_owner_id, v_goal_id, format('cadence:%s:1', v_period_key), v_slot1, false),
+    (v_owner_id, v_goal_id, format('cadence:%s:2', v_period_key), v_slot2, false),
+    (v_owner_id, v_goal_id, format('cadence:%s:3', v_period_key), v_slot3, false),
+    (v_owner_id, v_goal_id, format('cadence:%s:4', v_period_key), v_slot4, false);
+end $$;
+

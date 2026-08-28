@@ -653,6 +653,131 @@ describe("planner completion reconciliation", () => {
     expect(result.driftFacts).toEqual([]);
   });
 
+  it("credits the latest open past session before a future slot for monthly cadence", () => {
+    const goal = buildGoal({
+      recurrence_interval: "monthly",
+      target_count: 4,
+      target_basis: "period",
+      start_date: "2026-08-01",
+      end_date: "2026-08-31",
+    });
+    const normalized = normalizeGoalRequirement(goal);
+    const units = materializeWorkUnits({
+      goal,
+      normalizedRequirement: normalized,
+      window: getScopeDateRange("2026-08"),
+      asOfDate: "2026-08-27",
+      baseAssignments: [
+        {
+          goalId: goal.id,
+          requirementFingerprint: normalized.requirementFingerprint,
+          unitKey: "cadence:2026-08-01:1",
+          scheduledDate: "2026-08-07",
+          locked: false,
+        },
+        {
+          goalId: goal.id,
+          requirementFingerprint: normalized.requirementFingerprint,
+          unitKey: "cadence:2026-08-01:2",
+          scheduledDate: "2026-08-14",
+          locked: false,
+        },
+        {
+          goalId: goal.id,
+          requirementFingerprint: normalized.requirementFingerprint,
+          unitKey: "cadence:2026-08-01:3",
+          scheduledDate: "2026-08-28",
+          locked: false,
+        },
+        {
+          goalId: goal.id,
+          requirementFingerprint: normalized.requirementFingerprint,
+          unitKey: "cadence:2026-08-01:4",
+          scheduledDate: "2026-08-20",
+          locked: false,
+        },
+      ],
+    });
+    const result = reconcilePlannerCompletions({
+      goal,
+      workUnits: units,
+      completions: [
+        completion("2026-08-07", "c1"),
+        completion("2026-08-14", "c2"),
+        completion("2026-08-27", "c3"),
+      ],
+      asOfDate: "2026-08-27",
+    });
+
+    expect(result.completionToUnit.c3).toEqual({
+      goalId: goal.id,
+      requirementFingerprint: normalized.requirementFingerprint,
+      unitKey: "cadence:2026-08-01:4",
+      completedOn: "2026-08-27",
+    });
+    expect(
+      result.units.find((unit) => unit.unitKey === "cadence:2026-08-01:4")
+    ).toMatchObject({
+      creditState: "completed_elsewhere",
+      classification: "fulfilled",
+      creditedCompletionDate: "2026-08-27",
+    });
+    expect(
+      result.units.find((unit) => unit.unitKey === "cadence:2026-08-01:3")
+        ?.creditedCompletionId
+    ).toBeNull();
+  });
+
+  it("preserves prior cadence completion identity when still valid", () => {
+    const goal = buildGoal({
+      recurrence_interval: "monthly",
+      target_count: 4,
+      target_basis: "period",
+      start_date: "2026-08-01",
+      end_date: "2026-08-31",
+    });
+    const normalized = normalizeGoalRequirement(goal);
+    const units = materializeWorkUnits({
+      goal,
+      normalizedRequirement: normalized,
+      window: getScopeDateRange("2026-08"),
+      asOfDate: "2026-08-27",
+      baseAssignments: [
+        {
+          goalId: goal.id,
+          requirementFingerprint: normalized.requirementFingerprint,
+          unitKey: "cadence:2026-08-01:3",
+          scheduledDate: "2026-08-28",
+          locked: false,
+        },
+        {
+          goalId: goal.id,
+          requirementFingerprint: normalized.requirementFingerprint,
+          unitKey: "cadence:2026-08-01:4",
+          scheduledDate: "2026-08-20",
+          locked: false,
+        },
+      ],
+    });
+    const result = reconcilePlannerCompletions({
+      goal,
+      workUnits: units,
+      completions: [completion("2026-08-27", "sticky")],
+      asOfDate: "2026-08-27",
+      previousCompletionToUnit: {
+        sticky: {
+          goalId: goal.id,
+          requirementFingerprint: normalized.requirementFingerprint,
+          unitKey: "cadence:2026-08-01:3",
+          completedOn: "2026-08-27",
+        },
+      },
+    });
+
+    expect(result.completionToUnit.sticky?.unitKey).toBe("cadence:2026-08-01:3");
+    expect(result.driftFacts).toEqual([]);
+  });
+
   it("treats off-schedule cadence credit as period fulfillment", () => {
     const goal = buildGoal();
     const normalized = normalizeGoalRequirement(goal);
