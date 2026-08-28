@@ -697,6 +697,7 @@ export function CalendarSurface({
     handleMonthScopedGridScroll,
     dayPreview,
     dayPreviewRef,
+    pointerInsideDayPreviewRef,
     previewDayEntries,
     previewDayCompletionFactMarkers,
     openMoveDialogForDay,
