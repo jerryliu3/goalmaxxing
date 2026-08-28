@@ -53,9 +53,11 @@ import {
 } from "@/lib/planner/linked-source-coverage";
 import type { PlannerBaseAssignment } from "@/lib/planner/work-units";
 import {
+  detectActivePlanReconciliationMismatches,
   hydrateActivePlanItemsFromWorkUnits,
   rebuildCompletionToUnitFromWorkUnits,
 } from "@/lib/planner/active-plan-reconciliation";
+import { reportError } from "@/lib/observability/report-error";
 import type { Database } from "@/lib/supabase/database.types";
 import type { createClient as createServerClient } from "@/lib/supabase/server";
 
@@ -908,27 +910,43 @@ export async function loadPlannerContextPayload({
   });
 
   const hydratedActivePlan = snapshot.activePlan
-    ? {
-        ...snapshot.activePlan,
-        items: hydrateActivePlanItemsFromWorkUnits(
-          snapshot.activePlan.items,
-          preview.workUnits,
-          new Map(
-            snapshot.activePlan.goals.map((goal) => [
-              goal.id,
-              goal.original_goal_id,
-            ])
-          )
-        ),
-        basePlan: snapshot.activePlan.basePlan
-          ? {
-              ...snapshot.activePlan.basePlan,
-              completionToUnit: rebuildCompletionToUnitFromWorkUnits(
-                preview.workUnits
-              ),
-            }
-          : snapshot.activePlan.basePlan,
-      }
+    ? (() => {
+        const goalIdByPlanGoalId = new Map(
+          snapshot.activePlan.goals.map((goal) => [
+            goal.id,
+            goal.original_goal_id,
+          ])
+        );
+        const reconciliationMismatches =
+          detectActivePlanReconciliationMismatches({
+            items: snapshot.activePlan.items,
+            workUnits: preview.workUnits,
+            goalIdByPlanGoalId,
+            planId: snapshot.activePlan.plan.id,
+          });
+        for (const mismatch of reconciliationMismatches) {
+          reportError(new Error("reconciliation_mismatch"), {
+            code: "reconciliation_mismatch",
+            ...mismatch,
+          });
+        }
+        return {
+          ...snapshot.activePlan,
+          items: hydrateActivePlanItemsFromWorkUnits(
+            snapshot.activePlan.items,
+            preview.workUnits,
+            goalIdByPlanGoalId
+          ),
+          basePlan: snapshot.activePlan.basePlan
+            ? {
+                ...snapshot.activePlan.basePlan,
+                completionToUnit: rebuildCompletionToUnitFromWorkUnits(
+                  preview.workUnits
+                ),
+              }
+            : snapshot.activePlan.basePlan,
+        };
+      })()
     : snapshot.activePlan;
 
   return {
