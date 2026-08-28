@@ -1,6 +1,7 @@
 import { format, isValid, parse } from "date-fns";
-import type { Goal } from "@/lib/goals/types";
 import { addDaysToDateString } from "@/lib/goals/periods";
+import type { Goal } from "@/lib/goals/types";
+export { getLinkedGoalRecurrenceLabel } from "@/lib/goals/recurrence-labels";
 
 export function formatGoalDateLabel(date: string): string {
   const parsedDate = parse(date, "yyyy-MM-dd", new Date());
@@ -8,24 +9,6 @@ export function formatGoalDateLabel(date: string): string {
     return date;
   }
   return format(parsedDate, "MMM d, yyyy");
-}
-
-export function getLinkedGoalRecurrenceLabel(
-  goal: Pick<Goal, "frequency_type" | "recurrence_interval">
-): string {
-  if (goal.frequency_type === "fixed_milestones") {
-    return "Milestone";
-  }
-
-  if (goal.recurrence_interval === "weekly") {
-    return "Weekly";
-  }
-
-  if (goal.recurrence_interval === "monthly") {
-    return "Monthly";
-  }
-
-  return "Daily";
 }
 
 export function getLinkedGoalDeadlineLabel(goal: Pick<Goal, "end_date">): string {
