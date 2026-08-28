@@ -830,10 +830,10 @@ test.describe("planner critical rails", () => {
     test.setTimeout(180_000);
     await openCalendar(page);
     const calendarPayload = await tryCalendarCompletionToggle(page);
-    test.skip(
-      calendarPayload === null,
-      "No actionable calendar completion toggle in scanned months."
-    );
+    if (calendarPayload === null) {
+      test.skip(true, "No actionable calendar completion toggle in scanned months.");
+      return;
+    }
     expect(calendarPayload.goalId).toBeTruthy();
   });
 
