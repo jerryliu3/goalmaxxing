@@ -6,13 +6,12 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
-import { countDistinctCompletionDays } from "@/lib/goals/admissible";
+import type { ChecklistGoalPresentation } from "@/lib/goals/checklist-presentation";
+import { projectChecklistGoalPresentation } from "@/lib/goals/checklist-presentation";
 import { getCategoryBadgeClass, getGoalCategoryLabel } from "@/lib/goals/category";
 import type { GoalProgressSnapshot } from "@/lib/goals/progress";
-import {
-  getFrequencySummary,
-} from "@/lib/goals/schedule";
-import { cadencePeriodTarget, isPeriodCadenceGoal } from "@/lib/goals/target-basis";
+import { getFrequencySummary } from "@/lib/goals/schedule";
+import { createChecklistTemporalContext } from "@/lib/goals/period-domain";
 import type { CompletionDateFact, Goal } from "@/lib/goals/types";
 import { cn } from "@/lib/utils";
 
@@ -20,13 +19,10 @@ interface GoalCardProps {
   goal: Goal;
   completions: CompletionDateFact[];
   progress?: GoalProgressSnapshot;
+  presentation?: ChecklistGoalPresentation;
   linkedCount: number;
   imageUrl?: string;
   selectedDate: string;
-  referenceDate: Date;
-  weeklyAnchor: {
-    weekStartsOn: number;
-  };
   disabled?: boolean;
   archived?: boolean;
 }
@@ -44,6 +40,7 @@ export function GoalCard({
   goal,
   completions,
   progress,
+  presentation,
   linkedCount,
   imageUrl,
   selectedDate,
@@ -52,28 +49,22 @@ export function GoalCard({
   readOnly = false,
   onToggle,
 }: GoalCardProps & GoalCardInteractionProps) {
-  const periodCadenceGoal = isPeriodCadenceGoal(goal);
-  const periodCompletionCount = periodCadenceGoal
-    ? countDistinctCompletionDays(completions.map((completion) => completion.completed_on))
-    : null;
-  const totalCompletionCount =
-    progress?.admissibleCompletionCount ?? completions.length;
-  const displayCompletionCount = periodCompletionCount ?? totalCompletionCount;
-  const periodSatisfiedOnSelectedDate =
-    periodCadenceGoal &&
-    periodCompletionCount !== null &&
-    periodCompletionCount >= cadencePeriodTarget(goal);
-  const hasNoEndDate = goal.end_date === null;
-  const completedOnSelectedDate = completions.some(
-    (completion) => completion.completed_on === selectedDate
-  );
-  const completionSourceForSelectedDate = completions.find(
-    (completion) => completion.completed_on === selectedDate
-  )?.source;
+  const resolvedPresentation =
+    presentation ??
+    projectChecklistGoalPresentation({
+      goal,
+      completions,
+      progress,
+      temporal: createChecklistTemporalContext({
+        selectedDate,
+        asOfDate: selectedDate,
+      }),
+    });
   const goalCategoryLabel = getGoalCategoryLabel(
     goal.category,
     goal.category_key
   );
+  const hasNoEndDate = goal.end_date === null;
 
   const body = (
     <>
@@ -110,8 +101,8 @@ export function GoalCard({
         </div>
         <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
           <p className="truncate">
-            {getFrequencySummary(goal, displayCompletionCount, {
-              periodScopedCount: periodCadenceGoal,
+            {getFrequencySummary(goal, resolvedPresentation.displayCompletionCount, {
+              periodScopedCount: resolvedPresentation.periodCompletionCount !== null,
             })}
           </p>
           {linkedCount > 0 ? (
@@ -123,7 +114,8 @@ export function GoalCard({
               {`Linked ${linkedCount}`}
             </span>
           ) : null}
-          {completionSourceForSelectedDate === "linked_cascade" ? (
+          {resolvedPresentation.completionSourceForSelectedDate ===
+          "linked_cascade" ? (
             <Badge variant="outline" className="h-4 px-1 text-[10px]">
               Auto-completed
             </Badge>
@@ -133,12 +125,11 @@ export function GoalCard({
     </>
   );
 
-
   return (
     <Card
       className={cn(
         "shadow-sm",
-        (periodSatisfiedOnSelectedDate || progress?.outcome === "achieved") &&
+        resolvedPresentation.isGreen &&
           "border-emerald-200 bg-emerald-50"
       )}
     >
@@ -147,20 +138,20 @@ export function GoalCard({
           <span
             aria-hidden
             className={`size-4 shrink-0 rounded-full border ${
-              completedOnSelectedDate
+              resolvedPresentation.exactDateCompleted
                 ? "border-primary bg-primary"
                 : "border-muted-foreground/40 bg-transparent"
             }`}
           />
         ) : (
           <CompletionToggle
-            completed={completedOnSelectedDate}
+            completed={resolvedPresentation.exactDateCompleted}
             pending={disabled && !archived}
             size="lg"
             onClick={(event) => onToggle?.(event.currentTarget)}
             disabled={disabled || archived}
             aria-label={
-              completedOnSelectedDate
+              resolvedPresentation.exactDateCompleted
                 ? `Remove completion for ${selectedDate}`
                 : `Complete goal for ${selectedDate}`
             }

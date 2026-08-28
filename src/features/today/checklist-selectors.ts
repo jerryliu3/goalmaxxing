@@ -6,11 +6,20 @@ import {
   type GoalDateSort,
 } from "@/lib/goals/list-view";
 import { isGoalManuallyArchived } from "@/lib/goals/schedule";
-import { cadencePeriodTarget, isPeriodCadenceGoal } from "@/lib/goals/target-basis";
-import type { Goal } from "@/lib/goals/types";
+import { shouldHideTargetAchievedGoal } from "@/lib/goals/checklist-presentation";
+import {
+  getRecurrenceGroup,
+  recurrenceGroupLabel,
+  recurrenceGroupOrder,
+  type RecurrenceGroup,
+} from "@/lib/goals/recurrence-labels";
+import type { CompletionDateFact, Goal } from "@/lib/goals/types";
+import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
+
+export type { RecurrenceGroup };
+export { recurrenceGroupLabel, recurrenceGroupOrder, getRecurrenceGroup };
 
 export type RecurrenceFilter = "all" | "daily" | "weekly" | "monthly" | "fixed";
-export type RecurrenceGroup = "daily" | "weekly" | "monthly" | "fixed";
 
 export const VISIBLE_GOALS_PER_GROUP = 4;
 export const INITIAL_GROUP_EXPANDED: Record<RecurrenceGroup, boolean> = {
@@ -18,20 +27,6 @@ export const INITIAL_GROUP_EXPANDED: Record<RecurrenceGroup, boolean> = {
   weekly: false,
   monthly: false,
   fixed: false,
-};
-
-export const recurrenceGroupOrder: RecurrenceGroup[] = [
-  "daily",
-  "weekly",
-  "monthly",
-  "fixed",
-];
-
-export const recurrenceGroupLabel: Record<RecurrenceGroup, string> = {
-  daily: "Daily",
-  weekly: "Weekly",
-  monthly: "Monthly",
-  fixed: "Milestones",
 };
 
 export const recurrenceFilterOptions: Array<{
@@ -44,19 +39,6 @@ export const recurrenceFilterOptions: Array<{
   { value: "monthly", label: "Monthly" },
   { value: "fixed", label: "Milestones" },
 ];
-
-export function getRecurrenceGroup(goal: Goal): RecurrenceGroup {
-  if (goal.frequency_type === "fixed_milestones") {
-    return "fixed";
-  }
-  if (goal.recurrence_interval === "weekly") {
-    return "weekly";
-  }
-  if (goal.recurrence_interval === "monthly") {
-    return "monthly";
-  }
-  return "daily";
-}
 
 export function matchesTodayFacetFilters({
   goal,
@@ -113,51 +95,24 @@ export function selectCompletedTargetGoalIds({
   goals: Goal[];
   progressByGoal: ReadonlyMap<
     string,
-    { outcome: string; achievementDate?: string | null } | undefined
+    Pick<ProgressContextSummary, "outcome" | "achievementDate"> | undefined
   >;
-  completionsByGoal: ReadonlyMap<string, Array<{ completed_on: string }>>;
+  completionsByGoal: ReadonlyMap<
+    string,
+    Array<Pick<CompletionDateFact, "completed_on">>
+  >;
   asOfDate: string;
 }): Set<string> {
   const ids = new Set<string>();
-  const getDistinctSortedCompletionDates = (goalId: string) =>
-    Array.from(
-      new Set((completionsByGoal.get(goalId) ?? []).map((completion) => completion.completed_on))
-    ).sort((left, right) => left.localeCompare(right));
-
   for (const goal of goals) {
-    if (isPeriodCadenceGoal(goal)) {
-      const distinctSortedDates = getDistinctSortedCompletionDates(goal.id);
-      const target = cadencePeriodTarget(goal);
-      if (distinctSortedDates.length < target) {
-        if (progressByGoal.get(goal.id)?.outcome === "achieved") {
-          ids.add(goal.id);
-        }
-        continue;
-      }
-      const achievedOn = distinctSortedDates[target - 1] ?? null;
-      if (achievedOn !== null && achievedOn < asOfDate) {
-        ids.add(goal.id);
-      }
-      continue;
-    }
-
-    const progress = progressByGoal.get(goal.id);
-    if (progress?.outcome !== "achieved") {
-      continue;
-    }
-    if (progress.achievementDate !== undefined) {
-      if (
-        progress.achievementDate !== null &&
-        progress.achievementDate < asOfDate
-      ) {
-        ids.add(goal.id);
-      }
-      continue;
-    }
-    const lastCompletedOn = getDistinctSortedCompletionDates(goal.id).at(-1);
-    // Checklist facts are usually just the viewed day. An achieved goal with
-    // no fact on that day was therefore hit on an earlier date.
-    if (lastCompletedOn == null || lastCompletedOn < asOfDate) {
+    if (
+      shouldHideTargetAchievedGoal({
+        goal,
+        progress: progressByGoal.get(goal.id),
+        completions: completionsByGoal.get(goal.id) ?? [],
+        asOfDate,
+      })
+    ) {
       ids.add(goal.id);
     }
   }

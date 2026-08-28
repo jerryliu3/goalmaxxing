@@ -46,7 +46,6 @@ const goal: Goal = {
   updated_at: "2026-01-01T00:00:00Z",
 };
 
-const weeklyAnchor = { weekStartsOn: 1 };
 
 describe("GoalCard", () => {
   afterEach(() => {
@@ -59,8 +58,6 @@ describe("GoalCard", () => {
         completions={[]}
         linkedCount={0}
         selectedDate="2026-08-13"
-        referenceDate={new Date("2026-08-13T12:00:00")}
-        weeklyAnchor={weeklyAnchor}
         archived
         disabled
         onToggle={vi.fn()}
@@ -83,8 +80,6 @@ describe("GoalCard", () => {
         completions={[]}
         linkedCount={0}
         selectedDate="2026-08-13"
-        referenceDate={new Date("2026-08-13T12:00:00")}
-        weeklyAnchor={weeklyAnchor}
         readOnly={true}
       />
     );
@@ -102,8 +97,6 @@ describe("GoalCard", () => {
         completions={[]}
         linkedCount={0}
         selectedDate="2026-08-13"
-        referenceDate={new Date("2026-08-13T12:00:00")}
-        weeklyAnchor={weeklyAnchor}
         onToggle={vi.fn()}
       />
     );
@@ -122,8 +115,6 @@ describe("GoalCard", () => {
         completions={[]}
         linkedCount={0}
         selectedDate="2026-08-13"
-        referenceDate={new Date("2026-08-13T12:00:00")}
-        weeklyAnchor={weeklyAnchor}
         onToggle={vi.fn()}
       />
     );
@@ -138,8 +129,6 @@ describe("GoalCard", () => {
         completions={[]}
         linkedCount={3}
         selectedDate="2026-08-13"
-        referenceDate={new Date("2026-08-13T12:00:00")}
-        weeklyAnchor={weeklyAnchor}
         onToggle={vi.fn()}
       />
     );
@@ -160,8 +149,6 @@ describe("GoalCard", () => {
         ]}
         linkedCount={0}
         selectedDate="2026-08-13"
-        referenceDate={new Date("2026-08-13T12:00:00")}
-        weeklyAnchor={weeklyAnchor}
         onToggle={vi.fn()}
       />
     );
@@ -195,8 +182,6 @@ describe("GoalCard", () => {
         progress={progress}
         linkedCount={0}
         selectedDate="2026-08-13"
-        referenceDate={new Date("2026-08-13T12:00:00")}
-        weeklyAnchor={weeklyAnchor}
         onToggle={vi.fn()}
       />
     );
@@ -243,8 +228,6 @@ describe("GoalCard", () => {
         progress={progress}
         linkedCount={0}
         selectedDate="2026-08-13"
-        referenceDate={new Date("2026-08-13T12:00:00")}
-        weeklyAnchor={weeklyAnchor}
         onToggle={vi.fn()}
       />
     );
@@ -286,8 +269,6 @@ describe("GoalCard", () => {
         progress={progress}
         linkedCount={0}
         selectedDate="2026-08-13"
-        referenceDate={new Date("2026-08-13T12:00:00")}
-        weeklyAnchor={weeklyAnchor}
         onToggle={vi.fn()}
       />
     );
