@@ -50,6 +50,7 @@ export function PlannerTasksPanel({
   const supabase = useMemo(() => createClient(), []);
   const [tasks, setTasks] = useState<PlannerTaskRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [adding, setAdding] = useState(false);
   const [togglingTaskId, setTogglingTaskId] = useState<string | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
@@ -58,26 +59,42 @@ export function PlannerTasksPanel({
   const scheduledDateRef = useRef<string | null>(scheduledDate);
   const requestVersionRef = useRef(0);
 
-  const loadTasks = useCallback(async (forDate: string | null = scheduledDateRef.current) => {
-    const requestVersion = ++requestVersionRef.current;
-    setLoading(true);
-    const { data, error } = await supabase.rpc("list_planner_tasks", {
-      p_for_date: forDate ?? undefined,
-    });
-    if (requestVersion !== requestVersionRef.current) {
-      return;
-    }
-    if (error) {
-      toast.error(error.message || "Could not load tasks.");
-      setLoading(false);
-      return;
-    }
-    setTasks((data ?? []) as PlannerTaskRow[]);
-    setLoading(false);
-  }, [supabase]);
+  const loadTasks = useCallback(
+    async (
+      forDate: string | null = scheduledDateRef.current,
+      options?: { background?: boolean }
+    ) => {
+      const requestVersion = ++requestVersionRef.current;
+      if (!options?.background) {
+        setLoading(true);
+      }
+      const { data, error } = await supabase.rpc("list_planner_tasks", {
+        p_for_date: forDate ?? undefined,
+      });
+      if (requestVersion !== requestVersionRef.current) {
+        return;
+      }
+      if (error) {
+        toast.error(error.message || "Could not load tasks.");
+        setHasLoadedOnce(true);
+        if (!options?.background) {
+          setLoading(false);
+        }
+        return;
+      }
+      setTasks((data ?? []) as PlannerTaskRow[]);
+      setHasLoadedOnce(true);
+      if (!options?.background) {
+        setLoading(false);
+      }
+    },
+    [supabase]
+  );
 
   useEffect(() => {
     scheduledDateRef.current = scheduledDate;
+    setHasLoadedOnce(false);
+    setTasks([]);
     const timer = window.setTimeout(() => {
       void loadTasks(scheduledDate);
     }, 0);
@@ -87,7 +104,7 @@ export function PlannerTasksPanel({
   }, [loadTasks, scheduledDate]);
 
   usePlannerTabCacheInvalidation(() => {
-    void loadTasks(scheduledDateRef.current);
+    void loadTasks(scheduledDateRef.current, { background: true });
   });
 
   useEffect(
@@ -124,22 +141,34 @@ export function PlannerTasksPanel({
 
   const toggleTask = useCallback(
     async (task: PlannerTaskRow) => {
+      const nextCompleted = task.completed_at == null;
       setTogglingTaskId(task.task_id);
+      setTasks((current) =>
+        current.map((row) =>
+          row.task_id === task.task_id
+            ? {
+                ...row,
+                completed_at: nextCompleted ? new Date().toISOString() : null,
+              }
+            : row
+        )
+      );
       try {
         const { error } = await supabase.rpc("set_planner_task_completion", {
           p_task_id: task.task_id,
-          p_completed: task.completed_at == null,
+          p_completed: nextCompleted,
         });
         if (error) {
+          setTasks((current) =>
+            current.map((row) => (row.task_id === task.task_id ? task : row))
+          );
           toast.error(error.message || "Task completion could not be updated.");
-          return;
         }
-        await loadTasks(scheduledDateRef.current);
       } finally {
         setTogglingTaskId(null);
       }
     },
-    [loadTasks, supabase]
+    [supabase]
   );
 
   const deleteTask = useCallback(
@@ -148,20 +177,24 @@ export function PlannerTasksPanel({
         return;
       }
       setDeletingTaskId(task.task_id);
+      let previousTasks: PlannerTaskRow[] = [];
+      setTasks((current) => {
+        previousTasks = current;
+        return current.filter((row) => row.task_id !== task.task_id);
+      });
       try {
         const { error } = await supabase.rpc("delete_planner_task", {
           p_task_id: task.task_id,
         });
         if (error) {
+          setTasks(previousTasks);
           toast.error(error.message || "Task could not be deleted.");
-          return;
         }
-        await loadTasks(scheduledDateRef.current);
       } finally {
         setDeletingTaskId(null);
       }
     },
-    [allowDelete, loadTasks, supabase]
+    [allowDelete, supabase]
   );
 
   const requestDeleteTask = useCallback(
@@ -174,7 +207,7 @@ export function PlannerTasksPanel({
     [allowDelete]
   );
 
-  if (hideWhenEmpty && (loading || tasks.length === 0)) {
+  if (hideWhenEmpty && (!hasLoadedOnce || tasks.length === 0)) {
     return null;
   }
 
@@ -205,7 +238,7 @@ export function PlannerTasksPanel({
         ) : null}
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {loading && tasks.length === 0 ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />
             Loading tasks...

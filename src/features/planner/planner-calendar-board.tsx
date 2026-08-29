@@ -21,6 +21,7 @@ import styles from "@/features/planner/calendar-surface.module.css";
 import { PlannerDayEntriesPanel } from "@/features/planner/planner-day-entries-panel";
 import { PlannerDayPreviewPopover } from "@/features/planner/planner-day-preview-popover";
 import { PlannerViewWindowHeader } from "@/features/planner/planner-view-window-header";
+import { PlannerTasksPanel } from "@/features/tasks/planner-tasks-panel";
 
 const SEVEN_COLUMN_GRID_STYLE = {
   gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
@@ -209,6 +210,13 @@ export function PlannerCalendarBoard({
                   includeSourceElement={false}
                 />
               </div>
+              <PlannerTasksPanel
+                title="Tasks"
+                description={null}
+                scheduledDate={focusedDay}
+                allowCreate={false}
+                hideWhenEmpty
+              />
             </div>
           ) : viewMode === "three_day" ? (
             rollingWeekStrip
