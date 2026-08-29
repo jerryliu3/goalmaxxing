@@ -202,6 +202,7 @@ export function GoalCreationFieldControls({
         className={cn(
           "grid items-start gap-3",
           canShowRecurrenceFields
+            || isPlannerTask
             ? "grid-cols-2 sm:grid-cols-3"
             : "grid-cols-2"
         )}

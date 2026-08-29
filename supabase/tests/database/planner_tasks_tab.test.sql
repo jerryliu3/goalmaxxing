@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(13);
+select plan(18);
 
 insert into auth.users (id, email)
 values (
@@ -202,6 +202,69 @@ select is(
   ),
   0,
   'hard-deleted tasks are removed from planner_tasks'
+);
+
+select ok(
+  (
+    select scheduled_time = '09:30'
+    from public.create_planner_task(
+      'Timed morning task',
+      current_date,
+      '09:30'
+    )
+    limit 1
+  ),
+  'create_planner_task stores optional scheduled_time'
+);
+
+select throws_ok(
+  $$select public.create_planner_task('Bad time', current_date, '9:30')$$,
+  '22023',
+  'invalid_scheduled_time',
+  'create_planner_task rejects invalid scheduled_time'
+);
+
+select ok(
+  (
+    select count(*) = 1
+    from public.create_planner_task(
+      'Untimed afternoon task',
+      current_date,
+      null
+    )
+  ),
+  'create_planner_task allows null scheduled_time'
+);
+
+select ok(
+  (
+    select count(*) = 1
+    from public.create_planner_task(
+      'Later timed task',
+      current_date,
+      '14:00'
+    )
+  ),
+  'create_planner_task accepts a second timed task for sorting'
+);
+
+select results_eq(
+  $$
+    select title
+    from public.list_planner_tasks(current_date)
+    where title in (
+      'Timed morning task',
+      'Untimed afternoon task',
+      'Later timed task'
+    )
+  $$,
+  $$
+    values
+      ('Timed morning task'::text),
+      ('Later timed task'::text),
+      ('Untimed afternoon task'::text)
+  $$,
+  'list_planner_tasks sorts by time ascending with nulls last'
 );
 
 reset role;

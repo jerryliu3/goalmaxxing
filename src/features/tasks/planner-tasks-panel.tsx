@@ -22,6 +22,7 @@ interface PlannerTaskRow {
   task_id: string;
   title: string;
   scheduled_date: string;
+  scheduled_time: string | null;
   completed_at: string | null;
   created_at: string;
   updated_at: string;
@@ -244,6 +245,9 @@ export function PlannerTasksPanel({
                       {task.title}
                     </span>
                   </button>
+                  {task.scheduled_time ? (
+                    <Badge variant="outline">{task.scheduled_time}</Badge>
+                  ) : null}
                   {showScheduledDate ? (
                     <Badge variant="outline">{task.scheduled_date}</Badge>
                   ) : null}

@@ -85,7 +85,8 @@ export function useGoalFormSubmit({
         try {
           ({ error } = await supabase.rpc("create_planner_task", {
             p_title: state.title.trim(),
-            p_scheduled_date: state.task_scheduled_date.trim() || undefined,
+            p_scheduled_date: state.task_scheduled_date.trim(),
+            p_scheduled_time: state.task_scheduled_time.trim() || undefined,
           }));
         } catch (cause) {
           toast.error(getRpcErrorMessage(cause, "Could not save task. Try again."));
