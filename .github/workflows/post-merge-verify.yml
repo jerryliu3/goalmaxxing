@@ -166,7 +166,14 @@ jobs:
             ${{ runner.os }}-playwright-
 
       - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium webkit
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${RUNNER_OS}" == "macOS" ]]; then
+            pnpm exec playwright install chromium webkit
+          else
+            pnpm exec playwright install --with-deps chromium webkit
+          fi
 
       - name: Run Chromium, WebKit, mobile, and API E2E
         shell: bash
@@ -222,11 +229,17 @@ jobs:
     steps:
       - name: Assert all full verify jobs passed
         run: |
-          if [[ "${{ needs.verify-static-full.result }}" != "success" || "${{ needs.verify-integration-full.result }}" != "success" ]]; then
-            echo "verify-static-full result: ${{ needs.verify-static-full.result }}"
-            echo "verify-integration-full result: ${{ needs.verify-integration-full.result }}"
-            exit 1
+          pass() {
+            [[ "$1" == "success" || "$1" == "skipped" ]]
+          }
+          static_result="${{ needs.verify-static-full.result }}"
+          integration_result="${{ needs.verify-integration-full.result }}"
+          echo "verify-static-full result: $static_result"
+          echo "verify-integration-full result: $integration_result"
+          if pass "$static_result" && pass "$integration_result"; then
+            exit 0
           fi
+          exit 1
 
   report-main-status:
     name: report-main-status

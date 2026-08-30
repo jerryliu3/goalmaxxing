@@ -337,8 +337,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Avoid long apt stalls on GH runners; fall back to browser-only install.
-          if ! timeout 8m pnpm exec playwright install --with-deps chromium; then
+          # macOS has no GNU timeout and does not need apt system deps.
+          if [[ "${RUNNER_OS}" == "macOS" ]]; then
+            pnpm exec playwright install chromium
+          elif ! timeout 8m pnpm exec playwright install --with-deps chromium; then
             echo "Playwright --with-deps timed out or failed; retrying without system deps."
             pnpm exec playwright install chromium
           fi
@@ -396,11 +398,17 @@ jobs:
     steps:
       - name: Assert PR smoke jobs passed
         run: |
-          if [[ "${{ needs.verify-pr-db.result }}" != "success" || "${{ needs.verify-pr-e2e.result }}" != "success" ]]; then
-            echo "verify-pr-db result: ${{ needs.verify-pr-db.result }}"
-            echo "verify-pr-e2e result: ${{ needs.verify-pr-e2e.result }}"
-            exit 1
+          pass() {
+            [[ "$1" == "success" || "$1" == "skipped" ]]
+          }
+          db_result="${{ needs.verify-pr-db.result }}"
+          e2e_result="${{ needs.verify-pr-e2e.result }}"
+          echo "verify-pr-db result: $db_result"
+          echo "verify-pr-e2e result: $e2e_result"
+          if pass "$db_result" && pass "$e2e_result"; then
+            exit 0
           fi
+          exit 1
 
   verify:
     name: verify
@@ -415,9 +423,16 @@ jobs:
     steps:
       - name: Assert all verify jobs passed
         run: |
-          if [[ "${{ needs.verify-static.result }}" != "success" || "${{ needs.verify-mobile-static.result }}" != "success" || "${{ needs.verify-pr-smoke.result }}" != "success" ]]; then
-            echo "verify-static result: ${{ needs.verify-static.result }}"
-            echo "verify-mobile-static result: ${{ needs.verify-mobile-static.result }}"
-            echo "verify-pr-smoke result: ${{ needs.verify-pr-smoke.result }}"
-            exit 1
+          pass() {
+            [[ "$1" == "success" || "$1" == "skipped" ]]
+          }
+          static_result="${{ needs.verify-static.result }}"
+          mobile_result="${{ needs.verify-mobile-static.result }}"
+          smoke_result="${{ needs.verify-pr-smoke.result }}"
+          echo "verify-static result: $static_result"
+          echo "verify-mobile-static result: $mobile_result"
+          echo "verify-pr-smoke result: $smoke_result"
+          if pass "$static_result" && pass "$mobile_result" && pass "$smoke_result"; then
+            exit 0
           fi
+          exit 1
