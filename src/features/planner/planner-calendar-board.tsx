@@ -211,6 +211,7 @@ export function PlannerCalendarBoard({
                 />
               </div>
               <PlannerTasksPanel
+                key={focusedDay}
                 title="Tasks"
                 description={null}
                 scheduledDate={focusedDay}

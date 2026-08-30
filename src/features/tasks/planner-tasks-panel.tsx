@@ -93,8 +93,6 @@ export function PlannerTasksPanel({
 
   useEffect(() => {
     scheduledDateRef.current = scheduledDate;
-    setHasLoadedOnce(false);
-    setTasks([]);
     const timer = window.setTimeout(() => {
       void loadTasks(scheduledDate);
     }, 0);

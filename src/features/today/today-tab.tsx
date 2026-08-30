@@ -501,6 +501,7 @@ export function TodayTab({
       {showGoalSections && !readOnly ? (
         <div className="pt-3">
           <PlannerTasksPanel
+            key={viewDate}
             title="Tasks"
             description={null}
             scheduledDate={viewDate}
