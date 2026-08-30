@@ -223,7 +223,7 @@ jobs:
     needs:
       - verify-static-full
       - verify-integration-full
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER == 'self-hosted' && fromJSON('["self-hosted", "macOS", "cadence-ci"]') || 'ubuntu-latest' }}
     timeout-minutes: 5
 
     steps:
@@ -246,7 +246,7 @@ jobs:
     if: ${{ always() && !cancelled() }}
     needs:
       - verify-full
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER == 'self-hosted' && fromJSON('["self-hosted", "macOS", "cadence-ci"]') || 'ubuntu-latest' }}
     permissions:
       contents: read
       issues: write

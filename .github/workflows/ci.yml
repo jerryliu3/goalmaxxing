@@ -392,7 +392,7 @@ jobs:
     needs:
       - verify-pr-db
       - verify-pr-e2e
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER == 'self-hosted' && fromJSON('["self-hosted", "macOS", "cadence-ci"]') || 'ubuntu-latest' }}
     timeout-minutes: 5
 
     steps:
@@ -417,7 +417,7 @@ jobs:
       - verify-static
       - verify-mobile-static
       - verify-pr-smoke
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER == 'self-hosted' && fromJSON('["self-hosted", "macOS", "cadence-ci"]') || 'ubuntu-latest' }}
     timeout-minutes: 5
 
     steps:
