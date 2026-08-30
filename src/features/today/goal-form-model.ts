@@ -14,6 +14,7 @@ export interface GoalFormState extends GoalCreationFields {
   reward_text: string;
   team_id: string | null;
   task_scheduled_date: string;
+  task_scheduled_time: string;
 }
 
 export interface GoalFormGoalArgs {
@@ -57,6 +58,7 @@ export const defaultGoalFormState: GoalFormState = {
   reward_text: "",
   team_id: null,
   task_scheduled_date: toLocalDateString(),
+  task_scheduled_time: "",
 };
 
 export function toGoalCreationFields(state: GoalFormState): GoalCreationFields {

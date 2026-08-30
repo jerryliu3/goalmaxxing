@@ -11,6 +11,7 @@ interface PlannerTaskRow {
   task_id: string;
   title: string;
   scheduled_date: string;
+  scheduled_time: string | null;
   completed_at: string | null;
 }
 
@@ -155,7 +156,9 @@ export function TasksScreen() {
                 </Text>
               </View>
               <Text style={{ color: theme.colors.mutedForeground, fontSize: 12 }}>
-                {task.scheduled_date}
+                {task.scheduled_time
+                  ? `${task.scheduled_date} · ${task.scheduled_time}`
+                  : task.scheduled_date}
               </Text>
             </Pressable>
           );

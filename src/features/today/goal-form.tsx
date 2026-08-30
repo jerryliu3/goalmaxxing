@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingCard } from "@/components/ui/loading-card";
 import { GoalCreationFieldControls } from "@/features/goals/goal-creation-fields";
+import { GoalDefaultTimeField } from "@/features/goals/goal-schedule-fields";
 import {
   GoalFormLinkTargetsErrorAlert,
   GoalFormRecoveryAlert,
@@ -220,25 +221,58 @@ export function GoalForm({
             }}
             extraGridSlot={
               isPlannerTask ? (
-                <div className="min-w-0 space-y-2">
-                  <Label htmlFor="task-scheduled-date">Date (optional)</Label>
-                  <Input
-                    id="task-scheduled-date"
-                    type="date"
-                    value={state.task_scheduled_date}
-                    onChange={(event) => {
-                      if (saving || recovery !== null) {
-                        return;
-                      }
-                      setState((previous) => ({
-                        ...previous,
-                        task_scheduled_date: event.target.value,
-                      }));
-                    }}
-                    disabled={saving || recovery !== null}
-                    className="h-8 min-h-8 w-full min-w-0 py-0 text-sm leading-none [&::-webkit-calendar-picker-indicator]:size-3.5 [&::-webkit-datetime-edit]:p-0"
-                  />
-                </div>
+                <>
+                  <div className="min-w-0 space-y-2">
+                    <Label htmlFor="task-scheduled-date">Date</Label>
+                    <Input
+                      id="task-scheduled-date"
+                      type="date"
+                      required
+                      value={state.task_scheduled_date}
+                      onChange={(event) => {
+                        if (saving || recovery !== null) {
+                          return;
+                        }
+                        const nextDate = event.target.value;
+                        if (!nextDate) {
+                          return;
+                        }
+                        setState((previous) => ({
+                          ...previous,
+                          task_scheduled_date: nextDate,
+                        }));
+                      }}
+                      disabled={saving || recovery !== null}
+                      className="h-8 min-h-8 w-full min-w-0 py-0 text-sm leading-none [&::-webkit-calendar-picker-indicator]:size-3.5 [&::-webkit-datetime-edit]:p-0"
+                    />
+                  </div>
+                  <div className="min-w-0 space-y-2">
+                    <GoalDefaultTimeField
+                      id="task-scheduled-time"
+                      label="Time of day (optional)"
+                      showHelperText={false}
+                      value={state.task_scheduled_time}
+                      onValueChange={(value) => {
+                        if (saving || recovery !== null) {
+                          return;
+                        }
+                        setState((previous) => ({
+                          ...previous,
+                          task_scheduled_time: value,
+                        }));
+                      }}
+                      onClear={() => {
+                        if (saving || recovery !== null) {
+                          return;
+                        }
+                        setState((previous) => ({
+                          ...previous,
+                          task_scheduled_time: "",
+                        }));
+                      }}
+                    />
+                  </div>
+                </>
               ) : null
             }
             middleSlot={

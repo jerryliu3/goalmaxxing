@@ -196,6 +196,7 @@ export function useGoalFormState(goalId?: string) {
           team_id: goal.team_id ?? null,
           is_private: goal.is_private ?? false,
           task_scheduled_date: toLocalDateString(),
+          task_scheduled_time: "",
         });
         setCreateKind(goal.frequency_type);
 
@@ -256,6 +257,21 @@ export function useGoalFormState(goalId?: string) {
     if (isPlannerTask) {
       if (!state.title.trim()) {
         return { validationError: "Title is required.", validationWarning: null };
+      }
+      if (!state.task_scheduled_date.trim()) {
+        return {
+          validationError: "Task date is required.",
+          validationWarning: null,
+        };
+      }
+      if (
+        state.task_scheduled_time.trim().length > 0 &&
+        !/^([01]\d|2[0-3]):[0-5]\d$/.test(state.task_scheduled_time.trim())
+      ) {
+        return {
+          validationError: "Time of day must be a valid 24-hour HH:MM value.",
+          validationWarning: null,
+        };
       }
       return { validationError: null, validationWarning: null };
     }

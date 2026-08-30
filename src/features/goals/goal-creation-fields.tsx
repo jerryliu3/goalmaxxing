@@ -201,9 +201,11 @@ export function GoalCreationFieldControls({
       <div
         className={cn(
           "grid items-start gap-3",
-          canShowRecurrenceFields
-            ? "grid-cols-2 sm:grid-cols-3"
-            : "grid-cols-2"
+          isPlannerTask
+            ? "grid-cols-1 sm:grid-cols-3"
+            : canShowRecurrenceFields
+              ? "grid-cols-2 sm:grid-cols-3"
+              : "grid-cols-2"
         )}
       >
         <div className="min-w-0 space-y-2">

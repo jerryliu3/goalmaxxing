@@ -2000,6 +2000,7 @@ export type Database = {
           is_deleted: boolean
           owner_id: string
           scheduled_date: string
+          scheduled_time: string | null
           title: string
           updated_at: string
         }
@@ -2010,6 +2011,7 @@ export type Database = {
           is_deleted?: boolean
           owner_id: string
           scheduled_date?: string
+          scheduled_time?: string | null
           title: string
           updated_at?: string
         }
@@ -2020,6 +2022,7 @@ export type Database = {
           is_deleted?: boolean
           owner_id?: string
           scheduled_date?: string
+          scheduled_time?: string | null
           title?: string
           updated_at?: string
         }
@@ -2647,11 +2650,16 @@ export type Database = {
       create_goal_links: { Args: { p_links: Json }; Returns: undefined }
       create_goals: { Args: { p_goals: Json }; Returns: string[] }
       create_planner_task: {
-        Args: { p_scheduled_date?: string; p_title: string }
+        Args: {
+          p_scheduled_date?: string
+          p_scheduled_time?: string
+          p_title: string
+        }
         Returns: {
           completed_at: string
           created_at: string
           scheduled_date: string
+          scheduled_time: string
           task_id: string
           title: string
           updated_at: string
@@ -2916,6 +2924,7 @@ export type Database = {
           completed_at: string
           created_at: string
           scheduled_date: string
+          scheduled_time: string
           task_id: string
           title: string
           updated_at: string
@@ -3072,6 +3081,7 @@ export type Database = {
           completed_at: string
           created_at: string
           scheduled_date: string
+          scheduled_time: string
           task_id: string
           title: string
           updated_at: string
