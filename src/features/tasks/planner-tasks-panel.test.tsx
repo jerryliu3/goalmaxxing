@@ -85,7 +85,7 @@ describe("PlannerTasksPanel", () => {
     ).toBeNull();
   });
 
-  it("stays hidden while loading when hideWhenEmpty is enabled", async () => {
+  it("stays hidden while the initial load is in flight when hideWhenEmpty is enabled", async () => {
     let resolveRpc: (value: { data: unknown[]; error: null }) => void = () => {};
     rpcMock.mockImplementation(
       () =>
@@ -110,6 +110,60 @@ describe("PlannerTasksPanel", () => {
 
     await waitFor(() => {
       expect(screen.queryByText("Tasks")).toBeNull();
+    });
+  });
+
+  it("keeps the panel visible while toggling completion", async () => {
+    const task = {
+      task_id: "task-1",
+      title: "Ship release notes",
+      scheduled_date: "2026-08-22",
+      scheduled_time: null,
+      completed_at: null,
+      created_at: "2026-08-21T12:00:00.000Z",
+      updated_at: "2026-08-21T12:00:00.000Z",
+    };
+
+    rpcMock.mockImplementation(async (name: string) => {
+      if (name === "list_planner_tasks") {
+        return { data: [task], error: null };
+      }
+      if (name === "set_planner_task_completion") {
+        return { data: null, error: null };
+      }
+      return { data: null, error: null };
+    });
+
+    const user = userEvent.setup();
+
+    render(
+      <PlannerTasksPanel
+        title="Tasks"
+        description={null}
+        scheduledDate="2026-08-22"
+        allowCreate={false}
+        hideWhenEmpty
+      />
+    );
+
+    const toggleButton = await screen.findByRole("button", { name: /ship release notes/i });
+    expect(screen.getByText("Tasks")).toBeInTheDocument();
+
+    await user.click(toggleButton);
+
+    await waitFor(() => {
+      expect(rpcMock).toHaveBeenCalledWith("set_planner_task_completion", {
+        p_task_id: "task-1",
+        p_completed: true,
+      });
+    });
+
+    expect(screen.getByText("Tasks")).toBeInTheDocument();
+    expect(screen.getByText("Ship release notes")).toHaveClass("line-through");
+    expect(rpcMock).toHaveBeenCalledTimes(2);
+    expect(rpcMock).toHaveBeenNthCalledWith(2, "set_planner_task_completion", {
+      p_task_id: "task-1",
+      p_completed: true,
     });
   });
 
