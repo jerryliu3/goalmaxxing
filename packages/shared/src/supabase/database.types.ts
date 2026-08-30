@@ -2659,7 +2659,7 @@ export type Database = {
           completed_at: string
           created_at: string
           scheduled_date: string
-          scheduled_time: string | null
+          scheduled_time: string
           task_id: string
           title: string
           updated_at: string
@@ -2924,7 +2924,7 @@ export type Database = {
           completed_at: string
           created_at: string
           scheduled_date: string
-          scheduled_time: string | null
+          scheduled_time: string
           task_id: string
           title: string
           updated_at: string
@@ -3081,7 +3081,7 @@ export type Database = {
           completed_at: string
           created_at: string
           scheduled_date: string
-          scheduled_time: string | null
+          scheduled_time: string
           task_id: string
           title: string
           updated_at: string
