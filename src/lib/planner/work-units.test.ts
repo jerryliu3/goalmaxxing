@@ -294,6 +294,55 @@ describe("planner work units", () => {
     expect(units.every((unit) => unit.placementWindow === null)).toBe(true);
   });
 
+  it("classifies ordinals as historical shortfall the day after the goal ends", () => {
+    const goal = buildGoal({
+      frequency_type: "fixed_milestones",
+      recurrence_interval: null,
+      target_count: 1,
+      target_basis: "lifetime",
+      milestone_names: ["Only"],
+      start_date: "2026-08-30",
+      end_date: "2026-08-30",
+    });
+    const assignment = {
+      goalId: goal.id,
+      requirementFingerprint: normalizeGoalRequirement(goal).requirementFingerprint,
+      unitKey: "milestone:1",
+      scheduledDate: "2026-08-30",
+      locked: false,
+    };
+
+    const sameMonth = materializeWorkUnits({
+      goal,
+      normalizedRequirement: normalizeGoalRequirement(goal),
+      window: getScopeDateRange("2026-08"),
+      asOfDate: "2026-08-31",
+      ordinalsForScopeMonth: allOrdinals(goal),
+      baseAssignments: [assignment],
+    });
+    const spanningWindow = materializeWorkUnits({
+      goal,
+      normalizedRequirement: normalizeGoalRequirement(goal),
+      window: { start: "2026-08-01", end: "2026-09-30" },
+      asOfDate: "2026-08-31",
+      ordinalsForScopeMonth: allOrdinals(goal),
+      baseAssignments: [assignment],
+    });
+
+    expect(sameMonth[0]).toMatchObject({
+      classification: "historical_shortfall",
+      placementWindow: null,
+      scheduledDate: "2026-08-30",
+      creditState: "uncredited",
+    });
+    expect(spanningWindow[0]).toMatchObject({
+      classification: "historical_shortfall",
+      placementWindow: null,
+      scheduledDate: "2026-08-30",
+      creditState: "uncredited",
+    });
+  });
+
   it("classifies expired cadence obligations as historical misses", () => {
     const goal = buildGoal();
     const units = materializeWorkUnits({
