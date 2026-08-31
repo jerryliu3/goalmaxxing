@@ -1517,6 +1517,49 @@ describe("pure planner kernel", () => {
     expect(cadence.solver.issueCodes).toContain("historical_miss");
   });
 
+  it("keeps an uncredited one-day milestone on its past date after the deadline", () => {
+    const overdueMilestone = goal({
+      id: "goal-one-day",
+      frequency_type: "fixed_milestones",
+      recurrence_interval: null,
+      target_count: 1,
+      milestone_names: ["Only"],
+      start_date: "2026-08-30",
+      end_date: "2026-08-30",
+    });
+    const fingerprint = computeRequirementFingerprint(overdueMilestone);
+    const output = runPlannerKernel(
+      input({
+        startDate: "2026-08-01",
+        endDate: "2026-09-30",
+        asOfDate: "2026-08-31",
+        goals: [overdueMilestone],
+        preserveExistingAssignments: true,
+        basePlan: {
+          planId: "plan-a",
+          version: 1,
+          assignments: [
+            {
+              goalId: overdueMilestone.id,
+              requirementFingerprint: fingerprint,
+              unitKey: "milestone:1",
+              scheduledDate: "2026-08-30",
+              locked: false,
+            },
+          ],
+        },
+      })
+    );
+
+    expect(output.validation.valid).toBe(true);
+    expect(output.workUnits[0]).toMatchObject({
+      classification: "historical_shortfall",
+      scheduledDate: "2026-08-30",
+      creditState: "uncredited",
+    });
+    expect(output.solver.issueCodes).toContain("historical_shortfall");
+  });
+
   it("credits cadence completions to the latest open past session before a future slot", () => {
     const cadenceGoal = goal({
       id: "goal-monthly-cadence",

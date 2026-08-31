@@ -273,11 +273,9 @@ export function materializeWorkUnits({
       end: effectiveGoalEndDate,
     });
     const classification: WorkUnitClassification =
-      placementWindow === null &&
-      compareDateStrings(window.end, asOfDate) < 0
+      placementWindow === null
         ? "historical_shortfall"
-        : placementWindow &&
-            compareDateStrings(placementWindow.start, asOfDate) > 0
+        : compareDateStrings(placementWindow.start, asOfDate) > 0
           ? "future"
           : "open";
 
