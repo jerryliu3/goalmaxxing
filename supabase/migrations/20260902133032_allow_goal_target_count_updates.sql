@@ -37,6 +37,7 @@ declare
   v_difficulty public.goal_difficulty;
   v_new_target_count integer;
   v_completed_count integer := 0;
+  v_effective_basis public.goal_target_basis;
 begin
   perform private.assert_goal_owner(p_id, v_uid);
 
@@ -53,13 +54,15 @@ begin
   where id = p_id
   for update;
 
+  v_effective_basis := coalesce(p_target_basis, v_old.target_basis);
+
   if v_old.frequency_type is distinct from p_frequency_type
     or v_old.recurrence_interval is distinct from p_recurrence_interval
     or v_old.target_basis is distinct from private.resolve_goal_target_basis(
       p_frequency_type,
       p_recurrence_interval,
       p_target_count,
-      p_target_basis
+      v_effective_basis
     )
     or v_old.start_date is distinct from p_start_date then
     raise exception using
@@ -71,10 +74,7 @@ begin
     p_frequency_type,
     p_recurrence_interval,
     p_target_count,
-    coalesce(
-      p_target_basis,
-      v_old.target_basis
-    )
+    v_effective_basis
   );
 
   if v_old.frequency_type = 'fixed_milestones'::public.goal_frequency_type

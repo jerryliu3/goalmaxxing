@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(36);
+select plan(39);
 
 -- Pin the five dropped client-PostgREST triggers.
 select hasnt_trigger(
@@ -477,6 +477,29 @@ select is(
   'raising target_count after achievement recomputes XP and drops the bonus'
 );
 
+select lives_ok(
+  $$
+    select public.update_goal(
+      'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa6',
+      'XP target change goal',
+      null,
+      null,
+      'health',
+      'health',
+      '#10b981',
+      'fixed_milestones',
+      null,
+      1,
+      null,
+      current_date - 7,
+      current_date + 30,
+      null,
+      null
+    )
+  $$,
+  'update_goal allows decreasing target_count down to recorded completions'
+);
+
 select throws_ok(
   $$
     select public.update_goal(
@@ -500,6 +523,60 @@ select throws_ok(
   '22023',
   'target count cannot be below existing completions',
   'update_goal rejects target_count below recorded completions'
+);
+
+select public.create_goal(
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa7',
+  'Lifetime target goal',
+  null,
+  null,
+  'health',
+  'health',
+  '#10b981',
+  'recurring',
+  'daily',
+  12,
+  null,
+  current_date,
+  current_date + 30,
+  null,
+  null,
+  false,
+  'medium',
+  'lifetime'
+);
+
+select lives_ok(
+  $$
+    select public.update_goal(
+      'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa7',
+      'Lifetime target goal',
+      null,
+      null,
+      'health',
+      'health',
+      '#10b981',
+      'recurring',
+      'daily',
+      20,
+      null,
+      current_date,
+      current_date + 30,
+      null,
+      null
+    )
+  $$,
+  'update_goal keeps stored lifetime basis when p_target_basis is omitted'
+);
+
+select is(
+  (
+    select target_count
+    from public.goals
+    where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa7'
+  ),
+  20,
+  'lifetime target_count updates persist after creation'
 );
 
 reset role;

@@ -236,7 +236,6 @@ export function GoalCreationFieldControls({
               value={fields.target_count}
               onValueChange={(value) => onFieldChange({ type: "target_count", value })}
               minValue={ordinalTargetMin}
-              disabled={disabled}
               showRecurringHelperText={false}
             />
             <p className="text-xs text-muted-foreground">
@@ -300,7 +299,6 @@ export function GoalCreationFieldControls({
                   : undefined
               }
               required={fields.target_basis === "period" || fields.target_basis === "lifetime"}
-              disabled={disabled}
               showRecurringHelperText={false}
             />
           </div>
@@ -322,7 +320,6 @@ export function GoalCreationFieldControls({
               onValueChange={(value) => onFieldChange({ type: "target_count", value })}
               minValue={ordinalTargetMin}
               required
-              disabled={disabled}
               showRecurringHelperText={false}
             />
           </div>

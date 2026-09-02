@@ -349,6 +349,41 @@ describe("GoalForm target validation", () => {
       "Target cannot be below 200 existing completions."
     );
   });
+
+  it("blocks milestone targets below existing completions", () => {
+    const feedback = getGoalCreationValidationFeedback(
+      {
+        ...createDefaultGoalCreationFields(),
+        title: "Milestones",
+        frequency_type: "fixed_milestones",
+        target_count: "2",
+        milestone_names: ["One", "Two"],
+        start_date: "2026-08-17",
+        end_date: "2026-12-31",
+      },
+      { completedCount: 3 }
+    );
+    expect(feedback.validationError).toBe(
+      "Target cannot be below 3 existing completions."
+    );
+  });
+
+  it("does not apply the completion floor to period targets", () => {
+    const feedback = getGoalCreationValidationFeedback(
+      {
+        ...createDefaultGoalCreationFields(),
+        title: "Weekly goal",
+        frequency_type: "recurring",
+        recurrence_interval: "weekly",
+        target_basis: "period",
+        target_count: "3",
+        start_date: "2026-08-17",
+        end_date: "2026-12-31",
+      },
+      { completedCount: 200 }
+    );
+    expect(feedback.validationError).toBeNull();
+  });
 });
 
 describe("GoalForm persistence recovery", () => {

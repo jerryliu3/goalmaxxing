@@ -175,7 +175,9 @@ export function useGoalFormState(goalId?: string) {
           goal.category_key
         );
         setEditingGoal(goal);
-        setCompletedCount(progressByGoal.get(goal.id)?.admissibleCompletionCount ?? 0);
+        setCompletedCount(
+          (progress?.facts ?? []).filter((fact) => fact.goal_id === goal.id).length
+        );
         setState({
           title: goal.title,
           description: goal.description ?? "",
