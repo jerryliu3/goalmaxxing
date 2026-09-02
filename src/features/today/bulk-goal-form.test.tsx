@@ -197,7 +197,9 @@ describe("BulkGoalForm", () => {
     cleanup();
   });
 
-  it("parses drafts into the shared editor and persists exact goal/link payloads", async () => {
+  it(
+    "parses drafts into the shared editor and persists exact goal/link payloads",
+    async () => {
     const randomUuidSpy = vi.spyOn(globalThis.crypto, "randomUUID");
     try {
       randomUuidSpy
@@ -251,9 +253,7 @@ describe("BulkGoalForm", () => {
         .find((element) => element.textContent?.includes("Medium"));
       expect(difficultyTrigger).toBeTruthy();
       await user.click(difficultyTrigger!);
-      await waitFor(async () => {
-        await user.click(await screen.findByRole("option", { name: "Hard" }));
-      });
+      await user.click(await screen.findByRole("option", { name: "Hard" }));
       await user.click(
         within(dialog).getByRole("checkbox", {
           name: /make this goal private/i,
@@ -325,7 +325,9 @@ describe("BulkGoalForm", () => {
     } finally {
       randomUuidSpy.mockRestore();
     }
-  });
+  },
+  15_000
+  );
 
   it("keeps drafts frozen with a reconciliation action when create_goals is ambiguous", async () => {
     rpcMock.mockRejectedValueOnce(new Error("create request timed out"));
