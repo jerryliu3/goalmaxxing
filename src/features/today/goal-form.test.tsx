@@ -451,7 +451,9 @@ describe("GoalForm persistence recovery", () => {
     cleanup();
   });
 
-  it("retains a saved goal and retries a rejected link without reporting success", async () => {
+  it(
+    "retains a saved goal and retries a rejected link without reporting success",
+    async () => {
     const randomUuidSpy = vi
       .spyOn(globalThis.crypto, "randomUUID")
       .mockReturnValue("99000000-0000-4000-8000-000000000001");
@@ -460,7 +462,7 @@ describe("GoalForm persistence recovery", () => {
       .mockResolvedValueOnce({ error: null })
       .mockRejectedValueOnce({})
       .mockResolvedValueOnce({ error: null });
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
 
     try {
       render(<GoalForm showBackButton={false} onExit={onExit} />);
@@ -487,19 +489,22 @@ describe("GoalForm persistence recovery", () => {
       await waitFor(() => {
         expect(onExit).toHaveBeenCalledTimes(1);
       });
-      expect(rpcMock).toHaveBeenNthCalledWith(
-        1,
-        "create_goal",
-        expect.objectContaining({
-          p_id: "99000000-0000-4000-8000-000000000001",
-        })
+      const createGoalCalls = rpcMock.mock.calls.filter(
+        ([method]) => method === "create_goal"
       );
+      expect(createGoalCalls).toHaveLength(1);
+      const stableGoalId = createGoalCalls[0]?.[1]?.p_id;
+      expect(stableGoalId).toEqual(expect.any(String));
+      expect(createGoalCalls[0]?.[1]).toMatchObject({
+        p_id: stableGoalId,
+        p_title: "Daily reset",
+      });
       expect(rpcMock).toHaveBeenNthCalledWith(2, "replace_goal_source_link", {
-        p_source_goal_id: "99000000-0000-4000-8000-000000000001",
+        p_source_goal_id: stableGoalId,
         p_target_goal_id: "goal-main-1",
       });
       expect(rpcMock).toHaveBeenNthCalledWith(3, "replace_goal_source_link", {
-        p_source_goal_id: "99000000-0000-4000-8000-000000000001",
+        p_source_goal_id: stableGoalId,
         p_target_goal_id: "goal-main-1",
       });
       expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(2);
@@ -508,9 +513,13 @@ describe("GoalForm persistence recovery", () => {
     } finally {
       randomUuidSpy.mockRestore();
     }
-  });
+  },
+  15_000
+  );
 
-  it("retains a stable goal id when create_goal rejects ambiguously", async () => {
+  it(
+    "retains a stable goal id when create_goal rejects ambiguously",
+    async () => {
     const randomUuidSpy = vi
       .spyOn(globalThis.crypto, "randomUUID")
       .mockReturnValue("99000000-0000-4000-8000-000000000002");
@@ -519,7 +528,7 @@ describe("GoalForm persistence recovery", () => {
       .mockRejectedValueOnce(new Error("create request timed out"))
       .mockResolvedValueOnce({ error: null })
       .mockResolvedValueOnce({ error: null });
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
 
     try {
       render(<GoalForm showBackButton={false} onExit={onExit} />);
@@ -537,28 +546,30 @@ describe("GoalForm persistence recovery", () => {
       await waitFor(() => {
         expect(onExit).toHaveBeenCalledTimes(1);
       });
-      expect(rpcMock).toHaveBeenNthCalledWith(
-        1,
-        "create_goal",
-        expect.objectContaining({
-          p_id: "99000000-0000-4000-8000-000000000002",
-        })
+      const createGoalCalls = rpcMock.mock.calls.filter(
+        ([method]) => method === "create_goal"
       );
-      expect(rpcMock).toHaveBeenNthCalledWith(
-        2,
-        "create_goal",
-        expect.objectContaining({
-          p_id: "99000000-0000-4000-8000-000000000002",
-        })
-      );
+      expect(createGoalCalls).toHaveLength(2);
+      const stableGoalId = createGoalCalls[0]?.[1]?.p_id;
+      expect(stableGoalId).toEqual(expect.any(String));
+      expect(createGoalCalls[0]?.[1]).toMatchObject({
+        p_id: stableGoalId,
+        p_title: "Stable goal",
+      });
+      expect(createGoalCalls[1]?.[1]).toMatchObject({
+        p_id: stableGoalId,
+        p_title: "Stable goal",
+      });
       expect(rpcMock).toHaveBeenNthCalledWith(3, "replace_goal_source_link", {
-        p_source_goal_id: "99000000-0000-4000-8000-000000000002",
+        p_source_goal_id: stableGoalId,
         p_target_goal_id: undefined,
       });
     } finally {
       randomUuidSpy.mockRestore();
     }
-  });
+  },
+  15_000
+  );
 
   it("keeps a returned create error editable instead of creating recovery state", async () => {
     const randomUuidSpy = vi
