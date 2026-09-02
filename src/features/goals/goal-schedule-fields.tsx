@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { getGoalHorizonEndDate } from "@/lib/goals/definition-validation";
 
 const GOAL_DATE_INPUT_CLASS =
-  "h-8 min-h-8 w-full max-w-full min-w-0 py-0 text-sm leading-none [&::-webkit-calendar-picker-indicator]:size-3.5 [&::-webkit-datetime-edit]:min-w-0 [&::-webkit-datetime-edit]:p-0";
+  "h-8 min-h-8 w-full min-w-0 py-0 text-sm leading-none [&::-webkit-calendar-picker-indicator]:size-3.5 [&::-webkit-datetime-edit]:min-w-0 [&::-webkit-datetime-edit]:p-0";
 
 interface GoalDateRangeFieldsProps {
   startDate: string;
