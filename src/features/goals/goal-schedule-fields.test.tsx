@@ -27,6 +27,12 @@ describe("GoalDateRangeFields", () => {
     expect(screen.getByLabelText("Start date")).toHaveClass("h-8");
     expect(screen.getByLabelText("End date")).toHaveClass("h-8");
     expect(screen.getByLabelText("Start date")).not.toHaveClass("h-9");
+    expect(screen.getByLabelText("Start date")).toHaveClass("max-w-full");
+    expect(screen.getByLabelText("End date")).toHaveClass("max-w-full");
+    expect(screen.getByLabelText("Start date").parentElement?.parentElement).toHaveClass(
+      "grid-cols-1",
+      "sm:grid-cols-2"
+    );
   });
 
   it("renders start/end values and default labels", () => {
