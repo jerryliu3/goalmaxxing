@@ -83,6 +83,7 @@ export function GoalForm({
     isEditing,
     isPlannerTask,
     definitionFieldsLocked,
+    completedCount,
     filteredLinkTargets,
     selectedLinkTargetGoal,
     validationError,
@@ -183,6 +184,7 @@ export function GoalForm({
               setState((previous) => ({ ...previous, ...patch }));
             }}
             definitionFieldsLocked={definitionFieldsLocked}
+            completedCount={completedCount}
             disabled={saving || recovery !== null}
             includePlannerTask={!isEditing}
             createKind={createKind}

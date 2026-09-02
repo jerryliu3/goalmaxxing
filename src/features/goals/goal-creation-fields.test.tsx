@@ -67,6 +67,7 @@ function renderControls(
     isEditing?: boolean;
     includePlannerTask?: boolean;
     teamId?: string | null;
+    completedCount?: number;
   } = {}
 ) {
   const onFieldChange =
@@ -87,6 +88,7 @@ function renderControls(
       onCreateKindChange={onCreateKindChange}
       isEditing={options.isEditing ?? false}
       isPlannerTask={options.createKind === "planner_task"}
+      completedCount={options.completedCount}
       linkTarget={baseLinkProps(options.linkTarget)}
       teamId={options.teamId ?? null}
     />
@@ -383,7 +385,7 @@ describe("GoalCreationFieldControls create mode", () => {
 });
 
 describe("GoalCreationFieldControls locked mode", () => {
-  it("disables goal type, cadence, target fields, and start date when definition fields are locked", () => {
+  it("disables goal type, cadence, and start date when definition fields are locked", () => {
     renderControls(
       baseFields({
         recurrence_interval: "weekly",
@@ -400,12 +402,32 @@ describe("GoalCreationFieldControls locked mode", () => {
     expect(comboboxWithText("Recurring")).toBeDisabled();
     expect(comboboxWithText("Weekly")).toBeDisabled();
     const targetInput = document.getElementById("recurring-target-count");
-    expect(targetInput).toBeDisabled();
+    expect(targetInput).not.toBeDisabled();
     expect(screen.getByLabelText("Start date")).toBeDisabled();
     expect(screen.getByLabelText("End date (optional)")).not.toBeDisabled();
     expect(
-      screen.getByText(/goal type, frequency, target, and start date are fixed/i)
+      screen.getByText(/goal type, frequency, and start date are fixed/i)
     ).toBeInTheDocument();
+  });
+
+  it("keeps the lifetime target editable and floors it at existing completions", () => {
+    renderControls(
+      baseFields({
+        recurrence_interval: "daily",
+        target_basis: "lifetime",
+        target_count: "250",
+      }),
+      {
+        definitionFieldsLocked: true,
+        isEditing: true,
+        createKind: "recurring",
+        completedCount: 200,
+      }
+    );
+
+    const targetInput = document.getElementById("daily-lifetime-target-count");
+    expect(targetInput).not.toBeDisabled();
+    expect(targetInput).toHaveAttribute("min", "200");
   });
 
   it("keeps end date editable and end-date quick actions usable in locked mode", async () => {

@@ -274,7 +274,7 @@ describe("goal form definition validation adapter", () => {
 
     expect(
       screen.getByText(
-        "Goal type, frequency, target, and start date are fixed after creation. Archive this goal and create a new one to change them."
+        "Goal type, frequency, and start date are fixed after creation. Archive this goal and create a new one to change them."
       )
     ).toBeInTheDocument();
 
@@ -294,7 +294,7 @@ describe("goal form definition validation adapter", () => {
     expect(frequencyCombobox).toBeDefined();
     expect(frequencyCombobox).toBeDisabled();
     expect(targetField).toBeTruthy();
-    expect(targetField).toBeDisabled();
+    expect(targetField).not.toBeDisabled();
     expect(screen.getByLabelText("Start date")).toBeDisabled();
     expect(screen.getByLabelText("End date (optional)")).not.toBeDisabled();
   });
@@ -328,6 +328,25 @@ describe("GoalForm target validation", () => {
     });
     expect(feedback.validationError).toBe(
       "Total target completions requires a positive target."
+    );
+  });
+
+  it("blocks lifetime targets below existing completions", () => {
+    const feedback = getGoalCreationValidationFeedback(
+      {
+        ...createDefaultGoalCreationFields(),
+        title: "Daily lifetime goal",
+        frequency_type: "recurring",
+        recurrence_interval: "daily",
+        target_basis: "lifetime",
+        target_count: "50",
+        start_date: "2026-08-17",
+        end_date: "2026-12-31",
+      },
+      { completedCount: 200 }
+    );
+    expect(feedback.validationError).toBe(
+      "Target cannot be below 200 existing completions."
     );
   });
 });

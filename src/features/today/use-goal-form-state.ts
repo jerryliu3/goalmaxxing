@@ -50,6 +50,7 @@ export function useGoalFormState(goalId?: string) {
   const [linkLoadAttempt, setLinkLoadAttempt] = useState(0);
   const [goalCapacityInput, setGoalCapacityInput] =
     useState<GoalCapacityInput | null>(null);
+  const [completedCount, setCompletedCount] = useState(0);
   const [linkTargetSearch, setLinkTargetSearch] = useState("");
   const [linkTargetOpen, setLinkTargetOpen] = useState(false);
   const [createKind, setCreateKind] = useState<GoalCreateKind>("recurring");
@@ -63,6 +64,7 @@ export function useGoalFormState(goalId?: string) {
       setLoading(true);
       setLinkTargetsReady(false);
       setLinkTargetsError(null);
+      setCompletedCount(0);
 
       const {
         data: { user },
@@ -173,6 +175,7 @@ export function useGoalFormState(goalId?: string) {
           goal.category_key
         );
         setEditingGoal(goal);
+        setCompletedCount(progressByGoal.get(goal.id)?.admissibleCompletionCount ?? 0);
         setState({
           title: goal.title,
           description: goal.description ?? "",
@@ -279,6 +282,7 @@ export function useGoalFormState(goalId?: string) {
     const feedback = getGoalCreationValidationFeedback(toGoalCreationFields(state), {
       capacity: goalCapacityInput ?? undefined,
       asOfDate: toLocalDateString(),
+      completedCount,
     });
     if (feedback.validationError) {
       return feedback;
@@ -292,7 +296,7 @@ export function useGoalFormState(goalId?: string) {
     }
 
     return feedback;
-  }, [state, goalCapacityInput, isPlannerTask]);
+  }, [state, goalCapacityInput, completedCount, isPlannerTask]);
 
   return {
     state,
@@ -314,6 +318,7 @@ export function useGoalFormState(goalId?: string) {
     isEditing,
     isPlannerTask,
     definitionFieldsLocked,
+    completedCount,
     filteredLinkTargets,
     selectedLinkTargetGoal,
     validationError,

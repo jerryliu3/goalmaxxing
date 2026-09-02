@@ -133,7 +133,7 @@ select lives_ok(
   'normalized legacy period goal can use the immutable edit path'
 );
 
-select throws_ok(
+select lives_ok(
   $$
     select public.update_goal(
       '97000000-0000-4000-8000-000000000002',
@@ -156,9 +156,7 @@ select throws_ok(
       'period'
     )
   $$,
-  '22023',
-  'goal definition fields are immutable after creation',
-  'normalized legacy period goal still rejects definition edits'
+  'normalized legacy period goal can change target_count after creation'
 );
 
 select is(
@@ -167,8 +165,8 @@ select is(
     from public.goals
     where id = '97000000-0000-4000-8000-000000000002'
   ),
-  1,
-  'rejected immutable edit leaves normalized target unchanged'
+  2,
+  'period target_count updates persist after creation'
 );
 
 reset role;
