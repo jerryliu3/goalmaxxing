@@ -89,6 +89,7 @@ export interface GoalCreationFieldControlsProps {
   startDateId?: string;
   endDateId?: string;
   disabled?: boolean;
+  completedCount?: number;
 }
 
 export function GoalCreationFieldControls({
@@ -110,6 +111,7 @@ export function GoalCreationFieldControls({
   startDateId = "start-date",
   endDateId = "end-date",
   disabled = false,
+  completedCount = 0,
 }: GoalCreationFieldControlsProps) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [milestoneNamesOpen, setMilestoneNamesOpen] = useState(false);
@@ -132,6 +134,7 @@ export function GoalCreationFieldControls({
   const parsedTargetCount = parseGoalCreationTargetCount(fields.target_count);
   const fixedMilestoneCount =
     fields.frequency_type === "fixed_milestones" ? parsedTargetCount ?? 0 : 0;
+  const ordinalTargetMin = Math.max(1, completedCount);
   const hasLinkedTarget = linkTarget.value !== "none";
   const showTeamScopedFields = teamId === null;
   const goalTypeValue = isEditing ? fields.frequency_type : createKind;
@@ -232,7 +235,7 @@ export function GoalCreationFieldControls({
               frequencyType={fields.frequency_type}
               value={fields.target_count}
               onValueChange={(value) => onFieldChange({ type: "target_count", value })}
-              disabled={definitionFieldsLocked}
+              minValue={ordinalTargetMin}
               showRecurringHelperText={false}
             />
             <p className="text-xs text-muted-foreground">
@@ -287,14 +290,15 @@ export function GoalCreationFieldControls({
               frequencyType={fields.frequency_type}
               value={fields.target_count}
               onValueChange={(value) => onFieldChange({ type: "target_count", value })}
-              minValue={1}
+              minValue={
+                fields.target_basis === "lifetime" ? ordinalTargetMin : 1
+              }
               maxValue={
                 fields.target_basis === "period"
                   ? getGoalPeriodTargetMax(fields.recurrence_interval)
                   : undefined
               }
               required={fields.target_basis === "period" || fields.target_basis === "lifetime"}
-              disabled={definitionFieldsLocked}
               showRecurringHelperText={false}
             />
           </div>
@@ -314,9 +318,8 @@ export function GoalCreationFieldControls({
               frequencyType={fields.frequency_type}
               value={fields.target_count}
               onValueChange={(value) => onFieldChange({ type: "target_count", value })}
-              minValue={1}
+              minValue={ordinalTargetMin}
               required
-              disabled={definitionFieldsLocked}
               showRecurringHelperText={false}
             />
           </div>
@@ -383,7 +386,7 @@ export function GoalCreationFieldControls({
       <div className="-mt-2 space-y-3">
         {definitionFieldsLocked ? (
           <p className="text-xs text-muted-foreground">
-            Goal type, frequency, target, and start date are fixed after creation.
+            Goal type, frequency, and start date are fixed after creation.
             Archive this goal and create a new one to change them.
           </p>
         ) : null}

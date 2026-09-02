@@ -276,6 +276,7 @@ function collectGoalCreationDefinitionIssues(
   options?: {
     capacity?: GoalCapacityInput;
     asOfDate?: string;
+    completedCount?: number;
   }
 ): GoalDefinitionValidationIssue[] {
   return validateGoalDefinition({
@@ -293,7 +294,10 @@ function collectGoalCreationDefinitionIssues(
 }
 
 export function validateGoalCreationFieldErrors(
-  fields: GoalCreationFields
+  fields: GoalCreationFields,
+  options?: {
+    completedCount?: number;
+  }
 ): string[] {
   const errors: string[] = [];
   const parsedTarget = parsePositiveTargetCount(fields.target_count);
@@ -362,6 +366,21 @@ export function validateGoalCreationFieldErrors(
     errors.push("Per-period target must be a positive whole number.");
   }
 
+  const completedCount = options?.completedCount ?? 0;
+  const isOrdinalTarget =
+    fields.frequency_type === "fixed_milestones" ||
+    (fields.frequency_type === "recurring" && fields.target_basis === "lifetime");
+  if (
+    isOrdinalTarget &&
+    parsedTarget !== null &&
+    completedCount > 0 &&
+    parsedTarget < completedCount
+  ) {
+    errors.push(
+      `Target cannot be below ${completedCount} existing completions.`
+    );
+  }
+
   if (!fields.start_date) {
     errors.push("Start date is required.");
   } else {
@@ -388,9 +407,12 @@ export function getGoalCreationValidationFeedback(
   options?: {
     capacity?: GoalCapacityInput;
     asOfDate?: string;
+    completedCount?: number;
   }
 ): { validationError: string | null; validationWarning: string | null } {
-  const fieldErrors = validateGoalCreationFieldErrors(fields);
+  const fieldErrors = validateGoalCreationFieldErrors(fields, {
+    completedCount: options?.completedCount,
+  });
   if (fieldErrors.length > 0) {
     return { validationError: fieldErrors[0] ?? null, validationWarning: null };
   }
