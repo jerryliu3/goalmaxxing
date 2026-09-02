@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { createDefaultGoalCreationFields } from "@/features/goals/goal-creation-model";
 import { buildStarterPackRows } from "@/features/goals/starter-packs";
 import {
@@ -26,6 +26,15 @@ function bulkDraft(overrides: Partial<BulkGoalDraft> = {}): BulkGoalDraft {
 }
 
 describe("bulk goal drafts", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-17T12:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("normalizes parser goals through the canonical draft model", () => {
     const [draft] = buildBulkGoalDraftsFromLlmGoals([
       {

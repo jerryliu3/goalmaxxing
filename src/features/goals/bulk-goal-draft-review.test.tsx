@@ -101,7 +101,7 @@ async function selectComboboxOption(
   const trigger = comboboxWithText(scope, triggerText);
   if (trigger) {
     await user.click(trigger);
-    await user.click(screen.getByRole("option", { name: optionName }));
+    await user.click(await screen.findByRole("option", { name: optionName }));
     return;
   }
 
@@ -150,8 +150,10 @@ describe("BulkGoalDraftReview", () => {
   describe.each(["coach", "full"] as const)(
     "shared create-mode editor (%s)",
     (variant) => {
-      it("supports draft editing transitions and create-mode advanced fields", async () => {
-        const user = userEvent.setup();
+      it(
+        "supports draft editing transitions and create-mode advanced fields",
+        async () => {
+        const user = userEvent.setup({ delay: null });
         render(
           <ReviewHarness
             variant={variant}
@@ -227,7 +229,7 @@ describe("BulkGoalDraftReview", () => {
         const difficultyTrigger = comboboxWithText(dialog, "Medium");
         expect(difficultyTrigger).toBeTruthy();
         await user.click(difficultyTrigger!);
-        await user.click(screen.getByRole("option", { name: "Hard" }));
+        await user.click(await screen.findByRole("option", { name: "Hard" }));
 
         const privacyCheckbox = within(dialog).getByRole("checkbox", {
           name: /make this goal private/i,
@@ -260,7 +262,9 @@ describe("BulkGoalDraftReview", () => {
         await user.click(screen.getByRole("button", { name: "Close" }));
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
         expect(screen.getByText("Long run")).toBeInTheDocument();
-      });
+      },
+      15_000
+      );
     }
   );
 

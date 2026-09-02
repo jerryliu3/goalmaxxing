@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BulkGoalForm } from "@/features/today/bulk-goal-form";
@@ -144,11 +144,10 @@ function parseNaturalLanguageGoals(
   postJsonMock.mockResolvedValue({ goals, warnings: [] });
   const prompt =
     "Create one weekly strength goal and one lifetime presentation practice goal.";
+  const promptInput = screen.getByLabelText("Describe goals in natural language");
+  fireEvent.change(promptInput, { target: { value: prompt } });
   return user
-    .type(screen.getByLabelText("Describe goals in natural language"), prompt)
-    .then(() =>
-      user.click(screen.getByRole("button", { name: "Parse natural language" }))
-    )
+    .click(screen.getByRole("button", { name: "Parse natural language" }))
     .then(() =>
       waitFor(() => {
         expect(postJsonMock).toHaveBeenCalledWith(
@@ -208,7 +207,7 @@ describe("BulkGoalForm", () => {
         error: null,
       });
 
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       render(<BulkGoalForm showBackButton={false} />);
       await screen.findByText("Create multiple goals");
 
@@ -252,7 +251,9 @@ describe("BulkGoalForm", () => {
         .find((element) => element.textContent?.includes("Medium"));
       expect(difficultyTrigger).toBeTruthy();
       await user.click(difficultyTrigger!);
-      await user.click(screen.getByRole("option", { name: "Hard" }));
+      await waitFor(async () => {
+        await user.click(await screen.findByRole("option", { name: "Hard" }));
+      });
       await user.click(
         within(dialog).getByRole("checkbox", {
           name: /make this goal private/i,
@@ -377,7 +378,7 @@ describe("BulkGoalForm", () => {
       .mockResolvedValueOnce({ error: null })
       .mockResolvedValueOnce({ error: { message: "link save failed" } })
       .mockResolvedValueOnce({ error: null });
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     render(<BulkGoalForm showBackButton={false} />);
     await screen.findByText("Create multiple goals");
 
@@ -441,7 +442,7 @@ describe("BulkGoalForm", () => {
   });
 
   it("blocks creation while selected drafts remain invalid", async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     render(<BulkGoalForm showBackButton={false} />);
     await screen.findByText("Create multiple goals");
 
