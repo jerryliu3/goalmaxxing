@@ -44,6 +44,21 @@ export interface GoalDefinitionValidationIssue {
   message: string;
 }
 
+function isOpenCapacityDate(
+  date: string,
+  restWeekdays: Set<number>,
+  blackoutRanges: GoalCapacityInput["blackoutRanges"]
+) {
+  if (restWeekdays.has(getUtcWeekday(date))) {
+    return false;
+  }
+  return !blackoutRanges.some(
+    (range) =>
+      compareDateStrings(date, range.start) >= 0 &&
+      compareDateStrings(date, range.end) <= 0
+  );
+}
+
 export function countAvailableDays(
   { start, end }: { start: string; end: string },
   capacity: GoalCapacityInput
@@ -54,18 +69,9 @@ export function countAvailableDays(
   const restWeekdays = new Set(capacity.restWeekdays);
   let available = 0;
   for (const date of enumerateDates({ start, end })) {
-    if (restWeekdays.has(getUtcWeekday(date))) {
-      continue;
+    if (isOpenCapacityDate(date, restWeekdays, capacity.blackoutRanges)) {
+      available += 1;
     }
-    const blocked = capacity.blackoutRanges.some(
-      (range) =>
-        compareDateStrings(date, range.start) >= 0 &&
-        compareDateStrings(date, range.end) <= 0
-    );
-    if (blocked) {
-      continue;
-    }
-    available += 1;
   }
   return available;
 }
@@ -95,15 +101,7 @@ function findPeriodCapacityShortfall(
     if (!availableByPeriod.has(period.periodKey)) {
       availableByPeriod.set(period.periodKey, 0);
     }
-    if (restWeekdays.has(getUtcWeekday(date))) {
-      continue;
-    }
-    const blocked = capacity.blackoutRanges.some(
-      (range) =>
-        compareDateStrings(date, range.start) >= 0 &&
-        compareDateStrings(date, range.end) <= 0
-    );
-    if (!blocked) {
+    if (isOpenCapacityDate(date, restWeekdays, capacity.blackoutRanges)) {
       availableByPeriod.set(
         period.periodKey,
         (availableByPeriod.get(period.periodKey) ?? 0) + 1
@@ -313,7 +311,7 @@ export function validateGoalDefinition(
     if (shortfall) {
       issues.push({
         code: "target_exceeds_capacity",
-        message: `Only ${shortfall.available} available days in at least one ${input.recurrenceInterval} period before ${planningEndDate} with your current rest days and blackout ranges — ${shortfall.needed} remaining sessions likely won't all fit.`,
+        message: `Only ${shortfall.available} available days in at least one ${input.recurrenceInterval} period before ${planningEndDate} with your current rest days and blackout ranges — ${shortfall.needed} sessions likely won't all fit.`,
       });
     }
   }
@@ -348,7 +346,7 @@ export function validateGoalDefinition(
     if (remaining > available) {
       issues.push({
         code: "target_exceeds_capacity",
-        message: `Only ${available} available days before ${planningEndDate} with your current rest days and blackout ranges — ${remaining} remaining sessions likely won't all fit. Lower the target, extend the end date, or free up rest days.`,
+        message: `Only ${available} available days before ${planningEndDate} with your current rest days and blackout ranges — ${remaining} sessions likely won't all fit. Lower the target, extend the end date, or free up rest days.`,
       });
     }
   }

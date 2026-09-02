@@ -384,6 +384,66 @@ describe("GoalForm target validation", () => {
     );
     expect(feedback.validationError).toBeNull();
   });
+
+  it("credits existing completions in remaining lifetime capacity warnings", () => {
+    const fields = {
+      ...createDefaultGoalCreationFields(),
+      title: "Daily lifetime goal",
+      frequency_type: "recurring" as const,
+      recurrence_interval: "daily" as const,
+      target_basis: "lifetime" as const,
+      target_count: "6",
+      start_date: "2026-08-01",
+      end_date: "2026-08-07",
+    };
+    const capacity = {
+      asOfDate: "2026-08-01",
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [] as Array<{ start: string; end: string }>,
+      },
+    };
+
+    expect(getGoalCreationValidationFeedback(fields, capacity).validationWarning).toContain(
+      "6 sessions"
+    );
+    expect(
+      getGoalCreationValidationFeedback(fields, {
+        ...capacity,
+        completedCount: 2,
+      }).validationWarning
+    ).toBeNull();
+  });
+
+  it("credits current-period completions in remaining period capacity warnings", () => {
+    const fields = {
+      ...createDefaultGoalCreationFields(),
+      title: "Weekly goal",
+      frequency_type: "recurring" as const,
+      recurrence_interval: "weekly" as const,
+      target_basis: "period" as const,
+      target_count: "6",
+      start_date: "2026-08-03",
+      end_date: "2026-08-09",
+    };
+    const capacity = {
+      asOfDate: "2026-08-03",
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [] as Array<{ start: string; end: string }>,
+      },
+    };
+
+    expect(getGoalCreationValidationFeedback(fields, capacity).validationWarning).toContain(
+      "6 sessions"
+    );
+    expect(
+      getGoalCreationValidationFeedback(fields, {
+        ...capacity,
+        currentPeriodCompletedCount: 2,
+      }).validationWarning
+    ).toBeNull();
+  });
 });
 
 describe("GoalForm persistence recovery", () => {
