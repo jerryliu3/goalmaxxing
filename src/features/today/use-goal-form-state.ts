@@ -51,6 +51,7 @@ export function useGoalFormState(goalId?: string) {
   const [goalCapacityInput, setGoalCapacityInput] =
     useState<GoalCapacityInput | null>(null);
   const [completedCount, setCompletedCount] = useState(0);
+  const [currentPeriodCompletedCount, setCurrentPeriodCompletedCount] = useState(0);
   const [linkTargetSearch, setLinkTargetSearch] = useState("");
   const [linkTargetOpen, setLinkTargetOpen] = useState(false);
   const [createKind, setCreateKind] = useState<GoalCreateKind>("recurring");
@@ -65,6 +66,7 @@ export function useGoalFormState(goalId?: string) {
       setLinkTargetsReady(false);
       setLinkTargetsError(null);
       setCompletedCount(0);
+      setCurrentPeriodCompletedCount(0);
 
       const {
         data: { user },
@@ -178,6 +180,9 @@ export function useGoalFormState(goalId?: string) {
         setCompletedCount(
           (progress?.facts ?? []).filter((fact) => fact.goal_id === goal.id).length
         );
+        setCurrentPeriodCompletedCount(
+          progressByGoal.get(goal.id)?.currentPeriodCompletionCount ?? 0
+        );
         setState({
           title: goal.title,
           description: goal.description ?? "",
@@ -285,6 +290,7 @@ export function useGoalFormState(goalId?: string) {
       capacity: goalCapacityInput ?? undefined,
       asOfDate: toLocalDateString(),
       completedCount,
+      currentPeriodCompletedCount,
     });
     if (feedback.validationError) {
       return feedback;
@@ -298,7 +304,7 @@ export function useGoalFormState(goalId?: string) {
     }
 
     return feedback;
-  }, [state, goalCapacityInput, completedCount, isPlannerTask]);
+  }, [state, goalCapacityInput, completedCount, currentPeriodCompletedCount, isPlannerTask]);
 
   return {
     state,

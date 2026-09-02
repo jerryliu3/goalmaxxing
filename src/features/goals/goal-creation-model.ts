@@ -277,6 +277,7 @@ function collectGoalCreationDefinitionIssues(
     capacity?: GoalCapacityInput;
     asOfDate?: string;
     completedCount?: number;
+    currentPeriodCompletedCount?: number;
   }
 ): GoalDefinitionValidationIssue[] {
   return validateGoalDefinition({
@@ -290,6 +291,8 @@ function collectGoalCreationDefinitionIssues(
     endDate: fields.end_date || null,
     asOfDate: options?.asOfDate ?? toLocalDateString(),
     capacity: options?.capacity,
+    completedCount: options?.completedCount,
+    currentPeriodCompletedCount: options?.currentPeriodCompletedCount,
   });
 }
 
@@ -408,6 +411,7 @@ export function getGoalCreationValidationFeedback(
     capacity?: GoalCapacityInput;
     asOfDate?: string;
     completedCount?: number;
+    currentPeriodCompletedCount?: number;
   }
 ): { validationError: string | null; validationWarning: string | null } {
   const fieldErrors = validateGoalCreationFieldErrors(fields, {

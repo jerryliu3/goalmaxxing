@@ -370,4 +370,70 @@ describe("goal definition validation", () => {
       "21 available days in at least one monthly period"
     );
   });
+
+  it("credits existing completions when checking remaining lifetime capacity", () => {
+    const capacity = {
+      restWeekdays: [0, 6],
+      blackoutRanges: [] as Array<{ start: string; end: string }>,
+    };
+    const base = {
+      frequencyType: "recurring" as const,
+      targetBasis: "lifetime" as const,
+      recurrenceInterval: "daily" as const,
+      targetCount: 6,
+      startDate: "2026-08-01",
+      endDate: "2026-08-07",
+      asOfDate: "2026-08-01",
+      capacity,
+    };
+
+    expect(
+      validateGoalDefinition(base).some((issue) => issue.code === "target_exceeds_capacity")
+    ).toBe(true);
+    expect(
+      validateGoalDefinition({ ...base, completedCount: 2 }).some(
+        (issue) => issue.code === "target_exceeds_capacity"
+      )
+    ).toBe(false);
+    expect(
+      validateGoalDefinition({ ...base, completedCount: 2 }).find(
+        (issue) => issue.code === "target_exceeds_capacity"
+      )
+    ).toBeUndefined();
+
+    const stillShort = validateGoalDefinition({
+      ...base,
+      targetCount: 250,
+      completedCount: 200,
+    });
+    expect(stillShort.find((issue) => issue.code === "target_exceeds_capacity")?.message).toContain(
+      "50 remaining sessions"
+    );
+  });
+
+  it("credits current-period completions when checking remaining period capacity", () => {
+    const base = {
+      frequencyType: "recurring" as const,
+      targetBasis: "period" as const,
+      recurrenceInterval: "weekly" as const,
+      targetCount: 6,
+      startDate: "2026-08-03",
+      endDate: "2026-08-09",
+      asOfDate: "2026-08-03",
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [] as Array<{ start: string; end: string }>,
+      },
+    };
+
+    expect(
+      validateGoalDefinition(base).some((issue) => issue.code === "target_exceeds_capacity")
+    ).toBe(true);
+    expect(
+      validateGoalDefinition({
+        ...base,
+        currentPeriodCompletedCount: 2,
+      }).some((issue) => issue.code === "target_exceeds_capacity")
+    ).toBe(false);
+  });
 });
