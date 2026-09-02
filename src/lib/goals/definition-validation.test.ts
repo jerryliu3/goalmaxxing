@@ -370,4 +370,171 @@ describe("goal definition validation", () => {
       "21 available days in at least one monthly period"
     );
   });
+
+  it("credits existing completions when checking remaining lifetime capacity", () => {
+    const capacity = {
+      restWeekdays: [0, 6],
+      blackoutRanges: [] as Array<{ start: string; end: string }>,
+    };
+    const base = {
+      frequencyType: "recurring" as const,
+      targetBasis: "lifetime" as const,
+      recurrenceInterval: "daily" as const,
+      targetCount: 6,
+      startDate: "2026-08-01",
+      endDate: "2026-08-07",
+      asOfDate: "2026-08-01",
+      capacity,
+    };
+
+    expect(
+      validateGoalDefinition(base).some((issue) => issue.code === "target_exceeds_capacity")
+    ).toBe(true);
+    expect(
+      validateGoalDefinition({ ...base, completedCount: 2 }).some(
+        (issue) => issue.code === "target_exceeds_capacity"
+      )
+    ).toBe(false);
+
+    const stillShort = validateGoalDefinition({
+      ...base,
+      targetCount: 250,
+      completedCount: 200,
+    });
+    expect(stillShort.find((issue) => issue.code === "target_exceeds_capacity")?.message).toContain(
+      "50 sessions"
+    );
+  });
+
+  it("credits existing completions against remaining days after asOfDate", () => {
+    const base = {
+      frequencyType: "recurring" as const,
+      targetBasis: "lifetime" as const,
+      recurrenceInterval: "daily" as const,
+      targetCount: 6,
+      startDate: "2026-08-01",
+      endDate: "2026-08-07",
+      asOfDate: "2026-08-05",
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [] as Array<{ start: string; end: string }>,
+      },
+    };
+
+    expect(
+      validateGoalDefinition(base).some((issue) => issue.code === "target_exceeds_capacity")
+    ).toBe(true);
+    expect(
+      validateGoalDefinition({ ...base, completedCount: 4 }).some(
+        (issue) => issue.code === "target_exceeds_capacity"
+      )
+    ).toBe(false);
+  });
+
+  it("credits current-period completions when checking remaining period capacity", () => {
+    const base = {
+      frequencyType: "recurring" as const,
+      targetBasis: "period" as const,
+      recurrenceInterval: "weekly" as const,
+      targetCount: 6,
+      startDate: "2026-08-03",
+      endDate: "2026-08-09",
+      asOfDate: "2026-08-03",
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [] as Array<{ start: string; end: string }>,
+      },
+    };
+
+    expect(
+      validateGoalDefinition(base).some((issue) => issue.code === "target_exceeds_capacity")
+    ).toBe(true);
+    expect(
+      validateGoalDefinition({
+        ...base,
+        currentPeriodCompletedCount: 2,
+      }).some((issue) => issue.code === "target_exceeds_capacity")
+    ).toBe(false);
+  });
+
+  it("still warns when a later period cannot fit the full period target", () => {
+    const issues = validateGoalDefinition({
+      frequencyType: "recurring",
+      targetBasis: "period",
+      recurrenceInterval: "weekly",
+      targetCount: 6,
+      startDate: "2026-08-03",
+      endDate: "2026-08-16",
+      asOfDate: "2026-08-03",
+      currentPeriodCompletedCount: 2,
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [],
+      },
+    });
+
+    expect(issues).toContainEqual(
+      expect.objectContaining({ code: "target_exceeds_capacity" })
+    );
+    expect(issues.find((issue) => issue.code === "target_exceeds_capacity")?.message).toContain(
+      "6 sessions"
+    );
+  });
+
+  it("does not warn when remaining sessions are already complete", () => {
+    const issues = validateGoalDefinition({
+      frequencyType: "recurring",
+      targetBasis: "lifetime",
+      recurrenceInterval: "daily",
+      targetCount: 6,
+      startDate: "2026-08-01",
+      endDate: "2026-08-07",
+      asOfDate: "2026-08-01",
+      completedCount: 6,
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [],
+      },
+    });
+
+    expect(issues.some((issue) => issue.code === "target_exceeds_capacity")).toBe(false);
+  });
+
+  it("ignores period completions when checking lifetime remaining capacity", () => {
+    const issues = validateGoalDefinition({
+      frequencyType: "recurring",
+      targetBasis: "lifetime",
+      recurrenceInterval: "daily",
+      targetCount: 6,
+      startDate: "2026-08-01",
+      endDate: "2026-08-07",
+      asOfDate: "2026-08-01",
+      currentPeriodCompletedCount: 2,
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [],
+      },
+    });
+
+    expect(issues.some((issue) => issue.code === "target_exceeds_capacity")).toBe(true);
+  });
+
+  it("ignores lifetime completions when checking period remaining capacity", () => {
+    const issues = validateGoalDefinition({
+      frequencyType: "recurring",
+      targetBasis: "period",
+      recurrenceInterval: "weekly",
+      targetCount: 6,
+      startDate: "2026-08-03",
+      endDate: "2026-08-09",
+      asOfDate: "2026-08-03",
+      completedCount: 2,
+      capacity: {
+        restWeekdays: [0, 6],
+        blackoutRanges: [],
+      },
+    });
+
+    expect(issues.some((issue) => issue.code === "target_exceeds_capacity")).toBe(true);
+  });
 });
