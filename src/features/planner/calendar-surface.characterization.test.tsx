@@ -453,6 +453,7 @@ describe("CalendarSurface characterization", () => {
   });
 
   it("shows Today shortcut when today's tile is outside the rendered month window", async () => {
+    vi.setSystemTime(new Date("2026-08-15T12:00:00.000Z"));
     postJsonMock.mockResolvedValue(buildContext([]));
     const onMonthChange = vi.fn();
 
@@ -480,6 +481,8 @@ describe("CalendarSurface characterization", () => {
     fireEvent.click(todayButton);
 
     expect(onMonthChange).toHaveBeenCalledWith("2026-08", "replace");
+
+    vi.useRealTimers();
   });
 
   it("scrolls the shared month viewport to today's column", async () => {
