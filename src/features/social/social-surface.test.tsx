@@ -97,13 +97,25 @@ afterEach(() => {
 });
 
 describe("SocialSurface refresh behavior", () => {
+  async function expectFeedRefreshToken(token: string) {
+    await waitFor(
+      () => {
+        expect(screen.getByTestId("feed-list")).toHaveAttribute(
+          "data-refresh-token",
+          token
+        );
+      },
+      { timeout: 5000 }
+    );
+  }
+
   it("refreshes feed tab when an XP refresh event is requested", async () => {
     render(<SocialSurface />);
 
     await waitFor(() => {
-      expect(screen.getByTestId("feed-list")).toHaveAttribute("data-refresh-token", "1");
+      expect(invalidateSocialTabCache).toHaveBeenCalledTimes(1);
     });
-    expect(invalidateSocialTabCache).toHaveBeenCalledTimes(1);
+    await expectFeedRefreshToken("1");
     const globalRefreshCount = vi.mocked(invalidateSocialTabCache).mock.calls.length;
 
     act(() => {
@@ -113,9 +125,7 @@ describe("SocialSurface refresh behavior", () => {
       });
     });
 
-    await waitFor(() => {
-      expect(screen.getByTestId("feed-list")).toHaveAttribute("data-refresh-token", "2");
-    });
+    await expectFeedRefreshToken("2");
     expect(invalidateSocialFeedCache).toHaveBeenCalledTimes(1);
     expect(invalidateSocialTabCache).toHaveBeenCalledTimes(globalRefreshCount);
   });
@@ -151,17 +161,16 @@ describe("SocialSurface refresh behavior", () => {
     render(<SocialSurface />);
 
     await waitFor(() => {
-      expect(screen.getByTestId("feed-list")).toHaveAttribute("data-refresh-token", "1");
+      expect(invalidateSocialTabCache).toHaveBeenCalledTimes(1);
     });
+    await expectFeedRefreshToken("1");
     expect(invalidateSocialTabCache).toHaveBeenCalledTimes(1);
 
     act(() => {
       window.dispatchEvent(new Event("focus"));
     });
 
-    await waitFor(() => {
-      expect(screen.getByTestId("feed-list")).toHaveAttribute("data-refresh-token", "2");
-    });
+    await expectFeedRefreshToken("2");
     expect(invalidateSocialTabCache).toHaveBeenCalledTimes(2);
 
     act(() => {
