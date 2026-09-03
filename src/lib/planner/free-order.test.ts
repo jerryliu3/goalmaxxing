@@ -139,6 +139,66 @@ describe("ordinal is identity, not sequence", () => {
     });
   });
 
+  it("rebalances unlocked preserved placements to clear deadline_total shortfall", () => {
+    const goal = makeGoal({
+      target_count: 5,
+      start_date: "2026-09-01",
+      end_date: "2026-12-31",
+    });
+    const requirementFingerprint = computeRequirementFingerprint(goal);
+    const output = runPlannerKernel({
+      schemaVersion: "1",
+      eligibilityMode: "overlap_v1",
+      ownerId: "owner-a",
+      startDate: "2026-09-01",
+      endDate: "2026-12-31",
+      asOfDate: "2026-09-03",
+      timezone: "UTC",
+      goals: [goal],
+      completions: [],
+      links: [],
+      policy: createDefaultPlannerPolicy("UTC", "2026-09-03T00:00:00Z"),
+      preserveExistingAssignments: true,
+      basePlan: {
+        planId: "plan-preserve-squeeze",
+        version: 1,
+        assignments: [
+          {
+            goalId: goal.id,
+            requirementFingerprint,
+            unitKey: "total:1",
+            scheduledDate: "2026-12-19",
+            locked: false,
+          },
+          {
+            goalId: goal.id,
+            requirementFingerprint,
+            unitKey: "total:3",
+            scheduledDate: "2026-12-20",
+            locked: false,
+          },
+          {
+            goalId: goal.id,
+            requirementFingerprint,
+            unitKey: "total:5",
+            scheduledDate: "2026-12-31",
+            locked: false,
+          },
+        ],
+      },
+    });
+
+    expect(output.solver.issueCodes).not.toContain("placement_shortfall");
+    expect(output.workUnits.every((unit) => unit.scheduledDate !== null)).toBe(
+      true
+    );
+    const earlyPlacementCount = output.workUnits.filter(
+      (unit) =>
+        unit.scheduledDate !== null && unit.scheduledDate < "2026-12-01"
+    ).length;
+    expect(earlyPlacementCount).toBeGreaterThan(0);
+  });
+
   it("is deterministic across repeated solves", () => {
     const goal = makeGoal();
     const pins = { "goal-a:total:3": "2026-08-19" };

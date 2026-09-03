@@ -144,7 +144,7 @@ describe("projectWorkUnitsToSolver", () => {
     expect(result[0]?.candidateDates).toEqual(["2026-08-06"]);
   });
 
-  it("still projects an in-window preserved assignment as a soft lock", () => {
+  it("keeps an in-window preserved assignment movable via previousDate", () => {
     const result = projectWorkUnitsToSolver({
       workUnits: [
         createWorkUnit({
@@ -157,7 +157,8 @@ describe("projectWorkUnitsToSolver", () => {
     });
 
     expect(result).toHaveLength(1);
-    expect(result[0]?.lockedDate).toBe("2026-08-25");
+    expect(result[0]?.lockedDate).toBeNull();
+    expect(result[0]?.previousDate).toBe("2026-08-25");
     expect(result[0]?.candidateDates).toContain("2026-08-25");
   });
 
