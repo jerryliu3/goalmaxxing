@@ -153,14 +153,21 @@ export function CheckboxDropdown({
         <div
           ref={menuRef}
           role="listbox"
+          data-slot="checkbox-dropdown-menu"
           className={cn(
-            "fixed z-[120] rounded-lg border bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10",
+            "pointer-events-auto fixed z-[120] rounded-lg border bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10",
             menuClassName
           )}
           style={{
             left: position.left,
             top: position.top,
             width: position.width,
+            pointerEvents: "auto",
+          }}
+          onPointerDown={(event) => {
+            // Modal dialogs disable pointer events on body. The menu is portaled
+            // to body, so it must reclaim hits and not count as an outside click.
+            event.stopPropagation();
           }}
         >
           <div className="space-y-0.5 overflow-auto pr-1" style={{ maxHeight: position.maxHeight }}>
