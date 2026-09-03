@@ -39,7 +39,7 @@ interface PlannerCalendarCell {
 export interface PlannerCalendarBoardProps {
   loading: boolean;
   viewMode: PlannerCalendarViewMode;
-  showTasksOnCalendar?: boolean;
+  showTasksInsteadOfGoals?: boolean;
   previousWindowAriaLabel: string;
   nextWindowAriaLabel: string;
   fixedViewHeadingWidthCh: number;
@@ -100,7 +100,7 @@ export interface PlannerCalendarBoardProps {
 export function PlannerCalendarBoard({
   loading,
   viewMode,
-  showTasksOnCalendar = false,
+  showTasksInsteadOfGoals = false,
   previousWindowAriaLabel,
   nextWindowAriaLabel,
   fixedViewHeadingWidthCh,
@@ -212,7 +212,7 @@ export function PlannerCalendarBoard({
                   includeSourceElement={false}
                 />
               </div>
-              {showTasksOnCalendar ? null : (
+              {showTasksInsteadOfGoals ? null : (
                 <PlannerTasksPanel
                   key={focusedDay}
                   title="Tasks"

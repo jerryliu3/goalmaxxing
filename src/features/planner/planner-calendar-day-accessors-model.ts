@@ -30,6 +30,23 @@ import {
   resolveEffectiveEndMonth,
 } from "@/lib/goals/list-view";
 
+function collectCalendarTaskLookup(
+  calendarTaskEntriesByDate: Map<string, PlannerDayDetailEntry[]> | undefined
+) {
+  const entryByKey = new Map<string, PlannerDayDetailEntry>();
+  const entryDayByKey = new Map<string, string>();
+  if (!calendarTaskEntriesByDate) {
+    return { entryByKey, entryDayByKey };
+  }
+  for (const [day, entries] of calendarTaskEntriesByDate) {
+    for (const entry of entries) {
+      entryByKey.set(entry.key, entry);
+      entryDayByKey.set(entry.key, day);
+    }
+  }
+  return { entryByKey, entryDayByKey };
+}
+
 export interface CalendarDayAccessorsArgs {
   context: PlannerContextPayload | null;
   effectivePreview: PlannerContextPayload["preview"] | null;
@@ -49,6 +66,7 @@ export interface CalendarDayAccessorsArgs {
   additionalProjectionDays: string[];
   previewEntryOrderByDay: Record<string, string[]>;
   calendarTaskEntriesByDate?: Map<string, PlannerDayDetailEntry[]>;
+  showTasksInsteadOfGoals?: boolean;
 }
 
 export interface CalendarDayAccessorsMemoizedState {
@@ -94,6 +112,7 @@ export function selectCalendarDayAccessorsModel({
   additionalProjectionDays,
   previewEntryOrderByDay,
   calendarTaskEntriesByDate,
+  showTasksInsteadOfGoals = false,
   memoizedState,
 }: CalendarDayAccessorsArgs & {
   memoizedState?: CalendarDayAccessorsMemoizedState;
@@ -143,8 +162,8 @@ export function selectCalendarDayAccessorsModel({
   const {
     effectiveDraftItemEdits,
     entriesByDate,
-    entryByKey,
-    entryDayByKey,
+    entryByKey: goalEntryByKey,
+    entryDayByKey: goalEntryDayByKey,
     unplaceableGoalSummaries,
     totalUnplacedCount,
   } = calendarStoreProjection;
@@ -182,6 +201,16 @@ export function selectCalendarDayAccessorsModel({
     return day >= editableDateWindow.start && day <= editableDateWindow.end;
   };
 
+  const hideViewerPlan = duoScope === "partner";
+  const plannerReadOnly = duoScope === "partner";
+  const taskLookup = collectCalendarTaskLookup(
+    showTasksInsteadOfGoals ? calendarTaskEntriesByDate : undefined
+  );
+  const entryByKey = showTasksInsteadOfGoals ? taskLookup.entryByKey : goalEntryByKey;
+  const entryDayByKey = showTasksInsteadOfGoals
+    ? taskLookup.entryDayByKey
+    : goalEntryDayByKey;
+
   const canMutateEntryOnDay = (entry: PlannerDayDetailEntry, day: string | null) => {
     if (!day) {
       return false;
@@ -191,9 +220,6 @@ export function selectCalendarDayAccessorsModel({
     }
     return entryDayByKey.get(entry.key) === day;
   };
-
-  const hideViewerPlan = duoScope === "partner";
-  const plannerReadOnly = duoScope === "partner";
 
   const filterEntries = (entries: PlannerDayDetailEntry[]) =>
     entries.filter((entry) => {
@@ -206,24 +232,27 @@ export function selectCalendarDayAccessorsModel({
       );
     });
 
-  const entriesForDay = (day: string | null, goalEntries: PlannerDayDetailEntry[]) => {
+  const entriesForDay = (day: string | null) => {
     if (!day) {
-      return filterEntries(goalEntries);
+      return [];
     }
-    return filterEntries([
-      ...goalEntries,
-      ...(calendarTaskEntriesByDate?.get(day) ?? []),
-    ]);
+    if (showTasksInsteadOfGoals) {
+      return filterEntries(calendarTaskEntriesByDate?.get(day) ?? []);
+    }
+    return filterEntries(getCalendarDayProjection(day).entries);
   };
 
   const getEntriesForDay = (day: string | null) => {
     if (hideViewerPlan) {
       return [];
     }
-    return entriesForDay(day, getCalendarDayProjection(day).entries);
+    return entriesForDay(day);
   };
 
   const getCompletionFactMarkersForDay = (day: string | null) => {
+    if (showTasksInsteadOfGoals) {
+      return [];
+    }
     const viewerMarkers = hideViewerPlan
       ? []
       : getCalendarDayProjection(day).completionFactMarkers;
@@ -245,7 +274,9 @@ export function selectCalendarDayAccessorsModel({
     }
     return orderEntriesForDay({
       day,
-      entries: entriesForDay(day, getCalendarDayProjection(day).orderedEntries),
+      entries: showTasksInsteadOfGoals
+        ? entriesForDay(day)
+        : filterEntries(getCalendarDayProjection(day).orderedEntries),
       previewEntryOrderByDay,
     });
   };

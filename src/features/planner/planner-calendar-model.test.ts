@@ -296,7 +296,7 @@ describe("selectPlannerCalendarModel", () => {
     expect(model.dayAccessors.canMutateEntryOnDay(entry, "2026-10-12")).toBe(false);
   });
 
-  it("merges date-only tasks onto the calendar without applying goal filters", () => {
+  it("shows date-only tasks instead of goals without applying goal filters", () => {
     const taskEntry = toPlannerTaskCalendarEntry({
       taskId: "11111111-1111-4111-8111-111111111111",
       title: "Buy groceries",
@@ -320,6 +320,7 @@ describe("selectPlannerCalendarModel", () => {
         context,
         selectedDay: "2026-08-06",
         categoryFilter: "Health",
+        showTasksInsteadOfGoals: true,
         calendarTaskEntriesByDate: new Map([["2026-08-06", [taskEntry]]]),
       })
     );
@@ -327,5 +328,40 @@ describe("selectPlannerCalendarModel", () => {
 
     expect(entries.map((entry) => entry.goalTitle)).toEqual(["Buy groceries"]);
     expect(entries[0]?.entryKind).toBe("task");
+    expect(model.dayAccessors.getCompletionFactMarkersForDay("2026-08-06")).toEqual(
+      []
+    );
+  });
+
+  it("keeps planned goals when tasks are not replacing them", () => {
+    const taskEntry = toPlannerTaskCalendarEntry({
+      taskId: "11111111-1111-4111-8111-111111111111",
+      title: "Buy groceries",
+      scheduledDate: "2026-08-06",
+      scheduledTime: "09:00",
+      completedAt: null,
+    });
+    const context = buildContextWithPersistedPlan(
+      [
+        buildPlannerWorkUnit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          scheduledDate: "2026-08-06",
+        }),
+      ],
+      { "goal-a": "Lift" }
+    );
+
+    const model = selectPlannerCalendarModel(
+      buildArgs({
+        context,
+        selectedDay: "2026-08-06",
+        calendarTaskEntriesByDate: new Map([["2026-08-06", [taskEntry]]]),
+      })
+    );
+    const entries = model.dayAccessors.getOrderedEntriesForDay("2026-08-06");
+
+    expect(entries.map((entry) => entry.goalTitle)).toEqual(["Lift"]);
+    expect(entries[0]?.entryKind).not.toBe("task");
   });
 });

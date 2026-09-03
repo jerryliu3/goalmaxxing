@@ -72,15 +72,7 @@ export function useCalendarPlannerTasks({
       });
   });
 
-  const completeTask = useCallback(async (taskId: string, completed: boolean) => {
-    const payload = await postJson<CalendarPlannerTaskCompletionResponse>(
-      `/api/planner/tasks/${taskId}/completion`,
-      { completed }
-    );
-    if (!payload.task) {
-      throw new Error("Could not update the task.");
-    }
-    const task = payload.task;
+  const applyTaskUpdate = useCallback((task: PlannerCalendarTask) => {
     setTasks((current) => {
       const index = current.findIndex((row) => row.taskId === task.taskId);
       if (index < 0) {
@@ -90,8 +82,31 @@ export function useCalendarPlannerTasks({
       next[index] = task;
       return next;
     });
-    return task;
   }, []);
+
+  const completeTask = useCallback(async (taskId: string, completed: boolean) => {
+    const payload = await postJson<CalendarPlannerTaskCompletionResponse>(
+      `/api/planner/tasks/${taskId}/completion`,
+      { completed }
+    );
+    if (!payload.task) {
+      throw new Error("Could not update the task.");
+    }
+    applyTaskUpdate(payload.task);
+    return payload.task;
+  }, [applyTaskUpdate]);
+
+  const rescheduleTask = useCallback(async (taskId: string, scheduledDate: string) => {
+    const payload = await postJson<CalendarPlannerTaskCompletionResponse>(
+      `/api/planner/tasks/${taskId}/schedule`,
+      { scheduledDate }
+    );
+    if (!payload.task) {
+      throw new Error("Could not reschedule the task.");
+    }
+    applyTaskUpdate(payload.task);
+    return payload.task;
+  }, [applyTaskUpdate]);
 
   const taskEntriesByDate = useMemo(() => {
     if (!enabled || !from || !to) {
@@ -100,5 +115,5 @@ export function useCalendarPlannerTasks({
     return buildCalendarTaskEntriesByDate(tasks);
   }, [enabled, from, tasks, to]);
 
-  return { taskEntriesByDate, completeTask };
+  return { taskEntriesByDate, completeTask, rescheduleTask };
 }

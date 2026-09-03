@@ -50,6 +50,9 @@ import {
 import { usePlannerPersistenceActions } from "@/features/planner/use-planner-persistence-actions";
 import { usePlannerDraftCommands } from "@/features/planner/use-planner-draft-commands";
 import { usePlannerCalendarDnd } from "@/features/planner/use-planner-calendar-dnd";
+import { getApiErrorMessage } from "@/lib/api/client";
+import { toast } from "sonner";
+import { plannerTaskIdFromEntry } from "@/features/planner/calendar-task-entries";
 import { usePlannerContextLoader } from "@/features/planner/use-planner-context-loader";
 import { usePlannerSetup } from "@/features/planner/use-planner-setup";
 import { usePlannerPreviewSession } from "@/features/planner/use-planner-preview-session";
@@ -114,7 +117,7 @@ export function CalendarSurface({
   const [setupWeekStartsOn, setSetupWeekStartsOn] = useState(1);
   const [setupRestWeekdays, setSetupRestWeekdays] = useState<number[]>([]);
   // Session-scoped like warning dismissal; default off until the user opts in.
-  const [showTasksOnCalendar, setShowTasksOnCalendar] = useState(false);
+  const [showTasksInsteadOfGoals, setShowTasksInsteadOfGoals] = useState(false);
   const {
     hoverPreviewTimerRef,
     hoverPreviewCloseTimerRef,
@@ -207,8 +210,8 @@ export function CalendarSurface({
     selectedDay,
     viewMode,
   ]);
-  const { taskEntriesByDate, completeTask } = useCalendarPlannerTasks({
-    enabled: showTasksOnCalendar && duoScope !== "partner",
+  const { taskEntriesByDate, completeTask, rescheduleTask } = useCalendarPlannerTasks({
+    enabled: showTasksInsteadOfGoals && duoScope !== "partner",
     from: calendarTaskQueryWindow?.start ?? null,
     to: calendarTaskQueryWindow?.end ?? null,
   });
@@ -241,6 +244,7 @@ export function CalendarSurface({
     previewEntryOrderByDay,
     additionalProjectionDays,
     calendarTaskEntriesByDate: taskEntriesByDate,
+    showTasksInsteadOfGoals,
   });
   const {
     cells,
@@ -574,6 +578,18 @@ export function CalendarSurface({
     getEntryGoalFirstTitleWithTime,
     setPreviewEntryOrderByDay,
     queueDraftMoveCommand,
+    rescheduleCalendarTask: async (entry, nextDate) => {
+      const taskId = plannerTaskIdFromEntry(entry);
+      if (!taskId) {
+        return;
+      }
+      try {
+        await rescheduleTask(taskId, nextDate);
+        handlePlannerMutation();
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Could not reschedule the task."));
+      }
+    },
     clearHoverPreviewTimer,
     pointerPressActiveRef,
   });
@@ -660,8 +676,8 @@ export function CalendarSurface({
     focusedWeekDays,
     setupRestWeekdays,
     setSetupRestWeekdays,
-    showTasksOnCalendar,
-    onShowTasksOnCalendarChange: setShowTasksOnCalendar,
+    showTasksInsteadOfGoals,
+    onShowTasksInsteadOfGoalsChange: setShowTasksInsteadOfGoals,
     setupLoading,
     recoverLoading,
     canRecoverPastSessions,

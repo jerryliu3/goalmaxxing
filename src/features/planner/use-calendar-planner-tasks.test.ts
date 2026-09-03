@@ -98,4 +98,50 @@ describe("useCalendarPlannerTasks", () => {
       creditState: "credited",
     });
   });
+
+  it("moves a task to a new scheduled date immediately", async () => {
+    mocks.postJson.mockResolvedValue({
+      task: {
+        taskId: "11111111-1111-4111-8111-111111111111",
+        title: "Buy groceries",
+        scheduledDate: "2026-09-08",
+        scheduledTime: "09:00",
+        completedAt: null,
+      },
+    });
+    const { result } = renderHook(() =>
+      useCalendarPlannerTasks({
+        enabled: true,
+        from: "2026-09-01",
+        to: "2026-09-30",
+      })
+    );
+
+    await waitFor(() => {
+      expect(
+        result.current.taskEntriesByDate.get("2026-09-02")?.[0]?.goalTitle
+      ).toBe("Buy groceries");
+    });
+
+    await act(async () => {
+      await result.current.rescheduleTask(
+        "11111111-1111-4111-8111-111111111111",
+        "2026-09-08"
+      );
+    });
+
+    expect(mocks.postJson).toHaveBeenCalledWith(
+      "/api/planner/tasks/11111111-1111-4111-8111-111111111111/schedule",
+      { scheduledDate: "2026-09-08" }
+    );
+    expect(
+      result.current.taskEntriesByDate.get("2026-09-08")?.[0]
+    ).toMatchObject({
+      key: plannerTaskCalendarEntryKey(
+        "11111111-1111-4111-8111-111111111111"
+      ),
+      goalTitle: "Buy groceries",
+    });
+    expect(result.current.taskEntriesByDate.get("2026-09-02")).toBeUndefined();
+  });
 });
