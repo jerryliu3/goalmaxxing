@@ -174,6 +174,22 @@ export interface PlannerCanonicalSnapshot {
   unplaceableGoals?: PlannerGoalUnplaceableRecord[];
 }
 
+export function partitionPlannerItemsByKnownGoals<
+  T extends { id: string; goal_id: string },
+>(items: T[], goals: ReadonlyArray<{ id: string }>) {
+  const goalIds = new Set(goals.map((goal) => goal.id));
+  const knownItems: T[] = [];
+  const skippedItems: Array<{ itemId: string; goalId: string }> = [];
+  for (const item of items) {
+    if (goalIds.has(item.goal_id)) {
+      knownItems.push(item);
+    } else {
+      skippedItems.push({ itemId: item.id, goalId: item.goal_id });
+    }
+  }
+  return { knownItems, skippedItems };
+}
+
 function requireTableRead(error: { message: string } | null, code: string) {
   if (error) {
     throw new PlannerRouteError(
@@ -474,7 +490,19 @@ async function loadActivePlanSnapshot(
   completions: Completion[],
   preferences: PlannerPreferencesSnapshot | null
 ): Promise<ActiveExecutionPlanSnapshot | null> {
-  if (plannerItems.length === 0) {
+  const { knownItems, skippedItems } = partitionPlannerItemsByKnownGoals(
+    plannerItems,
+    goals
+  );
+  if (skippedItems.length > 0) {
+    reportError(new Error("Planner item referenced a missing goal."), {
+      code: "planner_item_missing_goal",
+      itemCount: skippedItems.length,
+      goalIds: Array.from(new Set(skippedItems.map((item) => item.goalId))),
+      sampleItemId: skippedItems[0]?.itemId,
+    });
+  }
+  if (knownItems.length === 0) {
     return null;
   }
 
@@ -487,15 +515,10 @@ async function loadActivePlanSnapshot(
   >();
   const items: PlannerActiveItemRow[] = [];
   const assignments: PlannerBaseAssignment[] = [];
-  for (const item of plannerItems) {
+  for (const item of knownItems) {
     const goal = goalById.get(item.goal_id);
     if (!goal) {
-      throw new PlannerRouteError(
-        500,
-        "invariant_failed",
-        "Planner item referenced a missing goal.",
-        { itemId: item.id, goalId: item.goal_id }
-      );
+      continue;
     }
     let activeGoal = activeGoalByGoalId.get(goal.id);
     let requirementKind = requirementKindByGoalId.get(goal.id);
@@ -755,13 +778,17 @@ export async function loadPlannerContextPayload({
   const preparationEnd = preparationWindows.at(-1)?.end ?? endDate;
   const needsPreparationHorizonItems =
     (snapshot.unplaceableGoals?.length ?? 0) > 0 || snapshot.links.length > 0;
+  const goalById = new Map(snapshot.goals.map((goal) => [goal.id, goal]));
   const persistedItemsInPreparationHorizon = needsPreparationHorizonItems
-    ? await loadPlannerItemsForWindow(
-        supabase,
-        ownerId,
-        preparationStart,
-        preparationEnd
-      )
+    ? partitionPlannerItemsByKnownGoals(
+        await loadPlannerItemsForWindow(
+          supabase,
+          ownerId,
+          preparationStart,
+          preparationEnd
+        ),
+        snapshot.goals
+      ).knownItems
     : [];
   const effectivePolicy = plannerPolicySchema.parse(
     snapshot.preferences?.default_policy ??
@@ -769,7 +796,6 @@ export async function loadPlannerContextPayload({
   );
   const policyFingerprint = canonicalHash(effectivePolicy);
   const policyRevision = snapshot.preferences?.policy_revision ?? 0;
-  const goalById = new Map(snapshot.goals.map((goal) => [goal.id, goal]));
   const plannedDatesByGoalId = buildPlannedDatesByGoalIdFromPlannerItems(
     persistedItemsInPreparationHorizon
   );

@@ -67,7 +67,10 @@ export interface Profile {
   display_name: string | null;
   avatar_url: string | null;
   planner_primary_tab?: PlannerPrimaryTabPreference | null;
-  week_starts_on?: number;
+  timezone?: string | null;
+  timezone_confirmed_at?: string | null;
+  week_starts_on?: number | null;
+  rest_weekdays?: number[] | null;
   social_activity_visible?: boolean;
   created_at: string;
 }
