@@ -11,6 +11,7 @@ import {
 import type { PlannerDragTarget } from "@/features/planner/calendar-dnd";
 import { isEntryCredited } from "@/features/planner/calendar-format";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
+import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import { getGoalVisual } from "@/features/planner/goal-visuals";
 import { resolvePlannerDndResolution } from "@/features/planner/planner-dnd-resolution";
 import { reorderPreviewEntryKeys } from "@/features/planner/reorder-preview-entries";
@@ -26,6 +27,10 @@ interface UsePlannerCalendarDndArgs {
     nextDate: string;
     source: "date_input" | "drag_drop" | "coach";
   }) => boolean;
+  rescheduleCalendarTask?: (
+    entry: PlannerDayDetailEntry,
+    nextDate: string
+  ) => Promise<void> | void;
   clearHoverPreviewTimer: () => void;
   pointerPressActiveRef: MutableRefObject<boolean>;
 }
@@ -37,6 +42,7 @@ export function usePlannerCalendarDnd({
   getEntryGoalFirstTitleWithTime,
   setPreviewEntryOrderByDay,
   queueDraftMoveCommand,
+  rescheduleCalendarTask,
   clearHoverPreviewTimer,
   pointerPressActiveRef,
 }: UsePlannerCalendarDndArgs) {
@@ -157,6 +163,15 @@ export function usePlannerCalendarDnd({
         clearDragState();
         return;
       }
+      if (isPlannerTaskCalendarEntry(resolution.entry)) {
+        const currentDay = entryDayByKey.get(entryKey);
+        clearDragState();
+        if (!currentDay || currentDay === resolution.nextDate) {
+          return;
+        }
+        void rescheduleCalendarTask?.(resolution.entry, resolution.nextDate);
+        return;
+      }
       void queueDraftMoveCommand({
         entry: resolution.entry,
         nextDate: resolution.nextDate,
@@ -169,6 +184,7 @@ export function usePlannerCalendarDnd({
       entryByKey,
       entryDayByKey,
       queueDraftMoveCommand,
+      rescheduleCalendarTask,
       reorderPreviewEntriesForDay,
     ]
   );

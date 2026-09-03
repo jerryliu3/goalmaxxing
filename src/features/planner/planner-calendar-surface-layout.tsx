@@ -70,7 +70,8 @@ export interface PlannerCalendarSurfaceLayoutProps {
   hasUnsavedPlannerChanges: boolean;
   draftSaveBlocked: boolean;
   viewMode: PlannerCalendarViewMode;
-  showTasksOnCalendar: boolean;
+  showTasksInsteadOfGoals: boolean;
+  onShowTasksInsteadOfGoalsChange: (value: boolean) => void;
   searchQuery: string;
   savePlan: () => void;
   discardDraftChanges: () => void;
@@ -212,7 +213,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     hasUnsavedPlannerChanges,
     draftSaveBlocked,
     viewMode,
-    showTasksOnCalendar,
+    showTasksInsteadOfGoals,
+    onShowTasksInsteadOfGoalsChange,
     searchQuery,
     savePlan,
     discardDraftChanges,
@@ -373,7 +375,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
           <PlannerCalendarBoard
             loading={loading}
             viewMode={viewMode}
-            showTasksOnCalendar={showTasksOnCalendar}
+            showTasksInsteadOfGoals={showTasksInsteadOfGoals}
             previousWindowAriaLabel={previousWindowAriaLabel}
             nextWindowAriaLabel={nextWindowAriaLabel}
             fixedViewHeadingWidthCh={fixedViewHeadingWidthCh}
@@ -556,6 +558,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         eventDetailCallbacks={eventDetailCallbacks}
         filtersOpen={filtersOpen}
         onFiltersOpenChange={setFiltersOpen}
+        showTasksInsteadOfGoals={showTasksInsteadOfGoals}
+        onShowTasksInsteadOfGoalsChange={onShowTasksInsteadOfGoalsChange}
+        tasksToggleDisabled={plannerReadOnly}
         categoryFilter={categoryFilter}
         onCategoryFilterChange={setCategoryFilter}
         categoryOptions={categoryOptions}

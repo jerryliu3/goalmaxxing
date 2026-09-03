@@ -197,16 +197,24 @@ describe("calendar feed entry titles", () => {
 });
 
 describe("calendar task immovability", () => {
-  it("treats incomplete tasks as immovable", () => {
-    const taskEntry = toPlannerTaskCalendarEntry({
+  it("lets incomplete tasks move while completed tasks stay put", () => {
+    const openTask = toPlannerTaskCalendarEntry({
       taskId: "11111111-1111-4111-8111-111111111111",
       title: "Buy groceries",
       scheduledDate: "2026-09-02",
       scheduledTime: null,
       completedAt: null,
     });
+    const doneTask = toPlannerTaskCalendarEntry({
+      taskId: "22222222-2222-4222-8222-222222222222",
+      title: "Done already",
+      scheduledDate: "2026-09-02",
+      scheduledTime: null,
+      completedAt: "2026-09-02T12:00:00.000Z",
+    });
 
-    expect(isEntryImmovableForDraft(taskEntry)).toBe(true);
+    expect(isEntryImmovableForDraft(openTask)).toBe(false);
+    expect(isEntryImmovableForDraft(doneTask)).toBe(true);
     expect(isEntryImmovableForDraft(buildPlannerDayEntry())).toBe(false);
   });
 });

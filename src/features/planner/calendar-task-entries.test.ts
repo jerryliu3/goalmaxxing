@@ -42,7 +42,7 @@ describe("calendar task entries", () => {
     expect(byDate.get("2026-09-02")?.[1]?.creditState).toBe("credited");
   });
 
-  it("keeps tasks immovable and out of the event-detail dialog", () => {
+  it("keeps open tasks movable and out of the event-detail dialog", () => {
     const openTask = toPlannerTaskCalendarEntry({
       taskId: "11111111-1111-4111-8111-111111111111",
       title: "Buy groceries",
@@ -54,7 +54,7 @@ describe("calendar task entries", () => {
 
     expect(isPlannerTaskCalendarEntry(openTask)).toBe(true);
     expect(isPlannerTaskCalendarEntry(goalEntry)).toBe(false);
-    expect(isEntryImmovableForDraft(openTask)).toBe(true);
+    expect(isEntryImmovableForDraft(openTask)).toBe(false);
     expect(isEntryImmovableForDraft(goalEntry)).toBe(false);
     expect(canOpenPlannerEventDetails(openTask)).toBe(false);
     expect(canOpenPlannerEventDetails(goalEntry)).toBe(true);

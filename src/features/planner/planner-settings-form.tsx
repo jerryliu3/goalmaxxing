@@ -6,8 +6,6 @@ import { restWeekdayOptions } from "@/features/planner/calendar-format";
 interface PlannerSettingsFormProps {
   setupRestWeekdays: number[];
   onSetupRestWeekdaysChange: (next: number[]) => void;
-  showTasksOnCalendar: boolean;
-  onShowTasksOnCalendarChange: (next: boolean) => void;
   setupLoading: boolean;
   plannerReadOnly: boolean;
   recoverLoading: boolean;
@@ -31,8 +29,6 @@ interface PlannerSettingsFormProps {
 export function PlannerSettingsForm({
   setupRestWeekdays,
   onSetupRestWeekdaysChange,
-  showTasksOnCalendar,
-  onShowTasksOnCalendarChange,
   setupLoading,
   plannerReadOnly,
   recoverLoading,
@@ -57,20 +53,6 @@ export function PlannerSettingsForm({
       <p className="text-sm text-muted-foreground">
         Timezone and first-day-of-week preferences now live in Profile settings.
       </p>
-      <label className="flex items-start gap-2 text-sm">
-        <input
-          type="checkbox"
-          className="mt-0.5"
-          checked={showTasksOnCalendar}
-          onChange={(event) => onShowTasksOnCalendarChange(event.target.checked)}
-        />
-        <span>
-          Show tasks on calendar
-          <span className="mt-1 block text-xs text-muted-foreground">
-            Tasks appear on their scheduled date only and cannot be moved.
-          </span>
-        </span>
-      </label>
       <div className="space-y-2 text-sm">
         <p>Rest weekdays</p>
         <div className="flex flex-wrap gap-2">
