@@ -841,6 +841,19 @@ async function prepareOnce({
     });
   }
 
+  for (const [key, item] of Array.from(existingByKey.entries())) {
+    const suppression = resolveLinkSuppression({
+      goalId: item.goal_id,
+      inboundSourceIdsByTargetId: suppressionInboundIndex,
+      sourcesById: suppressionSourcesById,
+      ownerId,
+      asOfDate,
+    });
+    if (isSuppressedOnDate(suppression, item.scheduled_date)) {
+      existingByKey.delete(key);
+    }
+  }
+
   const preparedByKey = new Map<string, PreparedItem>(
     Array.from(existingByKey.entries()).map(([key, item]) => [
       key,
