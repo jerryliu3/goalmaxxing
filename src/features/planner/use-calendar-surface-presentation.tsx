@@ -64,6 +64,8 @@ type CalendarSurfacePresentationArgs = Omit<
   focusedWeekDays: string[];
   setupRestWeekdays: number[];
   setSetupRestWeekdays: (value: number[]) => void;
+  showTasksOnCalendar: boolean;
+  onShowTasksOnCalendarChange: (value: boolean) => void;
   setupLoading: boolean;
   recoverLoading: boolean;
   canRecoverPastSessions: boolean;
@@ -112,6 +114,8 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     focusedWeekDays,
     setupRestWeekdays,
     setSetupRestWeekdays,
+    showTasksOnCalendar,
+    onShowTasksOnCalendarChange,
     setupLoading,
     recoverLoading,
     canRecoverPastSessions,
@@ -187,6 +191,8 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
       buildPlannerSettingsForm({
         setupRestWeekdays,
         setSetupRestWeekdays,
+        showTasksOnCalendar,
+        onShowTasksOnCalendarChange,
         setupLoading,
         plannerReadOnly,
         recoverLoading,
@@ -225,6 +231,8 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
       setSetupRestWeekdays,
       setupLoading,
       setupRestWeekdays,
+      showTasksOnCalendar,
+      onShowTasksOnCalendarChange,
       submitSetup,
       plannerReadOnly,
     ]
@@ -245,6 +253,7 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
   return buildCalendarSurfaceLayoutProps({
     ...layoutProps,
     viewMode,
+    showTasksOnCalendar,
     saveLoading,
     expandedMonthRows,
     plannerReadOnly,

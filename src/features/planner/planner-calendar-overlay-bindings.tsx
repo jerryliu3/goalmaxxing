@@ -7,6 +7,8 @@ import type { OpenGoalInstance } from "@/features/planner/use-calendar-view-navi
 export function buildPlannerSettingsForm({
   setupRestWeekdays,
   setSetupRestWeekdays,
+  showTasksOnCalendar,
+  onShowTasksOnCalendarChange,
   setupLoading,
   plannerReadOnly,
   recoverLoading,
@@ -28,6 +30,8 @@ export function buildPlannerSettingsForm({
 }: {
   setupRestWeekdays: number[];
   setSetupRestWeekdays: (value: number[]) => void;
+  showTasksOnCalendar: boolean;
+  onShowTasksOnCalendarChange: (value: boolean) => void;
   setupLoading: boolean;
   plannerReadOnly: boolean;
   recoverLoading: boolean;
@@ -51,6 +55,8 @@ export function buildPlannerSettingsForm({
     <PlannerSettingsForm
       setupRestWeekdays={setupRestWeekdays}
       onSetupRestWeekdaysChange={setSetupRestWeekdays}
+      showTasksOnCalendar={showTasksOnCalendar}
+      onShowTasksOnCalendarChange={onShowTasksOnCalendarChange}
       setupLoading={setupLoading}
       plannerReadOnly={plannerReadOnly}
       recoverLoading={recoverLoading}

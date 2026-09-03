@@ -18,6 +18,7 @@ import type {
 import type { GoalCategoryFilterOption } from "@/features/goals/goal-filters";
 import type { PlannerDragTarget } from "@/features/planner/planner-drag-target";
 import type { PlannerEligibilityNotices } from "@/features/planner/planner-eligibility-notices";
+import { canOpenPlannerEventDetails } from "@/features/planner/calendar-task-entries";
 import type { MoveSourceCandidate } from "@/features/planner/planner-move-source-options";
 import type { GoalMonthOption } from "@/lib/goals/list-view";
 import type { PlannerWorkUnit } from "@cadence/shared/planner/context";
@@ -69,6 +70,7 @@ export interface PlannerCalendarSurfaceLayoutProps {
   hasUnsavedPlannerChanges: boolean;
   draftSaveBlocked: boolean;
   viewMode: PlannerCalendarViewMode;
+  showTasksOnCalendar: boolean;
   searchQuery: string;
   savePlan: () => void;
   discardDraftChanges: () => void;
@@ -210,6 +212,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     hasUnsavedPlannerChanges,
     draftSaveBlocked,
     viewMode,
+    showTasksOnCalendar,
     searchQuery,
     savePlan,
     discardDraftChanges,
@@ -370,6 +373,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
           <PlannerCalendarBoard
             loading={loading}
             viewMode={viewMode}
+            showTasksOnCalendar={showTasksOnCalendar}
             previousWindowAriaLabel={previousWindowAriaLabel}
             nextWindowAriaLabel={nextWindowAriaLabel}
             fixedViewHeadingWidthCh={fixedViewHeadingWidthCh}
@@ -399,7 +403,11 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
               const entry = focusedDayEntries.find(
                 (candidate) => candidate.key === entryKey
               );
-              if (!entry || !canMutateEntryOnDay(entry, focusedDay)) {
+              if (
+                !entry ||
+                !canOpenPlannerEventDetails(entry) ||
+                !canMutateEntryOnDay(entry, focusedDay)
+              ) {
                 return;
               }
               setLocalSelectedDay(focusedDay);
@@ -431,7 +439,11 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
               const entry = previewDayEntries.find(
                 (candidate) => candidate.key === entryKey
               );
-              if (!entry || !canMutateEntryOnDay(entry, day)) {
+              if (
+                !entry ||
+                !canOpenPlannerEventDetails(entry) ||
+                !canMutateEntryOnDay(entry, day)
+              ) {
                 return;
               }
               setLocalSelectedDay(day);
@@ -494,7 +506,11 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
           const entry = expandedPreviewEntries.find(
             (candidate) => candidate.key === entryKey
           );
-          if (!entry || !canMutateEntryOnDay(entry, day)) {
+          if (
+            !entry ||
+            !canOpenPlannerEventDetails(entry) ||
+            !canMutateEntryOnDay(entry, day)
+          ) {
             return;
           }
           setExpandedPreviewDay(null);

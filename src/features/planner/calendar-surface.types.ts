@@ -27,8 +27,11 @@ export type {
   PlannerWorkUnit,
 } from "@cadence/shared/planner/context";
 
+export type PlannerCalendarEntryKind = "goal" | "task";
+
 export interface PlannerDayDetailEntry {
   key: string;
+  entryKind?: PlannerCalendarEntryKind;
   originalGoalId: string;
   goalTitle: string | null;
   unitKey: string;

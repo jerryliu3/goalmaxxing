@@ -8,6 +8,7 @@ import {
   selectPlannerCalendarModel,
   type PlannerCalendarModelArgs,
 } from "@/features/planner/planner-calendar-model";
+import { toPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import {
   buildPlannerContext,
   buildPlannerWorkUnit,
@@ -293,5 +294,40 @@ describe("selectPlannerCalendarModel", () => {
     expect(model.dayAccessors.canMutateEntryOnDay(entry, "2026-08-25")).toBe(true);
     expect(model.dayAccessors.canMutateEntryOnDay(entry, "2026-09-01")).toBe(true);
     expect(model.dayAccessors.canMutateEntryOnDay(entry, "2026-10-12")).toBe(false);
+  });
+
+  it("merges date-only tasks onto the calendar without applying goal filters", () => {
+    const taskEntry = toPlannerTaskCalendarEntry({
+      taskId: "11111111-1111-4111-8111-111111111111",
+      title: "Buy groceries",
+      scheduledDate: "2026-08-06",
+      scheduledTime: "09:00",
+      completedAt: null,
+      createdAt: "2026-08-01T00:00:00.000Z",
+      updatedAt: "2026-08-01T00:00:00.000Z",
+    });
+    const context = buildContextWithPersistedPlan(
+      [
+        buildPlannerWorkUnit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          scheduledDate: "2026-08-06",
+        }),
+      ],
+      { "goal-a": "Strength" }
+    );
+
+    const model = selectPlannerCalendarModel(
+      buildArgs({
+        context,
+        selectedDay: "2026-08-06",
+        categoryFilter: "Health",
+        calendarTaskEntriesByDate: new Map([["2026-08-06", [taskEntry]]]),
+      })
+    );
+    const entries = model.dayAccessors.getOrderedEntriesForDay("2026-08-06");
+
+    expect(entries.map((entry) => entry.goalTitle)).toEqual(["Buy groceries"]);
+    expect(entries[0]?.entryKind).toBe("task");
   });
 });

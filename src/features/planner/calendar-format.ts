@@ -8,6 +8,7 @@ import type {
   CompletionControlDisabledReason,
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
+import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 
 const weekdayLabelsSunFirst = weekStartOptions.map((option) => option.shortLabel);
 export { normalizeWeekStartsOn };
@@ -178,6 +179,7 @@ export function isEntryCredited(entry: PlannerDayDetailEntry) {
 
 export function isEntryImmovableForDraft(entry: PlannerDayDetailEntry) {
   return (
+    isPlannerTaskCalendarEntry(entry) ||
     isEntryCredited(entry) ||
     entry.draftGhost ||
     entry.classification === "satisfied_elsewhere"

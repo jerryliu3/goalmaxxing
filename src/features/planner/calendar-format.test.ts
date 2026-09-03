@@ -4,8 +4,11 @@ import {
   getEntryCompactTitle,
   getEntryMilestoneFirstTitle,
   getEntrySubtitle,
+  isEntryImmovableForDraft,
   normalizeWeekStartsOn,
 } from "@/features/planner/calendar-format";
+import { toPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
+import { buildPlannerDayEntry } from "@/features/planner/test-fixtures";
 
 describe("calendar format week start helpers", () => {
   it("defaults invalid week start values to Monday", () => {
@@ -190,5 +193,22 @@ describe("calendar feed entry titles", () => {
         unitKey: "total:1",
       })
     ).toBe("Hydration");
+  });
+});
+
+describe("calendar task immovability", () => {
+  it("treats incomplete tasks as immovable", () => {
+    const taskEntry = toPlannerTaskCalendarEntry({
+      taskId: "11111111-1111-4111-8111-111111111111",
+      title: "Buy groceries",
+      scheduledDate: "2026-09-02",
+      scheduledTime: null,
+      completedAt: null,
+      createdAt: "2026-09-01T00:00:00.000Z",
+      updatedAt: "2026-09-01T00:00:00.000Z",
+    });
+
+    expect(isEntryImmovableForDraft(taskEntry)).toBe(true);
+    expect(isEntryImmovableForDraft(buildPlannerDayEntry())).toBe(false);
   });
 });
