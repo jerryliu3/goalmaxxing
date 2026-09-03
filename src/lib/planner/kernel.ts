@@ -839,10 +839,7 @@ export function runPlannerKernel(
             {
               targetCount: requirement.targetCount,
               remainingLifetime: {
-                start:
-                  compareCanonicalStrings(rawInput.asOfDate, goal.start_date) > 0
-                    ? rawInput.asOfDate
-                    : goal.start_date,
+                start: goal.start_date,
                 end: effectiveGoalEndDate,
               },
             },
