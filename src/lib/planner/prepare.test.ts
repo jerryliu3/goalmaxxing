@@ -1028,6 +1028,86 @@ describe("preparePlannerSchedule", () => {
     );
   });
 
+  it("re-solves linked target placements after unlink removes suppression", async () => {
+    mocks.resolveCanonicalAsOfDate.mockReturnValue("2026-09-05");
+    const sourceGoal = goal({
+      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      title: "September Source",
+      start_date: "2026-09-01",
+      end_date: "2026-09-30",
+      target_count: 5,
+      milestone_names: ["M1", "M2", "M3", "M4", "M5"],
+    });
+    const targetGoal = goal({
+      id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      title: "Annual Target",
+      start_date: "2026-01-01",
+      end_date: "2026-12-31",
+      target_count: 10,
+      milestone_names: [
+        "M1",
+        "M2",
+        "M3",
+        "M4",
+        "M5",
+        "M6",
+        "M7",
+        "M8",
+        "M9",
+        "M10",
+      ],
+    });
+    mocks.loadPlannerPreparationSnapshot.mockResolvedValue(
+      preparationSnapshot(
+        [sourceGoal, targetGoal],
+        [
+          persistedItem({
+            goal_id: targetGoal.id,
+            unit_key: "milestone:7",
+            scheduled_date: "2026-10-15",
+            original_scheduled_date: "2026-10-15",
+            locked: false,
+          }),
+        ]
+      )
+    );
+    mocks.runPlannerKernel.mockImplementation((kernelInput) => {
+      const goalId = kernelInput.goals[0]?.id;
+      if (goalId !== targetGoal.id) {
+        return kernelOutput(goalId, []);
+      }
+      return kernelOutput(targetGoal.id, [
+        { unitKey: "milestone:6", scheduledDate: "2026-09-18" },
+      ]);
+    });
+
+    await prepare();
+
+    const targetCalls = mocks.runPlannerKernel.mock.calls.filter(
+      ([kernelInput]) => kernelInput.goals[0]?.id === targetGoal.id
+    );
+    expect(targetCalls.length).toBeGreaterThan(0);
+    const items = mocks.rpc.mock.calls[0]?.[1].p_items as Array<{
+      goal_id: string;
+      unit_key: string;
+      scheduled_date: string;
+    }>;
+    expect(items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          goal_id: targetGoal.id,
+          unit_key: "milestone:6",
+          scheduled_date: "2026-09-18",
+        }),
+        expect.objectContaining({
+          goal_id: targetGoal.id,
+          unit_key: "milestone:7",
+          scheduled_date: "2026-10-15",
+        }),
+      ])
+    );
+  });
+
   it("treats planned-and-completed source dates as projected linked coverage", async () => {
     mocks.resolveCanonicalAsOfDate.mockReturnValue("2026-08-18");
     const sourceGoal = goal({
