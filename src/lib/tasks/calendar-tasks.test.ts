@@ -3,6 +3,7 @@ import {
   calendarTasksQuerySchema,
   mapPlannerCalendarTaskRows,
   plannerTaskCompletionRequestSchema,
+  plannerTaskScheduleRequestSchema,
 } from "@/lib/tasks/calendar-tasks";
 
 describe("calendar task query schema", () => {
@@ -49,6 +50,21 @@ describe("planner task completion request schema", () => {
     expect(
       plannerTaskCompletionRequestSchema.safeParse({ completed: true, extra: 1 })
         .success
+    ).toBe(false);
+  });
+});
+
+describe("planner task schedule request schema", () => {
+  it("requires an iso scheduled date", () => {
+    expect(
+      plannerTaskScheduleRequestSchema.parse({ scheduledDate: "2026-09-08" })
+    ).toEqual({ scheduledDate: "2026-09-08" });
+    expect(plannerTaskScheduleRequestSchema.safeParse({}).success).toBe(false);
+    expect(
+      plannerTaskScheduleRequestSchema.safeParse({
+        scheduledDate: "2026-09-08",
+        extra: 1,
+      }).success
     ).toBe(false);
   });
 });

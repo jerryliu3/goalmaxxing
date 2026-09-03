@@ -29,6 +29,12 @@ export const plannerTaskCompletionRequestSchema = z
   })
   .strict();
 
+export const plannerTaskScheduleRequestSchema = z
+  .object({
+    scheduledDate: z.iso.date(),
+  })
+  .strict();
+
 export const plannerCalendarTaskRowSchema = z
   .object({
     id: z.uuid().optional(),

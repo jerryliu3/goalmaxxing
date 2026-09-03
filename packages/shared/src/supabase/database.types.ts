@@ -3087,6 +3087,18 @@ export type Database = {
           updated_at: string
         }[]
       }
+      set_planner_task_scheduled_date: {
+        Args: { p_scheduled_date: string; p_task_id: string }
+        Returns: {
+          completed_at: string
+          created_at: string
+          scheduled_date: string
+          scheduled_time: string
+          task_id: string
+          title: string
+          updated_at: string
+        }[]
+      }
       soft_delete_goal: { Args: { p_goal_id: string }; Returns: undefined }
       synthetic_activity_tick_service: { Args: never; Returns: Json }
       synthetic_apply_completion_service: {
