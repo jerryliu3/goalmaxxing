@@ -2,6 +2,7 @@ import type { Completion, Goal } from "@/lib/goals/types";
 import {
   buildLinkSuppressionInboundIndex,
   getLinkResumeDate,
+  isSuppressedOnDate,
   resolveLinkSuppression,
   toLinkSuppressionSource,
 } from "@/lib/planner/link-suppression";
@@ -43,6 +44,17 @@ export function indexCompletionsByGoalId(completions: Completion[]) {
   return completionsByGoalId;
 }
 
+export function buildParentCompletionDates(
+  goalId: string,
+  completionsByGoalId: Map<string, Completion[]>
+) {
+  return new Set(
+    (completionsByGoalId.get(goalId) ?? []).map(
+      (completion) => completion.completed_on
+    )
+  );
+}
+
 export function collectProjectedLinkedSourceCoverageDates({
   goal,
   effectiveEnd,
@@ -50,6 +62,7 @@ export function collectProjectedLinkedSourceCoverageDates({
   linkSourceGoals,
   completionsByGoalId,
   plannedDatesByGoalId,
+  parentCompletionDates = new Set<string>(),
 }: {
   goal: Goal;
   effectiveEnd: string;
@@ -57,6 +70,7 @@ export function collectProjectedLinkedSourceCoverageDates({
   linkSourceGoals: Goal[];
   completionsByGoalId: Map<string, Completion[]>;
   plannedDatesByGoalId: Map<string, string[]>;
+  parentCompletionDates?: ReadonlySet<string>;
 }) {
   const requirement = normalizeGoalRequirement(goal).requirement;
   if (requirement.kind === "cadence" || linkSourceGoals.length === 0) {
@@ -71,9 +85,11 @@ export function collectProjectedLinkedSourceCoverageDates({
       if (
         completion.completed_on < sourceGoal.start_date ||
         completion.completed_on > asOfDate ||
-        (sourceGoal.end_date !== null && completion.completed_on > sourceGoal.end_date) ||
+        (sourceGoal.end_date !== null &&
+          completion.completed_on > sourceGoal.end_date) ||
         completion.completed_on < goal.start_date ||
-        completion.completed_on > effectiveEnd
+        completion.completed_on > effectiveEnd ||
+        parentCompletionDates.has(completion.completed_on)
       ) {
         continue;
       }
@@ -85,7 +101,8 @@ export function collectProjectedLinkedSourceCoverageDates({
         scheduledDate < sourceGoal.start_date ||
         (sourceGoal.end_date !== null && scheduledDate > sourceGoal.end_date) ||
         scheduledDate < goal.start_date ||
-        scheduledDate > effectiveEnd
+        scheduledDate > effectiveEnd ||
+        parentCompletionDates.has(scheduledDate)
       ) {
         continue;
       }
@@ -107,6 +124,62 @@ export function computeProjectedLinkedSourceCoverageCount({
     return 0;
   }
   return Math.min(projectedCoverageDates.size, requirement.targetCount);
+}
+
+export function resolveProjectedLinkedSourceCoverageForGoal({
+  goal,
+  effectiveEnd,
+  asOfDate,
+  ownerId,
+  inboundSourceIdsByTargetId,
+  sourcesById,
+  linkSourceGoals,
+  completionsByGoalId,
+  plannedDatesByGoalId,
+}: {
+  goal: Goal;
+  effectiveEnd: string;
+  asOfDate: string;
+  ownerId: string;
+  inboundSourceIdsByTargetId: ReadonlyMap<string, ReadonlySet<string>>;
+  sourcesById: ReadonlyMap<string, ReturnType<typeof toLinkSuppressionSource>>;
+  linkSourceGoals: Goal[];
+  completionsByGoalId: Map<string, Completion[]>;
+  plannedDatesByGoalId: Map<string, string[]>;
+}) {
+  const suppression = resolveLinkSuppression({
+    goalId: goal.id,
+    inboundSourceIdsByTargetId,
+    sourcesById,
+    ownerId,
+    asOfDate,
+  });
+  if (!isSuppressedOnDate(suppression, asOfDate)) {
+    return {
+      projectedCoverageDates: new Set<string>(),
+      projectedCoverageCount: 0,
+    };
+  }
+  const parentCompletionDates = buildParentCompletionDates(
+    goal.id,
+    completionsByGoalId
+  );
+  const projectedCoverageDates = collectProjectedLinkedSourceCoverageDates({
+    goal,
+    effectiveEnd,
+    asOfDate,
+    linkSourceGoals,
+    completionsByGoalId,
+    plannedDatesByGoalId,
+    parentCompletionDates,
+  });
+  return {
+    projectedCoverageDates,
+    projectedCoverageCount: computeProjectedLinkedSourceCoverageCount({
+      goal,
+      projectedCoverageDates,
+    }),
+  };
 }
 
 export function computeLinkedSourceCoverageByGoalId({
@@ -158,21 +231,20 @@ export function computeLinkedSourceCoverageByGoalId({
           .map((link) => [link.sourceGoalId, goalById.get(link.sourceGoalId)])
       ).values()
     ).filter((linkSourceGoal): linkSourceGoal is Goal => Boolean(linkSourceGoal));
-    const projectedCoverageDates = collectProjectedLinkedSourceCoverageDates({
-      goal,
-      effectiveEnd: goalWindowsState.effectiveEnd,
-      asOfDate,
-      linkSourceGoals,
-      completionsByGoalId,
-      plannedDatesByGoalId,
-    });
-    projectedCoverageCountByGoalId.set(
-      goal.id,
-      computeProjectedLinkedSourceCoverageCount({
+    const { projectedCoverageCount } = resolveProjectedLinkedSourceCoverageForGoal(
+      {
         goal,
-        projectedCoverageDates,
-      })
+        effectiveEnd: goalWindowsState.effectiveEnd,
+        asOfDate,
+        ownerId,
+        inboundSourceIdsByTargetId: suppressionInboundIndex,
+        sourcesById: suppressionSourcesById,
+        linkSourceGoals,
+        completionsByGoalId,
+        plannedDatesByGoalId,
+      }
     );
+    projectedCoverageCountByGoalId.set(goal.id, projectedCoverageCount);
   }
   return { projectedCoverageCountByGoalId };
 }

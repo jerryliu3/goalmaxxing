@@ -49,9 +49,8 @@ import {
 } from "@/lib/planner/unplaceable";
 import {
   buildPlannedDatesByGoalIdFromPlannerItems,
-  collectProjectedLinkedSourceCoverageDates,
-  computeProjectedLinkedSourceCoverageCount,
   mapProjectedCoverageToUnitKeys,
+  resolveProjectedLinkedSourceCoverageForGoal,
 } from "@/lib/planner/linked-source-coverage";
 import {
   materializeWorkUnits,
@@ -572,14 +571,18 @@ async function prepareOnce({
           .map((link) => [link.sourceGoalId, goalById.get(link.sourceGoalId)])
       ).values()
     ).filter((linkSourceGoal): linkSourceGoal is Goal => Boolean(linkSourceGoal));
-    const projectedCoverageDates = collectProjectedLinkedSourceCoverageDates({
-      goal,
-      effectiveEnd: goalWindowsState.effectiveEnd,
-      asOfDate,
-      linkSourceGoals,
-      completionsByGoalId,
-      plannedDatesByGoalId,
-    });
+    const { projectedCoverageDates, projectedCoverageCount } =
+      resolveProjectedLinkedSourceCoverageForGoal({
+        goal,
+        effectiveEnd: goalWindowsState.effectiveEnd,
+        asOfDate,
+        ownerId,
+        inboundSourceIdsByTargetId: suppressionInboundIndex,
+        sourcesById: suppressionSourcesById,
+        linkSourceGoals,
+        completionsByGoalId,
+        plannedDatesByGoalId,
+      });
     const existingUnplaceableRecord =
       validUnplaceableRecordByGoalId.get(goal.id) ?? null;
     const existingRecordIsValid =
@@ -628,10 +631,6 @@ async function prepareOnce({
       continue;
     }
     precheckCompletionCreditedUnitKeysByGoalId.set(goal.id, completionCreditedUnitKeys);
-    const projectedCoverageCount = computeProjectedLinkedSourceCoverageCount({
-      goal,
-      projectedCoverageDates,
-    });
     projectedLinkedSourceCoverageCountByGoalId.set(goal.id, projectedCoverageCount);
     const projectedLinkedSourceCoverageUnitKeys = mapProjectedCoverageToUnitKeys({
       requiredUnitKeys,
