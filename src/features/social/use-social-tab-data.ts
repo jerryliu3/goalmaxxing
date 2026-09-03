@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -11,7 +10,7 @@ import {
   getAvatarUrlValidationError,
   normalizeAvatarUrlDraft,
 } from "@/features/social/avatar-url";
-import { getApiErrorMessage, getJson, putJson } from "@/lib/api/client";
+import { getApiErrorMessage, putJson } from "@/lib/api/client";
 import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
@@ -27,7 +26,10 @@ import { unsubscribeCurrentBrowser } from "@/lib/push/client";
 import { createClient } from "@/lib/supabase/client";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
 import type { PlannerPreferencesDraft } from "@/features/settings/planner-preferences-settings";
-import { buildProfilePreferencesUpdate } from "@/features/social/profile-preferences";
+import {
+  buildProfilePreferencesUpdate,
+  plannerPreferencesFromProfile,
+} from "@/features/social/profile-preferences";
 import {
   buildAvatarCleanupPathsForProfileChange,
   deleteProfileAvatar,
@@ -53,16 +55,6 @@ export interface ShareMenuPosition {
   maxHeight: number;
   top?: number;
   bottom?: number;
-}
-
-interface PlannerPreferencesContextPayload {
-  preferences: {
-    timezone: string;
-    defaultPolicy: {
-      weekStartsOn: number;
-      restWeekdays: number[];
-    };
-  } | null;
 }
 
 interface PlannerPreferencesState extends PlannerPreferencesDraft {
@@ -147,29 +139,17 @@ export function useSocialTabData() {
       return;
     }
     setAuthEmail(user.email ?? "");
-    const scopeMonth = format(new Date(), "yyyy-MM");
-    const plannerContextPromise = getJson<PlannerPreferencesContextPayload>(
-      "/api/planner/context",
-      { query: { scopeMonth } }
-    ).catch((error: unknown) => {
-      toast.error(
-        getApiErrorMessage(error, "Planner preferences could not be loaded.")
-      );
-      return null;
-    });
 
-    const [profileResponse, ownGoalsResponse, sharesResponse, plannerContext] =
-      await Promise.all([
-        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-        supabase
-          .from("goals")
-          .select("*")
-          .eq("owner_id", user.id)
-          .eq("is_deleted", false)
-          .order("created_at", { ascending: false }),
-        supabase.from("goal_shares").select("*").eq("shared_with", user.id),
-        plannerContextPromise,
-      ]);
+    const [profileResponse, ownGoalsResponse, sharesResponse] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+      supabase
+        .from("goals")
+        .select("*")
+        .eq("owner_id", user.id)
+        .eq("is_deleted", false)
+        .order("created_at", { ascending: false }),
+      supabase.from("goal_shares").select("*").eq("shared_with", user.id),
+    ]);
 
     const profile = (profileResponse.data ?? null) as Profile | null;
     const ownGoals = (ownGoalsResponse.data ?? []) as Goal[];
@@ -184,17 +164,10 @@ export function useSocialTabData() {
       ),
       social_activity_visible: profile?.social_activity_visible ?? true,
     });
-    const nextPlannerPreferences: PlannerPreferencesState = plannerContext?.preferences
-      ? {
-          timezone: plannerContext.preferences.timezone,
-          weekStartsOn: normalizeWeekStartsOn(
-            plannerContext.preferences.defaultPolicy.weekStartsOn
-          ),
-          restWeekdays: [
-            ...(plannerContext.preferences.defaultPolicy.restWeekdays ?? []),
-          ].sort((left, right) => left - right),
-        }
-      : defaultPlannerPreferencesState;
+    const nextPlannerPreferences = plannerPreferencesFromProfile(
+      profile,
+      defaultPlannerPreferencesState
+    );
     setPlannerPreferencesPersisted(nextPlannerPreferences);
     setPlannerPreferencesDraft({
       timezone: nextPlannerPreferences.timezone,
