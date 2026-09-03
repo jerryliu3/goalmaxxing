@@ -1,5 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { getEntryGoalFirstTitleWithTime } from "@/features/planner/calendar-format";
 import { toPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import { buildPlannerDayEntry } from "@/features/planner/test-fixtures";
 import { usePlannerCalendarDnd } from "@/features/planner/use-planner-calendar-dnd";
@@ -27,7 +28,7 @@ describe("usePlannerCalendarDnd", () => {
           [goal.key, "2026-09-02"],
         ]),
         getEntriesForDay: () => [],
-        getEntryGoalFirstTitleWithTime: (entry) => entry.goalTitle,
+        getEntryGoalFirstTitleWithTime,
         setPreviewEntryOrderByDay: vi.fn(),
         queueDraftMoveCommand,
         rescheduleCalendarTask,
@@ -72,7 +73,7 @@ describe("usePlannerCalendarDnd", () => {
         entryByKey: new Map([[task.key, task]]),
         entryDayByKey: new Map([[task.key, "2026-09-02"]]),
         getEntriesForDay: () => [],
-        getEntryGoalFirstTitleWithTime: (entry) => entry.goalTitle,
+        getEntryGoalFirstTitleWithTime,
         setPreviewEntryOrderByDay: vi.fn(),
         queueDraftMoveCommand: vi.fn(() => true),
         rescheduleCalendarTask,
