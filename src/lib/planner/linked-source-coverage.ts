@@ -5,6 +5,7 @@ import {
   isSuppressedOnDate,
   resolveLinkSuppression,
   toLinkSuppressionSource,
+  type LinkSuppression,
 } from "@/lib/planner/link-suppression";
 import { buildGoalPreparationWindows } from "@/lib/planner/preparation-windows";
 import { normalizeGoalRequirement } from "@/lib/planner/requirements";
@@ -42,6 +43,24 @@ export function indexCompletionsByGoalId(completions: Completion[]) {
     completionsByGoalId.set(completion.goal_id, entries);
   }
   return completionsByGoalId;
+}
+
+export function buildLinkSourceGoalsForTarget({
+  targetGoalId,
+  links,
+  goalById,
+}: {
+  targetGoalId: string;
+  links: ReadonlyArray<{ sourceGoalId: string; targetGoalId: string }>;
+  goalById: ReadonlyMap<string, Goal>;
+}) {
+  return Array.from(
+    new Map(
+      links
+        .filter((link) => link.targetGoalId === targetGoalId)
+        .map((link) => [link.sourceGoalId, goalById.get(link.sourceGoalId)])
+    ).values()
+  ).filter((linkSourceGoal): linkSourceGoal is Goal => Boolean(linkSourceGoal));
 }
 
 export function buildParentCompletionDates(
@@ -136,6 +155,7 @@ export function resolveProjectedLinkedSourceCoverageForGoal({
   linkSourceGoals,
   completionsByGoalId,
   plannedDatesByGoalId,
+  suppression: resolvedSuppression,
 }: {
   goal: Goal;
   effectiveEnd: string;
@@ -146,14 +166,23 @@ export function resolveProjectedLinkedSourceCoverageForGoal({
   linkSourceGoals: Goal[];
   completionsByGoalId: Map<string, Completion[]>;
   plannedDatesByGoalId: Map<string, string[]>;
+  suppression?: LinkSuppression;
 }) {
-  const suppression = resolveLinkSuppression({
-    goalId: goal.id,
-    inboundSourceIdsByTargetId,
-    sourcesById,
-    ownerId,
-    asOfDate,
-  });
+  if (linkSourceGoals.length === 0) {
+    return {
+      projectedCoverageDates: new Set<string>(),
+      projectedCoverageCount: 0,
+    };
+  }
+  const suppression =
+    resolvedSuppression ??
+    resolveLinkSuppression({
+      goalId: goal.id,
+      inboundSourceIdsByTargetId,
+      sourcesById,
+      ownerId,
+      asOfDate,
+    });
   if (!isSuppressedOnDate(suppression, asOfDate)) {
     return {
       projectedCoverageDates: new Set<string>(),
@@ -224,13 +253,11 @@ export function computeLinkedSourceCoverageByGoalId({
       preparationStart: goalPreparationStart,
       preparationEnd,
     });
-    const linkSourceGoals = Array.from(
-      new Map(
-        links
-          .filter((link) => link.targetGoalId === goal.id)
-          .map((link) => [link.sourceGoalId, goalById.get(link.sourceGoalId)])
-      ).values()
-    ).filter((linkSourceGoal): linkSourceGoal is Goal => Boolean(linkSourceGoal));
+    const linkSourceGoals = buildLinkSourceGoalsForTarget({
+      targetGoalId: goal.id,
+      links,
+      goalById,
+    });
     const { projectedCoverageCount } = resolveProjectedLinkedSourceCoverageForGoal(
       {
         goal,
@@ -242,6 +269,7 @@ export function computeLinkedSourceCoverageByGoalId({
         linkSourceGoals,
         completionsByGoalId,
         plannedDatesByGoalId,
+        suppression,
       }
     );
     projectedCoverageCountByGoalId.set(goal.id, projectedCoverageCount);

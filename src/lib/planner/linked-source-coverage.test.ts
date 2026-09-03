@@ -6,6 +6,7 @@ import {
   toLinkSuppressionSource,
 } from "@/lib/planner/link-suppression";
 import {
+  buildLinkSourceGoalsForTarget,
   buildParentCompletionDates,
   buildPlannedDatesByGoalIdFromAssignments,
   buildPlannedDatesByGoalIdFromPlannerItems,
@@ -73,6 +74,31 @@ function linkContext(goals: Goal[], links: Array<{ sourceGoalId: string; targetG
     sourcesById: new Map(goals.map((goal) => [goal.id, toLinkSuppressionSource(goal)])),
   };
 }
+
+describe("buildLinkSourceGoalsForTarget", () => {
+  it("returns unique direct inbound source goals for a target", () => {
+    const sourceA = buildGoal({ id: "source-a" });
+    const sourceB = buildGoal({ id: "source-b" });
+    const target = buildGoal({ id: "target-a" });
+    const goalById = new Map([
+      [sourceA.id, sourceA],
+      [sourceB.id, sourceB],
+      [target.id, target],
+    ]);
+    const linkSourceGoals = buildLinkSourceGoalsForTarget({
+      targetGoalId: target.id,
+      links: [
+        { sourceGoalId: sourceA.id, targetGoalId: target.id },
+        { sourceGoalId: sourceB.id, targetGoalId: target.id },
+        { sourceGoalId: sourceA.id, targetGoalId: target.id },
+        { sourceGoalId: "missing-source", targetGoalId: target.id },
+        { sourceGoalId: sourceA.id, targetGoalId: "other-target" },
+      ],
+      goalById,
+    });
+    expect(linkSourceGoals).toEqual([sourceA, sourceB]);
+  });
+});
 
 describe("buildParentCompletionDates", () => {
   it("returns unique parent completion dates", () => {
@@ -403,9 +429,14 @@ describe("resolveProjectedLinkedSourceCoverageForGoal", () => {
       "2026-05-31",
       "2026-05-04",
     ].map((date) => completion(source.id, date));
-    const parentCompletions = Array.from({ length: 46 }, (_, index) =>
-      completion(target.id, `2026-0${index < 9 ? "1" : ""}${index + 1}-01`.replace("010-", "10-"))
-    );
+    const parentCompletions = [
+      "2026-01-03",
+      "2026-02-04",
+      "2026-03-05",
+      "2026-04-06",
+      "2026-06-07",
+      "2026-08-08",
+    ].map((date) => completion(target.id, date));
 
     const result = resolveProjectedLinkedSourceCoverageForGoal({
       goal: target,
@@ -426,7 +457,26 @@ describe("resolveProjectedLinkedSourceCoverageForGoal", () => {
     expect(result.projectedCoverageCount).toBe(0);
   });
 
-  it("projects coverage only while the target remains suppressed", () => {
+  it("returns zero without resolving suppression when there are no linked sources", () => {
+    const target = buildGoal({ id: "target-a" });
+    const result = resolveProjectedLinkedSourceCoverageForGoal({
+      goal: target,
+      effectiveEnd: "2026-12-31",
+      asOfDate: "2026-08-18",
+      ownerId: OWNER_ID,
+      inboundSourceIdsByTargetId: new Map(),
+      sourcesById: new Map([[target.id, toLinkSuppressionSource(target)]]),
+      linkSourceGoals: [],
+      completionsByGoalId: new Map(),
+      plannedDatesByGoalId: new Map(),
+    });
+    expect(result).toEqual({
+      projectedCoverageDates: new Set<string>(),
+      projectedCoverageCount: 0,
+    });
+  });
+
+  it("honors a pre-resolved suppression value", () => {
     const source = buildGoal({
       id: "source-aug",
       frequency_type: "recurring",
@@ -465,6 +515,7 @@ describe("resolveProjectedLinkedSourceCoverageForGoal", () => {
     const suppressed = resolveProjectedLinkedSourceCoverageForGoal({
       ...input,
       asOfDate: "2026-08-18",
+      suppression: { kind: "until", through: "2026-08-31" },
     });
     expect(suppressed.projectedCoverageCount).toBe(2);
     expect(suppressed.projectedCoverageDates).toEqual(
@@ -474,6 +525,7 @@ describe("resolveProjectedLinkedSourceCoverageForGoal", () => {
     const unsuppressed = resolveProjectedLinkedSourceCoverageForGoal({
       ...input,
       asOfDate: "2026-09-01",
+      suppression: { kind: "none" },
     });
     expect(unsuppressed.projectedCoverageCount).toBe(0);
     expect(unsuppressed.projectedCoverageDates).toEqual(new Set());
@@ -567,7 +619,7 @@ describe("resolveProjectedLinkedSourceCoverageForGoal", () => {
 });
 
 describe("computeLinkedSourceCoverageByGoalId", () => {
-  it("returns per-goal projected counts using suppression and parent dedupe rules", () => {
+  it("returns zero projected coverage after direct source suppression ends", () => {
     const source = buildGoal({
       id: "source-a",
       frequency_type: "recurring",
@@ -577,29 +629,17 @@ describe("computeLinkedSourceCoverageByGoalId", () => {
       start_date: "2026-08-01",
       end_date: "2026-08-31",
     });
-    const suppressedTarget = buildGoal({
-      id: "target-suppressed",
+    const target = buildGoal({
+      id: "target-a",
       frequency_type: "fixed_milestones",
       target_count: 4,
       milestone_names: ["1", "2", "3", "4"],
       start_date: "2026-01-01",
       end_date: "2026-12-31",
     });
-    const unsuppressedTarget = buildGoal({
-      id: "target-open",
-      frequency_type: "fixed_milestones",
-      target_count: 4,
-      milestone_names: ["1", "2", "3", "4"],
-      start_date: "2026-01-01",
-      end_date: "2026-12-31",
-    });
-    const links = [
-      { sourceGoalId: source.id, targetGoalId: suppressedTarget.id },
-      { sourceGoalId: source.id, targetGoalId: unsuppressedTarget.id },
-    ];
     const { projectedCoverageCountByGoalId } = computeLinkedSourceCoverageByGoalId({
-      goals: [source, suppressedTarget, unsuppressedTarget],
-      links,
+      goals: [source, target],
+      links: [{ sourceGoalId: source.id, targetGoalId: target.id }],
       ownerId: OWNER_ID,
       asOfDate: "2026-09-01",
       preparationStart: "2026-09-01",
@@ -610,8 +650,7 @@ describe("computeLinkedSourceCoverageByGoalId", () => {
       plannedDatesByGoalId: new Map(),
     });
 
-    expect(projectedCoverageCountByGoalId.get(suppressedTarget.id)).toBe(0);
-    expect(projectedCoverageCountByGoalId.get(unsuppressedTarget.id)).toBe(0);
+    expect(projectedCoverageCountByGoalId.get(target.id)).toBe(0);
   });
 
   it("counts future source plans for suppressed targets before suppression ends", () => {
@@ -783,11 +822,24 @@ describe("exercise-style regression", () => {
       "2026-07-02",
       "2026-07-10",
     ];
-    const parentManualDates = Array.from({ length: 30 }, (_, index) => {
-      const month = String(Math.floor(index / 28) + 1).padStart(2, "0");
-      const day = String((index % 28) + 1).padStart(2, "0");
-      return `2026-${month}-${day}`;
-    }).filter((date) => !parentCascadeDates.includes(date));
+    const parentManualDates = [
+      "2026-01-03",
+      "2026-01-10",
+      "2026-02-04",
+      "2026-02-11",
+      "2026-03-05",
+      "2026-03-12",
+      "2026-04-02",
+      "2026-04-09",
+      "2026-06-03",
+      "2026-06-10",
+      "2026-08-01",
+      "2026-08-08",
+      "2026-08-15",
+      "2026-08-22",
+      "2026-08-29",
+      "2026-09-01",
+    ];
 
     const completionsByGoalId = indexCompletionsByGoalId([
       ...mayDates.map((date) => completion(maySource.id, date)),

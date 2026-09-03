@@ -48,6 +48,7 @@ import {
   type PlannerGoalUnplaceableReason,
 } from "@/lib/planner/unplaceable";
 import {
+  buildLinkSourceGoalsForTarget,
   buildPlannedDatesByGoalIdFromPlannerItems,
   mapProjectedCoverageToUnitKeys,
   resolveProjectedLinkedSourceCoverageForGoal,
@@ -564,25 +565,23 @@ async function prepareOnce({
         locked: item.locked,
       }))
     );
-    const linkSourceGoals = Array.from(
-      new Map(
-        preparation.snapshot.links
-          .filter((link) => link.targetGoalId === goal.id)
-          .map((link) => [link.sourceGoalId, goalById.get(link.sourceGoalId)])
-      ).values()
-    ).filter((linkSourceGoal): linkSourceGoal is Goal => Boolean(linkSourceGoal));
-    const { projectedCoverageDates, projectedCoverageCount } =
-      resolveProjectedLinkedSourceCoverageForGoal({
-        goal,
-        effectiveEnd: goalWindowsState.effectiveEnd,
-        asOfDate,
-        ownerId,
-        inboundSourceIdsByTargetId: suppressionInboundIndex,
-        sourcesById: suppressionSourcesById,
-        linkSourceGoals,
-        completionsByGoalId,
-        plannedDatesByGoalId,
-      });
+    const linkSourceGoals = buildLinkSourceGoalsForTarget({
+      targetGoalId: goal.id,
+      links: preparation.snapshot.links,
+      goalById,
+    });
+    const { projectedCoverageCount } = resolveProjectedLinkedSourceCoverageForGoal({
+      goal,
+      effectiveEnd: goalWindowsState.effectiveEnd,
+      asOfDate,
+      ownerId,
+      inboundSourceIdsByTargetId: suppressionInboundIndex,
+      sourcesById: suppressionSourcesById,
+      linkSourceGoals,
+      completionsByGoalId,
+      plannedDatesByGoalId,
+      suppression,
+    });
     const existingUnplaceableRecord =
       validUnplaceableRecordByGoalId.get(goal.id) ?? null;
     const existingRecordIsValid =
