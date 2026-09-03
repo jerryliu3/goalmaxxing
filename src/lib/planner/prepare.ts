@@ -48,10 +48,10 @@ import {
   type PlannerGoalUnplaceableReason,
 } from "@/lib/planner/unplaceable";
 import {
+  buildLinkSourceGoalsForTarget,
   buildPlannedDatesByGoalIdFromPlannerItems,
-  collectProjectedLinkedSourceCoverageDates,
-  computeProjectedLinkedSourceCoverageCount,
   mapProjectedCoverageToUnitKeys,
+  resolveProjectedLinkedSourceCoverageForGoal,
 } from "@/lib/planner/linked-source-coverage";
 import {
   materializeWorkUnits,
@@ -565,20 +565,22 @@ async function prepareOnce({
         locked: item.locked,
       }))
     );
-    const linkSourceGoals = Array.from(
-      new Map(
-        preparation.snapshot.links
-          .filter((link) => link.targetGoalId === goal.id)
-          .map((link) => [link.sourceGoalId, goalById.get(link.sourceGoalId)])
-      ).values()
-    ).filter((linkSourceGoal): linkSourceGoal is Goal => Boolean(linkSourceGoal));
-    const projectedCoverageDates = collectProjectedLinkedSourceCoverageDates({
+    const linkSourceGoals = buildLinkSourceGoalsForTarget({
+      targetGoalId: goal.id,
+      links: preparation.snapshot.links,
+      goalById,
+    });
+    const { projectedCoverageCount } = resolveProjectedLinkedSourceCoverageForGoal({
       goal,
       effectiveEnd: goalWindowsState.effectiveEnd,
       asOfDate,
+      ownerId,
+      inboundSourceIdsByTargetId: suppressionInboundIndex,
+      sourcesById: suppressionSourcesById,
       linkSourceGoals,
       completionsByGoalId,
       plannedDatesByGoalId,
+      suppression,
     });
     const existingUnplaceableRecord =
       validUnplaceableRecordByGoalId.get(goal.id) ?? null;
@@ -628,10 +630,6 @@ async function prepareOnce({
       continue;
     }
     precheckCompletionCreditedUnitKeysByGoalId.set(goal.id, completionCreditedUnitKeys);
-    const projectedCoverageCount = computeProjectedLinkedSourceCoverageCount({
-      goal,
-      projectedCoverageDates,
-    });
     projectedLinkedSourceCoverageCountByGoalId.set(goal.id, projectedCoverageCount);
     const projectedLinkedSourceCoverageUnitKeys = mapProjectedCoverageToUnitKeys({
       requiredUnitKeys,

@@ -1747,7 +1747,7 @@ describe("preparePlannerSchedule", () => {
     const targetOutcome = rpcPayload.p_unplaceable.find(
       (entry) => entry.goal_id === targetGoal.id
     );
-    expect(targetOutcome?.unplaced_count).toBe(1);
+    expect(targetOutcome?.unplaced_count).toBe(2);
   });
 
   it("ignores archived or deleted linked sources when projecting coverage", async () => {
@@ -1922,7 +1922,146 @@ describe("preparePlannerSchedule", () => {
     const targetOutcome = rpcPayload.p_unplaceable.find(
       (entry) => entry.goal_id === targetGoal.id
     );
-    expect(targetOutcome?.unplaced_count).toBe(0);
+    expect(targetOutcome?.unplaced_count).toBe(1);
+  });
+
+  it("does not virtual-credit unsuppressed annual targets from ended linked subgoals in prepare", async () => {
+    mocks.resolveCanonicalAsOfDate.mockReturnValue("2026-09-03");
+    const maySource = goal({
+      id: "4d4d4d4d-4d4d-44d4-84d4-4d4d4d4d4d4d",
+      title: "May subgoal",
+      frequency_type: "recurring",
+      recurrence_interval: "weekly",
+      target_count: 10,
+      milestone_names: null,
+      start_date: "2026-05-01",
+      end_date: "2026-05-31",
+    });
+    const julySource = goal({
+      id: "4e4e4e4e-4e4e-44e4-84e4-4e4e4e4e4e4e",
+      title: "July subgoal",
+      frequency_type: "recurring",
+      recurrence_interval: "weekly",
+      target_count: 3,
+      milestone_names: null,
+      start_date: "2026-07-01",
+      end_date: "2026-07-31",
+    });
+    const exerciseTarget = goal({
+      id: "4f4f4f4f-4f4f-44f4-84f4-4f4f4f4f4f4f",
+      title: "Exercise in the morning",
+      frequency_type: "recurring",
+      recurrence_interval: "weekly",
+      target_count: 52,
+      milestone_names: null,
+      start_date: "2026-01-01",
+      end_date: "2026-12-31",
+    });
+    const mayDates = [
+      "2026-05-02",
+      "2026-05-04",
+      "2026-05-05",
+      "2026-05-07",
+      "2026-05-09",
+      "2026-05-12",
+      "2026-05-14",
+      "2026-05-16",
+      "2026-05-19",
+      "2026-05-21",
+      "2026-05-23",
+      "2026-05-26",
+      "2026-05-28",
+      "2026-05-30",
+      "2026-05-31",
+    ];
+    const julyDates = ["2026-07-02", "2026-07-10", "2026-07-18"];
+    const cascadeDates = [...mayDates.slice(0, 14), "2026-07-02", "2026-07-10"];
+    const manualDates = [
+      "2026-01-03",
+      "2026-01-10",
+      "2026-02-04",
+      "2026-02-11",
+      "2026-03-05",
+      "2026-03-12",
+      "2026-04-02",
+      "2026-04-09",
+      "2026-06-03",
+      "2026-06-10",
+      "2026-08-01",
+      "2026-08-08",
+      "2026-08-15",
+      "2026-08-22",
+      "2026-08-29",
+      "2026-09-01",
+    ];
+    const completions: Completion[] = [
+      ...mayDates.map((completedOn, index) => ({
+        id: `may-completion-${index + 1}`,
+        goal_id: maySource.id,
+        user_id: OWNER_ID,
+        completed_on: completedOn,
+        source: "manual" as const,
+        created_at: `${completedOn}T00:00:00.000Z`,
+      })),
+      ...julyDates.map((completedOn, index) => ({
+        id: `july-completion-${index + 1}`,
+        goal_id: julySource.id,
+        user_id: OWNER_ID,
+        completed_on: completedOn,
+        source: "manual" as const,
+        created_at: `${completedOn}T00:00:00.000Z`,
+      })),
+      ...cascadeDates.map((completedOn, index) => ({
+        id: `cascade-completion-${index + 1}`,
+        goal_id: exerciseTarget.id,
+        user_id: OWNER_ID,
+        completed_on: completedOn,
+        source: "linked_cascade" as const,
+        created_at: `${completedOn}T00:00:00.000Z`,
+      })),
+      ...manualDates.map((completedOn, index) => ({
+        id: `manual-completion-${index + 1}`,
+        goal_id: exerciseTarget.id,
+        user_id: OWNER_ID,
+        completed_on: completedOn,
+        source: "manual" as const,
+        created_at: `${completedOn}T00:00:00.000Z`,
+      })),
+    ];
+    mocks.loadPlannerPreparationSnapshot.mockResolvedValue(
+      preparationSnapshot(
+        [maySource, julySource, exerciseTarget],
+        [],
+        [],
+        completions,
+        [
+          { sourceGoalId: maySource.id, targetGoalId: exerciseTarget.id },
+          { sourceGoalId: julySource.id, targetGoalId: exerciseTarget.id },
+        ]
+      )
+    );
+    mocks.runPlannerKernel.mockImplementation((kernelInput) =>
+      kernelOutput(kernelInput.goals[0].id, [
+        { unitKey: "total:47", scheduledDate: "2026-09-10" },
+        { unitKey: "total:48", scheduledDate: "2026-09-17" },
+        { unitKey: "total:49", scheduledDate: "2026-09-24" },
+        { unitKey: "total:50", scheduledDate: "2026-10-01" },
+        { unitKey: "total:51", scheduledDate: "2026-10-08" },
+        { unitKey: "total:52", scheduledDate: "2026-10-15" },
+      ])
+    );
+
+    await prepare();
+
+    const targetCalls = mocks.runPlannerKernel.mock.calls.filter(
+      ([kernelInput]) => kernelInput.goals[0]?.id === exerciseTarget.id
+    );
+    expect(targetCalls.length).toBeGreaterThan(0);
+    for (const [kernelInput] of targetCalls) {
+      expect(kernelInput.precoveredCountByGoalId).toEqual({
+        [exerciseTarget.id]: 0,
+      });
+    }
   });
 
   it("applies projected source coverage after already-credited target ordinals", async () => {
