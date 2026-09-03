@@ -546,7 +546,7 @@ describe("pure planner kernel", () => {
       )
     );
 
-    expect(monthOutputs.map((output) => output.workUnits.length)).toEqual([3, 4, 5]);
+    expect(monthOutputs.map((output) => output.workUnits.length)).toEqual([4, 4, 4]);
     const unitKeys = monthOutputs.flatMap((output) =>
       output.workUnits.map((unit) => unit.unitKey)
     );
@@ -579,8 +579,8 @@ describe("pure planner kernel", () => {
       })
     );
 
-    expect(september.workUnits.length).toBe(5);
-    expect(october.workUnits.length).toBe(7);
+    expect(september.workUnits.length).toBe(8);
+    expect(october.workUnits.length).toBe(4);
     const unitKeys = [...september.workUnits, ...october.workUnits].map(
       (unit) => unit.unitKey
     );
@@ -2113,5 +2113,68 @@ describe("solve intent and draft pins", () => {
       creditedCompletionId: "completion-1",
       creditedCompletionDate: "2026-08-05",
     });
+  });
+
+  it("scopes remaining deadline-total ordinals into the current month after heavy early-year completion", () => {
+    const showerGoal = withLifetimeTargetBasisForTests({
+      id: "92893edf-6497-4587-bbcd-ad2ff6b47415",
+      owner_id: "owner-a",
+      title: "Shower early",
+      description: null,
+      category: "Personal",
+      color: null,
+      frequency_type: "recurring",
+      recurrence_interval: "daily",
+      target_count: 91,
+      milestone_names: null,
+      start_date: "2026-01-01",
+      end_date: "2026-12-31",
+      photo_path: null,
+      team_id: null,
+      is_deleted: false,
+      archived_at: null,
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+    } as Goal);
+    const completionDates = [
+      "2026-01-01", "2026-01-02", "2026-01-08", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-31",
+      "2026-02-04", "2026-02-10", "2026-02-13", "2026-02-15", "2026-02-16", "2026-02-19", "2026-02-28",
+      "2026-03-05", "2026-03-07", "2026-03-21", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-30",
+      "2026-04-03", "2026-04-08", "2026-04-10", "2026-04-11", "2026-04-14", "2026-04-20", "2026-04-21", "2026-04-29",
+      "2026-05-02", "2026-05-12", "2026-05-16", "2026-05-25", "2026-05-29",
+      "2026-06-16", "2026-06-18", "2026-06-21", "2026-06-23",
+      "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-07", "2026-07-11", "2026-07-18", "2026-07-21", "2026-07-23", "2026-07-26", "2026-07-29",
+      "2026-08-01", "2026-08-05", "2026-08-06", "2026-08-10", "2026-08-12", "2026-08-20", "2026-08-31",
+    ];
+    const completions: Completion[] = completionDates.map((completedOn, index) => ({
+      id: `completion-${index}`,
+      goal_id: showerGoal.id,
+      user_id: showerGoal.owner_id,
+      completed_on: completedOn,
+      source: "manual",
+      created_at: `${completedOn}T00:00:00Z`,
+    }));
+    const policy = createDefaultPlannerPolicy("America/New_York", "2026-09-03T00:00:00Z");
+    const september = runPlannerKernel({
+      schemaVersion: "1",
+      eligibilityMode: "overlap_v1",
+      ownerId: showerGoal.owner_id,
+      ...toKernelWindow("2026-09"),
+      asOfDate: "2026-09-03",
+      timezone: "America/New_York",
+      goals: [showerGoal],
+      completions,
+      links: [],
+      policy,
+      basePlan: null,
+    });
+    const dates = september.workUnits
+      .map((unit) => unit.scheduledDate)
+      .filter((date): date is string => date !== null);
+
+    expect(dates.length).toBeGreaterThan(0);
+    expect(dates.every((date) => date >= "2026-09-03" && date <= "2026-09-30")).toBe(
+      true
+    );
   });
 });

@@ -261,11 +261,11 @@ function allocateOrdinalWindow({
       ? effectivePlacementStart
       : baselineProjectableStart;
   const lifetimeEnd = effectiveGoalEndDate;
-  const ownershipWindow =
-    compareCanonicalStrings(projectableStart, lifetimeEnd) <= 0
-      ? { start: projectableStart, end: lifetimeEnd }
-      : { start: goal.start_date, end: lifetimeEnd };
-  const ownershipCandidateDates = enumerateDates(ownershipWindow);
+  const idealLifetimeWindow = {
+    start: goal.start_date,
+    end: lifetimeEnd,
+  };
+  const idealCandidateDates = enumerateDates(idealLifetimeWindow);
   const reservedCompletionDates = new Set(
     reconciledUnits
       .map((unit) => unit.creditedCompletionDate)
@@ -316,8 +316,8 @@ function allocateOrdinalWindow({
       goalId: goal.id,
       ordinal,
       targetCount: requirement.targetCount,
-      remainingLifetime: ownershipWindow,
-      candidateDates: ownershipCandidateDates,
+      remainingLifetime: idealLifetimeWindow,
+      candidateDates: idealCandidateDates,
     });
     const ownerMonth = targetDate
       ? monthFromDate(targetDate)
