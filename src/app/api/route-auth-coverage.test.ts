@@ -154,6 +154,8 @@ import { POST as plannerPreparePost } from "@/app/api/planner/prepare/route";
 import { POST as plannerResetPost } from "@/app/api/planner/reset/route";
 import { POST as plannerResetAllPost } from "@/app/api/planner/reset-all/route";
 import { POST as plannerLockPost } from "@/app/api/planner/items/lock/route";
+import { GET as plannerTasksGet } from "@/app/api/planner/tasks/route";
+import { POST as plannerTaskCompletionPost } from "@/app/api/planner/tasks/[taskId]/completion/route";
 import { POST as plannerCoachPost } from "@/app/api/planner/coach/route";
 import {
   GET as plannerConversationsGet,
@@ -331,6 +333,22 @@ const auditedRouteCases: AuditedRouteCase[] = [
   routeCase("POST /api/planner/reset", plannerResetPost),
   routeCase("POST /api/planner/reset-all", plannerResetAllPost),
   routeCase("POST /api/planner/items/lock", plannerLockPost),
+  {
+    label: "GET /api/planner/tasks",
+    invoke: (token) => {
+      const request = requestFor("GET /api/planner/tasks", token);
+      const url = new URL(request.url);
+      url.searchParams.set("from", "2026-09-01");
+      url.searchParams.set("to", "2026-09-30");
+      return plannerTasksGet(new Request(url, request));
+    },
+  },
+  routeCase(
+    "POST /api/planner/tasks/[taskId]/completion",
+    plannerTaskCompletionPost,
+    { taskId: RESOURCE_ID },
+    { completed: true }
+  ),
   routeCase("POST /api/planner/coach", plannerCoachPost),
   routeCase("GET /api/planner/coach/conversations", plannerConversationsGet),
   routeCase("POST /api/planner/coach/conversations", plannerConversationsPost),
