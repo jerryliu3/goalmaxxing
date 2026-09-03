@@ -9,16 +9,17 @@ export function plannerTaskCalendarEntryKey(taskId: string) {
 }
 
 export function isPlannerTaskCalendarEntry(
-  entry: Pick<PlannerDayDetailEntry, "entryKind" | "key">
+  entry: Pick<PlannerDayDetailEntry, "entryKind">
 ) {
-  return (
-    entry.entryKind === PLANNER_TASK_ENTRY_KIND ||
-    entry.key.startsWith(`${PLANNER_TASK_ENTRY_KIND}:`)
-  );
+  return entry.entryKind === PLANNER_TASK_ENTRY_KIND;
 }
 
 export function canOpenPlannerEventDetails(entry: PlannerDayDetailEntry) {
   return !isPlannerTaskCalendarEntry(entry);
+}
+
+export function plannerTaskIdFromEntry(entry: PlannerDayDetailEntry) {
+  return isPlannerTaskCalendarEntry(entry) ? entry.originalGoalId : null;
 }
 
 export function toPlannerTaskCalendarEntry(
@@ -26,12 +27,13 @@ export function toPlannerTaskCalendarEntry(
 ): PlannerDayDetailEntry {
   const scheduledTime = normalizePlannerLocalTime(task.scheduledTime);
   const completed = Boolean(task.completedAt);
+  const key = plannerTaskCalendarEntryKey(task.taskId);
   return {
-    key: plannerTaskCalendarEntryKey(task.taskId),
+    key,
     entryKind: PLANNER_TASK_ENTRY_KIND,
     originalGoalId: task.taskId,
     goalTitle: task.title,
-    unitKey: plannerTaskCalendarEntryKey(task.taskId),
+    unitKey: key,
     label: null,
     classification: PLANNER_TASK_ENTRY_KIND,
     creditState: completed ? "credited" : "uncredited",
@@ -61,15 +63,4 @@ export function buildCalendarTaskEntriesByDate(
     }
   }
   return byDate;
-}
-
-export function plannerTaskIdFromEntry(entry: PlannerDayDetailEntry) {
-  if (!isPlannerTaskCalendarEntry(entry)) {
-    return null;
-  }
-  if (entry.originalGoalId.length > 0) {
-    return entry.originalGoalId;
-  }
-  const prefix = `${PLANNER_TASK_ENTRY_KIND}:`;
-  return entry.key.startsWith(prefix) ? entry.key.slice(prefix.length) : null;
 }

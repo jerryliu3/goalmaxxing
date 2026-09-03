@@ -18,8 +18,6 @@ describe("calendar task entries", () => {
         scheduledDate: "2026-09-02",
         scheduledTime: "09:30",
         completedAt: null,
-        createdAt: "2026-09-01T00:00:00.000Z",
-        updatedAt: "2026-09-01T00:00:00.000Z",
       },
       {
         taskId: "22222222-2222-4222-8222-222222222222",
@@ -27,8 +25,6 @@ describe("calendar task entries", () => {
         scheduledDate: "2026-09-02",
         scheduledTime: null,
         completedAt: "2026-09-02T12:00:00.000Z",
-        createdAt: "2026-09-01T00:00:00.000Z",
-        updatedAt: "2026-09-02T12:00:00.000Z",
       },
     ]);
 
@@ -53,8 +49,6 @@ describe("calendar task entries", () => {
       scheduledDate: "2026-09-02",
       scheduledTime: null,
       completedAt: null,
-      createdAt: "2026-09-01T00:00:00.000Z",
-      updatedAt: "2026-09-01T00:00:00.000Z",
     });
     const goalEntry = buildPlannerDayEntry();
 

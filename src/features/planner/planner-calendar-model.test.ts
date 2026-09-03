@@ -303,8 +303,6 @@ describe("selectPlannerCalendarModel", () => {
       scheduledDate: "2026-08-06",
       scheduledTime: "09:00",
       completedAt: null,
-      createdAt: "2026-08-01T00:00:00.000Z",
-      updatedAt: "2026-08-01T00:00:00.000Z",
     });
     const context = buildContextWithPersistedPlan(
       [

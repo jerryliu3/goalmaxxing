@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { getApiErrorMessage, getJson, postJson } from "@/lib/api/client";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
@@ -18,6 +18,13 @@ interface CalendarPlannerTaskCompletionResponse {
   task?: PlannerCalendarTask;
 }
 
+async function fetchCalendarTasks(from: string, to: string) {
+  const payload = await getJson<CalendarPlannerTasksResponse>("/api/planner/tasks", {
+    query: { from, to },
+  });
+  return payload.tasks ?? [];
+}
+
 export function useCalendarPlannerTasks({
   enabled,
   from,
@@ -28,56 +35,52 @@ export function useCalendarPlannerTasks({
   to: string | null;
 }) {
   const [tasks, setTasks] = useState<PlannerCalendarTask[]>([]);
-  const requestVersionRef = useRef(0);
-
-  const loadTasks = useCallback(
-    async (options?: { background?: boolean }) => {
-      if (!enabled || !from || !to) {
-        setTasks([]);
-        return;
-      }
-      const requestVersion = ++requestVersionRef.current;
-      try {
-        const payload = await getJson<CalendarPlannerTasksResponse>(
-          "/api/planner/tasks",
-          {
-            query: { from, to },
-          }
-        );
-        if (requestVersion !== requestVersionRef.current) {
-          return;
-        }
-        setTasks(payload.tasks ?? []);
-      } catch (error) {
-        if (requestVersion !== requestVersionRef.current) {
-          return;
-        }
-        if (!options?.background) {
-          toast.error(
-            getApiErrorMessage(error, "Could not load calendar tasks.")
-          );
-        }
-        setTasks([]);
-      }
-    },
-    [enabled, from, to]
-  );
 
   useEffect(() => {
-    void loadTasks();
-    return () => {
-      requestVersionRef.current += 1;
-    };
-  }, [loadTasks]);
-
-  usePlannerTabCacheInvalidation(() => {
-    if (!enabled) {
+    if (!enabled || !from || !to) {
       return;
     }
-    void loadTasks({ background: true });
+
+    let cancelled = false;
+    void fetchCalendarTasks(from, to)
+      .then((nextTasks) => {
+        if (!cancelled) {
+          setTasks(nextTasks);
+        }
+      })
+      .catch((error: unknown) => {
+        if (cancelled) {
+          return;
+        }
+        toast.error(getApiErrorMessage(error, "Could not load calendar tasks."));
+        setTasks([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, from, to]);
+
+  usePlannerTabCacheInvalidation(() => {
+    if (!enabled || !from || !to) {
+      return;
+    }
+    void fetchCalendarTasks(from, to)
+      .then(setTasks)
+      .catch(() => {
+        // Keep the last successful snapshot on background refresh failures.
+      });
   });
 
-  const applyTaskUpdate = useCallback((task: PlannerCalendarTask) => {
+  const completeTask = useCallback(async (taskId: string, completed: boolean) => {
+    const payload = await postJson<CalendarPlannerTaskCompletionResponse>(
+      `/api/planner/tasks/${taskId}/completion`,
+      { completed }
+    );
+    if (!payload.task) {
+      throw new Error("Could not update the task.");
+    }
+    const task = payload.task;
     setTasks((current) => {
       const index = current.findIndex((row) => row.taskId === task.taskId);
       if (index < 0) {
@@ -87,34 +90,15 @@ export function useCalendarPlannerTasks({
       next[index] = task;
       return next;
     });
+    return task;
   }, []);
 
-  const completeTask = useCallback(
-    async (taskId: string, completed: boolean) => {
-      const payload = await postJson<CalendarPlannerTaskCompletionResponse>(
-        `/api/planner/tasks/${taskId}/completion`,
-        { completed }
-      );
-      if (!payload.task) {
-        throw new Error("Could not update the task.");
-      }
-      applyTaskUpdate(payload.task);
-      return payload.task;
-    },
-    [applyTaskUpdate]
-  );
-
   const taskEntriesByDate = useMemo(() => {
-    if (!enabled) {
+    if (!enabled || !from || !to) {
       return EMPTY_TASK_ENTRIES_BY_DATE;
     }
     return buildCalendarTaskEntriesByDate(tasks);
-  }, [enabled, tasks]);
+  }, [enabled, from, tasks, to]);
 
-  return {
-    tasks,
-    taskEntriesByDate,
-    completeTask,
-    reload: loadTasks,
-  };
+  return { taskEntriesByDate, completeTask };
 }

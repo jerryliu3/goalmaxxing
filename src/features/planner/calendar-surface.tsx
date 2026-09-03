@@ -44,10 +44,6 @@ import { useCalendarCompletionControls } from "@/features/planner/use-calendar-c
 import { usePlannerCalendarModel } from "@/features/planner/use-planner-calendar-model";
 import { useCalendarPlannerTasks } from "@/features/planner/use-calendar-planner-tasks";
 import {
-  readCalendarShowTasksPreference,
-  writeCalendarShowTasksPreference,
-} from "@/features/planner/calendar-task-visibility";
-import {
   buildCalendarVisibleDateWindow,
   selectCalendarViewWindowProjection,
 } from "@/features/planner/calendar-view-projection";
@@ -117,6 +113,7 @@ export function CalendarSurface({
   const [setupTimezone, setSetupTimezone] = useState(resolveUserTimezone());
   const [setupWeekStartsOn, setSetupWeekStartsOn] = useState(1);
   const [setupRestWeekdays, setSetupRestWeekdays] = useState<number[]>([]);
+  // Session-scoped like warning dismissal; default off until the user opts in.
   const [showTasksOnCalendar, setShowTasksOnCalendar] = useState(false);
   const {
     hoverPreviewTimerRef,
@@ -168,15 +165,6 @@ export function CalendarSurface({
     }, 0);
     return () => window.clearTimeout(timer);
   }, [loadContext]);
-
-  useEffect(() => {
-    setShowTasksOnCalendar(readCalendarShowTasksPreference());
-  }, []);
-
-  const handleShowTasksOnCalendarChange = useCallback((next: boolean) => {
-    setShowTasksOnCalendar(next);
-    writeCalendarShowTasksPreference(next);
-  }, []);
 
   const handlePlannerMutation = useCallback(() => {
     skipInvalidationReloadRef.current = true;
@@ -673,7 +661,7 @@ export function CalendarSurface({
     setupRestWeekdays,
     setSetupRestWeekdays,
     showTasksOnCalendar,
-    onShowTasksOnCalendarChange: handleShowTasksOnCalendarChange,
+    onShowTasksOnCalendarChange: setShowTasksOnCalendar,
     setupLoading,
     recoverLoading,
     canRecoverPastSessions,

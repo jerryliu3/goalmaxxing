@@ -204,8 +204,6 @@ describe("calendar task immovability", () => {
       scheduledDate: "2026-09-02",
       scheduledTime: null,
       completedAt: null,
-      createdAt: "2026-09-01T00:00:00.000Z",
-      updatedAt: "2026-09-01T00:00:00.000Z",
     });
 
     expect(isEntryImmovableForDraft(taskEntry)).toBe(true);

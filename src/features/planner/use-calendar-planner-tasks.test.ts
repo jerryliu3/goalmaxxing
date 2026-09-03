@@ -31,8 +31,6 @@ describe("useCalendarPlannerTasks", () => {
           scheduledDate: "2026-09-02",
           scheduledTime: "09:00",
           completedAt: null,
-          createdAt: "2026-09-01T00:00:00.000Z",
-          updatedAt: "2026-09-01T00:00:00.000Z",
         },
       ],
     });
@@ -43,8 +41,6 @@ describe("useCalendarPlannerTasks", () => {
         scheduledDate: "2026-09-02",
         scheduledTime: "09:00",
         completedAt: "2026-09-02T12:00:00.000Z",
-        createdAt: "2026-09-01T00:00:00.000Z",
-        updatedAt: "2026-09-02T12:00:00.000Z",
       },
     });
   });

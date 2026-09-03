@@ -206,21 +206,21 @@ export function selectCalendarDayAccessorsModel({
       );
     });
 
-  const taskEntriesForDay = (day: string | null) => {
+  const entriesForDay = (day: string | null, goalEntries: PlannerDayDetailEntry[]) => {
     if (!day) {
-      return [];
+      return filterEntries(goalEntries);
     }
-    return filterEntries(calendarTaskEntriesByDate?.get(day) ?? []);
+    return filterEntries([
+      ...goalEntries,
+      ...(calendarTaskEntriesByDate?.get(day) ?? []),
+    ]);
   };
 
   const getEntriesForDay = (day: string | null) => {
     if (hideViewerPlan) {
       return [];
     }
-    return [
-      ...filterEntries(getCalendarDayProjection(day).entries),
-      ...taskEntriesForDay(day),
-    ];
+    return entriesForDay(day, getCalendarDayProjection(day).entries);
   };
 
   const getCompletionFactMarkersForDay = (day: string | null) => {
@@ -245,10 +245,7 @@ export function selectCalendarDayAccessorsModel({
     }
     return orderEntriesForDay({
       day,
-      entries: [
-        ...filterEntries(getCalendarDayProjection(day).orderedEntries),
-        ...taskEntriesForDay(day),
-      ],
+      entries: entriesForDay(day, getCalendarDayProjection(day).orderedEntries),
       previewEntryOrderByDay,
     });
   };
