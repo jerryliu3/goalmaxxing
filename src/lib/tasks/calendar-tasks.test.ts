@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  CALENDAR_TASKS_MAX_WINDOW_DAYS,
   calendarTasksQuerySchema,
-  inclusiveDayCount,
   mapPlannerCalendarTaskRows,
   plannerTaskCompletionRequestSchema,
 } from "@/lib/tasks/calendar-tasks";
@@ -33,10 +31,12 @@ describe("calendar task query schema", () => {
         to: "2027-01-03",
       }).success
     ).toBe(false);
-    expect(inclusiveDayCount("2026-01-01", "2026-01-01")).toBe(1);
-    expect(inclusiveDayCount("2026-01-01", "2026-12-31")).toBeLessThanOrEqual(
-      CALENDAR_TASKS_MAX_WINDOW_DAYS
-    );
+    expect(
+      calendarTasksQuerySchema.safeParse({
+        from: "2026-01-01",
+        to: "2026-12-31",
+      }).success
+    ).toBe(true);
   });
 });
 
@@ -63,8 +63,6 @@ describe("mapPlannerCalendarTaskRows", () => {
           scheduled_date: "2026-09-02",
           scheduled_time: "09:30",
           completed_at: null,
-          created_at: "2026-09-01T12:00:00.000Z",
-          updated_at: "2026-09-01T12:00:00.000Z",
         },
         {
           task_id: "22222222-2222-4222-8222-222222222222",
@@ -72,8 +70,6 @@ describe("mapPlannerCalendarTaskRows", () => {
           scheduled_date: "2026-09-03",
           scheduled_time: null,
           completed_at: "2026-09-03T18:00:00.000Z",
-          created_at: "2026-09-01T12:00:00.000Z",
-          updated_at: "2026-09-03T18:00:00.000Z",
         },
         { title: "missing-id" },
       ])
@@ -84,8 +80,6 @@ describe("mapPlannerCalendarTaskRows", () => {
         scheduledDate: "2026-09-02",
         scheduledTime: "09:30",
         completedAt: null,
-        createdAt: "2026-09-01T12:00:00.000Z",
-        updatedAt: "2026-09-01T12:00:00.000Z",
       },
       {
         taskId: "22222222-2222-4222-8222-222222222222",
@@ -93,9 +87,12 @@ describe("mapPlannerCalendarTaskRows", () => {
         scheduledDate: "2026-09-03",
         scheduledTime: null,
         completedAt: "2026-09-03T18:00:00.000Z",
-        createdAt: "2026-09-01T12:00:00.000Z",
-        updatedAt: "2026-09-03T18:00:00.000Z",
       },
     ]);
+  });
+
+  it("ignores non-array payloads", () => {
+    expect(mapPlannerCalendarTaskRows(null)).toEqual([]);
+    expect(mapPlannerCalendarTaskRows({ task_id: "x" })).toEqual([]);
   });
 });

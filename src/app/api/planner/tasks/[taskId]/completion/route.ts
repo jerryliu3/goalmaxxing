@@ -77,7 +77,7 @@ export async function POST(
       );
     }
 
-    const [task] = mapPlannerCalendarTaskRows(data ?? []);
+    const [task] = mapPlannerCalendarTaskRows(data);
     if (!task) {
       throw new ApiRouteError(
         404,

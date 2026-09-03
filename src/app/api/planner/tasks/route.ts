@@ -39,9 +39,7 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabase
       .from("planner_tasks")
-      .select(
-        "id, title, scheduled_date, scheduled_time, completed_at, created_at, updated_at"
-      )
+      .select("id, title, scheduled_date, scheduled_time, completed_at")
       .eq("is_deleted", false)
       .gte("scheduled_date", from)
       .lte("scheduled_date", to)
@@ -63,7 +61,7 @@ export async function GET(request: Request) {
     return apiSuccessResponse(
       {
         schemaVersion: CALENDAR_TASKS_SCHEMA_VERSION,
-        tasks: mapPlannerCalendarTaskRows(data ?? []),
+        tasks: mapPlannerCalendarTaskRows(data),
       },
       correlationId
     );
