@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(18);
+select plan(20);
 
 insert into auth.users (id, email)
 values (
@@ -265,6 +265,36 @@ select results_eq(
       ('Untimed afternoon task'::text)
   $$,
   'list_planner_tasks sorts by time ascending with nulls last'
+);
+
+select is(
+  (
+    select scheduled_date
+    from public.set_planner_task_scheduled_date(
+      (
+        select id
+        from public.planner_tasks
+        where owner_id = '11111111-1111-4111-8111-111111111111'
+          and title = 'Strength mobility block'
+        order by created_at desc
+        limit 1
+      ),
+      current_date + 3
+    )
+    limit 1
+  ),
+  current_date + 3,
+  'set_planner_task_scheduled_date moves a task to a new date'
+);
+
+select throws_ok(
+  $$select public.set_planner_task_scheduled_date(
+    '99999999-9999-4999-8999-999999999999',
+    current_date
+  )$$,
+  'P0001',
+  'planner_task_not_found',
+  'set_planner_task_scheduled_date rejects missing tasks'
 );
 
 reset role;

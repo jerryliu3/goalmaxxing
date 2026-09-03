@@ -156,6 +156,7 @@ import { POST as plannerResetAllPost } from "@/app/api/planner/reset-all/route";
 import { POST as plannerLockPost } from "@/app/api/planner/items/lock/route";
 import { GET as plannerTasksGet } from "@/app/api/planner/tasks/route";
 import { POST as plannerTaskCompletionPost } from "@/app/api/planner/tasks/[taskId]/completion/route";
+import { POST as plannerTaskSchedulePost } from "@/app/api/planner/tasks/[taskId]/schedule/route";
 import { POST as plannerCoachPost } from "@/app/api/planner/coach/route";
 import {
   GET as plannerConversationsGet,
@@ -348,6 +349,12 @@ const auditedRouteCases: AuditedRouteCase[] = [
     plannerTaskCompletionPost,
     { taskId: RESOURCE_ID },
     { completed: true }
+  ),
+  routeCase(
+    "POST /api/planner/tasks/[taskId]/schedule",
+    plannerTaskSchedulePost,
+    { taskId: RESOURCE_ID },
+    { scheduledDate: "2026-09-08" }
   ),
   routeCase("POST /api/planner/coach", plannerCoachPost),
   routeCase("GET /api/planner/coach/conversations", plannerConversationsGet),
