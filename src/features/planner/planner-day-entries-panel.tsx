@@ -4,6 +4,7 @@ import { CalendarDayPreviewList } from "@/features/planner/calendar-day-preview-
 import { completionDisabledReasonCopy } from "@/features/planner/calendar-format";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import type { PlannerCompletionFactMarker } from "@/features/planner/calendar-surface.types";
+import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import { READ_ONLY_MONTH_HINT } from "@/features/planner/planner-save-availability";
 import { getCompletionControlState } from "@/features/planner/completion-entry-dispatch";
 
@@ -68,6 +69,12 @@ export function PlannerDayEntriesPanel({
           return {
             currentlyCredited: isEntryCredited(entry),
             disabledReasonCopy: READ_ONLY_MONTH_HINT,
+          };
+        }
+        if (isPlannerTaskCalendarEntry(entry)) {
+          return {
+            currentlyCredited: isEntryCredited(entry),
+            disabledReasonCopy: null,
           };
         }
         const completionState = getCompletionControlState({

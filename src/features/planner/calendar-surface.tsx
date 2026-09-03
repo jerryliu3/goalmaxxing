@@ -10,6 +10,7 @@ import { allCategoriesValue } from "@/features/goals/goal-filters";
 import {
   buildWeekdayLabels,
   getEntryGoalFirstTitleWithTime,
+  normalizeWeekStartsOn,
 } from "@/features/planner/calendar-format";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import { useCalendarDraftState } from "@/features/planner/use-calendar-draft-moves";
@@ -25,7 +26,7 @@ import {
   useCalendarSurfaceInteractionRefs,
   useCalendarSurfaceUiEffects,
 } from "@/features/planner/use-calendar-surface-ui-effects";
-import { resolveUserTimezone } from "@/lib/dates/timezone";
+import { getDateInTimezone, resolveUserTimezone } from "@/lib/dates/timezone";
 import {
   invalidatePlannerRelatedTabCaches,
 } from "@/lib/cache/planner-tab-cache";
@@ -41,6 +42,11 @@ import {
 import { buildMoveSourceOptions } from "@/features/planner/planner-move-source-options";
 import { useCalendarCompletionControls } from "@/features/planner/use-calendar-completion-controls";
 import { usePlannerCalendarModel } from "@/features/planner/use-planner-calendar-model";
+import { useCalendarPlannerTasks } from "@/features/planner/use-calendar-planner-tasks";
+import {
+  buildCalendarVisibleDateWindow,
+  selectCalendarViewWindowProjection,
+} from "@/features/planner/calendar-view-projection";
 import { usePlannerPersistenceActions } from "@/features/planner/use-planner-persistence-actions";
 import { usePlannerDraftCommands } from "@/features/planner/use-planner-draft-commands";
 import { usePlannerCalendarDnd } from "@/features/planner/use-planner-calendar-dnd";
@@ -107,6 +113,8 @@ export function CalendarSurface({
   const [setupTimezone, setSetupTimezone] = useState(resolveUserTimezone());
   const [setupWeekStartsOn, setSetupWeekStartsOn] = useState(1);
   const [setupRestWeekdays, setSetupRestWeekdays] = useState<number[]>([]);
+  // Session-scoped like warning dismissal; default off until the user opts in.
+  const [showTasksOnCalendar, setShowTasksOnCalendar] = useState(false);
   const {
     hoverPreviewTimerRef,
     hoverPreviewCloseTimerRef,
@@ -174,6 +182,36 @@ export function CalendarSurface({
       ].filter((day): day is string => Boolean(day)),
     [dayPreview?.day, expandedPreviewDay, localSelectedDay, moveDialogDay]
   );
+  const calendarTodayForTasks =
+    context?.asOfDate ??
+    getDateInTimezone(new Date(), context?.timezone ?? setupTimezone);
+  const calendarTaskQueryWindow = useMemo(() => {
+    const projection = selectCalendarViewWindowProjection({
+      month,
+      selectedDay,
+      calendarToday: calendarTodayForTasks,
+      weekStartsOn: normalizeWeekStartsOn(
+        context?.preferences?.defaultPolicy.weekStartsOn
+      ),
+      viewMode,
+    });
+    return buildCalendarVisibleDateWindow([
+      ...projection.visibleDays,
+      ...additionalProjectionDays,
+    ]);
+  }, [
+    additionalProjectionDays,
+    calendarTodayForTasks,
+    context?.preferences?.defaultPolicy.weekStartsOn,
+    month,
+    selectedDay,
+    viewMode,
+  ]);
+  const { taskEntriesByDate, completeTask } = useCalendarPlannerTasks({
+    enabled: showTasksOnCalendar && duoScope !== "partner",
+    from: calendarTaskQueryWindow?.start ?? null,
+    to: calendarTaskQueryWindow?.end ?? null,
+  });
   const {
     currentScopeMonth,
     weekStartsOn,
@@ -202,6 +240,7 @@ export function CalendarSurface({
     partnerCompletionMarkersByDate,
     previewEntryOrderByDay,
     additionalProjectionDays,
+    calendarTaskEntriesByDate: taskEntriesByDate,
   });
   const {
     cells,
@@ -551,6 +590,7 @@ export function CalendarSurface({
       handlePlannerMutation,
       loadContext,
       refreshDraftPreview,
+      completePlannerTask: completeTask,
     });
 
   const { closeMoveDialog, submitMoveDialog, contractExpandedPreview } =
@@ -620,6 +660,8 @@ export function CalendarSurface({
     focusedWeekDays,
     setupRestWeekdays,
     setSetupRestWeekdays,
+    showTasksOnCalendar,
+    onShowTasksOnCalendarChange: setShowTasksOnCalendar,
     setupLoading,
     recoverLoading,
     canRecoverPastSessions,

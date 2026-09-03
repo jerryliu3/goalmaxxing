@@ -1,10 +1,14 @@
-import { buildActiveGoalIndexes } from "@/features/planner/calendar-entries";
+import {
+  buildActiveGoalIndexes,
+  orderEntriesForDay,
+} from "@/features/planner/calendar-entries";
 import {
   applyCalendarCompletionMarkerFilters,
   buildCalendarCategoryFilterOptions,
   entryMatchesCalendarSearchQuery,
   goalPassesCalendarFilters,
 } from "@/features/planner/calendar-filters";
+import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import {
   readPlannerCalendarDayProjection,
   selectPlannerCalendarDayProjectionsByDay,
@@ -44,6 +48,7 @@ export interface CalendarDayAccessorsArgs {
   visibleDays: string[];
   additionalProjectionDays: string[];
   previewEntryOrderByDay: Record<string, string[]>;
+  calendarTaskEntriesByDate?: Map<string, PlannerDayDetailEntry[]>;
 }
 
 export interface CalendarDayAccessorsMemoizedState {
@@ -88,6 +93,7 @@ export function selectCalendarDayAccessorsModel({
   visibleDays,
   additionalProjectionDays,
   previewEntryOrderByDay,
+  calendarTaskEntriesByDate,
   memoizedState,
 }: CalendarDayAccessorsArgs & {
   memoizedState?: CalendarDayAccessorsMemoizedState;
@@ -190,17 +196,31 @@ export function selectCalendarDayAccessorsModel({
   const plannerReadOnly = duoScope === "partner";
 
   const filterEntries = (entries: PlannerDayDetailEntry[]) =>
-    entries.filter(
-      (entry) =>
+    entries.filter((entry) => {
+      if (isPlannerTaskCalendarEntry(entry)) {
+        return entryMatchesCalendarSearchQuery(entry, searchQuery);
+      }
+      return (
         goalPassesFilters(entry.originalGoalId) &&
         entryMatchesCalendarSearchQuery(entry, searchQuery)
-    );
+      );
+    });
+
+  const entriesForDay = (day: string | null, goalEntries: PlannerDayDetailEntry[]) => {
+    if (!day) {
+      return filterEntries(goalEntries);
+    }
+    return filterEntries([
+      ...goalEntries,
+      ...(calendarTaskEntriesByDate?.get(day) ?? []),
+    ]);
+  };
 
   const getEntriesForDay = (day: string | null) => {
     if (hideViewerPlan) {
       return [];
     }
-    return filterEntries(getCalendarDayProjection(day).entries);
+    return entriesForDay(day, getCalendarDayProjection(day).entries);
   };
 
   const getCompletionFactMarkersForDay = (day: string | null) => {
@@ -223,7 +243,11 @@ export function selectCalendarDayAccessorsModel({
     if (hideViewerPlan) {
       return [];
     }
-    return filterEntries(getCalendarDayProjection(day).orderedEntries);
+    return orderEntriesForDay({
+      day,
+      entries: entriesForDay(day, getCalendarDayProjection(day).orderedEntries),
+      previewEntryOrderByDay,
+    });
   };
 
   return {

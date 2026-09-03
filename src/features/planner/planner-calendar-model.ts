@@ -4,6 +4,7 @@ import type {
   PlannerCalendarViewMode,
   PlannerCompletionFactMarker,
   PlannerContextPayload,
+  PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import {
   buildCalendarVisibleDateWindow,
@@ -54,6 +55,7 @@ export interface PlannerCalendarModelArgs {
   partnerCompletionMarkersByDate?: Map<string, PlannerCompletionFactMarker[]>;
   previewEntryOrderByDay: Record<string, string[]>;
   additionalProjectionDays: string[];
+  calendarTaskEntriesByDate?: Map<string, PlannerDayDetailEntry[]>;
   memoizedState: PlannerCalendarMemoizedState;
 }
 
@@ -90,6 +92,7 @@ export function selectPlannerCalendarModel({
   partnerCompletionMarkersByDate,
   previewEntryOrderByDay,
   additionalProjectionDays,
+  calendarTaskEntriesByDate,
   memoizedState,
 }: PlannerCalendarModelArgs): PlannerCalendarModel {
   const weekStartsOn = normalizeWeekStartsOn(
@@ -125,6 +128,7 @@ export function selectPlannerCalendarModel({
     visibleDays: viewProjection.visibleDays,
     additionalProjectionDays: [viewProjection.focusedDay, ...additionalProjectionDays],
     previewEntryOrderByDay,
+    calendarTaskEntriesByDate,
     memoizedState,
   });
   const eligibilityNotices = selectPlannerEligibilityNotices({

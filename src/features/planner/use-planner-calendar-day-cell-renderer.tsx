@@ -21,6 +21,7 @@ import type {
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import type { PlannerDayPreviewInteractions } from "@/features/planner/use-planner-day-preview-interactions";
+import { canOpenPlannerEventDetails } from "@/features/planner/calendar-task-entries";
 
 interface PlannerCalendarCell {
   date: string;
@@ -188,7 +189,9 @@ export function usePlannerCalendarDayCellRenderer({
                 setLocalSelectedDay(day);
                 onSelectedDayChange(day, "push", "day");
               }
-              setSelectedEventEntryKey(entry.key);
+              if (canOpenPlannerEventDetails(entry)) {
+                setSelectedEventEntryKey(entry.key);
+              }
               setDayPreview(null);
               return;
             }

@@ -39,6 +39,7 @@ interface PlannerCalendarCell {
 export interface PlannerCalendarBoardProps {
   loading: boolean;
   viewMode: PlannerCalendarViewMode;
+  showTasksOnCalendar?: boolean;
   previousWindowAriaLabel: string;
   nextWindowAriaLabel: string;
   fixedViewHeadingWidthCh: number;
@@ -99,6 +100,7 @@ export interface PlannerCalendarBoardProps {
 export function PlannerCalendarBoard({
   loading,
   viewMode,
+  showTasksOnCalendar = false,
   previousWindowAriaLabel,
   nextWindowAriaLabel,
   fixedViewHeadingWidthCh,
@@ -210,14 +212,16 @@ export function PlannerCalendarBoard({
                   includeSourceElement={false}
                 />
               </div>
-              <PlannerTasksPanel
-                key={focusedDay}
-                title="Tasks"
-                description={null}
-                scheduledDate={focusedDay}
-                allowCreate={false}
-                hideWhenEmpty
-              />
+              {showTasksOnCalendar ? null : (
+                <PlannerTasksPanel
+                  key={focusedDay}
+                  title="Tasks"
+                  description={null}
+                  scheduledDate={focusedDay}
+                  allowCreate={false}
+                  hideWhenEmpty
+                />
+              )}
             </div>
           ) : viewMode === "three_day" ? (
             rollingWeekStrip

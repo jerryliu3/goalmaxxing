@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { toast } from "sonner";
 import {
   getCompletionControlDisabledReason,
   getDateFactDispatchForEntry as resolveDateFactDispatchForEntry,
@@ -8,6 +9,12 @@ import type {
   PlannerContextPayload,
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
+import {
+  isPlannerTaskCalendarEntry,
+  plannerTaskIdFromEntry,
+} from "@/features/planner/calendar-task-entries";
+import { isEntryCredited } from "@/features/planner/calendar-format";
+import { getApiErrorMessage } from "@/lib/api/client";
 import type { DateFactDispatchForEntry } from "@/features/planner/completion-entry-dispatch";
 import { usePlannerEntryMutations } from "@/features/planner/use-planner-entry-mutations";
 import type { RunCompletionMutationInput } from "@/features/planner/use-completion-mutation";
@@ -26,6 +33,7 @@ export function useCalendarCompletionControls({
   handlePlannerMutation,
   loadContext,
   refreshDraftPreview,
+  completePlannerTask,
 }: {
   context: PlannerContextPayload | null;
   hasDraftSession: boolean;
@@ -49,6 +57,7 @@ export function useCalendarCompletionControls({
   refreshDraftPreview: (
     nextPolicy: PlannerPolicy
   ) => Promise<PlannerContextPayload["preview"]>;
+  completePlannerTask?: (taskId: string, completed: boolean) => Promise<unknown>;
 }) {
   const canMutatePlanItems = Boolean(
     context?.activePlan?.plan.status === "active"
@@ -80,7 +89,7 @@ export function useCalendarCompletionControls({
     [canMutatePlanItems]
   );
 
-  const { toggleItemLock, toggleDateFact } = usePlannerEntryMutations({
+  const { toggleItemLock, toggleDateFact: toggleGoalDateFact } = usePlannerEntryMutations({
     context,
     hasDraftSession,
     draftSaveCommands,
@@ -95,6 +104,39 @@ export function useCalendarCompletionControls({
     loadContext,
     refreshDraftPreview,
   });
+
+  const toggleDateFact = useCallback(
+    async (
+      entry: PlannerDayDetailEntry,
+      selectedDateOverride?: string,
+      sourceElement?: HTMLElement
+    ) => {
+      if (isPlannerTaskCalendarEntry(entry)) {
+        const taskId = plannerTaskIdFromEntry(entry);
+        if (!taskId || !completePlannerTask) {
+          return;
+        }
+        const mutationKey = `fact:${entry.key}`;
+        setMutationLoadingKey(mutationKey);
+        try {
+          await completePlannerTask(taskId, !isEntryCredited(entry));
+          handlePlannerMutation();
+        } catch (error) {
+          toast.error(getApiErrorMessage(error, "Could not update the task."));
+        } finally {
+          setMutationLoadingKey(null);
+        }
+        return;
+      }
+      await toggleGoalDateFact(entry, selectedDateOverride, sourceElement);
+    },
+    [
+      completePlannerTask,
+      handlePlannerMutation,
+      setMutationLoadingKey,
+      toggleGoalDateFact,
+    ]
+  );
 
   return {
     canMutatePlanItems,
