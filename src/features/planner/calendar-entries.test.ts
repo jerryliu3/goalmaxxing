@@ -139,4 +139,85 @@ describe("planner calendar entries", () => {
       scheduledDate: "2026-08-31",
     });
   });
+
+  it("hides linked targets on suppressed dates", () => {
+    const links = [
+      {
+        sourceGoalId: "source-a",
+        targetGoalId: "target-b",
+        targetSuppressionKind: "until" as const,
+        targetResumesOn: "2026-10-01",
+      },
+    ];
+    const entriesByDate = buildEntriesByDate({
+      workUnits: [
+        {
+          originalGoalId: "target-b",
+          unitKey: "milestone:21",
+          label: "Post",
+          scheduledDate: "2026-09-04",
+          classification: "open",
+          creditState: "uncredited",
+        },
+      ],
+      activeItems: [
+        {
+          id: "item-target",
+          plan_goal_id: "target-b",
+          unit_key: "milestone:21",
+          requirement_kind: "deadline_total",
+          scheduled_date: "2026-10-01",
+          original_scheduled_date: "2026-10-01",
+          classification: "open",
+          credit_state: "uncredited",
+          locked: false,
+          revision: 0,
+          credited_completion_id: null,
+          credited_completion_date: null,
+        },
+      ],
+      activeGoalsByPlanGoalId: new Map(),
+      activeGoalsByOriginalGoalId: new Map(),
+      goalTitles: { "target-b": "Post videos" },
+      linkSummaries: links,
+      draftItemEdits: {},
+    });
+
+    expect(entriesByDate.get("2026-09-04")).toBeUndefined();
+    expect(entriesByDate.get("2026-10-01")?.[0]).toMatchObject({
+      originalGoalId: "target-b",
+      unitKey: "milestone:21",
+      creditState: "uncredited",
+    });
+  });
+
+  it("pins uncredited persisted sessions to their stored scheduled date", () => {
+    const entriesByDate = buildEntriesByDate({
+      workUnits: [
+        {
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          label: "Session",
+          scheduledDate: "2026-09-04",
+          classification: "open",
+          creditState: "uncredited",
+        },
+      ],
+      activeItems: [persistedItem("2026-10-01")],
+      activeGoalsByPlanGoalId: new Map([
+        ["goal-a", { id: "goal-a", original_goal_id: "goal-a", title: "Goal A" }],
+      ]),
+      activeGoalsByOriginalGoalId: new Map([
+        ["goal-a", { id: "goal-a", original_goal_id: "goal-a", title: "Goal A" }],
+      ]),
+      goalTitles: { "goal-a": "Goal A" },
+      draftItemEdits: {},
+    });
+
+    expect(entriesByDate.get("2026-09-04")).toBeUndefined();
+    expect(entriesByDate.get("2026-10-01")?.[0]).toMatchObject({
+      originalGoalId: "goal-a",
+      creditState: "uncredited",
+    });
+  });
 });
