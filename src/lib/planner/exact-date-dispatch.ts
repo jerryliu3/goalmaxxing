@@ -124,6 +124,39 @@ function dispatchFailure(
   };
 }
 
+export function mapCompletionRpcError(
+  error: { code?: string | null; message?: string | null } | null
+): PlannerExactDateDispatchFailure | null {
+  if (!error) {
+    return null;
+  }
+  if (error.code === "23514" && error.message === "future_completion_not_allowed") {
+    return dispatchFailure(
+      422,
+      "future_completion_not_allowed",
+      "Completions can only be added for today or a past date."
+    );
+  }
+  if (
+    error.code === "23514" &&
+    error.message === "completion_outside_goal_lifetime"
+  ) {
+    return dispatchFailure(
+      422,
+      "completion_outside_goal_lifetime",
+      "The completion date must be within the goal lifetime."
+    );
+  }
+  if (error.code === "23514" && error.message === "linked_goal_disallowed") {
+    return dispatchFailure(
+      422,
+      "linked_goal_disallowed",
+      "Linked target goals cannot be completed while upstream suppression is active."
+    );
+  }
+  return null;
+}
+
 function dateOutsideGoalLifetime(date: string, goal: GoalLifetimeWindow) {
   return date < goal.startDate || (goal.endDate !== null && date > goal.endDate);
 }
@@ -324,10 +357,13 @@ export async function applyPlannerItemDateFact({
     desiredFactState,
   });
   if (mutationError) {
-    return dispatchFailure(
-      409,
-      "planner_item_date_fact_failed",
-      "Planner item date fact could not be updated."
+    return (
+      mapCompletionRpcError(mutationError) ??
+      dispatchFailure(
+        409,
+        "planner_item_date_fact_failed",
+        "Planner item date fact could not be updated."
+      )
     );
   }
 
@@ -415,10 +451,13 @@ export async function applyPlannerGoalDateFact({
     desiredFactState,
   });
   if (mutationError) {
-    return dispatchFailure(
-      409,
-      "planner_goal_date_fact_failed",
-      "Planner goal date fact could not be updated."
+    return (
+      mapCompletionRpcError(mutationError) ??
+      dispatchFailure(
+        409,
+        "planner_goal_date_fact_failed",
+        "Planner goal date fact could not be updated."
+      )
     );
   }
 

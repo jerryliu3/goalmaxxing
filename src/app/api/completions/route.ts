@@ -3,6 +3,7 @@ import { getDateInTimezone } from "@/lib/dates/timezone";
 import {
   applyPlannerGoalDateFact,
   applyPlannerItemDateFact,
+  mapCompletionRpcError,
   targetedExactDateRequestSchema,
 } from "@/lib/planner/exact-date-dispatch";
 import {
@@ -130,6 +131,10 @@ export async function handleCompletionPost(request: Request) {
     );
 
     if (mutationError) {
+      const mapped = mapCompletionRpcError(mutationError);
+      if (mapped) {
+        throw new PlannerRouteError(mapped.status, mapped.code, mapped.message);
+      }
       throw new PlannerRouteError(
         409,
         "completion_update_failed",

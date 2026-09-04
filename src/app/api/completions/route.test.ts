@@ -220,4 +220,17 @@ describe("completions route", () => {
     );
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
+
+  it("maps linked-target RPC failures to 422", async () => {
+    mocks.rpc.mockResolvedValue({
+      error: { code: "23514", message: "linked_goal_disallowed" },
+    });
+
+    const response = await POST(request("2026-08-05", "present"));
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toMatchObject({
+      code: "linked_goal_disallowed",
+    });
+  });
 });
