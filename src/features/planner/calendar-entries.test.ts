@@ -5,6 +5,7 @@ import {
   resolveCalendarDayData,
 } from "./calendar-entries";
 import type {
+  PlannerActiveGoalSnapshot,
   PlannerActiveItemSnapshot,
   PlannerWorkUnit,
 } from "./calendar-surface.types";
@@ -17,6 +18,21 @@ function unit(scheduledDate: string): PlannerWorkUnit {
     scheduledDate,
     classification: "open",
     creditState: "uncredited",
+  };
+}
+
+function activeGoal(
+  overrides: Partial<PlannerActiveGoalSnapshot> = {}
+): PlannerActiveGoalSnapshot {
+  return {
+    id: "goal-a",
+    goal_id: "goal-a",
+    original_goal_id: "goal-a",
+    requirement_fingerprint: "deadline_total:1",
+    title: "Goal A",
+    category: "fitness",
+    color: null,
+    ...overrides,
   };
 }
 
@@ -205,10 +221,10 @@ describe("planner calendar entries", () => {
       ],
       activeItems: [persistedItem("2026-10-01")],
       activeGoalsByPlanGoalId: new Map([
-        ["goal-a", { id: "goal-a", original_goal_id: "goal-a", title: "Goal A" }],
+        ["goal-a", activeGoal()],
       ]),
       activeGoalsByOriginalGoalId: new Map([
-        ["goal-a", { id: "goal-a", original_goal_id: "goal-a", title: "Goal A" }],
+        ["goal-a", activeGoal()],
       ]),
       goalTitles: { "goal-a": "Goal A" },
       draftItemEdits: {},
