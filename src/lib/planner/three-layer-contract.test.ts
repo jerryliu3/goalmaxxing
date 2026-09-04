@@ -407,8 +407,12 @@ describe("prepare / kernel / projection contract", () => {
             "create-videos",
             {
               id: "create-videos",
+              goal_id: "create-videos",
               original_goal_id: "create-videos",
+              requirement_fingerprint: "deadline_total:1",
               title: "Create videos",
+              category: "creative",
+              color: null,
             },
           ],
         ]),
