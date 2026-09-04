@@ -40,6 +40,11 @@ function earlierDate(left: string, right: string) {
   return left < right ? left : right;
 }
 
+type DemoSessionWindows = Pick<
+  PlannerWorkUnit,
+  "creditWindow" | "placementWindow" | "draftMoveWindow" | "classification"
+>;
+
 function demoSessionWindows({
   goal,
   scheduledDate,
@@ -54,10 +59,7 @@ function demoSessionWindows({
   asOfDate: string;
   visibleStart: string;
   visibleEnd: string;
-}): Pick<
-  PlannerWorkUnit,
-  "creditWindow" | "placementWindow" | "draftMoveWindow" | "classification"
-> {
+}): DemoSessionWindows {
   const lifetimeEnd = goal.end_date ?? visibleEnd;
   const creditWindow = {
     start: goal.start_date,
@@ -174,7 +176,7 @@ export function buildDemoPlannerContext(
     const credited = snapshotItem
       ? creditedCompletionForItem(snapshot, snapshotItem)
       : undefined;
-    const windows = goal
+    const windows: DemoSessionWindows = goal
       ? demoSessionWindows({
           goal,
           scheduledDate: item.scheduled_date,
