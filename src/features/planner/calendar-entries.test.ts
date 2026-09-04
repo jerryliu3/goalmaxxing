@@ -253,4 +253,29 @@ describe("planner calendar entries", () => {
       creditState: "uncredited",
     });
   });
+
+  it("does not paint snapshot credit when a persisted item has no work unit", () => {
+    const entriesByDate = buildEntriesByDate({
+      workUnits: [],
+      activeItems: [
+        {
+          ...persistedItem("2026-10-01"),
+          classification: "fulfilled",
+          credit_state: "completed_as_scheduled",
+        },
+      ],
+      activeGoalsByPlanGoalId: new Map([
+        ["goal-a", { id: "goal-a", original_goal_id: "goal-a", title: "Goal A" }],
+      ]),
+      activeGoalsByOriginalGoalId: new Map(),
+      goalTitles: { "goal-a": "Goal A" },
+      draftItemEdits: {},
+    });
+
+    expect(entriesByDate.get("2026-10-01")?.[0]).toMatchObject({
+      originalGoalId: "goal-a",
+      classification: "open",
+      creditState: "uncredited",
+    });
+  });
 });
