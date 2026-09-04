@@ -936,7 +936,11 @@ describe("pure planner kernel", () => {
     expect(output.workUnits.map((unit) => unit.unitKey)).toEqual(
       expect.arrayContaining(["milestone:9", "milestone:10", "milestone:11"])
     );
-    expect(output.solver.issueCodes).toContain("placement_shortfall");
+    for (const unitKey of ["milestone:9", "milestone:10", "milestone:11"]) {
+      const unit = output.workUnits.find((entry) => entry.unitKey === unitKey);
+      expect(unit?.scheduledDate).not.toBeNull();
+    }
+    expect(output.solver.issueCodes).not.toContain("placement_shortfall");
   });
 
   it("does not enforce resumed omission guard on partial resumed windows", () => {

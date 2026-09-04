@@ -65,7 +65,10 @@ export function projectWorkUnitsToSolver({
     if (isRecoverablePastPlacement(unit)) {
       return null;
     }
-    return preserveExistingAssignments ? unit.scheduledDate : null;
+    // Preserve mode keeps stability through previousDate/displacement cost only.
+    // Unlocked persisted rows stay interchangeable so prepare can rebalance
+    // deadline_total shortfalls instead of re-locking every assignment.
+    return null;
   };
   // Preserve-mode placements before the active window (asOfDate moved forward)
   // are already fixed. Leave them out of the solver instead of soft-locking a
