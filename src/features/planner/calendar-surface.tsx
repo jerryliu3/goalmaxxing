@@ -653,7 +653,6 @@ export function CalendarSurface({
       coachActions: coach.actions,
     });
 
-  const showBlockingLoading = loading && context === null;
   const resetGoalOptions = useMemo(
     () =>
       buildPlannerResetGoalOptions(context?.activePlan?.goals, context?.asOfDate ?? ""),

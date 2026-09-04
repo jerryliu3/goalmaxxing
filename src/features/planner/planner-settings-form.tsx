@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckboxDropdown } from "@/components/ui/checkbox-dropdown";
 import { restWeekdayOptions } from "@/features/planner/calendar-format";
@@ -66,16 +66,18 @@ export function PlannerSettingsForm({
       })),
     [openGoals]
   );
-  const selectedGoals = useMemo(
-    () => openGoals.filter((goal) => selectedGoalIds.includes(goal.goalId)),
-    [openGoals, selectedGoalIds]
+  const openGoalIds = useMemo(
+    () => new Set(openGoals.map((goal) => goal.goalId)),
+    [openGoals]
   );
-
-  useEffect(() => {
-    setSelectedGoalIds((current) =>
-      current.filter((goalId) => openGoals.some((goal) => goal.goalId === goalId))
-    );
-  }, [openGoals]);
+  const visibleSelectedGoalIds = useMemo(
+    () => selectedGoalIds.filter((goalId) => openGoalIds.has(goalId)),
+    [openGoalIds, selectedGoalIds]
+  );
+  const selectedGoals = useMemo(
+    () => openGoals.filter((goal) => visibleSelectedGoalIds.includes(goal.goalId)),
+    [openGoals, visibleSelectedGoalIds]
+  );
 
   return (
     <div className="space-y-4">
@@ -168,7 +170,7 @@ export function PlannerSettingsForm({
           <div className="flex flex-col gap-2 sm:flex-row">
             <CheckboxDropdown
               options={goalOptions}
-              selectedValues={selectedGoalIds}
+              selectedValues={visibleSelectedGoalIds}
               onSelectedValuesChange={setSelectedGoalIds}
               placeholder={
                 openGoals.length === 0 ? "No open goals available" : "Select goals to reset"
