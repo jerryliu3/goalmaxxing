@@ -44,7 +44,7 @@ import {
 import {
   buildLinkSuppressionInboundIndex,
   getLinkResumeDate,
-  isSuppressedInWindow,
+  isFullySuppressedForWindow,
   resolveLinkSuppression,
   toLinkSuppressionSource,
 } from "@/lib/planner/link-suppression";
@@ -506,7 +506,7 @@ export function runPlannerKernel(
         window,
         ownerId: rawInput.ownerId,
         goal,
-        currentLinkRole: isSuppressedInWindow(suppression, window)
+        currentLinkRole: isFullySuppressedForWindow(suppression, window)
           ? "target"
           : "none",
         asOfDate: rawInput.asOfDate,

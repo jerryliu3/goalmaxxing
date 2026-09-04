@@ -4,7 +4,7 @@ import type { Goal } from "@/lib/goals/types";
 import { getScopeDateRange } from "@/lib/planner/dates";
 import {
   getLinkResumeDate,
-  isSuppressedInWindow,
+  isFullySuppressedForWindow,
   isSuppressedOnDate,
   resolveLinkSuppression,
   toLinkSuppressionSource,
@@ -349,30 +349,33 @@ describe("resolveLinkSuppression", () => {
 });
 
 describe("suppression helpers", () => {
-  it("supports monotone month coverage even before source start", () => {
+  it("treats targets as fully suppressed only when resume is after the window end", () => {
     expect(
-      isSuppressedInWindow(
+      isFullySuppressedForWindow(
         { kind: "until", through: "2026-12-31" },
         getScopeDateRange("2026-08")
       )
     ).toBe(true);
-  });
-
-  it("reports suppression window inclusion for finite and indefinite states", () => {
     expect(
-      isSuppressedInWindow(
+      isFullySuppressedForWindow(
         { kind: "until", through: "2026-08-31" },
         getScopeDateRange("2026-08")
       )
     ).toBe(true);
     expect(
-      isSuppressedInWindow(
+      isFullySuppressedForWindow(
         { kind: "until", through: "2026-07-31" },
         getScopeDateRange("2026-08")
       )
     ).toBe(false);
     expect(
-      isSuppressedInWindow(
+      isFullySuppressedForWindow(
+        { kind: "until", through: "2026-08-31" },
+        { start: "2026-08-01", end: "2026-10-31" }
+      )
+    ).toBe(false);
+    expect(
+      isFullySuppressedForWindow(
         { kind: "indefinite" },
         getScopeDateRange("2026-08")
       )
