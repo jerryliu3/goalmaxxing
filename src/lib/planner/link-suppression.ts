@@ -128,18 +128,6 @@ export function resolveLinkSuppression({
   return { kind: "until", through: latestSuppressionEnd };
 }
 
-export function isSuppressedInWindow(
-  suppression: LinkSuppression,
-  window: DateWindow
-) {
-  // Visible scope is the planner kernel DateWindow, not mounted calendar cells.
-  return (
-    suppression.kind === "indefinite" ||
-    (suppression.kind === "until" &&
-      compareDateStrings(suppression.through, window.start) >= 0)
-  );
-}
-
 export function isSuppressedOnDate(suppression: LinkSuppression, date: string) {
   return (
     suppression.kind === "indefinite" ||
@@ -153,4 +141,21 @@ export function getLinkResumeDate(suppression: LinkSuppression): string | null {
     return null;
   }
   return addDaysToDateString(suppression.through, 1);
+}
+
+export function isFullySuppressedForWindow(
+  suppression: LinkSuppression,
+  window: DateWindow
+) {
+  if (suppression.kind === "indefinite") {
+    return true;
+  }
+  if (suppression.kind === "none") {
+    return false;
+  }
+  const resumeDate = getLinkResumeDate(suppression);
+  return (
+    resumeDate !== null &&
+    compareDateStrings(resumeDate, window.end) > 0
+  );
 }

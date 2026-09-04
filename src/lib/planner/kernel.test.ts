@@ -836,6 +836,64 @@ describe("pure planner kernel", () => {
     );
   });
 
+  it("keeps linked targets eligible in multi-month windows once source suppression has resumed", () => {
+    const sourceGoal = goal({
+      id: "goal-source-august",
+      target_count: 2,
+      start_date: "2026-08-01",
+      end_date: "2026-08-31",
+    });
+    const targetGoal = goal({
+      id: "goal-target-annual",
+      frequency_type: "fixed_milestones",
+      recurrence_interval: null,
+      target_count: 4,
+      milestone_names: ["M1", "M2", "M3", "M4"],
+      start_date: "2026-01-01",
+      end_date: "2026-12-31",
+    });
+    const requirementFingerprint = computeRequirementFingerprint(targetGoal);
+    const output = runPlannerKernel(
+      input({
+        startDate: "2026-08-01",
+        endDate: "2026-10-31",
+        asOfDate: "2026-09-03",
+        goals: [sourceGoal, targetGoal],
+        links: [{ sourceGoalId: sourceGoal.id, targetGoalId: targetGoal.id }],
+        basePlan: {
+          planId: "test-plan",
+          version: 1,
+          assignments: [
+            {
+              goalId: targetGoal.id,
+              requirementFingerprint,
+              unitKey: "milestone:4",
+              scheduledDate: "2026-09-03",
+              locked: false,
+              scheduledTimeOverride: null,
+            },
+          ],
+          completionToUnit: {},
+          issueCodes: [],
+        },
+        preserveExistingAssignments: true,
+      })
+    );
+
+    expect(
+      output.eligibility.find((entry) => entry.goalId === targetGoal.id)
+    ).toMatchObject({
+      eligible: true,
+      reason: "eligible",
+    });
+    expect(
+      output.workUnits.some(
+        (unit) =>
+          unit.originalGoalId === targetGoal.id && unit.unitKey === "milestone:4"
+      )
+    ).toBe(true);
+  });
+
   it("applies monotone suppression before source start when source ends after scope start", () => {
     const sourceGoal = goal({
       id: "goal-source-future",
