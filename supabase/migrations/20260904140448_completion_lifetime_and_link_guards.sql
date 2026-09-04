@@ -228,7 +228,10 @@ begin
     perform private.raise_if_linked_target_completion_disallowed(p_goal_id, p_completed_on);
   exception
     when check_violation then
-      return false;
+      if SQLERRM in ('completion_outside_goal_lifetime', 'linked_goal_disallowed') then
+        return false;
+      end if;
+      raise;
   end;
 
   while coalesce(array_length(v_queue, 1), 0) > 0 loop

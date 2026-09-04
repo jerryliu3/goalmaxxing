@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   applyPlannerGoalDateFact,
   applyPlannerItemDateFact,
+  mapCompletionRpcError,
   targetedExactDateRequestSchema,
 } from "./exact-date-dispatch";
 
@@ -78,6 +79,48 @@ describe("exact-date dispatch schema", () => {
     });
 
     expect(parsed.success).toBe(false);
+  });
+});
+
+describe("mapCompletionRpcError", () => {
+  it("maps known completion invariant failures to stable 422 route errors", () => {
+    expect(
+      mapCompletionRpcError({
+        code: "23514",
+        message: "future_completion_not_allowed",
+      })
+    ).toMatchObject({
+      status: 422,
+      code: "future_completion_not_allowed",
+    });
+    expect(
+      mapCompletionRpcError({
+        code: "23514",
+        message: "completion_outside_goal_lifetime",
+      })
+    ).toMatchObject({
+      status: 422,
+      code: "completion_outside_goal_lifetime",
+    });
+    expect(
+      mapCompletionRpcError({
+        code: "23514",
+        message: "linked_goal_disallowed",
+      })
+    ).toMatchObject({
+      status: 422,
+      code: "linked_goal_disallowed",
+    });
+  });
+
+  it("leaves unknown RPC failures unmapped", () => {
+    expect(
+      mapCompletionRpcError({
+        code: "42501",
+        message: "not_authorized_for_goal",
+      })
+    ).toBeNull();
+    expect(mapCompletionRpcError(null)).toBeNull();
   });
 });
 
