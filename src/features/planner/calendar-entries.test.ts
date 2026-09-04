@@ -265,7 +265,7 @@ describe("planner calendar entries", () => {
         },
       ],
       activeGoalsByPlanGoalId: new Map([
-        ["goal-a", { id: "goal-a", original_goal_id: "goal-a", title: "Goal A" }],
+        ["goal-a", activeGoal()],
       ]),
       activeGoalsByOriginalGoalId: new Map(),
       goalTitles: { "goal-a": "Goal A" },
