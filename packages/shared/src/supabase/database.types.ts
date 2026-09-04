@@ -2601,6 +2601,14 @@ export type Database = {
           unlocked_count: number
         }[]
       }
+      clear_planner_schedule_for_goal: {
+        Args: { p_expected_digest: string; p_goal_id: string; p_windows: Json }
+        Returns: {
+          deleted_count: number
+          schedule_digest: string
+          window_count: number
+        }[]
+      }
       clear_planner_schedule_windows: {
         Args: { p_expected_digest: string; p_windows: Json }
         Returns: {

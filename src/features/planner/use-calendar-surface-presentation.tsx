@@ -13,6 +13,7 @@ import {
 import { usePlannerCalendarDayCellRenderer } from "@/features/planner/use-planner-calendar-day-cell-renderer";
 import type { PlannerDayPreviewInteractions } from "@/features/planner/use-planner-day-preview-interactions";
 import type { OpenGoalInstance } from "@/features/planner/use-calendar-view-navigation";
+import type { PlannerResetGoalOption } from "@/features/planner/planner-reset-goal-options";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 
 type CalendarSurfacePresentationArgs = Omit<
@@ -69,10 +70,13 @@ type CalendarSurfacePresentationArgs = Omit<
   canRecoverPastSessions: boolean;
   rebuildBlockedMessage: string | undefined;
   fullResetLoading: boolean;
+  goalResetLoading: boolean;
+  openGoals: PlannerResetGoalOption[];
   submitSetup: () => Promise<void>;
   recoverPastSessions: () => Promise<void>;
   rebuildSchedule: () => Promise<void>;
   resetPlanFully: () => Promise<void>;
+  resetPlanForGoals: (goals: PlannerResetGoalOption[]) => Promise<void>;
   rebuildLoading: boolean;
   updateDraftLabel: (entry: PlannerDayDetailEntry, label: string) => void;
   updateDraftScheduledDate: (entry: PlannerDayDetailEntry, date: string) => void;
@@ -117,10 +121,13 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     canRecoverPastSessions,
     rebuildBlockedMessage,
     fullResetLoading,
+    goalResetLoading,
+    openGoals,
     submitSetup,
     recoverPastSessions,
     rebuildSchedule,
     resetPlanFully,
+    resetPlanForGoals,
     rebuildLoading,
     updateDraftLabel,
     updateDraftScheduledDate,
@@ -200,19 +207,24 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
         canShowSaveAction: layoutProps.canShowSaveAction,
         rebuildBlockedMessage,
         fullResetLoading,
+        goalResetLoading,
+        openGoals,
         submitSetup,
         recoverPastSessions,
         resetPlan: layoutProps.resetPlan,
         rebuildSchedule,
         resetPlanFully,
+        resetPlanForGoals,
       }),
     [
       canRecoverPastSessions,
       fullResetLoading,
+      goalResetLoading,
       layoutProps.canResetPlan,
       layoutProps.canShowSaveAction,
       layoutProps.hasDraftSession,
       layoutProps.loading,
+      openGoals,
       rebuildLoading,
       layoutProps.resetLoading,
       layoutProps.resetPlan,
@@ -220,6 +232,7 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
       rebuildSchedule,
       recoverLoading,
       recoverPastSessions,
+      resetPlanForGoals,
       resetPlanFully,
       saveLoading,
       setSetupRestWeekdays,

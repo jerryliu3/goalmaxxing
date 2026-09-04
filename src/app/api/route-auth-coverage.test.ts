@@ -153,6 +153,7 @@ import { POST as plannerSavePost } from "@/app/api/planner/save/route";
 import { POST as plannerPreparePost } from "@/app/api/planner/prepare/route";
 import { POST as plannerResetPost } from "@/app/api/planner/reset/route";
 import { POST as plannerResetAllPost } from "@/app/api/planner/reset-all/route";
+import { POST as plannerResetGoalPost } from "@/app/api/planner/reset-goal/route";
 import { POST as plannerLockPost } from "@/app/api/planner/items/lock/route";
 import { GET as plannerTasksGet } from "@/app/api/planner/tasks/route";
 import { POST as plannerTaskCompletionPost } from "@/app/api/planner/tasks/[taskId]/completion/route";
@@ -333,6 +334,7 @@ const auditedRouteCases: AuditedRouteCase[] = [
   routeCase("POST /api/planner/prepare", plannerPreparePost),
   routeCase("POST /api/planner/reset", plannerResetPost),
   routeCase("POST /api/planner/reset-all", plannerResetAllPost),
+  routeCase("POST /api/planner/reset-goal", plannerResetGoalPost),
   routeCase("POST /api/planner/items/lock", plannerLockPost),
   {
     label: "GET /api/planner/tasks",

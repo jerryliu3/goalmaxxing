@@ -1,9 +1,7 @@
 "use client";
 
-import { addMonths, format } from "date-fns";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { parseMonth } from "@/features/planner/calendar-format";
 import type {
   PlannerContextPayload,
   PlannerErrorPayload,
@@ -22,6 +20,9 @@ import {
 } from "@/lib/planner/draft-window";
 import type { PlannerDraftCommand } from "@/lib/planner/draft-commands";
 import type { PlannerPolicy } from "@/lib/planner/policy";
+import { buildPlannerHorizonScopeMonths } from "@/lib/planner/reset-scope";
+import type { PlannerResetGoalOption } from "@/features/planner/planner-reset-goal-options";
+import { formatPlannerResetGoalSelectionLabel } from "@/features/planner/planner-reset-goal-options";
 import { withPlannerRefreshTimeout } from "@/lib/planner/refresh-timeout";
 import { shouldUseDirectDraftPersistence } from "@/lib/planner/save-persistence";
 
@@ -80,6 +81,7 @@ export function usePlannerPersistenceActions({
   const [saveLoading, setSaveLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [fullResetLoading, setFullResetLoading] = useState(false);
+  const [goalResetLoading, setGoalResetLoading] = useState(false);
   const [rebuildLoading, setRebuildLoading] = useState(false);
   const nonPublishablePreviewMessage = useCallback(
     (preview: NonNullable<PlannerContextPayload["preview"]>) =>
@@ -347,15 +349,11 @@ export function usePlannerPersistenceActions({
     }
 
     setFullResetLoading(true);
-    const asOfMonth = context.asOfDate.slice(0, 7);
-    const scopeMonthsToProcess = new Set<string>([context.scopeMonth, ...(month ? [month] : [])]);
-    for (let monthOffset = 0; monthOffset < 24; monthOffset += 1) {
-      scopeMonthsToProcess.add(format(addMonths(parseMonth(asOfMonth), monthOffset), "yyyy-MM"));
-    }
-
-    const scopeMonths = Array.from(scopeMonthsToProcess).sort((left, right) =>
-      left.localeCompare(right)
-    );
+    const scopeMonths = buildPlannerHorizonScopeMonths({
+      asOfDate: context.asOfDate,
+      scopeMonth: context.scopeMonth,
+      viewedMonth: month,
+    });
 
     try {
       const payload = await postJson<{ scopeCount: number }>("/api/planner/reset-all", {
@@ -399,6 +397,87 @@ export function usePlannerPersistenceActions({
     loadContext,
     month,
   ]);
+
+  const resetPlanForGoals = useCallback(
+    async (goals: PlannerResetGoalOption[]) => {
+      if (!context || goals.length === 0) {
+        return;
+      }
+      const expectedDigest = context.revisions.scheduleDigest;
+      if (!expectedDigest) {
+        toast.error("Planner state is stale. Refresh and try again.");
+        return;
+      }
+      const selectionLabel = formatPlannerResetGoalSelectionLabel(goals);
+      const confirmed = window.confirm(
+        `Reset will clear scheduled planner sessions for ${selectionLabel} across the planning horizon. Continue?`
+      );
+      if (!confirmed) {
+        return;
+      }
+
+      setGoalResetLoading(true);
+      const scopeMonths = buildPlannerHorizonScopeMonths({
+        asOfDate: context.asOfDate,
+        scopeMonth: context.scopeMonth,
+        viewedMonth: month,
+      });
+
+      try {
+        const payload = await postJson<{
+          scopeCount: number;
+          deletedCount: number;
+          goalCount: number;
+        }>("/api/planner/reset-goal", {
+          goalIds: goals.map((goal) => goal.goalId),
+          expectedDigest,
+          scopeMonths,
+        });
+
+        clearDraftSession();
+        handlePlannerMutation();
+        const refreshed = await withPlannerRefreshTimeout({
+          operation: loadContext({
+            showLoading: false,
+            toastOnError: false,
+            forcePrepare: true,
+          }),
+          timeoutMessage:
+            "Goal reset ran, but calendar refresh timed out. Please refresh the page.",
+        });
+        if (!refreshed) {
+          toast.error("Goal reset ran, but calendar refresh failed. Please refresh the page.");
+          return;
+        }
+        coachActions.resetForPlannerStateReset();
+        const appliedScopeCount =
+          typeof payload.scopeCount === "number" && payload.scopeCount > 0
+            ? payload.scopeCount
+            : scopeMonths.length;
+        const deletedCount =
+          typeof payload.deletedCount === "number" ? payload.deletedCount : 0;
+        const goalCount =
+          typeof payload.goalCount === "number" ? payload.goalCount : goals.length;
+        toast.success(
+          deletedCount > 0
+            ? `Reset ${goalCount} goal${goalCount === 1 ? "" : "s"} across ${appliedScopeCount} month${appliedScopeCount === 1 ? "" : "s"} (${deletedCount} session${deletedCount === 1 ? "" : "s"} cleared).`
+            : `No scheduled sessions to clear for the selected goal${goalCount === 1 ? "" : "s"}.`
+        );
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Goal planner reset failed."));
+      } finally {
+        setGoalResetLoading(false);
+      }
+    },
+    [
+      clearDraftSession,
+      coachActions,
+      context,
+      handlePlannerMutation,
+      loadContext,
+      month,
+    ]
+  );
 
   const rebuildSchedule = useCallback(async () => {
     if (rebuildLoading) {
@@ -445,10 +524,12 @@ export function usePlannerPersistenceActions({
     saveLoading,
     resetLoading,
     fullResetLoading,
+    goalResetLoading,
     rebuildLoading,
     savePlan,
     resetPlan,
     resetPlanFully,
+    resetPlanForGoals,
     rebuildSchedule,
     discardDraftChanges,
   };
