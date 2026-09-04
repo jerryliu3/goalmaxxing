@@ -39,6 +39,10 @@ import {
   resolveEffectiveEndMonths,
   sortGoalsByDate,
 } from "@/lib/goals/list-view";
+import {
+  filterChecklistLinkedTargetSuppressedGoals,
+  selectChecklistHiddenLinkedTargetGoalIds,
+} from "@/lib/goals/checklist-link-suppression";
 import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
 import { useChecklistProjection } from "@/features/today/use-checklist-projection";
 import { progressSummaryMap } from "@/lib/goals/progress-context";
@@ -199,6 +203,17 @@ export function TodayTab({
       redirectToLogin,
     });
 
+  const hiddenLinkedTargetGoalIds = useMemo(
+    () =>
+      selectChecklistHiddenLinkedTargetGoalIds({
+        goals: completableGoals,
+        links: data.links,
+        ownerId: data.userId,
+        viewDate,
+      }),
+    [completableGoals, data.links, data.userId, viewDate]
+  );
+
   const filteredTodayGoals = useMemo(
     () =>
       selectFilteredTodayGoals({
@@ -210,10 +225,12 @@ export function TodayTab({
         endMonths: effectiveTodayEndMonths,
         targetAchievedGoalIds,
         showTargetAchievedGoals,
+        hiddenLinkedTargetGoalIds,
       }),
     [
       activeGoals,
       categoryFilters,
+      hiddenLinkedTargetGoalIds,
       targetAchievedGoalIds,
       effectiveTodayEndMonths,
       recurrenceFilters,
@@ -266,8 +283,14 @@ export function TodayTab({
   );
 
   const upcoming = useMemo(
-    () => prepareSupplementalGoals(selectUpcomingGoals(activeGoals, todayDate)),
-    [activeGoals, prepareSupplementalGoals, todayDate]
+    () =>
+      prepareSupplementalGoals(
+        filterChecklistLinkedTargetSuppressedGoals(
+          selectUpcomingGoals(activeGoals, todayDate),
+          hiddenLinkedTargetGoalIds
+        )
+      ),
+    [activeGoals, hiddenLinkedTargetGoalIds, prepareSupplementalGoals, todayDate]
   );
 
   const pastGoals = useMemo(
