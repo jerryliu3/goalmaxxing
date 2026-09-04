@@ -32,6 +32,16 @@ interface DropdownPosition {
   top: number;
   width: number;
   maxHeight: number;
+  useFixed: boolean;
+}
+
+function resolvePortalContainer(trigger: HTMLElement | null): HTMLElement {
+  if (!trigger) {
+    return document.body;
+  }
+
+  const dialogContent = trigger.closest('[data-slot="dialog-content"]');
+  return dialogContent instanceof HTMLElement ? dialogContent : document.body;
 }
 
 export function CheckboxDropdown({
@@ -52,6 +62,7 @@ export function CheckboxDropdown({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const [position, setPosition] = useState<DropdownPosition | null>(null);
 
   const updatePosition = useCallback(() => {
@@ -60,37 +71,54 @@ export function CheckboxDropdown({
       return;
     }
 
+    const container = resolvePortalContainer(trigger);
+    const useFixed = container === document.body;
     const viewportPadding = 8;
     const gap = 6;
     const defaultMaxHeight = 224;
     const minMenuHeight = 120;
-    const rect = trigger.getBoundingClientRect();
-    const width = Math.max(rect.width, 180);
+    const searchHeaderHeight = enableSearch ? 40 : 0;
+    const triggerRect = trigger.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const width = Math.max(triggerRect.width, 180);
 
-    const spaceBelow = window.innerHeight - rect.bottom - viewportPadding;
-    const spaceAbove = rect.top - viewportPadding;
+    const spaceBelow = useFixed
+      ? window.innerHeight - triggerRect.bottom - viewportPadding
+      : containerRect.bottom - triggerRect.bottom - viewportPadding;
+    const spaceAbove = useFixed
+      ? triggerRect.top - viewportPadding
+      : triggerRect.top - containerRect.top - viewportPadding;
     const openUpward = spaceBelow < 180 && spaceAbove > spaceBelow;
     const availableHeight = openUpward ? spaceAbove - gap : spaceBelow - gap;
     const maxHeight = Math.max(
       minMenuHeight,
-      Math.min(defaultMaxHeight, availableHeight)
+      Math.min(defaultMaxHeight, availableHeight - searchHeaderHeight)
     );
 
-    const unclampedTop = openUpward
-      ? rect.top - gap - maxHeight
-      : rect.bottom + gap;
-    const top = Math.min(
-      Math.max(viewportPadding, unclampedTop),
-      window.innerHeight - viewportPadding - maxHeight
-    );
+    const top = useFixed
+      ? (() => {
+          const unclampedTop = openUpward
+            ? triggerRect.top - gap - maxHeight - searchHeaderHeight
+            : triggerRect.bottom + gap;
+          return Math.min(
+            Math.max(viewportPadding, unclampedTop),
+            window.innerHeight - viewportPadding - maxHeight - searchHeaderHeight
+          );
+        })()
+      : openUpward
+        ? triggerRect.top - containerRect.top - gap - maxHeight - searchHeaderHeight
+        : triggerRect.bottom - containerRect.top + gap;
 
-    const left = Math.min(
-      Math.max(viewportPadding, rect.left),
-      window.innerWidth - viewportPadding - width
-    );
+    const left = useFixed
+      ? Math.min(
+          Math.max(viewportPadding, triggerRect.left),
+          window.innerWidth - viewportPadding - width
+        )
+      : triggerRect.left - containerRect.left;
 
-    setPosition({ left, top, width, maxHeight });
-  }, []);
+    setPortalContainer(container);
+    setPosition({ left, top, width, maxHeight, useFixed });
+  }, [enableSearch]);
 
   useLayoutEffect(() => {
     if (!open) {
@@ -172,84 +200,88 @@ export function CheckboxDropdown({
           )}
         />
       </button>
-      {open && position
+      {open && position && portalContainer
         ? createPortal(
-        <div
-          ref={menuRef}
-          role="listbox"
-          data-slot="checkbox-dropdown-menu"
-          className={cn(
-            "pointer-events-auto fixed z-[120] rounded-lg border bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10",
-            menuClassName
-          )}
-          style={{
-            left: position.left,
-            top: position.top,
-            width: position.width,
-            pointerEvents: "auto",
-          }}
-          onPointerDown={(event) => {
-            // Modal dialogs disable pointer events on body. The menu is portaled
-            // to body, so it must reclaim hits and not count as an outside click.
-            event.stopPropagation();
-          }}
-        >
-          <div className="space-y-0.5 overflow-auto pr-1" style={{ maxHeight: position.maxHeight }}>
-            {enableSearch ? (
-              <div className="sticky top-0 z-10 bg-popover px-1 pb-1 pt-0.5">
-                <Input
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder={searchPlaceholder}
-                  aria-label={searchPlaceholder}
-                  className="h-7 text-xs"
-                  onKeyDown={(event) => event.stopPropagation()}
-                />
-              </div>
-            ) : null}
-            <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted/60">
-              <input
-                type="checkbox"
-                checked={selectedValues.length === 0}
-                onChange={() => onSelectedValuesChange([])}
-                className="size-4 shrink-0 accent-primary"
-              />
-              <span className="min-w-0 truncate">{allLabel}</span>
-            </label>
-            {visibleOptions.map((option) => {
-              const checked = selectedSet.has(option.value);
-              return (
-                <label
-                  key={option.value}
-                  className={cn(
-                    "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted/60",
-                    option.disabled ? "cursor-not-allowed opacity-60" : ""
-                  )}
-                >
+            <div
+              ref={menuRef}
+              role="listbox"
+              data-slot="checkbox-dropdown-menu"
+              className={cn(
+                "z-[120] flex flex-col overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10",
+                position.useFixed ? "fixed" : "absolute",
+                menuClassName
+              )}
+              style={{
+                left: position.left,
+                top: position.top,
+                width: position.width,
+                maxHeight: position.maxHeight + (enableSearch ? 40 : 0),
+              }}
+              onPointerDown={(event) => {
+                event.stopPropagation();
+              }}
+            >
+              {enableSearch ? (
+                <div className="shrink-0 border-b border-border/60 bg-popover px-2 py-1.5">
+                  <Input
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder={searchPlaceholder}
+                    aria-label={searchPlaceholder}
+                    className="h-7 text-xs"
+                    onKeyDown={(event) => event.stopPropagation()}
+                    onPointerDown={(event) => event.stopPropagation()}
+                  />
+                </div>
+              ) : null}
+              <div
+                className="min-h-0 flex-1 space-y-0.5 overflow-y-auto overscroll-contain p-1"
+                onWheel={(event) => event.stopPropagation()}
+                onTouchMove={(event) => event.stopPropagation()}
+              >
+                <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted/60">
                   <input
                     type="checkbox"
-                    disabled={option.disabled}
-                    checked={checked}
-                    onChange={() => {
-                      if (option.disabled) {
-                        return;
-                      }
-                      onSelectedValuesChange(
-                        checked
-                          ? selectedValues.filter((value) => value !== option.value)
-                          : [...selectedValues, option.value]
-                      );
-                    }}
+                    checked={selectedValues.length === 0}
+                    onChange={() => onSelectedValuesChange([])}
                     className="size-4 shrink-0 accent-primary"
                   />
-                  <span className="min-w-0 truncate">{option.label}</span>
+                  <span className="min-w-0 truncate">{allLabel}</span>
                 </label>
-              );
-            })}
-          </div>
-          </div>,
-          document.body
-        )
+                {visibleOptions.map((option) => {
+                  const checked = selectedSet.has(option.value);
+                  return (
+                    <label
+                      key={option.value}
+                      className={cn(
+                        "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted/60",
+                        option.disabled ? "cursor-not-allowed opacity-60" : ""
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        disabled={option.disabled}
+                        checked={checked}
+                        onChange={() => {
+                          if (option.disabled) {
+                            return;
+                          }
+                          onSelectedValuesChange(
+                            checked
+                              ? selectedValues.filter((value) => value !== option.value)
+                              : [...selectedValues, option.value]
+                          );
+                        }}
+                        className="size-4 shrink-0 accent-primary"
+                      />
+                      <span className="min-w-0 truncate">{option.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>,
+            portalContainer
+          )
         : null}
     </div>
   );
