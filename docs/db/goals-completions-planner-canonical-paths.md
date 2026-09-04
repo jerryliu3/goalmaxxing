@@ -60,8 +60,8 @@ and planner boundaries. Closure v2 additions are marked in the **Closure v2** se
 ### Reconciliation observability
 
 - Kernel work units are the authority for planner credit/classification.
-- `hydrateActivePlanItemsFromWorkUnits` overwrites active-plan snapshot rows before client render.
-- When a snapshot row diverges from its work unit on `classification` or `credit_state`, `context-loader` emits `reportError` with code `reconciliation_mismatch` (observability only).
+- Active-plan snapshot items are identity-only (`id`, schedule, lock, revision, `unit_key`, `plan_goal_id`). They do not carry credit or classification.
+- When a snapshot item has no matching work unit, `context-loader` emits `reportError` with code `reconciliation_mismatch` and `reason: "missing_work_unit"` (observability only). Credited historical units without a persisted item are not mismatches.
 
 ### Completion intent surfaces
 

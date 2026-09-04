@@ -97,12 +97,8 @@ export interface PlannerActiveItemSnapshot {
   requirement_kind: "milestone_sequence" | "cadence" | "deadline_total";
   scheduled_date: string | null;
   original_scheduled_date?: string | null;
-  classification: PlannerWorkUnitClassification;
-  credit_state: PlannerWorkUnitCreditState;
   locked: boolean;
   revision: number;
-  credited_completion_id: string | null;
-  credited_completion_date: string | null;
   scheduled_time_override?: string | null;
   effective_scheduled_local_time?: string | null;
 }

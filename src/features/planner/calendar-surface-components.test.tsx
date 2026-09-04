@@ -32,7 +32,7 @@ const sampleEntry = {
     color: "#22c55e",
   },
   activeItem: {
-    credited_completion_id: null,
+    id: "item-1",
   },
   draftDiffKind: null,
   draftDiffFromDate: null,

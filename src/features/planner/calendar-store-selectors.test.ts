@@ -80,12 +80,8 @@ function buildContext(
                 requirement_kind: "deadline_total" as const,
                 scheduled_date: workUnit.scheduledDate,
                 original_scheduled_date: workUnit.scheduledDate,
-                classification: workUnit.classification,
-                credit_state: workUnit.creditState,
                 locked: false,
                 revision: 0,
-                credited_completion_id: null,
-                credited_completion_date: null,
               }]
             : []
         ),

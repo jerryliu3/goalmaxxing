@@ -92,12 +92,8 @@ describe("day visibility golden vectors (Sept 4 Post videos)", () => {
       requirement_kind: "deadline_total",
       scheduled_date: RESUME_DATE,
       original_scheduled_date: RESUME_DATE,
-      classification: "open",
-      credit_state: "uncredited",
       locked: false,
       revision: 0,
-      credited_completion_id: null,
-      credited_completion_date: null,
     };
     const entriesByDate = buildEntriesByDate({
       workUnits: [previewUnit],

@@ -27,57 +27,21 @@ function workUnit(
   };
 }
 
+const identityItem = {
+  id: "item-1",
+  plan_goal_id: "pg-1",
+  unit_key: "unit-1",
+  requirement_kind: "deadline_total" as const,
+  scheduled_date: "2026-08-01",
+  locked: false,
+  revision: 1,
+};
+
 describe("detectActivePlanReconciliationMismatches", () => {
-  it("returns empty when snapshot matches work units", () => {
+  it("returns empty when every snapshot item has a matching work unit", () => {
     const mismatches = detectActivePlanReconciliationMismatches({
       planId: "plan-1",
-      items: [
-        {
-          id: "item-1",
-          plan_goal_id: "pg-1",
-          unit_key: "unit-1",
-          requirement_kind: "deadline_total",
-          scheduled_date: "2026-08-01",
-          classification: "open",
-          credit_state: "uncredited",
-          locked: false,
-          revision: 1,
-          credited_completion_id: null,
-          credited_completion_date: null,
-        },
-      ],
-      workUnits: [
-        workUnit({
-          originalGoalId: "goal-1",
-          unitKey: "unit-1",
-          classification: "open",
-          creditState: "uncredited",
-        }),
-      ],
-      goalIdByPlanGoalId: new Map([["pg-1", "goal-1"]]),
-    });
-
-    expect(mismatches).toEqual([]);
-  });
-
-  it("detects classification and credit mismatches", () => {
-    const mismatches = detectActivePlanReconciliationMismatches({
-      planId: "plan-1",
-      items: [
-        {
-          id: "item-1",
-          plan_goal_id: "pg-1",
-          unit_key: "unit-1",
-          requirement_kind: "deadline_total",
-          scheduled_date: "2026-08-01",
-          classification: "open",
-          credit_state: "uncredited",
-          locked: false,
-          revision: 1,
-          credited_completion_id: null,
-          credited_completion_date: null,
-        },
-      ],
+      items: [identityItem],
       workUnits: [
         workUnit({
           originalGoalId: "goal-1",
@@ -89,14 +53,45 @@ describe("detectActivePlanReconciliationMismatches", () => {
       goalIdByPlanGoalId: new Map([["pg-1", "goal-1"]]),
     });
 
-    expect(mismatches).toHaveLength(1);
-    expect(mismatches[0]).toMatchObject({
-      entryKey: "goal-1:unit-1",
+    expect(mismatches).toEqual([]);
+  });
+
+  it("does not treat credited work units without a snapshot item as mismatches", () => {
+    const mismatches = detectActivePlanReconciliationMismatches({
       planId: "plan-1",
-      snapshotClassification: "open",
-      unitClassification: "fulfilled",
-      snapshotCreditState: "uncredited",
-      unitCreditState: "completed_as_scheduled",
+      items: [],
+      workUnits: [
+        workUnit({
+          originalGoalId: "goal-1",
+          unitKey: "unit-1",
+          classification: "fulfilled",
+          creditState: "completed_as_scheduled",
+          creditedCompletionId: "completion-1",
+          creditedCompletionDate: "2026-07-15",
+        }),
+      ],
+      goalIdByPlanGoalId: new Map([["pg-1", "goal-1"]]),
     });
+
+    expect(mismatches).toEqual([]);
+  });
+
+  it("detects snapshot items with no matching work unit", () => {
+    const mismatches = detectActivePlanReconciliationMismatches({
+      planId: "plan-1",
+      items: [identityItem],
+      workUnits: [],
+      goalIdByPlanGoalId: new Map([["pg-1", "goal-1"]]),
+    });
+
+    expect(mismatches).toEqual([
+      {
+        entryKey: "goal-1:unit-1",
+        planId: "plan-1",
+        planGoalId: "pg-1",
+        unitKey: "unit-1",
+        reason: "missing_work_unit",
+      },
+    ]);
   });
 });
