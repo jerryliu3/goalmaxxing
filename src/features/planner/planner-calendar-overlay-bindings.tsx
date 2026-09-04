@@ -3,6 +3,7 @@ import { PlannerSettingsForm } from "@/features/planner/planner-settings-form";
 import type { PlannerEventDetailDialogCallbacks } from "@/features/planner/planner-event-detail-dialog";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import type { OpenGoalInstance } from "@/features/planner/use-calendar-view-navigation";
+import type { PlannerResetGoalOption } from "@/features/planner/planner-reset-goal-options";
 
 export function buildPlannerSettingsForm({
   setupRestWeekdays,
@@ -20,11 +21,14 @@ export function buildPlannerSettingsForm({
   canShowSaveAction,
   rebuildBlockedMessage,
   fullResetLoading,
+  goalResetLoading,
+  openGoals,
   submitSetup,
   recoverPastSessions,
   resetPlan,
   rebuildSchedule,
   resetPlanFully,
+  resetPlanForGoal,
 }: {
   setupRestWeekdays: number[];
   setSetupRestWeekdays: (value: number[]) => void;
@@ -41,11 +45,14 @@ export function buildPlannerSettingsForm({
   canShowSaveAction: boolean;
   rebuildBlockedMessage: string | undefined;
   fullResetLoading: boolean;
+  goalResetLoading: boolean;
+  openGoals: PlannerResetGoalOption[];
   submitSetup: () => Promise<void>;
   recoverPastSessions: () => Promise<void>;
   resetPlan: () => void;
   rebuildSchedule: () => Promise<void>;
   resetPlanFully: () => Promise<void>;
+  resetPlanForGoal: (goalId: string, goalTitle: string) => Promise<void>;
 }): ReactNode {
   return (
     <PlannerSettingsForm
@@ -64,6 +71,8 @@ export function buildPlannerSettingsForm({
       canShowSaveAction={canShowSaveAction}
       rebuildBlockedMessage={rebuildBlockedMessage}
       fullResetLoading={fullResetLoading}
+      goalResetLoading={goalResetLoading}
+      openGoals={openGoals}
       onSaveSettings={() => {
         void submitSetup();
       }}
@@ -76,6 +85,9 @@ export function buildPlannerSettingsForm({
       }}
       onFullReset={() => {
         void resetPlanFully();
+      }}
+      onResetGoal={(goalId, goalTitle) => {
+        void resetPlanForGoal(goalId, goalTitle);
       }}
     />
   );

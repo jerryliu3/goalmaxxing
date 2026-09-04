@@ -40,6 +40,7 @@ import {
   getNonPublishablePreviewMessage,
 } from "@/features/planner/planner-save-availability";
 import { buildMoveSourceOptions } from "@/features/planner/planner-move-source-options";
+import { buildPlannerResetGoalOptions } from "@/features/planner/planner-reset-goal-options";
 import { useCalendarCompletionControls } from "@/features/planner/use-calendar-completion-controls";
 import { usePlannerCalendarModel } from "@/features/planner/use-planner-calendar-model";
 import { useCalendarPlannerTasks } from "@/features/planner/use-calendar-planner-tasks";
@@ -626,10 +627,12 @@ export function CalendarSurface({
     saveLoading,
     resetLoading,
     fullResetLoading,
+    goalResetLoading,
     rebuildLoading,
     savePlan,
     resetPlan,
     resetPlanFully,
+    resetPlanForGoal,
     rebuildSchedule,
     discardDraftChanges,
   } = usePlannerPersistenceActions({
@@ -651,6 +654,11 @@ export function CalendarSurface({
     });
 
   const showBlockingLoading = loading && context === null;
+  const resetGoalOptions = useMemo(
+    () =>
+      buildPlannerResetGoalOptions(context?.activePlan?.goals, context?.asOfDate ?? ""),
+    [context?.activePlan?.goals, context?.asOfDate]
+  );
   const layoutProps = useCalendarSurfacePresentation({
     saveLoading,
     jumpToTodayBase,
@@ -683,10 +691,13 @@ export function CalendarSurface({
     canRecoverPastSessions,
     rebuildBlockedMessage,
     fullResetLoading,
+    goalResetLoading,
+    openGoals: resetGoalOptions,
     submitSetup,
     recoverPastSessions,
     rebuildSchedule,
     resetPlanFully,
+    resetPlanForGoal,
     updateDraftLabel,
     updateDraftScheduledDate,
     updateDraftScheduledTimeOverride,
