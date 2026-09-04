@@ -272,8 +272,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      raise_if_completion_outside_goal_lifetime: {
+        Args: { p_date: string; p_goal_id: string }
+        Returns: undefined
+      }
       raise_if_future_completion_date: {
         Args: { p_date: string; p_user_id: string }
+        Returns: undefined
+      }
+      raise_if_linked_target_completion_disallowed: {
+        Args: { p_date: string; p_goal_id: string }
         Returns: undefined
       }
       recompute_health_daily_metrics_for_user: {
