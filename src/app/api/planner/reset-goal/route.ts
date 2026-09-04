@@ -14,7 +14,7 @@ import type { Json } from "@/lib/supabase/database.types";
 export const runtime = "nodejs";
 
 const goalResetSchema = z.object({
-  goalId: z.uuid(),
+  goalIds: z.array(z.uuid()).min(1).max(50),
   expectedDigest: z.string().regex(/^[a-f0-9]{64}$/),
   scopeMonths: z
     .array(
@@ -30,6 +30,44 @@ const goalResetSchema = z.object({
     .max(36),
 });
 
+function mapGoalResetRpcError(error: {
+  code?: string | null;
+  message?: string | null;
+}) {
+  if (postgresErrorMatches(error, "P0001", "stale_schedule")) {
+    throw new PlannerRouteError(
+      409,
+      "stale_revision",
+      "Planner reset state is stale. Refresh and try again."
+    );
+  }
+  if (postgresErrorMatches(error, "42501", "not authorized for goal")) {
+    throw new PlannerRouteError(
+      403,
+      "forbidden",
+      "You can only reset goals you own."
+    );
+  }
+  if (
+    postgresErrorMatches(error, "22023", "invalid_schedule_windows_payload") ||
+    postgresErrorMatches(error, "22023", "duplicate_schedule_window") ||
+    postgresErrorMatches(error, "22023", "overlapping_schedule_windows") ||
+    postgresErrorMatches(error, "22023", "invalid_schedule_window")
+  ) {
+    throw new PlannerRouteError(
+      400,
+      "validation_failed",
+      "Provide valid scope months for goal reset."
+    );
+  }
+  throw new PlannerRouteError(
+    409,
+    "planner_reset_failed",
+    "Goal planner reset could not be completed.",
+    { cause: error.message ?? undefined }
+  );
+}
+
 export async function handlePlannerResetGoal(request: Request) {
   return withPlannerRoute(async ({ correlationId }) => {
     const routeContext = await requirePlannerRouteContext(request);
@@ -43,87 +81,54 @@ export async function handlePlannerResetGoal(request: Request) {
       toPlannerScheduleWindow(scopeMonth)
     );
 
-    const resetResponse = await routeContext.supabase.rpc(
-      "clear_planner_schedule_for_goal",
-      {
-        p_goal_id: body.goalId,
-        p_windows: windows as unknown as Json,
-        p_expected_digest: body.expectedDigest,
-      }
-    );
+    let currentDigest = body.expectedDigest;
+    let totalDeleted = 0;
+    let scopeCount = 0;
 
-    if (resetResponse.error) {
-      if (postgresErrorMatches(resetResponse.error, "P0001", "stale_schedule")) {
-        throw new PlannerRouteError(
-          409,
-          "stale_revision",
-          "Planner reset state is stale. Refresh and try again."
-        );
-      }
-      if (postgresErrorMatches(resetResponse.error, "42501", "not authorized for goal")) {
-        throw new PlannerRouteError(
-          403,
-          "forbidden",
-          "You can only reset goals you own."
-        );
-      }
-      if (
-        postgresErrorMatches(
-          resetResponse.error,
-          "22023",
-          "invalid_schedule_windows_payload"
-        ) ||
-        postgresErrorMatches(
-          resetResponse.error,
-          "22023",
-          "duplicate_schedule_window"
-        ) ||
-        postgresErrorMatches(
-          resetResponse.error,
-          "22023",
-          "overlapping_schedule_windows"
-        ) ||
-        postgresErrorMatches(resetResponse.error, "22023", "invalid_schedule_window")
-      ) {
-        throw new PlannerRouteError(
-          400,
-          "validation_failed",
-          "Provide valid scope months for goal reset."
-        );
-      }
-      throw new PlannerRouteError(
-        409,
-        "planner_reset_failed",
-        "Goal planner reset could not be completed.",
-        { cause: resetResponse.error.message }
+    for (const goalId of body.goalIds) {
+      const resetResponse = await routeContext.supabase.rpc(
+        "clear_planner_schedule_for_goal",
+        {
+          p_goal_id: goalId,
+          p_windows: windows as unknown as Json,
+          p_expected_digest: currentDigest,
+        }
       );
-    }
 
-    const resetRow = Array.isArray(resetResponse.data)
-      ? resetResponse.data[0]
-      : resetResponse.data;
+      if (resetResponse.error) {
+        mapGoalResetRpcError(resetResponse.error);
+      }
 
-    if (!resetRow) {
-      throw new PlannerRouteError(
-        500,
-        "invariant_failed",
-        "Goal planner reset did not return updated state."
-      );
+      const resetRow = Array.isArray(resetResponse.data)
+        ? resetResponse.data[0]
+        : resetResponse.data;
+
+      if (!resetRow) {
+        throw new PlannerRouteError(
+          500,
+          "invariant_failed",
+          "Goal planner reset did not return updated state."
+        );
+      }
+
+      totalDeleted +=
+        typeof resetRow.deleted_count === "number" ? resetRow.deleted_count : 0;
+      scopeCount =
+        typeof resetRow.window_count === "number" ? resetRow.window_count : scopeCount;
+      if (typeof resetRow.schedule_digest === "string") {
+        currentDigest = resetRow.schedule_digest;
+      }
     }
 
     return NextResponse.json(
       {
         schemaVersion: "1",
-        goalId: body.goalId,
+        goalIds: body.goalIds,
+        goalCount: body.goalIds.length,
         requestedScopeCount: body.scopeMonths.length,
-        scopeCount:
-          typeof resetRow.window_count === "number" ? resetRow.window_count : 0,
-        deletedCount:
-          typeof resetRow.deleted_count === "number" ? resetRow.deleted_count : 0,
-        scheduleDigest:
-          typeof resetRow.schedule_digest === "string"
-            ? resetRow.schedule_digest
-            : null,
+        scopeCount,
+        deletedCount: totalDeleted,
+        scheduleDigest: currentDigest,
         correlationId,
       },
       { headers: { "Cache-Control": "no-store" } }

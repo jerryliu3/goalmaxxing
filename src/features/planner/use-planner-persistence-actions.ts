@@ -21,6 +21,8 @@ import {
 import type { PlannerDraftCommand } from "@/lib/planner/draft-commands";
 import type { PlannerPolicy } from "@/lib/planner/policy";
 import { buildPlannerHorizonScopeMonths } from "@/lib/planner/reset-scope";
+import type { PlannerResetGoalOption } from "@/features/planner/planner-reset-goal-options";
+import { formatPlannerResetGoalSelectionLabel } from "@/features/planner/planner-reset-goal-options";
 import { withPlannerRefreshTimeout } from "@/lib/planner/refresh-timeout";
 import { shouldUseDirectDraftPersistence } from "@/lib/planner/save-persistence";
 
@@ -396,9 +398,9 @@ export function usePlannerPersistenceActions({
     month,
   ]);
 
-  const resetPlanForGoal = useCallback(
-    async (goalId: string, goalTitle: string) => {
-      if (!context) {
+  const resetPlanForGoals = useCallback(
+    async (goals: PlannerResetGoalOption[]) => {
+      if (!context || goals.length === 0) {
         return;
       }
       const expectedDigest = context.revisions.scheduleDigest;
@@ -406,8 +408,9 @@ export function usePlannerPersistenceActions({
         toast.error("Planner state is stale. Refresh and try again.");
         return;
       }
+      const selectionLabel = formatPlannerResetGoalSelectionLabel(goals);
       const confirmed = window.confirm(
-        `Reset will clear scheduled planner sessions for "${goalTitle}" across the planning horizon. Continue?`
+        `Reset will clear scheduled planner sessions for ${selectionLabel} across the planning horizon. Continue?`
       );
       if (!confirmed) {
         return;
@@ -424,8 +427,9 @@ export function usePlannerPersistenceActions({
         const payload = await postJson<{
           scopeCount: number;
           deletedCount: number;
+          goalCount: number;
         }>("/api/planner/reset-goal", {
-          goalId,
+          goalIds: goals.map((goal) => goal.goalId),
           expectedDigest,
           scopeMonths,
         });
@@ -452,10 +456,12 @@ export function usePlannerPersistenceActions({
             : scopeMonths.length;
         const deletedCount =
           typeof payload.deletedCount === "number" ? payload.deletedCount : 0;
+        const goalCount =
+          typeof payload.goalCount === "number" ? payload.goalCount : goals.length;
         toast.success(
           deletedCount > 0
-            ? `Reset ${goalTitle} across ${appliedScopeCount} month${appliedScopeCount === 1 ? "" : "s"} (${deletedCount} session${deletedCount === 1 ? "" : "s"} cleared).`
-            : `No scheduled sessions to clear for ${goalTitle}.`
+            ? `Reset ${goalCount} goal${goalCount === 1 ? "" : "s"} across ${appliedScopeCount} month${appliedScopeCount === 1 ? "" : "s"} (${deletedCount} session${deletedCount === 1 ? "" : "s"} cleared).`
+            : `No scheduled sessions to clear for the selected goal${goalCount === 1 ? "" : "s"}.`
         );
       } catch (error) {
         toast.error(getApiErrorMessage(error, "Goal planner reset failed."));
@@ -523,7 +529,7 @@ export function usePlannerPersistenceActions({
     savePlan,
     resetPlan,
     resetPlanFully,
-    resetPlanForGoal,
+    resetPlanForGoals,
     rebuildSchedule,
     discardDraftChanges,
   };

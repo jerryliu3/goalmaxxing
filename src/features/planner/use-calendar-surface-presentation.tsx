@@ -76,7 +76,7 @@ type CalendarSurfacePresentationArgs = Omit<
   recoverPastSessions: () => Promise<void>;
   rebuildSchedule: () => Promise<void>;
   resetPlanFully: () => Promise<void>;
-  resetPlanForGoal: (goalId: string, goalTitle: string) => Promise<void>;
+  resetPlanForGoals: (goals: PlannerResetGoalOption[]) => Promise<void>;
   rebuildLoading: boolean;
   updateDraftLabel: (entry: PlannerDayDetailEntry, label: string) => void;
   updateDraftScheduledDate: (entry: PlannerDayDetailEntry, date: string) => void;
@@ -127,7 +127,7 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     recoverPastSessions,
     rebuildSchedule,
     resetPlanFully,
-    resetPlanForGoal,
+    resetPlanForGoals,
     rebuildLoading,
     updateDraftLabel,
     updateDraftScheduledDate,
@@ -214,7 +214,7 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
         resetPlan: layoutProps.resetPlan,
         rebuildSchedule,
         resetPlanFully,
-        resetPlanForGoal,
+        resetPlanForGoals,
       }),
     [
       canRecoverPastSessions,
@@ -232,7 +232,7 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
       rebuildSchedule,
       recoverLoading,
       recoverPastSessions,
-      resetPlanForGoal,
+      resetPlanForGoals,
       resetPlanFully,
       saveLoading,
       setSetupRestWeekdays,

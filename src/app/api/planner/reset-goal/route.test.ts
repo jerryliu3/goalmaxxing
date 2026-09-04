@@ -60,7 +60,8 @@ vi.mock("@/lib/planner/api", async () => {
 
 import { POST } from "./route";
 
-const GOAL_ID = "91700000-0000-4000-8000-000000000001";
+const GOAL_A = "91700000-0000-4000-8000-000000000001";
+const GOAL_B = "91700000-0000-4000-8000-000000000002";
 
 function createRequest() {
   return new Request("http://localhost/api/planner/reset-goal", {
@@ -74,7 +75,7 @@ describe("planner goal reset route", () => {
   beforeEach(() => {
     mocks.rpc.mockReset();
     mocks.parseBoundedJsonBody.mockResolvedValue({
-      goalId: GOAL_ID,
+      goalIds: [GOAL_A],
       expectedDigest: "a".repeat(64),
       scopeMonths: ["2026-08", "2026-09"],
     });
@@ -99,19 +100,61 @@ describe("planner goal reset route", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       schemaVersion: "1",
-      goalId: GOAL_ID,
+      goalIds: [GOAL_A],
+      goalCount: 1,
       requestedScopeCount: 2,
       scopeCount: 2,
       deletedCount: 3,
       scheduleDigest: "b".repeat(64),
     });
     expect(mocks.rpc).toHaveBeenCalledWith("clear_planner_schedule_for_goal", {
-      p_goal_id: GOAL_ID,
+      p_goal_id: GOAL_A,
       p_windows: [
         { start_date: "2026-08-01", end_date: "2026-08-31" },
         { start_date: "2026-09-01", end_date: "2026-09-30" },
       ],
       p_expected_digest: "a".repeat(64),
     });
+  });
+
+  it("chains digest updates when resetting multiple goals in one request", async () => {
+    mocks.parseBoundedJsonBody.mockResolvedValue({
+      goalIds: [GOAL_A, GOAL_B],
+      expectedDigest: "a".repeat(64),
+      scopeMonths: ["2026-08"],
+    });
+    mocks.rpc
+      .mockResolvedValueOnce({
+        data: [{ schedule_digest: "b".repeat(64), deleted_count: 2, window_count: 1 }],
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: [{ schedule_digest: "c".repeat(64), deleted_count: 1, window_count: 1 }],
+        error: null,
+      });
+
+    const response = await POST(createRequest());
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      goalCount: 2,
+      deletedCount: 3,
+      scheduleDigest: "c".repeat(64),
+    });
+    expect(mocks.rpc).toHaveBeenNthCalledWith(
+      1,
+      "clear_planner_schedule_for_goal",
+      expect.objectContaining({
+        p_goal_id: GOAL_A,
+        p_expected_digest: "a".repeat(64),
+      })
+    );
+    expect(mocks.rpc).toHaveBeenNthCalledWith(
+      2,
+      "clear_planner_schedule_for_goal",
+      expect.objectContaining({
+        p_goal_id: GOAL_B,
+        p_expected_digest: "b".repeat(64),
+      })
+    );
   });
 });

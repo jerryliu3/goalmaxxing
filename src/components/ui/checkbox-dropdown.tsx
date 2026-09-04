@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 import { useOutsidePointerDismiss } from "@/lib/ui/use-outside-pointer-dismiss";
 
 export interface CheckboxDropdownOption {
@@ -19,6 +20,8 @@ interface CheckboxDropdownProps {
   onSelectedValuesChange: (values: string[]) => void;
   placeholder: string;
   allLabel?: string;
+  enableSearch?: boolean;
+  searchPlaceholder?: string;
   className?: string;
   triggerClassName?: string;
   menuClassName?: string;
@@ -38,11 +41,14 @@ export function CheckboxDropdown({
   onSelectedValuesChange,
   placeholder,
   allLabel = placeholder,
+  enableSearch = false,
+  searchPlaceholder = "Search...",
   className,
   triggerClassName,
   menuClassName,
 }: CheckboxDropdownProps) {
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -119,6 +125,16 @@ export function CheckboxDropdown({
     [options, selectedSet]
   );
 
+  const visibleOptions = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!enableSearch || normalizedQuery.length === 0) {
+      return options;
+    }
+    return options.filter((option) =>
+      option.label.toLowerCase().includes(normalizedQuery)
+    );
+  }, [enableSearch, options, searchQuery]);
+
   const triggerLabel =
     selectedOptions.length === 0
       ? placeholder
@@ -138,7 +154,15 @@ export function CheckboxDropdown({
           "flex h-8 w-full items-center justify-between rounded-full border border-input bg-background/90 px-3 text-xs text-foreground outline-none transition-colors hover:bg-accent/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
           triggerClassName
         )}
-        onClick={() => setOpen((previous) => !previous)}
+        onClick={() => {
+          setOpen((previous) => {
+            const next = !previous;
+            if (!next) {
+              setSearchQuery("");
+            }
+            return next;
+          });
+        }}
       >
         <span className="truncate">{triggerLabel}</span>
         <ChevronDown
@@ -171,6 +195,18 @@ export function CheckboxDropdown({
           }}
         >
           <div className="space-y-0.5 overflow-auto pr-1" style={{ maxHeight: position.maxHeight }}>
+            {enableSearch ? (
+              <div className="sticky top-0 z-10 bg-popover px-1 pb-1 pt-0.5">
+                <Input
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder={searchPlaceholder}
+                  aria-label={searchPlaceholder}
+                  className="h-7 text-xs"
+                  onKeyDown={(event) => event.stopPropagation()}
+                />
+              </div>
+            ) : null}
             <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted/60">
               <input
                 type="checkbox"
@@ -180,7 +216,7 @@ export function CheckboxDropdown({
               />
               <span className="min-w-0 truncate">{allLabel}</span>
             </label>
-            {options.map((option) => {
+            {visibleOptions.map((option) => {
               const checked = selectedSet.has(option.value);
               return (
                 <label

@@ -28,7 +28,7 @@ export function buildPlannerSettingsForm({
   resetPlan,
   rebuildSchedule,
   resetPlanFully,
-  resetPlanForGoal,
+  resetPlanForGoals,
 }: {
   setupRestWeekdays: number[];
   setSetupRestWeekdays: (value: number[]) => void;
@@ -52,7 +52,7 @@ export function buildPlannerSettingsForm({
   resetPlan: () => void;
   rebuildSchedule: () => Promise<void>;
   resetPlanFully: () => Promise<void>;
-  resetPlanForGoal: (goalId: string, goalTitle: string) => Promise<void>;
+  resetPlanForGoals: (goals: PlannerResetGoalOption[]) => Promise<void>;
 }): ReactNode {
   return (
     <PlannerSettingsForm
@@ -86,8 +86,8 @@ export function buildPlannerSettingsForm({
       onFullReset={() => {
         void resetPlanFully();
       }}
-      onResetGoal={(goalId, goalTitle) => {
-        void resetPlanForGoal(goalId, goalTitle);
+      onResetGoals={(goals) => {
+        void resetPlanForGoals(goals);
       }}
     />
   );

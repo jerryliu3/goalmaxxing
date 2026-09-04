@@ -632,7 +632,7 @@ export function CalendarSurface({
     savePlan,
     resetPlan,
     resetPlanFully,
-    resetPlanForGoal,
+    resetPlanForGoals,
     rebuildSchedule,
     discardDraftChanges,
   } = usePlannerPersistenceActions({
@@ -697,7 +697,7 @@ export function CalendarSurface({
     recoverPastSessions,
     rebuildSchedule,
     resetPlanFully,
-    resetPlanForGoal,
+    resetPlanForGoals,
     updateDraftLabel,
     updateDraftScheduledDate,
     updateDraftScheduledTimeOverride,

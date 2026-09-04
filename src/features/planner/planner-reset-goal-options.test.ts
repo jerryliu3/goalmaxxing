@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildPlannerResetGoalOptions } from "@/features/planner/planner-reset-goal-options";
+import {
+  buildPlannerResetGoalOptions,
+  formatPlannerResetGoalSelectionLabel,
+} from "@/features/planner/planner-reset-goal-options";
 import type { PlannerActiveGoalSnapshot } from "@cadence/shared/planner/context";
 
 function goal(
@@ -32,5 +35,24 @@ describe("buildPlannerResetGoalOptions", () => {
       { goalId: "goal-a", title: "Alpha" },
       { goalId: "goal-b", title: "Beta" },
     ]);
+  });
+});
+
+describe("formatPlannerResetGoalSelectionLabel", () => {
+  it("formats multi-goal labels for confirmation copy", () => {
+    expect(
+      formatPlannerResetGoalSelectionLabel([
+        { goalId: "goal-a", title: "Alpha" },
+        { goalId: "goal-b", title: "Beta" },
+      ])
+    ).toBe("Alpha, Beta");
+    expect(
+      formatPlannerResetGoalSelectionLabel(
+        Array.from({ length: 4 }, (_, index) => ({
+          goalId: `goal-${index}`,
+          title: `Goal ${index}`,
+        }))
+      )
+    ).toBe("4 goals");
   });
 });

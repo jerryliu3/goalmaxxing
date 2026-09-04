@@ -1,14 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CheckboxDropdown } from "@/components/ui/checkbox-dropdown";
 import { restWeekdayOptions } from "@/features/planner/calendar-format";
 import type { PlannerResetGoalOption } from "@/features/planner/planner-reset-goal-options";
 
@@ -35,7 +29,7 @@ interface PlannerSettingsFormProps {
   onUnlockAllGoals: () => void;
   onRefreshCalendar: () => void;
   onFullReset: () => void;
-  onResetGoal: (goalId: string, goalTitle: string) => void;
+  onResetGoals: (goals: PlannerResetGoalOption[]) => void;
 }
 
 export function PlannerSettingsForm({
@@ -61,21 +55,27 @@ export function PlannerSettingsForm({
   onUnlockAllGoals,
   onRefreshCalendar,
   onFullReset,
-  onResetGoal,
+  onResetGoals,
 }: PlannerSettingsFormProps) {
-  const [selectedGoalId, setSelectedGoalId] = useState<string>("");
-  const selectedGoal =
-    openGoals.find((goal) => goal.goalId === selectedGoalId) ?? null;
+  const [selectedGoalIds, setSelectedGoalIds] = useState<string[]>([]);
+  const goalOptions = useMemo(
+    () =>
+      openGoals.map((goal) => ({
+        value: goal.goalId,
+        label: goal.title,
+      })),
+    [openGoals]
+  );
+  const selectedGoals = useMemo(
+    () => openGoals.filter((goal) => selectedGoalIds.includes(goal.goalId)),
+    [openGoals, selectedGoalIds]
+  );
 
   useEffect(() => {
-    if (openGoals.length === 0) {
-      setSelectedGoalId("");
-      return;
-    }
-    if (!openGoals.some((goal) => goal.goalId === selectedGoalId)) {
-      setSelectedGoalId(openGoals[0]?.goalId ?? "");
-    }
-  }, [openGoals, selectedGoalId]);
+    setSelectedGoalIds((current) =>
+      current.filter((goalId) => openGoals.some((goal) => goal.goalId === goalId))
+    );
+  }, [openGoals]);
 
   return (
     <div className="space-y-4">
@@ -162,48 +162,47 @@ export function PlannerSettingsForm({
         </Button>
         <div className="space-y-2 border-t border-destructive/20 pt-3">
           <p className="text-xs text-muted-foreground">
-            Reset one open goal to clear its scheduled sessions across the same horizon.
+            Reset selected open goals to clear their scheduled sessions across the same
+            horizon.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Select
-              value={selectedGoalId || undefined}
-              onValueChange={setSelectedGoalId}
-              disabled={openGoals.length === 0 || goalResetLoading || loading}
-            >
-              <SelectTrigger className="w-full sm:flex-1" aria-label="Goal to reset">
-                <SelectValue
-                  placeholder={
-                    openGoals.length === 0 ? "No open goals available" : "Select a goal"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {openGoals.map((goal) => (
-                  <SelectItem key={goal.goalId} value={goal.goalId}>
-                    {goal.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CheckboxDropdown
+              options={goalOptions}
+              selectedValues={selectedGoalIds}
+              onSelectedValuesChange={setSelectedGoalIds}
+              placeholder={
+                openGoals.length === 0 ? "No open goals available" : "Select goals to reset"
+              }
+              allLabel="No goals selected"
+              enableSearch
+              searchPlaceholder="Search goals"
+              className="w-full sm:flex-1"
+              triggerClassName="h-9 rounded-md text-sm"
+              menuClassName="z-[220]"
+            />
             <Button
               type="button"
               variant="destructive"
               className="sm:w-auto"
               disabled={
-                !selectedGoal ||
+                selectedGoals.length === 0 ||
                 goalResetLoading ||
                 loading ||
                 resetLoading ||
                 fullResetLoading
               }
               onClick={() => {
-                if (!selectedGoal) {
+                if (selectedGoals.length === 0) {
                   return;
                 }
-                onResetGoal(selectedGoal.goalId, selectedGoal.title);
+                onResetGoals(selectedGoals);
               }}
             >
-              {goalResetLoading ? "Resetting goal..." : "Reset goal"}
+              {goalResetLoading
+                ? "Resetting goals..."
+                : selectedGoals.length > 1
+                  ? `Reset ${selectedGoals.length} goals`
+                  : "Reset goal"}
             </Button>
           </div>
         </div>

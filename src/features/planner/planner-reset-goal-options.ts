@@ -23,3 +23,18 @@ export function buildPlannerResetGoalOptions(
     }))
     .sort((left, right) => left.title.localeCompare(right.title));
 }
+
+export function formatPlannerResetGoalSelectionLabel(
+  goals: PlannerResetGoalOption[]
+) {
+  if (goals.length === 0) {
+    return "";
+  }
+  if (goals.length === 1) {
+    return `"${goals[0]?.title ?? "goal"}"`;
+  }
+  if (goals.length <= 3) {
+    return goals.map((goal) => goal.title).join(", ");
+  }
+  return `${goals.length} goals`;
+}
