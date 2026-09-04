@@ -5,8 +5,11 @@ import { getScopeDateRange } from "@/lib/planner/dates";
 import {
   getLinkResumeDate,
   isFullySuppressedForWindow,
+  isLinkedTargetSuppressedOnDate,
   isSuppressedOnDate,
+  linkSuppressionFromSummary,
   resolveLinkSuppression,
+  selectSuppressedGoalIdsOnDate,
   toLinkSuppressionSource,
   type LinkSuppressionSource,
 } from "@/lib/planner/link-suppression";
@@ -329,6 +332,23 @@ describe("resolveLinkSuppression", () => {
     ).toEqual({ kind: "until", through: "2026-11-20" });
   });
 
+  it("still suppresses when the source has not started yet", () => {
+    expect(
+      resolveLinkSuppression({
+        goalId,
+        links: [{ sourceGoalId: "source-a", targetGoalId: goalId }],
+        sourcesById: new Map([
+          [
+            "source-a",
+            source({ startDate: "2026-10-01", endDate: "2026-12-31" }),
+          ],
+        ]),
+        ownerId,
+        asOfDate,
+      })
+    ).toEqual({ kind: "until", through: "2026-12-31" });
+  });
+
   it("does not self-suppress through ancestry cycles", () => {
     expect(
       resolveLinkSuppression({
@@ -398,5 +418,224 @@ describe("suppression helpers", () => {
     ).toBe("2026-09-01");
     expect(getLinkResumeDate({ kind: "none" })).toBeNull();
     expect(getLinkResumeDate({ kind: "indefinite" })).toBeNull();
+  });
+
+  it("round-trips planner link summaries through isSuppressedOnDate", () => {
+    const until = linkSuppressionFromSummary({
+      targetSuppressionKind: "until",
+      targetResumesOn: "2026-10-01",
+    });
+    expect(until).toEqual({ kind: "until", through: "2026-09-30" });
+    expect(getLinkResumeDate(until)).toBe("2026-10-01");
+    expect(
+      isLinkedTargetSuppressedOnDate({
+        goalId: "other-goal",
+        date: "2026-09-04",
+        linkSummaries: [
+          {
+            targetGoalId: "target-b",
+            targetSuppressionKind: "until",
+            targetResumesOn: "2026-10-01",
+          },
+        ],
+      })
+    ).toBe(false);
+    expect(
+      isLinkedTargetSuppressedOnDate({
+        goalId: "target-b",
+        date: "2026-09-30",
+        linkSummaries: [
+          {
+            targetGoalId: "target-b",
+            targetSuppressionKind: "until",
+            targetResumesOn: "2026-10-01",
+          },
+        ],
+      })
+    ).toBe(true);
+    expect(
+      isLinkedTargetSuppressedOnDate({
+        goalId: "target-b",
+        date: "2026-10-01",
+        linkSummaries: [
+          {
+            targetGoalId: "target-b",
+            targetSuppressionKind: "until",
+            targetResumesOn: "2026-10-01",
+          },
+        ],
+      })
+    ).toBe(false);
+  });
+});
+
+describe("selectSuppressedGoalIdsOnDate", () => {
+  const ownerId = "owner-a";
+
+  function goal(overrides: Partial<Goal> & Pick<Goal, "id" | "title">): Goal {
+    return {
+      owner_id: ownerId,
+      description: null,
+      category: "health",
+      color: null,
+      frequency_type: "recurring",
+      recurrence_interval: "daily",
+      target_count: null,
+      milestone_names: null,
+      start_date: "2026-09-01",
+      end_date: "2026-09-30",
+      photo_path: null,
+      team_id: null,
+      is_deleted: false,
+      archived_at: null,
+      created_at: "2026-09-01T00:00:00Z",
+      updated_at: "2026-09-01T00:00:00Z",
+      target_basis: "period",
+      ...overrides,
+    };
+  }
+
+  it("hides linked targets while upstream suppression is active", () => {
+    const goals = [
+      goal({ id: "source-a", title: "Create videos" }),
+      goal({
+        id: "target-b",
+        title: "Post videos",
+        start_date: "2026-01-01",
+        end_date: null,
+      }),
+    ];
+    const links = [
+      { source_goal_id: "source-a", target_goal_id: "target-b" },
+    ];
+
+    expect(
+      selectSuppressedGoalIdsOnDate({
+        goals,
+        links,
+        ownerId,
+        date: "2026-09-04",
+      })
+    ).toEqual(new Set(["target-b"]));
+    expect(
+      selectSuppressedGoalIdsOnDate({
+        goals,
+        links,
+        ownerId,
+        date: "2026-10-01",
+      })
+    ).toEqual(new Set());
+  });
+
+  it("hides transitive targets in a linked chain", () => {
+    const goals = [
+      goal({ id: "source-a", title: "Create videos" }),
+      goal({
+        id: "target-b",
+        title: "Edit videos",
+        start_date: "2026-01-01",
+        end_date: null,
+      }),
+      goal({
+        id: "target-c",
+        title: "Post videos",
+        start_date: "2026-01-01",
+        end_date: null,
+      }),
+    ];
+
+    expect(
+      selectSuppressedGoalIdsOnDate({
+        goals,
+        links: [
+          { sourceGoalId: "source-a", targetGoalId: "target-b" },
+          { sourceGoalId: "target-b", targetGoalId: "target-c" },
+        ],
+        ownerId,
+        date: "2026-09-04",
+      })
+    ).toEqual(new Set(["target-b", "target-c"]));
+  });
+
+  it("does not hide targets after the source has ended", () => {
+    const goals = [
+      goal({
+        id: "source-a",
+        title: "Create videos",
+        end_date: "2026-08-31",
+      }),
+      goal({
+        id: "target-b",
+        title: "Post videos",
+        start_date: "2026-01-01",
+        end_date: null,
+      }),
+    ];
+
+    expect(
+      selectSuppressedGoalIdsOnDate({
+        goals,
+        links: [{ sourceGoalId: "source-a", targetGoalId: "target-b" }],
+        ownerId,
+        date: "2026-09-04",
+      })
+    ).toEqual(new Set());
+  });
+
+  it("hides targets indefinitely for open-ended sources", () => {
+    const goals = [
+      goal({
+        id: "source-a",
+        title: "Create videos",
+        end_date: null,
+        target_count: null,
+      }),
+      goal({
+        id: "target-b",
+        title: "Post videos",
+        start_date: "2026-01-01",
+        end_date: null,
+      }),
+    ];
+
+    expect(
+      selectSuppressedGoalIdsOnDate({
+        goals,
+        links: [{ sourceGoalId: "source-a", targetGoalId: "target-b" }],
+        ownerId,
+        date: "2026-09-04",
+      })
+    ).toEqual(new Set(["target-b"]));
+  });
+
+  it("walks past a deleted intermediate source", () => {
+    const goals = [
+      goal({ id: "source-a", title: "Create videos" }),
+      goal({
+        id: "source-b",
+        title: "Edit videos",
+        start_date: "2026-01-01",
+        end_date: null,
+        is_deleted: true,
+      }),
+      goal({
+        id: "target-c",
+        title: "Post videos",
+        start_date: "2026-01-01",
+        end_date: null,
+      }),
+    ];
+
+    expect(
+      selectSuppressedGoalIdsOnDate({
+        goals,
+        links: [
+          { sourceGoalId: "source-a", targetGoalId: "source-b" },
+          { sourceGoalId: "source-b", targetGoalId: "target-c" },
+        ],
+        ownerId,
+        date: "2026-09-04",
+      })
+    ).toEqual(new Set(["source-b", "target-c"]));
   });
 });

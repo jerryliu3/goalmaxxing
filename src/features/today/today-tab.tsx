@@ -39,10 +39,7 @@ import {
   resolveEffectiveEndMonths,
   sortGoalsByDate,
 } from "@/lib/goals/list-view";
-import {
-  filterChecklistLinkedTargetSuppressedGoals,
-  selectChecklistHiddenLinkedTargetGoalIds,
-} from "@/lib/goals/checklist-link-suppression";
+import { selectSuppressedGoalIdsOnDate } from "@/lib/planner/link-suppression";
 import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
 import { useChecklistProjection } from "@/features/today/use-checklist-projection";
 import { progressSummaryMap } from "@/lib/goals/progress-context";
@@ -207,11 +204,11 @@ export function TodayTab({
 
   const hiddenLinkedTargetGoalIds = useMemo(
     () =>
-      selectChecklistHiddenLinkedTargetGoalIds({
+      selectSuppressedGoalIdsOnDate({
         goals: completableGoals,
         links: data.links,
         ownerId: data.userId,
-        viewDate,
+        date: viewDate,
       }),
     [completableGoals, data.links, data.userId, viewDate]
   );
