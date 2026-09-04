@@ -66,58 +66,44 @@ insert into public.planner_items (
   owner_id,
   goal_id,
   unit_key,
-  requirement_kind,
   scheduled_date,
   original_scheduled_date,
-  classification,
-  credit_state,
-  locked,
-  revision
+  locked
 )
 values
   (
     '11111111-1111-4111-8111-111111111111',
     '91700000-0000-4000-8000-000000000011',
-    '2026-08-01',
-    'cadence',
+    'unit:goal-a-1',
     date_trunc('month', current_date)::date,
     date_trunc('month', current_date)::date,
-    'open',
-    'uncredited',
-    false,
-    1
+    false
   ),
   (
     '11111111-1111-4111-8111-111111111111',
     '91700000-0000-4000-8000-000000000011',
-    '2026-08-08',
-    'cadence',
+    'unit:goal-a-2',
     (date_trunc('month', current_date) + interval '7 day')::date,
     (date_trunc('month', current_date) + interval '7 day')::date,
-    'open',
-    'uncredited',
-    false,
-    1
+    false
   ),
   (
     '11111111-1111-4111-8111-111111111111',
     '91700000-0000-4000-8000-000000000012',
-    '2026-08-02',
-    'cadence',
+    'unit:goal-b-1',
     (date_trunc('month', current_date) + interval '1 day')::date,
     (date_trunc('month', current_date) + interval '1 day')::date,
-    'open',
-    'uncredited',
-    false,
-    1
+    false
   );
 
+reset role;
 set local role authenticated;
 select set_config(
-  'request.jwt.claims',
-  json_build_object('sub', '11111111-1111-4111-8111-111111111111')::text,
+  'request.jwt.claim.sub',
+  '11111111-1111-4111-8111-111111111111',
   true
 );
+select set_config('request.jwt.claim.role', 'authenticated', true);
 
 select is(
   (
