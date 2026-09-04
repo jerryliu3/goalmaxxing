@@ -73,9 +73,6 @@ export function selectChecklistHiddenLinkedTargetGoalIds({
 export function filterChecklistLinkedTargetSuppressedGoals<TGoal extends { id: string }>(
   goals: readonly TGoal[],
   hiddenLinkedTargetGoalIds: ReadonlySet<string>
-) {
-  if (hiddenLinkedTargetGoalIds.size === 0) {
-    return goals;
-  }
+): TGoal[] {
   return goals.filter((goal) => !hiddenLinkedTargetGoalIds.has(goal.id));
 }
