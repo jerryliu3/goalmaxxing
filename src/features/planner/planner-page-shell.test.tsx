@@ -15,7 +15,11 @@ vi.mock("@/features/planner/calendar-page-shell", () => ({
 }));
 
 vi.mock("@/features/today/checklist-shell", () => ({
-  ChecklistShell: () => <div>Checklist surface</div>,
+  ChecklistShell: ({ isActive }: { isActive?: boolean }) => (
+    <div>
+      Checklist surface{isActive === false ? " inactive" : " active"}
+    </div>
+  ),
 }));
 
 vi.mock("@/features/tasks/tasks-tab", () => ({
@@ -31,7 +35,7 @@ describe("PlannerPageShell", () => {
   it("does not show a first-visit guide on the default Checklist surface", async () => {
     render(<PlannerPageShell />);
 
-    expect(await screen.findByText("Checklist surface")).toBeInTheDocument();
+    expect(await screen.findByText("Checklist surface active")).toBeInTheDocument();
     expect(screen.queryByRole("dialog", { name: "Checklist guide" })).toBeNull();
   });
 
@@ -40,7 +44,7 @@ describe("PlannerPageShell", () => {
     const user = userEvent.setup();
     render(<PlannerPageShell />);
 
-    expect(await screen.findByText("Checklist surface")).toBeInTheDocument();
+    expect(await screen.findByText("Checklist surface active")).toBeInTheDocument();
     expect(screen.getByText("Calendar surface")).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "Calendar" }));
@@ -56,5 +60,6 @@ describe("PlannerPageShell", () => {
     render(<PlannerPageShell />);
 
     expect(await screen.findByText("Calendar surface")).toBeInTheDocument();
+    expect(screen.getByText("Checklist surface inactive")).toBeInTheDocument();
   });
 });

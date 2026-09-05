@@ -27,10 +27,12 @@ export async function warmAppTabData({
   userId,
   partnerId,
   forceRefresh = false,
+  includeProgressContext = true,
 }: {
   userId: string;
   partnerId: string | null;
   forceRefresh?: boolean;
+  includeProgressContext?: boolean;
 }) {
   if (!userId) {
     return;
@@ -95,8 +97,8 @@ export async function warmAppTabData({
   };
 
   await Promise.allSettled([
-    warmChecklist(),
-    warmInsights(),
+    includeProgressContext ? warmChecklist() : Promise.resolve(),
+    includeProgressContext ? warmInsights() : Promise.resolve(),
     warmPlanner(),
     fetchSocialFeedPage({ scope: "global", limit: 20, forceRefresh }),
     fetchSocialChallenges({ forceRefresh }),
