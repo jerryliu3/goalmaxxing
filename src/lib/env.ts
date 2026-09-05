@@ -24,17 +24,19 @@ const optionalNonEmptyString = z.preprocess(
 
 const optionalUrl = z.preprocess(emptyToUndefined, z.string().url().optional());
 
-const booleanFromEnv = (defaultValue: boolean) =>
+const booleanFromEnv = (defaultValue: boolean | (() => boolean)) =>
   z.preprocess((value) => {
+    const resolvedDefault =
+      typeof defaultValue === "function" ? defaultValue() : defaultValue;
     if (value === undefined || value === null) {
-      return defaultValue;
+      return resolvedDefault;
     }
     if (typeof value !== "string") {
       return value;
     }
     const normalized = value.trim().toLowerCase();
     if (normalized === "") {
-      return defaultValue;
+      return resolvedDefault;
     }
     if (normalized === "true") {
       return true;
@@ -96,7 +98,7 @@ const serverEnvSchema = publicEnvSchema.extend({
   REPORT_ISSUES_FROM_EMAIL: optionalNonEmptyString,
   FEATURE_CROSS_MONTH_MOVES: booleanFromEnv(false),
   XP_ENABLED: booleanFromEnv(false),
-  SOCIAL_ENABLED: booleanFromEnv(false),
+  SOCIAL_ENABLED: booleanFromEnv(() => process.env.NODE_ENV === "development"),
   INTEGRATIONS_ENABLED: booleanFromEnv(false),
   JOURNEY_ENABLED: booleanFromEnv(false),
   INTEGRATIONS_ROLLOUT_STAGE: z.preprocess((value) => {

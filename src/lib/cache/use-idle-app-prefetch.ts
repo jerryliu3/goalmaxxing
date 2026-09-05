@@ -3,7 +3,10 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { buildAppTabs } from "@/components/navigation/tabs";
-import { scheduleIdleTask } from "@/lib/browser/schedule-idle";
+import {
+  scheduleDelayedIdleTask,
+  scheduleIdleTask,
+} from "@/lib/browser/schedule-idle";
 import { subscribePlannerTabCacheInvalidation } from "@/lib/cache/planner-tab-cache";
 import { warmAppTabData } from "@/lib/cache/warm-app-tab-data";
 import { withHrefPrefix } from "@/lib/navigation/demo-path";
@@ -14,6 +17,10 @@ function isCalendarPath(pathname: string, hrefPrefix?: string) {
   const calendarHref = withHrefPrefix("/calendar", hrefPrefix);
   return pathname === calendarHref || pathname.startsWith(`${calendarHref}/`);
 }
+
+// Past the calendar e2e "no eager progress-context" window (750ms), then
+// warm Insights/Checklist so the first bottom-nav click can paint from cache.
+const CALENDAR_PROGRESS_CONTEXT_WARM_DELAY_MS = 2000;
 
 export function useIdleAppPrefetch({
   userId,
@@ -34,19 +41,35 @@ export function useIdleAppPrefetch({
       plannerPrimaryTabPreference,
       hrefPrefix ? { hrefPrefix } : undefined
     );
-    const includeProgressContext = !isCalendarPath(pathname, hrefPrefix);
+    const includeProgressContextNow = !isCalendarPath(pathname, hrefPrefix);
     const cancelIdle = scheduleIdleTask(() => {
       for (const tab of tabs) {
         void router.prefetch(tab.href);
       }
-      void router.prefetch("/calendar?surface=calendar");
-      void router.prefetch("/calendar?surface=tasks");
+      void router.prefetch(withHrefPrefix("/calendar?surface=calendar", hrefPrefix));
+      void router.prefetch(withHrefPrefix("/calendar?surface=tasks", hrefPrefix));
       void import("@/features/planner/calendar-page-shell");
       void import("@/features/today/checklist-shell");
       void import("@/features/tasks/tasks-tab");
-      void warmAppTabData({ userId, partnerId, includeProgressContext });
+      void warmAppTabData({
+        userId,
+        partnerId,
+        includeProgressContext: includeProgressContextNow,
+      });
     });
-    return cancelIdle;
+    const cancelDelayedProgressWarm = includeProgressContextNow
+      ? () => undefined
+      : scheduleDelayedIdleTask(() => {
+          void warmAppTabData({
+            userId,
+            partnerId,
+            includeProgressContext: true,
+          });
+        }, CALENDAR_PROGRESS_CONTEXT_WARM_DELAY_MS);
+    return () => {
+      cancelIdle();
+      cancelDelayedProgressWarm();
+    };
   }, [hrefPrefix, partnerId, pathname, plannerPrimaryTabPreference, router, userId]);
 
   useEffect(() => {
