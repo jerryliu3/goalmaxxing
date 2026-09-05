@@ -15,14 +15,14 @@ import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 
-export function CalendarPageShell() {
+export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();
   const isMobileViewport = useMediaQuery("(max-width: 767px)");
   const defaultCalendarViewMode: PlannerCalendarViewMode = isMobileViewport ? "week" : "month";
   const { scope, activePartner } = useDuoSurface("calendar");
   const overlayEnabled =
-    Boolean(activePartner) && (scope === "partner" || scope === "both");
+    isActive && Boolean(activePartner) && (scope === "partner" || scope === "both");
 
   const normalized = useMemo(
     () =>
@@ -39,7 +39,7 @@ export function CalendarPageShell() {
   });
 
   useEffect(() => {
-    if (!normalized.changed) {
+    if (!isActive || !normalized.changed) {
       return;
     }
     applySearchParams(
@@ -53,10 +53,13 @@ export function CalendarPageShell() {
       },
       "replace"
     );
-  }, [applySearchParams, normalized.changed, normalized.nextParams]);
+  }, [applySearchParams, isActive, normalized.changed, normalized.nextParams]);
 
   const updateMonth = useCallback(
     (month: string, mode: "push" | "replace") => {
+      if (!isActive) {
+        return;
+      }
       applySearchParams(
         (params) => {
           params.set("view", "month");
@@ -66,11 +69,14 @@ export function CalendarPageShell() {
         mode
       );
     },
-    [applySearchParams]
+    [applySearchParams, isActive]
   );
 
   const updateViewMode = useCallback(
     (viewMode: PlannerCalendarViewMode, mode: "push" | "replace") => {
+      if (!isActive) {
+        return;
+      }
       applySearchParams(
         (params) => {
           params.set("view", viewMode);
@@ -91,7 +97,7 @@ export function CalendarPageShell() {
         mode
       );
     },
-    [applySearchParams, normalized.day, normalized.month]
+    [applySearchParams, isActive, normalized.day, normalized.month]
   );
 
   const updateSelectedDay = useCallback(
@@ -100,6 +106,9 @@ export function CalendarPageShell() {
       mode: "push" | "replace",
       nextViewMode?: PlannerCalendarViewMode
     ) => {
+      if (!isActive) {
+        return;
+      }
       applySearchParams(
         (params) => {
           if (day && isValidDate(day)) {
@@ -117,7 +126,7 @@ export function CalendarPageShell() {
         mode
       );
     },
-    [applySearchParams, normalized.viewMode]
+    [applySearchParams, isActive, normalized.viewMode]
   );
 
   return (

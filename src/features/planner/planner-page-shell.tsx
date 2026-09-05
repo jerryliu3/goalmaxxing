@@ -150,13 +150,13 @@ export function PlannerPageShell() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="calendar">
-          <CalendarPageShell />
+        <TabsContent value="calendar" forceMount className="data-[state=inactive]:hidden">
+          <CalendarPageShell isActive={surface === "calendar"} />
         </TabsContent>
-        <TabsContent value="checklist">
+        <TabsContent value="checklist" forceMount className="data-[state=inactive]:hidden">
           <ChecklistShell />
         </TabsContent>
-        <TabsContent value="tasks">
+        <TabsContent value="tasks" forceMount className="data-[state=inactive]:hidden">
           <TasksTab />
         </TabsContent>
       </Tabs>

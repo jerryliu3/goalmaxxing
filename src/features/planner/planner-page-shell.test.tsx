@@ -18,6 +18,10 @@ vi.mock("@/features/today/checklist-shell", () => ({
   ChecklistShell: () => <div>Checklist surface</div>,
 }));
 
+vi.mock("@/features/tasks/tasks-tab", () => ({
+  TasksTab: () => <div>Tasks surface</div>,
+}));
+
 describe("PlannerPageShell", () => {
   afterEach(() => {
     cleanup();
@@ -37,7 +41,7 @@ describe("PlannerPageShell", () => {
     render(<PlannerPageShell />);
 
     expect(await screen.findByText("Checklist surface")).toBeInTheDocument();
-    expect(screen.queryByText("Calendar surface")).not.toBeInTheDocument();
+    expect(screen.getByText("Calendar surface")).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "Calendar" }));
 

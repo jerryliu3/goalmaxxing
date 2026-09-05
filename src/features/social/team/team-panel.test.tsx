@@ -16,6 +16,7 @@ vi.mock("@/features/social/data", () => ({
   declineSocialTeamInvite: vi.fn(),
   dissolveSocialTeam: vi.fn(),
   fetchSocialTeamState: mocks.fetchSocialTeamState,
+  peekSocialTeamStateCache: () => null,
 }));
 
 vi.mock("@/features/social/team/nudge-button", () => ({

@@ -5,47 +5,55 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildLoginHref } from "@/lib/auth/login-redirect";
 import { withAbortSignal } from "@/lib/async/abort";
 import {
-  CHECKLIST_DATA_CACHE_PREFIX,
+  buildChecklistDataCacheKey,
+  buildPartnerCacheScope,
 } from "@/lib/cache/planner-tab-cache";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
-import { readTabDataCache, writeTabDataCache } from "@/lib/cache/tab-data-cache";
-import { toLocalDateString } from "@/lib/dates/day";
 import {
-  fetchProgressContext,
-  type ProgressContextResponse,
-} from "@/lib/goals/progress-context";
-import type {
-  CompletionDateFact,
-  Goal,
-  GoalLink,
-} from "@/lib/goals/types";
+  isTabDataCacheFresh,
+  readTabDataCache,
+  writeTabDataCache,
+} from "@/lib/cache/tab-data-cache";
+import { toLocalDateString } from "@/lib/dates/day";
+import { fetchProgressContext } from "@/lib/goals/progress-context";
 import { createClient } from "@/lib/supabase/client";
 import { useDuoLaneError } from "@/features/social/duo/use-duo-lane-error";
-import { assertQueriesOk } from "@/lib/supabase/query-error";
 import { useDuo } from "@/features/social/duo/duo-context";
-import { selectViewerVisibleGoals } from "@cadence/shared/goals/visible-goals";
+import {
+  emptyTodayData,
+  fetchChecklistTodayData,
+  type TodayData,
+} from "@/features/today/fetch-checklist-data";
 
-export interface TodayData {
-  userId: string;
-  goals: Goal[];
-  completions: CompletionDateFact[];
-  memberTeamIds: string[];
-  links: GoalLink[];
-  photoUrls: Record<string, string>;
-  progress: ProgressContextResponse | null;
-}
-
-export const emptyTodayData: TodayData = {
-  userId: "",
-  goals: [],
-  completions: [],
-  memberTeamIds: [],
-  links: [],
-  photoUrls: {},
-  progress: null,
-};
+export type { TodayData };
+export { emptyTodayData };
 
 const TODAY_REQUEST_TIMEOUT_MS = 15_000;
+
+function resolveChecklistCacheKey({
+  viewerUserId,
+  subjectUserId,
+  viewDate,
+  todayLocalDate,
+  partnerId,
+}: {
+  viewerUserId: string;
+  subjectUserId?: string;
+  viewDate: string;
+  todayLocalDate: string;
+  partnerId: string | null;
+}) {
+  if (!viewerUserId) {
+    return null;
+  }
+  const targetSubjectUserId = subjectUserId ?? viewerUserId;
+  return buildChecklistDataCacheKey({
+    subjectUserId: targetSubjectUserId,
+    viewDate,
+    todayLocalDate,
+    partnerScope: buildPartnerCacheScope(partnerId, targetSubjectUserId === viewerUserId),
+  });
+}
 
 export function useChecklistData({
   subjectUserId,
@@ -62,9 +70,20 @@ export function useChecklistData({
   const { viewerUserId, state: duoState } = useDuo();
   const partnerId = duoState.activePartner?.partnerId ?? null;
   const router = useAppRouter();
-  const [data, setData] = useState<TodayData>(emptyTodayData);
-  const dataRef = useRef<TodayData>(emptyTodayData);
-  const [loading, setLoading] = useState(true);
+  const todayLocalDate = toLocalDateString();
+  const initialCacheKey = resolveChecklistCacheKey({
+    viewerUserId,
+    subjectUserId,
+    viewDate,
+    todayLocalDate,
+    partnerId,
+  });
+  const initialCachedData = initialCacheKey
+    ? readTabDataCache<TodayData>(initialCacheKey)
+    : null;
+  const [data, setData] = useState<TodayData>(initialCachedData ?? emptyTodayData);
+  const dataRef = useRef<TodayData>(initialCachedData ?? emptyTodayData);
+  const [loading, setLoading] = useState(!initialCachedData);
   const loadRequestIdRef = useRef(0);
   const viewDateProgressRequestIdRef = useRef(0);
   const visibleLoadCountRef = useRef(0);
@@ -72,7 +91,6 @@ export function useChecklistData({
   const authRedirectStartedRef = useRef(false);
   const currentViewDateRef = useRef(viewDate);
   const previousViewDateRef = useRef(viewDate);
-  const todayLocalDate = toLocalDateString();
 
   useEffect(() => {
     currentViewDateRef.current = viewDate;
@@ -117,10 +135,6 @@ export function useChecklistData({
     ) => {
       const requestId = loadRequestIdRef.current + 1;
       loadRequestIdRef.current = requestId;
-      if (showLoading) {
-        visibleLoadCountRef.current += 1;
-        setLoading(true);
-      }
       const controller = new AbortController();
       const timeoutId = window.setTimeout(
         () => controller.abort(),
@@ -143,137 +157,97 @@ export function useChecklistData({
           return;
         }
 
-        // PostgREST filter methods mutate and return the same builder, so this is
-        // built fresh per load and only one branch below ever consumes it.
-        const goalsQuery = supabase
-          .from("goals")
-          .select("*")
-          .eq("is_deleted", false)
-          .order("created_at", { ascending: false });
         const targetSubjectUserId = subjectUserId ?? userId;
-        const targetIsViewer = targetSubjectUserId === userId;
-        const partnerCacheScope =
-          targetIsViewer && partnerId ? `partner:${partnerId}` : "partner:none";
-        const todayDataCacheKey = `${CHECKLIST_DATA_CACHE_PREFIX}${targetSubjectUserId}:${currentViewDateRef.current}:${todayLocalDate}:${partnerCacheScope}`;
-        if (!forceRefresh) {
-          const cachedData = readTabDataCache<TodayData>(todayDataCacheKey);
-          if (cachedData) {
-            setData(cachedData);
-            clearLaneError();
+        const todayDataCacheKey = resolveChecklistCacheKey({
+          viewerUserId: userId,
+          subjectUserId,
+          viewDate: currentViewDateRef.current,
+          todayLocalDate,
+          partnerId,
+        });
+        const cachedData = todayDataCacheKey
+          ? readTabDataCache<TodayData>(todayDataCacheKey)
+          : null;
+        if (cachedData) {
+          setData(cachedData);
+          dataRef.current = cachedData;
+          clearLaneError();
+          if (!forceRefresh && todayDataCacheKey && isTabDataCacheFresh(todayDataCacheKey)) {
+            setLoading(false);
             return;
           }
         }
-        const progress = await withAbortSignal(
-          fetchProgressContext({
-            asOfDate: todayLocalDate,
-            viewDate: currentViewDateRef.current,
-            subjectUserId: targetIsViewer ? undefined : targetSubjectUserId,
-            forceRefresh,
-          }),
-          controller.signal
-        );
 
-        const previousData = dataRef.current;
-        if (
-          completionOnly &&
-          previousData.userId === targetSubjectUserId &&
-          previousData.goals.length > 0
-        ) {
+        const shouldShowLoading = showLoading && !cachedData && dataRef.current.userId.length === 0;
+        if (shouldShowLoading) {
+          visibleLoadCountRef.current += 1;
+          setLoading(true);
+        }
+        try {
+          if (completionOnly) {
+            const progress = await withAbortSignal(
+              fetchProgressContext({
+                asOfDate: todayLocalDate,
+                viewDate: currentViewDateRef.current,
+                subjectUserId:
+                  targetSubjectUserId === userId ? undefined : targetSubjectUserId,
+                forceRefresh,
+              }),
+              controller.signal
+            );
+            const previousData = dataRef.current;
+            if (previousData.userId === targetSubjectUserId && previousData.goals.length > 0) {
+              if (requestId !== loadRequestIdRef.current) {
+                return;
+              }
+              const nextData: TodayData = {
+                ...previousData,
+                completions: progress.facts,
+                progress,
+              };
+              dataRef.current = nextData;
+              setData(nextData);
+              if (todayDataCacheKey) {
+                writeTabDataCache(todayDataCacheKey, nextData);
+              }
+              clearLaneError();
+              return;
+            }
+          }
+
+          const nextData = await withAbortSignal(
+            fetchChecklistTodayData({
+              userId,
+              subjectUserId,
+              viewDate: currentViewDateRef.current,
+              todayLocalDate,
+              partnerId,
+              forceRefresh,
+              signal: controller.signal,
+            }),
+            controller.signal
+          );
           if (requestId !== loadRequestIdRef.current) {
             return;
           }
-          const nextData: TodayData = {
-            ...previousData,
-            completions: progress.facts,
-            progress,
-          };
-          dataRef.current = nextData;
           setData(nextData);
-          writeTabDataCache(todayDataCacheKey, nextData);
+          dataRef.current = nextData;
+          if (todayDataCacheKey) {
+            writeTabDataCache(todayDataCacheKey, nextData);
+          }
           clearLaneError();
-          return;
-        }
-
-        const [goalsResponse, teamMembersResponse, linksResponse] =
-          await withAbortSignal(
-            Promise.all([
-              targetIsViewer
-                ? goalsQuery
-                : goalsQuery
-                    .eq("owner_id", targetSubjectUserId)
-                    .is("team_id", null),
-              targetIsViewer
-                ? supabase.from("team_members").select("team_id").eq("user_id", userId)
-                : Promise.resolve({ data: [], error: null }),
-              targetIsViewer
-                ? supabase.from("goal_links").select("*").eq("owner_id", userId)
-                : Promise.resolve({ data: [], error: null }),
-            ]),
-            controller.signal
-          );
-
-        assertQueriesOk(
-          [goalsResponse, teamMembersResponse, linksResponse],
-          "Checklist goals could not be loaded."
-        );
-
-        const goals = (goalsResponse.data ?? []) as Goal[];
-        const completions = progress.facts;
-        const memberTeamIds = ((teamMembersResponse.data ?? []) as Array<{
-          team_id: string;
-        }>).map((row) => row.team_id);
-        const visibleGoals = selectViewerVisibleGoals({
-          goals,
-          partnerId: targetIsViewer ? partnerId : null,
-          memberTeamIds,
-        });
-        const links = (linksResponse.data ?? []) as GoalLink[];
-
-        const photoUrls: Record<string, string> = {};
-        await withAbortSignal(
-          Promise.all(
-            visibleGoals
-              .filter((goal) => goal.photo_path)
-              .map(async (goal) => {
-                if (!goal.photo_path) {
-                  return;
-                }
-                const { data: signedData } = await supabase.storage
-                  .from("goal-photos")
-                  .createSignedUrl(goal.photo_path, 60 * 60);
-                if (signedData?.signedUrl) {
-                  photoUrls[goal.id] = signedData.signedUrl;
-                }
-              })
-          ),
-          controller.signal
-        );
-
-        if (requestId !== loadRequestIdRef.current) {
-          return;
-        }
-
-        const nextData: TodayData = {
-          userId: targetSubjectUserId,
-          goals: visibleGoals,
-          completions,
-          memberTeamIds,
-          links,
-          photoUrls,
-          progress,
-        };
-        setData(nextData);
-        dataRef.current = nextData;
-        writeTabDataCache(todayDataCacheKey, nextData);
-        clearLaneError();
-      } finally {
-        window.clearTimeout(timeoutId);
-        if (showLoading) {
-          visibleLoadCountRef.current = Math.max(visibleLoadCountRef.current - 1, 0);
-          if (visibleLoadCountRef.current === 0) {
+        } finally {
+          if (shouldShowLoading) {
+            visibleLoadCountRef.current = Math.max(visibleLoadCountRef.current - 1, 0);
+            if (visibleLoadCountRef.current === 0) {
+              setLoading(false);
+            }
+          } else {
             setLoading(false);
           }
         }
+      } finally {
+        window.clearTimeout(timeoutId);
       }
     },
     [clearLaneError, partnerId, redirectToLogin, subjectUserId, supabase, todayLocalDate, viewerUserId]
@@ -286,7 +260,9 @@ export function useChecklistData({
 
     const run = async () => {
       try {
-        await loadData();
+        await loadData({
+          showLoading: dataRef.current.userId.length === 0,
+        });
       } catch (error) {
         reportLoadError(error);
       }
@@ -319,12 +295,16 @@ export function useChecklistData({
           };
           dataRef.current = nextData;
           setData(nextData);
-          const targetSubjectUserId = subjectUserId ?? dataRef.current.userId;
-          const targetIsViewer = targetSubjectUserId === viewerUserId;
-          const partnerCacheScope =
-            targetIsViewer && partnerId ? `partner:${partnerId}` : "partner:none";
-          const cacheKey = `${CHECKLIST_DATA_CACHE_PREFIX}${targetSubjectUserId}:${viewDate}:${todayLocalDate}:${partnerCacheScope}`;
-          writeTabDataCache(cacheKey, nextData);
+          const cacheKey = resolveChecklistCacheKey({
+            viewerUserId,
+            subjectUserId,
+            viewDate,
+            todayLocalDate,
+            partnerId,
+          });
+          if (cacheKey) {
+            writeTabDataCache(cacheKey, nextData);
+          }
         })
         .catch((error: unknown) => {
           reportLoadError(error);

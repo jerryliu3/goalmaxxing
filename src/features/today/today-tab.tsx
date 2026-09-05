@@ -357,7 +357,7 @@ export function TodayTab({
     showFiltersSection && (contentMode === "full" || contentMode === "filters-only");
   const showGoalSections = contentMode === "full" || contentMode === "goals-only";
 
-  if (loading) {
+  if (loading && data.userId.length === 0) {
     return (
       <div className="space-y-5">
         <LoadingCard

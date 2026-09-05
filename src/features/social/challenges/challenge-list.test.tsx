@@ -15,6 +15,7 @@ vi.mock("@/features/social/data", () => ({
     fetchSocialChallengeDetailMock(...args),
   joinSocialChallenge: (...args: unknown[]) => joinSocialChallengeMock(...args),
   leaveSocialChallenge: (...args: unknown[]) => leaveSocialChallengeMock(...args),
+  peekSocialChallengesCache: () => null,
 }));
 
 vi.mock("@/features/social/social-freshness-indicator", () => ({

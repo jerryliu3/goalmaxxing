@@ -156,6 +156,9 @@ describe("useChecklistData cache behavior", () => {
       })
     );
 
+    expect(result.current.loading).toBe(false);
+    expect(result.current.data.goals).toEqual([{ ...baseGoal }]);
+
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });

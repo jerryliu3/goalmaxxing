@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  isTabDataCacheFresh,
+  markTabDataCacheStaleByPrefix,
   readTabDataCache,
   resetTabDataCacheForTests,
   setTabDataCacheScope,
@@ -36,5 +38,24 @@ describe("tab-data-cache scope isolation", () => {
 
     setTabDataCacheScope("user-a");
     expect(readTabDataCache<{ value: string }>("progress-context:test")).toBeNull();
+  });
+});
+
+describe("tab-data-cache stale-while-revalidate", () => {
+  afterEach(() => {
+    resetTabDataCacheForTests();
+    window.sessionStorage.clear();
+  });
+
+  it("keeps last-good values readable after prefix invalidation", () => {
+    writeTabDataCache("progress-context:test", { value: "A" });
+    expect(isTabDataCacheFresh("progress-context:test")).toBe(true);
+
+    markTabDataCacheStaleByPrefix("progress-context:");
+
+    expect(readTabDataCache<{ value: string }>("progress-context:test")).toEqual({
+      value: "A",
+    });
+    expect(isTabDataCacheFresh("progress-context:test")).toBe(false);
   });
 });

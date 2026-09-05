@@ -4,7 +4,7 @@ import { ArrowDown, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { fetchSocialFeedHead, fetchSocialFeedPage } from "@/features/social/data";
+import { fetchSocialFeedHead, fetchSocialFeedPage, peekSocialFeedPageCache } from "@/features/social/data";
 import { FeedEventCard } from "@/features/social/feed/feed-event-card";
 import type { SocialFeedEvent } from "@/features/social/types";
 
@@ -18,12 +18,15 @@ const FEED_PULL_TO_REFRESH_THRESHOLD_PX = 72;
 const FEED_PULL_TO_REFRESH_MAX_PX = 96;
 
 export function FeedList({ isActive = true, refreshToken = 0 }: FeedListProps) {
-  const [items, setItems] = useState<SocialFeedEvent[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const cachedFeed = peekSocialFeedPageCache();
+  const [items, setItems] = useState<SocialFeedEvent[]>(cachedFeed?.items ?? []);
+  const [nextCursor, setNextCursor] = useState<string | null>(cachedFeed?.nextCursor ?? null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [hasLoadedInitialPage, setHasLoadedInitialPage] = useState(false);
-  const [latestLoadedItemId, setLatestLoadedItemId] = useState<string | null>(null);
+  const [hasLoadedInitialPage, setHasLoadedInitialPage] = useState(Boolean(cachedFeed));
+  const [latestLoadedItemId, setLatestLoadedItemId] = useState<string | null>(
+    cachedFeed?.items[0]?.id ?? null
+  );
   const [hasNewActivity, setHasNewActivity] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
@@ -32,6 +35,7 @@ export function FeedList({ isActive = true, refreshToken = 0 }: FeedListProps) {
   const isPullActiveRef = useRef(false);
   const pullDistanceRef = useRef(0);
   const pullRefreshInFlightRef = useRef(false);
+  const hasPaintedFeedRef = useRef(Boolean(cachedFeed));
 
   const setPullDistanceState = useCallback((distance: number) => {
     pullDistanceRef.current = distance;
@@ -39,7 +43,10 @@ export function FeedList({ isActive = true, refreshToken = 0 }: FeedListProps) {
   }, []);
 
   const loadFeed = useCallback(async (cursor?: string | null) => {
-    setLoading(true);
+    const isInitialPage = !cursor;
+    if (isInitialPage && !hasPaintedFeedRef.current) {
+      setLoading(true);
+    }
     setErrorMessage(null);
     try {
       const response = await fetchSocialFeedPage({
@@ -50,6 +57,7 @@ export function FeedList({ isActive = true, refreshToken = 0 }: FeedListProps) {
       setItems((previous) => (cursor ? [...previous, ...response.items] : response.items));
       setNextCursor(response.nextCursor);
       if (!cursor) {
+        hasPaintedFeedRef.current = true;
         setHasLoadedInitialPage(true);
         setLatestLoadedItemId(response.items[0]?.id ?? null);
         setHasNewActivity(false);

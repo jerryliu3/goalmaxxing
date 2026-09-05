@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PublicProfileTrigger } from "@/components/public-profile-trigger";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
@@ -8,6 +8,7 @@ import { SocialFreshnessIndicator } from "@/features/social/social-freshness-ind
 import {
   fetchSocialLeaderboards,
   fetchSocialLeaderboardStandings,
+  peekSocialLeaderboardsCache,
 } from "@/features/social/data";
 import type { LeaderboardSeason, LeaderboardStanding } from "@/features/social/types";
 
@@ -28,11 +29,17 @@ export function LeaderboardsPanel({
   refreshToken = 0,
   onRefreshRequested,
 }: LeaderboardsPanelProps) {
-  const [seasons, setSeasons] = useState<LeaderboardSeason[]>([]);
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
+  const cachedLeaderboards = peekSocialLeaderboardsCache();
+  const [seasons, setSeasons] = useState<LeaderboardSeason[]>(
+    cachedLeaderboards?.items ?? []
+  );
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(
+    cachedLeaderboards?.items[0]?.id ?? null
+  );
   const [standings, setStandings] = useState<StandingsState | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!cachedLeaderboards);
+  const hasPaintedLeaderboardsRef = useRef(Boolean(cachedLeaderboards));
 
   const selectedSeason = useMemo(
     () => seasons.find((season) => season.id === selectedSeasonId) ?? null,
@@ -41,9 +48,12 @@ export function LeaderboardsPanel({
 
   const loadSeasons = useCallback(async () => {
     setError(null);
-    setIsLoading(true);
+    if (!hasPaintedLeaderboardsRef.current) {
+      setIsLoading(true);
+    }
     try {
       const response = await fetchSocialLeaderboards();
+      hasPaintedLeaderboardsRef.current = true;
       setSeasons(response.items);
       setSelectedSeasonId((current) =>
         current && response.items.some((season) => season.id === current)
@@ -92,7 +102,7 @@ export function LeaderboardsPanel({
     return () => window.clearTimeout(timeoutId);
   }, [isActive, loadStandings, refreshToken, selectedSeasonId]);
 
-  if (isLoading) {
+  if (isLoading && seasons.length === 0) {
     return (
       <Card className="shadow-sm">
         <CardHeader className="space-y-2">

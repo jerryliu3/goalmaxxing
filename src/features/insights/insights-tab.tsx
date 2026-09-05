@@ -662,7 +662,7 @@ export function InsightsTab({
     contentMode === "full" || contentMode === "goals-only";
   const showGoalStatsStepper = !sharedPeriod || contentMode === "goal-stats-only";
 
-  if (loading) {
+  if (loading && !state.userId) {
     return (
       <LoadingCard
         title="Loading insights..."

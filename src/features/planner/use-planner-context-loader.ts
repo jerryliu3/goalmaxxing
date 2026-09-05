@@ -16,9 +16,13 @@ import {
 } from "@/features/planner/calendar-view-projection";
 import { getApiErrorMessage, getJson, postJson } from "@/lib/api/client";
 import {
-  PLANNER_CONTEXT_CACHE_PREFIX,
+  buildPlannerContextCacheKey,
 } from "@/lib/cache/planner-tab-cache";
-import { readTabDataCache, writeTabDataCache } from "@/lib/cache/tab-data-cache";
+import {
+  isTabDataCacheFresh,
+  readTabDataCache,
+  writeTabDataCache,
+} from "@/lib/cache/tab-data-cache";
 import { getDateInTimezone } from "@/lib/dates/timezone";
 import type { PlannerPolicy } from "@/lib/planner/policy";
 
@@ -97,7 +101,7 @@ export function usePlannerContextLoader({
       const visibleStart = visibleWindow.start;
       const visibleEnd = visibleWindow.end;
 
-      const plannerContextCacheKey = `${PLANNER_CONTEXT_CACHE_PREFIX}${month}`;
+      const plannerContextCacheKey = buildPlannerContextCacheKey(month);
       const cachedContextPayload = readTabDataCache<PlannerContextPayload>(plannerContextCacheKey);
       if (cachedContextPayload) {
         setContext(cachedContextPayload);
@@ -109,6 +113,11 @@ export function usePlannerContextLoader({
           setSetupRestWeekdays(policyForSetup.restWeekdays);
         }
         shouldShowLoading = false;
+        if (!forcePrepare && isTabDataCacheFresh(plannerContextCacheKey)) {
+          calendarPreparedRef.current = true;
+          setLoading(false);
+          return true;
+        }
       }
 
       if (shouldShowLoading) {

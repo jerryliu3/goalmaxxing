@@ -19,6 +19,8 @@ import {
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
 import { TAB_ONBOARDING_TOURS } from "@/features/onboarding/tab-onboarding";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
+import { SOCIAL_ACTIVITY_VISIBLE_CACHE_KEY } from "@/lib/cache/planner-tab-cache";
+import { readTabDataCache, writeTabDataCache } from "@/lib/cache/tab-data-cache";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { subscribeXpRefresh } from "@/lib/xp/events";
@@ -40,14 +42,14 @@ const SOCIAL_SURFACE_POLL_INTERVAL_MS = 60 * 1000;
 export function SocialSurface() {
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();
-  const [socialActivityVisible, setSocialActivityVisible] = useState<boolean | null>(null);
-  const visibilityResolved = socialActivityVisible !== null;
+  const cachedVisibility = readTabDataCache<boolean>(SOCIAL_ACTIVITY_VISIBLE_CACHE_KEY);
+  const [socialActivityVisible, setSocialActivityVisible] = useState(
+    cachedVisibility ?? true
+  );
   const publicSocialLocked = socialActivityVisible === false;
-  const activeTab = visibilityResolved
-    ? resolveSocialSurfaceTab(searchParams.get("tab") ?? undefined, {
-        socialActivityVisible,
-      })
-    : "team";
+  const activeTab = resolveSocialSurfaceTab(searchParams.get("tab") ?? undefined, {
+    socialActivityVisible,
+  });
   const [refreshToken, setRefreshToken] = useState(0);
   const lastFocusRefreshAtRef = useRef(0);
   const requestedOnboardingKey = searchParams.get("onboarding");
@@ -56,7 +58,7 @@ export function SocialSurface() {
     setRefreshToken((token) => token + 1);
   }, []);
 
-  const triggerGlobalRefresh = useCallback(() => {
+  const triggerBackgroundRefresh = useCallback(() => {
     invalidateSocialTabCache();
     refreshActiveTab();
   }, [refreshActiveTab]);
@@ -70,8 +72,8 @@ export function SocialSurface() {
       return;
     }
     lastFocusRefreshAtRef.current = now;
-    triggerGlobalRefresh();
-  }, [triggerGlobalRefresh]);
+    triggerBackgroundRefresh();
+  }, [triggerBackgroundRefresh]);
 
   useEffect(() => {
     return subscribeXpRefresh(() => {
@@ -84,28 +86,16 @@ export function SocialSurface() {
   }, [activeTab, refreshActiveTab]);
 
   useEffect(() => {
-    if (!visibilityResolved) {
-      return;
-    }
-    const timeoutId = window.setTimeout(() => {
-      triggerGlobalRefresh();
-    }, 0);
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [triggerGlobalRefresh, visibilityResolved]);
-
-  useEffect(() => {
     const intervalId = window.setInterval(() => {
       if (document.visibilityState !== "visible") {
         return;
       }
-      triggerGlobalRefresh();
+      triggerBackgroundRefresh();
     }, SOCIAL_SURFACE_POLL_INTERVAL_MS);
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [triggerGlobalRefresh]);
+  }, [triggerBackgroundRefresh]);
 
   useEffect(() => {
     let cancelled = false;
@@ -115,6 +105,7 @@ export function SocialSurface() {
       const userId = data.user?.id;
       if (!userId) {
         if (!cancelled) {
+          writeTabDataCache(SOCIAL_ACTIVITY_VISIBLE_CACHE_KEY, true);
           setSocialActivityVisible(true);
         }
         return;
@@ -127,7 +118,9 @@ export function SocialSurface() {
         .maybeSingle();
 
       if (!cancelled) {
-        setSocialActivityVisible(profile?.social_activity_visible !== false);
+        const nextVisible = profile?.social_activity_visible !== false;
+        writeTabDataCache(SOCIAL_ACTIVITY_VISIBLE_CACHE_KEY, nextVisible);
+        setSocialActivityVisible(nextVisible);
       }
     });
 
@@ -157,10 +150,6 @@ export function SocialSurface() {
       document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
     };
   }, [handleVisibilityOrFocus]);
-
-  if (!visibilityResolved) {
-    return null;
-  }
 
   return (
     <>
@@ -270,14 +259,14 @@ export function SocialSurface() {
               <ChallengeList
                 isActive={activeTab === "challenges"}
                 refreshToken={refreshToken}
-                onRefreshRequested={triggerGlobalRefresh}
+                onRefreshRequested={triggerBackgroundRefresh}
               />
             </TabsContent>
             <TabsContent value="leaderboards" className="space-y-4">
               <LeaderboardsPanel
                 isActive={activeTab === "leaderboards"}
                 refreshToken={refreshToken}
-                onRefreshRequested={triggerGlobalRefresh}
+                onRefreshRequested={triggerBackgroundRefresh}
               />
             </TabsContent>
           </>

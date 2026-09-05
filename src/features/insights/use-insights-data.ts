@@ -4,46 +4,55 @@ import { useAppRouter } from "@/lib/navigation/use-app-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildLoginHref } from "@/lib/auth/login-redirect";
 import { withAbortSignal } from "@/lib/async/abort";
-import { INSIGHTS_DATA_CACHE_PREFIX } from "@/lib/cache/planner-tab-cache";
+import {
+  buildInsightsDataCacheKey,
+  buildPartnerCacheScope,
+} from "@/lib/cache/planner-tab-cache";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
-import { readTabDataCache, writeTabDataCache } from "@/lib/cache/tab-data-cache";
+import {
+  isTabDataCacheFresh,
+  readTabDataCache,
+  writeTabDataCache,
+} from "@/lib/cache/tab-data-cache";
 import { toLocalDateString } from "@/lib/dates/day";
-import {
-  fetchProgressContext,
-  type ProgressContextResponse,
-} from "@/lib/goals/progress-context";
-import {
-  fetchInsightsStats,
-  InsightsStatsAuthenticationError,
-} from "@/lib/insights/stats";
-import type { CompletionDateFact, Goal } from "@/lib/goals/types";
-import type { InsightsStatsResponse } from "@/lib/insights/types";
 import { createClient } from "@/lib/supabase/client";
 import { useDuoLaneError } from "@/features/social/duo/use-duo-lane-error";
-import { assertQueriesOk } from "@/lib/supabase/query-error";
-import { selectViewerVisibleGoals } from "@cadence/shared/goals/visible-goals";
 import { useDuo } from "@/features/social/duo/duo-context";
 import { subscribeXpRefresh } from "@/lib/xp/events";
+import {
+  emptyInsights,
+  fetchInsightsData,
+  InsightsStatsAuthenticationError,
+  type InsightsData,
+} from "@/features/insights/fetch-insights-data";
 
-export interface InsightsData {
-  userId: string;
-  goals: Goal[];
-  completions: CompletionDateFact[];
-  memberTeamIds: string[];
-  progress: ProgressContextResponse | null;
-  insightsStats: InsightsStatsResponse | null;
-}
-
-export const emptyInsights: InsightsData = {
-  userId: "",
-  goals: [],
-  completions: [],
-  memberTeamIds: [],
-  progress: null,
-  insightsStats: null,
-};
+export type { InsightsData };
+export { emptyInsights };
 
 const INSIGHTS_REQUEST_TIMEOUT_MS = 15_000;
+
+function resolveInsightsCacheKey({
+  viewerUserId,
+  subjectUserId,
+  selectedYear,
+  partnerId,
+}: {
+  viewerUserId: string;
+  subjectUserId?: string;
+  selectedYear: string;
+  partnerId: string | null;
+}) {
+  if (!viewerUserId) {
+    return null;
+  }
+  const targetSubjectUserId = subjectUserId ?? viewerUserId;
+  return buildInsightsDataCacheKey({
+    subjectUserId: targetSubjectUserId,
+    selectedYear,
+    asOfDate: toLocalDateString(),
+    partnerScope: buildPartnerCacheScope(partnerId, targetSubjectUserId === viewerUserId),
+  });
+}
 
 export function useInsightsData({
   subjectUserId,
@@ -58,11 +67,25 @@ export function useInsightsData({
   const { viewerUserId, state: duoState } = useDuo();
   const partnerId = duoState.activePartner?.partnerId ?? null;
   const router = useAppRouter();
-  const [state, setState] = useState<InsightsData>(emptyInsights);
-  const [loading, setLoading] = useState(true);
+  const initialCacheKey = resolveInsightsCacheKey({
+    viewerUserId,
+    subjectUserId,
+    selectedYear,
+    partnerId,
+  });
+  const initialCachedState = initialCacheKey
+    ? readTabDataCache<InsightsData>(initialCacheKey)
+    : null;
+  const [state, setState] = useState<InsightsData>(initialCachedState ?? emptyInsights);
+  const [loading, setLoading] = useState(!initialCachedState);
   const loadRequestIdRef = useRef(0);
   const visibleLoadCountRef = useRef(0);
   const authRedirectStartedRef = useRef(false);
+  const stateRef = useRef(initialCachedState ?? emptyInsights);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   const redirectToLogin = useCallback(() => {
     if (authRedirectStartedRef.current) {
@@ -94,10 +117,6 @@ export function useInsightsData({
     ) => {
       const requestId = loadRequestIdRef.current + 1;
       loadRequestIdRef.current = requestId;
-      if (showLoading) {
-        visibleLoadCountRef.current += 1;
-        setLoading(true);
-      }
       const controller = new AbortController();
       const timeoutId = window.setTimeout(
         () => controller.abort(),
@@ -120,95 +139,64 @@ export function useInsightsData({
           return;
         }
 
-        // PostgREST filter methods mutate and return the same builder, so this is
-        // built fresh per load and only one branch below ever consumes it.
-        const goalsQuery = supabase
-          .from("goals")
-          .select("*")
-          .eq("is_deleted", false)
-          .order("title");
-        const yearStart = `${selectedYear}-01-01`;
-        const yearEnd = `${selectedYear}-12-31`;
-        const targetSubjectUserId = subjectUserId ?? userId;
-        const targetIsViewer = targetSubjectUserId === userId;
-        const asOfDate = toLocalDateString();
-        const partnerCacheScope =
-          targetIsViewer && partnerId ? `partner:${partnerId}` : "partner:none";
-        const insightsDataCacheKey = `${INSIGHTS_DATA_CACHE_PREFIX}${targetSubjectUserId}:${selectedYear}:${asOfDate}:${partnerCacheScope}`;
-        if (!forceRefresh) {
-          const cachedState = readTabDataCache<InsightsData>(insightsDataCacheKey);
-          if (cachedState) {
-            setState(cachedState);
-            clearLaneError();
+        const insightsDataCacheKey = resolveInsightsCacheKey({
+          viewerUserId: userId,
+          subjectUserId,
+          selectedYear,
+          partnerId,
+        });
+        const cachedState = insightsDataCacheKey
+          ? readTabDataCache<InsightsData>(insightsDataCacheKey)
+          : null;
+        if (cachedState) {
+          setState(cachedState);
+          stateRef.current = cachedState;
+          clearLaneError();
+          if (!forceRefresh && insightsDataCacheKey && isTabDataCacheFresh(insightsDataCacheKey)) {
+            setLoading(false);
             return;
           }
         }
-        const [goalsResponse, teamMembersResponse, progress, insightsStats] =
-          await withAbortSignal(
-            Promise.all([
-              targetIsViewer
-                ? goalsQuery
-                : goalsQuery
-                    .eq("owner_id", targetSubjectUserId)
-                    .is("team_id", null),
-              targetIsViewer
-                ? supabase.from("team_members").select("team_id").eq("user_id", userId)
-                : Promise.resolve({ data: [], error: null }),
-              fetchProgressContext({
-                asOfDate,
-                factsFrom: yearStart,
-                factsTo: yearEnd,
-                subjectUserId: targetIsViewer ? undefined : targetSubjectUserId,
-                forceRefresh,
-              }),
-              fetchInsightsStats({
-                forceRefresh,
-                subjectUserId: targetIsViewer ? undefined : targetSubjectUserId,
-              }),
-            ]),
+
+        const shouldShowLoading =
+          showLoading && !cachedState && stateRef.current.userId.length === 0;
+        if (shouldShowLoading) {
+          visibleLoadCountRef.current += 1;
+          setLoading(true);
+        }
+        try {
+          const nextState = await withAbortSignal(
+            fetchInsightsData({
+              userId,
+              subjectUserId,
+              selectedYear,
+              partnerId,
+              forceRefresh,
+              signal: controller.signal,
+            }),
             controller.signal
           );
-
-        if (requestId !== loadRequestIdRef.current) {
-          return;
-        }
-
-        assertQueriesOk(
-          [goalsResponse, teamMembersResponse],
-          "Insights goals could not be loaded."
-        );
-
-        const memberTeamIds = ((teamMembersResponse.data ?? []) as Array<{
-          team_id: string;
-        }>).map((row) => row.team_id);
-        const goals = (goalsResponse.data ?? []) as Goal[];
-        const visibleGoals = targetIsViewer
-          ? selectViewerVisibleGoals({
-              goals,
-              partnerId,
-              memberTeamIds,
-            })
-          : goals;
-
-        const nextState: InsightsData = {
-          userId: targetSubjectUserId,
-          goals: visibleGoals,
-          completions: progress.facts,
-          memberTeamIds,
-          progress,
-          insightsStats,
-        };
-        setState(nextState);
-        writeTabDataCache(insightsDataCacheKey, nextState);
-        clearLaneError();
-      } finally {
-        window.clearTimeout(timeoutId);
-        if (showLoading) {
-          visibleLoadCountRef.current = Math.max(visibleLoadCountRef.current - 1, 0);
-          if (visibleLoadCountRef.current === 0) {
+          if (requestId !== loadRequestIdRef.current) {
+            return;
+          }
+          setState(nextState);
+          stateRef.current = nextState;
+          if (insightsDataCacheKey) {
+            writeTabDataCache(insightsDataCacheKey, nextState);
+          }
+          clearLaneError();
+        } finally {
+          if (shouldShowLoading) {
+            visibleLoadCountRef.current = Math.max(visibleLoadCountRef.current - 1, 0);
+            if (visibleLoadCountRef.current === 0) {
+              setLoading(false);
+            }
+          } else {
             setLoading(false);
           }
         }
+      } finally {
+        window.clearTimeout(timeoutId);
       }
     },
     [clearLaneError, partnerId, redirectToLogin, selectedYear, subjectUserId, supabase, viewerUserId]
@@ -227,7 +215,9 @@ export function useInsightsData({
   useEffect(() => {
     const run = async () => {
       try {
-        await loadData();
+        await loadData({
+          showLoading: stateRef.current.userId.length === 0,
+        });
       } catch (error) {
         if (error instanceof InsightsStatsAuthenticationError) {
           redirectToLogin();

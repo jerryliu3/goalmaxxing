@@ -1,6 +1,7 @@
 import type { PublicProfileBundle } from "@cadence/shared/social/public-profile";
 import { getApiErrorMessage, getJson } from "@/lib/api/client";
 import {
+  isTabDataCacheFresh,
   readTabDataCache,
   TAB_DATA_CACHE_TTL_MS,
   writeTabDataCache,
@@ -32,7 +33,7 @@ export async function fetchPublicProfileBundle({
   const cacheKey = buildPublicProfileCacheKey(normalizedSubjectUserId, year);
   if (!forceRefresh) {
     const cached = readTabDataCache<PublicProfileBundle>(cacheKey);
-    if (cached) {
+    if (cached && isTabDataCacheFresh(cacheKey)) {
       return cached;
     }
   }

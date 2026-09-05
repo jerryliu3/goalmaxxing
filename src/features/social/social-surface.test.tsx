@@ -109,14 +109,19 @@ describe("SocialSurface refresh behavior", () => {
     );
   }
 
-  it("refreshes feed tab when an XP refresh event is requested", async () => {
+  it("does not wipe social cache on enter", async () => {
     render(<SocialSurface />);
 
     await waitFor(() => {
-      expect(invalidateSocialTabCache).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId("feed-list")).toBeInTheDocument();
     });
-    await expectFeedRefreshToken("1");
-    const globalRefreshCount = vi.mocked(invalidateSocialTabCache).mock.calls.length;
+    expect(invalidateSocialTabCache).not.toHaveBeenCalled();
+  });
+
+  it("refreshes feed tab when an XP refresh event is requested", async () => {
+    render(<SocialSurface />);
+
+    await expectFeedRefreshToken("0");
 
     act(() => {
       requestXpRefresh({
@@ -125,9 +130,9 @@ describe("SocialSurface refresh behavior", () => {
       });
     });
 
-    await expectFeedRefreshToken("2");
+    await expectFeedRefreshToken("1");
     expect(invalidateSocialFeedCache).toHaveBeenCalledTimes(1);
-    expect(invalidateSocialTabCache).toHaveBeenCalledTimes(globalRefreshCount);
+    expect(invalidateSocialTabCache).not.toHaveBeenCalled();
   });
 
   it("does not refresh non-feed tabs on XP refresh events", async () => {
@@ -136,10 +141,8 @@ describe("SocialSurface refresh behavior", () => {
     render(<SocialSurface />);
 
     await waitFor(() => {
-      expect(invalidateSocialTabCache).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("tab", { name: "Leaderboards" })).toBeInTheDocument();
     });
-    const globalRefreshCount = vi.mocked(invalidateSocialTabCache).mock.calls.length;
-
     await user.click(screen.getByRole("tab", { name: "Leaderboards" }));
 
     act(() => {
@@ -150,7 +153,7 @@ describe("SocialSurface refresh behavior", () => {
     });
 
     expect(invalidateSocialFeedCache).not.toHaveBeenCalled();
-    expect(invalidateSocialTabCache).toHaveBeenCalledTimes(globalRefreshCount);
+    expect(invalidateSocialTabCache).not.toHaveBeenCalled();
   });
 
   it("refreshes once when window focus returns within cooldown window", async () => {
@@ -160,9 +163,13 @@ describe("SocialSurface refresh behavior", () => {
     });
     render(<SocialSurface />);
 
-    await waitFor(() => {
-      expect(invalidateSocialTabCache).toHaveBeenCalledTimes(1);
+    await expectFeedRefreshToken("0");
+    expect(invalidateSocialTabCache).not.toHaveBeenCalled();
+
+    act(() => {
+      window.dispatchEvent(new Event("focus"));
     });
+
     await expectFeedRefreshToken("1");
     expect(invalidateSocialTabCache).toHaveBeenCalledTimes(1);
 
@@ -170,15 +177,8 @@ describe("SocialSurface refresh behavior", () => {
       window.dispatchEvent(new Event("focus"));
     });
 
-    await expectFeedRefreshToken("2");
-    expect(invalidateSocialTabCache).toHaveBeenCalledTimes(2);
-
-    act(() => {
-      window.dispatchEvent(new Event("focus"));
-    });
-
     await waitFor(() => {
-      expect(invalidateSocialTabCache).toHaveBeenCalledTimes(2);
+      expect(invalidateSocialTabCache).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -190,18 +190,13 @@ describe("SocialSurface refresh behavior", () => {
     });
 
     render(<SocialSurface />);
-
-    act(() => {
-      vi.runOnlyPendingTimers();
-    });
-    const initialRefreshCount = vi.mocked(invalidateSocialTabCache).mock.calls.length;
-    expect(initialRefreshCount).toBeGreaterThan(0);
+    expect(vi.mocked(invalidateSocialTabCache).mock.calls.length).toBe(0);
 
     act(() => {
       vi.advanceTimersByTime(60 * 1000);
     });
 
-    expect(invalidateSocialTabCache).toHaveBeenCalledTimes(initialRefreshCount + 1);
+    expect(invalidateSocialTabCache).toHaveBeenCalledTimes(1);
 
     Object.defineProperty(document, "visibilityState", {
       configurable: true,
@@ -212,7 +207,7 @@ describe("SocialSurface refresh behavior", () => {
       vi.advanceTimersByTime(60 * 1000);
     });
 
-    expect(invalidateSocialTabCache).toHaveBeenCalledTimes(initialRefreshCount + 1);
+    expect(invalidateSocialTabCache).toHaveBeenCalledTimes(1);
   });
 
   it("shows freshness indicator only for cron-backed tabs", async () => {
