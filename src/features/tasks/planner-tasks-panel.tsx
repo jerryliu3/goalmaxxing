@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateField } from "@/components/ui/date-field";
 import {
   Dialog,
   DialogContent,
@@ -15,8 +16,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { createClient } from "@/lib/supabase/client";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
+import { toLocalDateString } from "@/lib/dates/day";
+import { createClient } from "@/lib/supabase/client";
 
 interface PlannerTaskRow {
   task_id: string;
@@ -56,6 +58,10 @@ export function PlannerTasksPanel({
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [confirmingDeleteTask, setConfirmingDeleteTask] = useState<PlannerTaskRow | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDate, setNewTaskDate] = useState(
+    () => scheduledDate ?? toLocalDateString()
+  );
+  const canAddTask = newTaskTitle.trim().length > 0;
   const scheduledDateRef = useRef<string | null>(scheduledDate);
   const requestVersionRef = useRef(0);
 
@@ -124,7 +130,7 @@ export function PlannerTasksPanel({
     try {
       const { error } = await supabase.rpc("create_planner_task", {
         p_title: title,
-        p_scheduled_date: scheduledDateRef.current ?? undefined,
+        p_scheduled_date: newTaskDate.trim() || undefined,
       });
       if (error) {
         toast.error(error.message || "Task could not be created.");
@@ -135,7 +141,7 @@ export function PlannerTasksPanel({
     } finally {
       setAdding(false);
     }
-  }, [allowCreate, loadTasks, newTaskTitle, supabase]);
+  }, [allowCreate, loadTasks, newTaskDate, newTaskTitle, supabase]);
 
   const toggleTask = useCallback(
     async (task: PlannerTaskRow) => {
@@ -222,13 +228,25 @@ export function PlannerTasksPanel({
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
                   event.preventDefault();
-                  void addTask();
+                  if (canAddTask) {
+                    void addTask();
+                  }
                 }
               }}
               placeholder="Add a task..."
               maxLength={200}
             />
-            <Button type="button" onClick={() => void addTask()} disabled={adding}>
+            <DateField
+              value={newTaskDate}
+              onValueChange={setNewTaskDate}
+              aria-label="Task date"
+              className="h-8 w-[150px] shrink-0"
+            />
+            <Button
+              type="button"
+              onClick={() => void addTask()}
+              disabled={adding || !canAddTask}
+            >
               {adding ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
               Add
             </Button>

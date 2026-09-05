@@ -71,7 +71,7 @@ export function TasksScreen() {
       </View>
       <PrimaryButton
         label={saving ? "Adding..." : "Add task"}
-        disabled={saving}
+        disabled={saving || newTaskTitle.trim().length === 0}
         onPress={async () => {
           if (!userId) {
             setMessage("Sign in to manage tasks.");

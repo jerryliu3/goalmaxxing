@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PlannerTasksPanel } from "@/features/tasks/planner-tasks-panel";
@@ -15,6 +15,10 @@ vi.mock("sonner", () => ({
   toast: {
     error: vi.fn(),
   },
+}));
+
+vi.mock("@/lib/dates/day", () => ({
+  toLocalDateString: () => "2026-09-05",
 }));
 
 describe("PlannerTasksPanel", () => {
@@ -188,13 +192,53 @@ describe("PlannerTasksPanel", () => {
       });
     });
 
+    const addButton = screen.getByRole("button", { name: /add/i });
+    expect(addButton).toBeDisabled();
+    expect(screen.getByLabelText("Task date")).toHaveValue("2026-09-05");
+
     await user.type(screen.getByPlaceholderText("Add a task..."), "Quick inbox task");
-    await user.click(screen.getByRole("button", { name: /add/i }));
+    expect(addButton).toBeEnabled();
+    await user.click(addButton);
 
     await waitFor(() => {
       expect(rpcMock).toHaveBeenCalledWith("create_planner_task", {
         p_title: "Quick inbox task",
-        p_scheduled_date: undefined,
+        p_scheduled_date: "2026-09-05",
+      });
+    });
+  });
+
+  it("creates tasks on the date chosen beside the add button", async () => {
+    rpcMock.mockImplementation(async (name: string) => {
+      if (name === "list_planner_tasks") {
+        return { data: [], error: null };
+      }
+      if (name === "create_planner_task") {
+        return { data: [], error: null };
+      }
+      return { data: null, error: null };
+    });
+
+    const user = userEvent.setup();
+
+    render(<PlannerTasksPanel allowCreate allowDelete={false} />);
+
+    await waitFor(() => {
+      expect(rpcMock).toHaveBeenCalledWith("list_planner_tasks", {
+        p_for_date: undefined,
+      });
+    });
+
+    await user.type(screen.getByPlaceholderText("Add a task..."), "Later inbox task");
+    fireEvent.change(screen.getByLabelText("Task date"), {
+      target: { value: "2026-09-12" },
+    });
+    await user.click(screen.getByRole("button", { name: /add/i }));
+
+    await waitFor(() => {
+      expect(rpcMock).toHaveBeenCalledWith("create_planner_task", {
+        p_title: "Later inbox task",
+        p_scheduled_date: "2026-09-12",
       });
     });
   });
