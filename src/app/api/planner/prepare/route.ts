@@ -25,6 +25,7 @@ const prepareRequestSchema = z
     scopeMonth: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
     visibleStart: z.iso.date(),
     visibleEnd: z.iso.date(),
+    rebalanceExistingAssignments: z.boolean().optional(),
   })
   .strict()
   .superRefine((value, context) => {
@@ -81,6 +82,7 @@ export async function POST(request: Request) {
           start: body.visibleStart,
           end: body.visibleEnd,
         },
+        rebalanceExistingAssignments: body.rebalanceExistingAssignments === true,
         correlationId,
       });
     } catch (error) {

@@ -144,7 +144,25 @@ describe("projectWorkUnitsToSolver", () => {
     expect(result[0]?.candidateDates).toEqual(["2026-08-06"]);
   });
 
-  it("keeps an in-window preserved assignment movable via previousDate", () => {
+  it("soft-locks an in-window preserved assignment unless rebuild rebalance is on", () => {
+    const frozen = projectWorkUnitsToSolver({
+      workUnits: [
+        createWorkUnit({
+          scheduledDate: "2026-08-25",
+        }),
+      ],
+      compiledPolicy,
+      assessments,
+      preserveExistingAssignments: true,
+    });
+
+    expect(frozen).toHaveLength(1);
+    expect(frozen[0]?.lockedDate).toBe("2026-08-25");
+    expect(frozen[0]?.previousDate).toBe("2026-08-25");
+    expect(frozen[0]?.candidateDates).toContain("2026-08-25");
+  });
+
+  it("keeps an in-window preserved assignment movable during rebuild rebalance", () => {
     const result = projectWorkUnitsToSolver({
       workUnits: [
         createWorkUnit({
@@ -154,6 +172,7 @@ describe("projectWorkUnitsToSolver", () => {
       compiledPolicy,
       assessments,
       preserveExistingAssignments: true,
+      rebalanceExistingAssignments: true,
     });
 
     expect(result).toHaveLength(1);

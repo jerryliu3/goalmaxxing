@@ -116,8 +116,8 @@ export function PlannerSettingsForm({
       {!plannerReadOnly ? (
         <div className="space-y-2 rounded-md border p-3">
           <p className="text-xs text-muted-foreground">
-            Use these tools to refresh the current calendar projection or clear lock-based
-            blockers.
+            Use these tools to recover missed past sessions, or refresh the calendar
+            to rebalance unlocked sessions onto open days.
           </p>
           <div className="flex flex-wrap gap-2">
             <Button
