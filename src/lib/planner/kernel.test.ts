@@ -981,6 +981,7 @@ describe("pure planner kernel", () => {
         links: [{ sourceGoalId: sourceGoal.id, targetGoalId: targetGoal.id }],
         linkSourceGoals: [sourceGoal],
         preserveExistingAssignments: true,
+        rebalanceExistingAssignments: true,
         basePlan: {
           planId: "plan-a",
           version: 1,

@@ -42,6 +42,7 @@ interface UsePlannerPersistenceActionsArgs {
     showLoading?: boolean;
     toastOnError?: boolean;
     forcePrepare?: boolean;
+    rebalanceExistingAssignments?: boolean;
   }) => Promise<boolean>;
   cacheDraftPreviewForWindow: (args: {
     preview: NonNullable<PlannerContextPayload["preview"]>;
@@ -495,6 +496,7 @@ export function usePlannerPersistenceActions({
           showLoading: false,
           toastOnError: false,
           forcePrepare: true,
+          rebalanceExistingAssignments: true,
         }),
         timeoutMessage:
           "Schedule rebuild ran, but calendar refresh timed out. Please refresh the page.",

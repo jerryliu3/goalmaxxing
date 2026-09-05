@@ -119,6 +119,18 @@ describe("solver-input coverage", () => {
     expect(
       computeGenerationInputHash({
         ...input(),
+        preserveExistingAssignments: true,
+        rebalanceExistingAssignments: true,
+      })
+    ).not.toBe(
+      computeGenerationInputHash({
+        ...input(),
+        preserveExistingAssignments: true,
+      })
+    );
+    expect(
+      computeGenerationInputHash({
+        ...input(),
         draftPinnedDates: { "goal-a:total:1": "2026-08-20" },
       })
     ).not.toBe(base);

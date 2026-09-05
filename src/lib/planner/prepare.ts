@@ -107,6 +107,81 @@ function itemKey(item: { goal_id: string; unit_key: string }) {
   return `${item.goal_id}\u0000${item.unit_key}`;
 }
 
+interface GeneratedPreparedItem {
+  goalId: string;
+  unitKey: string;
+  scheduledDate: string;
+  scheduledTimeOverride: string | null;
+  locked: boolean;
+}
+
+function buildPreparedItem({
+  existing,
+  generated,
+  rebalanceExistingAssignments,
+}: {
+  existing: PlannerItemRow | undefined;
+  generated: GeneratedPreparedItem;
+  rebalanceExistingAssignments: boolean;
+}): PreparedItem {
+  if (!existing) {
+    return {
+      goal_id: generated.goalId,
+      unit_key: generated.unitKey,
+      scheduled_date: generated.scheduledDate,
+      original_scheduled_date: generated.scheduledDate,
+      scheduled_time: generated.scheduledTimeOverride,
+      locked: generated.locked,
+    };
+  }
+  if (!rebalanceExistingAssignments) {
+    return {
+      goal_id: existing.goal_id,
+      unit_key: existing.unit_key,
+      scheduled_date: existing.scheduled_date,
+      original_scheduled_date:
+        existing.original_scheduled_date ?? existing.scheduled_date,
+      scheduled_time: existing.scheduled_time,
+      locked: existing.locked,
+    };
+  }
+  return {
+    goal_id: existing.goal_id,
+    unit_key: existing.unit_key,
+    scheduled_date: generated.scheduledDate,
+    original_scheduled_date:
+      existing.original_scheduled_date ?? existing.scheduled_date,
+    scheduled_time: generated.scheduledTimeOverride ?? existing.scheduled_time,
+    locked: generated.locked,
+  };
+}
+
+function dedupePreparedItemsByGoalDate(items: PreparedItem[]): PreparedItem[] {
+  const occupiedGoalDates = new Set<string>();
+  const deduped: PreparedItem[] = [];
+  for (const item of items) {
+    const goalDate = `${item.goal_id}\u0000${item.scheduled_date}`;
+    if (occupiedGoalDates.has(goalDate)) {
+      reportError(
+        new Error(
+          "Planner prepare dropped duplicate same-goal same-day assignment."
+        ),
+        {
+          scope: "planner.prepare",
+          code: "duplicate_goal_date",
+          goalId: item.goal_id,
+          unitKey: item.unit_key,
+          scheduledDate: item.scheduled_date,
+        }
+      );
+      continue;
+    }
+    occupiedGoalDates.add(goalDate);
+    deduped.push(item);
+  }
+  return deduped;
+}
+
 function itemMatchesCurrentRequirement({
   item,
   goal,
@@ -361,9 +436,11 @@ function throwPrepareInvariant({
 async function prepareOnce({
   supabase,
   ownerId,
+  rebalanceExistingAssignments,
 }: {
   supabase: ServerSupabaseClient;
   ownerId: string;
+  rebalanceExistingAssignments: boolean;
 }) {
   const preparation = await loadPlannerPreparationSnapshot({
     supabase,
@@ -758,6 +835,7 @@ async function prepareOnce({
           issueCodes: [],
         },
         preserveExistingAssignments: true,
+        rebalanceExistingAssignments,
       });
       if (kernel.validation.invariantViolations.length > 0) {
         throwPrepareInvariant({
@@ -790,16 +868,19 @@ async function prepareOnce({
         if (unit.scheduledDate !== null) {
           const goalDateKey = `${goal.id}\u0000${unit.scheduledDate}`;
           if (goalDates.has(goalDateKey)) {
-            throwPrepareInvariant({
-              code: "duplicate_goal_date",
-              message:
-                "Planner prepare produced duplicate same-goal same-day assignments.",
-              details: {
+            reportError(
+              new Error(
+                "Planner prepare skipped duplicate same-goal same-day kernel output."
+              ),
+              {
+                scope: "planner.prepare",
+                code: "duplicate_goal_date",
                 goalId: goal.id,
                 unitKey: unit.unitKey,
                 scheduledDate: unit.scheduledDate,
-              },
-            });
+              }
+            );
+            continue;
           }
           goalDates.add(goalDateKey);
         }
@@ -867,52 +948,24 @@ async function prepareOnce({
     ])
   );
   for (const [key, generated] of generatedByKey) {
-    const existing = existingByKey.get(key);
     preparedByKey.set(
       key,
-      existing
-        ? {
-            goal_id: existing.goal_id,
-            unit_key: existing.unit_key,
-            scheduled_date: existing.scheduled_date,
-            original_scheduled_date:
-              existing.original_scheduled_date ?? existing.scheduled_date,
-            scheduled_time: existing.scheduled_time,
-            locked: existing.locked,
-          }
-        : {
-            goal_id: generated.goalId,
-            unit_key: generated.unitKey,
-            scheduled_date: generated.scheduledDate,
-            original_scheduled_date: generated.scheduledDate,
-            scheduled_time: generated.scheduledTimeOverride,
-            locked: generated.locked,
-          }
+      buildPreparedItem({
+        existing: existingByKey.get(key),
+        generated,
+        rebalanceExistingAssignments,
+      })
     );
   }
 
-  const preparedItems = Array.from(preparedByKey.values()).sort(
-    (left, right) =>
-      left.scheduled_date.localeCompare(right.scheduled_date) ||
-      left.goal_id.localeCompare(right.goal_id) ||
-      left.unit_key.localeCompare(right.unit_key)
+  const preparedItems = dedupePreparedItemsByGoalDate(
+    Array.from(preparedByKey.values()).sort(
+      (left, right) =>
+        left.scheduled_date.localeCompare(right.scheduled_date) ||
+        left.goal_id.localeCompare(right.goal_id) ||
+        left.unit_key.localeCompare(right.unit_key)
+    )
   );
-  const occupiedGoalDates = new Set<string>();
-  for (const item of preparedItems) {
-    const goalDate = `${item.goal_id}\u0000${item.scheduled_date}`;
-    if (occupiedGoalDates.has(goalDate)) {
-      throwPrepareInvariant({
-        code: "duplicate_goal_date",
-        message:
-          "Planner prepare produced duplicate same-goal same-day assignments.",
-        details: {
-          goalId: item.goal_id,
-          scheduledDate: item.scheduled_date,
-        },
-      });
-    }
-    occupiedGoalDates.add(goalDate);
-  }
 
   for (const goal of preparation.snapshot.goals) {
     const preparedOutcome = goalOutcomeByGoalId.get(goal.id);
@@ -1018,6 +1071,7 @@ export async function preparePlannerSchedule({
   capabilities = { crossMonthMovesEnabled: false },
   scopeMonth,
   visibleWindow,
+  rebalanceExistingAssignments = false,
   correlationId,
 }: {
   supabase: ServerSupabaseClient;
@@ -1025,11 +1079,20 @@ export async function preparePlannerSchedule({
   capabilities?: { crossMonthMovesEnabled: boolean };
   scopeMonth: string;
   visibleWindow: PreparationWindow;
+  rebalanceExistingAssignments?: boolean;
   correlationId?: string;
 }) {
-  let result = await prepareOnce({ supabase, ownerId });
+  let result = await prepareOnce({
+    supabase,
+    ownerId,
+    rebalanceExistingAssignments,
+  });
   if (result.stale) {
-    result = await prepareOnce({ supabase, ownerId });
+    result = await prepareOnce({
+      supabase,
+      ownerId,
+      rebalanceExistingAssignments,
+    });
   }
   if (result.stale) {
     throw new PlannerRouteError(

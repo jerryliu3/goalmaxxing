@@ -93,6 +93,7 @@ export const plannerKernelInputSchema = z
     eligibilityMode: eligibilityModeSchema,
     solveIntent: z.enum(["stable", "replan"]).optional(),
     preserveExistingAssignments: z.boolean().optional(),
+    rebalanceExistingAssignments: z.boolean().optional(),
     recoverPastPlacements: z.boolean().optional(),
     draftPinnedDates: z.record(z.string(), dateSchema).optional(),
     precoveredCountByGoalId: z

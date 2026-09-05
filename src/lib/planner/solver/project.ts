@@ -20,6 +20,7 @@ export function projectWorkUnitsToSolver({
   assessments,
   completionDatesByGoal = new Map(),
   preserveExistingAssignments = false,
+  rebalanceExistingAssignments = false,
   recoverPastPlacements = false,
   draftPinnedDates = {},
   idealDateContextByGoal = new Map(),
@@ -29,6 +30,7 @@ export function projectWorkUnitsToSolver({
   assessments: Map<string, GoalAssessment>;
   completionDatesByGoal?: Map<string, Set<string>>;
   preserveExistingAssignments?: boolean;
+  rebalanceExistingAssignments?: boolean;
   recoverPastPlacements?: boolean;
   draftPinnedDates?: Record<string, string>;
   idealDateContextByGoal?: Map<
@@ -65,9 +67,12 @@ export function projectWorkUnitsToSolver({
     if (isRecoverablePastPlacement(unit)) {
       return null;
     }
-    // Preserve mode keeps stability through previousDate/displacement cost only.
-    // Unlocked persisted rows stay interchangeable so prepare can rebalance
-    // deadline_total shortfalls instead of re-locking every assignment.
+    // Calendar-open prepare freezes unlocked persisted dates. Explicit rebuild
+    // (and non-preserve solves) keep them movable via previousDate so clustered
+    // deadline_total sessions can spread into open days.
+    if (preserveExistingAssignments && !rebalanceExistingAssignments) {
+      return unit.scheduledDate;
+    }
     return null;
   };
   // Preserve-mode placements before the active window (asOfDate moved forward)

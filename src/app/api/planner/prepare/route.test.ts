@@ -65,6 +65,7 @@ describe("planner prepare route", () => {
           start: "2026-07-01",
           end: "2026-09-30",
         },
+        rebalanceExistingAssignments: false,
       })
     );
   });
@@ -86,5 +87,25 @@ describe("planner prepare route", () => {
       message: `Planner window exceeds ${MAX_PLANNER_WINDOW_DAYS} days.`,
     });
     expect(mocks.preparePlannerSchedule).not.toHaveBeenCalled();
+  });
+
+  it("forwards explicit rebuild rebalance to prepare", async () => {
+    mocks.parseBoundedJsonBody.mockResolvedValueOnce({
+      scopeMonth: "2026-08",
+      visibleStart: "2026-07-01",
+      visibleEnd: "2026-09-30",
+      rebalanceExistingAssignments: true,
+    });
+
+    const response = await POST(
+      new Request("http://localhost/api/planner/prepare", { method: "POST" })
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.preparePlannerSchedule).toHaveBeenCalledWith(
+      expect.objectContaining({
+        rebalanceExistingAssignments: true,
+      })
+    );
   });
 });

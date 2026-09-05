@@ -109,6 +109,11 @@ export interface PlannerKernelInput {
   solveIntent?: SolverSolveIntent;
   preserveExistingAssignments?: boolean;
   /**
+   * When preserve mode is on, still allow unlocked persisted rows to move.
+   * Calendar-open prepare leaves this false; explicit rebuild sets it true.
+   */
+  rebalanceExistingAssignments?: boolean;
+  /**
    * Recovery mode: let the solver re-place uncredited units whose saved date
    * has already passed, instead of holding them at that stale date.
    *
@@ -818,6 +823,8 @@ export function runPlannerKernel(
     completionDatesByGoal,
     preserveExistingAssignments:
       rawInput.preserveExistingAssignments === true,
+    rebalanceExistingAssignments:
+      rawInput.rebalanceExistingAssignments === true,
     recoverPastPlacements: rawInput.recoverPastPlacements === true,
     draftPinnedDates: rawInput.draftPinnedDates ?? {},
     idealDateContextByGoal: new Map(
@@ -1048,6 +1055,8 @@ export function runPlannerKernel(
     solveIntent: rawInput.solveIntent ?? "stable",
     preserveExistingAssignments:
       rawInput.preserveExistingAssignments === true,
+    rebalanceExistingAssignments:
+      rawInput.rebalanceExistingAssignments === true,
     draftPinnedDates: rawInput.draftPinnedDates ?? {},
     precoveredCountByGoalId: rawInput.precoveredCountByGoalId ?? {},
     startDate: rawInput.startDate,

@@ -400,6 +400,12 @@ describe("preparePlannerSchedule", () => {
 
     await prepare();
 
+    expect(mocks.runPlannerKernel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        preserveExistingAssignments: true,
+        rebalanceExistingAssignments: false,
+      })
+    );
     const matchingItems = mocks.rpc.mock.calls[0]?.[1].p_items.filter(
       (item: { unit_key: string }) => item.unit_key === "milestone:1"
     );
@@ -409,6 +415,91 @@ describe("preparePlannerSchedule", () => {
         original_scheduled_date: "2026-08-12",
       }),
     ]);
+  });
+
+  it("persists kernel rebalance dates only when rebuild rebalance is requested", async () => {
+    const plannerGoal = goal({
+      frequency_type: "recurring",
+      recurrence_interval: "daily",
+      target_count: 5,
+      milestone_names: null,
+      start_date: "2026-09-01",
+      end_date: "2026-12-31",
+    });
+    const existing = persistedItem({
+      goal_id: plannerGoal.id,
+      unit_key: "total:1",
+      scheduled_date: "2026-12-19",
+      original_scheduled_date: "2026-12-19",
+      locked: false,
+    });
+    mocks.loadPlannerPreparationSnapshot.mockResolvedValue(
+      preparationSnapshot([plannerGoal], [existing])
+    );
+    mocks.runPlannerKernel.mockReturnValue(
+      kernelOutput(plannerGoal.id, [
+        { unitKey: "total:1", scheduledDate: "2026-09-10" },
+        { unitKey: "total:2", scheduledDate: "2026-09-15" },
+      ])
+    );
+
+    await preparePlannerSchedule({
+      supabase: { rpc: mocks.rpc } as never,
+      ownerId: OWNER_ID,
+      scopeMonth: "2026-08",
+      visibleWindow: { start: "2026-07-27", end: "2026-09-06" },
+      rebalanceExistingAssignments: true,
+    });
+
+    expect(mocks.runPlannerKernel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        preserveExistingAssignments: true,
+        rebalanceExistingAssignments: true,
+      })
+    );
+    const items = mocks.rpc.mock.calls[0]?.[1].p_items as Array<{
+      unit_key: string;
+      scheduled_date: string;
+      original_scheduled_date: string;
+    }>;
+    expect(items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unit_key: "total:1",
+          scheduled_date: "2026-09-10",
+          original_scheduled_date: "2026-12-19",
+        }),
+        expect.objectContaining({
+          unit_key: "total:2",
+          scheduled_date: "2026-09-15",
+        }),
+      ])
+    );
+  });
+
+  it("drops duplicate same-goal same-day rows instead of failing calendar prepare", async () => {
+    const plannerGoal = goal({ target_count: 2 });
+    mocks.loadPlannerPreparationSnapshot.mockResolvedValue(
+      preparationSnapshot([plannerGoal])
+    );
+    mocks.runPlannerKernel.mockReturnValue(
+      kernelOutput(plannerGoal.id, [
+        { unitKey: "milestone:1", scheduledDate: "2026-08-12" },
+        { unitKey: "milestone:2", scheduledDate: "2026-08-12" },
+      ])
+    );
+
+    await expect(prepare()).resolves.toBeDefined();
+    expect(mocks.rpc).toHaveBeenCalledTimes(1);
+    const items = mocks.rpc.mock.calls[0]?.[1].p_items as Array<{
+      unit_key: string;
+      scheduled_date: string;
+    }>;
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({
+      unit_key: "milestone:1",
+      scheduled_date: "2026-08-12",
+    });
   });
 
   it("solves each goal independently in common whole-month chunks no longer than 366 days", async () => {

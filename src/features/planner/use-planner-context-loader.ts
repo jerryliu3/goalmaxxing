@@ -26,6 +26,7 @@ export interface LoadPlannerContextOptions {
   showLoading?: boolean;
   toastOnError?: boolean;
   forcePrepare?: boolean;
+  rebalanceExistingAssignments?: boolean;
 }
 
 interface UsePlannerContextLoaderArgs {
@@ -68,6 +69,7 @@ export function usePlannerContextLoader({
       showLoading = true,
       toastOnError = false,
       forcePrepare = false,
+      rebalanceExistingAssignments = false,
     }: LoadPlannerContextOptions = {}) => {
       if (activeTab !== "calendar") {
         return false;
@@ -122,6 +124,9 @@ export function usePlannerContextLoader({
               scopeMonth: month,
               visibleStart,
               visibleEnd,
+              ...(rebalanceExistingAssignments
+                ? { rebalanceExistingAssignments: true }
+                : {}),
             })
           : await getJson<PlannerContextPayload>("/api/planner/context", {
               query: {

@@ -30,6 +30,7 @@ export interface GenerationHashInput {
   eligibilityMode: PlannerEligibilityMode;
   solveIntent: SolverSolveIntent;
   preserveExistingAssignments: boolean;
+  rebalanceExistingAssignments?: boolean;
   draftPinnedDates: Record<string, string>;
   precoveredCountByGoalId?: Record<string, number>;
   startDate: string;
@@ -63,6 +64,7 @@ export function computeGenerationInputHash(input: GenerationHashInput) {
       policyCompiler: POLICY_COMPILER_VERSION,
     },
     preserveExistingAssignments: input.preserveExistingAssignments,
+    rebalanceExistingAssignments: input.rebalanceExistingAssignments === true,
     draftPinnedDates: Object.fromEntries(
       Object.entries(input.draftPinnedDates).sort(([left], [right]) =>
         compareCanonicalStrings(left, right)
