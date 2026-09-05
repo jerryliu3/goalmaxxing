@@ -110,7 +110,7 @@ export function SettingsTab() {
             ? "Replay the app intro and page guides."
             : "Send product bugs or UX friction details directly to support.";
 
-  if (loading) {
+  if (loading && !state.userId) {
     return (
       <LoadingCard
         title="Loading settings..."

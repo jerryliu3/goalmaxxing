@@ -10,6 +10,7 @@ vi.mock("@/features/social/data", () => ({
   fetchSocialLeaderboards: (...args: unknown[]) => fetchSocialLeaderboardsMock(...args),
   fetchSocialLeaderboardStandings: (...args: unknown[]) =>
     fetchSocialLeaderboardStandingsMock(...args),
+  peekSocialLeaderboardsCache: () => null,
 }));
 
 vi.mock("@/features/social/social-freshness-indicator", () => ({

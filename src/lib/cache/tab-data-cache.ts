@@ -3,8 +3,12 @@ const DEFAULT_TAB_DATA_CACHE_SCOPE = "anonymous";
 export const TAB_DATA_CACHE_TTL_MS = 5 * 60 * 1000;
 
 interface TabDataCacheRecord<TValue> {
-  expiresAt: number;
+  freshUntil: number;
   value: TValue;
+}
+
+interface PersistedTabDataCacheRecord<TValue> extends TabDataCacheRecord<TValue> {
+  expiresAt?: number;
 }
 
 const tabDataCache = new Map<string, TabDataCacheRecord<unknown>>();
@@ -72,18 +76,29 @@ function normalizeTabDataCacheScope(scope: string | null | undefined) {
     : DEFAULT_TAB_DATA_CACHE_SCOPE;
 }
 
+function normalizeRecord<TValue>(
+  parsed: PersistedTabDataCacheRecord<TValue> | null
+): TabDataCacheRecord<TValue> | null {
+  if (!parsed || parsed.value === undefined) {
+    return null;
+  }
+  const freshUntil =
+    typeof parsed.freshUntil === "number"
+      ? parsed.freshUntil
+      : typeof parsed.expiresAt === "number"
+        ? parsed.expiresAt
+        : 0;
+  return { freshUntil, value: parsed.value };
+}
+
 function readPersistentRecord<TValue>(cacheKey: string) {
   try {
     const raw = sessionStorageGet(buildStorageKey(cacheKey));
     if (!raw) {
       return null;
     }
-    const parsed = JSON.parse(raw) as TabDataCacheRecord<TValue> | null;
-    if (!parsed || parsed.expiresAt < Date.now()) {
-      sessionStorageRemove(buildStorageKey(cacheKey));
-      return null;
-    }
-    return parsed;
+    const parsed = JSON.parse(raw) as PersistedTabDataCacheRecord<TValue> | null;
+    return normalizeRecord(parsed);
   } catch {
     return null;
   }
@@ -113,16 +128,10 @@ function purgePersistentStorageForOtherScopes(activeScope: string) {
   }
 }
 
-export function readTabDataCache<TValue>(cacheKey: string) {
-  const inMemory = tabDataCache.get(cacheKey) as
-    | TabDataCacheRecord<TValue>
-    | undefined;
+function readRecord<TValue>(cacheKey: string) {
+  const inMemory = tabDataCache.get(cacheKey) as TabDataCacheRecord<TValue> | undefined;
   if (inMemory) {
-    if (inMemory.expiresAt >= Date.now()) {
-      return inMemory.value;
-    }
-    tabDataCache.delete(cacheKey);
-    removePersistentRecord(cacheKey);
+    return inMemory;
   }
 
   const fromStorage = readPersistentRecord<TValue>(cacheKey);
@@ -131,7 +140,16 @@ export function readTabDataCache<TValue>(cacheKey: string) {
   }
 
   tabDataCache.set(cacheKey, fromStorage);
-  return fromStorage.value;
+  return fromStorage;
+}
+
+export function readTabDataCache<TValue>(cacheKey: string) {
+  return readRecord<TValue>(cacheKey)?.value ?? null;
+}
+
+export function isTabDataCacheFresh(cacheKey: string) {
+  const record = readRecord(cacheKey);
+  return Boolean(record && record.freshUntil > Date.now());
 }
 
 export function writeTabDataCache<TValue>(
@@ -140,7 +158,7 @@ export function writeTabDataCache<TValue>(
   ttlMs = TAB_DATA_CACHE_TTL_MS
 ) {
   const record: TabDataCacheRecord<TValue> = {
-    expiresAt: Date.now() + ttlMs,
+    freshUntil: Date.now() + ttlMs,
     value,
   };
   tabDataCache.set(cacheKey, record);
@@ -152,19 +170,42 @@ export function invalidateTabDataCache(cacheKey: string) {
   removePersistentRecord(cacheKey);
 }
 
-export function invalidateTabDataCacheByPrefix(prefix: string) {
+function markRecordStale(cacheKey: string) {
+  const record = readRecord(cacheKey);
+  if (!record) {
+    return;
+  }
+  const staleRecord = { ...record, freshUntil: 0 };
+  tabDataCache.set(cacheKey, staleRecord);
+  writePersistentRecord(cacheKey, staleRecord);
+}
+
+export function markTabDataCacheStaleByPrefix(prefix: string) {
+  const matchingKeys = new Set<string>();
   for (const key of tabDataCache.keys()) {
     if (key.startsWith(prefix)) {
-      tabDataCache.delete(key);
-      removePersistentRecord(key);
+      matchingKeys.add(key);
     }
   }
   const storagePrefix = buildStorageKey(prefix);
   for (const storageKey of sessionStorageKeys()) {
-    if (storageKey.startsWith(storagePrefix)) {
-      sessionStorageRemove(storageKey);
+    if (!storageKey.startsWith(storagePrefix)) {
+      continue;
+    }
+    const cacheKey = storageKey.slice(
+      `${TAB_DATA_CACHE_STORAGE_PREFIX}:${tabDataCacheScope}:`.length
+    );
+    if (cacheKey.startsWith(prefix)) {
+      matchingKeys.add(cacheKey);
     }
   }
+  for (const cacheKey of matchingKeys) {
+    markRecordStale(cacheKey);
+  }
+}
+
+export function invalidateTabDataCacheByPrefix(prefix: string) {
+  markTabDataCacheStaleByPrefix(prefix);
 }
 
 export function setTabDataCacheScope(scope: string | null | undefined) {

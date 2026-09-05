@@ -81,6 +81,7 @@ export function TabNav({
             <li key={tab.href} className="relative">
               <Link
                 href={tab.href}
+                prefetch={true}
                 onClick={() => {
                   if (!isAppTabActive(pathname, tab.href)) {
                     setOptimisticNav({ from: pathname, to: tab.href });

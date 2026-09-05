@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  isTabDataCacheFresh,
   readTabDataCache,
   resetTabDataCacheForTests,
   writeTabDataCache,
@@ -21,7 +22,7 @@ describe("invalidatePlannerRelatedTabCaches", () => {
     window.sessionStorage.clear();
   });
 
-  it("clears planner, checklist, insights, stats, and progress cache keys", () => {
+  it("marks planner, checklist, insights, stats, and progress cache keys stale", () => {
     writeTabDataCache(`${PLANNER_CONTEXT_CACHE_PREFIX}2026-08`, { context: true });
     writeTabDataCache(`${CHECKLIST_DATA_CACHE_PREFIX}viewer:2026-08-15`, { data: true });
     writeTabDataCache(`${INSIGHTS_DATA_CACHE_PREFIX}viewer:2026:2026-08-15`, {
@@ -34,17 +35,24 @@ describe("invalidatePlannerRelatedTabCaches", () => {
 
     invalidatePlannerRelatedTabCaches();
 
-    expect(readTabDataCache(`${PLANNER_CONTEXT_CACHE_PREFIX}2026-08`)).toBeNull();
+    expect(readTabDataCache(`${PLANNER_CONTEXT_CACHE_PREFIX}2026-08`)).toEqual({
+      context: true,
+    });
+    expect(isTabDataCacheFresh(`${PLANNER_CONTEXT_CACHE_PREFIX}2026-08`)).toBe(false);
     expect(
       readTabDataCache(`${CHECKLIST_DATA_CACHE_PREFIX}viewer:2026-08-15`)
-    ).toBeNull();
+    ).toEqual({ data: true });
+    expect(isTabDataCacheFresh(`${CHECKLIST_DATA_CACHE_PREFIX}viewer:2026-08-15`)).toBe(
+      false
+    );
     expect(
       readTabDataCache(`${INSIGHTS_DATA_CACHE_PREFIX}viewer:2026:2026-08-15`)
-    ).toBeNull();
+    ).toEqual({ data: true });
     expect(
       readTabDataCache(`${INSIGHTS_STATS_CACHE_PREFIX}:viewer:viewer`)
-    ).toBeNull();
-    expect(readTabDataCache("progress-context:test")).toBeNull();
+    ).toEqual({ data: true });
+    expect(readTabDataCache("progress-context:test")).toEqual({ progress: true });
+    expect(isTabDataCacheFresh("progress-context:test")).toBe(false);
   });
 
   it("notifies subscribers after cache invalidation", async () => {

@@ -44,6 +44,19 @@ describe("env schema", () => {
     expect(env.INTEGRATIONS_ROLLOUT_STAGE).toBe("off");
   });
 
+  it("enables social by default in local development", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    resetEnvCacheForTests();
+    expect(getServerEnv().SOCIAL_ENABLED).toBe(true);
+  });
+
+  it("lets SOCIAL_ENABLED=false turn social off in development", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("SOCIAL_ENABLED", "false");
+    resetEnvCacheForTests();
+    expect(getServerEnv().SOCIAL_ENABLED).toBe(false);
+  });
+
   it("requires core secrets in hosted production", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("VERCEL_ENV", "production");

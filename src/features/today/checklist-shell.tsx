@@ -11,7 +11,7 @@ import { toLocalDateString } from "@/lib/dates/day";
 import type { RecurrenceGroup } from "@/features/today/checklist-selectors";
 import type { GoalDateSort } from "@/lib/goals/list-view";
 
-export function ChecklistShell() {
+export function ChecklistShell({ isActive = true }: { isActive?: boolean }) {
   const { scope, activePartner, viewer, partner } = useDuoSurface("checklist");
   const [viewDate, setViewDate] = useState(toLocalDateString());
   const [showEndedGoals, setShowEndedGoals] = useState(false);
@@ -71,7 +71,7 @@ export function ChecklistShell() {
         <>
           <div className="mx-auto w-full md:max-w-3xl">
             <ChecklistSurface
-              isActive
+              isActive={isActive}
               sharedFilters={sharedFilters}
               contentMode="filters-only"
             />
@@ -82,7 +82,7 @@ export function ChecklistShell() {
             partner={partner}
             renderLane={(subject) => (
               <ChecklistSurface
-                isActive
+                isActive={isActive}
                 subjectUserId={subject.userId}
                 readOnly={subject.readOnly}
                 sharedFilters={sharedFilters}
@@ -99,7 +99,7 @@ export function ChecklistShell() {
           partner={partner}
           renderLane={(subject) => (
             <ChecklistSurface
-              isActive
+              isActive={isActive}
               subjectUserId={subject.userId}
               readOnly={subject.readOnly}
               sharedFilters={sharedFilters}

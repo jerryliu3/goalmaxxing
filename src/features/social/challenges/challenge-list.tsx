@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SocialFreshnessIndicator } from "@/features/social/social-freshness-indicator";
-import { fetchSocialChallenges } from "@/features/social/data";
+import { fetchSocialChallenges, peekSocialChallengesCache } from "@/features/social/data";
 import { ChallengeDetail } from "@/features/social/challenges/challenge-detail";
 import type { SocialChallenge } from "@/features/social/types";
 
@@ -18,10 +18,14 @@ export function ChallengeList({
   refreshToken = 0,
   onRefreshRequested,
 }: ChallengeListProps) {
-  const [items, setItems] = useState<SocialChallenge[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const cachedChallenges = peekSocialChallengesCache();
+  const [items, setItems] = useState<SocialChallenge[]>(cachedChallenges?.items ?? []);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    cachedChallenges?.items[0]?.id ?? null
+  );
+  const [isLoading, setIsLoading] = useState(!cachedChallenges);
   const [error, setError] = useState<string | null>(null);
+  const hasPaintedChallengesRef = useRef(Boolean(cachedChallenges));
 
   const selectedChallenge = useMemo(() => {
     if (!selectedId) {
@@ -31,10 +35,13 @@ export function ChallengeList({
   }, [items, selectedId]);
 
   const loadChallenges = useCallback(async () => {
-    setIsLoading(true);
+    if (!hasPaintedChallengesRef.current) {
+      setIsLoading(true);
+    }
     setError(null);
     try {
       const response = await fetchSocialChallenges();
+      hasPaintedChallengesRef.current = true;
       setItems(response.items);
       setSelectedId((previousSelectedId) => {
         if (
@@ -68,7 +75,7 @@ export function ChallengeList({
     };
   }, [isActive, loadChallenges, refreshToken]);
 
-  if (isLoading) {
+  if (isLoading && items.length === 0) {
     return (
       <Card className="shadow-sm">
         <CardHeader className="space-y-2">

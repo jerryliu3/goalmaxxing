@@ -7,7 +7,8 @@ import type {
 } from "@/features/social/types";
 import type { SocialTeamStateResponse } from "@cadence/shared/social/team";
 import {
-  invalidateTabDataCacheByPrefix,
+  isTabDataCacheFresh,
+  markTabDataCacheStaleByPrefix,
   readTabDataCache,
   writeTabDataCache,
 } from "@/lib/cache/tab-data-cache";
@@ -48,7 +49,7 @@ interface SocialFreshnessResponse {
 
 export type FeedReactionKind = "cheer" | "fire" | "clap" | "strong";
 export const SOCIAL_TAB_CACHE_PREFIX = "social:";
-const SOCIAL_FEED_CACHE_PREFIX = `${SOCIAL_TAB_CACHE_PREFIX}feed:`;
+export const SOCIAL_FEED_CACHE_PREFIX = `${SOCIAL_TAB_CACHE_PREFIX}feed:`;
 const SOCIAL_FEED_CACHE_TTL_MS = 60 * 1000;
 
 async function parseApiError(response: Response, fallbackMessage: string) {
@@ -60,11 +61,11 @@ async function parseApiError(response: Response, fallbackMessage: string) {
 }
 
 export function invalidateSocialTabCache() {
-  invalidateTabDataCacheByPrefix(SOCIAL_TAB_CACHE_PREFIX);
+  markTabDataCacheStaleByPrefix(SOCIAL_TAB_CACHE_PREFIX);
 }
 
 export function invalidateSocialFeedCache() {
-  invalidateTabDataCacheByPrefix(SOCIAL_FEED_CACHE_PREFIX);
+  markTabDataCacheStaleByPrefix(SOCIAL_FEED_CACHE_PREFIX);
 }
 
 function invalidateSocialAndPlannerCaches() {
@@ -77,14 +78,16 @@ async function fetchSocialCachedJson<TPayload>({
   path,
   fallbackMessage,
   ttlMs,
+  forceRefresh = false,
 }: {
   cacheKey: string;
   path: string;
   fallbackMessage: string;
   ttlMs?: number;
+  forceRefresh?: boolean;
 }) {
   const cached = readTabDataCache<TPayload>(cacheKey);
-  if (cached) {
+  if (cached && !forceRefresh && isTabDataCacheFresh(cacheKey)) {
     return cached;
   }
 
@@ -100,7 +103,7 @@ async function fetchSocialCachedJson<TPayload>({
   return payload;
 }
 
-export async function fetchSocialFeedPage({
+export function peekSocialFeedPageCache({
   cursor,
   scope = "global",
   limit = 20,
@@ -108,6 +111,30 @@ export async function fetchSocialFeedPage({
   cursor?: string | null;
   scope?: "global" | "team" | "actor";
   limit?: number;
+} = {}) {
+  const params = new URLSearchParams();
+  params.set("scope", scope);
+  params.set("limit", String(limit));
+  if (cursor) {
+    params.set("cursor", cursor);
+  }
+  return readTabDataCache<{
+    schemaVersion: "1";
+    items: SocialFeedEvent[];
+    nextCursor: string | null;
+  }>(`${SOCIAL_FEED_CACHE_PREFIX}${params.toString()}`);
+}
+
+export async function fetchSocialFeedPage({
+  cursor,
+  scope = "global",
+  limit = 20,
+  forceRefresh = false,
+}: {
+  cursor?: string | null;
+  scope?: "global" | "team" | "actor";
+  limit?: number;
+  forceRefresh?: boolean;
 }) {
   const params = new URLSearchParams();
   params.set("scope", scope);
@@ -120,6 +147,7 @@ export async function fetchSocialFeedPage({
     path: `/api/social/feed?${params.toString()}`,
     fallbackMessage: "Failed to load feed.",
     ttlMs: SOCIAL_FEED_CACHE_TTL_MS,
+    forceRefresh,
   });
 }
 
@@ -152,11 +180,28 @@ export async function fetchSocialFreshness() {
   return (await response.json()) as SocialFreshnessResponse;
 }
 
-export async function fetchSocialChallenges() {
+export function peekSocialChallengesCache() {
+  return readTabDataCache<SocialChallengesResponse>(`${SOCIAL_TAB_CACHE_PREFIX}challenges`);
+}
+
+export function peekSocialLeaderboardsCache() {
+  return readTabDataCache<SocialLeaderboardsResponse>(`${SOCIAL_TAB_CACHE_PREFIX}leaderboards`);
+}
+
+export function peekSocialTeamStateCache() {
+  return readTabDataCache<SocialTeamStateResponse>(`${SOCIAL_TAB_CACHE_PREFIX}team`);
+}
+
+export async function fetchSocialChallenges({
+  forceRefresh = false,
+}: {
+  forceRefresh?: boolean;
+} = {}) {
   return fetchSocialCachedJson<SocialChallengesResponse>({
     cacheKey: `${SOCIAL_TAB_CACHE_PREFIX}challenges`,
     path: "/api/social/challenges",
     fallbackMessage: "Failed to load challenges.",
+    forceRefresh,
   });
 }
 
@@ -196,11 +241,16 @@ export async function leaveSocialChallenge(challengeId: string) {
   return payload;
 }
 
-export async function fetchSocialLeaderboards() {
+export async function fetchSocialLeaderboards({
+  forceRefresh = false,
+}: {
+  forceRefresh?: boolean;
+} = {}) {
   return fetchSocialCachedJson<SocialLeaderboardsResponse>({
     cacheKey: `${SOCIAL_TAB_CACHE_PREFIX}leaderboards`,
     path: "/api/social/leaderboards",
     fallbackMessage: "Failed to load leaderboards.",
+    forceRefresh,
   });
 }
 
@@ -218,11 +268,16 @@ export async function fetchSocialLeaderboardStandings(
   });
 }
 
-export async function fetchSocialTeamState() {
+export async function fetchSocialTeamState({
+  forceRefresh = false,
+}: {
+  forceRefresh?: boolean;
+} = {}) {
   return fetchSocialCachedJson<SocialTeamStateResponse>({
     cacheKey: `${SOCIAL_TAB_CACHE_PREFIX}team`,
     path: "/api/social/team",
     fallbackMessage: "Failed to load team state.",
+    forceRefresh,
   });
 }
 

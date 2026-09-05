@@ -12,6 +12,7 @@ import {
   declineSocialTeamInvite,
   dissolveSocialTeam,
   fetchSocialTeamState,
+  peekSocialTeamStateCache,
 } from "@/features/social/data";
 import {
   TEAM_NUDGE_USER_TEXT_MAX_LENGTH,
@@ -28,7 +29,8 @@ interface TeamPanelProps {
 
 export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps) {
   const router = useAppRouter();
-  const [rows, setRows] = useState<TeamStateRow[]>([]);
+  const cachedTeam = peekSocialTeamStateCache();
+  const [rows, setRows] = useState<TeamStateRow[]>(cachedTeam?.items ?? []);
   const [partnerUsername, setPartnerUsername] = useState("");
   const [message, setMessage] = useState("");
   const [nudgeMessage, setNudgeMessage] = useState("");

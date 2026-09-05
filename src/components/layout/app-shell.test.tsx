@@ -43,6 +43,9 @@ vi.mock("@/components/intro/journey-intro-overlay", () => ({
 vi.mock("@/lib/cache/tab-data-cache", () => ({
   setTabDataCacheScope: (scope: string) => cacheScopeMock.setScope(scope),
 }));
+vi.mock("@/lib/cache/use-idle-app-prefetch", () => ({
+  useIdleAppPrefetch: () => undefined,
+}));
 
 const emptyDuoProps = {
   duoState: {

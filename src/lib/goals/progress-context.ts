@@ -5,7 +5,8 @@ import {
   isApiClientTransportError,
 } from "@/lib/api/client";
 import {
-  invalidateTabDataCacheByPrefix,
+  isTabDataCacheFresh,
+  markTabDataCacheStaleByPrefix,
   readTabDataCache,
   TAB_DATA_CACHE_TTL_MS,
   writeTabDataCache,
@@ -66,7 +67,7 @@ export function isProgressContextAuthenticationError(
 }
 
 export function invalidateProgressContextCache() {
-  invalidateTabDataCacheByPrefix(PROGRESS_CONTEXT_CACHE_PREFIX);
+  markTabDataCacheStaleByPrefix(PROGRESS_CONTEXT_CACHE_PREFIX);
 }
 
 function isProgressContextResponse(payload: unknown): payload is ProgressContextResponse {
@@ -95,7 +96,7 @@ export async function fetchProgressContext({
   });
   const cacheKey = `${PROGRESS_CONTEXT_CACHE_PREFIX}${query.toString()}`;
   const cached = readTabDataCache<ProgressContextResponse>(cacheKey);
-  if (!forceRefresh && cached) {
+  if (!forceRefresh && cached && isTabDataCacheFresh(cacheKey)) {
     return cached;
   }
 

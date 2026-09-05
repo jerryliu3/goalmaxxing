@@ -16,6 +16,7 @@ import { DuoProvider } from "@/features/social/duo/duo-context";
 import { DuoScopeToggle } from "@/features/social/duo/duo-scope-toggle";
 import { PublicProfileSheetProvider } from "@/features/social/public-profile/public-profile-sheet-provider";
 import { setTabDataCacheScope } from "@/lib/cache/tab-data-cache";
+import { useIdleAppPrefetch } from "@/lib/cache/use-idle-app-prefetch";
 import { withHrefPrefix } from "@/lib/navigation/demo-path";
 import type {
   DuoAvailability,
@@ -56,6 +57,12 @@ export function AppShell({
   onNewGoalClick,
 }: AppShellProps) {
   setTabDataCacheScope(userId);
+  useIdleAppPrefetch({
+    userId,
+    partnerId: duoState.activePartner?.partnerId ?? null,
+    plannerPrimaryTabPreference,
+    hrefPrefix,
+  });
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = searchParams.toString();

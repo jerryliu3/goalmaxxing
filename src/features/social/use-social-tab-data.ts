@@ -11,7 +11,16 @@ import {
   normalizeAvatarUrlDraft,
 } from "@/features/social/avatar-url";
 import { getApiErrorMessage, putJson } from "@/lib/api/client";
-import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
+import {
+  invalidatePlannerRelatedTabCaches,
+  SETTINGS_DATA_CACHE_PREFIX,
+} from "@/lib/cache/planner-tab-cache";
+import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
+import {
+  isTabDataCacheFresh,
+  readTabDataCache,
+  writeTabDataCache,
+} from "@/lib/cache/tab-data-cache";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
 import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
@@ -79,14 +88,35 @@ const defaultPlannerPreferencesState: PlannerPreferencesState = {
   restWeekdays: [],
 };
 
+const SETTINGS_TAB_CACHE_KEY = `${SETTINGS_DATA_CACHE_PREFIX}v1`;
+
+interface SettingsTabCachePayload {
+  state: SocialState;
+  authEmail: string;
+  profileDraft: {
+    username: string;
+    display_name: string;
+    avatar_url: string;
+    planner_primary_tab: ReturnType<typeof normalizePlannerPrimaryTabPreference>;
+    social_activity_visible: boolean;
+  };
+  plannerPreferencesPersisted: PlannerPreferencesState;
+  plannerPreferencesDraft: PlannerPreferencesDraft;
+}
+
+function readSettingsTabCache() {
+  return readTabDataCache<SettingsTabCachePayload>(SETTINGS_TAB_CACHE_KEY);
+}
+
 export function useSocialTabData() {
   const supabase = useMemo(() => createClient(), []);
   const router = useAppRouter();
-  const [state, setState] = useState<SocialState>(initialState);
-  const [loading, setLoading] = useState(true);
+  const cachedSettings = readSettingsTabCache();
+  const [state, setState] = useState<SocialState>(cachedSettings?.state ?? initialState);
+  const [loading, setLoading] = useState(!cachedSettings);
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
-  const [authEmail, setAuthEmail] = useState("");
+  const [authEmail, setAuthEmail] = useState(cachedSettings?.authEmail ?? "");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Profile[]>([]);
   const [selectedShareGoalIds, setSelectedShareGoalIds] = useState<string[]>(
@@ -102,25 +132,46 @@ export function useSocialTabData() {
     }
   );
   const [sharedMonthCursor, setSharedMonthCursor] = useState(new Date());
-  const [profileDraft, setProfileDraft] = useState({
-    username: "",
-    display_name: "",
-    avatar_url: "",
-    planner_primary_tab: DEFAULT_PLANNER_PRIMARY_TAB_PREFERENCE,
-    social_activity_visible: true,
-  });
-  const [plannerPreferencesLoading, setPlannerPreferencesLoading] = useState(true);
+  const [profileDraft, setProfileDraft] = useState(
+    cachedSettings?.profileDraft ?? {
+      username: "",
+      display_name: "",
+      avatar_url: "",
+      planner_primary_tab: DEFAULT_PLANNER_PRIMARY_TAB_PREFERENCE,
+      social_activity_visible: true,
+    }
+  );
+  const [plannerPreferencesLoading, setPlannerPreferencesLoading] = useState(
+    !cachedSettings
+  );
   const [plannerPreferencesPersisted, setPlannerPreferencesPersisted] =
-    useState<PlannerPreferencesState>(defaultPlannerPreferencesState);
+    useState<PlannerPreferencesState>(
+      cachedSettings?.plannerPreferencesPersisted ?? defaultPlannerPreferencesState
+    );
   const [plannerPreferencesDraft, setPlannerPreferencesDraft] =
-    useState<PlannerPreferencesDraft>({
-      timezone: defaultPlannerPreferencesState.timezone,
-      weekStartsOn: defaultPlannerPreferencesState.weekStartsOn,
-    });
+    useState<PlannerPreferencesDraft>(
+      cachedSettings?.plannerPreferencesDraft ?? {
+        timezone: defaultPlannerPreferencesState.timezone,
+        weekStartsOn: defaultPlannerPreferencesState.weekStartsOn,
+      }
+    );
 
   const loadData = useCallback(async () => {
-    setLoading(true);
-    setPlannerPreferencesLoading(true);
+    const cached = readSettingsTabCache();
+    if (cached && isTabDataCacheFresh(SETTINGS_TAB_CACHE_KEY)) {
+      setState(cached.state);
+      setAuthEmail(cached.authEmail);
+      setProfileDraft(cached.profileDraft);
+      setPlannerPreferencesPersisted(cached.plannerPreferencesPersisted);
+      setPlannerPreferencesDraft(cached.plannerPreferencesDraft);
+      setPlannerPreferencesLoading(false);
+      setLoading(false);
+      return;
+    }
+    if (!cached) {
+      setLoading(true);
+      setPlannerPreferencesLoading(true);
+    }
 
     const {
       data: { user },
@@ -244,6 +295,34 @@ export function useSocialTabData() {
       completions,
       profileDirectory: profileById,
     });
+    writeTabDataCache(SETTINGS_TAB_CACHE_KEY, {
+      state: {
+        userId: user.id,
+        profile,
+        ownGoals,
+        sharedGoals,
+        sharedEntries,
+        outgoingShares,
+        sharedOwners,
+        completions,
+        profileDirectory: profileById,
+      },
+      authEmail: user.email ?? "",
+      profileDraft: {
+        username: profile?.username ?? "",
+        display_name: profile?.display_name ?? "",
+        avatar_url: profile?.avatar_url ?? "",
+        planner_primary_tab: normalizePlannerPrimaryTabPreference(
+          profile?.planner_primary_tab
+        ),
+        social_activity_visible: profile?.social_activity_visible ?? true,
+      },
+      plannerPreferencesPersisted: nextPlannerPreferences,
+      plannerPreferencesDraft: {
+        timezone: nextPlannerPreferences.timezone,
+        weekStartsOn: nextPlannerPreferences.weekStartsOn,
+      },
+    });
     setLoading(false);
   }, [supabase]);
 
@@ -254,6 +333,10 @@ export function useSocialTabData() {
 
     void run();
   }, [loadData]);
+
+  usePlannerTabCacheInvalidation(() => {
+    void loadData();
+  });
 
   useEffect(() => {
     const searchQuery = searchTerm.trim().toLowerCase();

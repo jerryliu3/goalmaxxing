@@ -6,6 +6,7 @@ import { FeedList } from "@/features/social/feed/feed-list";
 vi.mock("@/features/social/data", () => ({
   fetchSocialFeedPage: vi.fn(),
   fetchSocialFeedHead: vi.fn(),
+  peekSocialFeedPageCache: vi.fn(() => null),
 }));
 
 vi.mock("@/features/social/feed/feed-event-card", () => ({

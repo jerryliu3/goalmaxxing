@@ -28,8 +28,10 @@ import {
 } from "@/features/planner/use-calendar-surface-ui-effects";
 import { getDateInTimezone, resolveUserTimezone } from "@/lib/dates/timezone";
 import {
+  buildPlannerContextCacheKey,
   invalidatePlannerRelatedTabCaches,
 } from "@/lib/cache/planner-tab-cache";
+import { readTabDataCache } from "@/lib/cache/tab-data-cache";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import type {
   CalendarSurfaceProps,
@@ -78,7 +80,12 @@ export function CalendarSurface({
   partnerCompletionMarkersByDate,
   partnerOverlayError,
 }: CalendarSurfaceProps) {
-  const [context, setContext] = useState<PlannerContextPayload | null>(null);
+  const [context, setContext] = useState<PlannerContextPayload | null>(() => {
+    if (!month) {
+      return null;
+    }
+    return readTabDataCache<PlannerContextPayload>(buildPlannerContextCacheKey(month));
+  });
   const [loading, setLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);

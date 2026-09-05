@@ -52,6 +52,7 @@ describe("ChecklistShell", () => {
     expect(checklistSurfaceMock).toHaveBeenCalledTimes(1);
     expect(checklistSurfaceMock.mock.calls[0]?.[0]).toMatchObject({
       readOnly: false,
+      isActive: true,
     });
   });
 
@@ -87,6 +88,7 @@ describe("ChecklistShell", () => {
     expect(checklistSurfaceMock).toHaveBeenCalledTimes(3);
     expect(checklistSurfaceMock.mock.calls[0]?.[0]).toMatchObject({
       contentMode: "filters-only",
+      isActive: true,
     });
     expect(checklistSurfaceMock.mock.calls[1]?.[0]).toMatchObject({
       contentMode: "goals-only",
@@ -98,6 +100,15 @@ describe("ChecklistShell", () => {
       showFiltersSection: false,
       readOnly: true,
       subjectUserId: "partner-1",
+    });
+  });
+
+  it("keeps checklist surfaces inactive when the calendar surface is showing", () => {
+    render(<ChecklistShell isActive={false} />);
+
+    expect(checklistSurfaceMock).toHaveBeenCalledTimes(1);
+    expect(checklistSurfaceMock.mock.calls[0]?.[0]).toMatchObject({
+      isActive: false,
     });
   });
 });

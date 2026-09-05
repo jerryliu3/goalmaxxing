@@ -5,6 +5,7 @@ import {
   isApiClientTransportError,
 } from "@/lib/api/client";
 import {
+  isTabDataCacheFresh,
   readTabDataCache,
   TAB_DATA_CACHE_TTL_MS,
   writeTabDataCache,
@@ -59,7 +60,7 @@ export async function fetchInsightsStats({
     : null;
   if (cacheKey) {
     const cached = readTabDataCache<InsightsStatsResponse>(cacheKey);
-    if (!forceRefresh && cached) {
+    if (!forceRefresh && cached && isTabDataCacheFresh(cacheKey)) {
       return cached;
     }
   }
