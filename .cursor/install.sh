@@ -14,7 +14,12 @@ cd "$REPO_ROOT"
 if ! command -v docker >/dev/null 2>&1 || ! command -v fuse-overlayfs >/dev/null 2>&1; then
   echo "[install] Installing docker.io + fuse-overlayfs..."
   sudo apt-get update -qq
-  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq docker.io fuse-overlayfs
+  # Keep existing conffiles (e.g. /etc/fuse.conf) so dpkg never prompts on stdin,
+  # which would otherwise fail the non-interactive build.
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+    -o Dpkg::Options::=--force-confdef \
+    -o Dpkg::Options::=--force-confold \
+    docker.io fuse-overlayfs
 fi
 
 # Let the unprivileged user talk to the Docker socket without sudo.
