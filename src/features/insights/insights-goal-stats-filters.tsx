@@ -13,6 +13,7 @@ import {
 import { GoalListControls } from "@/features/goals/goal-list-controls";
 import { InsightsPeriodControls } from "@/features/insights/insights-period-controls";
 import type { HeatmapViewMode } from "@/features/insights/insights-tab";
+import { toggleExclusiveSelection } from "@/lib/filters/toggle-exclusive-selection";
 import type { GoalDateSort } from "@/lib/goals/list-view";
 import type { Goal } from "@/lib/goals/types";
 
@@ -97,11 +98,7 @@ export function InsightsGoalStatsFilters({
                 onEndMonthsChange([]);
                 return;
               }
-              onEndMonthsChange(
-                endMonths.includes(option.value)
-                  ? endMonths.filter((month) => month !== option.value)
-                  : [...endMonths, option.value]
-              );
+              onEndMonthsChange(toggleExclusiveSelection(endMonths, option.value));
             }}
           >
             {option.label}

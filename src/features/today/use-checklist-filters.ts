@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { toLocalDateString } from "@/lib/dates/day";
+import { toggleExclusiveSelection } from "@/lib/filters/toggle-exclusive-selection";
 import {
   INITIAL_GROUP_EXPANDED,
   recurrenceFilterOptions,
@@ -148,11 +149,7 @@ export function useChecklistFilters(sharedFilters?: ChecklistSharedFilters) {
 
   const toggleCategoryFilter = useCallback(
     (categoryKey: string) => {
-      setCategoryFilters(
-        categoryFilters.includes(categoryKey)
-          ? categoryFilters.filter((key) => key !== categoryKey)
-          : [...categoryFilters, categoryKey]
-      );
+      setCategoryFilters(toggleExclusiveSelection(categoryFilters, categoryKey));
     },
     [categoryFilters, setCategoryFilters]
   );
@@ -160,9 +157,7 @@ export function useChecklistFilters(sharedFilters?: ChecklistSharedFilters) {
   const toggleRecurrenceFilter = useCallback(
     (recurrence: RecurrenceGroup) => {
       setRecurrenceFilters(
-        recurrenceFilters.includes(recurrence)
-          ? recurrenceFilters.filter((value) => value !== recurrence)
-          : [...recurrenceFilters, recurrence]
+        toggleExclusiveSelection(recurrenceFilters, recurrence)
       );
     },
     [recurrenceFilters, setRecurrenceFilters]
