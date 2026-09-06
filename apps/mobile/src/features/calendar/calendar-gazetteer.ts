@@ -14,6 +14,24 @@ export function resolveMobileSessionFill(
   return gazetteerFillForGoal(goal?.color ?? null, goal?.category ?? null);
 }
 
+export function gazetteerFillWithAlpha(hex: string, alpha: number) {
+  const normalized = hex.startsWith("#") ? hex.slice(1) : hex;
+  if (normalized.length !== 6) {
+    return hex;
+  }
+  const channel = Math.round(Math.min(1, Math.max(0, alpha)) * 255)
+    .toString(16)
+    .padStart(2, "0");
+  return `#${normalized}${channel}`;
+}
+
+export function selectMobileMonthPills<T>(units: T[], maxVisible = 2) {
+  return {
+    visible: units.slice(0, maxVisible),
+    overflowCount: Math.max(0, units.length - maxVisible),
+  };
+}
+
 export function selectMobileRecoverCopy(
   unplaceableGoals: PlannerContextPayload["unplaceableGoals"]
 ) {

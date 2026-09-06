@@ -5,7 +5,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
 import {
   Modal,
@@ -28,7 +27,7 @@ import { useCalendarStore } from "../../store/calendar-state";
 import { useTheme } from "../../theme";
 import { PrimaryButton } from "../../ui/button";
 import { LoadingScreen, Screen } from "../../ui/screen";
-import { CoachPanel } from "./CoachPanel";
+import { ChecklistScreen } from "../checklist/ChecklistScreen";
 import { CalendarPartnerReadOnlySection } from "./CalendarPartnerReadOnlySection";
 import { useDuo, useDuoSurfaceScope } from "../duo/DuoProvider";
 import { DuoScopeSegmentedControl } from "../duo/DuoScopeSegmentedControl";
@@ -58,7 +57,9 @@ import { useCalendarPartnerOverlay } from "./use-calendar-partner-overlay";
 import { shiftMonth, usePlannerContext } from "./use-planner-context";
 import { resolveActivePlanItem } from "./resolve-active-plan-item";
 import {
+  gazetteerFillWithAlpha,
   resolveMobileSessionFill,
+  selectMobileMonthPills,
   selectMobileRecoverCopy,
 } from "./calendar-gazetteer";
 
@@ -93,11 +94,7 @@ function MeasureableDay({
   );
 }
 
-export function CalendarScreen({
-  plannerNavigation,
-}: {
-  plannerNavigation?: ReactNode;
-} = {}) {
+export function CalendarScreen() {
   const theme = useTheme();
   const { month, day, viewMode, apply } = useCalendarStore();
   const { ready, scope, hasActivePartner } =
@@ -327,7 +324,6 @@ export function CalendarScreen({
 
   return (
     <Screen title="Plan" kicker={viewMode === "day" ? "Day" : "Calendar"}>
-      {plannerNavigation}
       <DuoScopeSegmentedControl surface="calendar" />
       {readOnlyState.banner && (readOnlyState.allowMutations || viewMode === "month") ? (
         <View
@@ -407,9 +403,11 @@ export function CalendarScreen({
       {viewMode === "month" ? (
         <View style={styles.grid}>
           {buildMonthCells(scopeMonth, weekStartsOn).map((cell) => {
-            const viewerSessionCount = readOnlyState.showViewerSessions
-              ? (unitsByDate.get(cell.date)?.length ?? 0)
-              : 0;
+            const viewerSessions = readOnlyState.showViewerSessions
+              ? (unitsByDate.get(cell.date) ?? [])
+              : [];
+            const viewerSessionCount = viewerSessions.length;
+            const monthPills = selectMobileMonthPills(viewerSessions);
             const partnerMarkers = partnerOverlay.markersByDate.get(cell.date) ?? [];
             const markerModel = buildCalendarMonthMarkerModel({
               markers: partnerMarkers,
@@ -452,14 +450,37 @@ export function CalendarScreen({
                   <Text style={{ color: theme.colors.foreground, fontSize: 12 }}>
                     {cell.date.slice(8)}
                   </Text>
-                  {readOnlyState.showViewerSessions ? (
+                  {readOnlyState.showViewerSessions
+                    ? monthPills.visible.map((unit) => {
+                        const fill = resolveMobileSessionFill(planner.data, unit);
+                        const credited = unit.creditState !== "uncredited";
+                        return (
+                          <View
+                            key={unitEntryKey(unit)}
+                            accessible={false}
+                            style={[
+                              styles.monthPill,
+                              {
+                                backgroundColor: gazetteerFillWithAlpha(
+                                  fill,
+                                  credited ? 0.4 : 0.18
+                                ),
+                                borderColor: fill,
+                              },
+                            ]}
+                          />
+                        );
+                      })
+                    : null}
+                  {readOnlyState.showViewerSessions && monthPills.overflowCount > 0 ? (
                     <Text
                       style={{
                         color: theme.colors.mutedForeground,
                         fontSize: 10,
+                        fontWeight: "700",
                       }}
                     >
-                      {viewerSessionCount}
+                      +{monthPills.overflowCount}
                     </Text>
                   ) : null}
                   {markerModel.visibleMarkers.map((marker) => (
@@ -565,6 +586,9 @@ export function CalendarScreen({
           </MeasureableDay>
         ))
       )}
+      {viewMode === "day" ? (
+        <ChecklistScreen embedded asOfDate={selectedDay} />
+      ) : null}
       {readOnlyState.allowMutations && draft.dirty ? (
         <>
           <Text style={{ color: theme.colors.mutedForeground }}>
@@ -751,7 +775,13 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     padding: 4,
   },
-  cellPress: { flex: 1 },
+  cellPress: { flex: 1, gap: 3 },
+  monthPill: {
+    height: 5,
+    borderRadius: 99,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginTop: 3,
+  },
   partnerDot: {
     width: 8,
     height: 8,

@@ -62,9 +62,9 @@ export interface ChecklistLaneData {
   progress: ProgressContextResponse | null;
 }
 
-export function useChecklistClock() {
+export function useChecklistClock(asOfDate?: string) {
   return {
-    asOfDate: todayIso(),
+    asOfDate: asOfDate ?? todayIso(),
     timezone: timezoneName(),
   };
 }
@@ -74,16 +74,18 @@ export function useChecklistLaneData({
   partnerId,
   enabled,
   includeGoals = true,
+  asOfDate: asOfDateOverride,
 }: {
   subject: DuoLaneSubject;
   partnerId: string | null;
   enabled: boolean;
   includeGoals?: boolean;
+  asOfDate?: string;
 }): ChecklistLaneData {
   const { userId } = useSession();
   const queryClient = useQueryClient();
   const [completionErrorMessage, setCompletionErrorMessage] = useState<string | null>(null);
-  const { asOfDate, timezone } = useChecklistClock();
+  const { asOfDate, timezone } = useChecklistClock(asOfDateOverride);
   const interactive = isChecklistLaneInteractive(subject);
   const subjectReady = subject.id === "viewer" ? Boolean(userId) : Boolean(subject.userId);
   const laneEnabled = Boolean(userId) && enabled && subjectReady;
