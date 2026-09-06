@@ -8,6 +8,34 @@ export const SETTINGS_SECTIONS = [
 
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 
+export const SETTINGS_GROUPS: Array<{
+  key: "plan" | "connected" | "account";
+  label: string;
+  items: Array<{ key: SettingsSection; label: string }>;
+}> = [
+  {
+    key: "plan",
+    label: "Plan",
+    items: [
+      { key: "preferences", label: "Preferences" },
+      { key: "onboarding", label: "Onboarding guides" },
+    ],
+  },
+  {
+    key: "connected",
+    label: "Connected",
+    items: [
+      { key: "notifications", label: "Notifications" },
+      { key: "integrations", label: "Integrations" },
+    ],
+  },
+  {
+    key: "account",
+    label: "Account",
+    items: [{ key: "report-issue", label: "Report an issue" }],
+  },
+];
+
 export function resolveSettingsSection(
   value: string | null | undefined
 ): SettingsSection | null {
