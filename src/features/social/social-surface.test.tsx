@@ -22,22 +22,6 @@ vi.mock("@/features/social/data", () => ({
   invalidateSocialTabCache: vi.fn(),
 }));
 
-vi.mock("@/features/social/feed/feed-list", () => ({
-  FeedList: ({
-    isActive,
-    refreshToken,
-  }: {
-    isActive?: boolean;
-    refreshToken?: number;
-  }) => (
-    <div
-      data-testid="feed-list"
-      data-is-active={String(isActive)}
-      data-refresh-token={String(refreshToken)}
-    />
-  ),
-}));
-
 vi.mock("@/features/social/challenges/challenge-list", () => ({
   ChallengeList: ({ refreshToken }: { refreshToken?: number }) => (
     <div

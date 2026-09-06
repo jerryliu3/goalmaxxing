@@ -3,7 +3,6 @@ import { getMonthInTimezone } from "@/features/planner/calendar-format";
 import type { PlannerContextPayload } from "@/features/planner/calendar-surface.types";
 import {
   fetchSocialChallenges,
-  fetchSocialFeedPage,
   fetchSocialLeaderboards,
   fetchSocialTeamState,
 } from "@/features/social/data";
@@ -100,7 +99,6 @@ export async function warmAppTabData({
     includeProgressContext ? warmChecklist() : Promise.resolve(),
     includeProgressContext ? warmInsights() : Promise.resolve(),
     warmPlanner(),
-    fetchSocialFeedPage({ scope: "global", limit: 20, forceRefresh }),
     fetchSocialChallenges({ forceRefresh }),
     fetchSocialLeaderboards({ forceRefresh }),
     fetchSocialTeamState({ forceRefresh }),

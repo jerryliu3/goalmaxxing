@@ -4,7 +4,6 @@ const mocks = vi.hoisted(() => ({
   fetchChecklistTodayData: vi.fn(),
   fetchInsightsData: vi.fn(),
   getJson: vi.fn(),
-  fetchSocialFeedPage: vi.fn(),
   fetchSocialChallenges: vi.fn(),
   fetchSocialLeaderboards: vi.fn(),
   fetchSocialTeamState: vi.fn(),
@@ -24,7 +23,6 @@ vi.mock("@/lib/api/client", () => ({
 
 vi.mock("@/features/social/data", () => ({
   fetchSocialChallenges: mocks.fetchSocialChallenges,
-  fetchSocialFeedPage: mocks.fetchSocialFeedPage,
   fetchSocialLeaderboards: mocks.fetchSocialLeaderboards,
   fetchSocialTeamState: mocks.fetchSocialTeamState,
 }));
@@ -36,7 +34,6 @@ describe("warmAppTabData", () => {
     mocks.fetchChecklistTodayData.mockReset().mockResolvedValue({ userId: "user-1" });
     mocks.fetchInsightsData.mockReset().mockResolvedValue({ userId: "user-1" });
     mocks.getJson.mockReset().mockResolvedValue({ month: "2026-09" });
-    mocks.fetchSocialFeedPage.mockReset().mockResolvedValue({});
     mocks.fetchSocialChallenges.mockReset().mockResolvedValue({});
     mocks.fetchSocialLeaderboards.mockReset().mockResolvedValue({});
     mocks.fetchSocialTeamState.mockReset().mockResolvedValue({});
@@ -52,7 +49,9 @@ describe("warmAppTabData", () => {
     expect(mocks.fetchChecklistTodayData).not.toHaveBeenCalled();
     expect(mocks.fetchInsightsData).not.toHaveBeenCalled();
     expect(mocks.getJson).toHaveBeenCalled();
-    expect(mocks.fetchSocialFeedPage).toHaveBeenCalled();
+    expect(mocks.fetchSocialChallenges).toHaveBeenCalled();
+    expect(mocks.fetchSocialLeaderboards).toHaveBeenCalled();
+    expect(mocks.fetchSocialTeamState).toHaveBeenCalled();
   });
 
   it("warms checklist and insights by default", async () => {
