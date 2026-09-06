@@ -150,7 +150,7 @@ export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
       return;
     }
     void router.prefetch("/calendar");
-    void router.prefetch("/calendar?surface=calendar");
+    void router.prefetch("/calendar?view=day");
     void import("@/features/planner/calendar-page-shell");
   }, [open, router]);
 

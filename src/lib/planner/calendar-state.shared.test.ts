@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { normalizeCalendarState } from "@cadence/shared/planner/calendar-state";
-import { normalizeChecklistShellRoute } from "@/lib/planner/calendar-route";
+import {
+  normalizeCalendarRoute,
+  normalizeChecklistShellRoute,
+} from "@/lib/planner/calendar-route";
 
 describe("normalizeChecklistShellRoute", () => {
   it("falls back to today for an invalid tab", () => {
@@ -82,5 +85,47 @@ describe("normalizeCalendarState", () => {
     expect(result.tab).toBe("today");
     expect(result.day).toBe("2026-08-13");
     expect(result.viewMode).toBe("month");
+  });
+});
+
+describe("normalizeCalendarRoute", () => {
+  it("maps checklist and tasks surfaces into Plan day", () => {
+    const checklist = normalizeCalendarRoute({
+      searchParams: new URLSearchParams("surface=checklist"),
+      defaultCalendarViewMode: "week",
+    });
+    expect(checklist.viewMode).toBe("day");
+    expect(checklist.day).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(checklist.nextParams.get("view")).toBe("day");
+    expect(checklist.nextParams.get("surface")).toBeNull();
+    expect(checklist.changed).toBe(true);
+
+    const tasks = normalizeCalendarRoute({
+      searchParams: new URLSearchParams("surface=tasks&day=2026-08-13"),
+      defaultCalendarViewMode: "week",
+    });
+    expect(tasks.viewMode).toBe("day");
+    expect(tasks.day).toBe("2026-08-13");
+    expect(tasks.nextParams.get("surface")).toBeNull();
+  });
+
+  it("drops the legacy calendar surface query without changing the view", () => {
+    const result = normalizeCalendarRoute({
+      searchParams: new URLSearchParams("surface=calendar&view=week&day=2026-08-13"),
+      defaultCalendarViewMode: "week",
+    });
+    expect(result.viewMode).toBe("week");
+    expect(result.nextParams.get("surface")).toBeNull();
+    expect(result.nextParams.get("view")).toBe("week");
+  });
+
+  it("maps three_day URLs to week", () => {
+    const result = normalizeCalendarRoute({
+      searchParams: new URLSearchParams("view=three_day&day=2026-08-13"),
+      defaultCalendarViewMode: "month",
+    });
+    expect(result.viewMode).toBe("week");
+    expect(result.nextParams.get("view")).toBe("week");
+    expect(result.day).toBe("2026-08-13");
   });
 });

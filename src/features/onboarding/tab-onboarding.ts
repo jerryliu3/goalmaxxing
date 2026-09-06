@@ -18,13 +18,9 @@ export interface TabOnboardingStep {
 export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]> = {
   "planner.calendar": [
     {
-      title: "Planner views",
-      description: "Switch between Calendar, Checklist, and Tasks here.",
-      target: "planner.surfaces",
-    },
-    {
-      title: "Plan your sessions",
-      description: "Use Month/Week/Day and Filters to shape the calendar.",
+      title: "Plan views",
+      description:
+        "Switch Week, Month, and Day here. Day is the checklist for the selected date.",
       target: "planner.calendar.controls",
     },
     {
@@ -133,7 +129,7 @@ export const TAB_ONBOARDING_REPLAY_LINKS: TabOnboardingReplayLink[] = [
   {
     key: "planner.calendar",
     label: "Plan",
-    href: `/calendar?surface=calendar&${TAB_ONBOARDING_QUERY_PARAM}=planner.calendar`,
+    href: `/calendar?${TAB_ONBOARDING_QUERY_PARAM}=planner.calendar`,
   },
   {
     key: "insights.main",

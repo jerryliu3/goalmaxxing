@@ -1,4 +1,5 @@
 import {
+  getTodayDateParam,
   isValidCalendarViewMode,
   isValidDate,
   isValidMonth,
@@ -118,15 +119,34 @@ export function normalizeCalendarRoute({
   searchParams: SearchParamsLike;
   defaultCalendarViewMode: PlannerCalendarViewMode;
 }) {
+  const surface = searchParams.get("surface");
+  const forceDay = surface === "checklist" || surface === "tasks";
+  let requestedView: string | null = forceDay ? "day" : searchParams.get("view");
+  if (requestedView === "three_day") {
+    requestedView = "week";
+  }
+  const requestedDay =
+    searchParams.get("day") ?? (forceDay ? getTodayDateParam() : null);
+
   const state = normalizeCalendarState({
     month: searchParams.get("month"),
-    day: searchParams.get("day"),
-    viewMode: searchParams.get("view"),
+    day: requestedDay,
+    viewMode: requestedView,
     defaultCalendarViewMode,
     surface: "calendar",
   });
   const nextParams = new URLSearchParams(searchParams.toString());
   let changed = dropInvalidCalendarParams(searchParams, nextParams);
+  changed = deleteIfPresent(nextParams, "surface") || changed;
+  const rawTab = searchParams.get("tab");
+  if (
+    rawTab === "today" ||
+    rawTab === "not-today" ||
+    rawTab === "calendar" ||
+    rawTab === "past"
+  ) {
+    changed = deleteIfPresent(nextParams, "tab") || changed;
+  }
   changed = writeCalendarParams(nextParams, state) || changed;
 
   return {

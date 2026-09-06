@@ -207,7 +207,7 @@ test.describe("cadence schedule-affinity", () => {
   }) => {
     test.setTimeout(120_000);
 
-    await gotoAppPath(page, "/calendar?surface=checklist");
+    await gotoAppPath(page, "/calendar?view=day");
 
     const fixture = await resolveCadenceAffinityFixture(page);
     test.skip(
@@ -220,7 +220,7 @@ test.describe("cadence schedule-affinity", () => {
       desiredFactState: "absent",
     });
 
-    await gotoAppPath(page, "/calendar?surface=checklist");
+    await gotoAppPath(page, "/calendar?view=day");
     const goalCard = page
       .getByRole("heading", { name: CADENCE_AFFINITY_GOAL_TITLE })
       .locator('xpath=ancestor::*[contains(@class,"shadow-sm")][1]');

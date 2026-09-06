@@ -27,9 +27,8 @@ const PLANNER_VIEW_MODES: ReadonlyArray<{
   value: PlannerCalendarViewMode;
   label: string;
 }> = [
-  { value: "month", label: "Month" },
   { value: "week", label: "Week" },
-  { value: "three_day", label: "3 Day" },
+  { value: "month", label: "Month" },
   { value: "day", label: "Day" },
 ];
 
@@ -159,7 +158,7 @@ export function PlannerCalendarToolbar({
             data-onboarding="planner.calendar.controls"
           >
             <Select
-              value={viewMode}
+              value={viewMode === "three_day" ? "week" : viewMode}
               onValueChange={(value) => onViewModeChange(value as PlannerCalendarViewMode)}
             >
               <SelectTrigger

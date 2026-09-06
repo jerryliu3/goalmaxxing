@@ -29,24 +29,21 @@ describe("TabOnboardingOverlay", () => {
     mockOnboardingTargetRects();
     render(
       <>
-        <div data-onboarding="planner.surfaces">Planner tabs</div>
         <div data-onboarding="planner.calendar.controls">Calendar controls</div>
         <div data-onboarding="planner.calendar.board">Calendar board</div>
         <TabOnboardingOverlay onboardingKey="planner.calendar" />
       </>
     );
 
-    expect(await screen.findByRole("dialog", { name: "Planner views" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Plan views" })).toBeInTheDocument();
     expect(screen.getByTestId("onboarding-highlight")).toBeInTheDocument();
-    expect(screen.getByRole("dialog", { name: "Planner views" }).parentElement).toHaveClass(
+    expect(screen.getByRole("dialog", { name: "Plan views" }).parentElement).toHaveClass(
       "z-[80]"
     );
-    expect(screen.queryByRole("dialog", { name: "Planner views" })).not.toHaveClass(
+    expect(screen.queryByRole("dialog", { name: "Plan views" })).not.toHaveClass(
       "backdrop-blur-sm"
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Plan your sessions" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(await screen.findByRole("dialog", { name: "Try the board" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Got it" }));
@@ -68,12 +65,12 @@ describe("TabOnboardingOverlay", () => {
     const { rerender } = render(
       <TabOnboardingOverlay onboardingKey="planner.calendar" />
     );
-    expect(screen.queryByRole("dialog", { name: "Planner views" })).toBeNull();
+    expect(screen.queryByRole("dialog", { name: "Plan views" })).toBeNull();
 
     rerender(
       <TabOnboardingOverlay onboardingKey="planner.calendar" forceOpen />
     );
-    expect(await screen.findByRole("dialog", { name: "Planner views" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Plan views" })).toBeInTheDocument();
   });
 
   it("walks through community tabs without including Team on the first step", async () => {
@@ -144,7 +141,6 @@ describe("TabOnboardingOverlay", () => {
 
     render(
       <>
-        <div data-onboarding="planner.surfaces">Planner tabs</div>
         <div data-onboarding="planner.calendar.controls">Calendar controls</div>
         <div data-onboarding="planner.calendar.today">Today</div>
         <div data-onboarding="planner.calendar.board">Calendar board</div>
@@ -152,7 +148,6 @@ describe("TabOnboardingOverlay", () => {
       </>
     );
 
-    fireEvent.click(await screen.findByRole("button", { name: "Next" }));
     fireEvent.click(await screen.findByRole("button", { name: "Next" }));
     expect(await screen.findByRole("dialog", { name: "Try the board" })).toBeInTheDocument();
     await waitFor(() => {

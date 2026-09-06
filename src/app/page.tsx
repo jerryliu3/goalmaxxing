@@ -48,8 +48,7 @@ export default async function MarketingLandingPage({
   }
 
   if (tab === "today" || tab === "not-today" || tab === "past") {
-    const normalizedTab = tab === "past" ? "not-today" : tab;
-    redirect(`/checklist?tab=${normalizedTab}`);
+    redirect("/calendar?view=day");
   }
 
   const nextParams = new URLSearchParams();

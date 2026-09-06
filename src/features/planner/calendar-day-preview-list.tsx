@@ -67,7 +67,7 @@ export function CalendarDayPreviewList<
   return (
     <div
       className={`space-y-1 overflow-y-auto overflow-x-hidden text-xs [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
-        expanded ? "max-h-72" : "max-h-44"
+        expanded ? "max-h-[min(32rem,70dvh)]" : "max-h-44"
       }`}
     >
       {entries.length === 0 && completionFactMarkers.length === 0 ? (
