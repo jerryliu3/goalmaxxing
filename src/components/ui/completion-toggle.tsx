@@ -34,6 +34,7 @@ interface CompletionToggleProps
 
 export function CompletionToggle({
   completed,
+  pending = false,
   size = "md",
   className,
   onClick,
@@ -103,6 +104,7 @@ export function CompletionToggle({
       data-completed={completed}
       data-visual-completed={visualCompleted}
       data-motion="completion-toggle"
+      aria-busy={pending || undefined}
       className={cn(
         "group relative isolate flex shrink-0 touch-manipulation items-center justify-center rounded-md border border-border bg-background shadow-sm transition-[transform,box-shadow,background-color,border-color] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-0.5 active:scale-[0.94] active:shadow-none disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transform-none motion-reduce:transition-none",
         classes.button,
