@@ -280,10 +280,6 @@ export type Database = {
         Args: { p_date: string; p_user_id: string }
         Returns: undefined
       }
-      raise_if_linked_target_completion_disallowed: {
-        Args: { p_date: string; p_goal_id: string }
-        Returns: undefined
-      }
       recompute_health_daily_metrics_for_user: {
         Args: { p_from: string; p_to: string; p_user_id: string }
         Returns: number

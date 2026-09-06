@@ -130,15 +130,6 @@ function dateOutsideStoredLifetime(date: string, row: Pick<Goal, "start_date" | 
   return date < row.start_date || (row.end_date !== null && date > row.end_date);
 }
 
-function dbWriteWouldRejectLinkedTarget(date: string, source: Goal) {
-  return (
-    !source.is_deleted &&
-    source.archived_at === null &&
-    (source.end_date === null ||
-      (source.end_date >= source.start_date && source.end_date >= date))
-  );
-}
-
 describe("prepare / kernel / projection contract", () => {
   const createVideos = goal({
     id: "create-videos",
@@ -491,32 +482,32 @@ describe("prepare / kernel / projection contract", () => {
       expect(dateOutsideStoredLifetime("2026-10-01", createVideos)).toBe(true);
     });
 
-    it("rejects completing the linked target while allowing the source", () => {
+    it("keeps planning suppression while still allowing a linked-target completion write", () => {
       expect(isSuppressedOnDate(suppressionFor("post-videos", goals, links, VIEW_DATE), VIEW_DATE)).toBe(
         true
       );
-      expect(dbWriteWouldRejectLinkedTarget(VIEW_DATE, createVideos)).toBe(true);
+      expect(todayVisibleIds(goals, VIEW_DATE, links)).toEqual(["create-videos"]);
+      expect(dateOutsideStoredLifetime(VIEW_DATE, postVideos)).toBe(false);
       expect(isSuppressedOnDate(suppressionFor("create-videos", goals, links, VIEW_DATE), VIEW_DATE)).toBe(
         false
       );
-      expect(dateOutsideStoredLifetime(VIEW_DATE, createVideos)).toBe(false);
     });
 
-    it("allows the linked target after the stored source end_date", () => {
+    it("shows the linked target again after the stored source end_date", () => {
       expect(
         isSuppressedOnDate(
           suppressionFor("post-videos", goals, links, RESUME_DATE),
           RESUME_DATE
         )
       ).toBe(false);
-      expect(dbWriteWouldRejectLinkedTarget(RESUME_DATE, createVideos)).toBe(false);
       expect(todayVisibleIds(goals, RESUME_DATE, links)).toEqual([
         "create-videos",
         "post-videos",
       ]);
+      expect(dateOutsideStoredLifetime(RESUME_DATE, postVideos)).toBe(false);
     });
 
-    it("keeps TS planning-horizon resume and DB stored-end suppression distinct for ordinal sources with no end_date", () => {
+    it("keeps TS planning-horizon resume distinct from the target's stored lifetime", () => {
       const openOrdinalSource = goal({
         id: "open-source",
         title: "Open source",
@@ -540,16 +531,14 @@ describe("prepare / kernel / projection contract", () => {
       expect(
         isSuppressedOnDate(suppressionFor("open-target", pair, pairLinks, VIEW_DATE), VIEW_DATE)
       ).toBe(true);
-      expect(dbWriteWouldRejectLinkedTarget(VIEW_DATE, openOrdinalSource)).toBe(true);
+      expect(dateOutsideStoredLifetime(VIEW_DATE, openTarget)).toBe(false);
       expect(
         isSuppressedOnDate(
           suppressionFor("open-target", pair, pairLinks, VIEW_DATE),
           afterSoftHorizon
         )
       ).toBe(false);
-      expect(dbWriteWouldRejectLinkedTarget(afterSoftHorizon, openOrdinalSource)).toBe(
-        true
-      );
+      expect(dateOutsideStoredLifetime(afterSoftHorizon, openTarget)).toBe(false);
     });
   });
 });

@@ -1,46 +1,8 @@
--- Enforce completion lifetime on write RPCs.
--- Authenticated clients cannot insert completions directly; this guard closes
--- the remaining RPC bypass for dates outside start_date/end_date.
--- Linked-target suppression is a planning/visibility rule only. Direct
--- completion of a linked target is allowed; source completion still cascades.
--- Databases that applied an earlier revision of this file may still have
--- private.raise_if_linked_target_completion_disallowed until
--- 20260906175753_drop_linked_target_completion_write_guard.sql runs.
-
-create or replace function private.raise_if_completion_outside_goal_lifetime(
-  p_goal_id uuid,
-  p_date date
-)
-returns void
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_start date;
-  v_end date;
-begin
-  select goal.start_date, goal.end_date
-    into v_start, v_end
-  from public.goals as goal
-  where goal.id = p_goal_id;
-
-  if not found then
-    return;
-  end if;
-
-  if p_date < v_start
-    or (v_end is not null and p_date > v_end)
-  then
-    raise exception
-      using errcode = '23514',
-            message = 'completion_outside_goal_lifetime';
-  end if;
-end;
-$$;
-
-revoke all on function private.raise_if_completion_outside_goal_lifetime(uuid, date)
-  from public, anon, authenticated;
+-- Linked-target suppression remains a planning/visibility rule, not a
+-- completion-write rule. The original 20260904140448 revision installed
+-- private.raise_if_linked_target_completion_disallowed into mark_goal_complete;
+-- editing that file in place does not replay on databases that already applied
+-- it. Replace the write RPCs, then drop the helper.
 
 create or replace function public.mark_goal_complete(
   p_goal_id uuid,
@@ -243,3 +205,5 @@ begin
   return v_root_inserted;
 end;
 $$;
+
+drop function if exists private.raise_if_linked_target_completion_disallowed(uuid, date);
