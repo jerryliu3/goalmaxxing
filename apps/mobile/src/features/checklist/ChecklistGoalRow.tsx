@@ -1,3 +1,4 @@
+import { gazetteerCategoryColor } from "@cadence/shared/brand/gazetteer";
 import { Link, type Href } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../theme";
@@ -23,6 +24,7 @@ export function ChecklistGoalRow({
   toggling?: boolean;
 }) {
   const theme = useTheme();
+  const categoryColor = gazetteerCategoryColor(category);
   const nest = (
     <NestCompletionMark
       done={done}
@@ -35,7 +37,11 @@ export function ChecklistGoalRow({
     <View
       style={[
         styles.row,
-        { borderColor: theme.colors.border, backgroundColor: theme.colors.card },
+        {
+          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.card,
+          borderLeftColor: categoryColor,
+        },
       ]}
     >
       {interactive ? (
@@ -71,7 +77,9 @@ export function ChecklistGoalRow({
           >
             {title}
           </Text>
-          <Text style={{ color: theme.colors.mutedForeground }}>{category}</Text>
+          <Text style={{ color: categoryColor, fontSize: 12, letterSpacing: 0.6 }}>
+            {category}
+          </Text>
         </Link>
       ) : (
         <View style={styles.titleWrap}>
@@ -84,7 +92,9 @@ export function ChecklistGoalRow({
           >
             {title}
           </Text>
-          <Text style={{ color: theme.colors.mutedForeground }}>{category}</Text>
+          <Text style={{ color: categoryColor, fontSize: 12, letterSpacing: 0.6 }}>
+            {category}
+          </Text>
           {readOnlyReason ? (
             <Text style={{ color: theme.colors.mutedForeground, fontSize: 12 }}>
               {readOnlyReason}
@@ -102,6 +112,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
     borderWidth: StyleSheet.hairlineWidth,
+    borderLeftWidth: 3,
     borderRadius: 12,
     padding: 12,
   },
