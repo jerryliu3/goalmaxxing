@@ -4,6 +4,7 @@ import type {
   PlannerWorkUnitCreditState,
 } from "@cadence/shared/planner/context";
 import { isLinkedTargetSuppressedOnDate } from "@/lib/planner/link-suppression";
+import { resolveWorkUnitDisplayDate } from "@/lib/planner/session-display-date";
 import {
   entryDisplayRank,
   getEntryGoalFirstTitle,
@@ -167,9 +168,12 @@ export function buildEntriesByDateProjection({
     unitByEntryKey.set(key, unit);
     const activeItem = activeItemByEntryKey.get(key) ?? null;
     const isCreditedHistoricalUnit = unit.creditState !== "uncredited";
-    const displayDay = isCreditedHistoricalUnit
-      ? (unit.scheduledDate ?? unit.creditedCompletionDate)
-      : (activeItem?.scheduled_date ?? unit.scheduledDate ?? unit.creditedCompletionDate);
+    const displayDay = resolveWorkUnitDisplayDate({
+      creditState: unit.creditState,
+      persistedScheduledDate: activeItem?.scheduled_date,
+      previewScheduledDate: unit.scheduledDate,
+      creditedCompletionDate: unit.creditedCompletionDate,
+    });
     if (
       !displayDay ||
       (!isCreditedHistoricalUnit && !persistedEntryKeys.has(key)) ||
