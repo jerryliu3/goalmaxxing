@@ -88,6 +88,21 @@ function resolveCategorySwatchColor(category: string | null): string | null {
   return getCategorySwatchColor(categoryKey as GoalVisualCategoryKey);
 }
 
+export function colorWithAlpha(color: string, alpha: number) {
+  const hex = normalizeGoalColor(color) ?? FALLBACK_COLORS[0];
+  const red = Number.parseInt(hex.slice(1, 3), 16);
+  const green = Number.parseInt(hex.slice(3, 5), 16);
+  const blue = Number.parseInt(hex.slice(5, 7), 16);
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
+export function getWorkPillFillStyle(color: string, credited = false) {
+  return {
+    backgroundColor: colorWithAlpha(color, credited ? 0.4 : 0.18),
+    borderColor: color,
+  };
+}
+
 export function getGoalVisual(input: GoalVisualInput): GoalVisual {
   const hash = stableHash(input.goalId);
   const categoryColor = resolveCategorySwatchColor(input.category);

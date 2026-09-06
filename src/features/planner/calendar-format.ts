@@ -204,7 +204,6 @@ export function getEntryDraftDiffSummary(entry: {
 
 export function getEntryDraftPillClasses(input: {
   draftDiffKind: PlannerDraftVisualKind | null;
-  credited: boolean;
 }) {
   if (input.draftDiffKind === "moved_from") {
     return "border-amber-300 bg-amber-100 text-amber-950 dark:border-amber-300 dark:bg-amber-100 dark:text-amber-950";
@@ -215,10 +214,7 @@ export function getEntryDraftPillClasses(input: {
   if (input.draftDiffKind === "new") {
     return "border-violet-300 bg-violet-100 text-violet-950 dark:border-violet-300 dark:bg-violet-100 dark:text-violet-950";
   }
-  if (input.credited) {
-    return "border-emerald-300 bg-emerald-100 text-emerald-950 dark:border-emerald-300 dark:bg-emerald-100 dark:text-emerald-950";
-  }
-  return "border-border bg-background";
+  return "border text-foreground";
 }
 
 export function entryDisplayRank(entry: {

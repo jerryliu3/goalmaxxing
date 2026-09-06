@@ -10,7 +10,7 @@ import {
   getEntryDraftDiffSummary,
   getEntryDraftPillClasses,
 } from "@/features/planner/calendar-format";
-import { getGoalVisual } from "@/features/planner/goal-visuals";
+import { getGoalVisual, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
 
 export interface CalendarMonthCellEntryBase {
   key: string;
@@ -132,15 +132,17 @@ export function CalendarMonthDayCell<
       color: entry.activeGoal?.color ?? null,
       category: entry.activeGoal?.category ?? null,
     });
-    const Icon = visual.Icon;
     const compactTitle = getEntryDisplayTitle(entry);
     const credited = isEntryCredited(entry);
     const immovable = isEntryImmovableForDraft(entry);
     const draftDiffSummary = getEntryDraftDiffSummary(entry);
+    const isDraft = Boolean(entry.draftDiffKind);
     const pillToneClasses = getEntryDraftPillClasses({
       draftDiffKind: entry.draftDiffKind,
-      credited,
     });
+    const pillFillStyle = isDraft
+      ? undefined
+      : getWorkPillFillStyle(visual.color, credited);
     return (
       <PlannerDraggableEntry
         key={`cell-entry-${entry.key}`}
@@ -150,7 +152,7 @@ export function CalendarMonthDayCell<
         {({ setNodeRef, attributes, listeners, style, isDragging }) => (
           <div
             ref={setNodeRef}
-            style={style}
+            style={{ ...style, ...pillFillStyle }}
             onClick={(event) => {
               event.stopPropagation();
               if (isDragging) {
@@ -193,12 +195,6 @@ export function CalendarMonthDayCell<
             {...attributes}
             {...listeners}
           >
-            <span
-              className="inline-flex size-3.5 items-center justify-center rounded-full"
-              style={{ backgroundColor: visual.color }}
-            >
-              <Icon className="size-2.5 text-white" />
-            </span>
             <span className="truncate">{compactTitle}</span>
             {entry.hasLinkedTargets ? (
               <Link2
@@ -206,7 +202,12 @@ export function CalendarMonthDayCell<
                 aria-label="Links this subgoal to a main goal"
               />
             ) : null}
-            {credited ? <CheckCircle2 className="size-3 shrink-0" /> : null}
+            {credited ? (
+              <CheckCircle2
+                className="size-3 shrink-0"
+                aria-label="Completed"
+              />
+            ) : null}
           </div>
         )}
       </PlannerDraggableEntry>
@@ -310,7 +311,7 @@ export function CalendarMonthDayCell<
               })}
               {hiddenItemCount > 0 ? (
                 <p className="text-[10px] text-muted-foreground">
-                  +{hiddenItemCount} more
+                  +{hiddenItemCount}
                 </p>
               ) : null}
             </div>
