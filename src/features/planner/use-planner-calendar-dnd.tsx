@@ -12,7 +12,7 @@ import type { PlannerDragTarget } from "@/features/planner/calendar-dnd";
 import { isEntryCredited } from "@/features/planner/calendar-format";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
-import { getGoalVisual } from "@/features/planner/goal-visuals";
+import { getGoalVisual, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
 import { resolvePlannerDndResolution } from "@/features/planner/planner-dnd-resolution";
 import { reorderPreviewEntryKeys } from "@/features/planner/reorder-preview-entries";
 
@@ -80,23 +80,13 @@ export function usePlannerCalendarDnd({
         color: entry.activeGoal?.color ?? null,
         category: entry.activeGoal?.category ?? null,
       });
-      const Icon = visual.Icon;
       const title = getEntryGoalFirstTitleWithTime(entry);
       const credited = isEntryCredited(entry);
       return (
         <div
-          className={`flex max-w-64 items-center gap-2 rounded-lg border px-2 py-1 text-xs ${
-            credited
-              ? "border-emerald-300 bg-emerald-100 text-emerald-950"
-              : "border-primary/40 bg-card text-foreground"
-          }`}
+          className="flex max-w-64 items-center gap-2 rounded-lg border px-2 py-1 text-xs text-foreground"
+          style={getWorkPillFillStyle(visual.color, credited)}
         >
-          <span
-            className="inline-flex size-4 items-center justify-center rounded-full"
-            style={{ backgroundColor: visual.color }}
-          >
-            <Icon className="size-2.5 text-white" />
-          </span>
           <span className="truncate font-medium">{title}</span>
         </div>
       );

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getGoalVisual, normalizeGoalColor } from "./goal-visuals";
+import { getGoalVisual, normalizeGoalColor, getWorkPillFillStyle } from "./goal-visuals";
 
 describe("goal visuals", () => {
   it("keeps icon/color deterministic per goal id", () => {
@@ -36,6 +36,16 @@ describe("goal visuals", () => {
         category: "Health",
       }).color
     ).toBe("#10b981");
+  });
+
+  it("turns category color into pill fill, not a separate chip", () => {
+    expect(
+      getWorkPillFillStyle("#10b981", false).backgroundColor
+    ).toBe("rgba(16, 185, 129, 0.18)");
+    expect(getWorkPillFillStyle("#10b981", true).borderColor).toBe("#10b981");
+    expect(
+      getWorkPillFillStyle("#10b981", true).backgroundColor
+    ).toBe("rgba(16, 185, 129, 0.4)");
   });
 
   it("keeps goal-level color for custom categories", () => {
