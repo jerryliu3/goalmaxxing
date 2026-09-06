@@ -26,6 +26,8 @@ export interface ChecklistSharedFilters {
   setShowArchivedGoals: (value: boolean) => void;
   showTargetAchievedGoals: boolean;
   setShowTargetAchievedGoals: (value: boolean) => void;
+  showSuppressedLinkedTargets: boolean;
+  setShowSuppressedLinkedTargets: (value: boolean) => void;
   categoryFilters: string[];
   setCategoryFilters: (value: string[]) => void;
   recurrenceFilters: RecurrenceGroup[];
@@ -48,6 +50,8 @@ export function useChecklistFilters(sharedFilters?: ChecklistSharedFilters) {
   const [internalShowUpcomingGoals, setInternalShowUpcomingGoals] = useState(false);
   const [internalShowArchivedGoals, setInternalShowArchivedGoals] = useState(false);
   const [internalShowTargetAchievedGoals, setInternalShowTargetAchievedGoals] =
+    useState(false);
+  const [internalShowSuppressedLinkedTargets, setInternalShowSuppressedLinkedTargets] =
     useState(false);
   const [internalCategoryFilters, setInternalCategoryFilters] = useState<string[]>([]);
   const [internalRecurrenceFilters, setInternalRecurrenceFilters] = useState<
@@ -75,6 +79,11 @@ export function useChecklistFilters(sharedFilters?: ChecklistSharedFilters) {
     sharedFilters?.showTargetAchievedGoals ?? internalShowTargetAchievedGoals;
   const setShowTargetAchievedGoals =
     sharedFilters?.setShowTargetAchievedGoals ?? setInternalShowTargetAchievedGoals;
+  const showSuppressedLinkedTargets =
+    sharedFilters?.showSuppressedLinkedTargets ?? internalShowSuppressedLinkedTargets;
+  const setShowSuppressedLinkedTargets =
+    sharedFilters?.setShowSuppressedLinkedTargets ??
+    setInternalShowSuppressedLinkedTargets;
   const categoryFilters = sharedFilters?.categoryFilters ?? internalCategoryFilters;
   const setCategoryFilters =
     sharedFilters?.setCategoryFilters ?? setInternalCategoryFilters;
@@ -180,6 +189,8 @@ export function useChecklistFilters(sharedFilters?: ChecklistSharedFilters) {
     setShowArchivedGoals,
     showTargetAchievedGoals,
     setShowTargetAchievedGoals,
+    showSuppressedLinkedTargets,
+    setShowSuppressedLinkedTargets,
     categoryFilters,
     setCategoryFilters,
     recurrenceFilters,
