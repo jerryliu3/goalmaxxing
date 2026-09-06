@@ -1,8 +1,10 @@
 "use client";
 
+import { format, parse } from "date-fns";
 import { Link2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { NestCompletionMark } from "@/components/ui/nest-completion-mark";
+import { cn } from "@/lib/utils";
 import {
   PlannerDraggableEntry,
   PlannerDroppableDay,
@@ -46,6 +48,8 @@ interface CalendarMonthDayCellProps<
   monthContextLabel?: string | null;
   isToday: boolean;
   isPastInMonth: boolean;
+  isSelected?: boolean;
+  layout?: "month" | "agenda";
   ariaLabel: string;
   entriesForDay: TEntry[];
   completionFactMarkersForDay: TCompletionFactMarker[];
@@ -86,6 +90,8 @@ export function CalendarMonthDayCell<
   monthContextLabel = null,
   isToday,
   isPastInMonth,
+  isSelected = false,
+  layout = "month",
   ariaLabel,
   entriesForDay,
   completionFactMarkersForDay,
@@ -170,7 +176,7 @@ export function CalendarMonthDayCell<
             onPointerCancelCapture={() => {
               onEntryPointerEnd();
             }}
-            className={`flex items-center gap-1.5 rounded-sm border px-1.5 py-1 text-[11px] ${pillToneClasses} ${
+            className={`flex items-center gap-1.5 rounded-[10px] border px-1.5 py-1 text-[11px] ${pillToneClasses} ${
               entry.draftGhost ? "opacity-70 line-through" : ""
             } ${
               immovable
@@ -215,6 +221,106 @@ export function CalendarMonthDayCell<
       </PlannerDraggableEntry>
     );
   };
+
+  const parsedDay = parse(day, "yyyy-MM-dd", new Date());
+  const weekdayLabel = format(parsedDay, "EEE");
+  const dayNumber = format(parsedDay, "d");
+
+  if (layout === "agenda") {
+    return (
+      <li
+        className={cn(
+          "border-b border-border/70 last:border-b-0",
+          isSelected && "bg-primary/5",
+          !inMonth && "opacity-60"
+        )}
+        data-day={day}
+        data-calendar-week-row="true"
+      >
+        <div className="flex items-start gap-2 py-3">
+          <button
+            type="button"
+            className="w-14 shrink-0 px-1 text-left touch-manipulation"
+            aria-label={ariaLabel}
+            aria-current={isToday ? "date" : undefined}
+            aria-pressed={isSelected}
+            data-day-cell="true"
+            data-day={day}
+            data-onboarding={isToday ? "planner.calendar.today" : undefined}
+            onClick={(event) => onCellClick(event.currentTarget)}
+            onDoubleClick={(event) => onCellDoubleClick(event.currentTarget)}
+          >
+            <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              {weekdayLabel}
+            </span>
+            <span
+              className={cn(
+                "mt-0.5 inline-flex size-8 items-center justify-center rounded-full text-lg font-semibold leading-none",
+                isToday && "bg-primary text-primary-foreground",
+                !isToday && isSelected && "text-primary"
+              )}
+            >
+              {dayNumber}
+            </span>
+          </button>
+          <PlannerDroppableDay day={day}>
+            {({ setNodeRef, isOver }) => (
+              <div
+                ref={setNodeRef}
+                className={cn(
+                  "flex min-h-[2.75rem] min-w-0 flex-1 flex-col gap-1.5 rounded-[10px] px-1 py-0.5",
+                  isAnyEntryDragging && isOver && "ring-2 ring-primary/70"
+                )}
+              >
+                {hasVisibleContent ? (
+                  <>
+                    {visibleEntries.map((entry, entryIndex) =>
+                      renderEntry(entry, entryIndex)
+                    )}
+                    {visibleCompletionFactMarkers.map((marker) => {
+                      const partnerOwned = marker.owner === "partner";
+                      const statusCopy = partnerOwned
+                        ? "Partner marked this done."
+                        : marker.scheduledDate && marker.scheduledDate !== day
+                          ? `Marked done here, currently credited from the ${marker.scheduledDate} scheduled session.`
+                          : "Marked done on this date.";
+                      return (
+                        <div
+                          key={`completion-fact-${marker.key}`}
+                          className={
+                            partnerOwned
+                              ? "flex items-center gap-1.5 rounded-[10px] border-2 border-primary bg-transparent px-1.5 py-1 text-[11px] text-primary"
+                              : "flex items-center gap-1.5 rounded-[10px] border border-primary/35 bg-primary/10 px-1.5 py-1 text-[11px] text-foreground"
+                          }
+                          aria-label={`${marker.goalTitle}. ${statusCopy}`}
+                        >
+                          <NestCompletionMark done className="size-3 shrink-0" />
+                          <span className="truncate">{marker.goalTitle}</span>
+                        </div>
+                      );
+                    })}
+                    {hiddenItemCount > 0 ? (
+                      <p className="text-[10px] text-muted-foreground">
+                        +{hiddenItemCount}
+                      </p>
+                    ) : null}
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="min-h-[2.75rem] w-full rounded-[10px] px-2 text-left text-sm text-muted-foreground touch-manipulation"
+                    onClick={(event) => onCellClick(event.currentTarget)}
+                  >
+                    No work this day
+                  </button>
+                )}
+              </div>
+            )}
+          </PlannerDroppableDay>
+        </div>
+      </li>
+    );
+  }
 
   return (
     <PlannerDroppableDay day={day}>
