@@ -19,9 +19,29 @@ export type LinkSuppression =
   | { kind: "until"; through: string }
   | { kind: "indefinite" };
 
-interface LinkEdge {
+export interface LinkEdge {
   sourceGoalId: string;
   targetGoalId: string;
+}
+
+type LinkEdgeInput =
+  | LinkEdge
+  | { source_goal_id: string; target_goal_id: string };
+
+export interface LinkSuppressionSummary {
+  targetGoalId: string;
+  targetSuppressionKind: LinkSuppression["kind"];
+  targetResumesOn: string | null;
+}
+
+function toLinkEdge(link: LinkEdgeInput): LinkEdge {
+  if ("sourceGoalId" in link) {
+    return { sourceGoalId: link.sourceGoalId, targetGoalId: link.targetGoalId };
+  }
+  return {
+    sourceGoalId: link.source_goal_id,
+    targetGoalId: link.target_goal_id,
+  };
 }
 
 export function buildLinkSuppressionInboundIndex(
@@ -158,4 +178,69 @@ export function isFullySuppressedForWindow(
     resumeDate !== null &&
     compareDateStrings(resumeDate, window.end) > 0
   );
+}
+
+export function linkSuppressionFromSummary(
+  summary: Pick<LinkSuppressionSummary, "targetSuppressionKind" | "targetResumesOn">
+): LinkSuppression {
+  if (summary.targetSuppressionKind === "indefinite") {
+    return { kind: "indefinite" };
+  }
+  if (summary.targetSuppressionKind === "until" && summary.targetResumesOn) {
+    return {
+      kind: "until",
+      through: addDaysToDateString(summary.targetResumesOn, -1),
+    };
+  }
+  return { kind: "none" };
+}
+
+export function isLinkedTargetSuppressedOnDate({
+  goalId,
+  date,
+  linkSummaries,
+}: {
+  goalId: string;
+  date: string;
+  linkSummaries: readonly LinkSuppressionSummary[] | undefined;
+}) {
+  const summary = (linkSummaries ?? []).find((link) => link.targetGoalId === goalId);
+  if (!summary) {
+    return false;
+  }
+  return isSuppressedOnDate(linkSuppressionFromSummary(summary), date);
+}
+
+export function selectSuppressedGoalIdsOnDate({
+  goals,
+  links,
+  ownerId,
+  date,
+}: {
+  goals: readonly Goal[];
+  links: ReadonlyArray<LinkEdgeInput>;
+  ownerId: string;
+  date: string;
+}): ReadonlySet<string> {
+  const linkEdges = links.map(toLinkEdge);
+  const inboundIndex = buildLinkSuppressionInboundIndex(linkEdges);
+  const sourcesById = new Map(
+    goals.map((goal) => [goal.id, toLinkSuppressionSource(goal)])
+  );
+  const hidden = new Set<string>();
+
+  for (const targetGoalId of inboundIndex.keys()) {
+    const suppression = resolveLinkSuppression({
+      goalId: targetGoalId,
+      inboundSourceIdsByTargetId: inboundIndex,
+      sourcesById,
+      ownerId,
+      asOfDate: date,
+    });
+    if (isSuppressedOnDate(suppression, date)) {
+      hidden.add(targetGoalId);
+    }
+  }
+
+  return hidden;
 }

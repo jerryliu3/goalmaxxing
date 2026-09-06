@@ -3,7 +3,7 @@ import type {
   PlannerWorkUnitClassification,
   PlannerWorkUnitCreditState,
 } from "@cadence/shared/planner/context";
-import { isPlannerLinkedTargetSuppressedOnDate } from "@/features/planner/calendar-link-suppression";
+import { isLinkedTargetSuppressedOnDate } from "@/lib/planner/link-suppression";
 import {
   entryDisplayRank,
   getEntryGoalFirstTitle,
@@ -76,10 +76,10 @@ export function buildEntriesByDateProjection({
     activeItemByEntryKey.set(`${originalGoalId}:${item.unit_key}`, item);
   }
   const isSuppressedLinkedTargetOnDay = (goalId: string, day: string) =>
-    isPlannerLinkedTargetSuppressedOnDate({
+    isLinkedTargetSuppressedOnDate({
       goalId,
       date: day,
-      links: linkSummaries,
+      linkSummaries,
     });
   const persistedEntryKeys = new Set(
     (activeItems ?? []).map((item) => {
@@ -467,10 +467,10 @@ export function buildCompletionFactMarkersByDate({
     }
     const markerDay = unit.creditedCompletionDate;
     if (
-      isPlannerLinkedTargetSuppressedOnDate({
+      isLinkedTargetSuppressedOnDate({
         goalId: unit.originalGoalId,
         date: markerDay,
-        links: linkSummaries,
+        linkSummaries,
       })
     ) {
       continue;
