@@ -29,15 +29,15 @@ test.describe("public demo sandbox", () => {
   });
 
   test("completing a goal updates this tab", async ({ page }) => {
-    await page.goto("/demo/calendar");
+    await page.goto("/demo/calendar?view=day");
     await expect(page.getByText("Read 20 pages")).toBeVisible({ timeout: 20_000 });
 
-    const card = page.locator("[data-slot=card]").filter({ hasText: "Read 20 pages" });
-    await card.getByRole("button", { name: /Mark goal as complete|Complete goal for/ }).click();
+    const row = page
+      .locator("[data-planner-entry-key]")
+      .filter({ hasText: "Read 20 pages" });
+    await row.getByRole("button", { name: "Mark session done" }).click();
     await expect(
-      card.getByRole("button", {
-        name: /Unmark goal completion for current period|Remove completion for/,
-      })
+      row.getByRole("button", { name: "Mark session not done" })
     ).toBeVisible();
   });
 });

@@ -34,11 +34,11 @@ describe("public root page routing", () => {
     );
   });
 
-  it("redirects legacy past tab links into checklist", async () => {
+  it("redirects legacy past tab links into Plan day", async () => {
     await MarketingLandingPage({
       searchParams: Promise.resolve({ tab: "past" }),
     });
 
-    expect(redirectMock).toHaveBeenCalledWith("/checklist?tab=not-today");
+    expect(redirectMock).toHaveBeenCalledWith("/calendar?view=day");
   });
 });

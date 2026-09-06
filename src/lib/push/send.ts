@@ -110,7 +110,7 @@ async function sendNativePush(token: string, payload: PushPayload) {
       body: payload.body,
       sound: "default",
       data: {
-        url: payload.url ?? "/checklist",
+        url: payload.url ?? "/calendar?view=day",
       },
     }),
     signal: AbortSignal.timeout(10_000),
