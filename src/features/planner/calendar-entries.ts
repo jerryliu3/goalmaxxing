@@ -237,8 +237,9 @@ export function buildEntriesByDateProjection({
       goalTitle: activeGoal?.title ?? goalTitles?.[originalGoalId] ?? null,
       unitKey: item.unit_key,
       label: activeGoal?.title ?? item.unit_key,
-      classification: item.classification,
-      creditState: item.credit_state,
+      // Identity-only snapshot rows are uncredited until a work unit supplies credit.
+      classification: "open",
+      creditState: "uncredited",
       activeGoal,
       activeItem: item,
       draftDiffKind: null,
