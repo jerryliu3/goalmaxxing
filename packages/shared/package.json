@@ -42,6 +42,7 @@
     "./social/public-profile": "./src/social/public-profile.ts",
     "./social/team": "./src/social/team.ts",
     "./supabase/database.types": "./src/supabase/database.types.ts",
+    "./brand/gazetteer": "./src/brand/gazetteer.ts",
     "./tokens": "./src/tokens.ts"
   },
   "dependencies": {
