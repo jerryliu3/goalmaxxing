@@ -1,7 +1,8 @@
 "use client";
 
-import { Archive, CalendarClock, CheckCircle2 } from "lucide-react";
+import { Archive, CalendarClock } from "lucide-react";
 import type { ReactNode } from "react";
+import { NestCompletionMark } from "@/components/ui/nest-completion-mark";
 import { CollapsibleGoalSection } from "@/features/today/collapsible-goal-section";
 import type { Goal } from "@/lib/goals/types";
 
@@ -55,7 +56,7 @@ export function ChecklistPastPanels({
           onOpenChange={onPastPanelOpenChange}
           title="Past"
           count={pastGoals.length}
-          icon={<CheckCircle2 className="size-4 text-muted-foreground" />}
+          icon={<NestCompletionMark done className="size-4 text-muted-foreground" />}
           emptyMessage="No past goals yet."
         >
           {pastGoals.map((goal) => renderGoal(goal, { key: goal.id }))}

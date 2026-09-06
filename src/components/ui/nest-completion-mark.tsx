@@ -20,8 +20,8 @@ export function NestCompletionMark({
       data-completed={done ? "true" : "false"}
     >
       <rect
-        x="4.5"
-        y="4.5"
+        x="2.5"
+        y="2.5"
         width="19"
         height="19"
         rx="4"
@@ -31,8 +31,8 @@ export function NestCompletionMark({
       />
       {done ? (
         <rect
-          x="8.6"
-          y="8.6"
+          x="6.6"
+          y="6.6"
           width="10.8"
           height="10.8"
           rx="2.4"

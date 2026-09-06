@@ -1,11 +1,12 @@
 "use client";
 
-import { CheckCircle2, Circle, Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { NestCompletionMark } from "@/components/ui/nest-completion-mark";
 import { DateField } from "@/components/ui/date-field";
 import {
   Dialog,
@@ -285,10 +286,15 @@ export function PlannerTasksPanel({
                   >
                     {toggling ? (
                       <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
-                    ) : complete ? (
-                      <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
                     ) : (
-                      <Circle className="size-4 shrink-0 text-muted-foreground" />
+                      <NestCompletionMark
+                        done={complete}
+                        className={
+                          complete
+                            ? "size-4 shrink-0 text-primary"
+                            : "size-4 shrink-0 text-muted-foreground"
+                        }
+                      />
                     )}
                     <span className={complete ? "text-muted-foreground line-through" : ""}>
                       {task.title}

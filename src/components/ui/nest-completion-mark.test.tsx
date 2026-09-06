@@ -17,5 +17,10 @@ describe("NestCompletionMark", () => {
       "true"
     );
     expect(container.querySelectorAll("rect")).toHaveLength(2);
+
+    const outer = container.querySelector("rect");
+    expect(outer).toHaveAttribute("x", "2.5");
+    expect(outer).toHaveAttribute("width", "19");
+    expect(Number(outer?.getAttribute("x")) + Number(outer?.getAttribute("width"))).toBeLessThanOrEqual(24);
   });
 });
