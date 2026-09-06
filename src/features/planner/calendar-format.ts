@@ -170,10 +170,7 @@ export function getDayStatus(
 }
 
 export function isEntryCredited(entry: PlannerDayDetailEntry) {
-  return (
-    entry.creditState !== "uncredited" ||
-    Boolean(entry.activeItem?.credited_completion_id)
-  );
+  return entry.creditState !== "uncredited";
 }
 
 export function isEntryImmovableForDraft(entry: PlannerDayDetailEntry) {

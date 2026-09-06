@@ -54,7 +54,6 @@ import {
 import type { PlannerBaseAssignment } from "@/lib/planner/work-units";
 import {
   detectActivePlanReconciliationMismatches,
-  hydrateActivePlanItemsFromWorkUnits,
   rebuildCompletionToUnitFromWorkUnits,
 } from "@/lib/planner/active-plan-reconciliation";
 import { reportError } from "@/lib/observability/report-error";
@@ -132,18 +131,8 @@ export interface PlannerActiveItemRow {
   requirement_kind: "milestone_sequence" | "cadence" | "deadline_total";
   scheduled_date: string | null;
   original_scheduled_date: string | null;
-  classification:
-    | "fulfilled"
-    | "open"
-    | "future"
-    | "historical_shortfall"
-    | "historical_miss"
-    | "satisfied_elsewhere";
-  credit_state: "uncredited" | "completed_as_scheduled" | "completed_elsewhere";
   locked: boolean;
   revision: number;
-  credited_completion_id: string | null;
-  credited_completion_date: string | null;
   scheduled_time_override: string | null;
   effective_scheduled_local_time: string | null;
 }
@@ -554,12 +543,8 @@ async function loadActivePlanSnapshot(
       requirement_kind: requirementKind,
       scheduled_date: item.scheduled_date,
       original_scheduled_date: originalScheduledDate,
-      classification: "open",
-      credit_state: "uncredited",
       locked: item.locked,
       revision: 0,
-      credited_completion_id: null,
-      credited_completion_date: null,
       scheduled_time_override: item.scheduled_time,
       effective_scheduled_local_time: item.scheduled_time,
     });
@@ -958,11 +943,6 @@ export async function loadPlannerContextPayload({
         }
         return {
           ...snapshot.activePlan,
-          items: hydrateActivePlanItemsFromWorkUnits(
-            snapshot.activePlan.items,
-            preview.workUnits,
-            goalIdByPlanGoalId
-          ),
           basePlan: snapshot.activePlan.basePlan
             ? {
                 ...snapshot.activePlan.basePlan,

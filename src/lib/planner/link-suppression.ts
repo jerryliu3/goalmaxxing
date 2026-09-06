@@ -19,7 +19,7 @@ export type LinkSuppression =
   | { kind: "until"; through: string }
   | { kind: "indefinite" };
 
-interface LinkEdge {
+export interface LinkEdge {
   sourceGoalId: string;
   targetGoalId: string;
 }

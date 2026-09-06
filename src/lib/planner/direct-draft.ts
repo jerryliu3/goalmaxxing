@@ -264,8 +264,6 @@ export function buildDirectDraftPersistence({
     const itemIsImmovable =
       assignment.locked ||
       completedUnitKeys.has(key) ||
-      activeItem.credit_state !== "uncredited" ||
-      activeItem.classification === "satisfied_elsewhere" ||
       assignment.scheduledDate === null;
     if (command.kind === "set_item_time_override") {
       if (itemIsImmovable) {

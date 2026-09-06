@@ -21,7 +21,7 @@ export interface CalendarMonthCellEntryBase {
   classification: string;
   creditState: string;
   activeGoal: { color: string | null; category?: string | null } | null;
-  activeItem: { credited_completion_id: string | null } | null;
+  activeItem: { id?: string } | null;
   draftDiffKind: "moved_from" | "moved_to" | "new" | null;
   draftDiffFromDate: string | null;
   draftDiffToDate: string | null;

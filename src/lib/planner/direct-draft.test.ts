@@ -65,8 +65,6 @@ const snapshot = {
       unit_key: assignment.unitKey,
       scheduled_date: assignment.scheduledDate,
       original_scheduled_date: assignment.scheduledDate,
-      classification: "open",
-      credit_state: "uncredited",
       locked: assignment.locked,
     })),
     basePlan: {

@@ -6,10 +6,7 @@ export interface ReconciliationMismatch {
   planId: string | null;
   planGoalId: string;
   unitKey: string;
-  snapshotClassification: string;
-  unitClassification: string;
-  snapshotCreditState: string;
-  unitCreditState: string;
+  reason: "missing_work_unit";
 }
 
 function buildWorkUnitIndex(workUnits: PlannerWorkUnit[]) {
@@ -19,37 +16,6 @@ function buildWorkUnitIndex(workUnits: PlannerWorkUnit[]) {
       unit,
     ])
   );
-}
-
-export function hydrateActivePlanItemsFromWorkUnits(
-  items: PlannerActiveItemSnapshot[],
-  workUnits: PlannerWorkUnit[],
-  goalIdByPlanGoalId: ReadonlyMap<string, string>
-): PlannerActiveItemSnapshot[] {
-  const unitByKey = buildWorkUnitIndex(workUnits);
-
-  return items.map((item) => {
-    const originalGoalId =
-      goalIdByPlanGoalId.get(item.plan_goal_id) ?? item.plan_goal_id;
-    const unit = unitByKey.get(`${originalGoalId}:${item.unit_key}`);
-    if (!unit) {
-      return {
-        ...item,
-        classification: "open",
-        credit_state: "uncredited",
-        credited_completion_id: null,
-        credited_completion_date: null,
-      };
-    }
-
-    return {
-      ...item,
-      classification: unit.classification,
-      credit_state: unit.creditState,
-      credited_completion_id: unit.creditedCompletionId,
-      credited_completion_date: unit.creditedCompletionDate,
-    };
-  });
 }
 
 export function detectActivePlanReconciliationMismatches({
@@ -70,24 +36,16 @@ export function detectActivePlanReconciliationMismatches({
     const originalGoalId =
       goalIdByPlanGoalId.get(item.plan_goal_id) ?? item.plan_goal_id;
     const unit = unitByKey.get(`${originalGoalId}:${item.unit_key}`);
-    if (!unit) {
+    if (unit) {
       continue;
     }
-    if (
-      unit.classification !== item.classification ||
-      unit.creditState !== item.credit_state
-    ) {
-      mismatches.push({
-        entryKey: `${originalGoalId}:${item.unit_key}`,
-        planId,
-        planGoalId: item.plan_goal_id,
-        unitKey: item.unit_key,
-        snapshotClassification: item.classification,
-        unitClassification: unit.classification,
-        snapshotCreditState: item.credit_state,
-        unitCreditState: unit.creditState,
-      });
-    }
+    mismatches.push({
+      entryKey: `${originalGoalId}:${item.unit_key}`,
+      planId,
+      planGoalId: item.plan_goal_id,
+      unitKey: item.unit_key,
+      reason: "missing_work_unit",
+    });
   }
 
   return mismatches;

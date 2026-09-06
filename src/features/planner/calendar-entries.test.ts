@@ -44,12 +44,8 @@ function persistedItem(scheduledDate: string): PlannerActiveItemSnapshot {
     requirement_kind: "deadline_total",
     scheduled_date: scheduledDate,
     original_scheduled_date: scheduledDate,
-    classification: "open",
-    credit_state: "uncredited",
     locked: false,
     revision: 0,
-    credited_completion_id: null,
-    credited_completion_date: null,
   };
 }
 
@@ -201,12 +197,8 @@ describe("planner calendar entries", () => {
           requirement_kind: "deadline_total",
           scheduled_date: "2026-10-01",
           original_scheduled_date: "2026-10-01",
-          classification: "open",
-          credit_state: "uncredited",
           locked: false,
           revision: 0,
-          credited_completion_id: null,
-          credited_completion_date: null,
         },
       ],
       activeGoalsByPlanGoalId: new Map(),
@@ -257,13 +249,7 @@ describe("planner calendar entries", () => {
   it("does not paint snapshot credit when a persisted item has no work unit", () => {
     const entriesByDate = buildEntriesByDate({
       workUnits: [],
-      activeItems: [
-        {
-          ...persistedItem("2026-10-01"),
-          classification: "fulfilled",
-          credit_state: "completed_as_scheduled",
-        },
-      ],
+      activeItems: [persistedItem("2026-10-01")],
       activeGoalsByPlanGoalId: new Map([
         ["goal-a", activeGoal()],
       ]),

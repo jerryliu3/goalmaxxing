@@ -40,28 +40,32 @@ function earlierDate(left: string, right: string) {
   return left < right ? left : right;
 }
 
+type DemoSessionWindows = Pick<
+  PlannerWorkUnit,
+  "creditWindow" | "placementWindow" | "draftMoveWindow" | "classification"
+>;
+
 function demoSessionWindows({
   goal,
-  item,
+  scheduledDate,
+  credited,
   asOfDate,
   visibleStart,
   visibleEnd,
 }: {
   goal: Goal;
-  item: PlannerActiveItemSnapshot;
+  scheduledDate: string | null;
+  credited: boolean;
   asOfDate: string;
   visibleStart: string;
   visibleEnd: string;
-}): Pick<
-  PlannerWorkUnit,
-  "creditWindow" | "placementWindow" | "draftMoveWindow" | "classification"
-> {
+}): DemoSessionWindows {
   const lifetimeEnd = goal.end_date ?? visibleEnd;
   const creditWindow = {
     start: goal.start_date,
-    end: laterDate(lifetimeEnd, item.scheduled_date ?? lifetimeEnd),
+    end: laterDate(lifetimeEnd, scheduledDate ?? lifetimeEnd),
   };
-  if (item.credit_state !== "uncredited") {
+  if (credited) {
     return {
       creditWindow,
       placementWindow: null,
@@ -71,14 +75,14 @@ function demoSessionWindows({
   }
   const moveWindow = {
     start: laterDate(goal.start_date, visibleStart),
-    end: earlierDate(lifetimeEnd, laterDate(visibleEnd, item.scheduled_date ?? visibleEnd)),
+    end: earlierDate(lifetimeEnd, laterDate(visibleEnd, scheduledDate ?? visibleEnd)),
   };
   if (moveWindow.start > moveWindow.end) {
     return {
       creditWindow,
       placementWindow: null,
       draftMoveWindow: null,
-      classification: item.scheduled_date && item.scheduled_date > asOfDate ? "future" : "open",
+      classification: scheduledDate && scheduledDate > asOfDate ? "future" : "open",
     };
   }
   return {
@@ -86,7 +90,7 @@ function demoSessionWindows({
     placementWindow: moveWindow,
     draftMoveWindow: moveWindow,
     classification:
-      item.scheduled_date && item.scheduled_date > asOfDate ? "future" : "open",
+      scheduledDate && scheduledDate > asOfDate ? "future" : "open",
   };
 }
 
@@ -155,7 +159,6 @@ export function buildDemoPlannerContext(
       alexGoals.some((goal) => goal.id === item.goal_id)
   );
   const activeItems: PlannerActiveItemSnapshot[] = monthItems.map((item) => {
-    const credited = creditedCompletionForItem(snapshot, item);
     return {
       id: item.id,
       plan_goal_id: item.goal_id,
@@ -163,21 +166,21 @@ export function buildDemoPlannerContext(
       requirement_kind: item.requirement_kind,
       scheduled_date: item.scheduled_date,
       original_scheduled_date: item.original_scheduled_date,
-      classification: credited ? "fulfilled" : "open",
-      credit_state: credited ? "completed_as_scheduled" : "uncredited",
       locked: item.locked,
       revision: item.revision,
-      credited_completion_id: credited?.id ?? null,
-      credited_completion_date: credited?.completed_on ?? null,
     };
   });
   const workUnits: PlannerWorkUnit[] = activeItems.map((item) => {
     const goal = alexGoals.find((candidate) => candidate.id === item.plan_goal_id);
     const snapshotItem = monthItems.find((candidate) => candidate.id === item.id);
-    const windows = goal
+    const credited = snapshotItem
+      ? creditedCompletionForItem(snapshot, snapshotItem)
+      : undefined;
+    const windows: DemoSessionWindows = goal
       ? demoSessionWindows({
           goal,
-          item,
+          scheduledDate: item.scheduled_date,
+          credited: Boolean(credited),
           asOfDate: snapshot.asOfDate,
           visibleStart: windowStart,
           visibleEnd: windowEnd,
@@ -186,7 +189,7 @@ export function buildDemoPlannerContext(
           creditWindow: undefined,
           placementWindow: null,
           draftMoveWindow: null,
-          classification: item.classification,
+          classification: credited ? "fulfilled" : "open",
         };
     return {
       originalGoalId: item.plan_goal_id,
@@ -194,18 +197,15 @@ export function buildDemoPlannerContext(
       kind: item.requirement_kind,
       label: snapshotItem?.label ?? goal?.title ?? null,
       scheduledDate: item.scheduled_date,
-      creditState: item.credit_state,
-      creditedCompletionDate: item.credited_completion_date,
+      creditState: credited ? "completed_as_scheduled" : "uncredited",
+      creditedCompletionDate: credited?.completed_on ?? null,
       locked: item.locked,
       ...windows,
     };
   });
   const digest = sha256Hex(
     activeItems
-      .map(
-        (item) =>
-          `${item.id}:${item.scheduled_date}:${item.credit_state}:${item.revision}`
-      )
+      .map((item) => `${item.id}:${item.scheduled_date}:${item.revision}`)
       .join("|")
   );
   const goalTitles = Object.fromEntries(alexGoals.map((goal) => [goal.id, goal.title]));
