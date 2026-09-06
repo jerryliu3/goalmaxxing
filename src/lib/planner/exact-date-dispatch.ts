@@ -1,10 +1,5 @@
 import { z } from "zod";
 import { getDateInTimezone, isValidIanaTimezone } from "@/lib/dates/timezone";
-import {
-  isSuppressedOnDate,
-  resolveLinkSuppression,
-  type LinkSuppressionSource,
-} from "@/lib/planner/link-suppression";
 import type { createClient as createServerClient } from "@/lib/supabase/server";
 
 const digestSchema = z.string().regex(/^[a-f0-9]{64}$/);
@@ -80,37 +75,6 @@ interface GoalLifetimeWindow {
   endDate: string | null;
 }
 
-interface GoalLinkSourceRecord {
-  id: string;
-  owner_id: string;
-  start_date: string;
-  end_date: string | null;
-  frequency_type: "fixed_milestones" | "recurring";
-  target_count: number | null;
-  is_deleted: boolean;
-  archived_at: string | null;
-}
-
-interface GoalLinkRow {
-  source_goal_id: string;
-  target_goal_id: string;
-  source: GoalLinkSourceRecord | GoalLinkSourceRecord[] | null;
-}
-
-const GOAL_LINK_SOURCE_SELECT =
-  "source_goal_id, target_goal_id, source:goals!goal_links_source_goal_id_fkey(id, owner_id, start_date, end_date, frequency_type, target_count, is_deleted, archived_at)";
-
-type SuppressionGraphLoadResult =
-  | {
-      ok: true;
-      links: Array<{ sourceGoalId: string; targetGoalId: string }>;
-      sourcesById: Map<string, LinkSuppressionSource>;
-    }
-  | {
-      ok: false;
-      failure: PlannerExactDateDispatchFailure;
-    };
-
 function dispatchFailure(
   status: number,
   code: string,
@@ -124,81 +88,34 @@ function dispatchFailure(
   };
 }
 
-function dateOutsideGoalLifetime(date: string, goal: GoalLifetimeWindow) {
-  return date < goal.startDate || (goal.endDate !== null && date > goal.endDate);
+export function mapCompletionRpcError(
+  error: { code?: string | null; message?: string | null } | null
+): PlannerExactDateDispatchFailure | null {
+  if (!error) {
+    return null;
+  }
+  if (error.code === "23514" && error.message === "future_completion_not_allowed") {
+    return dispatchFailure(
+      422,
+      "future_completion_not_allowed",
+      "Completions can only be added for today or a past date."
+    );
+  }
+  if (
+    error.code === "23514" &&
+    error.message === "completion_outside_goal_lifetime"
+  ) {
+    return dispatchFailure(
+      422,
+      "completion_outside_goal_lifetime",
+      "The completion date must be within the goal lifetime."
+    );
+  }
+  return null;
 }
 
-async function loadSuppressionGraphForGoal({
-  supabase,
-  ownerId,
-  goalId,
-}: {
-  supabase: ExactDateClient;
-  ownerId: string;
-  goalId: string;
-}): Promise<SuppressionGraphLoadResult> {
-  const links: Array<{ sourceGoalId: string; targetGoalId: string }> = [];
-  const sourcesById = new Map<string, LinkSuppressionSource>();
-  const visitedTargets = new Set<string>([goalId]);
-  let frontierTargetGoalIds = [goalId];
-
-  while (frontierTargetGoalIds.length > 0) {
-    const targetLinksResponse = await supabase
-      .from("goal_links")
-      .select(GOAL_LINK_SOURCE_SELECT)
-      .in("target_goal_id", frontierTargetGoalIds)
-      .eq("owner_id", ownerId);
-
-    if (targetLinksResponse.error) {
-      return {
-        ok: false,
-        failure: dispatchFailure(
-          503,
-          "planner_goal_lookup_failed",
-          "Planner goal state could not be loaded."
-        ),
-      };
-    }
-
-    const linkRows = (targetLinksResponse.data ?? []) as GoalLinkRow[];
-    const nextFrontierTargetGoalIds = new Set<string>();
-
-    for (const linkRow of linkRows) {
-      links.push({
-        sourceGoalId: linkRow.source_goal_id,
-        targetGoalId: linkRow.target_goal_id,
-      });
-
-      const sourceRecord = Array.isArray(linkRow.source)
-        ? (linkRow.source[0] ?? null)
-        : linkRow.source;
-      if (sourceRecord) {
-        sourcesById.set(sourceRecord.id, {
-          id: sourceRecord.id,
-          ownerId: sourceRecord.owner_id,
-          isDeleted: sourceRecord.is_deleted,
-          archivedAt: sourceRecord.archived_at,
-          startDate: sourceRecord.start_date,
-          endDate: sourceRecord.end_date,
-          frequencyType: sourceRecord.frequency_type,
-          targetCount: sourceRecord.target_count,
-        });
-      }
-
-      if (!visitedTargets.has(linkRow.source_goal_id)) {
-        visitedTargets.add(linkRow.source_goal_id);
-        nextFrontierTargetGoalIds.add(linkRow.source_goal_id);
-      }
-    }
-
-    frontierTargetGoalIds = Array.from(nextFrontierTargetGoalIds);
-  }
-
-  return {
-    ok: true,
-    links,
-    sourcesById,
-  };
+function dateOutsideGoalLifetime(date: string, goal: GoalLifetimeWindow) {
+  return date < goal.startDate || (goal.endDate !== null && date > goal.endDate);
 }
 
 async function ensureExpectedDigest({
@@ -324,10 +241,13 @@ export async function applyPlannerItemDateFact({
     desiredFactState,
   });
   if (mutationError) {
-    return dispatchFailure(
-      409,
-      "planner_item_date_fact_failed",
-      "Planner item date fact could not be updated."
+    return (
+      mapCompletionRpcError(mutationError) ??
+      dispatchFailure(
+        409,
+        "planner_item_date_fact_failed",
+        "Planner item date fact could not be updated."
+      )
     );
   }
 
@@ -368,28 +288,7 @@ export async function applyPlannerGoalDateFact({
     return digestFailure;
   }
   const localToday = getDateInTimezone(new Date(), timezone);
-  const suppressionGraph = await loadSuppressionGraphForGoal({
-    supabase,
-    ownerId,
-    goalId,
-  });
-  if (!suppressionGraph.ok) {
-    return suppressionGraph.failure;
-  }
-  const suppression = resolveLinkSuppression({
-    goalId,
-    links: suppressionGraph.links,
-    sourcesById: suppressionGraph.sourcesById,
-    ownerId,
-    asOfDate: localToday,
-  });
-  if (isSuppressedOnDate(suppression, date)) {
-    return dispatchFailure(
-      422,
-      "linked_goal_disallowed",
-      "Linked target goals cannot be completed through plan-goal date facts."
-    );
-  }
+  void ownerId;
 
   if (desiredFactState === "present") {
     if (date > localToday) {
@@ -415,10 +314,13 @@ export async function applyPlannerGoalDateFact({
     desiredFactState,
   });
   if (mutationError) {
-    return dispatchFailure(
-      409,
-      "planner_goal_date_fact_failed",
-      "Planner goal date fact could not be updated."
+    return (
+      mapCompletionRpcError(mutationError) ??
+      dispatchFailure(
+        409,
+        "planner_goal_date_fact_failed",
+        "Planner goal date fact could not be updated."
+      )
     );
   }
 

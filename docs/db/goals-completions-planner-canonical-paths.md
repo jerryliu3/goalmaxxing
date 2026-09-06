@@ -31,6 +31,8 @@ and planner boundaries. Closure v2 additions are marked in the **Closure v2** se
 | Invariant | Canonical layer | Early check | Tests |
 |---|---|---|---|
 | Exact-date idempotency | completion RPCs + `/api/completions` | route handler | `route.test.ts`, `exact-date-dispatch.test.ts` |
+| Goal lifetime on completion writes | `mark_goal_complete` / `apply_external_completion_service` | route handler + exact-date dispatch | `completion_lifetime_and_link_guards.test.sql` |
+| Linked-target suppression on completion writes | `mark_goal_complete` / `apply_external_completion_service` | exact-date dispatch | `completion_lifetime_and_link_guards.test.sql` |
 | Planner digest expectations | `exact-date-dispatch.ts` | route handler | `exact-date-dispatch.test.ts` |
 | Cross-surface route choice | `completion-intent.ts` | Today, Insights, Calendar adapters | `completion-intent.test.ts`, `completion-intent-parity.test.ts` |
 

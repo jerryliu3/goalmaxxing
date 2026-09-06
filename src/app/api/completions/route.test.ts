@@ -220,4 +220,5 @@ describe("completions route", () => {
     );
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
+
 });
