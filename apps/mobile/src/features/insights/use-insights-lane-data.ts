@@ -1,15 +1,32 @@
-import type { ProgressContextResponse } from "@cadence/shared/goals/progress-context";
+import type {
+  ProgressContextFact,
+  ProgressContextResponse,
+  ProgressContextSummary,
+} from "@cadence/shared/goals/progress-context";
 import type { DuoLaneSubject } from "@cadence/shared/social/duo";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import { useEffect, useMemo, useRef } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
+import { sanitizeMobileSupabaseError } from "../../lib/supabase-error";
+import { supabase } from "../../lib/supabase";
+import { triggerLightPressFeedback } from "../../lib/haptics";
 import { useSession } from "../../lib/session";
-import { duoQueryKeys } from "../duo/query-keys";
+import {
+  buildMobileGoalsQueryKey,
+  buildMobileTeamMembershipQueryKey,
+  duoQueryKeys,
+} from "../duo/query-keys";
 import {
   extractMobileDuoPartnerFailureContext,
   reportMobileDuoPartnerFetchFailure,
 } from "../duo/telemetry";
+import {
+  MOBILE_CHECKLIST_GOALS_SELECT,
+  resolveTeamMembershipIds,
+  selectChecklistGoalsForSubject,
+  type MobileGoal,
+} from "../checklist/checklist-lane-data";
 import {
   buildInsightsLaneQueryKey,
   buildInsightsProgressQuery,
@@ -26,10 +43,18 @@ export interface InsightsLaneData {
   subject: DuoLaneSubject;
   loading: boolean;
   error: unknown;
+  facts: ProgressContextFact[];
+  summaries: ProgressContextSummary[];
+  goals: MobileGoal[];
   factsByDay: Record<string, number>;
   monthSummary: InsightsMonthSummary;
   days: string[];
   offset: number;
+  toggleCompletion: ((input: {
+    goalId: string;
+    date: string;
+    desiredFactState: "present" | "absent";
+  }) => void) | null;
   refresh: () => void;
 }
 
@@ -48,16 +73,19 @@ function buildMonthCells(month: string) {
 export function useInsightsLaneData({
   subject,
   month,
+  partnerId,
   enabled,
 }: {
   subject: DuoLaneSubject;
   month: string;
+  partnerId: string | null;
   enabled: boolean;
 }): InsightsLaneData {
   const { userId } = useSession();
   const queryClient = useQueryClient();
   const asOfDate = format(new Date(), "yyyy-MM-dd");
   const timezone = timezoneName();
+  const interactive = subject.id === "viewer" && !subject.readOnly;
   const subjectReady = subject.id === "viewer" ? Boolean(userId) : Boolean(subject.userId);
   const laneEnabled = Boolean(userId) && enabled && subjectReady;
   const reportedPartnerErrorAt = useRef(0);
@@ -81,6 +109,49 @@ export function useInsightsLaneData({
       });
     },
   });
+  const goalsQuery = useQuery({
+    queryKey: buildMobileGoalsQueryKey({
+      viewerUserId: userId,
+      subjectUserId: subject.userId,
+    }),
+    enabled: laneEnabled,
+    queryFn: async () => {
+      let goalsLoadQuery = supabase.from("goals").select(MOBILE_CHECKLIST_GOALS_SELECT);
+      if (subject.id === "partner" && partnerId) {
+        goalsLoadQuery = goalsLoadQuery.eq("owner_id", partnerId);
+      }
+      const { data, error } = await goalsLoadQuery
+        .eq("is_deleted", false)
+        .order("title", { ascending: true });
+      if (error) {
+        throw sanitizeMobileSupabaseError({
+          error,
+          userMessage: "Progress goals could not be loaded.",
+        });
+      }
+      return (data ?? []) as MobileGoal[];
+    },
+  });
+  const teamMembershipQuery = useQuery({
+    queryKey: buildMobileTeamMembershipQueryKey({
+      viewerUserId: userId,
+      subjectUserId: subject.userId,
+    }),
+    enabled: laneEnabled && subject.id === "viewer",
+    queryFn: async () => {
+      if (!userId) {
+        return [] as string[];
+      }
+      const { data, error } = await supabase
+        .from("team_members")
+        .select("team_id")
+        .eq("user_id", userId);
+      return resolveTeamMembershipIds({
+        rows: (data ?? null) as Array<{ team_id: string }> | null,
+        hasError: Boolean(error),
+      });
+    },
+  });
 
   useEffect(() => {
     if (
@@ -99,24 +170,64 @@ export function useInsightsLaneData({
     });
   }, [query.error, query.errorUpdatedAt, subject.id]);
 
-  const factsByDay = useMemo(
-    () => countInsightsFactsByDay(query.data?.facts ?? []),
-    [query.data?.facts]
-  );
+  const facts = query.data?.facts ?? [];
+  const factsByDay = useMemo(() => countInsightsFactsByDay(facts), [facts]);
   const monthSummary = useMemo(
     () => summarizeInsightsMonth(factsByDay),
     [factsByDay]
   );
   const cells = useMemo(() => buildMonthCells(month), [month]);
+  const goals = selectChecklistGoalsForSubject({
+    goals: goalsQuery.data ?? [],
+    subject,
+    partnerId,
+    memberTeamIds: teamMembershipQuery.data ?? [],
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async (input: {
+      goalId: string;
+      date: string;
+      desiredFactState: "present" | "absent";
+    }) => {
+      if (!interactive) {
+        throw new Error("Progress ledger is read-only.");
+      }
+      triggerLightPressFeedback();
+      return api.postJson("/api/completions", {
+        goalId: input.goalId,
+        date: input.date,
+        desiredFactState: input.desiredFactState,
+        timezone,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: duoQueryKeys.insightsPrefix(userId),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: duoQueryKeys.progressPrefix(userId),
+      });
+    },
+  });
 
   return {
     subject,
-    loading: query.isLoading,
-    error: query.error,
+    loading:
+      query.isLoading ||
+      goalsQuery.isLoading ||
+      (interactive && teamMembershipQuery.isLoading),
+    error: query.error ?? goalsQuery.error ?? teamMembershipQuery.error,
+    facts,
+    summaries: query.data?.summaries ?? [],
+    goals,
     factsByDay,
     monthSummary,
     days: cells.days,
     offset: cells.offset,
+    toggleCompletion: interactive
+      ? (input) => toggleMutation.mutate(input)
+      : null,
     refresh: () => {
       void queryClient.invalidateQueries({
         queryKey: duoQueryKeys.insightsPrefix(userId),
