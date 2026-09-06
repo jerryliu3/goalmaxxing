@@ -61,6 +61,7 @@ export interface CalendarDayAccessorsArgs {
   endMonthFilter: string | null;
   searchQuery?: string;
   duoScope: "me" | "partner" | "both";
+  viewMode?: "month" | "week" | "three_day" | "day";
   partnerCompletionMarkersByDate?: Map<string, PlannerCompletionFactMarker[]>;
   visibleDays: string[];
   additionalProjectionDays: string[];
@@ -90,6 +91,9 @@ export interface CalendarDayAccessorsResult {
   getCompletionFactMarkersForDay: (
     day: string | null
   ) => PlannerCompletionFactMarker[];
+  getPartnerCompletionFactMarkersForDay: (
+    day: string | null
+  ) => PlannerCompletionFactMarker[];
   getOrderedEntriesForDay: (day: string | null) => PlannerDayDetailEntry[];
   canMutateEntryOnDay: (entry: PlannerDayDetailEntry, day: string | null) => boolean;
   hideViewerPlan: boolean;
@@ -107,6 +111,7 @@ export function selectCalendarDayAccessorsModel({
   endMonthFilter,
   searchQuery = "",
   duoScope,
+  viewMode = "month",
   partnerCompletionMarkersByDate,
   visibleDays,
   additionalProjectionDays,
@@ -203,6 +208,8 @@ export function selectCalendarDayAccessorsModel({
 
   const hideViewerPlan = duoScope === "partner";
   const plannerReadOnly = duoScope === "partner";
+  const overlayPartnerOnViewer =
+    duoScope === "partner" || (duoScope === "both" && viewMode !== "week");
   const taskLookup = collectCalendarTaskLookup(
     showTasksInsteadOfGoals ? calendarTaskEntriesByDate : undefined
   );
@@ -249,6 +256,18 @@ export function selectCalendarDayAccessorsModel({
     return entriesForDay(day);
   };
 
+  const getPartnerCompletionFactMarkersForDay = (day: string | null) => {
+    if (!day || duoScope === "me") {
+      return [];
+    }
+    return applyCalendarCompletionMarkerFilters({
+      viewerMarkers: [],
+      partnerMarkers: partnerCompletionMarkersByDate?.get(day) ?? [],
+      goalPassesFilters,
+      searchQuery,
+    });
+  };
+
   const getCompletionFactMarkersForDay = (day: string | null) => {
     if (showTasksInsteadOfGoals) {
       return [];
@@ -256,10 +275,9 @@ export function selectCalendarDayAccessorsModel({
     const viewerMarkers = hideViewerPlan
       ? []
       : getCalendarDayProjection(day).completionFactMarkers;
-    const partnerMarkers =
-      day && (duoScope === "partner" || duoScope === "both")
-        ? partnerCompletionMarkersByDate?.get(day) ?? []
-        : [];
+    const partnerMarkers = overlayPartnerOnViewer
+      ? getPartnerCompletionFactMarkersForDay(day)
+      : [];
     return applyCalendarCompletionMarkerFilters({
       viewerMarkers,
       partnerMarkers,
@@ -295,6 +313,7 @@ export function selectCalendarDayAccessorsModel({
     effectiveEndMonthFilter,
     getEntriesForDay,
     getCompletionFactMarkersForDay,
+    getPartnerCompletionFactMarkersForDay,
     getOrderedEntriesForDay,
     canMutateEntryOnDay,
     hideViewerPlan,

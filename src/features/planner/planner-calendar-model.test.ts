@@ -360,4 +360,51 @@ describe("selectPlannerCalendarModel", () => {
     expect(entries.map((entry) => entry.goalTitle)).toEqual(["Lift"]);
     expect(entries[0]?.entryKind).not.toBe("task");
   });
+
+  it("keeps partner markers on the viewer month and moves them off the Duo week board", () => {
+    const partnerMarkers = new Map([
+      [
+        "2026-08-06",
+        [
+          {
+            key: "partner-marker",
+            originalGoalId: "partner-goal",
+            unitKey: "partner-fact",
+            goalTitle: "Partner stretch",
+            scheduledDate: "2026-08-06",
+            owner: "partner" as const,
+          },
+        ],
+      ],
+    ]);
+
+    const monthModel = selectPlannerCalendarModel(
+      buildArgs({
+        duoScope: "both",
+        viewMode: "month",
+        partnerCompletionMarkersByDate: partnerMarkers,
+      })
+    );
+    expect(
+      monthModel.dayAccessors.getCompletionFactMarkersForDay("2026-08-06").map(
+        (marker) => marker.key
+      )
+    ).toEqual(["partner-marker"]);
+
+    const weekModel = selectPlannerCalendarModel(
+      buildArgs({
+        duoScope: "both",
+        viewMode: "week",
+        partnerCompletionMarkersByDate: partnerMarkers,
+      })
+    );
+    expect(weekModel.dayAccessors.getCompletionFactMarkersForDay("2026-08-06")).toEqual(
+      []
+    );
+    expect(
+      weekModel.dayAccessors.getPartnerCompletionFactMarkersForDay("2026-08-06").map(
+        (marker) => marker.key
+      )
+    ).toEqual(["partner-marker"]);
+  });
 });

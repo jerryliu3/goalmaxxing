@@ -79,6 +79,10 @@ export interface PlannerCalendarSurfaceLayoutProps {
   setFiltersOpen: (open: boolean) => void;
   setSearchQuery: (query: string) => void;
   partnerOverlayError?: string | null;
+  partnerWeekBoard?: {
+    label: string;
+    getMarkersForDay: (day: string) => PlannerCompletionFactMarker[];
+  } | null;
   month: string | null;
   previousWindowAriaLabel: string;
   nextWindowAriaLabel: string;
@@ -222,6 +226,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     setFiltersOpen,
     setSearchQuery,
     partnerOverlayError,
+    partnerWeekBoard = null,
     month,
     previousWindowAriaLabel,
     nextWindowAriaLabel,
@@ -433,6 +438,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             cells={cells}
             renderCalendarDayCell={renderCalendarDayCell}
             focusedWeekCells={focusedWeekCells}
+            partnerWeekBoard={partnerWeekBoard}
             dayPreview={dayPreview}
             dayPreviewRef={dayPreviewRef}
             previewDayEntries={previewDayEntries}
