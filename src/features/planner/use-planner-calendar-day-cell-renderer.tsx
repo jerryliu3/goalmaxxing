@@ -158,6 +158,8 @@ export function usePlannerCalendarDayCellRenderer({
           monthContextLabel={monthContextLabel}
           isToday={isToday}
           isPastInMonth={isPastInMonth}
+          isSelected={cell.date === focusedDay}
+          layout={viewMode === "week" ? "agenda" : "month"}
           ariaLabel={ariaLabel}
           entriesForDay={entriesForDay}
           completionFactMarkersForDay={completionFactMarkersForDay}
@@ -184,6 +186,10 @@ export function usePlannerCalendarDayCellRenderer({
             if (!canMutateEntryOnDay(entry, day)) {
               return;
             }
+            if (viewMode === "week") {
+              openDayViewForDay(day);
+              return;
+            }
             if (viewMode === "day") {
               if (day !== focusedDay) {
                 setLocalSelectedDay(day);
@@ -202,6 +208,10 @@ export function usePlannerCalendarDayCellRenderer({
           }}
           onCellClick={(target) => {
             if (draggingEntryKey) {
+              return;
+            }
+            if (viewMode === "week") {
+              openDayViewForDay(cell.date);
               return;
             }
             if (viewMode === "day") {
