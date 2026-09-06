@@ -41,9 +41,8 @@ describe("tab onboarding storage", () => {
 
   it("keeps community, insights, and calendar tours on the intended targets", () => {
     expect(TAB_ONBOARDING_TOURS["social.main"].map((step) => step.target)).toEqual([
-      "social.feed",
-      "social.compete",
       "social.team",
+      "social.compete",
     ]);
     expect(TAB_ONBOARDING_TOURS["insights.main"][2]?.description).toContain(
       "read-only overlap"

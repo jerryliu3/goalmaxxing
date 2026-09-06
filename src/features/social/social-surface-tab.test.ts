@@ -6,9 +6,10 @@ describe("resolveSocialSurfaceTab", () => {
     expect(resolveSocialSurfaceTab("team")).toBe("team");
   });
 
-  it("falls back to feed for unknown tabs", () => {
-    expect(resolveSocialSurfaceTab(undefined)).toBe("feed");
-    expect(resolveSocialSurfaceTab("unknown")).toBe("feed");
+  it("falls back to team for feed, unknown, and missing tabs", () => {
+    expect(resolveSocialSurfaceTab(undefined)).toBe("team");
+    expect(resolveSocialSurfaceTab("unknown")).toBe("team");
+    expect(resolveSocialSurfaceTab("feed")).toBe("team");
   });
 
   it("sends private accounts to team regardless of the requested tab", () => {

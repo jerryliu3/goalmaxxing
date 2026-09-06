@@ -52,21 +52,15 @@ export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]>
   ],
   "social.main": [
     {
-      title: "Feed",
-      description:
-        "Feed shows recent progress from you and others so you can stay connected.",
-      target: "social.feed",
+      title: "Team",
+      description: "Invite a friend and keep team goals next to the people you share them with.",
+      target: "social.team",
     },
     {
       title: "Challenges and leaderboards",
       description:
         "Join Challenges for shared competitions, and use Leaderboards to compare consistent progress.",
       target: "social.compete",
-    },
-    {
-      title: "Partner up",
-      description: "Open Team to invite a friend and keep each other accountable.",
-      target: "social.team",
     },
   ],
 };

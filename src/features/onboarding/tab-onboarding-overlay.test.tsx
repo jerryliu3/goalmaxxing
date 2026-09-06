@@ -73,24 +73,21 @@ describe("TabOnboardingOverlay", () => {
     expect(await screen.findByRole("dialog", { name: "Plan views" })).toBeInTheDocument();
   });
 
-  it("walks through community tabs without including Team on the first step", async () => {
+  it("walks through community tabs starting on Team", async () => {
     render(
       <>
-        <div data-onboarding="social.feed">Feed</div>
+        <div data-onboarding="social.team">Team</div>
         <div data-onboarding="social.compete">Challenges</div>
         <div data-onboarding="social.compete">Leaderboards</div>
-        <div data-onboarding="social.team">Team</div>
         <TabOnboardingOverlay onboardingKey="social.main" />
       </>
     );
 
-    expect(await screen.findByRole("dialog", { name: "Feed" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Team" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(
       await screen.findByRole("dialog", { name: "Challenges and leaderboards" })
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Partner up" })).toBeInTheDocument();
   });
 
   it("prefers today's calendar cell over the full board on the last step", async () => {
