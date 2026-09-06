@@ -130,7 +130,7 @@ export function GoalCard({
       className={cn(
         "shadow-sm",
         resolvedPresentation.isGreen &&
-          "border-emerald-200 bg-emerald-50"
+          "border-primary/30 bg-primary/10"
       )}
     >
       <CardContent className="flex items-center gap-2 px-2 py-0.5">

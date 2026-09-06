@@ -39,7 +39,7 @@ describe("SocialFreshnessIndicator", () => {
       "standings + challenges"
     );
     expect(screen.getByTestId("social-freshness-status-dot")).toHaveClass(
-      "bg-emerald-500"
+      "bg-primary"
     );
   });
 

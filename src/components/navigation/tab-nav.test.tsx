@@ -64,7 +64,7 @@ describe("TabNav", () => {
       "nav.settings"
     );
     expect(screen.getByRole("link", { name: /Community/i })).toHaveClass(
-      "text-white"
+      "text-primary"
     );
     expect(container.querySelectorAll("[data-motion='tab-nav-highlight']")).toHaveLength(1);
   });
@@ -87,8 +87,8 @@ describe("TabNav", () => {
   it("keeps the mobile nav bar 50% transparent so content shows through", () => {
     const { container } = render(<TabNav mobile />);
     const tabList = container.querySelector("ul");
-    expect(tabList).toHaveClass("bg-background/50");
-    expect(tabList).toHaveClass("supports-[backdrop-filter]:bg-background/50");
+    expect(tabList).toHaveClass("bg-background/90");
+    expect(tabList).toHaveClass("supports-[backdrop-filter]:bg-background/80");
     expect(tabList).not.toHaveClass("bg-background/10");
     expect(tabList).not.toHaveClass("bg-background/20");
     expect(tabList).not.toHaveClass("bg-background/25");

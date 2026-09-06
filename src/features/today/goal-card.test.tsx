@@ -188,10 +188,9 @@ describe("GoalCard", () => {
     );
 
     expect(screen.queryByText("Achieved")).not.toBeInTheDocument();
-    expect(container.firstChild).toHaveClass("border-emerald-200");
-    expect(container.firstChild).toHaveClass("bg-emerald-50");
-    expect(container.firstChild).not.toHaveClass("dark:border-emerald-800/60");
-    expect(container.firstChild).not.toHaveClass("dark:bg-emerald-950/40");
+    expect(container.firstChild).toHaveClass("border-primary/30");
+    expect(container.firstChild).toHaveClass("bg-primary/10");
+    expect(container.firstChild).not.toHaveClass("bg-emerald-50");
   });
 
   it("shows period-scoped counts for cadence goals on the selected checklist period", () => {

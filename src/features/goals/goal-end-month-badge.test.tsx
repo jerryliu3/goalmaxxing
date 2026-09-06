@@ -11,8 +11,7 @@ describe("GoalEndMonthBadge", () => {
     render(<GoalEndMonthBadge endDate="2026-08-14" />);
 
     const badge = screen.getByLabelText("Goal end date Aug 14, 2026");
-    expect(badge).toHaveClass("bg-sky-100");
-    expect(badge).toHaveClass("text-sky-900");
-    expect(badge).not.toHaveClass("text-sky-100");
+    expect(badge).toHaveClass("bg-secondary");
+    expect(badge).toHaveClass("text-foreground");
   });
 });

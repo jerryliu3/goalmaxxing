@@ -286,7 +286,7 @@ export function PlannerTasksPanel({
                     {toggling ? (
                       <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
                     ) : complete ? (
-                      <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
+                      <CheckCircle2 className="size-4 shrink-0 text-primary" />
                     ) : (
                       <Circle className="size-4 shrink-0 text-muted-foreground" />
                     )}
