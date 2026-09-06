@@ -173,7 +173,6 @@ describe("exact-date dispatch helpers", () => {
 
     const result = await applyPlannerGoalDateFact({
       supabase,
-      ownerId: "owner-a",
       goalId,
       date: "2026-08-05",
       desiredFactState: "present",

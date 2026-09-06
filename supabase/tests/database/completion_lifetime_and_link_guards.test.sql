@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(16);
+select plan(18);
 
 insert into auth.users (id, email)
 values ('11111111-1111-4111-8111-111111111111', 'completion-invariants-alice@example.com')
@@ -247,6 +247,26 @@ select set_config(
   true
 );
 select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select ok(
+  not exists (
+    select 1
+    from pg_proc as proc
+    inner join pg_namespace as nsp on nsp.oid = proc.pronamespace
+    where nsp.nspname = 'private'
+      and proc.proname = 'raise_if_linked_target_completion_disallowed'
+  ),
+  'linked-target completion write guard is not installed'
+);
+
+select is(
+  position(
+    'raise_if_linked_target_completion_disallowed'
+    in lower(pg_get_functiondef('public.mark_goal_complete(uuid, date)'::regprocedure))
+  ),
+  0,
+  'mark_goal_complete does not call the dropped linked-target write guard'
+);
 
 select lives_ok(
   $tap$
