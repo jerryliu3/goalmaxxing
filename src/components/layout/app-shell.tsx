@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Fragment, type ReactNode, ViewTransition } from "react";
+import { Fragment, type ReactNode, useLayoutEffect, ViewTransition } from "react";
 import { JourneyIntroOverlay } from "@/components/intro/journey-intro-overlay";
 import { JourneyProvider } from "@/components/journey/journey-provider.web";
 import type { JourneyFeatureFlags } from "@/components/journey/types";
@@ -57,6 +57,12 @@ export function AppShell({
   onNewGoalClick,
 }: AppShellProps) {
   setTabDataCacheScope(userId);
+  useLayoutEffect(() => {
+    document.body.classList.add("gm-gazetteer");
+    return () => {
+      document.body.classList.remove("gm-gazetteer");
+    };
+  }, []);
   useIdleAppPrefetch({
     userId,
     partnerId: duoState.activePartner?.partnerId ?? null,
@@ -92,8 +98,9 @@ export function AppShell({
             initialScopePreference={initialDuoScopePreference}
           >
             <PublicProfileSheetProvider>
-              <div className="relative z-10 flex min-h-screen w-full justify-center px-4 py-4 sm:px-6 sm:py-6">
-                <div className="flex w-full max-w-5xl flex-col gap-4 md:gap-6">
+              <div className="gm-gazetteer">
+                <div className="relative z-10 flex min-h-screen w-full justify-center bg-background px-4 py-4 sm:px-6 sm:py-6">
+                  <div className="flex w-full max-w-5xl flex-col gap-4 md:gap-6">
                   <header
                     className="sticky top-0 z-40 -mx-4 -mt-4 border-b bg-background/80 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.7rem)] shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/70 md:static md:m-0 md:rounded-2xl md:border md:bg-card/95 md:p-4"
                     style={{ viewTransitionName: "app-shell-header" }}
@@ -151,16 +158,17 @@ export function AppShell({
                   ) : (
                     <ViewTransitionWrapper>{mainContent}</ViewTransitionWrapper>
                   )}
+                  </div>
                 </div>
+                <div className="relative z-50 md:hidden" style={{ viewTransitionName: "app-mobile-tab-nav" }}>
+                  <TabNav
+                    mobile
+                    plannerPrimaryTabPreference={plannerPrimaryTabPreference}
+                    hrefPrefix={hrefPrefix}
+                  />
+                </div>
+                {goalSheet}
               </div>
-              <div className="relative z-50 md:hidden" style={{ viewTransitionName: "app-mobile-tab-nav" }}>
-                <TabNav
-                  mobile
-                  plannerPrimaryTabPreference={plannerPrimaryTabPreference}
-                  hrefPrefix={hrefPrefix}
-                />
-              </div>
-              {goalSheet}
             </PublicProfileSheetProvider>
           </DuoProvider>
         </JourneyProvider>

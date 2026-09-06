@@ -1,4 +1,4 @@
-import { CheckCircle2 } from "lucide-react";
+import { NestCompletionMark } from "@/components/ui/nest-completion-mark";
 import type { PlannerCompletionFactMarker } from "@/features/planner/calendar-surface.types";
 
 export function PlannerPartnerWeekDayCell({
@@ -36,9 +36,9 @@ export function PlannerPartnerWeekDayCell({
           {markers.map((marker) => (
             <div
               key={marker.key}
-              className="flex items-center gap-1.5 rounded-sm border-2 border-sky-500 bg-transparent px-1.5 py-1 text-[11px] text-sky-700 dark:text-sky-300"
+              className="flex items-center gap-1.5 rounded-md border-2 border-primary bg-transparent px-1.5 py-1 text-[11px] text-primary"
             >
-              <CheckCircle2 className="size-3 shrink-0" />
+              <NestCompletionMark done className="size-3 shrink-0" />
               <span className="truncate">{marker.goalTitle}</span>
             </div>
           ))}

@@ -34,6 +34,10 @@ describe("CompletionToggle", () => {
       name: "Mark session not done",
     });
     expect(toggle).toHaveAttribute("data-completed", "true");
+    expect(toggle.querySelector('[data-completion-mark="nest"]')).toHaveAttribute(
+      "data-completed",
+      "true"
+    );
 
     fireEvent.click(toggle);
     expect(onClick).toHaveBeenCalledOnce();
