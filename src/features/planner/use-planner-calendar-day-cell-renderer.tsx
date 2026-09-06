@@ -22,6 +22,13 @@ import type {
 } from "@/features/planner/calendar-surface.types";
 import type { PlannerDayPreviewInteractions } from "@/features/planner/use-planner-day-preview-interactions";
 import { canOpenPlannerEventDetails } from "@/features/planner/calendar-task-entries";
+import { useMediaQuery } from "@/lib/ui/use-media-query";
+
+export function resolveWeekAgendaSelectionViewMode(
+  isDesktopTwoPane: boolean
+): Extract<PlannerCalendarViewMode, "week" | "day"> {
+  return isDesktopTwoPane ? "week" : "day";
+}
 
 interface PlannerCalendarCell {
   date: string;
@@ -77,6 +84,7 @@ interface UsePlannerCalendarDayCellRendererArgs {
     | "openDayPreview"
     | "handleDayCellClick"
     | "openDayViewForDay"
+    | "selectDayForView"
     | "scheduleHoverPreview"
     | "scheduleHoverPreviewClose"
     | "startLongPressPreview"
@@ -111,6 +119,7 @@ export function usePlannerCalendarDayCellRenderer({
     openDayPreview,
     handleDayCellClick,
     openDayViewForDay,
+    selectDayForView,
     scheduleHoverPreview,
     scheduleHoverPreviewClose,
     startLongPressPreview,
@@ -119,6 +128,7 @@ export function usePlannerCalendarDayCellRenderer({
     lastTouchTapRef,
     suppressDayCellClickRef,
   } = dayPreviewInteractions;
+  const isDesktopTwoPane = useMediaQuery("(min-width: 768px)");
   const onboardingItemDay = selectOnboardingCalendarItemDay({
     calendarToday,
     visibleCells,
@@ -187,7 +197,10 @@ export function usePlannerCalendarDayCellRenderer({
               return;
             }
             if (viewMode === "week") {
-              openDayViewForDay(day);
+              selectDayForView(
+                day,
+                resolveWeekAgendaSelectionViewMode(isDesktopTwoPane)
+              );
               return;
             }
             if (viewMode === "day") {
@@ -211,7 +224,10 @@ export function usePlannerCalendarDayCellRenderer({
               return;
             }
             if (viewMode === "week") {
-              openDayViewForDay(cell.date);
+              selectDayForView(
+                cell.date,
+                resolveWeekAgendaSelectionViewMode(isDesktopTwoPane)
+              );
               return;
             }
             if (viewMode === "day") {
@@ -324,6 +340,8 @@ export function usePlannerCalendarDayCellRenderer({
       onSelectedDayChange,
       openDayPreview,
       openDayViewForDay,
+      selectDayForView,
+      isDesktopTwoPane,
       plannerReadOnly,
       pointerPressActiveRef,
       scheduleHoverPreview,

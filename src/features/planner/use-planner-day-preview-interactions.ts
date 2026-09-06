@@ -54,6 +54,7 @@ export interface PlannerDayPreviewInteractions {
   }) => void;
   openMoveDialogForDay: (day: string) => void;
   openDayViewForDay: (day: string) => void;
+  selectDayForView: (day: string, nextViewMode: PlannerCalendarViewMode) => void;
   scheduleHoverPreviewClose: (day: string) => void;
   scheduleHoverPreview: (day: string, target: EventTarget & HTMLElement) => void;
   handleDayCellClick: (day: string, target: EventTarget & HTMLElement) => void;
@@ -141,13 +142,13 @@ export function usePlannerDayPreviewInteractions({
     [setDayPreview, setExpandedPreviewDay, setMoveDialogDay, setMoveDialogSourceEntryKey]
   );
 
-  const openDayViewForDay = useCallback(
-    (day: string) => {
+  const selectDayForView = useCallback(
+    (day: string, nextViewMode: PlannerCalendarViewMode) => {
       setExpandedPreviewDay(null);
       setMoveDialogDay(null);
       setSelectedEventEntryKey(null);
       setLocalSelectedDay(day);
-      onSelectedDayChange(day, "push", "day");
+      onSelectedDayChange(day, "push", nextViewMode);
       setDayPreview(null);
     },
     [
@@ -158,6 +159,13 @@ export function usePlannerDayPreviewInteractions({
       setMoveDialogDay,
       setSelectedEventEntryKey,
     ]
+  );
+
+  const openDayViewForDay = useCallback(
+    (day: string) => {
+      selectDayForView(day, "day");
+    },
+    [selectDayForView]
   );
 
   const shouldSuppressDayCellClick = useCallback(
@@ -303,6 +311,7 @@ export function usePlannerDayPreviewInteractions({
     openDayPreview,
     openMoveDialogForDay,
     openDayViewForDay,
+    selectDayForView,
     scheduleHoverPreviewClose,
     scheduleHoverPreview,
     handleDayCellClick,

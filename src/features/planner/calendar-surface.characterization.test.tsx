@@ -199,6 +199,7 @@ describe("CalendarSurface characterization", () => {
 
   afterEach(() => {
     cleanup();
+    vi.unstubAllGlobals();
   });
 
   it("renders adjacent-month persisted rows from the prepared context", async () => {
@@ -363,9 +364,56 @@ describe("CalendarSurface characterization", () => {
     );
     expect(screen.getByTestId("plan-desktop-day-pane")).toBeInTheDocument();
     expect(
-      screen.getByRole("group", { name: "Calendar view mode" })
+      screen.getByRole("group", { name: "Plan view mode" })
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Plan" })).toBeInTheDocument();
+  });
+
+  it("keeps week view when a desktop agenda row is selected", async () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        matches: String(query).includes("min-width: 768px"),
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      }))
+    );
+    postJsonMock.mockResolvedValue(
+      buildContext([
+        unit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          scheduledDate: "2026-08-15",
+        }),
+      ])
+    );
+    const onSelectedDayChange = vi.fn();
+
+    render(
+      <CalendarSurface
+        activeTab="calendar"
+        month="2026-08"
+        selectedDay="2026-08-15"
+        viewMode="week"
+        onMonthChange={vi.fn()}
+        onViewModeChange={vi.fn()}
+        onSelectedDayChange={onSelectedDayChange}
+        onPlannerMutation={vi.fn()}
+      />
+    );
+
+    expect(await screen.findByTestId("week-agenda")).toBeInTheDocument();
+    const nextDayRow = document.querySelector(
+      '[data-calendar-week-row="true"][data-day="2026-08-16"] button[data-day-cell="true"]'
+    );
+    expect(nextDayRow).toBeInstanceOf(HTMLElement);
+    fireEvent.click(nextDayRow as HTMLElement);
+
+    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-16", "push", "week");
+    vi.unstubAllGlobals();
   });
 
   it("uses today's weekday column when switching from month to day view", async () => {
