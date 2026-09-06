@@ -46,7 +46,7 @@ describe("tab onboarding storage", () => {
       "social.team",
     ]);
     expect(TAB_ONBOARDING_TOURS["insights.main"][2]?.description).toContain(
-      "forgot to mark a completion"
+      "read-only overlap"
     );
     expect(TAB_ONBOARDING_TOURS["insights.main"].map((step) => step.target)).toEqual([
       "insights.overall",

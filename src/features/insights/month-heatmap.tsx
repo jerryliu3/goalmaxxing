@@ -10,6 +10,7 @@ interface MonthHeatmapProps {
   countsByDate: Record<string, number>;
   interactive?: boolean;
   pendingDate?: string | null;
+  isDayDisabled?: (date: string) => boolean;
   onDayClick?: (date: string, sourceElement: HTMLButtonElement) => void;
   onPreviousMonth?: () => void;
   onNextMonth?: () => void;
@@ -22,6 +23,7 @@ export function MonthHeatmap({
   countsByDate,
   interactive = false,
   pendingDate = null,
+  isDayDisabled,
   onDayClick,
   onPreviousMonth,
   onNextMonth,
@@ -71,13 +73,14 @@ export function MonthHeatmap({
             const value = countsByDate[key] ?? 0;
 
             if (interactive && onDayClick) {
+              const dayDisabled = pendingDate === key || Boolean(isDayDisabled?.(key));
               return (
                 <button
                   key={key}
                   type="button"
                   title={`${key}: ${value} completion${value === 1 ? "" : "s"}`}
                   onClick={(event) => onDayClick(key, event.currentTarget)}
-                  disabled={pendingDate === key}
+                  disabled={dayDisabled}
                   className={cn(
                     "flex h-[var(--month-cell-size)] w-[var(--month-cell-size)] items-center justify-center rounded-md text-[10px] text-muted-foreground transition-transform hover:scale-105 hover:ring-2 hover:ring-primary/30 disabled:opacity-60",
                     getHeatmapScaleClass(value)

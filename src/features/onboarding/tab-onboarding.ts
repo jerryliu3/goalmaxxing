@@ -33,19 +33,19 @@ export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]>
   ],
   "insights.main": [
     {
-      title: "Overall stats",
-      description: "See streaks and activity over time in this card.",
+      title: "Goal ledger",
+      description: "The heatmap is the aggregate of selected goals.",
       target: "insights.overall",
     },
     {
-      title: "Goal stats",
-      description: "Open filters to focus on specific goals and dates.",
+      title: "Choose goals",
+      description: "Open filters to focus the list, then select one goal to edit completions.",
       target: "insights.goal-stats",
     },
     {
-      title: "Edit a missed day",
+      title: "Log a missed day",
       description:
-        "Tap a past day on a goal if you forgot to mark a completion.",
+        "Select one goal, then tap a past or today cell. Multi-select stays a read-only overlap.",
       target: "insights.goal",
       fallbackTargets: ["insights.goal-stats"],
     },
