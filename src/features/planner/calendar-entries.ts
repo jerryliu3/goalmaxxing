@@ -1,7 +1,9 @@
 import type {
+  PlannerGoalLinkSummary,
   PlannerWorkUnitClassification,
   PlannerWorkUnitCreditState,
 } from "@cadence/shared/planner/context";
+import { isPlannerLinkedTargetSuppressedOnDate } from "@/features/planner/calendar-link-suppression";
 import {
   entryDisplayRank,
   getEntryGoalFirstTitle,
@@ -49,6 +51,7 @@ export function buildEntriesByDateProjection({
   activeGoalsByOriginalGoalId,
   goalTitles,
   linkedTargetSourceGoalIds,
+  linkSummaries,
   draftItemEdits,
   draftCommands = [],
 }: {
@@ -58,6 +61,7 @@ export function buildEntriesByDateProjection({
   activeGoalsByOriginalGoalId: Map<string, PlannerActiveGoalSnapshot>;
   goalTitles: Record<string, string> | undefined;
   linkedTargetSourceGoalIds?: ReadonlySet<string>;
+  linkSummaries?: readonly PlannerGoalLinkSummary[];
   draftItemEdits: Record<string, DraftItemEdit>;
   draftCommands?: readonly PlannerDraftCommand[];
 }) {
@@ -66,6 +70,17 @@ export function buildEntriesByDateProjection({
   const entryDayByKey = new Map<string, string>();
   const unitByEntryKey = new Map<string, PlannerWorkUnit>();
   const activeItemByEntryKey = new Map<string, PlannerActiveItemSnapshot>();
+  for (const item of activeItems ?? []) {
+    const activeGoal = activeGoalsByPlanGoalId.get(item.plan_goal_id) ?? null;
+    const originalGoalId = activeGoal?.original_goal_id ?? item.plan_goal_id;
+    activeItemByEntryKey.set(`${originalGoalId}:${item.unit_key}`, item);
+  }
+  const isSuppressedLinkedTargetOnDay = (goalId: string, day: string) =>
+    isPlannerLinkedTargetSuppressedOnDate({
+      goalId,
+      date: day,
+      links: linkSummaries,
+    });
   const persistedEntryKeys = new Set(
     (activeItems ?? []).map((item) => {
       const activeGoal = activeGoalsByPlanGoalId.get(item.plan_goal_id);
@@ -150,11 +165,15 @@ export function buildEntriesByDateProjection({
   for (const unit of workUnits ?? []) {
     const key = `${unit.originalGoalId}:${unit.unitKey}`;
     unitByEntryKey.set(key, unit);
-    const displayDay = unit.scheduledDate ?? unit.creditedCompletionDate;
+    const activeItem = activeItemByEntryKey.get(key) ?? null;
     const isCreditedHistoricalUnit = unit.creditState !== "uncredited";
+    const displayDay = isCreditedHistoricalUnit
+      ? (unit.scheduledDate ?? unit.creditedCompletionDate)
+      : (activeItem?.scheduled_date ?? unit.scheduledDate ?? unit.creditedCompletionDate);
     if (
       !displayDay ||
-      (!isCreditedHistoricalUnit && !persistedEntryKeys.has(key))
+      (!isCreditedHistoricalUnit && !persistedEntryKeys.has(key)) ||
+      isSuppressedLinkedTargetOnDay(unit.originalGoalId, displayDay)
     ) {
       continue;
     }
@@ -163,7 +182,7 @@ export function buildEntriesByDateProjection({
         key,
         day: displayDay,
         unit,
-        activeItem: null,
+        activeItem,
       }),
     });
   }
@@ -172,7 +191,6 @@ export function buildEntriesByDateProjection({
     const activeGoal = activeGoalsByPlanGoalId.get(item.plan_goal_id) ?? null;
     const originalGoalId = activeGoal?.original_goal_id ?? item.plan_goal_id;
     const key = `${originalGoalId}:${item.unit_key}`;
-    activeItemByEntryKey.set(key, item);
     const existingEntry = entryByKey.get(key);
     if (existingEntry) {
       const existingDay = entryDayByKey.get(key);
@@ -204,6 +222,9 @@ export function buildEntriesByDateProjection({
       continue;
     }
     if (!item.scheduled_date) {
+      continue;
+    }
+    if (isSuppressedLinkedTargetOnDay(originalGoalId, item.scheduled_date)) {
       continue;
     }
     setEntryOnDay(item.scheduled_date, key, {
@@ -266,6 +287,14 @@ export function buildEntriesByDateProjection({
         entryByKey.delete(key);
         entryDayByKey.delete(key);
       }
+      continue;
+    }
+    const draftGoalId = unit?.originalGoalId ?? existingEntry?.originalGoalId;
+    if (
+      draftGoalId &&
+      isSuppressedLinkedTargetOnDay(draftGoalId, nextDay) &&
+      edit.scheduledDate !== undefined
+    ) {
       continue;
     }
 
@@ -418,10 +447,12 @@ export function buildCompletionFactMarkersByDate({
   workUnits,
   activeGoalsByOriginalGoalId,
   goalTitles,
+  linkSummaries,
 }: {
   workUnits: PlannerWorkUnit[] | undefined;
   activeGoalsByOriginalGoalId: Map<string, PlannerActiveGoalSnapshot>;
   goalTitles: Record<string, string> | undefined;
+  linkSummaries?: readonly PlannerGoalLinkSummary[];
 }) {
   const map = new Map<string, PlannerCompletionFactMarker[]>();
   for (const unit of workUnits ?? []) {
@@ -432,6 +463,15 @@ export function buildCompletionFactMarkersByDate({
       continue;
     }
     const markerDay = unit.creditedCompletionDate;
+    if (
+      isPlannerLinkedTargetSuppressedOnDate({
+        goalId: unit.originalGoalId,
+        date: markerDay,
+        links: linkSummaries,
+      })
+    ) {
+      continue;
+    }
     const markersForDay = map.get(markerDay) ?? [];
     const goalTitle =
       activeGoalsByOriginalGoalId.get(unit.originalGoalId)?.title ??
