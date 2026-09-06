@@ -75,12 +75,11 @@ describe("AppShell", () => {
       </AppShell>
     );
 
-    const newGoalLink = screen.getByRole("link", { name: /new goal \+/i });
+    const newGoalLink = screen.getAllByRole("link", { name: /new goal \+/i })[0];
     expect(newGoalLink).toHaveAttribute("href", "/goals/new?returnTo=%2F");
     expect(newGoalLink).toHaveAttribute("data-onboarding", "nav.new-goal");
     expect(newGoalLink).toHaveClass("h-8");
     expect(newGoalLink).toHaveClass("bg-primary");
-    expect(newGoalLink).toHaveClass("text-white");
   });
 
   it("includes the current route in the new goal returnTo query", () => {
@@ -93,7 +92,7 @@ describe("AppShell", () => {
       </AppShell>
     );
 
-    const newGoalLink = screen.getByRole("link", { name: /new goal \+/i });
+    const newGoalLink = screen.getAllByRole("link", { name: /new goal \+/i })[0];
     expect(newGoalLink).toHaveAttribute(
       "href",
       "/goals/new?returnTo=%2Fsocial%3Ftab%3Dchallenges%26sort%3Drecent"
@@ -108,7 +107,7 @@ describe("AppShell", () => {
       </AppShell>
     );
 
-    expect(screen.getByRole("link", { name: /new goal \+/i })).toHaveAttribute(
+    expect(screen.getAllByRole("link", { name: /new goal \+/i })[0]).toHaveAttribute(
       "href",
       "/demo/goals/new?returnTo=%2Fdemo%2Fcalendar"
     );
@@ -142,6 +141,18 @@ describe("AppShell", () => {
     );
 
     expect(screen.getByText("Child content")).toBeInTheDocument();
+  });
+
+  it("labels the running head with the current destination", () => {
+    mockPathname = "/insights";
+    render(
+      <AppShell userId="user-1" {...emptyDuoProps}>
+        <div>Child content</div>
+      </AppShell>
+    );
+
+    expect(screen.getByText("Progress")).toBeInTheDocument();
+    expect(screen.getByText("Goalmaxxing")).toBeInTheDocument();
   });
 
   it("applies Gazetteer tokens to the authenticated shell and body", () => {

@@ -1,12 +1,10 @@
 "use client";
 
-import { format, parse } from "date-fns";
 import type { MutableRefObject, ReactNode } from "react";
 import { PlannerDndProvider } from "@/features/planner/calendar-dnd";
 import type { PlannerDragTarget } from "@/features/planner/planner-drag-target";
 import {
   getEntryGoalFirstTitleWithTime,
-  getEntryMilestoneFirstTitleWithTime,
   getEntrySubtitle,
   isEntryCredited,
   isEntryImmovableForDraft,
@@ -18,11 +16,9 @@ import type {
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import styles from "@/features/planner/calendar-surface.module.css";
-import { PlannerDayEntriesPanel } from "@/features/planner/planner-day-entries-panel";
 import { PlannerDayPreviewPopover } from "@/features/planner/planner-day-preview-popover";
-import { PlanDayUnplannedPanel } from "@/features/planner/plan-day-unplanned-panel";
+import { PlannerFocusedDayPane } from "@/features/planner/planner-focused-day-pane";
 import { PlannerViewWindowHeader } from "@/features/planner/planner-view-window-header";
-import { PlannerTasksPanel } from "@/features/tasks/planner-tasks-panel";
 import { PlannerPartnerWeekDayCell } from "@/features/planner/planner-partner-week-cell";
 
 const SEVEN_COLUMN_GRID_STYLE = {
@@ -158,7 +154,7 @@ export function PlannerCalendarBoard({
 }: PlannerCalendarBoardProps) {
   return (
     <div
-      className="rounded-xl border bg-card p-4 shadow-sm"
+      className="border-b border-border pb-4"
       data-onboarding="planner.calendar.board"
     >
       <PlannerViewWindowHeader
@@ -190,11 +186,126 @@ export function PlannerCalendarBoard({
           {viewMode === "day" ? (
             <div className="space-y-2">
               {rollingWeekStrip}
-              <div className="rounded-md border p-3">
-                <p className="mb-2 text-sm font-medium">
-                  {format(parse(focusedDay, "yyyy-MM-dd", new Date()), "EEE MMM d, yyyy")}
-                </p>
-                <PlannerDayEntriesPanel
+              <PlannerFocusedDayPane
+                day={focusedDay}
+                entries={focusedDayEntries}
+                completionFactMarkers={focusedDayCompletionFactMarkers}
+                mutationLoading={Boolean(mutationLoadingKey)}
+                asOfDate={asOfDate}
+                canMutatePlanItems={canMutatePlanItems}
+                canMutateEntryOnDay={canMutateEntryOnDay}
+                onEntryOpen={onFocusedDayEntryOpen}
+                onToggleCompletion={onToggleCompletion}
+                onEntryPointerStart={onEntryPointerStart}
+                onEntryPointerEnd={onEntryPointerEnd}
+                showTasksInsteadOfGoals={showTasksInsteadOfGoals}
+                titleAs="h2"
+              />
+            </div>
+          ) : viewMode === "three_day" ? (
+            rollingWeekStrip
+          ) : (
+            <div className="md:grid md:grid-cols-[minmax(0,1.2fr)_minmax(18rem,24rem)] md:items-start md:gap-8">
+              <div className="min-w-0">
+                {viewMode === "week" && partnerWeekBoard ? (
+                  <div
+                    className="grid gap-4 md:grid-cols-2"
+                    data-testid="duo-week-board"
+                  >
+                    <section className="space-y-2">
+                      <h2 className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                        You
+                      </h2>
+                      <ol
+                        aria-label="Your week"
+                        className="flex flex-col"
+                        data-calendar-week-agenda="true"
+                      >
+                        {focusedWeekCells.map(renderCalendarDayCell)}
+                      </ol>
+                    </section>
+                    <section className="space-y-2">
+                      <div className="flex min-h-6 items-center gap-2">
+                        <h2 className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                          {partnerWeekBoard.label}
+                        </h2>
+                        <span className="rounded-[8px] border border-border px-2 py-0.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                          View only
+                        </span>
+                      </div>
+                      <ol
+                        aria-label={`${partnerWeekBoard.label} week`}
+                        className="flex flex-col"
+                      >
+                        {focusedWeekCells.map((cell) => (
+                          <PlannerPartnerWeekDayCell
+                            key={`partner-week-${cell.date}`}
+                            day={cell.date}
+                            inMonth={cell.inMonth}
+                            isToday={cell.date === asOfDate}
+                            isSelected={cell.date === focusedDay}
+                            layout="agenda"
+                            markers={partnerWeekBoard.getMarkersForDay(cell.date)}
+                          />
+                        ))}
+                      </ol>
+                    </section>
+                  </div>
+                ) : viewMode === "week" ? (
+                  <ol
+                    aria-label="Week agenda"
+                    className="flex flex-col"
+                    data-testid="week-agenda"
+                    data-calendar-week-agenda="true"
+                  >
+                    {focusedWeekCells.map(renderCalendarDayCell)}
+                  </ol>
+                ) : (
+                  <div className="mx-auto w-full max-w-[56rem]">
+                    <div
+                      ref={calendarGridViewportRef}
+                      onScroll={onCalendarGridViewportScroll}
+                      className="overflow-x-auto pb-1"
+                      data-calendar-horizontal-viewport="true"
+                    >
+                      {isMonthScopedCalendarViewMode(viewMode) ? (
+                        <div
+                          className={styles.monthGridTrack}
+                          data-calendar-grid-track="true"
+                        >
+                          <div
+                            className="grid gap-2 text-center text-xs text-muted-foreground"
+                            style={SEVEN_COLUMN_GRID_STYLE}
+                            data-calendar-weekday-grid="true"
+                          >
+                            {weekdayLabels.map((weekday) => (
+                              <span key={weekday}>{weekday}</span>
+                            ))}
+                          </div>
+                          <div
+                            ref={multiMonthGridScrollRef}
+                            onScroll={onMonthScopedGridScroll}
+                            className="mt-2 max-h-[34rem] overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                            data-calendar-month-vertical-viewport="true"
+                          >
+                            <div
+                              className="grid gap-2"
+                              style={SEVEN_COLUMN_GRID_STYLE}
+                            >
+                              {cells.map(renderCalendarDayCell)}
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <aside
+                className="hidden min-w-0 md:block"
+                data-testid="plan-desktop-day-pane"
+              >
+                <PlannerFocusedDayPane
                   day={focusedDay}
                   entries={focusedDayEntries}
                   completionFactMarkers={focusedDayCompletionFactMarkers}
@@ -202,133 +313,13 @@ export function PlannerCalendarBoard({
                   asOfDate={asOfDate}
                   canMutatePlanItems={canMutatePlanItems}
                   canMutateEntryOnDay={canMutateEntryOnDay}
-                  getEntryDisplayTitle={getEntryMilestoneFirstTitleWithTime}
-                  getEntrySubtitle={getEntrySubtitle}
-                  isEntryCredited={isEntryCredited}
-                  isEntryImmovableForDraft={isEntryImmovableForDraft}
                   onEntryOpen={onFocusedDayEntryOpen}
-                  onToggleCompletion={(entry, day) => {
-                    if (!canMutateEntryOnDay(entry, day)) {
-                      return;
-                    }
-                    onToggleCompletion(entry, day);
-                  }}
+                  onToggleCompletion={onToggleCompletion}
                   onEntryPointerStart={onEntryPointerStart}
                   onEntryPointerEnd={onEntryPointerEnd}
-                  density="expanded"
-                  includeSourceElement={false}
+                  showTasksInsteadOfGoals={showTasksInsteadOfGoals}
                 />
-              </div>
-              {showTasksInsteadOfGoals ? null : (
-                <PlanDayUnplannedPanel
-                  day={focusedDay}
-                  placedEntries={focusedDayEntries}
-                />
-              )}
-              {showTasksInsteadOfGoals ? null : (
-                <PlannerTasksPanel
-                  key={focusedDay}
-                  title="Tasks"
-                  description="One-time tasks for this day, separate from recurring goals."
-                  scheduledDate={focusedDay}
-                  allowCreate
-                  hideWhenEmpty={false}
-                />
-              )}
-            </div>
-          ) : viewMode === "three_day" ? (
-            rollingWeekStrip
-          ) : viewMode === "week" && partnerWeekBoard ? (
-            <div
-              className="grid gap-4 md:grid-cols-2"
-              data-testid="duo-week-board"
-            >
-              <section className="space-y-2">
-                <h2 className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                  You
-                </h2>
-                <ol
-                  aria-label="Your week"
-                  className="flex flex-col"
-                  data-calendar-week-agenda="true"
-                >
-                  {focusedWeekCells.map(renderCalendarDayCell)}
-                </ol>
-              </section>
-              <section className="space-y-2">
-                <div className="flex min-h-6 items-center gap-2">
-                  <h2 className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                    {partnerWeekBoard.label}
-                  </h2>
-                  <span className="rounded-[8px] border border-border px-2 py-0.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                    View only
-                  </span>
-                </div>
-                <ol
-                  aria-label={`${partnerWeekBoard.label} week`}
-                  className="flex flex-col"
-                >
-                  {focusedWeekCells.map((cell) => (
-                    <PlannerPartnerWeekDayCell
-                      key={`partner-week-${cell.date}`}
-                      day={cell.date}
-                      inMonth={cell.inMonth}
-                      isToday={cell.date === asOfDate}
-                      isSelected={cell.date === focusedDay}
-                      layout="agenda"
-                      markers={partnerWeekBoard.getMarkersForDay(cell.date)}
-                    />
-                  ))}
-                </ol>
-              </section>
-            </div>
-          ) : viewMode === "week" ? (
-            <ol
-              aria-label="Week agenda"
-              className="flex flex-col"
-              data-testid="week-agenda"
-              data-calendar-week-agenda="true"
-            >
-              {focusedWeekCells.map(renderCalendarDayCell)}
-            </ol>
-          ) : (
-            <div className="mx-auto w-full max-w-[56rem]">
-              <div
-                ref={calendarGridViewportRef}
-                onScroll={onCalendarGridViewportScroll}
-                className="overflow-x-auto pb-1"
-                data-calendar-horizontal-viewport="true"
-              >
-                {isMonthScopedCalendarViewMode(viewMode) ? (
-                  <div
-                    className={styles.monthGridTrack}
-                    data-calendar-grid-track="true"
-                  >
-                    <div
-                      className="grid gap-2 text-center text-xs text-muted-foreground"
-                      style={SEVEN_COLUMN_GRID_STYLE}
-                      data-calendar-weekday-grid="true"
-                    >
-                      {weekdayLabels.map((weekday) => (
-                        <span key={weekday}>{weekday}</span>
-                      ))}
-                    </div>
-                    <div
-                      ref={multiMonthGridScrollRef}
-                      onScroll={onMonthScopedGridScroll}
-                      className="mt-2 max-h-[34rem] overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                      data-calendar-month-vertical-viewport="true"
-                    >
-                      <div
-                        className="grid gap-2"
-                        style={SEVEN_COLUMN_GRID_STYLE}
-                      >
-                        {cells.map(renderCalendarDayCell)}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+              </aside>
             </div>
           )}
 

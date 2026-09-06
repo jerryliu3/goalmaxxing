@@ -158,6 +158,16 @@ async function waitForCalendarReady(page: Page) {
 }
 
 async function ensureCalendarMonthView(page: Page) {
+  const monthViewButton = page.getByRole("button", { name: "Month", exact: true });
+  if (await monthViewButton.isVisible().catch(() => false)) {
+    const pressed = await monthViewButton.getAttribute("aria-pressed");
+    if (pressed !== "true") {
+      await monthViewButton.click();
+      await waitForCalendarReady(page);
+    }
+    return;
+  }
+
   const viewModeSelect = page.getByRole("combobox", { name: "Calendar view mode" });
   if (await viewModeSelect.isVisible().catch(() => false)) {
     const selectedLabel = (await viewModeSelect.textContent())?.trim() ?? "";
@@ -166,13 +176,6 @@ async function ensureCalendarMonthView(page: Page) {
       await page.getByRole("option", { name: "Month", exact: true }).click();
       await waitForCalendarReady(page);
     }
-    return;
-  }
-
-  const monthViewButton = page.getByRole("button", { name: "Month", exact: true });
-  if (await monthViewButton.isVisible().catch(() => false)) {
-    await monthViewButton.click();
-    await waitForCalendarReady(page);
   }
 }
 

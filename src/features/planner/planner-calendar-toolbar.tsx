@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
+import { CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,13 +12,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
 import type { PlannerEligibilityNotices } from "@/features/planner/planner-eligibility-notices";
@@ -79,15 +72,14 @@ export function PlannerCalendarToolbar({
 
   return (
     <div
-      className="rounded-xl border bg-card p-4 shadow-sm"
+      className="border-b border-border pb-4"
       data-testid="planner-calendar-toolbar"
     >
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <CalendarDays className="size-4 text-primary" />
-              <h2 className="text-lg font-semibold">Calendar</h2>
+              <h2 className="font-display text-lg font-semibold tracking-tight">Plan</h2>
               <Tooltip content="Calendar help" side="top" align="center">
                 <Button
                   type="button"
@@ -157,25 +149,32 @@ export function PlannerCalendarToolbar({
             className="flex shrink-0 items-center gap-2"
             data-onboarding="planner.calendar.controls"
           >
-            <Select
-              value={viewMode === "three_day" ? "week" : viewMode}
-              onValueChange={(value) => onViewModeChange(value as PlannerCalendarViewMode)}
+            <div
+              role="group"
+              aria-label="Calendar view mode"
+              className="inline-flex rounded-[10px] bg-muted p-0.5 text-xs font-medium"
             >
-              <SelectTrigger
-                className="h-8 w-[7.5rem] rounded-md bg-background/90 text-xs"
-                disabled={loading}
-                aria-label="Calendar view mode"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PLANNER_VIEW_MODES.map((modeOption) => (
-                  <SelectItem key={modeOption.value} value={modeOption.value}>
-                    {modeOption.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {PLANNER_VIEW_MODES.map((modeOption) => (
+                <button
+                  key={modeOption.value}
+                  type="button"
+                  aria-pressed={
+                    (viewMode === "three_day" ? "week" : viewMode) ===
+                    modeOption.value
+                  }
+                  disabled={loading}
+                  onClick={() => onViewModeChange(modeOption.value)}
+                  className={
+                    (viewMode === "three_day" ? "week" : viewMode) ===
+                    modeOption.value
+                      ? "min-h-8 rounded-[8px] bg-background px-3 text-foreground"
+                      : "min-h-8 rounded-[8px] px-3 text-muted-foreground"
+                  }
+                >
+                  {modeOption.label}
+                </button>
+              ))}
+            </div>
             <Button
               type="button"
               variant="outline"

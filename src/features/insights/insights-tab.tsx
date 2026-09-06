@@ -18,7 +18,6 @@ import { type TouchEventHandler, useCallback, useMemo, useRef, useState } from "
 import { toast } from "sonner";
 import { AnchoredPopupCard } from "@/components/ui/anchored-popup-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { LoadingCard } from "@/components/ui/loading-card";
 import { InsightsPeriodStepper } from "@/features/insights/insights-period-controls";
@@ -771,15 +770,17 @@ export function InsightsTab({
   return (
     <div className="space-y-5">
       {showGoalStatsSection ? (
-        <Card className="shadow-sm" data-onboarding="insights.goal-stats">
-          <CardHeader className="pb-3">
+        <section className="border-b border-border pb-4" data-onboarding="insights.goal-stats">
+          <div className="pb-3">
             <div
               data-title-date-row="true"
               className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2"
             >
               <div className="flex min-w-0 items-center gap-2">
                 <CalendarRange className="size-4 shrink-0 text-primary" />
-                <CardTitle>Goal ledger</CardTitle>
+                <h2 className="font-display text-lg font-semibold tracking-tight">
+                  Goal ledger
+                </h2>
               </div>
               <div className="flex items-center gap-2 justify-self-center">
                 {showGoalStatsStepper ? (
@@ -802,8 +803,8 @@ export function InsightsTab({
                 </Button>
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
+          </div>
+          <div className="space-y-3">
             <InsightsGoalStatsFilters
               goals={personalGoals}
               referenceMonth={goalFilterStartMonth}
@@ -827,24 +828,26 @@ export function InsightsTab({
               placeholder="Search goals..."
               className="h-8"
             />
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       ) : null}
 
-      {showGoalsSection ? (
-        <ProgressGoalList
-          goals={ledgerGoalItems}
-          selectedGoalIds={selectedLedgerIdSet}
-          readOnly={readOnly}
-          onToggleGoal={(goalId) => {
-            setSelectedGoalIds((current) =>
-              toggleLedgerGoalSelection(visibleGoalIds, current, goalId)
-            );
-          }}
-        />
-      ) : null}
+      {showGoalsSection || showHeatmap ? (
+        <div className="grid gap-6 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] md:items-start">
+          {showGoalsSection ? (
+            <ProgressGoalList
+              goals={ledgerGoalItems}
+              selectedGoalIds={selectedLedgerIdSet}
+              readOnly={readOnly}
+              onToggleGoal={(goalId) => {
+                setSelectedGoalIds((current) =>
+                  toggleLedgerGoalSelection(visibleGoalIds, current, goalId)
+                );
+              }}
+            />
+          ) : null}
 
-      {showHeatmap ? (
+          {showHeatmap ? (
         <div
           ref={aggregateHeatmapRef}
           className="space-y-3"
@@ -955,6 +958,8 @@ export function InsightsTab({
               </Button>
             </div>
           ) : null}
+        </div>
+      ) : null}
         </div>
       ) : null}
 
