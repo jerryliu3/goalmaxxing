@@ -63,7 +63,10 @@ export function PlannerWarningsPanel({
   return (
     <>
       {hasPlannerWarnings && !warningsDismissed && !showBlockingLoading && !error ? (
-        <div className="rounded-md border border-amber-300 bg-amber-100 px-3 py-2 text-xs text-amber-950 dark:border-amber-300 dark:bg-amber-100 dark:text-amber-950">
+        <div
+          className="rounded-[10px] border border-[color:var(--gm-recover,#b45309)]/35 bg-[color:var(--gm-recover,#b45309)]/10 px-3 py-2 text-xs text-foreground"
+          data-testid="plan-recover-banner"
+        >
           <div className="flex items-center justify-between gap-2">
             <p className="min-w-0 flex-1">{plannerWarningBannerCopy}</p>
             <div className="flex shrink-0 items-center gap-2">
@@ -74,7 +77,7 @@ export function PlannerWarningsPanel({
                 className="h-7 text-xs"
                 onClick={() => setWarningsOpen(true)}
               >
-                See warnings
+                Recover
               </Button>
               <button
                 type="button"
@@ -91,7 +94,7 @@ export function PlannerWarningsPanel({
       <Dialog open={warningsOpen} onOpenChange={setWarningsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Planner warnings</DialogTitle>
+            <DialogTitle>Recover</DialogTitle>
             <DialogDescription>
               {unplaceableGoalSummaries.length > 0 && invalidLockGoalCount > 0
                 ? `${unplaceableGoalSummaries.length} goal${

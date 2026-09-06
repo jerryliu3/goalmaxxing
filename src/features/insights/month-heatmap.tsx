@@ -82,11 +82,18 @@ export function MonthHeatmap({
                   onClick={(event) => onDayClick(key, event.currentTarget)}
                   disabled={dayDisabled}
                   className={cn(
-                    "flex h-[var(--month-cell-size)] w-[var(--month-cell-size)] items-center justify-center rounded-md text-[10px] text-muted-foreground transition-transform hover:scale-105 hover:ring-2 hover:ring-primary/30 disabled:opacity-60",
-                    getHeatmapScaleClass(value)
+                    "group relative flex h-[var(--month-cell-size)] w-[var(--month-cell-size)] items-center justify-center rounded-[8px] border border-border p-[3px] text-[10px] text-muted-foreground transition-colors hover:border-primary/50 disabled:opacity-60",
+                    dayDisabled && "opacity-60"
                   )}
                 >
-                  {format(day, "d")}
+                  <span
+                    className={cn(
+                      "flex h-full w-full items-center justify-center rounded-[4px]",
+                      getHeatmapScaleClass(value)
+                    )}
+                  >
+                    {format(day, "d")}
+                  </span>
                 </button>
               );
             }
@@ -95,12 +102,16 @@ export function MonthHeatmap({
               <div
                 key={key}
                 title={`${key}: ${value} completion${value === 1 ? "" : "s"}`}
-                className={cn(
-                  "flex h-[var(--month-cell-size)] w-[var(--month-cell-size)] items-center justify-center rounded-md text-[10px] text-muted-foreground",
-                  getHeatmapScaleClass(value)
-                )}
+                className="relative flex h-[var(--month-cell-size)] w-[var(--month-cell-size)] items-center justify-center rounded-[8px] border border-border p-[3px] text-[10px] text-muted-foreground"
               >
-                {format(day, "d")}
+                <span
+                  className={cn(
+                    "flex h-full w-full items-center justify-center rounded-[4px]",
+                    getHeatmapScaleClass(value)
+                  )}
+                >
+                  {format(day, "d")}
+                </span>
               </div>
             );
           })}

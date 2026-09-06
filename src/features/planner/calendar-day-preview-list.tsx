@@ -2,6 +2,7 @@
 
 import { Link2 } from "lucide-react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
+import { NestCompletionMark } from "@/components/ui/nest-completion-mark";
 import {
   PlannerDraggablePreviewEntry,
 } from "@/features/planner/calendar-dnd";
@@ -66,8 +67,8 @@ export function CalendarDayPreviewList<
   const expanded = density === "expanded";
   return (
     <div
-      className={`space-y-1 overflow-y-auto overflow-x-hidden text-xs [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
-        expanded ? "max-h-[min(32rem,70dvh)]" : "max-h-44"
+      className={`overflow-y-auto overflow-x-hidden text-xs [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
+        expanded ? "max-h-[min(32rem,70dvh)] divide-y" : "max-h-44 space-y-1"
       }`}
     >
       {entries.length === 0 && completionFactMarkers.length === 0 ? (
@@ -89,9 +90,10 @@ export function CalendarDayPreviewList<
             const pillToneClasses = getEntryDraftPillClasses({
               draftDiffKind: entry.draftDiffKind,
             });
-            const pillFillStyle = isDraft
-              ? undefined
-              : getWorkPillFillStyle(visual.color, credited);
+            const pillFillStyle =
+              isDraft || expanded
+                ? undefined
+                : getWorkPillFillStyle(visual.color, credited);
             const completionToggleState = getCompletionToggleState(entry, day);
             return (
               <PlannerDraggablePreviewEntry
@@ -111,19 +113,29 @@ export function CalendarDayPreviewList<
                   <div
                     ref={setNodeRef}
                     style={{ ...style, ...pillFillStyle }}
-                    className={`flex items-center gap-2 rounded-md border transition-colors ${pillToneClasses} ${
-                      expanded ? "p-2" : "p-1.5"
-                    } ${
-                      entry.draftGhost ? "opacity-75" : ""
-                    } ${
-                      isOver
-                        ? "border-primary/70 ring-1 ring-primary/60"
-                        : "hover:border-primary/60"
-                    } ${
-                      immovable
-                        ? "cursor-not-allowed"
-                        : "cursor-grab active:cursor-grabbing"
-                    } ${isDragging ? "pointer-events-none opacity-0" : ""}`}
+                    className={
+                      expanded
+                        ? `flex items-center gap-3 py-3 transition-colors ${
+                            isDraft ? pillToneClasses : "bg-transparent"
+                          } ${entry.draftGhost ? "opacity-75" : ""} ${
+                            isOver ? "bg-primary/5" : ""
+                          } ${
+                            immovable
+                              ? "cursor-not-allowed"
+                              : "cursor-grab active:cursor-grabbing"
+                          } ${isDragging ? "pointer-events-none opacity-0" : ""}`
+                        : `flex items-center gap-2 rounded-[10px] border p-1.5 transition-colors ${pillToneClasses} ${
+                            entry.draftGhost ? "opacity-75" : ""
+                          } ${
+                            isOver
+                              ? "border-primary/70 ring-1 ring-primary/60"
+                              : "hover:border-primary/60"
+                          } ${
+                            immovable
+                              ? "cursor-not-allowed"
+                              : "cursor-grab active:cursor-grabbing"
+                          } ${isDragging ? "pointer-events-none opacity-0" : ""}`
+                    }
                     title={
                       `${draftDiffSummary ? `${draftDiffSummary} ` : ""}${
                         immovable
@@ -147,6 +159,7 @@ export function CalendarDayPreviewList<
                       onEntryOpen(entry.key);
                     }}
                     data-planner-entry-key={entry.key}
+                    data-plan-work-row={expanded ? "ledger" : "pill"}
                     {...attributes}
                     {...listeners}
                   >
@@ -179,7 +192,13 @@ export function CalendarDayPreviewList<
                     ) : null}
                     <div className="flex min-w-0 flex-1 items-center gap-2 text-left">
                       <div className="min-w-0">
-                        <p className={`${expanded ? "" : "truncate"} font-medium`}>
+                        <p
+                          className={
+                            expanded
+                              ? "font-display text-base font-medium tracking-tight"
+                              : "truncate font-medium"
+                          }
+                        >
                           <span className="inline-flex items-center gap-1">
                             <span>{displayTitle}</span>
                             {entry.hasLinkedTargets ? (
@@ -192,14 +211,18 @@ export function CalendarDayPreviewList<
                         </p>
                         {draftDiffSummary ? (
                           <p
-                            className={`${expanded ? "" : "truncate"} text-muted-foreground`}
+                            className={`${expanded ? "text-[11px] uppercase tracking-[0.12em]" : "truncate"} text-muted-foreground`}
                           >
                             {draftDiffSummary}
                           </p>
                         ) : null}
                         {subtitle ? (
                           <p
-                            className={`${expanded ? "" : "truncate"} text-muted-foreground`}
+                            className={`${
+                              expanded
+                                ? "text-[11px] uppercase tracking-[0.12em]"
+                                : "truncate"
+                            } text-muted-foreground`}
                           >
                             {subtitle}
                           </p>
@@ -221,15 +244,44 @@ export function CalendarDayPreviewList<
             return (
               <div
                 key={`preview-completion-fact-${marker.key}`}
-                className={`rounded-md ${
-                  marker.owner === "partner"
-                    ? "border-2 border-primary bg-transparent text-primary"
-                    : "border border-primary/35 bg-primary/10 text-foreground"
-                } ${expanded ? "p-2" : "p-1.5"}`}
+                className={
+                  expanded
+                    ? `flex items-center gap-3 py-3 ${
+                        marker.owner === "partner" ? "text-primary" : "text-foreground"
+                      }`
+                    : `rounded-[10px] ${
+                        marker.owner === "partner"
+                          ? "border-2 border-primary bg-transparent text-primary"
+                          : "border border-primary/35 bg-primary/10 text-foreground"
+                      } p-1.5`
+                }
                 aria-label={detail ? `${marker.goalTitle}. ${detail}` : marker.goalTitle}
               >
-                <p className="truncate font-medium">{marker.goalTitle}</p>
-                {detail ? <p className="truncate text-[11px]">{detail}</p> : null}
+                {expanded ? (
+                  <NestCompletionMark done className="size-4 shrink-0" />
+                ) : null}
+                <div className="min-w-0">
+                  <p
+                    className={
+                      expanded
+                        ? "font-display text-base font-medium tracking-tight"
+                        : "truncate font-medium"
+                    }
+                  >
+                    {marker.goalTitle}
+                  </p>
+                  {detail ? (
+                    <p
+                      className={
+                        expanded
+                          ? "text-[11px] uppercase tracking-[0.12em] text-muted-foreground"
+                          : "truncate text-[11px]"
+                      }
+                    >
+                      {detail}
+                    </p>
+                  ) : null}
+                </div>
               </div>
             );
           })}

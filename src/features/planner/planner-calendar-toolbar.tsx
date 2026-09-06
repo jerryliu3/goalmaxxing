@@ -220,7 +220,7 @@ export function PlannerCalendarToolbar({
           </DialogHeader>
           <div className="space-y-3 text-sm">
             <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
-              <li>Switch between day, 3-day, week, and month views.</li>
+              <li>Switch between day, week, and month views.</li>
               <li>Drag sessions or use the detail editor to move dates and time overrides.</li>
               <li>
                 Regenerate from planner settings when needed, then save once the preview looks
