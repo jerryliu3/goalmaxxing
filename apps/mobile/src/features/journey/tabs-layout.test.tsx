@@ -7,6 +7,10 @@ import TabsLayout from "../../../app/(tabs)/_layout";
 vi.mock("react-native", () => ({
   Text: (props: Record<string, unknown>) => React.createElement("Text", props),
   View: (props: Record<string, unknown>) => React.createElement("View", props),
+  StyleSheet: {
+    create: <T,>(styles: T) => styles,
+    hairlineWidth: 1,
+  },
 }));
 
 const Text = (props: Record<string, unknown>) => React.createElement("Text", props);

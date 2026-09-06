@@ -214,7 +214,7 @@ export function SocialScreen() {
 
   if (!duo.socialEnabled) {
     return (
-      <Screen title="Community">
+      <Screen title="Community" kicker="Together">
         <Text style={{ color: theme.colors.mutedForeground }}>
           Social is disabled for this environment.
         </Text>
@@ -223,12 +223,12 @@ export function SocialScreen() {
   }
 
   if (duo.teamLoading) {
-    return <LoadingScreen />;
+    return <LoadingScreen label="Loading Community…" />;
   }
 
   if (duo.availability === "unavailable") {
     return (
-      <Screen title="Community">
+      <Screen title="Community" kicker="Together">
         <Text style={{ color: theme.colors.destructive }}>
           Team status is temporarily unavailable. Retry to continue team actions.
         </Text>
@@ -262,7 +262,7 @@ export function SocialScreen() {
   };
 
   return (
-    <Screen title="Community">
+    <Screen title="Community" kicker="Together">
       <View style={[styles.card, { borderColor: theme.colors.border }]}>
         <View style={styles.identityRow}>
           <UserAvatar

@@ -1,6 +1,7 @@
 import { Link, type Href } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../theme";
+import { NestCompletionMark } from "../../ui/nest-completion-mark";
 
 export function ChecklistGoalRow({
   title,
@@ -22,6 +23,13 @@ export function ChecklistGoalRow({
   toggling?: boolean;
 }) {
   const theme = useTheme();
+  const nest = (
+    <NestCompletionMark
+      done={done}
+      color={done ? theme.colors.primary : theme.colors.mutedForeground}
+      size={22}
+    />
+  );
 
   return (
     <View
@@ -37,14 +45,9 @@ export function ChecklistGoalRow({
           accessibilityRole="checkbox"
           accessibilityLabel={title}
           accessibilityState={{ checked: done, disabled: toggling }}
-          style={[
-            styles.toggle,
-            {
-              backgroundColor: done ? theme.colors.primary : theme.colors.secondary,
-            },
-          ]}
+          style={styles.toggle}
         >
-          <Text style={{ color: theme.colors.primaryForeground }}>{done ? "✓" : ""}</Text>
+          {nest}
         </Pressable>
       ) : (
         <View
@@ -52,25 +55,35 @@ export function ChecklistGoalRow({
           accessibilityRole="checkbox"
           accessibilityLabel={title}
           accessibilityState={{ checked: done, disabled: true }}
-          style={[
-            styles.readOnlyStatus,
-            {
-              borderColor: theme.colors.border,
-              backgroundColor: theme.colors.secondary,
-            },
-          ]}
+          style={styles.readOnlyStatus}
         >
-          <Text style={{ color: theme.colors.mutedForeground }}>{done ? "✓" : ""}</Text>
+          {nest}
         </View>
       )}
       {interactive && href ? (
         <Link href={href} style={styles.titleWrap}>
-          <Text style={{ color: theme.colors.foreground, fontWeight: "600" }}>{title}</Text>
+          <Text
+            style={{
+              color: theme.colors.foreground,
+              fontWeight: "600",
+              fontFamily: theme.fonts?.display,
+            }}
+          >
+            {title}
+          </Text>
           <Text style={{ color: theme.colors.mutedForeground }}>{category}</Text>
         </Link>
       ) : (
         <View style={styles.titleWrap}>
-          <Text style={{ color: theme.colors.foreground, fontWeight: "600" }}>{title}</Text>
+          <Text
+            style={{
+              color: theme.colors.foreground,
+              fontWeight: "600",
+              fontFamily: theme.fonts?.display,
+            }}
+          >
+            {title}
+          </Text>
           <Text style={{ color: theme.colors.mutedForeground }}>{category}</Text>
           {readOnlyReason ? (
             <Text style={{ color: theme.colors.mutedForeground, fontSize: 12 }}>
@@ -88,22 +101,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 12,
     padding: 12,
   },
   toggle: {
     width: 28,
     height: 28,
-    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
   readOnlyStatus: {
     width: 28,
     height: 28,
-    borderRadius: 8,
-    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -1,6 +1,6 @@
 import { buildAppTabs } from "@cadence/shared/navigation/tabs";
 import { Redirect, Tabs } from "expo-router";
-import { Text } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import { useForceUpgradeRequired } from "../../src/lib/runtime-config";
 import { useSession } from "../../src/lib/session";
 import { DuoProvider } from "../../src/features/duo/DuoProvider";
@@ -11,11 +11,10 @@ import { useTheme } from "../../src/theme";
 import { LoadingScreen } from "../../src/ui/screen";
 
 const TAB_ICONS: Record<string, string> = {
-  insights: "◉",
-  checklist: "☑",
-  calendar: "🛣️",
-  social: "🌐",
-  settings: "☺",
+  insights: "▤",
+  calendar: "▣",
+  social: "◎",
+  settings: "○",
 };
 
 function withHexAlpha(color: string, alpha: number) {
@@ -49,33 +48,43 @@ export default function TabsLayout() {
         <PublicProfileSheetProvider>
           <Tabs
             screenOptions={{
-              headerStyle: { backgroundColor: theme.colors.background },
-              headerTintColor: theme.colors.foreground,
-              tabBarStyle: { backgroundColor: withHexAlpha(theme.colors.card, 0.5) },
+              headerShown: false,
+              tabBarStyle: {
+                backgroundColor: withHexAlpha(theme.colors.background, 0.92),
+                borderTopColor: theme.colors.border,
+                borderTopWidth: StyleSheet.hairlineWidth,
+                elevation: 0,
+                shadowOpacity: 0,
+              },
               tabBarActiveTintColor: theme.colors.primary,
               tabBarInactiveTintColor: theme.colors.mutedForeground,
+              tabBarLabelStyle: {
+                fontSize: 10,
+                fontWeight: "600",
+                letterSpacing: 1.2,
+                textTransform: "uppercase",
+              },
             }}
           >
-            {tabs.map((tab) => {
-              const tabLabel = tab.key === "social" ? "Community" : tab.label;
-              return (
-                <Tabs.Screen
-                  key={tab.key}
-                  name={tab.key}
-                  options={{
-                    title: tabLabel,
-                    tabBarLabel: tabLabel,
-                    href: tab.key === "social" && upgrade.flags && !upgrade.flags.socialEnabled
+            {tabs.map((tab) => (
+              <Tabs.Screen
+                key={tab.key}
+                name={tab.key}
+                options={{
+                  title: tab.label,
+                  tabBarLabel: tab.label,
+                  href:
+                    tab.key === "social" && upgrade.flags && !upgrade.flags.socialEnabled
                       ? null
                       : undefined,
-                    tabBarIcon: ({ color }) => (
-                      <Text style={{ color, fontSize: 16 }}>{TAB_ICONS[tab.key]}</Text>
-                    ),
-                  }}
-                />
-              );
-            })}
+                  tabBarIcon: ({ color }) => (
+                    <Text style={{ color, fontSize: 14 }}>{TAB_ICONS[tab.key]}</Text>
+                  ),
+                }}
+              />
+            ))}
             <Tabs.Screen name="checklist" options={{ href: null }} />
+            <Tabs.Screen name="tasks" options={{ href: null }} />
           </Tabs>
         </PublicProfileSheetProvider>
       </DuoProvider>

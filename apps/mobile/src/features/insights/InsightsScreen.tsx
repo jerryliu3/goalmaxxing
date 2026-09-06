@@ -128,11 +128,11 @@ export function InsightsScreen() {
   const width = 7 * (cell + gap);
 
   if (!ready) {
-    return <LoadingScreen />;
+    return <LoadingScreen label="Loading Progress…" />;
   }
 
   return (
-    <Screen title="Insights">
+    <Screen title="Progress" kicker="Ledger">
       <DuoScopeSegmentedControl surface="insights" />
       <View style={styles.row}>
         <Pressable
