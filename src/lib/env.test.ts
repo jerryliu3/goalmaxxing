@@ -42,6 +42,7 @@ describe("env schema", () => {
     expect(env.SOCIAL_ENABLED).toBe(false);
     expect(env.INTEGRATIONS_ENABLED).toBe(false);
     expect(env.JOURNEY_ENABLED).toBe(false);
+    expect(env.DIGEST_ENABLED).toBe(false);
     expect(env.INTEGRATIONS_ROLLOUT_STAGE).toBe("off");
   });
 
@@ -69,6 +70,12 @@ describe("env schema", () => {
     vi.stubEnv("XP_ENABLED", "false");
     resetEnvCacheForTests();
     expect(getServerEnv().XP_ENABLED).toBe(false);
+  });
+
+  it("enables digest by default in local development", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    resetEnvCacheForTests();
+    expect(getServerEnv().DIGEST_ENABLED).toBe(true);
   });
 
   it("requires core secrets in hosted production", () => {

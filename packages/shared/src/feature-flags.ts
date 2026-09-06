@@ -24,4 +24,9 @@ export interface FeatureFlags {
    * Default: off until journey background rollout is validated.
    */
   journeyEnabled: boolean;
+  /**
+   * First-open daily/weekly digest overlay.
+   * Default: off in production; on in local development.
+   */
+  digestEnabled: boolean;
 }

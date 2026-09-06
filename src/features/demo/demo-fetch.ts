@@ -138,6 +138,7 @@ export async function handleDemoFetch(
         socialEnabled: true,
         integrationsEnabled: false,
         journeyEnabled: false,
+        digestEnabled: false,
       },
       minSupportedAppVersion: null,
       integrationsRolloutStage: "off",

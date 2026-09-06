@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resetEnvCacheForTests } from "@/lib/env";
 import {
+  readDigestQuotaLimit,
   readPlannerCoachQuotaLimit,
   shouldBypassPlannerCoachQuota,
 } from "./ai-quota";
@@ -41,5 +42,22 @@ describe("planner AI quota limits", () => {
     resetEnvCacheForTests();
 
     expect(readPlannerCoachQuotaLimit()).toBe(75);
+  });
+
+  it("defaults digest quota to four requests per UTC day", () => {
+    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("CALENDAR_COACH_DISABLE_QUOTA", "false");
+    resetEnvCacheForTests();
+
+    expect(readDigestQuotaLimit()).toBe(4);
+  });
+
+  it("uses explicit in-range digest limits", () => {
+    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("CALENDAR_COACH_DISABLE_QUOTA", "false");
+    vi.stubEnv("DIGEST_DAILY_LIMIT", "8");
+    resetEnvCacheForTests();
+
+    expect(readDigestQuotaLimit()).toBe(8);
   });
 });

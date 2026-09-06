@@ -13,6 +13,7 @@ function publicMobileFlags() {
     socialEnabled: flags.socialEnabled,
     integrationsEnabled: flags.integrationsEnabled,
     journeyEnabled: flags.journeyEnabled,
+    digestEnabled: flags.digestEnabled,
   };
 }
 

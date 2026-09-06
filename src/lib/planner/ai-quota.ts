@@ -16,7 +16,7 @@ const quotaResultSchema = z.object({
   retry_after_seconds: z.number().int().nonnegative(),
 });
 
-export type PlannerAiQuotaFeature = "planner_coach" | "bulk_parser";
+export type PlannerAiQuotaFeature = "planner_coach" | "bulk_parser" | "digest";
 
 export interface PlannerAiQuotaResult {
   usageDate: string;
@@ -56,6 +56,13 @@ export function readPlannerCoachQuotaLimit() {
     return DEV_UNLIMITED_COACH_LIMIT;
   }
   return clampQuotaLimit(getServerEnv().CALENDAR_COACH_DAILY_LIMIT, 20);
+}
+
+export function readDigestQuotaLimit() {
+  if (shouldBypassPlannerCoachQuota()) {
+    return DEV_UNLIMITED_COACH_LIMIT;
+  }
+  return clampQuotaLimit(getServerEnv().DIGEST_DAILY_LIMIT, 4);
 }
 
 export async function consumePlannerAiQuota({
