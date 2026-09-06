@@ -29,7 +29,7 @@ const socialSurfaceTriggerBaseClass =
 // indigo-200/blue-100/blue-50 gradient, and indigo-300/blue-200/blue-100
 // when selected, with a rgba(79, 70, 229, 0.22) raised shadow.
 const socialSurfaceTriggerToneClass =
-  "border border-sky-300/80 bg-gradient-to-bl from-sky-200/95 via-blue-100/95 to-sky-50/90 text-sky-950 shadow-[0_3px_0_rgba(2,132,199,0.22)] data-[state=active]:border-sky-500 data-[state=active]:from-sky-300/95 data-[state=active]:via-blue-200/95 data-[state=active]:to-sky-100";
+  "border border-border bg-card text-foreground shadow-[0_3px_0_rgba(36,28,20,0.12)] data-[state=active]:border-primary data-[state=active]:bg-primary/15";
 
 const selectedChipShadow =
   "inset 0 4px 7px rgba(15, 23, 42, 0.3), inset 2px 0 4px rgba(15, 23, 42, 0.16), inset -1px 0 0 rgba(255, 255, 255, 0.42), inset 0 -2px 1px rgba(255, 255, 255, 0.72)";
