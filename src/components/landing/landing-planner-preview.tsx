@@ -7,9 +7,10 @@ import {
   useRef,
   useState,
 } from "react";
-import { Check, CheckCircle2, ChevronDown, Loader2 } from "lucide-react";
+import { Check, ChevronDown, Loader2 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { NestCompletionMark } from "@/components/ui/nest-completion-mark";
 import {
   LandingPartnerPhonePreview,
   shouldShowPartnerPhone,
@@ -859,7 +860,7 @@ function PartnerPill({
         completed ? `${label}. Partner marked this done.` : `${label}. Planned`
       }
     >
-      {completed ? <CheckCircle2 className="size-2.5 shrink-0" /> : null}
+      {completed ? <NestCompletionMark done className="size-2.5 shrink-0" /> : null}
       <span className="min-w-0 truncate">{label}</span>
     </div>
   );

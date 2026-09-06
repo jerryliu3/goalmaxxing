@@ -119,7 +119,7 @@ html body[data-scroll-locked] {
 body {
   background: var(--gm-page, var(--background));
   color: var(--foreground);
-  font-family: var(--font-source-sans), var(--font-geist-sans), Inter, system-ui, -apple-system, sans-serif;
+  font-family: var(--font-source-sans), Inter, system-ui, -apple-system, sans-serif;
 }
 
 /*
@@ -163,7 +163,7 @@ body {
 }
 
 .gm-gazetteer .font-mono {
-  font-family: var(--font-plex-mono), var(--font-geist-mono), ui-monospace, monospace;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
 }
 
 .dark .gm-gazetteer {

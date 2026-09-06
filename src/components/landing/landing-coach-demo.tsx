@@ -108,7 +108,7 @@ export function LandingCoachDemo() {
                     Coach proposal
                   </p>
                 </div>
-                <p className="mt-2 text-[11px] leading-relaxed text-slate-700">
+                <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
                   Start with three weekly runs, keep Monday as recovery, and protect
                   Thursday for launch work.
                 </p>

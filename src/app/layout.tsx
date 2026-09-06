@@ -1,17 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, IBM_Plex_Mono, Newsreader, Source_Sans_3 } from "next/font/google";
+import { IBM_Plex_Mono, Newsreader, Source_Sans_3 } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 const newsreader = Newsreader({
   variable: "--font-newsreader",
@@ -75,7 +65,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} ${sourceSans.variable} ${plexMono.variable} gm-gazetteer h-full antialiased`}
+      className={`${newsreader.variable} ${sourceSans.variable} ${plexMono.variable} gm-gazetteer h-full antialiased`}
     >
       <body className="gm-gazetteer min-h-full bg-background text-foreground flex flex-col">
         {children}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Fragment, type ReactNode, useLayoutEffect, ViewTransition } from "react";
+import { Fragment, type ReactNode, ViewTransition } from "react";
 import { JourneyIntroOverlay } from "@/components/intro/journey-intro-overlay";
 import { JourneyProvider } from "@/components/journey/journey-provider.web";
 import type { JourneyFeatureFlags } from "@/components/journey/types";
@@ -70,12 +70,6 @@ export function AppShell({
   onNewGoalClick,
 }: AppShellProps) {
   setTabDataCacheScope(userId);
-  useLayoutEffect(() => {
-    document.body.classList.add("gm-gazetteer");
-    return () => {
-      document.body.classList.remove("gm-gazetteer");
-    };
-  }, []);
   useIdleAppPrefetch({
     userId,
     partnerId: duoState.activePartner?.partnerId ?? null,

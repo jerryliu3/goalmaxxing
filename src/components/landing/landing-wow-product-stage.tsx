@@ -41,7 +41,7 @@ const HEATMAP_LEVELS = Array.from({ length: HEATMAP_CELL_COUNT }, (_, index) => 
 
 const CONFETTI_BITS = [
   { x: -22, y: -28, rotate: -28, color: "#C9A494", delay: 0 },
-  { x: 20, y: -34, rotate: 22, color: "#9EAF93", delay: 0.04 },
+  { x: 20, y: -34, rotate: 22, color: "#4a6740", delay: 0.04 },
   { x: -8, y: -40, rotate: 10, color: "#A9BCC8", delay: 0.08 },
   { x: 28, y: -18, rotate: -16, color: "#E2D4C4", delay: 0.02 },
   { x: -30, y: -12, rotate: 26, color: "#D4B562", delay: 0.06 },
@@ -92,7 +92,7 @@ export function LandingWowProductStage({
     >
       <div className="flex items-center justify-between border-b border-stone-200/80 px-5 py-3">
         <div>
-          <p className="text-[10px] font-semibold tracking-[0.18em] text-[#7E9174] uppercase">
+          <p className="text-[10px] font-semibold tracking-[0.18em] text-gain uppercase">
             Goalmaxxing
           </p>
           <p className="text-sm font-semibold">{sceneTitle(productScene)}</p>
@@ -300,7 +300,7 @@ function Checklist({ checkedCount }: { checkedCount: number }) {
             <span
               className={`inline-flex size-5 items-center justify-center rounded-md border ${
                 checked
-                  ? "border-[#7E9174] bg-[#9EAF93] text-white"
+                  ? "border-gain bg-gain text-primary-foreground"
                   : "border-stone-300 text-transparent"
               }`}
             >
