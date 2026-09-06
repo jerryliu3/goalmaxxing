@@ -652,7 +652,8 @@ export function InsightsTab({
     contentMode === "full" || contentMode === "goal-stats-only";
   const showGoalsSection =
     contentMode === "full" || contentMode === "goals-only";
-  const showGoalStatsStepper = !sharedPeriod || contentMode === "goal-stats-only";
+  // Duo both owns one shared stepper in InsightsShell.
+  const showGoalStatsStepper = !sharedPeriod;
   const todayLocal = toLocalDateString();
   const heatmapEditable = ledgerMode === "edit" && !readOnly && Boolean(editableGoal);
   const milestoneTargetCount =

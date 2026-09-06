@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
 import { DuoLanes } from "@/features/social/duo/duo-lanes";
 import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
+import { InsightsPeriodStepper } from "@/features/insights/insights-period-controls";
 import {
   InsightsTab,
   type InsightsSharedGoalFilters,
@@ -64,6 +65,15 @@ export function InsightsShell() {
         onboardingKey="insights.main"
         forceOpen={searchParams.get("onboarding") === "insights.main"}
       />
+      {sharePeriodControls ? (
+        <div className="flex justify-center">
+          <InsightsPeriodStepper
+            monthCursor={monthCursor}
+            onMonthCursorChange={setMonthCursor}
+            perGoalViewMode={perGoalViewMode}
+          />
+        </div>
+      ) : null}
       <DuoLanes
         scope={scope}
         viewer={viewer}

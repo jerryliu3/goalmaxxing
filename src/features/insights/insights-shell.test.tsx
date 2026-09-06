@@ -47,6 +47,7 @@ describe("InsightsShell", () => {
     expect(insightsTabMock.mock.calls[0]?.[0]).toMatchObject({
       readOnly: false,
     });
+    expect(screen.queryByRole("button", { name: "Previous period" })).not.toBeInTheDocument();
   });
 
   it("renders a full ledger in each duo lane", () => {
@@ -75,5 +76,8 @@ describe("InsightsShell", () => {
     expect(insightsTabMock.mock.calls[1]?.[0]).toMatchObject({
       readOnly: true,
     });
+    expect(screen.getByRole("button", { name: "Previous period" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next period" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Choose month and year")).toBeInTheDocument();
   });
 });
