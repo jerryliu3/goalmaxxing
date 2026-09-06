@@ -79,6 +79,7 @@ export function CalendarSurface({
   duoScope = "me",
   partnerCompletionMarkersByDate,
   partnerOverlayError,
+  partnerWeekLabel = null,
 }: CalendarSurfaceProps) {
   const [context, setContext] = useState<PlannerContextPayload | null>(() => {
     if (!month) {
@@ -302,6 +303,7 @@ export function CalendarSurface({
     effectiveEndMonthFilter,
     getEntriesForDay,
     getCompletionFactMarkersForDay,
+    getPartnerCompletionFactMarkersForDay,
     getOrderedEntriesForDay,
     canMutateEntryOnDay,
     plannerReadOnly,
@@ -745,6 +747,14 @@ export function CalendarSurface({
     setFiltersOpen,
     setSearchQuery,
     partnerOverlayError,
+    partnerWeekBoard:
+      viewMode === "week" && duoScope === "both" && partnerWeekLabel
+        ? {
+            label: partnerWeekLabel,
+            getMarkersForDay: (day: string) =>
+              getPartnerCompletionFactMarkersForDay(day),
+          }
+        : null,
     month,
     previousWindowAriaLabel,
     nextWindowAriaLabel,
