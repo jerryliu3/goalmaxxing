@@ -128,4 +128,16 @@ describe("SettingsTab", () => {
       screen.queryByRole("dialog", { name: "Preferences" })
     ).toBeNull();
   });
+
+  it("groups existing controls into Plan, Connected, and Account", () => {
+    render(<SettingsTab />);
+
+    expect(screen.getByText("Plan")).toBeInTheDocument();
+    expect(screen.getByText("Connected")).toBeInTheDocument();
+    expect(screen.getByText("Account")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preferences" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
+    expect(screen.queryByText("Primary planner tab")).not.toBeInTheDocument();
+  });
 });

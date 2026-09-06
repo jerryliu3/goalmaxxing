@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { resolveSettingsSection } from "@/features/settings/settings-section";
+import {
+  resolveSettingsSection,
+  SETTINGS_GROUPS,
+} from "@/features/settings/settings-section";
 
 describe("resolveSettingsSection", () => {
   it("keeps known settings panels", () => {
@@ -14,5 +17,20 @@ describe("resolveSettingsSection", () => {
     expect(resolveSettingsSection(undefined)).toBeNull();
     expect(resolveSettingsSection("profile")).toBeNull();
     expect(resolveSettingsSection("unknown")).toBeNull();
+  });
+
+  it("groups existing controls into Plan, Connected, and Account", () => {
+    expect(SETTINGS_GROUPS.map((group) => group.label)).toEqual([
+      "Plan",
+      "Connected",
+      "Account",
+    ]);
+    expect(SETTINGS_GROUPS.flatMap((group) => group.items.map((item) => item.key))).toEqual([
+      "preferences",
+      "onboarding",
+      "notifications",
+      "integrations",
+      "report-issue",
+    ]);
   });
 });
