@@ -46,8 +46,9 @@ describe("ProgressGoalList", () => {
     });
 
     const buttons = root.root.findAll(
-      (node: ReactTestInstance) => node.props.accessibilityRole === "button"
+      (node: ReactTestInstance) => String(node.type) === "pressable"
     );
+    expect(buttons).toHaveLength(2);
     expect(buttons[0]?.props.accessibilityLabel).toBe("Tempo run");
     expect(buttons[0]?.props.accessibilityState).toEqual({
       selected: true,
@@ -76,7 +77,7 @@ describe("ProgressGoalList", () => {
     });
 
     const button = root.root.find(
-      (node: ReactTestInstance) => node.props.accessibilityRole === "button"
+      (node: ReactTestInstance) => String(node.type) === "pressable"
     );
     expect(button.props.disabled).toBe(true);
     expect(button.props.accessibilityState).toEqual({

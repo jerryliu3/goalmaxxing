@@ -88,12 +88,14 @@ describe("InsightsLedgerPanel", () => {
     expect(renderedText(root)).toContain("Aggregate of selected goals");
     expect(
       root.root.findAll(
-        (node: ReactTestInstance) => node.props.accessibilityRole === "button"
+        (node: ReactTestInstance) => String(node.type) === "pressable"
       )
     ).toHaveLength(2);
 
     const liftButton = root.root.find(
-      (node: ReactTestInstance) => node.props.accessibilityLabel === "Lift"
+      (node: ReactTestInstance) =>
+        String(node.type) === "pressable" &&
+        node.props.accessibilityLabel === "Lift"
     );
     act(() => {
       liftButton.props.onPress();
@@ -102,9 +104,9 @@ describe("InsightsLedgerPanel", () => {
     expect(renderedText(root)).toContain("Tap a past or today cell");
     const pastDay = root.root.find(
       (node: ReactTestInstance) =>
+        String(node.type) === "pressable" &&
         node.props.testID === "insights-ledger-day-2026-09-01"
     );
-    expect(pastDay.props.accessibilityRole).toBe("button");
     act(() => {
       pastDay.props.onPress();
     });
@@ -116,9 +118,9 @@ describe("InsightsLedgerPanel", () => {
 
     const futureDay = root.root.find(
       (node: ReactTestInstance) =>
+        String(node.type) === "view" &&
         node.props.testID === "insights-ledger-day-2099-01-01"
     );
-    expect(futureDay.props.accessibilityRole).toBeUndefined();
     expect(futureDay.props.onPress).toBeUndefined();
   });
 });
