@@ -64,7 +64,7 @@ export function PlannerWarningsPanel({
     <>
       {hasPlannerWarnings && !warningsDismissed && !showBlockingLoading && !error ? (
         <div
-          className="rounded-[10px] border border-[color:var(--gm-recover,#b45309)]/35 bg-[color:var(--gm-recover,#b45309)]/10 px-3 py-2 text-xs text-foreground"
+          className="rounded-[10px] border border-recover/35 bg-recover/10 px-3 py-2 text-xs text-foreground"
           data-testid="plan-recover-banner"
         >
           <div className="flex items-center justify-between gap-2">

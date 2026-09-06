@@ -75,9 +75,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} ${sourceSans.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} ${sourceSans.variable} ${plexMono.variable} gm-gazetteer h-full antialiased`}
     >
-      <body className="min-h-full bg-background text-foreground flex flex-col">
+      <body className="gm-gazetteer min-h-full bg-background text-foreground flex flex-col">
         {children}
         <Toaster position="bottom-right" richColors />
       </body>

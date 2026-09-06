@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface AuthShellProps {
@@ -25,16 +24,19 @@ export function AuthShell({
   return (
     <div
       className={cn(
-        "flex min-h-screen items-center justify-center px-4 py-10",
-        backgroundClassName ?? "bg-background"
+        "flex min-h-screen items-center justify-center bg-page px-4 py-10",
+        backgroundClassName
       )}
     >
-      <Card className="w-full max-w-md shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <section className="w-full max-w-md space-y-6 border-b border-border pb-8">
+        <div className="space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+            Goalmaxxing
+          </p>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+        <div className="space-y-6">
           {children}
           <p className="text-sm text-muted-foreground">
             {alternateText}{" "}
@@ -42,8 +44,8 @@ export function AuthShell({
               {alternateLabel}
             </Link>
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </div>
   );
 }
