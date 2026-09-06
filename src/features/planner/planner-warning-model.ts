@@ -40,7 +40,17 @@ export function selectPlannerWarningModel({
     ? "none"
     : "actionable";
   const plannerWarningBannerCopy =
-    "Some goals need updates before the calendar can be fully scheduled.";
+    unplaceableGoalCount > 0
+      ? `${unplaceableGoalCount} goal${
+          unplaceableGoalCount === 1 ? " still has" : "s still have"
+        } sessions to recover.`
+      : eligibilityNotices.hardIneligible.length > 0
+        ? `${eligibilityNotices.hardIneligible.length} goal${
+            eligibilityNotices.hardIneligible.length === 1 ? " needs" : "s need"
+          } a small update before ${
+            eligibilityNotices.hardIneligible.length === 1 ? "it" : "they"
+          } can be placed.`
+        : "Some sessions still need a home. Recover them when you're ready.";
 
   return {
     warningSuggestedNextSteps,

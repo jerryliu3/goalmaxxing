@@ -351,15 +351,17 @@ export function CalendarMonthDayCell<
           onPointerUp={onCellPointerUp}
           onPointerCancel={onCellPointerCancel}
           onPointerLeave={onCellPointerLeave}
-          className={`relative min-h-24 rounded-sm border p-2 text-left transition-colors ${
+          className={`relative min-h-24 rounded-[10px] border p-2 text-left transition-colors ${
             inMonth
               ? isToday
-                ? "bg-primary/10 ring-1 ring-primary/50 hover:border-primary"
+                ? "border-primary bg-primary/8 hover:border-primary"
                 : isPastInMonth
-                  ? "bg-muted/20 hover:border-primary/50"
-                  : "bg-background hover:border-primary/60"
-              : "border-muted-foreground/40 bg-muted/80 text-muted-foreground"
-          } ${isAnyEntryDragging && isOver ? "ring-2 ring-primary/70" : ""}`}
+                  ? "border-border bg-muted/25 hover:border-primary/40"
+                  : "border-border bg-background hover:border-primary/50"
+              : "border-border/70 bg-muted/40 text-muted-foreground"
+          } ${isSelected ? "border-primary/70 bg-primary/5" : ""} ${
+            isAnyEntryDragging && isOver ? "ring-2 ring-primary/70" : ""
+          }`}
           aria-label={ariaLabel}
           data-no-swipe="true"
           data-day-cell="true"

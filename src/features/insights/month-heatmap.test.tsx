@@ -16,5 +16,6 @@ describe("MonthHeatmap", () => {
 
     expect(screen.getByRole("button", { name: "1" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "7" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "1" })).toHaveClass("rounded-[8px]");
   });
 });
