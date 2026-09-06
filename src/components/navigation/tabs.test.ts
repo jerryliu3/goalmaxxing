@@ -8,15 +8,21 @@ describe("navigation tab preferences", () => {
 
     expect(calendarFirst.map((tab) => tab.key)).toEqual([
       "calendar",
-      "social",
       "insights",
+      "social",
       "settings",
     ]);
     expect(checklistFirst.map((tab) => tab.key)).toEqual([
       "calendar",
-      "social",
       "insights",
+      "social",
       "settings",
+    ]);
+    expect(calendarFirst.map((tab) => tab.label)).toEqual([
+      "Plan",
+      "Progress",
+      "Community",
+      "You",
     ]);
   });
 
@@ -25,8 +31,8 @@ describe("navigation tab preferences", () => {
       buildAppTabs("calendar", { hrefPrefix: "/demo" }).map((tab) => tab.href)
     ).toEqual([
       "/demo/calendar",
-      "/demo/social",
       "/demo/insights",
+      "/demo/social",
       "/demo/settings",
     ]);
   });

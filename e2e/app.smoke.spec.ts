@@ -8,9 +8,9 @@ test("loads the seeded authenticated planner shell", async ({ page }, testInfo) 
   await expect(
     mainNav
   ).toBeVisible();
-  await expect(mainNav.getByRole("link", { name: "Planner" })).toBeVisible();
-  const insightsLink = mainNav.getByRole("link", { name: "Insights" });
-  const socialLink = mainNav.getByRole("link", { name: "Social" });
+  await expect(mainNav.getByRole("link", { name: "Plan" })).toBeVisible();
+  const insightsLink = mainNav.getByRole("link", { name: "Progress" });
+  const socialLink = mainNav.getByRole("link", { name: "Community" });
   const insightsCount = await insightsLink.count();
   const socialCount = await socialLink.count();
 
@@ -21,7 +21,7 @@ test("loads the seeded authenticated planner shell", async ({ page }, testInfo) 
   } else {
     await expect(socialLink.first()).toBeVisible();
   }
-  await expect(mainNav.getByRole("link", { name: /Settings|Profile/ })).toBeVisible();
+  await expect(mainNav.getByRole("link", { name: /Settings|You/ })).toBeVisible();
   await expect(page.getByText("Loading your goals...")).toHaveCount(0);
 
   if (testInfo.project.name === "mobile-webkit") {
@@ -40,7 +40,7 @@ test("explicit Calendar surface does not eagerly load checklist context", async 
 
   await page.goto("/calendar?surface=calendar");
   await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Planner" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Plan" })).toBeVisible();
   await expect(page).toHaveURL(/\/calendar/);
   await page.waitForTimeout(750);
   expect(progressContextRequests).toBe(0);

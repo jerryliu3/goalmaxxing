@@ -35,30 +35,30 @@ export function requestJourneyIntroOpen() {
 
 const JOURNEY_INTRO_STEPS = [
   {
-    title: "Planner",
+    title: "Plan",
     description:
-      "Use Calendar, Checklist, and Tasks to plan sessions and capture one-off work.",
+      "Week, month, and day live here. Day is the checklist for the selected date.",
     target: "nav.calendar",
+    kind: "copy" as const,
+  },
+  {
+    title: "Progress",
+    description:
+      "See completions on a goal ledger. Select a goal to log or review days.",
+    target: "nav.insights",
     kind: "copy" as const,
   },
   {
     title: "Community",
     description:
-      "Feed, Challenges, and Leaderboards are for public accounts. Team stays available so you can still partner privately.",
+      "Team, Challenges, and Leaderboards live here. Team stays available so you can still partner privately.",
     target: "nav.social",
     kind: "copy" as const,
   },
   {
-    title: "Insights",
+    title: "You",
     description:
-      "See progress, streaks, and stats for the goals you are working on.",
-    target: "nav.insights",
-    kind: "copy" as const,
-  },
-  {
-    title: "Profile",
-    description:
-      "Open Profile for settings. You can change timezone, week start, and visibility here later.",
+      "Open You for identity and settings. Timezone, week start, and visibility live here.",
     target: "nav.settings",
     kind: "copy" as const,
   },
