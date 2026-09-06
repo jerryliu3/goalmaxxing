@@ -18,6 +18,8 @@ export function ChecklistShell({ isActive = true }: { isActive?: boolean }) {
   const [showUpcomingGoals, setShowUpcomingGoals] = useState(false);
   const [showArchivedGoals, setShowArchivedGoals] = useState(false);
   const [showTargetAchievedGoals, setShowTargetAchievedGoals] = useState(false);
+  const [showSuppressedLinkedTargets, setShowSuppressedLinkedTargets] =
+    useState(false);
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
   const [recurrenceFilters, setRecurrenceFilters] = useState<RecurrenceGroup[]>([]);
   const [todayGoalSearchQuery, setTodayGoalSearchQuery] = useState("");
@@ -38,6 +40,8 @@ export function ChecklistShell({ isActive = true }: { isActive?: boolean }) {
             setShowArchivedGoals,
             showTargetAchievedGoals,
             setShowTargetAchievedGoals,
+            showSuppressedLinkedTargets,
+            setShowSuppressedLinkedTargets,
             categoryFilters,
             setCategoryFilters,
             recurrenceFilters,
@@ -55,6 +59,7 @@ export function ChecklistShell({ isActive = true }: { isActive?: boolean }) {
       recurrenceFilters,
       shareFilters,
       showArchivedGoals,
+      showSuppressedLinkedTargets,
       showTargetAchievedGoals,
       showEndedGoals,
       showUpcomingGoals,

@@ -11,6 +11,7 @@ import {
   type ChecklistGoalPresentation,
 } from "@/lib/goals/checklist-presentation";
 import { createChecklistTemporalContext } from "@/lib/goals/period-domain";
+import { filterChecklistLinkedTargetSuppressedGoals } from "@/lib/goals/checklist-link-suppression";
 import type { CompletionDateFact, Goal } from "@/lib/goals/types";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 import {
@@ -136,6 +137,7 @@ export function selectFilteredTodayGoals({
   endMonths,
   targetAchievedGoalIds = new Set<string>(),
   showTargetAchievedGoals = true,
+  hiddenLinkedTargetGoalIds = new Set<string>(),
 }: {
   activeGoals: Goal[];
   todayDate: string;
@@ -145,9 +147,13 @@ export function selectFilteredTodayGoals({
   endMonths: string[];
   targetAchievedGoalIds?: ReadonlySet<string>;
   showTargetAchievedGoals?: boolean;
+  hiddenLinkedTargetGoalIds?: ReadonlySet<string>;
 }): Goal[] {
   const normalizedQuery = searchQuery.trim().toLowerCase();
-  const matchingGoals = activeGoals
+  const matchingGoals = filterChecklistLinkedTargetSuppressedGoals(
+    activeGoals,
+    hiddenLinkedTargetGoalIds
+  )
     .filter((goal) => goal.start_date <= todayDate)
     .filter((goal) => showTargetAchievedGoals || !targetAchievedGoalIds.has(goal.id))
     .filter((goal) =>

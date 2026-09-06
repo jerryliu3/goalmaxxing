@@ -77,6 +77,35 @@ describe("checklist selectors", () => {
     ).toEqual(["weekly"]);
   });
 
+  it("hides linked targets while their source is active on the viewed day", () => {
+    const source = goal({
+      id: "source-a",
+      owner_id: "me",
+      title: "Create videos",
+      start_date: "2026-09-01",
+      end_date: "2026-09-30",
+    });
+    const target = goal({
+      id: "target-b",
+      owner_id: "me",
+      title: "Post videos",
+      start_date: "2026-01-01",
+      end_date: null,
+    });
+
+    expect(
+      selectFilteredTodayGoals({
+        activeGoals: [source, target],
+        todayDate: "2026-09-04",
+        categoryFilters: [],
+        recurrenceFilters: [],
+        searchQuery: "",
+        endMonths: [],
+        hiddenLinkedTargetGoalIds: new Set(["target-b"]),
+      }).map((row) => row.id)
+    ).toEqual(["source-a"]);
+  });
+
   it("applies OR filtering for categories, cadence, and end months", () => {
     const goals = [
       goal({

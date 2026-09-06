@@ -39,6 +39,10 @@ import {
   resolveEffectiveEndMonths,
   sortGoalsByDate,
 } from "@/lib/goals/list-view";
+import {
+  filterChecklistLinkedTargetSuppressedGoals,
+  selectChecklistHiddenLinkedTargetGoalIds,
+} from "@/lib/goals/checklist-link-suppression";
 import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
 import { useChecklistProjection } from "@/features/today/use-checklist-projection";
 import { progressSummaryMap } from "@/lib/goals/progress-context";
@@ -82,6 +86,8 @@ export function TodayTab({
     setShowArchivedGoals,
     showTargetAchievedGoals,
     setShowTargetAchievedGoals,
+    showSuppressedLinkedTargets,
+    setShowSuppressedLinkedTargets,
     categoryFilters,
     setCategoryFilters,
     recurrenceFilters,
@@ -199,6 +205,17 @@ export function TodayTab({
       redirectToLogin,
     });
 
+  const hiddenLinkedTargetGoalIds = useMemo(
+    () =>
+      selectChecklistHiddenLinkedTargetGoalIds({
+        goals: completableGoals,
+        links: data.links,
+        ownerId: data.userId,
+        viewDate,
+      }),
+    [completableGoals, data.links, data.userId, viewDate]
+  );
+
   const filteredTodayGoals = useMemo(
     () =>
       selectFilteredTodayGoals({
@@ -210,10 +227,15 @@ export function TodayTab({
         endMonths: effectiveTodayEndMonths,
         targetAchievedGoalIds,
         showTargetAchievedGoals,
+        hiddenLinkedTargetGoalIds: showSuppressedLinkedTargets
+          ? new Set<string>()
+          : hiddenLinkedTargetGoalIds,
       }),
     [
       activeGoals,
       categoryFilters,
+      hiddenLinkedTargetGoalIds,
+      showSuppressedLinkedTargets,
       targetAchievedGoalIds,
       effectiveTodayEndMonths,
       recurrenceFilters,
@@ -266,8 +288,20 @@ export function TodayTab({
   );
 
   const upcoming = useMemo(
-    () => prepareSupplementalGoals(selectUpcomingGoals(activeGoals, todayDate)),
-    [activeGoals, prepareSupplementalGoals, todayDate]
+    () =>
+      prepareSupplementalGoals(
+        filterChecklistLinkedTargetSuppressedGoals(
+          selectUpcomingGoals(activeGoals, todayDate),
+          showSuppressedLinkedTargets ? new Set<string>() : hiddenLinkedTargetGoalIds
+        )
+      ),
+    [
+      activeGoals,
+      hiddenLinkedTargetGoalIds,
+      prepareSupplementalGoals,
+      showSuppressedLinkedTargets,
+      todayDate,
+    ]
   );
 
   const pastGoals = useMemo(
@@ -350,6 +384,12 @@ export function TodayTab({
       count: targetAchievedGoalIds.size,
       checked: showTargetAchievedGoals,
       onChange: setShowTargetAchievedGoals,
+    },
+    {
+      label: "Show suppressed linked goals",
+      count: hiddenLinkedTargetGoalIds.size,
+      checked: showSuppressedLinkedTargets,
+      onChange: setShowSuppressedLinkedTargets,
     },
   ];
 
