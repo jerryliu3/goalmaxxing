@@ -22,6 +22,7 @@ export function planDraftMove({
   scopeMonth,
   source = "date_input",
   previewUnit,
+  destinationSuppressedByLink,
   conflictKeys,
   completionFactConflict,
 }: {
@@ -36,6 +37,7 @@ export function planDraftMove({
    */
   source?: DraftMoveSource;
   previewUnit: PlannerWorkUnit | undefined;
+  destinationSuppressedByLink?: boolean;
   conflictKeys: Set<string> | undefined;
   completionFactConflict:
     | { unitKey: string; scheduledDate: string | null }
@@ -53,6 +55,13 @@ export function planDraftMove({
   }
   if (!scopeMonth) {
     return { ok: false, message: "Planner context is unavailable." };
+  }
+  if (destinationSuppressedByLink) {
+    return {
+      ok: false,
+      message:
+        "This linked target is suppressed on that date. Move it to a date on or after the linked resume date.",
+    };
   }
   if (isEntryImmovableForDraft(entry)) {
     return {
