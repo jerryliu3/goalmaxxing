@@ -103,7 +103,25 @@ export async function generateCurrentDigest({
     estimatedInputTokens: 800,
   });
   if (!quota.allowed) {
-    throw new ApiRouteError(429, "quota_exceeded", "Daily digest suggestions are used up.");
+    if (regenerate) {
+      throw new ApiRouteError(429, "quota_exceeded", "Daily digest suggestions are used up.");
+    }
+    const suggestions = fallbackDigestSuggestions(snapshot.period.kind);
+    await upsertDigestRow({
+      supabase,
+      userId,
+      kind: snapshot.period.kind,
+      periodKey: snapshot.period.periodKey,
+      facts: snapshot.facts,
+      suggestions,
+    });
+    return {
+      kind: snapshot.period.kind,
+      periodKey: snapshot.period.periodKey,
+      facts: snapshot.facts,
+      suggestions,
+      reused: false,
+    };
   }
 
   let suggestions: DigestSuggestions;
@@ -163,7 +181,7 @@ export async function acknowledgeCurrentDigest({
     kind: snapshot.period.kind,
     periodKey: snapshot.period.periodKey,
     facts: snapshot.facts,
-    suggestions: snapshot.record?.suggestions ?? null,
+    suggestions: snapshot.record?.suggestions,
     acknowledgedAt: new Date().toISOString(),
   });
   return {
