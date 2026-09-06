@@ -46,4 +46,22 @@ describe("selectPlannerWarningModel", () => {
       "1 goal needs a small update before it can be placed."
     );
   });
+
+  it("surfaces lock and capacity issues under Recover", () => {
+    const model = selectPlannerWarningModel({
+      unplaceableGoalCount: 0,
+      invalidLockGoalCount: 1,
+      capacityWarningGoalCount: 1,
+      eligibilityNotices: emptyEligibility,
+    });
+
+    expect(model.hasPlannerWarnings).toBe(true);
+    expect(model.plannerWarningBannerCopy).toBe(
+      "Some sessions still need a home. Recover them when you're ready."
+    );
+    expect(model.warningSuggestedNextSteps).toEqual([
+      "Unlock conflicting locked sessions and regenerate the calendar.",
+      "Open planner settings to adjust targets, deadlines, or rest-day constraints.",
+    ]);
+  });
 });

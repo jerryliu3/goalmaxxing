@@ -35,7 +35,10 @@ export function selectPlannerWarningModel({
   }
 
   const hasPlannerWarnings =
-    unplaceableGoalCount > 0 || eligibilityNotices.hardIneligible.length > 0;
+    unplaceableGoalCount > 0 ||
+    eligibilityNotices.hardIneligible.length > 0 ||
+    invalidLockGoalCount > 0 ||
+    capacityWarningGoalCount > 0;
   const plannerWarningSeverity: PlannerWarningSeverity = !hasPlannerWarnings
     ? "none"
     : "actionable";
