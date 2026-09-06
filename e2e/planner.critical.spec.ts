@@ -158,7 +158,7 @@ async function waitForCalendarReady(page: Page) {
 }
 
 async function ensureCalendarMonthView(page: Page) {
-  const viewModeSelect = page.getByRole("combobox", { name: "Calendar view mode" });
+  const viewModeSelect = page.getByRole("combobox", { name: "Plan view mode" });
   if (await viewModeSelect.isVisible().catch(() => false)) {
     const selectedLabel = (await viewModeSelect.textContent())?.trim() ?? "";
     if (!selectedLabel.startsWith("Month")) {

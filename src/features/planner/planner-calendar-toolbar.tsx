@@ -88,13 +88,13 @@ export function PlannerCalendarToolbar({
             <div className="flex items-center gap-2">
               <CalendarDays className="size-4 text-primary" />
               <h2 className="text-lg font-semibold">Calendar</h2>
-              <Tooltip content="Calendar help" side="top" align="center">
+              <Tooltip content="Plan help" side="top" align="center">
                 <Button
                   type="button"
                   variant="outline"
                   size="icon-sm"
-                  aria-label="Open calendar help"
-                  title="Calendar help"
+                  aria-label="Open plan help"
+                  title="Plan help"
                   onClick={() => setHelpOpen(true)}
                 >
                   <CircleHelp className="size-4" />
@@ -164,7 +164,7 @@ export function PlannerCalendarToolbar({
               <SelectTrigger
                 className="h-8 w-[7.5rem] rounded-md bg-background/90 text-xs"
                 disabled={loading}
-                aria-label="Calendar view mode"
+                aria-label="Plan view mode"
               >
                 <SelectValue />
               </SelectTrigger>
@@ -214,9 +214,9 @@ export function PlannerCalendarToolbar({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Calendar help</DialogTitle>
+            <DialogTitle>Plan help</DialogTitle>
             <DialogDescription>
-              Use this calendar to preview scheduling changes before saving them.
+              Use this plan to preview scheduling changes before saving them.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 text-sm">
@@ -266,7 +266,7 @@ export function PlannerCalendarToolbar({
               </div>
             ) : null}
             <Button type="button" variant="outline" size="sm" onClick={() => setHelpOpen(false)}>
-              Back to calendar
+              Back to plan
             </Button>
           </div>
         </DialogContent>
