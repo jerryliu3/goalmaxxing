@@ -145,6 +145,60 @@ export async function handleDemoFetch(
     });
   }
 
+  if (pathname === "/api/digest" && method === "GET") {
+    return jsonResponse({
+      schemaVersion: "1",
+      kind: "daily",
+      periodKey: requireStore().asOfDate,
+      localDate: requireStore().asOfDate,
+      digestAutoShow: false,
+      acknowledged: true,
+      shouldAutoShow: false,
+      facts: {
+        recap: {
+          label: "Yesterday",
+          start: requireStore().asOfDate,
+          end: requireStore().asOfDate,
+          placed: 0,
+          completed: 0,
+          items: [],
+        },
+        ahead: {
+          label: "Today",
+          start: requireStore().asOfDate,
+          end: requireStore().asOfDate,
+          placed: 0,
+          completed: 0,
+          items: [],
+        },
+      },
+      suggestions: null,
+      correlationId: DEMO_CORRELATION_ID,
+    });
+  }
+  if (pathname === "/api/digest/generate" && method === "POST") {
+    return jsonResponse({
+      schemaVersion: "1",
+      kind: "daily",
+      periodKey: requireStore().asOfDate,
+      reused: true,
+      suggestions: {
+        motivation: "Demo stays on the calendar.",
+        suggestions: [],
+      },
+      correlationId: DEMO_CORRELATION_ID,
+    });
+  }
+  if (pathname === "/api/digest/ack" && method === "POST") {
+    return jsonResponse({
+      schemaVersion: "1",
+      kind: "daily",
+      periodKey: requireStore().asOfDate,
+      acknowledged: true,
+      correlationId: DEMO_CORRELATION_ID,
+    });
+  }
+
   if (pathname === "/api/xp/profile" && method === "GET") {
     return jsonResponse(buildDemoXpProfile());
   }
