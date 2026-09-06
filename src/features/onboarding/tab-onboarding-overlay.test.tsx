@@ -170,10 +170,10 @@ describe("TabOnboardingOverlay", () => {
       </>
     );
 
-    expect(await screen.findByRole("dialog", { name: "Overall stats" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Goal ledger" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Goal stats" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Choose goals" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Edit a missed day" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Log a missed day" })).toBeInTheDocument();
   });
 });

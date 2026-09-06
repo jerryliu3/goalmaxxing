@@ -2,22 +2,16 @@
 
 import {
   addMonths,
-  differenceInCalendarDays,
-  eachDayOfInterval,
-  endOfYear,
   format,
   parseISO,
-  startOfDay,
   startOfMonth,
   startOfYear,
   subMonths,
+  endOfYear,
 } from "date-fns";
 import {
   CalendarRange,
-  Flame,
-  PencilLine,
   SlidersHorizontal,
-  TrendingUp,
   X,
 } from "lucide-react";
 import { type TouchEventHandler, useCallback, useMemo, useRef, useState } from "react";
@@ -27,14 +21,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { LoadingCard } from "@/components/ui/loading-card";
-import { Progress } from "@/components/ui/progress";
-import { InsightsGoalCardHeader } from "@/features/insights/insights-goal-card-header";
 import { InsightsPeriodStepper } from "@/features/insights/insights-period-controls";
 import { InsightsGoalStatsFilters } from "@/features/insights/insights-goal-stats-filters";
 import { MilestonePills } from "@/features/goals/milestone-pills";
-import { InsightsOverallStatsCard } from "@/features/insights/insights-overall-stats-card";
+import { ProgressGoalList } from "@/features/insights/progress-goal-list";
 import {
-  selectOverallCompletionPercent,
+  isLedgerHeatmapDayMutable,
+  progressLedgerCaption,
+  resolveProgressLedgerMode,
+  resolveSelectedLedgerGoalIds,
+  toggleLedgerGoalSelection,
+} from "@/features/insights/progress-ledger-selection";
+import {
   selectSearchedGoals,
   selectVisiblePerGoalHeatmaps,
   selectYearHeatmapValues,
@@ -47,10 +45,6 @@ import { CalendarDayPreviewList } from "@/features/planner/calendar-day-preview-
 import { computeDayPreviewPosition } from "@/features/planner/day-preview-popup";
 import { getApiErrorMessage } from "@/lib/api/client";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
-import {
-  getCategoryBadgeClass,
-  getGoalCategoryLabel,
-} from "@/lib/goals/category";
 import {
   countCompletionsByDate,
   groupCompletionTitlesByDate,
@@ -84,10 +78,7 @@ import {
   progressSummaryMap,
 } from "@/lib/goals/progress-context";
 import type { Goal } from "@/lib/goals/types";
-import {
-  resolveInsightsCompletionIntent,
-  resolveTargetedRecurring,
-} from "@/lib/planner/completion-intent";
+import { resolveInsightsCompletionIntent } from "@/lib/planner/completion-intent";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import { withPlannerRefreshTimeout } from "@/lib/planner/refresh-timeout";
 import { useOutsidePointerDismiss } from "@/lib/ui/use-outside-pointer-dismiss";
@@ -200,7 +191,6 @@ export function InsightsTab({
   const perGoalViewMode = sharedPeriod?.perGoalViewMode ?? internalPerGoalViewMode;
   const setPerGoalViewMode =
     sharedPeriod?.onPerGoalViewModeChange ?? setInternalPerGoalViewMode;
-  const [goalMonthOverrides, setGoalMonthOverrides] = useState<Record<string, Date>>({});
   const [internalGoalSearchQuery, setInternalGoalSearchQuery] = useState("");
   const [internalGoalEndMonths, setInternalGoalEndMonths] = useState<string[]>([]);
   const [internalGoalSort, setInternalGoalSort] = useState<GoalDateSort>("earliest_end");
@@ -216,7 +206,7 @@ export function InsightsTab({
   const setShowHistoricalGoals =
     sharedGoalFilters?.setShowHistoricalGoals ?? setInternalShowHistoricalGoals;
   const [goalStatsFiltersOpen, setGoalStatsFiltersOpen] = useState(false);
-  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
+  const [selectedGoalIds, setSelectedGoalIds] = useState<string[] | null>(null);
   const [aggregateDrilldownDate, setAggregateDrilldownDate] = useState<string | null>(null);
   const [aggregateDrilldownPosition, setAggregateDrilldownPosition] = useState<
     ReturnType<typeof computeDayPreviewPosition> | null
@@ -237,15 +227,6 @@ export function InsightsTab({
     failClosed: Boolean(readOnly && subjectUserId),
   });
   const supabase = useMemo(() => createClient(), []);
-
-  // Switching month/year invalidates per-goal cursors. React's sanctioned form
-  // for "reset state when a prop changes" is a render-phase adjustment, not an
-  // effect -- an effect here cascades an extra render on every switch.
-  const [overridesViewMode, setOverridesViewMode] = useState(perGoalViewMode);
-  if (overridesViewMode !== perGoalViewMode) {
-    setOverridesViewMode(perGoalViewMode);
-    setGoalMonthOverrides({});
-  }
 
   const completableGoalIds = useMemo(
     () =>
@@ -276,25 +257,12 @@ export function InsightsTab({
     [state.progress]
   );
 
-  const aggregateCountsByDate = useMemo(
-    () => countCompletionsByDate(personalCompletions),
-    [personalCompletions]
-  );
   const goalTitleById = useMemo(
     () =>
       new Map(
         personalGoals.map((goal) => [goal.id, goal.title])
       ),
     [personalGoals]
-  );
-  const aggregateCompletionItemsByDate = useMemo(
-    () => groupCompletionTitlesByDate(personalCompletions, goalTitleById),
-    [goalTitleById, personalCompletions]
-  );
-
-  const aggregateHeatmapData = useMemo(
-    () => selectYearHeatmapValues(monthCursor, aggregateCountsByDate),
-    [aggregateCountsByDate, monthCursor]
   );
 
   const selectedYearStart = useMemo(() => startOfYear(monthCursor), [monthCursor]);
@@ -334,11 +302,57 @@ export function InsightsTab({
     ]
   );
 
-  const overallCompletion = useMemo(
-    () => selectOverallCompletionPercent(personalGoals, progressByGoal),
-    [personalGoals, progressByGoal]
+  const visibleGoalIds = useMemo(
+    () => visiblePerGoalHeatmaps.map((goal) => goal.id),
+    [visiblePerGoalHeatmaps]
   );
-  const overallStats = state.insightsStats?.overall ?? null;
+  const selectedLedgerGoalIds = useMemo(
+    () => resolveSelectedLedgerGoalIds(visibleGoalIds, selectedGoalIds),
+    [selectedGoalIds, visibleGoalIds]
+  );
+  const selectedLedgerIdSet = useMemo(
+    () => new Set(selectedLedgerGoalIds),
+    [selectedLedgerGoalIds]
+  );
+  const ledgerMode = resolveProgressLedgerMode({
+    selectedCount: selectedLedgerGoalIds.length,
+    visibleCount: visibleGoalIds.length,
+  });
+  const editableGoal =
+    ledgerMode === "edit"
+      ? (visiblePerGoalHeatmaps.find((goal) => goal.id === selectedLedgerGoalIds[0]) ??
+        null)
+      : null;
+  const ledgerCompletions = useMemo(
+    () => filterCompletionsForGoalIds(personalCompletions, selectedLedgerIdSet),
+    [personalCompletions, selectedLedgerIdSet]
+  );
+  const ledgerCountsByDate = useMemo(
+    () => countCompletionsByDate(ledgerCompletions),
+    [ledgerCompletions]
+  );
+  const ledgerCompletionItemsByDate = useMemo(
+    () => groupCompletionTitlesByDate(ledgerCompletions, goalTitleById),
+    [goalTitleById, ledgerCompletions]
+  );
+  const ledgerHeatmapData = useMemo(
+    () => selectYearHeatmapValues(monthCursor, ledgerCountsByDate),
+    [ledgerCountsByDate, monthCursor]
+  );
+  const ledgerGoalItems = useMemo(
+    () =>
+      visiblePerGoalHeatmaps.map((goal) => {
+        const progress = progressByGoal.get(goal.id);
+        const completionCount = progress?.admissibleCompletionCount ?? 0;
+        return {
+          id: goal.id,
+          title: goal.title,
+          color: goal.color ?? "var(--muted-foreground)",
+          rateLabel: getCompletionCountLabel(goal, completionCount, progress),
+        };
+      }),
+    [progressByGoal, visiblePerGoalHeatmaps]
+  );
 
   const refreshInsightsInBackground = useCallback(
     (scrollY: number) => {
@@ -606,34 +620,12 @@ export function InsightsTab({
     setMonthCursor((previous) => (deltaX < 0 ? addMonths(previous, 1) : subMonths(previous, 1)));
   };
 
-  const shiftGoalMonthCursor = useCallback(
-    (goalId: string, direction: -1 | 1) => {
-      const baselineMonth = goalMonthOverrides[goalId] ?? monthCursor;
-      const nextMonth =
-        direction > 0
-          ? addMonths(baselineMonth, 1)
-          : subMonths(baselineMonth, 1);
-
-      if (nextMonth.getFullYear() !== monthCursor.getFullYear()) {
-        setGoalMonthOverrides({});
-        setMonthCursor(nextMonth);
-        return;
-      }
-
-      setGoalMonthOverrides((previous) => ({
-        ...previous,
-        [goalId]: nextMonth,
-      }));
-    },
-    [goalMonthOverrides, monthCursor, setMonthCursor]
-  );
-
   const aggregateDrilldownItems = useMemo(
     () =>
       aggregateDrilldownDate
-        ? aggregateCompletionItemsByDate[aggregateDrilldownDate] ?? []
+        ? ledgerCompletionItemsByDate[aggregateDrilldownDate] ?? []
         : [],
-    [aggregateCompletionItemsByDate, aggregateDrilldownDate]
+    [aggregateDrilldownDate, ledgerCompletionItemsByDate]
   );
   const aggregateDrilldownMarkers = useMemo<AggregateDrilldownCompletionMarker[]>(
     () =>
@@ -654,18 +646,117 @@ export function InsightsTab({
     containerRef: aggregateDrilldownRef,
     onDismiss: clearAggregateDrilldown,
   });
-  const showOverallStatsCard =
+  const showHeatmap =
     contentMode === "full" || contentMode === "overall-only";
   const showGoalStatsSection =
     contentMode === "full" || contentMode === "goal-stats-only";
   const showGoalsSection =
     contentMode === "full" || contentMode === "goals-only";
   const showGoalStatsStepper = !sharedPeriod || contentMode === "goal-stats-only";
+  const todayLocal = toLocalDateString();
+  const heatmapEditable = ledgerMode === "edit" && !readOnly && Boolean(editableGoal);
+  const milestoneTargetCount =
+    editableGoal?.frequency_type === "fixed_milestones"
+      ? Math.max(editableGoal.target_count ?? 0, 1)
+      : 0;
+  const editableCompletions = editableGoal
+    ? (completionsByGoal.get(editableGoal.id) ?? [])
+    : [];
+  const editableProgress = editableGoal ? progressByGoal.get(editableGoal.id) : undefined;
+  const persistedMilestoneNames =
+    editableGoal?.frequency_type === "fixed_milestones"
+      ? buildMilestoneNames(milestoneTargetCount, editableGoal.milestone_names)
+      : [];
+  const draftMilestoneNames =
+    editableGoal && milestoneNameDrafts[editableGoal.id]
+      ? milestoneNameDrafts[editableGoal.id]
+      : persistedMilestoneNames;
+  const milestoneNamesChanged = !areMilestoneNamesEqual(
+    draftMilestoneNames,
+    persistedMilestoneNames
+  );
+  const mappedMilestoneDates =
+    editableProgress?.milestoneDates ??
+    getSortedCompletionDates(editableCompletions).slice(0, milestoneTargetCount);
+
+  const openLedgerDrilldown = (
+    date: string,
+    sourceElement?: HTMLButtonElement
+  ) => {
+    setAggregateDrilldownDate(date);
+    if (sourceElement) {
+      const rect = sourceElement.getBoundingClientRect();
+      setAggregateDrilldownPosition(
+        computeDayPreviewPosition({
+          rect: {
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height,
+          },
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+        })
+      );
+      return;
+    }
+    const tile = aggregateHeatmapRef.current?.querySelector(
+      `.${getAggregateDrilldownDayClass(date)}`
+    );
+    if (tile instanceof Element) {
+      const rect = tile.getBoundingClientRect();
+      setAggregateDrilldownPosition(
+        computeDayPreviewPosition({
+          rect: {
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height,
+          },
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+        })
+      );
+      return;
+    }
+    setAggregateDrilldownPosition(null);
+  };
+
+  const handleLedgerDayClick = (
+    date: string,
+    sourceElement?: HTMLButtonElement
+  ) => {
+    if (heatmapEditable && editableGoal) {
+      if (!isLedgerHeatmapDayMutable(date, todayLocal)) {
+        toast.error("You can only select today or past dates.");
+        return;
+      }
+      if (editableGoal.frequency_type === "fixed_milestones") {
+        void toggleMilestoneDateSelection(
+          editableGoal,
+          date,
+          getSortedCompletionDates(editableCompletions),
+          milestoneTargetCount,
+          editableProgress?.creditedUnitCount ?? 0,
+          sourceElement
+        );
+        return;
+      }
+      void toggleRecurringDateSelection(
+        editableGoal,
+        date,
+        (ledgerCountsByDate[date] ?? 0) > 0,
+        sourceElement
+      );
+      return;
+    }
+    openLedgerDrilldown(date, sourceElement);
+  };
 
   if (loading && !state.userId) {
     return (
       <LoadingCard
-        title="Loading insights..."
+        title="Loading progress..."
         description="Crunching your completion history."
       />
     );
@@ -679,50 +770,6 @@ export function InsightsTab({
 
   return (
     <div className="space-y-5">
-      {showOverallStatsCard ? (
-        <InsightsOverallStatsCard
-          heatmapRef={aggregateHeatmapRef}
-          selectedYearStart={selectedYearStart}
-          selectedYearEnd={selectedYearEnd}
-          values={aggregateHeatmapData}
-          overallCompletion={overallCompletion}
-          overallStats={overallStats}
-          classForValue={(value) =>
-            `${getHeatmapScaleClass(value?.count ?? 0)} cursor-pointer ${getAggregateDrilldownDayClass(value?.date)}`
-          }
-          titleForValue={(value) =>
-            `${value?.date ?? "N/A"}: ${value?.count ?? 0} completion${
-              (value?.count ?? 0) === 1 ? "" : "s"
-            }`
-          }
-          onDayClick={(value) => {
-            if (value?.date) {
-              setAggregateDrilldownDate(value.date);
-              const tile = aggregateHeatmapRef.current?.querySelector(
-                `.${getAggregateDrilldownDayClass(value.date)}`
-              );
-              if (tile instanceof Element) {
-                const rect = tile.getBoundingClientRect();
-                setAggregateDrilldownPosition(
-                  computeDayPreviewPosition({
-                    rect: {
-                      top: rect.top,
-                      left: rect.left,
-                      width: rect.width,
-                      height: rect.height,
-                    },
-                    viewportWidth: window.innerWidth,
-                    viewportHeight: window.innerHeight,
-                  })
-                );
-              } else {
-                setAggregateDrilldownPosition(null);
-              }
-            }
-          }}
-        />
-      ) : null}
-
       {showGoalStatsSection ? (
         <Card className="shadow-sm" data-onboarding="insights.goal-stats">
           <CardHeader className="pb-3">
@@ -732,7 +779,7 @@ export function InsightsTab({
             >
               <div className="flex min-w-0 items-center gap-2">
                 <CalendarRange className="size-4 shrink-0 text-primary" />
-                <CardTitle>Goal Stats</CardTitle>
+                <CardTitle>Goal ledger</CardTitle>
               </div>
               <div className="flex items-center gap-2 justify-self-center">
                 {showGoalStatsStepper ? (
@@ -747,8 +794,8 @@ export function InsightsTab({
                   variant="outline"
                   size="icon-sm"
                   className="h-8 w-8 shrink-0 rounded-full"
-                  aria-label="Open Insights filters"
-                  title="Open Insights filters"
+                  aria-label="Open Progress filters"
+                  title="Open Progress filters"
                   onClick={() => setGoalStatsFiltersOpen(true)}
                 >
                   <SlidersHorizontal className="size-3.5" />
@@ -785,358 +832,133 @@ export function InsightsTab({
       ) : null}
 
       {showGoalsSection ? (
-        <Card className="border-0 bg-transparent py-0 shadow-none ring-0">
-          <CardContent
-            className="space-y-3 px-0"
-            data-no-swipe="true"
-            onTouchStart={perGoalViewMode === "month" ? onMonthSectionTouchStart : undefined}
-            onTouchEnd={perGoalViewMode === "month" ? onMonthSectionTouchEnd : undefined}
-          >
-            {visiblePerGoalHeatmaps.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No goals match these controls.</p>
-            ) : (
-              visiblePerGoalHeatmaps.map((goal, index) => {
-              const goalMonthCursor = goalMonthOverrides[goal.id] ?? monthCursor;
-              const completions = completionsByGoal.get(goal.id) ?? [];
-              const progress = progressByGoal.get(goal.id);
-              const completionCount =
-                progress?.admissibleCompletionCount ?? 0;
-              const hasTargetCount =
-                goal.frequency_type === "fixed_milestones" ||
-                isDeadlineTotalGoal(goal);
-              const hasCadenceHitRate =
-                isPeriodCadenceGoal(goal) &&
-                progress?.closedPeriodHitRatePercent !== null;
-              const completionCountLabel = getCompletionCountLabel(
-                goal,
-                completionCount,
-                progress
-              );
-              const countsByDate = countCompletionsByDate(completions);
-              const percent = progress?.percent ?? 0;
-              const streaks = {
-                current: progress?.currentStreak ?? 0,
-                longest: progress?.longestStreak ?? 0,
-              };
-              const daysRemaining =
-                goal.end_date !== null
-                  ? Math.max(
-                      differenceInCalendarDays(parseISO(goal.end_date), startOfDay(new Date())),
-                      0
-                    )
-                  : null;
-              const isRecurring = goal.frequency_type === "recurring";
-              const targetedRecurring = resolveTargetedRecurring(goal);
-              const isMilestone = goal.frequency_type === "fixed_milestones";
-              const canEditHistory = !readOnly && (isRecurring || isMilestone);
-              const editingHistory = editingGoalId === goal.id;
-              const milestoneTargetCount = Math.max(goal.target_count ?? completionCount, 1);
-              const milestoneCompletionDates = getSortedCompletionDates(completions);
-              const mappedMilestoneDates =
-                progress?.milestoneDates ??
-                milestoneCompletionDates.slice(0, milestoneTargetCount);
-              const goalHeatmapData = eachDayOfInterval({
-                start: selectedYearStart,
-                end: selectedYearEnd,
-              }).map((date) => {
-                const key = format(date, "yyyy-MM-dd");
-                return {
-                  date: key,
-                  count: countsByDate[key] ?? 0,
-                };
-              });
-              const persistedMilestoneNames = isMilestone
-                ? buildMilestoneNames(milestoneTargetCount, goal.milestone_names)
-                : [];
-              const draftMilestoneNames =
-                milestoneNameDrafts[goal.id] ?? persistedMilestoneNames;
-              const milestoneNamesChanged = !areMilestoneNamesEqual(
-                draftMilestoneNames,
-                persistedMilestoneNames
-              );
-              const goalCategoryLabel = getGoalCategoryLabel(
-                goal.category,
-                goal.category_key
-              );
-              return (
-                <Card
-                  key={goal.id}
-                  className="border shadow-none"
-                  data-onboarding={
-                    index === 0 && !readOnly ? "insights.goal" : undefined
-                  }
-                >
-                  <CardContent className="space-y-3 py-4">
-                    <InsightsGoalCardHeader
-                      title={goal.title}
-                      color={goal.color ?? "var(--muted-foreground)"}
-                      categoryLabel={goalCategoryLabel}
-                      categoryClassName={getCategoryBadgeClass(
-                        goal.category_key ?? goal.category
-                      )}
-                      endDate={goal.end_date}
-                      daysRemaining={daysRemaining}
-                      action={
-                        canEditHistory ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={editingHistory ? "secondary" : "outline"}
-                            disabled={savingMilestoneNamesGoalId === goal.id}
-                            onClick={() => {
-                              void (async () => {
-                                if (editingHistory) {
-                                  if (isMilestone && milestoneNamesChanged) {
-                                    const saved = await saveMilestoneNames(
-                                      goal,
-                                      buildMilestoneNames(
-                                        milestoneTargetCount,
-                                        draftMilestoneNames
-                                      )
-                                    );
-                                    if (!saved) {
-                                      return;
-                                    }
-                                  }
-                                  setEditingGoalId(null);
-                                  return;
-                                }
-
-                                setEditingGoalId(goal.id);
-                                if (isMilestone) {
-                                  setMilestoneNameDrafts((previous) => ({
-                                    ...previous,
-                                    [goal.id]: persistedMilestoneNames,
-                                  }));
-                                }
-                              })();
-                            }}
-                          >
-                            <PencilLine className="size-3.5" />
-                            {editingHistory
-                              ? savingMilestoneNamesGoalId === goal.id
-                                ? "Saving..."
-                                : "Done"
-                              : "Edit"}
-                          </Button>
-                        ) : undefined
-                      }
-                    />
-
-                    {isMilestone ? (
-                      <>
-                        <MilestonePills
-                          targetCount={milestoneTargetCount}
-                          completionDates={mappedMilestoneDates}
-                          milestoneNames={draftMilestoneNames}
-                          maxVisible={MAX_VISIBLE_MILESTONES}
-                        />
-                        {editingHistory ? (
-                          <p className="text-xs text-muted-foreground">
-                            Tap calendar dates to assign milestones. Earliest selected date maps to
-                            milestone 1. You can select up to {milestoneTargetCount} date
-                            {milestoneTargetCount === 1 ? "" : "s"}.
-                          </p>
-                        ) : null}
-                        {perGoalViewMode === "month" ? (
-                          <MonthHeatmap
-                            month={goalMonthCursor}
-                            countsByDate={countsByDate}
-                            interactive={editingHistory}
-                            pendingDate={pendingRetroDate}
-                            onPreviousMonth={() => shiftGoalMonthCursor(goal.id, -1)}
-                            onNextMonth={() => shiftGoalMonthCursor(goal.id, 1)}
-                            {...(editingHistory
-                              ? {
-                                  onDayClick: (
-                                    date: string,
-                                    sourceElement: HTMLButtonElement
-                                  ) =>
-                                    void toggleMilestoneDateSelection(
-                                      goal,
-                                      date,
-                                      milestoneCompletionDates,
-                                      milestoneTargetCount,
-                                      progress?.creditedUnitCount ?? 0,
-                                      sourceElement
-                                    ),
-                                }
-                              : {})}
-                          />
-                        ) : (
-                          <div className="overflow-x-auto py-1">
-                            <CalendarHeatmap
-                              startDate={selectedYearStart}
-                              endDate={selectedYearEnd}
-                              values={goalHeatmapData}
-                              showWeekdayLabels
-                              weekdayLabels={aggregateWeekdayLabels}
-                              classForValue={(value) =>
-                                `${getHeatmapScaleClass(value?.count ?? 0)}${
-                                  editingHistory ? " cursor-pointer" : ""
-                                }`
-                              }
-                              titleForValue={(value) =>
-                                `${value?.date ?? "N/A"}: ${value?.count ?? 0} completion${
-                                  (value?.count ?? 0) === 1 ? "" : "s"
-                                }`
-                              }
-                              {...(editingHistory
-                                ? {
-                                    onClick: (value?: { date?: string }) => {
-                                      const selectedDate = value?.date;
-                                      if (!selectedDate) {
-                                        return;
-                                      }
-                                      void toggleMilestoneDateSelection(
-                                        goal,
-                                        selectedDate,
-                                        milestoneCompletionDates,
-                                        milestoneTargetCount,
-                                        progress?.creditedUnitCount ?? 0
-                                      );
-                                    },
-                                  }
-                                : {})}
-                            />
-                          </div>
-                        )}
-                        {editingHistory && isMilestone ? (
-                          <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
-                            <p className="text-xs text-muted-foreground">Milestone names</p>
-                            <div className="grid gap-2 sm:grid-cols-2">
-                              {Array.from({ length: milestoneTargetCount }).map((_, index) => (
-                                <Input
-                                  key={`${goal.id}-milestone-name-${index + 1}`}
-                                  value={draftMilestoneNames[index] ?? defaultMilestoneName(index)}
-                                  onChange={(event) =>
-                                    setMilestoneNameDrafts((previous) => {
-                                      const nextGoalNames = [
-                                        ...(previous[goal.id] ?? persistedMilestoneNames),
-                                      ];
-                                      nextGoalNames[index] = event.target.value;
-                                      return {
-                                        ...previous,
-                                        [goal.id]: nextGoalNames,
-                                      };
-                                    })
-                                  }
-                                  placeholder={defaultMilestoneName(index)}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        ) : null}
-                      </>
-                    ) : (
-                      <>
-                        {editingHistory ? (
-                          <p className="text-xs text-muted-foreground">
-                            Tap any day to toggle completion retroactively.
-                          </p>
-                        ) : null}
-                        {perGoalViewMode === "month" ? (
-                          <MonthHeatmap
-                            month={goalMonthCursor}
-                            countsByDate={countsByDate}
-                            interactive={editingHistory}
-                            pendingDate={pendingRetroDate}
-                            onPreviousMonth={() => shiftGoalMonthCursor(goal.id, -1)}
-                            onNextMonth={() => shiftGoalMonthCursor(goal.id, 1)}
-                            {...(editingHistory
-                              ? {
-                                  onDayClick: (
-                                    date: string,
-                                    sourceElement: HTMLButtonElement
-                                  ) =>
-                                    void toggleRecurringDateSelection(
-                                      goal,
-                                      date,
-                                      (countsByDate[date] ?? 0) > 0,
-                                      sourceElement
-                                    ),
-                                }
-                              : {})}
-                          />
-                        ) : (
-                          <div className="overflow-x-auto py-1">
-                            <CalendarHeatmap
-                              startDate={selectedYearStart}
-                              endDate={selectedYearEnd}
-                              values={goalHeatmapData}
-                              showWeekdayLabels
-                              weekdayLabels={aggregateWeekdayLabels}
-                              classForValue={(value) =>
-                                `${getHeatmapScaleClass(value?.count ?? 0)}${
-                                  editingHistory ? " cursor-pointer" : ""
-                                }`
-                              }
-                              titleForValue={(value) =>
-                                `${value?.date ?? "N/A"}: ${value?.count ?? 0} completion${
-                                  (value?.count ?? 0) === 1 ? "" : "s"
-                                }`
-                              }
-                              {...(editingHistory
-                                ? {
-                                    onClick: (value?: { date?: string }) => {
-                                      const selectedDate = value?.date;
-                                      if (!selectedDate) {
-                                        return;
-                                      }
-                                      void toggleRecurringDateSelection(
-                                        goal,
-                                        selectedDate,
-                                        (countsByDate[selectedDate] ?? 0) > 0
-                                      );
-                                    },
-                                  }
-                                : {})}
-                            />
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="inline-flex items-center gap-1">
-                          <TrendingUp className="size-3" />
-                          Completion
-                        </span>
-                        <span className="text-right">
-                          {(hasTargetCount || hasCadenceHitRate)
-                            ? `${Math.round(percent)}% · ${completionCountLabel}`
-                            : completionCountLabel}
-                        </span>
-                      </div>
-                      {hasTargetCount || hasCadenceHitRate ? (
-                        <Progress value={percent} />
-                      ) : null}
-                    </div>
-
-                    {goal.frequency_type === "recurring" && !targetedRecurring ? (
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        {goal.frequency_type === "recurring" && !targetedRecurring ? (
-                          <>
-                            <span className="inline-flex items-center gap-1">
-                              <Flame className="size-3" />
-                              Current streak: {streaks.current}
-                            </span>
-                            <span>Longest streak: {streaks.longest}</span>
-                          </>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </CardContent>
-                </Card>
-              );
-              })
-            )}
-          </CardContent>
-        </Card>
+        <ProgressGoalList
+          goals={ledgerGoalItems}
+          selectedGoalIds={selectedLedgerIdSet}
+          readOnly={readOnly}
+          onToggleGoal={(goalId) => {
+            setSelectedGoalIds((current) =>
+              toggleLedgerGoalSelection(visibleGoalIds, current, goalId)
+            );
+          }}
+        />
       ) : null}
 
-      {showOverallStatsCard && aggregateDrilldownDate ? (
+      {showHeatmap ? (
+        <div
+          ref={aggregateHeatmapRef}
+          className="space-y-3"
+          data-onboarding="insights.overall"
+          data-no-swipe="true"
+          onTouchStart={
+            perGoalViewMode === "month" ? onMonthSectionTouchStart : undefined
+          }
+          onTouchEnd={
+            perGoalViewMode === "month" ? onMonthSectionTouchEnd : undefined
+          }
+        >
+          <p className="text-sm text-muted-foreground">
+            {progressLedgerCaption(ledgerMode, selectedLedgerGoalIds.length)}
+          </p>
+          {editableGoal?.frequency_type === "fixed_milestones" ? (
+            <MilestonePills
+              targetCount={milestoneTargetCount}
+              completionDates={mappedMilestoneDates}
+              milestoneNames={draftMilestoneNames}
+              maxVisible={MAX_VISIBLE_MILESTONES}
+            />
+          ) : null}
+          {ledgerMode === "empty" ? null : perGoalViewMode === "month" ? (
+            <MonthHeatmap
+              month={monthCursor}
+              countsByDate={ledgerCountsByDate}
+              interactive
+              pendingDate={pendingRetroDate}
+              isDayDisabled={
+                heatmapEditable
+                  ? (date) => !isLedgerHeatmapDayMutable(date, todayLocal)
+                  : undefined
+              }
+              onPreviousMonth={() => setMonthCursor((previous) => subMonths(previous, 1))}
+              onNextMonth={() => setMonthCursor((previous) => addMonths(previous, 1))}
+              onDayClick={(date, sourceElement) =>
+                handleLedgerDayClick(date, sourceElement)
+              }
+            />
+          ) : (
+            <div className="overflow-x-auto py-1">
+              <CalendarHeatmap
+                startDate={selectedYearStart}
+                endDate={selectedYearEnd}
+                values={ledgerHeatmapData}
+                showWeekdayLabels
+                weekdayLabels={aggregateWeekdayLabels}
+                classForValue={(value) =>
+                  `${getHeatmapScaleClass(value?.count ?? 0)} cursor-pointer ${getAggregateDrilldownDayClass(value?.date)}`
+                }
+                titleForValue={(value) =>
+                  `${value?.date ?? "N/A"}: ${value?.count ?? 0} completion${
+                    (value?.count ?? 0) === 1 ? "" : "s"
+                  }`
+                }
+                onClick={(value?: { date?: string }) => {
+                  const selectedDate = value?.date;
+                  if (!selectedDate) {
+                    return;
+                  }
+                  handleLedgerDayClick(selectedDate);
+                }}
+              />
+            </div>
+          )}
+          {heatmapEditable && editableGoal?.frequency_type === "fixed_milestones" ? (
+            <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
+              <p className="text-xs text-muted-foreground">Milestone names</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {Array.from({ length: milestoneTargetCount }).map((_, index) => (
+                  <Input
+                    key={`${editableGoal.id}-milestone-name-${index + 1}`}
+                    value={draftMilestoneNames[index] ?? defaultMilestoneName(index)}
+                    onChange={(event) =>
+                      setMilestoneNameDrafts((previous) => {
+                        const nextGoalNames = [
+                          ...(previous[editableGoal.id] ?? persistedMilestoneNames),
+                        ];
+                        nextGoalNames[index] = event.target.value;
+                        return {
+                          ...previous,
+                          [editableGoal.id]: nextGoalNames,
+                        };
+                      })
+                    }
+                    placeholder={defaultMilestoneName(index)}
+                  />
+                ))}
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                disabled={
+                  !milestoneNamesChanged ||
+                  savingMilestoneNamesGoalId === editableGoal.id
+                }
+                onClick={() => {
+                  void saveMilestoneNames(
+                    editableGoal,
+                    buildMilestoneNames(milestoneTargetCount, draftMilestoneNames)
+                  );
+                }}
+              >
+                {savingMilestoneNamesGoalId === editableGoal.id
+                  ? "Saving..."
+                  : "Save names"}
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {showHeatmap && aggregateDrilldownDate && !heatmapEditable ? (
         <AnchoredPopupCard
           popupRef={aggregateDrilldownRef}
           position={aggregateDrilldownPosition}
@@ -1145,23 +967,21 @@ export function InsightsTab({
           fallbackWidth={320}
           title={`Completions on ${format(parseISO(aggregateDrilldownDate), "MMM d, yyyy")}`}
           actions={
-            <>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs"
-                onClick={clearAggregateDrilldown}
-                aria-label="Close drilldown"
-              >
-                <X className="size-3" />
-              </Button>
-            </>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs"
+              onClick={clearAggregateDrilldown}
+              aria-label="Close drilldown"
+            >
+              <X className="size-3" />
+            </Button>
           }
         >
           <p className="text-xs text-muted-foreground">
-            {aggregateCountsByDate[aggregateDrilldownDate] ?? 0} completion
-            {(aggregateCountsByDate[aggregateDrilldownDate] ?? 0) === 1 ? "" : "s"}
+            {ledgerCountsByDate[aggregateDrilldownDate] ?? 0} completion
+            {(ledgerCountsByDate[aggregateDrilldownDate] ?? 0) === 1 ? "" : "s"}
           </p>
           <div className="mt-2 max-h-56 space-y-2 overflow-y-auto pr-1">
             {aggregateDrilldownItems.length === 0 ? (
