@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,8 +33,8 @@ export function DigestOverlay({
   const [forced, setForced] = useState(false);
   const [step, setStep] = useState<OverlayStep>("recap");
   const [payload, setPayload] = useState<DigestPayload | null>(null);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-  const [generateAttempted, setGenerateAttempted] = useState(false);
+  const [generateSettled, setGenerateSettled] = useState(false);
+  const generateStartedRef = useRef(false);
 
   useEffect(() => {
     const handleOpenRequest = () => {
@@ -77,12 +77,11 @@ export function DigestOverlay({
   }, [forced]);
 
   useEffect(() => {
-    if (!open || !payload || payload.suggestions || loadingSuggestions || generateAttempted) {
+    if (!open || !payload || payload.suggestions || generateStartedRef.current) {
       return;
     }
+    generateStartedRef.current = true;
     let cancelled = false;
-    setLoadingSuggestions(true);
-    setGenerateAttempted(true);
     void postJson<{ facts?: DigestPayload["facts"]; suggestions: DigestPayload["suggestions"] }>(
       "/api/digest/generate",
       {}
@@ -103,20 +102,21 @@ export function DigestOverlay({
       .catch(() => undefined)
       .finally(() => {
         if (!cancelled) {
-          setLoadingSuggestions(false);
+          setGenerateSettled(true);
         }
       });
     return () => {
       cancelled = true;
+      generateStartedRef.current = false;
     };
-  }, [open, payload, loadingSuggestions, generateAttempted]);
+  }, [open, payload]);
 
   const close = (acknowledge: boolean) => {
     setOpen(false);
     setForced(false);
     setStep("recap");
-    setGenerateAttempted(false);
-    setLoadingSuggestions(false);
+    generateStartedRef.current = false;
+    setGenerateSettled(false);
     if (acknowledge) {
       void postJson("/api/digest/ack", {}).catch(() => undefined);
     }
@@ -150,7 +150,7 @@ export function DigestOverlay({
             step={step}
             facts={facts}
             suggestions={payload?.suggestions ?? null}
-            loadingSuggestions={loadingSuggestions}
+            generateSettled={generateSettled}
             hrefPrefix={hrefPrefix}
             onNavigate={(href) => {
               close(true);
@@ -187,14 +187,14 @@ function DigestStepBody({
   step,
   facts,
   suggestions,
-  loadingSuggestions,
+  generateSettled,
   hrefPrefix,
   onNavigate,
 }: {
   step: OverlayStep;
   facts: DigestFacts;
   suggestions: DigestPayload["suggestions"];
-  loadingSuggestions: boolean;
+  generateSettled: boolean;
   hrefPrefix: string;
   onNavigate: (href: string) => void;
 }) {
@@ -203,9 +203,9 @@ function DigestStepBody({
       <div className="space-y-3">
         <p className="text-sm">
           {suggestions?.motivation ??
-            (loadingSuggestions
-              ? "Writing a short note…"
-              : "Start with what’s already on the calendar.")}
+            (generateSettled
+              ? "Start with what’s already on the calendar."
+              : "Writing a short note…")}
         </p>
         {(suggestions?.suggestions ?? []).map((suggestion) => {
           const href = digestActionHref(suggestion.action, hrefPrefix);

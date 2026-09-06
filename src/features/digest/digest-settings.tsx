@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,26 +14,35 @@ export function DigestSettings() {
   const [saving, setSaving] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const digest = await getJson<DigestPayload>("/api/digest");
-      setDigestAutoShow(digest.digestAutoShow);
-      setAvailable(true);
-    } catch (error) {
-      if (isApiClientError(error) && error.code === "digest_disabled") {
-        setAvailable(false);
-      } else {
-        toast.error(getApiErrorMessage(error, "Digest settings could not be loaded."));
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    void load();
-  }, [load]);
+    let cancelled = false;
+    void getJson<DigestPayload>("/api/digest")
+      .then((digest) => {
+        if (cancelled) {
+          return;
+        }
+        setDigestAutoShow(digest.digestAutoShow);
+        setAvailable(true);
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+        if (isApiClientError(error) && error.code === "digest_disabled") {
+          setAvailable(false);
+        } else {
+          toast.error(getApiErrorMessage(error, "Digest settings could not be loaded."));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const saveAutoShow = async (next: boolean) => {
     setDigestAutoShow(next);
