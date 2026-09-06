@@ -406,6 +406,16 @@ Keep context near the action:
 Users should not need to remember which view owns an action or what a color
 means on another screen.
 
+### First-open digest is skippable, not a ritual
+
+The digest is a briefing overlay on first open, not a fifth destination and not
+a mandatory morning ceremony. On the profile week-start day it recaps last week
+and this week; on other days it recaps yesterday and today. Never stack both.
+Skip, Escape, and click-outside all acknowledge the period. Replay and auto-show
+live in Settings. Suggestions can point at Plan, Today, or Progress; they must
+not rewrite the plan. Keep production chrome on the existing `AppShell` rather
+than copying concept-lab shells.
+
 ### Use progressive disclosure
 
 The default interface should support the most common task without exposing

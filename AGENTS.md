@@ -191,6 +191,12 @@ surfaces. The default is to simplify and reuse what already exists.
   Day work inspect and checklist-replacement concepts live in
   `docs/ux/goalmaxxing-day-work-study.md` and `/ux/day-work`. They are
   exploratory, not a product lock.
+- First-open digest is an `AppShell` overlay, not a tab or Progress
+  destination. Cadence is weekly on the profile week-start day and daily
+  otherwise. Skip, Escape, and click-outside all acknowledge the period.
+  Replay and auto-show live in Settings. Suggestions never mutate the plan.
+  Do not copy concept shells into production `AppShell`, tabs, or planner
+  chrome.
 - Reuse-first: before adding a new hook/component/helper, check whether an
   existing one can be extended or composed.
 - Prefer canonical homes for shared domain logic (`src/lib/planner/*`,
