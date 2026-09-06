@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
 import { api } from "./api";
 
 const NATIVE_PUSH_REGISTRATION_KEY = "cadence.native-push-registration";
@@ -43,7 +44,7 @@ async function ensureAndroidNotificationChannel() {
     name: "default",
     importance: Notifications.AndroidImportance.DEFAULT,
     vibrationPattern: [0, 250, 250, 250],
-    lightColor: "#2F6FDB",
+    lightColor: GAZETTEER.stamp,
   });
 }
 

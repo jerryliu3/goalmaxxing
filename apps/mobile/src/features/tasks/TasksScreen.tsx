@@ -49,7 +49,7 @@ export function TasksScreen() {
       : "Could not load tasks.";
 
   return (
-    <Screen title="To-Do">
+    <Screen title="Tasks" kicker="Plan">
       <Text style={{ color: theme.colors.mutedForeground }}>
         Completed tasks stay visible through today and hide the day after.
       </Text>
