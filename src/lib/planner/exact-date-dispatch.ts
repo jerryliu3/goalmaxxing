@@ -263,7 +263,6 @@ export async function applyPlannerItemDateFact({
 
 export async function applyPlannerGoalDateFact({
   supabase,
-  ownerId,
   goalId,
   date,
   desiredFactState,
@@ -272,7 +271,6 @@ export async function applyPlannerGoalDateFact({
   expectation,
 }: {
   supabase: ExactDateClient;
-  ownerId: string;
   goalId: string;
   date: string;
   desiredFactState: "present" | "absent";
@@ -288,7 +286,6 @@ export async function applyPlannerGoalDateFact({
     return digestFailure;
   }
   const localToday = getDateInTimezone(new Date(), timezone);
-  void ownerId;
 
   if (desiredFactState === "present") {
     if (date > localToday) {

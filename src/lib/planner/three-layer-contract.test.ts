@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildEntriesByDate } from "@/features/planner/calendar-entries";
 import { isEntryCredited } from "@/features/planner/calendar-format";
 import type {
@@ -24,6 +24,10 @@ import {
   toLinkSuppressionSource,
 } from "@/lib/planner/link-suppression";
 import { createDefaultPlannerPolicy } from "@/lib/planner/policy";
+import {
+  applyPlannerGoalDateFact,
+  mapCompletionRpcError,
+} from "@/lib/planner/exact-date-dispatch";
 import { resolveWorkUnitDisplayDate } from "@/lib/planner/session-display-date";
 import type { PlannerWorkUnit as KernelWorkUnit } from "@/lib/planner/work-units";
 
@@ -126,8 +130,47 @@ function prepareWouldSkipKernel({
   );
 }
 
-function dateOutsideStoredLifetime(date: string, row: Pick<Goal, "start_date" | "end_date">) {
-  return date < row.start_date || (row.end_date !== null && date > row.end_date);
+const GOAL_DISPATCH_DIGEST =
+  "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+function goalLifetime(row: Pick<Goal, "start_date" | "end_date">) {
+  return { startDate: row.start_date, endDate: row.end_date };
+}
+
+async function dispatchGoalCompletionWrite({
+  goalId,
+  date,
+  lifetime,
+}: {
+  goalId: string;
+  date: string;
+  lifetime: Pick<Goal, "start_date" | "end_date">;
+}) {
+  const rpc = vi
+    .fn()
+    .mockResolvedValueOnce({
+      data: GOAL_DISPATCH_DIGEST,
+      error: null,
+    })
+    .mockResolvedValueOnce({ data: null, error: null });
+  const supabase = {
+    rpc,
+    from: vi.fn(() => {
+      throw new Error("linked suppression lookup should not run");
+    }),
+  } as unknown as Parameters<typeof applyPlannerGoalDateFact>[0]["supabase"];
+
+  const result = await applyPlannerGoalDateFact({
+    supabase,
+    goalId,
+    date,
+    desiredFactState: "present",
+    timezone: "UTC",
+    goalLifetime: goalLifetime(lifetime),
+    expectation: { expectedDigest: GOAL_DISPATCH_DIGEST },
+  });
+
+  return { result, rpc };
 }
 
 describe("prepare / kernel / projection contract", () => {
@@ -475,25 +518,111 @@ describe("prepare / kernel / projection contract", () => {
   });
 
   describe("completion write matrix", () => {
-    it("rejects dates outside the stored lifetime and allows the bounds", () => {
-      expect(dateOutsideStoredLifetime("2026-08-31", createVideos)).toBe(true);
-      expect(dateOutsideStoredLifetime("2026-09-01", createVideos)).toBe(false);
-      expect(dateOutsideStoredLifetime("2026-09-30", createVideos)).toBe(false);
-      expect(dateOutsideStoredLifetime("2026-10-01", createVideos)).toBe(true);
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(`${VIEW_DATE}T12:00:00.000Z`));
     });
 
-    it("keeps planning suppression while still allowing a linked-target completion write", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("rejects dates outside the stored lifetime before calling mark_goal_complete", async () => {
+      const beforeStart = await dispatchGoalCompletionWrite({
+        goalId: createVideos.id,
+        date: "2026-08-31",
+        lifetime: createVideos,
+      });
+      expect(beforeStart.result).toMatchObject({
+        ok: false,
+        status: 422,
+        code: "completion_outside_goal_lifetime",
+      });
+      expect(beforeStart.rpc).toHaveBeenCalledTimes(1);
+      expect(beforeStart.rpc).toHaveBeenCalledWith("get_planner_schedule_digest", {});
+
+      const startBound = await dispatchGoalCompletionWrite({
+        goalId: createVideos.id,
+        date: "2026-09-01",
+        lifetime: createVideos,
+      });
+      expect(startBound.result).toMatchObject({
+        ok: true,
+        payload: { goalId: createVideos.id, date: "2026-09-01", factState: "present" },
+      });
+      expect(startBound.rpc).toHaveBeenLastCalledWith("mark_goal_complete", {
+        p_goal_id: createVideos.id,
+        p_date: "2026-09-01",
+      });
+
+      vi.setSystemTime(new Date("2026-09-30T12:00:00.000Z"));
+      const endBound = await dispatchGoalCompletionWrite({
+        goalId: createVideos.id,
+        date: "2026-09-30",
+        lifetime: createVideos,
+      });
+      expect(endBound.result).toMatchObject({
+        ok: true,
+        payload: { goalId: createVideos.id, date: "2026-09-30", factState: "present" },
+      });
+      expect(endBound.rpc).toHaveBeenLastCalledWith("mark_goal_complete", {
+        p_goal_id: createVideos.id,
+        p_date: "2026-09-30",
+      });
+
+      vi.setSystemTime(new Date("2026-10-01T12:00:00.000Z"));
+      const afterEnd = await dispatchGoalCompletionWrite({
+        goalId: createVideos.id,
+        date: "2026-10-01",
+        lifetime: createVideos,
+      });
+      expect(afterEnd.result).toMatchObject({
+        ok: false,
+        status: 422,
+        code: "completion_outside_goal_lifetime",
+      });
+      expect(afterEnd.rpc).not.toHaveBeenCalledWith(
+        "mark_goal_complete",
+        expect.anything()
+      );
+    });
+
+    it("keeps planning suppression while still calling mark_goal_complete for a linked target", async () => {
       expect(isSuppressedOnDate(suppressionFor("post-videos", goals, links, VIEW_DATE), VIEW_DATE)).toBe(
         true
       );
       expect(todayVisibleIds(goals, VIEW_DATE, links)).toEqual(["create-videos"]);
-      expect(dateOutsideStoredLifetime(VIEW_DATE, postVideos)).toBe(false);
       expect(isSuppressedOnDate(suppressionFor("create-videos", goals, links, VIEW_DATE), VIEW_DATE)).toBe(
         false
       );
+
+      const write = await dispatchGoalCompletionWrite({
+        goalId: postVideos.id,
+        date: VIEW_DATE,
+        lifetime: postVideos,
+      });
+      expect(write.result).toEqual({
+        ok: true,
+        payload: {
+          goalId: postVideos.id,
+          date: VIEW_DATE,
+          factState: "present",
+        },
+      });
+      expect(write.rpc).toHaveBeenLastCalledWith("mark_goal_complete", {
+        p_goal_id: postVideos.id,
+        p_date: VIEW_DATE,
+      });
+      expect(
+        mapCompletionRpcError({
+          code: "23514",
+          message: "linked_goal_disallowed",
+        })
+      ).toBeNull();
     });
 
-    it("shows the linked target again after the stored source end_date", () => {
+    it("shows the linked target again after the stored source end_date", async () => {
+      vi.setSystemTime(new Date(`${RESUME_DATE}T12:00:00.000Z`));
       expect(
         isSuppressedOnDate(
           suppressionFor("post-videos", goals, links, RESUME_DATE),
@@ -504,10 +633,20 @@ describe("prepare / kernel / projection contract", () => {
         "create-videos",
         "post-videos",
       ]);
-      expect(dateOutsideStoredLifetime(RESUME_DATE, postVideos)).toBe(false);
+
+      const write = await dispatchGoalCompletionWrite({
+        goalId: postVideos.id,
+        date: RESUME_DATE,
+        lifetime: postVideos,
+      });
+      expect(write.result).toMatchObject({ ok: true });
+      expect(write.rpc).toHaveBeenLastCalledWith("mark_goal_complete", {
+        p_goal_id: postVideos.id,
+        p_date: RESUME_DATE,
+      });
     });
 
-    it("keeps TS planning-horizon resume distinct from the target's stored lifetime", () => {
+    it("keeps TS planning-horizon resume distinct from the target's stored lifetime", async () => {
       const openOrdinalSource = goal({
         id: "open-source",
         title: "Open source",
@@ -531,14 +670,38 @@ describe("prepare / kernel / projection contract", () => {
       expect(
         isSuppressedOnDate(suppressionFor("open-target", pair, pairLinks, VIEW_DATE), VIEW_DATE)
       ).toBe(true);
-      expect(dateOutsideStoredLifetime(VIEW_DATE, openTarget)).toBe(false);
       expect(
         isSuppressedOnDate(
           suppressionFor("open-target", pair, pairLinks, VIEW_DATE),
           afterSoftHorizon
         )
       ).toBe(false);
-      expect(dateOutsideStoredLifetime(afterSoftHorizon, openTarget)).toBe(false);
+
+      const duringSuppression = await dispatchGoalCompletionWrite({
+        goalId: openTarget.id,
+        date: VIEW_DATE,
+        lifetime: openTarget,
+      });
+      expect(duringSuppression.result).toMatchObject({ ok: true });
+      expect(duringSuppression.rpc).toHaveBeenLastCalledWith("mark_goal_complete", {
+        p_goal_id: openTarget.id,
+        p_date: VIEW_DATE,
+      });
+
+      const afterHorizon = await dispatchGoalCompletionWrite({
+        goalId: openTarget.id,
+        date: afterSoftHorizon,
+        lifetime: openTarget,
+      });
+      expect(afterHorizon.result).toMatchObject({
+        ok: false,
+        status: 422,
+        code: "future_completion_not_allowed",
+      });
+      expect(afterHorizon.rpc).not.toHaveBeenCalledWith(
+        "mark_goal_complete",
+        expect.anything()
+      );
     });
   });
 });

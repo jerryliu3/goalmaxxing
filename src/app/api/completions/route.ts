@@ -35,7 +35,7 @@ export async function handleCompletionPost(request: Request) {
 
     const { data: goal, error: goalError } = await routeContext.supabase
       .from("goals")
-      .select("id, owner_id, start_date, end_date")
+      .select("id, start_date, end_date")
       .eq("id", goalId)
       .maybeSingle();
 
@@ -75,7 +75,6 @@ export async function handleCompletionPost(request: Request) {
     if (plannerGoalExpectation) {
       const result = await applyPlannerGoalDateFact({
         supabase: routeContext.supabase,
-        ownerId: goal.owner_id,
         goalId,
         date,
         desiredFactState,
