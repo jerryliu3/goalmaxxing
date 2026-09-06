@@ -459,6 +459,9 @@ export function buildCompletionFactMarkersByDate({
     if (!unit.creditedCompletionDate) {
       continue;
     }
+    if (unit.scheduledDate === null) {
+      continue;
+    }
     if (unit.creditedCompletionDate === unit.scheduledDate) {
       continue;
     }

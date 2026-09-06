@@ -156,6 +156,23 @@ describe("planner calendar entries", () => {
     });
   });
 
+  it("skips completion markers when scheduled date is null", () => {
+    const markers = buildCompletionFactMarkersByDate({
+      workUnits: [
+        {
+          ...unit("2026-08-31"),
+          scheduledDate: null,
+          creditedCompletionDate: "2026-09-01",
+          creditState: "completed_elsewhere",
+        },
+      ],
+      activeGoalsByOriginalGoalId: new Map(),
+      goalTitles: { "goal-a": "Goal A" },
+    });
+
+    expect(markers.size).toBe(0);
+  });
+
   it("hides linked targets on suppressed dates", () => {
     const links = [
       {
