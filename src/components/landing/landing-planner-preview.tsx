@@ -539,15 +539,15 @@ function getStatusNote(phase: PlannerDemoPhase, mode: PlannerDemoMode = "solo") 
 
 function toneClassName(tone: TaskTone) {
   if (tone === "emerald") {
-    return "border-emerald-300/80 bg-emerald-100/85 text-emerald-950";
+    return "border-gain/40 bg-gain/15 text-foreground";
   }
   if (tone === "violet") {
-    return "border-violet-300/80 bg-violet-100/85 text-violet-950";
+    return "border-primary/40 bg-primary/15 text-foreground";
   }
   if (tone === "amber") {
-    return "border-amber-300/80 bg-amber-100/90 text-amber-950";
+    return "border-recover/40 bg-recover/15 text-foreground";
   }
-  return "border-blue-300/80 bg-blue-100/85 text-blue-950";
+  return "border-primary/40 bg-primary/15 text-foreground";
 }
 
 function getActiveMonthMove(phase: PlannerDemoPhase): MonthMoveKey | null {
@@ -704,7 +704,7 @@ function TaskTile({
         task.tone
       )}`}
     >
-      {completed ? <Check className="size-2.5 shrink-0 text-emerald-700" /> : null}
+      {completed ? <Check className="size-2.5 shrink-0 text-gain" /> : null}
       <span>{task.label}</span>
     </p>
   );
@@ -726,13 +726,13 @@ function MonthPill({
       title={task.label}
       className={`${taskChipLayoutClassName} overflow-hidden ${
         variant === "ghost"
-          ? "border-dashed border-slate-300 bg-slate-50 text-slate-500 line-through shadow-none"
+          ? "border-dashed border-border bg-page text-muted-foreground line-through shadow-none"
           : variant === "new"
-            ? "border-blue-300 bg-blue-50 text-blue-950"
+            ? "border-primary/40 bg-muted text-foreground"
             : toneClassName(task.tone)
       }`}
     >
-      {completed ? <Check className="size-2.5 shrink-0 text-emerald-700" /> : null}
+      {completed ? <Check className="size-2.5 shrink-0 text-gain" /> : null}
       <span className="min-w-0 truncate">{task.label}</span>
     </div>
   );
@@ -748,12 +748,12 @@ function WeekPreviewTaskRow({
   const detail = getSeededTaskDetail(task);
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-emerald-200/70 bg-white p-2">
+    <div className="flex items-center gap-2 rounded-lg border border-gain/35 bg-background p-2">
       <span
         className={`inline-flex size-5 shrink-0 items-center justify-center rounded-md border transition ${
           completed
-            ? "border-emerald-600 bg-emerald-600 text-white"
-            : "border-slate-300 text-transparent"
+            ? "border-gain bg-gain text-primary-foreground"
+            : "border-border text-transparent"
         }`}
       >
         <Check className="size-3" />
@@ -808,20 +808,20 @@ function PartnerNudgeComposer({
   return (
     <div className="mt-3 flex items-center gap-2">
       <div
-        className={`min-w-0 flex-1 rounded-lg border bg-white px-2 py-1.5 text-[10px] ${
-          message ? "font-medium text-sky-950" : "text-muted-foreground"
+        className={`min-w-0 flex-1 rounded-lg border bg-background px-2 py-1.5 text-[10px] ${
+          message ? "font-medium text-foreground" : "text-muted-foreground"
         }`}
       >
         {message || "Send a nudge..."}
       </div>
       <div
         data-demo-send-nudge
-        className={`inline-flex h-8 shrink-0 items-center gap-1 rounded-md px-2.5 text-[10px] font-semibold text-white shadow-sm transition ${
+        className={`inline-flex h-8 shrink-0 items-center gap-1 rounded-md px-2.5 text-[10px] font-semibold text-primary-foreground shadow-sm transition ${
           phase === "week-completing"
-            ? "scale-95 bg-sky-800"
+            ? "scale-95 bg-primary"
             : sent
-              ? "bg-sky-600"
-              : "bg-sky-700"
+              ? "bg-primary"
+              : "bg-primary"
         }`}
       >
         {phase === "week-completing" ? (
@@ -852,8 +852,8 @@ function PartnerPill({
       title={label}
       className={`${taskChipLayoutClassName} overflow-hidden ${
         completed
-          ? "border-2 border-sky-500 bg-transparent text-sky-700 shadow-none"
-          : "border border-sky-300/90 bg-sky-50/60 text-sky-800 shadow-none"
+          ? "border-2 border-primary bg-transparent text-primary shadow-none"
+          : "border border-primary/40 bg-muted/60 text-foreground shadow-none"
       }`}
       aria-label={
         completed ? `${label}. Partner marked this done.` : `${label}. Planned`
@@ -1116,7 +1116,7 @@ export function LandingPlannerPreview() {
         </p>
       </div>
     <Card ref={previewRef} className="overflow-hidden border shadow-sm">
-      <div className="h-2 w-full bg-gradient-to-r from-blue-500 via-cyan-500 to-violet-500" />
+      <div className="h-2 w-full bg-gradient-to-r from-primary via-primary/70 to-gain" />
       <CardHeader className="relative z-30 pb-2">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -1126,11 +1126,11 @@ export function LandingPlannerPreview() {
               className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground"
             >
               {isBusy ? (
-                <Loader2 className="size-3 shrink-0 animate-spin text-blue-600" />
+                <Loader2 className="size-3 shrink-0 animate-spin text-primary" />
               ) : isSuccess ? (
-                <Check className="size-3 shrink-0 text-emerald-600" />
+                <Check className="size-3 shrink-0 text-gain" />
               ) : (
-                <span className="size-1.5 shrink-0 rounded-full bg-blue-500" />
+                <span className="size-1.5 shrink-0 rounded-full bg-primary" />
               )}
               <p className="truncate text-foreground">{statusNote}</p>
             </div>
@@ -1140,15 +1140,15 @@ export function LandingPlannerPreview() {
               {showSavePlan ? (
                 <div
                   data-demo-save-plan
-                  className={`relative inline-flex h-8 items-center overflow-hidden rounded-md bg-blue-700 px-2.5 text-[11px] font-semibold text-white shadow-sm transition ${
+                  className={`relative inline-flex h-8 items-center overflow-hidden rounded-md bg-primary px-2.5 text-[11px] font-semibold text-primary-foreground shadow-sm transition ${
                     displayPhase === "clicking-save"
-                      ? "scale-95 bg-blue-800 ring-2 ring-blue-300 ring-offset-1"
+                      ? "scale-95 bg-primary ring-2 ring-primary/40 ring-offset-1"
                       : ""
                   }`}
                 >
                   {displayPhase === "clicking-save" ? (
                     <motion.span
-                      className="pointer-events-none absolute inset-0 bg-white/35"
+                      className="pointer-events-none absolute inset-0 bg-background/35"
                       initial={reducedMotion ? false : { opacity: 0.55 }}
                       animate={{ opacity: 0 }}
                       transition={{ duration: 0.45 }}
@@ -1197,7 +1197,7 @@ export function LandingPlannerPreview() {
                         key={value}
                         data-demo-view-option={value}
                         className={`flex items-center justify-between rounded-md px-2 py-1.5 ${
-                          selected ? "bg-blue-100 font-medium text-blue-900" : ""
+                          selected ? "bg-primary/15 font-medium text-foreground" : ""
                         }`}
                       >
                         <span>{label}</span>
@@ -1290,7 +1290,7 @@ export function LandingPlannerPreview() {
                       className={`relative flex min-h-0 flex-col overflow-hidden rounded-md border p-0.5 ${
                         date
                           ? isToday
-                            ? "border-blue-300 bg-blue-50/80"
+                            ? "border-primary/40 bg-muted/80"
                             : "bg-muted/20"
                           : "border-transparent"
                       }`}
@@ -1299,7 +1299,7 @@ export function LandingPlannerPreview() {
                         <>
                           <motion.span
                             data-demo-month-day-ripple
-                            className="pointer-events-none absolute top-1/2 left-1/2 size-8 rounded-full bg-blue-500/35"
+                            className="pointer-events-none absolute top-1/2 left-1/2 size-8 rounded-full bg-primary/35"
                             initial={
                               reducedMotion
                                 ? false
@@ -1310,7 +1310,7 @@ export function LandingPlannerPreview() {
                           />
                           <motion.span
                             data-demo-month-day-ripple-second
-                            className="pointer-events-none absolute top-1/2 left-1/2 size-8 rounded-full bg-blue-500/25"
+                            className="pointer-events-none absolute top-1/2 left-1/2 size-8 rounded-full bg-primary/25"
                             initial={
                               reducedMotion
                                 ? false
@@ -1331,14 +1331,14 @@ export function LandingPlannerPreview() {
                               }
                               className={`inline-flex size-3 items-center justify-center rounded-full text-[8px] ${
                                 isToday
-                                  ? "bg-blue-600 font-semibold text-white"
+                                  ? "bg-primary font-semibold text-primary-foreground"
                                   : "text-muted-foreground"
                               }`}
                             >
                               {date}
                             </span>
                             {isToday ? (
-                              <span className="hidden text-[7px] font-semibold text-blue-700 sm:inline">
+                              <span className="hidden text-[7px] font-semibold text-primary sm:inline">
                                 Today
                               </span>
                             ) : null}
@@ -1449,14 +1449,14 @@ export function LandingPlannerPreview() {
                     key={day.id}
                     className={`relative min-w-0 overflow-hidden rounded-lg border p-1.5 ${
                       day.isToday
-                        ? "border-blue-300 bg-blue-50/80"
+                        ? "border-primary/40 bg-muted/80"
                         : "bg-muted/20"
                     }`}
                   >
                     {day.isToday && showWeekRipple ? (
                       <motion.span
                         data-demo-day-ripple
-                        className="pointer-events-none absolute top-1/2 left-1/2 size-8 rounded-full bg-blue-500/35"
+                        className="pointer-events-none absolute top-1/2 left-1/2 size-8 rounded-full bg-primary/35"
                         initial={
                           reducedMotion
                             ? false
@@ -1468,7 +1468,7 @@ export function LandingPlannerPreview() {
                     ) : null}
                     <p
                       className={`text-[9px] font-semibold sm:text-[10px] ${
-                        day.isToday ? "text-blue-700" : "text-muted-foreground"
+                        day.isToday ? "text-primary" : "text-muted-foreground"
                       }`}
                     >
                       {day.day}
@@ -1477,7 +1477,7 @@ export function LandingPlannerPreview() {
                       <span
                         className={`inline-flex size-4 items-center justify-center rounded-full text-[9px] ${
                           day.isToday
-                            ? "bg-blue-600 font-semibold text-white"
+                            ? "bg-primary font-semibold text-primary-foreground"
                             : "text-muted-foreground"
                         }`}
                       >
@@ -1537,13 +1537,13 @@ export function LandingPlannerPreview() {
                       data-demo-partner-day-preview
                       initial={reducedMotion ? false : { y: 6 }}
                       animate={{ y: 0 }}
-                      className="absolute top-0 right-0 z-10 max-w-sm rounded-xl border border-sky-200 bg-sky-50/70 p-3 shadow-sm"
+                      className="absolute top-0 right-0 z-10 max-w-sm rounded-xl border border-border bg-muted/70 p-3 shadow-sm"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-[10px] font-semibold text-sky-950">
+                        <p className="text-[10px] font-semibold text-foreground">
                           Thursday, August 15 · Alex
                         </p>
-                        <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[8px] font-semibold text-white">
+                        <span className="rounded-full bg-primary px-2 py-0.5 text-[8px] font-semibold text-primary-foreground">
                           Today
                         </span>
                       </div>
@@ -1576,13 +1576,13 @@ export function LandingPlannerPreview() {
                       data-demo-partner-day-preview
                       initial={reducedMotion ? false : { y: 6 }}
                       animate={{ y: 0 }}
-                      className="mt-3 ml-auto max-w-sm rounded-xl border border-sky-200 bg-sky-50/70 p-3 shadow-sm"
+                      className="mt-3 ml-auto max-w-sm rounded-xl border border-border bg-muted/70 p-3 shadow-sm"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-[10px] font-semibold text-sky-950">
+                        <p className="text-[10px] font-semibold text-foreground">
                           Thursday, August 15 · Alex
                         </p>
-                        <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[8px] font-semibold text-white">
+                        <span className="rounded-full bg-primary px-2 py-0.5 text-[8px] font-semibold text-primary-foreground">
                           Today
                         </span>
                       </div>
@@ -1606,13 +1606,13 @@ export function LandingPlannerPreview() {
                   data-demo-day-preview
                   initial={reducedMotion ? false : { y: 6 }}
                   animate={{ y: 0 }}
-                  className="mt-3 ml-auto max-w-sm rounded-xl border border-blue-200 bg-blue-50/70 p-3 shadow-sm"
+                  className="mt-3 ml-auto max-w-sm rounded-xl border border-border bg-muted/70 p-3 shadow-sm"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-[10px] font-semibold text-blue-950">
+                    <p className="text-[10px] font-semibold text-foreground">
                       Thursday, August 15
                     </p>
-                    <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[8px] font-semibold text-white">
+                    <span className="rounded-full bg-primary px-2 py-0.5 text-[8px] font-semibold text-primary-foreground">
                       Today
                     </span>
                   </div>
@@ -1635,13 +1635,13 @@ export function LandingPlannerPreview() {
                   data-demo-duo-day-preview
                   initial={reducedMotion ? false : { y: 6 }}
                   animate={{ y: 0 }}
-                  className="mt-3 ml-auto max-w-sm rounded-xl border border-blue-200 bg-blue-50/70 p-3 shadow-sm"
+                  className="mt-3 ml-auto max-w-sm rounded-xl border border-border bg-muted/70 p-3 shadow-sm"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-[10px] font-semibold text-blue-950">
+                    <p className="text-[10px] font-semibold text-foreground">
                       Thursday, August 15
                     </p>
-                    <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[8px] font-semibold text-white">
+                    <span className="rounded-full bg-primary px-2 py-0.5 text-[8px] font-semibold text-primary-foreground">
                       Today
                     </span>
                   </div>
@@ -1655,7 +1655,7 @@ export function LandingPlannerPreview() {
                         }
                       />
                     ))}
-                    <div className="rounded-lg border border-sky-200/70 bg-white p-2">
+                    <div className="rounded-lg border border-border bg-background p-2">
                       <PartnerPill
                         label={PARTNER_WEEK_TODAY.label}
                         completed={false}

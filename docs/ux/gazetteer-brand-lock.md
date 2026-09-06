@@ -9,8 +9,9 @@ Date locked: 5 September 2026. Production cutover: September 2026.
 Do not import `src/features/ux-concepts/*` or `src/features/ux-brand/*` into
 production. Reimplement atoms in live modules.
 
-Canonical palette lives in `src/lib/brand/gazetteer.ts`. Authenticated chrome
-applies `.gm-gazetteer` in `AppShell`.
+Canonical palette lives in `src/lib/brand/gazetteer.ts`. Tokens are on
+`:root` and `.gm-gazetteer` so marketing, auth, and the authenticated shell
+share paper, rust, and Nest.
 
 ## Type
 

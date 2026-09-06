@@ -51,7 +51,7 @@ export function LandingPartnerPhonePreview({
       </p>
       <div className="overflow-hidden rounded-t-[1.75rem] border border-b-0 border-stone-300/90 bg-stone-900 shadow-[0_18px_40px_-18px_rgba(15,23,42,0.45)]">
         <div className="relative h-[10.75rem] overflow-hidden bg-stone-950 sm:h-[11.25rem]">
-          <div className="absolute inset-x-3 top-2 z-20 flex items-center justify-between px-1 text-[8px] font-semibold text-white/90">
+          <div className="absolute inset-x-3 top-2 z-20 flex items-center justify-between px-1 text-[8px] font-semibold text-primary-foreground/90">
             <span>9:41</span>
             <div className="flex items-center gap-0.5">
               <span className="inline-block h-2 w-3 rounded-[1px] border border-white/80" />
@@ -67,8 +67,8 @@ export function LandingPartnerPhonePreview({
             <div className="grid grid-cols-4 gap-3">
               {["Calendar", "Notes", "Photos", "Music"].map((label) => (
                 <div key={label} className="flex flex-col items-center gap-1">
-                  <span className="size-9 rounded-[0.65rem] bg-white/18 shadow-inner ring-1 ring-white/25 backdrop-blur-sm" />
-                  <span className="w-full truncate text-center text-[6px] font-medium text-white/75">
+                  <span className="size-9 rounded-[0.65rem] bg-background/18 shadow-inner ring-1 ring-white/25 backdrop-blur-sm" />
+                  <span className="w-full truncate text-center text-[6px] font-medium text-primary-foreground/75">
                     {label}
                   </span>
                 </div>
@@ -77,8 +77,8 @@ export function LandingPartnerPhonePreview({
             <div className="grid grid-cols-4 gap-3 opacity-85">
               {["Mail", "Maps", "Health", "Wallet"].map((label) => (
                 <div key={label} className="flex flex-col items-center gap-1">
-                  <span className="size-9 rounded-[0.65rem] bg-white/14 shadow-inner ring-1 ring-white/20 backdrop-blur-sm" />
-                  <span className="w-full truncate text-center text-[6px] font-medium text-white/65">
+                  <span className="size-9 rounded-[0.65rem] bg-background/14 shadow-inner ring-1 ring-white/20 backdrop-blur-sm" />
+                  <span className="w-full truncate text-center text-[6px] font-medium text-primary-foreground/65">
                     {label}
                   </span>
                 </div>
@@ -148,9 +148,9 @@ function PartnerPhonePushNotification({
                       ? { duration: 0 }
                       : { type: "spring", stiffness: 420, damping: 32, mass: 0.75 }
                   }
-                  className="flex items-start gap-2.5 rounded-2xl border border-white/35 bg-white/82 p-2.5 shadow-[0_10px_30px_-12px_rgba(15,23,42,0.55)] backdrop-blur-md"
+                  className="flex items-start gap-2.5 rounded-2xl border border-white/35 bg-background/82 p-2.5 shadow-[0_10px_30px_-12px_rgba(15,23,42,0.55)] backdrop-blur-md"
                 >
-                  <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-700 text-[10px] font-bold text-white">
+                  <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-[10px] font-bold text-primary-foreground">
                     G
                   </span>
                   <div className="min-w-0 flex-1 pt-0.5">

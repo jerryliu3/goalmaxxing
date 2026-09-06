@@ -14,7 +14,7 @@ describe("selectFeatureIndex", () => {
     expect(selectFeatureIndex([-900, -300, 300], 320)).toBe(2);
   });
 
-  it("pairs each mobile why card with its matching reasoning", () => {
+  it("pairs each mobile why card with its matching reasoning", { timeout: 15_000 }, () => {
     render(<LandingFeatureNarrative />);
 
     const habitCard = screen

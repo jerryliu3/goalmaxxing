@@ -179,7 +179,7 @@ function Leaderboard({ local }: { local: number }) {
               className={`relative flex items-center gap-3 rounded-xl border px-3 py-2 ${
                 row.you
                   ? "border-[#A9BCC8] bg-[#D5DFE8]/80 shadow-[0_18px_40px_-18px_rgba(126,150,166,0.55)]"
-                  : "border-stone-200 bg-white/70"
+                  : "border-stone-200 bg-background/70"
               }`}
             >
               <span className="w-4 text-xs font-semibold text-[#7E96A6]">
@@ -253,7 +253,7 @@ function MonthGrid({ visibleCount }: { visibleCount: number }) {
               date
                 ? isToday
                   ? "border-[#A9BCC8] bg-[#D5DFE8]/70"
-                  : "border-stone-200 bg-white/70"
+                  : "border-stone-200 bg-background/70"
                 : "border-transparent"
             }`}
           >
@@ -295,7 +295,7 @@ function Checklist({ checkedCount }: { checkedCount: number }) {
         return (
           <div
             key={item}
-            className="flex items-center gap-3 rounded-xl border border-stone-200 bg-white/75 px-3 py-2.5"
+            className="flex items-center gap-3 rounded-xl border border-stone-200 bg-background/75 px-3 py-2.5"
           >
             <span
               className={`inline-flex size-5 items-center justify-center rounded-md border ${
@@ -382,7 +382,7 @@ function InsightsPanel({
 
 function StatTile({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="min-w-0 rounded-lg border border-stone-200 bg-white/70 p-2.5">
+    <div className="min-w-0 rounded-lg border border-stone-200 bg-background/70 p-2.5">
       <p className="text-[10px] text-[#8A847C]">{label}</p>
       <p className="mt-1 text-lg font-semibold tabular-nums">
         {typeof value === "number" ? value.toLocaleString() : value}

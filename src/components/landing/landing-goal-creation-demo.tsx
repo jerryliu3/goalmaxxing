@@ -122,7 +122,7 @@ function ChoiceRow({
             key={option}
             className={`rounded-md border px-2 py-1 text-[10px] font-medium ${
               option === selected
-                ? "border-violet-300 bg-violet-50 text-violet-950"
+                ? "border-primary/40 bg-muted text-foreground"
                 : "bg-background text-muted-foreground"
             }`}
           >
@@ -165,7 +165,7 @@ function ManualGoalForm({ filledRows }: { filledRows: number }) {
               Category
             </p>
             <div className="mt-1 flex items-center gap-1.5 rounded-md border bg-background px-2 py-1.5 text-[11px] font-medium">
-              <span className="size-2 rounded-full bg-emerald-500" />
+              <span className="size-2 rounded-full bg-gain" />
               Health
             </div>
           </div>
@@ -239,27 +239,27 @@ function NaturalLanguageDemo({
 
   return (
     <div data-testid="goal-creation-natural" className="space-y-3 p-4">
-      <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-3">
-        <p className="text-[9px] font-semibold tracking-wide text-blue-700 uppercase">
+      <div className="rounded-xl border border-border bg-muted/50 p-3">
+        <p className="text-[9px] font-semibold tracking-wide text-primary uppercase">
           Natural language
         </p>
-        <p className="mt-1.5 min-h-12 text-[12px] leading-relaxed text-blue-950">
+        <p className="mt-1.5 min-h-12 text-[12px] leading-relaxed text-foreground">
           {typedText}
           {showCaret ? (
-            <span className="ml-px inline-block h-3.5 w-px animate-pulse bg-blue-700 align-middle" />
+            <span className="ml-px inline-block h-3.5 w-px animate-pulse bg-primary align-middle" />
           ) : null}
         </p>
       </div>
 
       <div
         data-demo-creation-status={displayPhase}
-        className="flex min-h-5 items-center gap-1.5 text-[10px] text-violet-800"
+        className="flex min-h-5 items-center gap-1.5 text-[10px] text-primary"
         aria-live="polite"
       >
         {displayPhase === "parsing" || displayPhase === "creating" ? (
           <Loader2 className="size-3 animate-spin" />
         ) : displayPhase === "created" ? (
-          <Check className="size-3 text-emerald-700" />
+          <Check className="size-3 text-gain" />
         ) : (
           <Sparkles className="size-3" />
         )}
@@ -272,7 +272,7 @@ function NaturalLanguageDemo({
           return (
             <div
               key={draft.title}
-              className={`rounded-lg border border-violet-200 bg-violet-50/70 p-2.5 transition ${
+              className={`rounded-lg border border-border bg-muted/70 p-2.5 transition ${
                 visible ? "opacity-100" : "opacity-0"
               }`}
             >
@@ -405,15 +405,15 @@ export function LandingGoalCreationDemo() {
           {mode === "manual" ? "All fields editable" : "4 selected"}
         </span>
         {mode === "manual" ? (
-          <div className="inline-flex h-8 items-center rounded-md bg-violet-700 px-2.5 text-[11px] font-semibold text-white shadow-sm">
+          <div className="inline-flex h-8 items-center rounded-md bg-primary px-2.5 text-[11px] font-semibold text-primary-foreground shadow-sm">
             Create goal
           </div>
         ) : (
           <div
             data-demo-create-goals
-            className={`inline-flex h-8 items-center gap-1.5 overflow-hidden rounded-md bg-violet-700 px-2.5 text-[11px] font-semibold text-white shadow-sm transition ${
+            className={`inline-flex h-8 items-center gap-1.5 overflow-hidden rounded-md bg-primary px-2.5 text-[11px] font-semibold text-primary-foreground shadow-sm transition ${
               displayPhase === "clicking-create"
-                ? "scale-95 bg-violet-800 ring-2 ring-violet-300 ring-offset-1"
+                ? "scale-95 bg-primary ring-2 ring-primary/40 ring-offset-1"
                 : ""
             }`}
           >
