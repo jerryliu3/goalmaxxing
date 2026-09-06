@@ -3,6 +3,7 @@ export const SETTINGS_SECTIONS = [
   "notifications",
   "integrations",
   "onboarding",
+  "digest",
   "appearance",
   "report-issue",
 ] as const;
@@ -27,6 +28,11 @@ export const SETTINGS_GROUPS: Array<{
         key: "onboarding",
         label: "Onboarding guides",
         description: "Replay the app intro and page guides.",
+      },
+      {
+        key: "digest",
+        label: "Digest",
+        description: "Replay the first-open briefing or turn auto-show off.",
       },
     ],
   },

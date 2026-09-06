@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   readCurrentDigest: vi.fn(),
   generateCurrentDigest: vi.fn(),
   acknowledgeCurrentDigest: vi.fn(),
+  setDigestAutoShow: vi.fn(),
 }));
 
 vi.mock("@/lib/feature-flags", () => ({
@@ -33,12 +34,14 @@ vi.mock("@/lib/digest/service", async () => {
     readCurrentDigest: mocks.readCurrentDigest,
     generateCurrentDigest: mocks.generateCurrentDigest,
     acknowledgeCurrentDigest: mocks.acknowledgeCurrentDigest,
+    setDigestAutoShow: mocks.setDigestAutoShow,
   };
 });
 
 import { GET } from "./route";
 import { POST as generatePost } from "./generate/route";
 import { POST as ackPost } from "./ack/route";
+import { POST as settingsPost } from "./settings/route";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 
@@ -137,6 +140,19 @@ describe("digest routes", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       acknowledged: true,
+    });
+  });
+
+  it("updates digest auto-show", async () => {
+    mocks.setDigestAutoShow.mockResolvedValue({ digestAutoShow: false });
+    const response = await settingsPost(
+      jsonRequest("http://localhost/api/digest/settings", { digestAutoShow: false })
+    );
+    expect(response.status).toBe(200);
+    expect(mocks.setDigestAutoShow).toHaveBeenCalledWith({
+      supabase: {},
+      userId: USER_ID,
+      digestAutoShow: false,
     });
   });
 });
