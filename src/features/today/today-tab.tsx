@@ -287,9 +287,8 @@ export function TodayTab({
   const upcoming = useMemo(
     () =>
       prepareSupplementalGoals(
-        filterChecklistLinkedTargetSuppressedGoals(
-          selectUpcomingGoals(activeGoals, todayDate),
-          showSuppressedLinkedTargets ? new Set<string>() : hiddenLinkedTargetGoalIds
+        selectUpcomingGoals(activeGoals, todayDate).filter((goal) =>
+          showSuppressedLinkedTargets ? true : !hiddenLinkedTargetGoalIds.has(goal.id)
         )
       ),
     [
