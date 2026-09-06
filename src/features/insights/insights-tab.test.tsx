@@ -98,10 +98,13 @@ describe("InsightsTab goal ledger", () => {
       />
     );
 
-    expect(screen.getByText("Goal ledger")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Goal ledger" })).toBeInTheDocument();
     expect(
       screen.getByText(/Aggregate of selected goals/)
     ).toBeInTheDocument();
+    expect(screen.getByText(/Aggregate of selected goals/).closest(".grid")).toHaveClass(
+      "md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]"
+    );
     expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Lift/ }));

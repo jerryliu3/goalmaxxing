@@ -6,7 +6,6 @@ import type {
   PlannerPrimaryTabPreference,
 } from "@cadence/shared/navigation/tabs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserAvatar } from "@/components/user-avatar";
@@ -49,20 +48,20 @@ export function ProfileSection({
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   return (
-    <Card className="overflow-visible shadow-sm">
-      <CardHeader>
-        <CardTitle>
+    <section className="space-y-4 border-b border-border pb-5">
+      <div>
+        <h2 className="font-display text-xl font-semibold tracking-tight">
           {profileDraft.display_name.trim() ||
             profile?.display_name ||
             "You"}
-        </CardTitle>
-        <CardDescription>
+        </h2>
+        <p className="text-sm text-muted-foreground">
           {profileDraft.username.trim()
             ? `@${profileDraft.username.trim()}`
             : "Username is used for sharing and invites."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </p>
+      </div>
+      <div className="space-y-4">
         <div className="flex items-center gap-3">
           <UserAvatar
             avatarUrl={avatarPreviewUrl || null}
@@ -164,7 +163,7 @@ export function ProfileSection({
           <WandSparkles className="size-4" />
           Save profile
         </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
