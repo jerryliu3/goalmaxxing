@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(13);
+select plan(16);
 
 insert into auth.users (id, email)
 values ('11111111-1111-4111-8111-111111111111', 'completion-invariants-alice@example.com')
@@ -248,16 +248,27 @@ select set_config(
 );
 select set_config('request.jwt.claim.role', 'authenticated', true);
 
-select throws_ok(
+select lives_ok(
   $tap$
     select public.mark_goal_complete(
       'c0500000-0000-4000-8000-000000000002',
       current_date
     );
   $tap$,
-  '23514',
-  'linked_goal_disallowed',
-  'direct completion of a suppressed linked target is rejected'
+  'direct completion of a linked target is allowed'
+);
+
+select is(
+  (
+    select count(*)
+    from public.completions
+    where goal_id = 'c0500000-0000-4000-8000-000000000002'
+      and user_id = '11111111-1111-4111-8111-111111111111'
+      and completed_on = current_date
+      and source = 'manual'
+  ),
+  1::bigint,
+  'direct linked-target completion writes a manual completion fact'
 );
 
 select lives_ok(
@@ -277,10 +288,10 @@ select is(
     where goal_id = 'c0500000-0000-4000-8000-000000000002'
       and user_id = '11111111-1111-4111-8111-111111111111'
       and completed_on = current_date
-      and source = 'linked_cascade'
+      and source in ('manual', 'linked_cascade')
   ),
   1::bigint,
-  'source completion still cascades onto the linked target'
+  'linked target has one completion fact after direct and cascaded writes'
 );
 
 select lives_ok(
@@ -337,39 +348,57 @@ select lives_ok(
   'linked targets are completable after the source end_date'
 );
 
-select throws_ok(
+select lives_ok(
   $tap$
     select public.mark_goal_complete(
       'c0500000-0000-4000-8000-000000000008',
       current_date
     );
   $tap$,
-  '23514',
-  'linked_goal_disallowed',
-  'suppression walks past a deleted intermediate source'
+  'transitive ancestry no longer blocks direct linked-target completion'
 );
 
-select throws_ok(
+select lives_ok(
   $tap$
     select public.mark_goal_complete(
       'c0500000-0000-4000-8000-00000000000a',
       current_date
     );
   $tap$,
-  '23514',
-  'linked_goal_disallowed',
-  'a source with null end_date suppresses indefinitely'
+  'indefinite ancestry no longer blocks direct linked-target completion'
+);
+
+select ok(
+  public.apply_external_completion_service(
+    'c0500000-0000-4000-8000-00000000000d',
+    current_date - 1,
+    current_date,
+    'invariant:suppressed-target'
+  ),
+  'external sync can complete linked targets directly when date is allowed'
 );
 
 select is(
+  (
+    select count(*)
+    from public.completions
+    where goal_id = 'c0500000-0000-4000-8000-00000000000d'
+      and user_id = '11111111-1111-4111-8111-111111111111'
+      and completed_on = current_date - 1
+      and source = 'external_sync'
+  ),
+  1::bigint,
+  'direct external sync write for linked target is recorded'
+);
+
+select ok(
   public.apply_external_completion_service(
     'c0500000-0000-4000-8000-00000000000d',
     current_date,
     current_date,
-    'invariant:suppressed-target'
+    'invariant:suppressed-target-duplicate'
   ),
-  false,
-  'external sync skips a suppressed linked target without inserting'
+  'external sync can also write linked target on local today'
 );
 
 select ok(

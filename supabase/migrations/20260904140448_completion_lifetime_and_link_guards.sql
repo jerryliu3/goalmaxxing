@@ -35,66 +35,7 @@ begin
 end;
 $$;
 
-create or replace function private.raise_if_linked_target_completion_disallowed(
-  p_goal_id uuid,
-  p_date date
-)
-returns void
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_owner_id uuid;
-  v_suppressed boolean := false;
-begin
-  select goal.owner_id
-    into v_owner_id
-  from public.goals as goal
-  where goal.id = p_goal_id;
-
-  if not found then
-    return;
-  end if;
-
-  with recursive ancestors as (
-    select p_goal_id as goal_id
-    union
-    select gl.source_goal_id
-    from public.goal_links as gl
-    inner join ancestors as ancestor on ancestor.goal_id = gl.target_goal_id
-    where gl.owner_id = v_owner_id
-  )
-  select exists (
-    select 1
-    from ancestors as ancestor
-    inner join public.goals as source_goal
-      on source_goal.id = ancestor.goal_id
-    where ancestor.goal_id is distinct from p_goal_id
-      and source_goal.owner_id = v_owner_id
-      and source_goal.is_deleted = false
-      and source_goal.archived_at is null
-      and (
-        source_goal.end_date is null
-        or (
-          source_goal.end_date >= source_goal.start_date
-          and source_goal.end_date >= p_date
-        )
-      )
-  )
-  into v_suppressed;
-
-  if v_suppressed then
-    raise exception
-      using errcode = '23514',
-            message = 'linked_goal_disallowed';
-  end if;
-end;
-$$;
-
 revoke all on function private.raise_if_completion_outside_goal_lifetime(uuid, date)
-  from public, anon, authenticated;
-revoke all on function private.raise_if_linked_target_completion_disallowed(uuid, date)
   from public, anon, authenticated;
 
 create or replace function public.mark_goal_complete(
@@ -122,7 +63,6 @@ begin
 
   perform private.raise_if_future_completion_date(v_uid, p_date);
   perform private.raise_if_completion_outside_goal_lifetime(p_goal_id, p_date);
-  perform private.raise_if_linked_target_completion_disallowed(p_goal_id, p_date);
 
   while coalesce(array_length(v_queue, 1), 0) > 0 loop
     v_current := v_queue[1];
@@ -225,10 +165,9 @@ begin
 
   begin
     perform private.raise_if_completion_outside_goal_lifetime(p_goal_id, p_completed_on);
-    perform private.raise_if_linked_target_completion_disallowed(p_goal_id, p_completed_on);
   exception
     when check_violation then
-      if SQLERRM in ('completion_outside_goal_lifetime', 'linked_goal_disallowed') then
+      if SQLERRM = 'completion_outside_goal_lifetime' then
         return false;
       end if;
       raise;

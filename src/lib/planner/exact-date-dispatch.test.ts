@@ -10,56 +10,6 @@ const goalId = "10000000-0000-4000-8000-000000000011";
 const goalDispatchDigest =
   "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
-interface GoalLinkSourceRecord {
-  id: string;
-  owner_id: string;
-  start_date: string;
-  end_date: string | null;
-  frequency_type: "fixed_milestones" | "recurring";
-  target_count: number | null;
-  is_deleted: boolean;
-  archived_at: string | null;
-}
-
-interface GoalLinkRow {
-  source_goal_id: string;
-  target_goal_id: string;
-  source: GoalLinkSourceRecord;
-}
-
-interface GoalLinksPageResult {
-  data: GoalLinkRow[] | null;
-  error: { message: string } | null;
-}
-
-function buildGoalLinkDispatchMock(pages: GoalLinksPageResult[]) {
-  const targetGoalLinksQuery = {
-    select: vi.fn(),
-    in: vi.fn(),
-    eq: vi.fn(),
-  };
-  targetGoalLinksQuery.select.mockReturnValue(targetGoalLinksQuery);
-  targetGoalLinksQuery.in.mockReturnValue(targetGoalLinksQuery);
-  for (const page of pages) {
-    targetGoalLinksQuery.eq.mockResolvedValueOnce(page);
-  }
-  const rpc = vi.fn().mockResolvedValue({
-    data: goalDispatchDigest,
-    error: null,
-  });
-  const supabase = {
-    rpc,
-    from: vi.fn((table: string) => {
-      if (table !== "goal_links") {
-        throw new Error(`unexpected table: ${table}`);
-      }
-      return targetGoalLinksQuery;
-    }),
-  } as unknown as Parameters<typeof applyPlannerGoalDateFact>[0]["supabase"];
-
-  return { supabase, rpc, targetGoalLinksQuery };
-}
-
 describe("exact-date dispatch schema", () => {
   it("rejects payloads that provide both planner expectations", () => {
     const parsed = targetedExactDateRequestSchema.safeParse({
@@ -101,15 +51,6 @@ describe("mapCompletionRpcError", () => {
     ).toMatchObject({
       status: 422,
       code: "completion_outside_goal_lifetime",
-    });
-    expect(
-      mapCompletionRpcError({
-        code: "23514",
-        message: "linked_goal_disallowed",
-      })
-    ).toMatchObject({
-      status: 422,
-      code: "linked_goal_disallowed",
     });
   });
 
@@ -215,142 +156,20 @@ describe("exact-date dispatch helpers", () => {
     });
   });
 
-  it("rejects planner goal dispatch when a linked source still covers the date", async () => {
-    const { supabase } = buildGoalLinkDispatchMock([
-      {
-        data: [
-          {
-            source_goal_id: "22000000-0000-4000-8000-000000000099",
-            target_goal_id: goalId,
-            source: {
-              id: "22000000-0000-4000-8000-000000000099",
-              owner_id: "owner-a",
-              start_date: "2026-01-01",
-              end_date: "2026-12-31",
-              frequency_type: "recurring",
-              target_count: null,
-              is_deleted: false,
-              archived_at: null,
-            },
-          },
-        ],
+  it("allows planner goal dispatch without linked-suppression prechecks", async () => {
+    const rpc = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: goalDispatchDigest,
         error: null,
-      },
-      { data: [], error: null },
-    ]);
-
-    const result = await applyPlannerGoalDateFact({
-      supabase,
-      ownerId: "owner-a",
-      goalId,
-      date: "2026-08-05",
-      desiredFactState: "present",
-      timezone: "UTC",
-      goalLifetime: { startDate: "2026-08-01", endDate: "2026-08-31" },
-      expectation: {
-        expectedDigest: goalDispatchDigest,
-      },
-    });
-
-    expect(result).toEqual({
-      ok: false,
-      status: 422,
-      code: "linked_goal_disallowed",
-      message:
-        "Linked target goals cannot be completed through plan-goal date facts.",
-    });
-  });
-
-  it("rejects planner goal dispatch when suppression comes from an ancestor behind a deleted intermediate", async () => {
-    const intermediateId = "22000000-0000-4000-8000-000000000090";
-    const ancestorId = "22000000-0000-4000-8000-000000000091";
-    const { supabase } = buildGoalLinkDispatchMock([
-      {
-        data: [
-          {
-            source_goal_id: intermediateId,
-            target_goal_id: goalId,
-            source: {
-              id: intermediateId,
-              owner_id: "owner-a",
-              start_date: "2026-01-01",
-              end_date: "2026-12-31",
-              frequency_type: "recurring",
-              target_count: null,
-              is_deleted: true,
-              archived_at: null,
-            },
-          },
-        ],
-        error: null,
-      },
-      {
-        data: [
-          {
-            source_goal_id: ancestorId,
-            target_goal_id: intermediateId,
-            source: {
-              id: ancestorId,
-              owner_id: "owner-a",
-              start_date: "2026-01-01",
-              end_date: "2026-12-31",
-              frequency_type: "recurring",
-              target_count: null,
-              is_deleted: false,
-              archived_at: null,
-            },
-          },
-        ],
-        error: null,
-      },
-      { data: [], error: null },
-    ]);
-
-    const result = await applyPlannerGoalDateFact({
-      supabase,
-      ownerId: "owner-a",
-      goalId,
-      date: "2026-08-05",
-      desiredFactState: "present",
-      timezone: "UTC",
-      goalLifetime: { startDate: "2026-08-01", endDate: "2026-08-31" },
-      expectation: {
-        expectedDigest: goalDispatchDigest,
-      },
-    });
-
-    expect(result).toEqual({
-      ok: false,
-      status: 422,
-      code: "linked_goal_disallowed",
-      message:
-        "Linked target goals cannot be completed through plan-goal date facts.",
-    });
-  });
-
-  it("allows planner goal dispatch when the linked source already ended", async () => {
-    const { supabase, rpc } = buildGoalLinkDispatchMock([
-      {
-        data: [
-          {
-            source_goal_id: "22000000-0000-4000-8000-000000000098",
-            target_goal_id: goalId,
-            source: {
-              id: "22000000-0000-4000-8000-000000000098",
-              owner_id: "owner-a",
-              start_date: "2026-01-01",
-              end_date: "2026-07-31",
-              frequency_type: "recurring",
-              target_count: null,
-              is_deleted: false,
-              archived_at: null,
-            },
-          },
-        ],
-        error: null,
-      },
-      { data: [], error: null },
-    ]);
+      })
+      .mockResolvedValueOnce({ data: null, error: null });
+    const supabase = {
+      rpc,
+      from: vi.fn(() => {
+        throw new Error("linked suppression lookup should not run");
+      }),
+    } as unknown as Parameters<typeof applyPlannerGoalDateFact>[0]["supabase"];
 
     const result = await applyPlannerGoalDateFact({
       supabase,
@@ -376,96 +195,6 @@ describe("exact-date dispatch helpers", () => {
     expect(rpc).toHaveBeenLastCalledWith("mark_goal_complete", {
       p_goal_id: goalId,
       p_date: "2026-08-05",
-    });
-  });
-
-  it("allows planner goal dispatch when source is soft-deleted or archived", async () => {
-    const { supabase } = buildGoalLinkDispatchMock([
-      {
-        data: [
-          {
-            source_goal_id: "22000000-0000-4000-8000-000000000097",
-            target_goal_id: goalId,
-            source: {
-              id: "22000000-0000-4000-8000-000000000097",
-              owner_id: "owner-a",
-              start_date: "2026-01-01",
-              end_date: "2026-12-31",
-              frequency_type: "recurring",
-              target_count: null,
-              is_deleted: true,
-              archived_at: null,
-            },
-          },
-          {
-            source_goal_id: "22000000-0000-4000-8000-000000000096",
-            target_goal_id: goalId,
-            source: {
-              id: "22000000-0000-4000-8000-000000000096",
-              owner_id: "owner-a",
-              start_date: "2026-01-01",
-              end_date: "2026-12-31",
-              frequency_type: "recurring",
-              target_count: null,
-              is_deleted: false,
-              archived_at: "2026-01-02T00:00:00Z",
-            },
-          },
-        ],
-        error: null,
-      },
-      { data: [], error: null },
-    ]);
-
-    const result = await applyPlannerGoalDateFact({
-      supabase,
-      ownerId: "owner-a",
-      goalId,
-      date: "2026-08-05",
-      desiredFactState: "present",
-      timezone: "UTC",
-      goalLifetime: { startDate: "2026-08-01", endDate: "2026-08-31" },
-      expectation: {
-        expectedDigest: goalDispatchDigest,
-      },
-    });
-
-    expect(result).toEqual({
-      ok: true,
-      payload: {
-        goalId,
-        date: "2026-08-05",
-        factState: "present",
-      },
-    });
-  });
-
-  it("returns lookup failure when goal link embed read fails", async () => {
-    const { supabase } = buildGoalLinkDispatchMock([
-      {
-        data: null,
-        error: { message: "db fail" },
-      },
-    ]);
-
-    const result = await applyPlannerGoalDateFact({
-      supabase,
-      ownerId: "owner-a",
-      goalId,
-      date: "2026-08-05",
-      desiredFactState: "present",
-      timezone: "UTC",
-      goalLifetime: { startDate: "2026-08-01", endDate: "2026-08-31" },
-      expectation: {
-        expectedDigest: goalDispatchDigest,
-      },
-    });
-
-    expect(result).toEqual({
-      ok: false,
-      status: 503,
-      code: "planner_goal_lookup_failed",
-      message: "Planner goal state could not be loaded.",
     });
   });
 });
