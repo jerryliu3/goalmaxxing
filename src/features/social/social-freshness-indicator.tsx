@@ -138,7 +138,7 @@ export function SocialFreshnessIndicator({
         errorMessage
           ? "bg-destructive"
           : snapshot
-            ? "animate-pulse bg-emerald-500"
+            ? "animate-pulse bg-primary"
             : "bg-muted-foreground/40"
       ),
     [errorMessage, snapshot]

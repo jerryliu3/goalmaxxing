@@ -11,7 +11,7 @@ export function GoalEndMonthBadge({ endDate }: GoalEndMonthBadgeProps) {
   return (
     <Badge
       variant="outline"
-      className="h-5 gap-1 rounded-md border-sky-200 bg-sky-100 px-1.5 font-medium text-[11px] text-sky-900 dark:border-sky-200 dark:bg-sky-100 dark:text-sky-900"
+      className="h-5 gap-1 rounded-md border-border bg-secondary px-1.5 font-medium text-[11px] text-foreground"
       title="Goal end date"
       aria-label={endDate ? `Goal end date ${dateLabel}` : "No goal end date"}
     >

@@ -178,7 +178,7 @@ export function SignupForm() {
           <p className="text-xs text-muted-foreground">Checking username availability...</p>
         ) : null}
         {usernameStatus === "available" ? (
-          <p className="text-xs text-emerald-600 dark:text-emerald-400">
+          <p className="text-xs text-primary">
             Username is available.
           </p>
         ) : null}
