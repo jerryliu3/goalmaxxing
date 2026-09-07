@@ -23,16 +23,11 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 const socialSurfaceTriggerBaseClass =
-  "h-10 min-w-0 flex-col gap-0.5 rounded-xl px-1.5 py-1 text-[10px] font-semibold leading-tight transition-[transform,box-shadow,border-color,background-color] duration-150 hover:-translate-y-0.5 active:translate-y-[3px] data-[state=active]:translate-y-[3px] data-[state=active]:hover:translate-y-[3px] data-[state=active]:cursor-default after:hidden";
+  "h-10 min-w-0 flex-col gap-0.5 rounded-none px-1.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] leading-tight shadow-none data-[state=active]:shadow-none";
 
-// Saved alternate (former Leaderboards): indigo-300 border, an
-// indigo-200/blue-100/blue-50 gradient, and indigo-300/blue-200/blue-100
-// when selected, with a rgba(79, 70, 229, 0.22) raised shadow.
 const socialSurfaceTriggerToneClass =
-  "border border-border bg-card text-foreground shadow-[0_3px_0_rgba(36,28,20,0.12)] data-[state=active]:border-primary data-[state=active]:bg-primary/15";
+  "border-0 bg-transparent text-muted-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary";
 
-const selectedChipShadow =
-  "inset 0 4px 7px rgba(15, 23, 42, 0.3), inset 2px 0 4px rgba(15, 23, 42, 0.16), inset -1px 0 0 rgba(255, 255, 255, 0.42), inset 0 -2px 1px rgba(255, 255, 255, 0.72)";
 const SOCIAL_SURFACE_FOCUS_REFRESH_COOLDOWN_MS = 15 * 1000;
 const SOCIAL_SURFACE_POLL_INTERVAL_MS = 60 * 1000;
 
@@ -173,7 +168,7 @@ export function SocialSurface() {
       >
         <TabsList
           variant="line"
-          className="grid w-full grid-cols-3 gap-1.5 rounded-2xl bg-transparent p-0"
+          className="grid w-full grid-cols-3 gap-0 rounded-none border-b border-border bg-transparent p-0"
         >
           <TabsTrigger
             value="team"
@@ -181,9 +176,6 @@ export function SocialSurface() {
               socialSurfaceTriggerBaseClass,
               socialSurfaceTriggerToneClass
             )}
-            style={
-              activeTab === "team" ? { boxShadow: selectedChipShadow } : undefined
-            }
             data-onboarding="social.team"
           >
             <Users className="size-3.5" />
@@ -195,11 +187,6 @@ export function SocialSurface() {
               socialSurfaceTriggerBaseClass,
               socialSurfaceTriggerToneClass
             )}
-            style={
-              activeTab === "challenges"
-                ? { boxShadow: selectedChipShadow }
-                : undefined
-            }
             data-onboarding="social.compete"
             disabled={publicSocialLocked}
             title={publicSocialLocked ? "Private accounts use Team only." : undefined}
@@ -213,11 +200,6 @@ export function SocialSurface() {
               socialSurfaceTriggerBaseClass,
               socialSurfaceTriggerToneClass
             )}
-            style={
-              activeTab === "leaderboards"
-                ? { boxShadow: selectedChipShadow }
-                : undefined
-            }
             data-onboarding="social.compete"
             disabled={publicSocialLocked}
             title={publicSocialLocked ? "Private accounts use Team only." : undefined}

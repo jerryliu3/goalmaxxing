@@ -41,6 +41,19 @@ interface AppShellProps {
   onNewGoalClick?: () => void;
 }
 
+function destinationKicker(pathname: string) {
+  if (pathname.includes("/insights")) {
+    return "Progress";
+  }
+  if (pathname.includes("/social")) {
+    return "Community";
+  }
+  if (pathname.includes("/settings")) {
+    return "You";
+  }
+  return "Plan";
+}
+
 export function AppShell({
   children,
   userId,
@@ -81,6 +94,7 @@ export function AppShell({
   );
   const ViewTransitionWrapper =
     typeof ViewTransition === "function" ? ViewTransition : Fragment;
+  const kicker = destinationKicker(pathname);
 
   return (
     <XpRewardProvider>
@@ -99,34 +113,41 @@ export function AppShell({
           >
             <PublicProfileSheetProvider>
               <div className="gm-gazetteer">
-                <div className="relative z-10 flex min-h-screen w-full justify-center bg-background px-4 py-4 sm:px-6 sm:py-6">
-                  <div className="flex w-full max-w-5xl flex-col gap-4 md:gap-6">
+                <div className="relative z-10 flex min-h-screen w-full justify-center bg-[color:var(--gm-page,#f3ead8)] px-4 py-4 sm:px-6 sm:py-6">
+                  <div className="flex w-full max-w-6xl flex-col gap-4 md:gap-6">
                   <header
-                    className="sticky top-0 z-40 -mx-4 -mt-4 border-b bg-background/80 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.7rem)] shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/70 md:static md:m-0 md:rounded-2xl md:border md:bg-card/95 md:p-4"
+                    className="sticky top-0 z-40 -mx-4 -mt-4 border-b border-border bg-background/85 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.7rem)] backdrop-blur supports-[backdrop-filter]:bg-background/75 md:static md:m-0 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none"
                     style={{ viewTransitionName: "app-shell-header" }}
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h1 className="text-2xl font-semibold tracking-tight">Goalmaxxing</h1>
-                        <XpProgressBar />
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+                          {kicker}
+                        </p>
+                        <p className="font-display truncate text-xl font-semibold tracking-tight md:text-2xl">
+                          Goalmaxxing
+                        </p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <Button
-                          asChild={!onNewGoalClick}
-                          size="sm"
-                          className="h-8 bg-primary text-white hover:bg-primary/80 hover:text-white"
-                          title="New Goal +"
-                          data-onboarding="nav.new-goal"
-                          onClick={onNewGoalClick}
-                        >
-                          {onNewGoalClick ? (
-                            "New Goal +"
-                          ) : (
-                            <Link href={newGoalHref}>
-                              New Goal +
-                            </Link>
-                          )}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <XpProgressBar />
+                          <Button
+                            asChild={!onNewGoalClick}
+                            size="sm"
+                            className="hidden h-8 bg-primary text-primary-foreground hover:bg-primary/80 md:inline-flex"
+                            title="New Goal +"
+                            data-onboarding="nav.new-goal"
+                            onClick={onNewGoalClick}
+                          >
+                            {onNewGoalClick ? (
+                              "New Goal +"
+                            ) : (
+                              <Link href={newGoalHref}>
+                                New Goal +
+                              </Link>
+                            )}
+                          </Button>
+                        </div>
                         <DuoScopeToggle />
                       </div>
                     </div>
@@ -160,6 +181,28 @@ export function AppShell({
                   )}
                   </div>
                 </div>
+                {onNewGoalClick ? (
+                  <button
+                    type="button"
+                    className="fixed right-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-40 flex size-12 items-center justify-center rounded-[12px] bg-primary text-lg font-semibold text-primary-foreground shadow-md md:hidden"
+                    title="New Goal +"
+                    data-onboarding="nav.new-goal"
+                    onClick={onNewGoalClick}
+                  >
+                    +
+                    <span className="sr-only">New Goal +</span>
+                  </button>
+                ) : (
+                  <Link
+                    href={newGoalHref}
+                    className="fixed right-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-40 flex size-12 items-center justify-center rounded-[12px] bg-primary text-lg font-semibold text-primary-foreground shadow-md md:hidden"
+                    title="New Goal +"
+                    data-onboarding="nav.new-goal"
+                  >
+                    +
+                    <span className="sr-only">New Goal +</span>
+                  </Link>
+                )}
                 <div className="relative z-50 md:hidden" style={{ viewTransitionName: "app-mobile-tab-nav" }}>
                   <TabNav
                     mobile

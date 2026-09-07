@@ -118,16 +118,16 @@ export function SettingsTab() {
       />
 
       {SETTINGS_GROUPS.map((group) => (
-        <Card key={group.key} className="shadow-sm">
-          <CardHeader>
-            <CardTitle>{group.label}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-0 p-0">
+        <section key={group.key} className="space-y-1">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            {group.label}
+          </h2>
+          <div className="divide-y border-y">
             {group.items.map((item) => (
               <button
                 key={item.key}
                 type="button"
-                className="flex w-full items-center justify-between border-t px-4 py-3 text-left text-base font-medium transition-colors hover:bg-muted/30 first:border-t-0"
+                className="flex w-full items-center justify-between py-3 text-left text-base font-medium transition-colors hover:bg-muted/30"
                 onClick={() => writeSettingsSection(item.key)}
               >
                 <span>{item.label}</span>
@@ -135,7 +135,7 @@ export function SettingsTab() {
               </button>
             ))}
             {group.key === "account" ? (
-              <div className="border-t p-4">
+              <div className="py-3">
                 <Button
                   type="button"
                   variant="outline"
@@ -148,8 +148,8 @@ export function SettingsTab() {
                 </Button>
               </div>
             ) : null}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       ))}
 
       <Dialog

@@ -132,9 +132,9 @@ describe("SettingsTab", () => {
   it("groups existing controls into Plan, Connected, and Account", () => {
     render(<SettingsTab />);
 
-    expect(screen.getByText("Plan")).toBeInTheDocument();
-    expect(screen.getByText("Connected")).toBeInTheDocument();
-    expect(screen.getByText("Account")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Plan" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Connected" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Account" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preferences" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();

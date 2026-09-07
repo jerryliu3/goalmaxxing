@@ -1,12 +1,13 @@
 import {
   act,
+  cleanup,
   fireEvent,
   render,
   screen,
   waitFor,
   within,
 } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CalendarSurface } from "./calendar-surface";
 import type {
   PlannerContextPayload,
@@ -196,6 +197,11 @@ describe("CalendarSurface characterization", () => {
     coachHookMock.actions.resetForPlannerStateReset.mockReset();
   });
 
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
   it("renders adjacent-month persisted rows from the prepared context", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
@@ -318,10 +324,97 @@ describe("CalendarSurface characterization", () => {
         />
       );
 
-      expect(await screen.findByText("07:30 Tempo run 4x800")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getAllByText("07:30 Tempo run 4x800").length).toBeGreaterThan(0);
+      });
       expect(screen.queryByText("07:30 Goal B")).not.toBeInTheDocument();
     }
   );
+
+  it("renders week as a vertical agenda beside a desktop day pane", async () => {
+    postJsonMock.mockResolvedValue(
+      buildContext([
+        unit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          scheduledDate: "2026-08-15",
+        }),
+      ])
+    );
+
+    render(
+      <CalendarSurface
+        activeTab="calendar"
+        month="2026-08"
+        selectedDay="2026-08-15"
+        viewMode="week"
+        onMonthChange={vi.fn()}
+        onViewModeChange={vi.fn()}
+        onSelectedDayChange={vi.fn()}
+        onPlannerMutation={vi.fn()}
+      />
+    );
+
+    expect(await screen.findByTestId("week-agenda")).toBeInTheDocument();
+    expect(document.querySelector("[data-calendar-week-agenda='true']")).toBeInstanceOf(
+      HTMLElement
+    );
+    expect(document.querySelector("[data-calendar-week-row='true']")).toBeInstanceOf(
+      HTMLElement
+    );
+    expect(screen.getByTestId("plan-desktop-day-pane")).toBeInTheDocument();
+    expect(
+      screen.getByRole("group", { name: "Plan view mode" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Plan" })).toBeInTheDocument();
+  });
+
+  it("keeps week view when a desktop agenda row is selected", async () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        matches: String(query).includes("min-width: 768px"),
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      }))
+    );
+    postJsonMock.mockResolvedValue(
+      buildContext([
+        unit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          scheduledDate: "2026-08-15",
+        }),
+      ])
+    );
+    const onSelectedDayChange = vi.fn();
+
+    render(
+      <CalendarSurface
+        activeTab="calendar"
+        month="2026-08"
+        selectedDay="2026-08-15"
+        viewMode="week"
+        onMonthChange={vi.fn()}
+        onViewModeChange={vi.fn()}
+        onSelectedDayChange={onSelectedDayChange}
+        onPlannerMutation={vi.fn()}
+      />
+    );
+
+    expect(await screen.findByTestId("week-agenda")).toBeInTheDocument();
+    const nextDayRow = document.querySelector(
+      '[data-calendar-week-row="true"][data-day="2026-08-16"] button[data-day-cell="true"]'
+    );
+    expect(nextDayRow).toBeInstanceOf(HTMLElement);
+    fireEvent.click(nextDayRow as HTMLElement);
+
+    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-16", "push", "week");
+    vi.unstubAllGlobals();
+  });
 
   it("uses today's weekday column when switching from month to day view", async () => {
     postJsonMock.mockResolvedValue(
@@ -355,8 +448,7 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("combobox", { name: "Plan view mode" }));
-    fireEvent.click(await screen.findByRole("option", { name: "Day" }));
+    fireEvent.click(screen.getByRole("button", { name: "Day" }));
 
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-15", "push", "day");
   });
@@ -393,8 +485,7 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("combobox", { name: "Plan view mode" }));
-    fireEvent.click(await screen.findByRole("option", { name: "Week" }));
+    fireEvent.click(screen.getByRole("button", { name: "Week" }));
 
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-15", "push", "week");
   });
@@ -793,8 +884,10 @@ describe("CalendarSurface characterization", () => {
       />
     );
 
-    const dayHeading = await screen.findByText(/Aug 31, 2026/i, { selector: "p" });
-    const dayPanel = dayHeading.closest("div");
+    const dayHeading = await screen.findByRole("heading", {
+      name: /monday, aug 31/i,
+    });
+    const dayPanel = dayHeading.closest("[data-testid='plan-day-pane']");
     if (!dayPanel) {
       throw new Error("Expected day panel container.");
     }
