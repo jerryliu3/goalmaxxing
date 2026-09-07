@@ -203,6 +203,10 @@ export function usePlannerCalendarDayCellRenderer({
               );
               return;
             }
+            if (viewMode === "month") {
+              selectDayForView(day, "month");
+              return;
+            }
             if (viewMode === "day") {
               if (day !== focusedDay) {
                 setLocalSelectedDay(day);
@@ -228,6 +232,10 @@ export function usePlannerCalendarDayCellRenderer({
                 cell.date,
                 resolveWeekAgendaSelectionViewMode(isDesktopTwoPane)
               );
+              return;
+            }
+            if (viewMode === "month") {
+              selectDayForView(cell.date, "month");
               return;
             }
             if (viewMode === "day") {

@@ -940,8 +940,12 @@ describe("CalendarSurface characterization", () => {
       return match;
     });
 
-    fireEvent.click(dayCell);
-    await screen.findByRole("button", { name: "Expand day details" });
+    fireEvent.mouseEnter(dayCell);
+    await screen.findByRole(
+      "button",
+      { name: "Expand day details" },
+      { timeout: 2500 }
+    );
     const previewPopover = document.querySelector('[data-no-swipe="true"].fixed');
     if (!(previewPopover instanceof HTMLElement)) {
       throw new Error("Expected preview popover element.");
@@ -1856,8 +1860,10 @@ describe("CalendarSurface characterization", () => {
       '[data-day-cell="true"][data-day="2026-08-31"]'
     );
     expect(dayCell).toBeInstanceOf(HTMLButtonElement);
-    fireEvent.click(dayCell as Element);
-    fireEvent.click(await screen.findByRole("button", { name: "Move" }));
+    fireEvent.mouseEnter(dayCell as Element);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Move" }, { timeout: 2500 })
+    );
 
     const dialog = await screen.findByRole("dialog", {
       name: /Move session here/i,

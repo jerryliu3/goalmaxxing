@@ -80,10 +80,6 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
       applySearchParams(
         (params) => {
           params.set("view", viewMode);
-          if (viewMode === "month") {
-            params.delete("day");
-            return;
-          }
           const day =
             normalized.day ??
             (isValidMonth(normalized.month)
@@ -112,9 +108,7 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
       applySearchParams(
         (params) => {
           if (day && isValidDate(day)) {
-            const resolvedViewMode =
-              nextViewMode ??
-              (normalized.viewMode === "month" ? "day" : normalized.viewMode);
+            const resolvedViewMode = nextViewMode ?? normalized.viewMode;
             params.set("view", resolvedViewMode);
             params.set("day", day);
             params.set("month", day.slice(0, 7));

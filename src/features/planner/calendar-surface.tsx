@@ -242,7 +242,7 @@ export function CalendarSurface({
     draftPolicy,
     draftCommandState,
     month,
-    selectedDay,
+    selectedDay: localSelectedDay ?? selectedDay,
     viewMode,
     setupTimezone,
     duoScope,
