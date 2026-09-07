@@ -153,6 +153,37 @@ describe("calendar surface extracted components", () => {
     expect(onEntryOpen).toHaveBeenCalledWith(sampleEntry.key);
   });
 
+  it("renders expanded day rows as a hairline ledger instead of filled pills", () => {
+    renderWithDnd(
+      <CalendarDayPreviewList
+        day="2026-08-06"
+        entries={[sampleEntry]}
+        completionFactMarkers={[]}
+        mutationLoading={false}
+        getEntryDisplayTitle={(entry) => entry.goalTitle ?? "Untitled"}
+        getEntrySubtitle={(entry) => entry.label}
+        isEntryCredited={() => false}
+        isEntryImmovableForDraft={() => false}
+        getCompletionToggleState={() => ({
+          currentlyCredited: false,
+          disabledReasonCopy: null,
+        })}
+        onEntryOpen={() => {}}
+        onToggleCompletion={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+        density="expanded"
+      />
+    );
+
+    const row = document.querySelector('[data-plan-work-row="ledger"]');
+    expect(row).toBeInstanceOf(HTMLElement);
+    expect(row).toHaveClass("py-3");
+    expect(row).not.toHaveClass("rounded-[10px]");
+    expect(screen.getByText("Run").closest("p")).toHaveClass("font-display");
+    expect(screen.getByText("Easy run")).toHaveClass("uppercase");
+  });
+
   it("exposes partner completion markers without relying on title tooltips", () => {
     renderWithDnd(
       <CalendarMonthDayCell
