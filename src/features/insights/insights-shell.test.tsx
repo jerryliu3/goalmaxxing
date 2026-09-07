@@ -47,9 +47,10 @@ describe("InsightsShell", () => {
     expect(insightsTabMock.mock.calls[0]?.[0]).toMatchObject({
       readOnly: false,
     });
+    expect(screen.queryByRole("button", { name: "Previous period" })).not.toBeInTheDocument();
   });
 
-  it("renders split duo-both layout with one shared goal stats section", () => {
+  it("renders a full ledger in each duo lane", () => {
     useDuoSurfaceMock.mockReturnValue({
       scope: "both",
       activePartner: {
@@ -68,14 +69,15 @@ describe("InsightsShell", () => {
 
     render(<InsightsShell />);
 
-    expect(insightsTabMock).toHaveBeenCalledTimes(5);
-    expect(screen.getByTestId("insights-tab-goal-stats-only")).toBeInTheDocument();
-
-    const modes = insightsTabMock.mock.calls.map(
-      (call) => (call[0] as { contentMode?: string }).contentMode
-    );
-    expect(modes.filter((mode) => mode === "overall-only")).toHaveLength(2);
-    expect(modes.filter((mode) => mode === "goals-only")).toHaveLength(2);
-    expect(modes.filter((mode) => mode === "goal-stats-only")).toHaveLength(1);
+    expect(insightsTabMock).toHaveBeenCalledTimes(2);
+    expect(insightsTabMock.mock.calls[0]?.[0]).toMatchObject({
+      readOnly: false,
+    });
+    expect(insightsTabMock.mock.calls[1]?.[0]).toMatchObject({
+      readOnly: true,
+    });
+    expect(screen.getByRole("button", { name: "Previous period" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next period" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Choose month and year")).toBeInTheDocument();
   });
 });
