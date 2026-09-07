@@ -84,6 +84,24 @@ describe("CompletionToggle", () => {
     vi.useRealTimers();
   });
 
+  it("keeps the originating button available to a deferred hold callback", () => {
+    vi.useFakeTimers();
+    const onClick = vi.fn();
+    render(
+      <CompletionToggle
+        completed={false}
+        aria-label="Mark session done"
+        onClick={onClick}
+      />
+    );
+    const toggle = screen.getByRole("button", { name: "Mark session done" });
+
+    commitByHold(toggle);
+
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(onClick.mock.calls[0]?.[0].currentTarget).toBe(toggle);
+  });
+
     it("does not commit on a pointer click without waiting for the hold", () => {
       const onClick = vi.fn();
       render(

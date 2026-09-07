@@ -27,6 +27,17 @@ type CompletionToggleClickHandler = (
   event: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLButtonElement>
 ) => void | PromiseLike<void>;
 
+function withStableCurrentTarget<T extends React.SyntheticEvent<HTMLButtonElement>>(
+  event: T,
+  currentTarget: HTMLButtonElement
+) {
+  const eventWithStableTarget = Object.create(event) as T;
+  Object.defineProperty(eventWithStableTarget, "currentTarget", {
+    value: currentTarget,
+  });
+  return eventWithStableTarget;
+}
+
 interface CompletionToggleProps
   extends Omit<React.ComponentProps<"button">, "children" | "onClick"> {
   completed: boolean;
@@ -123,7 +134,8 @@ export function CompletionToggle({
     (
       event:
         | React.MouseEvent<HTMLButtonElement>
-        | React.KeyboardEvent<HTMLButtonElement>
+        | React.KeyboardEvent<HTMLButtonElement>,
+      sourceElement?: HTMLButtonElement
     ) => {
       triggerLightPressFeedback();
       const desiredState = !completed;
@@ -140,7 +152,11 @@ export function CompletionToggle({
         optimisticBaseStateRef.current = null;
         optimisticTimerRef.current = null;
       }, OPTIMISTIC_FALLBACK_MS);
-      const mutation = onClick?.(event);
+      const mutation = onClick?.(
+        sourceElement
+          ? withStableCurrentTarget(event, sourceElement)
+          : event
+      );
       if (mutation) {
         void Promise.resolve(mutation).then(clearOptimisticState, clearOptimisticState);
       }
@@ -187,9 +203,13 @@ export function CompletionToggle({
         if (holdTimerRef.current !== null) {
           window.clearTimeout(holdTimerRef.current);
         }
+        const sourceElement = event.currentTarget;
         holdTimerRef.current = window.setTimeout(() => {
           holdTimerRef.current = null;
-          commitToggle(event as unknown as React.MouseEvent<HTMLButtonElement>);
+          commitToggle(
+            event as unknown as React.MouseEvent<HTMLButtonElement>,
+            sourceElement
+          );
         }, COMPLETION_HOLD_MS);
       }}
       onMouseDown={(event) => {
