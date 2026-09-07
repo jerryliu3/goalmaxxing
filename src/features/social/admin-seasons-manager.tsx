@@ -584,7 +584,7 @@ export function AdminSeasonsManager() {
             </Button>
           </div>
           {error ? <p className="text-xs text-destructive">{error}</p> : null}
-          {success ? <p className="text-xs text-emerald-600">{success}</p> : null}
+          {success ? <p className="text-xs text-primary">{success}</p> : null}
         </CardContent>
       </Card>
 

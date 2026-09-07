@@ -75,6 +75,7 @@
   --color-ring: var(--ring);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-newsreader), Georgia, "Times New Roman", serif;
 }
 
 * {
@@ -119,7 +120,7 @@ body {
 .gm-gazetteer {
   --background: #f8f1e3;
   --foreground: #241c14;
-  --card: #f3ead8;
+  --card: #f8f1e3;
   --card-foreground: #241c14;
   --popover: #f8f1e3;
   --popover-foreground: #241c14;
@@ -136,13 +137,19 @@ body {
   --input: #d4c4a4;
   --ring: #9a4f2c;
   --radius: 0.75rem;
+  --gm-page: #f3ead8;
+  --gm-gain: #4a6740;
+  --gm-recover: #b45309;
+  --font-sans: var(--font-source-sans), Inter, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
   color: var(--foreground);
-  background: var(--background);
-  font-family: var(--font-source-sans), var(--font-geist-sans), Inter, system-ui, sans-serif;
+  background: var(--gm-page);
+  font-family: var(--font-sans);
 }
 
 .gm-gazetteer h1,
-.gm-gazetteer h2 {
+.gm-gazetteer h2,
+.gm-gazetteer .font-display {
   font-family: var(--font-newsreader), Georgia, "Times New Roman", serif;
 }
 

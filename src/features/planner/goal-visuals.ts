@@ -10,6 +10,10 @@ import {
   Target,
 } from "lucide-react";
 import {
+  GAZETTEER_FALLBACK_COLORS,
+  toGazetteerDisplayColor,
+} from "@/lib/brand/gazetteer";
+import {
   getCategorySwatchColor,
   resolveCategoryKey,
   type CategoryPresetId,
@@ -26,16 +30,7 @@ const GOAL_ICONS: readonly LucideIcon[] = [
   Star,
 ];
 
-const FALLBACK_COLORS = [
-  "#2563eb",
-  "#7c3aed",
-  "#0891b2",
-  "#0f766e",
-  "#15803d",
-  "#ca8a04",
-  "#c2410c",
-  "#be123c",
-] as const;
+const FALLBACK_COLORS = GAZETTEER_FALLBACK_COLORS;
 
 const HEX_COLOR_REGEX = /^#?[0-9a-f]{6}$/i;
 type GoalVisualCategoryKey = Exclude<CategoryPresetId, "other">;
@@ -68,7 +63,8 @@ export function normalizeGoalColor(color: string | null) {
   if (!HEX_COLOR_REGEX.test(trimmed)) {
     return null;
   }
-  return trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+  const hex = trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+  return toGazetteerDisplayColor(hex);
 }
 
 function resolveCategorySwatchColor(category: string | null): string | null {
@@ -108,9 +104,10 @@ export function getGoalVisual(input: GoalVisualInput): GoalVisual {
   const categoryColor = resolveCategorySwatchColor(input.category);
   return {
     Icon: GOAL_ICONS[hash % GOAL_ICONS.length],
-    color:
+    color: toGazetteerDisplayColor(
       categoryColor ??
-      normalizeGoalColor(input.color) ??
-      FALLBACK_COLORS[hash % FALLBACK_COLORS.length],
+        normalizeGoalColor(input.color) ??
+        FALLBACK_COLORS[hash % FALLBACK_COLORS.length]
+    ),
   };
 }

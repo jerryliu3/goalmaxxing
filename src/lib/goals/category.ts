@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { GAZETTEER_CATEGORY_COLORS } from "@/lib/brand/gazetteer";
 import type { Database } from "@/lib/supabase/database.types";
-import { cn } from "@/lib/utils";
 
 export interface GoalCategory {
   key: string;
@@ -33,35 +33,35 @@ export const DEFAULT_GOAL_CATEGORIES: GoalCategory[] = [
     key: "health",
     label: "Health",
     aliases: [],
-    color: "#10b981",
+    color: GAZETTEER_CATEGORY_COLORS.health,
     sortOrder: 10,
   },
   {
     key: "career",
     label: "Career",
     aliases: [],
-    color: "#8b5cf6",
+    color: GAZETTEER_CATEGORY_COLORS.career,
     sortOrder: 20,
   },
   {
     key: "personal",
     label: "Personal",
     aliases: [],
-    color: "#6366f1",
+    color: GAZETTEER_CATEGORY_COLORS.personal,
     sortOrder: 30,
   },
   {
     key: "relationships",
     label: "Relationships",
     aliases: [],
-    color: "#f43f5e",
+    color: GAZETTEER_CATEGORY_COLORS.relationships,
     sortOrder: 40,
   },
   {
     key: "other",
     label: "Other",
     aliases: [],
-    color: "#64748b",
+    color: GAZETTEER_CATEGORY_COLORS.other,
     sortOrder: 999,
   },
 ];
@@ -244,37 +244,22 @@ export function getCategoryBadgeClass(categoryKey: string): string {
   const normalized = categoryKey.trim().toLowerCase();
 
   if (normalized === "personal") {
-    return cn(
-      "border-indigo-200 bg-indigo-100 text-indigo-700",
-      "dark:border-indigo-300 dark:bg-indigo-100 dark:text-indigo-900"
-    );
+    return "border-foreground/20 bg-secondary text-foreground";
   }
 
   if (normalized === "relationships") {
-    return cn(
-      "border-rose-200 bg-rose-100 text-rose-700",
-      "dark:border-rose-300 dark:bg-rose-100 dark:text-rose-900"
-    );
+    return "border-primary/35 bg-primary/10 text-primary";
   }
 
   if (normalized === "health") {
-    return cn(
-      "border-emerald-200 bg-emerald-100 text-emerald-700",
-      "dark:border-emerald-300 dark:bg-emerald-100 dark:text-emerald-900"
-    );
+    return "border-[color:var(--gm-gain)]/35 bg-[color:var(--gm-gain)]/10 text-[color:var(--gm-gain)]";
   }
 
   if (normalized === "career") {
-    return cn(
-      "border-violet-200 bg-violet-100 text-violet-700",
-      "dark:border-violet-300 dark:bg-violet-100 dark:text-violet-900"
-    );
+    return "border-primary/35 bg-primary/10 text-primary";
   }
 
-  return cn(
-    "border-slate-200 bg-slate-100 text-slate-700",
-    "dark:border-slate-300 dark:bg-slate-100 dark:text-slate-900"
-  );
+  return "border-border bg-muted text-muted-foreground";
 }
 
 export function getCategorySwatchColor(
@@ -282,12 +267,12 @@ export function getCategorySwatchColor(
   categories: GoalCategory[] = DEFAULT_GOAL_CATEGORIES
 ): string {
   if (selection === CATEGORY_CUSTOM_VALUE) {
-    return "#64748b";
+    return GAZETTEER_CATEGORY_COLORS.other;
   }
 
   const normalizedCatalog = normalizeCategoryCatalog(categories);
   const categoryLookup = buildLookup(normalizedCatalog);
-  return categoryLookup.get(selection)?.color ?? "#64748b";
+  return categoryLookup.get(selection)?.color ?? GAZETTEER_CATEGORY_COLORS.other;
 }
 
 export async function fetchGoalCategories(
@@ -307,7 +292,7 @@ export async function fetchGoalCategories(
       key: row.key,
       label: row.label,
       aliases: row.aliases ?? [],
-      color: row.color ?? "#64748b",
+      color: row.color ?? GAZETTEER_CATEGORY_COLORS.other,
       sortOrder: row.sort_order,
     }))
   );

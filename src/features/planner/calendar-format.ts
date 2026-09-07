@@ -206,15 +206,15 @@ export function getEntryDraftPillClasses(input: {
   draftDiffKind: PlannerDraftVisualKind | null;
 }) {
   if (input.draftDiffKind === "moved_from") {
-    return "border-amber-300 bg-amber-100 text-amber-950 dark:border-amber-300 dark:bg-amber-100 dark:text-amber-950";
+    return "border-amber-700/40 bg-amber-50 text-amber-950";
   }
   if (input.draftDiffKind === "moved_to") {
-    return "border-sky-300 bg-sky-100 text-sky-950 dark:border-sky-300 dark:bg-sky-100 dark:text-sky-950";
+    return "border-primary/40 bg-primary/10 text-foreground";
   }
   if (input.draftDiffKind === "new") {
-    return "border-violet-300 bg-violet-100 text-violet-950 dark:border-violet-300 dark:bg-violet-100 dark:text-violet-950";
+    return "border-primary/50 bg-secondary text-foreground";
   }
-  return "border text-foreground";
+  return "border-border text-foreground";
 }
 
 export function entryDisplayRank(entry: {

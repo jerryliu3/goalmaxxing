@@ -89,7 +89,7 @@ function CoachGoalDraftProposal({
   );
   if (proposal.creationStatus === "created" || draftState?.status === "created") {
     return (
-      <p className="mt-2 rounded border border-emerald-300 bg-emerald-50 p-2 text-xs text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100">
+      <p className="mt-2 rounded border border-primary/35 bg-primary/10 p-2 text-xs text-foreground">
         Goals created. This action is not undoable here; edit or delete them from
         Goals.
       </p>
@@ -277,7 +277,7 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
     <div className="rounded-xl border bg-card p-4 shadow-sm">
       <div className="mb-2 flex items-center gap-2">
         <h3 className="text-base font-semibold">AI Coach</h3>
-        <Badge className="border-sky-300 bg-sky-100 text-sky-900 dark:border-sky-400 dark:bg-sky-900/40 dark:text-sky-100">
+        <Badge className="border-primary/40 bg-primary/10 text-primary">
           Beta
         </Badge>
       </div>
