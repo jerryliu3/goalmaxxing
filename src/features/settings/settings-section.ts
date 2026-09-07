@@ -3,6 +3,7 @@ export const SETTINGS_SECTIONS = [
   "notifications",
   "integrations",
   "onboarding",
+  "appearance",
   "report-issue",
 ] as const;
 
@@ -32,7 +33,10 @@ export const SETTINGS_GROUPS: Array<{
   {
     key: "account",
     label: "Account",
-    items: [{ key: "report-issue", label: "Report an issue" }],
+    items: [
+      { key: "appearance", label: "Appearance" },
+      { key: "report-issue", label: "Report an issue" },
+    ],
   },
 ];
 
@@ -44,6 +48,7 @@ export function resolveSettingsSection(
     value === "notifications" ||
     value === "integrations" ||
     value === "onboarding" ||
+    value === "appearance" ||
     value === "report-issue"
   ) {
     return value;

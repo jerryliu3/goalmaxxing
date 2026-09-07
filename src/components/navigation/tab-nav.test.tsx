@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { UiStyleProvider } from "@/components/brand/ui-style-provider";
 import { TabNav } from "@/components/navigation/tab-nav";
 
 let mockPathname = "/";
@@ -64,7 +65,7 @@ describe("TabNav", () => {
       "nav.settings"
     );
     expect(screen.getByRole("link", { name: /Community/i })).toHaveClass(
-      "text-primary"
+      "text-white"
     );
     expect(container.querySelectorAll("[data-motion='tab-nav-highlight']")).toHaveLength(1);
   });
@@ -87,8 +88,8 @@ describe("TabNav", () => {
   it("keeps the mobile nav bar 50% transparent so content shows through", () => {
     const { container } = render(<TabNav mobile />);
     const tabList = container.querySelector("ul");
-    expect(tabList).toHaveClass("bg-background/90");
-    expect(tabList).toHaveClass("supports-[backdrop-filter]:bg-background/80");
+    expect(tabList).toHaveClass("bg-background/50");
+    expect(tabList).toHaveClass("supports-[backdrop-filter]:bg-background/50");
     expect(tabList).not.toHaveClass("bg-background/10");
     expect(tabList).not.toHaveClass("bg-background/20");
     expect(tabList).not.toHaveClass("bg-background/25");
@@ -197,6 +198,20 @@ describe("TabNav", () => {
     );
     expect(screen.getByRole("link", { name: /Progress/i })).not.toHaveAttribute(
       "aria-current"
+    );
+  });
+
+  it("uses underline chrome when Gazetteer is selected", () => {
+    mockPathname = "/social";
+    render(
+      <UiStyleProvider initialStyleId="gazetteer">
+        <TabNav />
+      </UiStyleProvider>
+    );
+
+    expect(screen.getByRole("link", { name: /Community/i })).toHaveClass("text-primary");
+    expect(screen.getByRole("navigation", { name: "Main navigation" })).toHaveClass(
+      "border-b"
     );
   });
 });

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { NestCompletionMark } from "@/components/ui/nest-completion-mark";
+import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import { DateField } from "@/components/ui/date-field";
 import {
   Dialog,
@@ -287,7 +287,7 @@ export function PlannerTasksPanel({
                     {toggling ? (
                       <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
                     ) : (
-                      <NestCompletionMark
+                      <StyleCompletionMark
                         done={complete}
                         className={
                           complete

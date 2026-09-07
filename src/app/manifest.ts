@@ -9,8 +9,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/calendar",
     scope: "/",
     display: "standalone",
-    background_color: "#f3ead8",
-    theme_color: "#9A4F2C",
+    background_color: "#fafafa",
+    theme_color: "#2563eb",
     icons: [
       {
         src: "/cadence-icon.svg",

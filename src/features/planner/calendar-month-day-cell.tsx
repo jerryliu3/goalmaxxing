@@ -3,7 +3,7 @@
 import { format, parse } from "date-fns";
 import { Link2 } from "lucide-react";
 import type { ReactNode } from "react";
-import { NestCompletionMark } from "@/components/ui/nest-completion-mark";
+import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import { cn } from "@/lib/utils";
 import {
   PlannerDraggableEntry,
@@ -210,7 +210,7 @@ export function CalendarMonthDayCell<
               />
             ) : null}
             {credited ? (
-              <NestCompletionMark
+              <StyleCompletionMark
                 done
                 className="size-3 shrink-0 text-foreground"
                 label="Completed"
@@ -294,7 +294,7 @@ export function CalendarMonthDayCell<
                           }
                           aria-label={`${marker.goalTitle}. ${statusCopy}`}
                         >
-                          <NestCompletionMark done className="size-3 shrink-0" />
+                          <StyleCompletionMark done className="size-3 shrink-0" />
                           <span className="truncate">{marker.goalTitle}</span>
                         </div>
                       );
@@ -411,7 +411,7 @@ export function CalendarMonthDayCell<
                   }
                   aria-label={`${marker.goalTitle}. ${statusCopy}`}
                 >
-                  <NestCompletionMark done className="size-3 shrink-0" />
+                  <StyleCompletionMark done className="size-3 shrink-0" />
                   <span className="truncate">{marker.goalTitle}</span>
                   {partnerOwned ? (
                     <span className="sr-only">Partner marked this done.</span>

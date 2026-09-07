@@ -106,7 +106,7 @@ export function AppShell({
             initialScopePreference={initialDuoScopePreference}
           >
             <PublicProfileSheetProvider>
-              <div className="gm-gazetteer">
+              <div>
                 <div className="relative z-10 flex min-h-screen w-full justify-center bg-page px-4 py-4 sm:px-6 sm:py-6">
                   <div className="flex w-full max-w-6xl flex-col gap-4 md:gap-6">
                   <header

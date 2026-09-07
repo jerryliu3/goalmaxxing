@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { OnboardingGuidesSettings } from "@/features/onboarding/onboarding-guides-settings";
+import { AppearanceSettings } from "@/features/settings/appearance-settings";
 import { IntegrationsSettings } from "@/features/settings/integrations-settings";
 import { PlannerPreferencesSettings } from "@/features/settings/planner-preferences-settings";
 import { ReportIssueSettings } from "@/features/settings/report-issue-settings";
@@ -82,7 +83,9 @@ export function SettingsTab() {
           ? "Integrations"
           : settingsSection === "onboarding"
             ? "Onboarding guides"
-            : "Report an issue";
+            : settingsSection === "appearance"
+              ? "Appearance"
+              : "Report an issue";
   const settingsSectionDescription =
     settingsSection === "preferences"
       ? "Manage planner defaults for Plan."
@@ -92,7 +95,9 @@ export function SettingsTab() {
           ? "Connect Apple Health or Health Connect and opt into auto-complete."
           : settingsSection === "onboarding"
             ? "Replay the app intro and page guides."
-            : "Send product bugs or UX friction details directly to support.";
+            : settingsSection === "appearance"
+              ? "Choose a visual style for Goalmaxxing. Original is the default; more skins can be added here."
+              : "Send product bugs or UX friction details directly to support.";
 
   if (loading && !state.userId) {
     return (
@@ -246,6 +251,20 @@ export function SettingsTab() {
 
             {settingsSection === "onboarding" ? (
               <OnboardingGuidesSettings />
+            ) : null}
+
+            {settingsSection === "appearance" ? (
+              <Card className="shadow-sm">
+                <CardHeader>
+                  <CardTitle>Appearance</CardTitle>
+                  <CardDescription>
+                    Switch visual styles without changing layout or plan behavior.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AppearanceSettings />
+                </CardContent>
+              </Card>
             ) : null}
 
             {settingsSection === "integrations" ? (

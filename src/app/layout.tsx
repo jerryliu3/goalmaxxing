@@ -1,7 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Newsreader, Source_Sans_3 } from "next/font/google";
+import { cookies } from "next/headers";
+import { Geist, Geist_Mono, IBM_Plex_Mono, Newsreader, Source_Sans_3 } from "next/font/google";
 import { Toaster } from "sonner";
+import { UiStyleProvider } from "@/components/brand/ui-style-provider";
+import { getUiStyle, parseUiStyleId, UI_STYLE_COOKIE_NAME } from "@/lib/brand/ui-style";
 import "./globals.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 const newsreader = Newsreader({
   variable: "--font-newsreader",
@@ -49,26 +62,43 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = {
-  themeColor: "#9A4F2C",
-  viewportFit: "cover",
-  maximumScale: 1,
-  minimumScale: 1,
-  userScalable: false,
-};
+export async function generateViewport(): Promise<Viewport> {
+  const style = getUiStyle(
+    parseUiStyleId((await cookies()).get(UI_STYLE_COOKIE_NAME)?.value)
+  );
+  return {
+    themeColor: style.themeColor,
+    viewportFit: "cover",
+    maximumScale: 1,
+    minimumScale: 1,
+    userScalable: false,
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const style = getUiStyle(
+    parseUiStyleId((await cookies()).get(UI_STYLE_COOKIE_NAME)?.value)
+  );
+  const fontVariables = [
+    geistSans.variable,
+    geistMono.variable,
+    newsreader.variable,
+    sourceSans.variable,
+    plexMono.variable,
+  ].join(" ");
+
   return (
     <html
       lang="en"
-      className={`${newsreader.variable} ${sourceSans.variable} ${plexMono.variable} gm-gazetteer h-full antialiased`}
+      data-ui-style={style.id}
+      className={`${fontVariables} ${style.htmlClass} h-full antialiased`.trim()}
     >
-      <body className="gm-gazetteer min-h-full bg-background text-foreground flex flex-col">
-        {children}
+      <body className="min-h-full bg-background text-foreground flex flex-col">
+        <UiStyleProvider initialStyleId={style.id}>{children}</UiStyleProvider>
         <Toaster position="bottom-right" richColors />
       </body>
     </html>

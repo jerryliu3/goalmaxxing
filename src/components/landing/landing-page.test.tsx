@@ -20,6 +20,12 @@ function primaryCtaLinks() {
 }
 
 describe("LandingPage", () => {
+  it("exposes a visual style picker on marketing chrome", () => {
+    render(<LandingPage />);
+
+    expect(screen.getByRole("combobox", { name: "Visual style" })).toBeInTheDocument();
+  });
+
   it("places the climb chapter after Inside Goalmaxxing", () => {
     render(<LandingPage />);
 
@@ -37,7 +43,7 @@ describe("LandingPage", () => {
     expect(root.className).toMatch(/overflow-x-clip/);
   });
 
-  it("keeps filled stamp-rust CTAs instead of outline grey", () => {
+  it("keeps filled primary CTAs instead of outline grey", () => {
     render(<LandingPage />);
 
     for (const link of primaryCtaLinks()) {

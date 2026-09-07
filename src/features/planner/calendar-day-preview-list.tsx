@@ -2,7 +2,7 @@
 
 import { Link2 } from "lucide-react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
-import { NestCompletionMark } from "@/components/ui/nest-completion-mark";
+import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import {
   PlannerDraggablePreviewEntry,
 } from "@/features/planner/calendar-dnd";
@@ -258,7 +258,7 @@ export function CalendarDayPreviewList<
                 aria-label={detail ? `${marker.goalTitle}. ${detail}` : marker.goalTitle}
               >
                 {expanded ? (
-                  <NestCompletionMark done className="size-4 shrink-0" />
+                  <StyleCompletionMark done className="size-4 shrink-0" />
                 ) : null}
                 <div className="min-w-0">
                   <p
