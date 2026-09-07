@@ -114,6 +114,19 @@ export function getWorkPillFillStyle(color: string, credited = false, styleId?: 
   };
 }
 
+export function getMonthWorkFillStyle(credited: boolean) {
+  if (!credited) {
+    return {
+      backgroundColor: "transparent",
+      borderColor: "var(--border)",
+    };
+  }
+  return {
+    backgroundColor: "color-mix(in oklch, var(--primary) 22%, transparent)",
+    borderColor: "var(--primary)",
+  };
+}
+
 export function getGoalVisual(input: GoalVisualInput, styleId?: UiStyleId): GoalVisual {
   const hash = stableHash(input.goalId);
   const categoryColor = resolveCategorySwatchColor(input.category);

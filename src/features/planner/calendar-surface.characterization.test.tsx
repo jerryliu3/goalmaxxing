@@ -896,6 +896,7 @@ describe("CalendarSurface characterization", () => {
       expect(dayPanel.textContent ?? "").toContain("Tempo run 4x800");
       expect(dayPanel.textContent ?? "").not.toContain("07:30 Goal B");
     });
+    expect(document.querySelector("[data-rolling-week-grid='cells']")).toBeNull();
   });
 
   it("suppresses default milestone label duplication in month preview and event dialog", async () => {

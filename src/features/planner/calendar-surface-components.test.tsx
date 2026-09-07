@@ -225,7 +225,7 @@ describe("calendar surface extracted components", () => {
     expect(screen.getByText("Partner marked this done.")).toBeInTheDocument();
   });
 
-  it("shows overflow as +N and a completed mark instead of a category chip", () => {
+  it("shows overflow as +N without a completed mark on month cells", () => {
     const view = renderWithDnd(
       <CalendarMonthDayCell
         day="2026-08-06"
@@ -259,7 +259,8 @@ describe("calendar surface extracted components", () => {
     );
 
     expect(within(view.container).getByText("+1")).toBeInTheDocument();
-    expect(within(view.container).getByLabelText("Completed")).toBeInTheDocument();
+    expect(within(view.container).getByText("Easy run")).toHaveClass("line-through");
+    expect(within(view.container).queryByLabelText("Completed")).not.toBeInTheDocument();
     expect(
       within(view.container).queryByRole("button", { name: "Mark session done" })
     ).not.toBeInTheDocument();
@@ -283,7 +284,7 @@ describe("calendar surface extracted components", () => {
           completionFactMarkersForDay={[]}
           isAnyEntryDragging={false}
           getEntryDisplayTitle={(entry) => entry.label ?? "Untitled"}
-          isEntryCredited={() => false}
+          isEntryCredited={() => true}
           isEntryImmovableForDraft={() => false}
           onEntryClick={() => {}}
           onCellClick={onCellClick}
@@ -302,7 +303,13 @@ describe("calendar surface extracted components", () => {
 
     expect(screen.getByText("Thu")).toBeInTheDocument();
     expect(screen.getByText("6")).toBeInTheDocument();
-    expect(screen.getByText("Easy run")).toBeInTheDocument();
+    expect(screen.getByText("Easy run")).toHaveClass("line-through");
+    expect(
+      screen
+        .getByLabelText("Completed")
+        .compareDocumentPosition(screen.getByText("Easy run")) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
     expect(
       screen.queryByRole("button", { name: "Mark session done" })
     ).not.toBeInTheDocument();

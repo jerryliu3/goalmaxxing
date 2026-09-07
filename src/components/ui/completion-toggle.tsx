@@ -30,6 +30,7 @@ interface CompletionToggleProps
   completed: boolean;
   pending?: boolean;
   size?: keyof typeof sizeClasses;
+  chrome?: "button" | "plain";
   onClick?: CompletionToggleClickHandler;
 }
 
@@ -37,6 +38,7 @@ export function CompletionToggle({
   completed,
   pending = false,
   size = "md",
+  chrome = "button",
   className,
   onClick,
   ...props
@@ -108,8 +110,11 @@ export function CompletionToggle({
       data-motion="completion-toggle"
       aria-busy={pending || undefined}
       className={cn(
-        "group relative isolate flex shrink-0 touch-manipulation items-center justify-center border border-border bg-background shadow-sm transition-[transform,box-shadow,background-color,border-color] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-0.5 active:scale-[0.94] active:shadow-none disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transform-none motion-reduce:transition-none",
-        style.completionMark === "nest" ? "rounded-md" : "rounded-full",
+        "group relative isolate flex shrink-0 touch-manipulation items-center justify-center transition-[transform,box-shadow,background-color,border-color] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transform-none motion-reduce:transition-none",
+        chrome === "button" &&
+          "border border-border bg-background shadow-sm hover:border-primary hover:bg-primary/5 active:translate-y-0.5 active:scale-[0.94] active:shadow-none",
+        chrome === "plain" && "border-0 bg-transparent shadow-none hover:opacity-80",
+        chrome === "button" && (style.completionMark === "nest" ? "rounded-md" : "rounded-full"),
         classes.button,
         className
       )}

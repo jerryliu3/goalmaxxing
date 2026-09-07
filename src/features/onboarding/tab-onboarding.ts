@@ -20,7 +20,7 @@ export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]>
     {
       title: "Plan views",
       description:
-        "Switch Week, Month, and Day here. Day is the checklist for the selected date.",
+        "Switch Day, Week, and Month here. Day is the checklist for the selected date.",
       target: "planner.calendar.controls",
     },
     {

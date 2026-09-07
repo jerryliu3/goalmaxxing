@@ -20,9 +20,9 @@ const PLANNER_VIEW_MODES: ReadonlyArray<{
   value: PlannerCalendarViewMode;
   label: string;
 }> = [
+  { value: "day", label: "Day" },
   { value: "week", label: "Week" },
   { value: "month", label: "Month" },
-  { value: "day", label: "Day" },
 ];
 
 interface PlannerCalendarToolbarProps {
