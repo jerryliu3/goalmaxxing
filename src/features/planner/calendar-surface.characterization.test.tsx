@@ -897,6 +897,7 @@ describe("CalendarSurface characterization", () => {
       expect(dayPanel.textContent ?? "").not.toContain("07:30 Goal B");
     });
     expect(document.querySelector("[data-rolling-week-grid='cells']")).toBeNull();
+    expect(dayPanel).toHaveStyle({ viewTransitionName: "plan-day-2026-08-31" });
   });
 
   it("suppresses default milestone label duplication in month preview and event dialog", async () => {

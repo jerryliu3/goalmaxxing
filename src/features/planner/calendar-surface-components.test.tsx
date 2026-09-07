@@ -87,6 +87,9 @@ describe("calendar surface extracted components", () => {
     expect(screen.getByText("Easy run")).toBeInTheDocument();
     expect(screen.getByText("Stretch")).toBeInTheDocument();
     expect(
+      screen.getByRole("button", { name: /thursday, august 6/i })
+    ).toHaveStyle({ viewTransitionName: "plan-day-2026-08-06" });
+    expect(
       screen.queryByRole("button", { name: "Mark session done" })
     ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /thursday, august 6/i })).not.toHaveAttribute(
@@ -304,6 +307,9 @@ describe("calendar surface extracted components", () => {
     expect(screen.getByText("Thu")).toBeInTheDocument();
     expect(screen.getByText("6")).toBeInTheDocument();
     expect(screen.getByText("Easy run")).toHaveClass("line-through");
+    expect(document.querySelector('[data-calendar-week-row="true"]')).toHaveStyle({
+      viewTransitionName: "plan-day-2026-08-06",
+    });
     expect(
       screen
         .getByLabelText("Completed")

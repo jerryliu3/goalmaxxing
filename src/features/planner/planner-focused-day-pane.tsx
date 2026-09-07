@@ -12,6 +12,7 @@ import type {
 import { PlanDayUnplannedPanel } from "@/features/planner/plan-day-unplanned-panel";
 import { PlannerDayEntriesPanel } from "@/features/planner/planner-day-entries-panel";
 import { PlannerTasksPanel } from "@/features/tasks/planner-tasks-panel";
+import { planDayViewTransitionName } from "@/features/planner/plan-view-transition";
 
 interface PlannerFocusedDayPaneProps {
   day: string;
@@ -31,6 +32,7 @@ interface PlannerFocusedDayPaneProps {
   onEntryPointerEnd: () => void;
   showTasksInsteadOfGoals?: boolean;
   titleAs?: "h2" | "p";
+  shareDayTransition?: boolean;
 }
 
 export function PlannerFocusedDayPane({
@@ -47,10 +49,19 @@ export function PlannerFocusedDayPane({
   onEntryPointerEnd,
   showTasksInsteadOfGoals = false,
   titleAs = "p",
+  shareDayTransition = false,
 }: PlannerFocusedDayPaneProps) {
   const TitleTag = titleAs;
   return (
-    <div className="space-y-3" data-testid="plan-day-pane">
+    <div
+      className="space-y-3"
+      data-testid="plan-day-pane"
+      style={
+        shareDayTransition
+          ? { viewTransitionName: planDayViewTransitionName(day) }
+          : undefined
+      }
+    >
       <div className="border-b border-border pb-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           Day
