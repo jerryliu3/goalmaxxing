@@ -44,6 +44,9 @@ jobs:
       - name: Run unit tests
         run: pnpm test
 
+      - name: Build production application
+        run: pnpm build
+
       - name: Run timezone process matrix
         run: pnpm test:tz
 
