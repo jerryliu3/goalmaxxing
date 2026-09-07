@@ -23,6 +23,7 @@ import { PlannerDayPreviewPopover } from "@/features/planner/planner-day-preview
 import { PlanDayUnplannedPanel } from "@/features/planner/plan-day-unplanned-panel";
 import { PlannerViewWindowHeader } from "@/features/planner/planner-view-window-header";
 import { PlannerTasksPanel } from "@/features/tasks/planner-tasks-panel";
+import { PlannerPartnerWeekDayCell } from "@/features/planner/planner-partner-week-cell";
 
 const SEVEN_COLUMN_GRID_STYLE = {
   gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
@@ -80,6 +81,10 @@ export interface PlannerCalendarBoardProps {
   cells: PlannerCalendarCell[];
   renderCalendarDayCell: (cell: PlannerCalendarCell) => ReactNode;
   focusedWeekCells: PlannerCalendarCell[];
+  partnerWeekBoard?: {
+    label: string;
+    getMarkersForDay: (day: string) => PlannerCompletionFactMarker[];
+  } | null;
   dayPreview: DayPreviewState | null;
   dayPreviewRef: MutableRefObject<HTMLDivElement | null>;
   previewDayEntries: PlannerDayDetailEntry[];
@@ -137,6 +142,7 @@ export function PlannerCalendarBoard({
   cells,
   renderCalendarDayCell,
   focusedWeekCells,
+  partnerWeekBoard = null,
   dayPreview,
   dayPreviewRef,
   previewDayEntries,
@@ -267,6 +273,47 @@ export function PlannerCalendarBoard({
                         {cells.map(renderCalendarDayCell)}
                       </div>
                     </div>
+                  </div>
+                ) : viewMode === "week" && partnerWeekBoard ? (
+                  <div
+                    className="grid gap-4 md:grid-cols-2"
+                    data-testid="duo-week-board"
+                  >
+                    <section className="space-y-2">
+                      <h2 className="text-sm font-medium">You</h2>
+                      <div className="grid min-w-[calc(7*((100%-1rem)/3))] grid-cols-[repeat(7,minmax(0,calc((100%-1rem)/3)))] gap-2 text-center text-xs text-muted-foreground md:min-w-0 md:grid-cols-7">
+                        {weekdayLabels.map((weekday) => (
+                          <span key={`viewer-${weekday}`}>{weekday}</span>
+                        ))}
+                      </div>
+                      <div className="grid min-w-[calc(7*((100%-1rem)/3))] grid-cols-[repeat(7,minmax(0,calc((100%-1rem)/3)))] gap-2 md:min-w-0 md:grid-cols-7">
+                        {focusedWeekCells.map(renderCalendarDayCell)}
+                      </div>
+                    </section>
+                    <section className="space-y-2">
+                      <div className="flex min-h-6 items-center gap-2">
+                        <h2 className="text-sm font-medium">{partnerWeekBoard.label}</h2>
+                        <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                          View only
+                        </span>
+                      </div>
+                      <div className="grid min-w-[calc(7*((100%-1rem)/3))] grid-cols-[repeat(7,minmax(0,calc((100%-1rem)/3)))] gap-2 text-center text-xs text-muted-foreground md:min-w-0 md:grid-cols-7">
+                        {weekdayLabels.map((weekday) => (
+                          <span key={`partner-${weekday}`}>{weekday}</span>
+                        ))}
+                      </div>
+                      <div className="grid min-w-[calc(7*((100%-1rem)/3))] grid-cols-[repeat(7,minmax(0,calc((100%-1rem)/3)))] gap-2 md:min-w-0 md:grid-cols-7">
+                        {focusedWeekCells.map((cell) => (
+                          <PlannerPartnerWeekDayCell
+                            key={`partner-week-${cell.date}`}
+                            day={cell.date}
+                            inMonth={cell.inMonth}
+                            isToday={cell.date === asOfDate}
+                            markers={partnerWeekBoard.getMarkersForDay(cell.date)}
+                          />
+                        ))}
+                      </div>
+                    </section>
                   </div>
                 ) : (
                   <>

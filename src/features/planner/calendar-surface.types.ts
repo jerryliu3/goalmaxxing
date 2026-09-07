@@ -80,6 +80,7 @@ export interface CalendarSurfaceProps {
   duoScope?: "me" | "partner" | "both";
   partnerCompletionMarkersByDate?: Map<string, PlannerCompletionFactMarker[]>;
   partnerOverlayError?: string | null;
+  partnerWeekLabel?: string | null;
 }
 
 export type CoachMessageRole = "user" | "assistant";
