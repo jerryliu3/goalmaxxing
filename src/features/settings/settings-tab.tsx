@@ -5,20 +5,11 @@ import {
   ChevronRight,
   LogOut,
 } from "lucide-react";
-import type { PlannerPrimaryTabPreference } from "@cadence/shared/navigation/tabs";
 import { useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingCard } from "@/components/ui/loading-card";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -32,20 +23,13 @@ import { PlannerPreferencesSettings } from "@/features/settings/planner-preferen
 import { ReportIssueSettings } from "@/features/settings/report-issue-settings";
 import {
   resolveSettingsSection,
+  SETTINGS_GROUPS,
   type SettingsSection,
 } from "@/features/settings/settings-section";
 import { NotificationsSection } from "@/features/social/notifications-section";
 import { ProfileSection } from "@/features/social/profile-section";
 import { useSocialTabData } from "@/features/social/use-social-tab-data";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
-
-const SETTINGS_SECTION_ITEMS: { key: SettingsSection; label: string }[] = [
-  { key: "preferences", label: "Preferences" },
-  { key: "notifications", label: "Notifications" },
-  { key: "integrations", label: "Integrations" },
-  { key: "onboarding", label: "Onboarding guides" },
-  { key: "report-issue", label: "Report an issue" },
-];
 
 export function SettingsTab() {
   const {
@@ -101,7 +85,7 @@ export function SettingsTab() {
             : "Report an issue";
   const settingsSectionDescription =
     settingsSection === "preferences"
-      ? "Manage planner defaults and checklist/calendar ordering."
+      ? "Manage planner defaults for Plan."
       : settingsSection === "notifications"
         ? "Configure push access and reminder schedules."
         : settingsSection === "integrations"
@@ -113,7 +97,7 @@ export function SettingsTab() {
   if (loading && !state.userId) {
     return (
       <LoadingCard
-        title="Loading settings..."
+        title="Loading You..."
         description="Syncing your profile, notifications, and collaboration settings."
       />
     );
@@ -133,39 +117,40 @@ export function SettingsTab() {
         onUploadAvatar={uploadProfileAvatarFile}
       />
 
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Settings</CardTitle>
-          <CardDescription>
-            Manage preferences, notifications, integrations, and support options.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-0 p-0">
-          {SETTINGS_SECTION_ITEMS.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              className="flex w-full items-center justify-between border-t px-4 py-3 text-left text-base font-medium transition-colors hover:bg-muted/30 first:border-t-0"
-              onClick={() => writeSettingsSection(item.key)}
-            >
-              <span>{item.label}</span>
-              <ChevronRight className="size-4 text-muted-foreground" />
-            </button>
-          ))}
-          <div className="border-t p-4">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => void signOut()}
-              disabled={signingOut}
-            >
-              <LogOut className="size-4" />
-              {signingOut ? "Signing out..." : "Sign out"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {SETTINGS_GROUPS.map((group) => (
+        <Card key={group.key} className="shadow-sm">
+          <CardHeader>
+            <CardTitle>{group.label}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-0 p-0">
+            {group.items.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className="flex w-full items-center justify-between border-t px-4 py-3 text-left text-base font-medium transition-colors hover:bg-muted/30 first:border-t-0"
+                onClick={() => writeSettingsSection(item.key)}
+              >
+                <span>{item.label}</span>
+                <ChevronRight className="size-4 text-muted-foreground" />
+              </button>
+            ))}
+            {group.key === "account" ? (
+              <div className="border-t p-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void signOut()}
+                  disabled={signingOut}
+                >
+                  <LogOut className="size-4" />
+                  {signingOut ? "Signing out..." : "Sign out"}
+                </Button>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      ))}
 
       <Dialog
         modal={false}
@@ -201,7 +186,7 @@ export function SettingsTab() {
                 <CardHeader>
                   <CardTitle>Preferences</CardTitle>
                   <CardDescription>
-                    Manage planner defaults and checklist/calendar ordering.
+                    Manage planner defaults for Plan.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -211,36 +196,11 @@ export function SettingsTab() {
                     disabled={plannerPreferencesLoading || saving}
                   />
                   <div className="mt-4 space-y-3 border-t pt-4">
-                    <div className="space-y-1">
-                      <Label htmlFor="preferences-planner-primary-tab">
-                        Primary planner tab
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        Choose whether Checklist or Calendar appears first in planner navigation.
-                      </p>
-                    </div>
-                    <Select
-                      value={profileDraft.planner_primary_tab}
-                      onValueChange={(value: PlannerPrimaryTabPreference) =>
-                        setProfileDraft((prev) => ({ ...prev, planner_primary_tab: value }))
-                      }
-                    >
-                      <SelectTrigger
-                        id="preferences-planner-primary-tab"
-                        className="w-full sm:w-72"
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="checklist">Checklist first</SelectItem>
-                        <SelectItem value="calendar">Calendar first</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <div className="space-y-2 border-t pt-3">
+                    <div className="space-y-2">
                       <div className="space-y-1">
                         <p className="text-sm font-medium">Privacy</p>
                         <p className="text-xs text-muted-foreground">
-                          Control whether your social activity appears in feeds and leaderboards.
+                          Control whether your social activity appears in leaderboards.
                         </p>
                       </div>
                       <label className="flex items-start gap-3 text-sm">
@@ -258,7 +218,7 @@ export function SettingsTab() {
                         <span>
                           Social activity enabled
                           <span className="block text-xs text-muted-foreground">
-                            Turn off to hide your activity from social feed and leaderboard listings.
+                            Turn off to hide your activity from leaderboard listings.
                           </span>
                         </span>
                       </label>

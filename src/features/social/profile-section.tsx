@@ -51,8 +51,16 @@ export function ProfileSection({
   return (
     <Card className="overflow-visible shadow-sm">
       <CardHeader>
-        <CardTitle>Account profile</CardTitle>
-        <CardDescription>Username is used for sharing and invites.</CardDescription>
+        <CardTitle>
+          {profileDraft.display_name.trim() ||
+            profile?.display_name ||
+            "You"}
+        </CardTitle>
+        <CardDescription>
+          {profileDraft.username.trim()
+            ? `@${profileDraft.username.trim()}`
+            : "Username is used for sharing and invites."}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-3">
