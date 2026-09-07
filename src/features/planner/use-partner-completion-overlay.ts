@@ -91,8 +91,6 @@ export function usePartnerCompletionOverlay({
             goals,
           })
         );
-        setMarkersPartnerId(partnerId);
-        setMarkersMonth(month);
         setError(null);
       } catch (caught) {
         if (cancelled || isProgressContextAuthenticationError(caught)) {

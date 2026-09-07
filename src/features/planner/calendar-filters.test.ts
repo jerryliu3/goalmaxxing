@@ -108,6 +108,28 @@ describe("calendar filters", () => {
     ]);
   });
 
+  it("excludes partner markers when category or end-month metadata does not match", () => {
+    const partnerMarker = {
+      key: "partner-marker",
+      originalGoalId: "partner-goal",
+      unitKey: "partner-fact",
+      goalTitle: "Partner goal",
+      goalCategory: "Health",
+      goalEndDate: "2026-09-30",
+      scheduledDate: "2026-08-15",
+      owner: "partner" as const,
+    };
+
+    expect(
+      applyCalendarCompletionMarkerFilters({
+        viewerMarkers: [],
+        partnerMarkers: [partnerMarker],
+        goalPassesFilters: (_goalId, goal) =>
+          goal?.category === "Personal" && goal.end_date === "2026-08-31",
+      })
+    ).toEqual([]);
+  });
+
   it("normalizes search query text for case-insensitive substring matching", () => {
     expect(normalizeCalendarSearchQuery("  Tempo Run  ")).toBe("tempo run");
   });
