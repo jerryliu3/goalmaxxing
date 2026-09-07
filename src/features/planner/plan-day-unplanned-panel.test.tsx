@@ -1,6 +1,8 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlanDayUnplannedPanel } from "@/features/planner/plan-day-unplanned-panel";
+import { buildGoal } from "@/lib/goals/goal-test-fixtures";
+import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 
 vi.mock("@/features/today/use-checklist-data", () => ({
   useChecklistData: () => ({
@@ -33,23 +35,42 @@ describe("PlanDayUnplannedPanel", () => {
     cleanup();
   });
 
-  it("keeps unplanned work collapsed until Unplanned is expanded", () => {
+  it("shows active goals that are not already planned for the day", () => {
     render(
       <PlanDayUnplannedPanel day="2026-09-06" placedEntries={[]} />
     );
 
-    expect(screen.getByRole("button", { name: "Unplanned" })).toHaveAttribute(
-      "aria-expanded",
-      "false"
-    );
-    expect(screen.queryByText("Nothing unplanned for this day.")).toBeNull();
-
-    fireEvent.click(screen.getByRole("button", { name: "Unplanned" }));
-
-    expect(screen.getByRole("button", { name: "Unplanned" })).toHaveAttribute(
-      "aria-expanded",
-      "true"
-    );
     expect(screen.getByText("Nothing unplanned for this day.")).toBeInTheDocument();
+  });
+
+  it("hides the completion checkbox for unplanned goals on a future day", () => {
+    const goal = buildGoal({ id: "goal-run", title: "Run" });
+    render(
+      <PlanDayUnplannedPanel
+        day="2026-09-10"
+        placedEntries={[]}
+        checklist={
+          {
+            loading: false,
+            todayLocalDate: "2026-09-06",
+            visibleGoalIds: null,
+            data: { goals: [goal] },
+            listModel: {
+              completableGoals: [goal],
+              presentationByGoalId: new Map([
+                ["goal-run", { exactDateCompleted: false }],
+              ]),
+            },
+            savingGoalId: null,
+            toggleCompletion: vi.fn(),
+          } as unknown as PlanDayChecklistModel
+        }
+      />
+    );
+
+    expect(screen.getByText("Run")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /mark run done/i })
+    ).not.toBeInTheDocument();
   });
 });

@@ -16,7 +16,7 @@ const TAB_BY_KEY: Record<AppTabKey, AppTabDefinition> = {
   calendar: { key: "calendar", href: "/calendar", label: "Plan" },
   insights: { key: "insights", href: "/insights", label: "Progress" },
   social: { key: "social", href: "/social", label: "Community" },
-  settings: { key: "settings", href: "/settings", label: "You" },
+  settings: { key: "settings", href: "/settings", label: "Profile" },
 };
 
 export const DEFAULT_PLANNER_PRIMARY_TAB_PREFERENCE: PlannerPrimaryTabPreference =

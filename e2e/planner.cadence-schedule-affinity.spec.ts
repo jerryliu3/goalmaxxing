@@ -250,7 +250,7 @@ test.describe("cadence schedule-affinity", () => {
           payload.desiredFactState === "present"
         );
       }),
-      completeButton.click(),
+      completeButton.click({ delay: 550 }),
     ]);
     const payload = completionRequest.postDataJSON() as {
       date: string;

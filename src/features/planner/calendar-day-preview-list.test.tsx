@@ -51,4 +51,48 @@ describe("CalendarDayPreviewList", () => {
     expect(screen.queryByText("Marked done.")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Read")).toBeInTheDocument();
   });
+
+  it("hides the completion checkbox when the session cannot be marked done", () => {
+    renderWithDnd(
+      <CalendarDayPreviewList
+        day="2026-08-20"
+        entries={[
+          {
+            key: "goal-1:unit-1",
+            originalGoalId: "goal-1",
+            goalTitle: "Run",
+            unitKey: "unit-1",
+            label: null,
+            classification: "future",
+            creditState: "uncredited",
+            activeGoal: { color: "#10b981", category: "health" },
+            activeItem: { id: "item-1" },
+            draftDiffKind: null,
+            draftDiffFromDate: null,
+            draftDiffToDate: null,
+            draftGhost: false,
+          },
+        ]}
+        completionFactMarkers={[]}
+        mutationLoading={false}
+        getEntryDisplayTitle={(entry) => entry.goalTitle ?? "Untitled"}
+        getEntrySubtitle={() => null}
+        isEntryCredited={() => false}
+        isEntryImmovableForDraft={() => false}
+        getCompletionToggleState={() => ({
+          currentlyCredited: false,
+          disabledReasonCopy: "You can only mark planner sessions done for today or past dates.",
+        })}
+        onEntryOpen={vi.fn()}
+        onToggleCompletion={vi.fn()}
+        onEntryPointerStart={vi.fn()}
+        onEntryPointerEnd={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Run")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Mark session done" })
+    ).not.toBeInTheDocument();
+  });
 });

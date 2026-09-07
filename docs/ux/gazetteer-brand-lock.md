@@ -1,7 +1,7 @@
 # Visual styles (production)
 
 Status: **Original is the default visual style.** Gazetteer is an opt-in
-skin. Spatial Plan (B) remains the IA: Plan · Progress · Community · You.
+skin. Spatial Plan (B) remains the IA: Plan · Progress · Community · Profile.
 
 Date locked: 5 September 2026. Style switcher: September 2026.
 
@@ -35,11 +35,12 @@ applied only when Gazetteer is selected.
 | Walnut ink | `#241C14` | Titles and body |
 | Muted | `#7A6A56` / `#5C4E3F` | Meta |
 | Rule gold | `#D4C4A4` | Hairlines |
-| Stamp rust | `#9A4F2C` | Identity: Nest, numerals, heatmap level 3 |
-| Stamp rust light | `#C88968` | Heatmap level 2, today |
-| Adjacent months | `#E4E4E7` / `#3F3F46` | Shared with Original previous- and next-month tiles |
-| Sage / oxidized copper | `#6F8175` | Selected-day chrome (not adjacent months) |
-| Sage level 1 | `color-mix` of sage 28% onto paper | Selected day fill |
+| Stamp rust | `#9A4F2C` | Identity: Nest, numerals, heatmap level 3, selected-day outline |
+| Stamp rust light | `#C88968` | Heatmap level 2 |
+| Adjacent months | `#D4D4D8` / `#52525B` | Opaque Zinc 300 / 600 — one layer darker than Original so the same grey reads on warm paper |
+| Secondary | `#E4E4E7` / `#3F3F46` | Zinc 200 / 700 — badges and secondary buttons |
+| Sage / oxidized copper | `#6F8175` | Selected work-row wash (not the selected-day outline) |
+| Sage level 1 | `color-mix` of sage 28% onto paper | Selected work-row fill |
 | Work pills | Opaque pastels mixed onto paper | Session chips; same fill in every month |
 | Gutter green | `#4A6740` | Rise / gain only |
 | Warning | `#EAB308` | Shared yellow on Original and Gazetteer; never rust |

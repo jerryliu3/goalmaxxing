@@ -12,7 +12,7 @@ import {
   getPlannerCompletionControlDisabledReason,
   resolvePlannerEntryCompletionIntent,
 } from "@/lib/planner/completion-intent";
-import type { CompletionDispatchDecision } from "@/lib/planner/completion-dispatch";
+import { resolveSelectedDateState } from "@/lib/dates/day";
 
 export interface DateFactDispatchForEntry {
   currentlyCredited: boolean;
@@ -107,6 +107,48 @@ export function getCompletionControlState({
   return controlState;
 }
 
+export function isCompletionClosedForDate(
+  selectedDate: string,
+  asOfDate: string | null
+) {
+  if (!asOfDate) {
+    return false;
+  }
+  return resolveSelectedDateState(selectedDate, asOfDate) === "future";
+}
+
+export function planCompletionControlMode(state: {
+  currentlyCredited: boolean;
+  disabledReasonCopy: string | null;
+}): "toggle" | "done" | "hidden" {
+  if (state.disabledReasonCopy) {
+    return state.currentlyCredited ? "done" : "hidden";
+  }
+  return "toggle";
+}
+
+export function planCompletionControlModeForDate({
+  currentlyCredited,
+  selectedDate,
+  asOfDate,
+  extraDisabledReason = null,
+}: {
+  currentlyCredited: boolean;
+  selectedDate: string;
+  asOfDate: string | null;
+  extraDisabledReason?: string | null;
+}): "toggle" | "done" | "hidden" {
+  const disabledReasonCopy =
+    extraDisabledReason ??
+    (isCompletionClosedForDate(selectedDate, asOfDate)
+      ? "You can only mark this done for today or past dates."
+      : null);
+  return planCompletionControlMode({
+    currentlyCredited,
+    disabledReasonCopy,
+  });
+}
+
 export function getPlannerCompletionTogglePresentation({
   entry,
   selectedDay,
@@ -133,7 +175,9 @@ export function getPlannerCompletionTogglePresentation({
   if (isPlannerTaskCalendarEntry(entry)) {
     return {
       currentlyCredited,
-      disabledReasonCopy: null,
+      disabledReasonCopy: isCompletionClosedForDate(selectedDay, asOfDate)
+        ? "You can only mark this done for today or past dates."
+        : null,
     };
   }
   const completionState = getCompletionControlState({

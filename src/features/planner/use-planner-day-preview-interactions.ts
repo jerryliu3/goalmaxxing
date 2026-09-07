@@ -15,7 +15,7 @@ import { computeDayPreviewPosition } from "@/features/planner/day-preview-popup"
 import { useOutsidePointerDismiss } from "@/lib/ui/use-outside-pointer-dismiss";
 
 const DAY_PREVIEW_HOVER_DELAY_MS = 1000;
-const DAY_PREVIEW_CLOSE_DELAY_MS = 250;
+export const DAY_PREVIEW_HOVER_GRACE_MS = 300;
 const DAY_PREVIEW_LONG_PRESS_DELAY_MS = 500;
 
 interface UsePlannerDayPreviewInteractionsArgs {
@@ -63,6 +63,18 @@ export interface PlannerDayPreviewInteractions {
   longPressTriggeredRef: MutableRefObject<boolean>;
   lastTouchTapRef: MutableRefObject<{ day: string; at: number } | null>;
   suppressDayCellClickRef: MutableRefObject<{ day: string; active: boolean } | null>;
+}
+
+export function isHoverPreviewKeepAliveTarget(
+  target: Element,
+  day: string,
+  popup: HTMLElement | null
+) {
+  if (popup?.contains(target)) {
+    return true;
+  }
+  const origin = target.closest("[data-day]");
+  return origin instanceof HTMLElement && origin.dataset.day === day;
 }
 
 export function usePlannerDayPreviewInteractions({
@@ -188,8 +200,11 @@ export function usePlannerDayPreviewInteractions({
 
   const scheduleHoverPreviewClose = useCallback(
     (day: string) => {
-      clearHoverPreviewCloseTimer();
+      if (hoverPreviewCloseTimerRef.current) {
+        return;
+      }
       hoverPreviewCloseTimerRef.current = window.setTimeout(() => {
+        hoverPreviewCloseTimerRef.current = null;
         setDayPreview((current) => {
           if (!current || current.pinned || current.day !== day) {
             return current;
@@ -199,14 +214,17 @@ export function usePlannerDayPreviewInteractions({
           }
           return null;
         });
-      }, DAY_PREVIEW_CLOSE_DELAY_MS);
+      }, DAY_PREVIEW_HOVER_GRACE_MS);
     },
-    [clearHoverPreviewCloseTimer, hoverPreviewCloseTimerRef, pointerInsideDayPreviewRef, setDayPreview]
+    [hoverPreviewCloseTimerRef, pointerInsideDayPreviewRef, setDayPreview]
   );
 
   const scheduleHoverPreview = useCallback(
     (day: string, target: EventTarget & HTMLElement) => {
       if (dayPreview?.pinned || pointerPressActiveRef.current) {
+        return;
+      }
+      if (dayPreview && dayPreview.day !== day) {
         return;
       }
       clearHoverPreviewCloseTimer();
@@ -221,7 +239,7 @@ export function usePlannerDayPreviewInteractions({
     [
       clearHoverPreviewCloseTimer,
       clearHoverPreviewTimer,
-      dayPreview?.pinned,
+      dayPreview,
       hoverPreviewTimerRef,
       openDayPreview,
       pointerPressActiveRef,
@@ -277,7 +295,15 @@ export function usePlannerDayPreviewInteractions({
       if (!(target instanceof Element)) {
         return;
       }
-      if (isDayPreviewSurfaceTarget(target)) {
+      if (
+        isHoverPreviewKeepAliveTarget(
+          target,
+          dayPreview.day,
+          dayPreviewRef.current
+        )
+      ) {
+        pointerInsideDayPreviewRef.current = true;
+        clearHoverPreviewCloseTimer();
         return;
       }
       pointerInsideDayPreviewRef.current = false;
@@ -289,8 +315,9 @@ export function usePlannerDayPreviewInteractions({
       window.removeEventListener("pointermove", handlePointerMove);
     };
   }, [
+    clearHoverPreviewCloseTimer,
     dayPreview,
-    isDayPreviewSurfaceTarget,
+    dayPreviewRef,
     pointerInsideDayPreviewRef,
     scheduleHoverPreviewClose,
   ]);

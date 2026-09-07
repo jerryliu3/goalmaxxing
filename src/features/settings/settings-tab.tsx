@@ -102,7 +102,7 @@ export function SettingsTab() {
   if (loading && !state.userId) {
     return (
       <LoadingCard
-        title="Loading You..."
+        title="Loading Profile..."
         description="Syncing your profile, notifications, and collaboration settings."
       />
     );

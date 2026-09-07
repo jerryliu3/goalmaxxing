@@ -60,6 +60,15 @@ describe("PlannerCalendarToolbar", () => {
     expect(title.parentElement).toContainElement(helpButton);
   });
 
+  it("themes Planning Mode with secondary chrome instead of warning yellow", () => {
+    renderToolbar({ hasDraftSession: true });
+
+    const badge = screen.getByTestId("planner-preview-mode-badge");
+    expect(badge).toHaveTextContent("Planning Mode");
+    expect(badge).toHaveAttribute("data-variant", "secondary");
+    expect(badge.className).not.toMatch(/warning/);
+  });
+
   it("shows hidden linked goals from the plan help dialog", async () => {
     renderToolbar({
       linkedTargetDetails: [

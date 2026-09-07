@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { normalizeCalendarState } from "@cadence/shared/planner/calendar-state";
+import {
+  normalizeCalendarState,
+  resolveDayInMonth,
+} from "@cadence/shared/planner/calendar-state";
 import {
   normalizeCalendarRoute,
   normalizeChecklistShellRoute,
@@ -63,6 +66,16 @@ describe("normalizeChecklistShellRoute", () => {
 });
 
 describe("normalizeCalendarState", () => {
+  it("selects today when the calendar surface has no day or month", () => {
+    const result = normalizeCalendarState({
+      viewMode: "month",
+      defaultCalendarViewMode: "month",
+      surface: "calendar",
+    });
+    expect(result.day).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(result.month).toBe(result.day?.slice(0, 7));
+  });
+
   it("fills a day for week view on the calendar surface", () => {
     const result = normalizeCalendarState({
       month: "2026-08",
@@ -85,6 +98,28 @@ describe("normalizeCalendarState", () => {
     expect(result.tab).toBe("today");
     expect(result.day).toBe("2026-08-13");
     expect(result.viewMode).toBe("month");
+  });
+});
+
+describe("resolveDayInMonth", () => {
+  it("keeps a preferred day that already belongs to the month", () => {
+    expect(
+      resolveDayInMonth({
+        month: "2026-09",
+        preferredDay: "2026-09-07",
+        today: "2026-09-07",
+      })
+    ).toBe("2026-09-07");
+  });
+
+  it("clamps the preferred ordinal when the next month is shorter", () => {
+    expect(
+      resolveDayInMonth({
+        month: "2026-02",
+        preferredDay: "2026-01-31",
+        today: "2026-09-07",
+      })
+    ).toBe("2026-02-28");
   });
 });
 
@@ -137,5 +172,16 @@ describe("normalizeCalendarRoute", () => {
     expect(result.viewMode).toBe("month");
     expect(result.day).toBe("2026-08-13");
     expect(result.nextParams.get("day")).toBe("2026-08-13");
+  });
+
+  it("fills a selected day for a month URL that omitted day", () => {
+    const result = normalizeCalendarRoute({
+      searchParams: new URLSearchParams("view=month&month=2026-08"),
+      defaultCalendarViewMode: "month",
+    });
+    expect(result.viewMode).toBe("month");
+    expect(result.month).toBe("2026-08");
+    expect(result.day?.startsWith("2026-08-")).toBe(true);
+    expect(result.nextParams.get("day")).toBe(result.day);
   });
 });

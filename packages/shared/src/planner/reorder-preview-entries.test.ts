@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { reorderPreviewEntryKeys } from "./reorder-preview-entries";
+import { reorderPreviewEntryKeys, sameEntryKeyOrder } from "./reorder-preview-entries";
 
 describe("reorderPreviewEntryKeys", () => {
   it("reorders within incomplete and completed groups without crossing them", () => {
@@ -51,5 +51,24 @@ describe("reorderPreviewEntryKeys", () => {
         overEntryKey: "done-a",
       })
     ).toBeNull();
+  });
+
+  it("moves an item to the end of its group", () => {
+    expect(
+      reorderPreviewEntryKeys({
+        incompleteKeys: ["open-a", "open-b", "open-c"],
+        completedKeys: ["done-a"],
+        activeEntryKey: "open-a",
+        overEntryKey: "__end__",
+      })
+    ).toEqual(["open-b", "open-c", "open-a", "done-a"]);
+  });
+});
+
+describe("sameEntryKeyOrder", () => {
+  it("treats matching lists as unchanged and missing lists as different", () => {
+    expect(sameEntryKeyOrder(["a", "b"], ["a", "b"])).toBe(true);
+    expect(sameEntryKeyOrder(["a", "b"], ["b", "a"])).toBe(false);
+    expect(sameEntryKeyOrder(undefined, ["a"])).toBe(false);
   });
 });

@@ -120,14 +120,14 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
     <div className="space-y-4">
       <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle>Current team</CardTitle>
+          <CardTitle>Team</CardTitle>
           <CardDescription>
             {activeTeam
               ? `Active with ${activeTeam.partnerDisplayName ?? activeTeam.partnerUsername ?? "partner"}`
-              : "No active team"}
+              : "Invite a partner or accept an invite to start duo progress."}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           {activeTeam ? (
             <div className="space-y-2">
               <PublicProfileTrigger
@@ -172,81 +172,63 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
               </Button>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Accept an invite to activate team features.</p>
+            <>
+              <div className="grid gap-2 md:grid-cols-3">
+                <Input
+                  value={partnerUsername}
+                  onChange={(event) => setPartnerUsername(event.target.value)}
+                  placeholder="Partner username"
+                />
+                <Input
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                  placeholder="Invite message (optional)"
+                />
+                <Button
+                  type="button"
+                  onClick={() => void sendInvite()}
+                  disabled={partnerUsername.trim().replace(/^@/, "").length < 3}
+                >
+                  Send invite
+                </Button>
+              </div>
+              <div className="space-y-2 text-sm">
+                <p className="font-medium">Pending invites</p>
+                {pendingInvites.length === 0 ? (
+                  <p className="text-muted-foreground">No pending invites.</p>
+                ) : (
+                  pendingInvites.map((invite) => (
+                    <div key={invite.teamId} className="rounded border p-3">
+                      <p className="font-medium">
+                        {invite.partnerDisplayName ?? invite.partnerUsername ?? invite.partnerId}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {invite.isIncoming ? "Incoming" : "Outgoing"}
+                      </p>
+                      {invite.isIncoming ? (
+                        <div className="mt-2 flex gap-2">
+                          <Button type="button" size="sm" onClick={() => void acceptInvite(invite.teamId)}>
+                            Accept
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => void declineInvite(invite.teamId)}
+                          >
+                            Decline
+                          </Button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
           )}
+          {error ? <p className="text-xs text-destructive">{error}</p> : null}
         </CardContent>
       </Card>
-
-      {!activeTeam ? (
-        <>
-          <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle>Team invites</CardTitle>
-              <CardDescription>
-                Send an invite by partner username while rollout routes are dark-launched.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-2 md:grid-cols-3">
-              <Input
-                value={partnerUsername}
-                onChange={(event) => setPartnerUsername(event.target.value)}
-                placeholder="Partner username"
-              />
-              <Input
-                value={message}
-                onChange={(event) => setMessage(event.target.value)}
-                placeholder="Invite message (optional)"
-              />
-              <Button
-                type="button"
-                onClick={() => void sendInvite()}
-                disabled={partnerUsername.trim().replace(/^@/, "").length < 3}
-              >
-                Send invite
-              </Button>
-              {error ? <p className="text-xs text-destructive md:col-span-3">{error}</p> : null}
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle>Pending invites</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              {pendingInvites.length === 0 ? (
-                <p className="text-muted-foreground">No pending invites.</p>
-              ) : (
-                pendingInvites.map((invite) => (
-                  <div key={invite.teamId} className="rounded border p-3">
-                    <p className="font-medium">
-                      {invite.partnerDisplayName ?? invite.partnerUsername ?? invite.partnerId}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {invite.isIncoming ? "Incoming" : "Outgoing"}
-                    </p>
-                    {invite.isIncoming ? (
-                      <div className="mt-2 flex gap-2">
-                        <Button type="button" size="sm" onClick={() => void acceptInvite(invite.teamId)}>
-                          Accept
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => void declineInvite(invite.teamId)}
-                        >
-                          Decline
-                        </Button>
-                      </div>
-                    ) : null}
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </>
-      ) : null}
-      {activeTeam && error ? <p className="text-xs text-destructive">{error}</p> : null}
     </div>
   );
 }

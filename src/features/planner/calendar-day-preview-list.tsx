@@ -13,11 +13,12 @@ import {
   getEntryDraftDiffSummary,
   getEntryDraftPillClasses,
 } from "@/features/planner/calendar-format";
+import { planCompletionControlMode } from "@/features/planner/completion-entry-dispatch";
 import {
   type CalendarCompletionFactMarkerBase,
   type CalendarMonthCellEntryBase,
 } from "@/features/planner/calendar-month-day-cell";
-import { getGoalVisual, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
+import { getGoalVisual, getWorkPillDraftFillStyle, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
 
 interface PreviewCompletionToggleState {
   currentlyCredited: boolean;
@@ -82,6 +83,7 @@ export function CalendarDayPreviewList<
         <>
           <PlannerSortableDayList
             day={day}
+            surface="checklist"
             entryKeys={entries.map((entry) => entry.key)}
           >
           {entries.map((entry) => {
@@ -100,16 +102,20 @@ export function CalendarDayPreviewList<
               draftDiffKind: entry.draftDiffKind,
             });
             const pillFillStyle =
-              isDraft || expanded
-                ? undefined
-                : getWorkPillFillStyle(visual.color, credited);
+              entry.draftDiffKind === "moved_to" || entry.draftDiffKind === "new"
+                ? getWorkPillDraftFillStyle(visual.color, entry.draftDiffKind)
+                : isDraft || expanded
+                  ? undefined
+                  : getWorkPillFillStyle(visual.color, credited);
             const completionToggleState = getCompletionToggleState(entry, day);
+            const completionMode = planCompletionControlMode(completionToggleState);
             const isSelectedRow = selectedEntryKey === entry.key;
             return (
               <PlannerDraggablePreviewEntry
                 key={`preview-entry-${entry.key}`}
                 day={day}
                 entryKey={entry.key}
+                surface="checklist"
                 disabled={immovable}
               >
                 {({
@@ -119,7 +125,6 @@ export function CalendarDayPreviewList<
                   listeners,
                   style,
                   isDragging,
-                  isOver,
                 }) => (
                   <div
                     ref={(node) => {
@@ -134,18 +139,12 @@ export function CalendarDayPreviewList<
                           } ${planSelectedWorkRowClass(isSelectedRow)} ${
                             entry.draftGhost ? "opacity-75" : ""
                           } ${
-                            isOver ? "bg-primary/5" : ""
-                          } ${
-                            immovable ? "cursor-not-allowed" : "cursor-grab touch-none active:cursor-grabbing"
+                            immovable ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing"
                           } ${isDragging ? "pointer-events-none opacity-0" : ""}`
                         : `flex items-start rounded-[10px] border px-1.5 py-1 transition-colors ${pillToneClasses} ${
                             entry.draftGhost ? "opacity-75" : ""
-                          } ${
-                            isOver
-                              ? "border-primary/70 ring-1 ring-primary/60"
-                              : "hover:border-primary/60"
-                          } ${
-                            immovable ? "cursor-not-allowed" : "cursor-grab touch-none active:cursor-grabbing"
+                          } hover:border-primary/60 ${
+                            immovable ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing"
                           } ${isDragging ? "pointer-events-none opacity-0" : ""}`
                     }
                     aria-current={isSelectedRow ? "true" : undefined}
@@ -178,7 +177,7 @@ export function CalendarDayPreviewList<
                     {...attributes}
                     {...(immovable ? {} : listeners)}
                   >
-                    {!entry.draftGhost ? (
+                    {!entry.draftGhost && completionMode === "toggle" ? (
                       <div
                         className={
                           expanded
@@ -192,6 +191,12 @@ export function CalendarDayPreviewList<
                         onPointerDown={(event) => {
                           event.stopPropagation();
                         }}
+                        onMouseDown={(event) => {
+                          event.stopPropagation();
+                        }}
+                        onTouchStart={(event) => {
+                          event.stopPropagation();
+                        }}
                       >
                         <CompletionToggle
                           completed={completionToggleState.currentlyCredited}
@@ -202,19 +207,27 @@ export function CalendarDayPreviewList<
                             event.stopPropagation();
                             onToggleCompletion(entry, day, event.currentTarget);
                           }}
-                          disabled={
-                            mutationLoading ||
-                            completionToggleState.disabledReasonCopy !== null
-                          }
+                          disabled={mutationLoading}
                           aria-label={
                             completionToggleState.currentlyCredited
                               ? "Mark session not done"
                               : "Mark session done"
                           }
-                          title={
-                            completionToggleState.disabledReasonCopy ??
-                            "Toggle completion for this session"
-                          }
+                          title="Hold to change completion"
+                        />
+                      </div>
+                    ) : !entry.draftGhost && completionMode === "done" ? (
+                      <div
+                        className={
+                          expanded
+                            ? "flex items-center py-3"
+                            : "flex h-6 items-center"
+                        }
+                      >
+                        <StyleCompletionMark
+                          done
+                          className="size-6 shrink-0"
+                          label="Completed"
                         />
                       </div>
                     ) : null}

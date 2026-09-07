@@ -22,7 +22,7 @@ describe("navigation tab preferences", () => {
       "Plan",
       "Progress",
       "Community",
-      "You",
+      "Profile",
     ]);
   });
 

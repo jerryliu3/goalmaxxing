@@ -2,10 +2,10 @@
  * Production Gazetteer lock (paper, walnut, stamp rust, sage/copper chrome, Nest).
  * Keep hexes here so planner fills, categories, and chrome share one palette.
  *
- * Stamp rust is identity (Nest, numerals, heatmap). Today uses heatmap rust
- * level 2 (`stampLight`). Selected days use sage/copper at heatmap level 1
- * (28% mix onto paper). Adjacent months share Original grey `#e4e4e7`.
- * Warning yellow and error red stay the shared Original semantics.
+ * Stamp rust is identity (Nest, numerals, heatmap, selected-day outline).
+ * Today uses heatmap rust level 1. Adjacent months use opaque Zinc 300/600
+ * (`#d4d4d8` / `#52525b`) so paper does not tint them. Secondary chrome stays
+ * Zinc 200/700. Warning yellow and error red stay the shared Original semantics.
  */
 export const GAZETTEER = {
   page: "#f3ead8",

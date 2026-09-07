@@ -126,7 +126,6 @@ export function selectPlannerCalendarModel({
     endMonthFilter,
     searchQuery,
     duoScope,
-    viewMode,
     partnerCompletionMarkersByDate,
     visibleDays: viewProjection.visibleDays,
     additionalProjectionDays: [viewProjection.focusedDay, ...additionalProjectionDays],

@@ -44,7 +44,6 @@ import {
 import { buildMoveSourceOptions } from "@/features/planner/planner-move-source-options";
 import { buildPlannerResetGoalOptions } from "@/features/planner/planner-reset-goal-options";
 import { useCalendarCompletionControls } from "@/features/planner/use-calendar-completion-controls";
-import { PlanDayChecklistProvider } from "@/features/planner/use-plan-day-checklist-model";
 import { usePlannerCalendarModel } from "@/features/planner/use-planner-calendar-model";
 import { useCalendarPlannerTasks } from "@/features/planner/use-calendar-planner-tasks";
 import {
@@ -307,7 +306,6 @@ export function CalendarSurface({
     effectiveEndMonthFilter,
     getEntriesForDay,
     getCompletionFactMarkersForDay,
-    getPartnerCompletionFactMarkersForDay,
     getOrderedEntriesForDay,
     canMutateEntryOnDay,
     plannerReadOnly,
@@ -748,14 +746,8 @@ export function CalendarSurface({
     setFiltersOpen,
     setSearchQuery,
     partnerOverlayError,
-    partnerWeekBoard:
-      viewMode === "week" && duoScope === "both" && partnerWeekLabel
-        ? {
-            label: partnerWeekLabel,
-            getMarkersForDay: (day: string) =>
-              getPartnerCompletionFactMarkersForDay(day),
-          }
-        : null,
+    partnerLabel: partnerWeekLabel,
+    duoScope,
     month,
     previousWindowAriaLabel,
     nextWindowAriaLabel,
@@ -823,18 +815,5 @@ export function CalendarSurface({
     rebuildLoading,
   });
 
-  if (viewMode === "day") {
-    return (
-      <PlanDayChecklistProvider viewDate={focusedDay} searchQuery={searchQuery}>
-        {(dayChecklist) => (
-          <PlannerCalendarSurfaceLayout
-            {...layoutProps}
-            dayChecklist={dayChecklist}
-          />
-        )}
-      </PlanDayChecklistProvider>
-    );
-  }
-
-  return <PlannerCalendarSurfaceLayout {...layoutProps} dayChecklist={null} />;
+  return <PlannerCalendarSurfaceLayout {...layoutProps} />;
 }

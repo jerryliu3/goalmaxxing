@@ -361,7 +361,7 @@ describe("selectPlannerCalendarModel", () => {
     expect(entries[0]?.entryKind).not.toBe("task");
   });
 
-  it("keeps partner markers on the viewer month and moves them off the Duo week board", () => {
+  it("keeps partner markers on the viewer month and week when Duo is Both", () => {
     const partnerMarkers = new Map([
       [
         "2026-08-06",
@@ -398,11 +398,8 @@ describe("selectPlannerCalendarModel", () => {
         partnerCompletionMarkersByDate: partnerMarkers,
       })
     );
-    expect(weekModel.dayAccessors.getCompletionFactMarkersForDay("2026-08-06")).toEqual(
-      []
-    );
     expect(
-      weekModel.dayAccessors.getPartnerCompletionFactMarkersForDay("2026-08-06").map(
+      weekModel.dayAccessors.getCompletionFactMarkersForDay("2026-08-06").map(
         (marker) => marker.key
       )
     ).toEqual(["partner-marker"]);

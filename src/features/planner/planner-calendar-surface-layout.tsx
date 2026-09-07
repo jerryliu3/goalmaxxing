@@ -21,7 +21,7 @@ import type { PlannerEligibilityNotices } from "@/features/planner/planner-eligi
 import { canOpenPlannerEventDetails } from "@/features/planner/calendar-task-entries";
 import type { MoveSourceCandidate } from "@/features/planner/planner-move-source-options";
 import type { GoalMonthOption } from "@/lib/goals/list-view";
-import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
+import { usePlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 import type { PlannerWorkUnit } from "@cadence/shared/planner/context";
 import type {
   Dispatch,
@@ -80,10 +80,8 @@ export interface PlannerCalendarSurfaceLayoutProps {
   setFiltersOpen: (open: boolean) => void;
   setSearchQuery: (query: string) => void;
   partnerOverlayError?: string | null;
-  partnerWeekBoard?: {
-    label: string;
-    getMarkersForDay: (day: string) => PlannerCompletionFactMarker[];
-  } | null;
+  partnerLabel?: string | null;
+  duoScope?: "me" | "partner" | "both";
   month: string | null;
   previousWindowAriaLabel: string;
   nextWindowAriaLabel: string;
@@ -179,7 +177,6 @@ export interface PlannerCalendarSurfaceLayoutProps {
   endMonthOptions: GoalMonthOption[];
   settingsOpen: boolean;
   plannerSettingsForm: ReactNode;
-  dayChecklist?: PlanDayChecklistModel | null;
 }
 
 export function buildCalendarSurfaceLayoutProps<
@@ -229,7 +226,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     setFiltersOpen,
     setSearchQuery,
     partnerOverlayError,
-    partnerWeekBoard = null,
+    partnerLabel = null,
+    duoScope = "me",
     month,
     previousWindowAriaLabel,
     nextWindowAriaLabel,
@@ -307,8 +305,12 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     endMonthOptions,
     settingsOpen,
     plannerSettingsForm,
-    dayChecklist = null,
   } = props;
+  const dayChecklist = usePlanDayChecklistModel({
+    enabled: true,
+    viewDate: focusedDay,
+    searchQuery,
+  });
 
   return (
     <div className="space-y-4">
@@ -437,7 +439,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
               pointerPressActiveRef.current = false;
             }}
             selectedEntryKey={selectedEventEntry?.key ?? null}
-            dayChecklist={viewMode === "day" ? dayChecklist : null}
+            dayChecklist={dayChecklist}
+            partnerLabel={partnerLabel}
+            splitPartnerChecklist={viewMode === "day" && duoScope === "both"}
             calendarGridViewportRef={calendarGridViewportRef}
             onCalendarGridViewportScroll={handleCalendarGridViewportScroll}
             weekdayLabels={weekdayLabels}
@@ -446,7 +450,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             cells={cells}
             renderCalendarDayCell={renderCalendarDayCell}
             focusedWeekCells={focusedWeekCells}
-            partnerWeekBoard={partnerWeekBoard}
             dayPreview={dayPreview}
             dayPreviewRef={dayPreviewRef}
             previewDayEntries={previewDayEntries}

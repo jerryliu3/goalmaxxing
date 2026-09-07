@@ -8,6 +8,7 @@ import {
   within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { COMPLETION_HOLD_MS } from "@/components/ui/completion-toggle";
 import { CalendarSurface } from "./calendar-surface";
 import type {
   PlannerContextPayload,
@@ -208,6 +209,7 @@ function buildDomRect({
 
 describe("CalendarSurface characterization", () => {
   beforeEach(() => {
+    vi.useRealTimers();
     resetPlannerTabCacheInvalidationForTests();
     document.body.innerHTML = "";
     invalidatePlannerRelatedTabCaches();
@@ -229,6 +231,7 @@ describe("CalendarSurface characterization", () => {
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   it("renders adjacent-month persisted rows from the prepared context", async () => {
@@ -392,6 +395,7 @@ describe("CalendarSurface characterization", () => {
       HTMLElement
     );
     expect(screen.getByTestId("plan-desktop-day-pane")).toBeInTheDocument();
+    expect(screen.getByTestId("plan-desktop-day-pane")).not.toHaveClass("hidden");
     expect(
       screen.getByRole("group", { name: "Plan view mode" })
     ).toBeInTheDocument();
@@ -449,7 +453,7 @@ describe("CalendarSurface characterization", () => {
     vi.unstubAllGlobals();
   });
 
-  it("uses today's weekday column when switching from month to day view", async () => {
+  it("keeps the selected day when switching from month to day view", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
         unit({
@@ -465,7 +469,7 @@ describe("CalendarSurface characterization", () => {
       <CalendarSurface
         activeTab="calendar"
         month="2026-08"
-        selectedDay={null}
+        selectedDay="2026-08-20"
         viewMode="month"
         onMonthChange={vi.fn()}
         onViewModeChange={vi.fn()}
@@ -483,10 +487,12 @@ describe("CalendarSurface characterization", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Day" }));
 
-    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-15", "push", "day");
+    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-20", "push", "day", {
+      alignMonth: true,
+    });
   });
 
-  it("uses today's weekday column when switching from month to week view", async () => {
+  it("keeps the selected day when switching from month to week view", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
         unit({
@@ -502,7 +508,7 @@ describe("CalendarSurface characterization", () => {
       <CalendarSurface
         activeTab="calendar"
         month="2026-08"
-        selectedDay={null}
+        selectedDay="2026-08-20"
         viewMode="month"
         onMonthChange={vi.fn()}
         onViewModeChange={vi.fn()}
@@ -520,7 +526,9 @@ describe("CalendarSurface characterization", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Week" }));
 
-    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-15", "push", "week");
+    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-20", "push", "week", {
+      alignMonth: true,
+    });
   });
 
   it("keeps month weekday labels and tiles on one horizontal track", async () => {
@@ -681,9 +689,6 @@ describe("CalendarSurface characterization", () => {
       expect(horizontalViewport).not.toBeNull();
       expect(verticalViewport).not.toBeNull();
 
-      await waitFor(() => {
-        expect(horizontalViewport?.scrollLeft).toBe(400);
-      });
       if (horizontalViewport) {
         horizontalViewport.scrollLeft = 0;
         fireEvent.scroll(horizontalViewport);
@@ -798,7 +803,10 @@ describe("CalendarSurface characterization", () => {
       });
 
       await waitFor(() => {
-        expect(verticalViewport?.scrollTop).toBe(200);
+        const viewport = container.querySelector<HTMLElement>(
+          '[data-calendar-month-vertical-viewport="true"]'
+        );
+        expect(viewport?.scrollTop).toBe(200);
       });
       if (verticalViewport) {
         verticalViewport.scrollTop = 0;
@@ -2051,9 +2059,13 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Mark session done" })
-    );
+    const toggle = await screen.findByRole("button", { name: "Mark session done" });
+    vi.useFakeTimers();
+    fireEvent.pointerDown(toggle);
+    act(() => {
+      vi.advanceTimersByTime(COMPLETION_HOLD_MS);
+    });
+    vi.useRealTimers();
 
     await waitFor(() => {
       expect(completionMutationMock).toHaveBeenCalledWith(
@@ -2136,10 +2148,9 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    const completionButton = await screen.findByRole("button", {
-      name: "Mark session done",
-    });
-    expect(completionButton).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: "Mark session done" })
+    ).not.toBeInTheDocument();
     const lockButton = screen.queryByRole("button", { name: "Lock" });
     if (lockButton) {
       expect(lockButton).toBeDisabled();

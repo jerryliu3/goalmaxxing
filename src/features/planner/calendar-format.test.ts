@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildWeekdayLabels,
   getEntryCompactTitle,
+  getEntryDraftPillClasses,
   getEntryMilestoneFirstTitle,
   getEntrySubtitle,
   isEntryImmovableForDraft,
@@ -216,5 +217,24 @@ describe("calendar task immovability", () => {
     expect(isEntryImmovableForDraft(openTask)).toBe(false);
     expect(isEntryImmovableForDraft(doneTask)).toBe(true);
     expect(isEntryImmovableForDraft(buildPlannerDayEntry())).toBe(false);
+  });
+});
+
+describe("draft pill classes", () => {
+  it("uses structural draft classes so goal color can darken in the fill", () => {
+    expect(getEntryDraftPillClasses({ draftDiffKind: "moved_from" })).toContain(
+      "border-dashed"
+    );
+    expect(getEntryDraftPillClasses({ draftDiffKind: "moved_to" })).toContain("border-2");
+    expect(getEntryDraftPillClasses({ draftDiffKind: "moved_to" })).not.toContain(
+      "bg-primary"
+    );
+    expect(getEntryDraftPillClasses({ draftDiffKind: "new" })).toContain("border-2");
+    expect(getEntryDraftPillClasses({ draftDiffKind: "new" })).not.toContain(
+      "bg-foreground"
+    );
+    expect(getEntryDraftPillClasses({ draftDiffKind: null })).toContain(
+      "border-border"
+    );
   });
 });

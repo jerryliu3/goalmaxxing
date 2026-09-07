@@ -49,6 +49,7 @@ export function CompletionToggle({
   onPointerCancel,
   onKeyDown,
   disabled,
+  title,
   ...props
 }: CompletionToggleProps) {
   const { style } = useUiStyle();
@@ -58,10 +59,11 @@ export function CompletionToggle({
     null
   );
   const [holding, setHolding] = React.useState(false);
+  const [fillTransition, setFillTransition] = React.useState(false);
   const optimisticBaseStateRef = React.useRef<boolean | null>(null);
   const optimisticTimerRef = React.useRef<number | null>(null);
   const holdTimerRef = React.useRef<number | null>(null);
-  const ignoreClickUntilRef = React.useRef(0);
+  const fillTransitionTimerRef = React.useRef<number | null>(null);
 
   const clearOptimisticState = React.useCallback(() => {
     setOptimisticCompleted(null);
@@ -72,13 +74,25 @@ export function CompletionToggle({
     }
   }, []);
 
+  const clearFillTransitionTimer = React.useCallback(() => {
+    if (fillTransitionTimerRef.current !== null) {
+      window.clearTimeout(fillTransitionTimerRef.current);
+      fillTransitionTimerRef.current = null;
+    }
+  }, []);
+
   const cancelHold = React.useCallback(() => {
     setHolding(false);
     if (holdTimerRef.current !== null) {
       window.clearTimeout(holdTimerRef.current);
       holdTimerRef.current = null;
     }
-  }, []);
+    clearFillTransitionTimer();
+    fillTransitionTimerRef.current = window.setTimeout(() => {
+      fillTransitionTimerRef.current = null;
+      setFillTransition(false);
+    }, COMPLETION_HOLD_MS);
+  }, [clearFillTransitionTimer]);
 
   React.useEffect(
     () => () => {
@@ -87,6 +101,9 @@ export function CompletionToggle({
       }
       if (holdTimerRef.current !== null) {
         window.clearTimeout(holdTimerRef.current);
+      }
+      if (fillTransitionTimerRef.current !== null) {
+        window.clearTimeout(fillTransitionTimerRef.current);
       }
     },
     []
@@ -113,6 +130,8 @@ export function CompletionToggle({
       optimisticBaseStateRef.current = completed;
       setOptimisticCompleted(desiredState);
       setHolding(false);
+      setFillTransition(false);
+      clearFillTransitionTimer();
       if (optimisticTimerRef.current !== null) {
         window.clearTimeout(optimisticTimerRef.current);
       }
@@ -126,7 +145,7 @@ export function CompletionToggle({
         void Promise.resolve(mutation).then(clearOptimisticState, clearOptimisticState);
       }
     },
-    [clearOptimisticState, completed, onClick]
+    [clearFillTransitionTimer, clearOptimisticState, completed, onClick]
   );
 
   const visualCompleted = optimisticCompleted ?? completed;
@@ -138,6 +157,7 @@ export function CompletionToggle({
       data-completed={completed}
       data-visual-completed={visualCompleted}
       data-holding={holding ? "true" : "false"}
+      data-fill-transition={fillTransition ? "true" : "false"}
       data-motion="completion-toggle"
       aria-busy={pending || undefined}
       disabled={disabled}
@@ -162,14 +182,21 @@ export function CompletionToggle({
           return;
         }
         setHolding(true);
+        setFillTransition(true);
+        clearFillTransitionTimer();
         if (holdTimerRef.current !== null) {
           window.clearTimeout(holdTimerRef.current);
         }
         holdTimerRef.current = window.setTimeout(() => {
           holdTimerRef.current = null;
-          ignoreClickUntilRef.current = performance.now() + 800;
           commitToggle(event as unknown as React.MouseEvent<HTMLButtonElement>);
         }, COMPLETION_HOLD_MS);
+      }}
+      onMouseDown={(event) => {
+        event.stopPropagation();
+      }}
+      onTouchStart={(event) => {
+        event.stopPropagation();
       }}
       onPointerUp={(event) => {
         event.stopPropagation();
@@ -197,19 +224,16 @@ export function CompletionToggle({
         }
       }}
       onClick={(event) => {
+        event.preventDefault();
         event.stopPropagation();
-        if (performance.now() < ignoreClickUntilRef.current) {
-          event.preventDefault();
-          return;
-        }
-        commitToggle(event);
       }}
       {...props}
+      title={title ?? "Hold to change completion"}
     >
       <StyleCompletionMark
         done={visualCompleted}
         fillProgress={fillProgress}
-        fillTransition={holding}
+        fillTransition={fillTransition}
         pressed={holding}
         className={cn(
           visualCompleted || holding ? "text-primary" : "text-muted-foreground",

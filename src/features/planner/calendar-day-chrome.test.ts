@@ -3,6 +3,7 @@ import {
   planAgendaDayNumberClass,
   planAgendaDayRowClass,
   planFilledChromeMetaClass,
+  planHiddenItemCountLabel,
   planMonthDayNumberClass,
   planMonthDaySurfaceClass,
   planSelectedWorkRowClass,
@@ -47,6 +48,7 @@ describe("plan calendar day chrome", () => {
     expect(today).toContain("bg-today");
     expect(today).not.toContain("bg-today/");
     expect(todaySelected).toContain("bg-today");
+    expect(todaySelected).toContain("ring-primary");
     expect(todaySelected).not.toContain("bg-adjacent");
     expect(todayAdjacent).toContain("bg-today");
     expect(todayAdjacent).not.toContain("bg-adjacent");
@@ -55,37 +57,50 @@ describe("plan calendar day chrome", () => {
     ).toBe("text-today-foreground");
   });
 
-  it("fills a user-selected day that is not today with the selected-day token", () => {
+  it("outlines a user-selected day that is not today", () => {
     const selected = planMonthDaySurfaceClass({
       inMonth: true,
       isToday: false,
       isSelected: true,
       isPastInMonth: false,
     });
-    expect(selected).toContain("bg-day-selected");
+    expect(selected).toContain("ring-primary");
+    expect(selected).not.toContain("bg-day-selected");
     expect(selected).not.toContain("bg-adjacent");
     expect(selected).not.toContain("bg-today");
     expect(
       planMonthDayNumberClass({ inMonth: true, isToday: false, isSelected: true })
-    ).toBe("text-day-selected-foreground");
+    ).toBe("text-primary");
   });
 
-  it("uses selected-day fill for a selected week row that is not today", () => {
+  it("outlines a selected week row that is not today", () => {
     expect(
       planAgendaDayRowClass({ inMonth: true, isToday: false, isSelected: true })
-    ).toContain("bg-day-selected");
+    ).toContain("ring-primary");
+    expect(
+      planAgendaDayRowClass({ inMonth: true, isToday: false, isSelected: true })
+    ).not.toContain("bg-day-selected");
     expect(
       planAgendaDayRowClass({ inMonth: true, isToday: true, isSelected: true })
     ).toContain("bg-today");
+    expect(
+      planAgendaDayRowClass({ inMonth: true, isToday: true, isSelected: true })
+    ).toContain("ring-primary");
     expect(
       planAgendaDayRowClass({ inMonth: false, isToday: false, isSelected: false })
     ).toContain("bg-adjacent");
     expect(
       planAgendaDayNumberClass({ isToday: false, isSelected: true })
-    ).toContain("text-day-selected");
+    ).toContain("text-primary");
     expect(
       planAgendaDayNumberClass({ isToday: true, isSelected: true })
     ).toContain("text-today");
+  });
+
+  it("hides overflow remainder as +N more", () => {
+    expect(planHiddenItemCountLabel(0)).toBeNull();
+    expect(planHiddenItemCountLabel(1)).toBe("+1 more");
+    expect(planHiddenItemCountLabel(4)).toBe("+4 more");
   });
 
   it("washes a selected work row with an inset selection bar", () => {
@@ -103,7 +118,7 @@ describe("plan calendar day chrome", () => {
     ).toContain("text-current");
     expect(
       planFilledChromeMetaClass({ inMonth: true, isToday: false, isSelected: true })
-    ).toContain("text-current");
+    ).toBe("text-muted-foreground");
     expect(
       planFilledChromeMetaClass({ inMonth: true, isToday: false, isSelected: false })
     ).toBe("text-muted-foreground");

@@ -96,7 +96,7 @@ describe("usePlannerCalendarDnd", () => {
     expect(queueDraftMoveCommand).not.toHaveBeenCalled();
   });
 
-  it("reorders while dragging over another same-day entry", () => {
+  it("does not rewrite list order while dragging over a same-day entry", () => {
     const goal = buildPlannerDayEntry({ key: "goal-1:unit-1" });
     const other = buildPlannerDayEntry({ key: "goal-2:unit-1" });
     const setPreviewEntryOrderByDay = vi.fn();
@@ -125,6 +125,45 @@ describe("usePlannerCalendarDnd", () => {
         type: "preview_entry",
         day: "2026-09-02",
         entryKey: other.key,
+      });
+    });
+
+    expect(setPreviewEntryOrderByDay).not.toHaveBeenCalled();
+  });
+
+  it("reorders when dropping onto the same-day list end", () => {
+    const first = buildPlannerDayEntry({ key: "goal-1:unit-1" });
+    const second = buildPlannerDayEntry({ key: "goal-2:unit-1" });
+    const setPreviewEntryOrderByDay = vi.fn((updater) => {
+      if (typeof updater === "function") {
+        updater({});
+      }
+    });
+    const { result } = renderHook(() =>
+      usePlannerCalendarDnd({
+        entryByKey: new Map([
+          [first.key, first],
+          [second.key, second],
+        ]),
+        entryDayByKey: new Map([
+          [first.key, "2026-09-02"],
+          [second.key, "2026-09-02"],
+        ]),
+        getEntriesForDay: () => [first, second],
+        getEntryGoalFirstTitleWithTime,
+        setPreviewEntryOrderByDay,
+        queueDraftMoveCommand: vi.fn(() => true),
+        rescheduleCalendarTask: vi.fn(),
+        clearHoverPreviewTimer: vi.fn(),
+        pointerPressActiveRef: { current: false },
+      })
+    );
+
+    act(() => {
+      result.current.handleDndEntryDragEnd(first.key, {
+        type: "preview_entry",
+        day: "2026-09-02",
+        entryKey: "__end__",
       });
     });
 

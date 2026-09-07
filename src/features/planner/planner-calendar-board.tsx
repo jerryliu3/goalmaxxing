@@ -19,7 +19,6 @@ import styles from "@/features/planner/calendar-surface.module.css";
 import { PlannerDayPreviewPopover } from "@/features/planner/planner-day-preview-popover";
 import { PlannerFocusedDayPane } from "@/features/planner/planner-focused-day-pane";
 import { PlannerViewWindowHeader } from "@/features/planner/planner-view-window-header";
-import { PlannerPartnerWeekDayCell } from "@/features/planner/planner-partner-week-cell";
 import { PlanViewTransitionFrame } from "@/features/planner/plan-view-transition-frame";
 import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 
@@ -77,6 +76,8 @@ export interface PlannerCalendarBoardProps {
   onEntryPointerEnd: () => void;
   selectedEntryKey?: string | null;
   dayChecklist?: PlanDayChecklistModel | null;
+  partnerLabel?: string | null;
+  splitPartnerChecklist?: boolean;
   calendarGridViewportRef: MutableRefObject<HTMLDivElement | null>;
   onCalendarGridViewportScroll: () => void;
   weekdayLabels: string[];
@@ -85,10 +86,6 @@ export interface PlannerCalendarBoardProps {
   cells: PlannerCalendarCell[];
   renderCalendarDayCell: (cell: PlannerCalendarCell) => ReactNode;
   focusedWeekCells: PlannerCalendarCell[];
-  partnerWeekBoard?: {
-    label: string;
-    getMarkersForDay: (day: string) => PlannerCompletionFactMarker[];
-  } | null;
   dayPreview: DayPreviewState | null;
   dayPreviewRef: MutableRefObject<HTMLDivElement | null>;
   previewDayEntries: PlannerDayDetailEntry[];
@@ -141,6 +138,8 @@ export function PlannerCalendarBoard({
   onEntryPointerEnd,
   selectedEntryKey = null,
   dayChecklist = null,
+  partnerLabel = null,
+  splitPartnerChecklist = false,
   calendarGridViewportRef,
   onCalendarGridViewportScroll,
   weekdayLabels,
@@ -149,7 +148,6 @@ export function PlannerCalendarBoard({
   cells,
   renderCalendarDayCell,
   focusedWeekCells,
-  partnerWeekBoard = null,
   dayPreview,
   dayPreviewRef,
   previewDayEntries,
@@ -212,59 +210,17 @@ export function PlannerCalendarBoard({
               showTasksInsteadOfGoals={showTasksInsteadOfGoals}
               selectedEntryKey={selectedEntryKey}
               dayChecklist={dayChecklist}
+              partnerLabel={partnerLabel}
+              splitPartnerChecklist={splitPartnerChecklist}
               titleAs="h2"
               shareDayTransition
             />
           ) : viewMode === "three_day" ? (
             rollingWeekStrip
           ) : (
-            <div className="md:grid md:grid-cols-[minmax(0,1.2fr)_minmax(18rem,24rem)] md:items-start md:gap-8">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,3fr)_minmax(16rem,1fr)] md:items-start md:gap-8">
               <div className="min-w-0">
-                {viewMode === "week" && partnerWeekBoard ? (
-                  <div
-                    className="grid gap-4 md:grid-cols-2"
-                    data-testid="duo-week-board"
-                  >
-                    <section className="space-y-2">
-                      <h2 className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                        You
-                      </h2>
-                      <ol
-                        aria-label="Your week"
-                        className="flex flex-col"
-                        data-calendar-week-agenda="true"
-                      >
-                        {focusedWeekCells.map(renderCalendarDayCell)}
-                      </ol>
-                    </section>
-                    <section className="space-y-2">
-                      <div className="flex min-h-6 items-center gap-2">
-                        <h2 className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                          {partnerWeekBoard.label}
-                        </h2>
-                        <span className="rounded-[8px] border border-border px-2 py-0.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                          View only
-                        </span>
-                      </div>
-                      <ol
-                        aria-label={`${partnerWeekBoard.label} week`}
-                        className="flex flex-col"
-                      >
-                        {focusedWeekCells.map((cell) => (
-                          <PlannerPartnerWeekDayCell
-                            key={`partner-week-${cell.date}`}
-                            day={cell.date}
-                            inMonth={cell.inMonth}
-                            isToday={cell.date === asOfDate}
-                            isSelected={cell.date === focusedDay}
-                            layout="agenda"
-                            markers={partnerWeekBoard.getMarkersForDay(cell.date)}
-                          />
-                        ))}
-                      </ol>
-                    </section>
-                  </div>
-                ) : viewMode === "week" ? (
+                {viewMode === "week" ? (
                   <ol
                     aria-label="Week agenda"
                     className="flex flex-col"
@@ -315,7 +271,7 @@ export function PlannerCalendarBoard({
                 )}
               </div>
               <aside
-                className="hidden min-w-0 md:block"
+                className="min-w-0 md:mt-0"
                 data-testid="plan-desktop-day-pane"
                 style={{ viewTransitionName: "plan-focused-aside" }}
               >
@@ -333,6 +289,9 @@ export function PlannerCalendarBoard({
                   onEntryPointerEnd={onEntryPointerEnd}
                   showTasksInsteadOfGoals={showTasksInsteadOfGoals}
                   selectedEntryKey={selectedEntryKey}
+                  dayChecklist={dayChecklist}
+                  partnerLabel={partnerLabel}
+                  splitPartnerChecklist={false}
                 />
               </aside>
             </div>

@@ -50,7 +50,7 @@ describe("InsightsShell", () => {
     expect(screen.queryByRole("button", { name: "Previous period" })).not.toBeInTheDocument();
   });
 
-  it("renders a full ledger in each duo lane", () => {
+  it("renders one shared ledger above duo heatmaps", () => {
     useDuoSurfaceMock.mockReturnValue({
       scope: "both",
       activePartner: {
@@ -69,11 +69,16 @@ describe("InsightsShell", () => {
 
     render(<InsightsShell />);
 
-    expect(insightsTabMock).toHaveBeenCalledTimes(2);
+    expect(insightsTabMock).toHaveBeenCalledTimes(3);
     expect(insightsTabMock.mock.calls[0]?.[0]).toMatchObject({
-      readOnly: false,
+      contentMode: "ledger",
     });
     expect(insightsTabMock.mock.calls[1]?.[0]).toMatchObject({
+      contentMode: "overall-only",
+      readOnly: false,
+    });
+    expect(insightsTabMock.mock.calls[2]?.[0]).toMatchObject({
+      contentMode: "overall-only",
       readOnly: true,
     });
     expect(screen.getByRole("button", { name: "Previous period" })).toBeInTheDocument();

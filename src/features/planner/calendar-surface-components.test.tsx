@@ -1,7 +1,8 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { COMPLETION_HOLD_MS } from "@/components/ui/completion-toggle";
 import { PlannerDndProvider } from "./calendar-dnd";
 import { CalendarDayPreviewList } from "./calendar-day-preview-list";
 import { CalendarMonthDayCell } from "./calendar-month-day-cell";
@@ -51,6 +52,7 @@ const sampleMarker = {
 describe("calendar surface extracted components", () => {
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
   });
   it("renders month day cell and delegates click behavior", async () => {
     const onCellClick = vi.fn();
@@ -183,7 +185,8 @@ describe("calendar surface extracted components", () => {
     expect(todayCell).toHaveClass("bg-today");
     expect(todayCell).toHaveClass("text-today-foreground");
     const selectedCell = screen.getByRole("button", { name: /august 7/i });
-    expect(selectedCell).toHaveClass("bg-day-selected");
+    expect(selectedCell.className).toMatch(/ring-primary/);
+    expect(selectedCell).not.toHaveClass("bg-day-selected");
     expect(selectedCell).not.toHaveClass("bg-today");
     expect(selectedCell).not.toHaveClass("bg-adjacent");
     const adjacentToday = screen.getByRole("button", { name: /september 6/i });
@@ -226,12 +229,18 @@ describe("calendar surface extracted components", () => {
     expect(toggle.closest("[data-plan-drag-handle]")).toBeNull();
     expect(screen.getByText("Run").closest("[data-plan-drag-handle]")).not.toBeNull();
 
-    fireEvent.click(toggle);
+    vi.useFakeTimers();
+    fireEvent.pointerDown(toggle);
+    act(() => {
+      vi.advanceTimersByTime(COMPLETION_HOLD_MS);
+    });
     expect(onToggleCompletion).toHaveBeenCalledTimes(1);
     expect(onEntryOpen).not.toHaveBeenCalled();
+    vi.useRealTimers();
 
     fireEvent.click(toggle, { detail: 1 });
     expect(onEntryOpen).not.toHaveBeenCalled();
+    expect(onToggleCompletion).toHaveBeenCalledTimes(1);
 
     await user.click(screen.getByText("Run"));
     expect(onEntryOpen).toHaveBeenCalledWith(sampleEntry.key);
@@ -366,7 +375,7 @@ describe("calendar surface extracted components", () => {
       />
     );
 
-    expect(within(view.container).getByText("+1")).toBeInTheDocument();
+    expect(within(view.container).getByText("+1 more")).toBeInTheDocument();
     expect(within(view.container).getByText("Easy run")).toHaveClass("line-through");
     expect(within(view.container).queryByLabelText("Completed")).not.toBeInTheDocument();
     expect(
@@ -520,11 +529,15 @@ describe("calendar surface extracted components", () => {
     );
 
     const toggle = screen.getByRole("button", { name: "Mark session done" });
+    vi.useFakeTimers();
     fireEvent.pointerDown(toggle);
     expect(onEntryPointerStart).not.toHaveBeenCalled();
-    fireEvent.click(toggle);
+    act(() => {
+      vi.advanceTimersByTime(COMPLETION_HOLD_MS);
+    });
     expect(onToggleCompletion).toHaveBeenCalledTimes(1);
     expect(onEntryClick).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 });
 

@@ -35,7 +35,9 @@ test.describe("public demo sandbox", () => {
     const row = page
       .locator("[data-planner-entry-key]")
       .filter({ hasText: "Read 20 pages" });
-    await row.getByRole("button", { name: "Mark session done" }).click();
+    await row.getByRole("button", { name: "Mark session done" }).click({
+      delay: 550,
+    });
     await expect(
       row.getByRole("button", { name: "Mark session not done" })
     ).toBeVisible();

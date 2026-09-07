@@ -61,7 +61,6 @@ export interface CalendarDayAccessorsArgs {
   endMonthFilter: string | null;
   searchQuery?: string;
   duoScope: "me" | "partner" | "both";
-  viewMode?: "month" | "week" | "three_day" | "day";
   partnerCompletionMarkersByDate?: Map<string, PlannerCompletionFactMarker[]>;
   visibleDays: string[];
   additionalProjectionDays: string[];
@@ -111,7 +110,6 @@ export function selectCalendarDayAccessorsModel({
   endMonthFilter,
   searchQuery = "",
   duoScope,
-  viewMode = "month",
   partnerCompletionMarkersByDate,
   visibleDays,
   additionalProjectionDays,
@@ -208,8 +206,7 @@ export function selectCalendarDayAccessorsModel({
 
   const hideViewerPlan = duoScope === "partner";
   const plannerReadOnly = duoScope === "partner";
-  const overlayPartnerOnViewer =
-    duoScope === "partner" || (duoScope === "both" && viewMode !== "week");
+  const overlayPartnerOnViewer = duoScope === "partner" || duoScope === "both";
   const taskLookup = collectCalendarTaskLookup(
     showTasksInsteadOfGoals ? calendarTaskEntriesByDate : undefined
   );

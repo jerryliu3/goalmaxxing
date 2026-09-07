@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import { toLocalDateString } from "@/lib/dates/day";
 import { createClient } from "@/lib/supabase/client";
+import { planCompletionControlModeForDate } from "@/features/planner/completion-entry-dispatch";
 
 interface PlannerTaskRow {
   task_id: string;
@@ -39,6 +40,7 @@ interface PlannerTasksPanelProps {
   allowCreate?: boolean;
   allowDelete?: boolean;
   hideWhenEmpty?: boolean;
+  chrome?: "card" | "plain";
 }
 
 export function PlannerTasksPanel({
@@ -49,6 +51,7 @@ export function PlannerTasksPanel({
   allowCreate = true,
   allowDelete = false,
   hideWhenEmpty = false,
+  chrome = "card",
 }: PlannerTasksPanelProps) {
   const supabase = useMemo(() => createClient(), []);
   const [tasks, setTasks] = useState<PlannerTaskRow[]>([]);
@@ -146,6 +149,14 @@ export function PlannerTasksPanel({
 
   const toggleTask = useCallback(
     async (task: PlannerTaskRow) => {
+      const completionMode = planCompletionControlModeForDate({
+        currentlyCredited: task.completed_at != null,
+        selectedDate: scheduledDateRef.current ?? task.scheduled_date,
+        asOfDate: toLocalDateString(),
+      });
+      if (completionMode !== "toggle") {
+        return;
+      }
       const nextCompleted = task.completed_at == null;
       setTogglingTaskId(task.task_id);
       setTasks((current) =>
@@ -216,171 +227,216 @@ export function PlannerTasksPanel({
     return null;
   }
 
+  const addForm = allowCreate ? (
+    <div className="flex gap-2">
+      <Input
+        value={newTaskTitle}
+        onChange={(event) => setNewTaskTitle(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            if (canAddTask) {
+              void addTask();
+            }
+          }
+        }}
+        placeholder="Add a task..."
+        maxLength={200}
+      />
+      <DateField
+        value={newTaskDate}
+        onValueChange={setNewTaskDate}
+        aria-label="Task date"
+        className="h-8 w-[150px] shrink-0"
+      />
+      <Button
+        type="button"
+        onClick={() => void addTask()}
+        disabled={adding || !canAddTask}
+      >
+        {adding ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+        Add
+      </Button>
+    </div>
+  ) : null;
+
+  const taskList =
+    loading && tasks.length === 0 ? (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="size-4 animate-spin" />
+        Loading tasks...
+      </div>
+    ) : tasks.length === 0 ? (
+      <p className="text-sm text-muted-foreground">
+        {allowCreate
+          ? "No tasks yet. Add one to keep your planner focused."
+          : "No tasks scheduled for this day yet."}
+      </p>
+    ) : (
+      <ul className={chrome === "plain" ? "divide-y" : "space-y-2"}>
+        {tasks.map((task) => {
+          const complete = task.completed_at != null;
+          const toggling = togglingTaskId === task.task_id;
+          const deleting = deletingTaskId === task.task_id;
+          const busy = toggling || deleting;
+          const completionMode = planCompletionControlModeForDate({
+            currentlyCredited: complete,
+            selectedDate: scheduledDate ?? task.scheduled_date,
+            asOfDate: toLocalDateString(),
+          });
+          const titleClass = complete
+            ? "font-display text-base font-medium tracking-tight text-muted-foreground line-through"
+            : chrome === "plain"
+              ? "font-display text-base font-medium tracking-tight"
+              : undefined;
+          const mark =
+            toggling ? (
+              <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
+            ) : completionMode === "toggle" ? (
+              <StyleCompletionMark
+                done={complete}
+                className={
+                  complete
+                    ? "size-4 shrink-0 text-primary"
+                    : "size-4 shrink-0 text-muted-foreground"
+                }
+              />
+            ) : completionMode === "done" ? (
+              <StyleCompletionMark
+                done
+                className="size-4 shrink-0 text-primary"
+                label="Completed"
+              />
+            ) : null;
+          const title = <span className={titleClass}>{task.title}</span>;
+          return (
+            <li
+              key={task.task_id}
+              className={
+                chrome === "plain"
+                  ? "flex items-center justify-between gap-3 py-3"
+                  : "flex items-center justify-between gap-3 rounded-md border px-3 py-2"
+              }
+            >
+              {completionMode === "toggle" ? (
+                <button
+                  type="button"
+                  className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                  onClick={() => void toggleTask(task)}
+                  disabled={busy}
+                >
+                  {mark}
+                  {title}
+                </button>
+              ) : (
+                <div className="flex min-w-0 flex-1 items-center gap-2 text-left">
+                  {mark}
+                  {title}
+                </div>
+              )}
+              {task.scheduled_time ? (
+                <Badge variant="outline">{task.scheduled_time}</Badge>
+              ) : null}
+              {showScheduledDate ? (
+                <Badge variant="outline">{task.scheduled_date}</Badge>
+              ) : null}
+              {allowDelete ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Delete task ${task.title}`}
+                  title="Delete task"
+                  onClick={() => requestDeleteTask(task)}
+                  disabled={busy}
+                >
+                  {deleting ? (
+                    <Loader2 className="animate-spin text-destructive" />
+                  ) : (
+                    <Trash2 className="text-destructive" />
+                  )}
+                </Button>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    );
+
+  const deleteDialog = (
+    <Dialog
+      open={confirmingDeleteTask !== null}
+      onOpenChange={(open) => {
+        if (deletingTaskId) {
+          return;
+        }
+        if (!open) {
+          setConfirmingDeleteTask(null);
+        }
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete task?</DialogTitle>
+          <DialogDescription>
+            {confirmingDeleteTask
+              ? `This permanently deletes "${confirmingDeleteTask.title}".`
+              : "This permanently deletes this task."}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setConfirmingDeleteTask(null)}
+            disabled={Boolean(deletingTaskId)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={!confirmingDeleteTask || Boolean(deletingTaskId)}
+            onClick={() => {
+              if (!confirmingDeleteTask) {
+                return;
+              }
+              void deleteTask(confirmingDeleteTask).then(() => {
+                setConfirmingDeleteTask(null);
+              });
+            }}
+          >
+            {deletingTaskId ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Trash2 className="size-4" />
+            )}
+            Delete task
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
+  if (chrome === "plain") {
+    return (
+      <div className="space-y-3">
+        {addForm}
+        {taskList}
+        {deleteDialog}
+      </div>
+    );
+  }
+
   return (
     <Card className="shadow-sm">
       <CardHeader className="space-y-2">
         <CardTitle>{title}</CardTitle>
         {description ? <CardDescription>{description}</CardDescription> : null}
-        {allowCreate ? (
-          <div className="flex gap-2">
-            <Input
-              value={newTaskTitle}
-              onChange={(event) => setNewTaskTitle(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  if (canAddTask) {
-                    void addTask();
-                  }
-                }
-              }}
-              placeholder="Add a task..."
-              maxLength={200}
-            />
-            <DateField
-              value={newTaskDate}
-              onValueChange={setNewTaskDate}
-              aria-label="Task date"
-              className="h-8 w-[150px] shrink-0"
-            />
-            <Button
-              type="button"
-              onClick={() => void addTask()}
-              disabled={adding || !canAddTask}
-            >
-              {adding ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
-              Add
-            </Button>
-          </div>
-        ) : null}
+        {addForm}
       </CardHeader>
-      <CardContent>
-        {loading && tasks.length === 0 ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" />
-            Loading tasks...
-          </div>
-        ) : tasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {allowCreate
-              ? "No tasks yet. Add one to keep your planner focused."
-              : "No tasks scheduled for this day yet."}
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {tasks.map((task) => {
-              const complete = task.completed_at != null;
-              const toggling = togglingTaskId === task.task_id;
-              const deleting = deletingTaskId === task.task_id;
-              const busy = toggling || deleting;
-              return (
-                <li
-                  key={task.task_id}
-                  className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
-                >
-                  <button
-                    type="button"
-                    className="flex min-w-0 flex-1 items-center gap-2 text-left"
-                    onClick={() => void toggleTask(task)}
-                    disabled={busy}
-                  >
-                    {toggling ? (
-                      <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
-                    ) : (
-                      <StyleCompletionMark
-                        done={complete}
-                        className={
-                          complete
-                            ? "size-4 shrink-0 text-primary"
-                            : "size-4 shrink-0 text-muted-foreground"
-                        }
-                      />
-                    )}
-                    <span className={complete ? "text-muted-foreground line-through" : ""}>
-                      {task.title}
-                    </span>
-                  </button>
-                  {task.scheduled_time ? (
-                    <Badge variant="outline">{task.scheduled_time}</Badge>
-                  ) : null}
-                  {showScheduledDate ? (
-                    <Badge variant="outline">{task.scheduled_date}</Badge>
-                  ) : null}
-                  {allowDelete ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`Delete task ${task.title}`}
-                      title="Delete task"
-                      onClick={() => requestDeleteTask(task)}
-                      disabled={busy}
-                    >
-                      {deleting ? (
-                        <Loader2 className="animate-spin text-destructive" />
-                      ) : (
-                        <Trash2 className="text-destructive" />
-                      )}
-                    </Button>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </CardContent>
-      <Dialog
-        open={confirmingDeleteTask !== null}
-        onOpenChange={(open) => {
-          if (deletingTaskId) {
-            return;
-          }
-          if (!open) {
-            setConfirmingDeleteTask(null);
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete task?</DialogTitle>
-            <DialogDescription>
-              {confirmingDeleteTask
-                ? `This permanently deletes "${confirmingDeleteTask.title}".`
-                : "This permanently deletes this task."}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setConfirmingDeleteTask(null)}
-              disabled={Boolean(deletingTaskId)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={!confirmingDeleteTask || Boolean(deletingTaskId)}
-              onClick={() => {
-                if (!confirmingDeleteTask) {
-                  return;
-                }
-                void deleteTask(confirmingDeleteTask).then(() => {
-                  setConfirmingDeleteTask(null);
-                });
-              }}
-            >
-              {deletingTaskId ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Trash2 className="size-4" />
-              )}
-              Delete task
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CardContent>{taskList}</CardContent>
+      {deleteDialog}
     </Card>
   );
 }

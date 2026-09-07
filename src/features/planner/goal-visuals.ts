@@ -41,6 +41,8 @@ const FALLBACK_COLORS = [
 
 const HEX_COLOR_REGEX = /^#?[0-9a-f]{6}$/i;
 export const WORK_PILL_HUE_AMOUNT = 0.24;
+export const WORK_PILL_DRAFT_HUE_AMOUNT = 0.48;
+export const WORK_PILL_NEW_DRAFT_HUE_AMOUNT = 0.62;
 const ORIGINAL_WORK_PILL_PAPER = "#ffffff";
 const WORK_PILL_INK = "#1c1917";
 type GoalVisualCategoryKey = Exclude<CategoryPresetId, "other">;
@@ -162,6 +164,26 @@ export function getWorkPillFillStyle(color: string, _credited = false, styleId?:
     backgroundColor: fill,
     borderColor: fill,
     color: WORK_PILL_INK,
+  };
+}
+
+export function getWorkPillDraftFillStyle(
+  color: string,
+  kind: "moved_to" | "new",
+  styleId?: UiStyleId
+) {
+  const hex = toStyleDisplayColor(
+    normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0],
+    styleId
+  );
+  const amount =
+    kind === "new" ? WORK_PILL_NEW_DRAFT_HUE_AMOUNT : WORK_PILL_DRAFT_HUE_AMOUNT;
+  const fill = mixOpaqueHex(hex, workPillPaper(styleId), amount);
+  const border = mixOpaqueHex(hex, workPillPaper(styleId), Math.min(1, amount + 0.18));
+  return {
+    backgroundColor: fill,
+    borderColor: border,
+    color: contrastingInkForColor(fill, styleId),
   };
 }
 

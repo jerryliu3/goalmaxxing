@@ -17,9 +17,13 @@ vi.mock("sonner", () => ({
   },
 }));
 
-vi.mock("@/lib/dates/day", () => ({
-  toLocalDateString: () => "2026-09-05",
-}));
+vi.mock("@/lib/dates/day", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/dates/day")>();
+  return {
+    ...actual,
+    toLocalDateString: () => "2026-09-05",
+  };
+});
 
 describe("PlannerTasksPanel", () => {
   beforeEach(() => {
@@ -169,6 +173,37 @@ describe("PlannerTasksPanel", () => {
       p_task_id: "task-1",
       p_completed: true,
     });
+  });
+
+  it("hides the completion checkbox for tasks on a future day", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        {
+          task_id: "task-future",
+          title: "Later inbox task",
+          scheduled_date: "2026-09-12",
+          scheduled_time: null,
+          completed_at: null,
+          created_at: "2026-09-05T12:00:00.000Z",
+          updated_at: "2026-09-05T12:00:00.000Z",
+        },
+      ],
+      error: null,
+    });
+
+    render(
+      <PlannerTasksPanel
+        title="Todos"
+        description={null}
+        scheduledDate="2026-09-12"
+        allowCreate={false}
+      />
+    );
+
+    expect(await screen.findByText("Later inbox task")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /later inbox task/i })
+    ).not.toBeInTheDocument();
   });
 
   it("creates tasks from the panel without sending a scheduled time", async () => {

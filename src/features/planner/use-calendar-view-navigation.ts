@@ -196,32 +196,24 @@ export function useCalendarViewNavigation({
         return;
       }
       setDayPreview(null);
-      const monthScopedTopRowDay = isMonthScopedCalendarViewMode(viewMode)
-        ? resolveMonthScopedTopRowDay() ?? monthScrollAnchorDayRef.current
-        : null;
-      const rowAnchorDay =
-        monthScopedTopRowDay ?? focusedWeekDays[0] ?? focusedDay;
-      const anchorDay = resolveWeekdayAlignedAnchorDay(rowAnchorDay);
       if (isMonthScopedCalendarViewMode(nextViewMode)) {
         setPendingMonthAlignment({
-          rowStartDay: rowAnchorDay,
-          focusDay: anchorDay,
+          rowStartDay: resolveWeekStartDay(focusedDay),
+          focusDay: focusedDay,
         });
       } else {
         setPendingMonthAlignment(null);
       }
       monthScrollAlignmentKeyRef.current = null;
       calendarHorizontalAlignmentKeyRef.current = null;
-      onSelectedDayChange(anchorDay, "push", nextViewMode);
+      onSelectedDayChange(focusedDay, "push", nextViewMode, { alignMonth: true });
     },
     [
       calendarHorizontalAlignmentKeyRef,
       focusedDay,
-      focusedWeekDays,
       monthScrollAlignmentKeyRef,
       onSelectedDayChange,
-      resolveMonthScopedTopRowDay,
-      resolveWeekdayAlignedAnchorDay,
+      resolveWeekStartDay,
       setDayPreview,
       viewMode,
     ]

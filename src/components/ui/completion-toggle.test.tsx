@@ -12,6 +12,7 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  vi.useRealTimers();
   if (originalVibrate) {
     Object.defineProperty(window.navigator, "vibrate", originalVibrate);
   } else {
@@ -20,7 +21,14 @@ afterEach(() => {
 });
 
 describe("CompletionToggle", () => {
-  it("exposes completion state and forwards clicks", () => {
+  function commitByHold(toggle: HTMLElement) {
+    fireEvent.pointerDown(toggle);
+    act(() => {
+      vi.advanceTimersByTime(COMPLETION_HOLD_MS);
+    });
+  }
+
+  it("exposes completion state and does not commit on click", () => {
     const onClick = vi.fn();
 
     render(
@@ -42,7 +50,7 @@ describe("CompletionToggle", () => {
     );
 
     fireEvent.click(toggle);
-    expect(onClick).toHaveBeenCalledOnce();
+    expect(onClick).not.toHaveBeenCalled();
   });
 
   it("commits after a pointer hold and fills the inner mark", () => {
@@ -76,7 +84,7 @@ describe("CompletionToggle", () => {
     vi.useRealTimers();
   });
 
-    it("commits on a pointer click without waiting for the hold", () => {
+    it("does not commit on a pointer click without waiting for the hold", () => {
       const onClick = vi.fn();
       render(
         <CompletionToggle
@@ -94,7 +102,7 @@ describe("CompletionToggle", () => {
       );
       fireEvent.pointerUp(toggle);
       fireEvent.click(toggle, { detail: 1 });
-      expect(onClick).toHaveBeenCalledOnce();
+      expect(onClick).not.toHaveBeenCalled();
     });
 
     it("cancels a hold that is released early", () => {
@@ -110,11 +118,17 @@ describe("CompletionToggle", () => {
     const toggle = screen.getByRole("button", { name: "Mark session done" });
     fireEvent.pointerDown(toggle);
     fireEvent.pointerUp(toggle);
+    expect(toggle).toHaveAttribute("data-holding", "false");
+    expect(toggle).toHaveAttribute("data-fill-transition", "true");
+    expect(toggle.querySelector("[data-completion-mark='circle']")).toHaveAttribute(
+      "data-fill-progress",
+      "0"
+    );
     act(() => {
       vi.advanceTimersByTime(COMPLETION_HOLD_MS);
     });
     expect(onClick).not.toHaveBeenCalled();
-    expect(toggle).toHaveAttribute("data-holding", "false");
+    expect(toggle).toHaveAttribute("data-fill-transition", "false");
     vi.useRealTimers();
   });
 
@@ -161,6 +175,22 @@ describe("CompletionToggle", () => {
 
     fireEvent.pointerDown(screen.getByRole("button", { name: "Mark session done" }));
     expect(onParentPointerDown).not.toHaveBeenCalled();
+  });
+
+  it("does not let mouse or touch starts bubble to a parent drag listener", () => {
+    const onParentMouseDown = vi.fn();
+    const onParentTouchStart = vi.fn();
+    render(
+      <div onMouseDown={onParentMouseDown} onTouchStart={onParentTouchStart}>
+        <CompletionToggle completed={false} aria-label="Mark session done" />
+      </div>
+    );
+
+    const toggle = screen.getByRole("button", { name: "Mark session done" });
+    fireEvent.mouseDown(toggle);
+    fireEvent.touchStart(toggle);
+    expect(onParentMouseDown).not.toHaveBeenCalled();
+    expect(onParentTouchStart).not.toHaveBeenCalled();
   });
 
   it("does not let clicks bubble to parent row handlers", () => {
@@ -218,6 +248,7 @@ describe("CompletionToggle", () => {
   });
 
   it("uses best-effort haptic feedback when supported", () => {
+    vi.useFakeTimers();
     const vibrate = vi.fn(() => true);
     Object.defineProperty(window.navigator, "vibrate", {
       configurable: true,
@@ -231,13 +262,10 @@ describe("CompletionToggle", () => {
       />
     );
 
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: "Mark session done",
-      })
-    );
+    commitByHold(screen.getByRole("button", { name: "Mark session done" }));
 
     expect(vibrate).toHaveBeenCalledWith(8);
+    vi.useRealTimers();
   });
 
   it("does not fire interaction feedback while disabled", () => {
@@ -264,6 +292,7 @@ describe("CompletionToggle", () => {
   });
 
   it("keeps optimistic completed state visible until canonical completion catches up", () => {
+    vi.useFakeTimers();
     const { rerender } = render(
       <CompletionToggle
         completed={false}
@@ -272,7 +301,7 @@ describe("CompletionToggle", () => {
     );
 
     const toggle = screen.getByRole("button", { name: "Mark session done" });
-    fireEvent.click(toggle);
+    commitByHold(toggle);
     expect(toggle).toHaveAttribute("data-visual-completed", "true");
 
     rerender(
@@ -290,9 +319,11 @@ describe("CompletionToggle", () => {
       />
     );
     expect(toggle).toHaveAttribute("data-visual-completed", "false");
+    vi.useRealTimers();
   });
 
   it("clears optimistic state when the click handler settles", async () => {
+    vi.useFakeTimers();
     let resolveMutation!: () => void;
     const mutation = new Promise<void>((resolve) => {
       resolveMutation = resolve;
@@ -307,8 +338,9 @@ describe("CompletionToggle", () => {
     );
 
     const toggle = screen.getByRole("button", { name: "Mark session done" });
-    fireEvent.click(toggle);
+    commitByHold(toggle);
     expect(toggle).toHaveAttribute("data-visual-completed", "true");
+    vi.useRealTimers();
 
     await act(async () => {
       resolveMutation();
@@ -329,7 +361,7 @@ describe("CompletionToggle", () => {
     );
 
     const toggle = screen.getByRole("button", { name: "Mark session done" });
-    fireEvent.click(toggle);
+    commitByHold(toggle);
     expect(toggle).toHaveAttribute("data-visual-completed", "true");
 
     act(() => {
@@ -346,6 +378,7 @@ describe("CompletionToggle", () => {
   });
 
   it("optimistically clears the checkmark when unchecking", () => {
+    vi.useFakeTimers();
     render(
       <CompletionToggle
         completed
@@ -356,11 +389,13 @@ describe("CompletionToggle", () => {
     const toggle = screen.getByRole("button", {
       name: "Mark session not done",
     });
-    fireEvent.click(toggle);
+    commitByHold(toggle);
     expect(toggle).toHaveAttribute("data-visual-completed", "false");
+    vi.useRealTimers();
   });
 
   it("suppresses haptics when the user requests reduced motion", () => {
+    vi.useFakeTimers();
     const vibrate = vi.fn(() => true);
     Object.defineProperty(window.navigator, "vibrate", {
       configurable: true,
@@ -386,8 +421,9 @@ describe("CompletionToggle", () => {
         aria-label="Mark session done"
       />
     );
-    fireEvent.click(screen.getByRole("button", { name: "Mark session done" }));
+    commitByHold(screen.getByRole("button", { name: "Mark session done" }));
 
     expect(vibrate).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 });
