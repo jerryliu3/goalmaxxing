@@ -1,16 +1,14 @@
 "use client";
 
-import { Flag, Newspaper, Trophy, Users } from "lucide-react";
+import { Flag, Trophy, Users } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChallengeList } from "@/features/social/challenges/challenge-list";
 import {
-  invalidateSocialFeedCache,
   invalidateSocialTabCache,
 } from "@/features/social/data";
 import { GroupJoinCard } from "@/features/social/group-join-card";
 import { TeamPanel } from "@/features/social/team/team-panel";
-import { FeedList } from "@/features/social/feed/feed-list";
 import { LeaderboardsPanel } from "@/features/social/leaderboards/leaderboards-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -23,7 +21,6 @@ import { SOCIAL_ACTIVITY_VISIBLE_CACHE_KEY } from "@/lib/cache/planner-tab-cache
 import { readTabDataCache, writeTabDataCache } from "@/lib/cache/tab-data-cache";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { subscribeXpRefresh } from "@/lib/xp/events";
 
 const socialSurfaceTriggerBaseClass =
   "h-10 min-w-0 flex-col gap-0.5 rounded-xl px-1.5 py-1 text-[10px] font-semibold leading-tight transition-[transform,box-shadow,border-color,background-color] duration-150 hover:-translate-y-0.5 active:translate-y-[3px] data-[state=active]:translate-y-[3px] data-[state=active]:hover:translate-y-[3px] data-[state=active]:cursor-default after:hidden";
@@ -76,16 +73,6 @@ export function SocialSurface() {
   }, [triggerBackgroundRefresh]);
 
   useEffect(() => {
-    return subscribeXpRefresh(() => {
-      if (activeTab !== "feed") {
-        return;
-      }
-      invalidateSocialFeedCache();
-      refreshActiveTab();
-    });
-  }, [activeTab, refreshActiveTab]);
-
-  useEffect(() => {
     const intervalId = window.setInterval(() => {
       if (document.visibilityState !== "visible") {
         return;
@@ -130,10 +117,16 @@ export function SocialSurface() {
   }, []);
 
   useEffect(() => {
+    const requestedTab = searchParams.get("tab");
+    if (requestedTab === "feed") {
+      applySearchParams((params) => {
+        params.delete("tab");
+      }, "replace");
+      return;
+    }
     if (!publicSocialLocked) {
       return;
     }
-    const requestedTab = searchParams.get("tab");
     if (requestedTab === "team" || requestedTab === null) {
       return;
     }
@@ -169,7 +162,7 @@ export function SocialSurface() {
             socialActivityVisible,
           });
           applySearchParams((params) => {
-            if (nextTab === "feed") {
+            if (nextTab === "team") {
               params.delete("tab");
             } else {
               params.set("tab", nextTab);
@@ -180,23 +173,21 @@ export function SocialSurface() {
       >
         <TabsList
           variant="line"
-          className="grid w-full grid-cols-4 gap-1.5 rounded-2xl bg-transparent p-0"
+          className="grid w-full grid-cols-3 gap-1.5 rounded-2xl bg-transparent p-0"
         >
           <TabsTrigger
-            value="feed"
+            value="team"
             className={cn(
               socialSurfaceTriggerBaseClass,
               socialSurfaceTriggerToneClass
             )}
             style={
-              activeTab === "feed" ? { boxShadow: selectedChipShadow } : undefined
+              activeTab === "team" ? { boxShadow: selectedChipShadow } : undefined
             }
-            data-onboarding="social.feed"
-            disabled={publicSocialLocked}
-            title={publicSocialLocked ? "Private accounts use Team only." : undefined}
+            data-onboarding="social.team"
           >
-            <Newspaper className="size-3.5" />
-            <span className="truncate">Feed</span>
+            <Users className="size-3.5" />
+            <span className="truncate">Team</span>
           </TabsTrigger>
           <TabsTrigger
             value="challenges"
@@ -234,26 +225,12 @@ export function SocialSurface() {
             <Flag className="size-3.5" />
             <span className="truncate">Leaderboards</span>
           </TabsTrigger>
-          <TabsTrigger
-            value="team"
-            className={cn(
-              socialSurfaceTriggerBaseClass,
-              socialSurfaceTriggerToneClass
-            )}
-            style={
-              activeTab === "team" ? { boxShadow: selectedChipShadow } : undefined
-            }
-            data-onboarding="social.team"
-          >
-            <Users className="size-3.5" />
-            <span className="truncate">Team</span>
-          </TabsTrigger>
         </TabsList>
+        <TabsContent value="team" className="space-y-4">
+          <TeamPanel isActive={activeTab === "team"} refreshToken={refreshToken} />
+        </TabsContent>
         {!publicSocialLocked ? (
           <>
-            <TabsContent value="feed" className="space-y-4">
-              <FeedList isActive={activeTab === "feed"} refreshToken={refreshToken} />
-            </TabsContent>
             <TabsContent value="challenges" className="space-y-4">
               <GroupJoinCard />
               <ChallengeList
@@ -271,9 +248,6 @@ export function SocialSurface() {
             </TabsContent>
           </>
         ) : null}
-        <TabsContent value="team" className="space-y-4">
-          <TeamPanel isActive={activeTab === "team"} refreshToken={refreshToken} />
-        </TabsContent>
       </Tabs>
     </>
   );

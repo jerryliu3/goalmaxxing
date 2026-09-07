@@ -1,8 +1,7 @@
 export const SOCIAL_SURFACE_TABS = [
-  "feed",
+  "team",
   "challenges",
   "leaderboards",
-  "team",
 ] as const;
 
 export type SocialSurfaceTab = (typeof SOCIAL_SURFACE_TABS)[number];
@@ -17,5 +16,5 @@ export function resolveSocialSurfaceTab(
   if (value === "challenges" || value === "leaderboards" || value === "team") {
     return value;
   }
-  return "feed";
+  return "team";
 }
