@@ -112,8 +112,12 @@ surfaces. The default is to simplify and reuse what already exists.
   `docs/ux/goalmaxxing-experience-design-guide.md`.
 - Authenticated application leading direction is Spatial Plan (B). Use
   `docs/ux/goalmaxxing-application-design-guide.md` and `/ux/concepts`.
-  Production `AppShell` remains unchanged until an explicit implementation
-  decision.
+  Visual brand explorations live in
+  `docs/ux/goalmaxxing-application-brand-guide.md` and `/ux/brand`.
+  Gazetteer + Soft paper + Nest is the preserved leading lock; Col is the
+  runner-up. New atmosphere rounds are exploratory and do not replace that
+  lock. Production `AppShell` and Geist remain unchanged until an explicit
+  implementation decision.
 - Reuse-first: before adding a new hook/component/helper, check whether an
   existing one can be extended or composed.
 - Prefer canonical homes for shared domain logic (`src/lib/planner/*`,
