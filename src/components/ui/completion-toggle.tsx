@@ -1,9 +1,9 @@
 "use client";
 
-import { CheckCircle2, Circle } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { triggerLightPressFeedback } from "@/lib/feedback/haptics";
+import { NestCompletionMark } from "@/components/ui/nest-completion-mark";
 
 const sizeClasses = {
   sm: {
@@ -34,6 +34,7 @@ interface CompletionToggleProps
 
 export function CompletionToggle({
   completed,
+  pending = false,
   size = "md",
   className,
   onClick,
@@ -103,25 +104,19 @@ export function CompletionToggle({
       data-completed={completed}
       data-visual-completed={visualCompleted}
       data-motion="completion-toggle"
+      aria-busy={pending || undefined}
       className={cn(
-        "group relative isolate flex shrink-0 touch-manipulation items-center justify-center rounded-full border border-border bg-background shadow-sm transition-[transform,box-shadow,background-color,border-color] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-0.5 active:scale-[0.94] active:shadow-none disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transform-none motion-reduce:transition-none",
+        "group relative isolate flex shrink-0 touch-manipulation items-center justify-center rounded-md border border-border bg-background shadow-sm transition-[transform,box-shadow,background-color,border-color] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-0.5 active:scale-[0.94] active:shadow-none disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transform-none motion-reduce:transition-none",
         classes.button,
         className
       )}
       onClick={handleClick}
       {...props}
     >
-      {visualCompleted ? (
-        <CheckCircle2
-          key="completed"
-          className={cn("text-primary", classes.icon)}
-        />
-      ) : (
-        <Circle
-          key="incomplete"
-          className={cn("text-muted-foreground", classes.icon)}
-        />
-      )}
+      <NestCompletionMark
+        done={visualCompleted}
+        className={cn(visualCompleted ? "text-primary" : "text-muted-foreground", classes.icon)}
+      />
     </button>
   );
 }

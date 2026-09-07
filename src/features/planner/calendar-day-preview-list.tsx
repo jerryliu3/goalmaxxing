@@ -223,8 +223,8 @@ export function CalendarDayPreviewList<
                 key={`preview-completion-fact-${marker.key}`}
                 className={`rounded-md ${
                   marker.owner === "partner"
-                    ? "border-2 border-sky-500 bg-transparent text-sky-700 dark:text-sky-300"
-                    : "border border-emerald-300 bg-emerald-100 text-emerald-950 dark:border-emerald-300 dark:bg-emerald-100 dark:text-emerald-950"
+                    ? "border-2 border-primary bg-transparent text-primary"
+                    : "border border-primary/35 bg-primary/10 text-foreground"
                 } ${expanded ? "p-2" : "p-1.5"}`}
                 aria-label={detail ? `${marker.goalTitle}. ${detail}` : marker.goalTitle}
               >

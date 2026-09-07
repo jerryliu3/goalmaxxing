@@ -112,6 +112,65 @@ body {
   font-family: var(--font-geist-sans), Inter, system-ui, -apple-system, sans-serif;
 }
 
+/*
+ * Gazetteer lives on the authenticated shell (and body while AppShell is
+ * mounted so portaled sheets inherit tokens). Marketing keeps :root Geist.
+ */
+.gm-gazetteer {
+  --background: #f8f1e3;
+  --foreground: #241c14;
+  --card: #f3ead8;
+  --card-foreground: #241c14;
+  --popover: #f8f1e3;
+  --popover-foreground: #241c14;
+  --primary: #9a4f2c;
+  --primary-foreground: #f8f1e3;
+  --secondary: #efe4d0;
+  --secondary-foreground: #241c14;
+  --muted: #efe4d0;
+  --muted-foreground: #7a6a56;
+  --accent: #e8d9c0;
+  --accent-foreground: #241c14;
+  --destructive: #9a4f2c;
+  --border: #d4c4a4;
+  --input: #d4c4a4;
+  --ring: #9a4f2c;
+  --radius: 0.75rem;
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-source-sans), var(--font-geist-sans), Inter, system-ui, sans-serif;
+}
+
+.gm-gazetteer h1,
+.gm-gazetteer h2 {
+  font-family: var(--font-newsreader), Georgia, "Times New Roman", serif;
+}
+
+.gm-gazetteer .font-mono {
+  font-family: var(--font-plex-mono), var(--font-geist-mono), ui-monospace, monospace;
+}
+
+.dark .gm-gazetteer {
+  --background: #1c1610;
+  --foreground: #f3ead8;
+  --card: #241c14;
+  --card-foreground: #f3ead8;
+  --popover: #241c14;
+  --popover-foreground: #f3ead8;
+  --primary: #c88968;
+  --primary-foreground: #1c1610;
+  --secondary: #2a2218;
+  --secondary-foreground: #f3ead8;
+  --muted: #2a2218;
+  --muted-foreground: #c4b49a;
+  --accent: #3a2f24;
+  --accent-foreground: #f3ead8;
+  --destructive: #c88968;
+  --border: #5c4e3f;
+  --input: #5c4e3f;
+  --ring: #c88968;
+}
+
 .overflow-x-auto,
 .overflow-x-scroll {
   scrollbar-width: none;
@@ -379,6 +438,86 @@ body {
 
 .dark .react-calendar-heatmap .heatmap-scale-4 {
   fill: #40b262;
+}
+
+.gm-gazetteer .heatmap-scale-0 {
+  background: #efe4d0;
+}
+
+.gm-gazetteer .heatmap-scale-1 {
+  background: #e2c4b0;
+}
+
+.gm-gazetteer .heatmap-scale-2 {
+  background: #c88968;
+}
+
+.gm-gazetteer .heatmap-scale-3 {
+  background: #9a4f2c;
+}
+
+.gm-gazetteer .heatmap-scale-4 {
+  background: #6e341c;
+}
+
+.gm-gazetteer .react-calendar-heatmap .heatmap-scale-0 {
+  fill: #efe4d0;
+}
+
+.gm-gazetteer .react-calendar-heatmap .heatmap-scale-1 {
+  fill: #e2c4b0;
+}
+
+.gm-gazetteer .react-calendar-heatmap .heatmap-scale-2 {
+  fill: #c88968;
+}
+
+.gm-gazetteer .react-calendar-heatmap .heatmap-scale-3 {
+  fill: #9a4f2c;
+}
+
+.gm-gazetteer .react-calendar-heatmap .heatmap-scale-4 {
+  fill: #6e341c;
+}
+
+.dark .gm-gazetteer .heatmap-scale-0 {
+  background: #2a2218;
+}
+
+.dark .gm-gazetteer .heatmap-scale-1 {
+  background: #5c3a2a;
+}
+
+.dark .gm-gazetteer .heatmap-scale-2 {
+  background: #8a5a40;
+}
+
+.dark .gm-gazetteer .heatmap-scale-3 {
+  background: #c88968;
+}
+
+.dark .gm-gazetteer .heatmap-scale-4 {
+  background: #e2c4b0;
+}
+
+.dark .gm-gazetteer .react-calendar-heatmap .heatmap-scale-0 {
+  fill: #2a2218;
+}
+
+.dark .gm-gazetteer .react-calendar-heatmap .heatmap-scale-1 {
+  fill: #5c3a2a;
+}
+
+.dark .gm-gazetteer .react-calendar-heatmap .heatmap-scale-2 {
+  fill: #8a5a40;
+}
+
+.dark .gm-gazetteer .react-calendar-heatmap .heatmap-scale-3 {
+  fill: #c88968;
+}
+
+.dark .gm-gazetteer .react-calendar-heatmap .heatmap-scale-4 {
+  fill: #e2c4b0;
 }
 
 [data-sonner-toaster][data-position="bottom-right"] {
