@@ -144,7 +144,7 @@ describe("JourneyIntroOverlay", () => {
     expect(await screen.findByRole("dialog", { name: "Plan" })).toBeInTheDocument();
     await waitFor(() => {
       expect(routerMock.prefetch).toHaveBeenCalledWith("/calendar");
-      expect(routerMock.prefetch).toHaveBeenCalledWith("/calendar?surface=calendar");
+      expect(routerMock.prefetch).toHaveBeenCalledWith("/calendar?view=day");
     });
   });
 

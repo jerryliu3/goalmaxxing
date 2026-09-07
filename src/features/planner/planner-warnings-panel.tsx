@@ -211,7 +211,7 @@ export function PlannerWarningsPanel({
               size="sm"
               onClick={() => setWarningsOpen(false)}
             >
-              Back to calendar
+              Back to plan
             </Button>
           </div>
         </DialogContent>

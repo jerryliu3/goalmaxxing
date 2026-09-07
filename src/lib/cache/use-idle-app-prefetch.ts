@@ -46,11 +46,8 @@ export function useIdleAppPrefetch({
       for (const tab of tabs) {
         void router.prefetch(tab.href);
       }
-      void router.prefetch(withHrefPrefix("/calendar?surface=calendar", hrefPrefix));
-      void router.prefetch(withHrefPrefix("/calendar?surface=tasks", hrefPrefix));
+      void router.prefetch(withHrefPrefix("/calendar?view=day", hrefPrefix));
       void import("@/features/planner/calendar-page-shell");
-      void import("@/features/today/checklist-shell");
-      void import("@/features/tasks/tasks-tab");
       void warmAppTabData({
         userId,
         partnerId,

@@ -158,7 +158,7 @@ async function waitForCalendarReady(page: Page) {
 }
 
 async function ensureCalendarMonthView(page: Page) {
-  const viewModeSelect = page.getByRole("combobox", { name: "Calendar view mode" });
+  const viewModeSelect = page.getByRole("combobox", { name: "Plan view mode" });
   if (await viewModeSelect.isVisible().catch(() => false)) {
     const selectedLabel = (await viewModeSelect.textContent())?.trim() ?? "";
     if (!selectedLabel.startsWith("Month")) {
@@ -632,7 +632,7 @@ test.describe("planner critical rails", () => {
 
   // Serial retries restart the whole group; keep each attempt free of leftover draft UI.
   test.beforeEach(async ({ page }) => {
-    await page.goto("/checklist?tab=today");
+    await page.goto("/calendar?view=day");
     await expect(
       page.getByRole("navigation", { name: "Main navigation" })
     ).toBeVisible();
@@ -800,7 +800,7 @@ test.describe("planner critical rails", () => {
 
   test("completion toggle dispatches from today surface", async ({ page }) => {
     test.setTimeout(120_000);
-    await gotoAppPath(page, "/checklist?tab=today");
+    await gotoAppPath(page, "/calendar?view=day");
     const initialButton = page.locator(COMPLETION_TOGGLE_SELECTOR).first();
     await expect(initialButton).toBeVisible();
     await expect(initialButton).toBeEnabled();
@@ -811,19 +811,30 @@ test.describe("planner critical rails", () => {
     expect(todayPayload.goalId).toBeTruthy();
   });
 
-  test("completion toggle dispatches from past tab surface", async ({ page }) => {
+  test("completion toggle dispatches from a past Plan day", async ({ page }) => {
     test.setTimeout(120_000);
     await dismissTabOnboardingIfPresent(page);
-    await gotoAppPath(page, "/checklist?tab=past");
+    const yesterday = await page.evaluate(() => {
+      const date = new Date();
+      date.setHours(12, 0, 0, 0);
+      date.setDate(date.getDate() - 1);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    });
+    await gotoAppPath(page, `/calendar?view=day&day=${yesterday}`);
     const pastToggle = page.locator(COMPLETION_TOGGLE_SELECTOR).first();
-    await expect(pastToggle).toBeVisible({ timeout: 10_000 });
+    if (!(await pastToggle.isVisible({ timeout: 10_000 }).catch(() => false))) {
+      test.skip(true, "No Day completion toggle on yesterday.");
+      return;
+    }
     await expect(pastToggle).toBeEnabled();
     const pastPayload = await runCompletionToggleAction(page, async () => {
       await pastToggle.click();
     });
     expect(pastPayload.goalId).toBeTruthy();
-    const today = await page.evaluate(() => new Date().toISOString().slice(0, 10));
-    expect(pastPayload.date <= today).toBe(true);
+    expect(pastPayload.date <= yesterday).toBe(true);
   });
 
   test("completion toggle dispatches from calendar surface", async ({ page }) => {

@@ -23,7 +23,7 @@ describe("OnboardingGuidesSettings", () => {
     expect(screen.queryByText("Checklist")).toBeNull();
     expect(screen.getAllByRole("link", { name: "Replay" })[0]).toHaveAttribute(
       "href",
-      "/calendar?surface=calendar&onboarding=planner.calendar"
+      "/calendar?onboarding=planner.calendar"
     );
 
     expect(screen.queryByText("Starter packs")).toBeNull();

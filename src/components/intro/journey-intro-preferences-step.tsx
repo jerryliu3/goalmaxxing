@@ -130,7 +130,7 @@ export function JourneyIntroPreferencesStep({
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Set your planner defaults now. You can change these anytime under Profile.
+        Set your planner defaults now. You can change these anytime under You.
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block space-y-1">

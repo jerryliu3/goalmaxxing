@@ -57,7 +57,6 @@ describe("tab onboarding storage", () => {
       step.target,
       ...(step.fallbackTargets ?? []),
     ])).toEqual([
-      ["planner.surfaces"],
       ["planner.calendar.controls"],
       ["planner.calendar.today", "planner.calendar.item", "planner.calendar.board"],
     ]);

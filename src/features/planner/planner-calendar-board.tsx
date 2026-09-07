@@ -20,6 +20,7 @@ import type {
 import styles from "@/features/planner/calendar-surface.module.css";
 import { PlannerDayEntriesPanel } from "@/features/planner/planner-day-entries-panel";
 import { PlannerDayPreviewPopover } from "@/features/planner/planner-day-preview-popover";
+import { PlanDayUnplannedPanel } from "@/features/planner/plan-day-unplanned-panel";
 import { PlannerViewWindowHeader } from "@/features/planner/planner-view-window-header";
 import { PlannerTasksPanel } from "@/features/tasks/planner-tasks-panel";
 
@@ -213,13 +214,19 @@ export function PlannerCalendarBoard({
                 />
               </div>
               {showTasksInsteadOfGoals ? null : (
+                <PlanDayUnplannedPanel
+                  day={focusedDay}
+                  placedEntries={focusedDayEntries}
+                />
+              )}
+              {showTasksInsteadOfGoals ? null : (
                 <PlannerTasksPanel
                   key={focusedDay}
                   title="Tasks"
-                  description={null}
+                  description="One-time tasks for this day, separate from recurring goals."
                   scheduledDate={focusedDay}
-                  allowCreate={false}
-                  hideWhenEmpty
+                  allowCreate
+                  hideWhenEmpty={false}
                 />
               )}
             </div>

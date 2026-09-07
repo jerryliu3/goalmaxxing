@@ -36,15 +36,25 @@ describe("PlannerCalendarToolbar", () => {
     cleanup();
   });
 
-  it("places calendar help beside the Calendar title", () => {
+  it("offers Week, Month, and Day without a 3 Day option", () => {
     renderToolbar();
 
-    const title = screen.getByRole("heading", { name: "Calendar" });
-    const helpButton = screen.getByRole("button", { name: "Open calendar help" });
+    fireEvent.click(screen.getByRole("combobox", { name: "Plan view mode" }));
+    expect(screen.getByRole("option", { name: "Week" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Month" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Day" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "3 Day" })).toBeNull();
+  });
+
+  it("places plan help beside the Plan title", () => {
+    renderToolbar();
+
+    const title = screen.getByRole("heading", { name: "Plan" });
+    const helpButton = screen.getByRole("button", { name: "Open plan help" });
     expect(title.parentElement).toContainElement(helpButton);
   });
 
-  it("shows hidden linked goals from the calendar help dialog", async () => {
+  it("shows hidden linked goals from the plan help dialog", async () => {
     renderToolbar({
       linkedTargetDetails: [
         {
@@ -56,7 +66,7 @@ describe("PlannerCalendarToolbar", () => {
       ],
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Open calendar help" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open plan help" }));
     const dialog = await screen.findByRole("dialog");
     fireEvent.click(within(dialog).getByRole("button", { name: "See hidden goals" }));
 

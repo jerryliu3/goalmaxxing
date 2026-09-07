@@ -207,7 +207,7 @@ test.describe("cadence schedule-affinity", () => {
   }) => {
     test.setTimeout(120_000);
 
-    await gotoAppPath(page, "/calendar?surface=checklist");
+    await gotoAppPath(page, "/calendar?view=day");
 
     const fixture = await resolveCadenceAffinityFixture(page);
     test.skip(
@@ -220,14 +220,14 @@ test.describe("cadence schedule-affinity", () => {
       desiredFactState: "absent",
     });
 
-    await gotoAppPath(page, "/calendar?surface=checklist");
-    const goalCard = page
-      .getByRole("heading", { name: CADENCE_AFFINITY_GOAL_TITLE })
-      .locator('xpath=ancestor::*[contains(@class,"shadow-sm")][1]');
-    await expect(goalCard).toBeVisible({ timeout: 15_000 });
+    await gotoAppPath(page, "/calendar?view=day");
+    const goalRow = page
+      .locator("[data-planner-entry-key]")
+      .filter({ hasText: CADENCE_AFFINITY_GOAL_TITLE });
+    await expect(goalRow).toBeVisible({ timeout: 15_000 });
 
-    const completeButton = goalCard.getByRole("button", {
-      name: `Complete goal for ${fixture.today}`,
+    const completeButton = goalRow.getByRole("button", {
+      name: "Mark session done",
     });
     await expect(completeButton).toBeEnabled({ timeout: 15_000 });
 

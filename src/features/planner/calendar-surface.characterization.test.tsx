@@ -355,7 +355,7 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("combobox", { name: "Calendar view mode" }));
+    fireEvent.click(screen.getByRole("combobox", { name: "Plan view mode" }));
     fireEvent.click(await screen.findByRole("option", { name: "Day" }));
 
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-15", "push", "day");
@@ -393,7 +393,7 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("combobox", { name: "Calendar view mode" }));
+    fireEvent.click(screen.getByRole("combobox", { name: "Plan view mode" }));
     fireEvent.click(await screen.findByRole("option", { name: "Week" }));
 
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-15", "push", "week");
@@ -1263,7 +1263,7 @@ describe("CalendarSurface characterization", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("keeps linked-target suppression out of warnings and in calendar help", async () => {
+  it("keeps linked-target suppression out of warnings and in plan help", async () => {
     const context = buildContext([
       unit({
         originalGoalId: "goal-a",
@@ -1327,12 +1327,12 @@ describe("CalendarSurface characterization", () => {
         /Goal B: hidden while linked subgoals are still active/i
       )
     ).not.toBeInTheDocument();
-    fireEvent.click(within(dialog).getByRole("button", { name: "Back to calendar" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Back to plan" }));
     await waitFor(() => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Open calendar help" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open plan help" }));
     const helpDialog = await screen.findByRole("dialog");
     fireEvent.click(within(helpDialog).getByRole("button", { name: "See hidden goals" }));
     expect(
@@ -1342,7 +1342,7 @@ describe("CalendarSurface characterization", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows linked-target suppression in calendar help without warning banner", async () => {
+  it("shows linked-target suppression in plan help without warning banner", async () => {
     const context = buildContext([
       unit({
         originalGoalId: "goal-a",
@@ -1387,7 +1387,7 @@ describe("CalendarSurface characterization", () => {
       screen.queryByRole("button", { name: "See warnings" })
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Open calendar help" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open plan help" }));
     const dialog = await screen.findByRole("dialog");
     fireEvent.click(within(dialog).getByRole("button", { name: "See hidden goals" }));
     expect(
