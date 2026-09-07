@@ -82,7 +82,7 @@ export function LandingWowMountain({ progress }: { progress: number }) {
             </linearGradient>
             <linearGradient id={`${reactId}-sage`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#D5DDC8" />
-              <stop offset="100%" stopColor="#9EAF93" />
+              <stop offset="100%" stopColor="#4a6740" />
             </linearGradient>
             <linearGradient id={`${reactId}-near`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#F7F3EC" />
@@ -92,7 +92,7 @@ export function LandingWowMountain({ progress }: { progress: number }) {
             <linearGradient id={`${reactId}-trail`} x1="0" y1="1" x2="1" y2="0">
               <stop offset="0%" stopColor="#C9A494" />
               <stop offset="55%" stopColor="#A9BCC8" />
-              <stop offset="100%" stopColor="#9EAF93" />
+              <stop offset="100%" stopColor="#4a6740" />
             </linearGradient>
             <filter id={`${reactId}-glow`} x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="3.5" result="blur" />

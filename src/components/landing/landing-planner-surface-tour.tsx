@@ -57,12 +57,12 @@ function CalendarOutline() {
           <div
             key={day.day}
             className={`min-h-16 rounded-md border p-1 ${
-              day.today ? "border-blue-300 bg-blue-50/80" : "bg-muted/20"
+              day.today ? "border-primary/40 bg-muted/80" : "bg-muted/20"
             }`}
           >
             <p
               className={`text-[8px] font-semibold ${
-                day.today ? "text-blue-700" : "text-muted-foreground"
+                day.today ? "text-primary" : "text-muted-foreground"
               }`}
             >
               {day.day}
@@ -104,8 +104,8 @@ function ChecklistOutline() {
           Daily
         </p>
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/70 p-2.5">
-            <span className="inline-flex size-5 items-center justify-center rounded-md bg-emerald-600 text-white">
+          <div className="flex items-center gap-2 rounded-lg border border-gain/35 bg-gain/10 p-2.5">
+            <span className="inline-flex size-5 items-center justify-center rounded-md bg-gain text-primary-foreground">
               <Check className="size-3" />
             </span>
             <div className="min-w-0 flex-1">
@@ -116,7 +116,7 @@ function ChecklistOutline() {
                 Career · Daily recurring
               </p>
             </div>
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[8px] font-medium text-emerald-800">
+            <span className="rounded-full bg-gain/15 px-2 py-0.5 text-[8px] font-medium text-gain">
               Done
             </span>
           </div>
@@ -124,8 +124,8 @@ function ChecklistOutline() {
             <span
               className={`inline-flex size-5 items-center justify-center rounded-md border ${
                 readChecked
-                  ? "border-emerald-600 bg-emerald-600 text-white"
-                  : "border-slate-300 bg-white text-transparent"
+                  ? "border-gain bg-gain text-primary-foreground"
+                  : "border-border bg-background text-transparent"
               }`}
             >
               <Check className="size-3" />
@@ -190,8 +190,8 @@ function TasksOutline() {
             <span
               className={`inline-flex size-5 items-center justify-center rounded-full border ${
                 task.done
-                  ? "border-emerald-600 bg-emerald-600 text-white"
-                  : "border-slate-300 text-transparent"
+                  ? "border-gain bg-gain text-primary-foreground"
+                  : "border-border text-transparent"
               }`}
             >
               <Check className="size-3" />

@@ -26,11 +26,11 @@ const heatmapLevels = Array.from({ length: 140 }, (_, index) => {
 });
 
 const heatmapClasses = [
-  "bg-slate-100",
-  "bg-emerald-100",
-  "bg-emerald-300",
-  "bg-emerald-500",
-  "bg-emerald-700",
+  "heatmap-scale-0",
+  "heatmap-scale-1",
+  "heatmap-scale-2",
+  "heatmap-scale-3",
+  "heatmap-scale-4",
 ] as const;
 
 function TourPanel({
@@ -50,9 +50,9 @@ function TourPanel({
 }) {
   return (
     <LandingReveal>
-      <article className="grid items-center gap-8 rounded-3xl border border-blue-100/80 bg-white/80 p-5 shadow-sm sm:p-8 md:grid-cols-2 md:gap-12">
+      <article className="grid items-center gap-8 rounded-3xl border border-border bg-background/80 p-5 shadow-sm sm:p-8 md:grid-cols-2 md:gap-12">
         <div className={reverse ? "md:order-2" : ""}>
-          <p className="text-xs font-semibold tracking-[0.16em] text-blue-700 uppercase">
+          <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
             {eyebrow}
           </p>
           <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -106,7 +106,7 @@ function InsightsVisual() {
                   selected ? "August 10 selected for history edit" : undefined
                 }
                 className={`min-w-0 rounded-[2px] ${heatmapClasses[level]} ${
-                  selected ? "ring-2 ring-blue-500 ring-offset-1" : ""
+                  selected ? "ring-2 ring-primary ring-offset-1" : ""
                 }`}
               />
             );
@@ -122,7 +122,7 @@ function InsightsVisual() {
           <span>More</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[8px] font-medium text-blue-700">
+          <span className="text-[8px] font-medium text-primary">
             Aug 10 selected
           </span>
           <span className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[9px] font-medium">
@@ -132,13 +132,13 @@ function InsightsVisual() {
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border bg-emerald-50/40 p-3">
+      <div className="mt-4 rounded-xl border bg-gain/10 p-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <LineChart className="size-3.5 text-emerald-700" />
+            <LineChart className="size-3.5 text-gain" />
             <span className="text-[10px] font-medium">30-day completion rate</span>
           </div>
-          <span className="text-[9px] font-medium text-emerald-800">+14%</span>
+          <span className="text-[9px] font-medium text-gain">+14%</span>
         </div>
         <svg
           viewBox="0 0 280 70"
@@ -179,7 +179,7 @@ function CommunityVisual() {
       <div className="space-y-3">
         <div className="rounded-2xl border bg-card p-4 shadow-sm">
           <div className="flex items-center gap-2">
-            <span className="inline-flex size-8 items-center justify-center rounded-full bg-violet-100 text-xs font-semibold text-violet-800">
+            <span className="inline-flex size-8 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
               AL
             </span>
             <div>
@@ -187,31 +187,31 @@ function CommunityVisual() {
               <p className="text-[9px] text-muted-foreground">Community · 12m</p>
             </div>
           </div>
-          <div className="mt-3 flex items-center justify-between rounded-lg bg-violet-50 px-3 py-2">
-            <span className="text-[10px] font-medium text-violet-900">
+          <div className="mt-3 flex items-center justify-between rounded-lg bg-muted px-3 py-2">
+            <span className="text-[10px] font-medium text-foreground">
               Run three times this week
             </span>
-            <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-violet-800">
+            <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-primary">
               <Heart className="size-3" />
               Cheer
             </span>
           </div>
         </div>
-        <div className="rounded-2xl border border-blue-200 bg-blue-50/60 p-4">
+        <div className="rounded-2xl border border-border bg-muted/60 p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[9px] font-semibold tracking-wide text-blue-700 uppercase">
+              <p className="text-[9px] font-semibold tracking-wide text-primary uppercase">
                 Your duo
               </p>
-              <p className="mt-1 text-[11px] font-medium text-blue-950">
+              <p className="mt-1 text-[11px] font-medium text-foreground">
                 You + Alex · 7,700 XP
               </p>
             </div>
-            <Users className="size-5 text-blue-700" />
+            <Users className="size-5 text-primary" />
           </div>
-          <div className="mt-3 flex items-center justify-between rounded-lg border border-blue-200 bg-white px-3 py-2">
-            <span className="text-[9px] text-blue-900">Momentum nudge</span>
-            <span className="rounded-full bg-blue-600 px-2 py-1 text-[8px] font-semibold text-white">
+          <div className="mt-3 flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2">
+            <span className="text-[9px] text-foreground">Momentum nudge</span>
+            <span className="rounded-full bg-primary px-2 py-1 text-[8px] font-semibold text-primary-foreground">
               Send
             </span>
           </div>
@@ -228,7 +228,7 @@ function CommunityVisual() {
             <div
               key={row.rank}
               className={`flex items-center gap-2 rounded-lg border px-2.5 py-2 ${
-                row.name === "You" ? "border-blue-300 bg-blue-50" : ""
+                row.name === "You" ? "border-primary/40 bg-muted" : ""
               }`}
             >
               <span className="text-[10px] font-semibold text-muted-foreground">
@@ -260,10 +260,10 @@ function PersonalizationStrip() {
   ] as const;
 
   return (
-    <div className="rounded-3xl border bg-gradient-to-r from-slate-50 via-white to-blue-50 p-5 shadow-sm sm:p-6">
+    <div className="rounded-3xl border bg-gradient-to-r from-page via-background to-muted p-5 shadow-sm sm:p-6">
       <div className="grid items-center gap-5 md:grid-cols-[0.65fr_2fr]">
         <div className="flex items-center gap-3">
-          <span className="inline-flex size-11 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
+          <span className="inline-flex size-11 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
             JO
           </span>
           <div>
@@ -279,7 +279,7 @@ function PersonalizationStrip() {
               key={label}
               className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-[9px] font-medium shadow-sm"
             >
-              <Icon className="size-3 text-blue-700" />
+              <Icon className="size-3 text-primary" />
               {label}
             </span>
           ))}
@@ -291,10 +291,10 @@ function PersonalizationStrip() {
 
 export function LandingProductTour() {
   return (
-    <section className="border-b border-blue-100/70">
+    <section className="border-b border-border">
       <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pt-4 pb-16 sm:px-6 md:pt-6 md:pb-20">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-xs font-semibold tracking-[0.16em] text-blue-700 uppercase">
+          <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
             Inside Goalmaxxing
           </p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">

@@ -155,17 +155,14 @@ describe("AppShell", () => {
     expect(screen.getByText("Goalmaxxing")).toBeInTheDocument();
   });
 
-  it("applies Gazetteer tokens to the authenticated shell and body", () => {
-    const { unmount } = render(
+  it("keeps Gazetteer tokens on the authenticated shell", () => {
+    render(
       <AppShell userId="user-1" {...emptyDuoProps}>
         <div>Child content</div>
       </AppShell>
     );
 
     expect(document.querySelector(".gm-gazetteer")).toBeInTheDocument();
-    expect(document.body).toHaveClass("gm-gazetteer");
-    unmount();
-    expect(document.body).not.toHaveClass("gm-gazetteer");
   });
 
   it("keeps the mobile tab bar out of the page view-transition snapshot", () => {

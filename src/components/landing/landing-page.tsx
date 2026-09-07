@@ -8,18 +8,18 @@ import { LandingWowChapter } from "@/components/landing/landing-wow-chapter";
 import { Button } from "@/components/ui/button";
 
 const primaryCtaClassName =
-  "border-blue-700 bg-blue-700 text-white hover:border-blue-800 hover:bg-blue-800 dark:border-blue-700 dark:bg-blue-700 dark:text-white dark:hover:border-blue-800 dark:hover:bg-blue-800";
+  "border-primary bg-primary text-primary-foreground hover:border-primary/80 hover:bg-primary/80";
 
 export function LandingPage() {
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-slate-50 text-foreground">
+    <div className="relative min-h-screen overflow-x-clip bg-page text-foreground">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1200px_circle_at_12%_-8%,rgba(191,219,254,0.7),transparent_55%),radial-gradient(900px_circle_at_92%_6%,rgba(219,234,254,0.8),transparent_52%),radial-gradient(800px_circle_at_78%_88%,rgba(224,231,255,0.45),transparent_50%)]"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1200px_circle_at_12%_-8%,rgba(154,79,44,0.12),transparent_55%),radial-gradient(900px_circle_at_92%_6%,rgba(212,196,164,0.55),transparent_52%),radial-gradient(800px_circle_at_78%_88%,rgba(74,103,64,0.12),transparent_50%)]"
       />
-      <header className="sticky top-0 z-40 border-b border-blue-100/80 bg-slate-50/80 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link href="/" className="text-base font-semibold tracking-tight">
+          <Link href="/" className="font-display text-xl font-semibold tracking-tight">
             Goalmaxxing
           </Link>
           <nav className="flex items-center gap-2">
@@ -33,7 +33,7 @@ export function LandingPage() {
       <main>
         <section className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:items-center md:py-10">
           <div className="max-w-xl space-y-6">
-            <h1 className="text-[2rem] font-semibold leading-[1.1] tracking-tight sm:text-[2.75rem]">
+            <h1 className="font-display text-[2rem] font-semibold leading-[1.1] tracking-tight sm:text-[2.75rem]">
               Achieve your goals using one focused system
             </h1>
             <p className="text-base text-muted-foreground sm:text-lg">
@@ -73,7 +73,7 @@ export function LandingPage() {
         <LandingFeatureNarrative />
 
         <section className="mx-auto w-full max-w-6xl px-4 py-16 text-center sm:px-6">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
             Build momentum across weeks, not just days.
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">

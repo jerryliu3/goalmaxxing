@@ -37,14 +37,12 @@ describe("LandingPage", () => {
     expect(root.className).toMatch(/overflow-x-clip/);
   });
 
-  it("keeps filled blue backgrounds in dark mode instead of outline grey", () => {
+  it("keeps filled stamp-rust CTAs instead of outline grey", () => {
     render(<LandingPage />);
 
     for (const link of primaryCtaLinks()) {
-      expect(link.className).toContain("bg-blue-700");
-      expect(link.className).toContain("dark:bg-blue-700");
-      expect(link.className).toContain("text-white");
-      expect(link.className).toContain("dark:text-white");
+      expect(link.className).toContain("bg-primary");
+      expect(link.className).toContain("text-primary-foreground");
       expect(link.className).not.toContain("dark:bg-input");
     }
   });

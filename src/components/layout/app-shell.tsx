@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Fragment, type ReactNode, useLayoutEffect, ViewTransition } from "react";
+import { Fragment, type ReactNode, ViewTransition } from "react";
 import { JourneyIntroOverlay } from "@/components/intro/journey-intro-overlay";
 import { JourneyProvider } from "@/components/journey/journey-provider.web";
 import type { JourneyFeatureFlags } from "@/components/journey/types";
@@ -70,12 +70,6 @@ export function AppShell({
   onNewGoalClick,
 }: AppShellProps) {
   setTabDataCacheScope(userId);
-  useLayoutEffect(() => {
-    document.body.classList.add("gm-gazetteer");
-    return () => {
-      document.body.classList.remove("gm-gazetteer");
-    };
-  }, []);
   useIdleAppPrefetch({
     userId,
     partnerId: duoState.activePartner?.partnerId ?? null,
@@ -113,7 +107,7 @@ export function AppShell({
           >
             <PublicProfileSheetProvider>
               <div className="gm-gazetteer">
-                <div className="relative z-10 flex min-h-screen w-full justify-center bg-[color:var(--gm-page,#f3ead8)] px-4 py-4 sm:px-6 sm:py-6">
+                <div className="relative z-10 flex min-h-screen w-full justify-center bg-page px-4 py-4 sm:px-6 sm:py-6">
                   <div className="flex w-full max-w-6xl flex-col gap-4 md:gap-6">
                   <header
                     className="sticky top-0 z-40 -mx-4 -mt-4 border-b border-border bg-background/85 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.7rem)] backdrop-blur supports-[backdrop-filter]:bg-background/75 md:static md:m-0 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none"

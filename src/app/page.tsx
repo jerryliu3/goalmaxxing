@@ -18,7 +18,7 @@ export const viewport: Viewport = {
   minimumScale: 1,
   userScalable: true,
   viewportFit: "cover",
-  themeColor: "#2563eb",
+  themeColor: "#9A4F2C",
 };
 
 function firstParam(value: string | string[] | undefined) {

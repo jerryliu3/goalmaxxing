@@ -57,16 +57,16 @@ export function selectFeatureIndex(cardCenters: number[], anchor: number) {
 function FeatureSceneVisual({ index }: { index: number }) {
   if (index === 0) {
     return (
-      <div className="w-full rounded-xl border bg-blue-50/70 p-4">
-        <p className="text-xs font-medium text-blue-950">Outcome over repetition</p>
+      <div className="w-full rounded-xl border bg-muted/70 p-4">
+        <p className="text-xs font-medium text-foreground">Outcome over repetition</p>
         <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
-          <div className="rounded-lg border border-slate-200 bg-white p-2.5">
-            <p className="font-semibold text-slate-500">Daily only</p>
-            <p className="mt-1 text-slate-600">Check the box again tomorrow</p>
+          <div className="rounded-lg border border-border bg-background p-2.5">
+            <p className="font-semibold text-muted-foreground">Daily only</p>
+            <p className="mt-1 text-muted-foreground">Check the box again tomorrow</p>
           </div>
-          <div className="rounded-lg border border-blue-200 bg-white p-2.5">
-            <p className="font-semibold text-blue-900">Week and month</p>
-            <p className="mt-1 text-blue-700">Ship onboarding · Raise activation</p>
+          <div className="rounded-lg border border-border bg-background p-2.5">
+            <p className="font-semibold text-foreground">Week and month</p>
+            <p className="mt-1 text-primary">Ship onboarding · Raise activation</p>
           </div>
         </div>
       </div>
@@ -75,17 +75,17 @@ function FeatureSceneVisual({ index }: { index: number }) {
 
   if (index === 1) {
     return (
-      <div className="w-full rounded-xl border bg-orange-50/70 p-4">
-        <p className="text-xs font-medium text-orange-950">Keep the plan moving</p>
+      <div className="w-full rounded-xl border bg-recover/10 p-4">
+        <p className="text-xs font-medium text-recover">Keep the plan moving</p>
         <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-[11px]">
-          <div className="rounded-lg border border-dashed border-slate-300 bg-white p-2.5">
-            <p className="font-semibold text-slate-500">Missed Thursday</p>
-            <p className="mt-1 text-slate-600 line-through">Tempo run</p>
+          <div className="rounded-lg border border-dashed border-border bg-background p-2.5">
+            <p className="font-semibold text-muted-foreground">Missed Thursday</p>
+            <p className="mt-1 text-muted-foreground line-through">Tempo run</p>
           </div>
-          <span className="text-orange-700">→</span>
-          <div className="rounded-lg border border-emerald-200 bg-white p-2.5">
-            <p className="font-semibold text-emerald-800">Next opening</p>
-            <p className="mt-1 text-emerald-950">Friday · 7:00 AM</p>
+          <span className="text-recover">→</span>
+          <div className="rounded-lg border border-gain/35 bg-background p-2.5">
+            <p className="font-semibold text-gain">Next opening</p>
+            <p className="mt-1 text-foreground">Friday · 7:00 AM</p>
           </div>
         </div>
       </div>
@@ -93,21 +93,21 @@ function FeatureSceneVisual({ index }: { index: number }) {
   }
 
   return (
-    <div className="w-full rounded-xl border bg-violet-50/70 p-3.5">
-      <p className="text-xs font-medium text-violet-950">Accountability loop</p>
+    <div className="w-full rounded-xl border bg-muted/70 p-3.5">
+      <p className="text-xs font-medium text-foreground">Accountability loop</p>
       <div className="mt-3 space-y-2 text-[11px]">
         {accountabilityEvents.map((event) => (
           <div
             key={event.kind}
-            className="rounded-lg border border-violet-200 bg-white p-2.5"
+            className="rounded-lg border border-border bg-background p-2.5"
           >
             <div className="flex items-center justify-between gap-3">
-              <p className="font-medium text-violet-900">{event.eyebrow}</p>
-              <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[9px] font-medium text-violet-800">
+              <p className="font-medium text-foreground">{event.eyebrow}</p>
+              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-medium text-primary">
                 {event.action}
               </span>
             </div>
-            <p className="mt-1 text-violet-800">{event.copy}</p>
+            <p className="mt-1 text-primary">{event.copy}</p>
           </div>
         ))}
       </div>
@@ -165,7 +165,7 @@ export function LandingFeatureNarrative() {
     >
       <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 md:py-16">
         <div className="mb-8 max-w-3xl">
-          <p className="text-xs font-semibold tracking-[0.16em] text-orange-700 uppercase">
+          <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
             Why Goalmaxxing
           </p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -189,11 +189,11 @@ export function LandingFeatureNarrative() {
                 data-feature-active={activeFeatureIndex === index}
                 className={`flex min-h-[220px] flex-col justify-center rounded-2xl border p-5 transition duration-300 md:h-[clamp(320px,42vh,420px)] md:min-h-0 ${
                   activeFeatureIndex === index
-                    ? "border-orange-300 bg-card shadow-[0_16px_50px_-30px_rgba(234,88,12,0.45)]"
+                    ? "border-primary/40 bg-card shadow-[0_16px_50px_-30px_rgba(154,79,44,0.45)]"
                     : "border-border/80 bg-background/60"
                 }`}
               >
-                <div className="inline-flex size-9 items-center justify-center rounded-lg bg-orange-100 text-orange-800">
+                <div className="inline-flex size-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
                   <Icon className="size-4" />
                 </div>
                 <h3 className="mt-3 text-2xl font-semibold tracking-tight">{title}</h3>

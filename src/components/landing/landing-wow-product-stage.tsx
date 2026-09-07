@@ -41,7 +41,7 @@ const HEATMAP_LEVELS = Array.from({ length: HEATMAP_CELL_COUNT }, (_, index) => 
 
 const CONFETTI_BITS = [
   { x: -22, y: -28, rotate: -28, color: "#C9A494", delay: 0 },
-  { x: 20, y: -34, rotate: 22, color: "#9EAF93", delay: 0.04 },
+  { x: 20, y: -34, rotate: 22, color: "#4a6740", delay: 0.04 },
   { x: -8, y: -40, rotate: 10, color: "#A9BCC8", delay: 0.08 },
   { x: 28, y: -18, rotate: -16, color: "#E2D4C4", delay: 0.02 },
   { x: -30, y: -12, rotate: 26, color: "#D4B562", delay: 0.06 },
@@ -92,7 +92,7 @@ export function LandingWowProductStage({
     >
       <div className="flex items-center justify-between border-b border-stone-200/80 px-5 py-3">
         <div>
-          <p className="text-[10px] font-semibold tracking-[0.18em] text-[#7E9174] uppercase">
+          <p className="text-[10px] font-semibold tracking-[0.18em] text-gain uppercase">
             Goalmaxxing
           </p>
           <p className="text-sm font-semibold">{sceneTitle(productScene)}</p>
@@ -179,7 +179,7 @@ function Leaderboard({ local }: { local: number }) {
               className={`relative flex items-center gap-3 rounded-xl border px-3 py-2 ${
                 row.you
                   ? "border-[#A9BCC8] bg-[#D5DFE8]/80 shadow-[0_18px_40px_-18px_rgba(126,150,166,0.55)]"
-                  : "border-stone-200 bg-white/70"
+                  : "border-stone-200 bg-background/70"
               }`}
             >
               <span className="w-4 text-xs font-semibold text-[#7E96A6]">
@@ -253,7 +253,7 @@ function MonthGrid({ visibleCount }: { visibleCount: number }) {
               date
                 ? isToday
                   ? "border-[#A9BCC8] bg-[#D5DFE8]/70"
-                  : "border-stone-200 bg-white/70"
+                  : "border-stone-200 bg-background/70"
                 : "border-transparent"
             }`}
           >
@@ -295,12 +295,12 @@ function Checklist({ checkedCount }: { checkedCount: number }) {
         return (
           <div
             key={item}
-            className="flex items-center gap-3 rounded-xl border border-stone-200 bg-white/75 px-3 py-2.5"
+            className="flex items-center gap-3 rounded-xl border border-stone-200 bg-background/75 px-3 py-2.5"
           >
             <span
               className={`inline-flex size-5 items-center justify-center rounded-md border ${
                 checked
-                  ? "border-[#7E9174] bg-[#9EAF93] text-white"
+                  ? "border-gain bg-gain text-primary-foreground"
                   : "border-stone-300 text-transparent"
               }`}
             >
@@ -382,7 +382,7 @@ function InsightsPanel({
 
 function StatTile({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="min-w-0 rounded-lg border border-stone-200 bg-white/70 p-2.5">
+    <div className="min-w-0 rounded-lg border border-stone-200 bg-background/70 p-2.5">
       <p className="text-[10px] text-[#8A847C]">{label}</p>
       <p className="mt-1 text-lg font-semibold tabular-nums">
         {typeof value === "number" ? value.toLocaleString() : value}
