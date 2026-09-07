@@ -6,7 +6,6 @@ import { motion, useReducedMotion } from "motion/react";
 import { useMemo, useState } from "react";
 import {
   isAppTabActive,
-  type PlannerPrimaryTabPreference,
 } from "@cadence/shared/navigation/tabs";
 import { useUiStyle } from "@/components/brand/ui-style-provider";
 import { buildAppTabs } from "@/components/navigation/tabs";
@@ -22,13 +21,11 @@ const GRID_BY_COUNT: Record<number, string> = {
 
 interface TabNavProps {
   mobile?: boolean;
-  plannerPrimaryTabPreference?: PlannerPrimaryTabPreference;
   hrefPrefix?: string;
 }
 
 export function TabNav({
   mobile = false,
-  plannerPrimaryTabPreference,
   hrefPrefix,
 }: TabNavProps) {
   const { style } = useUiStyle();
@@ -36,11 +33,8 @@ export function TabNav({
   const reduceMotion = useReducedMotion();
   const tabs = useMemo(
     () =>
-      buildAppTabs(
-        plannerPrimaryTabPreference,
-        hrefPrefix ? { hrefPrefix } : undefined
-      ),
-    [hrefPrefix, plannerPrimaryTabPreference]
+      buildAppTabs(hrefPrefix ? { hrefPrefix } : undefined),
+    [hrefPrefix]
   );
   const [optimisticNav, setOptimisticNav] = useState<{
     from: string;

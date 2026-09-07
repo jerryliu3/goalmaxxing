@@ -37,7 +37,7 @@ const JOURNEY_INTRO_STEPS = [
   {
     title: "Plan",
     description:
-      "Week, month, and day live here. Day is the checklist for the selected date.",
+      "Week, month, and day live here. Day is your plan for the selected date.",
     target: "nav.calendar",
     kind: "copy" as const,
   },

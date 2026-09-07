@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useMemo } from "react";
 import { selectChecklistListModel } from "@/features/today/checklist-list-model";
 import { useChecklistCompletionActions } from "@/features/today/use-checklist-completion-actions";
 import { useChecklistData } from "@/features/today/use-checklist-data";
@@ -8,18 +8,16 @@ import { useChecklistFilters } from "@/features/today/use-checklist-filters";
 import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
 
 export function usePlanDayChecklistModel({
-  enabled,
   viewDate,
   searchQuery,
 }: {
-  enabled: boolean;
   viewDate: string;
   searchQuery: string;
 }) {
   const filters = useChecklistFilters();
   const { data, loading, loadData, redirectToLogin, todayLocalDate } =
     useChecklistData({
-      isActive: enabled,
+      isActive: true,
       viewDate,
     });
   const listModel = useMemo(
@@ -61,7 +59,7 @@ export function usePlanDayChecklistModel({
     loadData,
     redirectToLogin,
   });
-  const ready = enabled && data.userId.length > 0;
+  const ready = data.userId.length > 0;
   const visibilityOptions = [
     {
       label: "Show past goals",
@@ -112,7 +110,6 @@ export function usePlanDayChecklistModel({
   };
 
   return {
-    enabled,
     ready,
     loading,
     data,
@@ -129,20 +126,3 @@ export function usePlanDayChecklistModel({
 }
 
 export type PlanDayChecklistModel = ReturnType<typeof usePlanDayChecklistModel>;
-
-export function PlanDayChecklistProvider({
-  viewDate,
-  searchQuery,
-  children,
-}: {
-  viewDate: string;
-  searchQuery: string;
-  children: (model: PlanDayChecklistModel) => ReactNode;
-}) {
-  const model = usePlanDayChecklistModel({
-    enabled: true,
-    viewDate,
-    searchQuery,
-  });
-  return children(model);
-}

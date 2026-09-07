@@ -54,7 +54,6 @@ const emptyDuoProps = {
   },
   duoAvailability: "ready" as const,
   initialDuoScopePreference: null,
-  plannerPrimaryTabPreference: "checklist" as const,
   journeyFlags: {
     journeyEnabled: false,
   },

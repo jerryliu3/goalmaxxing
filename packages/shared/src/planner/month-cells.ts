@@ -39,7 +39,3 @@ export function buildMonthCells(month: string, weekStartsOn = 1) {
 
   return cells;
 }
-
-export function buildMondayFirstMonthCells(month: string) {
-  return buildMonthCells(month, 1);
-}

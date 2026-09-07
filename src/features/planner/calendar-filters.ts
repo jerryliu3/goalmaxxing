@@ -10,6 +10,8 @@ interface CalendarFilterGoalSnapshot {
   end_date?: string | null;
 }
 
+type CalendarFilterGoalOverride = CalendarFilterGoalSnapshot | undefined;
+
 const MILESTONE_UNIT_KEY_PATTERN = /^milestone:\d+$/i;
 
 export function normalizeCalendarSearchQuery(searchQuery: string | null | undefined) {
@@ -45,16 +47,18 @@ export function goalPassesCalendarFilters({
   categoryFilter,
   allCategoriesValue,
   endMonthFilter,
+  goalOverride,
 }: {
   goalId: string;
   goalsByOriginalId: Map<string, CalendarFilterGoalSnapshot>;
   categoryFilter: string;
   allCategoriesValue: string;
   endMonthFilter: string | null;
+  goalOverride?: CalendarFilterGoalOverride;
 }) {
   const hasActiveFilters =
     categoryFilter !== allCategoriesValue || endMonthFilter !== null;
-  const goal = goalsByOriginalId.get(goalId) ?? null;
+  const goal = goalOverride ?? goalsByOriginalId.get(goalId) ?? null;
   if (!goal) {
     return !hasActiveFilters;
   }
@@ -117,7 +121,10 @@ export function applyCalendarCompletionMarkerFilters({
 }: {
   viewerMarkers: PlannerCompletionFactMarker[];
   partnerMarkers: PlannerCompletionFactMarker[];
-  goalPassesFilters: (goalId: string) => boolean;
+  goalPassesFilters: (
+    goalId: string,
+    goalOverride?: CalendarFilterGoalOverride
+  ) => boolean;
   searchQuery?: string;
 }) {
   const normalizedSearchQuery = normalizeCalendarSearchQuery(searchQuery);
@@ -126,12 +133,12 @@ export function applyCalendarCompletionMarkerFilters({
       goalPassesFilters(marker.originalGoalId) &&
       completionMarkerMatchesCalendarSearchQuery(marker, normalizedSearchQuery)
   );
-  const filteredPartnerMarkers = partnerMarkers.filter((marker) =>
-    completionMarkerMatchesCalendarSearchQuery(marker, normalizedSearchQuery)
+  const filteredPartnerMarkers = partnerMarkers.filter(
+    (marker) =>
+      goalPassesFilters(marker.originalGoalId, {
+        category: marker.goalCategory ?? "",
+        end_date: marker.goalEndDate,
+      }) && completionMarkerMatchesCalendarSearchQuery(marker, normalizedSearchQuery)
   );
-  // TODO(partner-filter-parity): Keep partner markers visible for now. Expand this
-  // to full partner-aware filtering once we ship a parity UX that includes partner
-  // goal metadata and explicit mixed-owner filter semantics.
   return mergeCompletionFactMarkers(filteredViewerMarkers, filteredPartnerMarkers);
 }
-

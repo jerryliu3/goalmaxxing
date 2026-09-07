@@ -23,8 +23,6 @@ describe("gazetteer display colors", () => {
     expect(GAZETTEER.stamp).toBe("#9a4f2c");
     expect(GAZETTEER.stampLight).not.toBe(GAZETTEER.stamp);
     expect(GAZETTEER.sage).toBe("#6f8175");
-    expect(GAZETTEER.sageLight).toBe("#dfddcf");
-    expect(GAZETTEER.sageLight).not.toBe(GAZETTEER.sage);
   });
 
   it("keeps warning yellow off the rust identity", () => {

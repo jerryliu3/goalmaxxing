@@ -58,7 +58,6 @@ export interface PlannerCalendarBoardProps {
   ) => void;
   onEntryDragEnd: (entryKey: string, target: PlannerDragTarget) => void;
   onEntryDragCancel: (entryKey: string | null) => void;
-  rollingWeekStrip: ReactNode;
   focusedDay: string;
   focusedDayEntries: PlannerDayDetailEntry[];
   focusedDayCompletionFactMarkers: PlannerCompletionFactMarker[];
@@ -124,7 +123,6 @@ export function PlannerCalendarBoard({
   onEntryDragOverTarget,
   onEntryDragEnd,
   onEntryDragCancel,
-  rollingWeekStrip,
   focusedDay,
   focusedDayEntries,
   focusedDayCompletionFactMarkers,
@@ -215,8 +213,6 @@ export function PlannerCalendarBoard({
               titleAs="h2"
               shareDayTransition
             />
-          ) : viewMode === "three_day" ? (
-            rollingWeekStrip
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,3fr)_minmax(16rem,1fr)] md:items-start md:gap-8">
               <div className="min-w-0">

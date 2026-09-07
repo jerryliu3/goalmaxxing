@@ -4,7 +4,6 @@ import {
   APP_TABS as SHARED_APP_TABS,
   buildAppTabs as buildSharedAppTabs,
   TAB_ORDER as SHARED_TAB_ORDER,
-  type PlannerPrimaryTabPreference,
   type AppTabDefinition,
 } from "@cadence/shared/navigation/tabs";
 
@@ -27,10 +26,9 @@ function withIcon(tab: AppTabDefinition): AppTab {
 }
 
 export function buildAppTabs(
-  plannerPrimaryTab?: PlannerPrimaryTabPreference,
   options?: { hrefPrefix?: string }
 ): AppTab[] {
-  return buildSharedAppTabs(plannerPrimaryTab, options).map(withIcon);
+  return buildSharedAppTabs(options).map(withIcon);
 }
 
 export const APP_TABS: AppTab[] = SHARED_APP_TABS.map(withIcon);

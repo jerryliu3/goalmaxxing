@@ -143,13 +143,17 @@ export function selectCalendarDayAccessorsModel({
     );
   })();
 
-  const goalPassesFilters = (goalId: string) =>
+  const goalPassesFilters = (
+    goalId: string,
+    goalOverride?: { category: string; end_date?: string | null }
+  ) =>
     goalPassesCalendarFilters({
       goalId,
       goalsByOriginalId: activeGoalsByOriginalGoalId,
       categoryFilter,
       allCategoriesValue,
       endMonthFilter: effectiveEndMonthFilter,
+      goalOverride,
     });
 
   const calendarStoreProjection =

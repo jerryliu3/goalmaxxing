@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { PlannerRollingWeekStrip } from "@/features/planner/planner-rolling-week-strip";
 import {
   buildCalendarSurfaceLayoutProps,
   type PlannerCalendarSurfaceLayoutProps,
@@ -18,7 +17,6 @@ import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.
 
 type CalendarSurfacePresentationArgs = Omit<
   PlannerCalendarSurfaceLayoutProps,
-  | "rollingWeekStrip"
   | "plannerSettingsForm"
   | "eventDetailCallbacks"
   | "saveButtonLabel"
@@ -60,8 +58,6 @@ type CalendarSurfacePresentationArgs = Omit<
   cells: Array<{ date: string; inMonth: boolean }>;
   focusedWeekCells: Array<{ date: string; inMonth: boolean }>;
   dayPreviewInteractions: PlannerDayPreviewInteractions;
-  rollingWeekStripRef: React.RefObject<HTMLDivElement | null>;
-  focusedWeekDays: string[];
   setupRestWeekdays: number[];
   setSetupRestWeekdays: (value: number[]) => void;
   setupLoading: boolean;
@@ -110,8 +106,6 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     cells,
     focusedWeekCells,
     dayPreviewInteractions,
-    rollingWeekStripRef,
-    focusedWeekDays,
     setupRestWeekdays,
     setSetupRestWeekdays,
     setupLoading,
@@ -170,25 +164,6 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
       void layoutProps.toggleDateFact(entry, day, sourceElement ?? undefined);
     },
   });
-
-  const rollingWeekStrip = useMemo(
-    () => (
-      <PlannerRollingWeekStrip
-        rollingWeekStripRef={rollingWeekStripRef}
-        viewMode={viewMode}
-        focusedWeekDays={focusedWeekDays}
-        focusedWeekCells={focusedWeekCells}
-        renderCalendarDayCell={renderCalendarDayCell}
-      />
-    ),
-    [
-      focusedWeekCells,
-      focusedWeekDays,
-      renderCalendarDayCell,
-      rollingWeekStripRef,
-      viewMode,
-    ]
-  );
 
   const plannerSettingsForm = useMemo(
     () =>
@@ -271,7 +246,6 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     saveButtonLabel,
     moveViewWindow,
     jumpToToday,
-    rollingWeekStrip,
     renderCalendarDayCell,
     plannerSettingsForm,
     eventDetailCallbacks,

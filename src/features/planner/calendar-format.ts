@@ -246,6 +246,4 @@ export function completionDisabledReasonCopy(reason: CompletionControlDisabledRe
   return "This session cannot be updated from the current planner snapshot.";
 }
 
-export { moveItemInArray } from "@cadence/shared/planner/reorder-preview-entries";
 export { createClientUuid } from "@cadence/shared/ids";
-

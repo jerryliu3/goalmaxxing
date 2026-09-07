@@ -39,7 +39,6 @@ export function DemoClientRuntime({ children }: { children: ReactNode }) {
             duoState={snapshot.duoState}
             duoAvailability="ready"
             initialDuoScopePreference="me"
-            plannerPrimaryTabPreference="calendar"
             journeyFlags={{ journeyEnabled: false }}
           >
             <Suspense fallback={null}>{children}</Suspense>

@@ -16,7 +16,7 @@ function SurfaceTab({
   onSelect: (value: PlannerSurface) => void;
 }) {
   const label =
-    value === "calendar" ? "Calendar" : value === "checklist" ? "Checklist" : "Tasks";
+    value === "calendar" ? "Plan" : value === "checklist" ? "Plan Day" : "Tasks";
   const isSelected = selected === value;
 
   return (

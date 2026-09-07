@@ -36,13 +36,13 @@ describe("LandingProductTour", () => {
     expect(screen.queryByText(/community chat/i)).not.toBeInTheDocument();
   });
 
-  it("lets visitors preview Calendar, Checklist, and Tasks outlines", async () => {
+  it("lets visitors preview Plan, Plan Day, and Tasks outlines", async () => {
     const user = userEvent.setup();
     render(<LandingProductTour />);
 
     expect(screen.getByTestId("planner-surface-checklist")).toBeVisible();
 
-    await user.click(screen.getByRole("tab", { name: "Calendar" }));
+    await user.click(screen.getByRole("tab", { name: "Plan" }));
     expect(screen.getByTestId("planner-surface-calendar")).toBeVisible();
     expect(screen.getByTestId("planner-surface-checklist")).not.toBeVisible();
 
@@ -53,7 +53,7 @@ describe("LandingProductTour", () => {
       screen.getByText("One-time tasks stay separate from recurring goals.")
     ).toBeVisible();
 
-    await user.click(screen.getByRole("tab", { name: "Checklist" }));
+    await user.click(screen.getByRole("tab", { name: "Plan Day" }));
     expect(screen.getByTestId("planner-surface-checklist")).toBeVisible();
   });
 });

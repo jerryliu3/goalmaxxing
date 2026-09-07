@@ -8,9 +8,7 @@ describe("buildProfilePreferencesUpdate", () => {
   it("returns null when nothing changed", () => {
     expect(
       buildProfilePreferencesUpdate({
-        plannerPrimaryTabDirty: false,
         socialActivityVisibleDirty: false,
-        plannerPrimaryTab: "checklist",
         socialActivityVisible: true,
       })
     ).toBeNull();
@@ -19,9 +17,7 @@ describe("buildProfilePreferencesUpdate", () => {
   it("returns only the privacy field when only privacy changed", () => {
     expect(
       buildProfilePreferencesUpdate({
-        plannerPrimaryTabDirty: false,
         socialActivityVisibleDirty: true,
-        plannerPrimaryTab: "calendar",
         socialActivityVisible: false,
       })
     ).toEqual({
@@ -29,16 +25,13 @@ describe("buildProfilePreferencesUpdate", () => {
     });
   });
 
-  it("returns both fields when planner tab and privacy changed", () => {
+  it("returns the privacy field when it changes", () => {
     expect(
       buildProfilePreferencesUpdate({
-        plannerPrimaryTabDirty: true,
         socialActivityVisibleDirty: true,
-        plannerPrimaryTab: "calendar",
         socialActivityVisible: true,
       })
     ).toEqual({
-      planner_primary_tab: "calendar",
       social_activity_visible: true,
     });
   });

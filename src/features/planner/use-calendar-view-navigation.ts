@@ -2,11 +2,7 @@
 
 import { addDays, addMonths, format, isValid, parse } from "date-fns";
 import { useCallback, useMemo, useRef, useState } from "react";
-import {
-  getEntryGoalFirstTitleWithTime,
-  isEntryImmovableForDraft,
-  parseMonth,
-} from "@/features/planner/calendar-format";
+import { isEntryImmovableForDraft, parseMonth } from "@/features/planner/calendar-format";
 import { getTopVisibleCalendarDay } from "@/features/planner/calendar-scroll-position";
 import type {
   PlannerCalendarViewMode,
@@ -291,5 +287,3 @@ export function useCalendarEventDetail({
       selectedGoalOpenInstanceIndex < selectedGoalOpenInstances.length - 1,
   };
 }
-
-export { getEntryGoalFirstTitleWithTime };

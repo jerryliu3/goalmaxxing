@@ -1,7 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { normalizePlannerPrimaryTabPreference } from "@cadence/shared/navigation/tabs";
 import { AppShell } from "@/components/layout/app-shell";
 import { getFeatureFlags } from "@/lib/feature-flags";
 import { parseDuoScopeCookieValue, DUO_SCOPE_COOKIE_NAME } from "@/lib/social/duo/scope-cookie";
@@ -28,14 +27,11 @@ export default async function AuthenticatedLayout({
   const [{ data: profile }, duo] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, username, avatar_url, planner_primary_tab")
+      .select("display_name, username, avatar_url")
       .eq("id", user.id)
       .maybeSingle(),
     loadDuoContext({ supabase }),
   ]);
-  const plannerPrimaryTabPreference = normalizePlannerPrimaryTabPreference(
-    profile?.planner_primary_tab
-  );
   const profileDisplayName =
     typeof profile?.display_name === "string" ? profile.display_name.trim() : "";
   const profileUsername =
@@ -79,7 +75,6 @@ export default async function AuthenticatedLayout({
       duoState={duo.state}
       duoAvailability={duo.availability}
       initialDuoScopePreference={initialDuoScopePreference}
-      plannerPrimaryTabPreference={plannerPrimaryTabPreference}
       viewerAvatarUrl={viewerAvatarUrl}
       journeyFlags={journeyFlags}
     >

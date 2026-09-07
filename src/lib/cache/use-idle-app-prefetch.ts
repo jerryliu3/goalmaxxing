@@ -11,7 +11,6 @@ import { subscribePlannerTabCacheInvalidation } from "@/lib/cache/planner-tab-ca
 import { warmAppTabData } from "@/lib/cache/warm-app-tab-data";
 import { withHrefPrefix } from "@/lib/navigation/demo-path";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
-import type { PlannerPrimaryTabPreference } from "@cadence/shared/navigation/tabs";
 
 function isCalendarPath(pathname: string, hrefPrefix?: string) {
   const calendarHref = withHrefPrefix("/calendar", hrefPrefix);
@@ -25,22 +24,17 @@ const CALENDAR_PROGRESS_CONTEXT_WARM_DELAY_MS = 2000;
 export function useIdleAppPrefetch({
   userId,
   partnerId,
-  plannerPrimaryTabPreference,
   hrefPrefix,
 }: {
   userId: string;
   partnerId: string | null;
-  plannerPrimaryTabPreference?: PlannerPrimaryTabPreference;
   hrefPrefix?: string;
 }) {
   const router = useAppRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    const tabs = buildAppTabs(
-      plannerPrimaryTabPreference,
-      hrefPrefix ? { hrefPrefix } : undefined
-    );
+    const tabs = buildAppTabs(hrefPrefix ? { hrefPrefix } : undefined);
     const includeProgressContextNow = !isCalendarPath(pathname, hrefPrefix);
     const cancelIdle = scheduleIdleTask(() => {
       for (const tab of tabs) {
@@ -67,7 +61,7 @@ export function useIdleAppPrefetch({
       cancelIdle();
       cancelDelayedProgressWarm();
     };
-  }, [hrefPrefix, partnerId, pathname, plannerPrimaryTabPreference, router, userId]);
+  }, [hrefPrefix, partnerId, pathname, router, userId]);
 
   useEffect(() => {
     return subscribePlannerTabCacheInvalidation(() => {

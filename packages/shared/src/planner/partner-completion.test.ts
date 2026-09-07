@@ -20,6 +20,9 @@ describe("partner completion", () => {
         { goal_id: "g2", completed_on: "2026-08-13", source: "manual" },
       ],
       titles: { g1: "Run" },
+      goals: {
+        g1: { title: "Run", category: "Health", endDate: "2026-08-31" },
+      },
     });
     const dayMarkers = markers.get("2026-08-13") ?? [];
     expect(dayMarkers.map((marker) => marker.goalTitle)).toEqual([
@@ -27,6 +30,10 @@ describe("partner completion", () => {
       "Run",
     ]);
     expect(dayMarkers.every((marker) => marker.owner === "partner")).toBe(true);
+    expect(dayMarkers[1]).toMatchObject({
+      goalCategory: "Health",
+      goalEndDate: "2026-08-31",
+    });
     expect(
       dayMarkers.every((marker) => marker.key.startsWith("partner:"))
     ).toBe(true);

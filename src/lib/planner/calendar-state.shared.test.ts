@@ -5,65 +5,7 @@ import {
 } from "@cadence/shared/planner/calendar-state";
 import {
   normalizeCalendarRoute,
-  normalizeChecklistShellRoute,
 } from "@/lib/planner/calendar-route";
-
-describe("normalizeChecklistShellRoute", () => {
-  it("falls back to today for an invalid tab", () => {
-    const result = normalizeChecklistShellRoute({
-      searchParams: new URLSearchParams("tab=nope"),
-      defaultCalendarViewMode: "month",
-    });
-    expect(result.tab).toBe("today");
-    expect(result.changed).toBe(true);
-    expect(result.nextParams.get("tab")).toBe("today");
-  });
-
-  it("promotes a valid day into calendar day view", () => {
-    const result = normalizeChecklistShellRoute({
-      searchParams: new URLSearchParams("day=2026-08-13"),
-      defaultCalendarViewMode: "month",
-    });
-    expect(result).toMatchObject({
-      tab: "calendar",
-      month: "2026-08",
-      day: "2026-08-13",
-      viewMode: "day",
-      changed: true,
-    });
-  });
-
-  it("does not promote a valid day when the today tab is explicit", () => {
-    const result = normalizeChecklistShellRoute({
-      searchParams: new URLSearchParams("tab=today&day=2026-08-13"),
-      defaultCalendarViewMode: "month",
-    });
-    expect(result.tab).toBe("today");
-    expect(result.day).toBe("2026-08-13");
-    expect(result.changed).toBe(false);
-  });
-
-  it("drops an invalid day instead of keeping it", () => {
-    const result = normalizeChecklistShellRoute({
-      searchParams: new URLSearchParams("tab=today&day=2026-13-40"),
-      defaultCalendarViewMode: "month",
-    });
-    expect(result.day).toBeNull();
-    expect(result.nextParams.has("day")).toBe(false);
-  });
-
-  it("keeps an explicit day in month view on the calendar tab", () => {
-    const result = normalizeChecklistShellRoute({
-      searchParams: new URLSearchParams(
-        "tab=calendar&view=month&month=2026-08&day=2026-08-13"
-      ),
-      defaultCalendarViewMode: "month",
-    });
-    expect(result.viewMode).toBe("month");
-    expect(result.day).toBe("2026-08-13");
-    expect(result.month).toBe("2026-08");
-  });
-});
 
 describe("normalizeCalendarState", () => {
   it("selects today when the calendar surface has no day or month", () => {

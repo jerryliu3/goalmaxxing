@@ -2,7 +2,6 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SettingsTab } from "@/features/settings/settings-tab";
-import { DEFAULT_PLANNER_PRIMARY_TAB_PREFERENCE } from "@cadence/shared/navigation/tabs";
 
 let mockSearch = "";
 
@@ -27,7 +26,6 @@ vi.mock("@/features/social/use-social-tab-data", () => ({
       username: "user",
       display_name: "User",
       avatar_url: "",
-      planner_primary_tab: DEFAULT_PLANNER_PRIMARY_TAB_PREFERENCE,
       social_activity_visible: true,
     },
     setProfileDraft: vi.fn(),

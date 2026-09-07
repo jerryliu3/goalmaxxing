@@ -13,6 +13,7 @@ import {
   resolvePlannerEntryCompletionIntent,
 } from "@/lib/planner/completion-intent";
 import { resolveSelectedDateState } from "@/lib/dates/day";
+import type { CompletionDispatchDecision } from "@/lib/planner/completion-dispatch";
 
 export interface DateFactDispatchForEntry {
   currentlyCredited: boolean;

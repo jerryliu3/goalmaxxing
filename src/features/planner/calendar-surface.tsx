@@ -79,7 +79,7 @@ export function CalendarSurface({
   duoScope = "me",
   partnerCompletionMarkersByDate,
   partnerOverlayError,
-  partnerWeekLabel = null,
+  partnerLabel = null,
 }: CalendarSurfaceProps) {
   const [context, setContext] = useState<PlannerContextPayload | null>(() => {
     if (!month) {
@@ -117,7 +117,8 @@ export function CalendarSurface({
   const [warningsDismissed, setWarningsDismissed] = useState(false);
   const [localSelectedDay, setLocalSelectedDay] = useState<string | null>(null);
   useEffect(() => {
-    setLocalSelectedDay(null);
+    const resetTimer = window.setTimeout(() => setLocalSelectedDay(null), 0);
+    return () => window.clearTimeout(resetTimer);
   }, [month, selectedDay, viewMode]);
   const [expandedMonthRows, setExpandedMonthRows] = useState(false);
   const [previewEntryOrderByDay, setPreviewEntryOrderByDay] = useState<
@@ -142,7 +143,6 @@ export function CalendarSurface({
     calendarPreparedRef,
     skipInvalidationReloadRef,
     dayPreviewRef,
-    rollingWeekStripRef,
     calendarGridViewportRef,
     multiMonthGridScrollRef,
     monthScrollAlignmentKeyRef,
@@ -374,7 +374,6 @@ export function CalendarSurface({
     resolveMonthScopedTopRowDay,
     multiMonthGridScrollRef,
     calendarGridViewportRef,
-    rollingWeekStripRef,
     monthScrollAlignmentKeyRef,
     calendarHorizontalAlignmentKeyRef,
   });
@@ -687,8 +686,6 @@ export function CalendarSurface({
     cells,
     focusedWeekCells,
     dayPreviewInteractions,
-    rollingWeekStripRef,
-    focusedWeekDays,
     setupRestWeekdays,
     setSetupRestWeekdays,
     showTasksInsteadOfGoals,
@@ -746,7 +743,7 @@ export function CalendarSurface({
     setFiltersOpen,
     setSearchQuery,
     partnerOverlayError,
-    partnerLabel: partnerWeekLabel,
+    partnerLabel,
     duoScope,
     month,
     previousWindowAriaLabel,

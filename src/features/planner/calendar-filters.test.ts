@@ -65,7 +65,7 @@ describe("calendar filters", () => {
     ).toBe(false);
   });
 
-  it("keeps partner markers visible even when viewer filters are active", () => {
+  it("applies viewer filters to partner markers using partner goal metadata", () => {
     const markers = applyCalendarCompletionMarkerFilters({
       viewerMarkers: [
         {
@@ -83,11 +83,15 @@ describe("calendar filters", () => {
           originalGoalId: "partner-goal",
           unitKey: "partner-fact",
           goalTitle: "Partner goal",
+          goalCategory: "Personal",
+          goalEndDate: "2026-08-31",
           scheduledDate: "2026-08-15",
           owner: "partner",
         },
       ],
-      goalPassesFilters: (goalId) => goalId === "viewer-other-goal",
+      goalPassesFilters: (goalId, goal) =>
+        goalId === "viewer-other-goal" ||
+        (goal?.category === "Personal" && goal.end_date === "2026-08-31"),
     });
 
     expect(markers).toEqual([
@@ -96,6 +100,8 @@ describe("calendar filters", () => {
         originalGoalId: "partner-goal",
         unitKey: "partner-fact",
         goalTitle: "Partner goal",
+        goalCategory: "Personal",
+        goalEndDate: "2026-08-31",
         scheduledDate: "2026-08-15",
         owner: "partner",
       },
@@ -158,4 +164,3 @@ describe("calendar filters", () => {
     ).toBe(true);
   });
 });
-
