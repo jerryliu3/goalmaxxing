@@ -13,7 +13,7 @@ import {
   type CalendarCompletionFactMarkerBase,
   type CalendarMonthCellEntryBase,
 } from "@/features/planner/calendar-month-day-cell";
-import { getGoalVisual } from "@/features/planner/goal-visuals";
+import { getGoalVisual, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
 
 interface PreviewCompletionToggleState {
   currentlyCredited: boolean;
@@ -80,16 +80,18 @@ export function CalendarDayPreviewList<
               color: entry.activeGoal?.color ?? null,
               category: entry.activeGoal?.category ?? null,
             });
-            const Icon = visual.Icon;
             const displayTitle = getEntryDisplayTitle(entry);
             const subtitle = getEntrySubtitle(entry);
             const credited = isEntryCredited(entry);
             const immovable = isEntryImmovableForDraft(entry);
             const draftDiffSummary = getEntryDraftDiffSummary(entry);
+            const isDraft = Boolean(entry.draftDiffKind);
             const pillToneClasses = getEntryDraftPillClasses({
               draftDiffKind: entry.draftDiffKind,
-              credited,
             });
+            const pillFillStyle = isDraft
+              ? undefined
+              : getWorkPillFillStyle(visual.color, credited);
             const completionToggleState = getCompletionToggleState(entry, day);
             return (
               <PlannerDraggablePreviewEntry
@@ -108,7 +110,7 @@ export function CalendarDayPreviewList<
                 }) => (
                   <div
                     ref={setNodeRef}
-                    style={style}
+                    style={{ ...style, ...pillFillStyle }}
                     className={`flex items-center gap-2 rounded-md border transition-colors ${pillToneClasses} ${
                       expanded ? "p-2" : "p-1.5"
                     } ${
@@ -176,12 +178,6 @@ export function CalendarDayPreviewList<
                       />
                     ) : null}
                     <div className="flex min-w-0 flex-1 items-center gap-2 text-left">
-                      <span
-                        className="inline-flex size-4 items-center justify-center rounded-full"
-                        style={{ backgroundColor: visual.color }}
-                      >
-                        <Icon className="size-2.5 text-white" />
-                      </span>
                       <div className="min-w-0">
                         <p className={`${expanded ? "" : "truncate"} font-medium`}>
                           <span className="inline-flex items-center gap-1">

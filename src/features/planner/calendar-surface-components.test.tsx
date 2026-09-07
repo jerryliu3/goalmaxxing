@@ -83,6 +83,9 @@ describe("calendar surface extracted components", () => {
 
     expect(screen.getByText("Easy run")).toBeInTheDocument();
     expect(screen.getByText("Stretch")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Mark session done" })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /thursday, august 6/i })).not.toHaveAttribute(
       "data-onboarding"
     );
@@ -186,6 +189,46 @@ describe("calendar surface extracted components", () => {
       screen.getByLabelText("Partner stretch. Partner marked this done.")
     ).toBeInTheDocument();
     expect(screen.getByText("Partner marked this done.")).toBeInTheDocument();
+  });
+
+  it("shows overflow as +N and a completed mark instead of a category chip", () => {
+    const view = renderWithDnd(
+      <CalendarMonthDayCell
+        day="2026-08-06"
+        inMonth
+        isToday={false}
+        isPastInMonth={false}
+        ariaLabel="Thursday, August 6, 2026."
+        entriesForDay={[
+          sampleEntry,
+          { ...sampleEntry, key: "goal-2:cadence:0", originalGoalId: "goal-2", label: "Lift" },
+          { ...sampleEntry, key: "goal-3:cadence:0", originalGoalId: "goal-3", label: "Yoga" },
+        ]}
+        completionFactMarkersForDay={[]}
+        maxVisibleItems={2}
+        isAnyEntryDragging={false}
+        getEntryDisplayTitle={(entry) => entry.label ?? "Untitled"}
+        isEntryCredited={(entry) => entry.key === sampleEntry.key}
+        isEntryImmovableForDraft={() => false}
+        onEntryClick={() => {}}
+        onCellClick={() => {}}
+        onCellDoubleClick={() => {}}
+        onCellMouseEnter={() => {}}
+        onCellMouseLeave={() => {}}
+        onCellPointerDown={() => {}}
+        onCellPointerUp={() => {}}
+        onCellPointerCancel={() => {}}
+        onCellPointerLeave={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+      />
+    );
+
+    expect(within(view.container).getByText("+1")).toBeInTheDocument();
+    expect(within(view.container).getByLabelText("Completed")).toBeInTheDocument();
+    expect(
+      within(view.container).queryByRole("button", { name: "Mark session done" })
+    ).not.toBeInTheDocument();
   });
 });
 
