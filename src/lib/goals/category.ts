@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { GAZETTEER_CATEGORY_COLORS } from "@/lib/brand/gazetteer";
 import type { Database } from "@/lib/supabase/database.types";
 
 export interface GoalCategory {
@@ -33,35 +32,35 @@ export const DEFAULT_GOAL_CATEGORIES: GoalCategory[] = [
     key: "health",
     label: "Health",
     aliases: [],
-    color: GAZETTEER_CATEGORY_COLORS.health,
+    color: "#10b981",
     sortOrder: 10,
   },
   {
     key: "career",
     label: "Career",
     aliases: [],
-    color: GAZETTEER_CATEGORY_COLORS.career,
+    color: "#8b5cf6",
     sortOrder: 20,
   },
   {
     key: "personal",
     label: "Personal",
     aliases: [],
-    color: GAZETTEER_CATEGORY_COLORS.personal,
+    color: "#6366f1",
     sortOrder: 30,
   },
   {
     key: "relationships",
     label: "Relationships",
     aliases: [],
-    color: GAZETTEER_CATEGORY_COLORS.relationships,
+    color: "#f43f5e",
     sortOrder: 40,
   },
   {
     key: "other",
     label: "Other",
     aliases: [],
-    color: GAZETTEER_CATEGORY_COLORS.other,
+    color: "#64748b",
     sortOrder: 999,
   },
 ];
@@ -267,12 +266,12 @@ export function getCategorySwatchColor(
   categories: GoalCategory[] = DEFAULT_GOAL_CATEGORIES
 ): string {
   if (selection === CATEGORY_CUSTOM_VALUE) {
-    return GAZETTEER_CATEGORY_COLORS.other;
+    return "#64748b";
   }
 
   const normalizedCatalog = normalizeCategoryCatalog(categories);
   const categoryLookup = buildLookup(normalizedCatalog);
-  return categoryLookup.get(selection)?.color ?? GAZETTEER_CATEGORY_COLORS.other;
+  return categoryLookup.get(selection)?.color ?? "#64748b";
 }
 
 export async function fetchGoalCategories(
@@ -292,7 +291,7 @@ export async function fetchGoalCategories(
       key: row.key,
       label: row.label,
       aliases: row.aliases ?? [],
-      color: row.color ?? GAZETTEER_CATEGORY_COLORS.other,
+      color: row.color ?? "#64748b",
       sortOrder: row.sort_order,
     }))
   );

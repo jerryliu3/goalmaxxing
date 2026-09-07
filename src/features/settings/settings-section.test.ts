@@ -10,6 +10,7 @@ describe("resolveSettingsSection", () => {
     expect(resolveSettingsSection("notifications")).toBe("notifications");
     expect(resolveSettingsSection("integrations")).toBe("integrations");
     expect(resolveSettingsSection("onboarding")).toBe("onboarding");
+    expect(resolveSettingsSection("appearance")).toBe("appearance");
     expect(resolveSettingsSection("report-issue")).toBe("report-issue");
   });
 
@@ -30,6 +31,7 @@ describe("resolveSettingsSection", () => {
       "onboarding",
       "notifications",
       "integrations",
+      "appearance",
       "report-issue",
     ]);
   });

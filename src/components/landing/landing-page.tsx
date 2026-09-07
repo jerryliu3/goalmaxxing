@@ -5,6 +5,7 @@ import { LandingFeatureNarrative } from "@/components/landing/landing-feature-na
 import { LandingPlannerPreview } from "@/components/landing/landing-planner-preview";
 import { LandingProductTour } from "@/components/landing/landing-product-tour";
 import { LandingWowChapter } from "@/components/landing/landing-wow-chapter";
+import { UiStylePicker } from "@/components/brand/ui-style-picker";
 import { Button } from "@/components/ui/button";
 
 const primaryCtaClassName =
@@ -15,14 +16,15 @@ export function LandingPage() {
     <div className="relative min-h-screen overflow-x-clip bg-page text-foreground">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1200px_circle_at_12%_-8%,rgba(154,79,44,0.12),transparent_55%),radial-gradient(900px_circle_at_92%_6%,rgba(212,196,164,0.55),transparent_52%),radial-gradient(800px_circle_at_78%_88%,rgba(74,103,64,0.12),transparent_50%)]"
+        className="gm-landing-atmosphere pointer-events-none absolute inset-0 -z-10"
       />
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <Link href="/" className="font-display text-xl font-semibold tracking-tight">
             Goalmaxxing
           </Link>
           <nav className="flex items-center gap-2">
+            <UiStylePicker showLabel={false} size="sm" />
             <Button asChild size="sm" className={primaryCtaClassName}>
               <Link href="/signup">Create account</Link>
             </Button>

@@ -35,27 +35,50 @@ describe("goal visuals", () => {
         color: "0A0B0C",
         category: "Health",
       }).color
-    ).toBe("#4a6740");
+    ).toBe("#10b981");
   });
 
   it("turns category color into pill fill, not a separate chip", () => {
     expect(
-      getWorkPillFillStyle("#4a6740", false).backgroundColor
-    ).toBe("rgba(74, 103, 64, 0.18)");
-    expect(getWorkPillFillStyle("#4a6740", true).borderColor).toBe("#4a6740");
+      getWorkPillFillStyle("#10b981", false).backgroundColor
+    ).toBe("rgba(16, 185, 129, 0.18)");
+    expect(getWorkPillFillStyle("#10b981", true).borderColor).toBe("#10b981");
     expect(
-      getWorkPillFillStyle("#4a6740", true).backgroundColor
-    ).toBe("rgba(74, 103, 64, 0.4)");
+      getWorkPillFillStyle("#10b981", true).backgroundColor
+    ).toBe("rgba(16, 185, 129, 0.4)");
   });
 
-  it("maps leftover blue goal hexes onto stamp rust", () => {
+  it("keeps leftover blue goal hexes on original", () => {
     expect(
       getGoalVisual({
         goalId: "12000000-0000-4000-8000-000000000005",
         color: "#2563eb",
         category: null,
       }).color
+    ).toBe("#2563eb");
+  });
+
+  it("maps leftover blue goal hexes onto stamp rust in Gazetteer", () => {
+    expect(
+      getGoalVisual(
+        {
+          goalId: "12000000-0000-4000-8000-000000000005",
+          color: "#2563eb",
+          category: null,
+        },
+        "gazetteer"
+      ).color
     ).toBe("#9a4f2c");
+    expect(
+      getGoalVisual(
+        {
+          goalId: "12000000-0000-4000-8000-000000000003",
+          color: "0A0B0C",
+          category: "Health",
+        },
+        "gazetteer"
+      ).color
+    ).toBe("#4a6740");
   });
 
   it("keeps goal-level color for custom categories", () => {

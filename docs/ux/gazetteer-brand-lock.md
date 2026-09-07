@@ -1,19 +1,22 @@
-# Gazetteer brand lock (production)
+# Visual styles (production)
 
-Status: **Gazetteer is the production visual lock for Goalmaxxing web.**
-The native mobile app is out of scope. Spatial Plan (B) remains the IA:
-Plan · Progress · Community · You.
+Status: **Original is the default visual style.** Gazetteer is an opt-in
+skin. Spatial Plan (B) remains the IA: Plan · Progress · Community · You.
 
-Date locked: 5 September 2026. Production cutover: September 2026.
+Date locked: 5 September 2026. Style switcher: September 2026.
 
 Do not import `src/features/ux-concepts/*` or `src/features/ux-brand/*` into
 production. Reimplement atoms in live modules.
 
-Canonical palette lives in `src/lib/brand/gazetteer.ts`. Tokens are on
-`:root` and `.gm-gazetteer` so marketing, auth, and the authenticated shell
-share paper, rust, and Nest.
+The style catalog lives in `src/lib/brand/ui-style.ts`. Preference is stored
+in the `gm_ui_style` cookie and applied on `html` (`data-ui-style` plus an
+optional overlay class such as `.gm-gazetteer`). You → Appearance and the
+marketing header share the same picker.
 
-## Type
+Canonical Gazetteer palette lives in `src/lib/brand/gazetteer.ts` and is
+applied only when Gazetteer is selected.
+
+## Type (Gazetteer)
 
 - **Display / names:** Newsreader. Use on destination titles, day names, and
   work-row titles.
@@ -22,7 +25,7 @@ share paper, rust, and Nest.
 - **Rise / figures:** IBM Plex Mono.
 - Do not put Newsreader on chrome labels.
 
-## Color
+## Color (Gazetteer)
 
 | Token | Hex | Use |
 |---|---|---|
@@ -36,7 +39,7 @@ share paper, rust, and Nest.
 
 No sky-blue chips. No lavender cards. Green is a legend unit, not “done.”
 
-## Shape and completion
+## Shape and completion (Gazetteer)
 
 - **Soft paper** corners (~8–16px) on chips, rows, month cells, sheets.
 - **Nest** completion: empty rounded frame, inner square settles in.

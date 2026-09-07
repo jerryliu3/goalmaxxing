@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { useUiStyle } from "@/components/brand/ui-style-provider";
+import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import { triggerLightPressFeedback } from "@/lib/feedback/haptics";
-import { NestCompletionMark } from "@/components/ui/nest-completion-mark";
+import { cn } from "@/lib/utils";
 
 const sizeClasses = {
   sm: {
@@ -40,6 +41,7 @@ export function CompletionToggle({
   onClick,
   ...props
 }: CompletionToggleProps) {
+  const { style } = useUiStyle();
   const OPTIMISTIC_FALLBACK_MS = 8_000;
   const classes = sizeClasses[size];
   const [optimisticCompleted, setOptimisticCompleted] = React.useState<boolean | null>(
@@ -106,14 +108,15 @@ export function CompletionToggle({
       data-motion="completion-toggle"
       aria-busy={pending || undefined}
       className={cn(
-        "group relative isolate flex shrink-0 touch-manipulation items-center justify-center rounded-md border border-border bg-background shadow-sm transition-[transform,box-shadow,background-color,border-color] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-0.5 active:scale-[0.94] active:shadow-none disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transform-none motion-reduce:transition-none",
+        "group relative isolate flex shrink-0 touch-manipulation items-center justify-center border border-border bg-background shadow-sm transition-[transform,box-shadow,background-color,border-color] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-0.5 active:scale-[0.94] active:shadow-none disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transform-none motion-reduce:transition-none",
+        style.completionMark === "nest" ? "rounded-md" : "rounded-full",
         classes.button,
         className
       )}
       onClick={handleClick}
       {...props}
     >
-      <NestCompletionMark
+      <StyleCompletionMark
         done={visualCompleted}
         className={cn(visualCompleted ? "text-primary" : "text-muted-foreground", classes.icon)}
       />

@@ -9,10 +9,8 @@ import {
   Star,
   Target,
 } from "lucide-react";
-import {
-  GAZETTEER_FALLBACK_COLORS,
-  toGazetteerDisplayColor,
-} from "@/lib/brand/gazetteer";
+import { toGazetteerDisplayColor } from "@/lib/brand/gazetteer";
+import { getUiStyle, resolveUiStyleId, type UiStyleId } from "@/lib/brand/ui-style";
 import {
   getCategorySwatchColor,
   resolveCategoryKey,
@@ -30,7 +28,16 @@ const GOAL_ICONS: readonly LucideIcon[] = [
   Star,
 ];
 
-const FALLBACK_COLORS = GAZETTEER_FALLBACK_COLORS;
+const FALLBACK_COLORS = [
+  "#2563eb",
+  "#7c3aed",
+  "#0891b2",
+  "#0f766e",
+  "#15803d",
+  "#ca8a04",
+  "#c2410c",
+  "#be123c",
+] as const;
 
 const HEX_COLOR_REGEX = /^#?[0-9a-f]{6}$/i;
 type GoalVisualCategoryKey = Exclude<CategoryPresetId, "other">;
@@ -55,7 +62,15 @@ function stableHash(input: string) {
   return Math.abs(hash >>> 0);
 }
 
-export function normalizeGoalColor(color: string | null) {
+export function toStyleDisplayColor(color: string, styleId?: UiStyleId) {
+  const withHash = color.startsWith("#") ? color : `#${color}`;
+  if (getUiStyle(resolveUiStyleId(styleId)).remapDisplayColors) {
+    return toGazetteerDisplayColor(withHash);
+  }
+  return withHash;
+}
+
+export function normalizeGoalColor(color: string | null, styleId?: UiStyleId) {
   if (!color) {
     return null;
   }
@@ -64,7 +79,7 @@ export function normalizeGoalColor(color: string | null) {
     return null;
   }
   const hex = trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
-  return toGazetteerDisplayColor(hex);
+  return toStyleDisplayColor(hex, styleId);
 }
 
 function resolveCategorySwatchColor(category: string | null): string | null {
@@ -84,30 +99,31 @@ function resolveCategorySwatchColor(category: string | null): string | null {
   return getCategorySwatchColor(categoryKey as GoalVisualCategoryKey);
 }
 
-export function colorWithAlpha(color: string, alpha: number) {
-  const hex = normalizeGoalColor(color) ?? FALLBACK_COLORS[0];
+export function colorWithAlpha(color: string, alpha: number, styleId?: UiStyleId) {
+  const hex = normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0];
   const red = Number.parseInt(hex.slice(1, 3), 16);
   const green = Number.parseInt(hex.slice(3, 5), 16);
   const blue = Number.parseInt(hex.slice(5, 7), 16);
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
 
-export function getWorkPillFillStyle(color: string, credited = false) {
+export function getWorkPillFillStyle(color: string, credited = false, styleId?: UiStyleId) {
   return {
-    backgroundColor: colorWithAlpha(color, credited ? 0.4 : 0.18),
-    borderColor: color,
+    backgroundColor: colorWithAlpha(color, credited ? 0.4 : 0.18, styleId),
+    borderColor: toStyleDisplayColor(color, styleId),
   };
 }
 
-export function getGoalVisual(input: GoalVisualInput): GoalVisual {
+export function getGoalVisual(input: GoalVisualInput, styleId?: UiStyleId): GoalVisual {
   const hash = stableHash(input.goalId);
   const categoryColor = resolveCategorySwatchColor(input.category);
   return {
     Icon: GOAL_ICONS[hash % GOAL_ICONS.length],
-    color: toGazetteerDisplayColor(
+    color: toStyleDisplayColor(
       categoryColor ??
-        normalizeGoalColor(input.color) ??
-        FALLBACK_COLORS[hash % FALLBACK_COLORS.length]
+        normalizeGoalColor(input.color, styleId) ??
+        FALLBACK_COLORS[hash % FALLBACK_COLORS.length],
+      styleId
     ),
   };
 }

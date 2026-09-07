@@ -63,6 +63,10 @@ vi.mock("@/features/settings/planner-preferences-settings", () => ({
   PlannerPreferencesSettings: () => <div>Preferences body</div>,
 }));
 
+vi.mock("@/features/settings/appearance-settings", () => ({
+  AppearanceSettings: () => <div>Appearance body</div>,
+}));
+
 vi.mock("@/features/settings/report-issue-settings", () => ({
   ReportIssueSettings: () => <div>Report issue body</div>,
 }));
@@ -109,6 +113,14 @@ describe("SettingsTab", () => {
     expect(screen.getByRole("dialog", { name: "Integrations" })).toBeInTheDocument();
   });
 
+  it("opens appearance from the tab query", () => {
+    mockSearch = "tab=appearance";
+    render(<SettingsTab />);
+
+    expect(screen.getByRole("dialog", { name: "Appearance" })).toBeInTheDocument();
+    expect(screen.getByText("Appearance body")).toBeInTheDocument();
+  });
+
   it("opens onboarding guides from the tab query", () => {
     mockSearch = "tab=onboarding";
     render(<SettingsTab />);
@@ -136,6 +148,7 @@ describe("SettingsTab", () => {
     expect(screen.getByRole("heading", { name: "Connected" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Account" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preferences" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Appearance" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
     expect(screen.queryByText("Primary planner tab")).not.toBeInTheDocument();

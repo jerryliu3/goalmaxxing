@@ -1,5 +1,7 @@
+"use client";
+
 import { format, parse } from "date-fns";
-import { NestCompletionMark } from "@/components/ui/nest-completion-mark";
+import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import type { PlannerCompletionFactMarker } from "@/features/planner/calendar-surface.types";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +56,7 @@ export function PlannerPartnerWeekDayCell({
                   key={marker.key}
                   className="flex items-center gap-1.5 rounded-[10px] border-2 border-primary bg-transparent px-1.5 py-1 text-[11px] text-primary"
                 >
-                  <NestCompletionMark done className="size-3 shrink-0" />
+                  <StyleCompletionMark done className="size-3 shrink-0" />
                   <span className="truncate">{marker.goalTitle}</span>
                 </div>
               ))
@@ -93,7 +95,7 @@ export function PlannerPartnerWeekDayCell({
               key={marker.key}
               className="flex items-center gap-1.5 rounded-[10px] border-2 border-primary bg-transparent px-1.5 py-1 text-[11px] text-primary"
             >
-              <NestCompletionMark done className="size-3 shrink-0" />
+              <StyleCompletionMark done className="size-3 shrink-0" />
               <span className="truncate">{marker.goalTitle}</span>
             </div>
           ))}

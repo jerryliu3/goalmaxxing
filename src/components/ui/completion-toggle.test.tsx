@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { UiStyleProvider } from "@/components/brand/ui-style-provider";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 
 const originalVibrate = Object.getOwnPropertyDescriptor(
@@ -34,13 +35,27 @@ describe("CompletionToggle", () => {
       name: "Mark session not done",
     });
     expect(toggle).toHaveAttribute("data-completed", "true");
-    expect(toggle.querySelector('[data-completion-mark="nest"]')).toHaveAttribute(
+    expect(toggle.querySelector('[data-completion-mark="circle"]')).toHaveAttribute(
       "data-completed",
       "true"
     );
 
     fireEvent.click(toggle);
     expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it("uses the Nest mark when Gazetteer is selected", () => {
+    render(
+      <UiStyleProvider initialStyleId="gazetteer">
+        <CompletionToggle completed aria-label="Mark session not done" />
+      </UiStyleProvider>
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Mark session not done" }).querySelector(
+        '[data-completion-mark="nest"]'
+      )
+    ).toHaveAttribute("data-completed", "true");
   });
 
   it("uses best-effort haptic feedback when supported", () => {
