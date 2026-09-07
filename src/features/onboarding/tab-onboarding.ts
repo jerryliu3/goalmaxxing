@@ -132,17 +132,17 @@ export interface TabOnboardingReplayLink {
 export const TAB_ONBOARDING_REPLAY_LINKS: TabOnboardingReplayLink[] = [
   {
     key: "planner.calendar",
-    label: "Calendar",
+    label: "Plan",
     href: `/calendar?surface=calendar&${TAB_ONBOARDING_QUERY_PARAM}=planner.calendar`,
+  },
+  {
+    key: "insights.main",
+    label: "Progress",
+    href: `/insights?${TAB_ONBOARDING_QUERY_PARAM}=insights.main`,
   },
   {
     key: "social.main",
     label: "Community",
     href: `/social?${TAB_ONBOARDING_QUERY_PARAM}=social.main`,
-  },
-  {
-    key: "insights.main",
-    label: "Insights",
-    href: `/insights?${TAB_ONBOARDING_QUERY_PARAM}=insights.main`,
   },
 ];

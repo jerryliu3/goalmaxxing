@@ -15,11 +15,11 @@ describe("OnboardingGuidesSettings", () => {
     expect(screen.getByRole("button", { name: "Replay" })).toBeInTheDocument();
 
     expect(screen.getByText("Page")).toBeInTheDocument();
-    expect(screen.getByText("Calendar")).toBeInTheDocument();
-    expect(screen.getByText("Insights")).toBeInTheDocument();
+    expect(screen.getByText("Plan")).toBeInTheDocument();
+    expect(screen.getByText("Progress")).toBeInTheDocument();
     expect(screen.getByText("Community")).toBeInTheDocument();
     expect(screen.queryByText("Tasks")).toBeNull();
-    expect(screen.queryByText("Profile")).toBeNull();
+    expect(screen.queryByText("You")).toBeNull();
     expect(screen.queryByText("Checklist")).toBeNull();
     expect(screen.getAllByRole("link", { name: "Replay" })[0]).toHaveAttribute(
       "href",

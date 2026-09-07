@@ -19,7 +19,7 @@ function isCalendarPath(pathname: string, hrefPrefix?: string) {
 }
 
 // Past the calendar e2e "no eager progress-context" window (750ms), then
-// warm Insights/Checklist so the first bottom-nav click can paint from cache.
+// warm Progress/Checklist so the first bottom-nav click can paint from cache.
 const CALENDAR_PROGRESS_CONTEXT_WARM_DELAY_MS = 2000;
 
 export function useIdleAppPrefetch({

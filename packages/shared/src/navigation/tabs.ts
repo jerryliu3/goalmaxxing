@@ -13,10 +13,10 @@ export interface AppTabDefinition {
 }
 
 const TAB_BY_KEY: Record<AppTabKey, AppTabDefinition> = {
-  insights: { key: "insights", href: "/insights", label: "Insights" },
-  calendar: { key: "calendar", href: "/calendar", label: "Planner" },
+  calendar: { key: "calendar", href: "/calendar", label: "Plan" },
+  insights: { key: "insights", href: "/insights", label: "Progress" },
   social: { key: "social", href: "/social", label: "Community" },
-  settings: { key: "settings", href: "/settings", label: "Profile" },
+  settings: { key: "settings", href: "/settings", label: "You" },
 };
 
 export const DEFAULT_PLANNER_PRIMARY_TAB_PREFERENCE: PlannerPrimaryTabPreference =
@@ -46,8 +46,8 @@ export function buildAppTabs(
   const prefix = normalizeHrefPrefix(options?.hrefPrefix);
   const orderedKeys: AppTabKey[] = [
     "calendar",
-    "social",
     "insights",
+    "social",
     "settings",
   ];
   return orderedKeys.map((key) => {
