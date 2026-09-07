@@ -13,7 +13,7 @@ import {
   getEntryDraftDiffSummary,
   getEntryDraftPillClasses,
 } from "@/features/planner/calendar-format";
-import { getGoalVisual, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
+import { getGoalVisual, getMonthWorkFillStyle, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
 
 export interface CalendarMonthCellEntryBase {
   key: string;
@@ -149,7 +149,9 @@ export function CalendarMonthDayCell<
     });
     const pillFillStyle = isDraft
       ? undefined
-      : getWorkPillFillStyle(visual.color, credited);
+      : layout === "month"
+        ? getMonthWorkFillStyle(credited)
+        : getWorkPillFillStyle(visual.color, credited);
     return (
       <PlannerDraggableEntry
         key={`cell-entry-${entry.key}`}
@@ -202,18 +204,20 @@ export function CalendarMonthDayCell<
             {...attributes}
             {...listeners}
           >
-            <span className="truncate">{compactTitle}</span>
+            {layout === "agenda" ? (
+              <StyleCompletionMark
+                done={credited}
+                className="size-3 shrink-0 text-foreground"
+                label={credited ? "Completed" : undefined}
+              />
+            ) : null}
+            <span className={credited ? "truncate line-through" : "truncate"}>
+              {compactTitle}
+            </span>
             {entry.hasLinkedTargets ? (
               <Link2
                 className="size-3 shrink-0 text-muted-foreground"
                 aria-label="Links this subgoal to a main goal"
-              />
-            ) : null}
-            {credited ? (
-              <StyleCompletionMark
-                done
-                className="size-3 shrink-0 text-foreground"
-                label="Completed"
               />
             ) : null}
           </div>
@@ -295,7 +299,7 @@ export function CalendarMonthDayCell<
                           aria-label={`${marker.goalTitle}. ${statusCopy}`}
                         >
                           <StyleCompletionMark done className="size-3 shrink-0" />
-                          <span className="truncate">{marker.goalTitle}</span>
+                          <span className="truncate line-through">{marker.goalTitle}</span>
                         </div>
                       );
                     })}
@@ -412,7 +416,7 @@ export function CalendarMonthDayCell<
                   aria-label={`${marker.goalTitle}. ${statusCopy}`}
                 >
                   <StyleCompletionMark done className="size-3 shrink-0" />
-                  <span className="truncate">{marker.goalTitle}</span>
+                  <span className="truncate line-through">{marker.goalTitle}</span>
                   {partnerOwned ? (
                     <span className="sr-only">Partner marked this done.</span>
                   ) : null}

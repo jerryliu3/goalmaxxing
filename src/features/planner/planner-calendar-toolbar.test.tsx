@@ -36,16 +36,19 @@ describe("PlannerCalendarToolbar", () => {
     cleanup();
   });
 
-  it("offers Week, Month, and Day without a 3 Day option", () => {
+  it("offers Day, Week, and Month without a 3 Day option", () => {
     renderToolbar();
 
     const viewGroup = screen.getByRole("group", { name: "Plan view mode" });
+    expect(
+      within(viewGroup)
+        .getAllByRole("button")
+        .map((button) => button.textContent)
+    ).toEqual(["Day", "Week", "Month"]);
     expect(within(viewGroup).getByRole("button", { name: "Week" })).toHaveAttribute(
       "aria-pressed",
       "true"
     );
-    expect(within(viewGroup).getByRole("button", { name: "Month" })).toBeInTheDocument();
-    expect(within(viewGroup).getByRole("button", { name: "Day" })).toBeInTheDocument();
     expect(within(viewGroup).queryByRole("button", { name: "3 Day" })).toBeNull();
   });
 

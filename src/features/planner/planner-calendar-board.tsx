@@ -184,24 +184,21 @@ export function PlannerCalendarBoard({
           } ${isMonthScopedCalendarViewMode(viewMode) ? "min-h-[34rem]" : "min-h-[26rem]"}`}
         >
           {viewMode === "day" ? (
-            <div className="space-y-2">
-              {rollingWeekStrip}
-              <PlannerFocusedDayPane
-                day={focusedDay}
-                entries={focusedDayEntries}
-                completionFactMarkers={focusedDayCompletionFactMarkers}
-                mutationLoading={Boolean(mutationLoadingKey)}
-                asOfDate={asOfDate}
-                canMutatePlanItems={canMutatePlanItems}
-                canMutateEntryOnDay={canMutateEntryOnDay}
-                onEntryOpen={onFocusedDayEntryOpen}
-                onToggleCompletion={onToggleCompletion}
-                onEntryPointerStart={onEntryPointerStart}
-                onEntryPointerEnd={onEntryPointerEnd}
-                showTasksInsteadOfGoals={showTasksInsteadOfGoals}
-                titleAs="h2"
-              />
-            </div>
+            <PlannerFocusedDayPane
+              day={focusedDay}
+              entries={focusedDayEntries}
+              completionFactMarkers={focusedDayCompletionFactMarkers}
+              mutationLoading={Boolean(mutationLoadingKey)}
+              asOfDate={asOfDate}
+              canMutatePlanItems={canMutatePlanItems}
+              canMutateEntryOnDay={canMutateEntryOnDay}
+              onEntryOpen={onFocusedDayEntryOpen}
+              onToggleCompletion={onToggleCompletion}
+              onEntryPointerStart={onEntryPointerStart}
+              onEntryPointerEnd={onEntryPointerEnd}
+              showTasksInsteadOfGoals={showTasksInsteadOfGoals}
+              titleAs="h2"
+            />
           ) : viewMode === "three_day" ? (
             rollingWeekStrip
           ) : (

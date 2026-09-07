@@ -168,6 +168,7 @@ export function CalendarDayPreviewList<
                         completed={completionToggleState.currentlyCredited}
                         pending={mutationLoading}
                         size="sm"
+                        chrome="plain"
                         onPointerDown={(event) => {
                           event.stopPropagation();
                         }}
@@ -200,7 +201,15 @@ export function CalendarDayPreviewList<
                           }
                         >
                           <span className="inline-flex items-center gap-1">
-                            <span>{displayTitle}</span>
+                            <span
+                              className={
+                                credited || completionToggleState.currentlyCredited
+                                  ? "line-through"
+                                  : undefined
+                              }
+                            >
+                              {displayTitle}
+                            </span>
                             {entry.hasLinkedTargets ? (
                               <Link2
                                 className="size-3 shrink-0 text-muted-foreground"
@@ -261,13 +270,13 @@ export function CalendarDayPreviewList<
                   <StyleCompletionMark done className="size-4 shrink-0" />
                 ) : null}
                 <div className="min-w-0">
-                  <p
-                    className={
-                      expanded
-                        ? "font-display text-base font-medium tracking-tight"
-                        : "truncate font-medium"
-                    }
-                  >
+                        <p
+                          className={
+                            expanded
+                              ? "font-display text-base font-medium tracking-tight line-through"
+                              : "truncate font-medium line-through"
+                          }
+                        >
                     {marker.goalTitle}
                   </p>
                   {detail ? (

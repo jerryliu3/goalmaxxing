@@ -35,6 +35,7 @@ describe("CompletionToggle", () => {
       name: "Mark session not done",
     });
     expect(toggle).toHaveAttribute("data-completed", "true");
+    expect(toggle).toHaveClass("rounded-full");
     expect(toggle.querySelector('[data-completion-mark="circle"]')).toHaveAttribute(
       "data-completed",
       "true"
@@ -42,6 +43,22 @@ describe("CompletionToggle", () => {
 
     fireEvent.click(toggle);
     expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it("hides circular button chrome in plain mode", () => {
+    render(
+      <CompletionToggle
+        completed
+        chrome="plain"
+        aria-label="Mark session not done"
+      />
+    );
+
+    const toggle = screen.getByRole("button", {
+      name: "Mark session not done",
+    });
+    expect(toggle).toHaveClass("border-0");
+    expect(toggle).not.toHaveClass("rounded-full");
   });
 
   it("uses the Nest mark when Gazetteer is selected", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getGoalVisual, normalizeGoalColor, getWorkPillFillStyle } from "./goal-visuals";
+import { getGoalVisual, getMonthWorkFillStyle, getWorkPillFillStyle, normalizeGoalColor } from "./goal-visuals";
 
 describe("goal visuals", () => {
   it("keeps icon/color deterministic per goal id", () => {
@@ -36,6 +36,15 @@ describe("goal visuals", () => {
         category: "Health",
       }).color
     ).toBe("#10b981");
+  });
+
+  it("uses one complete color on month cells and leaves incomplete transparent", () => {
+    expect(getMonthWorkFillStyle(false)).toEqual({
+      backgroundColor: "transparent",
+      borderColor: "var(--border)",
+    });
+    expect(getMonthWorkFillStyle(true).backgroundColor).toContain("var(--primary)");
+    expect(getMonthWorkFillStyle(true).borderColor).toBe("var(--primary)");
   });
 
   it("turns category color into pill fill, not a separate chip", () => {
