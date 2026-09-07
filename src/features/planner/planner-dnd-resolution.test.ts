@@ -37,6 +37,30 @@ describe("resolvePlannerDndResolution", () => {
     expect(resolution.nextDate).toBe("2026-08-16");
   });
 
+  it("returns clear when dropping a preview entry onto itself", () => {
+    const entry = buildPlannerDayEntry({ key: "goal-1:unit-1" });
+    const resolution = resolvePlannerDndResolution({
+      entryKey: entry.key,
+      target: { type: "preview_entry", day: "2026-08-15", entryKey: entry.key },
+      entryByKey: new Map([[entry.key, entry]]),
+      entryDayByKey: new Map([[entry.key, "2026-08-15"]]),
+    });
+
+    expect(resolution).toEqual({ kind: "clear" });
+  });
+
+  it("returns clear when dropping onto the source day instead of another entry", () => {
+    const entry = buildPlannerDayEntry({ key: "goal-1:unit-1" });
+    const resolution = resolvePlannerDndResolution({
+      entryKey: entry.key,
+      target: { type: "day", day: "2026-08-15" },
+      entryByKey: new Map([[entry.key, entry]]),
+      entryDayByKey: new Map([[entry.key, "2026-08-15"]]),
+    });
+
+    expect(resolution).toEqual({ kind: "clear" });
+  });
+
   it("returns move action for day drop targets", () => {
     const entry = buildPlannerDayEntry({ key: "goal-1:unit-1" });
     const resolution = resolvePlannerDndResolution({

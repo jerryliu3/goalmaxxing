@@ -16,6 +16,7 @@ import {
   selectUnplannedGoals,
 } from "@/features/planner/plan-day-unplanned";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
+import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 import {
   buildCompletableGoalIds,
   selectCompletableGoals,
@@ -23,14 +24,17 @@ import {
 import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
 import { progressSummaryMap } from "@/lib/goals/progress-context";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
+import type { Goal } from "@/lib/goals/types";
 import { cn } from "@/lib/utils";
 
 export function PlanDayUnplannedPanel({
   day,
   placedEntries,
+  checklist = null,
 }: {
   day: string;
   placedEntries: PlannerDayDetailEntry[];
+  checklist?: PlanDayChecklistModel | null;
 }) {
   const [showUnplanned, setShowUnplanned] = useState(false);
   const placedGoalIds = useMemo(
@@ -53,9 +57,52 @@ export function PlanDayUnplannedPanel({
         />
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <PlanDayUnplannedList day={day} placedGoalIds={placedGoalIds} />
+        {checklist ? (
+          <PlanDayUnplannedFromChecklist
+            day={day}
+            placedGoalIds={placedGoalIds}
+            checklist={checklist}
+          />
+        ) : (
+          <PlanDayUnplannedList day={day} placedGoalIds={placedGoalIds} />
+        )}
       </CollapsibleContent>
     </Collapsible>
+  );
+}
+
+function PlanDayUnplannedFromChecklist({
+  day,
+  placedGoalIds,
+  checklist,
+}: {
+  day: string;
+  placedGoalIds: ReadonlySet<string>;
+  checklist: PlanDayChecklistModel;
+}) {
+  const unplannedGoals = useMemo(() => {
+    const selected = selectUnplannedGoals({
+      goals: checklist.listModel.completableGoals,
+      placedGoalIds,
+      viewDate: day,
+    });
+    if (checklist.visibleGoalIds === null) {
+      return selected;
+    }
+    return selected.filter((goal) => checklist.visibleGoalIds?.has(goal.id));
+  }, [checklist.listModel.completableGoals, checklist.visibleGoalIds, day, placedGoalIds]);
+
+  if (checklist.loading && checklist.data.goals.length === 0) {
+    return <p className="text-sm text-muted-foreground">Loading unplanned work...</p>;
+  }
+
+  return (
+    <PlanDayUnplannedRows
+      goals={unplannedGoals}
+      presentationByGoalId={checklist.listModel.presentationByGoalId}
+      savingGoalId={checklist.savingGoalId}
+      onToggle={checklist.toggleCompletion}
+    />
   );
 }
 
@@ -122,7 +169,28 @@ function PlanDayUnplannedList({
     return <p className="text-sm text-muted-foreground">Loading unplanned work...</p>;
   }
 
-  if (unplannedGoals.length === 0) {
+  return (
+    <PlanDayUnplannedRows
+      goals={unplannedGoals}
+      presentationByGoalId={presentationByGoalId}
+      savingGoalId={savingGoalId}
+      onToggle={toggleCompletion}
+    />
+  );
+}
+
+function PlanDayUnplannedRows({
+  goals,
+  presentationByGoalId,
+  savingGoalId,
+  onToggle,
+}: {
+  goals: Goal[];
+  presentationByGoalId: PlanDayChecklistModel["listModel"]["presentationByGoalId"];
+  savingGoalId: string | null;
+  onToggle: (goal: Goal, sourceElement: HTMLButtonElement) => void;
+}) {
+  if (goals.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">Nothing unplanned for this day.</p>
     );
@@ -130,7 +198,7 @@ function PlanDayUnplannedList({
 
   return (
     <div className="divide-y">
-      {unplannedGoals.map((goal) => {
+      {goals.map((goal) => {
         const presentation = presentationByGoalId.get(goal.id);
         const completed = Boolean(presentation?.exactDateCompleted);
         return (
@@ -145,8 +213,11 @@ function PlanDayUnplannedList({
               size="sm"
               chrome="plain"
               onClick={(event) => {
-                if ("currentTarget" in event && event.currentTarget instanceof HTMLButtonElement) {
-                  void toggleCompletion(goal, event.currentTarget);
+                if (
+                  "currentTarget" in event &&
+                  event.currentTarget instanceof HTMLButtonElement
+                ) {
+                  onToggle(goal, event.currentTarget);
                 }
               }}
               disabled={savingGoalId === goal.id}

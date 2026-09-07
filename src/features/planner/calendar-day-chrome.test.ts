@@ -2,27 +2,29 @@ import { describe, expect, it } from "vitest";
 import {
   planAgendaDayNumberClass,
   planAgendaDayRowClass,
+  planFilledChromeMetaClass,
   planMonthDayNumberClass,
   planMonthDaySurfaceClass,
+  planSelectedWorkRowClass,
 } from "./calendar-day-chrome";
 
 describe("plan calendar day chrome", () => {
-  it("fills adjacent-month tiles with high-contrast secondary", () => {
+  it("fills adjacent-month tiles with the adjacent token", () => {
     const adjacent = planMonthDaySurfaceClass({
       inMonth: false,
       isToday: false,
       isSelected: false,
       isPastInMonth: false,
     });
-    expect(adjacent).toContain("bg-selection");
-    expect(adjacent).not.toContain("bg-primary");
-    expect(adjacent).not.toContain("bg-muted");
+    expect(adjacent).toContain("bg-adjacent");
+    expect(adjacent).not.toContain("bg-today");
+    expect(adjacent).not.toContain("bg-day-selected");
     expect(planMonthDayNumberClass({ inMonth: false, isToday: false })).toBe(
-      "text-selection-foreground"
+      "text-adjacent-foreground"
     );
   });
 
-  it("fills today with solid identity even in an adjacent month or when selected", () => {
+  it("fills today with solid today even in an adjacent month or when selected", () => {
     const today = planMonthDaySurfaceClass({
       inMonth: true,
       isToday: true,
@@ -42,47 +44,68 @@ describe("plan calendar day chrome", () => {
       isPastInMonth: false,
     });
 
-    expect(today).toContain("bg-primary");
-    expect(today).not.toContain("bg-primary/");
-    expect(todaySelected).toContain("bg-primary");
-    expect(todaySelected).not.toContain("bg-selection");
-    expect(todayAdjacent).toContain("bg-primary");
-    expect(todayAdjacent).not.toContain("bg-selection");
+    expect(today).toContain("bg-today");
+    expect(today).not.toContain("bg-today/");
+    expect(todaySelected).toContain("bg-today");
+    expect(todaySelected).not.toContain("bg-adjacent");
+    expect(todayAdjacent).toContain("bg-today");
+    expect(todayAdjacent).not.toContain("bg-adjacent");
     expect(
       planMonthDayNumberClass({ inMonth: false, isToday: true, isSelected: false })
-    ).toBe("text-primary-foreground");
+    ).toBe("text-today-foreground");
   });
 
-  it("fills a user-selected day that is not today with low-contrast muted", () => {
+  it("fills a user-selected day that is not today with the selected-day token", () => {
     const selected = planMonthDaySurfaceClass({
       inMonth: true,
       isToday: false,
       isSelected: true,
       isPastInMonth: false,
     });
-    expect(selected).toContain("bg-muted");
-    expect(selected).not.toContain("bg-selection");
-    expect(selected).not.toContain("bg-primary");
+    expect(selected).toContain("bg-day-selected");
+    expect(selected).not.toContain("bg-adjacent");
+    expect(selected).not.toContain("bg-today");
     expect(
       planMonthDayNumberClass({ inMonth: true, isToday: false, isSelected: true })
-    ).toBe("text-foreground");
+    ).toBe("text-day-selected-foreground");
   });
 
-  it("uses muted selection for a selected week row that is not today", () => {
+  it("uses selected-day fill for a selected week row that is not today", () => {
     expect(
       planAgendaDayRowClass({ inMonth: true, isToday: false, isSelected: true })
-    ).toContain("bg-muted");
+    ).toContain("bg-day-selected");
     expect(
       planAgendaDayRowClass({ inMonth: true, isToday: true, isSelected: true })
-    ).toContain("bg-primary");
+    ).toContain("bg-today");
     expect(
       planAgendaDayRowClass({ inMonth: false, isToday: false, isSelected: false })
-    ).toContain("bg-selection");
+    ).toContain("bg-adjacent");
     expect(
       planAgendaDayNumberClass({ isToday: false, isSelected: true })
-    ).toContain("text-foreground");
+    ).toContain("text-day-selected");
     expect(
       planAgendaDayNumberClass({ isToday: true, isSelected: true })
-    ).toContain("text-primary");
+    ).toContain("text-today");
+  });
+
+  it("washes a selected work row with an inset selection bar", () => {
+    expect(planSelectedWorkRowClass(false)).toBe("");
+    expect(planSelectedWorkRowClass(true)).toContain("bg-day-selected");
+    expect(planSelectedWorkRowClass(true)).toContain("inset_3px_0_0");
+  });
+
+  it("inherits meta color on filled agenda chrome so weekday labels stay visible", () => {
+    expect(
+      planFilledChromeMetaClass({ inMonth: false, isToday: false, isSelected: false })
+    ).toContain("text-current");
+    expect(
+      planFilledChromeMetaClass({ inMonth: true, isToday: true, isSelected: false })
+    ).toContain("text-current");
+    expect(
+      planFilledChromeMetaClass({ inMonth: true, isToday: false, isSelected: true })
+    ).toContain("text-current");
+    expect(
+      planFilledChromeMetaClass({ inMonth: true, isToday: false, isSelected: false })
+    ).toBe("text-muted-foreground");
   });
 });

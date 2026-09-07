@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { LoadingCard } from "@/components/ui/loading-card";
 import { ChecklistFiltersDialog } from "@/features/today/checklist-filters-dialog";
 import { ChecklistPastPanels } from "@/features/today/checklist-past-panels";
+import { ChecklistQuickFilterChips } from "@/features/today/checklist-quick-filter-chips";
 import {
   groupGoalsByRecurrence,
   selectActiveGoals,
@@ -429,12 +430,12 @@ export function TodayTab({
                 type="button"
                 variant="outline"
                 size="icon-sm"
-                className="h-8 w-8 shrink-0 rounded-full"
+                className="shrink-0"
                 onClick={() => setTodayFiltersOpen(true)}
                 aria-label="Open checklist filters"
                 title="Open checklist filters"
               >
-                <SlidersHorizontal className="size-3.5" />
+                <SlidersHorizontal />
               </Button>
               <ChecklistFiltersDialog
                 open={todayFiltersOpen}
@@ -464,56 +465,16 @@ export function TodayTab({
             />
           }
           quickFilterControls={
-            <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1">
-              <Button
-                key="recurrence-quick-all"
-                type="button"
-                variant={recurrenceFilters.length === 0 ? "default" : "outline"}
-                size="sm"
-                className="h-8 shrink-0 rounded-full px-3 text-xs"
-                onClick={() => setRecurrenceFilters([])}
-              >
-                All types
-              </Button>
-              {recurrenceQuickFilters.map((option) => (
-                <Button
-                  key={`recurrence-quick-${option.value}`}
-                  type="button"
-                  variant={
-                    recurrenceFilters.includes(option.value) ? "default" : "outline"
-                  }
-                  size="sm"
-                  className="h-8 shrink-0 rounded-full px-3 text-xs"
-                  onClick={() => toggleRecurrenceFilter(option.value)}
-                >
-                  {option.label}
-                </Button>
-              ))}
-              <Button
-                key="category-quick-all"
-                type="button"
-                variant={categoryFilters.length === 0 ? "default" : "outline"}
-                size="sm"
-                className="h-8 shrink-0 rounded-full px-3 text-xs"
-                onClick={() => setCategoryFilters([])}
-              >
-                All categories
-              </Button>
-              {quickCategories.map((category) => (
-                <Button
-                  key={`category-quick-${category.key}`}
-                  type="button"
-                  variant={
-                    categoryFilters.includes(category.key) ? "default" : "outline"
-                  }
-                  size="sm"
-                  className="h-8 shrink-0 rounded-full px-3 text-xs"
-                  onClick={() => toggleCategoryFilter(category.key)}
-                >
-                  {category.label}
-                </Button>
-              ))}
-            </div>
+            <ChecklistQuickFilterChips
+              recurrenceFilters={recurrenceFilters}
+              recurrenceQuickFilters={recurrenceQuickFilters}
+              onClearRecurrenceFilters={() => setRecurrenceFilters([])}
+              onToggleRecurrenceFilter={toggleRecurrenceFilter}
+              categoryFilters={categoryFilters}
+              quickCategories={quickCategories}
+              onClearCategoryFilters={() => setCategoryFilters([])}
+              onToggleCategoryFilter={toggleCategoryFilter}
+            />
           }
         />
       ) : null}

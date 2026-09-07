@@ -3,11 +3,14 @@
 import { format, parse } from "date-fns";
 import { Link2 } from "lucide-react";
 import type { ReactNode } from "react";
+import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
+import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
 import { cn } from "@/lib/utils";
 import {
   PlannerDraggableEntry,
   PlannerDroppableDay,
+  PlannerSortableDayList,
 } from "@/features/planner/calendar-dnd";
 import {
   getEntryDraftDiffSummary,
@@ -16,6 +19,7 @@ import {
 import {
   planAgendaDayNumberClass,
   planAgendaDayRowClass,
+  planFilledChromeMetaClass,
   planMonthDayNumberClass,
   planMonthDaySurfaceClass,
 } from "@/features/planner/calendar-day-chrome";
@@ -83,10 +87,34 @@ interface CalendarMonthDayCellProps<
   onCellPointerLeave: () => void;
   onEntryPointerStart: (immovable: boolean) => void;
   onEntryPointerEnd: () => void;
+  onToggleCompletion?: (
+    entry: TEntry,
+    day: string,
+    sourceElement: HTMLButtonElement
+  ) => void;
+  getCompletionToggleState?: (
+    entry: TEntry,
+    day: string
+  ) => {
+    currentlyCredited: boolean;
+    disabledReasonCopy: string | null;
+  };
+  mutationLoading?: boolean;
   onboardingFirstEntry?: boolean;
 }
 
 const DEFAULT_MAX_VISIBLE_ITEMS_PER_DAY_CELL = 2;
+
+function shouldSelectAgendaDayFromTarget(target: EventTarget | null) {
+  return !(
+    target instanceof Element &&
+    target.closest("button, [data-calendar-day-entry='true']")
+  );
+}
+
+function agendaDayCellFromRow(row: HTMLElement) {
+  return row.querySelector<HTMLElement>("[data-day-cell='true']") ?? row;
+}
 
 export function CalendarMonthDayCell<
   TEntry extends CalendarMonthCellEntryBase,
@@ -118,6 +146,9 @@ export function CalendarMonthDayCell<
   onCellPointerLeave,
   onEntryPointerStart,
   onEntryPointerEnd,
+  onToggleCompletion,
+  getCompletionToggleState,
+  mutationLoading = false,
   onboardingFirstEntry = false,
 }: CalendarMonthDayCellProps<TEntry, TCompletionFactMarker>) {
   const hasVisibleContent =
@@ -157,24 +188,45 @@ export function CalendarMonthDayCell<
     const pillFillStyle = isDraft
       ? undefined
       : getWorkPillFillStyle(visual.color, credited);
+    const completionToggleState = getCompletionToggleState?.(entry, day);
+    const showCompletionToggle = Boolean(
+      layout === "agenda" && onToggleCompletion && completionToggleState
+    );
     return (
       <PlannerDraggableEntry
         key={`cell-entry-${entry.key}`}
         entryKey={entry.key}
+        day={day}
         disabled={immovable}
       >
-        {({ setNodeRef, attributes, listeners, style, isDragging }) => (
+        {({ setNodeRef, attributes, listeners, style, isDragging, isOver }) => (
           <div
             ref={setNodeRef}
             style={{ ...style, ...pillFillStyle }}
             onClick={(event) => {
+              if (
+                event.target instanceof Element &&
+                event.target.closest(
+                  "[data-motion='completion-toggle'], [data-plan-completion-hit]"
+                )
+              ) {
+                return;
+              }
               event.stopPropagation();
               if (isDragging) {
                 return;
               }
               onEntryClick(day, entry, event.currentTarget);
             }}
-            onPointerDownCapture={() => {
+            onPointerDownCapture={(event) => {
+              if (
+                event.target instanceof Element &&
+                event.target.closest(
+                  "[data-motion='completion-toggle'], [data-plan-completion-hit]"
+                )
+              ) {
+                return;
+              }
               onEntryPointerStart(immovable);
             }}
             onPointerUpCapture={() => {
@@ -189,12 +241,14 @@ export function CalendarMonthDayCell<
               immovable
                 ? "cursor-not-allowed"
                 : "cursor-grab active:cursor-grabbing"
-            } ${isDragging ? "pointer-events-none opacity-0" : ""}`}
+            } ${isOver ? "border-primary/70 ring-1 ring-primary/60" : ""} ${
+              isDragging ? "pointer-events-none opacity-0" : ""
+            }`}
             title={
               `${draftDiffSummary ? `${draftDiffSummary} ` : ""}${
                 immovable
                   ? "Completed or historical sessions can't be moved in draft."
-                  : "Drag to another day to create a draft move command."
+                  : "Drag to rearrange in this day, or drop on another day to move."
               }`
             }
             data-calendar-day-entry="true"
@@ -209,14 +263,52 @@ export function CalendarMonthDayCell<
             {...attributes}
             {...listeners}
           >
-            {layout === "agenda" ? (
+            {showCompletionToggle && completionToggleState ? (
+              <div
+                className="flex items-center self-center"
+                data-plan-completion-hit="true"
+                onClick={(event) => {
+                  event.stopPropagation();
+                }}
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                }}
+              >
+                <CompletionToggle
+                  completed={completionToggleState.currentlyCredited}
+                  pending={mutationLoading}
+                  size="sm"
+                  chrome="plain"
+                  disabled={Boolean(completionToggleState.disabledReasonCopy)}
+                  aria-label={
+                    completionToggleState.currentlyCredited
+                      ? "Mark session not done"
+                      : "Mark session done"
+                  }
+                  title={
+                    completionToggleState.disabledReasonCopy ??
+                    "Toggle completion for this session"
+                  }
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onToggleCompletion?.(entry, day, event.currentTarget);
+                  }}
+                />
+              </div>
+            ) : layout === "agenda" ? (
               <StyleCompletionMark
                 done={credited}
-                className="size-3 shrink-0"
+                className="block size-3.5 shrink-0 self-center"
                 label={credited ? "Completed" : undefined}
               />
             ) : null}
-            <span className={credited ? "truncate line-through" : "truncate"}>
+            <span
+              className={cn(
+                "flex h-6 min-w-0 items-center truncate leading-none",
+                layout === "agenda" && "font-display",
+                credited && "line-through"
+              )}
+            >
               {compactTitle}
             </span>
             {entry.hasLinkedTargets ? (
@@ -238,10 +330,25 @@ export function CalendarMonthDayCell<
   if (layout === "agenda") {
     return (
       <li
-        className={planAgendaDayRowClass({ inMonth, isToday, isSelected })}
+        className={cn(
+          planAgendaDayRowClass({ inMonth, isToday, isSelected }),
+          "cursor-pointer"
+        )}
         data-day={day}
         data-calendar-week-row="true"
         style={{ viewTransitionName: planDayViewTransitionName(day) }}
+        onClick={(event) => {
+          if (!shouldSelectAgendaDayFromTarget(event.target)) {
+            return;
+          }
+          onCellClick(agendaDayCellFromRow(event.currentTarget));
+        }}
+        onDoubleClick={(event) => {
+          if (!shouldSelectAgendaDayFromTarget(event.target)) {
+            return;
+          }
+          onCellDoubleClick(agendaDayCellFromRow(event.currentTarget));
+        }}
       >
         <div className="flex items-start gap-2 py-3">
           <button
@@ -256,11 +363,19 @@ export function CalendarMonthDayCell<
             onClick={(event) => onCellClick(event.currentTarget)}
             onDoubleClick={(event) => onCellDoubleClick(event.currentTarget)}
           >
-            <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            <span
+              className={cn(
+                "block font-display text-[11px] font-medium uppercase tracking-wide",
+                planFilledChromeMetaClass({ inMonth, isToday, isSelected })
+              )}
+            >
               {weekdayLabel}
             </span>
             <span
-              className={planAgendaDayNumberClass({ isToday, isSelected })}
+              className={cn(
+                "font-display",
+                planAgendaDayNumberClass({ isToday, isSelected })
+              )}
             >
               {dayNumber}
             </span>
@@ -273,12 +388,18 @@ export function CalendarMonthDayCell<
                   "flex min-h-[2.75rem] min-w-0 flex-1 flex-col gap-1.5 rounded-[10px] px-1 py-0.5",
                   isAnyEntryDragging && isOver && "ring-2 ring-primary/70"
                 )}
+                data-calendar-week-work="true"
               >
                 {hasVisibleContent ? (
                   <>
-                    {visibleEntries.map((entry, entryIndex) =>
-                      renderEntry(entry, entryIndex)
-                    )}
+                    <PlannerSortableDayList
+                      day={day}
+                      entryKeys={visibleEntries.map((entry) => entry.key)}
+                    >
+                      {visibleEntries.map((entry, entryIndex) =>
+                        renderEntry(entry, entryIndex)
+                      )}
+                    </PlannerSortableDayList>
                     {visibleCompletionFactMarkers.map((marker) => {
                       const partnerOwned = marker.owner === "partner";
                       const statusCopy = partnerOwned
@@ -286,14 +407,19 @@ export function CalendarMonthDayCell<
                         : marker.scheduledDate && marker.scheduledDate !== day
                           ? `Marked done here, currently credited from the ${marker.scheduledDate} scheduled session.`
                           : "Marked done on this date.";
+                      if (partnerOwned) {
+                        return (
+                          <CalendarPartnerChip
+                            key={`completion-fact-${marker.key}`}
+                            title={marker.goalTitle}
+                            completed
+                          />
+                        );
+                      }
                       return (
                         <div
                           key={`completion-fact-${marker.key}`}
-                          className={
-                            partnerOwned
-                              ? "flex items-center gap-1.5 rounded-[10px] border-2 border-primary bg-transparent px-1.5 py-1 text-[11px] text-primary"
-                              : "flex items-center gap-1.5 rounded-[10px] border border-primary/35 bg-primary/10 px-1.5 py-1 text-[11px] text-foreground"
-                          }
+                          className="flex items-center gap-1.5 rounded-[10px] border border-primary/35 bg-primary/10 px-1.5 py-1 text-[11px] text-foreground"
                           aria-label={`${marker.goalTitle}. ${statusCopy}`}
                         >
                           <StyleCompletionMark done className="size-3 shrink-0" />
@@ -302,7 +428,12 @@ export function CalendarMonthDayCell<
                       );
                     })}
                     {hiddenItemCount > 0 ? (
-                      <p className="text-[10px] text-muted-foreground">
+                      <p
+                        className={cn(
+                          "text-[10px]",
+                          planFilledChromeMetaClass({ inMonth, isToday, isSelected })
+                        )}
+                      >
                         +{hiddenItemCount}
                       </p>
                     ) : null}
@@ -310,7 +441,10 @@ export function CalendarMonthDayCell<
                 ) : (
                   <button
                     type="button"
-                    className="min-h-[2.75rem] w-full rounded-[10px] px-2 text-left text-sm text-muted-foreground touch-manipulation"
+                    className={cn(
+                      "min-h-[2.75rem] w-full rounded-[10px] px-2 text-left text-sm touch-manipulation",
+                      planFilledChromeMetaClass({ inMonth, isToday, isSelected })
+                    )}
                     onClick={(event) => onCellClick(event.currentTarget)}
                   >
                     No work this day
@@ -391,9 +525,14 @@ export function CalendarMonthDayCell<
           </div>
           {hasVisibleContent ? (
             <div className="mt-4 space-y-1">
-              {visibleEntries.map((entry, entryIndex) =>
-                renderEntry(entry, entryIndex)
-              )}
+              <PlannerSortableDayList
+                day={day}
+                entryKeys={visibleEntries.map((entry) => entry.key)}
+              >
+                {visibleEntries.map((entry, entryIndex) =>
+                  renderEntry(entry, entryIndex)
+                )}
+              </PlannerSortableDayList>
               {visibleCompletionFactMarkers.map((marker) => {
                 const partnerOwned = marker.owner === "partner";
                 const statusCopy = partnerOwned
@@ -401,26 +540,34 @@ export function CalendarMonthDayCell<
                   : marker.scheduledDate && marker.scheduledDate !== day
                     ? `Marked done here, currently credited from the ${marker.scheduledDate} scheduled session.`
                     : "Marked done on this date.";
+                if (partnerOwned) {
+                  return (
+                    <CalendarPartnerChip
+                      key={`completion-fact-${marker.key}`}
+                      title={marker.goalTitle}
+                      completed
+                      className="rounded-md"
+                    />
+                  );
+                }
                 return (
                 <div
                   key={`completion-fact-${marker.key}`}
-                  className={
-                    partnerOwned
-                      ? "flex items-center gap-1.5 rounded-md border-2 border-primary bg-transparent px-1.5 py-1 text-[11px] text-primary"
-                      : "flex items-center gap-1.5 rounded-md border border-primary/35 bg-primary/10 px-1.5 py-1 text-[11px] text-foreground"
-                  }
+                  className="flex items-center gap-1.5 rounded-md border border-primary/35 bg-primary/10 px-1.5 py-1 text-[11px] text-foreground"
                   aria-label={`${marker.goalTitle}. ${statusCopy}`}
                 >
                   <StyleCompletionMark done className="size-3 shrink-0" />
                   <span className="truncate line-through">{marker.goalTitle}</span>
-                  {partnerOwned ? (
-                    <span className="sr-only">Partner marked this done.</span>
-                  ) : null}
                 </div>
                 );
               })}
               {hiddenItemCount > 0 ? (
-                <p className="text-[10px] text-muted-foreground">
+                <p
+                  className={cn(
+                    "text-[10px]",
+                    planFilledChromeMetaClass({ inMonth, isToday, isSelected })
+                  )}
+                >
                   +{hiddenItemCount}
                 </p>
               ) : null}

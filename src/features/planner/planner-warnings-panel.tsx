@@ -64,7 +64,7 @@ export function PlannerWarningsPanel({
     <>
       {hasPlannerWarnings && !warningsDismissed && !showBlockingLoading && !error ? (
         <div
-          className="rounded-[10px] border border-recover/35 bg-recover/10 px-3 py-2 text-xs text-foreground"
+          className="rounded-[10px] border border-warning bg-warning-fill px-3 py-2 text-xs text-foreground shadow-[inset_3px_0_0_0_var(--color-warning)]"
           data-testid="plan-recover-banner"
         >
           <div className="flex items-center justify-between gap-2">
@@ -74,7 +74,7 @@ export function PlannerWarningsPanel({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs"
+                className="h-7 border-warning bg-background text-xs text-foreground"
                 onClick={() => setWarningsOpen(true)}
               >
                 Recover

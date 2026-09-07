@@ -18,6 +18,22 @@ describe("gazetteer display colors", () => {
     expect(GAZETTEER.sage).not.toBe(GAZETTEER.gain);
   });
 
+  it("keeps rust for today and sage for selected-day chrome", () => {
+    expect(GAZETTEER.stampLight).toBe("#c88968");
+    expect(GAZETTEER.stamp).toBe("#9a4f2c");
+    expect(GAZETTEER.stampLight).not.toBe(GAZETTEER.stamp);
+    expect(GAZETTEER.sage).toBe("#6f8175");
+    expect(GAZETTEER.sageLight).toBe("#dfddcf");
+    expect(GAZETTEER.sageLight).not.toBe(GAZETTEER.sage);
+  });
+
+  it("keeps warning yellow off the rust identity", () => {
+    expect(GAZETTEER.recover).toBe("#eab308");
+    expect(GAZETTEER.recover).not.toBe(GAZETTEER.stamp);
+    expect(GAZETTEER.recover).not.toBe(GAZETTEER.stampLight);
+    expect(GAZETTEER.recover).not.toBe(GAZETTEER.colRust);
+  });
+
   it("keeps unknown hexes so custom goal colors still win", () => {
     expect(toGazetteerDisplayColor("#112233")).toBe("#112233");
     expect(toGazetteerDisplayColor("0A0B0C")).toBe("#0A0B0C");

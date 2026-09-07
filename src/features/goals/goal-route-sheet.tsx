@@ -175,7 +175,7 @@ export function GoalRouteSheet({
               aria-label={closeButtonLabel}
               data-no-swipe="true"
             >
-              <X className="size-4" />
+              <X />
             </Button>
           </div>
         </div>

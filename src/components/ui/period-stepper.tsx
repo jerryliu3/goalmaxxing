@@ -36,7 +36,7 @@ export function PeriodStepper({
         disabled={!onPrevious || previousDisabled}
         aria-label={previousAriaLabel}
       >
-        <ChevronLeft className="size-4" />
+        <ChevronLeft />
       </Button>
       {center}
       <Button
@@ -47,7 +47,7 @@ export function PeriodStepper({
         disabled={!onNext || nextDisabled}
         aria-label={nextAriaLabel}
       >
-        <ChevronRight className="size-4" />
+        <ChevronRight />
       </Button>
     </div>
   );

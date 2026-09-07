@@ -293,7 +293,7 @@ export function BulkGoalDraftReview(props: BulkGoalDraftReviewProps) {
                           aria-label={`Remove ${draft.title || "draft"}`}
                           disabled={editingDisabled}
                         >
-                          <Trash2 className="size-4" />
+                          <Trash2 />
                         </Button>
                       </div>
                     </div>

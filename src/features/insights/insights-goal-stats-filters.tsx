@@ -11,7 +11,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { GoalListControls } from "@/features/goals/goal-list-controls";
-import { InsightsPeriodControls } from "@/features/insights/insights-period-controls";
 import type { HeatmapViewMode } from "@/features/insights/insights-tab";
 import { toggleExclusiveSelection } from "@/lib/filters/toggle-exclusive-selection";
 import type { GoalDateSort } from "@/lib/goals/list-view";
@@ -24,8 +23,6 @@ interface InsightsGoalStatsFiltersProps {
   onEndMonthsChange: (months: string[]) => void;
   sort: GoalDateSort;
   onSortChange: (sort: GoalDateSort) => void;
-  monthCursor: Date;
-  onMonthCursorChange: (next: Date) => void;
   viewMode: HeatmapViewMode;
   onViewModeChange: (mode: HeatmapViewMode) => void;
   showEndedGoals: boolean;
@@ -42,8 +39,6 @@ export function InsightsGoalStatsFilters({
   onEndMonthsChange,
   sort,
   onSortChange,
-  monthCursor,
-  onMonthCursorChange,
   viewMode,
   onViewModeChange,
   showEndedGoals,
@@ -133,14 +128,6 @@ export function InsightsGoalStatsFilters({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <InsightsPeriodControls
-              monthCursor={monthCursor}
-              onMonthCursorChange={onMonthCursorChange}
-              perGoalViewMode={viewMode}
-              onPerGoalViewModeChange={onViewModeChange}
-              includeStepper={false}
-              viewModeSelectId="insights-goal-stats-filter-view-mode"
-            />
             <GoalListControls
               goals={goals}
               referenceMonth={referenceMonth}

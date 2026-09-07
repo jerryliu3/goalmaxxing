@@ -1,12 +1,9 @@
 "use client";
 
 import { CalendarDayPreviewList } from "@/features/planner/calendar-day-preview-list";
-import { completionDisabledReasonCopy } from "@/features/planner/calendar-format";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import type { PlannerCompletionFactMarker } from "@/features/planner/calendar-surface.types";
-import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
-import { READ_ONLY_MONTH_HINT } from "@/features/planner/planner-save-availability";
-import { getCompletionControlState } from "@/features/planner/completion-entry-dispatch";
+import { getPlannerCompletionTogglePresentation } from "@/features/planner/completion-entry-dispatch";
 
 interface PlannerDayEntriesPanelProps {
   day: string;
@@ -30,6 +27,7 @@ interface PlannerDayEntriesPanelProps {
   onEntryPointerEnd: () => void;
   density?: "compact" | "expanded";
   includeSourceElement?: boolean;
+  selectedEntryKey?: string | null;
 }
 
 export function PlannerDayEntriesPanel({
@@ -50,6 +48,7 @@ export function PlannerDayEntriesPanel({
   onEntryPointerEnd,
   density = "compact",
   includeSourceElement = true,
+  selectedEntryKey = null,
 }: PlannerDayEntriesPanelProps) {
   return (
     <CalendarDayPreviewList
@@ -63,33 +62,15 @@ export function PlannerDayEntriesPanel({
       isEntryImmovableForDraft={(entry) =>
         !canMutateEntryOnDay(entry, day) || isEntryImmovableForDraft(entry)
       }
-      getCompletionToggleState={(entry, selectedDay) => {
-        const mutableOnSelectedDay = canMutateEntryOnDay(entry, selectedDay);
-        if (!mutableOnSelectedDay) {
-          return {
-            currentlyCredited: isEntryCredited(entry),
-            disabledReasonCopy: READ_ONLY_MONTH_HINT,
-          };
-        }
-        if (isPlannerTaskCalendarEntry(entry)) {
-          return {
-            currentlyCredited: isEntryCredited(entry),
-            disabledReasonCopy: null,
-          };
-        }
-        const completionState = getCompletionControlState({
+      getCompletionToggleState={(entry, selectedDay) =>
+        getPlannerCompletionTogglePresentation({
           entry,
-          selectedDate: selectedDay,
+          selectedDay,
           asOfDate,
           canMutatePlanItems,
-        });
-        return {
-          currentlyCredited: completionState.currentlyCredited,
-          disabledReasonCopy: completionState.disabledReason
-            ? completionDisabledReasonCopy(completionState.disabledReason)
-            : null,
-        };
-      }}
+          canMutateEntryOnDay,
+        })
+      }
       onEntryOpen={onEntryOpen}
       onToggleCompletion={(entry, selectedDay, sourceElement) =>
         includeSourceElement
@@ -99,6 +80,7 @@ export function PlannerDayEntriesPanel({
       onEntryPointerStart={onEntryPointerStart}
       onEntryPointerEnd={onEntryPointerEnd}
       density={density}
+      selectedEntryKey={selectedEntryKey}
     />
   );
 }

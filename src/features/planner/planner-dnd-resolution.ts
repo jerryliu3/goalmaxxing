@@ -33,9 +33,12 @@ export function resolvePlannerDndResolution({
   if (!entry) {
     return { kind: "clear" };
   }
+  const sourceDay = entryDayByKey.get(entryKey) ?? null;
   if (target.type === "preview_entry") {
-    const sourceDay = entryDayByKey.get(entryKey) ?? null;
     if (sourceDay === target.day) {
+      if (target.entryKey === entryKey) {
+        return { kind: "clear" };
+      }
       return {
         kind: "reorder_preview",
         day: target.day,
@@ -48,6 +51,9 @@ export function resolvePlannerDndResolution({
       entry,
       nextDate: target.day,
     };
+  }
+  if (sourceDay === target.day) {
+    return { kind: "clear" };
   }
   return {
     kind: "move_entry",

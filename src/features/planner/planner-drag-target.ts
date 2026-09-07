@@ -34,7 +34,7 @@ export function parsePlannerEntryDragId(id: string | number) {
     }
     return parsed.slice(separatorIndex + 2);
   }
-  return null;
+  return parsePlannerPreviewEntryDropId(id)?.entryKey ?? null;
 }
 
 export function parsePlannerDayDropId(id: string | number) {

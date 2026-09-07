@@ -1,10 +1,11 @@
 "use client";
 
 import { format, parse } from "date-fns";
-import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
+import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
 import {
   planAgendaDayNumberClass,
   planAgendaDayRowClass,
+  planFilledChromeMetaClass,
   planMonthDayNumberClass,
   planMonthDaySurfaceClass,
 } from "@/features/planner/calendar-day-chrome";
@@ -39,7 +40,12 @@ export function PlannerPartnerWeekDayCell({
       >
         <div className="flex items-start gap-2 py-3">
           <div className="w-14 shrink-0 px-1">
-            <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            <span
+              className={cn(
+                "block text-[11px] font-medium uppercase tracking-wide",
+                planFilledChromeMetaClass({ inMonth, isToday, isSelected })
+              )}
+            >
               {weekdayLabel}
             </span>
             <span
@@ -51,16 +57,21 @@ export function PlannerPartnerWeekDayCell({
           <div className="flex min-h-[2.75rem] min-w-0 flex-1 flex-col gap-1.5">
             {markers.length > 0 ? (
               markers.map((marker) => (
-                <div
+                <CalendarPartnerChip
                   key={marker.key}
-                  className="flex items-center gap-1.5 rounded-[10px] border-2 border-primary bg-transparent px-1.5 py-1 text-[11px] text-primary"
-                >
-                  <StyleCompletionMark done className="size-3 shrink-0" />
-                  <span className="truncate">{marker.goalTitle}</span>
-                </div>
+                  title={marker.goalTitle}
+                  completed
+                />
               ))
             ) : (
-              <p className="py-1 text-sm text-muted-foreground">—</p>
+              <p
+                className={cn(
+                  "py-1 text-sm",
+                  planFilledChromeMetaClass({ inMonth, isToday, isSelected })
+                )}
+              >
+                —
+              </p>
             )}
           </div>
         </div>
@@ -94,13 +105,11 @@ export function PlannerPartnerWeekDayCell({
       {markers.length > 0 ? (
         <div className="mt-3 space-y-1">
           {markers.map((marker) => (
-            <div
+            <CalendarPartnerChip
               key={marker.key}
-              className="flex items-center gap-1.5 rounded-[10px] border-2 border-primary bg-transparent px-1.5 py-1 text-[11px] text-primary"
-            >
-              <StyleCompletionMark done className="size-3 shrink-0" />
-              <span className="truncate">{marker.goalTitle}</span>
-            </div>
+              title={marker.goalTitle}
+              completed
+            />
           ))}
         </div>
       ) : null}

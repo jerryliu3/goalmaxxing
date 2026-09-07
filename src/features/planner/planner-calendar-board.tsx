@@ -21,6 +21,7 @@ import { PlannerFocusedDayPane } from "@/features/planner/planner-focused-day-pa
 import { PlannerViewWindowHeader } from "@/features/planner/planner-view-window-header";
 import { PlannerPartnerWeekDayCell } from "@/features/planner/planner-partner-week-cell";
 import { PlanViewTransitionFrame } from "@/features/planner/plan-view-transition-frame";
+import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 
 const SEVEN_COLUMN_GRID_STYLE = {
   gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
@@ -52,6 +53,10 @@ export interface PlannerCalendarBoardProps {
   getDragDayLabel: (day: string) => string;
   renderEntryDragOverlay?: (entryKey: string) => ReactNode;
   onEntryDragStart: (entryKey: string) => void;
+  onEntryDragOverTarget?: (
+    entryKey: string,
+    target: PlannerDragTarget
+  ) => void;
   onEntryDragEnd: (entryKey: string, target: PlannerDragTarget) => void;
   onEntryDragCancel: (entryKey: string | null) => void;
   rollingWeekStrip: ReactNode;
@@ -70,6 +75,8 @@ export interface PlannerCalendarBoardProps {
   ) => void;
   onEntryPointerStart: (immovable: boolean) => void;
   onEntryPointerEnd: () => void;
+  selectedEntryKey?: string | null;
+  dayChecklist?: PlanDayChecklistModel | null;
   calendarGridViewportRef: MutableRefObject<HTMLDivElement | null>;
   onCalendarGridViewportScroll: () => void;
   weekdayLabels: string[];
@@ -117,6 +124,7 @@ export function PlannerCalendarBoard({
   getDragDayLabel,
   renderEntryDragOverlay,
   onEntryDragStart,
+  onEntryDragOverTarget,
   onEntryDragEnd,
   onEntryDragCancel,
   rollingWeekStrip,
@@ -131,6 +139,8 @@ export function PlannerCalendarBoard({
   onToggleCompletion,
   onEntryPointerStart,
   onEntryPointerEnd,
+  selectedEntryKey = null,
+  dayChecklist = null,
   calendarGridViewportRef,
   onCalendarGridViewportScroll,
   weekdayLabels,
@@ -176,6 +186,7 @@ export function PlannerCalendarBoard({
         getDayLabel={getDragDayLabel}
         renderDragOverlay={renderEntryDragOverlay}
         onEntryDragStart={onEntryDragStart}
+        onEntryDragOverTarget={onEntryDragOverTarget}
         onEntryDragEnd={onEntryDragEnd}
         onEntryDragCancel={onEntryDragCancel}
       >
@@ -199,6 +210,8 @@ export function PlannerCalendarBoard({
               onEntryPointerStart={onEntryPointerStart}
               onEntryPointerEnd={onEntryPointerEnd}
               showTasksInsteadOfGoals={showTasksInsteadOfGoals}
+              selectedEntryKey={selectedEntryKey}
+              dayChecklist={dayChecklist}
               titleAs="h2"
               shareDayTransition
             />
@@ -319,6 +332,7 @@ export function PlannerCalendarBoard({
                   onEntryPointerStart={onEntryPointerStart}
                   onEntryPointerEnd={onEntryPointerEnd}
                   showTasksInsteadOfGoals={showTasksInsteadOfGoals}
+                  selectedEntryKey={selectedEntryKey}
                 />
               </aside>
             </div>

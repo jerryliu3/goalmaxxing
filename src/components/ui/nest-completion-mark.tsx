@@ -4,26 +4,30 @@ export function NestCompletionMark({
   done,
   fillProgress = done ? 1 : 0,
   fillTransition = false,
+  pressed = false,
   className,
   label,
 }: {
   done: boolean;
   fillProgress?: number;
   fillTransition?: boolean;
+  pressed?: boolean;
   className?: string;
   label?: string;
 }) {
   const progress = Math.min(1, Math.max(0, fillProgress));
+  const outerScale = pressed ? 1.12 : 1;
   return (
     <svg
       viewBox="0 0 24 24"
-      className={cn("shrink-0", className)}
+      className={cn("block shrink-0 overflow-visible", className)}
       aria-hidden={label ? undefined : true}
       aria-label={label}
       role={label ? "img" : undefined}
       data-completion-mark="nest"
       data-completed={done ? "true" : "false"}
       data-fill-progress={progress}
+      data-pressed={pressed ? "true" : "false"}
     >
       <rect
         x="2.5"
@@ -34,6 +38,12 @@ export function NestCompletionMark({
         fill="none"
         stroke="currentColor"
         strokeWidth="1.7"
+        style={{
+          transform: `scale(${outerScale})`,
+          transformOrigin: "12px 12px",
+          transition:
+            "transform var(--motion-duration-fast, 120ms) var(--motion-ease-standard, ease)",
+        }}
       />
       <rect
         x="6.6"

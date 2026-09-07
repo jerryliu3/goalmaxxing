@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { getGoalVisual, getWorkPillFillStyle, normalizeGoalColor } from "./goal-visuals";
+import { GAZETTEER } from "@/lib/brand/gazetteer";
+import {
+  getGoalVisual,
+  getWorkPillFillStyle,
+  mixOpaqueHex,
+  normalizeGoalColor,
+  WORK_PILL_HUE_AMOUNT,
+} from "./goal-visuals";
 
 describe("goal visuals", () => {
   it("keeps icon/color deterministic per goal id", () => {
@@ -38,18 +45,34 @@ describe("goal visuals", () => {
     ).toBe("#10b981");
   });
 
-  it("uses an opaque category fill on work pills in every view", () => {
-    expect(getWorkPillFillStyle("#10b981", false)).toEqual({
-      backgroundColor: "#10b981",
-      borderColor: "#10b981",
-      color: "#ffffff",
-    });
-    expect(getWorkPillFillStyle("#10b981", true).backgroundColor).toBe("#10b981");
-    expect(getWorkPillFillStyle("#2563eb", false)).toEqual({
-      backgroundColor: "#2563eb",
-      borderColor: "#2563eb",
-      color: "#ffffff",
-    });
+  it("uses an opaque pastel fill that stays the same on every month tile", () => {
+    const original = getWorkPillFillStyle("#10b981", false);
+    const originalPastel = mixOpaqueHex("#10b981", "#ffffff", WORK_PILL_HUE_AMOUNT);
+    expect(original.backgroundColor).toBe(originalPastel);
+    expect(original.borderColor).toBe(originalPastel);
+    expect(original.backgroundColor).not.toBe("#10b981");
+    expect(original.color).toBe("#1c1917");
+    expect(getWorkPillFillStyle("#10b981", true).backgroundColor).toBe(originalPastel);
+
+    const originalBlue = getWorkPillFillStyle("#2563eb", false);
+    expect(originalBlue.backgroundColor).toBe(
+      mixOpaqueHex("#2563eb", "#ffffff", WORK_PILL_HUE_AMOUNT)
+    );
+    expect(originalBlue.color).toBe("#1c1917");
+
+    const gazetteerHealth = getWorkPillFillStyle("#10b981", false, "gazetteer");
+    const gazetteerPastel = mixOpaqueHex(
+      GAZETTEER.gain,
+      GAZETTEER.paper,
+      WORK_PILL_HUE_AMOUNT
+    );
+    expect(gazetteerHealth.backgroundColor).toBe(gazetteerPastel);
+    expect(gazetteerHealth.borderColor).toBe(gazetteerPastel);
+    expect(gazetteerHealth.color).toBe("#1c1917");
+  });
+
+  it("mixes two opaque hexes without leaving an alpha channel", () => {
+    expect(mixOpaqueHex("#ff0000", "#ffffff", 0.5)).toBe("#ff8080");
   });
 
   it("keeps leftover blue goal hexes on original", () => {

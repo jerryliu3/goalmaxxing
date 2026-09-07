@@ -11,6 +11,10 @@ import {
   GoalFilters,
   type GoalCategoryFilterOption,
 } from "@/features/goals/goal-filters";
+import {
+  ChecklistFiltersForm,
+  type ChecklistFiltersFormProps,
+} from "@/features/today/checklist-filters-dialog";
 import type { GoalMonthOption } from "@/lib/goals/list-view";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +30,7 @@ interface PlannerFiltersDialogProps {
   endMonthFilter: string | null;
   onEndMonthFilterChange: (value: string | null) => void;
   endMonthOptions: GoalMonthOption[];
+  dayFilters?: ChecklistFiltersFormProps | null;
 }
 
 export function PlannerFiltersDialog({
@@ -40,14 +45,24 @@ export function PlannerFiltersDialog({
   endMonthFilter,
   onEndMonthFilterChange,
   endMonthOptions,
+  dayFilters = null,
 }: PlannerFiltersDialogProps) {
+  const usingDayFilters = dayFilters !== null;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent
+        className={
+          usingDayFilters
+            ? "top-auto bottom-0 left-1/2 max-h-[85vh] max-w-[calc(100%-1rem)] -translate-x-1/2 translate-y-0 overflow-y-auto rounded-b-none rounded-t-xl pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:top-1/2 sm:bottom-auto sm:max-w-lg sm:-translate-y-1/2 sm:rounded-b-xl"
+            : undefined
+        }
+      >
         <DialogHeader>
-          <DialogTitle>Calendar filters</DialogTitle>
+          <DialogTitle>{usingDayFilters ? "Day filters" : "Calendar filters"}</DialogTitle>
           <DialogDescription>
-            Choose whether the calendar shows planned goals or date-only tasks.
+            {usingDayFilters
+              ? "Filter this day's planned work, unplanned goals, and tasks."
+              : "Choose whether the calendar shows planned goals or date-only tasks."}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -81,7 +96,9 @@ export function PlannerFiltersDialog({
               />
             </button>
           </div>
-          {showTasksInsteadOfGoals ? null : (
+          {showTasksInsteadOfGoals ? null : usingDayFilters && dayFilters ? (
+            <ChecklistFiltersForm {...dayFilters} />
+          ) : (
             <GoalFilters
               categoryFilterEnabled
               endMonthFilterEnabled

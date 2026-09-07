@@ -59,6 +59,104 @@ describe("usePlannerCalendarDnd", () => {
     });
   });
 
+  it("reorders when dropping onto another same-day entry", () => {
+    const goal = buildPlannerDayEntry({ key: "goal-1:unit-1" });
+    const other = buildPlannerDayEntry({ key: "goal-2:unit-1" });
+    const queueDraftMoveCommand = vi.fn(() => true);
+    const setPreviewEntryOrderByDay = vi.fn();
+    const { result } = renderHook(() =>
+      usePlannerCalendarDnd({
+        entryByKey: new Map([
+          [goal.key, goal],
+          [other.key, other],
+        ]),
+        entryDayByKey: new Map([
+          [goal.key, "2026-09-02"],
+          [other.key, "2026-09-02"],
+        ]),
+        getEntriesForDay: () => [goal, other],
+        getEntryGoalFirstTitleWithTime,
+        setPreviewEntryOrderByDay,
+        queueDraftMoveCommand,
+        rescheduleCalendarTask: vi.fn(),
+        clearHoverPreviewTimer: vi.fn(),
+        pointerPressActiveRef: { current: false },
+      })
+    );
+
+    act(() => {
+      result.current.handleDndEntryDragEnd(goal.key, {
+        type: "preview_entry",
+        day: "2026-09-02",
+        entryKey: other.key,
+      });
+    });
+
+    expect(setPreviewEntryOrderByDay).toHaveBeenCalled();
+    expect(queueDraftMoveCommand).not.toHaveBeenCalled();
+  });
+
+  it("reorders while dragging over another same-day entry", () => {
+    const goal = buildPlannerDayEntry({ key: "goal-1:unit-1" });
+    const other = buildPlannerDayEntry({ key: "goal-2:unit-1" });
+    const setPreviewEntryOrderByDay = vi.fn();
+    const { result } = renderHook(() =>
+      usePlannerCalendarDnd({
+        entryByKey: new Map([
+          [goal.key, goal],
+          [other.key, other],
+        ]),
+        entryDayByKey: new Map([
+          [goal.key, "2026-09-02"],
+          [other.key, "2026-09-02"],
+        ]),
+        getEntriesForDay: () => [goal, other],
+        getEntryGoalFirstTitleWithTime,
+        setPreviewEntryOrderByDay,
+        queueDraftMoveCommand: vi.fn(() => true),
+        rescheduleCalendarTask: vi.fn(),
+        clearHoverPreviewTimer: vi.fn(),
+        pointerPressActiveRef: { current: false },
+      })
+    );
+
+    act(() => {
+      result.current.handleDndEntryDragOver(goal.key, {
+        type: "preview_entry",
+        day: "2026-09-02",
+        entryKey: other.key,
+      });
+    });
+
+    expect(setPreviewEntryOrderByDay).toHaveBeenCalled();
+  });
+
+  it("does not queue a draft move when a goal is dropped on its current day", () => {
+    const goal = buildPlannerDayEntry({ key: "goal-1:unit-1" });
+    const queueDraftMoveCommand = vi.fn(() => true);
+    const { result } = renderHook(() =>
+      usePlannerCalendarDnd({
+        entryByKey: new Map([[goal.key, goal]]),
+        entryDayByKey: new Map([[goal.key, "2026-09-02"]]),
+        getEntriesForDay: () => [goal],
+        getEntryGoalFirstTitleWithTime,
+        setPreviewEntryOrderByDay: vi.fn(),
+        queueDraftMoveCommand,
+        rescheduleCalendarTask: vi.fn(),
+        clearHoverPreviewTimer: vi.fn(),
+        pointerPressActiveRef: { current: false },
+      })
+    );
+
+    act(() => {
+      result.current.handleDndEntryDragEnd(goal.key, {
+        type: "day",
+        day: "2026-09-02",
+      });
+    });
+    expect(queueDraftMoveCommand).not.toHaveBeenCalled();
+  });
+
   it("does not persist a task drop onto its current day", () => {
     const task = toPlannerTaskCalendarEntry({
       taskId: "11111111-1111-4111-8111-111111111111",

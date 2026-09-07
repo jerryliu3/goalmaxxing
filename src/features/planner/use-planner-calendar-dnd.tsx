@@ -132,6 +132,26 @@ export function usePlannerCalendarDnd({
     [getEntriesForDay, setPreviewEntryOrderByDay]
   );
 
+  const handleDndEntryDragOver = useCallback(
+    (entryKey: string, target: PlannerDragTarget) => {
+      const resolution = resolvePlannerDndResolution({
+        entryKey,
+        target,
+        entryByKey,
+        entryDayByKey,
+      });
+      if (resolution.kind !== "reorder_preview") {
+        return;
+      }
+      reorderPreviewEntriesForDay(
+        resolution.day,
+        resolution.activeEntryKey,
+        resolution.overEntryKey
+      );
+    },
+    [entryByKey, entryDayByKey, reorderPreviewEntriesForDay]
+  );
+
   const handleDndEntryDragEnd = useCallback(
     (entryKey: string, target: PlannerDragTarget) => {
       const resolution = resolvePlannerDndResolution({
@@ -193,6 +213,7 @@ export function usePlannerCalendarDnd({
     getDragDayLabel,
     renderEntryDragOverlay,
     handleDndEntryDragStart,
+    handleDndEntryDragOver,
     handleDndEntryDragEnd,
     handleDndEntryDragCancel,
   };

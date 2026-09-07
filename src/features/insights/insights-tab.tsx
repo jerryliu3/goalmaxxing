@@ -797,12 +797,12 @@ export function InsightsTab({
                   type="button"
                   variant="outline"
                   size="icon-sm"
-                  className="h-8 w-8 shrink-0 rounded-full"
+                  className="shrink-0"
                   aria-label="Open Progress filters"
                   title="Open Progress filters"
                   onClick={() => setGoalStatsFiltersOpen(true)}
                 >
-                  <SlidersHorizontal className="size-3.5" />
+                  <SlidersHorizontal />
                 </Button>
               </div>
             </div>
@@ -815,8 +815,6 @@ export function InsightsTab({
               onEndMonthsChange={setGoalEndMonths}
               sort={goalSort}
               onSortChange={setGoalSort}
-              monthCursor={monthCursor}
-              onMonthCursorChange={setMonthCursor}
               viewMode={perGoalViewMode}
               onViewModeChange={setPerGoalViewMode}
               showEndedGoals={showHistoricalGoals}
@@ -883,8 +881,6 @@ export function InsightsTab({
                   ? (date) => !isLedgerHeatmapDayMutable(date, todayLocal)
                   : undefined
               }
-              onPreviousMonth={() => setMonthCursor((previous) => subMonths(previous, 1))}
-              onNextMonth={() => setMonthCursor((previous) => addMonths(previous, 1))}
               onDayClick={(date, sourceElement) =>
                 handleLedgerDayClick(date, sourceElement)
               }

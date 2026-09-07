@@ -22,6 +22,7 @@ import type {
 } from "@/features/planner/calendar-surface.types";
 import type { PlannerDayPreviewInteractions } from "@/features/planner/use-planner-day-preview-interactions";
 import { canOpenPlannerEventDetails } from "@/features/planner/calendar-task-entries";
+import { getPlannerCompletionTogglePresentation } from "@/features/planner/completion-entry-dispatch";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 
 export function resolveWeekAgendaSelectionViewMode(
@@ -75,6 +76,14 @@ interface UsePlannerCalendarDayCellRendererArgs {
   canMutateEntryOnDay: (entry: PlannerDayDetailEntry, day: string) => boolean;
   getOrderedEntriesForDay: (day: string | null) => PlannerDayDetailEntry[];
   getCompletionFactMarkersForDay: (day: string | null) => PlannerCompletionFactMarker[];
+  asOfDate: string | null;
+  canMutatePlanItems: boolean;
+  mutationLoadingKey: string | null;
+  onToggleCompletion: (
+    entry: PlannerDayDetailEntry,
+    day: string,
+    sourceElement?: HTMLButtonElement
+  ) => void;
   visibleCells: PlannerCalendarCell[];
   dayPreviewInteractions: Pick<
     PlannerDayPreviewInteractions,
@@ -109,6 +118,10 @@ export function usePlannerCalendarDayCellRenderer({
   canMutateEntryOnDay,
   getOrderedEntriesForDay,
   getCompletionFactMarkersForDay,
+  asOfDate,
+  canMutatePlanItems,
+  mutationLoadingKey,
+  onToggleCompletion,
   visibleCells,
   dayPreviewInteractions,
 }: UsePlannerCalendarDayCellRendererArgs) {
@@ -328,6 +341,19 @@ export function usePlannerCalendarDayCellRenderer({
           onEntryPointerEnd={() => {
             pointerPressActiveRef.current = false;
           }}
+          onToggleCompletion={(entry, entryDay, sourceElement) => {
+            onToggleCompletion(entry, entryDay, sourceElement);
+          }}
+          getCompletionToggleState={(entry, entryDay) =>
+            getPlannerCompletionTogglePresentation({
+              entry,
+              selectedDay: entryDay,
+              asOfDate,
+              canMutatePlanItems,
+              canMutateEntryOnDay,
+            })
+          }
+          mutationLoading={Boolean(mutationLoadingKey)}
           onboardingFirstEntry={cell.date === onboardingItemDay}
         />
       );
@@ -362,6 +388,10 @@ export function usePlannerCalendarDayCellRenderer({
       lastTouchTapRef,
       viewMode,
       onboardingItemDay,
+      asOfDate,
+      canMutatePlanItems,
+      mutationLoadingKey,
+      onToggleCompletion,
     ]
   );
 }

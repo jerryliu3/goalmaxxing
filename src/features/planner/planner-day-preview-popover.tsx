@@ -97,7 +97,7 @@ export function PlannerDayPreviewPopover({
               onExpandDay(dayPreview.day);
             }}
           >
-            <Maximize2 className="size-3.5" />
+            <Maximize2 />
           </Button>
           {dayPreview.pinned ? (
             <Button

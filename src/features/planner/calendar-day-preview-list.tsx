@@ -3,9 +3,12 @@
 import { Link2 } from "lucide-react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
+import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
 import {
   PlannerDraggablePreviewEntry,
+  PlannerSortableDayList,
 } from "@/features/planner/calendar-dnd";
+import { planSelectedWorkRowClass } from "@/features/planner/calendar-day-chrome";
 import {
   getEntryDraftDiffSummary,
   getEntryDraftPillClasses,
@@ -43,6 +46,7 @@ interface CalendarDayPreviewListProps<
   onEntryPointerStart: (immovable: boolean) => void;
   onEntryPointerEnd: () => void;
   density?: "compact" | "expanded";
+  selectedEntryKey?: string | null;
 }
 
 export function CalendarDayPreviewList<
@@ -63,6 +67,7 @@ export function CalendarDayPreviewList<
   onEntryPointerStart,
   onEntryPointerEnd,
   density = "compact",
+  selectedEntryKey = null,
 }: CalendarDayPreviewListProps<TEntry, TCompletionFactMarker>) {
   const expanded = density === "expanded";
   return (
@@ -75,6 +80,10 @@ export function CalendarDayPreviewList<
         <p className="text-muted-foreground">No planned sessions.</p>
       ) : (
         <>
+          <PlannerSortableDayList
+            day={day}
+            entryKeys={entries.map((entry) => entry.key)}
+          >
           {entries.map((entry) => {
             const visual = getGoalVisual({
               goalId: entry.originalGoalId,
@@ -95,6 +104,7 @@ export function CalendarDayPreviewList<
                 ? undefined
                 : getWorkPillFillStyle(visual.color, credited);
             const completionToggleState = getCompletionToggleState(entry, day);
+            const isSelectedRow = selectedEntryKey === entry.key;
             return (
               <PlannerDraggablePreviewEntry
                 key={`preview-entry-${entry.key}`}
@@ -112,32 +122,38 @@ export function CalendarDayPreviewList<
                   isOver,
                 }) => (
                   <div
-                    ref={setNodeRef}
+                    ref={(node) => {
+                      setNodeRef(node);
+                      setActivatorNodeRef(node);
+                    }}
                     style={{ ...style, ...pillFillStyle }}
                     className={
                       expanded
-                        ? `flex items-stretch transition-colors ${
+                        ? `flex items-start transition-colors ${
                             isDraft ? pillToneClasses : "bg-transparent"
-                          } ${entry.draftGhost ? "opacity-75" : ""} ${
+                          } ${planSelectedWorkRowClass(isSelectedRow)} ${
+                            entry.draftGhost ? "opacity-75" : ""
+                          } ${
                             isOver ? "bg-primary/5" : ""
                           } ${
-                            immovable ? "cursor-not-allowed" : ""
+                            immovable ? "cursor-not-allowed" : "cursor-grab touch-none active:cursor-grabbing"
                           } ${isDragging ? "pointer-events-none opacity-0" : ""}`
-                        : `flex items-stretch rounded-[10px] border transition-colors ${pillToneClasses} ${
+                        : `flex items-start rounded-[10px] border px-1.5 py-1 transition-colors ${pillToneClasses} ${
                             entry.draftGhost ? "opacity-75" : ""
                           } ${
                             isOver
                               ? "border-primary/70 ring-1 ring-primary/60"
                               : "hover:border-primary/60"
                           } ${
-                            immovable ? "cursor-not-allowed" : ""
+                            immovable ? "cursor-not-allowed" : "cursor-grab touch-none active:cursor-grabbing"
                           } ${isDragging ? "pointer-events-none opacity-0" : ""}`
                     }
+                    aria-current={isSelectedRow ? "true" : undefined}
                     title={
                       `${draftDiffSummary ? `${draftDiffSummary} ` : ""}${
                         immovable
                           ? "Completed or historical sessions can't be moved in draft."
-                          : "Click to view details or drag to move this session."
+                          : "Click to view details or drag to rearrange in this day."
                       }`
                     }
                     onPointerDownCapture={(event) => {
@@ -159,13 +175,15 @@ export function CalendarDayPreviewList<
                     }}
                     data-planner-entry-key={entry.key}
                     data-plan-work-row={expanded ? "ledger" : "pill"}
+                    {...attributes}
+                    {...(immovable ? {} : listeners)}
                   >
                     {!entry.draftGhost ? (
                       <div
                         className={
                           expanded
                             ? "flex items-center py-3"
-                            : "flex items-center p-1.5 pr-0"
+                            : "flex h-6 items-center"
                         }
                         data-plan-completion-hit="true"
                         onClick={(event) => {
@@ -201,19 +219,10 @@ export function CalendarDayPreviewList<
                       </div>
                     ) : null}
                     <div
-                      ref={setActivatorNodeRef}
-                      className={
-                        immovable
-                          ? `flex min-w-0 flex-1 items-center text-left ${
-                              expanded ? "py-3 pl-3" : "p-1.5 pl-2"
-                            }`
-                          : `flex min-w-0 flex-1 cursor-grab items-center text-left touch-none active:cursor-grabbing ${
-                              expanded ? "py-3 pl-3" : "p-1.5 pl-2"
-                            }`
-                      }
+                      className={`flex min-w-0 flex-1 flex-col justify-center text-left leading-none ${
+                        expanded ? "py-3 pl-3" : "pl-2"
+                      } ${immovable ? "" : "touch-none"}`}
                       data-plan-drag-handle="true"
-                      {...attributes}
-                      {...listeners}
                       onClick={(event) => {
                         event.stopPropagation();
                         if (isDragging) {
@@ -226,8 +235,8 @@ export function CalendarDayPreviewList<
                         <p
                           className={
                             expanded
-                              ? "font-display text-base font-medium tracking-tight"
-                              : "truncate font-medium"
+                              ? "flex min-h-6 items-center font-display text-base font-medium leading-none tracking-tight"
+                              : "flex h-6 min-w-0 items-center truncate font-medium leading-none"
                           }
                         >
                           <span className="inline-flex items-center gap-1">
@@ -273,26 +282,32 @@ export function CalendarDayPreviewList<
               </PlannerDraggablePreviewEntry>
             );
           })}
+          </PlannerSortableDayList>
           {completionFactMarkers.map((marker) => {
-            const detail =
-              marker.owner === "partner"
-                ? "Partner marked this done."
-                : marker.scheduledDate && marker.scheduledDate !== day
-                  ? `Marked done here; credited from the ${marker.scheduledDate} scheduled session.`
-                  : null;
+            const partnerOwned = marker.owner === "partner";
+            const detail = partnerOwned
+              ? "Partner marked this done."
+              : marker.scheduledDate && marker.scheduledDate !== day
+                ? `Marked done here; credited from the ${marker.scheduledDate} scheduled session.`
+                : null;
+            if (partnerOwned) {
+              return (
+                <CalendarPartnerChip
+                  key={`preview-completion-fact-${marker.key}`}
+                  title={marker.goalTitle}
+                  completed
+                  density={expanded ? "expanded" : "compact"}
+                  description={expanded ? detail : null}
+                />
+              );
+            }
             return (
               <div
                 key={`preview-completion-fact-${marker.key}`}
                 className={
                   expanded
-                    ? `flex items-center gap-3 py-3 ${
-                        marker.owner === "partner" ? "text-primary" : "text-foreground"
-                      }`
-                    : `rounded-[10px] ${
-                        marker.owner === "partner"
-                          ? "border-2 border-primary bg-transparent text-primary"
-                          : "border border-primary/35 bg-primary/10 text-foreground"
-                      } p-1.5`
+                    ? "flex items-center gap-3 py-3 text-foreground"
+                    : "rounded-[10px] border border-primary/35 bg-primary/10 p-1.5 text-foreground"
                 }
                 aria-label={detail ? `${marker.goalTitle}. ${detail}` : marker.goalTitle}
               >

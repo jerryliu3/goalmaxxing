@@ -163,6 +163,12 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     getCompletionFactMarkersForDay,
     visibleCells: viewMode === "month" ? cells : focusedWeekCells,
     dayPreviewInteractions,
+    asOfDate: layoutProps.context?.asOfDate ?? null,
+    canMutatePlanItems: layoutProps.canMutatePlanItems,
+    mutationLoadingKey: layoutProps.mutationLoadingKey,
+    onToggleCompletion: (entry, day, sourceElement) => {
+      void layoutProps.toggleDateFact(entry, day, sourceElement ?? undefined);
+    },
   });
 
   const rollingWeekStrip = useMemo(

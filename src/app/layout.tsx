@@ -96,8 +96,12 @@ export default async function RootLayout({
       lang="en"
       data-ui-style={style.id}
       className={`${fontVariables} ${style.htmlClass} h-full antialiased`.trim()}
+      suppressHydrationWarning
     >
-      <body className="min-h-full bg-background text-foreground flex flex-col">
+      <body
+        className="min-h-full bg-background text-foreground flex flex-col"
+        suppressHydrationWarning
+      >
         <UiStyleProvider initialStyleId={style.id}>{children}</UiStyleProvider>
         <Toaster position="bottom-right" richColors />
       </body>
