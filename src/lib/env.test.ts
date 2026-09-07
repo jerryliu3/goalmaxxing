@@ -3,6 +3,7 @@ import {
   assertEnvAtBoot,
   getPublicEnv,
   getServerEnv,
+  looksLikeSupabaseSecretKey,
   resetEnvCacheForTests,
 } from "./env";
 
@@ -90,5 +91,12 @@ describe("env schema", () => {
     vi.stubEnv("CRON_SECRET", "cron-secret");
     resetEnvCacheForTests();
     expect(() => assertEnvAtBoot()).not.toThrow();
+  });
+
+  it("accepts service-role JWTs and sb_secret keys", () => {
+    expect(looksLikeSupabaseSecretKey("header.payload.signature")).toBe(true);
+    expect(looksLikeSupabaseSecretKey("sb_secret_abc")).toBe(true);
+    expect(looksLikeSupabaseSecretKey("placeholder")).toBe(false);
+    expect(looksLikeSupabaseSecretKey("")).toBe(false);
   });
 });

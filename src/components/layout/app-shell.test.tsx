@@ -143,7 +143,7 @@ describe("AppShell", () => {
     expect(screen.getByText("Child content")).toBeInTheDocument();
   });
 
-  it("labels the running head with the current destination", () => {
+  it("renders Goalmaxxing without a destination kicker", () => {
     mockPathname = "/insights";
     render(
       <AppShell userId="user-1" {...emptyDuoProps}>
@@ -151,8 +151,10 @@ describe("AppShell", () => {
       </AppShell>
     );
 
-    expect(screen.getByText("Progress")).toBeInTheDocument();
+    expect(screen.queryByText("Progress")).not.toBeInTheDocument();
     expect(screen.getByText("Goalmaxxing")).toBeInTheDocument();
+    expect(screen.getByText("Goalmaxxing")).toHaveClass("text-2xl");
+    expect(screen.getByText("XP Progress")).toBeInTheDocument();
   });
 
   it("applies Gazetteer tokens to the authenticated shell and body", () => {
