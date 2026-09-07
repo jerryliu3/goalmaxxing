@@ -21,7 +21,8 @@ applied only when Gazetteer is selected.
 - **Display / names:** Newsreader. Use on destination titles, day names, and
   work-row titles.
 - **Labels / running heads:** Source Sans 3, uppercase tracking on kickers,
-  tabs, and meta.
+  tabs, and meta. Chrome sans must resolve through `--font-app-sans`, not a
+  baked Geist utility.
 - **Rise / figures:** IBM Plex Mono.
 - Do not put Newsreader on chrome labels.
 
@@ -34,10 +35,15 @@ applied only when Gazetteer is selected.
 | Walnut ink | `#241C14` | Titles and body |
 | Muted | `#7A6A56` / `#5C4E3F` | Meta |
 | Rule gold | `#D4C4A4` | Hairlines |
-| Stamp rust | `#9A4F2C` | Accent, Nest, numerals, today |
-| Sage / oxidized copper | `#6F8175` | Adjacent-month tile fill |
-| Muted paper | `#EFE4D0` | Selected day that is not today |
+| Stamp rust | `#9A4F2C` | Identity: Nest, numerals, heatmap level 3 |
+| Stamp rust light | `#C88968` | Heatmap level 2, today |
+| Adjacent months | `#E4E4E7` / `#3F3F46` | Shared with Original previous- and next-month tiles |
+| Sage / oxidized copper | `#6F8175` | Selected-day chrome (not adjacent months) |
+| Sage level 1 | `color-mix` of sage 28% onto paper | Selected day fill |
+| Work pills | Opaque pastels mixed onto paper | Session chips; same fill in every month |
 | Gutter green | `#4A6740` | Rise / gain only |
+| Warning | `#EAB308` | Shared yellow on Original and Gazetteer; never rust |
+| Error | Original `--destructive` | Shared red; do not remap to rust |
 
 No sky-blue chips. No lavender cards. Green is a legend unit, not “done.”
 
@@ -46,5 +52,5 @@ No sky-blue chips. No lavender cards. Green is a legend unit, not “done.”
 - **Soft paper** corners (~8–16px) on chips, rows, month cells, sheets.
 - **Nest** completion: empty rounded frame, inner square settles in.
 - Day lists are hairline ledgers. Week/month pills stay move targets with
-  category fill. Completing happens in Day.
+  category fill. Completing happens from Day rows and Week checkboxes.
 - Unplaced work uses a Recover banner — adaptive, not shame.

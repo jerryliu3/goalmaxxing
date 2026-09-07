@@ -317,9 +317,9 @@ export function PlannerTasksPanel({
                       disabled={busy}
                     >
                       {deleting ? (
-                        <Loader2 className="size-4 animate-spin text-destructive" />
+                        <Loader2 className="animate-spin text-destructive" />
                       ) : (
-                        <Trash2 className="size-4 text-destructive" />
+                        <Trash2 className="text-destructive" />
                       )}
                     </Button>
                   ) : null}

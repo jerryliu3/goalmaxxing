@@ -102,7 +102,7 @@ export function PlannerEventDetailDialog({
               onClick={callbacks.onNavigateToFirstOpenInstance}
               disabled={!canNavigateToFirstOpenInstance}
             >
-              <ChevronsLeft className="size-4" />
+              <ChevronsLeft />
             </Button>
             <Button
               type="button"
@@ -112,7 +112,7 @@ export function PlannerEventDetailDialog({
               onClick={callbacks.onNavigateToPreviousOpenInstance}
               disabled={!canNavigateToPreviousOpenInstance}
             >
-              <ChevronLeft className="size-4" />
+              <ChevronLeft />
             </Button>
             <DialogTitle className="mx-1 min-w-0 text-center">
               {selectedEventEntry
@@ -127,7 +127,7 @@ export function PlannerEventDetailDialog({
               onClick={callbacks.onNavigateToNextOpenInstance}
               disabled={!canNavigateToNextOpenInstance}
             >
-              <ChevronRight className="size-4" />
+              <ChevronRight />
             </Button>
             <Button
               type="button"
@@ -137,7 +137,7 @@ export function PlannerEventDetailDialog({
               onClick={callbacks.onNavigateToLastOpenInstance}
               disabled={!canNavigateToLastOpenInstance}
             >
-              <ChevronsRight className="size-4" />
+              <ChevronsRight />
             </Button>
           </div>
         </DialogHeader>

@@ -2,9 +2,10 @@ import { cn } from "@/lib/utils";
 
 /**
  * Calendar tile chrome:
- * - Today: solid identity, even when that date sits in an adjacent month.
- * - Adjacent months: solid selection (high-contrast secondary).
- * - Selected day that is not today: muted (low-contrast secondary).
+ * - Today: solid today token (Original blue level 3 / Gazetteer rust level 2).
+ * - Adjacent months: adjacent token (Original and Gazetteer grey L1 `#e4e4e7`).
+ * - Selected day that is not today: day-selected token (Original blue level 2 /
+ *   Gazetteer copper level 1).
  */
 export function planMonthDaySurfaceClass({
   inMonth,
@@ -18,13 +19,13 @@ export function planMonthDaySurfaceClass({
   isPastInMonth: boolean;
 }): string {
   if (isToday) {
-    return "border-primary bg-primary text-primary-foreground hover:border-primary";
+    return "border-today bg-today text-today-foreground hover:border-today";
   }
   if (isSelected) {
-    return "border-border bg-muted text-foreground hover:border-border";
+    return "border-day-selected bg-day-selected text-day-selected-foreground hover:border-day-selected";
   }
   if (!inMonth) {
-    return "border-selection bg-selection text-selection-foreground hover:border-selection";
+    return "border-adjacent bg-adjacent text-adjacent-foreground hover:border-adjacent";
   }
   if (isPastInMonth) {
     return "border-border bg-muted/25 hover:border-primary/40";
@@ -42,13 +43,13 @@ export function planMonthDayNumberClass({
   isSelected?: boolean;
 }): string {
   if (isToday) {
-    return "text-primary-foreground";
+    return "text-today-foreground";
   }
   if (isSelected) {
-    return "text-foreground";
+    return "text-day-selected-foreground";
   }
   if (!inMonth) {
-    return "text-selection-foreground";
+    return "text-adjacent-foreground";
   }
   return "text-foreground";
 }
@@ -64,9 +65,9 @@ export function planAgendaDayRowClass({
 }): string {
   return cn(
     "border-b border-border/70 last:border-b-0",
-    isToday && "bg-primary text-primary-foreground",
-    !isToday && isSelected && "bg-muted text-foreground",
-    !isToday && !isSelected && !inMonth && "bg-selection text-selection-foreground"
+    isToday && "bg-today text-today-foreground",
+    !isToday && isSelected && "bg-day-selected text-day-selected-foreground",
+    !isToday && !isSelected && !inMonth && "bg-adjacent text-adjacent-foreground"
   );
 }
 
@@ -79,7 +80,28 @@ export function planAgendaDayNumberClass({
 }): string {
   return cn(
     "mt-0.5 inline-flex size-8 items-center justify-center rounded-full text-lg font-semibold leading-none",
-    isToday && "bg-primary-foreground text-primary",
-    !isToday && isSelected && "bg-background text-foreground"
+    isToday && "bg-today-foreground text-today",
+    !isToday && isSelected && "bg-day-selected-foreground text-day-selected"
   );
+}
+
+export function planFilledChromeMetaClass({
+  inMonth,
+  isToday,
+  isSelected,
+}: {
+  inMonth: boolean;
+  isToday: boolean;
+  isSelected: boolean;
+}): string {
+  return isToday || isSelected || !inMonth
+    ? "text-current opacity-75"
+    : "text-muted-foreground";
+}
+
+export function planSelectedWorkRowClass(selected: boolean) {
+  if (!selected) {
+    return "";
+  }
+  return "bg-day-selected text-day-selected-foreground shadow-[inset_3px_0_0_var(--color-selection)]";
 }

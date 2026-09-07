@@ -62,6 +62,9 @@ describe("CompletionToggle", () => {
     fireEvent.pointerDown(toggle);
     expect(toggle).toHaveAttribute("data-holding", "true");
     expect(mark).toHaveAttribute("data-fill-progress", "1");
+    expect(mark).toHaveAttribute("data-pressed", "true");
+    expect(toggle).not.toHaveClass("bg-primary/15");
+    expect(toggle).not.toHaveClass("scale-95");
     expect(onClick).not.toHaveBeenCalled();
 
     act(() => {
@@ -73,7 +76,28 @@ describe("CompletionToggle", () => {
     vi.useRealTimers();
   });
 
-  it("cancels a hold that is released early", () => {
+    it("commits on a pointer click without waiting for the hold", () => {
+      const onClick = vi.fn();
+      render(
+        <CompletionToggle
+          completed={false}
+          aria-label="Mark session done"
+          onClick={onClick}
+        />
+      );
+      const toggle = screen.getByRole("button", { name: "Mark session done" });
+      fireEvent.pointerDown(toggle);
+      expect(toggle).toHaveAttribute("data-holding", "true");
+      expect(toggle.querySelector("[data-completion-mark='circle']")).toHaveAttribute(
+        "data-pressed",
+        "true"
+      );
+      fireEvent.pointerUp(toggle);
+      fireEvent.click(toggle, { detail: 1 });
+      expect(onClick).toHaveBeenCalledOnce();
+    });
+
+    it("cancels a hold that is released early", () => {
     vi.useFakeTimers();
     const onClick = vi.fn();
     render(

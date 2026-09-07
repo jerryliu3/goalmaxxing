@@ -1,6 +1,11 @@
 /**
- * Production Gazetteer lock (paper, walnut, stamp rust, sage chrome, Nest).
+ * Production Gazetteer lock (paper, walnut, stamp rust, sage/copper chrome, Nest).
  * Keep hexes here so planner fills, categories, and chrome share one palette.
+ *
+ * Stamp rust is identity (Nest, numerals, heatmap). Today uses heatmap rust
+ * level 2 (`stampLight`). Selected days use sage/copper at heatmap level 1
+ * (28% mix onto paper). Adjacent months share Original grey `#e4e4e7`.
+ * Warning yellow and error red stay the shared Original semantics.
  */
 export const GAZETTEER = {
   page: "#f3ead8",
@@ -10,9 +15,11 @@ export const GAZETTEER = {
   mutedDeep: "#5c4e3f",
   rule: "#d4c4a4",
   stamp: "#9a4f2c",
+  stampLight: "#c88968",
   gain: "#4a6740",
   sage: "#6f8175",
-  recover: "#b45309",
+  sageLight: "#dfddcf",
+  recover: "#eab308",
   colRust: "#b5522a",
 } as const;
 

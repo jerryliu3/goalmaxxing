@@ -6,7 +6,6 @@ import {
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
-  useDraggable,
   useDroppable,
   useSensor,
   useSensors,
@@ -17,13 +16,19 @@ import {
   type DraggableAttributes,
   type DraggableSyntheticListeners,
 } from "@dnd-kit/core";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import {
   useMemo,
   useState,
   type CSSProperties,
   type ReactNode,
 } from "react";
+import { plannerCollisionDetection } from "@/features/planner/planner-dnd-collision";
 import {
   parsePlannerDragTarget,
   parsePlannerEntryDragId,
@@ -41,6 +46,19 @@ export {
   plannerPreviewEntryDropId,
   type PlannerDragTarget,
 };
+
+function sortableItemStyle(
+  transform: { x: number; y: number; scaleX: number; scaleY: number } | null,
+  transition: string | undefined
+): CSSProperties {
+  return {
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0) scaleX(${transform.scaleX}) scaleY(${transform.scaleY})`
+      : undefined,
+    transition,
+    touchAction: "none",
+  };
+}
 
 const MOUSE_PRESS_TO_DRAG_DELAY_MS = 120;
 const MOUSE_PRESS_TO_DRAG_TOLERANCE_PX = 24;
@@ -110,7 +128,7 @@ export function PlannerDndProvider({
         if (target.type === "day") {
           return `${getEntryLabel(entryKey)} over ${getDayLabel(target.day)}.`;
         }
-        return `${getEntryLabel(entryKey)} over ${getEntryLabel(target.entryKey)} in popup list.`;
+        return `${getEntryLabel(entryKey)} over ${getEntryLabel(target.entryKey)} in this day.`;
       },
       onDragEnd({ active, over }: DragEndEvent) {
         const entryKey = parsePlannerEntryDragId(active.id);
@@ -124,7 +142,7 @@ export function PlannerDndProvider({
         if (target.type === "day") {
           return `Dropped ${getEntryLabel(entryKey)} on ${getDayLabel(target.day)}.`;
         }
-        return `Dropped ${getEntryLabel(entryKey)} near ${getEntryLabel(target.entryKey)} in popup list.`;
+        return `Dropped ${getEntryLabel(entryKey)} near ${getEntryLabel(target.entryKey)} in this day.`;
       },
       onDragCancel({ active }: DragCancelEvent) {
         const entryKey = parsePlannerEntryDragId(active.id);
@@ -168,6 +186,7 @@ export function PlannerDndProvider({
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={plannerCollisionDetection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
@@ -199,37 +218,63 @@ interface PlannerDraggableEntryRenderProps {
   listeners: DraggableSyntheticListeners | undefined;
   style: CSSProperties;
   isDragging: boolean;
+  isOver: boolean;
 }
 
 interface PlannerDraggableEntryProps {
   entryKey: string;
+  day?: string;
   disabled?: boolean;
   children: (props: PlannerDraggableEntryRenderProps) => ReactNode;
 }
 
+export function PlannerSortableDayList({
+  day,
+  entryKeys,
+  children,
+}: {
+  day: string;
+  entryKeys: readonly string[];
+  children: ReactNode;
+}) {
+  return (
+    <SortableContext
+      items={entryKeys.map((entryKey) => plannerPreviewEntryDropId(day, entryKey))}
+      strategy={verticalListSortingStrategy}
+    >
+      {children}
+    </SortableContext>
+  );
+}
+
 export function PlannerDraggableEntry({
   entryKey,
+  day,
   disabled = false,
   children,
 }: PlannerDraggableEntryProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
-      id: plannerEntryDragId(entryKey),
-      data: { entryKey },
-      disabled,
-    });
-  const style: CSSProperties = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        touchAction: "none",
-      }
-    : { touchAction: "none" };
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    isOver,
+  } = useSortable({
+    id: day
+      ? plannerPreviewEntryDropId(day, entryKey)
+      : plannerEntryDragId(entryKey),
+    data: { entryKey, day },
+    disabled,
+  });
   return children({
     setNodeRef,
     attributes,
     listeners,
-    style,
+    style: sortableItemStyle(transform, transition),
     isDragging,
+    isOver: isOver && !isDragging,
   });
 }
 
@@ -273,36 +318,25 @@ export function PlannerDraggablePreviewEntry({
   const {
     attributes,
     listeners,
-    setNodeRef: setDragNodeRef,
+    setNodeRef,
     setActivatorNodeRef,
     transform,
+    transition,
     isDragging,
-  } = useDraggable({
-    id: plannerPreviewEntryDragId(day, entryKey),
+    isOver,
+  } = useSortable({
+    id: plannerPreviewEntryDropId(day, entryKey),
     data: { entryKey, day },
     disabled,
   });
-  const { setNodeRef: setDropNodeRef, isOver } = useDroppable({
-    id: plannerPreviewEntryDropId(day, entryKey),
-    data: { day, entryKey },
-  });
-  const setNodeRef = (node: HTMLElement | null) => {
-    setDragNodeRef(node);
-    setDropNodeRef(node);
-  };
-  const style: CSSProperties = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
-    : {};
   return children({
     setNodeRef,
     setActivatorNodeRef,
     attributes,
     listeners,
-    style,
+    style: sortableItemStyle(transform, transition),
     isDragging,
-    isOver,
+    isOver: isOver && !isDragging,
   });
 }
 

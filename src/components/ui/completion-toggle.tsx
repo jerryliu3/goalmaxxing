@@ -142,13 +142,13 @@ export function CompletionToggle({
       aria-busy={pending || undefined}
       disabled={disabled}
       className={cn(
-        "group relative isolate flex shrink-0 touch-manipulation items-center justify-center transition-[transform,box-shadow,background-color,border-color,color] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transform-none motion-reduce:transition-none",
+        "group relative isolate flex shrink-0 touch-manipulation items-center justify-center overflow-visible bg-transparent transition-[transform,box-shadow,border-color,color] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transform-none motion-reduce:transition-none hover:bg-transparent active:bg-transparent",
         chrome === "button" &&
-          "border border-border bg-background shadow-sm hover:border-primary hover:bg-primary/5 active:shadow-none",
-        chrome === "plain" && "border-0 bg-transparent shadow-none",
+          "border border-border bg-background shadow-sm hover:border-primary hover:bg-background active:bg-background active:shadow-none",
+        chrome === "plain" && "border-0 shadow-none",
         chrome === "button" &&
           (style.completionMark === "nest" ? "rounded-md" : "rounded-full"),
-        holding && "scale-95 border-primary bg-primary/15 text-primary",
+        holding && "text-primary",
         classes.button,
         className
       )}
@@ -202,9 +202,7 @@ export function CompletionToggle({
           event.preventDefault();
           return;
         }
-        if (event.detail === 0) {
-          commitToggle(event);
-        }
+        commitToggle(event);
       }}
       {...props}
     >
@@ -212,6 +210,7 @@ export function CompletionToggle({
         done={visualCompleted}
         fillProgress={fillProgress}
         fillTransition={holding}
+        pressed={holding}
         className={cn(
           visualCompleted || holding ? "text-primary" : "text-muted-foreground",
           chrome === "plain" ? classes.button : classes.icon

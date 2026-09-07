@@ -22,8 +22,6 @@ function renderFilters({
       onEndMonthsChange={onEndMonthsChange}
       sort="earliest_end"
       onSortChange={vi.fn()}
-      monthCursor={new Date(2026, 7, 1)}
-      onMonthCursorChange={vi.fn()}
       viewMode="month"
       onViewModeChange={onViewModeChange}
       showEndedGoals={false}
@@ -73,6 +71,8 @@ describe("InsightsGoalStatsFilters", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Show past goals")).toBeInTheDocument();
     expect(screen.getByText("(3)")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Goal stats view mode")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Choose month and year")).not.toBeInTheDocument();
   });
 
   it("keeps end-month chips mutually exclusive and restores the default when cleared", () => {
@@ -86,8 +86,6 @@ describe("InsightsGoalStatsFilters", () => {
           onEndMonthsChange={setEndMonths}
           sort="earliest_end"
           onSortChange={vi.fn()}
-          monthCursor={new Date(2026, 7, 1)}
-          onMonthCursorChange={vi.fn()}
           viewMode="month"
           onViewModeChange={vi.fn()}
           showEndedGoals={false}

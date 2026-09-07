@@ -38,7 +38,7 @@ export function CollapsibleGoalSection({
             </div>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="icon-sm">
-                {open ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                {open ? <ChevronUp /> : <ChevronDown />}
               </Button>
             </CollapsibleTrigger>
           </div>

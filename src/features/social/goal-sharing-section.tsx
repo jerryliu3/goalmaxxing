@@ -293,7 +293,7 @@ export function GoalSharingSection({
                                   void revokeGoalShare(goal.id, entry.shared_with)
                                 }
                               >
-                                <UserMinus className="size-3.5" />
+                                <UserMinus />
                               </Button>
                             </div>
                           );

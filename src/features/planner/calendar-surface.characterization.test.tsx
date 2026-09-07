@@ -79,6 +79,35 @@ vi.mock("@/features/planner/use-completion-mutation", () => ({
   useCompletionMutation: () => completionMutationMock,
 }));
 
+vi.mock("@/lib/navigation/use-app-router", () => ({
+  useAppRouter: () => ({
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+}));
+
+vi.mock("@/features/today/use-checklist-data", () => ({
+  useChecklistData: () => ({
+    data: {
+      userId: "",
+      goals: [],
+      completions: [],
+      memberTeamIds: [],
+      links: [],
+      photoUrls: {},
+      progress: null,
+    },
+    loading: false,
+    loadData: vi.fn(),
+    redirectToLogin: vi.fn(),
+    todayLocalDate: "2026-08-15",
+  }),
+}));
+
 function unit(overrides: Partial<PlannerWorkUnit>): PlannerWorkUnit {
   return buildPlannerWorkUnit({
     originalGoalId: "goal-a",
@@ -983,6 +1012,36 @@ describe("CalendarSurface characterization", () => {
     });
     expect(document.querySelector("[data-rolling-week-grid='cells']")).toBeNull();
     expect(dayPanel).toHaveStyle({ viewTransitionName: "plan-day-2026-08-31" });
+  });
+
+  it("exposes checklist filters on day view", async () => {
+    postJsonMock.mockResolvedValue(buildContext([]));
+
+    render(
+      <CalendarSurface
+        activeTab="calendar"
+        month="2026-08"
+        selectedDay="2026-08-31"
+        viewMode="day"
+        onMonthChange={vi.fn()}
+        onViewModeChange={vi.fn()}
+        onSelectedDayChange={vi.fn()}
+        onPlannerMutation={vi.fn()}
+      />
+    );
+
+    expect(await screen.findByTestId("plan-day-quick-filters")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "All types" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "All categories" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Filters" }));
+    expect(await screen.findByRole("heading", { name: "Day filters" })).toBeInTheDocument();
+    expect(screen.getByText("Recurrence")).toBeInTheDocument();
+    expect(screen.getByText("Show past goals")).toBeInTheDocument();
+    expect(screen.getByText("Show upcoming goals")).toBeInTheDocument();
+    expect(screen.getByText("Show archived goals")).toBeInTheDocument();
+    expect(screen.getByText("Show completed goals")).toBeInTheDocument();
+    expect(screen.getByText("Show suppressed linked goals")).toBeInTheDocument();
   });
 
   it("suppresses default milestone label duplication in month preview and event dialog", async () => {

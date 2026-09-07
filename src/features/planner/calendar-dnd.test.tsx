@@ -1,9 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { SortableContext } from "@dnd-kit/sortable";
 import {
   PlannerDndProvider,
   PlannerDraggableEntry,
   PlannerDroppableDay,
+  plannerEntryDragId,
 } from "./calendar-dnd";
 
 describe("calendar dnd primitives", () => {
@@ -25,7 +27,8 @@ describe("calendar dnd primitives", () => {
         <PlannerDroppableDay day="2026-08-06">
           {({ setNodeRef }) => <div ref={setNodeRef}>Drop day</div>}
         </PlannerDroppableDay>
-        <PlannerDraggableEntry entryKey="goal-1:unit-1">
+        <SortableContext items={[plannerEntryDragId("goal-1:unit-1")]}>
+          <PlannerDraggableEntry entryKey="goal-1:unit-1">
           {({ setNodeRef, attributes, listeners }) => (
             <button
               ref={setNodeRef}
@@ -36,7 +39,8 @@ describe("calendar dnd primitives", () => {
               Drag me
             </button>
           )}
-        </PlannerDraggableEntry>
+          </PlannerDraggableEntry>
+        </SortableContext>
       </PlannerDndProvider>
     );
 

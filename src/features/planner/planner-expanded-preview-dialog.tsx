@@ -85,7 +85,7 @@ export function PlannerExpandedPreviewDialog({
               title="Contract to day popup"
               onClick={onContract}
             >
-              <Minimize2 className="size-4" />
+              <Minimize2 />
             </Button>
           </div>
         ) : null}

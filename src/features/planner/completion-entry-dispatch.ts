@@ -1,8 +1,13 @@
+import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
+import {
+  completionDisabledReasonCopy,
+  isEntryCredited,
+} from "@/features/planner/calendar-format";
+import { READ_ONLY_MONTH_HINT } from "@/features/planner/planner-save-availability";
 import type {
   CompletionControlDisabledReason,
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
-import type { CompletionTemporalContext } from "@/lib/planner/completion-intent";
 import {
   getPlannerCompletionControlDisabledReason,
   resolvePlannerEntryCompletionIntent,
@@ -100,4 +105,47 @@ export function getCompletionControlState({
     canMutatePlanItems,
   });
   return controlState;
+}
+
+export function getPlannerCompletionTogglePresentation({
+  entry,
+  selectedDay,
+  asOfDate,
+  canMutatePlanItems,
+  canMutateEntryOnDay,
+}: {
+  entry: PlannerDayDetailEntry;
+  selectedDay: string;
+  asOfDate: string | null;
+  canMutatePlanItems: boolean;
+  canMutateEntryOnDay: (entry: PlannerDayDetailEntry, day: string) => boolean;
+}): {
+  currentlyCredited: boolean;
+  disabledReasonCopy: string | null;
+} {
+  const currentlyCredited = isEntryCredited(entry);
+  if (!canMutateEntryOnDay(entry, selectedDay)) {
+    return {
+      currentlyCredited,
+      disabledReasonCopy: READ_ONLY_MONTH_HINT,
+    };
+  }
+  if (isPlannerTaskCalendarEntry(entry)) {
+    return {
+      currentlyCredited,
+      disabledReasonCopy: null,
+    };
+  }
+  const completionState = getCompletionControlState({
+    entry,
+    selectedDate: selectedDay,
+    asOfDate,
+    canMutatePlanItems,
+  });
+  return {
+    currentlyCredited: completionState.currentlyCredited,
+    disabledReasonCopy: completionState.disabledReason
+      ? completionDisabledReasonCopy(completionState.disabledReason)
+      : null,
+  };
 }

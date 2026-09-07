@@ -9,7 +9,7 @@ import {
   Star,
   Target,
 } from "lucide-react";
-import { toGazetteerDisplayColor } from "@/lib/brand/gazetteer";
+import { GAZETTEER, toGazetteerDisplayColor } from "@/lib/brand/gazetteer";
 import { getUiStyle, resolveUiStyleId, type UiStyleId } from "@/lib/brand/ui-style";
 import {
   getCategorySwatchColor,
@@ -40,6 +40,9 @@ const FALLBACK_COLORS = [
 ] as const;
 
 const HEX_COLOR_REGEX = /^#?[0-9a-f]{6}$/i;
+export const WORK_PILL_HUE_AMOUNT = 0.24;
+const ORIGINAL_WORK_PILL_PAPER = "#ffffff";
+const WORK_PILL_INK = "#1c1917";
 type GoalVisualCategoryKey = Exclude<CategoryPresetId, "other">;
 
 export interface GoalVisualInput {
@@ -99,6 +102,36 @@ function resolveCategorySwatchColor(category: string | null): string | null {
   return getCategorySwatchColor(categoryKey as GoalVisualCategoryKey);
 }
 
+function parseHexChannels(hex: string): [number, number, number] {
+  const normalized = hex.startsWith("#") ? hex.slice(1) : hex;
+  return [
+    Number.parseInt(normalized.slice(0, 2), 16),
+    Number.parseInt(normalized.slice(2, 4), 16),
+    Number.parseInt(normalized.slice(4, 6), 16),
+  ];
+}
+
+function toHexChannel(value: number) {
+  return Math.round(Math.min(255, Math.max(0, value)))
+    .toString(16)
+    .padStart(2, "0");
+}
+
+export function mixOpaqueHex(hex: string, paper: string, amount: number): string {
+  const [red, green, blue] = parseHexChannels(hex);
+  const [paperRed, paperGreen, paperBlue] = parseHexChannels(paper);
+  const rest = 1 - amount;
+  return `#${toHexChannel(red * amount + paperRed * rest)}${toHexChannel(
+    green * amount + paperGreen * rest
+  )}${toHexChannel(blue * amount + paperBlue * rest)}`;
+}
+
+function workPillPaper(styleId?: UiStyleId) {
+  return getUiStyle(resolveUiStyleId(styleId)).remapDisplayColors
+    ? GAZETTEER.paper
+    : ORIGINAL_WORK_PILL_PAPER;
+}
+
 function srgbChannel(value: number) {
   const channel = value / 255;
   return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
@@ -124,10 +157,11 @@ export function getWorkPillFillStyle(color: string, _credited = false, styleId?:
     normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0],
     styleId
   );
+  const fill = mixOpaqueHex(hex, workPillPaper(styleId), WORK_PILL_HUE_AMOUNT);
   return {
-    backgroundColor: hex,
-    borderColor: hex,
-    color: contrastingInkForColor(hex, styleId),
+    backgroundColor: fill,
+    borderColor: fill,
+    color: WORK_PILL_INK,
   };
 }
 

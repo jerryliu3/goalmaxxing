@@ -89,13 +89,13 @@ export function PlannerCalendarToolbar({
                   title="Plan help"
                   onClick={() => setHelpOpen(true)}
                 >
-                  <CircleHelp className="size-4" />
+                  <CircleHelp />
                 </Button>
               </Tooltip>
               {hasDraftSession ? (
                 <Badge
                   data-testid="planner-preview-mode-badge"
-                  className="h-7 border-amber-300 bg-amber-100 px-3 text-sm font-semibold text-amber-950 dark:border-amber-300 dark:bg-amber-100 dark:text-amber-950"
+                  className="h-7 border-warning bg-warning-fill px-3 text-sm font-semibold text-foreground"
                 >
                   Planning Mode
                 </Badge>
@@ -184,7 +184,7 @@ export function PlannerCalendarToolbar({
               onClick={onOpenFilters}
               disabled={loading}
             >
-              <SlidersHorizontal className="size-4" />
+              <SlidersHorizontal />
             </Button>
             {canOpenSettings ? (
               <Button
@@ -196,7 +196,7 @@ export function PlannerCalendarToolbar({
                 onClick={onOpenSettings}
                 disabled={loading}
               >
-                <Settings className="size-4" />
+                <Settings />
               </Button>
             ) : null}
           </div>
@@ -231,7 +231,7 @@ export function PlannerCalendarToolbar({
               Linked main goals are hidden for clarity while linked source goals remain active.
             </p>
             {hiddenLinkedGoalCount > 0 ? (
-              <div className="space-y-2 rounded-md border border-amber-300 bg-amber-100 px-3 py-2 text-xs text-amber-950 dark:border-amber-300 dark:bg-amber-100 dark:text-amber-950">
+              <div className="space-y-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-xs text-foreground">
                 <p>
                   {hiddenLinkedGoalCount} linked main goal
                   {hiddenLinkedGoalCount === 1 ? " is" : "s are"} currently hidden in this
@@ -248,7 +248,7 @@ export function PlannerCalendarToolbar({
                 </Button>
                 {showHiddenGoals ? (
                   <div
-                    className={`space-y-1 rounded-md border border-amber-300/70 bg-white/70 p-2 text-xs text-amber-950 ${
+                    className={`space-y-1 rounded-md border border-warning/30 bg-background/70 p-2 text-xs text-foreground ${
                       hiddenLinkedGoalCount > 5 ? "max-h-36 overflow-y-auto pr-1" : ""
                     }`}
                   >

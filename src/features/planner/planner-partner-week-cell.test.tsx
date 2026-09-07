@@ -26,8 +26,15 @@ describe("PlannerPartnerWeekDayCell", () => {
     );
 
     expect(screen.getByText("Yoga")).toBeInTheDocument();
+    expect(screen.getByText("Yoga")).toHaveClass("line-through");
     expect(screen.getByText("06")).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Yoga. Partner marked this done.")).toHaveClass(
+      "bg-background"
+    );
+    expect(screen.getByLabelText("Yoga. Partner marked this done.")).not.toHaveClass(
+      "bg-transparent"
+    );
   });
 
   it("renders the Duo week column as a vertical agenda", () => {
@@ -56,5 +63,8 @@ describe("PlannerPartnerWeekDayCell", () => {
     expect(screen.getByText("6")).toBeInTheDocument();
     expect(screen.getByText("Yoga")).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Yoga. Partner marked this done.")).toHaveClass(
+      "bg-background"
+    );
   });
 });

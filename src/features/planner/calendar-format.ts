@@ -206,7 +206,7 @@ export function getEntryDraftPillClasses(input: {
   draftDiffKind: PlannerDraftVisualKind | null;
 }) {
   if (input.draftDiffKind === "moved_from") {
-    return "border-amber-700/40 bg-amber-50 text-amber-950";
+    return "border-warning/40 bg-warning/10 text-foreground";
   }
   if (input.draftDiffKind === "moved_to") {
     return "border-primary/40 bg-primary/10 text-foreground";

@@ -21,6 +21,7 @@ import type { PlannerEligibilityNotices } from "@/features/planner/planner-eligi
 import { canOpenPlannerEventDetails } from "@/features/planner/calendar-task-entries";
 import type { MoveSourceCandidate } from "@/features/planner/planner-move-source-options";
 import type { GoalMonthOption } from "@/lib/goals/list-view";
+import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 import type { PlannerWorkUnit } from "@cadence/shared/planner/context";
 import type {
   Dispatch,
@@ -97,6 +98,7 @@ export interface PlannerCalendarSurfaceLayoutProps {
   getDragDayLabel: (day: string) => string;
   renderEntryDragOverlay: (entryKey: string) => ReactNode;
   handleDndEntryDragStart: (entryKey: string) => void;
+  handleDndEntryDragOver: (entryKey: string, target: PlannerDragTarget) => void;
   handleDndEntryDragEnd: (entryKey: string, target: PlannerDragTarget) => void;
   handleDndEntryDragCancel: (entryKey: string | null) => void;
   rollingWeekStrip: ReactNode;
@@ -177,6 +179,7 @@ export interface PlannerCalendarSurfaceLayoutProps {
   endMonthOptions: GoalMonthOption[];
   settingsOpen: boolean;
   plannerSettingsForm: ReactNode;
+  dayChecklist?: PlanDayChecklistModel | null;
 }
 
 export function buildCalendarSurfaceLayoutProps<
@@ -241,6 +244,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     getDragDayLabel,
     renderEntryDragOverlay,
     handleDndEntryDragStart,
+    handleDndEntryDragOver,
     handleDndEntryDragEnd,
     handleDndEntryDragCancel,
     rollingWeekStrip,
@@ -303,6 +307,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     endMonthOptions,
     settingsOpen,
     plannerSettingsForm,
+    dayChecklist = null,
   } = props;
 
   return (
@@ -396,6 +401,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             getDragDayLabel={getDragDayLabel}
             renderEntryDragOverlay={renderEntryDragOverlay}
             onEntryDragStart={handleDndEntryDragStart}
+            onEntryDragOverTarget={handleDndEntryDragOver}
             onEntryDragEnd={handleDndEntryDragEnd}
             onEntryDragCancel={handleDndEntryDragCancel}
             rollingWeekStrip={rollingWeekStrip}
@@ -430,6 +436,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             onEntryPointerEnd={() => {
               pointerPressActiveRef.current = false;
             }}
+            selectedEntryKey={selectedEventEntry?.key ?? null}
+            dayChecklist={viewMode === "day" ? dayChecklist : null}
             calendarGridViewportRef={calendarGridViewportRef}
             onCalendarGridViewportScroll={handleCalendarGridViewportScroll}
             weekdayLabels={weekdayLabels}
@@ -573,6 +581,11 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         endMonthFilter={effectiveEndMonthFilter}
         onEndMonthFilterChange={setEndMonthFilter}
         endMonthOptions={endMonthOptions}
+        dayFilters={
+          viewMode === "day" && dayChecklist
+            ? dayChecklist.filterFormProps
+            : null
+        }
         settingsOpen={settingsOpen}
         onSettingsOpenChange={setSettingsOpen}
         plannerSettingsForm={plannerSettingsForm}

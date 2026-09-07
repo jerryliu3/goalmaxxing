@@ -21,6 +21,7 @@ import { PlannerExpandedPreviewDialog } from "@/features/planner/planner-expande
 import { PlannerFiltersDialog } from "@/features/planner/planner-filters-dialog";
 import type { MoveSourceCandidate } from "@/features/planner/planner-move-source-options";
 import { PlannerSettingsDialog } from "@/features/planner/planner-settings-dialog";
+import type { ChecklistFiltersFormProps } from "@/features/today/checklist-filters-dialog";
 import type { GoalMonthOption } from "@/lib/goals/list-view";
 
 export interface PlannerCalendarOverlaysProps {
@@ -90,6 +91,7 @@ export interface PlannerCalendarOverlaysProps {
   endMonthFilter: string | null;
   onEndMonthFilterChange: (value: string | null) => void;
   endMonthOptions: GoalMonthOption[];
+  dayFilters?: ChecklistFiltersFormProps | null;
   settingsOpen: boolean;
   onSettingsOpenChange: (open: boolean) => void;
   plannerSettingsForm: ReactNode;
@@ -142,6 +144,7 @@ export function PlannerCalendarOverlays({
   endMonthFilter,
   onEndMonthFilterChange,
   endMonthOptions,
+  dayFilters = null,
   settingsOpen,
   onSettingsOpenChange,
   plannerSettingsForm,
@@ -220,6 +223,7 @@ export function PlannerCalendarOverlays({
         endMonthFilter={endMonthFilter}
         onEndMonthFilterChange={onEndMonthFilterChange}
         endMonthOptions={endMonthOptions}
+        dayFilters={dayFilters}
       />
 
       <PlannerSettingsDialog open={settingsOpen} onOpenChange={onSettingsOpenChange}>

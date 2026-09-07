@@ -1,9 +1,9 @@
 export const heatmapScaleHex = [
-  "#E8E6EF",
-  "#C6EBD8",
-  "#7ED3A8",
-  "#34B87A",
-  "#1B7F52",
+  "#EBEDF0",
+  "#C5DDF7",
+  "#7EACE6",
+  "#0F64BF",
+  "#0A458C",
 ] as const;
 
 export function getHeatmapScaleIndex(count: number) {

@@ -65,9 +65,9 @@ export function PlannerViewWindowHeader({
                 onClick={onToggleExpandedMonthRows}
               >
                 {expandedMonthRows ? (
-                  <Minimize2 className="size-4" />
+                  <Minimize2 />
                 ) : (
-                  <Maximize2 className="size-4" />
+                  <Maximize2 />
                 )}
               </Button>
             ) : null}
