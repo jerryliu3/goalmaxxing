@@ -20,6 +20,7 @@ import { PlannerDayPreviewPopover } from "@/features/planner/planner-day-preview
 import { PlannerFocusedDayPane } from "@/features/planner/planner-focused-day-pane";
 import { PlannerViewWindowHeader } from "@/features/planner/planner-view-window-header";
 import { PlannerPartnerWeekDayCell } from "@/features/planner/planner-partner-week-cell";
+import { PlanViewTransitionFrame } from "@/features/planner/plan-view-transition-frame";
 
 const SEVEN_COLUMN_GRID_STYLE = {
   gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
@@ -183,6 +184,7 @@ export function PlannerCalendarBoard({
             loading ? "opacity-70" : "opacity-100"
           } ${isMonthScopedCalendarViewMode(viewMode) ? "min-h-[34rem]" : "min-h-[26rem]"}`}
         >
+          <PlanViewTransitionFrame viewMode={viewMode}>
           {viewMode === "day" ? (
             <PlannerFocusedDayPane
               day={focusedDay}
@@ -198,6 +200,7 @@ export function PlannerCalendarBoard({
               onEntryPointerEnd={onEntryPointerEnd}
               showTasksInsteadOfGoals={showTasksInsteadOfGoals}
               titleAs="h2"
+              shareDayTransition
             />
           ) : viewMode === "three_day" ? (
             rollingWeekStrip
@@ -301,6 +304,7 @@ export function PlannerCalendarBoard({
               <aside
                 className="hidden min-w-0 md:block"
                 data-testid="plan-desktop-day-pane"
+                style={{ viewTransitionName: "plan-focused-aside" }}
               >
                 <PlannerFocusedDayPane
                   day={focusedDay}
@@ -319,6 +323,7 @@ export function PlannerCalendarBoard({
               </aside>
             </div>
           )}
+          </PlanViewTransitionFrame>
 
           {viewMode !== "day" && dayPreview ? (
             <PlannerDayPreviewPopover

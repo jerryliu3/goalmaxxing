@@ -352,12 +352,32 @@ body {
   animation: 220ms var(--motion-ease-emphasized) both app-nav-enter-back;
 }
 
-::view-transition-old(.app-nav-crossfade) {
-  animation: 140ms ease-in both app-nav-fade-out;
+@keyframes plan-view-zoom-out {
+  to {
+    opacity: 0;
+    scale: 0.92;
+  }
 }
 
-::view-transition-new(.app-nav-crossfade) {
-  animation: 180ms ease-out both app-nav-fade-in;
+@keyframes plan-view-zoom-in {
+  from {
+    opacity: 0;
+    scale: 1.06;
+  }
+}
+
+::view-transition-old(.plan-view-zoom) {
+  animation: 220ms ease-in both plan-view-zoom-out;
+  transform-origin: 50% 18%;
+}
+
+::view-transition-new(.plan-view-zoom) {
+  animation: 280ms var(--motion-ease-emphasized) both plan-view-zoom-in;
+  transform-origin: 50% 18%;
+}
+
+::view-transition-group(plan-focused-aside) {
+  z-index: 2;
 }
 
 .motion-popup-enter {

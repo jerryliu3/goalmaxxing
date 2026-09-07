@@ -14,6 +14,7 @@ import {
   getEntryDraftPillClasses,
 } from "@/features/planner/calendar-format";
 import { getGoalVisual, getMonthWorkFillStyle, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
+import { planDayViewTransitionName } from "@/features/planner/plan-view-transition";
 
 export interface CalendarMonthCellEntryBase {
   key: string;
@@ -240,6 +241,7 @@ export function CalendarMonthDayCell<
         )}
         data-day={day}
         data-calendar-week-row="true"
+        style={{ viewTransitionName: planDayViewTransitionName(day) }}
       >
         <div className="flex items-start gap-2 py-3">
           <button
@@ -371,6 +373,7 @@ export function CalendarMonthDayCell<
           data-day-cell="true"
           data-day={day}
           data-onboarding={isToday ? "planner.calendar.today" : undefined}
+          style={{ viewTransitionName: planDayViewTransitionName(day) }}
         >
           <div className="pointer-events-none absolute top-2 left-2 flex items-center gap-1.5">
             <p
