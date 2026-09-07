@@ -43,7 +43,7 @@ describe("TabNav", () => {
     expect(screen.getByRole("link", { name: /Progress/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^Plan$/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Community/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /^You$/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Profile$/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Community/i })).toHaveAttribute(
       "aria-current",
       "page"
@@ -60,7 +60,7 @@ describe("TabNav", () => {
       "data-onboarding",
       "nav.social"
     );
-    expect(screen.getByRole("link", { name: /^You$/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /^Profile$/i })).toHaveAttribute(
       "data-onboarding",
       "nav.settings"
     );
@@ -156,15 +156,15 @@ describe("TabNav", () => {
     mockPathname = "/calendar";
     const { rerender } = render(<TabNav />);
 
-    fireEvent.click(screen.getByRole("link", { name: "You" }));
-    expect(screen.getByRole("link", { name: "You" })).toHaveAttribute(
+    fireEvent.click(screen.getByRole("link", { name: "Profile" }));
+    expect(screen.getByRole("link", { name: "Profile" })).toHaveAttribute(
       "aria-current",
       "page"
     );
 
     mockPathname = "/settings";
     rerender(<TabNav />);
-    expect(screen.getByRole("link", { name: "You" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Profile" })).toHaveAttribute(
       "aria-current",
       "page"
     );
@@ -175,7 +175,7 @@ describe("TabNav", () => {
       "aria-current",
       "page"
     );
-    expect(screen.getByRole("link", { name: "You" })).not.toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Profile" })).not.toHaveAttribute(
       "aria-current"
     );
   });

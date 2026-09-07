@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 import { GAZETTEER } from "@/lib/brand/gazetteer";
 import {
   getGoalVisual,
+  getWorkPillDraftFillStyle,
   getWorkPillFillStyle,
   mixOpaqueHex,
   normalizeGoalColor,
+  WORK_PILL_DRAFT_HUE_AMOUNT,
   WORK_PILL_HUE_AMOUNT,
+  WORK_PILL_NEW_DRAFT_HUE_AMOUNT,
 } from "./goal-visuals";
 
 describe("goal visuals", () => {
@@ -69,6 +72,20 @@ describe("goal visuals", () => {
     expect(gazetteerHealth.backgroundColor).toBe(gazetteerPastel);
     expect(gazetteerHealth.borderColor).toBe(gazetteerPastel);
     expect(gazetteerHealth.color).toBe("#1c1917");
+  });
+
+  it("darkens the original work color for draft placements", () => {
+    const moved = getWorkPillDraftFillStyle("#10b981", "moved_to");
+    const created = getWorkPillDraftFillStyle("#10b981", "new");
+    const rest = getWorkPillFillStyle("#10b981");
+    expect(moved.backgroundColor).toBe(
+      mixOpaqueHex("#10b981", "#ffffff", WORK_PILL_DRAFT_HUE_AMOUNT)
+    );
+    expect(created.backgroundColor).toBe(
+      mixOpaqueHex("#10b981", "#ffffff", WORK_PILL_NEW_DRAFT_HUE_AMOUNT)
+    );
+    expect(moved.backgroundColor).not.toBe(rest.backgroundColor);
+    expect(created.backgroundColor).not.toBe(moved.backgroundColor);
   });
 
   it("mixes two opaque hexes without leaving an alpha channel", () => {

@@ -49,6 +49,23 @@ describe("resolvePlannerDndResolution", () => {
     expect(resolution).toEqual({ kind: "clear" });
   });
 
+  it("returns preview reorder for same-day list-end drop targets", () => {
+    const entry = buildPlannerDayEntry({ key: "goal-1:unit-1" });
+    const resolution = resolvePlannerDndResolution({
+      entryKey: entry.key,
+      target: { type: "preview_entry", day: "2026-08-15", entryKey: "__end__" },
+      entryByKey: new Map([[entry.key, entry]]),
+      entryDayByKey: new Map([[entry.key, "2026-08-15"]]),
+    });
+
+    expect(resolution).toEqual({
+      kind: "reorder_preview",
+      day: "2026-08-15",
+      activeEntryKey: "goal-1:unit-1",
+      overEntryKey: "__end__",
+    });
+  });
+
   it("returns clear when dropping onto the source day instead of another entry", () => {
     const entry = buildPlannerDayEntry({ key: "goal-1:unit-1" });
     const resolution = resolvePlannerDndResolution({

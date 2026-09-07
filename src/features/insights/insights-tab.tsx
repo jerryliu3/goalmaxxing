@@ -14,7 +14,7 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import { type TouchEventHandler, useCallback, useMemo, useRef, useState } from "react";
+import { type Dispatch, type SetStateAction, type TouchEventHandler, useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AnchoredPopupCard } from "@/components/ui/anchored-popup-card";
 import { Button } from "@/components/ui/button";
@@ -89,7 +89,8 @@ export type InsightsTabContentMode =
   | "full"
   | "overall-only"
   | "goal-stats-only"
-  | "goals-only";
+  | "goals-only"
+  | "ledger";
 
 const MAX_VISIBLE_MILESTONES = 5;
 const AGGREGATE_DRILLDOWN_DAY_CLASS_PREFIX = "aggregate-drilldown-day-";
@@ -152,6 +153,7 @@ interface InsightsTabProps {
     onPerGoalViewModeChange: (mode: HeatmapViewMode) => void;
   };
   sharedGoalFilters?: InsightsSharedGoalFilters;
+  sharedLedgerSelection?: InsightsSharedLedgerSelection;
   contentMode?: InsightsTabContentMode;
 }
 
@@ -166,11 +168,17 @@ export interface InsightsSharedGoalFilters {
   setShowHistoricalGoals: (value: boolean) => void;
 }
 
+export interface InsightsSharedLedgerSelection {
+  selectedGoalIds: string[] | null;
+  onSelectedGoalIdsChange: Dispatch<SetStateAction<string[] | null>>;
+}
+
 export function InsightsTab({
   subjectUserId,
   readOnly = false,
   sharedPeriod,
   sharedGoalFilters,
+  sharedLedgerSelection,
   contentMode = "full",
 }: InsightsTabProps = {}) {
   const [internalMonthCursor, setInternalMonthCursor] = useState(new Date());
@@ -207,7 +215,11 @@ export function InsightsTab({
   const setShowHistoricalGoals =
     sharedGoalFilters?.setShowHistoricalGoals ?? setInternalShowHistoricalGoals;
   const [goalStatsFiltersOpen, setGoalStatsFiltersOpen] = useState(false);
-  const [selectedGoalIds, setSelectedGoalIds] = useState<string[] | null>(null);
+  const [internalSelectedGoalIds, setInternalSelectedGoalIds] = useState<string[] | null>(null);
+  const selectedGoalIds =
+    sharedLedgerSelection?.selectedGoalIds ?? internalSelectedGoalIds;
+  const setSelectedGoalIds =
+    sharedLedgerSelection?.onSelectedGoalIdsChange ?? setInternalSelectedGoalIds;
   const [aggregateDrilldownDate, setAggregateDrilldownDate] = useState<string | null>(null);
   const [aggregateDrilldownPosition, setAggregateDrilldownPosition] = useState<
     ReturnType<typeof computeDayPreviewPosition> | null
@@ -650,9 +662,14 @@ export function InsightsTab({
   const showHeatmap =
     contentMode === "full" || contentMode === "overall-only";
   const showGoalStatsSection =
-    contentMode === "full" || contentMode === "goal-stats-only";
+    contentMode === "full" ||
+    contentMode === "goal-stats-only" ||
+    contentMode === "ledger";
   const showGoalsSection =
-    contentMode === "full" || contentMode === "goals-only";
+    contentMode === "full" ||
+    contentMode === "goals-only" ||
+    contentMode === "ledger";
+  const stackLedgerAndHeatmap = !(showGoalsSection && showHeatmap);
   // Duo both owns one shared stepper in InsightsShell.
   const showGoalStatsStepper = !sharedPeriod;
   const todayLocal = toLocalDateString();
@@ -834,7 +851,13 @@ export function InsightsTab({
       ) : null}
 
       {showGoalsSection || showHeatmap ? (
-        <div className="flex flex-col-reverse gap-6 md:grid md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] md:items-start">
+        <div
+          className={
+            stackLedgerAndHeatmap
+              ? "space-y-3"
+              : "flex flex-col-reverse gap-6 md:grid md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] md:items-start"
+          }
+        >
           {showGoalsSection ? (
             <ProgressGoalList
               goals={ledgerGoalItems}

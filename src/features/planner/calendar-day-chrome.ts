@@ -2,10 +2,9 @@ import { cn } from "@/lib/utils";
 
 /**
  * Calendar tile chrome:
- * - Today: solid today token (Original blue level 3 / Gazetteer rust level 2).
- * - Adjacent months: adjacent token (Original and Gazetteer grey L1 `#e4e4e7`).
- * - Selected day that is not today: day-selected token (Original blue level 2 /
- *   Gazetteer copper level 1).
+ * - Today: solid today token (Original blue L2 / Gazetteer rust L1).
+ * - Adjacent months: opaque Zinc grey (Original 200/700, Gazetteer 300/600).
+ * - Selected day: rust/primary outline on top of the fill, including today.
  */
 export function planMonthDaySurfaceClass({
   inMonth,
@@ -19,13 +18,16 @@ export function planMonthDaySurfaceClass({
   isPastInMonth: boolean;
 }): string {
   if (isToday) {
-    return "border-today bg-today text-today-foreground hover:border-today";
+    return cn(
+      "border-today bg-today text-today-foreground hover:border-today",
+      isSelected && "ring-2 ring-inset ring-primary"
+    );
   }
   if (isSelected) {
-    return "border-day-selected bg-day-selected text-day-selected-foreground hover:border-day-selected";
+    return "border-primary bg-background text-foreground ring-2 ring-inset ring-primary hover:border-primary";
   }
   if (!inMonth) {
-    return "border-adjacent bg-adjacent text-adjacent-foreground hover:border-adjacent";
+    return "isolate border-adjacent bg-adjacent text-adjacent-foreground hover:border-adjacent";
   }
   if (isPastInMonth) {
     return "border-border bg-muted/25 hover:border-primary/40";
@@ -46,7 +48,7 @@ export function planMonthDayNumberClass({
     return "text-today-foreground";
   }
   if (isSelected) {
-    return "text-day-selected-foreground";
+    return "text-primary";
   }
   if (!inMonth) {
     return "text-adjacent-foreground";
@@ -66,8 +68,8 @@ export function planAgendaDayRowClass({
   return cn(
     "border-b border-border/70 last:border-b-0",
     isToday && "bg-today text-today-foreground",
-    !isToday && isSelected && "bg-day-selected text-day-selected-foreground",
-    !isToday && !isSelected && !inMonth && "bg-adjacent text-adjacent-foreground"
+    isSelected && "ring-2 ring-inset ring-primary",
+    !isToday && !isSelected && !inMonth && "isolate bg-adjacent text-adjacent-foreground"
   );
 }
 
@@ -81,22 +83,25 @@ export function planAgendaDayNumberClass({
   return cn(
     "mt-0.5 inline-flex size-8 items-center justify-center rounded-full text-lg font-semibold leading-none",
     isToday && "bg-today-foreground text-today",
-    !isToday && isSelected && "bg-day-selected-foreground text-day-selected"
+    isSelected && !isToday && "text-primary ring-2 ring-inset ring-primary"
   );
 }
 
 export function planFilledChromeMetaClass({
   inMonth,
   isToday,
-  isSelected,
 }: {
   inMonth: boolean;
   isToday: boolean;
-  isSelected: boolean;
+  isSelected?: boolean;
 }): string {
-  return isToday || isSelected || !inMonth
+  return isToday || !inMonth
     ? "text-current opacity-75"
     : "text-muted-foreground";
+}
+
+export function planHiddenItemCountLabel(hiddenCount: number) {
+  return hiddenCount > 0 ? `+${hiddenCount} more` : null;
 }
 
 export function planSelectedWorkRowClass(selected: boolean) {

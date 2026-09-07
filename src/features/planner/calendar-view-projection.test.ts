@@ -42,9 +42,8 @@ describe("selectCalendarViewWindowProjection", () => {
     ]);
     expect(projection.visibleDays).toEqual(projection.focusedWeekDays);
     expect(projection.focusedWeekCells).toHaveLength(7);
-    expect(
-      projection.focusedWeekCells.every((cell) => cell.inMonth)
-    ).toBe(true);
+    expect(projection.focusedWeekCells.every((cell) => cell.inMonth)).toBe(true);
+    expect(projection.focusedWeekDays).toContain(projection.focusedDay);
   });
 
   it("keeps day mode focused on a selected day while exposing the focused week window", () => {

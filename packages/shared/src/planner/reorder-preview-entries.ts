@@ -1,5 +1,18 @@
 import { createClientUuid } from "../ids";
 
+export const PLANNER_LIST_END_ENTRY_KEY = "__end__";
+
+export function sameEntryKeyOrder(
+  left: readonly string[] | undefined,
+  right: readonly string[]
+) {
+  return (
+    Array.isArray(left) &&
+    left.length === right.length &&
+    left.every((entryKey, index) => entryKey === right[index])
+  );
+}
+
 export function moveItemInArray<T>(items: T[], fromIndex: number, toIndex: number) {
   const next = [...items];
   const [moved] = next.splice(fromIndex, 1);
@@ -25,9 +38,10 @@ export function reorderPreviewEntryKeys({
 }): string[] | null {
   const movingCompleted = completedKeys.includes(activeEntryKey);
   const targetGroupKeys = movingCompleted ? completedKeys : incompleteKeys;
+  const dropAtEnd = overEntryKey === PLANNER_LIST_END_ENTRY_KEY;
   if (
     !targetGroupKeys.includes(activeEntryKey) ||
-    !targetGroupKeys.includes(overEntryKey)
+    (!dropAtEnd && !targetGroupKeys.includes(overEntryKey))
   ) {
     return null;
   }
@@ -41,7 +55,9 @@ export function reorderPreviewEntryKeys({
     targetGroupKeys.includes(entryKey)
   );
   const fromIndex = groupOrder.indexOf(activeEntryKey);
-  const toIndex = groupOrder.indexOf(overEntryKey);
+  const toIndex = dropAtEnd
+    ? groupOrder.length - 1
+    : groupOrder.indexOf(overEntryKey);
   if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) {
     return null;
   }

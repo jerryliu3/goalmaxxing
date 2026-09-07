@@ -20,10 +20,12 @@ import {
   planAgendaDayNumberClass,
   planAgendaDayRowClass,
   planFilledChromeMetaClass,
+  planHiddenItemCountLabel,
   planMonthDayNumberClass,
   planMonthDaySurfaceClass,
 } from "@/features/planner/calendar-day-chrome";
-import { getGoalVisual, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
+import { planCompletionControlMode } from "@/features/planner/completion-entry-dispatch";
+import { getGoalVisual, getWorkPillDraftFillStyle, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
 import { planDayViewTransitionName } from "@/features/planner/plan-view-transition";
 
 export interface CalendarMonthCellEntryBase {
@@ -156,18 +158,24 @@ export function CalendarMonthDayCell<
   const maxVisibleItemsPerCell = Number.isFinite(maxVisibleItems)
     ? Math.max(0, Math.floor(maxVisibleItems))
     : entriesForDay.length + completionFactMarkersForDay.length;
+  const viewerCompletionFactMarkers = completionFactMarkersForDay.filter(
+    (marker) => marker.owner !== "partner"
+  );
+  const partnerCompletionFactMarkers = completionFactMarkersForDay.filter(
+    (marker) => marker.owner === "partner"
+  );
   const visibleEntries = entriesForDay.slice(0, maxVisibleItemsPerCell);
   const remainingSlots = Math.max(
     0,
     maxVisibleItemsPerCell - visibleEntries.length
   );
-  const visibleCompletionFactMarkers = completionFactMarkersForDay.slice(
+  const visibleCompletionFactMarkers = viewerCompletionFactMarkers.slice(
     0,
     remainingSlots
   );
   const hiddenItemCount =
     entriesForDay.length +
-    completionFactMarkersForDay.length -
+    viewerCompletionFactMarkers.length -
     visibleEntries.length -
     visibleCompletionFactMarkers.length;
 
@@ -185,13 +193,22 @@ export function CalendarMonthDayCell<
     const pillToneClasses = getEntryDraftPillClasses({
       draftDiffKind: entry.draftDiffKind,
     });
-    const pillFillStyle = isDraft
-      ? undefined
-      : getWorkPillFillStyle(visual.color, credited);
+    const pillFillStyle =
+      entry.draftDiffKind === "moved_to" || entry.draftDiffKind === "new"
+        ? getWorkPillDraftFillStyle(visual.color, entry.draftDiffKind)
+        : isDraft
+          ? undefined
+          : getWorkPillFillStyle(visual.color, credited);
     const completionToggleState = getCompletionToggleState?.(entry, day);
+    const completionMode = completionToggleState
+      ? planCompletionControlMode(completionToggleState)
+      : "hidden";
     const showCompletionToggle = Boolean(
-      layout === "agenda" && onToggleCompletion && completionToggleState
+      layout === "agenda" && onToggleCompletion && completionMode === "toggle"
     );
+    const showStaticDoneMark =
+      layout === "agenda" &&
+      (completionMode === "done" || (!completionToggleState && credited));
     return (
       <PlannerDraggableEntry
         key={`cell-entry-${entry.key}`}
@@ -199,9 +216,12 @@ export function CalendarMonthDayCell<
         day={day}
         disabled={immovable}
       >
-        {({ setNodeRef, attributes, listeners, style, isDragging, isOver }) => (
+        {({ setNodeRef, setActivatorNodeRef, attributes, listeners, style, isDragging }) => (
           <div
-            ref={setNodeRef}
+            ref={(node) => {
+              setNodeRef(node);
+              setActivatorNodeRef(node);
+            }}
             style={{ ...style, ...pillFillStyle }}
             onClick={(event) => {
               if (
@@ -241,9 +261,7 @@ export function CalendarMonthDayCell<
               immovable
                 ? "cursor-not-allowed"
                 : "cursor-grab active:cursor-grabbing"
-            } ${isOver ? "border-primary/70 ring-1 ring-primary/60" : ""} ${
-              isDragging ? "pointer-events-none opacity-0" : ""
-            }`}
+            } ${isDragging ? "pointer-events-none opacity-0" : ""}`}
             title={
               `${draftDiffSummary ? `${draftDiffSummary} ` : ""}${
                 immovable
@@ -261,7 +279,7 @@ export function CalendarMonthDayCell<
             data-planner-goal-id={entry.originalGoalId}
             data-planner-unit-key={entry.unitKey}
             {...attributes}
-            {...listeners}
+            {...(immovable ? {} : listeners)}
           >
             {showCompletionToggle && completionToggleState ? (
               <div
@@ -273,33 +291,35 @@ export function CalendarMonthDayCell<
                 onPointerDown={(event) => {
                   event.stopPropagation();
                 }}
+                onMouseDown={(event) => {
+                  event.stopPropagation();
+                }}
+                onTouchStart={(event) => {
+                  event.stopPropagation();
+                }}
               >
                 <CompletionToggle
                   completed={completionToggleState.currentlyCredited}
                   pending={mutationLoading}
                   size="sm"
                   chrome="plain"
-                  disabled={Boolean(completionToggleState.disabledReasonCopy)}
                   aria-label={
                     completionToggleState.currentlyCredited
                       ? "Mark session not done"
                       : "Mark session done"
                   }
-                  title={
-                    completionToggleState.disabledReasonCopy ??
-                    "Toggle completion for this session"
-                  }
+                  title="Hold to change completion"
                   onClick={(event) => {
                     event.stopPropagation();
                     onToggleCompletion?.(entry, day, event.currentTarget);
                   }}
                 />
               </div>
-            ) : layout === "agenda" ? (
+            ) : showStaticDoneMark ? (
               <StyleCompletionMark
-                done={credited}
+                done
                 className="block size-3.5 shrink-0 self-center"
-                label={credited ? "Completed" : undefined}
+                label="Completed"
               />
             ) : null}
             <span
@@ -394,6 +414,7 @@ export function CalendarMonthDayCell<
                   <>
                     <PlannerSortableDayList
                       day={day}
+                      surface="calendar"
                       entryKeys={visibleEntries.map((entry) => entry.key)}
                     >
                       {visibleEntries.map((entry, entryIndex) =>
@@ -401,21 +422,10 @@ export function CalendarMonthDayCell<
                       )}
                     </PlannerSortableDayList>
                     {visibleCompletionFactMarkers.map((marker) => {
-                      const partnerOwned = marker.owner === "partner";
-                      const statusCopy = partnerOwned
-                        ? "Partner marked this done."
-                        : marker.scheduledDate && marker.scheduledDate !== day
+                      const statusCopy =
+                        marker.scheduledDate && marker.scheduledDate !== day
                           ? `Marked done here, currently credited from the ${marker.scheduledDate} scheduled session.`
                           : "Marked done on this date.";
-                      if (partnerOwned) {
-                        return (
-                          <CalendarPartnerChip
-                            key={`completion-fact-${marker.key}`}
-                            title={marker.goalTitle}
-                            completed
-                          />
-                        );
-                      }
                       return (
                         <div
                           key={`completion-fact-${marker.key}`}
@@ -427,6 +437,13 @@ export function CalendarMonthDayCell<
                         </div>
                       );
                     })}
+                    {partnerCompletionFactMarkers.map((marker) => (
+                      <CalendarPartnerChip
+                        key={`completion-fact-${marker.key}`}
+                        title={marker.goalTitle}
+                        completed
+                      />
+                    ))}
                     {hiddenItemCount > 0 ? (
                       <p
                         className={cn(
@@ -434,7 +451,7 @@ export function CalendarMonthDayCell<
                           planFilledChromeMetaClass({ inMonth, isToday, isSelected })
                         )}
                       >
-                        +{hiddenItemCount}
+                        {planHiddenItemCountLabel(hiddenItemCount)}
                       </p>
                     ) : null}
                   </>
@@ -527,6 +544,7 @@ export function CalendarMonthDayCell<
             <div className="mt-4 space-y-1">
               <PlannerSortableDayList
                 day={day}
+                surface="calendar"
                 entryKeys={visibleEntries.map((entry) => entry.key)}
               >
                 {visibleEntries.map((entry, entryIndex) =>
@@ -534,22 +552,10 @@ export function CalendarMonthDayCell<
                 )}
               </PlannerSortableDayList>
               {visibleCompletionFactMarkers.map((marker) => {
-                const partnerOwned = marker.owner === "partner";
-                const statusCopy = partnerOwned
-                  ? "Partner marked this done."
-                  : marker.scheduledDate && marker.scheduledDate !== day
+                const statusCopy =
+                  marker.scheduledDate && marker.scheduledDate !== day
                     ? `Marked done here, currently credited from the ${marker.scheduledDate} scheduled session.`
                     : "Marked done on this date.";
-                if (partnerOwned) {
-                  return (
-                    <CalendarPartnerChip
-                      key={`completion-fact-${marker.key}`}
-                      title={marker.goalTitle}
-                      completed
-                      className="rounded-md"
-                    />
-                  );
-                }
                 return (
                 <div
                   key={`completion-fact-${marker.key}`}
@@ -561,6 +567,14 @@ export function CalendarMonthDayCell<
                 </div>
                 );
               })}
+              {partnerCompletionFactMarkers.map((marker) => (
+                <CalendarPartnerChip
+                  key={`completion-fact-${marker.key}`}
+                  title={marker.goalTitle}
+                  completed
+                  className="rounded-md"
+                />
+              ))}
               {hiddenItemCount > 0 ? (
                 <p
                   className={cn(
@@ -568,7 +582,7 @@ export function CalendarMonthDayCell<
                     planFilledChromeMetaClass({ inMonth, isToday, isSelected })
                   )}
                 >
-                  +{hiddenItemCount}
+                  {planHiddenItemCountLabel(hiddenItemCount)}
                 </p>
               ) : null}
             </div>

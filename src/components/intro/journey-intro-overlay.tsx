@@ -56,9 +56,9 @@ const JOURNEY_INTRO_STEPS = [
     kind: "copy" as const,
   },
   {
-    title: "You",
+    title: "Profile",
     description:
-      "Open You for identity and settings. Timezone, week start, and visibility live here.",
+      "Open Profile for identity and settings. Timezone, week start, and visibility live here.",
     target: "nav.settings",
     kind: "copy" as const,
   },

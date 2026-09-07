@@ -21,8 +21,8 @@
   --popover-foreground: oklch(0.22 0.01 286);
   --primary: #0f64bf;
   --primary-foreground: #ffffff;
-  --secondary: oklch(0.94 0.01 286);
-  --secondary-foreground: oklch(0.3 0.01 286);
+  --secondary: #e4e4e7;
+  --secondary-foreground: #3f3f46;
   --muted: oklch(0.95 0.008 286);
   --muted-foreground: oklch(0.5 0.01 286);
   --accent: oklch(0.92 0.018 255);
@@ -31,7 +31,7 @@
   --border: oklch(0.89 0.008 286);
   --input: oklch(0.89 0.008 286);
   --ring: #0f64bf;
-  /* Original calendar chrome: today = blue L3, selected = blue L2, adjacent = grey L1. */
+  /* Original calendar chrome: today = blue L2, selected = outline, adjacent = grey L1. */
   --gm-page: var(--background);
   --gm-gain: #10b981;
   --gm-recover: #eab308;
@@ -39,7 +39,7 @@
   --gm-warning-fill: #fef9c3;
   --gm-selection: var(--primary);
   --gm-selection-foreground: var(--primary-foreground);
-  --gm-today: var(--primary);
+  --gm-today: var(--gm-heatmap-2);
   --gm-today-foreground: var(--primary-foreground);
   --gm-day-selected: #4687d8;
   --gm-day-selected-foreground: #ffffff;
@@ -66,8 +66,8 @@
   --popover-foreground: oklch(0.96 0.003 286);
   --primary: #4687d8;
   --primary-foreground: #0b1f38;
-  --secondary: oklch(0.31 0.01 286);
-  --secondary-foreground: oklch(0.96 0.003 286);
+  --secondary: #3f3f46;
+  --secondary-foreground: #e4e4e7;
   --muted: oklch(0.3 0.01 286);
   --muted-foreground: oklch(0.75 0.01 286);
   --accent: oklch(0.36 0.03 255);
@@ -83,7 +83,7 @@
   --gm-warning-fill: color-mix(in srgb, #facc15 22%, var(--background));
   --gm-selection: var(--primary);
   --gm-selection-foreground: var(--primary-foreground);
-  --gm-today: var(--primary);
+  --gm-today: var(--gm-heatmap-4);
   --gm-today-foreground: var(--primary-foreground);
   --gm-day-selected: #7eace6;
   --gm-day-selected-foreground: #0b1f38;
@@ -186,8 +186,8 @@ body {
   --popover-foreground: #241c14;
   --primary: #9a4f2c;
   --primary-foreground: #f8f1e3;
-  --secondary: #efe4d0;
-  --secondary-foreground: #241c14;
+  --secondary: #e4e4e7;
+  --secondary-foreground: #3f3f46;
   --muted: #efe4d0;
   --muted-foreground: #7a6a56;
   --accent: #e8d9c0;
@@ -203,11 +203,12 @@ body {
   --gm-warning-fill: #fef9c3;
   --gm-selection: #6f8175;
   --gm-selection-foreground: #f8f1e3;
-  --gm-today: var(--gm-stamp-light);
-  --gm-today-foreground: var(--primary-foreground);
+  --gm-today: var(--gm-heatmap-1);
+  --gm-today-foreground: var(--foreground);
   --gm-day-selected: color-mix(in srgb, var(--gm-selection) 28%, var(--background));
   --gm-day-selected-foreground: var(--foreground);
-  --gm-adjacent: #e4e4e7;
+  /* Opaque Zinc 300 — one layer darker than Original so the grey reads on warm paper. */
+  --gm-adjacent: #d4d4d8;
   --gm-adjacent-foreground: oklch(0.36 0.01 286);
   --gm-stamp-light: #c88968;
   --gm-heatmap-0: #efe4d0;
@@ -245,8 +246,8 @@ body {
   --popover-foreground: #f3ead8;
   --primary: #c88968;
   --primary-foreground: #1c1610;
-  --secondary: #2a2218;
-  --secondary-foreground: #f3ead8;
+  --secondary: #3f3f46;
+  --secondary-foreground: #e4e4e7;
   --muted: #2a2218;
   --muted-foreground: #c4b49a;
   --accent: #3a2f24;
@@ -261,11 +262,11 @@ body {
   --gm-warning-fill: color-mix(in srgb, #facc15 22%, var(--background));
   --gm-selection: #8aa396;
   --gm-selection-foreground: #1c1610;
-  --gm-today: var(--gm-stamp-light);
+  --gm-today: var(--gm-heatmap-1);
   --gm-today-foreground: var(--foreground);
   --gm-day-selected: color-mix(in srgb, var(--gm-selection) 70%, var(--background));
   --gm-day-selected-foreground: var(--foreground);
-  --gm-adjacent: #3f3f46;
+  --gm-adjacent: #52525b;
   --gm-adjacent-foreground: oklch(0.92 0.003 286);
   --gm-stamp-light: #8a5a40;
   --gm-heatmap-0: #2a2218;

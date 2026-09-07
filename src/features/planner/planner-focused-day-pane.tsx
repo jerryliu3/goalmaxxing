@@ -1,17 +1,20 @@
 import { format, parse } from "date-fns";
 import { useMemo } from "react";
-import { CompletionToggle } from "@/components/ui/completion-toggle";
 import {
   getEntryMilestoneFirstTitleWithTime,
   getEntrySubtitle,
   isEntryCredited,
   isEntryImmovableForDraft,
 } from "@/features/planner/calendar-format";
+import { planCompletionControlModeForDate } from "@/features/planner/completion-entry-dispatch";
+import { PlanLedgerCompletionControl } from "@/features/planner/plan-ledger-completion-control";
 import type {
   PlannerCompletionFactMarker,
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import { PlanDayUnplannedPanel } from "@/features/planner/plan-day-unplanned-panel";
+import { PlanDaySection } from "@/features/planner/plan-day-section";
+import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
 import {
   filterPlannerDayEntries,
   filterPlannerDayMarkers,
@@ -46,6 +49,8 @@ interface PlannerFocusedDayPaneProps {
   shareDayTransition?: boolean;
   selectedEntryKey?: string | null;
   dayChecklist?: PlanDayChecklistModel | null;
+  partnerLabel?: string | null;
+  splitPartnerChecklist?: boolean;
 }
 
 export function PlannerFocusedDayPane({
@@ -65,6 +70,8 @@ export function PlannerFocusedDayPane({
   shareDayTransition = false,
   selectedEntryKey = null,
   dayChecklist = null,
+  partnerLabel = null,
+  splitPartnerChecklist = false,
 }: PlannerFocusedDayPaneProps) {
   const TitleTag = titleAs;
   const visibleEntries = useMemo(
@@ -79,6 +86,14 @@ export function PlannerFocusedDayPane({
       ),
     [completionFactMarkers, dayChecklist?.visibleGoalIds]
   );
+  const viewerMarkers = useMemo(
+    () => visibleMarkers.filter((marker) => marker.owner !== "partner"),
+    [visibleMarkers]
+  );
+  const partnerMarkers = useMemo(
+    () => visibleMarkers.filter((marker) => marker.owner === "partner"),
+    [visibleMarkers]
+  );
   const renderSupplementalGoal = (goal: Goal, options?: { archived?: boolean; key?: string }) => {
     if (!dayChecklist) {
       return null;
@@ -87,29 +102,26 @@ export function PlannerFocusedDayPane({
       dayChecklist.listModel.presentationByGoalId.get(goal.id)?.exactDateCompleted
     );
     const archived = options?.archived ?? false;
+    const completionMode = planCompletionControlModeForDate({
+      currentlyCredited: completed,
+      selectedDate: day,
+      asOfDate,
+    });
     return (
       <div
         key={options?.key ?? goal.id}
         className="flex items-center gap-3 py-3"
         data-plan-work-row="ledger"
       >
-        <CompletionToggle
+        <PlanLedgerCompletionControl
           completed={completed}
           pending={dayChecklist.savingGoalId === goal.id}
-          size="sm"
-          chrome="plain"
-          onClick={(event) => {
-            if (
-              "currentTarget" in event &&
-              event.currentTarget instanceof HTMLButtonElement
-            ) {
-              void dayChecklist.toggleCompletion(goal, event.currentTarget);
-            }
+          mode={completionMode}
+          label={goal.title}
+          disabled={archived}
+          onToggle={(sourceElement) => {
+            void dayChecklist.toggleCompletion(goal, sourceElement);
           }}
-          disabled={archived || dayChecklist.savingGoalId === goal.id}
-          aria-label={
-            completed ? `Mark ${goal.title} not done` : `Mark ${goal.title} done`
-          }
         />
         <p
           className={cn(
@@ -156,69 +168,146 @@ export function PlannerFocusedDayPane({
           onToggleCategoryFilter={dayChecklist.filters.toggleCategoryFilter}
         />
       ) : null}
-      <PlannerDayEntriesPanel
-        day={day}
-        entries={visibleEntries}
-        completionFactMarkers={visibleMarkers}
-        mutationLoading={mutationLoading}
-        asOfDate={asOfDate}
-        canMutatePlanItems={canMutatePlanItems}
-        canMutateEntryOnDay={canMutateEntryOnDay}
-        getEntryDisplayTitle={getEntryMilestoneFirstTitleWithTime}
-        getEntrySubtitle={getEntrySubtitle}
-        isEntryCredited={isEntryCredited}
-        isEntryImmovableForDraft={isEntryImmovableForDraft}
-        onEntryOpen={onEntryOpen}
-        onToggleCompletion={(entry, selectedDay) => {
-          if (!canMutateEntryOnDay(entry, selectedDay)) {
-            return;
-          }
-          onToggleCompletion(entry, selectedDay);
-        }}
-        onEntryPointerStart={onEntryPointerStart}
-        onEntryPointerEnd={onEntryPointerEnd}
-        density="expanded"
-        includeSourceElement={false}
-        selectedEntryKey={selectedEntryKey}
-      />
-      {showTasksInsteadOfGoals ? null : (
-        <PlanDayUnplannedPanel
-          day={day}
-          placedEntries={visibleEntries}
-          checklist={dayChecklist}
-        />
-      )}
-      {showTasksInsteadOfGoals ? null : (
-        <PlannerTasksPanel
-          key={day}
-          title="Tasks"
-          description="One-time tasks for this day, separate from recurring goals."
-          scheduledDate={day}
-          allowCreate
-          hideWhenEmpty={false}
-        />
-      )}
-      {dayChecklist &&
-      !showTasksInsteadOfGoals &&
-      (dayChecklist.filters.showUpcomingGoals ||
-        dayChecklist.filters.showEndedGoals ||
-        dayChecklist.filters.showArchivedGoals) ? (
-        <ChecklistPastPanels
-          upcoming={dayChecklist.listModel.upcoming}
-          pastGoals={dayChecklist.listModel.pastGoals}
-          archivedGoals={dayChecklist.listModel.archivedGoals}
-          showUpcoming={dayChecklist.filters.showUpcomingGoals}
-          showEnded={dayChecklist.filters.showEndedGoals}
-          showArchived={dayChecklist.filters.showArchivedGoals}
-          upcomingOpen={dayChecklist.filters.upcomingOpen}
-          pastPanelOpen={dayChecklist.filters.pastPanelOpen}
-          archiveOpen={dayChecklist.filters.archiveOpen}
-          onUpcomingOpenChange={dayChecklist.filters.setUpcomingOpen}
-          onPastPanelOpenChange={dayChecklist.filters.setPastPanelOpen}
-          onArchiveOpenChange={dayChecklist.filters.setArchiveOpen}
-          renderGoal={renderSupplementalGoal}
-        />
-      ) : null}
+      <div
+        className={
+          splitPartnerChecklist
+            ? "md:grid md:grid-cols-2 md:items-start md:gap-8"
+            : undefined
+        }
+      >
+        <div
+          className="space-y-3"
+          data-testid={splitPartnerChecklist ? "plan-day-viewer-checklist" : undefined}
+        >
+          <PlanDaySection
+            key={`${day}-planned`}
+            title="Planned goals"
+            count={
+              visibleEntries.length +
+              (splitPartnerChecklist ? viewerMarkers.length : visibleMarkers.length)
+            }
+          >
+            <PlannerDayEntriesPanel
+              day={day}
+              entries={visibleEntries}
+              completionFactMarkers={
+                splitPartnerChecklist ? viewerMarkers : visibleMarkers
+              }
+              mutationLoading={mutationLoading}
+              asOfDate={asOfDate}
+              canMutatePlanItems={canMutatePlanItems}
+              canMutateEntryOnDay={canMutateEntryOnDay}
+              getEntryDisplayTitle={getEntryMilestoneFirstTitleWithTime}
+              getEntrySubtitle={getEntrySubtitle}
+              isEntryCredited={isEntryCredited}
+              isEntryImmovableForDraft={isEntryImmovableForDraft}
+              onEntryOpen={onEntryOpen}
+              onToggleCompletion={(entry, selectedDay) => {
+                if (!canMutateEntryOnDay(entry, selectedDay)) {
+                  return;
+                }
+                onToggleCompletion(entry, selectedDay);
+              }}
+              onEntryPointerStart={onEntryPointerStart}
+              onEntryPointerEnd={onEntryPointerEnd}
+              density="expanded"
+              includeSourceElement={false}
+              selectedEntryKey={selectedEntryKey}
+            />
+            {splitPartnerChecklist
+              ? partnerMarkers.map((marker) => (
+                  <div key={`mobile-partner-${marker.key}`} className="md:hidden">
+                    <CalendarPartnerChip
+                      title={marker.goalTitle}
+                      completed
+                      density="expanded"
+                      description="Partner marked this done."
+                    />
+                  </div>
+                ))
+              : null}
+          </PlanDaySection>
+          {showTasksInsteadOfGoals ? null : (
+            <PlanDaySection key={`${day}-unplanned`} title="Unplanned goals" defaultOpen={false}>
+              <PlanDayUnplannedPanel
+                day={day}
+                placedEntries={visibleEntries}
+                checklist={dayChecklist}
+              />
+            </PlanDaySection>
+          )}
+          {showTasksInsteadOfGoals ? null : (
+            <PlanDaySection key={`${day}-todos`} title="Todos" defaultOpen={false}>
+              <PlannerTasksPanel
+                key={day}
+                title="Todos"
+                description={null}
+                scheduledDate={day}
+                allowCreate
+                hideWhenEmpty={false}
+                chrome="plain"
+              />
+            </PlanDaySection>
+          )}
+          {dayChecklist &&
+          !showTasksInsteadOfGoals &&
+          (dayChecklist.filters.showUpcomingGoals ||
+            dayChecklist.filters.showEndedGoals ||
+            dayChecklist.filters.showArchivedGoals) ? (
+            <ChecklistPastPanels
+              upcoming={dayChecklist.listModel.upcoming}
+              pastGoals={dayChecklist.listModel.pastGoals}
+              archivedGoals={dayChecklist.listModel.archivedGoals}
+              showUpcoming={dayChecklist.filters.showUpcomingGoals}
+              showEnded={dayChecklist.filters.showEndedGoals}
+              showArchived={dayChecklist.filters.showArchivedGoals}
+              upcomingOpen={dayChecklist.filters.upcomingOpen}
+              pastPanelOpen={dayChecklist.filters.pastPanelOpen}
+              archiveOpen={dayChecklist.filters.archiveOpen}
+              onUpcomingOpenChange={dayChecklist.filters.setUpcomingOpen}
+              onPastPanelOpenChange={dayChecklist.filters.setPastPanelOpen}
+              onArchiveOpenChange={dayChecklist.filters.setArchiveOpen}
+              renderGoal={renderSupplementalGoal}
+            />
+          ) : null}
+        </div>
+        {splitPartnerChecklist ? (
+          <div
+            className="hidden min-w-0 md:block"
+            data-testid="plan-day-partner-checklist"
+          >
+            <div className="mb-3 flex min-h-6 items-center gap-2">
+              <p className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                {partnerLabel ?? "Partner"}
+              </p>
+              <span className="rounded-[8px] border border-border px-2 py-0.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                View only
+              </span>
+            </div>
+            <PlanDaySection
+              key={`${day}-partner-planned`}
+              title="Planned goals"
+              count={partnerMarkers.length}
+            >
+              {partnerMarkers.length > 0 ? (
+                partnerMarkers.map((marker) => (
+                  <CalendarPartnerChip
+                    key={`desktop-partner-${marker.key}`}
+                    title={marker.goalTitle}
+                    completed
+                    density="expanded"
+                    description="Partner marked this done."
+                  />
+                ))
+              ) : (
+                <p className="py-3 text-sm text-muted-foreground">
+                  No partner goals this day.
+                </p>
+              )}
+            </PlanDaySection>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

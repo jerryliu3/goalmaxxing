@@ -1,4 +1,4 @@
-import { format, parse } from "date-fns";
+import { format, isValid, parse } from "date-fns";
 
 export type PlannerShellTab = "today" | "not-today" | "calendar";
 export type SurfaceKey = "checklist" | "calendar";
@@ -16,7 +16,7 @@ export function isValidDate(value: string | null): value is string {
     return false;
   }
   const parsed = parse(value, "yyyy-MM-dd", new Date());
-  return format(parsed, "yyyy-MM-dd") === value;
+  return isValid(parsed) && format(parsed, "yyyy-MM-dd") === value;
 }
 
 export function isValidCalendarViewMode(
@@ -45,26 +45,56 @@ export interface CalendarState {
   viewMode: PlannerCalendarViewMode;
 }
 
+export function resolveDayInMonth({
+  month,
+  preferredDay,
+  today,
+}: {
+  month: string;
+  preferredDay: string | null;
+  today: string;
+}): string {
+  if (
+    preferredDay &&
+    isValidDate(preferredDay) &&
+    preferredDay.startsWith(`${month}-`)
+  ) {
+    return preferredDay;
+  }
+  if (today.startsWith(`${month}-`) && isValidDate(today)) {
+    return today;
+  }
+  if (preferredDay && isValidDate(preferredDay)) {
+    const candidate = `${month}-${preferredDay.slice(8, 10)}`;
+    if (isValidDate(candidate)) {
+      return candidate;
+    }
+    for (let day = 31; day >= 28; day -= 1) {
+      const next = `${month}-${String(day).padStart(2, "0")}`;
+      if (isValidDate(next)) {
+        return next;
+      }
+    }
+  }
+  return `${month}-01`;
+}
+
 function applyCalendarViewInvariants(
   month: string | null,
   day: string | null,
   viewMode: PlannerCalendarViewMode
 ): Pick<CalendarState, "month" | "day" | "viewMode"> {
-  if (viewMode === "month") {
-    const validMonth = isValidMonth(month) ? month : null;
-    const validDay = isValidDate(day) ? day : null;
-    return {
-      month: validDay ? validDay.slice(0, 7) : validMonth,
-      day: validDay,
-      viewMode,
-    };
-  }
-
-  const fallbackDay = isValidMonth(month) ? `${month}-01` : getTodayDateParam();
-  const normalizedDay = isValidDate(day) ? day : fallbackDay;
+  const today = getTodayDateParam();
+  const validMonth = isValidMonth(month) ? month : null;
+  const validDay = isValidDate(day) ? day : null;
+  const resolvedDay =
+    validDay ??
+    (validMonth
+      ? resolveDayInMonth({ month: validMonth, preferredDay: null, today })
+      : today);
   return {
-    day: normalizedDay,
-    month: normalizedDay.slice(0, 7),
+    day: resolvedDay,
+    month: resolvedDay.slice(0, 7),
     viewMode,
   };
 }

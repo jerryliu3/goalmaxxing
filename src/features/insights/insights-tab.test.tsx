@@ -183,4 +183,24 @@ describe("InsightsTab goal ledger", () => {
     expect(screen.getByText("Draft")).toBeInTheDocument();
     expect(screen.getByText("Defense")).toBeInTheDocument();
   });
+
+  it("stacks the heatmap in overall-only mode instead of splitting beside the list", () => {
+    render(
+      <InsightsTab
+        contentMode="overall-only"
+        sharedPeriod={{
+          monthCursor: new Date(2026, 8, 6),
+          onMonthCursorChange: () => {},
+          perGoalViewMode: "month",
+          onPerGoalViewModeChange: () => {},
+        }}
+      />
+    );
+
+    expect(screen.getByText(/Aggregate of selected goals/)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Goal ledger" })).toBeNull();
+    expect(
+      screen.getByText(/Aggregate of selected goals/).closest(".flex")
+    ).toBeNull();
+  });
 });

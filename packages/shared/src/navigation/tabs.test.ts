@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { APP_TABS, buildAppTabs, isAppTabActive } from "./tabs";
 
 describe("app navigation tabs", () => {
-  it("orders destinations as Plan, Progress, Community, You", () => {
+  it("orders destinations as Plan, Progress, Community, Profile", () => {
     expect(APP_TABS).toEqual([
       { key: "calendar", href: "/calendar", label: "Plan" },
       { key: "insights", href: "/insights", label: "Progress" },
       { key: "social", href: "/social", label: "Community" },
-      { key: "settings", href: "/settings", label: "You" },
+      { key: "settings", href: "/settings", label: "Profile" },
     ]);
   });
 
@@ -16,7 +16,7 @@ describe("app navigation tabs", () => {
       { key: "calendar", href: "/calendar", label: "Plan" },
       { key: "insights", href: "/insights", label: "Progress" },
       { key: "social", href: "/social", label: "Community" },
-      { key: "settings", href: "/settings", label: "You" },
+      { key: "settings", href: "/settings", label: "Profile" },
     ]);
     expect(buildAppTabs("checklist").map((tab) => tab.key)).toEqual([
       "calendar",
@@ -31,7 +31,7 @@ describe("app navigation tabs", () => {
       { key: "calendar", href: "/demo/calendar", label: "Plan" },
       { key: "insights", href: "/demo/insights", label: "Progress" },
       { key: "social", href: "/demo/social", label: "Community" },
-      { key: "settings", href: "/demo/settings", label: "You" },
+      { key: "settings", href: "/demo/settings", label: "Profile" },
     ]);
   });
 

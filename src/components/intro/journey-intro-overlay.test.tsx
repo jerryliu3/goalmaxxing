@@ -109,7 +109,7 @@ function renderIntro() {
         Community
       </button>
       <button type="button" data-onboarding="nav.settings">
-        You
+        Profile
       </button>
       <button type="button" data-onboarding="nav.new-goal">
         New Goal +
@@ -209,7 +209,7 @@ describe("JourneyIntroOverlay", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(await screen.findByRole("dialog", { name: "Community" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "You" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Profile" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(await screen.findByRole("dialog", { name: "New Goal +" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
@@ -296,7 +296,7 @@ describe("JourneyIntroOverlay", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(await screen.findByRole("dialog", { name: "Community" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "You" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Profile" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(await screen.findByRole("dialog", { name: "New Goal +" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));

@@ -1,4 +1,7 @@
-import type { PlannerDragTarget } from "@/features/planner/planner-drag-target";
+import {
+  PLANNER_LIST_END_ENTRY_KEY,
+  type PlannerDragTarget,
+} from "@/features/planner/planner-drag-target";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 
 export type PlannerDndResolution =
@@ -35,6 +38,21 @@ export function resolvePlannerDndResolution({
   }
   const sourceDay = entryDayByKey.get(entryKey) ?? null;
   if (target.type === "preview_entry") {
+    if (target.entryKey === PLANNER_LIST_END_ENTRY_KEY) {
+      if (sourceDay === target.day) {
+        return {
+          kind: "reorder_preview",
+          day: target.day,
+          activeEntryKey: entryKey,
+          overEntryKey: PLANNER_LIST_END_ENTRY_KEY,
+        };
+      }
+      return {
+        kind: "move_entry",
+        entry,
+        nextDate: target.day,
+      };
+    }
     if (sourceDay === target.day) {
       if (target.entryKey === entryKey) {
         return { kind: "clear" };

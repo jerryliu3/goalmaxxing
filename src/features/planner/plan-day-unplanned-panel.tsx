@@ -1,20 +1,15 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
-import { useMemo, useState } from "react";
-import { CompletionToggle } from "@/components/ui/completion-toggle";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { useMemo } from "react";
 import { useChecklistCompletionActions } from "@/features/today/use-checklist-completion-actions";
 import { useChecklistData } from "@/features/today/use-checklist-data";
 import { useChecklistProjection } from "@/features/today/use-checklist-projection";
+import { planCompletionControlModeForDate } from "@/features/planner/completion-entry-dispatch";
 import {
   placedGoalIdsForDay,
   selectUnplannedGoals,
 } from "@/features/planner/plan-day-unplanned";
+import { PlanLedgerCompletionControl } from "@/features/planner/plan-ledger-completion-control";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 import {
@@ -36,38 +31,19 @@ export function PlanDayUnplannedPanel({
   placedEntries: PlannerDayDetailEntry[];
   checklist?: PlanDayChecklistModel | null;
 }) {
-  const [showUnplanned, setShowUnplanned] = useState(false);
   const placedGoalIds = useMemo(
     () => placedGoalIdsForDay(placedEntries),
     [placedEntries]
   );
 
-  return (
-    <Collapsible open={showUnplanned} onOpenChange={setShowUnplanned}>
-      <CollapsibleTrigger
-        className="flex w-full items-center justify-between gap-2 py-2 text-left text-sm font-medium touch-manipulation"
-        aria-expanded={showUnplanned}
-      >
-        <span>Unplanned</span>
-        <ChevronDown
-          className={cn(
-            "size-4 text-muted-foreground transition-transform duration-[var(--motion-duration-fast)]",
-            showUnplanned && "rotate-180"
-          )}
-        />
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        {checklist ? (
-          <PlanDayUnplannedFromChecklist
-            day={day}
-            placedGoalIds={placedGoalIds}
-            checklist={checklist}
-          />
-        ) : (
-          <PlanDayUnplannedList day={day} placedGoalIds={placedGoalIds} />
-        )}
-      </CollapsibleContent>
-    </Collapsible>
+  return checklist ? (
+    <PlanDayUnplannedFromChecklist
+      day={day}
+      placedGoalIds={placedGoalIds}
+      checklist={checklist}
+    />
+  ) : (
+    <PlanDayUnplannedList day={day} placedGoalIds={placedGoalIds} />
   );
 }
 
@@ -98,6 +74,8 @@ function PlanDayUnplannedFromChecklist({
 
   return (
     <PlanDayUnplannedRows
+      day={day}
+      asOfDate={checklist.todayLocalDate}
       goals={unplannedGoals}
       presentationByGoalId={checklist.listModel.presentationByGoalId}
       savingGoalId={checklist.savingGoalId}
@@ -171,6 +149,8 @@ function PlanDayUnplannedList({
 
   return (
     <PlanDayUnplannedRows
+      day={day}
+      asOfDate={todayLocalDate}
       goals={unplannedGoals}
       presentationByGoalId={presentationByGoalId}
       savingGoalId={savingGoalId}
@@ -180,11 +160,15 @@ function PlanDayUnplannedList({
 }
 
 function PlanDayUnplannedRows({
+  day,
+  asOfDate,
   goals,
   presentationByGoalId,
   savingGoalId,
   onToggle,
 }: {
+  day: string;
+  asOfDate: string | null;
   goals: Goal[];
   presentationByGoalId: PlanDayChecklistModel["listModel"]["presentationByGoalId"];
   savingGoalId: string | null;
@@ -201,31 +185,23 @@ function PlanDayUnplannedRows({
       {goals.map((goal) => {
         const presentation = presentationByGoalId.get(goal.id);
         const completed = Boolean(presentation?.exactDateCompleted);
+        const completionMode = planCompletionControlModeForDate({
+          currentlyCredited: completed,
+          selectedDate: day,
+          asOfDate,
+        });
         return (
           <div
             key={goal.id}
             className="flex items-center gap-3 py-3"
             data-plan-work-row="ledger"
           >
-            <CompletionToggle
+            <PlanLedgerCompletionControl
               completed={completed}
               pending={savingGoalId === goal.id}
-              size="sm"
-              chrome="plain"
-              onClick={(event) => {
-                if (
-                  "currentTarget" in event &&
-                  event.currentTarget instanceof HTMLButtonElement
-                ) {
-                  onToggle(goal, event.currentTarget);
-                }
-              }}
-              disabled={savingGoalId === goal.id}
-              aria-label={
-                completed
-                  ? `Mark ${goal.title} not done`
-                  : `Mark ${goal.title} done`
-              }
+              mode={completionMode}
+              label={goal.title}
+              onToggle={(sourceElement) => onToggle(goal, sourceElement)}
             />
             <p
               className={cn(

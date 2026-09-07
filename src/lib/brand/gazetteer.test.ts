@@ -18,7 +18,7 @@ describe("gazetteer display colors", () => {
     expect(GAZETTEER.sage).not.toBe(GAZETTEER.gain);
   });
 
-  it("keeps rust for today and sage for selected-day chrome", () => {
+  it("keeps rust identity colors distinct from sage chrome", () => {
     expect(GAZETTEER.stampLight).toBe("#c88968");
     expect(GAZETTEER.stamp).toBe("#9a4f2c");
     expect(GAZETTEER.stampLight).not.toBe(GAZETTEER.stamp);

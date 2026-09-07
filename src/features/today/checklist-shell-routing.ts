@@ -5,6 +5,7 @@ export {
   isValidDate,
   isValidMonth,
   normalizeCalendarState,
+  resolveDayInMonth,
   type PlannerCalendarViewMode,
   type PlannerShellTab,
   type SurfaceKey,

@@ -206,13 +206,10 @@ export function getEntryDraftPillClasses(input: {
   draftDiffKind: PlannerDraftVisualKind | null;
 }) {
   if (input.draftDiffKind === "moved_from") {
-    return "border-warning/40 bg-warning/10 text-foreground";
+    return "border-2 border-dashed border-muted-foreground bg-muted/50 text-muted-foreground";
   }
-  if (input.draftDiffKind === "moved_to") {
-    return "border-primary/40 bg-primary/10 text-foreground";
-  }
-  if (input.draftDiffKind === "new") {
-    return "border-primary/50 bg-secondary text-foreground";
+  if (input.draftDiffKind === "moved_to" || input.draftDiffKind === "new") {
+    return "border-2";
   }
   return "border-border text-foreground";
 }

@@ -9,6 +9,7 @@ import {
   isValidDate,
   isValidMonth,
   normalizeCalendarRoute,
+  resolveDayInMonth,
   type PlannerCalendarViewMode,
 } from "@/features/today/checklist-shell-routing";
 import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
@@ -64,12 +65,19 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
         (params) => {
           params.set("view", "month");
           params.set("month", month);
-          params.delete("day");
+          params.set(
+            "day",
+            resolveDayInMonth({
+              month,
+              preferredDay: normalized.day,
+              today: getTodayDateParam(),
+            })
+          );
         },
         mode
       );
     },
-    [applySearchParams, isActive]
+    [applySearchParams, isActive, normalized.day]
   );
 
   const updateViewMode = useCallback(
@@ -80,11 +88,16 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
       applySearchParams(
         (params) => {
           params.set("view", viewMode);
+          const today = getTodayDateParam();
           const day =
             normalized.day ??
             (isValidMonth(normalized.month)
-              ? `${normalized.month}-01`
-              : getTodayDateParam());
+              ? resolveDayInMonth({
+                  month: normalized.month,
+                  preferredDay: null,
+                  today,
+                })
+              : today);
           if (isValidDate(day)) {
             params.set("day", day);
             params.set("month", day.slice(0, 7));
@@ -122,8 +135,10 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
             );
             return;
           }
-          params.set("view", nextViewMode ?? "month");
-          params.delete("day");
+          const fallbackDay = getTodayDateParam();
+          params.set("view", nextViewMode ?? normalized.viewMode);
+          params.set("day", fallbackDay);
+          params.set("month", fallbackDay.slice(0, 7));
         },
         mode
       );
@@ -144,11 +159,7 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
       duoScope={scope}
       partnerCompletionMarkersByDate={partnerOverlay.markersByDate}
       partnerOverlayError={partnerOverlay.error}
-      partnerWeekLabel={
-        normalized.viewMode === "week" && scope === "both"
-          ? partner?.label ?? null
-          : null
-      }
+      partnerWeekLabel={scope === "both" ? partner?.label ?? null : null}
     />
   );
 }

@@ -9,6 +9,7 @@ import { InsightsPeriodStepper } from "@/features/insights/insights-period-contr
 import {
   InsightsTab,
   type InsightsSharedGoalFilters,
+  type InsightsSharedLedgerSelection,
   type HeatmapViewMode,
 } from "@/features/insights/insights-tab";
 import type { GoalDateSort } from "@/lib/goals/list-view";
@@ -22,6 +23,7 @@ export function InsightsShell() {
   const [goalEndMonths, setGoalEndMonths] = useState<string[]>([]);
   const [goalSort, setGoalSort] = useState<GoalDateSort>("earliest_end");
   const [showHistoricalGoals, setShowHistoricalGoals] = useState(false);
+  const [selectedGoalIds, setSelectedGoalIds] = useState<string[] | null>(null);
   const sharePeriodControls = scope === "both" && Boolean(activePartner);
 
   const sharedPeriod = useMemo(
@@ -58,6 +60,16 @@ export function InsightsShell() {
       showHistoricalGoals,
     ]
   );
+  const sharedLedgerSelection = useMemo<InsightsSharedLedgerSelection | undefined>(
+    () =>
+      sharePeriodControls
+        ? {
+            selectedGoalIds,
+            onSelectedGoalIdsChange: setSelectedGoalIds,
+          }
+        : undefined,
+    [selectedGoalIds, sharePeriodControls]
+  );
 
   return (
     <div className="space-y-4">
@@ -66,27 +78,53 @@ export function InsightsShell() {
         forceOpen={searchParams.get("onboarding") === "insights.main"}
       />
       {sharePeriodControls ? (
-        <div className="flex justify-center">
-          <InsightsPeriodStepper
-            monthCursor={monthCursor}
-            onMonthCursorChange={setMonthCursor}
-            perGoalViewMode={perGoalViewMode}
-          />
-        </div>
-      ) : null}
-      <DuoLanes
-        scope={scope}
-        viewer={viewer}
-        partner={partner}
-        renderLane={(subject) => (
+        <>
+          <div className="flex justify-center">
+            <InsightsPeriodStepper
+              monthCursor={monthCursor}
+              onMonthCursorChange={setMonthCursor}
+              perGoalViewMode={perGoalViewMode}
+            />
+          </div>
           <InsightsTab
-            subjectUserId={subject.userId}
-            readOnly={subject.readOnly}
             sharedPeriod={sharedPeriod}
             sharedGoalFilters={sharedGoalFilters}
+            sharedLedgerSelection={sharedLedgerSelection}
+            contentMode="ledger"
           />
-        )}
-      />
+          <DuoLanes
+            scope={scope}
+            viewer={viewer}
+            partner={partner}
+            renderLane={(subject) => (
+              <InsightsTab
+                subjectUserId={subject.userId}
+                readOnly={subject.readOnly}
+                sharedPeriod={sharedPeriod}
+                sharedGoalFilters={sharedGoalFilters}
+                sharedLedgerSelection={
+                  subject.readOnly ? undefined : sharedLedgerSelection
+                }
+                contentMode="overall-only"
+              />
+            )}
+          />
+        </>
+      ) : (
+        <DuoLanes
+          scope={scope}
+          viewer={viewer}
+          partner={partner}
+          renderLane={(subject) => (
+            <InsightsTab
+              subjectUserId={subject.userId}
+              readOnly={subject.readOnly}
+              sharedPeriod={sharedPeriod}
+              sharedGoalFilters={sharedGoalFilters}
+            />
+          )}
+        />
+      )}
     </div>
   );
 }

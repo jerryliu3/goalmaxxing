@@ -95,7 +95,8 @@ export function PlannerCalendarToolbar({
               {hasDraftSession ? (
                 <Badge
                   data-testid="planner-preview-mode-badge"
-                  className="h-7 border-warning bg-warning-fill px-3 text-sm font-semibold text-foreground"
+                  variant="secondary"
+                  className="h-7 border-primary/40 px-3 text-sm font-semibold"
                 >
                   Planning Mode
                 </Badge>

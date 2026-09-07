@@ -14,7 +14,10 @@ import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.
 import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import { getGoalVisual, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
 import { resolvePlannerDndResolution } from "@/features/planner/planner-dnd-resolution";
-import { reorderPreviewEntryKeys } from "@/features/planner/reorder-preview-entries";
+import {
+  reorderPreviewEntryKeys,
+  sameEntryKeyOrder,
+} from "@/features/planner/reorder-preview-entries";
 
 interface UsePlannerCalendarDndArgs {
   entryByKey: Map<string, PlannerDayDetailEntry>;
@@ -120,7 +123,7 @@ export function usePlannerCalendarDnd({
           overEntryKey,
           existingOrder: previous[day],
         });
-        if (!next) {
+        if (!next || sameEntryKeyOrder(previous[day], next)) {
           return previous;
         }
         return {
@@ -133,23 +136,13 @@ export function usePlannerCalendarDnd({
   );
 
   const handleDndEntryDragOver = useCallback(
-    (entryKey: string, target: PlannerDragTarget) => {
-      const resolution = resolvePlannerDndResolution({
-        entryKey,
-        target,
-        entryByKey,
-        entryDayByKey,
-      });
-      if (resolution.kind !== "reorder_preview") {
-        return;
-      }
-      reorderPreviewEntriesForDay(
-        resolution.day,
-        resolution.activeEntryKey,
-        resolution.overEntryKey
-      );
+    (_entryKey: string, _target: PlannerDragTarget) => {
+      // Do not mutate list order while dragging. dnd-kit's DndContext fires
+      // onDragOver from a useEffect on `overId`; rewriting the list changes
+      // layout, which changes `overId`, which setStates again (max update depth).
+      // Sortable transforms still slide siblings; order commits on drop.
     },
-    [entryByKey, entryDayByKey, reorderPreviewEntriesForDay]
+    []
   );
 
   const handleDndEntryDragEnd = useCallback(

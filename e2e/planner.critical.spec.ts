@@ -34,6 +34,8 @@ interface SavePlanResult {
   };
 }
 
+const COMPLETION_HOLD_CLICK = { delay: 550 } as const;
+
 function collectSaveDraftCommands(
   requestPayload: SavePlanResult["requestPayload"]
 ): SavePlanDraftCommand[] {
@@ -336,7 +338,7 @@ async function tryCalendarCompletionToggle(
         continue;
       }
       return runCompletionToggleAction(page, async () => {
-        await button.click();
+        await button.click(COMPLETION_HOLD_CLICK);
       });
     }
   }
@@ -809,7 +811,7 @@ test.describe("planner critical rails", () => {
     await expect(initialButton).toBeEnabled();
 
     const todayPayload = await runCompletionToggleAction(page, async () => {
-      await initialButton.click();
+      await initialButton.click(COMPLETION_HOLD_CLICK);
     });
     expect(todayPayload.goalId).toBeTruthy();
   });
@@ -834,7 +836,7 @@ test.describe("planner critical rails", () => {
     }
     await expect(pastToggle).toBeEnabled();
     const pastPayload = await runCompletionToggleAction(page, async () => {
-      await pastToggle.click();
+      await pastToggle.click(COMPLETION_HOLD_CLICK);
     });
     expect(pastPayload.goalId).toBeTruthy();
     expect(pastPayload.date <= yesterday).toBe(true);

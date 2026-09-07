@@ -12,7 +12,7 @@ const buttonVariants = cva(
         default:
           "bg-primary text-primary-foreground shadow-sm hover:bg-primary/80 active:not-aria-[haspopup]:shadow-none",
         outline:
-          "border-border bg-background shadow-sm hover:bg-muted hover:text-foreground active:not-aria-[haspopup]:shadow-none aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "bg-background shadow-sm hover:bg-muted hover:text-foreground active:not-aria-[haspopup]:shadow-none aria-expanded:bg-muted aria-expanded:text-foreground dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
           "bg-secondary text-secondary-foreground shadow-sm hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] active:not-aria-[haspopup]:shadow-none aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:
@@ -37,10 +37,15 @@ const buttonVariants = cva(
     },
     compoundVariants: [
       {
+        variant: "outline",
+        size: ["default", "xs", "sm", "lg"],
+        class: "border-border dark:border-input",
+      },
+      {
         variant: ["outline", "ghost"],
         size: ["icon", "icon-xs", "icon-sm", "icon-lg"],
         class:
-          "border-transparent bg-transparent shadow-none hover:border-transparent hover:bg-transparent hover:text-foreground active:bg-transparent aria-expanded:border-transparent aria-expanded:bg-transparent dark:border-transparent dark:bg-transparent dark:hover:bg-transparent",
+          "border-0 bg-transparent shadow-none hover:border-0 hover:bg-transparent hover:text-foreground active:bg-transparent aria-expanded:border-0 aria-expanded:bg-transparent dark:border-0 dark:bg-transparent dark:hover:bg-transparent",
       },
     ],
     defaultVariants: {
