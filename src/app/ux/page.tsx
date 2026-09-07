@@ -28,6 +28,14 @@ export default function UxHubPage() {
             </p>
           </li>
           <li>
+            <Link className="text-lg font-semibold underline" href="/ux/destinations">
+              Progress and Community destinations
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Atlas/Pins ledger lock and Club compete lock. Capabilities stay.
+            </p>
+          </li>
+          <li>
             <Link className="text-lg font-semibold underline" href="/ux/first-principles">
               First-principles interface study
             </Link>

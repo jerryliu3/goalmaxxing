@@ -121,6 +121,9 @@ surfaces. The default is to simplify and reuse what already exists.
   First-principles interaction studies live in
   `docs/ux/goalmaxxing-first-principles-interface-study.md` and
   `/ux/first-principles`. They are divergent exploration, not a product lock.
+  Progress Atlas/Pins and Community Club locks from the destination study live
+  in `docs/ux/goalmaxxing-progress-community-destination-study.md` and
+  `/ux/destinations`. They are study locks, not a production ship.
 - Reuse-first: before adding a new hook/component/helper, check whether an
   existing one can be extended or composed.
 - Prefer canonical homes for shared domain logic (`src/lib/planner/*`,
