@@ -52,15 +52,16 @@ export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]>
   ],
   "social.main": [
     {
+      title: "Leaderboards",
+      description:
+        "Compare consistent progress with the rest of the community. Challenges appear here too when any are active.",
+      target: "social.leaderboards",
+      fallbackTargets: ["social.team"],
+    },
+    {
       title: "Team",
       description: "Invite a friend and keep team goals next to the people you share them with.",
       target: "social.team",
-    },
-    {
-      title: "Challenges and leaderboards",
-      description:
-        "Join Challenges for shared competitions, and use Leaderboards to compare consistent progress.",
-      target: "social.compete",
     },
   ],
 };

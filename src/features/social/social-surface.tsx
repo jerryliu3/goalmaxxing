@@ -1,6 +1,5 @@
 "use client";
 
-import { Flag, Trophy, Users } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChallengeList } from "@/features/social/challenges/challenge-list";
@@ -10,23 +9,12 @@ import {
 import { GroupJoinCard } from "@/features/social/group-join-card";
 import { TeamPanel } from "@/features/social/team/team-panel";
 import { LeaderboardsPanel } from "@/features/social/leaderboards/leaderboards-panel";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  resolveSocialSurfaceTab,
-} from "@/features/social/social-surface-tab";
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
 import { TAB_ONBOARDING_TOURS } from "@/features/onboarding/tab-onboarding";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
 import { SOCIAL_ACTIVITY_VISIBLE_CACHE_KEY } from "@/lib/cache/planner-tab-cache";
 import { readTabDataCache, writeTabDataCache } from "@/lib/cache/tab-data-cache";
 import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
-
-const socialSurfaceTriggerBaseClass =
-  "h-10 min-w-0 flex-col gap-0.5 rounded-none px-1.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] leading-tight shadow-none data-[state=active]:shadow-none";
-
-const socialSurfaceTriggerToneClass =
-  "border-0 bg-transparent text-muted-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary";
 
 const SOCIAL_SURFACE_FOCUS_REFRESH_COOLDOWN_MS = 15 * 1000;
 const SOCIAL_SURFACE_POLL_INTERVAL_MS = 60 * 1000;
@@ -39,9 +27,6 @@ export function SocialSurface() {
     cachedVisibility ?? true
   );
   const publicSocialLocked = socialActivityVisible === false;
-  const activeTab = resolveSocialSurfaceTab(searchParams.get("tab") ?? undefined, {
-    socialActivityVisible,
-  });
   const [refreshToken, setRefreshToken] = useState(0);
   const lastFocusRefreshAtRef = useRef(0);
   const requestedOnboardingKey = searchParams.get("onboarding");
@@ -113,22 +98,13 @@ export function SocialSurface() {
 
   useEffect(() => {
     const requestedTab = searchParams.get("tab");
-    if (requestedTab === "feed") {
-      applySearchParams((params) => {
-        params.delete("tab");
-      }, "replace");
-      return;
-    }
-    if (!publicSocialLocked) {
-      return;
-    }
-    if (requestedTab === "team" || requestedTab === null) {
+    if (!requestedTab) {
       return;
     }
     applySearchParams((params) => {
-      params.set("tab", "team");
+      params.delete("tab");
     }, "replace");
-  }, [applySearchParams, publicSocialLocked, searchParams]);
+  }, [applySearchParams, searchParams]);
 
   useEffect(() => {
     window.addEventListener("focus", handleVisibilityOrFocus);
@@ -150,87 +126,31 @@ export function SocialSurface() {
             : undefined
         }
       />
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) => {
-          const nextTab = resolveSocialSurfaceTab(value, {
-            socialActivityVisible,
-          });
-          applySearchParams((params) => {
-            if (nextTab === "team") {
-              params.delete("tab");
-            } else {
-              params.set("tab", nextTab);
-            }
-          }, "push");
-        }}
-        className="flex flex-col gap-4"
-      >
-        <TabsList
-          variant="line"
-          className="grid w-full grid-cols-3 gap-0 rounded-none border-b border-border bg-transparent p-0"
-        >
-          <TabsTrigger
-            value="team"
-            className={cn(
-              socialSurfaceTriggerBaseClass,
-              socialSurfaceTriggerToneClass
-            )}
-            data-onboarding="social.team"
-          >
-            <Users className="size-3.5" />
-            <span className="truncate">Team</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="challenges"
-            className={cn(
-              socialSurfaceTriggerBaseClass,
-              socialSurfaceTriggerToneClass
-            )}
-            data-onboarding="social.compete"
-            disabled={publicSocialLocked}
-            title={publicSocialLocked ? "Private accounts use Team only." : undefined}
-          >
-            <Trophy className="size-3.5" />
-            <span className="truncate">Challenges</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="leaderboards"
-            className={cn(
-              socialSurfaceTriggerBaseClass,
-              socialSurfaceTriggerToneClass
-            )}
-            data-onboarding="social.compete"
-            disabled={publicSocialLocked}
-            title={publicSocialLocked ? "Private accounts use Team only." : undefined}
-          >
-            <Flag className="size-3.5" />
-            <span className="truncate">Leaderboards</span>
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="team" className="space-y-4">
-          <TeamPanel isActive={activeTab === "team"} refreshToken={refreshToken} />
-        </TabsContent>
+      <div className="flex flex-col gap-8">
         {!publicSocialLocked ? (
           <>
-            <TabsContent value="challenges" className="space-y-4">
-              <GroupJoinCard />
-              <ChallengeList
-                isActive={activeTab === "challenges"}
-                refreshToken={refreshToken}
-                onRefreshRequested={triggerBackgroundRefresh}
-              />
-            </TabsContent>
-            <TabsContent value="leaderboards" className="space-y-4">
+            <section data-onboarding="social.leaderboards">
               <LeaderboardsPanel
-                isActive={activeTab === "leaderboards"}
+                isActive
                 refreshToken={refreshToken}
                 onRefreshRequested={triggerBackgroundRefresh}
               />
-            </TabsContent>
+            </section>
+            <section data-onboarding="social.challenges">
+              <ChallengeList
+                hideWhenEmpty
+                isActive
+                refreshToken={refreshToken}
+                onRefreshRequested={triggerBackgroundRefresh}
+              />
+            </section>
+            <GroupJoinCard />
           </>
         ) : null}
-      </Tabs>
+        <section data-onboarding="social.team">
+          <TeamPanel isActive refreshToken={refreshToken} />
+        </section>
+      </div>
     </>
   );
 }

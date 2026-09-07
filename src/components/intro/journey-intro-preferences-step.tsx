@@ -224,8 +224,8 @@ export function JourneyIntroPreferencesStep({
           </button>
         </div>
         <p className="text-xs text-muted-foreground">
-          A private account can still form a private team. Other Community tabs are
-          disabled unless switched later.
+          A private account can still form a private team. Leaderboards and challenges
+          stay hidden unless switched later.
         </p>
       </div>
     </div>
