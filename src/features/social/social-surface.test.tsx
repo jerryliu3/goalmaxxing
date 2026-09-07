@@ -1,5 +1,4 @@
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const mockSocialActivityVisible = vi.hoisted(() => ({ value: true as boolean }));
@@ -129,25 +128,25 @@ describe("SocialSurface refresh behavior", () => {
     );
   });
 
-  it("does not refresh non-feed tabs on XP refresh events", async () => {
-    mockSearch = "tab=challenges";
-    const user = userEvent.setup();
+  it("renders leaderboards, challenges, and team on one page", async () => {
     render(<SocialSurface />);
 
     await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "Leaderboards" })).toBeInTheDocument();
+      expect(screen.getByTestId("leaderboards-panel")).toBeInTheDocument();
     });
-    await user.click(screen.getByRole("tab", { name: "Leaderboards" }));
+    expect(screen.getByTestId("challenge-list")).toBeInTheDocument();
+    expect(screen.getByTestId("group-join-card")).toBeInTheDocument();
+    expect(screen.getByTestId("team-panel")).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Team" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Challenges" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Leaderboards" })).not.toBeInTheDocument();
 
-    act(() => {
-      requestXpRefresh({
-        reason: "completion",
-        desiredFactState: "present",
-      });
-    });
-
-    expect(invalidateSocialFeedCache).not.toHaveBeenCalled();
-    expect(invalidateSocialTabCache).not.toHaveBeenCalled();
+    const page = screen.getByTestId("leaderboards-panel").closest(".flex");
+    expect(page?.contains(screen.getByTestId("leaderboards-panel"))).toBe(true);
+    const sections = page?.querySelectorAll("section") ?? [];
+    expect(sections[0]).toContainElement(screen.getByTestId("leaderboards-panel"));
+    expect(sections[1]).toContainElement(screen.getByTestId("challenge-list"));
+    expect(sections[2]).toContainElement(screen.getByTestId("team-panel"));
   });
 
   it("refreshes once when window focus returns within cooldown window", async () => {
@@ -204,113 +203,58 @@ describe("SocialSurface refresh behavior", () => {
     expect(invalidateSocialTabCache).toHaveBeenCalledTimes(1);
   });
 
-  it("shows freshness indicator only for cron-backed tabs", async () => {
-    mockSearch = "";
-    const { rerender } = render(<SocialSurface />);
+  it("shows cron freshness on leaderboards and challenges", async () => {
+    render(<SocialSurface />);
     await waitFor(() => {
-      expect(screen.getByTestId("team-panel")).toBeInTheDocument();
+      expect(screen.getByTestId("leaderboards-panel")).toBeInTheDocument();
     });
-    expect(screen.queryByTestId("social-freshness-indicator")).not.toBeInTheDocument();
-
-    mockSearch = "tab=challenges";
-    rerender(<SocialSurface />);
-    await waitFor(() => {
-      expect(screen.getByTestId("social-freshness-indicator")).toHaveAttribute(
-        "data-source",
-        "challenges"
-      );
-    });
-
-    mockSearch = "tab=leaderboards";
-    rerender(<SocialSurface />);
-    await waitFor(() => {
-      expect(screen.getByTestId("social-freshness-indicator")).toHaveAttribute(
-        "data-source",
-        "leaderboards"
-      );
-    });
-
-    mockSearch = "tab=team";
-    rerender(<SocialSurface />);
-    await waitFor(() => {
-      expect(screen.queryByTestId("social-freshness-indicator")).not.toBeInTheDocument();
-    });
+    expect(
+      screen.getAllByTestId("social-freshness-indicator").map((node) =>
+        node.getAttribute("data-source")
+      )
+    ).toEqual(["leaderboards", "challenges"]);
   });
 });
 
-describe("SocialSurface tab URL", () => {
-  it("writes a community chip into the tab query", async () => {
-    const pushStateSpy = vi.spyOn(window.history, "pushState");
-    const user = userEvent.setup();
-    render(<SocialSurface />);
-
-    await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "Challenges" })).toBeInTheDocument();
-    });
-    await user.click(screen.getByRole("tab", { name: "Challenges" }));
-    expect(pushStateSpy.mock.calls.at(-1)?.[2]).toBe("/social?tab=challenges");
-  });
-
-  it("omits the team default from the query", async () => {
+describe("SocialSurface leftover tab query", () => {
+  it("strips leftover community tab query params", async () => {
     mockSearch = "tab=challenges";
-    const pushStateSpy = vi.spyOn(window.history, "pushState");
-    const user = userEvent.setup();
+    const replaceStateSpy = vi.spyOn(window.history, "replaceState");
     render(<SocialSurface />);
 
     await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
+      expect(replaceStateSpy.mock.calls.at(-1)?.[2]).toBe("/social");
     });
-    await user.click(screen.getByRole("tab", { name: "Team" }));
-    expect(pushStateSpy.mock.calls.at(-1)?.[2]).toBe("/social");
   });
 
-  it("keeps other query params when switching chips", async () => {
-    mockSearch = "onboarding=social.main";
-    const pushStateSpy = vi.spyOn(window.history, "pushState");
-    const user = userEvent.setup();
+  it("keeps other query params when stripping leftover tabs", async () => {
+    mockSearch = "onboarding=social.main&tab=leaderboards";
+    const replaceStateSpy = vi.spyOn(window.history, "replaceState");
     render(<SocialSurface />);
 
     await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
-    });
-    await user.click(screen.getByRole("tab", { name: "Challenges" }));
-    expect(pushStateSpy.mock.calls.at(-1)?.[2]).toBe(
-      "/social?onboarding=social.main&tab=challenges"
-    );
-  });
-
-  it("opens the tab from the query string on refresh", async () => {
-    mockSearch = "tab=leaderboards";
-    render(<SocialSurface />);
-
-    await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "Leaderboards" })).toHaveAttribute(
-        "data-state",
-        "active"
+      expect(replaceStateSpy.mock.calls.at(-1)?.[2]).toBe(
+        "/social?onboarding=social.main"
       );
     });
   });
 });
 
 describe("SocialSurface private accounts", () => {
-  it("shows disabled public tabs but never mounts their panels", async () => {
+  it("shows team only and never mounts public community panels", async () => {
     mockSocialActivityVisible.value = false;
     render(<SocialSurface />);
 
     await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "Team" })).toHaveAttribute("data-state", "active");
+      expect(screen.getByTestId("team-panel")).toBeInTheDocument();
+      expect(screen.queryByTestId("leaderboards-panel")).not.toBeInTheDocument();
     });
-    expect(screen.queryByRole("tab", { name: "Feed" })).not.toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Challenges" })).toBeDisabled();
-    expect(screen.getByRole("tab", { name: "Leaderboards" })).toBeDisabled();
-    expect(screen.getByRole("tab", { name: "Team" })).not.toBeDisabled();
     expect(screen.queryByTestId("feed-list")).not.toBeInTheDocument();
     expect(screen.queryByTestId("challenge-list")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("leaderboards-panel")).not.toBeInTheDocument();
-    expect(screen.getByTestId("team-panel")).toBeInTheDocument();
+    expect(screen.queryByTestId("group-join-card")).not.toBeInTheDocument();
   });
 
-  it("rewrites leftover feed links to Team", async () => {
+  it("rewrites leftover feed links to the single community page", async () => {
     mockSearch = "tab=feed";
     const replaceStateSpy = vi.spyOn(window.history, "replaceState");
     render(<SocialSurface />);
@@ -322,14 +266,14 @@ describe("SocialSurface private accounts", () => {
     expect(screen.getByTestId("team-panel")).toBeInTheDocument();
   });
 
-  it("rewrites public community tab links to Team", async () => {
+  it("rewrites public community tab links away on private accounts", async () => {
     mockSocialActivityVisible.value = false;
     mockSearch = "tab=challenges";
     const replaceStateSpy = vi.spyOn(window.history, "replaceState");
     render(<SocialSurface />);
 
     await waitFor(() => {
-      expect(replaceStateSpy.mock.calls.at(-1)?.[2]).toBe("/social?tab=team");
+      expect(replaceStateSpy.mock.calls.at(-1)?.[2]).toBe("/social");
     });
   });
 });

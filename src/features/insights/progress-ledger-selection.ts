@@ -54,18 +54,23 @@ export function isLedgerHeatmapDayMutable(date: string, today: string): boolean 
   return resolveSelectedDateState(date, today) !== "future";
 }
 
+export type ProgressLedgerUnit = "completion" | "milestone";
+
 export function progressLedgerCaption(
   mode: ProgressLedgerMode,
-  selectedCount: number
+  selectedCount: number,
+  unit: ProgressLedgerUnit = "completion"
 ): string {
+  const unitLabel = unit === "milestone" ? "milestone" : "completion";
+  const unitPlural = unit === "milestone" ? "milestones" : "completions";
   if (mode === "empty") {
-    return "Select a goal to see completions.";
+    return `Select a goal to see ${unitPlural}.`;
   }
   if (mode === "edit") {
-    return "Tap a past or today cell to log or remove a completion. Future days are closed.";
+    return `Tap a past or today cell to log or remove a ${unitLabel}. Future days are closed.`;
   }
   if (mode === "overlap") {
     return `Read-only overlap of ${selectedCount} goals.`;
   }
-  return "Aggregate of selected goals. This calendar logs completions, including unscheduled days.";
+  return `Aggregate of selected goals. This calendar logs ${unitPlural}, including unscheduled days.`;
 }

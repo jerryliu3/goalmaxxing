@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ChallengeList } from "@/features/social/challenges/challenge-list";
@@ -110,5 +110,22 @@ describe("ChallengeList", () => {
       await screen.findByText("New challenges will appear here when published.")
     ).toBeInTheDocument();
     expect(screen.getByText("Challenges")).toBeInTheDocument();
+  });
+
+  it("hides the empty roster when hideWhenEmpty is set", async () => {
+    fetchSocialChallengesMock.mockResolvedValueOnce({
+      schemaVersion: "1",
+      items: [],
+    });
+
+    render(<ChallengeList hideWhenEmpty />);
+
+    await waitFor(() => {
+      expect(fetchSocialChallengesMock).toHaveBeenCalled();
+    });
+    expect(screen.queryByText("Challenges")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("New challenges will appear here when published.")
+    ).not.toBeInTheDocument();
   });
 });

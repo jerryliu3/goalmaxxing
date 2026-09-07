@@ -11,12 +11,14 @@ interface ChallengeListProps {
   isActive?: boolean;
   refreshToken?: number;
   onRefreshRequested?: () => void;
+  hideWhenEmpty?: boolean;
 }
 
 export function ChallengeList({
   isActive = true,
   refreshToken = 0,
   onRefreshRequested,
+  hideWhenEmpty = false,
 }: ChallengeListProps) {
   const cachedChallenges = peekSocialChallengesCache();
   const [items, setItems] = useState<SocialChallenge[]>(cachedChallenges?.items ?? []);
@@ -76,6 +78,9 @@ export function ChallengeList({
   }, [isActive, loadChallenges, refreshToken]);
 
   if (isLoading && items.length === 0) {
+    if (hideWhenEmpty) {
+      return null;
+    }
     return (
       <Card className="shadow-sm">
         <CardHeader className="space-y-2">
@@ -106,6 +111,9 @@ export function ChallengeList({
   }
 
   if (items.length === 0) {
+    if (hideWhenEmpty) {
+      return null;
+    }
     return (
       <Card className="shadow-sm">
         <CardHeader className="space-y-2">

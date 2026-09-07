@@ -116,7 +116,9 @@ function getCompletionCountLabel(
     goal.frequency_type === "fixed_milestones" ||
     isDeadlineTotalGoal(goal)
   ) {
-    return `${completionCount}/${goal.target_count ?? 0} completions`;
+    return `${completionCount}/${goal.target_count ?? 0} ${
+      goal.frequency_type === "fixed_milestones" ? "milestones" : "completions"
+    }`;
   }
 
   if (isPeriodCadenceGoal(goal) && progress) {
@@ -834,7 +836,7 @@ export function InsightsTab({
       ) : null}
 
       {showGoalsSection || showHeatmap ? (
-        <div className="grid gap-6 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] md:items-start">
+        <div className="flex flex-col-reverse gap-6 md:grid md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] md:items-start">
           {showGoalsSection ? (
             <ProgressGoalList
               goals={ledgerGoalItems}
@@ -862,16 +864,14 @@ export function InsightsTab({
           }
         >
           <p className="text-sm text-muted-foreground">
-            {progressLedgerCaption(ledgerMode, selectedLedgerGoalIds.length)}
+            {progressLedgerCaption(
+              ledgerMode,
+              selectedLedgerGoalIds.length,
+              editableGoal?.frequency_type === "fixed_milestones"
+                ? "milestone"
+                : "completion"
+            )}
           </p>
-          {editableGoal?.frequency_type === "fixed_milestones" ? (
-            <MilestonePills
-              targetCount={milestoneTargetCount}
-              completionDates={mappedMilestoneDates}
-              milestoneNames={draftMilestoneNames}
-              maxVisible={MAX_VISIBLE_MILESTONES}
-            />
-          ) : null}
           {ledgerMode === "empty" ? null : perGoalViewMode === "month" ? (
             <MonthHeatmap
               month={monthCursor}
@@ -900,11 +900,18 @@ export function InsightsTab({
                 classForValue={(value) =>
                   `${getHeatmapScaleClass(value?.count ?? 0)} cursor-pointer ${getAggregateDrilldownDayClass(value?.date)}`
                 }
-                titleForValue={(value) =>
-                  `${value?.date ?? "N/A"}: ${value?.count ?? 0} completion${
-                    (value?.count ?? 0) === 1 ? "" : "s"
-                  }`
-                }
+                titleForValue={(value) => {
+                  const count = value?.count ?? 0;
+                  const unit =
+                    editableGoal?.frequency_type === "fixed_milestones"
+                      ? count === 1
+                        ? "milestone"
+                        : "milestones"
+                      : count === 1
+                        ? "completion"
+                        : "completions";
+                  return `${value?.date ?? "N/A"}: ${count} ${unit}`;
+                }}
                 onClick={(value?: { date?: string }) => {
                   const selectedDate = value?.date;
                   if (!selectedDate) {
@@ -915,6 +922,14 @@ export function InsightsTab({
               />
             </div>
           )}
+          {editableGoal?.frequency_type === "fixed_milestones" ? (
+            <MilestonePills
+              targetCount={milestoneTargetCount}
+              completionDates={mappedMilestoneDates}
+              milestoneNames={draftMilestoneNames}
+              maxVisible={MAX_VISIBLE_MILESTONES}
+            />
+          ) : null}
           {heatmapEditable && editableGoal?.frequency_type === "fixed_milestones" ? (
             <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
               <p className="text-xs text-muted-foreground">Milestone names</p>

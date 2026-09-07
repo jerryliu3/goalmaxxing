@@ -15,6 +15,14 @@ vi.mock("@/features/insights/use-insights-data", () => ({
         goal({ id: "run", owner_id: "me", title: "Tempo run" }),
         goal({ id: "lift", owner_id: "me", title: "Lift" }),
         goal({ id: "yoga", owner_id: "me", title: "Yoga" }),
+        goal({
+          id: "thesis",
+          owner_id: "me",
+          title: "Thesis",
+          frequency_type: "fixed_milestones",
+          target_count: 3,
+          milestone_names: ["Proposal", "Draft", "Defense"],
+        }),
       ],
       completions: [
         { goal_id: "run", completed_on: "2026-09-01", source: "manual" },
@@ -102,13 +110,16 @@ describe("InsightsTab goal ledger", () => {
     expect(
       screen.getByText(/Aggregate of selected goals/)
     ).toBeInTheDocument();
-    expect(screen.getByText(/Aggregate of selected goals/).closest(".grid")).toHaveClass(
+    expect(screen.getByText(/Aggregate of selected goals/).closest(".flex")).toHaveClass(
+      "flex-col-reverse",
+      "md:grid",
       "md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]"
     );
     expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Lift/ }));
     await user.click(screen.getByRole("button", { name: /Yoga/ }));
+    await user.click(screen.getByRole("button", { name: /Thesis/ }));
 
     expect(
       screen.getByText(/Tap a past or today cell to log or remove a completion/)
@@ -134,6 +145,7 @@ describe("InsightsTab goal ledger", () => {
 
     await user.click(screen.getByRole("button", { name: /Lift/ }));
     await user.click(screen.getByRole("button", { name: /Yoga/ }));
+    await user.click(screen.getByRole("button", { name: /Thesis/ }));
     await user.click(screen.getByTitle(/2026-09-01/));
 
     expect(runCompletionMutationMock).toHaveBeenCalledWith(
@@ -142,5 +154,33 @@ describe("InsightsTab goal ledger", () => {
         date: "2026-09-01",
       })
     );
+  });
+
+  it("lists milestones under the heatmap for a selected milestone goal", async () => {
+    const user = userEvent.setup();
+    render(
+      <InsightsTab
+        sharedPeriod={{
+          monthCursor: new Date(2026, 8, 6),
+          onMonthCursorChange: () => {},
+          perGoalViewMode: "month",
+          onPerGoalViewModeChange: () => {},
+        }}
+      />
+    );
+
+    expect(screen.getByText("0/3 milestones")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Tempo run/ }));
+    await user.click(screen.getByRole("button", { name: /Lift/ }));
+    await user.click(screen.getByRole("button", { name: /Yoga/ }));
+
+    expect(
+      screen.getByText(/Tap a past or today cell to log or remove a milestone/)
+    ).toBeInTheDocument();
+    expect(screen.getByText("Milestones")).toBeInTheDocument();
+    expect(screen.getByText("Proposal")).toBeInTheDocument();
+    expect(screen.getByText("Draft")).toBeInTheDocument();
+    expect(screen.getByText("Defense")).toBeInTheDocument();
   });
 });
