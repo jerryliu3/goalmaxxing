@@ -17,7 +17,7 @@ import { resolvePlannerDndResolution } from "@/features/planner/planner-dnd-reso
 import {
   reorderPreviewEntryKeys,
   sameEntryKeyOrder,
-} from "@/features/planner/reorder-preview-entries";
+} from "@cadence/shared/planner/reorder-preview-entries";
 
 interface UsePlannerCalendarDndArgs {
   entryByKey: Map<string, PlannerDayDetailEntry>;

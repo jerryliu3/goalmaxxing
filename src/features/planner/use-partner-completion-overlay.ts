@@ -60,7 +60,7 @@ export function usePartnerCompletionOverlay({
           }),
           supabase
             .from("goals")
-            .select("id,title")
+            .select("id,title,category,end_date")
             .eq("owner_id", partnerId)
             .eq("is_deleted", false),
         ]);
@@ -69,20 +69,28 @@ export function usePartnerCompletionOverlay({
         }
         assertQueriesOk([goalsResponse], "Partner completions are unavailable.");
 
-        const titles: Record<string, string> = {};
-        for (const goal of (goalsResponse.data ?? []) as Pick<Goal, "id" | "title">[]) {
-          titles[goal.id] = goal.title;
+        const goals: Record<
+          string,
+          { title: string; category: string; endDate: string | null }
+        > = {};
+        for (const goal of (goalsResponse.data ?? []) as Pick<
+          Goal,
+          "id" | "title" | "category" | "end_date"
+        >[]) {
+          goals[goal.id] = {
+            title: goal.title,
+            category: goal.category,
+            endDate: goal.end_date,
+          };
         }
         setMarkersPartnerId(partnerId);
         setMarkersMonth(month);
         setMarkersByDate(
           buildPartnerCompletionMarkersByDate({
             facts: progress.facts,
-            titles,
+            goals,
           })
         );
-        setMarkersPartnerId(partnerId);
-        setMarkersMonth(month);
         setError(null);
       } catch (caught) {
         if (cancelled || isProgressContextAuthenticationError(caught)) {

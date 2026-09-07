@@ -20,7 +20,6 @@ export function useCalendarSurfaceInteractionRefs() {
   const calendarPreparedRef = useRef(false);
   const skipInvalidationReloadRef = useRef(false);
   const dayPreviewRef = useRef<HTMLDivElement | null>(null);
-  const rollingWeekStripRef = useRef<HTMLDivElement | null>(null);
   const calendarGridViewportRef = useRef<HTMLDivElement | null>(null);
   const multiMonthGridScrollRef = useRef<HTMLDivElement | null>(null);
   const monthScrollAlignmentKeyRef = useRef<string | null>(null);
@@ -39,7 +38,6 @@ export function useCalendarSurfaceInteractionRefs() {
     calendarPreparedRef,
     skipInvalidationReloadRef,
     dayPreviewRef,
-    rollingWeekStripRef,
     calendarGridViewportRef,
     multiMonthGridScrollRef,
     monthScrollAlignmentKeyRef,

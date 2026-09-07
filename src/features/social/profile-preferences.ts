@@ -1,4 +1,3 @@
-import type { PlannerPrimaryTabPreference } from "@cadence/shared/navigation/tabs";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
 import {
   parsePlannerProfilePreferencesRow,
@@ -19,27 +18,18 @@ export interface PlannerPreferencesFromProfile {
 }
 
 export function buildProfilePreferencesUpdate({
-  plannerPrimaryTabDirty,
   socialActivityVisibleDirty,
-  plannerPrimaryTab,
   socialActivityVisible,
 }: {
-  plannerPrimaryTabDirty: boolean;
   socialActivityVisibleDirty: boolean;
-  plannerPrimaryTab: PlannerPrimaryTabPreference;
   socialActivityVisible: boolean;
 }) {
-  if (!plannerPrimaryTabDirty && !socialActivityVisibleDirty) {
+  if (!socialActivityVisibleDirty) {
     return null;
   }
 
   return {
-    ...(plannerPrimaryTabDirty
-      ? { planner_primary_tab: plannerPrimaryTab }
-      : null),
-    ...(socialActivityVisibleDirty
-      ? { social_activity_visible: socialActivityVisible }
-      : null),
+    social_activity_visible: socialActivityVisible,
   };
 }
 

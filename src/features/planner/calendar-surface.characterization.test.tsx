@@ -326,7 +326,7 @@ describe("CalendarSurface characterization", () => {
     ).toBeInstanceOf(HTMLElement);
   });
 
-  it.each(["month", "week", "three_day"] as const)(
+  it.each(["month", "week"] as const)(
     "keeps time prefix while using compact milestone labels in %s cells",
     async (viewMode) => {
       postJsonMock.mockResolvedValue(

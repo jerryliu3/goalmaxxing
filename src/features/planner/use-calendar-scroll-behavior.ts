@@ -26,7 +26,6 @@ export function useCalendarScrollBehavior({
   resolveMonthScopedTopRowDay,
   multiMonthGridScrollRef,
   calendarGridViewportRef,
-  rollingWeekStripRef,
   monthScrollAlignmentKeyRef,
   calendarHorizontalAlignmentKeyRef,
 }: {
@@ -45,7 +44,6 @@ export function useCalendarScrollBehavior({
   resolveMonthScopedTopRowDay: () => string | null;
   multiMonthGridScrollRef: React.RefObject<HTMLDivElement | null>;
   calendarGridViewportRef: React.RefObject<HTMLDivElement | null>;
-  rollingWeekStripRef: React.RefObject<HTMLDivElement | null>;
   monthScrollAlignmentKeyRef: React.MutableRefObject<string | null>;
   calendarHorizontalAlignmentKeyRef: React.MutableRefObject<string | null>;
 }) {
@@ -61,58 +59,6 @@ export function useCalendarScrollBehavior({
   const handleCalendarGridViewportScroll = useCallback(() => {
     return;
   }, []);
-
-  const alignRollingWeekStripToFocusedDay = useCallback(() => {
-    if (viewMode !== "day" && viewMode !== "three_day") {
-      return;
-    }
-    const strip = rollingWeekStripRef.current;
-    if (!strip) {
-      return;
-    }
-    const weekGrid = strip.querySelector<HTMLElement>('[data-rolling-week-grid="cells"]');
-    const firstCell = weekGrid?.firstElementChild;
-    if (!(firstCell instanceof HTMLElement) || !weekGrid) {
-      return;
-    }
-    const focusedDayIndex = focusedWeekDays.indexOf(focusedDay);
-    if (focusedDayIndex < 0) {
-      return;
-    }
-    const gridStyles = window.getComputedStyle(weekGrid);
-    const columnGap = Number.parseFloat(gridStyles.columnGap || "0");
-    const columnWidth = firstCell.getBoundingClientRect().width;
-    if (!Number.isFinite(columnWidth) || columnWidth <= 0) {
-      return;
-    }
-    const visibleColumnCount = Math.max(
-      1,
-      Math.round((strip.clientWidth + columnGap) / (columnWidth + columnGap))
-    );
-    const leftMostVisibleIndex = Math.max(
-      0,
-      Math.min(
-        focusedDayIndex - Math.floor(visibleColumnCount / 2),
-        Math.max(0, focusedWeekDays.length - visibleColumnCount)
-      )
-    );
-    strip.scrollTo({
-      left: leftMostVisibleIndex * (columnWidth + columnGap),
-      behavior: "auto",
-    });
-  }, [focusedDay, focusedWeekDays, rollingWeekStripRef, viewMode]);
-
-  useEffect(() => {
-    if (viewMode !== "day" && viewMode !== "three_day") {
-      return;
-    }
-    const frame = window.requestAnimationFrame(alignRollingWeekStripToFocusedDay);
-    window.addEventListener("resize", alignRollingWeekStripToFocusedDay);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("resize", alignRollingWeekStripToFocusedDay);
-    };
-  }, [alignRollingWeekStripToFocusedDay, viewMode]);
 
   useEffect(() => {
     if (!isMonthScopedCalendarViewMode(viewMode)) {

@@ -125,13 +125,14 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
             const resolvedViewMode = nextViewMode ?? normalized.viewMode;
             params.set("view", resolvedViewMode);
             params.set("day", day);
+            const viewedMonth = normalized.month;
             const keepViewedMonth =
               resolvedViewMode === "month" &&
-              isValidMonth(normalized.month) &&
+              isValidMonth(viewedMonth) &&
               options?.alignMonth !== true;
             params.set(
               "month",
-              keepViewedMonth ? normalized.month : day.slice(0, 7)
+              keepViewedMonth && viewedMonth ? viewedMonth : day.slice(0, 7)
             );
             return;
           }
@@ -159,7 +160,7 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
       duoScope={scope}
       partnerCompletionMarkersByDate={partnerOverlay.markersByDate}
       partnerOverlayError={partnerOverlay.error}
-      partnerWeekLabel={scope === "both" ? partner?.label ?? null : null}
+      partnerLabel={scope === "both" ? partner?.label ?? null : null}
     />
   );
 }

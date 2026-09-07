@@ -70,43 +70,6 @@ function writeCalendarParams(
   return changed;
 }
 
-export function normalizeChecklistShellRoute({
-  searchParams,
-  defaultCalendarViewMode,
-}: {
-  searchParams: SearchParamsLike;
-  defaultCalendarViewMode: PlannerCalendarViewMode;
-}) {
-  const rawTab = searchParams.get("tab");
-  const state = normalizeCalendarState({
-    tab: rawTab,
-    month: searchParams.get("month"),
-    day: searchParams.get("day"),
-    viewMode: searchParams.get("view"),
-    defaultCalendarViewMode,
-    surface: "checklist-shell",
-  });
-  const nextParams = new URLSearchParams(searchParams.toString());
-  const hasExplicitTab =
-    rawTab === "today" || rawTab === "not-today" || rawTab === "calendar";
-  let changed = dropInvalidCalendarParams(searchParams, nextParams);
-
-  if (rawTab && !hasExplicitTab) {
-    changed = setIfChanged(nextParams, "tab", "today") || changed;
-  }
-
-  if (state.tab === "calendar") {
-    changed = setIfChanged(nextParams, "tab", "calendar") || changed;
-    changed = writeCalendarParams(nextParams, state) || changed;
-  }
-
-  return {
-    ...state,
-    changed,
-    nextParams,
-  };
-}
-
 export function normalizeCalendarRoute({
   searchParams,
   defaultCalendarViewMode,

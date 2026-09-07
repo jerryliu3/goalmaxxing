@@ -193,6 +193,8 @@ export interface PlannerCompletionFactMarker {
   originalGoalId: string;
   unitKey: string;
   goalTitle: string;
+  goalCategory?: string;
+  goalEndDate?: string | null;
   scheduledDate: string | null;
   owner?: "viewer" | "partner";
 }

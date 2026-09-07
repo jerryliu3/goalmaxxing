@@ -18,7 +18,6 @@ export const GAZETTEER = {
   stampLight: "#c88968",
   gain: "#4a6740",
   sage: "#6f8175",
-  sageLight: "#dfddcf",
   recover: "#eab308",
   colRust: "#b5522a",
 } as const;
@@ -30,17 +29,6 @@ export const GAZETTEER_CATEGORY_COLORS = {
   relationships: GAZETTEER.colRust,
   other: GAZETTEER.muted,
 } as const;
-
-export const GAZETTEER_FALLBACK_COLORS = [
-  GAZETTEER.stamp,
-  GAZETTEER.gain,
-  GAZETTEER.mutedDeep,
-  GAZETTEER.colRust,
-  GAZETTEER.muted,
-  "#8a6a3a",
-  "#3f4a3a",
-  "#6e341c",
-] as const;
 
 const LEGACY_GOAL_COLOR_TO_GAZETTEER: Record<string, string> = {
   "#10b981": GAZETTEER_CATEGORY_COLORS.health,

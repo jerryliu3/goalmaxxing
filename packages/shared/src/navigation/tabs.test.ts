@@ -11,23 +11,17 @@ describe("app navigation tabs", () => {
     ]);
   });
 
-  it("keeps top-level tabs stable across planner preference values", () => {
-    expect(buildAppTabs("calendar")).toEqual([
+  it("keeps top-level tabs stable", () => {
+    expect(buildAppTabs()).toEqual([
       { key: "calendar", href: "/calendar", label: "Plan" },
       { key: "insights", href: "/insights", label: "Progress" },
       { key: "social", href: "/social", label: "Community" },
       { key: "settings", href: "/settings", label: "Profile" },
     ]);
-    expect(buildAppTabs("checklist").map((tab) => tab.key)).toEqual([
-      "calendar",
-      "insights",
-      "social",
-      "settings",
-    ]);
   });
 
   it("prefixes tab hrefs when a demo base path is provided", () => {
-    expect(buildAppTabs("calendar", { hrefPrefix: "/demo" })).toEqual([
+    expect(buildAppTabs({ hrefPrefix: "/demo" })).toEqual([
       { key: "calendar", href: "/demo/calendar", label: "Plan" },
       { key: "insights", href: "/demo/insights", label: "Progress" },
       { key: "social", href: "/demo/social", label: "Community" },

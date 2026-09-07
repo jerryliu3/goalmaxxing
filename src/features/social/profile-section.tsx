@@ -2,9 +2,6 @@
 
 import { useRef, useState } from "react";
 import { WandSparkles } from "lucide-react";
-import type {
-  PlannerPrimaryTabPreference,
-} from "@cadence/shared/navigation/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +12,6 @@ interface ProfileDraft {
   username: string;
   display_name: string;
   avatar_url: string;
-  planner_primary_tab: PlannerPrimaryTabPreference;
   social_activity_visible: boolean;
 }
 

@@ -12,5 +12,4 @@ export {
 } from "@cadence/shared/planner/calendar-state";
 export {
   normalizeCalendarRoute,
-  normalizeChecklistShellRoute,
 } from "@/lib/planner/calendar-route";

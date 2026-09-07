@@ -1,6 +1,6 @@
 import { addDays, addMonths, format, isValid, parse } from "date-fns";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
-import { buildMonthCells, type MonthCell } from "@/features/planner/month-cells";
+import { buildMonthCells, type MonthCell } from "@cadence/shared/planner/month-cells";
 
 export interface CalendarViewWindowProjection {
   cells: MonthCell[];

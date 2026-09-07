@@ -13,7 +13,7 @@ import { useNotificationPush } from "@/features/settings/use-notification-push";
 import { useNotificationSchedules } from "@/features/settings/use-notification-schedules";
 import { createClient } from "@/lib/supabase/client";
 
-const DEFAULT_MESSAGE = "Complete your checklist for today";
+const DEFAULT_MESSAGE = "Complete your plan for today";
 const DEFAULT_NOTIFICATION_HOUR = 21;
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() ?? "";
 

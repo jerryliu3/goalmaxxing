@@ -23,7 +23,6 @@ import type {
   DuoContextState,
   DuoScope,
 } from "@cadence/shared/social/duo";
-import type { PlannerPrimaryTabPreference } from "@cadence/shared/navigation/tabs";
 
 interface AppShellProps {
   children: ReactNode;
@@ -34,7 +33,6 @@ interface AppShellProps {
   duoState: DuoContextState;
   duoAvailability: DuoAvailability;
   initialDuoScopePreference: DuoScope | null;
-  plannerPrimaryTabPreference: PlannerPrimaryTabPreference;
   journeyFlags: JourneyFeatureFlags;
   hrefPrefix?: string;
   showJourneyIntro?: boolean;
@@ -50,7 +48,6 @@ export function AppShell({
   duoState,
   duoAvailability,
   initialDuoScopePreference,
-  plannerPrimaryTabPreference,
   journeyFlags,
   hrefPrefix,
   showJourneyIntro = true,
@@ -60,7 +57,6 @@ export function AppShell({
   useIdleAppPrefetch({
     userId,
     partnerId: duoState.activePartner?.partnerId ?? null,
-    plannerPrimaryTabPreference,
     hrefPrefix,
   });
   const pathname = usePathname();
@@ -130,7 +126,6 @@ export function AppShell({
                     </div>
                     <div className="mt-4 hidden md:block">
                       <TabNav
-                        plannerPrimaryTabPreference={plannerPrimaryTabPreference}
                         hrefPrefix={hrefPrefix}
                       />
                     </div>
@@ -183,7 +178,6 @@ export function AppShell({
                 <div className="relative z-50 md:hidden" style={{ viewTransitionName: "app-mobile-tab-nav" }}>
                   <TabNav
                     mobile
-                    plannerPrimaryTabPreference={plannerPrimaryTabPreference}
                     hrefPrefix={hrefPrefix}
                   />
                 </div>

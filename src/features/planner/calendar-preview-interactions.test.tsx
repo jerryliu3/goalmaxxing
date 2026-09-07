@@ -52,6 +52,35 @@ vi.mock("@/features/planner/use-completion-mutation", () => ({
   useCompletionMutation: () => vi.fn(async () => ({ ok: true })),
 }));
 
+vi.mock("@/lib/navigation/use-app-router", () => ({
+  useAppRouter: () => ({
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+}));
+
+vi.mock("@/features/today/use-checklist-data", () => ({
+  useChecklistData: () => ({
+    data: {
+      userId: "",
+      goals: [],
+      completions: [],
+      memberTeamIds: [],
+      links: [],
+      photoUrls: {},
+      progress: null,
+    },
+    loading: false,
+    loadData: vi.fn(),
+    redirectToLogin: vi.fn(),
+    todayLocalDate: "2026-08-15",
+  }),
+}));
+
 function unit(overrides: Partial<PlannerWorkUnit>): PlannerWorkUnit {
   return buildPlannerWorkUnit({
     originalGoalId: "goal-a",

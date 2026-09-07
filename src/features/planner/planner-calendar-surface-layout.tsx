@@ -99,7 +99,6 @@ export interface PlannerCalendarSurfaceLayoutProps {
   handleDndEntryDragOver: (entryKey: string, target: PlannerDragTarget) => void;
   handleDndEntryDragEnd: (entryKey: string, target: PlannerDragTarget) => void;
   handleDndEntryDragCancel: (entryKey: string | null) => void;
-  rollingWeekStrip: ReactNode;
   focusedDay: string;
   focusedDayEntries: PlannerDayDetailEntry[];
   focusedDayCompletionFactMarkers: PlannerCompletionFactMarker[];
@@ -245,7 +244,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     handleDndEntryDragOver,
     handleDndEntryDragEnd,
     handleDndEntryDragCancel,
-    rollingWeekStrip,
     focusedDay,
     focusedDayEntries,
     focusedDayCompletionFactMarkers,
@@ -307,7 +305,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     plannerSettingsForm,
   } = props;
   const dayChecklist = usePlanDayChecklistModel({
-    enabled: true,
     viewDate: focusedDay,
     searchQuery,
   });
@@ -406,7 +403,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             onEntryDragOverTarget={handleDndEntryDragOver}
             onEntryDragEnd={handleDndEntryDragEnd}
             onEntryDragCancel={handleDndEntryDragCancel}
-            rollingWeekStrip={rollingWeekStrip}
             focusedDay={focusedDay}
             focusedDayEntries={focusedDayEntries}
             focusedDayCompletionFactMarkers={focusedDayCompletionFactMarkers}

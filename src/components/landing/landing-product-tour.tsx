@@ -322,7 +322,7 @@ export function LandingProductTour() {
           interactive
         />
         <TourPanel
-          eyebrow="Insights"
+          eyebrow="Progress"
           title="See your patterns"
           description="Heatmaps, completion rates, and thirty-day trends reveal what is compounding. Easily edit past completion when needed so nothing is missed."
           visual={<InsightsVisual />}

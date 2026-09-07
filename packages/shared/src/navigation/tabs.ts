@@ -4,8 +4,6 @@ export type AppTabKey =
   | "social"
   | "settings";
 
-export type PlannerPrimaryTabPreference = "calendar" | "checklist";
-
 export interface AppTabDefinition {
   key: AppTabKey;
   href: string;
@@ -19,18 +17,6 @@ const TAB_BY_KEY: Record<AppTabKey, AppTabDefinition> = {
   settings: { key: "settings", href: "/settings", label: "Profile" },
 };
 
-export const DEFAULT_PLANNER_PRIMARY_TAB_PREFERENCE: PlannerPrimaryTabPreference =
-  "checklist";
-
-export function normalizePlannerPrimaryTabPreference(
-  value: string | null | undefined
-): PlannerPrimaryTabPreference {
-  if (value === "calendar" || value === "checklist") {
-    return value;
-  }
-  return DEFAULT_PLANNER_PRIMARY_TAB_PREFERENCE;
-}
-
 export function isAppTabActive(pathname: string, href: string) {
   if (href === "/") {
     return pathname === "/";
@@ -39,10 +25,8 @@ export function isAppTabActive(pathname: string, href: string) {
 }
 
 export function buildAppTabs(
-  plannerPrimaryTab: PlannerPrimaryTabPreference = DEFAULT_PLANNER_PRIMARY_TAB_PREFERENCE,
   options?: { hrefPrefix?: string }
 ): AppTabDefinition[] {
-  void plannerPrimaryTab;
   const prefix = normalizeHrefPrefix(options?.hrefPrefix);
   const orderedKeys: AppTabKey[] = [
     "calendar",

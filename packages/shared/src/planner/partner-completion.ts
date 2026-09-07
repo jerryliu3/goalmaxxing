@@ -29,19 +29,27 @@ export function monthGridFactsBounds(month: string | null): {
 
 export function buildPartnerCompletionMarkersByDate({
   facts,
+  goals,
   titles,
 }: {
   facts: ProgressContextFact[];
-  titles: Record<string, string>;
+  goals?: Record<
+    string,
+    { title: string; category: string; endDate: string | null }
+  >;
+  titles?: Record<string, string>;
 }): Map<string, PlannerCompletionFactMarker[]> {
   const map = new Map<string, PlannerCompletionFactMarker[]>();
   for (const fact of facts) {
     const markersForDay = map.get(fact.completed_on) ?? [];
+    const goal = goals?.[fact.goal_id];
     markersForDay.push({
       key: `partner:${fact.goal_id}:${fact.completed_on}:${fact.source}`,
       originalGoalId: fact.goal_id,
       unitKey: "partner-fact",
-      goalTitle: titles[fact.goal_id] ?? "Completed",
+      goalTitle: goal?.title ?? titles?.[fact.goal_id] ?? "Completed",
+      goalCategory: goal?.category,
+      goalEndDate: goal?.endDate ?? null,
       scheduledDate: fact.completed_on,
       owner: "partner",
     });

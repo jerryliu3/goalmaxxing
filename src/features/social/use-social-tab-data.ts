@@ -3,10 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
-  DEFAULT_PLANNER_PRIMARY_TAB_PREFERENCE,
-  normalizePlannerPrimaryTabPreference,
-} from "@cadence/shared/navigation/tabs";
-import {
   getAvatarUrlValidationError,
   normalizeAvatarUrlDraft,
 } from "@/features/social/avatar-url";
@@ -97,7 +93,6 @@ interface SettingsTabCachePayload {
     username: string;
     display_name: string;
     avatar_url: string;
-    planner_primary_tab: ReturnType<typeof normalizePlannerPrimaryTabPreference>;
     social_activity_visible: boolean;
   };
   plannerPreferencesPersisted: PlannerPreferencesState;
@@ -137,7 +132,6 @@ export function useSocialTabData() {
       username: "",
       display_name: "",
       avatar_url: "",
-      planner_primary_tab: DEFAULT_PLANNER_PRIMARY_TAB_PREFERENCE,
       social_activity_visible: true,
     }
   );
@@ -210,9 +204,6 @@ export function useSocialTabData() {
       username: profile?.username ?? "",
       display_name: profile?.display_name ?? "",
       avatar_url: profile?.avatar_url ?? "",
-      planner_primary_tab: normalizePlannerPrimaryTabPreference(
-        profile?.planner_primary_tab
-      ),
       social_activity_visible: profile?.social_activity_visible ?? true,
     });
     const nextPlannerPreferences = plannerPreferencesFromProfile(
@@ -312,9 +303,6 @@ export function useSocialTabData() {
         username: profile?.username ?? "",
         display_name: profile?.display_name ?? "",
         avatar_url: profile?.avatar_url ?? "",
-        planner_primary_tab: normalizePlannerPrimaryTabPreference(
-          profile?.planner_primary_tab
-        ),
         social_activity_visible: profile?.social_activity_visible ?? true,
       },
       plannerPreferencesPersisted: nextPlannerPreferences,
@@ -410,15 +398,11 @@ export function useSocialTabData() {
       username: profileDraft.username.trim().toLowerCase(),
       display_name: profileDraft.display_name.trim() || null,
       avatar_url: normalizeAvatarUrlDraft(profileDraft.avatar_url),
-      planner_primary_tab: normalizePlannerPrimaryTabPreference(
-        profileDraft.planner_primary_tab
-      ),
       social_activity_visible: profileDraft.social_activity_visible,
     }),
     [
       profileDraft.avatar_url,
       profileDraft.display_name,
-      profileDraft.planner_primary_tab,
       profileDraft.social_activity_visible,
       profileDraft.username,
     ]
@@ -428,15 +412,11 @@ export function useSocialTabData() {
       username: state.profile?.username?.trim().toLowerCase() ?? "",
       display_name: state.profile?.display_name?.trim() || null,
       avatar_url: state.profile?.avatar_url?.trim() || null,
-      planner_primary_tab: normalizePlannerPrimaryTabPreference(
-        state.profile?.planner_primary_tab
-      ),
       social_activity_visible: state.profile?.social_activity_visible ?? true,
     }),
     [
       state.profile?.avatar_url,
       state.profile?.display_name,
-      state.profile?.planner_primary_tab,
       state.profile?.social_activity_visible,
       state.profile?.username,
     ]
@@ -445,9 +425,6 @@ export function useSocialTabData() {
     normalizedProfileDraft.username !== normalizedPersistedProfile.username ||
     normalizedProfileDraft.display_name !== normalizedPersistedProfile.display_name ||
     normalizedProfileDraft.avatar_url !== normalizedPersistedProfile.avatar_url;
-  const plannerPrimaryTabDirty =
-    normalizedProfileDraft.planner_primary_tab !==
-    normalizedPersistedProfile.planner_primary_tab;
   const socialActivityVisibleDirty =
     normalizedProfileDraft.social_activity_visible !==
     normalizedPersistedProfile.social_activity_visible;
@@ -459,7 +436,7 @@ export function useSocialTabData() {
   const canSavePreferences =
     Boolean(state.userId) &&
     !plannerPreferencesLoading &&
-    (plannerPrimaryTabDirty || socialActivityVisibleDirty || plannerPreferencesDirty);
+    (socialActivityVisibleDirty || plannerPreferencesDirty);
 
   const saveProfile = async () => {
     if (!canSaveProfile) {
@@ -544,9 +521,7 @@ export function useSocialTabData() {
     setSaving(true);
     try {
       const profilePreferencesUpdate = buildProfilePreferencesUpdate({
-        plannerPrimaryTabDirty,
         socialActivityVisibleDirty,
-        plannerPrimaryTab: normalizedProfileDraft.planner_primary_tab,
         socialActivityVisible: normalizedProfileDraft.social_activity_visible,
       });
 
