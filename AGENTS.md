@@ -118,6 +118,9 @@ surfaces. The default is to simplify and reuse what already exists.
   runner-up. New atmosphere rounds are exploratory and do not replace that
   lock. Production `AppShell` and Geist remain unchanged until an explicit
   implementation decision.
+  First-principles interaction studies live in
+  `docs/ux/goalmaxxing-first-principles-interface-study.md` and
+  `/ux/first-principles`. They are divergent exploration, not a product lock.
 - Reuse-first: before adding a new hook/component/helper, check whether an
   existing one can be extended or composed.
 - Prefer canonical homes for shared domain logic (`src/lib/planner/*`,
