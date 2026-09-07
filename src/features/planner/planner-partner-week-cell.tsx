@@ -2,6 +2,12 @@
 
 import { format, parse } from "date-fns";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
+import {
+  planAgendaDayNumberClass,
+  planAgendaDayRowClass,
+  planMonthDayNumberClass,
+  planMonthDaySurfaceClass,
+} from "@/features/planner/calendar-day-chrome";
 import type { PlannerCompletionFactMarker } from "@/features/planner/calendar-surface.types";
 import { cn } from "@/lib/utils";
 
@@ -27,11 +33,7 @@ export function PlannerPartnerWeekDayCell({
   if (layout === "agenda") {
     return (
       <li
-        className={cn(
-          "border-b border-border/70 last:border-b-0",
-          isSelected && "bg-primary/5",
-          !inMonth && "opacity-60"
-        )}
+        className={planAgendaDayRowClass({ inMonth, isToday, isSelected })}
         data-day={day}
         data-partner-week-cell="true"
       >
@@ -41,10 +43,7 @@ export function PlannerPartnerWeekDayCell({
               {weekdayLabel}
             </span>
             <span
-              className={cn(
-                "mt-0.5 inline-flex size-8 items-center justify-center rounded-full text-lg font-semibold leading-none",
-                isToday && "bg-primary text-primary-foreground"
-              )}
+              className={planAgendaDayNumberClass({ isToday, isSelected })}
             >
               {dayNumber}
             </span>
@@ -71,20 +70,24 @@ export function PlannerPartnerWeekDayCell({
 
   return (
     <div
-      className={`relative min-h-24 rounded-[10px] border p-2 text-left ${
-        inMonth
-          ? isToday
-            ? "bg-primary/10 ring-1 ring-primary/50"
-            : "bg-background"
-          : "border-muted-foreground/40 bg-muted/80 text-muted-foreground"
-      }`}
+      className={cn(
+        "relative min-h-24 rounded-[10px] border p-2 text-left",
+        planMonthDaySurfaceClass({
+          inMonth,
+          isToday,
+          isSelected,
+          isPastInMonth: false,
+        })
+      )}
       data-day={day}
       data-partner-week-cell="true"
     >
       <p
-        className={`text-xs font-semibold leading-none ${
-          isToday ? "text-primary" : "text-foreground"
-        }`}
+        className={`text-xs font-semibold leading-none ${planMonthDayNumberClass({
+          inMonth,
+          isToday,
+          isSelected,
+        })}`}
       >
         {day.slice(8, 10)}
       </p>

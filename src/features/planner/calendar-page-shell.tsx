@@ -100,7 +100,8 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
     (
       day: string | null,
       mode: "push" | "replace",
-      nextViewMode?: PlannerCalendarViewMode
+      nextViewMode?: PlannerCalendarViewMode,
+      options?: { alignMonth?: boolean }
     ) => {
       if (!isActive) {
         return;
@@ -111,7 +112,14 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
             const resolvedViewMode = nextViewMode ?? normalized.viewMode;
             params.set("view", resolvedViewMode);
             params.set("day", day);
-            params.set("month", day.slice(0, 7));
+            const keepViewedMonth =
+              resolvedViewMode === "month" &&
+              isValidMonth(normalized.month) &&
+              options?.alignMonth !== true;
+            params.set(
+              "month",
+              keepViewedMonth ? normalized.month : day.slice(0, 7)
+            );
             return;
           }
           params.set("view", nextViewMode ?? "month");
@@ -120,7 +128,7 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
         mode
       );
     },
-    [applySearchParams, isActive, normalized.viewMode]
+    [applySearchParams, isActive, normalized.month, normalized.viewMode]
   );
 
   return (

@@ -413,6 +413,10 @@ describe("CalendarSurface characterization", () => {
     fireEvent.click(nextDayRow as HTMLElement);
 
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-16", "push", "week");
+    fireEvent.click(await screen.findByRole("button", { name: "Today" }));
+    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-15", "replace", "week", {
+      alignMonth: true,
+    });
     vi.unstubAllGlobals();
   });
 
@@ -539,20 +543,19 @@ describe("CalendarSurface characterization", () => {
     });
   });
 
-  it("shows Today shortcut when today's tile is outside the rendered month window", async () => {
-    vi.setSystemTime(new Date("2026-08-15T12:00:00.000Z"));
+  it("shows Today when the checklist day is not today and jumps back on click", async () => {
     postJsonMock.mockResolvedValue(buildContext([]));
-    const onMonthChange = vi.fn();
+    const onSelectedDayChange = vi.fn();
 
     render(
       <CalendarSurface
         activeTab="calendar"
-        month="2026-10"
-        selectedDay={null}
+        month="2026-08"
+        selectedDay="2026-08-31"
         viewMode="month"
-        onMonthChange={onMonthChange}
+        onMonthChange={vi.fn()}
         onViewModeChange={vi.fn()}
-        onSelectedDayChange={vi.fn()}
+        onSelectedDayChange={onSelectedDayChange}
         onPlannerMutation={vi.fn()}
       />
     );
@@ -564,12 +567,10 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    const todayButton = await screen.findByRole("button", { name: "Today" });
-    fireEvent.click(todayButton);
-
-    expect(onMonthChange).toHaveBeenCalledWith("2026-08", "replace");
-
-    vi.useRealTimers();
+    fireEvent.click(await screen.findByRole("button", { name: "Today" }));
+    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-15", "replace", "month", {
+      alignMonth: true,
+    });
   });
 
   it("scrolls the shared month viewport to today's column", async () => {
@@ -633,7 +634,7 @@ describe("CalendarSurface characterization", () => {
         <CalendarSurface
           activeTab="calendar"
           month="2026-08"
-          selectedDay={null}
+          selectedDay="2026-08-31"
           viewMode="month"
           onMonthChange={vi.fn()}
           onViewModeChange={vi.fn()}
@@ -729,7 +730,7 @@ describe("CalendarSurface characterization", () => {
         <CalendarSurface
           activeTab="calendar"
           month="2026-10"
-          selectedDay={null}
+          selectedDay="2026-10-15"
           viewMode="month"
           onMonthChange={vi.fn()}
           onViewModeChange={vi.fn()}
@@ -790,6 +791,90 @@ describe("CalendarSurface characterization", () => {
       await waitFor(() => {
         expect(verticalViewport?.scrollTop).toBe(500);
       });
+    } finally {
+      animationFrameSpy.mockRestore();
+      if (originalScrollTo) {
+        HTMLElement.prototype.scrollTo = originalScrollTo;
+      } else {
+        Reflect.deleteProperty(HTMLElement.prototype, "scrollTo");
+      }
+      rectSpy.mockRestore();
+    }
+  });
+
+  it("keeps the month grid still when a later day is selected for the checklist", async () => {
+    postJsonMock.mockResolvedValue(buildContext([]));
+    const rectSpy = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: HTMLElement) {
+        if (this.dataset.calendarMonthVerticalViewport === "true") {
+          return buildDomRect({ top: 100, width: 800, height: 544 });
+        }
+        if (this.dataset.calendarHorizontalViewport === "true") {
+          return buildDomRect({ width: 300, height: 544 });
+        }
+        if (this.dataset.day === "2026-08-10") {
+          return buildDomRect({ top: 100, left: 0 });
+        }
+        if (this.dataset.day === "2026-08-15") {
+          return buildDomRect({ top: 100, left: 500 });
+        }
+        if (this.dataset.day === "2026-08-31") {
+          return buildDomRect({ top: 400, left: 0 });
+        }
+        return buildDomRect();
+      });
+    const originalScrollTo = HTMLElement.prototype.scrollTo;
+    Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+      configurable: true,
+      writable: true,
+      value(this: HTMLElement, options: ScrollToOptions) {
+        if (options.top !== undefined) {
+          this.scrollTop = options.top;
+        }
+        if (options.left !== undefined) {
+          this.scrollLeft = options.left;
+        }
+      },
+    });
+    const animationFrameSpy = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation((callback) => {
+        callback(0);
+        return 1;
+      });
+    const onSelectedDayChange = vi.fn();
+
+    try {
+      const { container } = render(
+        <CalendarSurface
+          activeTab="calendar"
+          month="2026-08"
+          selectedDay={null}
+          viewMode="month"
+          onMonthChange={vi.fn()}
+          onViewModeChange={vi.fn()}
+          onSelectedDayChange={onSelectedDayChange}
+          onPlannerMutation={vi.fn()}
+        />
+      );
+
+      const verticalViewport = container.querySelector<HTMLElement>(
+        '[data-calendar-month-vertical-viewport="true"]'
+      );
+      expect(verticalViewport).not.toBeNull();
+      await waitFor(() => {
+        expect(verticalViewport?.scrollTop).toBe(0);
+      });
+
+      const laterDay = document.querySelector(
+        '[data-day-cell="true"][data-day="2026-08-31"]'
+      );
+      expect(laterDay).toBeInstanceOf(HTMLButtonElement);
+      fireEvent.click(laterDay as Element);
+
+      expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-31", "push", "month");
+      expect(verticalViewport?.scrollTop).toBe(0);
     } finally {
       animationFrameSpy.mockRestore();
       if (originalScrollTo) {

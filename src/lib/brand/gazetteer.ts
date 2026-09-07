@@ -1,5 +1,5 @@
 /**
- * Production Gazetteer lock (paper, walnut, stamp rust, Nest).
+ * Production Gazetteer lock (paper, walnut, stamp rust, sage chrome, Nest).
  * Keep hexes here so planner fills, categories, and chrome share one palette.
  */
 export const GAZETTEER = {
@@ -11,6 +11,7 @@ export const GAZETTEER = {
   rule: "#d4c4a4",
   stamp: "#9a4f2c",
   gain: "#4a6740",
+  sage: "#6f8175",
   recover: "#b45309",
   colRust: "#b5522a",
 } as const;

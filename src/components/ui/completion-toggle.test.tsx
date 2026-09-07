@@ -108,6 +108,75 @@ describe("CompletionToggle", () => {
     });
     expect(toggle).toHaveClass("border-0");
     expect(toggle).not.toHaveClass("rounded-full");
+    expect(toggle).toHaveClass("size-8");
+    expect(toggle.querySelector("[data-completion-mark]")).toHaveClass("size-8");
+  });
+
+  it("uses the former button size for the visible mark in plain sm chrome", () => {
+    render(
+      <CompletionToggle
+        completed={false}
+        size="sm"
+        chrome="plain"
+        aria-label="Mark session done"
+      />
+    );
+
+    const toggle = screen.getByRole("button", { name: "Mark session done" });
+    expect(toggle).toHaveClass("size-6");
+    expect(toggle.querySelector("[data-completion-mark]")).toHaveClass("size-6");
+  });
+
+  it("does not let pointer holds bubble to a parent drag listener", () => {
+    const onParentPointerDown = vi.fn();
+    render(
+      <div onPointerDown={onParentPointerDown}>
+        <CompletionToggle completed={false} aria-label="Mark session done" />
+      </div>
+    );
+
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Mark session done" }));
+    expect(onParentPointerDown).not.toHaveBeenCalled();
+  });
+
+  it("does not let clicks bubble to parent row handlers", () => {
+    const onParentClick = vi.fn();
+    render(
+      <div onClick={onParentClick}>
+        <CompletionToggle completed={false} aria-label="Mark session done" />
+      </div>
+    );
+
+    const toggle = screen.getByRole("button", { name: "Mark session done" });
+    fireEvent.click(toggle, { detail: 1 });
+    fireEvent.click(toggle);
+    expect(onParentClick).not.toHaveBeenCalled();
+  });
+
+  it("does not let a completed hold click bubble to parent row handlers", () => {
+    vi.useFakeTimers();
+    const onParentClick = vi.fn();
+    const onClick = vi.fn();
+    render(
+      <div onClick={onParentClick}>
+        <CompletionToggle
+          completed={false}
+          aria-label="Mark session done"
+          onClick={onClick}
+        />
+      </div>
+    );
+
+    const toggle = screen.getByRole("button", { name: "Mark session done" });
+    fireEvent.pointerDown(toggle);
+    act(() => {
+      vi.advanceTimersByTime(COMPLETION_HOLD_MS);
+    });
+    fireEvent.pointerUp(toggle);
+    fireEvent.click(toggle, { detail: 1 });
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(onParentClick).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 
   it("uses the Nest mark when Gazetteer is selected", () => {

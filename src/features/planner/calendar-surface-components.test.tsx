@@ -85,6 +85,9 @@ describe("calendar surface extracted components", () => {
     );
 
     expect(screen.getByText("Easy run")).toBeInTheDocument();
+    expect(screen.getByText("Easy run").closest("[data-calendar-day-entry]")).toHaveStyle({
+      backgroundColor: "#22c55e",
+    });
     expect(screen.getByText("Stretch")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /thursday, august 6/i })
@@ -112,6 +115,78 @@ describe("calendar surface extracted components", () => {
       sampleEntry,
       expect.any(HTMLElement)
     );
+  });
+
+  it("contrasts adjacent months, today, and the selected day", () => {
+    const cellProps = {
+      entriesForDay: [] as typeof sampleEntry[],
+      completionFactMarkersForDay: [] as typeof sampleMarker[],
+      isAnyEntryDragging: false,
+      getEntryDisplayTitle: (entry: typeof sampleEntry) => entry.label ?? "Untitled",
+      isEntryCredited: () => false,
+      isEntryImmovableForDraft: () => false,
+      onEntryClick: () => {},
+      onCellClick: () => {},
+      onCellDoubleClick: () => {},
+      onCellMouseEnter: () => {},
+      onCellMouseLeave: () => {},
+      onCellPointerDown: () => {},
+      onCellPointerUp: () => {},
+      onCellPointerCancel: () => {},
+      onCellPointerLeave: () => {},
+      onEntryPointerStart: () => {},
+      onEntryPointerEnd: () => {},
+    };
+
+    renderWithDnd(
+      <>
+        <CalendarMonthDayCell
+          day="2026-07-30"
+          inMonth={false}
+          isToday={false}
+          isPastInMonth={false}
+          ariaLabel="Thursday, July 30, 2026."
+          {...cellProps}
+        />
+        <CalendarMonthDayCell
+          day="2026-08-06"
+          inMonth
+          isToday
+          isPastInMonth={false}
+          ariaLabel="Thursday, August 6, 2026."
+          {...cellProps}
+        />
+        <CalendarMonthDayCell
+          day="2026-08-07"
+          inMonth
+          isToday={false}
+          isPastInMonth={false}
+          isSelected
+          ariaLabel="Friday, August 7, 2026."
+          {...cellProps}
+        />
+        <CalendarMonthDayCell
+          day="2026-09-06"
+          inMonth={false}
+          isToday
+          isPastInMonth={false}
+          ariaLabel="Sunday, September 6, 2026."
+          {...cellProps}
+        />
+      </>
+    );
+
+    expect(screen.getByRole("button", { name: /july 30/i })).toHaveClass("bg-selection");
+    const todayCell = screen.getByRole("button", { name: /august 6/i });
+    expect(todayCell).toHaveClass("bg-primary");
+    expect(todayCell).toHaveClass("text-primary-foreground");
+    const selectedCell = screen.getByRole("button", { name: /august 7/i });
+    expect(selectedCell).toHaveClass("bg-muted");
+    expect(selectedCell).not.toHaveClass("bg-primary");
+    expect(selectedCell).not.toHaveClass("bg-selection");
+    const adjacentToday = screen.getByRole("button", { name: /september 6/i });
+    expect(adjacentToday).toHaveClass("bg-primary");
+    expect(adjacentToday).not.toHaveClass("bg-selection");
   });
 
   it("renders preview list and supports opening and completion toggle", async () => {
@@ -144,19 +219,25 @@ describe("calendar surface extracted components", () => {
       name: "Mark session done",
     });
     expect(toggle.parentElement?.firstElementChild).toBe(toggle);
+    expect(toggle).toHaveClass("size-6");
+    expect(toggle.querySelector("[data-completion-mark]")).toHaveClass("size-6");
+    expect(toggle.closest("[data-plan-drag-handle]")).toBeNull();
+    expect(screen.getByText("Run").closest("[data-plan-drag-handle]")).not.toBeNull();
 
     fireEvent.click(toggle);
     expect(onToggleCompletion).toHaveBeenCalledTimes(1);
+    expect(onEntryOpen).not.toHaveBeenCalled();
 
-    const previewEntry = view.container.querySelector(
-      '[data-planner-entry-key="goal-1:cadence:0"]'
-    );
-    expect(previewEntry).not.toBeNull();
-    await user.click(previewEntry as HTMLElement);
+    fireEvent.click(toggle, { detail: 1 });
+    expect(onEntryOpen).not.toHaveBeenCalled();
+
+    await user.click(screen.getByText("Run"));
     expect(onEntryOpen).toHaveBeenCalledWith(sampleEntry.key);
   });
 
   it("renders expanded day rows as a hairline ledger instead of filled pills", () => {
+    const onEntryPointerStart = vi.fn();
+    const onEntryOpen = vi.fn();
     renderWithDnd(
       <CalendarDayPreviewList
         day="2026-08-06"
@@ -171,9 +252,9 @@ describe("calendar surface extracted components", () => {
           currentlyCredited: false,
           disabledReasonCopy: null,
         })}
-        onEntryOpen={() => {}}
+        onEntryOpen={onEntryOpen}
         onToggleCompletion={() => {}}
-        onEntryPointerStart={() => {}}
+        onEntryPointerStart={onEntryPointerStart}
         onEntryPointerEnd={() => {}}
         density="expanded"
       />
@@ -181,10 +262,24 @@ describe("calendar surface extracted components", () => {
 
     const row = document.querySelector('[data-plan-work-row="ledger"]');
     expect(row).toBeInstanceOf(HTMLElement);
-    expect(row).toHaveClass("py-3");
     expect(row).not.toHaveClass("rounded-[10px]");
+    expect(screen.getByText("Run").closest("[data-plan-drag-handle]")).toHaveClass("py-3");
     expect(screen.getByText("Run").closest("p")).toHaveClass("font-display");
     expect(screen.getByText("Easy run")).toHaveClass("uppercase");
+    const toggle = screen.getByRole("button", { name: "Mark session done" });
+    expect(toggle).toHaveClass("size-6");
+    expect(toggle.querySelector("[data-completion-mark]")).toHaveClass("size-6");
+    expect(toggle.closest("[data-plan-drag-handle]")).toBeNull();
+    expect(screen.getByText("Run").closest("[data-plan-drag-handle]")).not.toBeNull();
+
+    fireEvent.pointerDown(toggle);
+    expect(onEntryPointerStart).not.toHaveBeenCalled();
+    fireEvent.click(toggle, { detail: 1 });
+    expect(onEntryOpen).not.toHaveBeenCalled();
+    fireEvent.pointerDown(screen.getByText("Run"));
+    expect(onEntryPointerStart).toHaveBeenCalledWith(false);
+    fireEvent.click(screen.getByText("Run"));
+    expect(onEntryOpen).toHaveBeenCalledWith(sampleEntry.key);
   });
 
   it("exposes partner completion markers without relying on title tooltips", () => {
@@ -310,6 +405,9 @@ describe("calendar surface extracted components", () => {
     expect(document.querySelector('[data-calendar-week-row="true"]')).toHaveStyle({
       viewTransitionName: "plan-day-2026-08-06",
     });
+    expect(document.querySelector('[data-calendar-week-row="true"]')).toHaveClass(
+      "bg-primary"
+    );
     expect(
       screen
         .getByLabelText("Completed")

@@ -84,7 +84,7 @@ export function usePlannerCalendarDnd({
       const credited = isEntryCredited(entry);
       return (
         <div
-          className="flex max-w-64 items-center gap-2 rounded-lg border px-2 py-1 text-xs text-foreground"
+          className="flex max-w-64 items-center gap-2 rounded-lg border px-2 py-1 text-xs"
           style={getWorkPillFillStyle(visual.color, credited)}
         >
           <span className="truncate font-medium">{title}</span>

@@ -61,6 +61,10 @@ export interface DayPreviewState {
   };
 }
 
+export type SelectedDayChangeOptions = {
+  alignMonth?: boolean;
+};
+
 export interface CalendarSurfaceProps {
   activeTab: CalendarTab;
   month: string | null;
@@ -74,7 +78,8 @@ export interface CalendarSurfaceProps {
   onSelectedDayChange: (
     day: string | null,
     mode: "push" | "replace",
-    nextViewMode?: PlannerCalendarViewMode
+    nextViewMode?: PlannerCalendarViewMode,
+    options?: SelectedDayChangeOptions
   ) => void;
   onPlannerMutation: () => void;
   duoScope?: "me" | "partner" | "both";

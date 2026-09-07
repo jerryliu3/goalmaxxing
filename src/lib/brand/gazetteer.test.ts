@@ -12,6 +12,12 @@ describe("gazetteer display colors", () => {
     expect(toGazetteerDisplayColor("#6366f1")).toBe(GAZETTEER_CATEGORY_COLORS.personal);
   });
 
+  it("keeps sage as the chrome secondary distinct from gain green", () => {
+    expect(GAZETTEER.sage).toBe("#6f8175");
+    expect(GAZETTEER.gain).toBe("#4a6740");
+    expect(GAZETTEER.sage).not.toBe(GAZETTEER.gain);
+  });
+
   it("keeps unknown hexes so custom goal colors still win", () => {
     expect(toGazetteerDisplayColor("#112233")).toBe("#112233");
     expect(toGazetteerDisplayColor("0A0B0C")).toBe("#0A0B0C");
