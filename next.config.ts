@@ -22,6 +22,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: "/ux/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+    ];
+  },
 };
 
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN?.trim();
