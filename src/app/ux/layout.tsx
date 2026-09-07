@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { requireAdminContextFromCookies } from "@/lib/api/admin-context";
 import { ApiRouteError } from "@/lib/api/route";
+
+export const metadata: Metadata = {
+  title: "UX labs · Goalmaxxing",
+  robots: { index: false, follow: false },
+};
 
 export default async function UxLayout({ children }: { children: ReactNode }) {
   try {
