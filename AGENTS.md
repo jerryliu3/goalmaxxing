@@ -110,6 +110,10 @@ surfaces. The default is to simplify and reuse what already exists.
 
 - For Goalmaxxing web UX across product and marketing surfaces, follow
   `docs/ux/goalmaxxing-experience-design-guide.md`.
+- Authenticated application leading direction is Spatial Plan (B). Use
+  `docs/ux/goalmaxxing-application-design-guide.md` and `/ux/concepts`.
+  Production `AppShell` remains unchanged until an explicit implementation
+  decision.
 - Reuse-first: before adding a new hook/component/helper, check whether an
   existing one can be extended or composed.
 - Prefer canonical homes for shared domain logic (`src/lib/planner/*`,
