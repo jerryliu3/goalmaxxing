@@ -16,6 +16,7 @@ export function XpProgressBar() {
       rewardSequence={rewardSequence}
       href="/achievements"
       ariaLabel="Open achievements and XP details"
+      compact
     />
   );
 }
