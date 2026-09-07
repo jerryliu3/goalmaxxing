@@ -9,7 +9,7 @@ describe("NestCompletionMark", () => {
       "data-completed",
       "false"
     );
-    expect(container.querySelectorAll("rect")).toHaveLength(1);
+    expect(container.querySelectorAll("rect")).toHaveLength(2);
 
     rerender(<NestCompletionMark done />);
     expect(container.querySelector('[data-completion-mark="nest"]')).toHaveAttribute(

@@ -1,8 +1,13 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { GoalCard } from "@/features/today/goal-card";
+import { CompletionToggle } from "@/components/ui/completion-toggle";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useChecklistCompletionActions } from "@/features/today/use-checklist-completion-actions";
 import { useChecklistData } from "@/features/today/use-checklist-data";
 import { useChecklistProjection } from "@/features/today/use-checklist-projection";
@@ -18,6 +23,7 @@ import {
 import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
 import { progressSummaryMap } from "@/lib/goals/progress-context";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
+import { cn } from "@/lib/utils";
 
 export function PlanDayUnplannedPanel({
   day,
@@ -33,20 +39,23 @@ export function PlanDayUnplannedPanel({
   );
 
   return (
-    <div className="space-y-2">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        aria-pressed={showUnplanned}
-        onClick={() => setShowUnplanned((open) => !open)}
+    <Collapsible open={showUnplanned} onOpenChange={setShowUnplanned}>
+      <CollapsibleTrigger
+        className="flex w-full items-center justify-between gap-2 py-2 text-left text-sm font-medium touch-manipulation"
+        aria-expanded={showUnplanned}
       >
-        Show unplanned
-      </Button>
-      {showUnplanned ? (
+        <span>Unplanned</span>
+        <ChevronDown
+          className={cn(
+            "size-4 text-muted-foreground transition-transform duration-[var(--motion-duration-fast)]",
+            showUnplanned && "rotate-180"
+          )}
+        />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
         <PlanDayUnplannedList day={day} placedGoalIds={placedGoalIds} />
-      ) : null}
-    </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
@@ -108,13 +117,6 @@ function PlanDayUnplannedList({
     loadData,
     redirectToLogin,
   });
-  const linkedCountByGoalId = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const link of data.links) {
-      counts.set(link.source_goal_id, (counts.get(link.source_goal_id) ?? 0) + 1);
-    }
-    return counts;
-  }, [data.links]);
 
   if (loading && data.goals.length === 0) {
     return <p className="text-sm text-muted-foreground">Loading unplanned work...</p>;
@@ -127,21 +129,44 @@ function PlanDayUnplannedList({
   }
 
   return (
-    <div className="space-y-2">
-      {unplannedGoals.map((goal) => (
-        <GoalCard
-          key={goal.id}
-          goal={goal}
-          completions={completionsByGoal.get(goal.id) ?? []}
-          progress={progressByGoal.get(goal.id)}
-          presentation={presentationByGoalId.get(goal.id)}
-          linkedCount={linkedCountByGoalId.get(goal.id) ?? 0}
-          imageUrl={data.photoUrls[goal.id]}
-          disabled={savingGoalId === goal.id}
-          selectedDate={day}
-          onToggle={(sourceElement) => toggleCompletion(goal, sourceElement)}
-        />
-      ))}
+    <div className="divide-y">
+      {unplannedGoals.map((goal) => {
+        const presentation = presentationByGoalId.get(goal.id);
+        const completed = Boolean(presentation?.exactDateCompleted);
+        return (
+          <div
+            key={goal.id}
+            className="flex items-center gap-3 py-3"
+            data-plan-work-row="ledger"
+          >
+            <CompletionToggle
+              completed={completed}
+              pending={savingGoalId === goal.id}
+              size="sm"
+              chrome="plain"
+              onClick={(event) => {
+                if ("currentTarget" in event && event.currentTarget instanceof HTMLButtonElement) {
+                  void toggleCompletion(goal, event.currentTarget);
+                }
+              }}
+              disabled={savingGoalId === goal.id}
+              aria-label={
+                completed
+                  ? `Mark ${goal.title} not done`
+                  : `Mark ${goal.title} done`
+              }
+            />
+            <p
+              className={cn(
+                "font-display min-w-0 flex-1 text-base font-medium tracking-tight",
+                completed && "line-through"
+              )}
+            >
+              {goal.title}
+            </p>
+          </div>
+        );
+      })}
     </div>
   );
 }

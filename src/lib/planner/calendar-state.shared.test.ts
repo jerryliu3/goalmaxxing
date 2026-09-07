@@ -49,7 +49,7 @@ describe("normalizeChecklistShellRoute", () => {
     expect(result.nextParams.has("day")).toBe(false);
   });
 
-  it("clears day in month view on the calendar tab", () => {
+  it("keeps an explicit day in month view on the calendar tab", () => {
     const result = normalizeChecklistShellRoute({
       searchParams: new URLSearchParams(
         "tab=calendar&view=month&month=2026-08&day=2026-08-13"
@@ -57,7 +57,7 @@ describe("normalizeChecklistShellRoute", () => {
       defaultCalendarViewMode: "month",
     });
     expect(result.viewMode).toBe("month");
-    expect(result.day).toBeNull();
+    expect(result.day).toBe("2026-08-13");
     expect(result.month).toBe("2026-08");
   });
 });
@@ -127,5 +127,15 @@ describe("normalizeCalendarRoute", () => {
     expect(result.viewMode).toBe("week");
     expect(result.nextParams.get("view")).toBe("week");
     expect(result.day).toBe("2026-08-13");
+  });
+
+  it("keeps the selected day in month view", () => {
+    const result = normalizeCalendarRoute({
+      searchParams: new URLSearchParams("view=month&month=2026-08&day=2026-08-13"),
+      defaultCalendarViewMode: "month",
+    });
+    expect(result.viewMode).toBe("month");
+    expect(result.day).toBe("2026-08-13");
+    expect(result.nextParams.get("day")).toBe("2026-08-13");
   });
 });

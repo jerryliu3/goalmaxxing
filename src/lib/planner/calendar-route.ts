@@ -59,15 +59,10 @@ function writeCalendarParams(
   state: CalendarState
 ) {
   let changed = setIfChanged(nextParams, "view", state.viewMode);
-  if (state.viewMode === "month") {
-    changed = deleteIfPresent(nextParams, "day") || changed;
-    if (state.month) {
-      changed = setIfChanged(nextParams, "month", state.month) || changed;
-    }
-    return changed;
-  }
   if (state.day) {
     changed = setIfChanged(nextParams, "day", state.day) || changed;
+  } else {
+    changed = deleteIfPresent(nextParams, "day") || changed;
   }
   if (state.month) {
     changed = setIfChanged(nextParams, "month", state.month) || changed;

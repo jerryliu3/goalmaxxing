@@ -33,21 +33,21 @@ describe("PlanDayUnplannedPanel", () => {
     cleanup();
   });
 
-  it("keeps unplanned work hidden until Show unplanned is pressed", () => {
+  it("keeps unplanned work collapsed until Unplanned is expanded", () => {
     render(
       <PlanDayUnplannedPanel day="2026-09-06" placedEntries={[]} />
     );
 
-    expect(screen.getByRole("button", { name: "Show unplanned" })).toHaveAttribute(
-      "aria-pressed",
+    expect(screen.getByRole("button", { name: "Unplanned" })).toHaveAttribute(
+      "aria-expanded",
       "false"
     );
     expect(screen.queryByText("Nothing unplanned for this day.")).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "Show unplanned" }));
+    fireEvent.click(screen.getByRole("button", { name: "Unplanned" }));
 
-    expect(screen.getByRole("button", { name: "Show unplanned" })).toHaveAttribute(
-      "aria-pressed",
+    expect(screen.getByRole("button", { name: "Unplanned" })).toHaveAttribute(
+      "aria-expanded",
       "true"
     );
     expect(screen.getByText("Nothing unplanned for this day.")).toBeInTheDocument();

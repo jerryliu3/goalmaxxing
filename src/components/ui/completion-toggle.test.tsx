@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { UiStyleProvider } from "@/components/brand/ui-style-provider";
-import { CompletionToggle } from "@/components/ui/completion-toggle";
+import { CompletionToggle, COMPLETION_HOLD_MS } from "@/components/ui/completion-toggle";
 
 const originalVibrate = Object.getOwnPropertyDescriptor(
   window.navigator,
@@ -43,6 +43,55 @@ describe("CompletionToggle", () => {
 
     fireEvent.click(toggle);
     expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it("commits after a pointer hold and fills the inner mark", () => {
+    vi.useFakeTimers();
+    const onClick = vi.fn();
+    render(
+      <CompletionToggle
+        completed={false}
+        aria-label="Mark session done"
+        onClick={onClick}
+      />
+    );
+    const toggle = screen.getByRole("button", { name: "Mark session done" });
+    const mark = toggle.querySelector("[data-completion-mark='circle']");
+    expect(mark).toHaveAttribute("data-fill-progress", "0");
+
+    fireEvent.pointerDown(toggle);
+    expect(toggle).toHaveAttribute("data-holding", "true");
+    expect(mark).toHaveAttribute("data-fill-progress", "1");
+    expect(onClick).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(COMPLETION_HOLD_MS);
+    });
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(toggle).toHaveAttribute("data-visual-completed", "true");
+
+    vi.useRealTimers();
+  });
+
+  it("cancels a hold that is released early", () => {
+    vi.useFakeTimers();
+    const onClick = vi.fn();
+    render(
+      <CompletionToggle
+        completed={false}
+        aria-label="Mark session done"
+        onClick={onClick}
+      />
+    );
+    const toggle = screen.getByRole("button", { name: "Mark session done" });
+    fireEvent.pointerDown(toggle);
+    fireEvent.pointerUp(toggle);
+    act(() => {
+      vi.advanceTimersByTime(COMPLETION_HOLD_MS);
+    });
+    expect(onClick).not.toHaveBeenCalled();
+    expect(toggle).toHaveAttribute("data-holding", "false");
+    vi.useRealTimers();
   });
 
   it("hides circular button chrome in plain mode", () => {

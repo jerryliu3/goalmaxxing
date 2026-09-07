@@ -231,6 +231,43 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     expect(screen.getByRole("button", { name: "X" })).toBeInTheDocument();
   });
 
+  it("selects a month day without opening a click popup", async () => {
+    postJsonMock.mockResolvedValue(
+      buildContext([
+        unit({
+          scheduledDate: "2026-08-31",
+        }),
+      ])
+    );
+    const onSelectedDayChange = vi.fn();
+
+    render(
+      <CalendarSurface
+        activeTab="calendar"
+        month="2026-08"
+        selectedDay={null}
+        viewMode="month"
+        onMonthChange={vi.fn()}
+        onViewModeChange={vi.fn()}
+        onSelectedDayChange={onSelectedDayChange}
+        onPlannerMutation={vi.fn()}
+      />
+    );
+
+    await flushCalendarInit();
+
+    const dayCell = document.querySelector(
+      '[data-day-cell="true"][data-day="2026-08-31"]'
+    );
+    expect(dayCell).toBeInstanceOf(HTMLButtonElement);
+
+    fireEvent.click(dayCell as Element);
+    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-31", "push", "month");
+    expect(
+      screen.queryByRole("button", { name: "Expand day details" })
+    ).not.toBeInTheDocument();
+  });
+
   it("dismisses pinned preview on outside pointer down", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
@@ -260,9 +297,13 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     );
     expect(dayCell).toBeInstanceOf(HTMLButtonElement);
 
-    fireEvent.click(dayCell as Element);
-    const before = document.querySelector('[data-no-swipe="true"].fixed');
-    expect(before).toBeTruthy();
+    fireEvent.pointerDown(dayCell as Element, { pointerType: "touch" });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    expect(
+      screen.getByRole("button", { name: "Expand day details" })
+    ).toBeInTheDocument();
 
     fireEvent.pointerDown(document.body);
     await act(async () => {

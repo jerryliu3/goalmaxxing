@@ -51,9 +51,11 @@ function applyCalendarViewInvariants(
   viewMode: PlannerCalendarViewMode
 ): Pick<CalendarState, "month" | "day" | "viewMode"> {
   if (viewMode === "month") {
+    const validMonth = isValidMonth(month) ? month : null;
+    const validDay = isValidDate(day) ? day : null;
     return {
-      month: isValidMonth(month) ? month : null,
-      day: null,
+      month: validDay ? validDay.slice(0, 7) : validMonth,
+      day: validDay,
       viewMode,
     };
   }

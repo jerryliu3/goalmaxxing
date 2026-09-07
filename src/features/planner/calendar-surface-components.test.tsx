@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -142,7 +142,7 @@ describe("calendar surface extracted components", () => {
     });
     expect(toggle.parentElement?.firstElementChild).toBe(toggle);
 
-    await user.click(toggle);
+    fireEvent.click(toggle);
     expect(onToggleCompletion).toHaveBeenCalledTimes(1);
 
     const previewEntry = view.container.querySelector(
