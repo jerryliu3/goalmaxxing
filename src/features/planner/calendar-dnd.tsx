@@ -256,7 +256,12 @@ interface PlannerDraggablePreviewEntryProps {
   day: string;
   entryKey: string;
   disabled?: boolean;
-  children: (props: PlannerDraggableEntryRenderProps & { isOver: boolean }) => ReactNode;
+  children: (
+    props: PlannerDraggableEntryRenderProps & {
+      isOver: boolean;
+      setActivatorNodeRef: (node: HTMLElement | null) => void;
+    }
+  ) => ReactNode;
 }
 
 export function PlannerDraggablePreviewEntry({
@@ -269,6 +274,7 @@ export function PlannerDraggablePreviewEntry({
     attributes,
     listeners,
     setNodeRef: setDragNodeRef,
+    setActivatorNodeRef,
     transform,
     isDragging,
   } = useDraggable({
@@ -287,11 +293,11 @@ export function PlannerDraggablePreviewEntry({
   const style: CSSProperties = transform
     ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        touchAction: "none",
       }
-    : { touchAction: "none" };
+    : {};
   return children({
     setNodeRef,
+    setActivatorNodeRef,
     attributes,
     listeners,
     style,

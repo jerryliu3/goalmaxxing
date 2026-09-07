@@ -116,6 +116,9 @@ export function CalendarSurface({
   // Intentionally session-scoped for now; dismissal resets on page reload.
   const [warningsDismissed, setWarningsDismissed] = useState(false);
   const [localSelectedDay, setLocalSelectedDay] = useState<string | null>(null);
+  useEffect(() => {
+    setLocalSelectedDay(null);
+  }, [month, selectedDay, viewMode]);
   const [expandedMonthRows, setExpandedMonthRows] = useState(false);
   const [previewEntryOrderByDay, setPreviewEntryOrderByDay] = useState<
     Record<string, string[]>
@@ -356,7 +359,6 @@ export function CalendarSurface({
 
   const {
     showTodayShortcut,
-    queueTodayShortcutVisibilitySync,
     handleMonthScopedGridScroll,
     handleCalendarGridViewportScroll,
   } = useCalendarScrollBehavior({
@@ -366,8 +368,6 @@ export function CalendarSurface({
     calendarToday,
     focusedDay,
     focusedWeekDays,
-    cells,
-    cellByDate,
     pendingMonthAlignment,
     setPendingMonthAlignment,
     monthScrollAnchorDay,
@@ -670,7 +670,6 @@ export function CalendarSurface({
   const layoutProps = useCalendarSurfacePresentation({
     saveLoading,
     jumpToTodayBase,
-    queueTodayShortcutVisibilitySync,
     moveViewWindowBase,
     resolvedFocusedDay,
     stepDays,

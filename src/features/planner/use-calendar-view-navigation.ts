@@ -52,7 +52,8 @@ export function useCalendarViewNavigation({
   onSelectedDayChange: (
     day: string,
     mode: "push" | "replace",
-    viewMode: PlannerCalendarViewMode
+    viewMode: PlannerCalendarViewMode,
+    options?: { alignMonth?: boolean }
   ) => void;
   setDayPreview: (value: null) => void;
   setSelectedEventEntryKey: (value: string | null) => void;
@@ -142,35 +143,33 @@ export function useCalendarViewNavigation({
     [onMonthChange, onSelectedDayChange, setLocalSelectedDay, setSelectedEventEntryKey, viewMode]
   );
 
-  const jumpToToday = useCallback(
-    (queueTodayShortcutVisibilitySync: () => void) => {
-      setDayPreview(null);
-      monthScrollAlignmentKeyRef.current = null;
-      calendarHorizontalAlignmentKeyRef.current = null;
-      if (isMonthScopedCalendarViewMode(viewMode)) {
-        const todayRowStartDay = resolveWeekStartDay(calendarToday);
-        setPendingMonthAlignment({
-          rowStartDay: todayRowStartDay,
-          focusDay: calendarToday,
-        });
-        monthScrollAnchorDayRef.current = todayRowStartDay;
-        onMonthChange(calendarToday.slice(0, 7), "replace");
-        queueTodayShortcutVisibilitySync();
-        return;
-      }
-      onSelectedDayChange(calendarToday, "replace", viewMode);
-    },
-    [
-      calendarHorizontalAlignmentKeyRef,
-      calendarToday,
-      monthScrollAlignmentKeyRef,
-      onMonthChange,
-      onSelectedDayChange,
-      resolveWeekStartDay,
-      setDayPreview,
-      viewMode,
-    ]
-  );
+  const jumpToToday = useCallback(() => {
+    setDayPreview(null);
+    setSelectedEventEntryKey(null);
+    setLocalSelectedDay(calendarToday);
+    monthScrollAlignmentKeyRef.current = null;
+    calendarHorizontalAlignmentKeyRef.current = null;
+    if (isMonthScopedCalendarViewMode(viewMode)) {
+      const todayRowStartDay = resolveWeekStartDay(calendarToday);
+      setPendingMonthAlignment({
+        rowStartDay: todayRowStartDay,
+        focusDay: calendarToday,
+      });
+      monthScrollAnchorDayRef.current = todayRowStartDay;
+    }
+    onSelectedDayChange(calendarToday, "replace", viewMode, { alignMonth: true });
+  }, [
+    calendarHorizontalAlignmentKeyRef,
+    calendarToday,
+    monthScrollAlignmentKeyRef,
+    onSelectedDayChange,
+    resolveWeekStartDay,
+    setDayPreview,
+    setLocalSelectedDay,
+    setPendingMonthAlignment,
+    setSelectedEventEntryKey,
+    viewMode,
+  ]);
 
   const moveViewWindow = useCallback(
     (direction: -1 | 1, resolvedFocusedDay: string, stepDays: number) => {

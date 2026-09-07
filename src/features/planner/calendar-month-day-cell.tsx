@@ -13,7 +13,13 @@ import {
   getEntryDraftDiffSummary,
   getEntryDraftPillClasses,
 } from "@/features/planner/calendar-format";
-import { getGoalVisual, getMonthWorkFillStyle, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
+import {
+  planAgendaDayNumberClass,
+  planAgendaDayRowClass,
+  planMonthDayNumberClass,
+  planMonthDaySurfaceClass,
+} from "@/features/planner/calendar-day-chrome";
+import { getGoalVisual, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
 import { planDayViewTransitionName } from "@/features/planner/plan-view-transition";
 
 export interface CalendarMonthCellEntryBase {
@@ -150,9 +156,7 @@ export function CalendarMonthDayCell<
     });
     const pillFillStyle = isDraft
       ? undefined
-      : layout === "month"
-        ? getMonthWorkFillStyle(credited)
-        : getWorkPillFillStyle(visual.color, credited);
+      : getWorkPillFillStyle(visual.color, credited);
     return (
       <PlannerDraggableEntry
         key={`cell-entry-${entry.key}`}
@@ -208,7 +212,7 @@ export function CalendarMonthDayCell<
             {layout === "agenda" ? (
               <StyleCompletionMark
                 done={credited}
-                className="size-3 shrink-0 text-foreground"
+                className="size-3 shrink-0"
                 label={credited ? "Completed" : undefined}
               />
             ) : null}
@@ -217,7 +221,7 @@ export function CalendarMonthDayCell<
             </span>
             {entry.hasLinkedTargets ? (
               <Link2
-                className="size-3 shrink-0 text-muted-foreground"
+                className="size-3 shrink-0"
                 aria-label="Links this subgoal to a main goal"
               />
             ) : null}
@@ -234,11 +238,7 @@ export function CalendarMonthDayCell<
   if (layout === "agenda") {
     return (
       <li
-        className={cn(
-          "border-b border-border/70 last:border-b-0",
-          isSelected && "bg-primary/5",
-          !inMonth && "opacity-60"
-        )}
+        className={planAgendaDayRowClass({ inMonth, isToday, isSelected })}
         data-day={day}
         data-calendar-week-row="true"
         style={{ viewTransitionName: planDayViewTransitionName(day) }}
@@ -260,11 +260,7 @@ export function CalendarMonthDayCell<
               {weekdayLabel}
             </span>
             <span
-              className={cn(
-                "mt-0.5 inline-flex size-8 items-center justify-center rounded-full text-lg font-semibold leading-none",
-                isToday && "bg-primary text-primary-foreground",
-                !isToday && isSelected && "text-primary"
-              )}
+              className={planAgendaDayNumberClass({ isToday, isSelected })}
             >
               {dayNumber}
             </span>
@@ -357,17 +353,16 @@ export function CalendarMonthDayCell<
           onPointerUp={onCellPointerUp}
           onPointerCancel={onCellPointerCancel}
           onPointerLeave={onCellPointerLeave}
-          className={`relative min-h-24 rounded-[10px] border p-2 text-left transition-colors ${
-            inMonth
-              ? isToday
-                ? "border-primary bg-primary/8 hover:border-primary"
-                : isPastInMonth
-                  ? "border-border bg-muted/25 hover:border-primary/40"
-                  : "border-border bg-background hover:border-primary/50"
-              : "border-border/70 bg-muted/40 text-muted-foreground"
-          } ${isSelected ? "border-primary/70 bg-primary/5" : ""} ${
-            isAnyEntryDragging && isOver ? "ring-2 ring-primary/70" : ""
-          }`}
+          className={cn(
+            "relative min-h-24 rounded-[10px] border p-2 text-left transition-colors",
+            planMonthDaySurfaceClass({
+              inMonth,
+              isToday,
+              isSelected,
+              isPastInMonth,
+            }),
+            isAnyEntryDragging && isOver && "ring-2 ring-primary/70"
+          )}
           aria-label={ariaLabel}
           data-no-swipe="true"
           data-day-cell="true"
@@ -377,13 +372,11 @@ export function CalendarMonthDayCell<
         >
           <div className="pointer-events-none absolute top-2 left-2 flex items-center gap-1.5">
             <p
-              className={`text-xs font-semibold leading-none ${
-                isToday
-                  ? "text-primary"
-                  : inMonth
-                    ? "text-foreground"
-                    : "text-foreground"
-              }`}
+              className={`text-xs font-semibold leading-none ${planMonthDayNumberClass({
+                inMonth,
+                isToday,
+                isSelected,
+              })}`}
             >
               {day.slice(8, 10)}
             </p>

@@ -99,31 +99,35 @@ function resolveCategorySwatchColor(category: string | null): string | null {
   return getCategorySwatchColor(categoryKey as GoalVisualCategoryKey);
 }
 
-export function colorWithAlpha(color: string, alpha: number, styleId?: UiStyleId) {
-  const hex = normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0];
+function srgbChannel(value: number) {
+  const channel = value / 255;
+  return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+}
+
+export function contrastingInkForColor(color: string, styleId?: UiStyleId) {
+  const hex = toStyleDisplayColor(
+    normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0],
+    styleId
+  );
   const red = Number.parseInt(hex.slice(1, 3), 16);
   const green = Number.parseInt(hex.slice(3, 5), 16);
   const blue = Number.parseInt(hex.slice(5, 7), 16);
-  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+  const luminance =
+    0.2126 * srgbChannel(red) +
+    0.7152 * srgbChannel(green) +
+    0.0722 * srgbChannel(blue);
+  return luminance > 0.55 ? "#1c1917" : "#ffffff";
 }
 
-export function getWorkPillFillStyle(color: string, credited = false, styleId?: UiStyleId) {
+export function getWorkPillFillStyle(color: string, _credited = false, styleId?: UiStyleId) {
+  const hex = toStyleDisplayColor(
+    normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0],
+    styleId
+  );
   return {
-    backgroundColor: colorWithAlpha(color, credited ? 0.4 : 0.18, styleId),
-    borderColor: toStyleDisplayColor(color, styleId),
-  };
-}
-
-export function getMonthWorkFillStyle(credited: boolean) {
-  if (!credited) {
-    return {
-      backgroundColor: "transparent",
-      borderColor: "var(--border)",
-    };
-  }
-  return {
-    backgroundColor: "color-mix(in oklch, var(--primary) 22%, transparent)",
-    borderColor: "var(--primary)",
+    backgroundColor: hex,
+    borderColor: hex,
+    color: contrastingInkForColor(hex, styleId),
   };
 }
 

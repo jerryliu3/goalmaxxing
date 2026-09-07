@@ -153,6 +153,7 @@ export function CompletionToggle({
         className
       )}
       onPointerDown={(event) => {
+        event.stopPropagation();
         onPointerDown?.(event);
         if (event.defaultPrevented || disabled || pending) {
           return;
@@ -171,6 +172,7 @@ export function CompletionToggle({
         }, COMPLETION_HOLD_MS);
       }}
       onPointerUp={(event) => {
+        event.stopPropagation();
         onPointerUp?.(event);
         cancelHold();
       }}
@@ -179,6 +181,7 @@ export function CompletionToggle({
         cancelHold();
       }}
       onPointerCancel={(event) => {
+        event.stopPropagation();
         onPointerCancel?.(event);
         cancelHold();
       }}
@@ -189,10 +192,12 @@ export function CompletionToggle({
         }
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
+          event.stopPropagation();
           commitToggle(event);
         }
       }}
       onClick={(event) => {
+        event.stopPropagation();
         if (performance.now() < ignoreClickUntilRef.current) {
           event.preventDefault();
           return;
@@ -209,7 +214,7 @@ export function CompletionToggle({
         fillTransition={holding}
         className={cn(
           visualCompleted || holding ? "text-primary" : "text-muted-foreground",
-          classes.icon
+          chrome === "plain" ? classes.button : classes.icon
         )}
       />
     </button>

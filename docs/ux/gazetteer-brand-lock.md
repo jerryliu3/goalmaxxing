@@ -34,7 +34,9 @@ applied only when Gazetteer is selected.
 | Walnut ink | `#241C14` | Titles and body |
 | Muted | `#7A6A56` / `#5C4E3F` | Meta |
 | Rule gold | `#D4C4A4` | Hairlines |
-| Stamp rust | `#9A4F2C` | Accent, Nest, numerals |
+| Stamp rust | `#9A4F2C` | Accent, Nest, numerals, today |
+| Sage / oxidized copper | `#6F8175` | Adjacent-month tile fill |
+| Muted paper | `#EFE4D0` | Selected day that is not today |
 | Gutter green | `#4A6740` | Rise / gain only |
 
 No sky-blue chips. No lavender cards. Green is a legend unit, not “done.”

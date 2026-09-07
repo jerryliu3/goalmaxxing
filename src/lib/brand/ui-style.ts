@@ -29,9 +29,9 @@ export const UI_STYLES: Record<UiStyleId, UiStyle> = {
   original: {
     id: "original",
     label: "Original",
-    description: "Classic Goalmaxxing chrome: Geist, sky accent, and pill tabs.",
+    description: "Classic Goalmaxxing chrome: Geist, identity blue, and pill tabs.",
     htmlClass: "",
-    themeColor: "#2563eb",
+    themeColor: "#0F64BF",
     backgroundColor: "#fafafa",
     completionMark: "circle",
     tabChrome: "pills",

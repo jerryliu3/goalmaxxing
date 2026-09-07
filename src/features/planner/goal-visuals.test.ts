@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getGoalVisual, getMonthWorkFillStyle, getWorkPillFillStyle, normalizeGoalColor } from "./goal-visuals";
+import { getGoalVisual, getWorkPillFillStyle, normalizeGoalColor } from "./goal-visuals";
 
 describe("goal visuals", () => {
   it("keeps icon/color deterministic per goal id", () => {
@@ -38,23 +38,18 @@ describe("goal visuals", () => {
     ).toBe("#10b981");
   });
 
-  it("uses one complete color on month cells and leaves incomplete transparent", () => {
-    expect(getMonthWorkFillStyle(false)).toEqual({
-      backgroundColor: "transparent",
-      borderColor: "var(--border)",
+  it("uses an opaque category fill on work pills in every view", () => {
+    expect(getWorkPillFillStyle("#10b981", false)).toEqual({
+      backgroundColor: "#10b981",
+      borderColor: "#10b981",
+      color: "#ffffff",
     });
-    expect(getMonthWorkFillStyle(true).backgroundColor).toContain("var(--primary)");
-    expect(getMonthWorkFillStyle(true).borderColor).toBe("var(--primary)");
-  });
-
-  it("turns category color into pill fill, not a separate chip", () => {
-    expect(
-      getWorkPillFillStyle("#10b981", false).backgroundColor
-    ).toBe("rgba(16, 185, 129, 0.18)");
-    expect(getWorkPillFillStyle("#10b981", true).borderColor).toBe("#10b981");
-    expect(
-      getWorkPillFillStyle("#10b981", true).backgroundColor
-    ).toBe("rgba(16, 185, 129, 0.4)");
+    expect(getWorkPillFillStyle("#10b981", true).backgroundColor).toBe("#10b981");
+    expect(getWorkPillFillStyle("#2563eb", false)).toEqual({
+      backgroundColor: "#2563eb",
+      borderColor: "#2563eb",
+      color: "#ffffff",
+    });
   });
 
   it("keeps leftover blue goal hexes on original", () => {

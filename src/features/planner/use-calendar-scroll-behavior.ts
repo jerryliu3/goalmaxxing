@@ -1,12 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect } from "react";
 import {
   getCalendarTargetScrollLeft,
   getCalendarTargetScrollTop,
-  isCalendarDayVisible,
-  getTopVisibleCalendarDay,
 } from "@/features/planner/calendar-scroll-position";
+import { shouldShowPlanTodayShortcut } from "@/features/planner/calendar-today-shortcut";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
 
 function isMonthScopedCalendarViewMode(viewMode: PlannerCalendarViewMode) {
@@ -20,8 +19,6 @@ export function useCalendarScrollBehavior({
   calendarToday,
   focusedDay,
   focusedWeekDays,
-  cells,
-  cellByDate,
   pendingMonthAlignment,
   setPendingMonthAlignment,
   monthScrollAnchorDay,
@@ -39,8 +36,6 @@ export function useCalendarScrollBehavior({
   calendarToday: string;
   focusedDay: string;
   focusedWeekDays: string[];
-  cells: Array<{ date: string }>;
-  cellByDate: Map<string, unknown>;
   pendingMonthAlignment: { rowStartDay: string; focusDay: string } | null;
   setPendingMonthAlignment: React.Dispatch<
     React.SetStateAction<{ rowStartDay: string; focusDay: string } | null>
@@ -54,83 +49,18 @@ export function useCalendarScrollBehavior({
   monthScrollAlignmentKeyRef: React.MutableRefObject<string | null>;
   calendarHorizontalAlignmentKeyRef: React.MutableRefObject<string | null>;
 }) {
-  const [showTodayShortcut, setShowTodayShortcut] = useState(false);
-  const todayVisibilityFrameRef = useRef<number | null>(null);
-
-  const syncTodayShortcutVisibility = useCallback(() => {
-    let shouldShowShortcut = false;
-    if (viewMode === "month") {
-      const verticalContainer = multiMonthGridScrollRef.current;
-      const horizontalContainer = calendarGridViewportRef.current;
-      if (!cellByDate.has(calendarToday)) {
-        shouldShowShortcut = true;
-      } else if (!verticalContainer || !horizontalContainer) {
-        shouldShowShortcut = true;
-      } else {
-        const verticallyVisible = isCalendarDayVisible(verticalContainer, calendarToday, {
-          checkHorizontal: false,
-        });
-        const horizontallyVisible = isCalendarDayVisible(horizontalContainer, calendarToday, {
-          checkVertical: false,
-        });
-        shouldShowShortcut = !(verticallyVisible && horizontallyVisible);
-      }
-    } else if (viewMode === "week") {
-      const horizontalContainer = calendarGridViewportRef.current;
-      shouldShowShortcut = !(
-        focusedWeekDays.includes(calendarToday) &&
-        horizontalContainer &&
-        isCalendarDayVisible(horizontalContainer, calendarToday, {
-          checkVertical: false,
-        })
-      );
-    } else if (viewMode === "day" || viewMode === "three_day") {
-      const stripContainer = rollingWeekStripRef.current;
-      shouldShowShortcut = !(
-        focusedWeekDays.includes(calendarToday) &&
-        stripContainer &&
-        isCalendarDayVisible(stripContainer, calendarToday, {
-          checkVertical: false,
-        })
-      );
-    }
-    setShowTodayShortcut((current) =>
-      current === shouldShowShortcut ? current : shouldShowShortcut
-    );
-  }, [
-    calendarToday,
-    calendarGridViewportRef,
-    cellByDate,
-    focusedWeekDays,
-    multiMonthGridScrollRef,
-    rollingWeekStripRef,
-    viewMode,
-  ]);
-
-  const queueTodayShortcutVisibilitySync = useCallback(() => {
-    if (todayVisibilityFrameRef.current !== null) {
-      return;
-    }
-    todayVisibilityFrameRef.current = window.requestAnimationFrame(() => {
-      todayVisibilityFrameRef.current = null;
-      syncTodayShortcutVisibility();
-    });
-  }, [syncTodayShortcutVisibility]);
+  const showTodayShortcut = shouldShowPlanTodayShortcut(focusedDay, calendarToday);
 
   const handleMonthScopedGridScroll = useCallback(() => {
     if (!isMonthScopedCalendarViewMode(viewMode)) {
       return;
     }
-    const topRowDay = resolveMonthScopedTopRowDay();
-    if (topRowDay) {
-      // Anchor day tracked by navigation hook via scroll container reads.
-    }
-    queueTodayShortcutVisibilitySync();
-  }, [queueTodayShortcutVisibilitySync, resolveMonthScopedTopRowDay, viewMode]);
+    resolveMonthScopedTopRowDay();
+  }, [resolveMonthScopedTopRowDay, viewMode]);
 
   const handleCalendarGridViewportScroll = useCallback(() => {
-    queueTodayShortcutVisibilitySync();
-  }, [queueTodayShortcutVisibilitySync]);
+    return;
+  }, []);
 
   const alignRollingWeekStripToFocusedDay = useCallback(() => {
     if (viewMode !== "day" && viewMode !== "three_day") {
@@ -170,8 +100,7 @@ export function useCalendarScrollBehavior({
       left: leftMostVisibleIndex * (columnWidth + columnGap),
       behavior: "auto",
     });
-    queueTodayShortcutVisibilitySync();
-  }, [focusedDay, focusedWeekDays, queueTodayShortcutVisibilitySync, rollingWeekStripRef, viewMode]);
+  }, [focusedDay, focusedWeekDays, rollingWeekStripRef, viewMode]);
 
   useEffect(() => {
     if (viewMode !== "day" && viewMode !== "three_day") {
@@ -209,8 +138,10 @@ export function useCalendarScrollBehavior({
     ) {
       return;
     }
-    const verticalAlignmentKey = `${viewMode}:${month}:${rowStartDay}`;
-    const horizontalAlignmentKey = `${viewMode}:${month}:${focusDay}`;
+    // Scope alignment to the viewed month, not the selected day. Clicking a
+    // date should update the checklist without pulling that week to row one.
+    const verticalAlignmentKey = `${viewMode}:${month}`;
+    const horizontalAlignmentKey = `${viewMode}:${month}`;
     if (
       !pendingMonthAlignment &&
       monthScrollAlignmentKeyRef.current === verticalAlignmentKey &&
@@ -247,7 +178,6 @@ export function useCalendarScrollBehavior({
           current === pendingMonthAlignment ? null : current
         );
       }
-      queueTodayShortcutVisibilitySync();
     });
     return () => {
       window.cancelAnimationFrame(frame);
@@ -259,7 +189,6 @@ export function useCalendarScrollBehavior({
     monthScrollAnchorDay,
     multiMonthGridScrollRef,
     pendingMonthAlignment,
-    queueTodayShortcutVisibilitySync,
     resolveWeekdayAlignedAnchorDay,
     setPendingMonthAlignment,
     viewMode,
@@ -301,7 +230,6 @@ export function useCalendarScrollBehavior({
       } else {
         viewport.scrollLeft = nextLeft;
       }
-      queueTodayShortcutVisibilitySync();
     });
     return () => {
       window.cancelAnimationFrame(frame);
@@ -312,54 +240,11 @@ export function useCalendarScrollBehavior({
     focusedDay,
     focusedWeekDays,
     month,
-    queueTodayShortcutVisibilitySync,
     viewMode,
   ]);
 
-  useEffect(() => {
-    queueTodayShortcutVisibilitySync();
-  }, [cells, focusedDay, focusedWeekDays, month, queueTodayShortcutVisibilitySync, viewMode]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      queueTodayShortcutVisibilitySync();
-    };
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [queueTodayShortcutVisibilitySync]);
-
-  useEffect(() => {
-    if (viewMode !== "day" && viewMode !== "three_day") {
-      return;
-    }
-    const strip = rollingWeekStripRef.current;
-    if (!strip) {
-      return;
-    }
-    const handleStripScroll = () => {
-      queueTodayShortcutVisibilitySync();
-    };
-    strip.addEventListener("scroll", handleStripScroll, { passive: true });
-    return () => {
-      strip.removeEventListener("scroll", handleStripScroll);
-    };
-  }, [queueTodayShortcutVisibilitySync, rollingWeekStripRef, viewMode]);
-
-  useEffect(
-    () => () => {
-      if (todayVisibilityFrameRef.current !== null) {
-        window.cancelAnimationFrame(todayVisibilityFrameRef.current);
-        todayVisibilityFrameRef.current = null;
-      }
-    },
-    []
-  );
-
   return {
     showTodayShortcut,
-    queueTodayShortcutVisibilitySync,
     handleMonthScopedGridScroll,
     handleCalendarGridViewportScroll,
   };

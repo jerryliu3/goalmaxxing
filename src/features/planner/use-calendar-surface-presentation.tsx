@@ -27,8 +27,7 @@ type CalendarSurfacePresentationArgs = Omit<
   | "renderCalendarDayCell"
 > & {
   saveLoading: boolean;
-  jumpToTodayBase: (syncShortcut: () => void) => void;
-  queueTodayShortcutVisibilitySync: () => void;
+  jumpToTodayBase: () => void;
   moveViewWindowBase: (
     direction: -1 | 1,
     resolvedFocusedDay: string,
@@ -94,7 +93,6 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
   const {
     saveLoading,
     jumpToTodayBase,
-    queueTodayShortcutVisibilitySync,
     moveViewWindowBase,
     resolvedFocusedDay,
     stepDays,
@@ -141,10 +139,7 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
   } = args;
 
   const saveButtonLabel = saveLoading ? "Saving..." : "Save plan";
-  const jumpToToday = useCallback(
-    () => jumpToTodayBase(queueTodayShortcutVisibilitySync),
-    [jumpToTodayBase, queueTodayShortcutVisibilitySync]
-  );
+  const jumpToToday = jumpToTodayBase;
   const moveViewWindow = useCallback(
     (direction: -1 | 1) => {
       moveViewWindowBase(direction, resolvedFocusedDay, stepDays);

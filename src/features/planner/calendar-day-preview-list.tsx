@@ -104,6 +104,7 @@ export function CalendarDayPreviewList<
               >
                 {({
                   setNodeRef,
+                  setActivatorNodeRef,
                   attributes,
                   listeners,
                   style,
@@ -115,25 +116,21 @@ export function CalendarDayPreviewList<
                     style={{ ...style, ...pillFillStyle }}
                     className={
                       expanded
-                        ? `flex items-center gap-3 py-3 transition-colors ${
+                        ? `flex items-stretch transition-colors ${
                             isDraft ? pillToneClasses : "bg-transparent"
                           } ${entry.draftGhost ? "opacity-75" : ""} ${
                             isOver ? "bg-primary/5" : ""
                           } ${
-                            immovable
-                              ? "cursor-not-allowed"
-                              : "cursor-grab active:cursor-grabbing"
+                            immovable ? "cursor-not-allowed" : ""
                           } ${isDragging ? "pointer-events-none opacity-0" : ""}`
-                        : `flex items-center gap-2 rounded-[10px] border p-1.5 transition-colors ${pillToneClasses} ${
+                        : `flex items-stretch rounded-[10px] border transition-colors ${pillToneClasses} ${
                             entry.draftGhost ? "opacity-75" : ""
                           } ${
                             isOver
                               ? "border-primary/70 ring-1 ring-primary/60"
                               : "hover:border-primary/60"
                           } ${
-                            immovable
-                              ? "cursor-not-allowed"
-                              : "cursor-grab active:cursor-grabbing"
+                            immovable ? "cursor-not-allowed" : ""
                           } ${isDragging ? "pointer-events-none opacity-0" : ""}`
                     }
                     title={
@@ -143,7 +140,15 @@ export function CalendarDayPreviewList<
                           : "Click to view details or drag to move this session."
                       }`
                     }
-                    onPointerDownCapture={() => {
+                    onPointerDownCapture={(event) => {
+                      if (
+                        event.target instanceof Element &&
+                        event.target.closest(
+                          "[data-motion='completion-toggle'], [data-plan-completion-hit]"
+                        )
+                      ) {
+                        return;
+                      }
                       onEntryPointerStart(immovable);
                     }}
                     onPointerUpCapture={() => {
@@ -152,46 +157,71 @@ export function CalendarDayPreviewList<
                     onPointerCancelCapture={() => {
                       onEntryPointerEnd();
                     }}
-                    onClick={() => {
-                      if (isDragging) {
-                        return;
-                      }
-                      onEntryOpen(entry.key);
-                    }}
                     data-planner-entry-key={entry.key}
                     data-plan-work-row={expanded ? "ledger" : "pill"}
-                    {...attributes}
-                    {...listeners}
                   >
                     {!entry.draftGhost ? (
-                      <CompletionToggle
-                        completed={completionToggleState.currentlyCredited}
-                        pending={mutationLoading}
-                        size="sm"
-                        chrome="plain"
+                      <div
+                        className={
+                          expanded
+                            ? "flex items-center py-3"
+                            : "flex items-center p-1.5 pr-0"
+                        }
+                        data-plan-completion-hit="true"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                        }}
                         onPointerDown={(event) => {
                           event.stopPropagation();
                         }}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onToggleCompletion(entry, day, event.currentTarget);
-                        }}
-                        disabled={
-                          mutationLoading ||
-                          completionToggleState.disabledReasonCopy !== null
-                        }
-                        aria-label={
-                          completionToggleState.currentlyCredited
-                            ? "Mark session not done"
-                            : "Mark session done"
-                        }
-                        title={
-                          completionToggleState.disabledReasonCopy ??
-                          "Toggle completion for this session"
-                        }
-                      />
+                      >
+                        <CompletionToggle
+                          completed={completionToggleState.currentlyCredited}
+                          pending={mutationLoading}
+                          size="sm"
+                          chrome="plain"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onToggleCompletion(entry, day, event.currentTarget);
+                          }}
+                          disabled={
+                            mutationLoading ||
+                            completionToggleState.disabledReasonCopy !== null
+                          }
+                          aria-label={
+                            completionToggleState.currentlyCredited
+                              ? "Mark session not done"
+                              : "Mark session done"
+                          }
+                          title={
+                            completionToggleState.disabledReasonCopy ??
+                            "Toggle completion for this session"
+                          }
+                        />
+                      </div>
                     ) : null}
-                    <div className="flex min-w-0 flex-1 items-center gap-2 text-left">
+                    <div
+                      ref={setActivatorNodeRef}
+                      className={
+                        immovable
+                          ? `flex min-w-0 flex-1 items-center text-left ${
+                              expanded ? "py-3 pl-3" : "p-1.5 pl-2"
+                            }`
+                          : `flex min-w-0 flex-1 cursor-grab items-center text-left touch-none active:cursor-grabbing ${
+                              expanded ? "py-3 pl-3" : "p-1.5 pl-2"
+                            }`
+                      }
+                      data-plan-drag-handle="true"
+                      {...attributes}
+                      {...listeners}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (isDragging) {
+                          return;
+                        }
+                        onEntryOpen(entry.key);
+                      }}
+                    >
                       <div className="min-w-0">
                         <p
                           className={
