@@ -5,7 +5,6 @@ import { isValidIanaTimezone } from "@/lib/dates/timezone";
 import {
   parseBoundedJsonBody,
   PlannerRouteError,
-  requirePlannerAdminClient,
   requirePlannerRouteContext,
   resolveCanonicalAsOfDate,
   withPlannerRoute,
@@ -516,11 +515,10 @@ export async function PUT(request: Request) {
     const normalizedWeekStartsOn = normalizeWeekStartsOn(
       defaultPolicy.weekStartsOn
     );
-    const admin = requirePlannerAdminClient();
     const normalizedRestWeekdays = Array.from(
       new Set(defaultPolicy.restWeekdays)
     ).sort((left, right) => left - right);
-    const updateResponse = await admin
+    const updateResponse = await routeContext.supabase
       .from("profiles")
       .update({
         timezone: body.timezone,
@@ -535,11 +533,20 @@ export async function PUT(request: Request) {
       )
       .maybeSingle();
     if (updateResponse.error) {
+      const cause = updateResponse.error.message;
+      if (/Expected 3 parts in JWT/i.test(cause)) {
+        throw new PlannerRouteError(
+          401,
+          "authentication_required",
+          "Sign in again to update planner preferences.",
+          { cause }
+        );
+      }
       throw new PlannerRouteError(
         409,
         "preference_update_failed",
         "Planner preferences could not be updated.",
-        { cause: updateResponse.error.message }
+        { cause }
       );
     }
     if (!updateResponse.data) {

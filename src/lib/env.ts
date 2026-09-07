@@ -274,3 +274,13 @@ export function getSupabaseAnonKey(env: PublicEnv = getPublicEnv()) {
 export function getSupabaseSecretKey(env: ServerEnv = getServerEnv()) {
   return env.SUPABASE_SECRET_KEY ?? env.SUPABASE_SERVICE_ROLE_KEY;
 }
+
+export function looksLikeSupabaseSecretKey(value: string | null | undefined) {
+  if (!value) {
+    return false;
+  }
+  if (value.startsWith("sb_secret_")) {
+    return true;
+  }
+  return value.split(".").length === 3;
+}

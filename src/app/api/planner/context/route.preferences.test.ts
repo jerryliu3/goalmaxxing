@@ -6,6 +6,7 @@ import { resetEnvCacheForTests } from "@/lib/env";
 const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
   profileMaybeSingle: vi.fn(),
+  profileUpdateMaybeSingle: vi.fn(),
   adminProfileSelectMaybeSingle: vi.fn(),
   adminProfileUpdateMaybeSingle: vi.fn(),
   rpc: vi.fn(),
@@ -18,6 +19,13 @@ vi.mock("@/lib/supabase/server", () => ({
       select: () => ({
         eq: () => ({
           maybeSingle: mocks.profileMaybeSingle,
+        }),
+      }),
+      update: () => ({
+        eq: () => ({
+          select: () => ({
+            maybeSingle: mocks.profileUpdateMaybeSingle,
+          }),
         }),
       }),
     }),
@@ -73,6 +81,16 @@ describe("planner context preferences route", () => {
       error: null,
     });
     mocks.profileMaybeSingle.mockResolvedValue({
+      data: {
+        timezone,
+        timezone_confirmed_at: timezoneConfirmedAt,
+        week_starts_on: 1,
+        rest_weekdays: [],
+        blackout_ranges: [],
+      },
+      error: null,
+    });
+    mocks.profileUpdateMaybeSingle.mockResolvedValue({
       data: {
         timezone,
         timezone_confirmed_at: timezoneConfirmedAt,
@@ -149,5 +167,37 @@ describe("planner context preferences route", () => {
       },
     });
     expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("updates preferences through the signed-in profile client", async () => {
+    const response = await PUT(
+      request({
+        timezone,
+        defaultPolicy,
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.profileUpdateMaybeSingle).toHaveBeenCalled();
+    expect(mocks.adminProfileUpdateMaybeSingle).not.toHaveBeenCalled();
+  });
+
+  it("maps malformed session JWTs away from preference_update_failed", async () => {
+    mocks.profileUpdateMaybeSingle.mockResolvedValue({
+      data: null,
+      error: { message: "Expected 3 parts in JWT; got 1" },
+    });
+
+    const response = await PUT(
+      request({
+        timezone,
+        defaultPolicy,
+      })
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toMatchObject({
+      code: "authentication_required",
+    });
   });
 });

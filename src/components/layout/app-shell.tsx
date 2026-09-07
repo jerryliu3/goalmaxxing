@@ -41,19 +41,6 @@ interface AppShellProps {
   onNewGoalClick?: () => void;
 }
 
-function destinationKicker(pathname: string) {
-  if (pathname.includes("/insights")) {
-    return "Progress";
-  }
-  if (pathname.includes("/social")) {
-    return "Community";
-  }
-  if (pathname.includes("/settings")) {
-    return "You";
-  }
-  return "Plan";
-}
-
 export function AppShell({
   children,
   userId,
@@ -88,7 +75,6 @@ export function AppShell({
   );
   const ViewTransitionWrapper =
     typeof ViewTransition === "function" ? ViewTransition : Fragment;
-  const kicker = destinationKicker(pathname);
 
   return (
     <XpRewardProvider>
@@ -115,10 +101,7 @@ export function AppShell({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-                          {kicker}
-                        </p>
-                        <p className="font-display truncate text-xl font-semibold tracking-tight md:text-2xl">
+                        <p className="font-display truncate text-2xl font-semibold tracking-tight md:text-3xl">
                           Goalmaxxing
                         </p>
                       </div>
