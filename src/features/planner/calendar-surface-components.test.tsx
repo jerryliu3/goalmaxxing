@@ -1,7 +1,7 @@
-import { render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlannerDndProvider } from "./calendar-dnd";
 import { CalendarDayPreviewList } from "./calendar-day-preview-list";
 import { CalendarMonthDayCell } from "./calendar-month-day-cell";
@@ -47,6 +47,9 @@ const sampleMarker = {
 };
 
 describe("calendar surface extracted components", () => {
+  afterEach(() => {
+    cleanup();
+  });
   it("renders month day cell and delegates click behavior", async () => {
     const onCellClick = vi.fn();
     const onCellPointerDown = vi.fn();
@@ -229,6 +232,52 @@ describe("calendar surface extracted components", () => {
     expect(
       within(view.container).queryByRole("button", { name: "Mark session done" })
     ).not.toBeInTheDocument();
+  });
+
+  it("renders week days as a vertical agenda with weekday labels", async () => {
+    const onCellClick = vi.fn();
+    const user = userEvent.setup();
+
+    renderWithDnd(
+      <ol>
+        <CalendarMonthDayCell
+          day="2026-08-06"
+          inMonth
+          isToday
+          isPastInMonth={false}
+          isSelected
+          layout="agenda"
+          ariaLabel="Thursday, August 6, 2026. 1 planned item."
+          entriesForDay={[sampleEntry]}
+          completionFactMarkersForDay={[]}
+          isAnyEntryDragging={false}
+          getEntryDisplayTitle={(entry) => entry.label ?? "Untitled"}
+          isEntryCredited={() => false}
+          isEntryImmovableForDraft={() => false}
+          onEntryClick={() => {}}
+          onCellClick={onCellClick}
+          onCellDoubleClick={() => {}}
+          onCellMouseEnter={() => {}}
+          onCellMouseLeave={() => {}}
+          onCellPointerDown={() => {}}
+          onCellPointerUp={() => {}}
+          onCellPointerCancel={() => {}}
+          onCellPointerLeave={() => {}}
+          onEntryPointerStart={() => {}}
+          onEntryPointerEnd={() => {}}
+        />
+      </ol>
+    );
+
+    expect(screen.getByText("Thu")).toBeInTheDocument();
+    expect(screen.getByText("6")).toBeInTheDocument();
+    expect(screen.getByText("Easy run")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Mark session done" })
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /thursday, august 6/i }));
+    expect(onCellClick).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -238,6 +238,59 @@ export function PlannerCalendarBoard({
             </div>
           ) : viewMode === "three_day" ? (
             rollingWeekStrip
+          ) : viewMode === "week" && partnerWeekBoard ? (
+            <div
+              className="grid gap-4 md:grid-cols-2"
+              data-testid="duo-week-board"
+            >
+              <section className="space-y-2">
+                <h2 className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                  You
+                </h2>
+                <ol
+                  aria-label="Your week"
+                  className="flex flex-col"
+                  data-calendar-week-agenda="true"
+                >
+                  {focusedWeekCells.map(renderCalendarDayCell)}
+                </ol>
+              </section>
+              <section className="space-y-2">
+                <div className="flex min-h-6 items-center gap-2">
+                  <h2 className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                    {partnerWeekBoard.label}
+                  </h2>
+                  <span className="rounded-[8px] border border-border px-2 py-0.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                    View only
+                  </span>
+                </div>
+                <ol
+                  aria-label={`${partnerWeekBoard.label} week`}
+                  className="flex flex-col"
+                >
+                  {focusedWeekCells.map((cell) => (
+                    <PlannerPartnerWeekDayCell
+                      key={`partner-week-${cell.date}`}
+                      day={cell.date}
+                      inMonth={cell.inMonth}
+                      isToday={cell.date === asOfDate}
+                      isSelected={cell.date === focusedDay}
+                      layout="agenda"
+                      markers={partnerWeekBoard.getMarkersForDay(cell.date)}
+                    />
+                  ))}
+                </ol>
+              </section>
+            </div>
+          ) : viewMode === "week" ? (
+            <ol
+              aria-label="Week agenda"
+              className="flex flex-col"
+              data-testid="week-agenda"
+              data-calendar-week-agenda="true"
+            >
+              {focusedWeekCells.map(renderCalendarDayCell)}
+            </ol>
           ) : (
             <div className="mx-auto w-full max-w-[56rem]">
               <div
@@ -274,61 +327,7 @@ export function PlannerCalendarBoard({
                       </div>
                     </div>
                   </div>
-                ) : viewMode === "week" && partnerWeekBoard ? (
-                  <div
-                    className="grid gap-4 md:grid-cols-2"
-                    data-testid="duo-week-board"
-                  >
-                    <section className="space-y-2">
-                      <h2 className="text-sm font-medium">You</h2>
-                      <div className="grid min-w-[calc(7*((100%-1rem)/3))] grid-cols-[repeat(7,minmax(0,calc((100%-1rem)/3)))] gap-2 text-center text-xs text-muted-foreground md:min-w-0 md:grid-cols-7">
-                        {weekdayLabels.map((weekday) => (
-                          <span key={`viewer-${weekday}`}>{weekday}</span>
-                        ))}
-                      </div>
-                      <div className="grid min-w-[calc(7*((100%-1rem)/3))] grid-cols-[repeat(7,minmax(0,calc((100%-1rem)/3)))] gap-2 md:min-w-0 md:grid-cols-7">
-                        {focusedWeekCells.map(renderCalendarDayCell)}
-                      </div>
-                    </section>
-                    <section className="space-y-2">
-                      <div className="flex min-h-6 items-center gap-2">
-                        <h2 className="text-sm font-medium">{partnerWeekBoard.label}</h2>
-                        <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
-                          View only
-                        </span>
-                      </div>
-                      <div className="grid min-w-[calc(7*((100%-1rem)/3))] grid-cols-[repeat(7,minmax(0,calc((100%-1rem)/3)))] gap-2 text-center text-xs text-muted-foreground md:min-w-0 md:grid-cols-7">
-                        {weekdayLabels.map((weekday) => (
-                          <span key={`partner-${weekday}`}>{weekday}</span>
-                        ))}
-                      </div>
-                      <div className="grid min-w-[calc(7*((100%-1rem)/3))] grid-cols-[repeat(7,minmax(0,calc((100%-1rem)/3)))] gap-2 md:min-w-0 md:grid-cols-7">
-                        {focusedWeekCells.map((cell) => (
-                          <PlannerPartnerWeekDayCell
-                            key={`partner-week-${cell.date}`}
-                            day={cell.date}
-                            inMonth={cell.inMonth}
-                            isToday={cell.date === asOfDate}
-                            markers={partnerWeekBoard.getMarkersForDay(cell.date)}
-                          />
-                        ))}
-                      </div>
-                    </section>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid min-w-[calc(7*((100%-1rem)/3))] grid-cols-[repeat(7,minmax(0,calc((100%-1rem)/3)))] gap-2 text-center text-xs text-muted-foreground md:min-w-0 md:grid-cols-7">
-                      {weekdayLabels.map((weekday) => (
-                        <span key={weekday}>{weekday}</span>
-                      ))}
-                    </div>
-                    <div className="mt-2 grid min-w-[calc(7*((100%-1rem)/3))] grid-cols-[repeat(7,minmax(0,calc((100%-1rem)/3)))] gap-2 md:min-w-0 md:grid-cols-7">
-                      {(viewMode === "week" ? focusedWeekCells : cells).map(
-                        renderCalendarDayCell
-                      )}
-                    </div>
-                  </>
-                )}
+                ) : null}
               </div>
             </div>
           )}
