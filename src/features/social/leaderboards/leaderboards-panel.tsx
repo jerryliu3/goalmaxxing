@@ -1,10 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PublicProfileTrigger } from "@/components/public-profile-trigger";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserAvatar } from "@/components/user-avatar";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CompeteSnapRail,
+  CompeteTile,
+  competeDensity,
+  type CompetePerson,
+  type CompeteTileModel,
+} from "@/features/social/compete-snap-rail";
 import { SocialFreshnessIndicator } from "@/features/social/social-freshness-indicator";
+import { useDuo } from "@/features/social/duo/duo-context";
 import {
   fetchSocialLeaderboards,
   fetchSocialLeaderboardStandings,
@@ -24,27 +30,30 @@ interface LeaderboardsPanelProps {
   onRefreshRequested?: () => void;
 }
 
+function sortSeasons(seasons: LeaderboardSeason[]) {
+  const rank = (status: LeaderboardSeason["status"]) =>
+    status === "open" ? 0 : status === "upcoming" ? 1 : 2;
+  return [...seasons].sort((a, b) => rank(a.status) - rank(b.status));
+}
+
 export function LeaderboardsPanel({
   isActive = true,
   refreshToken = 0,
   onRefreshRequested,
 }: LeaderboardsPanelProps) {
+  const { viewerUserId, state: duoState } = useDuo();
+  const partnerId = duoState.activePartner?.partnerId ?? null;
   const cachedLeaderboards = peekSocialLeaderboardsCache();
   const [seasons, setSeasons] = useState<LeaderboardSeason[]>(
     cachedLeaderboards?.items ?? []
   );
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(
-    cachedLeaderboards?.items[0]?.id ?? null
-  );
-  const [standings, setStandings] = useState<StandingsState | null>(null);
+  const [standingsBySeason, setStandingsBySeason] = useState<
+    Record<string, StandingsState>
+  >({});
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(!cachedLeaderboards);
   const hasPaintedLeaderboardsRef = useRef(Boolean(cachedLeaderboards));
-
-  const selectedSeason = useMemo(
-    () => seasons.find((season) => season.id === selectedSeasonId) ?? null,
-    [seasons, selectedSeasonId]
-  );
 
   const loadSeasons = useCallback(async () => {
     setError(null);
@@ -54,31 +63,26 @@ export function LeaderboardsPanel({
     try {
       const response = await fetchSocialLeaderboards();
       hasPaintedLeaderboardsRef.current = true;
-      setSeasons(response.items);
-      setSelectedSeasonId((current) =>
-        current && response.items.some((season) => season.id === current)
-          ? current
-          : response.items[0]?.id ?? null
+      const nextSeasons = sortSeasons(response.items);
+      setSeasons(nextSeasons);
+      const standingsEntries = await Promise.all(
+        nextSeasons.map(async (season) => {
+          const standing = await fetchSocialLeaderboardStandings(season.id);
+          return [
+            season.id,
+            {
+              season: standing.season,
+              standings: standing.standings,
+              viewerRank: standing.viewerRank,
+            } satisfies StandingsState,
+          ] as const;
+        })
       );
+      setStandingsBySeason(Object.fromEntries(standingsEntries));
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Failed to load leaderboards.");
     } finally {
       setIsLoading(false);
-    }
-  }, []);
-
-  const loadStandings = useCallback(async (seasonId: string) => {
-    try {
-      const response = await fetchSocialLeaderboardStandings(seasonId);
-      setStandings({
-        season: response.season,
-        standings: response.standings,
-        viewerRank: response.viewerRank,
-      });
-    } catch (loadError) {
-      setError(
-        loadError instanceof Error ? loadError.message : "Failed to load standings."
-      );
     }
   }, []);
 
@@ -92,15 +96,39 @@ export function LeaderboardsPanel({
     return () => window.clearTimeout(timeoutId);
   }, [isActive, loadSeasons, refreshToken]);
 
-  useEffect(() => {
-    if (!isActive || !selectedSeasonId) {
-      return;
-    }
-    const timeoutId = window.setTimeout(() => {
-      void loadStandings(selectedSeasonId);
-    }, 0);
-    return () => window.clearTimeout(timeoutId);
-  }, [isActive, loadStandings, refreshToken, selectedSeasonId]);
+  const tiles = useMemo<CompeteTileModel[]>(() => {
+    return seasons
+      .filter((season) => season.status !== "closed")
+      .map((season) => {
+      const standing = standingsBySeason[season.id];
+      const leader = standing?.standings[0]?.score ?? 1;
+      const people: CompetePerson[] = (standing?.standings ?? []).map((row) => ({
+        rank: row.rank,
+        name: row.displayName,
+        you: row.subjectId === viewerUserId,
+        partner: Boolean(partnerId) && row.subjectId === partnerId,
+        label: String(row.score),
+        percent: Math.round((row.score / Math.max(leader, 1)) * 100),
+      }));
+      const viewerRow = people.find((row) => row.you);
+      return {
+        key: season.id,
+        title: season.title,
+        kicker: season.status === "closed" ? "Closed season" : "Live season",
+        metric: viewerRow
+          ? `#${viewerRow.rank} · ${viewerRow.label}`
+          : standing?.viewerRank
+            ? `Your rank: #${standing.viewerRank}`
+            : season.metric,
+        detail: `${season.subjectKind}${season.scope === "group" ? " · group" : ""} · ${season.metric}`,
+        joined: true,
+        closed: season.status === "closed",
+        people,
+        joinLabel: "Join board",
+        leaveLabel: "Leave board",
+      } satisfies CompeteTileModel;
+    });
+  }, [partnerId, seasons, standingsBySeason, viewerUserId]);
 
   if (isLoading && seasons.length === 0) {
     return (
@@ -132,7 +160,7 @@ export function LeaderboardsPanel({
     );
   }
 
-  if (seasons.length === 0) {
+  if (tiles.length === 0) {
     return (
       <Card className="shadow-sm">
         <CardHeader className="space-y-2">
@@ -148,82 +176,33 @@ export function LeaderboardsPanel({
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Leaderboard seasons</CardTitle>
-          <SocialFreshnessIndicator
-            refreshToken={refreshToken}
-            onRefreshRequested={onRefreshRequested}
-          />
-          <CardDescription>Select an active or recently closed season.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {seasons.map((season) => {
-            const selected = season.id === selectedSeasonId;
-            return (
-              <button
-                key={season.id}
-                type="button"
-                onClick={() => setSelectedSeasonId(season.id)}
-                className={`w-full rounded-md border bg-card p-3 text-left transition-[transform,box-shadow,border-color,background-color] duration-150 hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-[inset_0_2px_5px_rgba(15,23,42,0.22)] ${
-                  selected
-                    ? "translate-y-[3px] cursor-default border-primary bg-primary/5 shadow-[inset_0_2px_5px_rgba(15,23,42,0.22)] hover:translate-y-[3px]"
-                    : "border-border shadow-[0_3px_0_rgba(15,23,42,0.14)]"
-                }`}
-              >
-                <p className="font-medium">{season.title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {season.status} · {season.subjectKind}
-                  {season.scope === "group" ? " · group" : ""} · {season.metric}
-                </p>
-              </button>
-            );
-          })}
-        </CardContent>
-      </Card>
-
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>{standings?.season.title ?? selectedSeason?.title ?? "Standings"}</CardTitle>
-          <CardDescription>
-            {standings?.viewerRank
-              ? `Your rank: #${standings.viewerRank}`
-              : "Your rank will appear once you have a score."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 text-base">
-            {(standings?.standings ?? []).map((entry) => (
-              <div
-                key={entry.subjectId}
-                className="flex items-center justify-between rounded border p-3"
-              >
-                <PublicProfileTrigger
-                  subjectUserId={entry.subjectId}
-                  buttonLabel={`Open ${entry.displayName} profile`}
-                  className="-ml-1.5 flex min-w-0 items-center gap-3"
-                >
-                  <UserAvatar
-                    avatarUrl={entry.avatarUrl}
-                    displayName={entry.displayName}
-                    username={null}
-                    size="sm"
-                    alt={`${entry.displayName} avatar`}
-                  />
-                  <p className="text-xl font-medium">
-                    #{entry.rank} {entry.displayName}
-                  </p>
-                </PublicProfileTrigger>
-                <p className="font-medium">{entry.score}</p>
-              </div>
-            ))}
-            {(standings?.standings ?? []).length === 0 ? (
-              <p className="text-muted-foreground">No standings recorded yet.</p>
-            ) : null}
-          </div>
-        </CardContent>
-      </Card>
+    <div>
+      <div className="mb-1">
+        <SocialFreshnessIndicator
+          refreshToken={refreshToken}
+          onRefreshRequested={onRefreshRequested}
+        />
+      </div>
+      <CompeteSnapRail
+        label="Leaderboards"
+        hint="Stage-size posters · snap to the next season"
+      >
+        {tiles.map((tile) => {
+          const expanded = expandedId === tile.key;
+          return (
+            <CompeteTile
+              key={tile.key}
+              tile={tile}
+              span="wide"
+              density={competeDensity({ joined: tile.joined, expanded })}
+              expanded={expanded}
+              onExpand={() =>
+                setExpandedId((current) => (current === tile.key ? null : tile.key))
+              }
+            />
+          );
+        })}
+      </CompeteSnapRail>
     </div>
   );
 }

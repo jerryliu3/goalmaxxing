@@ -52,10 +52,6 @@ vi.mock("@/features/social/team/team-panel", () => ({
   ),
 }));
 
-vi.mock("@/features/social/group-join-card", () => ({
-  GroupJoinCard: () => <div data-testid="group-join-card" />,
-}));
-
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
     auth: {
@@ -128,21 +124,20 @@ describe("SocialSurface refresh behavior", () => {
     );
   });
 
-  it("renders leaderboards, challenges, and team on one page", async () => {
+  it("renders team, challenges, and leaderboards on one page", async () => {
     render(<SocialSurface />);
 
     await waitFor(() => {
-      expect(screen.getByTestId("leaderboards-panel")).toBeInTheDocument();
+      expect(screen.getByTestId("team-panel")).toBeInTheDocument();
     });
     expect(screen.getByTestId("challenge-list")).toBeInTheDocument();
-    expect(screen.getByTestId("group-join-card")).toBeInTheDocument();
-    expect(screen.getByTestId("team-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("leaderboards-panel")).toBeInTheDocument();
+    expect(screen.queryByTestId("group-join-card")).not.toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Team" })).not.toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Challenges" })).not.toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Leaderboards" })).not.toBeInTheDocument();
 
-    const page = screen.getByTestId("leaderboards-panel").closest(".flex");
-    expect(page?.contains(screen.getByTestId("leaderboards-panel"))).toBe(true);
+    const page = screen.getByTestId("team-panel").closest(".flex");
     const sections = page?.querySelectorAll("section") ?? [];
     expect(sections[0]).toContainElement(screen.getByTestId("leaderboards-panel"));
     expect(sections[1]).toContainElement(screen.getByTestId("challenge-list"));
@@ -251,7 +246,7 @@ describe("SocialSurface private accounts", () => {
     });
     expect(screen.queryByTestId("feed-list")).not.toBeInTheDocument();
     expect(screen.queryByTestId("challenge-list")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("group-join-card")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("leaderboards-panel")).not.toBeInTheDocument();
   });
 
   it("rewrites leftover feed links to the single community page", async () => {

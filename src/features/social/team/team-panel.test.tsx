@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TeamPanel } from "./team-panel";
 
@@ -8,6 +9,17 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
+}));
+
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => {
+    const query = {
+      select: () => query,
+      eq: () => query,
+      order: async () => ({ data: [], error: null }),
+    };
+    return { from: () => query };
+  },
 }));
 
 vi.mock("@/features/social/data", () => ({
@@ -49,7 +61,20 @@ describe("TeamPanel", () => {
   it("shows accumulated team XP in the current team section", async () => {
     render(<TeamPanel />);
 
-    expect(await screen.findByText("Team XP")).toBeInTheDocument();
-    expect(screen.getByText("55 XP")).toBeInTheDocument();
+    expect(await screen.findByText("Team XP 55")).toBeInTheDocument();
+  });
+
+  it("keeps invites and leave behind Team settings", async () => {
+    const user = userEvent.setup();
+    render(<TeamPanel />);
+
+    expect(await screen.findByRole("button", { name: "Team settings" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Leave team" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Team settings" }));
+    expect(screen.getByRole("button", { name: "Leave team" })).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Invites and join codes stay here/)
+    ).not.toBeInTheDocument();
   });
 });

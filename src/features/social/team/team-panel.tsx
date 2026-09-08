@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Settings } from "lucide-react";
 import { PublicProfileTrigger } from "@/components/public-profile-trigger";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/user-avatar";
+import { GroupJoinCard } from "@/features/social/group-join-card";
 import {
   acceptSocialTeamInvite,
   createSocialTeamInvite,
@@ -14,27 +16,34 @@ import {
   fetchSocialTeamState,
   peekSocialTeamStateCache,
 } from "@/features/social/data";
-import {
-  TEAM_NUDGE_USER_TEXT_MAX_LENGTH,
-  type TeamStateRow,
-} from "@cadence/shared/social/team";
+import { type TeamStateRow } from "@cadence/shared/social/team";
 import { NudgeButton } from "@/features/social/team/nudge-button";
-import { TeamXpSummary } from "@/features/social/team/team-xp-summary";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
+import { createClient } from "@/lib/supabase/client";
 
 interface TeamPanelProps {
   isActive?: boolean;
   refreshToken?: number;
 }
 
+interface SharedGoalRow {
+  id: string;
+  title: string;
+}
+
+const WEEKDAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
+
 export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps) {
   const router = useAppRouter();
+  const supabase = useMemo(() => createClient(), []);
   const cachedTeam = peekSocialTeamStateCache();
   const [rows, setRows] = useState<TeamStateRow[]>(cachedTeam?.items ?? []);
   const [partnerUsername, setPartnerUsername] = useState("");
   const [message, setMessage] = useState("");
-  const [nudgeMessage, setNudgeMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [sharedGoals, setSharedGoals] = useState<SharedGoalRow[]>([]);
+  const todayWeekIndex = (new Date().getDay() + 6) % 7;
 
   const activeTeam = useMemo(
     () => rows.find((row) => row.status === "active") ?? null,
@@ -55,6 +64,23 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
     }
   }, []);
 
+  const loadSharedGoals = useCallback(
+    async (teamId: string) => {
+      const { data, error: goalsError } = await supabase
+        .from("goals")
+        .select("id, title")
+        .eq("team_id", teamId)
+        .eq("is_deleted", false)
+        .order("title");
+      if (goalsError) {
+        setSharedGoals([]);
+        return;
+      }
+      setSharedGoals((data ?? []) as SharedGoalRow[]);
+    },
+    [supabase]
+  );
+
   useEffect(() => {
     if (!isActive) {
       return;
@@ -64,6 +90,16 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
     }, 0);
     return () => window.clearTimeout(timeoutId);
   }, [isActive, load, refreshToken]);
+
+  useEffect(() => {
+    if (!activeTeam) {
+      return;
+    }
+    const timeoutId = window.setTimeout(() => {
+      void loadSharedGoals(activeTeam.teamId);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [activeTeam, loadSharedGoals]);
 
   async function sendInvite() {
     setError(null);
@@ -116,98 +152,209 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
     }
   }
 
+  const partnerName =
+    activeTeam?.partnerDisplayName ??
+    activeTeam?.partnerUsername ??
+    "Partner";
+
   return (
-    <div className="space-y-4">
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Team</CardTitle>
-          <CardDescription>
+    <section className="overflow-hidden rounded-[16px] border border-border">
+      <div className="flex flex-wrap items-start justify-between gap-4 bg-muted/40 px-5 py-5">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            Team
+          </p>
+          <h2 className="mt-1 font-display text-4xl font-semibold tracking-tight">
+            {activeTeam ? partnerName : "Find a partner"}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             {activeTeam
-              ? `Active with ${activeTeam.partnerDisplayName ?? activeTeam.partnerUsername ?? "partner"}`
+              ? `Team XP ${activeTeam.teamXp ?? 0}`
               : "Invite a partner or accept an invite to start duo progress."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {activeTeam ? (
-            <div className="space-y-2">
-              <PublicProfileTrigger
-                subjectUserId={activeTeam.partnerId}
-                buttonLabel={`Open ${activeTeam.partnerDisplayName ?? activeTeam.partnerUsername ?? "partner"} profile`}
-                className="flex items-center gap-3 rounded border border-border bg-muted/20 px-3 py-3"
-              >
-                <UserAvatar
-                  avatarUrl={activeTeam.partnerAvatarUrl}
-                  displayName={activeTeam.partnerDisplayName}
-                  username={activeTeam.partnerUsername}
-                  size="sm"
-                  alt="Partner avatar"
-                />
-                <div className="min-w-0">
-                  <p className="truncate text-xl font-medium">
-                    {activeTeam.partnerDisplayName ??
-                      activeTeam.partnerUsername ??
-                      "Partner"}
-                  </p>
-                  <p className="truncate text-sm text-muted-foreground">
-                    Team partner
-                  </p>
-                </div>
-              </PublicProfileTrigger>
-              <TeamXpSummary totalXp={activeTeam.teamXp ?? 0} />
-              <Input
-                value={nudgeMessage}
-                onChange={(event) => setNudgeMessage(event.target.value)}
-                placeholder="Optional nudge message"
-                maxLength={TEAM_NUDGE_USER_TEXT_MAX_LENGTH}
-              />
-              <NudgeButton
-                partnerId={activeTeam.partnerId}
-                optionalMessage={nudgeMessage}
-                onSent={() => {
-                  void load();
-                }}
-              />
-              <Button type="button" variant="destructive" onClick={() => void dissolveActiveTeam()}>
-                Leave team
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className="grid gap-2 md:grid-cols-3">
-                <Input
-                  value={partnerUsername}
-                  onChange={(event) => setPartnerUsername(event.target.value)}
-                  placeholder="Partner username"
-                />
-                <Input
-                  value={message}
-                  onChange={(event) => setMessage(event.target.value)}
-                  placeholder="Invite message (optional)"
-                />
-                <Button
-                  type="button"
-                  onClick={() => void sendInvite()}
-                  disabled={partnerUsername.trim().replace(/^@/, "").length < 3}
-                >
-                  Send invite
-                </Button>
+          </p>
+        </div>
+        {activeTeam ? (
+          <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+            <NudgeButton
+              partnerId={activeTeam.partnerId}
+              onSent={() => {
+                void load();
+              }}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-expanded={settingsOpen}
+              aria-label="Team settings"
+              title="Team settings"
+              onClick={() => setSettingsOpen((open) => !open)}
+            >
+              <Settings />
+            </Button>
+          </div>
+        ) : null}
+      </div>
+
+      {activeTeam ? (
+        <div className="grid gap-px bg-border lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+          <div className="bg-background p-5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Shared week
+            </p>
+            <Link
+              href="/calendar?view=week"
+              className="mt-3 block"
+              aria-label="Open shared week on Plan"
+            >
+              <div className="grid grid-cols-7 gap-1">
+                {WEEKDAY_LABELS.map((label, index) => (
+                  <div key={`${label}-${index}`} className="text-center">
+                    <p className="mb-1 text-[10px] text-muted-foreground">{label}</p>
+                    <div
+                      className={`h-10 rounded-md ${
+                        index === todayWeekIndex
+                          ? "bg-today"
+                          : index < todayWeekIndex
+                            ? "bg-primary/30"
+                            : "bg-muted"
+                      }`}
+                    />
+                  </div>
+                ))}
               </div>
-              <div className="space-y-2 text-sm">
-                <p className="font-medium">Pending invites</p>
+            </Link>
+          </div>
+          <div className="bg-background p-5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Shared goals
+            </p>
+            {activeTeam && sharedGoals.length === 0 ? (
+              <p className="mt-3 text-xs text-muted-foreground">
+                Tap a goal to open it on Plan. No editor lives here.
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {sharedGoals.map((goal) => (
+                  <li key={goal.id}>
+                    <Link
+                      href="/calendar?view=week"
+                      className="flex w-full items-center justify-between gap-3 rounded-md text-left text-sm hover:bg-muted/60"
+                    >
+                      <span>{goal.title}</span>
+                      <span className="text-xs text-muted-foreground">Open on Plan</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4 bg-background p-5">
+          <div className="grid gap-2 md:grid-cols-3">
+            <Input
+              value={partnerUsername}
+              onChange={(event) => setPartnerUsername(event.target.value)}
+              placeholder="Partner username"
+            />
+            <Input
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              placeholder="Invite message (optional)"
+            />
+            <Button
+              type="button"
+              onClick={() => void sendInvite()}
+              disabled={partnerUsername.trim().replace(/^@/, "").length < 3}
+            >
+              Send invite
+            </Button>
+          </div>
+          <div className="space-y-2 text-sm">
+            <p className="font-medium">Pending invites</p>
+            {pendingInvites.length === 0 ? (
+              <p className="text-muted-foreground">No pending invites.</p>
+            ) : (
+              pendingInvites.map((invite) => (
+                <div key={invite.teamId} className="rounded border p-3">
+                  <p className="font-medium">
+                    {invite.partnerDisplayName ?? invite.partnerUsername ?? invite.partnerId}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {invite.isIncoming ? "Incoming" : "Outgoing"}
+                  </p>
+                  {invite.isIncoming ? (
+                    <div className="mt-2 flex gap-2">
+                      <Button type="button" size="sm" onClick={() => void acceptInvite(invite.teamId)}>
+                        Accept
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void declineInvite(invite.teamId)}
+                      >
+                        Decline
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              ))
+            )}
+          </div>
+          <GroupJoinCard />
+        </div>
+      )}
+
+      {activeTeam && settingsOpen ? (
+        <div className="border-t border-border p-5">
+          <p className="text-sm font-semibold">Team settings</p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-[10px] border border-border p-3">
+              <p className="text-xs font-semibold">Invite</p>
+              <Input
+                className="mt-2"
+                value={partnerUsername}
+                onChange={(event) => setPartnerUsername(event.target.value)}
+                placeholder="username"
+              />
+              <Input
+                className="mt-2"
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                placeholder="Invite message (optional)"
+              />
+              <Button
+                type="button"
+                size="sm"
+                className="mt-2"
+                onClick={() => void sendInvite()}
+                disabled={partnerUsername.trim().replace(/^@/, "").length < 3}
+              >
+                Send invite
+              </Button>
+              <div className="mt-3 space-y-2 text-sm">
                 {pendingInvites.length === 0 ? (
                   <p className="text-muted-foreground">No pending invites.</p>
                 ) : (
                   pendingInvites.map((invite) => (
                     <div key={invite.teamId} className="rounded border p-3">
                       <p className="font-medium">
-                        {invite.partnerDisplayName ?? invite.partnerUsername ?? invite.partnerId}
+                        {invite.partnerDisplayName ??
+                          invite.partnerUsername ??
+                          invite.partnerId}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {invite.isIncoming ? "Incoming" : "Outgoing"}
                       </p>
                       {invite.isIncoming ? (
                         <div className="mt-2 flex gap-2">
-                          <Button type="button" size="sm" onClick={() => void acceptInvite(invite.teamId)}>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => void acceptInvite(invite.teamId)}
+                          >
                             Accept
                           </Button>
                           <Button
@@ -224,11 +371,40 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
                   ))
                 )}
               </div>
-            </>
-          )}
-          {error ? <p className="text-xs text-destructive">{error}</p> : null}
-        </CardContent>
-      </Card>
-    </div>
+            </div>
+            <div className="rounded-[10px] border border-border p-3">
+              <GroupJoinCard />
+            </div>
+          </div>
+          <PublicProfileTrigger
+            subjectUserId={activeTeam.partnerId}
+            buttonLabel={`Open ${partnerName} profile`}
+            className="mt-4 flex items-center gap-3 rounded border border-border bg-muted/20 px-3 py-3"
+          >
+            <UserAvatar
+              avatarUrl={activeTeam.partnerAvatarUrl}
+              displayName={activeTeam.partnerDisplayName}
+              username={activeTeam.partnerUsername}
+              size="sm"
+              alt="Partner avatar"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{partnerName}</p>
+              <p className="truncate text-xs text-muted-foreground">Team partner</p>
+            </div>
+          </PublicProfileTrigger>
+          <Button
+            type="button"
+            variant="ghost"
+            className="mt-4 text-muted-foreground"
+            onClick={() => void dissolveActiveTeam()}
+          >
+            Leave team
+          </Button>
+        </div>
+      ) : null}
+
+      {error ? <p className="px-5 pb-4 text-xs text-destructive">{error}</p> : null}
+    </section>
   );
 }

@@ -5,14 +5,11 @@ import { ChallengeList } from "@/features/social/challenges/challenge-list";
 import type { SocialChallenge } from "@/features/social/types";
 
 const fetchSocialChallengesMock = vi.fn();
-const fetchSocialChallengeDetailMock = vi.fn();
 const joinSocialChallengeMock = vi.fn();
 const leaveSocialChallengeMock = vi.fn();
 
 vi.mock("@/features/social/data", () => ({
   fetchSocialChallenges: (...args: unknown[]) => fetchSocialChallengesMock(...args),
-  fetchSocialChallengeDetail: (...args: unknown[]) =>
-    fetchSocialChallengeDetailMock(...args),
   joinSocialChallenge: (...args: unknown[]) => joinSocialChallengeMock(...args),
   leaveSocialChallenge: (...args: unknown[]) => leaveSocialChallengeMock(...args),
   peekSocialChallengesCache: () => null,
@@ -22,7 +19,11 @@ vi.mock("@/features/social/social-freshness-indicator", () => ({
   SocialFreshnessIndicator: () => <div data-testid="social-freshness-indicator" />,
 }));
 
-function makeChallenge(id: string, title: string): SocialChallenge {
+function makeChallenge(
+  id: string,
+  title: string,
+  overrides: Partial<SocialChallenge> = {}
+): SocialChallenge {
   return {
     id,
     slug: title.toLowerCase().replaceAll(" ", "-"),
@@ -44,6 +45,7 @@ function makeChallenge(id: string, title: string): SocialChallenge {
     viewerAwardedAt: null,
     audienceKind: "global",
     groupId: null,
+    ...overrides,
   };
 }
 
@@ -57,7 +59,7 @@ describe("ChallengeList", () => {
     vi.clearAllMocks();
   });
 
-  it("switches selected challenges without reloading the roster", async () => {
+  it("expands ranks on click without reloading the roster", async () => {
     const challenges = [
       makeChallenge("11111111-1111-4111-8111-111111111111", "Weekly XP Sprint"),
       makeChallenge("22222222-2222-4222-8222-222222222222", "Cohort Health Push"),
@@ -66,27 +68,57 @@ describe("ChallengeList", () => {
       schemaVersion: "1",
       items: challenges,
     });
-    fetchSocialChallengeDetailMock.mockResolvedValue({
-      schemaVersion: "1",
-      item: challenges[0],
-    });
 
     render(<ChallengeList />);
     expect(
-      await screen.findByRole("button", { name: /Weekly XP Sprint/i })
+      await screen.findByRole("heading", { name: "Weekly XP Sprint" })
     ).toBeInTheDocument();
     await nextTick();
 
     expect(fetchSocialChallengesMock).toHaveBeenCalledTimes(1);
-    expect(fetchSocialChallengeDetailMock).toHaveBeenCalledTimes(0);
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: /Cohort Health Push/i }));
-    expect(screen.getByText("Cohort Health Push description")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Tap to open Cohort Health Push" }));
+    expect(screen.getByRole("button", { name: "Collapse Cohort Health Push" })).toBeInTheDocument();
+    expect(screen.getByText("Tap to open")).toBeInTheDocument();
     await nextTick();
 
     expect(fetchSocialChallengesMock).toHaveBeenCalledTimes(1);
-    expect(fetchSocialChallengeDetailMock).toHaveBeenCalledTimes(0);
+  });
+
+  it("joins and leaves from the tile foot", async () => {
+    const open = makeChallenge(
+      "11111111-1111-4111-8111-111111111111",
+      "Open Sprint",
+      { viewerJoined: false }
+    );
+    const joined = makeChallenge(
+      "22222222-2222-4222-8222-222222222222",
+      "Joined Sprint",
+      { viewerJoined: true }
+    );
+    fetchSocialChallengesMock.mockResolvedValue({
+      schemaVersion: "1",
+      items: [open, joined],
+    });
+    joinSocialChallengeMock.mockResolvedValue({ schemaVersion: "1", joined: true });
+    leaveSocialChallengeMock.mockResolvedValue({ schemaVersion: "1", joined: false });
+
+    render(<ChallengeList />);
+    expect(await screen.findByRole("button", { name: "Join challenge" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Leave challenge" })).not.toBeInTheDocument();
+    expect(screen.getByText("Ranked people stay hidden until you join or open this tile.")).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Join challenge" }));
+    await waitFor(() => {
+      expect(joinSocialChallengeMock).toHaveBeenCalledWith(open.id);
+    });
+    await user.click(screen.getByRole("button", { name: /Tap to open Joined Sprint/ }));
+    await user.click(screen.getByRole("button", { name: "Leave challenge" }));
+    await waitFor(() => {
+      expect(leaveSocialChallengeMock).toHaveBeenCalledWith(joined.id);
+    });
   });
 
   it("keeps the Challenges title when the roster fails to load", async () => {
@@ -127,5 +159,21 @@ describe("ChallengeList", () => {
     expect(
       screen.queryByText("New challenges will appear here when published.")
     ).not.toBeInTheDocument();
+  });
+
+  it("hides closed and archived challenges", async () => {
+    fetchSocialChallengesMock.mockResolvedValue({
+      schemaVersion: "1",
+      items: [
+        makeChallenge("11111111-1111-4111-8111-111111111111", "Closed Sprint", {
+          status: "closed",
+        }),
+        makeChallenge("22222222-2222-4222-8222-222222222222", "Live Sprint"),
+      ],
+    });
+
+    render(<ChallengeList />);
+    expect(await screen.findByRole("heading", { name: "Live Sprint" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Closed Sprint" })).not.toBeInTheDocument();
   });
 });
