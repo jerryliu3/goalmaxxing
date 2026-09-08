@@ -59,6 +59,15 @@ describe("feature flags", () => {
     });
   });
 
+  it("enables XP and social by default in local development", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    resetEnvCacheForTests();
+    expect(getFeatureFlags()).toMatchObject({
+      xpEnabled: true,
+      socialEnabled: true,
+    });
+  });
+
   it("reads the integrations kill switch from env", () => {
     vi.stubEnv("INTEGRATIONS_ENABLED", "true");
     resetEnvCacheForTests();

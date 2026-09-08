@@ -64,6 +64,7 @@ export default defineConfig({
     env: {
       NEXT_PUBLIC_APP_URL: baseURL,
       SOCIAL_ENABLED: process.env.SOCIAL_ENABLED ?? "true",
+      XP_ENABLED: process.env.XP_ENABLED ?? "true",
       // Present for push-dispatch routes; not required for boot outside Vercel prod.
       CRON_SECRET: process.env.CRON_SECRET ?? "playwright-cron-secret",
     },

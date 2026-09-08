@@ -6,6 +6,7 @@ import {
 import { NextResponse } from "next/server";
 import { runAfterResponse } from "@/lib/api/after";
 import { flushNotificationOutbox } from "@/lib/push/outbox";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { requireSocialRouteContext } from "@/lib/social/api";
 import { mapTeamStateError } from "@/lib/social/team";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -81,11 +82,16 @@ export async function GET(request: Request) {
     const activeTeam = items.find(
       (item) => item.status === "active" && item.acceptedAt
     );
-    if (activeTeam?.acceptedAt) {
-      activeTeam.teamXp = await readTeamXp({
-        acceptedAt: activeTeam.acceptedAt,
-        userIds: [context.userId, activeTeam.partnerId],
-      });
+    if (activeTeam?.acceptedAt && isFeatureEnabled("xpEnabled")) {
+      try {
+        activeTeam.teamXp = await readTeamXp({
+          acceptedAt: activeTeam.acceptedAt,
+          userIds: [context.userId, activeTeam.partnerId],
+        });
+      } catch {
+        // Team XP is additive. Missing admin credentials or ledger errors
+        // should not hide the rest of team state.
+      }
     }
 
     return NextResponse.json(

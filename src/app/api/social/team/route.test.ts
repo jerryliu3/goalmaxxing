@@ -98,6 +98,8 @@ describe("GET /api/social/team", () => {
   });
 
   it("derives active team XP from both members' signed global ledger rows", async () => {
+    vi.stubEnv("XP_ENABLED", "true");
+    resetEnvCacheForTests();
     mocks.rpc.mockResolvedValue({
       data: [
         {
@@ -147,6 +149,8 @@ describe("GET /api/social/team", () => {
   });
 
   it("paginates ledger reads so large team totals are not truncated", async () => {
+    vi.stubEnv("XP_ENABLED", "true");
+    resetEnvCacheForTests();
     mocks.rpc.mockResolvedValue({
       data: [
         {
@@ -185,5 +189,77 @@ describe("GET /api/social/team", () => {
     });
     expect(mocks.range).toHaveBeenNthCalledWith(1, 0, 999);
     expect(mocks.range).toHaveBeenNthCalledWith(2, 1_000, 1_999);
+  });
+
+  it("skips team XP ledger reads when XP is disabled", async () => {
+    vi.stubEnv("XP_ENABLED", "false");
+    resetEnvCacheForTests();
+    mocks.rpc.mockResolvedValue({
+      data: [
+        {
+          team_id: "11111111-1111-4111-8111-111111111111",
+          status: "active",
+          partner_id: "partner-1",
+          partner_username: "partner",
+          partner_display_name: "Partner",
+          partner_avatar_url: null,
+          invite_message: null,
+          invited_at: "2026-08-10T00:00:00.000Z",
+          accepted_at: "2026-08-12T14:30:00.000Z",
+          closed_at: null,
+          is_incoming: true,
+        },
+      ],
+      error: null,
+    });
+
+    const response = await GET(new Request("http://localhost/api/social/team"));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      items: [{ status: "active", acceptedAt: "2026-08-12T14:30:00.000Z" }],
+    });
+    expect(mocks.createAdminClient).not.toHaveBeenCalled();
+    expect(mocks.from).not.toHaveBeenCalled();
+  });
+
+  it("returns team state without team XP when the admin ledger client fails", async () => {
+    vi.stubEnv("XP_ENABLED", "true");
+    resetEnvCacheForTests();
+    mocks.rpc.mockResolvedValue({
+      data: [
+        {
+          team_id: "11111111-1111-4111-8111-111111111111",
+          status: "active",
+          partner_id: "partner-1",
+          partner_username: "partner",
+          partner_display_name: "Partner",
+          partner_avatar_url: null,
+          invite_message: null,
+          invited_at: "2026-08-10T00:00:00.000Z",
+          accepted_at: "2026-08-12T14:30:00.000Z",
+          closed_at: null,
+          is_incoming: true,
+        },
+      ],
+      error: null,
+    });
+    mocks.createAdminClient.mockImplementation(() => {
+      throw new Error(
+        "SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY must be a service-role JWT or sb_secret_ key."
+      );
+    });
+
+    const response = await GET(new Request("http://localhost/api/social/team"));
+
+    expect(response.status).toBe(200);
+    const payload = await response.json();
+    expect(payload.items).toEqual([
+      expect.objectContaining({
+        status: "active",
+        acceptedAt: "2026-08-12T14:30:00.000Z",
+      }),
+    ]);
+    expect(payload.items[0].teamXp).toBeNull();
   });
 });

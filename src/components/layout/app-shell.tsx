@@ -96,18 +96,18 @@ export function AppShell({
                     style={{ viewTransitionName: "app-shell-header" }}
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
+                      <div className="flex min-w-0 items-center gap-3">
                         <p className="font-display truncate text-2xl font-semibold tracking-tight md:text-3xl">
                           Goalmaxxing
                         </p>
+                        <XpProgressBar />
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <div className="flex items-center gap-2">
-                          <XpProgressBar />
                           <Button
                             asChild={!onNewGoalClick}
                             size="sm"
-                            className="hidden h-8 bg-primary text-primary-foreground hover:bg-primary/80 md:inline-flex"
+                            className="inline-flex h-8 bg-primary text-primary-foreground hover:bg-primary/80"
                             title="New Goal +"
                             data-onboarding="nav.new-goal"
                             onClick={onNewGoalClick}
@@ -153,28 +153,6 @@ export function AppShell({
                   )}
                   </div>
                 </div>
-                {onNewGoalClick ? (
-                  <button
-                    type="button"
-                    className="fixed right-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-40 flex size-12 items-center justify-center rounded-[12px] bg-primary text-lg font-semibold text-primary-foreground shadow-md md:hidden"
-                    title="New Goal +"
-                    data-onboarding="nav.new-goal"
-                    onClick={onNewGoalClick}
-                  >
-                    +
-                    <span className="sr-only">New Goal +</span>
-                  </button>
-                ) : (
-                  <Link
-                    href={newGoalHref}
-                    className="fixed right-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-40 flex size-12 items-center justify-center rounded-[12px] bg-primary text-lg font-semibold text-primary-foreground shadow-md md:hidden"
-                    title="New Goal +"
-                    data-onboarding="nav.new-goal"
-                  >
-                    +
-                    <span className="sr-only">New Goal +</span>
-                  </Link>
-                )}
                 <div className="relative z-50 md:hidden" style={{ viewTransitionName: "app-mobile-tab-nav" }}>
                   <TabNav
                     mobile
