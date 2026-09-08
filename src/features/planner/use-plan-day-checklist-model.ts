@@ -8,11 +8,13 @@ import { useChecklistFilters } from "@/features/today/use-checklist-filters";
 import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
 
 export function usePlanDayChecklistModel({
+  isActive,
   viewDate,
   searchQuery,
   asOfDate = null,
   timezone = null,
 }: {
+  isActive: boolean;
   viewDate: string;
   searchQuery: string;
   asOfDate?: string | null;
@@ -21,7 +23,7 @@ export function usePlanDayChecklistModel({
   const filters = useChecklistFilters();
   const { data, loading, loadData, redirectToLogin, todayLocalDate } =
     useChecklistData({
-      isActive: true,
+      isActive,
       viewDate,
       asOfDate,
       timezone,
@@ -67,7 +69,7 @@ export function usePlanDayChecklistModel({
     loadData,
     redirectToLogin,
   });
-  const ready = data.userId.length > 0;
+  const ready = isActive && data.userId.length > 0;
   const visibilityOptions = [
     {
       label: "Show past goals",
