@@ -69,7 +69,7 @@ describe("InsightsGoalStatsFilters", () => {
     expect(
       screen.getByRole("heading", { name: "Progress filters" })
     ).toBeInTheDocument();
-    expect(screen.getByRole("dialog", { name: "Progress filters" })).toHaveClass(
+    expect(screen.getByRole("dialog", { name: "Progress filters" })).not.toHaveClass(
       "overflow-visible"
     );
     expect(screen.getByText("Show past goals")).toBeInTheDocument();

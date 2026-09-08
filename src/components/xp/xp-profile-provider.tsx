@@ -69,7 +69,13 @@ const XpProfileContext = createContext<XpProfileContextValue>({
 
 const defaultBand = bandForTotalXp(0);
 
-export function XpProfileProvider({ children }: { children: ReactNode }) {
+export function XpProfileProvider({
+  children,
+  enabled = true,
+}: {
+  children: ReactNode;
+  enabled?: boolean;
+}) {
   const { celebrate } = useXpReward();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<XpProfilePayload["profile"] | null>(null);
@@ -172,6 +178,14 @@ export function XpProfileProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      setProfile(null);
+      setTracks([]);
+      setNextReward(null);
+      return;
+    }
+
     const runLoad = () => {
       void loadProfile();
     };
@@ -191,13 +205,16 @@ export function XpProfileProvider({ children }: { children: ReactNode }) {
         window.clearTimeout(timeoutId);
       }
     };
-  }, [loadProfile]);
+  }, [enabled, loadProfile]);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
     return subscribeXpRefresh((detail) => {
       void loadProfile(detail ?? null);
     });
-  }, [loadProfile]);
+  }, [enabled, loadProfile]);
 
   const value = useMemo<XpProfileContextValue>(
     () => ({

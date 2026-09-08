@@ -32,16 +32,6 @@ interface DropdownPosition {
   top: number;
   width: number;
   maxHeight: number;
-  useFixed: boolean;
-}
-
-function resolvePortalContainer(trigger: HTMLElement | null): HTMLElement {
-  if (!trigger) {
-    return document.body;
-  }
-
-  const dialogContent = trigger.closest('[data-slot="dialog-content"]');
-  return dialogContent instanceof HTMLElement ? dialogContent : document.body;
 }
 
 export function CheckboxDropdown({
@@ -62,7 +52,6 @@ export function CheckboxDropdown({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const [position, setPosition] = useState<DropdownPosition | null>(null);
 
   const updatePosition = useCallback(() => {
@@ -71,18 +60,14 @@ export function CheckboxDropdown({
       return;
     }
 
-    const container = resolvePortalContainer(trigger);
-    const useFixed = container === document.body;
     const viewportPadding = 8;
     const gap = 6;
     const defaultMaxHeight = 224;
     const minMenuHeight = 120;
     const searchHeaderHeight = enableSearch ? 40 : 0;
     const triggerRect = trigger.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
     const width = Math.max(triggerRect.width, 180);
-    const spaceBelow =
-      window.innerHeight - triggerRect.bottom - viewportPadding;
+    const spaceBelow = window.innerHeight - triggerRect.bottom - viewportPadding;
     const spaceAbove = triggerRect.top - viewportPadding;
     const openUpward = spaceBelow < 180 && spaceAbove > spaceBelow;
     const availableHeight = openUpward ? spaceAbove - gap : spaceBelow - gap;
@@ -90,30 +75,19 @@ export function CheckboxDropdown({
       minMenuHeight,
       Math.min(defaultMaxHeight, availableHeight - searchHeaderHeight)
     );
+    const unclampedTop = openUpward
+      ? triggerRect.top - gap - maxHeight - searchHeaderHeight
+      : triggerRect.bottom + gap;
+    const top = Math.min(
+      Math.max(viewportPadding, unclampedTop),
+      window.innerHeight - viewportPadding - maxHeight - searchHeaderHeight
+    );
+    const left = Math.min(
+      Math.max(viewportPadding, triggerRect.left),
+      window.innerWidth - viewportPadding - width
+    );
 
-    const top = useFixed
-      ? (() => {
-          const unclampedTop = openUpward
-            ? triggerRect.top - gap - maxHeight - searchHeaderHeight
-            : triggerRect.bottom + gap;
-          return Math.min(
-            Math.max(viewportPadding, unclampedTop),
-            window.innerHeight - viewportPadding - maxHeight - searchHeaderHeight
-          );
-        })()
-      : openUpward
-        ? triggerRect.top - containerRect.top - gap - maxHeight - searchHeaderHeight
-        : triggerRect.bottom - containerRect.top + gap;
-
-    const left = useFixed
-      ? Math.min(
-          Math.max(viewportPadding, triggerRect.left),
-          window.innerWidth - viewportPadding - width
-        )
-      : triggerRect.left - containerRect.left;
-
-    setPortalContainer(container);
-    setPosition({ left, top, width, maxHeight, useFixed });
+    setPosition({ left, top, width, maxHeight });
   }, [enableSearch]);
 
   useLayoutEffect(() => {
@@ -196,15 +170,14 @@ export function CheckboxDropdown({
           )}
         />
       </button>
-      {open && position && portalContainer
+      {open && position
         ? createPortal(
             <div
               ref={menuRef}
               role="listbox"
               data-slot="checkbox-dropdown-menu"
               className={cn(
-                "z-[120] flex flex-col overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10",
-                position.useFixed ? "fixed" : "absolute",
+                "fixed z-[120] flex flex-col overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10",
                 menuClassName
               )}
               style={{
@@ -277,7 +250,7 @@ export function CheckboxDropdown({
                 })}
               </div>
             </div>,
-            portalContainer
+            document.body
           )
         : null}
     </div>

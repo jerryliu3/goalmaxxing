@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TeamPanel } from "./team-panel";
 
 const mocks = vi.hoisted(() => ({
@@ -58,10 +58,40 @@ describe("TeamPanel", () => {
     });
   });
 
+  afterEach(() => {
+    cleanup();
+  });
+
   it("shows accumulated team XP in the current team section", async () => {
     render(<TeamPanel />);
 
     expect(await screen.findByText("Team XP 55")).toBeInTheDocument();
+  });
+
+  it("does not treat missing team XP as zero", async () => {
+    mocks.fetchSocialTeamState.mockResolvedValue({
+      schemaVersion: "1",
+      items: [
+        {
+          teamId: "team-1",
+          status: "active",
+          partnerId: "partner-1",
+          partnerUsername: "partner",
+          partnerDisplayName: "Partner",
+          partnerAvatarUrl: null,
+          inviteMessage: null,
+          invitedAt: "2026-08-10T00:00:00.000Z",
+          acceptedAt: "2026-08-12T14:30:00.000Z",
+          closedAt: null,
+          isIncoming: true,
+          teamXp: null,
+        },
+      ],
+    });
+    render(<TeamPanel />);
+
+    expect(await screen.findByText("Team XP unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("Team XP 0")).not.toBeInTheDocument();
   });
 
   it("keeps invites and leave behind Team settings", async () => {

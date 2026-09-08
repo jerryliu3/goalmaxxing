@@ -59,18 +59,23 @@ export function useChecklistData({
   subjectUserId,
   isActive,
   viewDate,
+  asOfDate = null,
+  timezone = null,
   failClosed = false,
 }: {
   subjectUserId?: string;
   isActive: boolean;
   viewDate: string;
+  asOfDate?: string | null;
+  timezone?: string | null;
   failClosed?: boolean;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const { viewerUserId, state: duoState } = useDuo();
   const partnerId = duoState.activePartner?.partnerId ?? null;
   const router = useAppRouter();
-  const todayLocalDate = toLocalDateString();
+  const todayLocalDate =
+    asOfDate && asOfDate.length > 0 ? asOfDate : toLocalDateString();
   const initialCacheKey = resolveChecklistCacheKey({
     viewerUserId,
     subjectUserId,
@@ -188,6 +193,7 @@ export function useChecklistData({
             const progress = await withAbortSignal(
               fetchProgressContext({
                 asOfDate: todayLocalDate,
+                timezone: timezone ?? undefined,
                 viewDate: currentViewDateRef.current,
                 subjectUserId:
                   targetSubjectUserId === userId ? undefined : targetSubjectUserId,
@@ -221,6 +227,7 @@ export function useChecklistData({
               subjectUserId,
               viewDate: currentViewDateRef.current,
               todayLocalDate,
+              timezone,
               partnerId,
               forceRefresh,
               signal: controller.signal,
@@ -250,7 +257,16 @@ export function useChecklistData({
         window.clearTimeout(timeoutId);
       }
     },
-    [clearLaneError, partnerId, redirectToLogin, subjectUserId, supabase, todayLocalDate, viewerUserId]
+    [
+      clearLaneError,
+      partnerId,
+      redirectToLogin,
+      subjectUserId,
+      supabase,
+      timezone,
+      todayLocalDate,
+      viewerUserId,
+    ]
   );
 
   useEffect(() => {
@@ -281,6 +297,7 @@ export function useChecklistData({
     const timer = window.setTimeout(() => {
       void fetchProgressContext({
         asOfDate: todayLocalDate,
+        timezone: timezone ?? undefined,
         viewDate,
         subjectUserId,
       })
@@ -311,7 +328,16 @@ export function useChecklistData({
         });
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [isActive, partnerId, reportLoadError, subjectUserId, todayLocalDate, viewDate, viewerUserId]);
+  }, [
+    isActive,
+    partnerId,
+    reportLoadError,
+    subjectUserId,
+    timezone,
+    todayLocalDate,
+    viewDate,
+    viewerUserId,
+  ]);
 
   const refreshInBackground = useCallback(() => {
     void loadData({ showLoading: false, forceRefresh: true }).catch(

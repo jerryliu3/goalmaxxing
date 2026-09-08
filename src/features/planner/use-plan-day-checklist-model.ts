@@ -23,6 +23,8 @@ export function usePlanDayChecklistModel({
     useChecklistData({
       isActive: true,
       viewDate,
+      asOfDate,
+      timezone,
     });
   const completionAsOfDate = asOfDate ?? todayLocalDate;
   const listModel = useMemo(

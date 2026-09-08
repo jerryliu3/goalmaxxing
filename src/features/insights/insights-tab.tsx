@@ -20,7 +20,6 @@ import { AnchoredPopupCard } from "@/components/ui/anchored-popup-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingCard } from "@/components/ui/loading-card";
-import { TooltipIcon } from "@/components/ui/tooltip-icon";
 import { InsightsPeriodStepper } from "@/features/insights/insights-period-controls";
 import { InsightsGoalStatsFilters } from "@/features/insights/insights-goal-stats-filters";
 import { ProgressGoalList } from "@/features/insights/progress-goal-list";
@@ -45,7 +44,6 @@ import "react-calendar-heatmap/dist/styles.css";
 import { CalendarDayPreviewList } from "@/features/planner/calendar-day-preview-list";
 import { computeDayPreviewPosition } from "@/features/planner/day-preview-popup";
 import { getApiErrorMessage } from "@/lib/api/client";
-import { resolveUserTimezone } from "@/lib/dates/timezone";
 import {
   countCompletionsByDate,
   groupCompletionTitlesByDate,
@@ -222,6 +220,8 @@ export function InsightsTab({
     selectedYear,
     failClosed: Boolean(readOnly && subjectUserId),
   });
+  const todayLocal = state.asOfDate || toLocalDateString();
+  const completionTimezone = state.timezone || "UTC";
   const supabase = useMemo(() => createClient(), []);
 
   const completableGoalIds = useMemo(
@@ -393,7 +393,7 @@ export function InsightsTab({
       }
 
       const isSelected = selectedDates.includes(completionDate);
-      const localToday = toLocalDateString();
+      const localToday = todayLocal;
       if (completionDate > localToday && !isSelected) {
         toast.error("You can only select today or past dates.");
         return;
@@ -432,7 +432,7 @@ export function InsightsTab({
         desiredFactState: mutation.desiredFactState,
         goalId: mutation.goalId,
         date: mutation.date,
-        timezone: resolveUserTimezone(),
+        timezone: completionTimezone,
         sourceRect: sourceElement
           ? captureViewportRect(sourceElement)
           : undefined,
@@ -453,7 +453,7 @@ export function InsightsTab({
       setPendingRetroDate(null);
       refreshInsightsInBackground(currentScrollY);
     },
-    [pendingRetroDate, readOnly, refreshInsightsInBackground, runCompletionMutation]
+    [completionTimezone, pendingRetroDate, readOnly, refreshInsightsInBackground, runCompletionMutation, todayLocal]
   );
 
   const toggleRecurringDateSelection = useCallback(
@@ -470,7 +470,7 @@ export function InsightsTab({
         return;
       }
 
-      const localToday = toLocalDateString();
+      const localToday = todayLocal;
       if (completionDate > localToday && !hasCompletionOnDate) {
         toast.error("You can only select today or past dates.");
         return;
@@ -504,7 +504,7 @@ export function InsightsTab({
         desiredFactState: mutation.desiredFactState,
         goalId: mutation.goalId,
         date: mutation.date,
-        timezone: resolveUserTimezone(),
+        timezone: completionTimezone,
         sourceRect: sourceElement
           ? captureViewportRect(sourceElement)
           : undefined,
@@ -525,7 +525,7 @@ export function InsightsTab({
       setPendingRetroDate(null);
       refreshInsightsInBackground(currentScrollY);
     },
-    [pendingRetroDate, readOnly, refreshInsightsInBackground, runCompletionMutation]
+    [completionTimezone, pendingRetroDate, readOnly, refreshInsightsInBackground, runCompletionMutation, todayLocal]
   );
 
   const saveMilestoneNames = useCallback(
@@ -644,7 +644,6 @@ export function InsightsTab({
     contentMode === "full" || contentMode === "goal-stats-only";
   const showGoalsSection = contentMode === "full" || contentMode === "lane";
   const stackLedgerAndHeatmap = contentMode !== "full";
-  const todayLocal = toLocalDateString();
   const heatmapEditable = ledgerMode === "edit" && !readOnly && Boolean(editableGoal);
   const milestoneTargetCount =
     editableGoal?.frequency_type === "fixed_milestones"
@@ -700,7 +699,7 @@ export function InsightsTab({
     heatmapEditable
   );
   const ledgerHelp = (
-    <TooltipIcon content={ledgerCaption} label="About this Progress view" />
+    <p className="text-sm text-muted-foreground">{ledgerCaption}</p>
   );
 
   const openLedgerDrilldown = (
@@ -798,18 +797,14 @@ export function InsightsTab({
       {showGoalStatsSection ? (
         <section className="border-b border-border pb-4" data-onboarding="insights.goal-stats">
           <div className="pb-3">
-            <div
-              data-title-date-row="true"
-              className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2"
-            >
+            <div className="flex w-full items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-2">
                 <CalendarRange className="size-4 shrink-0 text-primary" />
                 <h2 className="font-display text-lg font-semibold tracking-tight">
                   Progress Tracker
                 </h2>
-                {showHeatmap ? ledgerHelp : null}
               </div>
-              <div className="flex items-center gap-2 justify-self-center">
+              <div className="flex items-center gap-2">
                 <InsightsPeriodStepper
                   monthCursor={monthCursor}
                   onMonthCursorChange={setMonthCursor}
@@ -881,9 +876,7 @@ export function InsightsTab({
                   perGoalViewMode === "month" ? onMonthSectionTouchEnd : undefined
                 }
               >
-                {showGoalStatsSection ? null : (
-                  <div className="flex justify-end">{ledgerHelp}</div>
-                )}
+                {ledgerHelp}
                 {ledgerMode === "empty" ? null : perGoalViewMode === "month" ? (
                 <MonthHeatmap
                   month={monthCursor}

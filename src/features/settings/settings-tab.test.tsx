@@ -176,6 +176,7 @@ describe("SettingsTab", () => {
       "data-settings-slide",
       "out"
     );
+    expect(screen.getByTestId("settings-desktop-editor")).toHaveAttribute("inert");
     expect(screen.queryByText("Select a control to edit it here.")).toBeNull();
   });
 
@@ -204,6 +205,7 @@ describe("SettingsTab", () => {
       "data-settings-slide",
       "in"
     );
+    expect(screen.getByTestId("settings-desktop-editor")).not.toHaveAttribute("inert");
     expect(screen.getByTestId("settings-desktop-editor")).toHaveTextContent(
       "Notifications body"
     );

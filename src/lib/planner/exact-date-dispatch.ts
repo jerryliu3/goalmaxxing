@@ -27,7 +27,8 @@ export const targetedExactDateRequestSchema = z
       .trim()
       .min(1)
       .max(100)
-      .refine(isValidIanaTimezone, "Provide a valid IANA timezone."),
+      .refine(isValidIanaTimezone, "Provide a valid IANA timezone.")
+      .optional(),
     plannerItemExpectation: plannerItemExpectationSchema.optional(),
     plannerGoalExpectation: plannerGoalExpectationSchema.optional(),
   })

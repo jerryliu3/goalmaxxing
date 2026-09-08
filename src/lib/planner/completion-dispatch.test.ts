@@ -452,4 +452,45 @@ describe("completion dispatch executor", () => {
       vi.useRealTimers();
     }
   });
+
+  it("omits timezone from the completions body when it is not supplied", async () => {
+    const calls: Array<{ route: string; body: Record<string, unknown> }> = [];
+    const fetcher = async (route: string, init?: RequestInit) => {
+      calls.push({
+        route,
+        body: JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>,
+      });
+      return new Response(JSON.stringify({ schemaVersion: "1" }), {
+        status: 200,
+      });
+    };
+
+    const result = await executeCompletionDispatch({
+      decision: {
+        route: "canonical_exact_date",
+        exactDateOnly: true,
+        allowed: true,
+        reason: "allowed",
+      },
+      desiredFactState: "present",
+      goalId: "12000000-0000-4000-8000-000000000001",
+      date: "2026-08-05",
+      fetcher: fetcher as typeof fetch,
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      message: null,
+    });
+    expect(calls).toEqual([
+      {
+        route: "/api/completions",
+        body: {
+          goalId: "12000000-0000-4000-8000-000000000001",
+          date: "2026-08-05",
+          desiredFactState: "present",
+        },
+      },
+    ]);
+  });
 });

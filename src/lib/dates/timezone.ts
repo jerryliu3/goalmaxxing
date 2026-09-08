@@ -7,6 +7,14 @@ export function isValidIanaTimezone(timezone: string) {
   }
 }
 
+export function timezoneFromPreferences(candidateTimezone?: string | null) {
+  const normalizedCandidate = candidateTimezone?.trim();
+  if (normalizedCandidate && isValidIanaTimezone(normalizedCandidate)) {
+    return normalizedCandidate;
+  }
+  return "UTC";
+}
+
 export function resolveUserTimezone(candidateTimezone?: string | null) {
   const normalizedCandidate = candidateTimezone?.trim();
   if (normalizedCandidate && isValidIanaTimezone(normalizedCandidate)) {

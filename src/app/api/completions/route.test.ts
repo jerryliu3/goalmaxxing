@@ -170,6 +170,26 @@ describe("completions route", () => {
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
 
+  it("allows omitting the request timezone and still uses the profile timezone", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/completions", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          goalId,
+          date: "2026-08-05",
+          desiredFactState: "present",
+        }),
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.rpc).toHaveBeenCalledWith("mark_goal_complete", {
+      p_goal_id: goalId,
+      p_date: "2026-08-05",
+    });
+  });
+
   it("rejects creation outside the goal lifetime", async () => {
     const response = await POST(request("2026-07-31", "present"));
 

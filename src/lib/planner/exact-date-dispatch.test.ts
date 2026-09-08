@@ -30,6 +30,16 @@ describe("exact-date dispatch schema", () => {
 
     expect(parsed.success).toBe(false);
   });
+
+  it("allows omitting timezone because the route loads the profile timezone", () => {
+    const parsed = targetedExactDateRequestSchema.safeParse({
+      goalId,
+      date: "2026-08-05",
+      desiredFactState: "present",
+    });
+
+    expect(parsed.success).toBe(true);
+  });
 });
 
 describe("mapCompletionRpcError", () => {

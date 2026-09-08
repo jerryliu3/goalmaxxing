@@ -37,6 +37,7 @@ interface AppShellProps {
   hrefPrefix?: string;
   showJourneyIntro?: boolean;
   onNewGoalClick?: () => void;
+  xpEnabled?: boolean;
 }
 
 export function AppShell({
@@ -52,6 +53,7 @@ export function AppShell({
   hrefPrefix,
   showJourneyIntro = true,
   onNewGoalClick,
+  xpEnabled = true,
 }: AppShellProps) {
   setTabDataCacheScope(userId);
   useIdleAppPrefetch({
@@ -74,7 +76,7 @@ export function AppShell({
 
   return (
     <XpRewardProvider>
-      <XpProfileProvider>
+      <XpProfileProvider enabled={xpEnabled}>
         <JourneyProvider flags={journeyFlags}>
           <AltitudeBackdrop journeyFlags={journeyFlags} />
           {showJourneyIntro ? <JourneyIntroOverlay userId={userId} /> : null}
@@ -100,7 +102,7 @@ export function AppShell({
                         <p className="font-display truncate text-2xl font-semibold tracking-tight md:text-3xl">
                           Goalmaxxing
                         </p>
-                        <XpProgressBar />
+                        {xpEnabled ? <XpProgressBar /> : null}
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <div className="flex items-center gap-2">

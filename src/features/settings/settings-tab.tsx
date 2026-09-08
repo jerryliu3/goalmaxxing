@@ -212,11 +212,12 @@ export function SettingsTab() {
             "min-w-0 overflow-hidden md:transition-[flex-basis,max-width,max-height,opacity] md:duration-[var(--motion-duration-standard)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
             settingsPanelOpen
               ? "md:flex-1 md:opacity-100"
-              : "md:pointer-events-none md:max-h-0 md:max-w-0 md:flex-[0_0_0%] md:opacity-0"
+              : "md:pointer-events-none md:max-h-0 md:min-h-0 md:max-w-0 md:flex-[0_0_0%] md:opacity-0"
           )}
           data-testid="settings-desktop-editor"
           data-settings-slide={settingsPanelOpen ? "in" : "out"}
           aria-hidden={!settingsPanelOpen}
+          inert={!settingsPanelOpen ? true : undefined}
         >
           <div
             className={cn(

@@ -261,7 +261,9 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {activeTeam
-              ? `Team XP ${activeTeam.teamXp ?? 0}`
+              ? activeTeam.teamXp == null
+                ? "Team XP unavailable"
+                : `Team XP ${activeTeam.teamXp}`
               : "Invite a partner or accept an invite to start duo progress."}
           </p>
         </div>

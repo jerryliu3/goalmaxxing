@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useRef, type MouseEvent, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -109,6 +109,15 @@ export function CompeteTile({
   const peekPeople = tile.people.filter((row) => row.you || row.partner);
   const rows = density === "peek" ? peekPeople : tile.people;
   const wide = span === "wide";
+  const joinDisabled = tile.closed || joinPending;
+
+  function handleJoinClick(event: MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    if (joinDisabled) {
+      return;
+    }
+    onJoin?.();
+  }
 
   return (
     <article
@@ -176,9 +185,9 @@ export function CompeteTile({
         {onJoin && !tile.joined ? (
           <button
             type="button"
-            disabled={tile.closed || joinPending}
-            onClick={onJoin}
-            className={`pointer-events-auto mt-auto min-h-10 rounded-md bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-40 ${
+            aria-disabled={joinDisabled}
+            onClick={handleJoinClick}
+            className={`pointer-events-auto mt-auto min-h-10 rounded-md bg-primary text-sm font-semibold text-primary-foreground aria-disabled:opacity-40 ${
               wide ? "w-full sm:max-w-xs" : "w-full"
             }`}
           >
@@ -187,9 +196,9 @@ export function CompeteTile({
         ) : onJoin && tile.joined && expanded ? (
           <button
             type="button"
-            disabled={tile.closed || joinPending}
-            onClick={onJoin}
-            className="pointer-events-auto mt-auto self-start rounded-md bg-background px-2 py-1 text-xs font-medium text-destructive disabled:opacity-40"
+            aria-disabled={joinDisabled}
+            onClick={handleJoinClick}
+            className="pointer-events-auto mt-auto self-start rounded-md bg-background px-2 py-1 text-xs font-medium text-destructive aria-disabled:opacity-40"
           >
             {tile.leaveLabel ?? "Leave"}
           </button>

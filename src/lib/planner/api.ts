@@ -8,7 +8,7 @@ import {
   requireAuthenticatedRequestContext,
   withRoute as withSharedRoute,
 } from "@/lib/api/route";
-import { getDateInTimezone, isValidIanaTimezone } from "@/lib/dates/timezone";
+import { getDateInTimezone, timezoneFromPreferences } from "@/lib/dates/timezone";
 import { reportError } from "@/lib/observability/report-error";
 import { getPlannerCapabilities } from "@/lib/planner/capabilities";
 import type { PlannerCapabilities } from "@/lib/planner/capabilities";
@@ -133,11 +133,7 @@ export async function loadPlannerProfileTimezone({
     );
   }
 
-  const timezone = data?.timezone?.trim();
-  if (timezone && isValidIanaTimezone(timezone)) {
-    return timezone;
-  }
-  return "UTC";
+  return timezoneFromPreferences(data?.timezone);
 }
 
 export function requirePlannerAdminClient() {
