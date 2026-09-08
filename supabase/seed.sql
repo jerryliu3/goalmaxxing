@@ -1,11 +1,12 @@
 -- Cadence local seed data
 -- Demo credentials:
--- alice@example.com / password123
+-- alice@example.com / password123 (platform moderator — can open /ux labs)
 -- bob@example.com / password123
 -- carla@example.com / password123
 -- dana@example.com / password123 (onboarding demo account)
 
 truncate table
+  public.admin_users,
   public.feed_reactions,
   public.nudges,
   public.notification_outbox,
@@ -223,6 +224,21 @@ set
   avatar_url = excluded.avatar_url,
   timezone = excluded.timezone,
   timezone_confirmed_at = excluded.timezone_confirmed_at;
+
+-- Alice is the local UX-lab /ops viewer. /ux requires moderator+.
+insert into public.admin_users (user_id, role, granted_by, note)
+values (
+  '11111111-1111-4111-8111-111111111111',
+  'moderator',
+  '11111111-1111-4111-8111-111111111111',
+  'Seeded local moderator for UX labs and admin route smoke'
+)
+on conflict (user_id) do update
+set
+  role = excluded.role,
+  granted_by = excluded.granted_by,
+  note = excluded.note,
+  revoked_at = null;
 
 insert into public.goals (
   id,

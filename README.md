@@ -87,7 +87,7 @@ for the authenticated app.
 
 ## Demo Accounts (Seeded)
 
-- `alice@example.com` / `password123`
+- `alice@example.com` / `password123` (platform **moderator** — can open `/ux` labs)
 - `bob@example.com` / `password123`
 - `carla@example.com` / `password123`
 
