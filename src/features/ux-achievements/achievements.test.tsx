@@ -6,19 +6,33 @@ import { CaseConcept } from "@/features/ux-achievements/case-concept";
 import { GalleryConcept } from "@/features/ux-achievements/gallery-concept";
 import { RecordsConcept } from "@/features/ux-achievements/records-concept";
 import { RingsConcept } from "@/features/ux-achievements/rings-concept";
+import { ShowcaseConcept } from "@/features/ux-achievements/showcase-concept";
 import { VaultConcept } from "@/features/ux-achievements/vault-concept";
 
 afterEach(cleanup);
 
 describe("achievements destination study", () => {
-  it("lists all five concepts", () => {
+  it("lists Showcase first, then the five reference concepts", () => {
     render(<AchievementsIndex />);
-    for (const name of ["Case", "Vault", "Gallery", "Records", "Rings"]) {
+    for (const name of ["Showcase", "Case", "Vault", "Gallery", "Records", "Rings"]) {
       expect(screen.getByRole("link", { name: `Open ${name}` })).toHaveAttribute(
         "href",
         `/ux/achievements/${name.toLowerCase()}`
       );
     }
+  });
+
+  it("composes Showcase as Case shelves, Vault metal, and Records bests", async () => {
+    const user = userEvent.setup();
+    render(<ShowcaseConcept />);
+
+    expect(screen.getByLabelText("Personal records")).toBeInTheDocument();
+    expect(screen.getByText("21d")).toBeInTheDocument();
+    expect(screen.getByLabelText("Trophy showcase")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Level 8 unlocked" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /lv 4/i }));
+    expect(screen.getAllByRole("heading", { name: "Level 4 unlocked" }).length).toBeGreaterThan(0);
+    expect(screen.getByText(/plaque rail/i)).toBeInTheDocument();
   });
 
   it("pins a shelf medal onto the Case pedestal", async () => {

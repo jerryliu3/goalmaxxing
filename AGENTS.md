@@ -124,9 +124,10 @@ surfaces. The default is to simplify and reuse what already exists.
   Progress Atlas/Pins and Community Club locks from the destination study live
   in `docs/ux/goalmaxxing-progress-community-destination-study.md` and
   `/ux/destinations`. They are study locks, not a production ship.
-  Achievements Case/Vault/Gallery/Records/Rings concepts live in
+  Achievements Showcase hybrid (Case + Vault + Records) and reference
+  Case/Vault/Gallery/Records/Rings concepts live in
   `docs/ux/goalmaxxing-achievements-destination-study.md` and
-  `/ux/achievements` — exploratory only, no lock.
+  `/ux/achievements` — Showcase is the leading study take, not a production lock.
 - Reuse-first: before adding a new hook/component/helper, check whether an
   existing one can be extended or composed.
 - Prefer canonical homes for shared domain logic (`src/lib/planner/*`,

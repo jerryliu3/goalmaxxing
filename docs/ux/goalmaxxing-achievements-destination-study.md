@@ -1,7 +1,7 @@
 # Achievements destination study
 
-Status: **exploratory concepts only — no lock.** Production `/achievements`
-remains the two-card list (global XP awards + achieved goals).
+Status: **Showcase (A6) is the leading hybrid take — not a production ship.**
+Production `/achievements` remains the two-card list.
 
 Clickable study: `/ux/achievements`  
 Worktree: `.worktrees/achievements-ux` on branch `ux/achievements-study`
@@ -41,14 +41,16 @@ gain / copper carry tier and category — not purple-glow game UI.
 
 | # | Name | Thesis | Research root |
 |---|---|---|---|
+| A6 | **Showcase** | **Leading hybrid:** Case shelves + Vault premium dark gradients + Records band. | Review synthesis of A1 / A2 / A4 |
 | A1 | **Case** | Lit trophy case: pedestal hero, medal shelves, goal plaques. | Customizable trophy display / status object |
 | A2 | **Vault** | Sealed compartments — locked dark, unlocked lit and tactile. | Precious unlock; progress as claimed capacity |
 | A3 | **Gallery** | Snap-scroll framed posters + certificate rail. | Letterboxd / Polarsteps “hung” journey |
 | A4 | **Records** | Personal Records band above an Awards grid. | Duolingo 2023 Records / Awards split |
 | A5 | **Rings** | Three completion rings first; inventory second. | Apple Fitness glance-then-detail |
 
-None is locked. Judge craft (graphics, color, iconography) and how proud the
-first viewport feels.
+**Showcase is the current leading take** from review: keep A1’s trophy
+structure, A2’s premium metal/gradients, and A4’s personal records. The other
+five stay as references. Not a production lock yet.
 
 ## Visual bets
 

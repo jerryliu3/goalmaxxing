@@ -3,7 +3,8 @@ export type AchievementConceptSlug =
   | "vault"
   | "gallery"
   | "records"
-  | "rings";
+  | "rings"
+  | "showcase";
 
 export interface AchievementConcept {
   slug: AchievementConceptSlug;
@@ -18,6 +19,22 @@ export interface AchievementConcept {
 }
 
 export const ACHIEVEMENT_CONCEPTS: readonly AchievementConcept[] = [
+  {
+    slug: "showcase",
+    number: "A6",
+    name: "Showcase",
+    thesis:
+      "Leading hybrid: Case trophy structure + Vault premium dark metal + Records personal-bests band.",
+    navigation:
+      "Read personal records, then pin a medal on the pedestal. Shelves and plaques stay Case-shaped under Vault light.",
+    whatItKeeps:
+      "Level awards, achieved goals, unlock dates, reward text, locked mounts, personal bests.",
+    whatItAdds:
+      "One proud composition that keeps trophies without losing Records or Vault craft.",
+    risk: "Dark glass plus a records band can feel tall on small phones if the pedestal is greedy.",
+    research:
+      "Review synthesis of A1 structure, A2 gradients/preciousness, and A4 Duolingo Records split.",
+  },
   {
     slug: "case",
     number: "A1",

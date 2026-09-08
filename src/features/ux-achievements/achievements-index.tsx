@@ -47,10 +47,11 @@ export function AchievementsIndex() {
               className="mt-6 max-w-2xl text-lg leading-relaxed"
               style={{ color: GAZETTEER.mutedDeep }}
             >
-              Live Achievements is still two scrollable cards. These concepts
-              borrow decisions from Duolingo’s Records/Awards split, Apple
-              Fitness rings, Letterboxd-style hung frames, and trophy-case
-              status displays — then re-skin them in Gazetteer metal and paper.
+              Live Achievements is still two scrollable cards.{" "}
+              <span className="font-semibold text-[#241c14]">Showcase</span> is
+              the leading hybrid from review — Case shelves, Vault premium
+              metal, and Records personal bests — with the earlier concepts kept
+              as references.
             </p>
             <p className="mt-4 text-sm" style={{ color: GAZETTEER.muted }}>
               Study only. No lock. Production page unchanged. Worktree branch{" "}
@@ -65,10 +66,10 @@ export function AchievementsIndex() {
               className="text-xs font-semibold uppercase tracking-[0.18em]"
               style={{ color: GAZETTEER.muted }}
             >
-              Five bets
+              Leading hybrid + references
             </p>
             <h2 className="mt-3 max-w-3xl font-display text-3xl font-semibold tracking-tight">
-              Case · Vault · Gallery · Records · Rings
+              Showcase · then Case · Vault · Gallery · Records · Rings
             </h2>
             <ul className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {ACHIEVEMENT_CONCEPTS.map((item) => (

@@ -40,8 +40,8 @@ export default function UxHubPage() {
               Achievements destination study
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">
-              Case, Vault, Gallery, Records, Rings — trophy-case concepts for
-              `/achievements`.
+              Case, Vault, Gallery, Records, Rings, and Showcase hybrid — trophy
+              concepts for `/achievements`.
             </p>
           </li>
           <li>
