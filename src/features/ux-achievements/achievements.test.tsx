@@ -28,7 +28,8 @@ describe("achievements destination study", () => {
 
     expect(screen.getByLabelText("Personal records")).toBeInTheDocument();
     expect(screen.getByText("21d")).toBeInTheDocument();
-    expect(screen.getByText(/claimed/i)).toBeInTheDocument();
+    expect(screen.getByText("Claimed")).toBeInTheDocument();
+    expect(screen.getByText(/\d+\/\d+ · \d+%/)).toBeInTheDocument();
     expect(screen.getByLabelText("Trophy showcase")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Level 8 unlocked" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /lv 4/i }));
