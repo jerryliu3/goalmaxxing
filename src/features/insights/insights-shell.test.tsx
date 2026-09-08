@@ -1,15 +1,35 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useEffect } from "react";
 import { InsightsShell } from "./insights-shell";
+import type { Goal } from "@/lib/goals/types";
 
 const useDuoSurfaceMock = vi.fn();
-const insightsTabMock = vi.fn((props: unknown) => (
-  <div
-    data-testid={`insights-tab-${String(
-      (props as { contentMode?: string }).contentMode ?? "full"
-    )}`}
-  />
-));
+const insightsTabMock = vi.fn();
+
+function goal(id: string, title: string, endDate: string): Goal {
+  return {
+    id,
+    owner_id: id,
+    title,
+    description: null,
+    category: "health",
+    color: null,
+    frequency_type: "recurring",
+    recurrence_interval: "daily",
+    target_count: null,
+    milestone_names: null,
+    start_date: "2026-01-01",
+    end_date: endDate,
+    photo_path: null,
+    team_id: null,
+    is_deleted: false,
+    archived_at: null,
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    target_basis: "period",
+  };
+}
 
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
@@ -20,7 +40,28 @@ vi.mock("@/features/social/duo/use-duo-surface", () => ({
 }));
 
 vi.mock("@/features/insights/insights-tab", () => ({
-  InsightsTab: (props: unknown) => insightsTabMock(props),
+  InsightsTab: (props: {
+    contentMode?: string;
+    subjectUserId?: string;
+    readOnly?: boolean;
+    onPersonalGoalsChange?: (goals: Goal[]) => void;
+  }) => {
+    insightsTabMock(props);
+    const onPersonalGoalsChange = props.onPersonalGoalsChange;
+    const subjectUserId = props.subjectUserId;
+    useEffect(() => {
+      onPersonalGoalsChange?.(
+        subjectUserId === "partner-1"
+          ? [goal("partner-goal", "Partner lift", "2026-11-30")]
+          : [goal("viewer-goal", "Viewer run", "2026-06-30")]
+      );
+    }, [onPersonalGoalsChange, subjectUserId]);
+    return (
+      <div
+        data-testid={`insights-tab-${String(props.contentMode ?? "full")}`}
+      />
+    );
+  },
 }));
 
 describe("InsightsShell", () => {
@@ -58,7 +99,7 @@ describe("InsightsShell", () => {
         partnerUsername: "partner",
         partnerDisplayName: "Partner",
       },
-      viewer: { id: "viewer", label: "Solo", readOnly: false },
+      viewer: { id: "viewer", label: "Solo", userId: "viewer-1", readOnly: false },
       partner: {
         id: "partner",
         label: "Partner",
@@ -69,23 +110,24 @@ describe("InsightsShell", () => {
 
     render(<InsightsShell />);
 
-    expect(insightsTabMock).toHaveBeenCalledTimes(3);
+    expect(screen.getAllByTestId("insights-tab-lane")).toHaveLength(2);
     expect(insightsTabMock.mock.calls[0]?.[0]).toMatchObject({
-      contentMode: "goal-stats-only",
-    });
-    expect(insightsTabMock.mock.calls[1]?.[0]).toMatchObject({
       contentMode: "lane",
       readOnly: false,
     });
-    expect(insightsTabMock.mock.calls[2]?.[0]).toMatchObject({
-      contentMode: "lane",
-      readOnly: true,
-    });
-    const tracker = screen.getByTestId("insights-tab-goal-stats-only");
+    expect(
+      insightsTabMock.mock.calls.some(
+        (call) =>
+          (call[0] as { contentMode?: string; readOnly?: boolean }).contentMode ===
+            "lane" && (call[0] as { readOnly?: boolean }).readOnly === true
+      )
+    ).toBe(true);
+    const tracker = screen.getByTestId("insights-tracker-header");
     const lanes = screen.getByTestId("duo-lanes-scroll");
     expect(tracker.compareDocumentPosition(lanes) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING
     );
-    expect(screen.queryByTestId("insights-tab-goals-only")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("insights-tab-goal-stats-only")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Progress Tracker" })).toBeInTheDocument();
   });
 });

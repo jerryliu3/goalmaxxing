@@ -3,6 +3,7 @@ import {
   selectOverallCompletionPercent,
   selectSearchedGoals,
   selectVisiblePerGoalHeatmaps,
+  unionGoalsById,
 } from "@/features/insights/insights-selectors";
 import type { Goal } from "@/lib/goals/types";
 
@@ -39,6 +40,20 @@ describe("insights selectors", () => {
       selectOverallCompletionPercent(goals, new Map([["a", { percent: 50 }], ["b", { percent: 100 }]]))
     ).toBe(75);
     expect(selectOverallCompletionPercent([], new Map())).toBe(0);
+  });
+
+  it("unions lane goals without duplicating shared ids", () => {
+    const viewerGoals = [
+      goal({ id: "shared", owner_id: "me", title: "Shared" }),
+      goal({ id: "mine", owner_id: "me", title: "Mine" }),
+    ];
+    const partnerGoals = [
+      goal({ id: "shared", owner_id: "partner", title: "Shared copy" }),
+      goal({ id: "theirs", owner_id: "partner", title: "Theirs" }),
+    ];
+    expect(
+      unionGoalsById([viewerGoals, partnerGoals]).map((row) => row.id)
+    ).toEqual(["shared", "mine", "theirs"]);
   });
 
   it("splits current and historical heatmaps from the visible period", () => {

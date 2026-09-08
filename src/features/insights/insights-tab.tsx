@@ -9,19 +9,13 @@ import {
   subMonths,
   endOfYear,
 } from "date-fns";
-import {
-  CalendarRange,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
-import { type TouchEventHandler, useCallback, useMemo, useRef, useState } from "react";
+import { X } from "lucide-react";
+import { type TouchEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AnchoredPopupCard } from "@/components/ui/anchored-popup-card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { LoadingCard } from "@/components/ui/loading-card";
-import { InsightsPeriodStepper } from "@/features/insights/insights-period-controls";
-import { InsightsGoalStatsFilters } from "@/features/insights/insights-goal-stats-filters";
+import { InsightsTrackerHeader } from "@/features/insights/insights-tracker-header";
 import { ProgressGoalList } from "@/features/insights/progress-goal-list";
 import { InsightsOverallStatsTiles } from "@/features/insights/insights-overall-stats-card";
 import { ProgressMilestoneRunway } from "@/features/insights/progress-milestone-runway";
@@ -85,7 +79,7 @@ import { captureViewportRect } from "@/lib/xp/events";
 import { createClient } from "@/lib/supabase/client";
 
 export type HeatmapViewMode = "month" | "year";
-export type InsightsTabContentMode = "full" | "goal-stats-only" | "lane";
+export type InsightsTabContentMode = "full" | "lane";
 
 const AGGREGATE_DRILLDOWN_DAY_CLASS_PREFIX = "aggregate-drilldown-day-";
 const aggregateWeekdayLabels: [string, string, string, string, string, string, string] = [
@@ -148,6 +142,7 @@ interface InsightsTabProps {
   };
   sharedGoalFilters?: InsightsSharedGoalFilters;
   contentMode?: InsightsTabContentMode;
+  onPersonalGoalsChange?: (goals: Goal[]) => void;
 }
 
 export interface InsightsSharedGoalFilters {
@@ -167,6 +162,7 @@ export function InsightsTab({
   sharedPeriod,
   sharedGoalFilters,
   contentMode = "full",
+  onPersonalGoalsChange,
 }: InsightsTabProps = {}) {
   const [internalMonthCursor, setInternalMonthCursor] = useState(new Date());
   const [internalPerGoalViewMode, setInternalPerGoalViewMode] =
@@ -201,7 +197,6 @@ export function InsightsTab({
     sharedGoalFilters?.showHistoricalGoals ?? internalShowHistoricalGoals;
   const setShowHistoricalGoals =
     sharedGoalFilters?.setShowHistoricalGoals ?? setInternalShowHistoricalGoals;
-  const [goalStatsFiltersOpen, setGoalStatsFiltersOpen] = useState(false);
   const [selectedGoalIds, setSelectedGoalIds] = useState<string[] | null>(null);
   const [aggregateDrilldownDate, setAggregateDrilldownDate] = useState<string | null>(null);
   const [aggregateDrilldownPosition, setAggregateDrilldownPosition] = useState<
@@ -238,6 +233,14 @@ export function InsightsTab({
     () => selectCompletableGoals(state.goals, completableGoalIds),
     [completableGoalIds, state.goals]
   );
+
+  useEffect(() => {
+    onPersonalGoalsChange?.(personalGoals);
+  }, [onPersonalGoalsChange, personalGoals]);
+
+  useEffect(() => {
+    return () => onPersonalGoalsChange?.([]);
+  }, [onPersonalGoalsChange]);
 
   const personalCompletions = useMemo(
     () => filterCompletionsForGoalIds(state.completions, completableGoalIds),
@@ -640,8 +643,7 @@ export function InsightsTab({
     onDismiss: clearAggregateDrilldown,
   });
   const showHeatmap = contentMode === "full" || contentMode === "lane";
-  const showGoalStatsSection =
-    contentMode === "full" || contentMode === "goal-stats-only";
+  const showGoalStatsSection = contentMode === "full";
   const showGoalsSection = contentMode === "full" || contentMode === "lane";
   const stackLedgerAndHeatmap = contentMode !== "full";
   const heatmapEditable = ledgerMode === "edit" && !readOnly && Boolean(editableGoal);
@@ -795,59 +797,21 @@ export function InsightsTab({
   return (
     <div className="space-y-5">
       {showGoalStatsSection ? (
-        <section className="border-b border-border pb-4" data-onboarding="insights.goal-stats">
-          <div className="pb-3">
-            <div className="flex w-full items-center justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-2">
-                <CalendarRange className="size-4 shrink-0 text-primary" />
-                <h2 className="font-display text-lg font-semibold tracking-tight">
-                  Progress Tracker
-                </h2>
-              </div>
-              <div className="flex items-center gap-2">
-                <InsightsPeriodStepper
-                  monthCursor={monthCursor}
-                  onMonthCursorChange={setMonthCursor}
-                  perGoalViewMode={perGoalViewMode}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon-sm"
-                  className="shrink-0"
-                  aria-label="Open Progress filters"
-                  title="Open Progress filters"
-                  onClick={() => setGoalStatsFiltersOpen(true)}
-                >
-                  <SlidersHorizontal />
-                </Button>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-3">
-            <InsightsGoalStatsFilters
-              goals={personalGoals}
-              referenceMonth={goalFilterStartMonth}
-              endMonths={effectiveGoalEndMonths}
-              onEndMonthsChange={setGoalEndMonths}
-              sort={goalSort}
-              onSortChange={setGoalSort}
-              viewMode={perGoalViewMode}
-              onViewModeChange={setPerGoalViewMode}
-              showEndedGoals={showHistoricalGoals}
-              endedGoalCount={historicalGoals.length}
-              onShowEndedGoalsChange={setShowHistoricalGoals}
-              open={goalStatsFiltersOpen}
-              onOpenChange={setGoalStatsFiltersOpen}
-            />
-            <Input
-              value={goalSearchQuery}
-              onChange={(event) => setGoalSearchQuery(event.target.value)}
-              placeholder="Search goals..."
-              className="h-8"
-            />
-          </div>
-        </section>
+        <InsightsTrackerHeader
+          goals={personalGoals}
+          monthCursor={monthCursor}
+          onMonthCursorChange={(next) => setMonthCursor(next)}
+          perGoalViewMode={perGoalViewMode}
+          onPerGoalViewModeChange={setPerGoalViewMode}
+          goalSearchQuery={goalSearchQuery}
+          onGoalSearchQueryChange={setGoalSearchQuery}
+          goalEndMonths={goalEndMonths}
+          onGoalEndMonthsChange={setGoalEndMonths}
+          goalSort={goalSort}
+          onGoalSortChange={setGoalSort}
+          showHistoricalGoals={showHistoricalGoals}
+          onShowHistoricalGoalsChange={setShowHistoricalGoals}
+        />
       ) : null}
 
       {showGoalsSection || showHeatmap ? (

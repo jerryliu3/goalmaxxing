@@ -12,6 +12,21 @@ import {
 } from "@/lib/goals/list-view";
 import type { Goal } from "@/lib/goals/types";
 
+export function unionGoalsById(groups: readonly Goal[][]): Goal[] {
+  const seen = new Set<string>();
+  const result: Goal[] = [];
+  for (const group of groups) {
+    for (const goal of group) {
+      if (seen.has(goal.id)) {
+        continue;
+      }
+      seen.add(goal.id);
+      result.push(goal);
+    }
+  }
+  return result;
+}
+
 export function selectSearchedGoals(goals: Goal[], query: string): Goal[] {
   const normalizedQuery = query.trim().toLowerCase();
   if (normalizedQuery.length === 0) {

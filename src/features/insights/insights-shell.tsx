@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
 import { DuoLanes } from "@/features/social/duo/duo-lanes";
 import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
@@ -10,7 +10,10 @@ import {
   type InsightsSharedGoalFilters,
   type HeatmapViewMode,
 } from "@/features/insights/insights-tab";
+import { InsightsTrackerHeader } from "@/features/insights/insights-tracker-header";
+import { unionGoalsById } from "@/features/insights/insights-selectors";
 import type { GoalDateSort } from "@/lib/goals/list-view";
+import type { Goal } from "@/lib/goals/types";
 
 export function InsightsShell() {
   const searchParams = useSearchParams();
@@ -21,7 +24,19 @@ export function InsightsShell() {
   const [goalEndMonths, setGoalEndMonths] = useState<string[]>([]);
   const [goalSort, setGoalSort] = useState<GoalDateSort>("earliest_end");
   const [showHistoricalGoals, setShowHistoricalGoals] = useState(false);
+  const [viewerGoals, setViewerGoals] = useState<Goal[]>([]);
+  const [partnerGoals, setPartnerGoals] = useState<Goal[]>([]);
   const sharePeriodControls = scope === "both" && Boolean(activePartner);
+  const handleViewerGoalsChange = useCallback((goals: Goal[]) => {
+    setViewerGoals(goals);
+  }, []);
+  const handlePartnerGoalsChange = useCallback((goals: Goal[]) => {
+    setPartnerGoals(goals);
+  }, []);
+  const sharedFilterGoals = useMemo(
+    () => unionGoalsById([viewerGoals, partnerGoals]),
+    [partnerGoals, viewerGoals]
+  );
 
   const sharedPeriod = useMemo(
     () =>
@@ -65,10 +80,20 @@ export function InsightsShell() {
         forceOpen={searchParams.get("onboarding") === "insights.main"}
       />
       {sharePeriodControls ? (
-        <InsightsTab
-          sharedPeriod={sharedPeriod}
-          sharedGoalFilters={sharedGoalFilters}
-          contentMode="goal-stats-only"
+        <InsightsTrackerHeader
+          goals={sharedFilterGoals}
+          monthCursor={monthCursor}
+          onMonthCursorChange={setMonthCursor}
+          perGoalViewMode={perGoalViewMode}
+          onPerGoalViewModeChange={setPerGoalViewMode}
+          goalSearchQuery={goalSearchQuery}
+          onGoalSearchQueryChange={setGoalSearchQuery}
+          goalEndMonths={goalEndMonths}
+          onGoalEndMonthsChange={setGoalEndMonths}
+          goalSort={goalSort}
+          onGoalSortChange={setGoalSort}
+          showHistoricalGoals={showHistoricalGoals}
+          onShowHistoricalGoalsChange={setShowHistoricalGoals}
         />
       ) : null}
       <DuoLanes
@@ -82,6 +107,13 @@ export function InsightsShell() {
             sharedPeriod={sharedPeriod}
             sharedGoalFilters={sharedGoalFilters}
             contentMode={sharePeriodControls ? "lane" : undefined}
+            onPersonalGoalsChange={
+              sharePeriodControls
+                ? subject.id === "partner"
+                  ? handlePartnerGoalsChange
+                  : handleViewerGoalsChange
+                : undefined
+            }
           />
         )}
       />
