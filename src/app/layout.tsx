@@ -59,7 +59,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase,
     appleWebApp: {
       capable: true,
-      statusBarStyle: "default",
+      statusBarStyle: style.id === "gazetteer" ? "black-translucent" : "default",
       title: "Goalmaxxing",
     },
     icons: {
@@ -74,7 +74,7 @@ export async function generateViewport(): Promise<Viewport> {
     parseUiStyleId((await cookies()).get(UI_STYLE_COOKIE_NAME)?.value)
   );
   return {
-    themeColor: style.themeColor,
+    themeColor: style.backgroundColor,
     viewportFit: "cover",
     maximumScale: 1,
     minimumScale: 1,

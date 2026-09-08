@@ -16,7 +16,7 @@ export function XpProgressBar() {
       rewardSequence={rewardSequence}
       href="/achievements"
       ariaLabel="Open achievements and XP details"
-      className="max-w-[13.5rem] sm:max-w-none"
+      className="max-w-[9.5rem] min-w-0 sm:max-w-none"
     />
   );
 }

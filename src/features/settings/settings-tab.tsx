@@ -241,7 +241,7 @@ export function SettingsTab() {
         </div>
       ) : (
         <Dialog
-          modal={false}
+          modal
           open={settingsPanelOpen}
           onOpenChange={(open) => {
             if (!open) {
@@ -250,7 +250,7 @@ export function SettingsTab() {
           }}
         >
           <DialogContent
-            className="!top-0 !right-0 !left-auto !translate-x-0 !translate-y-0 inset-y-0 h-dvh w-[min(100vw,72rem)] max-w-none overflow-hidden rounded-none border-l p-0 data-open:slide-in-from-right data-closed:slide-out-to-right data-open:zoom-in-100 data-closed:zoom-out-100"
+            className="z-[60] !top-0 !right-0 !left-auto !translate-x-0 !translate-y-0 inset-y-0 h-dvh w-[min(100vw,72rem)] max-w-none overflow-hidden rounded-none border-l p-0 data-open:slide-in-from-right data-closed:slide-out-to-right data-open:zoom-in-100 data-closed:zoom-out-100"
             showCloseButton={false}
           >
             <DialogHeader className="gap-3 border-b px-4 py-3">
