@@ -14,12 +14,13 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import { type Dispatch, type SetStateAction, type TouchEventHandler, useCallback, useMemo, useRef, useState } from "react";
+import { type TouchEventHandler, useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AnchoredPopupCard } from "@/components/ui/anchored-popup-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingCard } from "@/components/ui/loading-card";
+import { TooltipIcon } from "@/components/ui/tooltip-icon";
 import { InsightsPeriodStepper } from "@/features/insights/insights-period-controls";
 import { InsightsGoalStatsFilters } from "@/features/insights/insights-goal-stats-filters";
 import { ProgressGoalList } from "@/features/insights/progress-goal-list";
@@ -86,13 +87,7 @@ import { captureViewportRect } from "@/lib/xp/events";
 import { createClient } from "@/lib/supabase/client";
 
 export type HeatmapViewMode = "month" | "year";
-export type InsightsTabContentMode =
-  | "full"
-  | "overall-only"
-  | "goal-stats-only"
-  | "goals-only"
-  | "ledger"
-  | "lane";
+export type InsightsTabContentMode = "full" | "goal-stats-only" | "lane";
 
 const AGGREGATE_DRILLDOWN_DAY_CLASS_PREFIX = "aggregate-drilldown-day-";
 const aggregateWeekdayLabels: [string, string, string, string, string, string, string] = [
@@ -154,7 +149,6 @@ interface InsightsTabProps {
     onPerGoalViewModeChange: (mode: HeatmapViewMode) => void;
   };
   sharedGoalFilters?: InsightsSharedGoalFilters;
-  sharedLedgerSelection?: InsightsSharedLedgerSelection;
   contentMode?: InsightsTabContentMode;
 }
 
@@ -169,17 +163,11 @@ export interface InsightsSharedGoalFilters {
   setShowHistoricalGoals: (value: boolean) => void;
 }
 
-export interface InsightsSharedLedgerSelection {
-  selectedGoalIds: string[] | null;
-  onSelectedGoalIdsChange: Dispatch<SetStateAction<string[] | null>>;
-}
-
 export function InsightsTab({
   subjectUserId,
   readOnly = false,
   sharedPeriod,
   sharedGoalFilters,
-  sharedLedgerSelection,
   contentMode = "full",
 }: InsightsTabProps = {}) {
   const [internalMonthCursor, setInternalMonthCursor] = useState(new Date());
@@ -216,11 +204,7 @@ export function InsightsTab({
   const setShowHistoricalGoals =
     sharedGoalFilters?.setShowHistoricalGoals ?? setInternalShowHistoricalGoals;
   const [goalStatsFiltersOpen, setGoalStatsFiltersOpen] = useState(false);
-  const [internalSelectedGoalIds, setInternalSelectedGoalIds] = useState<string[] | null>(null);
-  const selectedGoalIds =
-    sharedLedgerSelection?.selectedGoalIds ?? internalSelectedGoalIds;
-  const setSelectedGoalIds =
-    sharedLedgerSelection?.onSelectedGoalIdsChange ?? setInternalSelectedGoalIds;
+  const [selectedGoalIds, setSelectedGoalIds] = useState<string[] | null>(null);
   const [aggregateDrilldownDate, setAggregateDrilldownDate] = useState<string | null>(null);
   const [aggregateDrilldownPosition, setAggregateDrilldownPosition] = useState<
     ReturnType<typeof computeDayPreviewPosition> | null
@@ -228,9 +212,6 @@ export function InsightsTab({
   const [pendingRetroDate, setPendingRetroDate] = useState<string | null>(null);
   const [focusedLedgerDate, setFocusedLedgerDate] = useState<string | null>(null);
   const [milestoneNameDrafts, setMilestoneNameDrafts] = useState<Record<string, string[]>>({});
-  const [savingMilestoneNamesGoalId, setSavingMilestoneNamesGoalId] = useState<string | null>(
-    null
-  );
   const monthSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
   const aggregateHeatmapRef = useRef<HTMLDivElement | null>(null);
   const aggregateDrilldownRef = useRef<HTMLDivElement | null>(null);
@@ -557,7 +538,6 @@ export function InsightsTab({
         return false;
       }
 
-      setSavingMilestoneNamesGoalId(goal.id);
       const currentScrollY = window.scrollY;
       try {
         const { error } = await supabase.rpc("set_goal_milestone_names", {
@@ -587,8 +567,6 @@ export function InsightsTab({
           getApiErrorMessage(error, "Milestone names update failed.")
         );
         return false;
-      } finally {
-        setSavingMilestoneNamesGoalId(null);
       }
     },
     [loadData, readOnly, redirectToLogin, state.userId, supabase]
@@ -661,22 +639,11 @@ export function InsightsTab({
     containerRef: aggregateDrilldownRef,
     onDismiss: clearAggregateDrilldown,
   });
-  const showHeatmap =
-    contentMode === "full" ||
-    contentMode === "overall-only" ||
-    contentMode === "lane";
+  const showHeatmap = contentMode === "full" || contentMode === "lane";
   const showGoalStatsSection =
-    contentMode === "full" ||
-    contentMode === "goal-stats-only" ||
-    contentMode === "ledger";
-  const showGoalsSection =
-    contentMode === "full" ||
-    contentMode === "goals-only" ||
-    contentMode === "ledger" ||
-    contentMode === "lane";
-  const stackLedgerAndHeatmap =
-    contentMode === "lane" || !(showGoalsSection && showHeatmap);
-  const showGoalStatsStepper = showGoalStatsSection;
+    contentMode === "full" || contentMode === "goal-stats-only";
+  const showGoalsSection = contentMode === "full" || contentMode === "lane";
+  const stackLedgerAndHeatmap = contentMode !== "full";
   const todayLocal = toLocalDateString();
   const heatmapEditable = ledgerMode === "edit" && !readOnly && Boolean(editableGoal);
   const milestoneTargetCount =
@@ -724,6 +691,17 @@ export function InsightsTab({
   const showOverallStats =
     Boolean(state.insightsStats?.overall) &&
     (contentMode === "full" || contentMode === "lane");
+  const ledgerCaption = progressLedgerCaption(
+    ledgerMode,
+    selectedLedgerGoalIds.length,
+    editableGoal?.frequency_type === "fixed_milestones"
+      ? "milestone"
+      : "completion",
+    heatmapEditable
+  );
+  const ledgerHelp = (
+    <TooltipIcon content={ledgerCaption} label="About this Progress view" />
+  );
 
   const openLedgerDrilldown = (
     date: string,
@@ -829,15 +807,14 @@ export function InsightsTab({
                 <h2 className="font-display text-lg font-semibold tracking-tight">
                   Progress Tracker
                 </h2>
+                {showHeatmap ? ledgerHelp : null}
               </div>
               <div className="flex items-center gap-2 justify-self-center">
-                {showGoalStatsStepper ? (
-                  <InsightsPeriodStepper
-                    monthCursor={monthCursor}
-                    onMonthCursorChange={setMonthCursor}
-                    perGoalViewMode={perGoalViewMode}
-                  />
-                ) : null}
+                <InsightsPeriodStepper
+                  monthCursor={monthCursor}
+                  onMonthCursorChange={setMonthCursor}
+                  perGoalViewMode={perGoalViewMode}
+                />
                 <Button
                   type="button"
                   variant="outline"
@@ -888,98 +865,93 @@ export function InsightsTab({
           }
         >
           {showHeatmap ? (
-        <div
-          ref={aggregateHeatmapRef}
-          className={
-            stackLedgerAndHeatmap
-              ? "space-y-3"
-              : "space-y-3 md:col-start-2 md:row-start-1"
-          }
-          data-onboarding="insights.overall"
-          data-no-swipe="true"
-          onTouchStart={
-            perGoalViewMode === "month" ? onMonthSectionTouchStart : undefined
-          }
-          onTouchEnd={
-            perGoalViewMode === "month" ? onMonthSectionTouchEnd : undefined
-          }
-        >
-          <p className="text-sm text-muted-foreground">
-            {progressLedgerCaption(
-              ledgerMode,
-              selectedLedgerGoalIds.length,
-              editableGoal?.frequency_type === "fixed_milestones"
-                ? "milestone"
-                : "completion"
-            )}
-          </p>
-          {ledgerMode === "empty" ? null : perGoalViewMode === "month" ? (
-            <MonthHeatmap
-              month={monthCursor}
-              countsByDate={ledgerCountsByDate}
-              interactive
-              pendingDate={pendingRetroDate}
-              milestoneDates={milestonePinDates}
-              isDayDisabled={
-                heatmapEditable
-                  ? (date) => !isLedgerHeatmapDayMutable(date, todayLocal)
-                  : undefined
-              }
-              onDayClick={(date, sourceElement) =>
-                handleLedgerDayClick(date, sourceElement)
-              }
-            />
-          ) : (
-            <div className="overflow-x-auto py-1">
-              <CalendarHeatmap
-                startDate={selectedYearStart}
-                endDate={selectedYearEnd}
-                values={ledgerHeatmapData}
-                showWeekdayLabels
-                weekdayLabels={aggregateWeekdayLabels}
-                classForValue={(value) =>
-                  `${getHeatmapScaleClass(value?.count ?? 0)} cursor-pointer ${getAggregateDrilldownDayClass(value?.date)}`
+              <div
+                ref={aggregateHeatmapRef}
+                className={
+                  stackLedgerAndHeatmap
+                    ? "space-y-1"
+                    : "md:col-start-2 md:row-start-1"
                 }
-                titleForValue={(value) => {
-                  const count = value?.count ?? 0;
-                  const unit =
-                    editableGoal?.frequency_type === "fixed_milestones"
-                      ? count === 1
-                        ? "milestone"
-                        : "milestones"
-                      : count === 1
-                        ? "completion"
-                        : "completions";
-                  return `${value?.date ?? "N/A"}: ${count} ${unit}`;
-                }}
-                onClick={(value?: { date?: string }) => {
-                  const selectedDate = value?.date;
-                  if (!selectedDate) {
-                    return;
+                data-onboarding="insights.overall"
+                data-no-swipe="true"
+                onTouchStart={
+                  perGoalViewMode === "month" ? onMonthSectionTouchStart : undefined
+                }
+                onTouchEnd={
+                  perGoalViewMode === "month" ? onMonthSectionTouchEnd : undefined
+                }
+              >
+                {showGoalStatsSection ? null : (
+                  <div className="flex justify-end">{ledgerHelp}</div>
+                )}
+                {ledgerMode === "empty" ? null : perGoalViewMode === "month" ? (
+                <MonthHeatmap
+                  month={monthCursor}
+                  countsByDate={ledgerCountsByDate}
+                  interactive
+                  pendingDate={pendingRetroDate}
+                  milestoneDates={milestonePinDates}
+                  showMonthLabel={false}
+                  isDayDisabled={
+                    heatmapEditable
+                      ? (date) => !isLedgerHeatmapDayMutable(date, todayLocal)
+                      : undefined
                   }
-                  handleLedgerDayClick(selectedDate);
-                }}
-              />
+                  onDayClick={(date, sourceElement) =>
+                    handleLedgerDayClick(date, sourceElement)
+                  }
+                />
+              ) : (
+                <div className="overflow-x-auto py-1">
+                  <CalendarHeatmap
+                    startDate={selectedYearStart}
+                    endDate={selectedYearEnd}
+                    values={ledgerHeatmapData}
+                    showWeekdayLabels
+                    weekdayLabels={aggregateWeekdayLabels}
+                    classForValue={(value) =>
+                      `${getHeatmapScaleClass(value?.count ?? 0)} cursor-pointer ${getAggregateDrilldownDayClass(value?.date)}`
+                    }
+                    titleForValue={(value) => {
+                      const count = value?.count ?? 0;
+                      const unit =
+                        editableGoal?.frequency_type === "fixed_milestones"
+                          ? count === 1
+                            ? "milestone"
+                            : "milestones"
+                          : count === 1
+                            ? "completion"
+                            : "completions";
+                      return `${value?.date ?? "N/A"}: ${count} ${unit}`;
+                    }}
+                    onClick={(value?: { date?: string }) => {
+                      const selectedDate = value?.date;
+                      if (!selectedDate) {
+                        return;
+                      }
+                      handleLedgerDayClick(selectedDate);
+                    }}
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      ) : null}
+          ) : null}
 
           {showGoalsSection ? (
             <div className={stackLedgerAndHeatmap ? undefined : "md:col-start-1 md:row-start-1"}>
-            <ProgressGoalList
-              goals={ledgerGoalItems}
-              selectedGoalIds={selectedLedgerIdSet}
-              readOnly={readOnly}
-              onSelectAll={() => setSelectedGoalIds(null)}
-              onClearAll={() => setSelectedGoalIds([])}
-              onSelectOnly={(goalId) => setSelectedGoalIds([goalId])}
-              onToggleGoal={(goalId) => {
-                setSelectedGoalIds((current) =>
-                  toggleLedgerGoalSelection(visibleGoalIds, current, goalId)
-                );
-              }}
-            />
+              <ProgressGoalList
+                goals={ledgerGoalItems}
+                selectedGoalIds={selectedLedgerIdSet}
+                onboarding={!readOnly}
+                onSelectAll={() => setSelectedGoalIds(null)}
+                onClearAll={() => setSelectedGoalIds([])}
+                onSelectOnly={(goalId) => setSelectedGoalIds([goalId])}
+                onToggleGoal={(goalId) => {
+                  setSelectedGoalIds((current) =>
+                    toggleLedgerGoalSelection(visibleGoalIds, current, goalId)
+                  );
+                }}
+              />
             </div>
           ) : null}
         </div>

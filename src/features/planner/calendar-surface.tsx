@@ -6,7 +6,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { allCategoriesValue } from "@/features/goals/goal-filters";
 import {
   buildWeekdayLabels,
   getEntryGoalFirstTitleWithTime,
@@ -92,8 +91,8 @@ export function CalendarSurface({
   const [loading, setLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState(allCategoriesValue);
-  const [endMonthFilter, setEndMonthFilter] = useState<string | null>(null);
+  const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
+  const [endMonthFilters, setEndMonthFilters] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const {
     draftPolicy,
@@ -251,8 +250,8 @@ export function CalendarSurface({
     viewMode,
     setupTimezone,
     duoScope,
-    categoryFilter: viewMode === "day" ? allCategoriesValue : categoryFilter,
-    endMonthFilter: viewMode === "day" ? null : endMonthFilter,
+    categoryFilters: viewMode === "day" ? [] : categoryFilters,
+    endMonthFilters: viewMode === "day" ? [] : endMonthFilters,
     searchQuery,
     partnerCompletionMarkersByDate,
     previewEntryOrderByDay,
@@ -305,7 +304,7 @@ export function CalendarSurface({
     capacityWarningGoalCount,
     categoryOptions,
     endMonthOptions,
-    effectiveEndMonthFilter,
+    effectiveEndMonthFilters,
     getEntriesForDay,
     getCompletionFactMarkersForDay,
     getOrderedEntriesForDay,
@@ -806,11 +805,11 @@ export function CalendarSurface({
     canNavigateToNextOpenInstance,
     canNavigateToLastOpenInstance,
     filtersOpen,
-    categoryFilter,
-    setCategoryFilter,
+    categoryFilters,
+    setCategoryFilters,
     categoryOptions,
-    effectiveEndMonthFilter,
-    setEndMonthFilter,
+    effectiveEndMonthFilters,
+    setEndMonthFilters,
     endMonthOptions,
     settingsOpen,
     rebuildLoading,

@@ -24,11 +24,11 @@ interface PlannerFiltersDialogProps {
   showTasksInsteadOfGoals: boolean;
   onShowTasksInsteadOfGoalsChange: (next: boolean) => void;
   tasksToggleDisabled?: boolean;
-  categoryFilter: string;
-  onCategoryFilterChange: (value: string) => void;
+  categoryFilters: string[];
+  onCategoryFiltersChange: (value: string[]) => void;
   categoryOptions: GoalCategoryFilterOption[];
-  endMonthFilter: string | null;
-  onEndMonthFilterChange: (value: string | null) => void;
+  endMonthFilters: string[];
+  onEndMonthFiltersChange: (value: string[]) => void;
   endMonthOptions: GoalMonthOption[];
   dayFilters?: ChecklistFiltersFormProps | null;
 }
@@ -39,11 +39,11 @@ export function PlannerFiltersDialog({
   showTasksInsteadOfGoals,
   onShowTasksInsteadOfGoalsChange,
   tasksToggleDisabled = false,
-  categoryFilter,
-  onCategoryFilterChange,
+  categoryFilters,
+  onCategoryFiltersChange,
   categoryOptions,
-  endMonthFilter,
-  onEndMonthFilterChange,
+  endMonthFilters,
+  onEndMonthFiltersChange,
   endMonthOptions,
   dayFilters = null,
 }: PlannerFiltersDialogProps) {
@@ -53,7 +53,7 @@ export function PlannerFiltersDialog({
       <DialogContent
         className={
           usingDayFilters
-            ? "top-auto bottom-0 left-1/2 max-h-[85vh] max-w-[calc(100%-1rem)] -translate-x-1/2 translate-y-0 overflow-y-auto rounded-b-none rounded-t-xl pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:top-1/2 sm:bottom-auto sm:max-w-lg sm:-translate-y-1/2 sm:rounded-b-xl"
+            ? "top-auto bottom-0 left-1/2 max-h-[85vh] max-w-[calc(100%-1rem)] -translate-x-1/2 translate-y-0 overflow-visible rounded-b-none rounded-t-xl pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:top-1/2 sm:bottom-auto sm:max-w-lg sm:-translate-y-1/2 sm:rounded-b-xl"
             : undefined
         }
       >
@@ -65,7 +65,7 @@ export function PlannerFiltersDialog({
               : "Choose whether the planner shows scheduled goals or date-only tasks."}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="max-h-[min(32rem,calc(85vh-8rem))] space-y-4 overflow-y-auto overflow-x-visible">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
               <p className="text-sm font-medium">Show tasks instead of goals</p>
@@ -102,11 +102,11 @@ export function PlannerFiltersDialog({
             <GoalFilters
               categoryFilterEnabled
               endMonthFilterEnabled
-              categoryFilter={categoryFilter}
-              onCategoryFilterChange={onCategoryFilterChange}
+              categoryFilters={categoryFilters}
+              onCategoryFiltersChange={onCategoryFiltersChange}
               categoryOptions={categoryOptions}
-              endMonthFilter={endMonthFilter}
-              onEndMonthFilterChange={onEndMonthFilterChange}
+              endMonthFilters={endMonthFilters}
+              onEndMonthFiltersChange={onEndMonthFiltersChange}
               endMonthOptions={endMonthOptions}
             />
           )}

@@ -3,5 +3,5 @@ export function buildAppIconSvg(fill: string): string {
 }
 
 export function appIconHref(styleId: string): string {
-  return `/brand-icon?style=${styleId}`;
+  return `/brand-icon?style=${encodeURIComponent(styleId)}`;
 }

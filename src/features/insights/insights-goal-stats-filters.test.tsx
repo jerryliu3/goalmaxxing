@@ -67,8 +67,11 @@ describe("InsightsGoalStatsFilters", () => {
     expect(onViewModeChange).toHaveBeenCalledWith("year");
 
     expect(
-      screen.getByRole("heading", { name: "Insights filters" })
+      screen.getByRole("heading", { name: "Progress filters" })
     ).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Progress filters" })).toHaveClass(
+      "overflow-visible"
+    );
     expect(screen.getByText("Show past goals")).toBeInTheDocument();
     expect(screen.getByText("(3)")).toBeInTheDocument();
     expect(screen.queryByLabelText("Goal stats view mode")).not.toBeInTheDocument();

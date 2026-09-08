@@ -123,7 +123,7 @@ export function ChallengeList({
         metric: challengeMetric(item),
         detail: item.description ?? `${item.status} · target ${item.targetValue}`,
         joined: item.viewerJoined,
-        closed: item.status === "closed" || item.status === "archived",
+        closed: false,
         people,
         joinLabel: "Join challenge",
         leaveLabel: "Leave challenge",
@@ -131,6 +131,11 @@ export function ChallengeList({
     });
     return sortJoinedFirst(mapped);
   }, [items, partner, viewerLabel]);
+
+  const challengeById = useMemo(
+    () => new Map(items.map((item) => [item.id, item])),
+    [items]
+  );
 
   async function toggleJoin(challenge: SocialChallenge) {
     setPendingId(challenge.id);
@@ -220,7 +225,7 @@ export function ChallengeList({
         hint="Your score first · ranks on click"
       >
         {tiles.map((tile) => {
-          const challenge = items.find((item) => item.id === tile.key);
+          const challenge = challengeById.get(tile.key);
           const expanded = expandedId === tile.key;
           return (
             <CompeteTile

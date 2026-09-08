@@ -24,10 +24,9 @@ import type {
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import type { DraftCommandState } from "@/features/planner/draft-command-reducer";
-import { allCategoriesValue } from "@/features/goals/goal-filters";
 import {
   buildGoalEndMonthOptions,
-  resolveEffectiveEndMonth,
+  resolveEffectiveEndMonths,
 } from "@/lib/goals/list-view";
 
 function collectCalendarTaskLookup(
@@ -57,8 +56,8 @@ export interface CalendarDayAccessorsArgs {
     start: string;
     end: string;
   } | null;
-  categoryFilter: string;
-  endMonthFilter: string | null;
+  categoryFilters: string[];
+  endMonthFilters: string[];
   searchQuery?: string;
   duoScope: "me" | "partner" | "both";
   partnerCompletionMarkersByDate?: Map<string, PlannerCompletionFactMarker[]>;
@@ -85,7 +84,7 @@ export interface CalendarDayAccessorsResult {
   capacityWarningGoalCount: number;
   categoryOptions: ReturnType<typeof buildCalendarCategoryFilterOptions>;
   endMonthOptions: ReturnType<typeof buildGoalEndMonthOptions>;
-  effectiveEndMonthFilter: string | null;
+  effectiveEndMonthFilters: string[];
   getEntriesForDay: (day: string | null) => PlannerDayDetailEntry[];
   getCompletionFactMarkersForDay: (
     day: string | null
@@ -106,8 +105,8 @@ export function selectCalendarDayAccessorsModel({
   currentScopeMonth,
   calendarToday,
   editableDateWindow,
-  categoryFilter,
-  endMonthFilter,
+  categoryFilters,
+  endMonthFilters,
   searchQuery = "",
   duoScope,
   partnerCompletionMarkersByDate,
@@ -126,8 +125,8 @@ export function selectCalendarDayAccessorsModel({
   const activeGoalsByPlanGoalId = activeGoalIndexes.byPlanGoalId;
   const activeGoalsByOriginalGoalId = activeGoalIndexes.byOriginalGoalId;
   const filterReferenceMonth = currentScopeMonth ?? calendarToday.slice(0, 7);
-  const effectiveEndMonthFilter = resolveEffectiveEndMonth(
-    endMonthFilter,
+  const effectiveEndMonthFilters = resolveEffectiveEndMonths(
+    endMonthFilters,
     filterReferenceMonth
   );
 
@@ -139,7 +138,7 @@ export function selectCalendarDayAccessorsModel({
     return buildGoalEndMonthOptions(
       goalEndDates,
       filterReferenceMonth,
-      effectiveEndMonthFilter ? [effectiveEndMonthFilter] : []
+      effectiveEndMonthFilters
     );
   })();
 
@@ -150,9 +149,8 @@ export function selectCalendarDayAccessorsModel({
     goalPassesCalendarFilters({
       goalId,
       goalsByOriginalId: activeGoalsByOriginalGoalId,
-      categoryFilter,
-      allCategoriesValue,
-      endMonthFilter: effectiveEndMonthFilter,
+      categoryFilters,
+      endMonthFilters: effectiveEndMonthFilters,
       goalOverride,
     });
 
@@ -311,7 +309,7 @@ export function selectCalendarDayAccessorsModel({
     capacityWarningGoalCount,
     categoryOptions,
     endMonthOptions,
-    effectiveEndMonthFilter,
+    effectiveEndMonthFilters,
     getEntriesForDay,
     getCompletionFactMarkersForDay,
     getPartnerCompletionFactMarkersForDay,

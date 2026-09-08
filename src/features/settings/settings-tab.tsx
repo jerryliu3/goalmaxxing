@@ -6,7 +6,13 @@ import {
   LogOut,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useCallback, type Dispatch, type SetStateAction } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingCard } from "@/components/ui/loading-card";
 import {
@@ -22,6 +28,7 @@ import { IntegrationsSettings } from "@/features/settings/integrations-settings"
 import { PlannerPreferencesSettings, type PlannerPreferencesDraft } from "@/features/settings/planner-preferences-settings";
 import { ReportIssueSettings } from "@/features/settings/report-issue-settings";
 import {
+  getSettingsSectionCopy,
   resolveSettingsSection,
   SETTINGS_GROUPS,
   type SettingsSection,
@@ -64,11 +71,23 @@ export function SettingsTab() {
   const { applySearchParams } = useClientSearchParamsUpdater();
   const isDesktopTwoPane = useMediaQuery("(min-width: 768px)");
   const requestedSection = resolveSettingsSection(searchParams.get("tab"));
-  const settingsSection = requestedSection ?? "preferences";
+  const [cachedSection, setCachedSection] = useState<SettingsSection>(
+    () => requestedSection ?? "preferences"
+  );
+  const settingsSection = requestedSection ?? cachedSection;
   const settingsPanelOpen = requestedSection !== null;
+
+  useEffect(() => {
+    if (requestedSection) {
+      setCachedSection(requestedSection);
+    }
+  }, [requestedSection]);
 
   const writeSettingsSection = useCallback(
     (section: SettingsSection | null) => {
+      if (section) {
+        setCachedSection(section);
+      }
       applySearchParams((params) => {
         if (section) {
           params.set("tab", section);
@@ -84,30 +103,7 @@ export function SettingsTab() {
     writeSettingsSection(null);
   }, [writeSettingsSection]);
 
-  const settingsSectionTitle =
-    settingsSection === "preferences"
-      ? "Preferences"
-      : settingsSection === "notifications"
-        ? "Notifications"
-        : settingsSection === "integrations"
-          ? "Integrations"
-          : settingsSection === "onboarding"
-            ? "Onboarding guides"
-            : settingsSection === "appearance"
-              ? "Appearance"
-              : "Report an issue";
-  const settingsSectionDescription =
-    settingsSection === "preferences"
-      ? "Manage planner defaults for Plan."
-      : settingsSection === "notifications"
-        ? "Configure push access and reminder schedules."
-        : settingsSection === "integrations"
-          ? "Connect Apple Health or Health Connect and opt into auto-complete."
-          : settingsSection === "onboarding"
-            ? "Replay the app intro and page guides."
-            : settingsSection === "appearance"
-              ? "Choose a visual style for Goalmaxxing. Original is the default; more skins can be added here."
-              : "Send product bugs or UX friction details directly to support.";
+  const settingsCopy = getSettingsSectionCopy(settingsSection);
 
   if (loading && !state.userId) {
     return (
@@ -149,7 +145,11 @@ export function SettingsTab() {
                   "flex w-full items-center justify-between py-3 text-left text-base font-medium transition-colors hover:bg-muted/30",
                   requestedSection === item.key && "bg-muted/40"
                 )}
-                onClick={() => writeSettingsSection(item.key)}
+                onClick={() =>
+                  writeSettingsSection(
+                    requestedSection === item.key ? null : item.key
+                  )
+                }
               >
                 <span>{item.label}</span>
                 <ChevronRight className="size-4 text-muted-foreground" />
@@ -176,8 +176,22 @@ export function SettingsTab() {
   );
 
   return (
-    <div className="md:grid md:grid-cols-[minmax(16rem,24rem)_minmax(0,1fr)] md:items-start md:gap-10">
-      <div className="space-y-5">
+    <div
+      data-testid="settings-pane"
+      data-settings-pane={settingsPanelOpen ? "open" : "closed"}
+      className={cn(
+        "md:flex md:items-start md:overflow-x-hidden md:transition-[gap] md:duration-[var(--motion-duration-standard)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
+        isDesktopTwoPane && settingsPanelOpen ? "md:gap-10" : "md:gap-0"
+      )}
+    >
+      <div
+        className={cn(
+          "min-w-0 space-y-5 md:transition-[flex-basis,max-width] md:duration-[var(--motion-duration-standard)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
+          isDesktopTwoPane && settingsPanelOpen
+            ? "md:max-w-96 md:flex-[0_0_24rem]"
+            : "md:max-w-none md:flex-1"
+        )}
+      >
         <ProfileSection
           userId={state.userId}
           profile={state.profile}
@@ -193,24 +207,44 @@ export function SettingsTab() {
       </div>
 
       {isDesktopTwoPane ? (
-        <div className="min-w-0" data-testid="settings-desktop-editor">
-          {settingsPanelOpen ? (
-            <div className="space-y-3">
+        <div
+          className={cn(
+            "min-w-0 overflow-hidden md:transition-[flex-basis,max-width,max-height,opacity] md:duration-[var(--motion-duration-standard)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
+            settingsPanelOpen
+              ? "md:flex-1 md:opacity-100"
+              : "md:pointer-events-none md:max-h-0 md:max-w-0 md:flex-[0_0_0%] md:opacity-0"
+          )}
+          data-testid="settings-desktop-editor"
+          data-settings-slide={settingsPanelOpen ? "in" : "out"}
+          aria-hidden={!settingsPanelOpen}
+        >
+          <div
+            className={cn(
+              "space-y-3 md:w-full md:min-w-96 md:transition-transform md:duration-[var(--motion-duration-standard)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
+              settingsPanelOpen ? "md:translate-x-0" : "md:translate-x-full"
+            )}
+          >
+            <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="font-display text-xl font-semibold tracking-tight">
-                  {settingsSectionTitle}
+                  {settingsCopy.label}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {settingsSectionDescription}
+                  {settingsCopy.description}
                 </p>
               </div>
-              {editor}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={closeSettingsPanel}
+              >
+                <ArrowLeft className="size-4" />
+                Back
+              </Button>
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Select a control to edit it here.
-            </p>
-          )}
+            {editor}
+          </div>
         </div>
       ) : (
         <Dialog
@@ -223,7 +257,7 @@ export function SettingsTab() {
           }}
         >
           <DialogContent
-            className="!top-0 !right-0 !left-auto !translate-x-0 !translate-y-0 inset-y-0 h-dvh w-[min(100vw,72rem)] max-w-none overflow-hidden rounded-none border-l p-0"
+            className="!top-0 !right-0 !left-auto !translate-x-0 !translate-y-0 inset-y-0 h-dvh w-[min(100vw,72rem)] max-w-none overflow-hidden rounded-none border-l p-0 data-open:slide-in-from-right data-closed:slide-out-to-right data-open:zoom-in-100 data-closed:zoom-out-100"
             showCloseButton={false}
           >
             <DialogHeader className="gap-3 border-b px-4 py-3">
@@ -237,9 +271,9 @@ export function SettingsTab() {
                   <ArrowLeft className="size-4" />
                   Back
                 </Button>
-                <DialogTitle>{settingsSectionTitle}</DialogTitle>
+                <DialogTitle>{settingsCopy.label}</DialogTitle>
               </div>
-              <DialogDescription>{settingsSectionDescription}</DialogDescription>
+              <DialogDescription>{settingsCopy.description}</DialogDescription>
             </DialogHeader>
             <div className="h-[calc(100dvh-5.5rem)] overflow-y-auto overflow-x-hidden p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {editor}

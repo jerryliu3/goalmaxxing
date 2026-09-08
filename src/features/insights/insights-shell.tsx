@@ -64,43 +64,27 @@ export function InsightsShell() {
         onboardingKey="insights.main"
         forceOpen={searchParams.get("onboarding") === "insights.main"}
       />
-          {sharePeriodControls ? (
-        <>
+      {sharePeriodControls ? (
+        <InsightsTab
+          sharedPeriod={sharedPeriod}
+          sharedGoalFilters={sharedGoalFilters}
+          contentMode="goal-stats-only"
+        />
+      ) : null}
+      <DuoLanes
+        scope={scope}
+        viewer={viewer}
+        partner={partner}
+        renderLane={(subject) => (
           <InsightsTab
+            subjectUserId={subject.userId}
+            readOnly={subject.readOnly}
             sharedPeriod={sharedPeriod}
             sharedGoalFilters={sharedGoalFilters}
-            contentMode="goal-stats-only"
+            contentMode={sharePeriodControls ? "lane" : undefined}
           />
-          <DuoLanes
-            scope={scope}
-            viewer={viewer}
-            partner={partner}
-            renderLane={(subject) => (
-              <InsightsTab
-                subjectUserId={subject.userId}
-                readOnly={subject.readOnly}
-                sharedPeriod={sharedPeriod}
-                sharedGoalFilters={sharedGoalFilters}
-                contentMode="lane"
-              />
-            )}
-          />
-        </>
-      ) : (
-        <DuoLanes
-          scope={scope}
-          viewer={viewer}
-          partner={partner}
-          renderLane={(subject) => (
-            <InsightsTab
-              subjectUserId={subject.userId}
-              readOnly={subject.readOnly}
-              sharedPeriod={sharedPeriod}
-              sharedGoalFilters={sharedGoalFilters}
-            />
-          )}
-        />
-      )}
+        )}
+      />
     </div>
   );
 }

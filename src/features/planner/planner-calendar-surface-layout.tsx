@@ -179,11 +179,11 @@ export interface PlannerCalendarSurfaceLayoutProps {
   canNavigateToLastOpenInstance: boolean;
   eventDetailCallbacks: PlannerEventDetailDialogCallbacks;
   filtersOpen: boolean;
-  categoryFilter: string;
-  setCategoryFilter: (value: string) => void;
+  categoryFilters: string[];
+  setCategoryFilters: (value: string[]) => void;
   categoryOptions: GoalCategoryFilterOption[];
-  effectiveEndMonthFilter: string | null;
-  setEndMonthFilter: (value: string | null) => void;
+  effectiveEndMonthFilters: string[];
+  setEndMonthFilters: (value: string[]) => void;
   endMonthOptions: GoalMonthOption[];
   settingsOpen: boolean;
   plannerSettingsForm: ReactNode;
@@ -308,11 +308,11 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     canNavigateToLastOpenInstance,
     eventDetailCallbacks,
     filtersOpen,
-    categoryFilter,
-    setCategoryFilter,
+    categoryFilters,
+    setCategoryFilters,
     categoryOptions,
-    effectiveEndMonthFilter,
-    setEndMonthFilter,
+    effectiveEndMonthFilters,
+    setEndMonthFilters,
     endMonthOptions,
     settingsOpen,
     plannerSettingsForm,
@@ -320,6 +320,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
   const dayChecklist = usePlanDayChecklistModel({
     viewDate: focusedDay,
     searchQuery,
+    asOfDate: context?.asOfDate ?? null,
+    timezone: context?.timezone ?? null,
   });
   const pendingMonthRowRestoreRef = useRef<{
     day: string;
@@ -633,11 +635,11 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         showTasksInsteadOfGoals={showTasksInsteadOfGoals}
         onShowTasksInsteadOfGoalsChange={onShowTasksInsteadOfGoalsChange}
         tasksToggleDisabled={plannerReadOnly}
-        categoryFilter={categoryFilter}
-        onCategoryFilterChange={setCategoryFilter}
+        categoryFilters={categoryFilters}
+        onCategoryFiltersChange={setCategoryFilters}
         categoryOptions={categoryOptions}
-        endMonthFilter={effectiveEndMonthFilter}
-        onEndMonthFilterChange={setEndMonthFilter}
+        endMonthFilters={effectiveEndMonthFilters}
+        onEndMonthFiltersChange={setEndMonthFilters}
         endMonthOptions={endMonthOptions}
         dayFilters={
           viewMode === "day" && dayChecklist

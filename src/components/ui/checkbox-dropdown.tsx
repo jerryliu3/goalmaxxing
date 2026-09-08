@@ -81,13 +81,9 @@ export function CheckboxDropdown({
     const triggerRect = trigger.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
     const width = Math.max(triggerRect.width, 180);
-
-    const spaceBelow = useFixed
-      ? window.innerHeight - triggerRect.bottom - viewportPadding
-      : containerRect.bottom - triggerRect.bottom - viewportPadding;
-    const spaceAbove = useFixed
-      ? triggerRect.top - viewportPadding
-      : triggerRect.top - containerRect.top - viewportPadding;
+    const spaceBelow =
+      window.innerHeight - triggerRect.bottom - viewportPadding;
+    const spaceAbove = triggerRect.top - viewportPadding;
     const openUpward = spaceBelow < 180 && spaceAbove > spaceBelow;
     const availableHeight = openUpward ? spaceAbove - gap : spaceBelow - gap;
     const maxHeight = Math.max(
@@ -216,6 +212,7 @@ export function CheckboxDropdown({
                 top: position.top,
                 width: position.width,
                 maxHeight: position.maxHeight + (enableSearch ? 40 : 0),
+                pointerEvents: "auto",
               }}
               onPointerDown={(event) => {
                 event.stopPropagation();

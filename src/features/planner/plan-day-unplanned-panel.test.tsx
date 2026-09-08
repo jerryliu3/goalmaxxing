@@ -83,6 +83,42 @@ describe("PlanDayUnplannedPanel", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("keeps the completion checkbox for unplanned goals on today and past days", () => {
+    const goal = buildGoal({ id: "goal-run", title: "Run" });
+    const checklist = {
+      loading: false,
+      todayLocalDate: "2026-09-06",
+      visibleGoalIds: null,
+      data: { goals: [goal] },
+      listModel: {
+        completableGoals: [goal],
+        presentationByGoalId: new Map([
+          ["goal-run", { exactDateCompleted: false }],
+        ]),
+      },
+      savingGoalId: null,
+      toggleCompletion: vi.fn(),
+    } as unknown as PlanDayChecklistModel;
+
+    const { rerender } = render(
+      <PlanDayUnplannedPanel
+        day="2026-09-06"
+        placedEntries={[]}
+        checklist={checklist}
+      />
+    );
+    expect(screen.getByRole("button", { name: "Mark Run done" })).toBeInTheDocument();
+
+    rerender(
+      <PlanDayUnplannedPanel
+        day="2026-09-01"
+        placedEntries={[]}
+        checklist={checklist}
+      />
+    );
+    expect(screen.getByRole("button", { name: "Mark Run done" })).toBeInTheDocument();
+  });
+
   it("uses the Plan Day checklist facets to hide filtered unplanned goals", () => {
     const visibleGoal = buildGoal({ id: "goal-visible", title: "Visible goal" });
     const filteredGoal = buildGoal({ id: "goal-filtered", title: "Filtered goal" });

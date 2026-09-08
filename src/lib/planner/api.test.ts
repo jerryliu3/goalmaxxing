@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PlannerRouteError, resolveCanonicalAsOfDate } from "@/lib/planner/api";
+import {
+  loadPlannerProfileTimezone,
+  PlannerRouteError,
+  resolveCanonicalAsOfDate,
+} from "@/lib/planner/api";
 
 describe("resolveCanonicalAsOfDate", () => {
   beforeEach(() => {
@@ -47,5 +51,58 @@ describe("resolveCanonicalAsOfDate", () => {
       expect(routeError.code).toBe("as_of_date_conflict");
       expect(routeError.details).toEqual({ canonicalAsOfDate: "2026-08-05" });
     }
+  });
+});
+
+describe("loadPlannerProfileTimezone", () => {
+  function profileClient(result: {
+    data: { timezone: string | null } | null;
+    error: { message: string } | null;
+  }) {
+    return {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => result,
+          }),
+        }),
+      }),
+    } as unknown as Parameters<typeof loadPlannerProfileTimezone>[0]["supabase"];
+  }
+
+  it("returns a confirmed profile timezone", async () => {
+    await expect(
+      loadPlannerProfileTimezone({
+        supabase: profileClient({
+          data: { timezone: "America/New_York" },
+          error: null,
+        }),
+        userId: "11111111-1111-4111-8111-111111111111",
+      })
+    ).resolves.toBe("America/New_York");
+  });
+
+  it("falls back to UTC when the profile timezone is missing", async () => {
+    await expect(
+      loadPlannerProfileTimezone({
+        supabase: profileClient({ data: { timezone: null }, error: null }),
+        userId: "11111111-1111-4111-8111-111111111111",
+      })
+    ).resolves.toBe("UTC");
+  });
+
+  it("fails closed when the profile timezone cannot be loaded", async () => {
+    await expect(
+      loadPlannerProfileTimezone({
+        supabase: profileClient({
+          data: null,
+          error: { message: "unavailable" },
+        }),
+        userId: "11111111-1111-4111-8111-111111111111",
+      })
+    ).rejects.toMatchObject({
+      status: 503,
+      code: "profile_timezone_lookup_failed",
+    });
   });
 });

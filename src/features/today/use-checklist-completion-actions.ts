@@ -16,6 +16,7 @@ interface UseChecklistCompletionActionsOptions {
   readOnly: boolean;
   viewDate: string;
   todayLocalDate: string;
+  timezone?: string | null;
   completionsByGoal: ReadonlyMap<string, CompletionDateFact[]>;
   loadData: (options: {
     showLoading: boolean;
@@ -29,6 +30,7 @@ export function useChecklistCompletionActions({
   readOnly,
   viewDate,
   todayLocalDate,
+  timezone,
   completionsByGoal,
   loadData,
   redirectToLogin,
@@ -115,7 +117,7 @@ export function useChecklistCompletionActions({
         desiredFactState: routeDesiredFactState,
         goalId: mutation.goalId,
         date: dispatchDate,
-        timezone: resolveUserTimezone(),
+        timezone: resolveUserTimezone(timezone),
         sourceRect,
         blockedMessage:
           decision.reason === "future_creation"
@@ -147,6 +149,7 @@ export function useChecklistCompletionActions({
       refreshChecklistInBackground,
       runCompletionMutation,
       pinRecentlyCompletedGoal,
+      timezone,
       todayLocalDate,
       viewDate,
     ]

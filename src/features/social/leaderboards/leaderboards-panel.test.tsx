@@ -119,5 +119,9 @@ describe("LeaderboardsPanel", () => {
 
     expect(await screen.findByRole("heading", { name: "Season 1" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Finished season" })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(fetchSocialLeaderboardStandingsMock).toHaveBeenCalledTimes(1);
+    });
+    expect(fetchSocialLeaderboardStandingsMock).toHaveBeenCalledWith("season-1");
   });
 });

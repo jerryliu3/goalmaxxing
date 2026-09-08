@@ -11,14 +11,12 @@ import {
 
 export function NudgeButton({
   partnerId,
-  optionalMessage = "",
   onSent,
 }: {
   partnerId: string;
-  optionalMessage?: string;
   onSent?: () => void;
 }) {
-  const [message, setMessage] = useState(optionalMessage);
+  const [message, setMessage] = useState("");
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

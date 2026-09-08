@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Goal } from "@/lib/goals/types";
@@ -59,6 +59,14 @@ vi.mock("@/lib/dates/day", async () => {
   };
 });
 
+function onlyButtonForGoal(title: string) {
+  const row = screen.getByRole("button", { name: new RegExp(title) }).closest("li");
+  if (!(row instanceof HTMLElement)) {
+    throw new Error(`Could not find the Progress goal row for ${title}`);
+  }
+  return within(row).getByRole("button", { name: "Only" });
+}
+
 function goal(overrides: Partial<Goal> & Pick<Goal, "id" | "owner_id" | "title">): Goal {
   return {
     description: null,
@@ -108,7 +116,7 @@ describe("InsightsTab goal ledger", () => {
 
     expect(screen.getByRole("heading", { name: "Progress Tracker" })).toBeInTheDocument();
     expect(
-      screen.getByText(/Aggregate of selected goals/)
+      screen.getByRole("button", { name: "About this Progress view" })
     ).toBeInTheDocument();
     const layout = screen.getByTestId("progress-ledger-layout");
     expect(layout).toHaveClass(
@@ -117,22 +125,23 @@ describe("InsightsTab goal ledger", () => {
       "md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]"
     );
     expect(layout).not.toHaveClass("flex-col-reverse");
-    const heatmapCaption = screen.getByText(/Aggregate of selected goals/);
-    const goalsHeading = screen.getByRole("heading", { name: "Goals" });
+    const goalsHeading = screen.getByRole("heading", { name: /Goals/ });
     expect(
-      heatmapCaption.compareDocumentPosition(goalsHeading) & Node.DOCUMENT_POSITION_FOLLOWING
+      layout.compareDocumentPosition(goalsHeading) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
 
-    await user.click(screen.getAllByRole("button", { name: "Only" })[1]);
+    await user.click(onlyButtonForGoal("Lift"));
+    await user.hover(screen.getByRole("button", { name: "About this Progress view" }));
 
-    expect(
-      screen.getByText(/Tap a past or today cell to log or remove a completion/)
-    ).toBeInTheDocument();
+    expect(screen.getByRole("tooltip")).toHaveTextContent(
+      /Tap a past or today cell to log or remove a completion/
+    );
 
     await user.click(screen.getByRole("button", { name: /Yoga/ }));
+    await user.hover(screen.getByRole("button", { name: "About this Progress view" }));
 
-    expect(screen.getByText(/Read-only overlap of 2 goals/)).toBeInTheDocument();
+    expect(screen.getByRole("tooltip")).toHaveTextContent(/Read-only overlap of 2 goals/);
   });
 
   it("logs or removes a completion from the selected goal heatmap", async () => {
@@ -148,7 +157,7 @@ describe("InsightsTab goal ledger", () => {
       />
     );
 
-    await user.click(screen.getAllByRole("button", { name: "Only" })[0]);
+    await user.click(onlyButtonForGoal("Tempo run"));
     await user.click(screen.getByTitle(/2026-09-01/));
 
     expect(runCompletionMutationMock).toHaveBeenCalledWith(
@@ -174,11 +183,12 @@ describe("InsightsTab goal ledger", () => {
 
     expect(screen.getByText("0/3 milestones")).toBeInTheDocument();
 
-    await user.click(screen.getAllByRole("button", { name: "Only" })[3]);
+    await user.click(onlyButtonForGoal("Thesis"));
+    await user.hover(screen.getByRole("button", { name: "About this Progress view" }));
 
-    expect(
-      screen.getByText(/Tap a past or today cell to log or remove a milestone/)
-    ).toBeInTheDocument();
+    expect(screen.getByRole("tooltip")).toHaveTextContent(
+      /Tap a past or today cell to log or remove a milestone/
+    );
     expect(screen.getByRole("heading", { name: "Thesis" })).toBeInTheDocument();
     expect(screen.getByDisplayValue("Proposal")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Draft")).toBeInTheDocument();
@@ -186,27 +196,9 @@ describe("InsightsTab goal ledger", () => {
     expect(screen.getByText("1 / 3")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Select all" }));
-    expect(screen.getByText(/Aggregate of selected goals/)).toBeInTheDocument();
+    await user.hover(screen.getByRole("button", { name: "About this Progress view" }));
+    expect(screen.getByRole("tooltip")).toHaveTextContent(/Aggregate of selected goals/);
     expect(screen.queryByRole("heading", { name: "Thesis" })).not.toBeInTheDocument();
-  });
-
-  it("stacks the heatmap in overall-only mode instead of splitting beside the list", () => {
-    render(
-      <InsightsTab
-        contentMode="overall-only"
-        sharedPeriod={{
-          monthCursor: new Date(2026, 8, 6),
-          onMonthCursorChange: () => {},
-          perGoalViewMode: "month",
-          onPerGoalViewModeChange: () => {},
-        }}
-      />
-    );
-
-    expect(screen.getByText(/Aggregate of selected goals/)).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Progress Tracker" })).toBeNull();
-    expect(screen.getByTestId("progress-ledger-layout")).toHaveClass("space-y-3");
-    expect(screen.getByTestId("progress-ledger-layout")).not.toHaveClass("md:grid");
   });
 
   it("stacks heatmap then goals in lane mode without the shared tracker", () => {
@@ -222,13 +214,14 @@ describe("InsightsTab goal ledger", () => {
       />
     );
 
-    const heatmapCaption = screen.getByText(/Aggregate of selected goals/);
+    const help = screen.getByRole("button", { name: "About this Progress view" });
     const goalsHeading = screen.getByRole("heading", { name: /Goals/ });
     expect(screen.queryByRole("heading", { name: "Progress Tracker" })).toBeNull();
+    expect(screen.queryByText("September 2026")).not.toBeInTheDocument();
     expect(screen.getByTestId("progress-ledger-layout")).toHaveClass("space-y-3");
     expect(screen.getByTestId("progress-ledger-layout")).not.toHaveClass("md:grid");
     expect(
-      heatmapCaption.compareDocumentPosition(goalsHeading) & Node.DOCUMENT_POSITION_FOLLOWING
+      help.compareDocumentPosition(goalsHeading) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 });

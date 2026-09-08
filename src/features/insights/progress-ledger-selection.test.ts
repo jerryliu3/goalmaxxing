@@ -46,5 +46,8 @@ describe("progress ledger selection", () => {
     expect(progressLedgerCaption("edit", 1, "milestone")).toContain(
       "log or remove a milestone"
     );
+    expect(progressLedgerCaption("edit", 1, "completion", false)).toContain(
+      "this goal's completions"
+    );
   });
 });

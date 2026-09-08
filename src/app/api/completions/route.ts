@@ -7,6 +7,7 @@ import {
   targetedExactDateRequestSchema,
 } from "@/lib/planner/exact-date-dispatch";
 import {
+  loadPlannerProfileTimezone,
   parseBoundedJsonBody,
   PlannerRouteError,
   requirePlannerRouteContext,
@@ -24,7 +25,6 @@ export async function handleCompletionPost(request: Request) {
       goalId,
       date,
       desiredFactState,
-      timezone,
       plannerItemExpectation,
       plannerGoalExpectation,
     } = await parseBoundedJsonBody(
@@ -32,12 +32,18 @@ export async function handleCompletionPost(request: Request) {
       MAX_REQUEST_BYTES,
       targetedExactDateRequestSchema
     );
-
-    const { data: goal, error: goalError } = await routeContext.supabase
-      .from("goals")
-      .select("id, start_date, end_date")
-      .eq("id", goalId)
-      .maybeSingle();
+    const [timezone, goalResult] = await Promise.all([
+      loadPlannerProfileTimezone({
+        supabase: routeContext.supabase,
+        userId: routeContext.userId,
+      }),
+      routeContext.supabase
+        .from("goals")
+        .select("id, start_date, end_date")
+        .eq("id", goalId)
+        .maybeSingle(),
+    ]);
+    const { data: goal, error: goalError } = goalResult;
 
     if (goalError || !goal) {
       throw new PlannerRouteError(

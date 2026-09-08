@@ -119,5 +119,12 @@ describe("planCompletionControlModeForDate", () => {
         asOfDate: "2026-09-06",
       })
     ).toBe("toggle");
+    expect(
+      planCompletionControlModeForDate({
+        currentlyCredited: false,
+        selectedDate: "2026-09-01",
+        asOfDate: "2026-09-06",
+      })
+    ).toBe("toggle");
   });
 });

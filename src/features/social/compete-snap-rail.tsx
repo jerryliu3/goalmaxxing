@@ -24,8 +24,8 @@ export type CompeteTileModel = {
   joined: boolean;
   closed: boolean;
   people: CompetePerson[];
-  joinLabel: string;
-  leaveLabel: string;
+  joinLabel?: string;
+  leaveLabel?: string;
 };
 
 export function CompeteSnapRail({
@@ -167,7 +167,7 @@ export function CompeteTile({
           </ol>
         )}
 
-        {density === "peek" && !expanded ? (
+        {density === "peek" ? (
           <p className="mt-3 text-xs text-muted-foreground">Tap to open</p>
         ) : null}
 
@@ -177,27 +177,21 @@ export function CompeteTile({
           <button
             type="button"
             disabled={tile.closed || joinPending}
-            onClick={(event) => {
-              event.stopPropagation();
-              onJoin();
-            }}
+            onClick={onJoin}
             className={`pointer-events-auto mt-auto min-h-10 rounded-md bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-40 ${
               wide ? "w-full sm:max-w-xs" : "w-full"
             }`}
           >
-            {tile.closed ? "Closed" : tile.joinLabel}
+            {tile.closed ? "Closed" : tile.joinLabel ?? "Join"}
           </button>
         ) : onJoin && tile.joined && expanded ? (
           <button
             type="button"
             disabled={tile.closed || joinPending}
-            onClick={(event) => {
-              event.stopPropagation();
-              onJoin();
-            }}
+            onClick={onJoin}
             className="pointer-events-auto mt-auto self-start rounded-md bg-background px-2 py-1 text-xs font-medium text-destructive disabled:opacity-40"
           >
-            {tile.leaveLabel}
+            {tile.leaveLabel ?? "Leave"}
           </button>
         ) : (
           <div className="mt-auto" />

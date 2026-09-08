@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { cookies } from "next/headers";
+import { appIconHref } from "@/lib/brand/app-icon";
 import { getUiStyle, parseUiStyleId, UI_STYLE_COOKIE_NAME } from "@/lib/brand/ui-style";
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
@@ -18,13 +19,13 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     theme_color: style.themeColor,
     icons: [
       {
-        src: "/cadence-icon.svg",
+        src: appIconHref(style.id),
         sizes: "any",
         type: "image/svg+xml",
         purpose: "any",
       },
       {
-        src: "/cadence-icon.svg",
+        src: appIconHref(style.id),
         sizes: "any",
         type: "image/svg+xml",
         purpose: "maskable",

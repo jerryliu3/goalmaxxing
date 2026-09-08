@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { allCategoriesValue } from "@/features/goals/goal-filters";
 import {
   applyCalendarCompletionMarkerFilters,
   buildCalendarCategoryFilterOptions,
@@ -33,11 +32,59 @@ describe("calendar filters", () => {
       goalPassesCalendarFilters({
         goalId: "goal-a",
         goalsByOriginalId: goals,
-        categoryFilter: "Personal",
-        allCategoriesValue,
-        endMonthFilter: "2026-08",
+        categoryFilters: ["Personal"],
+        endMonthFilters: ["2026-08"],
       })
     ).toBe(true);
+  });
+
+  it("matches selected categories and ending months with OR", () => {
+    const goals = new Map([
+      ["goal-a", { category: "Personal", end_date: "2026-08-31" }],
+      ["goal-b", { category: "Health", end_date: "2026-09-30" }],
+      ["goal-c", { category: "Career", end_date: "2026-10-31" }],
+    ]);
+
+    expect(
+      goalPassesCalendarFilters({
+        goalId: "goal-a",
+        goalsByOriginalId: goals,
+        categoryFilters: ["Personal", "Health"],
+        endMonthFilters: [],
+      })
+    ).toBe(true);
+    expect(
+      goalPassesCalendarFilters({
+        goalId: "goal-b",
+        goalsByOriginalId: goals,
+        categoryFilters: ["Personal", "Health"],
+        endMonthFilters: [],
+      })
+    ).toBe(true);
+    expect(
+      goalPassesCalendarFilters({
+        goalId: "goal-c",
+        goalsByOriginalId: goals,
+        categoryFilters: ["Personal", "Health"],
+        endMonthFilters: [],
+      })
+    ).toBe(false);
+    expect(
+      goalPassesCalendarFilters({
+        goalId: "goal-a",
+        goalsByOriginalId: goals,
+        categoryFilters: [],
+        endMonthFilters: ["2026-08", "2026-09"],
+      })
+    ).toBe(true);
+    expect(
+      goalPassesCalendarFilters({
+        goalId: "goal-c",
+        goalsByOriginalId: goals,
+        categoryFilters: [],
+        endMonthFilters: ["2026-08", "2026-09"],
+      })
+    ).toBe(false);
   });
 
   it("hides unknown goals when any filter is active", () => {
@@ -49,18 +96,16 @@ describe("calendar filters", () => {
       goalPassesCalendarFilters({
         goalId: "missing-goal",
         goalsByOriginalId: goals,
-        categoryFilter: allCategoriesValue,
-        allCategoriesValue,
-        endMonthFilter: null,
+        categoryFilters: [],
+        endMonthFilters: [],
       })
     ).toBe(true);
     expect(
       goalPassesCalendarFilters({
         goalId: "missing-goal",
         goalsByOriginalId: goals,
-        categoryFilter: "Personal",
-        allCategoriesValue,
-        endMonthFilter: null,
+        categoryFilters: ["Personal"],
+        endMonthFilters: [],
       })
     ).toBe(false);
   });

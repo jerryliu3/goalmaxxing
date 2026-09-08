@@ -14,13 +14,11 @@ describe("NudgeButton", () => {
   it("limits custom user text to 90 characters", async () => {
     mocks.sendTeamNudge.mockResolvedValue(undefined);
 
-    render(
-      <NudgeButton
-        partnerId="partner-1"
-        optionalMessage={"x".repeat(100)}
-      />
-    );
+    render(<NudgeButton partnerId="partner-1" />);
 
+    fireEvent.change(screen.getByPlaceholderText("Optional nudge message"), {
+      target: { value: "x".repeat(100) },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Send nudge" }));
 
     await waitFor(() => {

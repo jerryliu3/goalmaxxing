@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 import { runAfterResponse } from "@/lib/api/after";
 import { flushNotificationOutbox } from "@/lib/push/outbox";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { reportError } from "@/lib/observability/report-error";
 import { requireSocialRouteContext } from "@/lib/social/api";
 import { mapTeamStateError } from "@/lib/social/team";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -88,9 +89,11 @@ export async function GET(request: Request) {
           acceptedAt: activeTeam.acceptedAt,
           userIds: [context.userId, activeTeam.partnerId],
         });
-      } catch {
-        // Team XP is additive. Missing admin credentials or ledger errors
-        // should not hide the rest of team state.
+      } catch (xpError) {
+        reportError(xpError, {
+          correlationId,
+          code: "team_xp_unavailable",
+        });
       }
     }
 
