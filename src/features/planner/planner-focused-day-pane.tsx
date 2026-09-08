@@ -25,7 +25,6 @@ import { PlannerDayEntriesPanel } from "@/features/planner/planner-day-entries-p
 import { PlannerTasksPanel, PlannerTasksPrefetch } from "@/features/tasks/planner-tasks-panel";
 import { planDayViewTransitionName } from "@/features/planner/plan-view-transition";
 import { ChecklistPastPanels } from "@/features/today/checklist-past-panels";
-import { ChecklistQuickFilterChips } from "@/features/today/checklist-quick-filter-chips";
 import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 import type { Goal } from "@/lib/goals/types";
 import { cn } from "@/lib/utils";
@@ -159,21 +158,6 @@ export function PlannerFocusedDayPane({
           {format(parse(day, "yyyy-MM-dd", new Date()), "EEEE, MMM d")}
         </TitleTag>
       </div>
-      {dayChecklist && !showTasksInsteadOfGoals ? (
-        <ChecklistQuickFilterChips
-          testId="plan-day-quick-filters"
-          recurrenceFilters={dayChecklist.filters.recurrenceFilters}
-          recurrenceQuickFilters={dayChecklist.filters.recurrenceQuickFilters}
-          onClearRecurrenceFilters={() =>
-            dayChecklist.filters.setRecurrenceFilters([])
-          }
-          onToggleRecurrenceFilter={dayChecklist.filters.toggleRecurrenceFilter}
-          categoryFilters={dayChecklist.filters.categoryFilters}
-          quickCategories={dayChecklist.quickCategories}
-          onClearCategoryFilters={() => dayChecklist.filters.setCategoryFilters([])}
-          onToggleCategoryFilter={dayChecklist.filters.toggleCategoryFilter}
-        />
-      ) : null}
       <div
         className={
           splitPartnerChecklist

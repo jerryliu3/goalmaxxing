@@ -183,6 +183,7 @@ export interface PlannerCalendarSurfaceLayoutProps {
   setCategoryFilters: (value: string[]) => void;
   categoryOptions: GoalCategoryFilterOption[];
   effectiveEndMonthFilters: string[];
+  endMonthFilters: string[];
   setEndMonthFilters: (value: string[]) => void;
   endMonthOptions: GoalMonthOption[];
   settingsOpen: boolean;
@@ -312,6 +313,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     setCategoryFilters,
     categoryOptions,
     effectiveEndMonthFilters,
+    endMonthFilters,
     setEndMonthFilters,
     endMonthOptions,
     settingsOpen,
@@ -323,6 +325,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     searchQuery,
     asOfDate: context?.asOfDate ?? null,
     timezone: context?.timezone ?? null,
+    endMonthFilters: effectiveEndMonthFilters,
   });
   const pendingMonthRowRestoreRef = useRef<{
     day: string;
@@ -421,6 +424,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         canOpenSettings={Boolean(context?.preferences)}
         linkedTargetDetails={eligibilityNotices.linkedTargetDetails}
         searchQuery={searchQuery}
+        referenceMonth={month ?? focusedDay.slice(0, 7)}
+        endMonthFilters={endMonthFilters}
+        onEndMonthFiltersChange={setEndMonthFilters}
         onSave={savePlan}
         onDiscardDraftChanges={discardDraftChanges}
         onViewModeChange={setCalendarViewMode}

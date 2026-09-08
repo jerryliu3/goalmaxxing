@@ -13,12 +13,14 @@ export function usePlanDayChecklistModel({
   searchQuery,
   asOfDate = null,
   timezone = null,
+  endMonthFilters = [],
 }: {
   isActive: boolean;
   viewDate: string;
   searchQuery: string;
   asOfDate?: string | null;
   timezone?: string | null;
+  endMonthFilters?: string[];
 }) {
   const filters = useChecklistFilters();
   const { data, loading, loadData, redirectToLogin, todayLocalDate } =
@@ -38,7 +40,7 @@ export function usePlanDayChecklistModel({
         categoryFilters: filters.categoryFilters,
         recurrenceFilters: filters.recurrenceFilters,
         searchQuery,
-        todayEndMonths: filters.todayEndMonths,
+        todayEndMonths: endMonthFilters,
         todaySort: filters.todaySort,
         showTargetAchievedGoals: filters.showTargetAchievedGoals,
         showSuppressedLinkedTargets: filters.showSuppressedLinkedTargets,
@@ -49,7 +51,7 @@ export function usePlanDayChecklistModel({
       filters.recurrenceFilters,
       filters.showSuppressedLinkedTargets,
       filters.showTargetAchievedGoals,
-      filters.todayEndMonths,
+      endMonthFilters,
       filters.todaySort,
       searchQuery,
       completionAsOfDate,
