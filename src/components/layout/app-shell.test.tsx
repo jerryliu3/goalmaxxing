@@ -84,6 +84,16 @@ describe("AppShell", () => {
     );
   });
 
+  it("hides the XP bar when XP is disabled", () => {
+    render(
+      <AppShell userId="user-1" xpEnabled={false} {...emptyDuoProps}>
+        <div>Child content</div>
+      </AppShell>
+    );
+
+    expect(screen.queryByText("XP Progress")).not.toBeInTheDocument();
+  });
+
   it("includes the current route in the new goal returnTo query", () => {
     mockPathname = "/social";
     mockSearch = "tab=challenges&sort=recent";

@@ -207,6 +207,35 @@ describe("PlannerTasksPanel", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("keeps the completion checkbox for carry-over tasks on a future planner day", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        {
+          task_id: "task-carry",
+          title: "Inbox leftover",
+          scheduled_date: "2026-09-05",
+          scheduled_time: null,
+          completed_at: null,
+          created_at: "2026-09-05T12:00:00.000Z",
+          updated_at: "2026-09-05T12:00:00.000Z",
+        },
+      ],
+      error: null,
+    });
+
+    render(
+      <PlannerTasksPanel
+        title="Todos"
+        description={null}
+        scheduledDate="2026-09-12"
+        asOfDate="2026-09-05"
+        allowCreate={false}
+      />
+    );
+
+    expect(await screen.findByRole("button", { name: /inbox leftover/i })).toBeInTheDocument();
+  });
+
   it("creates tasks from the panel without sending a scheduled time", async () => {
     rpcMock.mockImplementation(async (name: string) => {
       if (name === "list_planner_tasks") {
@@ -229,7 +258,7 @@ describe("PlannerTasksPanel", () => {
     });
 
     const addNew = screen.getByRole("button", { name: "+ Add new" });
-    expect(addNew).toHaveClass("text-primary");
+    expect(addNew).toHaveClass("text-xs", "text-primary");
     await user.click(addNew);
     expect(screen.getByPlaceholderText("Add a task...")).toHaveClass("border-b");
     const addButton = screen.getByRole("button", { name: /^add$/i });

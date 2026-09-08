@@ -32,6 +32,7 @@ export async function fetchChecklistTodayData({
   subjectUserId,
   viewDate,
   todayLocalDate,
+  timezone,
   partnerId,
   forceRefresh = false,
   signal,
@@ -40,6 +41,7 @@ export async function fetchChecklistTodayData({
   subjectUserId?: string;
   viewDate: string;
   todayLocalDate: string;
+  timezone?: string | null;
   partnerId: string | null;
   forceRefresh?: boolean;
   signal?: AbortSignal;
@@ -56,6 +58,7 @@ export async function fetchChecklistTodayData({
   const [progress, goalsResponse, teamMembersResponse, linksResponse] = await Promise.all([
     fetchProgressContext({
       asOfDate: todayLocalDate,
+      timezone: timezone ?? undefined,
       viewDate,
       subjectUserId: targetIsViewer ? undefined : targetSubjectUserId,
       forceRefresh,

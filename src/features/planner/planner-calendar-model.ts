@@ -49,8 +49,8 @@ export interface PlannerCalendarModelArgs {
   viewMode: PlannerCalendarViewMode;
   setupTimezone: string;
   duoScope: "me" | "partner" | "both";
-  categoryFilter: string;
-  endMonthFilter: string | null;
+  categoryFilters: string[];
+  endMonthFilters: string[];
   searchQuery?: string;
   partnerCompletionMarkersByDate?: Map<string, PlannerCompletionFactMarker[]>;
   previewEntryOrderByDay: Record<string, string[]>;
@@ -87,8 +87,8 @@ export function selectPlannerCalendarModel({
   viewMode,
   setupTimezone,
   duoScope,
-  categoryFilter,
-  endMonthFilter,
+  categoryFilters,
+  endMonthFilters,
   searchQuery = "",
   partnerCompletionMarkersByDate,
   previewEntryOrderByDay,
@@ -122,8 +122,8 @@ export function selectPlannerCalendarModel({
     currentScopeMonth,
     calendarToday,
     editableDateWindow,
-    categoryFilter,
-    endMonthFilter,
+    categoryFilters,
+    endMonthFilters,
     searchQuery,
     duoScope,
     partnerCompletionMarkersByDate,

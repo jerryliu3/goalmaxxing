@@ -21,7 +21,7 @@ export function PlannerSettingsDialog({
   children,
 }: PlannerSettingsDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Planner settings</DialogTitle>

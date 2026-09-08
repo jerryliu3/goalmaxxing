@@ -44,32 +44,32 @@ export function buildCalendarCategoryFilterOptions(
 export function goalPassesCalendarFilters({
   goalId,
   goalsByOriginalId,
-  categoryFilter,
-  allCategoriesValue,
-  endMonthFilter,
+  categoryFilters,
+  endMonthFilters,
   goalOverride,
 }: {
   goalId: string;
   goalsByOriginalId: Map<string, CalendarFilterGoalSnapshot>;
-  categoryFilter: string;
-  allCategoriesValue: string;
-  endMonthFilter: string | null;
+  categoryFilters: string[];
+  endMonthFilters: string[];
   goalOverride?: CalendarFilterGoalOverride;
 }) {
-  const hasActiveFilters =
-    categoryFilter !== allCategoriesValue || endMonthFilter !== null;
+  const hasActiveFilters = categoryFilters.length > 0 || endMonthFilters.length > 0;
   const goal = goalOverride ?? goalsByOriginalId.get(goalId) ?? null;
   if (!goal) {
     return !hasActiveFilters;
   }
-  if (
-    categoryFilter !== allCategoriesValue &&
-    goal.category.trim() !== categoryFilter
-  ) {
-    return false;
+  if (categoryFilters.length > 0) {
+    const allowedCategories = new Set(
+      categoryFilters.map((category) => category.trim())
+    );
+    if (!allowedCategories.has(goal.category.trim())) {
+      return false;
+    }
   }
-  if (endMonthFilter !== null) {
-    return goal.end_date?.slice(0, 7) === endMonthFilter;
+  if (endMonthFilters.length > 0) {
+    const endMonth = goal.end_date?.slice(0, 7) ?? null;
+    return endMonth !== null && endMonthFilters.includes(endMonth);
   }
   return true;
 }

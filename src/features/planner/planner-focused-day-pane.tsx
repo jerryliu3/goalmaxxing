@@ -254,6 +254,7 @@ export function PlannerFocusedDayPane({
                   title="Todos"
                   description={null}
                   scheduledDate={day}
+                  asOfDate={asOfDate}
                   allowCreate
                   hideWhenEmpty={false}
                   chrome="plain"
@@ -289,16 +290,13 @@ export function PlannerFocusedDayPane({
             data-testid="plan-day-partner-checklist"
           >
             <div className="mb-3">
-              <DuoLaneIdentity
-                subject={
-                  partnerSubject ?? {
-                    id: "partner",
-                    label: partnerLabel ?? "Partner",
-                    readOnly: true,
-                  }
-                }
-                className="px-0"
-              />
+              {partnerSubject ? (
+                <DuoLaneIdentity subject={partnerSubject} className="px-0" />
+              ) : (
+                <p className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                  {partnerLabel ?? "Partner"}
+                </p>
+              )}
             </div>
             <PlanDaySection
               key={`${day}-partner-planned`}

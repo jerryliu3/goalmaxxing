@@ -16,5 +16,6 @@ describe("app icon", () => {
   it("points the favicon route at the active style", () => {
     expect(appIconHref("original")).toBe("/brand-icon?style=original");
     expect(appIconHref("gazetteer")).toBe("/brand-icon?style=gazetteer");
+    expect(appIconHref("a b")).toBe("/brand-icon?style=a%20b");
   });
 });

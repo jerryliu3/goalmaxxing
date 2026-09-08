@@ -5,7 +5,8 @@ import { resetEnvCacheForTests } from "@/lib/env";
 
 const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
-  maybeSingle: vi.fn(),
+  goalMaybeSingle: vi.fn(),
+  profileMaybeSingle: vi.fn(),
   rpc: vi.fn(),
   applyPlannerItemDateFact: vi.fn(),
   applyPlannerGoalDateFact: vi.fn(),
@@ -13,14 +14,24 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => {
-    const query = {
-      select: vi.fn(() => query),
-      eq: vi.fn(() => query),
-      maybeSingle: mocks.maybeSingle,
+    const goalQuery = {
+      select: vi.fn(() => goalQuery),
+      eq: vi.fn(() => goalQuery),
+      maybeSingle: mocks.goalMaybeSingle,
+    };
+    const profileQuery = {
+      select: vi.fn(() => profileQuery),
+      eq: vi.fn(() => profileQuery),
+      maybeSingle: mocks.profileMaybeSingle,
     };
     return {
       auth: { getUser: mocks.getUser },
-      from: vi.fn(() => query),
+      from: vi.fn((table: string) => {
+        if (table === "profiles") {
+          return profileQuery;
+        }
+        return goalQuery;
+      }),
       rpc: mocks.rpc,
     };
   },
@@ -69,7 +80,7 @@ describe("completions route", () => {
       data: { user: { id: "11111111-1111-4111-8111-111111111111" } },
       error: null,
     });
-    mocks.maybeSingle.mockResolvedValue({
+    mocks.goalMaybeSingle.mockResolvedValue({
       data: {
         id: goalId,
         frequency_type: "recurring",
@@ -77,6 +88,10 @@ describe("completions route", () => {
         start_date: "2026-08-01",
         end_date: "2026-08-31",
       },
+      error: null,
+    });
+    mocks.profileMaybeSingle.mockResolvedValue({
+      data: { timezone: "UTC" },
       error: null,
     });
     mocks.rpc.mockResolvedValue({ error: null });
@@ -91,7 +106,7 @@ describe("completions route", () => {
     vi.clearAllMocks();
   });
 
-  it("rejects future creation in the requested timezone", async () => {
+  it("rejects future creation in the profile timezone", async () => {
     const response = await POST(request("2026-08-06", "present"));
 
     expect(response.status).toBe(422);
@@ -101,15 +116,77 @@ describe("completions route", () => {
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
 
-  it("uses a timezone-ahead local date for creation bounds", async () => {
+  it("uses the profile timezone, not the request timezone, for creation bounds", async () => {
+    mocks.profileMaybeSingle.mockResolvedValue({
+      data: { timezone: "Pacific/Auckland" },
+      error: null,
+    });
     const response = await POST(
-      request("2026-08-06", "present", "Pacific/Auckland")
+      request("2026-08-06", "present", "UTC")
     );
 
     expect(response.status).toBe(200);
     expect(mocks.rpc).toHaveBeenCalledWith("mark_goal_complete", {
       p_goal_id: goalId,
       p_date: "2026-08-06",
+    });
+  });
+
+  it("allows profile-local today even when the request timezone is still yesterday", async () => {
+    vi.setSystemTime(new Date("2026-09-08T03:50:00.000Z"));
+    mocks.goalMaybeSingle.mockResolvedValue({
+      data: {
+        id: goalId,
+        start_date: "2026-09-01",
+        end_date: "2026-09-30",
+      },
+      error: null,
+    });
+    mocks.profileMaybeSingle.mockResolvedValue({
+      data: { timezone: "UTC" },
+      error: null,
+    });
+
+    const response = await POST(
+      request("2026-09-08", "present", "America/New_York")
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.rpc).toHaveBeenCalledWith("mark_goal_complete", {
+      p_goal_id: goalId,
+      p_date: "2026-09-08",
+    });
+  });
+
+  it("rejects a date after profile today even if the request timezone is ahead", async () => {
+    const response = await POST(
+      request("2026-08-06", "present", "Pacific/Auckland")
+    );
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toMatchObject({
+      code: "future_completion_not_allowed",
+    });
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("allows omitting the request timezone and still uses the profile timezone", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/completions", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          goalId,
+          date: "2026-08-05",
+          desiredFactState: "present",
+        }),
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.rpc).toHaveBeenCalledWith("mark_goal_complete", {
+      p_goal_id: goalId,
+      p_date: "2026-08-05",
     });
   });
 
@@ -133,7 +210,7 @@ describe("completions route", () => {
   });
 
   it("supports exact-date completion for non-targeted goals", async () => {
-    mocks.maybeSingle.mockResolvedValueOnce({
+    mocks.goalMaybeSingle.mockResolvedValueOnce({
       data: {
         id: goalId,
         start_date: "2026-08-01",

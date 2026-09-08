@@ -37,7 +37,7 @@ function DialogWithDropdown() {
 function DialogWithSearchableDropdown() {
   const [selected, setSelected] = useState<string[]>([]);
   return (
-    <Dialog open>
+    <Dialog open modal={false}>
       <DialogContent>
         <DialogTitle>Planner settings</DialogTitle>
         <DialogDescription>Reset goals</DialogDescription>
@@ -68,7 +68,8 @@ describe("CheckboxDropdown", () => {
     const menu = await screen.findByRole("listbox");
     const dialogContent = screen.getByRole("dialog");
     expect(menu).toHaveAttribute("data-slot", "checkbox-dropdown-menu");
-    expect(dialogContent).toContainElement(menu);
+    expect(dialogContent).not.toContainElement(menu);
+    expect(document.body).toContainElement(menu);
     expect(document.body.style.pointerEvents).toBe("none");
 
     await user.click(screen.getByRole("checkbox", { name: "August" }));

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getDateInTimezone, isValidIanaTimezone } from "./timezone";
+import { getDateInTimezone, isValidIanaTimezone, timezoneFromPreferences } from "./timezone";
 
 describe("IANA timezone dates", () => {
   it("derives calendar dates without a UTC fallback", () => {
@@ -14,5 +14,11 @@ describe("IANA timezone dates", () => {
   it("rejects invalid timezone identifiers", () => {
     expect(isValidIanaTimezone("Pacific/Auckland")).toBe(true);
     expect(isValidIanaTimezone("Mars/Olympus_Mons")).toBe(false);
+  });
+
+  it("uses a confirmed preference timezone and otherwise UTC", () => {
+    expect(timezoneFromPreferences("Pacific/Auckland")).toBe("Pacific/Auckland");
+    expect(timezoneFromPreferences("Mars/Olympus_Mons")).toBe("UTC");
+    expect(timezoneFromPreferences(null)).toBe("UTC");
   });
 });

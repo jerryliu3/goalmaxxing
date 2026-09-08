@@ -85,11 +85,11 @@ export interface PlannerCalendarOverlaysProps {
   showTasksInsteadOfGoals: boolean;
   onShowTasksInsteadOfGoalsChange: (value: boolean) => void;
   tasksToggleDisabled?: boolean;
-  categoryFilter: string;
-  onCategoryFilterChange: (value: string) => void;
+  categoryFilters: string[];
+  onCategoryFiltersChange: (value: string[]) => void;
   categoryOptions: GoalCategoryFilterOption[];
-  endMonthFilter: string | null;
-  onEndMonthFilterChange: (value: string | null) => void;
+  endMonthFilters: string[];
+  onEndMonthFiltersChange: (value: string[]) => void;
   endMonthOptions: GoalMonthOption[];
   dayFilters?: ChecklistFiltersFormProps | null;
   settingsOpen: boolean;
@@ -138,11 +138,11 @@ export function PlannerCalendarOverlays({
   showTasksInsteadOfGoals,
   onShowTasksInsteadOfGoalsChange,
   tasksToggleDisabled = false,
-  categoryFilter,
-  onCategoryFilterChange,
+  categoryFilters,
+  onCategoryFiltersChange,
   categoryOptions,
-  endMonthFilter,
-  onEndMonthFilterChange,
+  endMonthFilters,
+  onEndMonthFiltersChange,
   endMonthOptions,
   dayFilters = null,
   settingsOpen,
@@ -217,11 +217,11 @@ export function PlannerCalendarOverlays({
         showTasksInsteadOfGoals={showTasksInsteadOfGoals}
         onShowTasksInsteadOfGoalsChange={onShowTasksInsteadOfGoalsChange}
         tasksToggleDisabled={tasksToggleDisabled}
-        categoryFilter={categoryFilter}
-        onCategoryFilterChange={onCategoryFilterChange}
+        categoryFilters={categoryFilters}
+        onCategoryFiltersChange={onCategoryFiltersChange}
         categoryOptions={categoryOptions}
-        endMonthFilter={endMonthFilter}
-        onEndMonthFilterChange={onEndMonthFilterChange}
+        endMonthFilters={endMonthFilters}
+        onEndMonthFiltersChange={onEndMonthFiltersChange}
         endMonthOptions={endMonthOptions}
         dayFilters={dayFilters}
       />

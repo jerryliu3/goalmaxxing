@@ -39,7 +39,7 @@ export interface ExecuteCompletionDispatchInput {
   desiredFactState: "present" | "absent";
   goalId: string;
   date: string;
-  timezone: string;
+  timezone?: string;
   plannerItemExpectation?: PlannerItemDateFactExpectation;
   plannerGoalExpectation?: PlannerGoalDateFactExpectation;
   fetcher?: typeof fetch;
@@ -195,8 +195,10 @@ export async function executeCompletionDispatch({
     goalId,
     date,
     desiredFactState,
-    timezone,
   };
+  if (timezone) {
+    body.timezone = timezone;
+  }
   if (decision.route === "item_date" && plannerItemExpectation) {
     body.plannerItemExpectation = {
       itemId: plannerItemExpectation.itemId,

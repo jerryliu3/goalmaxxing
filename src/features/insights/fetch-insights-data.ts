@@ -1,5 +1,5 @@
 import { selectViewerVisibleGoals } from "@cadence/shared/goals/visible-goals";
-import { toLocalDateString } from "@/lib/dates/day";
+import { getDateInTimezone, timezoneFromPreferences } from "@/lib/dates/timezone";
 import {
   fetchProgressContext,
   type ProgressContextResponse,
@@ -20,6 +20,8 @@ export interface InsightsData {
   memberTeamIds: string[];
   progress: ProgressContextResponse | null;
   insightsStats: InsightsStatsResponse | null;
+  asOfDate: string;
+  timezone: string;
 }
 
 export const emptyInsights: InsightsData = {
@@ -29,6 +31,8 @@ export const emptyInsights: InsightsData = {
   memberTeamIds: [],
   progress: null,
   insightsStats: null,
+  asOfDate: "",
+  timezone: "UTC",
 };
 
 export { InsightsStatsAuthenticationError };
@@ -53,7 +57,13 @@ export async function fetchInsightsData({
   const yearEnd = `${selectedYear}-12-31`;
   const targetSubjectUserId = subjectUserId ?? userId;
   const targetIsViewer = targetSubjectUserId === userId;
-  const asOfDate = toLocalDateString();
+  const profileResponse = await supabase
+    .from("profiles")
+    .select("timezone")
+    .eq("id", userId)
+    .maybeSingle();
+  const timezone = timezoneFromPreferences(profileResponse.data?.timezone);
+  const asOfDate = getDateInTimezone(new Date(), timezone);
   const goalsQuery = supabase
     .from("goals")
     .select("*")
@@ -69,6 +79,7 @@ export async function fetchInsightsData({
       : Promise.resolve({ data: [], error: null }),
     fetchProgressContext({
       asOfDate,
+      timezone,
       factsFrom: yearStart,
       factsTo: yearEnd,
       subjectUserId: targetIsViewer ? undefined : targetSubjectUserId,
@@ -108,5 +119,7 @@ export async function fetchInsightsData({
     memberTeamIds,
     progress,
     insightsStats,
+    asOfDate,
+    timezone,
   };
 }

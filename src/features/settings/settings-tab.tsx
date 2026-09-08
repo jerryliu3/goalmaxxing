@@ -6,9 +6,14 @@ import {
   LogOut,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingCard } from "@/components/ui/loading-card";
 import {
   Dialog,
@@ -20,9 +25,10 @@ import {
 import { OnboardingGuidesSettings } from "@/features/onboarding/onboarding-guides-settings";
 import { AppearanceSettings } from "@/features/settings/appearance-settings";
 import { IntegrationsSettings } from "@/features/settings/integrations-settings";
-import { PlannerPreferencesSettings } from "@/features/settings/planner-preferences-settings";
+import { PlannerPreferencesSettings, type PlannerPreferencesDraft } from "@/features/settings/planner-preferences-settings";
 import { ReportIssueSettings } from "@/features/settings/report-issue-settings";
 import {
+  getSettingsSectionCopy,
   resolveSettingsSection,
   SETTINGS_GROUPS,
   type SettingsSection,
@@ -31,6 +37,16 @@ import { NotificationsSection } from "@/features/social/notifications-section";
 import { ProfileSection } from "@/features/social/profile-section";
 import { useSocialTabData } from "@/features/social/use-social-tab-data";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
+import { useMediaQuery } from "@/lib/ui/use-media-query";
+import { cn } from "@/lib/utils";
+import type { Goal } from "@/lib/goals/types";
+
+type ProfileDraft = {
+  username: string;
+  display_name: string;
+  avatar_url: string;
+  social_activity_visible: boolean;
+};
 
 export function SettingsTab() {
   const {
@@ -53,12 +69,25 @@ export function SettingsTab() {
   } = useSocialTabData();
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();
+  const isDesktopTwoPane = useMediaQuery("(min-width: 768px)");
   const requestedSection = resolveSettingsSection(searchParams.get("tab"));
-  const settingsSection = requestedSection ?? "preferences";
+  const [cachedSection, setCachedSection] = useState<SettingsSection>(
+    () => requestedSection ?? "preferences"
+  );
+  const settingsSection = requestedSection ?? cachedSection;
   const settingsPanelOpen = requestedSection !== null;
+
+  useEffect(() => {
+    if (requestedSection) {
+      setCachedSection(requestedSection);
+    }
+  }, [requestedSection]);
 
   const writeSettingsSection = useCallback(
     (section: SettingsSection | null) => {
+      if (section) {
+        setCachedSection(section);
+      }
       applySearchParams((params) => {
         if (section) {
           params.set("tab", section);
@@ -74,30 +103,7 @@ export function SettingsTab() {
     writeSettingsSection(null);
   }, [writeSettingsSection]);
 
-  const settingsSectionTitle =
-    settingsSection === "preferences"
-      ? "Preferences"
-      : settingsSection === "notifications"
-        ? "Notifications"
-        : settingsSection === "integrations"
-          ? "Integrations"
-          : settingsSection === "onboarding"
-            ? "Onboarding guides"
-            : settingsSection === "appearance"
-              ? "Appearance"
-              : "Report an issue";
-  const settingsSectionDescription =
-    settingsSection === "preferences"
-      ? "Manage planner defaults for Plan."
-      : settingsSection === "notifications"
-        ? "Configure push access and reminder schedules."
-        : settingsSection === "integrations"
-          ? "Connect Apple Health or Health Connect and opt into auto-complete."
-          : settingsSection === "onboarding"
-            ? "Replay the app intro and page guides."
-            : settingsSection === "appearance"
-              ? "Choose a visual style for Goalmaxxing. Original is the default; more skins can be added here."
-              : "Send product bugs or UX friction details directly to support.";
+  const settingsCopy = getSettingsSectionCopy(settingsSection);
 
   if (loading && !state.userId) {
     return (
@@ -108,20 +114,23 @@ export function SettingsTab() {
     );
   }
 
-  return (
-    <div className="space-y-5">
-      <ProfileSection
-        userId={state.userId}
-        profile={state.profile}
-        profileDraft={profileDraft}
-        authEmail={authEmail}
-        saving={saving}
-        canSaveProfile={canSaveProfile}
-        setProfileDraft={setProfileDraft}
-        onSaveProfile={saveProfile}
-        onUploadAvatar={uploadProfileAvatarFile}
-      />
+  const editor = (
+    <SettingsSectionEditor
+      settingsSection={settingsSection}
+      ownGoals={state.ownGoals}
+      profileDraft={profileDraft}
+      setProfileDraft={setProfileDraft}
+      plannerPreferencesDraft={plannerPreferencesDraft}
+      setPlannerPreferencesDraft={setPlannerPreferencesDraft}
+      plannerPreferencesLoading={plannerPreferencesLoading}
+      saving={saving}
+      canSavePreferences={canSavePreferences}
+      savePreferences={savePreferences}
+    />
+  );
 
+  const groups = (
+    <div className="space-y-5">
       {SETTINGS_GROUPS.map((group) => (
         <section key={group.key} className="space-y-1">
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
@@ -132,8 +141,15 @@ export function SettingsTab() {
               <button
                 key={item.key}
                 type="button"
-                className="flex w-full items-center justify-between py-3 text-left text-base font-medium transition-colors hover:bg-muted/30"
-                onClick={() => writeSettingsSection(item.key)}
+                className={cn(
+                  "flex w-full items-center justify-between py-3 text-left text-base font-medium transition-colors hover:bg-muted/30",
+                  requestedSection === item.key && "bg-muted/40"
+                )}
+                onClick={() =>
+                  writeSettingsSection(
+                    requestedSection === item.key ? null : item.key
+                  )
+                }
               >
                 <span>{item.label}</span>
                 <ChevronRight className="size-4 text-muted-foreground" />
@@ -156,22 +172,68 @@ export function SettingsTab() {
           </div>
         </section>
       ))}
+    </div>
+  );
 
-      <Dialog
-        modal={false}
-        open={settingsPanelOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            closeSettingsPanel();
-          }
-        }}
+  return (
+    <div
+      data-testid="settings-pane"
+      data-settings-pane={settingsPanelOpen ? "open" : "closed"}
+      className={cn(
+        "md:flex md:items-start md:overflow-x-hidden md:transition-[gap] md:duration-[var(--motion-duration-standard)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
+        isDesktopTwoPane && settingsPanelOpen ? "md:gap-10" : "md:gap-0"
+      )}
+    >
+      <div
+        className={cn(
+          "min-w-0 space-y-5 md:transition-[flex-basis,max-width] md:duration-[var(--motion-duration-standard)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
+          isDesktopTwoPane && settingsPanelOpen
+            ? "md:max-w-96 md:flex-[0_0_24rem]"
+            : "md:max-w-none md:flex-1"
+        )}
       >
-        <DialogContent
-          className="!top-0 !right-0 !left-auto !translate-x-0 !translate-y-0 inset-y-0 h-dvh w-[min(100vw,72rem)] max-w-none overflow-hidden rounded-none border-l p-0"
-          showCloseButton={false}
+        <ProfileSection
+          userId={state.userId}
+          profile={state.profile}
+          profileDraft={profileDraft}
+          authEmail={authEmail}
+          saving={saving}
+          canSaveProfile={canSaveProfile}
+          setProfileDraft={setProfileDraft}
+          onSaveProfile={saveProfile}
+          onUploadAvatar={uploadProfileAvatarFile}
+        />
+        {groups}
+      </div>
+
+      {isDesktopTwoPane ? (
+        <div
+          className={cn(
+            "min-w-0 overflow-hidden md:transition-[flex-basis,max-width,max-height,opacity] md:duration-[var(--motion-duration-standard)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
+            settingsPanelOpen
+              ? "md:flex-1 md:opacity-100"
+              : "md:pointer-events-none md:max-h-0 md:min-h-0 md:max-w-0 md:flex-[0_0_0%] md:opacity-0"
+          )}
+          data-testid="settings-desktop-editor"
+          data-settings-slide={settingsPanelOpen ? "in" : "out"}
+          aria-hidden={!settingsPanelOpen}
+          inert={!settingsPanelOpen ? true : undefined}
         >
-          <DialogHeader className="gap-3 border-b px-4 py-3">
-            <div className="flex items-center gap-2">
+          <div
+            className={cn(
+              "space-y-3 md:w-full md:min-w-96 md:transition-transform md:duration-[var(--motion-duration-standard)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
+              settingsPanelOpen ? "md:translate-x-0" : "md:translate-x-full"
+            )}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="font-display text-xl font-semibold tracking-tight">
+                  {settingsCopy.label}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {settingsCopy.description}
+                </p>
+              </div>
               <Button
                 type="button"
                 variant="ghost"
@@ -181,123 +243,134 @@ export function SettingsTab() {
                 <ArrowLeft className="size-4" />
                 Back
               </Button>
-              <DialogTitle>{settingsSectionTitle}</DialogTitle>
             </div>
-            <DialogDescription>{settingsSectionDescription}</DialogDescription>
-          </DialogHeader>
-          <div className="h-[calc(100dvh-5.5rem)] overflow-y-auto overflow-x-hidden p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            {settingsSection === "preferences" ? (
-              <Card className="shadow-sm">
-                <CardHeader>
-                  <CardTitle>Preferences</CardTitle>
-                  <CardDescription>
-                    Manage planner defaults for Plan.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <PlannerPreferencesSettings
-                    value={plannerPreferencesDraft}
-                    onChange={setPlannerPreferencesDraft}
-                    disabled={plannerPreferencesLoading || saving}
-                  />
-                  <div className="mt-4 space-y-3 border-t pt-4">
-                    <div className="space-y-2">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">Privacy</p>
-                        <p className="text-xs text-muted-foreground">
-                          Control whether your social activity appears in leaderboards.
-                        </p>
-                      </div>
-                      <label className="flex items-start gap-3 text-sm">
-                        <input
-                          type="checkbox"
-                          className="mt-1"
-                          checked={profileDraft.social_activity_visible}
-                          onChange={(event) =>
-                            setProfileDraft((prev) => ({
-                              ...prev,
-                              social_activity_visible: event.target.checked,
-                            }))
-                          }
-                        />
-                        <span>
-                          Social activity enabled
-                          <span className="block text-xs text-muted-foreground">
-                            Turn off to hide your activity from leaderboard listings.
-                          </span>
-                        </span>
-                      </label>
-                    </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => void savePreferences()}
-                      disabled={
-                        saving ||
-                        plannerPreferencesLoading ||
-                        !canSavePreferences
-                      }
-                    >
-                      {saving ? "Saving..." : "Save preferences"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : null}
-
-            {settingsSection === "notifications" ? (
-              <NotificationsSection />
-            ) : null}
-
-            {settingsSection === "onboarding" ? (
-              <OnboardingGuidesSettings />
-            ) : null}
-
-            {settingsSection === "appearance" ? (
-              <Card className="shadow-sm">
-                <CardHeader>
-                  <CardTitle>Appearance</CardTitle>
-                  <CardDescription>
-                    Switch visual styles without changing layout or plan behavior.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <AppearanceSettings />
-                </CardContent>
-              </Card>
-            ) : null}
-
-            {settingsSection === "integrations" ? (
-              <Card className="shadow-sm">
-                <CardHeader>
-                  <CardTitle>Integrations</CardTitle>
-                  <CardDescription>
-                    Connect Apple Health or Health Connect and opt into auto-complete.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <IntegrationsSettings goals={state.ownGoals} />
-                </CardContent>
-              </Card>
-            ) : null}
-
-            {settingsSection === "report-issue" ? (
-              <Card className="shadow-sm">
-                <CardHeader>
-                  <CardTitle>Report an issue</CardTitle>
-                  <CardDescription>
-                    Submit an issue title and description. We will save every report and
-                    email support when delivery is configured.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ReportIssueSettings />
-                </CardContent>
-              </Card>
-            ) : null}
+            {editor}
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      ) : (
+        <Dialog
+          modal={false}
+          open={settingsPanelOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              closeSettingsPanel();
+            }
+          }}
+        >
+          <DialogContent
+            className="!top-0 !right-0 !left-auto !translate-x-0 !translate-y-0 inset-y-0 h-dvh w-[min(100vw,72rem)] max-w-none overflow-hidden rounded-none border-l p-0 data-open:slide-in-from-right data-closed:slide-out-to-right data-open:zoom-in-100 data-closed:zoom-out-100"
+            showCloseButton={false}
+          >
+            <DialogHeader className="gap-3 border-b px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={closeSettingsPanel}
+                >
+                  <ArrowLeft className="size-4" />
+                  Back
+                </Button>
+                <DialogTitle>{settingsCopy.label}</DialogTitle>
+              </div>
+              <DialogDescription>{settingsCopy.description}</DialogDescription>
+            </DialogHeader>
+            <div className="h-[calc(100dvh-5.5rem)] overflow-y-auto overflow-x-hidden p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              {editor}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
+}
+
+function SettingsSectionEditor({
+  settingsSection,
+  ownGoals,
+  profileDraft,
+  setProfileDraft,
+  plannerPreferencesDraft,
+  setPlannerPreferencesDraft,
+  plannerPreferencesLoading,
+  saving,
+  canSavePreferences,
+  savePreferences,
+}: {
+  settingsSection: SettingsSection;
+  ownGoals: Goal[];
+  profileDraft: ProfileDraft;
+  setProfileDraft: Dispatch<SetStateAction<ProfileDraft>>;
+  plannerPreferencesDraft: PlannerPreferencesDraft;
+  setPlannerPreferencesDraft: Dispatch<SetStateAction<PlannerPreferencesDraft>>;
+  plannerPreferencesLoading: boolean;
+  saving: boolean;
+  canSavePreferences: boolean;
+  savePreferences: () => Promise<void>;
+}) {
+  if (settingsSection === "preferences") {
+    return (
+      <div className="space-y-4">
+        <PlannerPreferencesSettings
+          value={plannerPreferencesDraft}
+          onChange={(next) => setPlannerPreferencesDraft(next)}
+          disabled={plannerPreferencesLoading || saving}
+        />
+        <div className="space-y-3 border-t pt-4">
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Privacy</p>
+            <p className="text-xs text-muted-foreground">
+              Control whether your social activity appears in leaderboards.
+            </p>
+          </div>
+          <label className="flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={profileDraft.social_activity_visible}
+              onChange={(event) =>
+                setProfileDraft((prev) => ({
+                  ...prev,
+                  social_activity_visible: event.target.checked,
+                }))
+              }
+            />
+            <span>
+              Social activity enabled
+              <span className="block text-xs text-muted-foreground">
+                Turn off to hide your activity from leaderboard listings.
+              </span>
+            </span>
+          </label>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => void savePreferences()}
+            disabled={saving || plannerPreferencesLoading || !canSavePreferences}
+          >
+            {saving ? "Saving..." : "Save preferences"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (settingsSection === "notifications") {
+    return <NotificationsSection />;
+  }
+
+  if (settingsSection === "onboarding") {
+    return <OnboardingGuidesSettings />;
+  }
+
+  if (settingsSection === "appearance") {
+    return <AppearanceSettings />;
+  }
+
+  if (settingsSection === "integrations") {
+    return <IntegrationsSettings goals={ownGoals} />;
+  }
+
+  return <ReportIssueSettings />;
 }

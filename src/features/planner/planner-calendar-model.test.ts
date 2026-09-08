@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { allCategoriesValue } from "@/features/goals/goal-filters";
 import { buildActiveGoalIndexes } from "@/features/planner/calendar-entries";
 import { selectPlannerCalendarStoreProjection } from "@/features/planner/calendar-store-selectors";
 import { initialDraftCommandState } from "@/features/planner/draft-command-reducer";
@@ -70,8 +69,8 @@ function buildArgs(
     viewMode: "month",
     setupTimezone: "UTC",
     duoScope: "me",
-    categoryFilter: allCategoriesValue,
-    endMonthFilter: null,
+    categoryFilters: [],
+    endMonthFilters: [],
     searchQuery: "",
     partnerCompletionMarkersByDate: undefined,
     previewEntryOrderByDay: {},
@@ -315,7 +314,7 @@ describe("selectPlannerCalendarModel", () => {
       buildArgs({
         context,
         selectedDay: "2026-08-06",
-        categoryFilter: "Health",
+        categoryFilters: ["Health"],
         showTasksInsteadOfGoals: true,
         calendarTaskEntriesByDate: new Map([["2026-08-06", [taskEntry]]]),
       })

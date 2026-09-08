@@ -80,6 +80,7 @@ interface PlannerTasksPanelProps {
   title?: string;
   description?: string | null;
   scheduledDate?: string | null;
+  asOfDate?: string | null;
   showScheduledDate?: boolean;
   allowCreate?: boolean;
   allowDelete?: boolean;
@@ -91,6 +92,7 @@ export function PlannerTasksPanel({
   title = "Tasks",
   description = "Track simple one-time tasks separately from recurring goals.",
   scheduledDate = null,
+  asOfDate = null,
   showScheduledDate = false,
   allowCreate = true,
   allowDelete = false,
@@ -113,6 +115,7 @@ export function PlannerTasksPanel({
   const [newTaskDate, setNewTaskDate] = useState(
     () => scheduledDate ?? toLocalDateString()
   );
+  const completionAsOfDate = asOfDate ?? toLocalDateString();
   const canAddTask = newTaskTitle.trim().length > 0;
   const scheduledDateRef = useRef<string | null>(scheduledDate);
   const requestVersionRef = useRef(0);
@@ -218,8 +221,8 @@ export function PlannerTasksPanel({
     async (task: PlannerTaskRow) => {
       const completionMode = planCompletionControlModeForDate({
         currentlyCredited: task.completed_at != null,
-        selectedDate: scheduledDateRef.current ?? task.scheduled_date,
-        asOfDate: toLocalDateString(),
+        selectedDate: task.scheduled_date,
+        asOfDate: completionAsOfDate,
       });
       if (completionMode !== "toggle") {
         return;
@@ -255,7 +258,7 @@ export function PlannerTasksPanel({
         setTogglingTaskId(null);
       }
     },
-    [supabase]
+    [completionAsOfDate, supabase]
   );
 
   const deleteTask = useCallback(
@@ -350,7 +353,7 @@ export function PlannerTasksPanel({
     allowCreate && !composerOpen ? (
       <button
         type="button"
-        className="py-1 text-left text-sm font-medium text-primary touch-manipulation"
+        className="py-1 text-left text-xs font-medium text-primary touch-manipulation"
         onClick={() => setComposerOpen(true)}
       >
         + Add new
@@ -378,8 +381,8 @@ export function PlannerTasksPanel({
           const busy = toggling || deleting;
           const completionMode = planCompletionControlModeForDate({
             currentlyCredited: complete,
-            selectedDate: scheduledDate ?? task.scheduled_date,
-            asOfDate: toLocalDateString(),
+            selectedDate: task.scheduled_date,
+            asOfDate: completionAsOfDate,
           });
           const titleClass = complete
             ? "font-display text-base font-medium tracking-tight text-muted-foreground line-through"
@@ -411,8 +414,8 @@ export function PlannerTasksPanel({
               key={task.task_id}
               className={
                 chrome === "plain"
-                  ? "flex items-center justify-between gap-3 py-3"
-                  : "flex items-center justify-between gap-3 rounded-md border px-3 py-2"
+                  ? "flex items-center justify-between gap-3 py-3 last:pb-0.5"
+                  : "flex items-center justify-between gap-3 rounded-md border px-3 py-2 last:mb-0"
               }
             >
               {completionMode === "toggle" ? (
@@ -517,7 +520,7 @@ export function PlannerTasksPanel({
 
   if (chrome === "plain") {
     return (
-      <div className="space-y-3">
+      <div className="space-y-1">
         {taskList}
         {addForm}
         {addNewButton}
@@ -532,7 +535,7 @@ export function PlannerTasksPanel({
         <CardTitle>{title}</CardTitle>
         {description ? <CardDescription>{description}</CardDescription> : null}
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-1">
         {taskList}
         {addForm}
         {addNewButton}

@@ -52,11 +52,26 @@ function DialogContent({
   children,
   showCloseButton = true,
   overlayClassName,
+  onPointerDownOutside,
+  onFocusOutside,
+  onInteractOutside,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
   overlayClassName?: string
 }) {
+  const ignoreCheckboxDropdownOutside = (
+    event: { target: EventTarget | null; preventDefault: () => void }
+  ) => {
+    const target = event.target
+    if (
+      target instanceof Element &&
+      target.closest('[data-slot="checkbox-dropdown-menu"]')
+    ) {
+      event.preventDefault()
+    }
+  }
+
   return (
     <DialogPortal>
       <DialogOverlay className={overlayClassName} />
@@ -66,6 +81,18 @@ function DialogContent({
           "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-[var(--motion-duration-standard)] ease-[var(--motion-ease-emphasized)] outline-none motion-reduce:animate-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className
         )}
+        onPointerDownOutside={(event) => {
+          ignoreCheckboxDropdownOutside(event)
+          onPointerDownOutside?.(event)
+        }}
+        onFocusOutside={(event) => {
+          ignoreCheckboxDropdownOutside(event)
+          onFocusOutside?.(event)
+        }}
+        onInteractOutside={(event) => {
+          ignoreCheckboxDropdownOutside(event)
+          onInteractOutside?.(event)
+        }}
         {...props}
       >
         {children}

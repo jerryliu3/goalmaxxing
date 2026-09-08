@@ -77,6 +77,7 @@ export default async function AuthenticatedLayout({
       initialDuoScopePreference={initialDuoScopePreference}
       viewerAvatarUrl={viewerAvatarUrl}
       journeyFlags={journeyFlags}
+      xpEnabled={flags.xpEnabled}
     >
       {children}
     </AppShell>

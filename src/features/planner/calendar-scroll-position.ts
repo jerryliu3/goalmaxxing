@@ -1,5 +1,11 @@
 const DAY_CELL_SELECTOR = '[data-day-cell="true"][data-day]';
 
+function queryCalendarDayCell(container: HTMLElement, day: string) {
+  return container.querySelector<HTMLElement>(
+    `${DAY_CELL_SELECTOR}[data-day="${day}"]`
+  );
+}
+
 export function getCalendarTargetScrollTop(
   container: HTMLElement,
   target: HTMLElement
@@ -47,10 +53,7 @@ export function resolveMonthRowAnchorDay({
 }
 
 export function captureCalendarDayScreenTop(viewport: HTMLElement, day: string) {
-  const cell = viewport.querySelector<HTMLElement>(
-    `${DAY_CELL_SELECTOR}[data-day="${day}"]`
-  );
-  return cell?.getBoundingClientRect().top ?? null;
+  return queryCalendarDayCell(viewport, day)?.getBoundingClientRect().top ?? null;
 }
 
 export function restoreCalendarDayScreenTop({
@@ -64,9 +67,7 @@ export function restoreCalendarDayScreenTop({
   previousTop: number;
   alignInsideViewport: boolean;
 }) {
-  const cell = viewport.querySelector<HTMLElement>(
-    `${DAY_CELL_SELECTOR}[data-day="${day}"]`
-  );
+  const cell = queryCalendarDayCell(viewport, day);
   if (!cell) {
     return;
   }
@@ -108,9 +109,7 @@ export function isCalendarDayVisible(
     insetPx = 1,
   }: CalendarDayVisibilityOptions = {}
 ) {
-  const dayCell = container.querySelector<HTMLElement>(
-    `${DAY_CELL_SELECTOR}[data-day="${day}"]`
-  );
+  const dayCell = queryCalendarDayCell(container, day);
   if (!dayCell) {
     return false;
   }

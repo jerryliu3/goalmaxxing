@@ -33,6 +33,88 @@ interface SharedGoalRow {
 
 const WEEKDAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
+type TeamInviteControlsProps = {
+  partnerUsername: string;
+  message: string;
+  pendingInvites: TeamStateRow[];
+  stacked?: boolean;
+  onPartnerUsernameChange: (value: string) => void;
+  onMessageChange: (value: string) => void;
+  onSend: () => void;
+  onAccept: (teamId: string) => void;
+  onDecline: (teamId: string) => void;
+};
+
+function TeamInviteControls({
+  partnerUsername,
+  message,
+  pendingInvites,
+  stacked = false,
+  onPartnerUsernameChange,
+  onMessageChange,
+  onSend,
+  onAccept,
+  onDecline,
+}: TeamInviteControlsProps) {
+  const canSend = partnerUsername.trim().replace(/^@/, "").length >= 3;
+  return (
+    <div className="space-y-3">
+      <div className={stacked ? "space-y-2" : "grid gap-2 md:grid-cols-3"}>
+        <Input
+          value={partnerUsername}
+          onChange={(event) => onPartnerUsernameChange(event.target.value)}
+          placeholder={stacked ? "username" : "Partner username"}
+        />
+        <Input
+          value={message}
+          onChange={(event) => onMessageChange(event.target.value)}
+          placeholder="Invite message (optional)"
+        />
+        <Button
+          type="button"
+          size={stacked ? "sm" : "default"}
+          onClick={onSend}
+          disabled={!canSend}
+        >
+          Send invite
+        </Button>
+      </div>
+      <div className="space-y-2 text-sm">
+        {stacked ? null : <p className="font-medium">Pending invites</p>}
+        {pendingInvites.length === 0 ? (
+          <p className="text-muted-foreground">No pending invites.</p>
+        ) : (
+          pendingInvites.map((invite) => (
+            <div key={invite.teamId} className="rounded border p-3">
+              <p className="font-medium">
+                {invite.partnerDisplayName ?? invite.partnerUsername ?? invite.partnerId}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {invite.isIncoming ? "Incoming" : "Outgoing"}
+              </p>
+              {invite.isIncoming ? (
+                <div className="mt-2 flex gap-2">
+                  <Button type="button" size="sm" onClick={() => onAccept(invite.teamId)}>
+                    Accept
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onDecline(invite.teamId)}
+                  >
+                    Decline
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps) {
   const router = useAppRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -156,6 +238,16 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
     activeTeam?.partnerDisplayName ??
     activeTeam?.partnerUsername ??
     "Partner";
+  const inviteControls: TeamInviteControlsProps = {
+    partnerUsername,
+    message,
+    pendingInvites,
+    onPartnerUsernameChange: setPartnerUsername,
+    onMessageChange: setMessage,
+    onSend: () => void sendInvite(),
+    onAccept: (teamId) => void acceptInvite(teamId),
+    onDecline: (teamId) => void declineInvite(teamId),
+  };
 
   return (
     <section className="overflow-hidden rounded-[16px] border border-border">
@@ -169,7 +261,9 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {activeTeam
-              ? `Team XP ${activeTeam.teamXp ?? 0}`
+              ? activeTeam.teamXp == null
+                ? "Team XP unavailable"
+                : `Team XP ${activeTeam.teamXp}`
               : "Invite a partner or accept an invite to start duo progress."}
           </p>
         </div>
@@ -252,57 +346,7 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
         </div>
       ) : (
         <div className="space-y-4 bg-background p-5">
-          <div className="grid gap-2 md:grid-cols-3">
-            <Input
-              value={partnerUsername}
-              onChange={(event) => setPartnerUsername(event.target.value)}
-              placeholder="Partner username"
-            />
-            <Input
-              value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              placeholder="Invite message (optional)"
-            />
-            <Button
-              type="button"
-              onClick={() => void sendInvite()}
-              disabled={partnerUsername.trim().replace(/^@/, "").length < 3}
-            >
-              Send invite
-            </Button>
-          </div>
-          <div className="space-y-2 text-sm">
-            <p className="font-medium">Pending invites</p>
-            {pendingInvites.length === 0 ? (
-              <p className="text-muted-foreground">No pending invites.</p>
-            ) : (
-              pendingInvites.map((invite) => (
-                <div key={invite.teamId} className="rounded border p-3">
-                  <p className="font-medium">
-                    {invite.partnerDisplayName ?? invite.partnerUsername ?? invite.partnerId}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {invite.isIncoming ? "Incoming" : "Outgoing"}
-                  </p>
-                  {invite.isIncoming ? (
-                    <div className="mt-2 flex gap-2">
-                      <Button type="button" size="sm" onClick={() => void acceptInvite(invite.teamId)}>
-                        Accept
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => void declineInvite(invite.teamId)}
-                      >
-                        Decline
-                      </Button>
-                    </div>
-                  ) : null}
-                </div>
-              ))
-            )}
-          </div>
+          <TeamInviteControls {...inviteControls} />
           <GroupJoinCard />
         </div>
       )}
@@ -313,63 +357,8 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div className="rounded-[10px] border border-border p-3">
               <p className="text-xs font-semibold">Invite</p>
-              <Input
-                className="mt-2"
-                value={partnerUsername}
-                onChange={(event) => setPartnerUsername(event.target.value)}
-                placeholder="username"
-              />
-              <Input
-                className="mt-2"
-                value={message}
-                onChange={(event) => setMessage(event.target.value)}
-                placeholder="Invite message (optional)"
-              />
-              <Button
-                type="button"
-                size="sm"
-                className="mt-2"
-                onClick={() => void sendInvite()}
-                disabled={partnerUsername.trim().replace(/^@/, "").length < 3}
-              >
-                Send invite
-              </Button>
-              <div className="mt-3 space-y-2 text-sm">
-                {pendingInvites.length === 0 ? (
-                  <p className="text-muted-foreground">No pending invites.</p>
-                ) : (
-                  pendingInvites.map((invite) => (
-                    <div key={invite.teamId} className="rounded border p-3">
-                      <p className="font-medium">
-                        {invite.partnerDisplayName ??
-                          invite.partnerUsername ??
-                          invite.partnerId}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {invite.isIncoming ? "Incoming" : "Outgoing"}
-                      </p>
-                      {invite.isIncoming ? (
-                        <div className="mt-2 flex gap-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={() => void acceptInvite(invite.teamId)}
-                          >
-                            Accept
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => void declineInvite(invite.teamId)}
-                          >
-                            Decline
-                          </Button>
-                        </div>
-                      ) : null}
-                    </div>
-                  ))
-                )}
+              <div className="mt-2">
+                <TeamInviteControls stacked {...inviteControls} />
               </div>
             </div>
             <div className="rounded-[10px] border border-border p-3">

@@ -240,4 +240,27 @@ describe("useChecklistData cache behavior", () => {
       { goal_id: "goal-1", completed_on: "2026-08-12", source: "manual" },
     ]);
   });
+
+  it("uses the planner asOfDate and timezone for progress fetches", async () => {
+    renderHook(() =>
+      useChecklistData({
+        isActive: true,
+        viewDate: "2026-08-12",
+        asOfDate: "2026-08-13",
+        timezone: "Pacific/Auckland",
+      })
+    );
+
+    await waitFor(() => {
+      expect(fetchProgressContext).toHaveBeenCalled();
+    });
+
+    expect(fetchProgressContext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        asOfDate: "2026-08-13",
+        timezone: "Pacific/Auckland",
+        viewDate: "2026-08-12",
+      })
+    );
+  });
 });

@@ -18,7 +18,7 @@ export function ProgressGoalList({
   onSelectOnly,
   onSelectAll,
   onClearAll,
-  readOnly = false,
+  onboarding = false,
 }: {
   goals: ProgressGoalListItem[];
   selectedGoalIds: ReadonlySet<string>;
@@ -26,7 +26,7 @@ export function ProgressGoalList({
   onSelectOnly?: (goalId: string) => void;
   onSelectAll?: () => void;
   onClearAll?: () => void;
-  readOnly?: boolean;
+  onboarding?: boolean;
 }) {
   if (goals.length === 0) {
     return (
@@ -34,7 +34,7 @@ export function ProgressGoalList({
     );
   }
 
-  const showListActions = Boolean(onSelectAll || onClearAll) && !readOnly;
+  const showListActions = Boolean(onSelectAll || onClearAll);
 
   return (
     <div>
@@ -79,8 +79,7 @@ export function ProgressGoalList({
               <button
                 type="button"
                 aria-pressed={selected}
-                data-onboarding={index === 0 && !readOnly ? "insights.goal" : undefined}
-                disabled={readOnly}
+                data-onboarding={index === 0 && onboarding ? "insights.goal" : undefined}
                 onClick={() => onToggleGoal(goal.id)}
                 className={cn(
                   "flex min-h-11 w-full flex-col items-start rounded-[10px] border px-3 py-2 text-left touch-manipulation",
@@ -108,7 +107,7 @@ export function ProgressGoalList({
                   </span>
                 </span>
               </button>
-              {onSelectOnly && !readOnly ? (
+              {onSelectOnly ? (
                 <button
                   type="button"
                   className="absolute top-1/2 right-2 z-10 -translate-y-1/2 text-[10px] font-semibold text-primary opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-visible:opacity-100"

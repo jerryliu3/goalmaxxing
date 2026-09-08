@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlannerFiltersDialog } from "@/features/planner/planner-filters-dialog";
 
@@ -14,11 +15,11 @@ describe("PlannerFiltersDialog", () => {
         onOpenChange={vi.fn()}
         showTasksInsteadOfGoals={false}
         onShowTasksInsteadOfGoalsChange={onShowTasksInsteadOfGoalsChange}
-        categoryFilter="__all_categories__"
-        onCategoryFilterChange={vi.fn()}
+        categoryFilters={[]}
+        onCategoryFiltersChange={vi.fn()}
         categoryOptions={[]}
-        endMonthFilter={null}
-        onEndMonthFilterChange={vi.fn()}
+        endMonthFilters={[]}
+        onEndMonthFiltersChange={vi.fn()}
         endMonthOptions={[]}
       />
     );
@@ -44,11 +45,11 @@ describe("PlannerFiltersDialog", () => {
         onOpenChange={vi.fn()}
         showTasksInsteadOfGoals
         onShowTasksInsteadOfGoalsChange={vi.fn()}
-        categoryFilter="__all_categories__"
-        onCategoryFilterChange={vi.fn()}
+        categoryFilters={[]}
+        onCategoryFiltersChange={vi.fn()}
         categoryOptions={[]}
-        endMonthFilter={null}
-        onEndMonthFilterChange={vi.fn()}
+        endMonthFilters={[]}
+        onEndMonthFiltersChange={vi.fn()}
         endMonthOptions={[]}
       />
     );
@@ -67,11 +68,11 @@ describe("PlannerFiltersDialog", () => {
         showTasksInsteadOfGoals={false}
         onShowTasksInsteadOfGoalsChange={vi.fn()}
         tasksToggleDisabled
-        categoryFilter="__all_categories__"
-        onCategoryFilterChange={vi.fn()}
+        categoryFilters={[]}
+        onCategoryFiltersChange={vi.fn()}
         categoryOptions={[]}
-        endMonthFilter={null}
-        onEndMonthFilterChange={vi.fn()}
+        endMonthFilters={[]}
+        onEndMonthFiltersChange={vi.fn()}
         endMonthOptions={[]}
       />
     );
@@ -88,11 +89,11 @@ describe("PlannerFiltersDialog", () => {
         onOpenChange={vi.fn()}
         showTasksInsteadOfGoals={false}
         onShowTasksInsteadOfGoalsChange={vi.fn()}
-        categoryFilter="__all_categories__"
-        onCategoryFilterChange={vi.fn()}
+        categoryFilters={[]}
+        onCategoryFiltersChange={vi.fn()}
         categoryOptions={[]}
-        endMonthFilter={null}
-        onEndMonthFilterChange={vi.fn()}
+        endMonthFilters={[]}
+        onEndMonthFiltersChange={vi.fn()}
         endMonthOptions={[]}
         dayFilters={{
           categoryFilterOptions: [{ value: "health", label: "Health" }],
@@ -154,5 +155,39 @@ describe("PlannerFiltersDialog", () => {
     expect(screen.getByText("Show completed goals")).toBeInTheDocument();
     expect(screen.getByText("Show suppressed linked goals")).toBeInTheDocument();
     expect(screen.getByText("(2)")).toBeInTheDocument();
+  });
+
+  it("lets week and month filters select multiple categories and ending months", async () => {
+    const onCategoryFiltersChange = vi.fn();
+    const onEndMonthFiltersChange = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <PlannerFiltersDialog
+        open
+        onOpenChange={vi.fn()}
+        showTasksInsteadOfGoals={false}
+        onShowTasksInsteadOfGoalsChange={vi.fn()}
+        categoryFilters={["Health"]}
+        onCategoryFiltersChange={onCategoryFiltersChange}
+        categoryOptions={[
+          { value: "Health", label: "Health" },
+          { value: "Personal", label: "Personal" },
+        ]}
+        endMonthFilters={["2026-08"]}
+        onEndMonthFiltersChange={onEndMonthFiltersChange}
+        endMonthOptions={[
+          { value: "2026-08", label: "August 2026" },
+          { value: "2026-09", label: "September 2026" },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "Category" }));
+    await user.click(screen.getByRole("checkbox", { name: "Personal" }));
+    expect(onCategoryFiltersChange).toHaveBeenCalledWith(["Health", "Personal"]);
+
+    await user.click(screen.getByRole("button", { name: "Ending in" }));
+    await user.click(screen.getByRole("checkbox", { name: "September 2026" }));
+    expect(onEndMonthFiltersChange).toHaveBeenCalledWith(["2026-08", "2026-09"]);
   });
 });

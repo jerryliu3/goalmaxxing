@@ -78,9 +78,12 @@ vi.mock("@/components/intro/journey-intro-overlay", () => ({
 }));
 
 describe("SettingsTab", () => {
+  const originalMatchMedia = window.matchMedia;
+
   afterEach(() => {
     cleanup();
     mockSearch = "";
+    window.matchMedia = originalMatchMedia;
   });
 
   it("writes an opened settings panel into the tab query", async () => {
@@ -150,5 +153,66 @@ describe("SettingsTab", () => {
     expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
     expect(screen.queryByText("Primary planner tab")).not.toBeInTheDocument();
+  });
+
+  it("uses the full You page until a setting is opened on desktop", () => {
+    window.matchMedia = ((query: string) =>
+      ({
+        matches: query.includes("min-width: 768px"),
+        media: query,
+        onchange: null,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        addListener: () => undefined,
+        dispatchEvent: () => false,
+      })) as typeof window.matchMedia;
+    render(<SettingsTab />);
+
+    expect(screen.getByTestId("settings-pane")).toHaveAttribute(
+      "data-settings-pane",
+      "closed"
+    );
+    expect(screen.getByTestId("settings-desktop-editor")).toHaveAttribute(
+      "data-settings-slide",
+      "out"
+    );
+    expect(screen.getByTestId("settings-desktop-editor")).toHaveAttribute("inert");
+    expect(screen.queryByText("Select a control to edit it here.")).toBeNull();
+  });
+
+  it("slides the You list beside the editor on desktop and can close it", async () => {
+    window.matchMedia = ((query: string) =>
+      ({
+        matches: query.includes("min-width: 768px"),
+        media: query,
+        onchange: null,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+        dispatchEvent: () => false,
+      })) as typeof window.matchMedia;
+    mockSearch = "tab=notifications";
+    const pushStateSpy = vi.spyOn(window.history, "pushState");
+    const user = userEvent.setup();
+    render(<SettingsTab />);
+
+    expect(screen.getByTestId("settings-pane")).toHaveAttribute(
+      "data-settings-pane",
+      "open"
+    );
+    expect(screen.getByTestId("settings-desktop-editor")).toHaveAttribute(
+      "data-settings-slide",
+      "in"
+    );
+    expect(screen.getByTestId("settings-desktop-editor")).not.toHaveAttribute("inert");
+    expect(screen.getByTestId("settings-desktop-editor")).toHaveTextContent(
+      "Notifications body"
+    );
+    expect(screen.getByRole("heading", { name: "Plan" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Notifications" })).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(pushStateSpy.mock.calls.at(-1)?.[2]).toBe("/settings");
   });
 });

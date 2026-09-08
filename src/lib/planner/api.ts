@@ -8,7 +8,7 @@ import {
   requireAuthenticatedRequestContext,
   withRoute as withSharedRoute,
 } from "@/lib/api/route";
-import { getDateInTimezone } from "@/lib/dates/timezone";
+import { getDateInTimezone, timezoneFromPreferences } from "@/lib/dates/timezone";
 import { reportError } from "@/lib/observability/report-error";
 import { getPlannerCapabilities } from "@/lib/planner/capabilities";
 import type { PlannerCapabilities } from "@/lib/planner/capabilities";
@@ -110,6 +110,30 @@ export interface AuthenticatedPlannerRouteContext {
     ReturnType<typeof requireAuthenticatedRequestContext>
   >["supabase"];
   capabilities: PlannerCapabilities;
+}
+
+export async function loadPlannerProfileTimezone({
+  supabase,
+  userId,
+}: {
+  supabase: AuthenticatedPlannerRouteContext["supabase"];
+  userId: string;
+}) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("timezone")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    throw new PlannerRouteError(
+      503,
+      "profile_timezone_lookup_failed",
+      "Planner timezone could not be loaded."
+    );
+  }
+
+  return timezoneFromPreferences(data?.timezone);
 }
 
 export function requirePlannerAdminClient() {

@@ -30,10 +30,12 @@ interface LeaderboardsPanelProps {
   onRefreshRequested?: () => void;
 }
 
-function sortSeasons(seasons: LeaderboardSeason[]) {
+function liveSeasons(seasons: LeaderboardSeason[]) {
   const rank = (status: LeaderboardSeason["status"]) =>
-    status === "open" ? 0 : status === "upcoming" ? 1 : 2;
-  return [...seasons].sort((a, b) => rank(a.status) - rank(b.status));
+    status === "open" ? 0 : 1;
+  return seasons
+    .filter((season) => season.status !== "closed")
+    .sort((a, b) => rank(a.status) - rank(b.status));
 }
 
 export function LeaderboardsPanel({
@@ -45,7 +47,7 @@ export function LeaderboardsPanel({
   const partnerId = duoState.activePartner?.partnerId ?? null;
   const cachedLeaderboards = peekSocialLeaderboardsCache();
   const [seasons, setSeasons] = useState<LeaderboardSeason[]>(
-    cachedLeaderboards?.items ?? []
+    liveSeasons(cachedLeaderboards?.items ?? [])
   );
   const [standingsBySeason, setStandingsBySeason] = useState<
     Record<string, StandingsState>
@@ -63,7 +65,7 @@ export function LeaderboardsPanel({
     try {
       const response = await fetchSocialLeaderboards();
       hasPaintedLeaderboardsRef.current = true;
-      const nextSeasons = sortSeasons(response.items);
+      const nextSeasons = liveSeasons(response.items);
       setSeasons(nextSeasons);
       const standingsEntries = await Promise.all(
         nextSeasons.map(async (season) => {
@@ -97,9 +99,7 @@ export function LeaderboardsPanel({
   }, [isActive, loadSeasons, refreshToken]);
 
   const tiles = useMemo<CompeteTileModel[]>(() => {
-    return seasons
-      .filter((season) => season.status !== "closed")
-      .map((season) => {
+    return seasons.map((season) => {
       const standing = standingsBySeason[season.id];
       const leader = standing?.standings[0]?.score ?? 1;
       const people: CompetePerson[] = (standing?.standings ?? []).map((row) => ({
@@ -114,7 +114,7 @@ export function LeaderboardsPanel({
       return {
         key: season.id,
         title: season.title,
-        kicker: season.status === "closed" ? "Closed season" : "Live season",
+        kicker: "Live season",
         metric: viewerRow
           ? `#${viewerRow.rank} · ${viewerRow.label}`
           : standing?.viewerRank
@@ -122,10 +122,8 @@ export function LeaderboardsPanel({
             : season.metric,
         detail: `${season.subjectKind}${season.scope === "group" ? " · group" : ""} · ${season.metric}`,
         joined: true,
-        closed: season.status === "closed",
+        closed: false,
         people,
-        joinLabel: "Join board",
-        leaveLabel: "Leave board",
       } satisfies CompeteTileModel;
     });
   }, [partnerId, seasons, standingsBySeason, viewerUserId]);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useRef, type MouseEvent, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -24,8 +24,8 @@ export type CompeteTileModel = {
   joined: boolean;
   closed: boolean;
   people: CompetePerson[];
-  joinLabel: string;
-  leaveLabel: string;
+  joinLabel?: string;
+  leaveLabel?: string;
 };
 
 export function CompeteSnapRail({
@@ -109,6 +109,15 @@ export function CompeteTile({
   const peekPeople = tile.people.filter((row) => row.you || row.partner);
   const rows = density === "peek" ? peekPeople : tile.people;
   const wide = span === "wide";
+  const joinDisabled = tile.closed || joinPending;
+
+  function handleJoinClick(event: MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    if (joinDisabled) {
+      return;
+    }
+    onJoin?.();
+  }
 
   return (
     <article
@@ -167,7 +176,7 @@ export function CompeteTile({
           </ol>
         )}
 
-        {density === "peek" && !expanded ? (
+        {density === "peek" ? (
           <p className="mt-3 text-xs text-muted-foreground">Tap to open</p>
         ) : null}
 
@@ -176,28 +185,22 @@ export function CompeteTile({
         {onJoin && !tile.joined ? (
           <button
             type="button"
-            disabled={tile.closed || joinPending}
-            onClick={(event) => {
-              event.stopPropagation();
-              onJoin();
-            }}
-            className={`pointer-events-auto mt-auto min-h-10 rounded-md bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-40 ${
+            aria-disabled={joinDisabled}
+            onClick={handleJoinClick}
+            className={`pointer-events-auto mt-auto min-h-10 rounded-md bg-primary text-sm font-semibold text-primary-foreground aria-disabled:opacity-40 ${
               wide ? "w-full sm:max-w-xs" : "w-full"
             }`}
           >
-            {tile.closed ? "Closed" : tile.joinLabel}
+            {tile.closed ? "Closed" : tile.joinLabel ?? "Join"}
           </button>
         ) : onJoin && tile.joined && expanded ? (
           <button
             type="button"
-            disabled={tile.closed || joinPending}
-            onClick={(event) => {
-              event.stopPropagation();
-              onJoin();
-            }}
-            className="pointer-events-auto mt-auto self-start rounded-md bg-background px-2 py-1 text-xs font-medium text-destructive disabled:opacity-40"
+            aria-disabled={joinDisabled}
+            onClick={handleJoinClick}
+            className="pointer-events-auto mt-auto self-start rounded-md bg-background px-2 py-1 text-xs font-medium text-destructive aria-disabled:opacity-40"
           >
-            {tile.leaveLabel}
+            {tile.leaveLabel ?? "Leave"}
           </button>
         ) : (
           <div className="mt-auto" />

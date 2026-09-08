@@ -10,22 +10,29 @@ import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
 export function usePlanDayChecklistModel({
   viewDate,
   searchQuery,
+  asOfDate = null,
+  timezone = null,
 }: {
   viewDate: string;
   searchQuery: string;
+  asOfDate?: string | null;
+  timezone?: string | null;
 }) {
   const filters = useChecklistFilters();
   const { data, loading, loadData, redirectToLogin, todayLocalDate } =
     useChecklistData({
       isActive: true,
       viewDate,
+      asOfDate,
+      timezone,
     });
+  const completionAsOfDate = asOfDate ?? todayLocalDate;
   const listModel = useMemo(
     () =>
       selectChecklistListModel({
         data,
         viewDate,
-        todayLocalDate,
+        todayLocalDate: completionAsOfDate,
         categoryFilters: filters.categoryFilters,
         recurrenceFilters: filters.recurrenceFilters,
         searchQuery,
@@ -43,7 +50,7 @@ export function usePlanDayChecklistModel({
       filters.todayEndMonths,
       filters.todaySort,
       searchQuery,
-      todayLocalDate,
+      completionAsOfDate,
       viewDate,
     ]
   );
@@ -54,7 +61,8 @@ export function usePlanDayChecklistModel({
   const { savingGoalId, toggleCompletion } = useChecklistCompletionActions({
     readOnly: false,
     viewDate,
-    todayLocalDate,
+    todayLocalDate: completionAsOfDate,
+    timezone,
     completionsByGoal,
     loadData,
     redirectToLogin,
@@ -113,7 +121,7 @@ export function usePlanDayChecklistModel({
     ready,
     loading,
     data,
-    todayLocalDate,
+    todayLocalDate: completionAsOfDate,
     filters,
     listModel,
     visibilityOptions,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getSettingsSectionCopy,
   resolveSettingsSection,
   SETTINGS_GROUPS,
 } from "@/features/settings/settings-section";
@@ -34,5 +35,11 @@ describe("resolveSettingsSection", () => {
       "appearance",
       "report-issue",
     ]);
+    expect(getSettingsSectionCopy("appearance")).toEqual({
+      key: "appearance",
+      label: "Appearance",
+      description:
+        "Choose a visual style for Goalmaxxing. Original is the default; more skins can be added here.",
+    });
   });
 });

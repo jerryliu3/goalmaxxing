@@ -62,7 +62,8 @@ export type ProgressLedgerUnit = "completion" | "milestone";
 export function progressLedgerCaption(
   mode: ProgressLedgerMode,
   selectedCount: number,
-  unit: ProgressLedgerUnit = "completion"
+  unit: ProgressLedgerUnit = "completion",
+  editable = true
 ): string {
   const unitLabel = unit === "milestone" ? "milestone" : "completion";
   const unitPlural = unit === "milestone" ? "milestones" : "completions";
@@ -70,6 +71,9 @@ export function progressLedgerCaption(
     return `Select a goal to see ${unitPlural}.`;
   }
   if (mode === "edit") {
+    if (!editable) {
+      return `This calendar shows this goal's ${unitPlural}.`;
+    }
     return `Tap a past or today cell to log or remove a ${unitLabel}. Future days are closed.`;
   }
   if (mode === "overlap") {
