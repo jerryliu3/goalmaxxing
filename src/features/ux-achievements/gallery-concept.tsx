@@ -19,7 +19,7 @@ const concept = getAchievementConcept("gallery");
 export function GalleryConcept() {
   const medalRailRef = useRef<HTMLUListElement>(null);
   const certRailRef = useRef<HTMLUListElement>(null);
-  const [activeMedal, setActiveMedal] = useState(COLLECTION.newestId);
+  const [activeMedal, setActiveMedal] = useState<string>(COLLECTION.newestId);
   const medals = LEVEL_AWARDS;
   const active = medals.find((item) => item.id === activeMedal) ?? medals[3];
 
