@@ -41,13 +41,6 @@ vi.mock("../../lib/session", () => ({
   }),
 }));
 
-vi.mock("../../lib/navigation-preferences", () => ({
-  useProfileNavigationPreferences: () => ({
-    loading: false,
-    plannerPrimaryTabPreference: "checklist",
-  }),
-}));
-
 vi.mock("../../theme", () => ({
   useTheme: () => ({
     colors: {

@@ -1,5 +1,4 @@
 import { Redirect } from "expo-router";
-import { useProfileNavigationPreferences } from "../src/lib/navigation-preferences";
 import { useForceUpgradeRequired } from "../src/lib/runtime-config";
 import { useSession } from "../src/lib/session";
 import { LoadingScreen } from "../src/ui/screen";
@@ -7,9 +6,8 @@ import { LoadingScreen } from "../src/ui/screen";
 export default function IndexRoute() {
   const { ready, session } = useSession();
   const upgrade = useForceUpgradeRequired();
-  const preferences = useProfileNavigationPreferences(session?.user.id ?? null);
 
-  if (!ready || upgrade.loading || (session && preferences.loading)) {
+  if (!ready || upgrade.loading) {
     return <LoadingScreen />;
   }
   if (upgrade.required) {
