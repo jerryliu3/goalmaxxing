@@ -78,9 +78,12 @@ vi.mock("@/components/intro/journey-intro-overlay", () => ({
 }));
 
 describe("SettingsTab", () => {
+  const originalMatchMedia = window.matchMedia;
+
   afterEach(() => {
     cleanup();
     mockSearch = "";
+    window.matchMedia = originalMatchMedia;
   });
 
   it("writes an opened settings panel into the tab query", async () => {
@@ -150,5 +153,27 @@ describe("SettingsTab", () => {
     expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
     expect(screen.queryByText("Primary planner tab")).not.toBeInTheDocument();
+  });
+
+  it("shows groups beside the editor on desktop", () => {
+    window.matchMedia = ((query: string) =>
+      ({
+        matches: query.includes("min-width: 768px"),
+        media: query,
+        onchange: null,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+        dispatchEvent: () => false,
+      })) as typeof window.matchMedia;
+    mockSearch = "tab=notifications";
+    render(<SettingsTab />);
+
+    expect(screen.getByTestId("settings-desktop-editor")).toHaveTextContent(
+      "Notifications body"
+    );
+    expect(screen.getByRole("heading", { name: "Plan" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
   });
 });
