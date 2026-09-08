@@ -1,11 +1,10 @@
-export type AwardTier = "bronze" | "copper" | "sage" | "gold" | "ink";
+import type {
+  AchievementGoalCategory,
+  AwardTier,
+} from "@/features/achievements/types";
 
-export type GoalCategory =
-  | "health"
-  | "career"
-  | "personal"
-  | "relationships"
-  | "other";
+export type { AwardTier };
+export type GoalCategory = AchievementGoalCategory;
 
 export interface SeedLevelAward {
   id: string;
