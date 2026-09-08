@@ -20,4 +20,17 @@ describe("MonthHeatmap", () => {
     expect(screen.queryByLabelText("Previous month")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Next month")).not.toBeInTheDocument();
   });
+
+  it("marks milestone days with a quiet pin", () => {
+    render(
+      <MonthHeatmap
+        month={new Date(2026, 8, 1)}
+        countsByDate={{ "2026-09-01": 1 }}
+        milestoneDates={["2026-09-01"]}
+      />
+    );
+
+    expect(screen.getByTestId("milestone-pin-2026-09-01")).toBeInTheDocument();
+    expect(screen.queryByTestId("milestone-pin-2026-09-02")).not.toBeInTheDocument();
+  });
 });

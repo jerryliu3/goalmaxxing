@@ -11,6 +11,7 @@ interface MonthHeatmapProps {
   interactive?: boolean;
   pendingDate?: string | null;
   isDayDisabled?: (date: string) => boolean;
+  milestoneDates?: ReadonlySet<string> | readonly string[];
   onDayClick?: (date: string, sourceElement: HTMLButtonElement) => void;
   onPreviousMonth?: () => void;
   onNextMonth?: () => void;
@@ -24,6 +25,7 @@ export function MonthHeatmap({
   interactive = false,
   pendingDate = null,
   isDayDisabled,
+  milestoneDates,
   onDayClick,
   onPreviousMonth,
   onNextMonth,
@@ -32,6 +34,10 @@ export function MonthHeatmap({
   const monthEnd = endOfMonth(month);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
   const firstWeekdayOffset = getISODay(monthStart) - 1;
+  const pinDates =
+    milestoneDates instanceof Set
+      ? milestoneDates
+      : new Set(milestoneDates ?? []);
 
   return (
     <div className="w-full space-y-2">
@@ -71,6 +77,13 @@ export function MonthHeatmap({
           {days.map((day) => {
             const key = format(day, "yyyy-MM-dd");
             const value = countsByDate[key] ?? 0;
+            const pin = pinDates.has(key) ? (
+              <span
+                data-testid={`milestone-pin-${key}`}
+                className="absolute right-1 top-1 size-1.5 rounded-full bg-foreground"
+                aria-hidden
+              />
+            ) : null;
 
             if (interactive && onDayClick) {
               const dayDisabled = pendingDate === key || Boolean(isDayDisabled?.(key));
@@ -94,6 +107,7 @@ export function MonthHeatmap({
                   >
                     {format(day, "d")}
                   </span>
+                  {pin}
                 </button>
               );
             }
@@ -112,6 +126,7 @@ export function MonthHeatmap({
                 >
                   {format(day, "d")}
                 </span>
+                {pin}
               </div>
             );
           })}

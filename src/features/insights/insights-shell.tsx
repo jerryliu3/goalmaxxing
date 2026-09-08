@@ -5,11 +5,9 @@ import { useMemo, useState } from "react";
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
 import { DuoLanes } from "@/features/social/duo/duo-lanes";
 import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
-import { InsightsPeriodStepper } from "@/features/insights/insights-period-controls";
 import {
   InsightsTab,
   type InsightsSharedGoalFilters,
-  type InsightsSharedLedgerSelection,
   type HeatmapViewMode,
 } from "@/features/insights/insights-tab";
 import type { GoalDateSort } from "@/lib/goals/list-view";
@@ -23,7 +21,6 @@ export function InsightsShell() {
   const [goalEndMonths, setGoalEndMonths] = useState<string[]>([]);
   const [goalSort, setGoalSort] = useState<GoalDateSort>("earliest_end");
   const [showHistoricalGoals, setShowHistoricalGoals] = useState(false);
-  const [selectedGoalIds, setSelectedGoalIds] = useState<string[] | null>(null);
   const sharePeriodControls = scope === "both" && Boolean(activePartner);
 
   const sharedPeriod = useMemo(
@@ -60,16 +57,6 @@ export function InsightsShell() {
       showHistoricalGoals,
     ]
   );
-  const sharedLedgerSelection = useMemo<InsightsSharedLedgerSelection | undefined>(
-    () =>
-      sharePeriodControls
-        ? {
-            selectedGoalIds,
-            onSelectedGoalIdsChange: setSelectedGoalIds,
-          }
-        : undefined,
-    [selectedGoalIds, sharePeriodControls]
-  );
 
   return (
     <div className="space-y-4">
@@ -77,20 +64,12 @@ export function InsightsShell() {
         onboardingKey="insights.main"
         forceOpen={searchParams.get("onboarding") === "insights.main"}
       />
-      {sharePeriodControls ? (
+          {sharePeriodControls ? (
         <>
-          <div className="flex justify-center">
-            <InsightsPeriodStepper
-              monthCursor={monthCursor}
-              onMonthCursorChange={setMonthCursor}
-              perGoalViewMode={perGoalViewMode}
-            />
-          </div>
           <InsightsTab
             sharedPeriod={sharedPeriod}
             sharedGoalFilters={sharedGoalFilters}
-            sharedLedgerSelection={sharedLedgerSelection}
-            contentMode="ledger"
+            contentMode="goal-stats-only"
           />
           <DuoLanes
             scope={scope}
@@ -102,10 +81,7 @@ export function InsightsShell() {
                 readOnly={subject.readOnly}
                 sharedPeriod={sharedPeriod}
                 sharedGoalFilters={sharedGoalFilters}
-                sharedLedgerSelection={
-                  subject.readOnly ? undefined : sharedLedgerSelection
-                }
-                contentMode="overall-only"
+                contentMode="lane"
               />
             )}
           />

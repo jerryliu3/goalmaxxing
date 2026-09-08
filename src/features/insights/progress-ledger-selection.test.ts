@@ -31,9 +31,10 @@ describe("progress ledger selection", () => {
     );
   });
 
-  it("collapses a full selection back to the aggregate default", () => {
-    expect(toggleLedgerGoalSelection(["a", "b"], ["a"], "b")).toBeNull();
+  it("deselects a selected goal, including from the aggregate and the last remaining item", () => {
     expect(toggleLedgerGoalSelection(["a", "b"], null, "a")).toEqual(["b"]);
+    expect(toggleLedgerGoalSelection(["a", "b"], ["a"], "a")).toEqual([]);
+    expect(toggleLedgerGoalSelection(["a", "b"], ["a"], "b")).toBeNull();
   });
 
   it("blocks future heatmap edits and labels each mode", () => {
