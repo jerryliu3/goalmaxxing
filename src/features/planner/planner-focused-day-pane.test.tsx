@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { PlannerDndProvider } from "@/features/planner/calendar-dnd";
 import { PlannerFocusedDayPane } from "@/features/planner/planner-focused-day-pane";
+import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 
 function renderWithDnd(ui: ReactNode) {
   return render(

@@ -79,18 +79,8 @@ export function PlannerFocusedDayPane({
   splitPartnerChecklist = false,
 }: PlannerFocusedDayPaneProps) {
   const TitleTag = titleAs;
-  const visibleEntries = useMemo(
-    () => filterPlannerDayEntries(entries, dayChecklist?.visibleGoalIds ?? null),
-    [dayChecklist?.visibleGoalIds, entries]
-  );
-  const visibleMarkers = useMemo(
-    () =>
-      filterPlannerDayMarkers(
-        completionFactMarkers,
-        dayChecklist?.visibleGoalIds ?? null
-      ),
-    [completionFactMarkers, dayChecklist?.visibleGoalIds]
-  );
+  const visibleEntries = entries;
+  const visibleMarkers = completionFactMarkers;
   const viewerMarkers = useMemo(
     () => visibleMarkers.filter((marker) => marker.owner !== "partner"),
     [visibleMarkers]
