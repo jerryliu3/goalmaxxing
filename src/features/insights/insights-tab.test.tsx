@@ -106,20 +106,25 @@ describe("InsightsTab goal ledger", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Goal ledger" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Progress Tracker" })).toBeInTheDocument();
     expect(
       screen.getByText(/Aggregate of selected goals/)
     ).toBeInTheDocument();
-    expect(screen.getByText(/Aggregate of selected goals/).closest(".flex")).toHaveClass(
-      "flex-col-reverse",
+    const layout = screen.getByTestId("progress-ledger-layout");
+    expect(layout).toHaveClass(
+      "flex-col",
       "md:grid",
       "md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]"
     );
+    expect(layout).not.toHaveClass("flex-col-reverse");
+    const heatmapCaption = screen.getByText(/Aggregate of selected goals/);
+    const goalsHeading = screen.getByRole("heading", { name: "Goals" });
+    expect(
+      heatmapCaption.compareDocumentPosition(goalsHeading) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /Lift/ }));
-    await user.click(screen.getByRole("button", { name: /Yoga/ }));
-    await user.click(screen.getByRole("button", { name: /Thesis/ }));
+    await user.click(screen.getAllByRole("button", { name: "Only" })[1]);
 
     expect(
       screen.getByText(/Tap a past or today cell to log or remove a completion/)
@@ -143,9 +148,7 @@ describe("InsightsTab goal ledger", () => {
       />
     );
 
-    await user.click(screen.getByRole("button", { name: /Lift/ }));
-    await user.click(screen.getByRole("button", { name: /Yoga/ }));
-    await user.click(screen.getByRole("button", { name: /Thesis/ }));
+    await user.click(screen.getAllByRole("button", { name: "Only" })[0]);
     await user.click(screen.getByTitle(/2026-09-01/));
 
     expect(runCompletionMutationMock).toHaveBeenCalledWith(
@@ -171,17 +174,20 @@ describe("InsightsTab goal ledger", () => {
 
     expect(screen.getByText("0/3 milestones")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /Tempo run/ }));
-    await user.click(screen.getByRole("button", { name: /Lift/ }));
-    await user.click(screen.getByRole("button", { name: /Yoga/ }));
+    await user.click(screen.getAllByRole("button", { name: "Only" })[3]);
 
     expect(
       screen.getByText(/Tap a past or today cell to log or remove a milestone/)
     ).toBeInTheDocument();
-    expect(screen.getByText("Milestones")).toBeInTheDocument();
-    expect(screen.getByText("Proposal")).toBeInTheDocument();
-    expect(screen.getByText("Draft")).toBeInTheDocument();
-    expect(screen.getByText("Defense")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Thesis" })).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Proposal")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Draft")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Defense")).toBeInTheDocument();
+    expect(screen.getByText("1 / 3")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Select all" }));
+    expect(screen.getByText(/Aggregate of selected goals/)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Thesis" })).not.toBeInTheDocument();
   });
 
   it("stacks the heatmap in overall-only mode instead of splitting beside the list", () => {
@@ -198,9 +204,31 @@ describe("InsightsTab goal ledger", () => {
     );
 
     expect(screen.getByText(/Aggregate of selected goals/)).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Goal ledger" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Progress Tracker" })).toBeNull();
+    expect(screen.getByTestId("progress-ledger-layout")).toHaveClass("space-y-3");
+    expect(screen.getByTestId("progress-ledger-layout")).not.toHaveClass("md:grid");
+  });
+
+  it("stacks heatmap then goals in lane mode without the shared tracker", () => {
+    render(
+      <InsightsTab
+        contentMode="lane"
+        sharedPeriod={{
+          monthCursor: new Date(2026, 8, 6),
+          onMonthCursorChange: () => {},
+          perGoalViewMode: "month",
+          onPerGoalViewModeChange: () => {},
+        }}
+      />
+    );
+
+    const heatmapCaption = screen.getByText(/Aggregate of selected goals/);
+    const goalsHeading = screen.getByRole("heading", { name: /Goals/ });
+    expect(screen.queryByRole("heading", { name: "Progress Tracker" })).toBeNull();
+    expect(screen.getByTestId("progress-ledger-layout")).toHaveClass("space-y-3");
+    expect(screen.getByTestId("progress-ledger-layout")).not.toHaveClass("md:grid");
     expect(
-      screen.getByText(/Aggregate of selected goals/).closest(".flex")
-    ).toBeNull();
+      heatmapCaption.compareDocumentPosition(goalsHeading) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 });

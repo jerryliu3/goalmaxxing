@@ -50,7 +50,7 @@ describe("InsightsShell", () => {
     expect(screen.queryByRole("button", { name: "Previous period" })).not.toBeInTheDocument();
   });
 
-  it("renders one shared ledger above duo heatmaps", () => {
+  it("renders shared tracker above duo lanes of heatmap, goals, and stats", () => {
     useDuoSurfaceMock.mockReturnValue({
       scope: "both",
       activePartner: {
@@ -71,18 +71,21 @@ describe("InsightsShell", () => {
 
     expect(insightsTabMock).toHaveBeenCalledTimes(3);
     expect(insightsTabMock.mock.calls[0]?.[0]).toMatchObject({
-      contentMode: "ledger",
+      contentMode: "goal-stats-only",
     });
     expect(insightsTabMock.mock.calls[1]?.[0]).toMatchObject({
-      contentMode: "overall-only",
+      contentMode: "lane",
       readOnly: false,
     });
     expect(insightsTabMock.mock.calls[2]?.[0]).toMatchObject({
-      contentMode: "overall-only",
+      contentMode: "lane",
       readOnly: true,
     });
-    expect(screen.getByRole("button", { name: "Previous period" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Next period" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Choose month and year")).toBeInTheDocument();
+    const tracker = screen.getByTestId("insights-tab-goal-stats-only");
+    const lanes = screen.getByTestId("duo-lanes-scroll");
+    expect(tracker.compareDocumentPosition(lanes) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+    expect(screen.queryByTestId("insights-tab-goals-only")).not.toBeInTheDocument();
   });
 });

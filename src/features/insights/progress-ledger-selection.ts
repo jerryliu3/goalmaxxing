@@ -41,6 +41,9 @@ export function toggleLedgerGoalSelection(
   const next = current.includes(goalId)
     ? current.filter((id) => id !== goalId)
     : [...current, goalId];
+  if (next.length === 0) {
+    return [];
+  }
   if (
     next.length === visibleGoalIds.length &&
     visibleGoalIds.every((id) => next.includes(id))

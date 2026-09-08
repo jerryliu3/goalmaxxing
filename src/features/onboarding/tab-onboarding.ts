@@ -33,7 +33,7 @@ export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]>
   ],
   "insights.main": [
     {
-      title: "Goal ledger",
+      title: "Progress Tracker",
       description: "The heatmap is the aggregate of selected goals.",
       target: "insights.overall",
     },

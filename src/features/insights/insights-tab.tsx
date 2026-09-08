@@ -22,8 +22,9 @@ import { Input } from "@/components/ui/input";
 import { LoadingCard } from "@/components/ui/loading-card";
 import { InsightsPeriodStepper } from "@/features/insights/insights-period-controls";
 import { InsightsGoalStatsFilters } from "@/features/insights/insights-goal-stats-filters";
-import { MilestonePills } from "@/features/goals/milestone-pills";
 import { ProgressGoalList } from "@/features/insights/progress-goal-list";
+import { InsightsOverallStatsTiles } from "@/features/insights/insights-overall-stats-card";
+import { ProgressMilestoneRunway } from "@/features/insights/progress-milestone-runway";
 import {
   isLedgerHeatmapDayMutable,
   progressLedgerCaption,
@@ -90,9 +91,9 @@ export type InsightsTabContentMode =
   | "overall-only"
   | "goal-stats-only"
   | "goals-only"
-  | "ledger";
+  | "ledger"
+  | "lane";
 
-const MAX_VISIBLE_MILESTONES = 5;
 const AGGREGATE_DRILLDOWN_DAY_CLASS_PREFIX = "aggregate-drilldown-day-";
 const aggregateWeekdayLabels: [string, string, string, string, string, string, string] = [
   "Su",
@@ -225,6 +226,7 @@ export function InsightsTab({
     ReturnType<typeof computeDayPreviewPosition> | null
   >(null);
   const [pendingRetroDate, setPendingRetroDate] = useState<string | null>(null);
+  const [focusedLedgerDate, setFocusedLedgerDate] = useState<string | null>(null);
   const [milestoneNameDrafts, setMilestoneNameDrafts] = useState<Record<string, string[]>>({});
   const [savingMilestoneNamesGoalId, setSavingMilestoneNamesGoalId] = useState<string | null>(
     null
@@ -660,7 +662,9 @@ export function InsightsTab({
     onDismiss: clearAggregateDrilldown,
   });
   const showHeatmap =
-    contentMode === "full" || contentMode === "overall-only";
+    contentMode === "full" ||
+    contentMode === "overall-only" ||
+    contentMode === "lane";
   const showGoalStatsSection =
     contentMode === "full" ||
     contentMode === "goal-stats-only" ||
@@ -668,10 +672,11 @@ export function InsightsTab({
   const showGoalsSection =
     contentMode === "full" ||
     contentMode === "goals-only" ||
-    contentMode === "ledger";
-  const stackLedgerAndHeatmap = !(showGoalsSection && showHeatmap);
-  // Duo both owns one shared stepper in InsightsShell.
-  const showGoalStatsStepper = !sharedPeriod;
+    contentMode === "ledger" ||
+    contentMode === "lane";
+  const stackLedgerAndHeatmap =
+    contentMode === "lane" || !(showGoalsSection && showHeatmap);
+  const showGoalStatsStepper = showGoalStatsSection;
   const todayLocal = toLocalDateString();
   const heatmapEditable = ledgerMode === "edit" && !readOnly && Boolean(editableGoal);
   const milestoneTargetCount =
@@ -690,13 +695,35 @@ export function InsightsTab({
     editableGoal && milestoneNameDrafts[editableGoal.id]
       ? milestoneNameDrafts[editableGoal.id]
       : persistedMilestoneNames;
-  const milestoneNamesChanged = !areMilestoneNamesEqual(
-    draftMilestoneNames,
-    persistedMilestoneNames
-  );
   const mappedMilestoneDates =
     editableProgress?.milestoneDates ??
     getSortedCompletionDates(editableCompletions).slice(0, milestoneTargetCount);
+  const milestoneStops =
+    editableGoal?.frequency_type === "fixed_milestones"
+      ? Array.from({ length: milestoneTargetCount }, (_, index) => ({
+          name: draftMilestoneNames[index] ?? defaultMilestoneName(index),
+          date: mappedMilestoneDates[index] ?? null,
+        }))
+      : [];
+  const milestonePinDates = useMemo(() => {
+    const dates = new Set<string>();
+    for (const goal of visiblePerGoalHeatmaps) {
+      if (!selectedLedgerIdSet.has(goal.id) || goal.frequency_type !== "fixed_milestones") {
+        continue;
+      }
+      const progress = progressByGoal.get(goal.id);
+      const goalDates =
+        progress?.milestoneDates ??
+        getSortedCompletionDates(completionsByGoal.get(goal.id) ?? []);
+      for (const date of goalDates) {
+        dates.add(date);
+      }
+    }
+    return dates;
+  }, [completionsByGoal, progressByGoal, selectedLedgerIdSet, visiblePerGoalHeatmaps]);
+  const showOverallStats =
+    Boolean(state.insightsStats?.overall) &&
+    (contentMode === "full" || contentMode === "lane");
 
   const openLedgerDrilldown = (
     date: string,
@@ -745,6 +772,7 @@ export function InsightsTab({
     date: string,
     sourceElement?: HTMLButtonElement
   ) => {
+    setFocusedLedgerDate(date);
     if (heatmapEditable && editableGoal) {
       if (!isLedgerHeatmapDayMutable(date, todayLocal)) {
         toast.error("You can only select today or past dates.");
@@ -799,7 +827,7 @@ export function InsightsTab({
               <div className="flex min-w-0 items-center gap-2">
                 <CalendarRange className="size-4 shrink-0 text-primary" />
                 <h2 className="font-display text-lg font-semibold tracking-tight">
-                  Goal ledger
+                  Progress Tracker
                 </h2>
               </div>
               <div className="flex items-center gap-2 justify-self-center">
@@ -852,29 +880,21 @@ export function InsightsTab({
 
       {showGoalsSection || showHeatmap ? (
         <div
+          data-testid="progress-ledger-layout"
           className={
             stackLedgerAndHeatmap
               ? "space-y-3"
-              : "flex flex-col-reverse gap-6 md:grid md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] md:items-start"
+              : "flex flex-col gap-6 md:grid md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] md:items-start"
           }
         >
-          {showGoalsSection ? (
-            <ProgressGoalList
-              goals={ledgerGoalItems}
-              selectedGoalIds={selectedLedgerIdSet}
-              readOnly={readOnly}
-              onToggleGoal={(goalId) => {
-                setSelectedGoalIds((current) =>
-                  toggleLedgerGoalSelection(visibleGoalIds, current, goalId)
-                );
-              }}
-            />
-          ) : null}
-
           {showHeatmap ? (
         <div
           ref={aggregateHeatmapRef}
-          className="space-y-3"
+          className={
+            stackLedgerAndHeatmap
+              ? "space-y-3"
+              : "space-y-3 md:col-start-2 md:row-start-1"
+          }
           data-onboarding="insights.overall"
           data-no-swipe="true"
           onTouchStart={
@@ -899,6 +919,7 @@ export function InsightsTab({
               countsByDate={ledgerCountsByDate}
               interactive
               pendingDate={pendingRetroDate}
+              milestoneDates={milestonePinDates}
               isDayDisabled={
                 heatmapEditable
                   ? (date) => !isLedgerHeatmapDayMutable(date, todayLocal)
@@ -941,61 +962,83 @@ export function InsightsTab({
               />
             </div>
           )}
-          {editableGoal?.frequency_type === "fixed_milestones" ? (
-            <MilestonePills
-              targetCount={milestoneTargetCount}
-              completionDates={mappedMilestoneDates}
-              milestoneNames={draftMilestoneNames}
-              maxVisible={MAX_VISIBLE_MILESTONES}
+        </div>
+      ) : null}
+
+          {showGoalsSection ? (
+            <div className={stackLedgerAndHeatmap ? undefined : "md:col-start-1 md:row-start-1"}>
+            <ProgressGoalList
+              goals={ledgerGoalItems}
+              selectedGoalIds={selectedLedgerIdSet}
+              readOnly={readOnly}
+              onSelectAll={() => setSelectedGoalIds(null)}
+              onClearAll={() => setSelectedGoalIds([])}
+              onSelectOnly={(goalId) => setSelectedGoalIds([goalId])}
+              onToggleGoal={(goalId) => {
+                setSelectedGoalIds((current) =>
+                  toggleLedgerGoalSelection(visibleGoalIds, current, goalId)
+                );
+              }}
             />
-          ) : null}
-          {heatmapEditable && editableGoal?.frequency_type === "fixed_milestones" ? (
-            <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
-              <p className="text-xs text-muted-foreground">Milestone names</p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {Array.from({ length: milestoneTargetCount }).map((_, index) => (
-                  <Input
-                    key={`${editableGoal.id}-milestone-name-${index + 1}`}
-                    value={draftMilestoneNames[index] ?? defaultMilestoneName(index)}
-                    onChange={(event) =>
-                      setMilestoneNameDrafts((previous) => {
-                        const nextGoalNames = [
-                          ...(previous[editableGoal.id] ?? persistedMilestoneNames),
-                        ];
-                        nextGoalNames[index] = event.target.value;
-                        return {
-                          ...previous,
-                          [editableGoal.id]: nextGoalNames,
-                        };
-                      })
-                    }
-                    placeholder={defaultMilestoneName(index)}
-                  />
-                ))}
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                disabled={
-                  !milestoneNamesChanged ||
-                  savingMilestoneNamesGoalId === editableGoal.id
-                }
-                onClick={() => {
-                  void saveMilestoneNames(
-                    editableGoal,
-                    buildMilestoneNames(milestoneTargetCount, draftMilestoneNames)
-                  );
-                }}
-              >
-                {savingMilestoneNamesGoalId === editableGoal.id
-                  ? "Saving..."
-                  : "Save names"}
-              </Button>
             </div>
           ) : null}
         </div>
       ) : null}
-        </div>
+
+      {showHeatmap && editableGoal?.frequency_type === "fixed_milestones" ? (
+        <ProgressMilestoneRunway
+          title={editableGoal.title}
+          countLabel={getCompletionCountLabel(
+            editableGoal,
+            editableProgress?.admissibleCompletionCount ?? mappedMilestoneDates.length,
+            editableProgress
+          )}
+          stops={milestoneStops}
+          activeDate={focusedLedgerDate}
+          onSelect={(stop) => {
+            if (stop.date) {
+              handleLedgerDayClick(stop.date);
+            }
+          }}
+          onNameChange={
+            heatmapEditable
+              ? (index, name) => {
+                  setMilestoneNameDrafts((previous) => {
+                    const nextGoalNames = [
+                      ...(previous[editableGoal.id] ?? persistedMilestoneNames),
+                    ];
+                    nextGoalNames[index] = name;
+                    return {
+                      ...previous,
+                      [editableGoal.id]: nextGoalNames,
+                    };
+                  });
+                }
+              : undefined
+          }
+          onNameCommit={
+            heatmapEditable
+              ? (index, name) => {
+                  const nextNames = [...draftMilestoneNames];
+                  nextNames[index] = name;
+                  const names = buildMilestoneNames(milestoneTargetCount, nextNames);
+                  if (areMilestoneNamesEqual(names, persistedMilestoneNames)) {
+                    return;
+                  }
+                  void saveMilestoneNames(editableGoal, names);
+                }
+              : undefined
+          }
+        />
+      ) : null}
+
+      {showOverallStats && state.insightsStats ? (
+        <section className="rounded-[12px] border border-border p-4">
+          <h2 className="mb-3 font-display text-base font-semibold tracking-tight">
+            Overall stats
+          </h2>
+          <InsightsOverallStatsTiles overallStats={state.insightsStats.overall} />
+        </section>
       ) : null}
 
       {showHeatmap && aggregateDrilldownDate && !heatmapEditable ? (
