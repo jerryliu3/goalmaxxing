@@ -7,7 +7,10 @@ import type {
   AchievementsShowcasePayload,
   LevelAward,
 } from "@/features/achievements/types";
-import { getGoalProgressSnapshot } from "@/lib/goals/progress";
+import {
+  getGoalProgressSnapshot,
+  type GoalProgressSnapshot,
+} from "@/lib/goals/progress";
 import type { Completion, Goal } from "@/lib/goals/types";
 import { levelForTotalXp } from "@/lib/xp/progression";
 
@@ -47,6 +50,7 @@ export interface BuildAchievementsShowcaseInput {
   totalXp: number;
   rewardCatalog: XpRewardRow[];
   userAwards: UserAwardRow[];
+  weeklyAnchor?: { weekStartsOn: number };
   truncated: {
     goals: boolean;
     completions: boolean;
@@ -67,6 +71,28 @@ function summarizeAchievedGoal({
     achievedOn,
     category: toAchievementGoalCategory(goal.category_key, goal.category),
   };
+}
+
+function resolveAchievedOn(
+  summary: GoalProgressSnapshot,
+  completions: Completion[]
+): string | null {
+  if (summary.achievementDate) {
+    return summary.achievementDate;
+  }
+  if (summary.milestoneDates.length > 0) {
+    return summary.milestoneDates.at(-1) ?? null;
+  }
+  if (completions.length === 0) {
+    return null;
+  }
+  return completions.reduce<string | null>(
+    (latest, completion) =>
+      latest === null || completion.completed_on > latest
+        ? completion.completed_on
+        : latest,
+    null
+  );
 }
 
 function groupCompletionsByGoal(completions: Completion[]) {
@@ -148,7 +174,12 @@ export function buildAchievementsShowcasePayload(
 ): AchievementsShowcasePayload {
   const completionsByGoal = groupCompletionsByGoal(input.completions);
   const goalSnapshots = input.goals.map((goal) =>
-    getGoalProgressSnapshot(goal, completionsByGoal.get(goal.id) ?? [], input.asOfDate)
+    getGoalProgressSnapshot(
+      goal,
+      completionsByGoal.get(goal.id) ?? [],
+      input.asOfDate,
+      { weeklyAnchor: input.weeklyAnchor }
+    )
   );
 
   const achievedGoals = input.goals
@@ -158,19 +189,12 @@ export function buildAchievementsShowcasePayload(
       completions: completionsByGoal.get(goal.id) ?? [],
     }))
     .filter((entry) => entry.summary.outcome === "achieved")
-    .map((entry) => {
-      const achievedOn =
-        entry.completions.length === 0
-          ? null
-          : entry.completions.reduce<string | null>(
-              (latest, completion) =>
-                latest === null || completion.completed_on > latest
-                  ? completion.completed_on
-                  : latest,
-              null
-            );
-      return summarizeAchievedGoal({ goal: entry.goal, achievedOn });
-    })
+    .map((entry) =>
+      summarizeAchievedGoal({
+        goal: entry.goal,
+        achievedOn: resolveAchievedOn(entry.summary, entry.completions),
+      })
+    )
     .sort((left, right) => {
       const leftDate = left.achievedOn ?? "";
       const rightDate = right.achievedOn ?? "";
@@ -205,6 +229,9 @@ export function buildAchievementsShowcasePayload(
     collection,
     personalRecords: buildPersonalRecords({
       achievedGoalsCount: achievedGoals.length,
+      achievedGoalDates: achievedGoals
+        .map((goal) => goal.achievedOn)
+        .filter((date): date is string => Boolean(date)),
       goalSnapshots,
       completions: input.completions,
       level: collection.level,

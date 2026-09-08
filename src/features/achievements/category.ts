@@ -1,5 +1,4 @@
 import type { AchievementGoalCategory } from "@/features/achievements/types";
-import type { CategoryPresetId } from "@/lib/goals/category";
 
 const CATEGORY_KEYS = new Set<AchievementGoalCategory>([
   "health",
@@ -33,10 +32,4 @@ export function toAchievementGoalCategory(
   }
 
   return "other";
-}
-
-export function categoryPresetToAchievement(
-  preset: CategoryPresetId
-): AchievementGoalCategory {
-  return preset;
 }

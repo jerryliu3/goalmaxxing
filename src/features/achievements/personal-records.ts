@@ -9,6 +9,7 @@ interface GoalStreakSnapshot {
 
 interface BuildPersonalRecordsInput {
   achievedGoalsCount: number;
+  achievedGoalDates: string[];
   goalSnapshots: GoalStreakSnapshot[];
   completions: Completion[];
   level: number;
@@ -74,25 +75,28 @@ function bestWeekRecord(completions: Completion[]): PersonalRecord {
 
 function goalsFinishedRecord(
   achievedGoalsCount: number,
-  completions: Completion[]
+  achievedGoalDates: string[]
 ): PersonalRecord {
-  const earliestCompletion = completions.reduce<string | null>((earliest, completion) => {
-    if (earliest === null || completion.completed_on < earliest) {
-      return completion.completed_on;
+  const earliestAchievedOn = achievedGoalDates.reduce<string | null>((earliest, date) => {
+    if (earliest === null || date < earliest) {
+      return date;
     }
     return earliest;
   }, null);
 
   let hint = "Finish your first goal";
-  if (earliestCompletion) {
+  if (earliestAchievedOn) {
     const daysSince = Math.max(
       0,
       Math.floor(
-        (Date.now() - parseISO(`${earliestCompletion}T12:00:00`).getTime()) /
+        (Date.now() - parseISO(`${earliestAchievedOn}T12:00:00`).getTime()) /
           (1000 * 60 * 60 * 24)
       )
     );
-    hint = daysSince === 0 ? "First finish today" : `First finish in ${daysSince} days`;
+    hint =
+      daysSince === 0
+        ? "First finish today"
+        : `First finish ${daysSince} days ago`;
   }
 
   return {
@@ -120,7 +124,7 @@ export function buildPersonalRecords(
   return [
     bestStreakRecord(input.goalSnapshots),
     bestWeekRecord(input.completions),
-    goalsFinishedRecord(input.achievedGoalsCount, input.completions),
+    goalsFinishedRecord(input.achievedGoalsCount, input.achievedGoalDates),
     highestLevelRecord(input.level, input.totalXp),
   ];
 }
