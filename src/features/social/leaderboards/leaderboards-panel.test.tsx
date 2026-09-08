@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LeaderboardsPanel } from "@/features/social/leaderboards/leaderboards-panel";
 import type { LeaderboardSeason, LeaderboardStanding } from "@/features/social/types";
@@ -71,7 +71,7 @@ describe("LeaderboardsPanel", () => {
     expect(screen.getByText("Leaderboards")).toBeInTheDocument();
   });
 
-  it("shows freshness indicator under the Leaderboard seasons heading", async () => {
+  it("shows freshness indicator with the Leaderboards heading", async () => {
     const season = makeSeason();
     fetchSocialLeaderboardsMock.mockResolvedValueOnce({
       schemaVersion: "1",
@@ -86,15 +86,38 @@ describe("LeaderboardsPanel", () => {
 
     render(<LeaderboardsPanel />);
 
-    const heading = await screen.findByText("Leaderboard seasons");
-    const header = heading.closest('[data-slot="card-header"]');
-    expect(header).not.toBeNull();
-    expect(
-      within(header as HTMLElement).getByTestId("social-freshness-indicator")
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Leaderboards" })).toBeInTheDocument();
+    expect(screen.getByTestId("social-freshness-indicator")).toBeInTheDocument();
+    expect(screen.getByText(/Stage-size posters/)).toBeInTheDocument();
 
     await waitFor(() => {
       expect(fetchSocialLeaderboardStandingsMock).toHaveBeenCalledWith("season-1");
     });
+  });
+
+  it("hides closed seasons", async () => {
+    const open = makeSeason();
+    const closed: LeaderboardSeason = {
+      ...open,
+      id: "season-closed",
+      slug: "season-closed",
+      title: "Finished season",
+      status: "closed",
+    };
+    fetchSocialLeaderboardsMock.mockResolvedValueOnce({
+      schemaVersion: "1",
+      items: [open, closed],
+    });
+    fetchSocialLeaderboardStandingsMock.mockResolvedValue({
+      schemaVersion: "1",
+      season: open,
+      standings: makeStandings(),
+      viewerRank: null,
+    });
+
+    render(<LeaderboardsPanel />);
+
+    expect(await screen.findByRole("heading", { name: "Season 1" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Finished season" })).not.toBeInTheDocument();
   });
 });

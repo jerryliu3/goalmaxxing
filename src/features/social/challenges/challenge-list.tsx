@@ -1,10 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CompeteSnapRail,
+  CompeteTile,
+  competeDensity,
+  sortJoinedFirst,
+  type CompeteTileModel,
+} from "@/features/social/compete-snap-rail";
 import { SocialFreshnessIndicator } from "@/features/social/social-freshness-indicator";
-import { fetchSocialChallenges, peekSocialChallengesCache } from "@/features/social/data";
-import { ChallengeDetail } from "@/features/social/challenges/challenge-detail";
+import { useDuo } from "@/features/social/duo/duo-context";
+import {
+  fetchSocialChallenges,
+  joinSocialChallenge,
+  leaveSocialChallenge,
+  peekSocialChallengesCache,
+} from "@/features/social/data";
 import type { SocialChallenge } from "@/features/social/types";
 
 interface ChallengeListProps {
@@ -14,27 +26,29 @@ interface ChallengeListProps {
   hideWhenEmpty?: boolean;
 }
 
+function challengeMetric(item: SocialChallenge) {
+  if (!item.viewerJoined) {
+    return "Join to track";
+  }
+  return `${item.viewerProgress ?? 0} / ${item.targetValue}`;
+}
+
 export function ChallengeList({
   isActive = true,
   refreshToken = 0,
   onRefreshRequested,
   hideWhenEmpty = false,
 }: ChallengeListProps) {
+  const { viewerLabel, state: duoState } = useDuo();
+  const partner = duoState.activePartner;
   const cachedChallenges = peekSocialChallengesCache();
   const [items, setItems] = useState<SocialChallenge[]>(cachedChallenges?.items ?? []);
-  const [selectedId, setSelectedId] = useState<string | null>(
-    cachedChallenges?.items[0]?.id ?? null
-  );
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(!cachedChallenges);
   const [error, setError] = useState<string | null>(null);
   const hasPaintedChallengesRef = useRef(Boolean(cachedChallenges));
-
-  const selectedChallenge = useMemo(() => {
-    if (!selectedId) {
-      return null;
-    }
-    return items.find((item) => item.id === selectedId) ?? null;
-  }, [items, selectedId]);
 
   const loadChallenges = useCallback(async () => {
     if (!hasPaintedChallengesRef.current) {
@@ -45,25 +59,12 @@ export function ChallengeList({
       const response = await fetchSocialChallenges();
       hasPaintedChallengesRef.current = true;
       setItems(response.items);
-      setSelectedId((previousSelectedId) => {
-        if (
-          previousSelectedId &&
-          response.items.some((item) => item.id === previousSelectedId)
-        ) {
-          return previousSelectedId;
-        }
-        return response.items[0]?.id ?? null;
-      });
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Failed to load challenges.");
     } finally {
       setIsLoading(false);
     }
   }, []);
-
-  const refreshAll = useCallback(async () => {
-    await loadChallenges();
-  }, [loadChallenges]);
 
   useEffect(() => {
     if (!isActive) {
@@ -76,6 +77,84 @@ export function ChallengeList({
       window.clearTimeout(timeoutId);
     };
   }, [isActive, loadChallenges, refreshToken]);
+
+  const tiles = useMemo<CompeteTileModel[]>(() => {
+    const openItems = items.filter(
+      (item) => item.status !== "closed" && item.status !== "archived"
+    );
+    const mapped = openItems.map((item) => {
+      const percent =
+        item.targetValue > 0
+          ? Math.round(((item.viewerProgress ?? 0) / item.targetValue) * 100)
+          : 0;
+      const people = item.viewerJoined
+        ? [
+            {
+              rank: 1,
+              name: viewerLabel,
+              you: true,
+              partner: false,
+              label: `${item.viewerProgress ?? 0}/${item.targetValue}`,
+              percent,
+            },
+            ...(item.subjectKind === "team" && partner
+              ? [
+                  {
+                    rank: 1,
+                    name:
+                      partner.partnerDisplayName ??
+                      partner.partnerUsername ??
+                      "Partner",
+                    you: false,
+                    partner: true,
+                    label: "Team",
+                    percent,
+                  },
+                ]
+              : []),
+          ]
+        : [];
+      return {
+        key: item.id,
+        title: item.title,
+        kicker: `${item.participantCount} people · ${item.audienceKind}${
+          item.subjectKind === "team" ? " · team" : ""
+        }`,
+        metric: challengeMetric(item),
+        detail: item.description ?? `${item.status} · target ${item.targetValue}`,
+        joined: item.viewerJoined,
+        closed: item.status === "closed" || item.status === "archived",
+        people,
+        joinLabel: "Join challenge",
+        leaveLabel: "Leave challenge",
+      } satisfies CompeteTileModel;
+    });
+    return sortJoinedFirst(mapped);
+  }, [items, partner, viewerLabel]);
+
+  async function toggleJoin(challenge: SocialChallenge) {
+    setPendingId(challenge.id);
+    setActionError(null);
+    try {
+      if (challenge.viewerJoined) {
+        await leaveSocialChallenge(challenge.id);
+      } else {
+        await joinSocialChallenge(challenge.id);
+      }
+      await loadChallenges();
+      setExpandedId(challenge.id);
+    } catch (joinError) {
+      setActionError(
+        joinError instanceof Error
+          ? joinError.message
+          : challenge.viewerJoined
+            ? "Could not leave challenge."
+            : "Could not join challenge."
+      );
+    } finally {
+      setPendingId(null);
+    }
+  }
 
   if (isLoading && items.length === 0) {
     if (hideWhenEmpty) {
@@ -110,7 +189,7 @@ export function ChallengeList({
     );
   }
 
-  if (items.length === 0) {
+  if (tiles.length === 0) {
     if (hideWhenEmpty) {
       return null;
     }
@@ -129,52 +208,37 @@ export function ChallengeList({
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-      <Card className="shadow-sm">
-        <CardHeader className="space-y-2">
-          <SocialFreshnessIndicator
-            refreshToken={refreshToken}
-            onRefreshRequested={onRefreshRequested}
-          />
-          <CardTitle>Challenges</CardTitle>
-          <CardDescription>Select a challenge to view details.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {items.map((item) => {
-            const isSelected = item.id === selectedId;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setSelectedId(item.id)}
-                className={`w-full rounded-md border bg-card p-3 text-left transition-[transform,box-shadow,border-color,background-color] duration-150 hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-[inset_0_2px_5px_rgba(15,23,42,0.22)] ${
-                  isSelected
-                    ? "translate-y-[3px] cursor-default border-primary bg-primary/5 shadow-[inset_0_2px_5px_rgba(15,23,42,0.22)] hover:translate-y-[3px]"
-                    : "border-border shadow-[0_3px_0_rgba(15,23,42,0.14)]"
-                }`}
-              >
-                <p className="font-medium">{item.title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {item.status} · {item.subjectKind}
-                  {item.audienceKind === "group" ? " · group" : ""} · {item.viewerProgress ?? 0}/
-                  {item.targetValue}
-                </p>
-              </button>
-            );
-          })}
-        </CardContent>
-      </Card>
-
-      {selectedChallenge ? (
-        <ChallengeDetail challenge={selectedChallenge} onUpdated={refreshAll} />
-      ) : (
-        <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle>Challenge details</CardTitle>
-            <CardDescription>Select a challenge to view details.</CardDescription>
-          </CardHeader>
-        </Card>
-      )}
+    <div>
+      <div className="mb-1">
+        <SocialFreshnessIndicator
+          refreshToken={refreshToken}
+          onRefreshRequested={onRefreshRequested}
+        />
+      </div>
+      <CompeteSnapRail
+        label="Challenges"
+        hint="Your score first · ranks on click"
+      >
+        {tiles.map((tile) => {
+          const challenge = items.find((item) => item.id === tile.key);
+          const expanded = expandedId === tile.key;
+          return (
+            <CompeteTile
+              key={tile.key}
+              tile={tile}
+              span="card"
+              density={competeDensity({ joined: tile.joined, expanded })}
+              expanded={expanded}
+              joinPending={pendingId === tile.key}
+              joinError={expanded ? actionError : null}
+              onExpand={() =>
+                setExpandedId((current) => (current === tile.key ? null : tile.key))
+              }
+              onJoin={challenge ? () => void toggleJoin(challenge) : undefined}
+            />
+          );
+        })}
+      </CompeteSnapRail>
     </div>
   );
 }

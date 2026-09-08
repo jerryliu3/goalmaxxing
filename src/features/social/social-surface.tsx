@@ -6,7 +6,6 @@ import { ChallengeList } from "@/features/social/challenges/challenge-list";
 import {
   invalidateSocialTabCache,
 } from "@/features/social/data";
-import { GroupJoinCard } from "@/features/social/group-join-card";
 import { TeamPanel } from "@/features/social/team/team-panel";
 import { LeaderboardsPanel } from "@/features/social/leaderboards/leaderboards-panel";
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
@@ -144,7 +143,6 @@ export function SocialSurface() {
                 onRefreshRequested={triggerBackgroundRefresh}
               />
             </section>
-            <GroupJoinCard />
           </>
         ) : null}
         <section data-onboarding="social.team">
