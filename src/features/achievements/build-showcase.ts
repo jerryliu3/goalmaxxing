@@ -51,6 +51,7 @@ export interface BuildAchievementsShowcaseInput {
   rewardCatalog: XpRewardRow[];
   userAwards: UserAwardRow[];
   weeklyAnchor?: { weekStartsOn: number };
+  weekStartsOn?: number;
   truncated: {
     goals: boolean;
     completions: boolean;
@@ -236,6 +237,7 @@ export function buildAchievementsShowcasePayload(
       completions: input.completions,
       level: collection.level,
       totalXp: input.totalXp,
+      weekStartsOn: input.weekStartsOn ?? input.weeklyAnchor?.weekStartsOn ?? 1,
     }),
     levelAwards,
     achievedGoals,

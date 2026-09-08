@@ -14,6 +14,7 @@ interface BuildPersonalRecordsInput {
   completions: Completion[];
   level: number;
   totalXp: number;
+  weekStartsOn: number;
 }
 
 function bestStreakRecord(goalSnapshots: GoalStreakSnapshot[]): PersonalRecord {
@@ -38,11 +39,11 @@ function bestStreakRecord(goalSnapshots: GoalStreakSnapshot[]): PersonalRecord {
   };
 }
 
-function bestWeekRecord(completions: Completion[]): PersonalRecord {
+function bestWeekRecord(completions: Completion[], weekStartsOn: number): PersonalRecord {
   const activeDaysByWeek = new Map<string, Set<string>>();
 
   for (const completion of completions) {
-    const weekStart = startOfWeek(parseISO(completion.completed_on), { weekStartsOn: 1 });
+    const weekStart = startOfWeek(parseISO(completion.completed_on), { weekStartsOn });
     const weekKey = format(weekStart, "yyyy-MM-dd");
     const activeDays = activeDaysByWeek.get(weekKey) ?? new Set<string>();
     activeDays.add(completion.completed_on);
@@ -123,7 +124,7 @@ export function buildPersonalRecords(
 ): PersonalRecord[] {
   return [
     bestStreakRecord(input.goalSnapshots),
-    bestWeekRecord(input.completions),
+    bestWeekRecord(input.completions, input.weekStartsOn),
     goalsFinishedRecord(input.achievedGoalsCount, input.achievedGoalDates),
     highestLevelRecord(input.level, input.totalXp),
   ];
