@@ -97,7 +97,7 @@ const serverEnvSchema = publicEnvSchema.extend({
   REPORT_ISSUES_TO_EMAIL: optionalNonEmptyString,
   REPORT_ISSUES_FROM_EMAIL: optionalNonEmptyString,
   FEATURE_CROSS_MONTH_MOVES: booleanFromEnv(false),
-  XP_ENABLED: booleanFromEnv(false),
+  XP_ENABLED: booleanFromEnv(() => process.env.NODE_ENV === "development"),
   SOCIAL_ENABLED: booleanFromEnv(() => process.env.NODE_ENV === "development"),
   INTEGRATIONS_ENABLED: booleanFromEnv(false),
   JOURNEY_ENABLED: booleanFromEnv(false),

@@ -79,6 +79,9 @@ describe("AppShell", () => {
     expect(newGoalLink).toHaveAttribute("data-onboarding", "nav.new-goal");
     expect(newGoalLink).toHaveClass("h-8");
     expect(newGoalLink).toHaveClass("bg-primary");
+    expect(screen.getByText("Goalmaxxing").parentElement).toContainElement(
+      screen.getByText("XP Progress")
+    );
   });
 
   it("includes the current route in the new goal returnTo query", () => {
