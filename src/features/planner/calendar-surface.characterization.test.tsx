@@ -399,7 +399,7 @@ describe("CalendarSurface characterization", () => {
     expect(
       screen.getByRole("group", { name: "Plan view mode" })
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Plan" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Planner" })).toBeInTheDocument();
   });
 
   it("keeps week view when a desktop agenda row is selected", async () => {
@@ -1231,6 +1231,14 @@ describe("CalendarSurface characterization", () => {
     expect(actionGroup).not.toBeNull();
     expect(actionGroup).toHaveClass("right-0");
     expect(heading).toBeInTheDocument();
+    expect(screen.getByTestId("plan-calendar-split")).toHaveClass(
+      "md:grid-cols-[minmax(0,3fr)_minmax(16rem,1fr)]"
+    );
+
+    fireEvent.click(expandButton);
+    expect(screen.getByTestId("plan-calendar-split")).not.toHaveClass(
+      "md:grid-cols-[minmax(0,3fr)_minmax(16rem,1fr)]"
+    );
   });
 
   it("dismisses unpinned day preview after pointer leaves preview surface", async () => {
@@ -1581,7 +1589,7 @@ describe("CalendarSurface characterization", () => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Open plan help" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open planner help" }));
     const helpDialog = await screen.findByRole("dialog");
     fireEvent.click(within(helpDialog).getByRole("button", { name: "See hidden goals" }));
     expect(
@@ -1636,7 +1644,7 @@ describe("CalendarSurface characterization", () => {
       screen.queryByRole("button", { name: "Recover" })
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Open plan help" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open planner help" }));
     const dialog = await screen.findByRole("dialog");
     fireEvent.click(within(dialog).getByRole("button", { name: "See hidden goals" }));
     expect(

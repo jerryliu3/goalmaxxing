@@ -49,7 +49,7 @@ describe("PlanDayUnplannedPanel", () => {
       <PlanDayUnplannedPanel day="2026-09-06" placedEntries={[]} />
     );
 
-    expect(screen.getByText("Nothing unplanned for this day.")).toBeInTheDocument();
+    expect(screen.getByText("Nothing unscheduled for this day.")).toBeInTheDocument();
   });
 
   it("hides the completion checkbox for unplanned goals on a future day", () => {
@@ -133,7 +133,7 @@ describe("PlanDayUnplannedPanel", () => {
       />
     );
 
-    expect(screen.getByText("Loading unplanned work...")).toBeInTheDocument();
+    expect(screen.getByText("Loading unscheduled work...")).toBeInTheDocument();
   });
 
   it("commits a current-day unplanned goal only after a hold", () => {
@@ -189,6 +189,6 @@ describe("PlanDayUnplannedPanel", () => {
 
     render(<PlanDayUnplannedPanel day="2026-09-06" placedEntries={[]} />);
 
-    expect(screen.getByText("Loading unplanned work...")).toBeInTheDocument();
+    expect(screen.getByText("Loading unscheduled work...")).toBeInTheDocument();
   });
 });

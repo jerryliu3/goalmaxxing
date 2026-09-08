@@ -50,13 +50,24 @@ describe("PlannerCalendarToolbar", () => {
       "true"
     );
     expect(within(viewGroup).queryByRole("button", { name: "3 Day" })).toBeNull();
+    expect(screen.getByTestId("plan-view-mode-thumb")).toHaveStyle({
+      transform: "translateX(100%)",
+    });
+  });
+
+  it("slides the view-mode thumb to Month", () => {
+    renderToolbar({ viewMode: "month" });
+
+    expect(screen.getByTestId("plan-view-mode-thumb")).toHaveStyle({
+      transform: "translateX(200%)",
+    });
   });
 
   it("places plan help beside the Plan title", () => {
     renderToolbar();
 
-    const title = screen.getByRole("heading", { name: "Plan" });
-    const helpButton = screen.getByRole("button", { name: "Open plan help" });
+    const title = screen.getByRole("heading", { name: "Planner" });
+    const helpButton = screen.getByRole("button", { name: "Open planner help" });
     expect(title.parentElement).toContainElement(helpButton);
   });
 
@@ -81,7 +92,7 @@ describe("PlannerCalendarToolbar", () => {
       ],
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Open plan help" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open planner help" }));
     const dialog = await screen.findByRole("dialog");
     fireEvent.click(within(dialog).getByRole("button", { name: "See hidden goals" }));
 

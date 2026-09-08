@@ -16,7 +16,8 @@ const mocks = vi.hoisted(() => ({
   duo: {
     scope: "both" as const,
     activePartner: { partnerId: "partner-1" },
-    partner: { label: "Alex" },
+    viewer: { id: "viewer" as const, label: "Alice", userId: "viewer-1", readOnly: false },
+    partner: { id: "partner" as const, label: "Alex", userId: "partner-1", readOnly: true },
   },
 }));
 
@@ -70,7 +71,8 @@ describe("CalendarPageShell", () => {
     mocks.duo = {
       scope: "both",
       activePartner: { partnerId: "partner-1" },
-      partner: { label: "Alex" },
+      viewer: { id: "viewer", label: "Alice", userId: "viewer-1", readOnly: false },
+      partner: { id: "partner", label: "Alex", userId: "partner-1", readOnly: true },
     };
   });
 
@@ -89,6 +91,18 @@ describe("CalendarPageShell", () => {
       viewMode: "month",
       duoScope: "both",
       partnerLabel: "Alex",
+      viewerSubject: {
+        id: "viewer",
+        label: "Alice",
+        userId: "viewer-1",
+        readOnly: false,
+      },
+      partnerSubject: {
+        id: "partner",
+        label: "Alex",
+        userId: "partner-1",
+        readOnly: true,
+      },
     });
     expect(mocks.overlayArgs).toEqual({
       enabled: true,

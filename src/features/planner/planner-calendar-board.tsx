@@ -18,6 +18,7 @@ import type {
 import styles from "@/features/planner/calendar-surface.module.css";
 import { PlannerDayPreviewPopover } from "@/features/planner/planner-day-preview-popover";
 import { PlannerFocusedDayPane } from "@/features/planner/planner-focused-day-pane";
+import type { DuoLaneSubject } from "@cadence/shared/social/duo";
 import { PlannerViewWindowHeader } from "@/features/planner/planner-view-window-header";
 import { PlanViewTransitionFrame } from "@/features/planner/plan-view-transition-frame";
 import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
@@ -76,6 +77,8 @@ export interface PlannerCalendarBoardProps {
   selectedEntryKey?: string | null;
   dayChecklist?: PlanDayChecklistModel | null;
   partnerLabel?: string | null;
+  viewerSubject?: DuoLaneSubject | null;
+  partnerSubject?: DuoLaneSubject | null;
   splitPartnerChecklist?: boolean;
   calendarGridViewportRef: MutableRefObject<HTMLDivElement | null>;
   onCalendarGridViewportScroll: () => void;
@@ -137,6 +140,8 @@ export function PlannerCalendarBoard({
   selectedEntryKey = null,
   dayChecklist = null,
   partnerLabel = null,
+  viewerSubject = null,
+  partnerSubject = null,
   splitPartnerChecklist = false,
   calendarGridViewportRef,
   onCalendarGridViewportScroll,
@@ -209,12 +214,21 @@ export function PlannerCalendarBoard({
               selectedEntryKey={selectedEntryKey}
               dayChecklist={dayChecklist}
               partnerLabel={partnerLabel}
+              viewerSubject={viewerSubject}
+              partnerSubject={partnerSubject}
               splitPartnerChecklist={splitPartnerChecklist}
               titleAs="h2"
               shareDayTransition
             />
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,3fr)_minmax(16rem,1fr)] md:items-start md:gap-8">
+            <div
+              data-testid="plan-calendar-split"
+              className={
+                viewMode === "month" && expandedMonthRows
+                  ? "grid grid-cols-1 gap-6"
+                  : "grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,3fr)_minmax(16rem,1fr)] md:items-start md:gap-8"
+              }
+            >
               <div className="min-w-0">
                 {viewMode === "week" ? (
                   <ol
@@ -250,7 +264,11 @@ export function PlannerCalendarBoard({
                           <div
                             ref={multiMonthGridScrollRef}
                             onScroll={onMonthScopedGridScroll}
-                            className="mt-2 max-h-[34rem] overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                            className={
+                              expandedMonthRows
+                                ? "mt-2"
+                                : "mt-2 max-h-[34rem] overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                            }
                             data-calendar-month-vertical-viewport="true"
                           >
                             <div

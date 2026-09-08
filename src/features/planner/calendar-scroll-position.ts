@@ -23,7 +23,7 @@ export function getCalendarTargetScrollLeft(
 }
 
 export function getTopVisibleCalendarDay(container: HTMLElement) {
-  const visibleTop = container.getBoundingClientRect().top + 1;
+  const visibleTop = Math.max(container.getBoundingClientRect().top, 0) + 1;
   const dayCells =
     container.querySelectorAll<HTMLElement>(DAY_CELL_SELECTOR);
 
@@ -34,6 +34,63 @@ export function getTopVisibleCalendarDay(container: HTMLElement) {
   }
 
   return null;
+}
+
+export function resolveMonthRowAnchorDay({
+  viewport,
+  focusedDay,
+}: {
+  viewport: HTMLElement;
+  focusedDay: string;
+}) {
+  return getTopVisibleCalendarDay(viewport) ?? focusedDay;
+}
+
+export function captureCalendarDayScreenTop(viewport: HTMLElement, day: string) {
+  const cell = viewport.querySelector<HTMLElement>(
+    `${DAY_CELL_SELECTOR}[data-day="${day}"]`
+  );
+  return cell?.getBoundingClientRect().top ?? null;
+}
+
+export function restoreCalendarDayScreenTop({
+  viewport,
+  day,
+  previousTop,
+  alignInsideViewport,
+}: {
+  viewport: HTMLElement;
+  day: string;
+  previousTop: number;
+  alignInsideViewport: boolean;
+}) {
+  const cell = viewport.querySelector<HTMLElement>(
+    `${DAY_CELL_SELECTOR}[data-day="${day}"]`
+  );
+  if (!cell) {
+    return;
+  }
+
+  if (alignInsideViewport) {
+    const nextTop = getCalendarTargetScrollTop(viewport, cell);
+    if (typeof viewport.scrollTo === "function") {
+      viewport.scrollTo({ top: nextTop, behavior: "auto" });
+    } else {
+      viewport.scrollTop = nextTop;
+    }
+  } else if (viewport.scrollTop !== 0) {
+    viewport.scrollTop = 0;
+  }
+
+  const delta = cell.getBoundingClientRect().top - previousTop;
+  if (Math.abs(delta) < 1) {
+    return;
+  }
+  if (typeof window.scrollBy === "function") {
+    window.scrollBy({ top: delta, left: 0, behavior: "auto" });
+    return;
+  }
+  window.scrollTo(0, (window.scrollY || 0) + delta);
 }
 
 interface CalendarDayVisibilityOptions {

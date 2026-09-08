@@ -28,7 +28,7 @@ describe("PlannerFiltersDialog", () => {
     });
     expect(toggle).toHaveAttribute("aria-checked", "false");
     expect(
-      screen.getByRole("heading", { name: "Calendar filters" })
+      screen.getByRole("heading", { name: "Planner filters" })
     ).toBeInTheDocument();
     expect(screen.getByText("Category")).toBeInTheDocument();
     expect(screen.queryByText("Recurrence")).not.toBeInTheDocument();

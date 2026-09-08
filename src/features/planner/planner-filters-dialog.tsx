@@ -58,11 +58,11 @@ export function PlannerFiltersDialog({
         }
       >
         <DialogHeader>
-          <DialogTitle>{usingDayFilters ? "Day filters" : "Calendar filters"}</DialogTitle>
+          <DialogTitle>{usingDayFilters ? "Day filters" : "Planner filters"}</DialogTitle>
           <DialogDescription>
             {usingDayFilters
-              ? "Filter this day's planned work, unplanned goals, and tasks."
-              : "Choose whether the calendar shows planned goals or date-only tasks."}
+              ? "Filter this day's scheduled work, unscheduled goals, and tasks."
+              : "Choose whether the planner shows scheduled goals or date-only tasks."}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -70,7 +70,7 @@ export function PlannerFiltersDialog({
             <div className="space-y-1">
               <p className="text-sm font-medium">Show tasks instead of goals</p>
               <p className="text-xs text-muted-foreground">
-                Hide planned goals and show tasks on their scheduled date. Drag a
+                Hide scheduled goals and show tasks on their scheduled date. Drag a
                 task to change that date immediately.
               </p>
             </div>

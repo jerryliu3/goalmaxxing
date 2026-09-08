@@ -21,7 +21,7 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
   const { applySearchParams } = useClientSearchParamsUpdater();
   const isMobileViewport = useMediaQuery("(max-width: 767px)");
   const defaultCalendarViewMode: PlannerCalendarViewMode = isMobileViewport ? "week" : "month";
-  const { scope, activePartner, partner } = useDuoSurface("calendar");
+  const { scope, activePartner, partner, viewer } = useDuoSurface("calendar");
   const overlayEnabled =
     isActive && Boolean(activePartner) && (scope === "partner" || scope === "both");
 
@@ -161,6 +161,8 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
       partnerCompletionMarkersByDate={partnerOverlay.markersByDate}
       partnerOverlayError={partnerOverlay.error}
       partnerLabel={scope === "both" ? partner?.label ?? null : null}
+      viewerSubject={scope === "both" ? viewer : null}
+      partnerSubject={scope === "both" ? partner : null}
     />
   );
 }

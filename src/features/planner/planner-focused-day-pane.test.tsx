@@ -64,6 +64,18 @@ describe("PlannerFocusedDayPane", () => {
         onEntryPointerEnd={() => {}}
         showTasksInsteadOfGoals
         partnerLabel="Alex"
+        viewerSubject={{
+          id: "viewer",
+          label: "Alice",
+          userId: "viewer-1",
+          readOnly: false,
+        }}
+        partnerSubject={{
+          id: "partner",
+          label: "Alex",
+          userId: "partner-1",
+          readOnly: true,
+        }}
         splitPartnerChecklist
       />
     );
@@ -72,7 +84,10 @@ describe("PlannerFocusedDayPane", () => {
     expect(screen.getByTestId("plan-day-partner-checklist")).toHaveClass("hidden");
     expect(screen.getByTestId("plan-day-partner-checklist")).toHaveClass("md:block");
     expect(screen.getAllByText("Partner stretch")).toHaveLength(2);
+    expect(screen.getByText("Alice")).toBeInTheDocument();
     expect(screen.getByText("Alex")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open Alice profile" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open Alex profile" })).toBeInTheDocument();
     expect(screen.getByText("View only")).toBeInTheDocument();
   });
 });

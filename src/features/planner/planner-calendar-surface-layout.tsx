@@ -1,6 +1,11 @@
 "use client";
 
 import { LoadingCard } from "@/components/ui/loading-card";
+import {
+  captureCalendarDayScreenTop,
+  resolveMonthRowAnchorDay,
+  restoreCalendarDayScreenTop,
+} from "@/features/planner/calendar-scroll-position";
 import { PlannerCoachPanel } from "@/features/planner/coach/planner-coach-panel";
 import type { usePlannerCoach } from "@/features/planner/coach/use-planner-coach";
 import { PlannerCalendarBoard } from "@/features/planner/planner-calendar-board";
@@ -23,11 +28,15 @@ import type { MoveSourceCandidate } from "@/features/planner/planner-move-source
 import type { GoalMonthOption } from "@/lib/goals/list-view";
 import { usePlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 import type { PlannerWorkUnit } from "@cadence/shared/planner/context";
-import type {
-  Dispatch,
-  MutableRefObject,
-  ReactNode,
-  SetStateAction,
+import type { DuoLaneSubject } from "@cadence/shared/social/duo";
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  type Dispatch,
+  type MutableRefObject,
+  type ReactNode,
+  type SetStateAction,
 } from "react";
 
 interface PlannerCalendarCell {
@@ -81,6 +90,8 @@ export interface PlannerCalendarSurfaceLayoutProps {
   setSearchQuery: (query: string) => void;
   partnerOverlayError?: string | null;
   partnerLabel?: string | null;
+  viewerSubject?: DuoLaneSubject | null;
+  partnerSubject?: DuoLaneSubject | null;
   duoScope?: "me" | "partner" | "both";
   month: string | null;
   previousWindowAriaLabel: string;
@@ -226,6 +237,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     setSearchQuery,
     partnerOverlayError,
     partnerLabel = null,
+    viewerSubject = null,
+    partnerSubject = null,
     duoScope = "me",
     month,
     previousWindowAriaLabel,
@@ -308,6 +321,52 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     viewDate: focusedDay,
     searchQuery,
   });
+  const pendingMonthRowRestoreRef = useRef<{
+    day: string;
+    previousTop: number;
+    alignInsideViewport: boolean;
+  } | null>(null);
+
+  const onToggleExpandedMonthRows = useCallback(() => {
+    const viewport = multiMonthGridScrollRef.current;
+    const willExpand = !expandedMonthRows;
+    if (viewport && viewMode === "month") {
+      const day = resolveMonthRowAnchorDay({ viewport, focusedDay });
+      const previousTop = captureCalendarDayScreenTop(viewport, day);
+      if (previousTop != null) {
+        pendingMonthRowRestoreRef.current = {
+          day,
+          previousTop,
+          alignInsideViewport: !willExpand,
+        };
+      }
+    }
+    setExpandedMonthRows(willExpand);
+  }, [
+    expandedMonthRows,
+    focusedDay,
+    multiMonthGridScrollRef,
+    setExpandedMonthRows,
+    viewMode,
+  ]);
+
+  useLayoutEffect(() => {
+    const pending = pendingMonthRowRestoreRef.current;
+    if (!pending) {
+      return;
+    }
+    pendingMonthRowRestoreRef.current = null;
+    const viewport = multiMonthGridScrollRef.current;
+    if (!viewport) {
+      return;
+    }
+    restoreCalendarDayScreenTop({
+      viewport,
+      day: pending.day,
+      previousTop: pending.previousTop,
+      alignInsideViewport: pending.alignInsideViewport,
+    });
+  }, [expandedMonthRows, multiMonthGridScrollRef]);
 
   return (
     <div className="space-y-4">
@@ -393,9 +452,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             expandedMonthRows={expandedMonthRows}
             onMoveViewWindow={moveViewWindow}
             onJumpToToday={jumpToToday}
-            onToggleExpandedMonthRows={() =>
-              setExpandedMonthRows((current) => !current)
-            }
+            onToggleExpandedMonthRows={onToggleExpandedMonthRows}
             getDragEntryLabel={getDragEntryLabel}
             getDragDayLabel={getDragDayLabel}
             renderEntryDragOverlay={renderEntryDragOverlay}
@@ -437,6 +494,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             selectedEntryKey={selectedEventEntry?.key ?? null}
             dayChecklist={dayChecklist}
             partnerLabel={partnerLabel}
+            viewerSubject={viewerSubject}
+            partnerSubject={partnerSubject}
             splitPartnerChecklist={viewMode === "day" && duoScope === "both"}
             calendarGridViewportRef={calendarGridViewportRef}
             onCalendarGridViewportScroll={handleCalendarGridViewportScroll}

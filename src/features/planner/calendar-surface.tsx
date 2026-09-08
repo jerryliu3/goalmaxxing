@@ -80,6 +80,8 @@ export function CalendarSurface({
   partnerCompletionMarkersByDate,
   partnerOverlayError,
   partnerLabel = null,
+  viewerSubject = null,
+  partnerSubject = null,
 }: CalendarSurfaceProps) {
   const [context, setContext] = useState<PlannerContextPayload | null>(() => {
     if (!month) {
@@ -744,6 +746,8 @@ export function CalendarSurface({
     setSearchQuery,
     partnerOverlayError,
     partnerLabel,
+    viewerSubject,
+    partnerSubject,
     duoScope,
     month,
     previousWindowAriaLabel,
