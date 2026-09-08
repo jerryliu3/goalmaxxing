@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PlannerTasksPanel } from "@/features/tasks/planner-tasks-panel";
+import { PlannerTasksPanel, clearPlannerTasksCacheForTests } from "@/features/tasks/planner-tasks-panel";
 
 const rpcMock = vi.hoisted(() => vi.fn());
 
@@ -32,6 +32,7 @@ describe("PlannerTasksPanel", () => {
 
   afterEach(() => {
     cleanup();
+    clearPlannerTasksCacheForTests();
   });
 
   it("hides the panel when configured and no tasks are scheduled", async () => {
@@ -227,7 +228,11 @@ describe("PlannerTasksPanel", () => {
       });
     });
 
-    const addButton = screen.getByRole("button", { name: /add/i });
+    const addNew = screen.getByRole("button", { name: "+ Add new" });
+    expect(addNew).toHaveClass("text-primary");
+    await user.click(addNew);
+    expect(screen.getByPlaceholderText("Add a task...")).toHaveClass("border-b");
+    const addButton = screen.getByRole("button", { name: /^add$/i });
     expect(addButton).toBeDisabled();
     expect(screen.getByLabelText("Task date")).toHaveValue("2026-09-05");
 
@@ -264,6 +269,7 @@ describe("PlannerTasksPanel", () => {
       });
     });
 
+    await user.click(screen.getByRole("button", { name: "+ Add new" }));
     await user.type(screen.getByPlaceholderText("Add a task..."), "Later inbox task");
     fireEvent.change(screen.getByLabelText("Task date"), {
       target: { value: "2026-09-12" },
@@ -276,5 +282,33 @@ describe("PlannerTasksPanel", () => {
         p_scheduled_date: "2026-09-12",
       });
     });
+  });
+
+  it("reopens cached tasks without a loading flash", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        {
+          task_id: "task-1",
+          title: "Ship release notes",
+          scheduled_date: "2026-09-07",
+          scheduled_time: null,
+          completed_at: null,
+          created_at: "2026-09-07T12:00:00.000Z",
+          updated_at: "2026-09-07T12:00:00.000Z",
+        },
+      ],
+      error: null,
+    });
+
+    const first = render(
+      <PlannerTasksPanel scheduledDate="2026-09-07" allowCreate chrome="plain" />
+    );
+    expect(await screen.findByText("Ship release notes")).toBeInTheDocument();
+    first.unmount();
+
+    rpcMock.mockImplementation(() => new Promise(() => {}));
+    render(<PlannerTasksPanel scheduledDate="2026-09-07" allowCreate chrome="plain" />);
+    expect(screen.getByText("Ship release notes")).toBeInTheDocument();
+    expect(screen.queryByText("Loading tasks...")).toBeNull();
   });
 });

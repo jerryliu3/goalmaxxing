@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -17,10 +17,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import { toLocalDateString } from "@/lib/dates/day";
 import { createClient } from "@/lib/supabase/client";
 import { planCompletionControlModeForDate } from "@/features/planner/completion-entry-dispatch";
+import { useOutsidePointerDismiss } from "@/lib/ui/use-outside-pointer-dismiss";
 
 interface PlannerTaskRow {
   task_id: string;
@@ -30,6 +32,48 @@ interface PlannerTaskRow {
   completed_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+const plannerTasksCache = new Map<string, PlannerTaskRow[]>();
+
+function plannerTasksCacheKey(date: string | null): string {
+  return date ?? "__all__";
+}
+
+function readPlannerTasksCache(date: string | null): PlannerTaskRow[] | undefined {
+  return plannerTasksCache.get(plannerTasksCacheKey(date));
+}
+
+function writePlannerTasksCache(date: string | null, tasks: PlannerTaskRow[]) {
+  plannerTasksCache.set(plannerTasksCacheKey(date), tasks);
+}
+
+export function clearPlannerTasksCacheForTests() {
+  plannerTasksCache.clear();
+}
+
+export function PlannerTasksPrefetch({
+  scheduledDate,
+}: {
+  scheduledDate: string | null;
+}) {
+  const supabase = useMemo(() => createClient(), []);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase.rpc("list_planner_tasks", {
+        p_for_date: scheduledDate ?? undefined,
+      });
+      if (cancelled || error) {
+        return;
+      }
+      writePlannerTasksCache(scheduledDate, (data ?? []) as PlannerTaskRow[]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [scheduledDate, supabase]);
+  return null;
 }
 
 interface PlannerTasksPanelProps {
@@ -54,14 +98,18 @@ export function PlannerTasksPanel({
   chrome = "card",
 }: PlannerTasksPanelProps) {
   const supabase = useMemo(() => createClient(), []);
-  const [tasks, setTasks] = useState<PlannerTaskRow[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const cachedTasks = readPlannerTasksCache(scheduledDate);
+  const [tasks, setTasks] = useState<PlannerTaskRow[]>(() => cachedTasks ?? []);
+  const [loading, setLoading] = useState(() => cachedTasks === undefined);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(() => cachedTasks !== undefined);
   const [adding, setAdding] = useState(false);
   const [togglingTaskId, setTogglingTaskId] = useState<string | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [confirmingDeleteTask, setConfirmingDeleteTask] = useState<PlannerTaskRow | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [composerOpen, setComposerOpen] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const composerRef = useRef<HTMLDivElement>(null);
   const [newTaskDate, setNewTaskDate] = useState(
     () => scheduledDate ?? toLocalDateString()
   );
@@ -75,7 +123,12 @@ export function PlannerTasksPanel({
       options?: { background?: boolean }
     ) => {
       const requestVersion = ++requestVersionRef.current;
-      if (!options?.background) {
+      const cached = readPlannerTasksCache(forDate);
+      if (cached && !options?.background) {
+        setTasks(cached);
+        setHasLoadedOnce(true);
+      }
+      if (!options?.background && cached === undefined) {
         setLoading(true);
       }
       const { data, error } = await supabase.rpc("list_planner_tasks", {
@@ -93,6 +146,7 @@ export function PlannerTasksPanel({
         return;
       }
       setTasks((data ?? []) as PlannerTaskRow[]);
+      writePlannerTasksCache(forDate, (data ?? []) as PlannerTaskRow[]);
       setHasLoadedOnce(true);
       if (!options?.background) {
         setLoading(false);
@@ -103,12 +157,7 @@ export function PlannerTasksPanel({
 
   useEffect(() => {
     scheduledDateRef.current = scheduledDate;
-    const timer = window.setTimeout(() => {
-      void loadTasks(scheduledDate);
-    }, 0);
-    return () => {
-      window.clearTimeout(timer);
-    };
+    void loadTasks(scheduledDate);
   }, [loadTasks, scheduledDate]);
 
   usePlannerTabCacheInvalidation(() => {
@@ -121,6 +170,23 @@ export function PlannerTasksPanel({
     },
     []
   );
+
+  useEffect(() => {
+    if (!composerOpen) {
+      return;
+    }
+    titleInputRef.current?.focus();
+  }, [composerOpen]);
+
+  const closeComposer = useCallback(() => {
+    setComposerOpen(false);
+  }, []);
+
+  useOutsidePointerDismiss({
+    enabled: composerOpen,
+    containerRef: composerRef,
+    onDismiss: closeComposer,
+  });
 
   const addTask = useCallback(async () => {
     if (!allowCreate) {
@@ -141,6 +207,7 @@ export function PlannerTasksPanel({
         return;
       }
       setNewTaskTitle("");
+      setComposerOpen(false);
       await loadTasks(scheduledDateRef.current);
     } finally {
       setAdding(false);
@@ -159,25 +226,29 @@ export function PlannerTasksPanel({
       }
       const nextCompleted = task.completed_at == null;
       setTogglingTaskId(task.task_id);
-      setTasks((current) =>
-        current.map((row) =>
+      setTasks((current) => {
+        const next = current.map((row) =>
           row.task_id === task.task_id
             ? {
                 ...row,
                 completed_at: nextCompleted ? new Date().toISOString() : null,
               }
             : row
-        )
-      );
+        );
+        writePlannerTasksCache(scheduledDateRef.current, next);
+        return next;
+      });
       try {
         const { error } = await supabase.rpc("set_planner_task_completion", {
           p_task_id: task.task_id,
           p_completed: nextCompleted,
         });
         if (error) {
-          setTasks((current) =>
-            current.map((row) => (row.task_id === task.task_id ? task : row))
-          );
+          setTasks((current) => {
+            const next = current.map((row) => (row.task_id === task.task_id ? task : row));
+            writePlannerTasksCache(scheduledDateRef.current, next);
+            return next;
+          });
           toast.error(error.message || "Task completion could not be updated.");
         }
       } finally {
@@ -196,7 +267,9 @@ export function PlannerTasksPanel({
       let previousTasks: PlannerTaskRow[] = [];
       setTasks((current) => {
         previousTasks = current;
-        return current.filter((row) => row.task_id !== task.task_id);
+        const next = current.filter((row) => row.task_id !== task.task_id);
+        writePlannerTasksCache(scheduledDateRef.current, next);
+        return next;
       });
       try {
         const { error } = await supabase.rpc("delete_planner_task", {
@@ -204,6 +277,7 @@ export function PlannerTasksPanel({
         });
         if (error) {
           setTasks(previousTasks);
+          writePlannerTasksCache(scheduledDateRef.current, previousTasks);
           toast.error(error.message || "Task could not be deleted.");
         }
       } finally {
@@ -227,9 +301,13 @@ export function PlannerTasksPanel({
     return null;
   }
 
-  const addForm = allowCreate ? (
-    <div className="flex gap-2">
+  const composerFieldClassName =
+    "h-8 rounded-none border-0 border-b border-input bg-transparent px-0 shadow-none focus-visible:border-primary focus-visible:ring-0 dark:bg-transparent";
+
+  const addForm = allowCreate && composerOpen ? (
+    <div ref={composerRef} className="space-y-2">
       <Input
+        ref={titleInputRef}
         value={newTaskTitle}
         onChange={(event) => setNewTaskTitle(event.target.value)}
         onKeyDown={(event) => {
@@ -239,26 +317,45 @@ export function PlannerTasksPanel({
               void addTask();
             }
           }
+          if (event.key === "Escape") {
+            event.preventDefault();
+            setComposerOpen(false);
+          }
         }}
         placeholder="Add a task..."
         maxLength={200}
+        className={composerFieldClassName}
       />
-      <DateField
-        value={newTaskDate}
-        onValueChange={setNewTaskDate}
-        aria-label="Task date"
-        className="h-8 w-[150px] shrink-0"
-      />
-      <Button
-        type="button"
-        onClick={() => void addTask()}
-        disabled={adding || !canAddTask}
-      >
-        {adding ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
-        Add
-      </Button>
+      <div className="flex items-center gap-2">
+        <DateField
+          value={newTaskDate}
+          onValueChange={setNewTaskDate}
+          aria-label="Task date"
+          className={cn(composerFieldClassName, "min-w-0 flex-1")}
+        />
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => void addTask()}
+          disabled={adding || !canAddTask}
+        >
+          {adding ? <Loader2 className="size-4 animate-spin" /> : null}
+          Add
+        </Button>
+      </div>
     </div>
   ) : null;
+
+  const addNewButton =
+    allowCreate && !composerOpen ? (
+      <button
+        type="button"
+        className="py-1 text-left text-sm font-medium text-primary touch-manipulation"
+        onClick={() => setComposerOpen(true)}
+      >
+        + Add new
+      </button>
+    ) : null;
 
   const taskList =
     loading && tasks.length === 0 ? (
@@ -269,7 +366,7 @@ export function PlannerTasksPanel({
     ) : tasks.length === 0 ? (
       <p className="text-sm text-muted-foreground">
         {allowCreate
-          ? "No tasks yet. Add one to keep your planner focused."
+          ? "No tasks yet."
           : "No tasks scheduled for this day yet."}
       </p>
     ) : (
@@ -421,8 +518,9 @@ export function PlannerTasksPanel({
   if (chrome === "plain") {
     return (
       <div className="space-y-3">
-        {addForm}
         {taskList}
+        {addForm}
+        {addNewButton}
         {deleteDialog}
       </div>
     );
@@ -433,9 +531,12 @@ export function PlannerTasksPanel({
       <CardHeader className="space-y-2">
         <CardTitle>{title}</CardTitle>
         {description ? <CardDescription>{description}</CardDescription> : null}
-        {addForm}
       </CardHeader>
-      <CardContent>{taskList}</CardContent>
+      <CardContent className="space-y-3">
+        {taskList}
+        {addForm}
+        {addNewButton}
+      </CardContent>
       {deleteDialog}
     </Card>
   );

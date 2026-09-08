@@ -69,7 +69,7 @@ function PlanDayUnplannedFromChecklist({
   }, [checklist.listModel.completableGoals, checklist.visibleGoalIds, day, placedGoalIds]);
 
   if (checklist.loading && checklist.data.goals.length === 0) {
-    return <p className="text-sm text-muted-foreground">Loading unplanned work...</p>;
+    return <p className="text-sm text-muted-foreground">Loading unscheduled work...</p>;
   }
 
   return (
@@ -144,7 +144,7 @@ function PlanDayUnplannedList({
   });
 
   if (loading && data.goals.length === 0) {
-    return <p className="text-sm text-muted-foreground">Loading unplanned work...</p>;
+    return <p className="text-sm text-muted-foreground">Loading unscheduled work...</p>;
   }
 
   return (
@@ -176,7 +176,7 @@ function PlanDayUnplannedRows({
 }) {
   if (goals.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">Nothing unplanned for this day.</p>
+      <p className="text-sm text-muted-foreground">Nothing unscheduled for this day.</p>
     );
   }
 

@@ -10,6 +10,7 @@ import type {
   PlannerActiveItemSnapshot,
   PlannerCompletionFactMarker,
 } from "@cadence/shared/planner/context";
+import type { DuoLaneSubject } from "@cadence/shared/social/duo";
 
 export type CalendarTab = PlannerShellTab;
 export type { PlannerCalendarViewMode };
@@ -86,6 +87,8 @@ export interface CalendarSurfaceProps {
   partnerCompletionMarkersByDate?: Map<string, PlannerCompletionFactMarker[]>;
   partnerOverlayError?: string | null;
   partnerLabel?: string | null;
+  viewerSubject?: DuoLaneSubject | null;
+  partnerSubject?: DuoLaneSubject | null;
 }
 
 export type CoachMessageRole = "user" | "assistant";

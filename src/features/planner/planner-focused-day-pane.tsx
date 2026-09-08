@@ -15,12 +15,14 @@ import type {
 import { PlanDayUnplannedPanel } from "@/features/planner/plan-day-unplanned-panel";
 import { PlanDaySection } from "@/features/planner/plan-day-section";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
+import { DuoLaneIdentity } from "@/features/social/duo/duo-lanes";
+import type { DuoLaneSubject } from "@cadence/shared/social/duo";
 import {
   filterPlannerDayEntries,
   filterPlannerDayMarkers,
 } from "@/features/planner/plan-day-filters";
 import { PlannerDayEntriesPanel } from "@/features/planner/planner-day-entries-panel";
-import { PlannerTasksPanel } from "@/features/tasks/planner-tasks-panel";
+import { PlannerTasksPanel, PlannerTasksPrefetch } from "@/features/tasks/planner-tasks-panel";
 import { planDayViewTransitionName } from "@/features/planner/plan-view-transition";
 import { ChecklistPastPanels } from "@/features/today/checklist-past-panels";
 import { ChecklistQuickFilterChips } from "@/features/today/checklist-quick-filter-chips";
@@ -50,6 +52,8 @@ interface PlannerFocusedDayPaneProps {
   selectedEntryKey?: string | null;
   dayChecklist?: PlanDayChecklistModel | null;
   partnerLabel?: string | null;
+  viewerSubject?: DuoLaneSubject | null;
+  partnerSubject?: DuoLaneSubject | null;
   splitPartnerChecklist?: boolean;
 }
 
@@ -71,6 +75,8 @@ export function PlannerFocusedDayPane({
   selectedEntryKey = null,
   dayChecklist = null,
   partnerLabel = null,
+  viewerSubject = null,
+  partnerSubject = null,
   splitPartnerChecklist = false,
 }: PlannerFocusedDayPaneProps) {
   const TitleTag = titleAs;
@@ -179,9 +185,12 @@ export function PlannerFocusedDayPane({
           className="space-y-3"
           data-testid={splitPartnerChecklist ? "plan-day-viewer-checklist" : undefined}
         >
+          {splitPartnerChecklist && viewerSubject ? (
+            <DuoLaneIdentity subject={viewerSubject} className="mb-1 px-0" />
+          ) : null}
           <PlanDaySection
             key={`${day}-planned`}
-            title="Planned goals"
+            title="Scheduled goals"
             count={
               visibleEntries.length +
               (splitPartnerChecklist ? viewerMarkers.length : visibleMarkers.length)
@@ -228,7 +237,7 @@ export function PlannerFocusedDayPane({
               : null}
           </PlanDaySection>
           {showTasksInsteadOfGoals ? null : (
-            <PlanDaySection key={`${day}-unplanned`} title="Unplanned goals" defaultOpen={false}>
+            <PlanDaySection key={`${day}-unplanned`} title="Unscheduled goals" defaultOpen={false}>
               <PlanDayUnplannedPanel
                 day={day}
                 placedEntries={visibleEntries}
@@ -237,17 +246,20 @@ export function PlannerFocusedDayPane({
             </PlanDaySection>
           )}
           {showTasksInsteadOfGoals ? null : (
-            <PlanDaySection key={`${day}-todos`} title="Todos" defaultOpen={false}>
-              <PlannerTasksPanel
-                key={day}
-                title="Todos"
-                description={null}
-                scheduledDate={day}
-                allowCreate
-                hideWhenEmpty={false}
-                chrome="plain"
-              />
-            </PlanDaySection>
+            <>
+              <PlannerTasksPrefetch scheduledDate={day} />
+              <PlanDaySection key={`${day}-todos`} title="Todos" defaultOpen={false}>
+                <PlannerTasksPanel
+                  key={day}
+                  title="Todos"
+                  description={null}
+                  scheduledDate={day}
+                  allowCreate
+                  hideWhenEmpty={false}
+                  chrome="plain"
+                />
+              </PlanDaySection>
+            </>
           )}
           {dayChecklist &&
           !showTasksInsteadOfGoals &&
@@ -276,17 +288,21 @@ export function PlannerFocusedDayPane({
             className="hidden min-w-0 md:block"
             data-testid="plan-day-partner-checklist"
           >
-            <div className="mb-3 flex min-h-6 items-center gap-2">
-              <p className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                {partnerLabel ?? "Partner"}
-              </p>
-              <span className="rounded-[8px] border border-border px-2 py-0.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                View only
-              </span>
+            <div className="mb-3">
+              <DuoLaneIdentity
+                subject={
+                  partnerSubject ?? {
+                    id: "partner",
+                    label: partnerLabel ?? "Partner",
+                    readOnly: true,
+                  }
+                }
+                className="px-0"
+              />
             </div>
             <PlanDaySection
               key={`${day}-partner-planned`}
-              title="Planned goals"
+              title="Scheduled goals"
               count={partnerMarkers.length}
             >
               {partnerMarkers.length > 0 ? (

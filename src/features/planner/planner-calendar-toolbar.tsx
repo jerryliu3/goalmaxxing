@@ -46,6 +46,56 @@ interface PlannerCalendarToolbarProps {
   onSearchQueryChange: (query: string) => void;
 }
 
+function PlanViewModeSwitch({
+  viewMode,
+  loading,
+  onViewModeChange,
+}: {
+  viewMode: PlannerCalendarViewMode;
+  loading: boolean;
+  onViewModeChange: (viewMode: PlannerCalendarViewMode) => void;
+}) {
+  const resolvedViewMode = viewMode === "three_day" ? "week" : viewMode;
+  const selectedViewIndex = Math.max(
+    0,
+    PLANNER_VIEW_MODES.findIndex((modeOption) => modeOption.value === resolvedViewMode)
+  );
+
+  return (
+    <div
+      role="group"
+      aria-label="Plan view mode"
+      className="relative isolate inline-grid grid-cols-3 rounded-[10px] bg-muted p-0.5 text-xs font-medium"
+    >
+      <span
+        aria-hidden
+        data-testid="plan-view-mode-thumb"
+        className="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc((100%-4px)/3)] rounded-[8px] bg-background shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+        style={{ transform: `translateX(${selectedViewIndex * 100}%)` }}
+      />
+      {PLANNER_VIEW_MODES.map((modeOption) => {
+        const selected = resolvedViewMode === modeOption.value;
+        return (
+          <button
+            key={modeOption.value}
+            type="button"
+            aria-pressed={selected}
+            disabled={loading}
+            onClick={() => onViewModeChange(modeOption.value)}
+            className={
+              selected
+                ? "relative z-10 min-h-8 rounded-[8px] px-3 text-foreground"
+                : "relative z-10 min-h-8 rounded-[8px] px-3 text-muted-foreground"
+            }
+          >
+            {modeOption.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function PlannerCalendarToolbar({
   hasDraftSession,
   plannerReadOnly,
@@ -79,14 +129,14 @@ export function PlannerCalendarToolbar({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <h2 className="font-display text-lg font-semibold tracking-tight">Plan</h2>
-              <Tooltip content="Plan help" side="top" align="center">
+              <h2 className="font-display text-lg font-semibold tracking-tight">Planner</h2>
+              <Tooltip content="Planner help" side="top" align="center">
                 <Button
                   type="button"
                   variant="outline"
                   size="icon-sm"
-                  aria-label="Open plan help"
-                  title="Plan help"
+                  aria-label="Open planner help"
+                  title="Planner help"
                   onClick={() => setHelpOpen(true)}
                 >
                   <CircleHelp />
@@ -150,32 +200,11 @@ export function PlannerCalendarToolbar({
             className="flex shrink-0 items-center gap-2"
             data-onboarding="planner.calendar.controls"
           >
-            <div
-              role="group"
-              aria-label="Plan view mode"
-              className="inline-flex rounded-[10px] bg-muted p-0.5 text-xs font-medium"
-            >
-              {PLANNER_VIEW_MODES.map((modeOption) => (
-                <button
-                  key={modeOption.value}
-                  type="button"
-                  aria-pressed={
-                    (viewMode === "three_day" ? "week" : viewMode) ===
-                    modeOption.value
-                  }
-                  disabled={loading}
-                  onClick={() => onViewModeChange(modeOption.value)}
-                  className={
-                    (viewMode === "three_day" ? "week" : viewMode) ===
-                    modeOption.value
-                      ? "min-h-8 rounded-[8px] bg-background px-3 text-foreground"
-                      : "min-h-8 rounded-[8px] px-3 text-muted-foreground"
-                  }
-                >
-                  {modeOption.label}
-                </button>
-              ))}
-            </div>
+            <PlanViewModeSwitch
+              viewMode={viewMode}
+              loading={loading}
+              onViewModeChange={onViewModeChange}
+            />
             <Button
               type="button"
               variant="outline"
@@ -214,7 +243,7 @@ export function PlannerCalendarToolbar({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Plan help</DialogTitle>
+            <DialogTitle>Planner help</DialogTitle>
             <DialogDescription>
               Use this plan to preview scheduling changes before saving them.
             </DialogDescription>
