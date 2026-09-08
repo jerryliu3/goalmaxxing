@@ -164,8 +164,9 @@ describe("SettingsTab", () => {
         addEventListener: () => undefined,
         removeEventListener: () => undefined,
         addListener: () => undefined,
+        removeListener: () => undefined,
         dispatchEvent: () => false,
-      })) as typeof window.matchMedia;
+      }) as MediaQueryList);
     render(<SettingsTab />);
 
     expect(screen.getByTestId("settings-pane")).toHaveAttribute(
