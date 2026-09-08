@@ -36,6 +36,15 @@ export default function UxHubPage() {
             </p>
           </li>
           <li>
+            <Link className="text-lg font-semibold underline" href="/ux/achievements">
+              Achievements destination study
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Case, Vault, Gallery, Records, Rings — trophy-case concepts for
+              `/achievements`.
+            </p>
+          </li>
+          <li>
             <Link className="text-lg font-semibold underline" href="/ux/first-principles">
               First-principles interface study
             </Link>

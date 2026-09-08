@@ -15,10 +15,10 @@ export function DestinationsIndex() {
               Goalmaxxing / Destination study
             </p>
             <Link
-              href="/ux/first-principles"
+              href="/ux/achievements"
               className="text-xs font-semibold text-muted-foreground"
             >
-              First-principles gallery
+              Achievements study
             </Link>
           </div>
           <h1 className="mt-10 max-w-4xl font-display text-[clamp(2.4rem,7vw,5.5rem)] font-semibold leading-[0.9] tracking-tight">
