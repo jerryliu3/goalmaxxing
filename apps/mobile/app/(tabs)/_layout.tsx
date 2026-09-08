@@ -3,7 +3,6 @@ import { Redirect, Tabs } from "expo-router";
 import { Text } from "react-native";
 import { useForceUpgradeRequired } from "../../src/lib/runtime-config";
 import { useSession } from "../../src/lib/session";
-import { useProfileNavigationPreferences } from "../../src/lib/navigation-preferences";
 import { DuoProvider } from "../../src/features/duo/DuoProvider";
 import { JourneyBackdrop } from "../../src/features/journey/JourneyBackdrop.native";
 import { JourneyProvider } from "../../src/features/journey/JourneyProvider.native";
@@ -31,10 +30,9 @@ export default function TabsLayout() {
   const { ready, session } = useSession();
   const upgrade = useForceUpgradeRequired();
   const theme = useTheme();
-  const preferences = useProfileNavigationPreferences(session?.user.id ?? null);
-  const tabs = buildAppTabs(preferences.plannerPrimaryTabPreference);
+  const tabs = buildAppTabs();
 
-  if (!ready || upgrade.loading || (session && preferences.loading)) {
+  if (!ready || upgrade.loading) {
     return <LoadingScreen />;
   }
   if (upgrade.required) {
