@@ -114,13 +114,13 @@ export function LeaderboardsPanel({
       return {
         key: season.id,
         title: season.title,
-        kicker: "Live season",
+        kicker: season.status === "open" ? "Open season" : "Season",
         metric: viewerRow
           ? `#${viewerRow.rank} · ${viewerRow.label}`
           : standing?.viewerRank
-            ? `Your rank: #${standing.viewerRank}`
-            : season.metric,
-        detail: `${season.subjectKind}${season.scope === "group" ? " · group" : ""} · ${season.metric}`,
+            ? `#${standing.viewerRank}`
+            : "—",
+        detail: season.metric,
         joined: true,
         closed: false,
         people,
@@ -183,7 +183,7 @@ export function LeaderboardsPanel({
       </div>
       <CompeteSnapRail
         label="Leaderboards"
-        hint="Stage-size posters · snap to the next season"
+        hint="Swipe between seasons"
       >
         {tiles.map((tile) => {
           const expanded = expandedId === tile.key;
