@@ -21,7 +21,12 @@ test.describe("public demo sandbox", () => {
     await page.goto("/demo");
     await expect(page).toHaveURL(/\/demo\/calendar/);
     await expect(page.getByTestId("demo-banner")).toBeVisible();
-    await expect(page.getByText("Read 20 pages")).toBeVisible({ timeout: 20_000 });
+    // "Read 20 pages" is a daily-recurring goal, so the default calendar view
+    // legitimately renders it on more than one day — any occurrence confirms
+    // the demo data loaded.
+    await expect(page.getByText("Read 20 pages").first()).toBeVisible({
+      timeout: 20_000,
+    });
     await expect(
       page.getByRole("navigation", { name: "Main navigation" })
     ).toBeVisible();

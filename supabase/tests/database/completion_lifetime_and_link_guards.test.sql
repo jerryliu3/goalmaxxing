@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(18);
+select plan(19);
 
 insert into auth.users (id, email)
 values ('11111111-1111-4111-8111-111111111111', 'completion-invariants-alice@example.com')
@@ -438,10 +438,21 @@ select is(
     where goal_id = 'c0500000-0000-4000-8000-00000000000d'
       and user_id = '11111111-1111-4111-8111-111111111111'
       and completed_on = current_date
-      and source = 'linked_cascade'
   ),
   1::bigint,
-  'external source completion still cascades onto the linked target'
+  'linked target still has exactly one completion fact for today'
+);
+
+select is(
+  (
+    select source::text
+    from public.completions
+    where goal_id = 'c0500000-0000-4000-8000-00000000000d'
+      and user_id = '11111111-1111-4111-8111-111111111111'
+      and completed_on = current_date
+  ),
+  'external_sync',
+  'cascade does not clobber the target''s existing external_sync completion (first write wins)'
 );
 
 reset role;
