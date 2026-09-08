@@ -1,6 +1,11 @@
 import type { MetadataRoute } from "next";
+import { cookies } from "next/headers";
+import { getUiStyle, parseUiStyleId, UI_STYLE_COOKIE_NAME } from "@/lib/brand/ui-style";
 
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const style = getUiStyle(
+    parseUiStyleId((await cookies()).get(UI_STYLE_COOKIE_NAME)?.value)
+  );
   return {
     id: "/",
     name: "Goalmaxxing",
@@ -9,8 +14,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/calendar",
     scope: "/",
     display: "standalone",
-    background_color: "#fafafa",
-    theme_color: "#2563eb",
+    background_color: style.backgroundColor,
+    theme_color: style.themeColor,
     icons: [
       {
         src: "/cadence-icon.svg",

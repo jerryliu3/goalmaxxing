@@ -39,4 +39,19 @@ describe("ui style catalog", () => {
     expect(document.documentElement).not.toHaveClass("gm-gazetteer");
     expect(document.documentElement.dataset.uiStyle).toBe("original");
   });
+
+  it("updates the favicon to the active style color", () => {
+    const icon = document.createElement("link");
+    icon.rel = "icon";
+    icon.href = "/cadence-icon.svg";
+    document.head.append(icon);
+
+    applyDocumentUiStyle(getUiStyle("original"));
+    expect(icon.getAttribute("href")).toBe("/brand-icon?style=original");
+
+    applyDocumentUiStyle(getUiStyle("gazetteer"));
+    expect(icon.getAttribute("href")).toBe("/brand-icon?style=gazetteer");
+
+    icon.remove();
+  });
 });

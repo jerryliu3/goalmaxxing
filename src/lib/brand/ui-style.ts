@@ -1,3 +1,5 @@
+import { appIconHref } from "@/lib/brand/app-icon";
+
 /**
  * Visual style catalog. Layout and IA stay shared; each entry is a skin
  * (tokens, type, completion mark, tab chrome). Add a new id + CSS class later.
@@ -95,6 +97,12 @@ export function applyDocumentUiStyle(style: UiStyle) {
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta) {
     themeMeta.setAttribute("content", style.themeColor);
+  }
+  const iconHref = appIconHref(style.id);
+  for (const link of document.querySelectorAll<HTMLLinkElement>(
+    'link[rel="icon"], link[rel="apple-touch-icon"]'
+  )) {
+    link.href = iconHref;
   }
 }
 

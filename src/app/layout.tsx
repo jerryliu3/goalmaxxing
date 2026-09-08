@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { Geist, Geist_Mono, IBM_Plex_Mono, Newsreader, Source_Sans_3 } from "next/font/google";
 import { Toaster } from "sonner";
 import { UiStyleProvider } from "@/components/brand/ui-style-provider";
+import { appIconHref } from "@/lib/brand/app-icon";
 import { getUiStyle, parseUiStyleId, UI_STYLE_COOKIE_NAME } from "@/lib/brand/ui-style";
 import "./globals.css";
 
@@ -46,21 +47,27 @@ const metadataBase = (() => {
   }
 })();
 
-export const metadata: Metadata = {
-  title: "Goalmaxxing",
-  description: "Personal goal tracking with insights and social accountability.",
-  applicationName: "Goalmaxxing",
-  metadataBase,
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
+export async function generateMetadata(): Promise<Metadata> {
+  const style = getUiStyle(
+    parseUiStyleId((await cookies()).get(UI_STYLE_COOKIE_NAME)?.value)
+  );
+  const iconUrl = appIconHref(style.id);
+  return {
     title: "Goalmaxxing",
-  },
-  icons: {
-    icon: "/cadence-icon.svg",
-    apple: "/cadence-icon.svg",
-  },
-};
+    description: "Personal goal tracking with insights and social accountability.",
+    applicationName: "Goalmaxxing",
+    metadataBase,
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: "Goalmaxxing",
+    },
+    icons: {
+      icon: { url: iconUrl, type: "image/svg+xml" },
+      apple: { url: iconUrl, type: "image/svg+xml" },
+    },
+  };
+}
 
 export async function generateViewport(): Promise<Viewport> {
   const style = getUiStyle(
