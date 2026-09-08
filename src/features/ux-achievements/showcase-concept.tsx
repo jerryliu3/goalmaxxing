@@ -31,7 +31,7 @@ const RECORD_ACCENT: Record<(typeof PERSONAL_RECORDS)[number]["accent"], string>
 };
 
 export function ShowcaseConcept() {
-  const [featuredId, setFeaturedId] = useState(COLLECTION.newestId);
+  const [featuredId, setFeaturedId] = useState<string>(COLLECTION.newestId);
   const featured =
     LEVEL_AWARDS.find((award) => award.id === featuredId) ?? LEVEL_AWARDS[3];
   const featuredLocked = !featured.unlockedAt;

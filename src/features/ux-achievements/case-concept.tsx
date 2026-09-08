@@ -17,7 +17,7 @@ import { GAZETTEER } from "@/lib/brand/gazetteer";
 const concept = getAchievementConcept("case");
 
 export function CaseConcept() {
-  const [featuredId, setFeaturedId] = useState(COLLECTION.newestId);
+  const [featuredId, setFeaturedId] = useState<string>(COLLECTION.newestId);
   const featured =
     LEVEL_AWARDS.find((award) => award.id === featuredId) ?? LEVEL_AWARDS[3];
   const unlocked = LEVEL_AWARDS.filter((award) => award.unlockedAt);
