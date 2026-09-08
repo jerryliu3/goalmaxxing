@@ -28,11 +28,17 @@ describe("achievements destination study", () => {
 
     expect(screen.getByLabelText("Personal records")).toBeInTheDocument();
     expect(screen.getByText("21d")).toBeInTheDocument();
+    expect(screen.getByText(/claimed/i)).toBeInTheDocument();
     expect(screen.getByLabelText("Trophy showcase")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Level 8 unlocked" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /lv 4/i }));
     expect(screen.getAllByRole("heading", { name: "Level 4 unlocked" }).length).toBeGreaterThan(0);
     expect(screen.getByText(/plaque rail/i)).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole("button", { name: /^locked award$/i })[0]!);
+    expect(screen.getByRole("heading", { name: "Still ahead" })).toBeInTheDocument();
+    expect(screen.queryByText(/level 10 unlocked/i)).not.toBeInTheDocument();
+    expect(screen.getAllByText(/^locked$/i).length).toBeGreaterThan(0);
   });
 
   it("pins a shelf medal onto the Case pedestal", async () => {

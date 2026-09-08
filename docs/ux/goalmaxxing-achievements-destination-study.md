@@ -41,7 +41,7 @@ gain / copper carry tier and category — not purple-glow game UI.
 
 | # | Name | Thesis | Research root |
 |---|---|---|---|
-| A6 | **Showcase** | **Leading hybrid:** Case shelves + Vault premium dark gradients + Records band. | Review synthesis of A1 / A2 / A4 |
+| A6 | **Showcase** | **Leading hybrid:** Case shelves + Vault locked mounts/claimed bar + Records band. | Review synthesis of A1 / A2 / A4 |
 | A1 | **Case** | Lit trophy case: pedestal hero, medal shelves, goal plaques. | Customizable trophy display / status object |
 | A2 | **Vault** | Sealed compartments — locked dark, unlocked lit and tactile. | Precious unlock; progress as claimed capacity |
 | A3 | **Gallery** | Snap-scroll framed posters + certificate rail. | Letterboxd / Polarsteps “hung” journey |

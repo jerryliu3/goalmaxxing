@@ -24,16 +24,16 @@ export const ACHIEVEMENT_CONCEPTS: readonly AchievementConcept[] = [
     number: "A6",
     name: "Showcase",
     thesis:
-      "Leading hybrid: Case trophy structure + Vault premium dark metal + Records personal-bests band.",
+      "Leading hybrid: Case trophy structure + Vault premium dark metal and locked mounts + Records personal-bests band.",
     navigation:
-      "Read personal records, then pin a medal on the pedestal. Shelves and plaques stay Case-shaped under Vault light.",
+      "Read personal records and the claimed bar, then pin an earned medal on the pedestal. Locked mounts stay dark — no spoilers for what’s next.",
     whatItKeeps:
-      "Level awards, achieved goals, unlock dates, reward text, locked mounts, personal bests.",
+      "Level awards, achieved goals, unlock dates, reward text, locked mounts, personal bests, claimed progress.",
     whatItAdds:
-      "One proud composition that keeps trophies without losing Records or Vault craft.",
+      "One proud composition that keeps trophies, Records, Vault craft, and honest locked mystery.",
     risk: "Dark glass plus a records band can feel tall on small phones if the pedestal is greedy.",
     research:
-      "Review synthesis of A1 structure, A2 gradients/preciousness, and A4 Duolingo Records split.",
+      "Review synthesis of A1 structure, A2 locked/claimed language, and A4 Duolingo Records split.",
   },
   {
     slug: "case",

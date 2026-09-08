@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { AchievementChrome, ConceptNote } from "@/features/ux-achievements/chrome";
-import { MedalMark, PlaqueMark, TIER_METAL } from "@/features/ux-achievements/medals";
+import {
+  MedalMark,
+  PlaqueMark,
+  SealMark,
+  TIER_METAL,
+} from "@/features/ux-achievements/medals";
 import { getAchievementConcept } from "@/features/ux-achievements/model";
 import {
   COLLECTION,
@@ -29,8 +34,12 @@ export function ShowcaseConcept() {
   const [featuredId, setFeaturedId] = useState(COLLECTION.newestId);
   const featured =
     LEVEL_AWARDS.find((award) => award.id === featuredId) ?? LEVEL_AWARDS[3];
+  const featuredLocked = !featured.unlockedAt;
   const unlocked = LEVEL_AWARDS.filter((award) => award.unlockedAt);
   const locked = LEVEL_AWARDS.filter((award) => !award.unlockedAt);
+  const claimed = COLLECTION.unlockedAwards + COLLECTION.achievedGoals;
+  const total = COLLECTION.totalAwards + GOAL_ACHIEVEMENTS.length;
+  const fill = Math.round((claimed / total) * 100);
 
   return (
     <AchievementChrome
@@ -69,8 +78,11 @@ export function ShowcaseConcept() {
             radial-gradient(ellipse at 30% 20%, rgba(240, 215, 138, 0.14), transparent 55%),
             linear-gradient(160deg, #3a2f24, #2a221a);
         }
-        .ach-showcase-mount-empty {
+        .ach-showcase-mount-locked {
           background: linear-gradient(160deg, #1c1712, #14100c);
+        }
+        .ach-showcase-fill {
+          background: linear-gradient(90deg, ${GAZETTEER.stamp}, ${GAZETTEER.stampLight} 55%, #d4a84b);
         }
         @keyframes ach-showcase-rise {
           from { opacity: 0; transform: translateY(10px) scale(0.96); }
@@ -91,28 +103,42 @@ export function ShowcaseConcept() {
               Bests on the wall. Medals on the shelf.
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#a89880]">
-              Case structure, vault metal, and personal records in one
-              composition — premium dark paper with trophies you can pin.
+              Case structure, vault metal, and personal records — locked mounts
+              stay dark so the next award stays a surprise.
             </p>
           </div>
-          <dl className="grid grid-cols-3 gap-4 text-right font-mono text-sm text-[#d4c4a4]">
-            <div>
-              <dt className="text-[10px] uppercase tracking-[0.14em] text-[#8a7a64]">Level</dt>
-              <dd className="mt-1 text-xl font-semibold text-[#f8f1e3]">{COLLECTION.level}</dd>
+          <div className="min-w-[13rem]">
+            <div className="flex items-baseline justify-between gap-3 font-mono text-xs text-[#a89880]">
+              <span>Claimed</span>
+              <span className="text-base text-[#f8f1e3]">
+                {claimed}/{total} · {fill}%
+              </span>
             </div>
-            <div>
-              <dt className="text-[10px] uppercase tracking-[0.14em] text-[#8a7a64]">Medals</dt>
-              <dd className="mt-1 text-xl font-semibold text-[#f8f1e3]">
-                {COLLECTION.unlockedAwards}/{COLLECTION.totalAwards}
-              </dd>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#3a3128]">
+              <div
+                className="ach-showcase-fill h-full rounded-full"
+                style={{ width: `${fill}%` }}
+              />
             </div>
-            <div>
-              <dt className="text-[10px] uppercase tracking-[0.14em] text-[#8a7a64]">Goals</dt>
-              <dd className="mt-1 text-xl font-semibold text-[#f8f1e3]">
-                {COLLECTION.achievedGoals}
-              </dd>
-            </div>
-          </dl>
+            <dl className="mt-4 grid grid-cols-3 gap-3 text-right font-mono text-sm text-[#d4c4a4]">
+              <div>
+                <dt className="text-[10px] uppercase tracking-[0.14em] text-[#8a7a64]">Level</dt>
+                <dd className="mt-1 text-lg font-semibold text-[#f8f1e3]">{COLLECTION.level}</dd>
+              </div>
+              <div>
+                <dt className="text-[10px] uppercase tracking-[0.14em] text-[#8a7a64]">Medals</dt>
+                <dd className="mt-1 text-lg font-semibold text-[#f8f1e3]">
+                  {COLLECTION.unlockedAwards}/{COLLECTION.totalAwards}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[10px] uppercase tracking-[0.14em] text-[#8a7a64]">Goals</dt>
+                <dd className="mt-1 text-lg font-semibold text-[#f8f1e3]">
+                  {COLLECTION.achievedGoals}
+                </dd>
+              </div>
+            </dl>
+          </div>
         </header>
 
         <section aria-label="Personal records">
@@ -153,31 +179,34 @@ export function ShowcaseConcept() {
             style={{ borderColor: "#5a4a38" }}
           >
             <div key={featured.id} className="ach-showcase-hero flex flex-col items-center">
-              <MedalMark
-                level={featured.level}
-                tier={featured.tier}
-                locked={!featured.unlockedAt}
-                size={128}
-                markId={`showcase-hero-${featured.id}`}
-              />
+              {featuredLocked ? (
+                <SealMark locked tier={featured.tier} size={88} />
+              ) : (
+                <MedalMark
+                  level={featured.level}
+                  tier={featured.tier}
+                  size={128}
+                  markId={`showcase-hero-${featured.id}`}
+                />
+              )}
               <p
                 className="mt-4 text-[10px] font-semibold uppercase tracking-[0.18em]"
                 style={{
-                  color: featured.unlockedAt
-                    ? TIER_METAL[featured.tier].glow
-                    : "#8a7a64",
+                  color: featuredLocked ? "#8a7a64" : TIER_METAL[featured.tier].glow,
                 }}
               >
-                {featured.unlockedAt ? "On display" : "Empty mount"}
+                {featuredLocked ? "Locked" : "On display"}
               </p>
               <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight text-[#f8f1e3]">
-                {featured.title}
+                {featuredLocked ? "Still ahead" : featured.title}
               </h3>
               <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#a89880]">
-                {featured.description}
+                {featuredLocked
+                  ? "Earn the next altitude before this mount opens. The medal stays hidden until then."
+                  : featured.description}
               </p>
               <p className="mt-3 font-mono text-xs text-[#8a7a64]">
-                {formatAwardDate(featured.unlockedAt)}
+                {featuredLocked ? "Locked" : formatAwardDate(featured.unlockedAt)}
               </p>
             </div>
           </div>
@@ -257,25 +286,43 @@ function ShelfMedal({
         type="button"
         onClick={onSelect}
         aria-pressed={selected}
-        className={`flex w-full flex-col items-center rounded-[14px] border px-2 py-4 transition ${
-          locked ? "ach-showcase-mount-empty" : "ach-showcase-mount"
+        aria-label={locked ? "Locked award" : `Lv ${award.level}`}
+        className={`relative flex min-h-[8.5rem] w-full flex-col items-center justify-center rounded-[14px] border px-2 py-4 transition ${
+          locked ? "ach-showcase-mount-locked" : "ach-showcase-mount"
         }`}
         style={{
           borderColor: selected ? GAZETTEER.stampLight : locked ? "#2e261e" : "#5a4a38",
           boxShadow: selected ? `0 0 0 1px ${GAZETTEER.stampLight}` : undefined,
         }}
       >
-        <MedalMark
-          level={award.level}
-          tier={award.tier}
-          locked={locked}
-          size={72}
-          markId={`showcase-shelf-${award.id}`}
-        />
-        <span className="mt-2 font-mono text-[11px] text-[#d4c4a4]">Lv {award.level}</span>
-        <span className="mt-0.5 text-[10px] uppercase tracking-[0.12em] text-[#8a7a64]">
-          {locked ? "Mount" : "Earned"}
-        </span>
+        {locked ? (
+          <>
+            <span
+              className="pointer-events-none absolute inset-x-3 top-3 h-px"
+              style={{ background: "#3a3128" }}
+              aria-hidden
+            />
+            <SealMark locked tier={award.tier} size={52} />
+            <span className="mt-3 text-[10px] uppercase tracking-[0.14em] text-[#8a7a64]">
+              Locked
+            </span>
+          </>
+        ) : (
+          <>
+            <MedalMark
+              level={award.level}
+              tier={award.tier}
+              size={72}
+              markId={`showcase-shelf-${award.id}`}
+            />
+            <span className="mt-2 font-mono text-[11px] text-[#d4c4a4]">
+              Lv {award.level}
+            </span>
+            <span className="mt-0.5 text-[10px] uppercase tracking-[0.12em] text-[#8a7a64]">
+              Earned
+            </span>
+          </>
+        )}
       </button>
     </li>
   );
