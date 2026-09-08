@@ -66,8 +66,9 @@ export function ProgressGoalList({
         ) : null}
       </div>
       <ul
+        data-testid="progress-goal-list"
         className={cn(
-          "-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-col md:overflow-x-visible md:overflow-y-auto md:px-0",
+          "grid grid-cols-2 gap-2 md:mx-0 md:flex md:flex-col md:overflow-x-visible md:overflow-y-auto md:px-0",
           goals.length >= VERTICAL_LIST_MAX_ITEMS &&
             "md:max-h-[calc(9.5*2.75rem+9*0.5rem)]"
         )}
@@ -75,7 +76,7 @@ export function ProgressGoalList({
         {goals.map((goal, index) => {
           const selected = selectedGoalIds.has(goal.id);
           return (
-            <li key={goal.id} className="group relative min-w-[10.5rem] shrink-0 md:min-w-0">
+            <li key={goal.id} className="group relative min-w-0">
               <button
                 type="button"
                 aria-pressed={selected}
