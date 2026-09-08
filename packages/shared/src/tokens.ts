@@ -44,10 +44,10 @@ export const lightTheme: Record<ThemeTokenName, string> = {
   cardForeground: "#312F38",
   popover: "#FBFBFD",
   popoverForeground: "#312F38",
-  primary: "#2F6FDB",
-  primaryForeground: "#F8F7FB",
-  secondary: "#ECEAF1",
-  secondaryForeground: "#45434D",
+  primary: "#0F64BF",
+  primaryForeground: "#FFFFFF",
+  secondary: "#E4E4E7",
+  secondaryForeground: "#3F3F46",
   muted: "#F0EEF4",
   mutedForeground: "#74717D",
   accent: "#E4ECF8",
@@ -55,7 +55,7 @@ export const lightTheme: Record<ThemeTokenName, string> = {
   destructive: "#D94A3A",
   border: "#DDDBE3",
   input: "#DDDBE3",
-  ring: "#3B78E0",
+  ring: "#0F64BF",
 };
 
 export const darkTheme: Record<ThemeTokenName, string> = {
@@ -65,10 +65,10 @@ export const darkTheme: Record<ThemeTokenName, string> = {
   cardForeground: "#F3F2F6",
   popover: "#2B2931",
   popoverForeground: "#F3F2F6",
-  primary: "#7BA8F0",
-  primaryForeground: "#1C1A21",
-  secondary: "#3C3944",
-  secondaryForeground: "#F3F2F6",
+  primary: "#4687D8",
+  primaryForeground: "#0B1F38",
+  secondary: "#3F3F46",
+  secondaryForeground: "#E4E4E7",
   muted: "#3A3742",
   mutedForeground: "#B6B3BE",
   accent: "#3E4B63",
@@ -76,7 +76,7 @@ export const darkTheme: Record<ThemeTokenName, string> = {
   destructive: "#F0715C",
   border: "#4A4754",
   input: "#4A4754",
-  ring: "#7BA8F0",
+  ring: "#4687D8",
 };
 
 export const cssTokenNames: Record<ThemeTokenName, string> = {

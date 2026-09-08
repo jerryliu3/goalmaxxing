@@ -1,6 +1,7 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { COMPLETION_HOLD_MS } from "@/components/ui/completion-toggle";
 import { ConceptsIndex } from "@/features/ux-concepts/concepts-index";
 import { TodayHomeConcept } from "@/features/ux-concepts/today-home-concept";
 import { SpatialPlanConcept } from "@/features/ux-concepts/spatial-plan-concept";
@@ -91,8 +92,7 @@ describe("ux concept gallery", () => {
     expect(screen.getByText(/launch notes \(task/i)).toBeInTheDocument();
   });
 
-  it("puts Tempo run in the Today Home first viewport", async () => {
-    const user = userEvent.setup();
+  it("puts Tempo run in the Today Home first viewport", () => {
     render(<TodayHomeConcept />);
     expect(screen.getByRole("heading", { name: "Thursday" })).toBeInTheDocument();
     expect(screen.getByText("Tempo run")).toBeInTheDocument();
@@ -101,7 +101,16 @@ describe("ux concept gallery", () => {
     expect(screen.getAllByRole("button", { name: /adapt strength/i }).length).toBeGreaterThan(
       0
     );
-    await user.click(screen.getByRole("button", { name: /complete tempo run/i }));
+    vi.useFakeTimers();
+    try {
+      const toggle = screen.getByRole("button", { name: /complete tempo run/i });
+      fireEvent.pointerDown(toggle);
+      act(() => {
+        vi.advanceTimersByTime(COMPLETION_HOLD_MS);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
     expect(
       screen.getByRole("button", { name: /remove completion for tempo run/i })
     ).toBeInTheDocument();
