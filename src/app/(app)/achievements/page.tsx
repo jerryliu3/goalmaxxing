@@ -1,11 +1,13 @@
 "use client";
 
 import { AchievementsShowcase } from "@/features/achievements/showcase";
+import { AchievementsShowcaseStyles } from "@/features/achievements/showcase-styles";
 import { useAchievementsShowcase } from "@/features/achievements/use-achievements-showcase";
 
 function AchievementsLoadingState() {
   return (
     <div className="ach-showcase-root -mx-4 rounded-[20px] px-4 py-10 text-[#a89880] sm:-mx-6 sm:px-6">
+      <AchievementsShowcaseStyles />
       <p className="text-sm">Loading achievements...</p>
     </div>
   );
@@ -13,8 +15,9 @@ function AchievementsLoadingState() {
 
 function AchievementsErrorState({ message }: { message: string }) {
   return (
-    <div className="ach-showcase-root -mx-4 rounded-[20px] px-4 py-10 text-destructive sm:-mx-6 sm:px-6">
-      <p className="text-sm">{message}</p>
+    <div className="ach-showcase-root -mx-4 rounded-[20px] px-4 py-10 sm:-mx-6 sm:px-6">
+      <AchievementsShowcaseStyles />
+      <p className="text-sm text-[#e8b4b4]">{message}</p>
     </div>
   );
 }

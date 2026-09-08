@@ -16,7 +16,8 @@ import type { Completion, Goal } from "@/lib/goals/types";
 import { isTargetedRecurringGoal } from "@/lib/planner/requirements";
 import { sha256Hex } from "@/lib/planner/canonical";
 import { createDefaultPlannerPolicy } from "@/lib/planner/policy";
-import { progressionForTotalXp } from "@/lib/xp/progression";
+import { buildAchievementsShowcasePayload } from "@/features/achievements/build-showcase";
+import type { AchievementsShowcasePayload } from "@/features/achievements/types";
 import {
   DEMO_ALEX_ID,
   DEMO_CORRELATION_ID,
@@ -441,46 +442,76 @@ export function buildDemoXpProfile() {
   };
 }
 
-export function buildDemoAchievements() {
+export function buildDemoAchievements(): AchievementsShowcasePayload {
   const snapshot = getDemoStore();
   const goals = goalsForSubject(snapshot, DEMO_ALEX_ID);
   const completions = completionsForSubject(snapshot, DEMO_ALEX_ID);
-  const completionsByGoal = groupCompletions(completions);
-  const achievedGoals = goals
-    .map((goal) => ({
-      goal,
-      summary: getGoalProgressSnapshot(
-        goal,
-        completionsByGoal.get(goal.id) ?? [],
-        snapshot.asOfDate,
-        { weeklyAnchor: WEEKLY_ANCHOR }
-      ),
-    }))
-    .filter((entry) => entry.summary.outcome === "achieved")
-    .map((entry) => ({
-      goalId: entry.goal.id,
-      title: entry.goal.title,
-      rewardText: entry.goal.reward_text,
-      achievedOn: entry.summary.milestoneDates.at(-1) ?? null,
-    }));
+  const progression = progressionForTotalXp(420);
+  const unlockedAt = isoDateTime(snapshot.asOfDate, 8);
 
-  return {
-    achievedGoals,
-    globalAchievements: [
+  return buildAchievementsShowcasePayload({
+    goals,
+    completions,
+    asOfDate: snapshot.asOfDate,
+    totalXp: 420,
+    rewardCatalog: [
       {
-        id: "70000000-0000-4000-8000-000000000001",
-        title: "First climb",
-        level: 5,
-        description: "Reached a lived-in altitude in the demo world.",
-        unlockedAt: isoDateTime(snapshot.asOfDate, 8),
-        revokedAt: null,
+        id: "70000000-0000-4000-8000-000000000010",
+        level: 2,
+        reward_code: "xp.level.2",
+        reward_title: "Level 2 unlocked",
+        reward_description: "You reached Level 2.",
+      },
+      {
+        id: "70000000-0000-4000-8000-000000000011",
+        level: 4,
+        reward_code: "xp.level.4",
+        reward_title: "Level 4 unlocked",
+        reward_description: "You reached Level 4.",
+      },
+      {
+        id: "70000000-0000-4000-8000-000000000012",
+        level: 6,
+        reward_code: "xp.level.6",
+        reward_title: "Level 6 unlocked",
+        reward_description: "You reached Level 6.",
+      },
+      {
+        id: "70000000-0000-4000-8000-000000000013",
+        level: 8,
+        reward_code: "xp.level.8",
+        reward_title: "Level 8 unlocked",
+        reward_description: "You reached Level 8.",
+      },
+      {
+        id: "70000000-0000-4000-8000-000000000014",
+        level: 10,
+        reward_code: "xp.level.10",
+        reward_title: "Level 10 unlocked",
+        reward_description: "You reached Level 10.",
       },
     ],
+    userAwards: progression.currentLevel >= 5
+      ? [
+          {
+            id: "70000000-0000-4000-8000-000000000001",
+            unlocked_at: unlockedAt,
+            acknowledged_at: null,
+            revoked_at: null,
+            xp_rewards: {
+              level: 4,
+              reward_code: "xp.level.4",
+              reward_title: "Level 4 unlocked",
+              reward_description: "You reached Level 4.",
+            },
+          },
+        ]
+      : [],
     truncated: {
       goals: false,
       completions: false,
     },
-  };
+  });
 }
 
 export function buildDemoNotificationPreferences() {
