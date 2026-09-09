@@ -177,7 +177,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     vi.useRealTimers();
   });
 
-  it("opens day mode on touch double-tap", async () => {
+  it("scrolls to the checklist instead of opening day mode on touch double-tap", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
         unit({
@@ -215,7 +215,12 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     });
     fireEvent.pointerDown(dayCell as Element, { pointerType: "touch" });
 
-    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-31", "push", "day");
+    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-31", "push", "month");
+    expect(onSelectedDayChange).not.toHaveBeenCalledWith(
+      "2026-08-31",
+      "push",
+      "day"
+    );
     expect(
       screen.queryByRole("button", { name: "Expand day details" })
     ).not.toBeInTheDocument();
