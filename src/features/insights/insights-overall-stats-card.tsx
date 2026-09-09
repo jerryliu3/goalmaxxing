@@ -50,7 +50,7 @@ export function InsightsOverallStatsTiles({
               tooltip="Numerator: every completion event ever logged."
             />
           </p>
-          <p className="mt-1 text-lg font-semibold sm:text-xl">
+          <p className="mt-1 font-display text-lg font-semibold sm:text-xl">
             {overallStats.totalActivities.toLocaleString()}
           </p>
         </div>
@@ -61,7 +61,7 @@ export function InsightsOverallStatsTiles({
               tooltip="Numerator: unique goals in achieved outcome."
             />
           </p>
-          <p className="mt-1 text-lg font-semibold sm:text-xl">
+          <p className="mt-1 font-display text-lg font-semibold sm:text-xl">
             {overallStats.totalGoalsCompleted.toLocaleString()}
           </p>
         </div>
@@ -72,7 +72,7 @@ export function InsightsOverallStatsTiles({
               tooltip="Numerator: completion events in the current month."
             />
           </p>
-          <p className="mt-1 text-lg font-semibold sm:text-xl">
+          <p className="mt-1 font-display text-lg font-semibold sm:text-xl">
             {overallStats.currentMonthActivities.current.toLocaleString()}
           </p>
           <CountTrendInline
@@ -87,7 +87,7 @@ export function InsightsOverallStatsTiles({
               tooltip="Numerator: completion events in the current week."
             />
           </p>
-          <p className="mt-1 text-lg font-semibold sm:text-xl">
+          <p className="mt-1 font-display text-lg font-semibold sm:text-xl">
             {overallStats.currentWeekActivities.current.toLocaleString()}
           </p>
           <CountTrendInline
@@ -102,7 +102,7 @@ export function InsightsOverallStatsTiles({
               tooltip="Numerator: completion events on today's date."
             />
           </p>
-          <p className="mt-1 text-lg font-semibold sm:text-xl">
+          <p className="mt-1 font-display text-lg font-semibold sm:text-xl">
             {overallStats.todayActivities.toLocaleString()}
           </p>
         </div>
@@ -113,7 +113,7 @@ export function InsightsOverallStatsTiles({
               tooltip="Numerator: consecutive days ending today with more than zero completions."
             />
           </p>
-          <p className="mt-1 text-lg font-semibold sm:text-xl">
+          <p className="mt-1 font-display text-lg font-semibold sm:text-xl">
             {overallStats.activeStreakDays.toLocaleString()} days
           </p>
         </div>
