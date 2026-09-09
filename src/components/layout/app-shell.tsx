@@ -94,15 +94,19 @@ export function AppShell({
                 <div className="relative z-10 flex min-h-screen w-full justify-center bg-page px-4 py-4 sm:px-6 sm:py-6">
                   <div className="flex w-full max-w-6xl flex-col gap-4 md:gap-6">
                   <header
-                    className="sticky top-0 z-40 -mx-4 -mt-4 border-b border-border bg-background/85 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.7rem)] backdrop-blur supports-[backdrop-filter]:bg-background/75 md:static md:m-0 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none"
+                    className="sticky top-0 z-40 -mx-4 -mt-4 border-b border-border bg-page/90 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.7rem)] backdrop-blur supports-[backdrop-filter]:bg-page/80 md:static md:m-0 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none"
                     style={{ viewTransitionName: "app-shell-header" }}
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <p className="font-display truncate text-2xl font-semibold tracking-tight md:text-3xl">
+                      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+                        <p className="font-display shrink-0 text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
                           Goalmaxxing
                         </p>
-                        {xpEnabled ? <XpProgressBar /> : null}
+                        {xpEnabled ? (
+                          <div className="min-w-0 flex-1">
+                            <XpProgressBar />
+                          </div>
+                        ) : null}
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <div className="flex items-center gap-2">

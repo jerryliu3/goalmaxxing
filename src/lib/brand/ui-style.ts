@@ -44,7 +44,7 @@ export const UI_STYLES: Record<UiStyleId, UiStyle> = {
     label: "Gazetteer",
     description: "Paper, walnut ink, stamp rust, Nest completion, and ledger chrome.",
     htmlClass: "gm-gazetteer",
-    themeColor: "#9A4F2C",
+    themeColor: "#f3ead8",
     backgroundColor: "#f3ead8",
     completionMark: "nest",
     tabChrome: "underline",
