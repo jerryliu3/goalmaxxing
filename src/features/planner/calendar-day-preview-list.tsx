@@ -19,6 +19,7 @@ import {
   type CalendarMonthCellEntryBase,
 } from "@/features/planner/calendar-month-day-cell";
 import { getGoalVisual, getWorkPillDraftFillStyle, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
+import { planEntryViewTransitionName } from "@/features/planner/plan-view-transition";
 
 interface PreviewCompletionToggleState {
   currentlyCredited: boolean;
@@ -48,6 +49,7 @@ interface CalendarDayPreviewListProps<
   onEntryPointerEnd: () => void;
   density?: "compact" | "expanded";
   selectedEntryKey?: string | null;
+  shareEntryTransition?: boolean;
 }
 
 export function CalendarDayPreviewList<
@@ -69,6 +71,7 @@ export function CalendarDayPreviewList<
   onEntryPointerEnd,
   density = "compact",
   selectedEntryKey = null,
+  shareEntryTransition = false,
 }: CalendarDayPreviewListProps<TEntry, TCompletionFactMarker>) {
   const expanded = density === "expanded";
   return (
@@ -131,7 +134,13 @@ export function CalendarDayPreviewList<
                       setNodeRef(node);
                       setActivatorNodeRef(node);
                     }}
-                    style={{ ...style, ...pillFillStyle }}
+                    style={{
+                      ...style,
+                      ...pillFillStyle,
+                      ...(shareEntryTransition
+                        ? { viewTransitionName: planEntryViewTransitionName(entry.key) }
+                        : {}),
+                    }}
                     className={
                       expanded
                         ? `flex items-start transition-colors ${

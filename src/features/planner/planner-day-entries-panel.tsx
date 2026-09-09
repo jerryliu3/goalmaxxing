@@ -28,6 +28,7 @@ interface PlannerDayEntriesPanelProps {
   density?: "compact" | "expanded";
   includeSourceElement?: boolean;
   selectedEntryKey?: string | null;
+  shareEntryTransition?: boolean;
 }
 
 export function PlannerDayEntriesPanel({
@@ -49,6 +50,7 @@ export function PlannerDayEntriesPanel({
   density = "compact",
   includeSourceElement = true,
   selectedEntryKey = null,
+  shareEntryTransition = false,
 }: PlannerDayEntriesPanelProps) {
   return (
     <CalendarDayPreviewList
@@ -81,6 +83,7 @@ export function PlannerDayEntriesPanel({
       onEntryPointerEnd={onEntryPointerEnd}
       density={density}
       selectedEntryKey={selectedEntryKey}
+      shareEntryTransition={shareEntryTransition}
     />
   );
 }

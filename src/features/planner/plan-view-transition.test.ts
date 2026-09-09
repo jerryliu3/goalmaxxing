@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { planDayViewTransitionName } from "@/features/planner/plan-view-transition";
+import { planDayViewTransitionName, planEntryViewTransitionName } from "@/features/planner/plan-view-transition";
 
-describe("planDayViewTransitionName", () => {
+describe("plan view transition names", () => {
   it("uses a CSS-safe shared name per local date", () => {
     expect(planDayViewTransitionName("2026-09-06")).toBe("plan-day-2026-09-06");
+  });
+
+  it("sanitizes entry keys for CSS view-transition names", () => {
+    expect(planEntryViewTransitionName("goal-a:total:1")).toBe("plan-entry-goal-a-total-1");
   });
 });
