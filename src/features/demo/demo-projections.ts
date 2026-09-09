@@ -18,6 +18,7 @@ import { sha256Hex } from "@/lib/planner/canonical";
 import { createDefaultPlannerPolicy } from "@/lib/planner/policy";
 import { buildAchievementsShowcasePayload } from "@/features/achievements/build-showcase";
 import type { AchievementsShowcasePayload } from "@/features/achievements/types";
+import { progressionForTotalXp } from "@/lib/xp/progression";
 import {
   DEMO_ALEX_ID,
   DEMO_CORRELATION_ID,
@@ -446,14 +447,16 @@ export function buildDemoAchievements(): AchievementsShowcasePayload {
   const snapshot = getDemoStore();
   const goals = goalsForSubject(snapshot, DEMO_ALEX_ID);
   const completions = completionsForSubject(snapshot, DEMO_ALEX_ID);
-  const progression = progressionForTotalXp(420);
+  const totalXp = 2460;
   const unlockedAt = isoDateTime(snapshot.asOfDate, 8);
 
   return buildAchievementsShowcasePayload({
     goals,
     completions,
     asOfDate: snapshot.asOfDate,
-    totalXp: 420,
+    totalXp,
+    weeklyAnchor: WEEKLY_ANCHOR,
+    weekStartsOn: DEMO_WEEK_STARTS_ON,
     rewardCatalog: [
       {
         id: "70000000-0000-4000-8000-000000000010",
@@ -491,22 +494,44 @@ export function buildDemoAchievements(): AchievementsShowcasePayload {
         reward_description: "You reached Level 10.",
       },
     ],
-    userAwards: progression.currentLevel >= 5
-      ? [
-          {
-            id: "70000000-0000-4000-8000-000000000001",
-            unlocked_at: unlockedAt,
-            acknowledged_at: null,
-            revoked_at: null,
-            xp_rewards: {
-              level: 4,
-              reward_code: "xp.level.4",
-              reward_title: "Level 4 unlocked",
-              reward_description: "You reached Level 4.",
-            },
-          },
-        ]
-      : [],
+    userAwards: [
+      {
+        id: "70000000-0000-4000-8000-000000000001",
+        unlocked_at: unlockedAt,
+        acknowledged_at: null,
+        revoked_at: null,
+        xp_rewards: {
+          level: 2,
+          reward_code: "xp.level.2",
+          reward_title: "Level 2 unlocked",
+          reward_description: "You reached Level 2.",
+        },
+      },
+      {
+        id: "70000000-0000-4000-8000-000000000002",
+        unlocked_at: unlockedAt,
+        acknowledged_at: null,
+        revoked_at: null,
+        xp_rewards: {
+          level: 4,
+          reward_code: "xp.level.4",
+          reward_title: "Level 4 unlocked",
+          reward_description: "You reached Level 4.",
+        },
+      },
+      {
+        id: "70000000-0000-4000-8000-000000000003",
+        unlocked_at: unlockedAt,
+        acknowledged_at: null,
+        revoked_at: null,
+        xp_rewards: {
+          level: 6,
+          reward_code: "xp.level.6",
+          reward_title: "Level 6 unlocked",
+          reward_description: "You reached Level 6.",
+        },
+      },
+    ],
     truncated: {
       goals: false,
       completions: false,
