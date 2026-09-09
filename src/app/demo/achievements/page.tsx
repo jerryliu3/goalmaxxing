@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { AchievementsShowcase } from "@/features/achievements/showcase";
-import { AchievementsShowcaseStyles } from "@/features/achievements/showcase-presentation";
 import type { AchievementsShowcasePayload } from "@/features/achievements/types";
 
 export default function DemoAchievementsPage() {
@@ -20,9 +19,8 @@ export default function DemoAchievementsPage() {
 
   if (!payload) {
     return (
-      <div className="ach-showcase-root rounded-[20px] px-4 py-10 text-[#a89880] sm:px-6">
-        <AchievementsShowcaseStyles />
-        <p className="text-sm">Loading demo achievements...</p>
+      <div className="ach-showcase-root rounded-[20px] px-4 py-10 sm:px-6">
+        <p className="ach-showcase-body text-sm">Loading demo achievements...</p>
       </div>
     );
   }

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  AchievementsShowcaseStyles,
   ShowcaseMedalShelf,
   ShowcasePedestal,
   ShowcasePersonalRecords,
@@ -37,51 +36,57 @@ export function ShowcaseConcept() {
   return (
     <AchievementChrome
       concept={concept}
-      stageClassName="ach-showcase-root min-h-dvh text-[#f3ead8]"
+      stageClassName="ach-showcase-root ach-showcase-root--study min-h-dvh"
     >
-      <AchievementsShowcaseStyles />
-
       <div className="space-y-8 pb-4 pt-6">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#c88968]">
+            <p className="ach-showcase-eyebrow text-[10px] font-semibold uppercase tracking-[0.2em]">
               Leading hybrid · A1 + A2 + A4
             </p>
-            <h2 className="mt-2 font-display text-4xl font-semibold tracking-tight text-[#f8f1e3] sm:text-5xl">
+            <h2 className="ach-showcase-heading mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
               Bests on the wall. Medals on the shelf.
             </h2>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#a89880]">
+            <p className="ach-showcase-body mt-3 max-w-xl text-sm leading-relaxed">
               Case structure, vault metal, and personal records — locked mounts
               stay dark so the next award stays a surprise.
             </p>
           </div>
           <div className="min-w-[13rem]">
-            <div className="flex items-baseline justify-between gap-3 font-mono text-xs text-[#a89880]">
+            <div className="ach-showcase-body flex items-baseline justify-between gap-3 font-mono text-xs">
               <span>Claimed</span>
-              <span className="text-base text-[#f8f1e3]">
+              <span className="ach-showcase-stat-value text-base">
                 {claimed}/{total} · {fill}%
               </span>
             </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#3a3128]">
+            <div className="ach-showcase-track mt-2 h-2 overflow-hidden rounded-full">
               <div
                 className="ach-showcase-fill h-full rounded-full"
                 style={{ width: `${fill}%` }}
               />
             </div>
-            <dl className="mt-4 grid grid-cols-3 gap-3 text-right font-mono text-sm text-[#d4c4a4]">
+            <dl className="ach-showcase-stat-muted mt-4 grid grid-cols-3 gap-3 text-right font-mono text-sm">
               <div>
-                <dt className="text-[10px] uppercase tracking-[0.14em] text-[#8a7a64]">Level</dt>
-                <dd className="mt-1 text-lg font-semibold text-[#f8f1e3]">{COLLECTION.level}</dd>
+                <dt className="ach-showcase-stat-label text-[10px] uppercase tracking-[0.14em]">
+                  Level
+                </dt>
+                <dd className="ach-showcase-stat-value mt-1 text-lg font-semibold">
+                  {COLLECTION.level}
+                </dd>
               </div>
               <div>
-                <dt className="text-[10px] uppercase tracking-[0.14em] text-[#8a7a64]">Medals</dt>
-                <dd className="mt-1 text-lg font-semibold text-[#f8f1e3]">
+                <dt className="ach-showcase-stat-label text-[10px] uppercase tracking-[0.14em]">
+                  Medals
+                </dt>
+                <dd className="ach-showcase-stat-value mt-1 text-lg font-semibold">
                   {COLLECTION.unlockedAwards}/{COLLECTION.totalAwards}
                 </dd>
               </div>
               <div>
-                <dt className="text-[10px] uppercase tracking-[0.14em] text-[#8a7a64]">Goals</dt>
-                <dd className="mt-1 text-lg font-semibold text-[#f8f1e3]">
+                <dt className="ach-showcase-stat-label text-[10px] uppercase tracking-[0.14em]">
+                  Goals
+                </dt>
+                <dd className="ach-showcase-stat-value mt-1 text-lg font-semibold">
                   {COLLECTION.achievedGoals}
                 </dd>
               </div>

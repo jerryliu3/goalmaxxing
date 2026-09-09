@@ -1,14 +1,12 @@
 "use client";
 
 import { AchievementsShowcase } from "@/features/achievements/showcase";
-import { AchievementsShowcaseStyles } from "@/features/achievements/showcase-presentation";
 import { useAchievementsShowcase } from "@/features/achievements/use-achievements-showcase";
 
 function AchievementsLoadingState() {
   return (
-    <div className="ach-showcase-root -mx-4 rounded-[20px] px-4 py-10 text-[#a89880] sm:-mx-6 sm:px-6">
-      <AchievementsShowcaseStyles />
-      <p className="text-sm">Loading achievements...</p>
+    <div className="ach-showcase-root -mx-4 rounded-[20px] px-4 py-10 sm:-mx-6 sm:px-6">
+      <p className="ach-showcase-body text-sm">Loading achievements...</p>
     </div>
   );
 }
@@ -22,12 +20,11 @@ function AchievementsErrorState({
 }) {
   return (
     <div className="ach-showcase-root -mx-4 rounded-[20px] px-4 py-10 sm:-mx-6 sm:px-6">
-      <AchievementsShowcaseStyles />
-      <p className="text-sm text-[#e8b4b4]">{message}</p>
+      <p className="ach-showcase-error text-sm">{message}</p>
       <button
         type="button"
         onClick={onRetry}
-        className="mt-4 rounded-md border border-[#5a4a38] px-3 py-2 text-sm text-[#f8f1e3] transition hover:bg-[#2c241c]"
+        className="ach-showcase-retry mt-4 rounded-md border px-3 py-2 text-sm transition"
       >
         Try again
       </button>

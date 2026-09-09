@@ -1,0 +1,335 @@
+/*
+ * Achievements Showcase surfaces adapt to the active UI style (Original / Gazetteer)
+ * and color scheme. The UX study keeps the dark vault via `.ach-showcase-root--study`.
+ */
+.ach-showcase-root {
+  color: var(--foreground);
+
+  --ach-eyebrow: var(--primary);
+  --ach-heading: var(--foreground);
+  --ach-body: var(--muted-foreground);
+  --ach-kicker: var(--muted-foreground);
+  --ach-stat-label: var(--muted-foreground);
+  --ach-stat-value: var(--foreground);
+  --ach-border: var(--border);
+  --ach-border-strong: color-mix(in srgb, var(--border) 65%, var(--foreground));
+  --ach-track: var(--muted);
+  --ach-selection: var(--gm-stamp-light, var(--primary));
+  --ach-error: var(--destructive);
+  --ach-accent-stamp: var(--gm-stamp-light, var(--primary));
+  --ach-accent-sage: var(--gm-gain);
+  --ach-accent-gain: color-mix(in srgb, var(--gm-gain) 82%, white);
+  --ach-accent-copper: color-mix(in srgb, var(--primary) 72%, white);
+  --ach-accent-ink: var(--border);
+  --ach-seal-line: var(--border);
+  --ach-mount-locked-border: color-mix(in srgb, var(--border) 55%, var(--background));
+
+  --ach-root-bg:
+    radial-gradient(
+      ellipse 70% 45% at 50% 0%,
+      color-mix(in srgb, var(--primary) 14%, transparent),
+      transparent 52%
+    ),
+    radial-gradient(
+      ellipse 50% 35% at 90% 20%,
+      color-mix(in srgb, var(--gm-heatmap-2, var(--primary)) 10%, transparent),
+      transparent 45%
+    ),
+    linear-gradient(
+      180deg,
+      var(--background) 0%,
+      color-mix(in srgb, var(--muted) 28%, var(--background)) 48%,
+      var(--background) 100%
+    );
+  --ach-glass-bg: linear-gradient(
+    180deg,
+    var(--card) 0%,
+    color-mix(in srgb, var(--muted) 22%, var(--card)) 100%
+  );
+  --ach-glass-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--foreground) 7%, transparent),
+    inset 0 -18px 40px color-mix(in srgb, var(--foreground) 4%, transparent);
+  --ach-shelf-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--primary) 18%, var(--muted)) 0%,
+    color-mix(in srgb, var(--primary) 10%, var(--muted)) 45%,
+    color-mix(in srgb, var(--foreground) 6%, var(--muted)) 100%
+  );
+  --ach-pedestal-bg:
+    radial-gradient(
+      ellipse at 50% 0%,
+      color-mix(in srgb, var(--ach-selection) 20%, transparent),
+      transparent 58%
+    ),
+    linear-gradient(
+      165deg,
+      var(--card),
+      color-mix(in srgb, var(--muted) 36%, var(--card))
+    );
+  --ach-record-bg:
+    radial-gradient(
+      ellipse at 20% 0%,
+      color-mix(in srgb, var(--ach-selection) 12%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(
+      160deg,
+      var(--card),
+      color-mix(in srgb, var(--muted) 30%, var(--card))
+    );
+  --ach-mount-bg:
+    radial-gradient(
+      ellipse at 30% 20%,
+      color-mix(in srgb, var(--ach-selection) 14%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(
+      160deg,
+      var(--card),
+      color-mix(in srgb, var(--muted) 34%, var(--card))
+    );
+  --ach-mount-locked-bg: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--muted) 72%, var(--background)),
+    color-mix(in srgb, var(--muted) 88%, var(--background))
+  );
+  --ach-plaque-bg: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--muted) 18%, var(--card)),
+    color-mix(in srgb, var(--muted) 34%, var(--card))
+  );
+  --ach-fill-bg: linear-gradient(
+    90deg,
+    var(--primary),
+    var(--ach-selection) 55%,
+    color-mix(in srgb, var(--primary) 68%, white)
+  );
+  --ach-retry-hover: color-mix(in srgb, var(--muted) 55%, var(--card));
+
+  background: var(--ach-root-bg);
+}
+
+.gm-gazetteer .ach-showcase-root:not(.ach-showcase-root--study) {
+  --ach-root-bg:
+    radial-gradient(
+      ellipse 70% 45% at 50% 0%,
+      color-mix(in srgb, var(--primary) 20%, transparent),
+      transparent 52%
+    ),
+    radial-gradient(
+      ellipse 50% 35% at 90% 20%,
+      color-mix(in srgb, var(--gm-stamp-light) 14%, transparent),
+      transparent 45%
+    ),
+    linear-gradient(
+      180deg,
+      var(--gm-page) 0%,
+      color-mix(in srgb, var(--muted) 32%, var(--gm-page)) 44%,
+      var(--background) 100%
+    );
+  --ach-shelf-bg: linear-gradient(
+    180deg,
+    #8a6a48 0%,
+    #6a5338 45%,
+    color-mix(in srgb, var(--foreground) 10%, var(--muted)) 100%
+  );
+}
+
+.dark .ach-showcase-root:not(.ach-showcase-root--study) {
+  --ach-root-bg:
+    radial-gradient(
+      ellipse 70% 45% at 50% 0%,
+      color-mix(in srgb, var(--primary) 22%, transparent),
+      transparent 52%
+    ),
+    radial-gradient(
+      ellipse 50% 35% at 90% 20%,
+      color-mix(in srgb, var(--gm-heatmap-4, var(--primary)) 12%, transparent),
+      transparent 45%
+    ),
+    linear-gradient(
+      180deg,
+      var(--background) 0%,
+      color-mix(in srgb, var(--muted) 40%, var(--background)) 42%,
+      color-mix(in srgb, var(--background) 92%, black) 100%
+    );
+  --ach-glass-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--foreground) 8%, transparent),
+    inset 0 -24px 48px color-mix(in srgb, black 28%, transparent);
+}
+
+.dark.gm-gazetteer .ach-showcase-root:not(.ach-showcase-root--study) {
+  --ach-shelf-bg: linear-gradient(180deg, #6a5338 0%, #4a3a28 45%, #32281c 100%);
+}
+
+.ach-showcase-root--study {
+  color: #f3ead8;
+  --ach-eyebrow: #c88968;
+  --ach-heading: #f8f1e3;
+  --ach-body: #a89880;
+  --ach-kicker: #8a7a64;
+  --ach-stat-label: #8a7a64;
+  --ach-stat-value: #f8f1e3;
+  --ach-border: #5a4a38;
+  --ach-border-strong: #5a4a38;
+  --ach-track: #3a3128;
+  --ach-selection: #c88968;
+  --ach-error: #e8b4b4;
+  --ach-accent-stamp: #c88968;
+  --ach-accent-sage: #a8b8ae;
+  --ach-accent-gain: #8fba7a;
+  --ach-accent-copper: #e8b89a;
+  --ach-accent-ink: #d4c4a4;
+  --ach-seal-line: #3a3128;
+  --ach-mount-locked-border: #2e261e;
+  --ach-root-bg:
+    radial-gradient(ellipse 70% 45% at 50% 0%, rgba(154, 79, 44, 0.28), transparent 52%),
+    radial-gradient(ellipse 50% 35% at 90% 20%, rgba(212, 168, 75, 0.12), transparent 45%),
+    linear-gradient(180deg, #1a1510 0%, #241c14 42%, #18140f 100%);
+  --ach-glass-bg: linear-gradient(180deg, #2c241c 0%, #1f1914 100%);
+  --ach-glass-shadow:
+    inset 0 1px 0 rgba(248, 241, 227, 0.08),
+    inset 0 -24px 48px rgba(0, 0, 0, 0.35);
+  --ach-shelf-bg: linear-gradient(180deg, #6a5338 0%, #4a3a28 45%, #32281c 100%);
+  --ach-pedestal-bg:
+    radial-gradient(ellipse at 50% 0%, rgba(212, 168, 75, 0.28), transparent 58%),
+    linear-gradient(165deg, #3a2f24, #2a221a);
+  --ach-record-bg:
+    radial-gradient(ellipse at 20% 0%, rgba(240, 215, 138, 0.12), transparent 55%),
+    linear-gradient(160deg, #3a2f24, #2a221a);
+  --ach-mount-bg:
+    radial-gradient(ellipse at 30% 20%, rgba(240, 215, 138, 0.14), transparent 55%),
+    linear-gradient(160deg, #3a2f24, #2a221a);
+  --ach-mount-locked-bg: linear-gradient(160deg, #1c1712, #14100c);
+  --ach-plaque-bg: linear-gradient(160deg, #32281f, #241c14);
+  --ach-fill-bg: linear-gradient(90deg, #9a4f2c, #c88968 55%, #d4a84b);
+  --ach-retry-hover: #2c241c;
+}
+
+.ach-showcase-glass {
+  background: var(--ach-glass-bg);
+  border: 1px solid var(--ach-border);
+  box-shadow: var(--ach-glass-shadow);
+}
+
+.ach-showcase-shelf {
+  background: var(--ach-shelf-bg);
+}
+
+.ach-showcase-pedestal {
+  background: var(--ach-pedestal-bg);
+  border-color: var(--ach-border);
+}
+
+.ach-showcase-record {
+  background: var(--ach-record-bg);
+  border-color: var(--ach-border);
+}
+
+.ach-showcase-mount {
+  background: var(--ach-mount-bg);
+  border-color: var(--ach-border);
+}
+
+.ach-showcase-mount-locked {
+  background: var(--ach-mount-locked-bg);
+  border-color: var(--ach-mount-locked-border);
+}
+
+.ach-showcase-mount.is-selected {
+  border-color: var(--ach-selection);
+  box-shadow: 0 0 0 1px var(--ach-selection);
+}
+
+.ach-showcase-fill {
+  background: var(--ach-fill-bg);
+}
+
+.ach-showcase-plaque {
+  border-color: var(--ach-border);
+  background: var(--ach-plaque-bg);
+}
+
+.ach-showcase-eyebrow {
+  color: var(--ach-eyebrow);
+}
+
+.ach-showcase-heading {
+  color: var(--ach-heading);
+}
+
+.ach-showcase-body {
+  color: var(--ach-body);
+}
+
+.ach-showcase-kicker {
+  color: var(--ach-kicker);
+}
+
+.ach-showcase-stat-label {
+  color: var(--ach-stat-label);
+}
+
+.ach-showcase-stat-value {
+  color: var(--ach-stat-value);
+}
+
+.ach-showcase-stat-muted {
+  color: color-mix(in srgb, var(--ach-stat-value) 78%, var(--ach-body));
+}
+
+.ach-showcase-track {
+  background: var(--ach-track);
+}
+
+.ach-showcase-error {
+  color: var(--ach-error);
+}
+
+.ach-showcase-retry {
+  border-color: var(--ach-border);
+  color: var(--ach-heading);
+}
+
+.ach-showcase-retry:hover {
+  background: var(--ach-retry-hover);
+}
+
+.ach-showcase-accent-stamp {
+  color: var(--ach-accent-stamp);
+}
+
+.ach-showcase-accent-sage {
+  color: var(--ach-accent-sage);
+}
+
+.ach-showcase-accent-gain {
+  color: var(--ach-accent-gain);
+}
+
+.ach-showcase-accent-copper {
+  color: var(--ach-accent-copper);
+}
+
+.ach-showcase-accent-ink {
+  color: var(--ach-accent-ink);
+}
+
+.ach-showcase-seal-line {
+  background: var(--ach-seal-line);
+}
+
+@keyframes ach-showcase-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ach-showcase-hero {
+  animation: ach-showcase-rise 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
