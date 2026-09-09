@@ -53,9 +53,10 @@ describe("PlannerCalendarToolbar", () => {
       "true"
     );
     expect(within(viewGroup).queryByRole("button", { name: "3 Day" })).toBeNull();
-    expect(screen.getByTestId("plan-view-mode-thumb")).toHaveStyle({
-      transform: "translateX(100%)",
-    });
+    expect(screen.getByTestId("plan-view-mode-thumb")).toHaveClass("bg-primary");
+    expect(within(viewGroup).getByRole("button", { name: "Week" })).toHaveClass(
+      "text-primary-foreground"
+    );
   });
 
   it("slides the view-mode thumb to Month", () => {
