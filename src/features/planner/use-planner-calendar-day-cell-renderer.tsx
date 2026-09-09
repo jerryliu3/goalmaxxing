@@ -23,6 +23,7 @@ import type {
 import type { PlannerDayPreviewInteractions } from "@/features/planner/use-planner-day-preview-interactions";
 import { canOpenPlannerEventDetails } from "@/features/planner/calendar-task-entries";
 import { getPlannerCompletionTogglePresentation } from "@/features/planner/completion-entry-dispatch";
+import { scrollPlannerChecklistIntoView } from "@/features/planner/planner-checklist-scroll";
 export function resolveWeekAgendaSelectionViewMode(): Extract<
   PlannerCalendarViewMode,
   "week" | "day"
@@ -91,7 +92,6 @@ interface UsePlannerCalendarDayCellRendererArgs {
     | "clearLongPressTimer"
     | "openDayPreview"
     | "handleDayCellClick"
-    | "openDayViewForDay"
     | "selectDayForView"
     | "scheduleHoverPreview"
     | "scheduleHoverPreviewClose"
@@ -130,7 +130,6 @@ export function usePlannerCalendarDayCellRenderer({
     clearLongPressTimer,
     openDayPreview,
     handleDayCellClick,
-    openDayViewForDay,
     selectDayForView,
     scheduleHoverPreview,
     scheduleHoverPreviewClose,
@@ -209,6 +208,9 @@ export function usePlannerCalendarDayCellRenderer({
             }
             if (viewMode === "week") {
               selectDayForView(day, resolveWeekAgendaSelectionViewMode());
+              if (canOpenPlannerEventDetails(entry)) {
+                setSelectedEventEntryKey(entry.key);
+              }
               return;
             }
             if (viewMode === "month") {
@@ -263,7 +265,11 @@ export function usePlannerCalendarDayCellRenderer({
             clearLongPressTimer();
             longPressTriggeredRef.current = false;
             setDayPreview(null);
-            openDayViewForDay(cell.date);
+            selectDayForView(
+              cell.date,
+              viewMode === "week" ? resolveWeekAgendaSelectionViewMode() : "month"
+            );
+            scrollPlannerChecklistIntoView();
           }}
           onCellMouseEnter={(target) => {
             if (viewMode === "day") {
@@ -299,7 +305,11 @@ export function usePlannerCalendarDayCellRenderer({
                   active: true,
                 };
                 setDayPreview(null);
-                openDayViewForDay(cell.date);
+                selectDayForView(
+                  cell.date,
+                  viewMode === "week" ? resolveWeekAgendaSelectionViewMode() : "month"
+                );
+                scrollPlannerChecklistIntoView();
                 return;
               }
               lastTouchTapRef.current = { day: cell.date, at: now };
@@ -367,7 +377,6 @@ export function usePlannerCalendarDayCellRenderer({
       longPressTriggeredRef,
       onSelectedDayChange,
       openDayPreview,
-      openDayViewForDay,
       selectDayForView,
       plannerReadOnly,
       pointerPressActiveRef,
