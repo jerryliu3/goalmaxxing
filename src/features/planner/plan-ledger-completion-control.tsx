@@ -5,6 +5,8 @@ import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import { cn } from "@/lib/utils";
 
+export type PlanLedgerCompletionMode = "toggle" | "done" | "hidden" | "move";
+
 export function PlanLedgerCompletionControl({
   completed,
   pending,
@@ -15,7 +17,7 @@ export function PlanLedgerCompletionControl({
 }: {
   completed: boolean;
   pending: boolean;
-  mode: "toggle" | "done" | "hidden" | "move";
+  mode: PlanLedgerCompletionMode;
   label: string;
   disabled?: boolean;
   onToggle: (sourceElement: HTMLButtonElement) => void;

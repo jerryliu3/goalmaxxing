@@ -10,7 +10,10 @@ import {
   placedGoalIdsForDay,
   selectUnplannedGoals,
 } from "@/features/planner/plan-day-unplanned";
-import { PlanLedgerCompletionControl } from "@/features/planner/plan-ledger-completion-control";
+import {
+  PlanLedgerCompletionControl,
+  type PlanLedgerCompletionMode,
+} from "@/features/planner/plan-ledger-completion-control";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 import {
@@ -187,7 +190,7 @@ function PlanDayUnplannedRows({
       {goals.map((goal) => {
         const presentation = presentationByGoalId.get(goal.id);
         const completed = Boolean(presentation?.exactDateCompleted);
-        let completionMode = planCompletionControlModeForDate({
+        let completionMode: PlanLedgerCompletionMode = planCompletionControlModeForDate({
           currentlyCredited: completed,
           selectedDate: day,
           asOfDate,
