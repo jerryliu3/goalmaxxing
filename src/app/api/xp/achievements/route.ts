@@ -112,7 +112,6 @@ export async function GET(request: Request) {
       rewardCatalog: rewardsResponse.data ?? [],
       userAwards: globalAchievementsResponse.data ?? [],
       weeklyAnchor: { weekStartsOn },
-      weekStartsOn,
       truncated: {
         goals: goalsTruncated,
         completions: completionsTruncated,
