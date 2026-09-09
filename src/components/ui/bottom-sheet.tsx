@@ -68,7 +68,17 @@ export function BottomSheet({
             ) : null}
           </div>
         )}
-        {header ? <DialogTitle className="sr-only">{title}</DialogTitle> : null}
+        {header ? (
+          <>
+            <DialogTitle className="sr-only">{title}</DialogTitle>
+            <DialogDescription className="sr-only">
+              {description ?? title}
+            </DialogDescription>
+          </>
+        ) : null}
+        {!header && !description ? (
+          <DialogDescription className="sr-only">{title}</DialogDescription>
+        ) : null}
         <div className="min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {children}
         </div>
