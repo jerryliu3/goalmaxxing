@@ -485,9 +485,39 @@ body {
     var(--motion-ease-emphasized) both;
 }
 
+@keyframes plan-draft-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.plan-draft-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.plan-draft-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--primary) 18%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: plan-draft-shimmer 1.8s linear infinite;
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .motion-popup-enter,
-  .motion-collapsible-content {
+  .motion-collapsible-content,
+  .plan-draft-shimmer::after {
     animation: none !important;
   }
 
