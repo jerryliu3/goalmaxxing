@@ -7,6 +7,7 @@ import {
 import { getDateInTimezone, resolveUserTimezone } from "@/lib/dates/timezone";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { buildAchievementsShowcasePayload } from "@/features/achievements/build-showcase";
+import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
 import type { Completion, Goal } from "@/lib/goals/types";
 
 export const runtime = "nodejs";
@@ -26,7 +27,7 @@ export async function GET(request: Request) {
 
     const profileResponse = await supabase
       .from("profiles")
-      .select("timezone")
+      .select("timezone,week_starts_on")
       .eq("id", userId)
       .maybeSingle();
     if (profileResponse.error) {
@@ -37,6 +38,7 @@ export async function GET(request: Request) {
       );
     }
     const timezone = resolveUserTimezone(profileResponse.data?.timezone);
+    const weekStartsOn = normalizeWeekStartsOn(profileResponse.data?.week_starts_on);
     const asOfDate = getDateInTimezone(new Date(), timezone);
 
     const [
@@ -109,6 +111,8 @@ export async function GET(request: Request) {
       totalXp: xpProfileResponse.data?.total_xp ?? 0,
       rewardCatalog: rewardsResponse.data ?? [],
       userAwards: globalAchievementsResponse.data ?? [],
+      weeklyAnchor: { weekStartsOn },
+      weekStartsOn,
       truncated: {
         goals: goalsTruncated,
         completions: completionsTruncated,
