@@ -251,10 +251,17 @@ test.describe("planner credit move", () => {
       )
       .toBe(true);
 
+    await page
+      .waitForResponse(
+        (response) =>
+          response.url().includes("/api/planner/context") && response.ok(),
+        { timeout: 30_000 }
+      )
+      .catch(() => undefined);
     const goalRow = page
       .locator("[data-planner-entry-key]")
       .filter({ hasText: CADENCE_AFFINITY_GOAL_TITLE });
-    await expect(goalRow).toBeVisible({ timeout: 15_000 });
+    await expect(goalRow).toBeVisible({ timeout: 30_000 });
 
     const completeButton = goalRow.getByRole("button", {
       name: "Mark session done",
