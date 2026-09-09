@@ -51,16 +51,6 @@ export interface AchievementsShowcasePayload {
   personalRecords: PersonalRecord[];
   levelAwards: LevelAward[];
   achievedGoals: AchievedGoalAchievement[];
-  globalAchievements: Array<{
-    id: string;
-    unlockedAt: string;
-    acknowledgedAt: string | null;
-    revokedAt: string | null;
-    level: number | null;
-    code: string | null;
-    title: string | null;
-    description: string | null;
-  }>;
   truncated: {
     goals: boolean;
     completions: boolean;
