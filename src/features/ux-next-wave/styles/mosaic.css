@@ -1,0 +1,180 @@
+/* 04 Mosaic: bold tiles with duration encoded in their footprint. */
+.nw-mosaic {
+  --bg: #f4f0f8;
+  --ink: #362b47;
+  --accent: #6846a3;
+  --muted: #897b94;
+  --surface: #fff;
+  --line: #48255724;
+}
+.nw .nw-mosaic .app-nav {
+  background: #eae2f3;
+}
+.nw .mosaic-layout {
+  display: grid;
+  grid-template-columns: 1.5fr 0.85fr;
+  gap: 42px;
+}
+.nw .mosaic-layout h1 {
+  position: relative;
+  margin: 24px 0 20px;
+  font-size: 3.6rem;
+}
+.nw .mosaic-layout h1 em {
+  font-family: inherit;
+  font-style: normal;
+  font-weight: 500;
+  color: #8464b9;
+}
+.nw .mosaic-period {
+  position: absolute;
+  right: 10px;
+  bottom: 0;
+  font-size: 6rem;
+  color: #b29cda;
+  line-height: 1;
+}
+.nw .mosaic-board {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+.nw .mosaic-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 20px 22px;
+  border-radius: 20px;
+  background: var(--soft);
+  color: color-mix(in srgb, var(--goal), black 25%);
+  min-height: 206px;
+  position: relative;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+.nw .mosaic-tile:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px #39285812;
+}
+.nw .mosaic-tile.wide {
+  grid-column: span 2;
+  min-height: 160px;
+}
+.nw .mosaic-tile > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.75rem;
+}
+.nw .mosaic-tile > strong {
+  font-size: 1.55rem;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  max-width: 180px;
+  margin: auto 0 16px;
+  z-index: 1;
+}
+.nw .mosaic-tile.wide > strong {
+  margin: 20px 0 16px;
+  max-width: none;
+  font-size: 1.9rem;
+}
+.nw .mosaic-tile-number {
+  position: absolute;
+  font-size: 5.2rem;
+  font-weight: 500;
+  letter-spacing: -0.08em;
+  opacity: 0.13;
+  right: 18px;
+  top: 36px;
+}
+.nw .mosaic-tile.finished {
+  background: #e5deec;
+  color: #82748e;
+}
+.nw .mosaic-tile.finished > strong {
+  text-decoration: line-through;
+}
+.nw .mosaic-tile.personal {
+  --soft: #ebf3bd;
+  --goal: #687431;
+}
+.nw .mosaic-tile.endurance {
+  --soft: #e7b998;
+  --goal: #8b4324;
+}
+.nw .mosaic-aside {
+  padding-top: 16px;
+}
+.nw .mosaic-receipt {
+  background: #fffdfd;
+  border-radius: 120px 120px 12px 12px;
+  padding: 56px 28px 24px;
+  text-align: center;
+  border: 1px solid #e7deed;
+}
+.nw .mosaic-receipt > .eyebrow {
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+}
+.nw .receipt-number {
+  font-size: 6rem;
+  font-weight: 450;
+  letter-spacing: -0.09em;
+  line-height: 1.3;
+  margin: 12px 0 4px;
+}
+.nw .receipt-number > span {
+  font-size: 2.2rem;
+  color: #baaac6;
+  letter-spacing: -0.06em;
+}
+.nw .mosaic-receipt h2 {
+  font-size: 1.45rem;
+}
+.nw .mosaic-receipt p {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin: 16px auto 0;
+  max-width: 220px;
+}
+.nw .receipt-marks {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin: 28px 0;
+}
+.nw .receipt-marks > span {
+  height: 32px;
+  width: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed #d8cbe2;
+  border-radius: 8px;
+  color: white;
+}
+.nw .receipt-marks .filled {
+  background: var(--goal);
+  border-color: var(--goal);
+}
+.nw .receipt-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  border-top: 1px dashed #d7ccdf;
+  padding-top: 19px;
+}
+.nw .receipt-bottom > span {
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.nw .receipt-bottom > strong {
+  font-size: 0.875rem;
+  font-weight: 550;
+}

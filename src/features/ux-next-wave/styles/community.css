@@ -1,0 +1,554 @@
+/* Community: finite, permissioned summaries and optional challenges. */
+.nw .community-avatars {
+  display: flex;
+  padding-right: 8px;
+  margin-bottom: 10px;
+}
+.nw .community-avatars > span {
+  width: 43px;
+  height: 43px;
+  background: var(--soft, #e4ded5);
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin-right: -8px;
+  font-size: 0.625rem;
+  color: var(--goal, #74654f);
+  font-weight: 600;
+}
+.nw .community-tabs {
+  display: flex;
+  width: fit-content;
+  height: auto;
+  background: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  margin: 28px 0 30px;
+  padding: 0;
+  gap: 28px;
+}
+.nw .community-tabs > button {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  padding: 12px 0;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  font-weight: 500;
+  min-height: 44px;
+}
+.nw .community-tabs > button[data-state="active"] {
+  box-shadow: 0 2px 0 var(--accent);
+  color: var(--ink);
+  background: none;
+}
+.nw .community-tabs > button:after {
+  display: none;
+}
+.nw .people-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.nw .person-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #ffffff6b;
+  padding: 25px;
+  position: relative;
+  overflow: hidden;
+  min-height: 350px;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
+}
+.nw .person-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 28px #2c3d3010;
+}
+.nw .person-top {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+}
+.nw .person-avatar {
+  width: 52px;
+  height: 52px;
+  background: var(--soft);
+  color: var(--goal);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.875rem;
+}
+.nw .person-numeral {
+  display: none;
+}
+.nw .person-card h2 {
+  margin-top: 28px;
+  font-size: 2rem;
+}
+.nw .person-card > p {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.nw .person-count {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+.nw .person-count > strong {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  letter-spacing: -0.07em;
+  font-weight: 450;
+}
+.nw .person-count small {
+  font-size: 1.5rem;
+  color: var(--muted);
+  letter-spacing: -0.05em;
+}
+.nw .person-count > span {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.nw .person-marks {
+  display: flex;
+  gap: 7px;
+  margin-top: 20px;
+  margin-bottom: 22px;
+}
+.nw .person-marks > span {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  color: white;
+}
+.nw .person-marks .filled {
+  background: var(--goal);
+  border-color: var(--goal);
+}
+.nw .person-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.6875rem;
+}
+.nw .team-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 27px 4px 2px;
+  max-width: 620px;
+}
+.nw .team-note svg {
+  margin-top: 3px;
+}
+.nw .team-note h3 {
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+.nw .team-note p {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+.nw .team-note span {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.nw .community-prism .person-card {
+  background: linear-gradient(135deg, #ffffffe0, #ffffff50);
+  border: 1px solid white;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 15px 20px -20px #395b4a66;
+}
+.nw .community-prism .person-card:nth-child(2) {
+  transform: translateY(14px);
+}
+.nw .community-prism .person-card:nth-child(3) {
+  transform: translateY(28px);
+}
+.nw .community-prism .team-note {
+  margin-top: 25px;
+}
+.nw .community-tempo .person-card {
+  border-radius: 0;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: none;
+  padding: 20px;
+}
+.nw .community-tempo .person-numeral {
+  display: block;
+  position: absolute;
+  right: 20px;
+  top: 83px;
+  font-size: 5rem;
+  letter-spacing: -0.08em;
+  color: #ddd7cc;
+  line-height: 1;
+}
+.nw .community-tempo .person-card h2 {
+  z-index: 1;
+}
+.nw .community-tempo .person-card:first-child {
+  background: #ff5a32;
+  --muted: #733820;
+  --line: #7f3b2324;
+}
+.nw .community-tempo .person-card:first-child .person-avatar {
+  background: #ffd2b7;
+}
+.nw .community-tempo .person-card:first-child .person-numeral {
+  color: #ec4c24;
+}
+.nw .community-tempo .person-count strong {
+  font-size: 4.5rem;
+}
+.nw .community-tempo .person-marks > span {
+  border-radius: 2px;
+  height: 6px;
+  width: 30px;
+}
+.nw .community-tempo .person-marks svg {
+  display: none;
+}
+.nw .community-weave .people-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.nw .community-weave .person-card {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 54px 110px 110px 1fr;
+  column-gap: 20px;
+  align-items: center;
+  padding: 20px 25px;
+  border-radius: 12px;
+}
+.nw .community-weave .person-top {
+  grid-column: 1;
+  grid-row: 1/3;
+}
+.nw .community-weave .person-top > svg {
+  display: none;
+}
+.nw .community-weave .person-card h2 {
+  font-size: 1.35rem;
+  margin: 0;
+  grid-column: 2;
+  grid-row: 1;
+}
+.nw .community-weave .person-card > p {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 0.75rem;
+}
+.nw .community-weave .person-count {
+  grid-column: 3;
+  grid-row: 1/3;
+  margin: 0;
+}
+.nw .community-weave .person-count strong {
+  font-size: 2.5rem;
+}
+.nw .community-weave .person-count > span {
+  display: none;
+}
+.nw .community-weave .person-marks,
+.nw .community-weave .person-bottom {
+  display: none;
+}
+.nw .person-week {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  grid-column: 4;
+  grid-row: 1/3;
+}
+.nw .person-week > span {
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  border: 1px solid var(--line);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--muted);
+}
+.nw .person-week .active {
+  background: var(--goal);
+  color: white;
+  border-color: var(--goal);
+}
+.nw .community-mosaic .person-card {
+  background: var(--soft);
+  border: 0;
+  border-radius: 28px 28px 10px 10px;
+  color: var(--goal);
+  --muted: color-mix(in srgb, var(--goal), black 10%);
+}
+.nw .community-mosaic .person-avatar {
+  background: #ffffff70;
+}
+.nw .community-mosaic .person-marks > span {
+  border-radius: 5px;
+  width: 28px;
+  height: 28px;
+}
+.nw .community-script .people-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.nw .community-script .person-card {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 60px 130px 1fr;
+  align-items: center;
+  padding: 24px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  column-gap: 25px;
+  background: none;
+}
+.nw .community-script .person-top {
+  grid-column: 1;
+  grid-row: 1/3;
+}
+.nw .community-script .person-top > svg {
+  display: none;
+}
+.nw .community-script .person-card h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  grid-column: 2;
+  grid-row: 1;
+}
+.nw .community-script .person-card > p {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 0.8125rem;
+}
+.nw .community-script .person-bottom {
+  display: none;
+}
+.nw .person-sentence {
+  grid-column: 3;
+  grid-row: 1/3;
+  font-family: Georgia, serif;
+  font-size: 1.5rem;
+  line-height: 1.5;
+  letter-spacing: -0.03em;
+}
+.nw .person-sentence b {
+  font-weight: 400;
+  font-style: italic;
+  text-decoration: underline;
+  text-decoration-color: #e9b0c0;
+  text-underline-offset: 6px;
+}
+.nw .challenge-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 48px;
+}
+.nw .challenge-poster {
+  padding: 30px;
+  border-radius: 18px;
+  background: var(--accent);
+  color: var(--surface);
+}
+.nw .challenge-poster .section-label {
+  color: inherit;
+  opacity: 0.75;
+}
+.nw .challenge-poster h2 {
+  font-size: 4.3rem;
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+  margin: 26px 0 20px;
+}
+.nw .challenge-poster > p {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  opacity: 0.85;
+}
+.nw .challenge-punches {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin: 32px 0;
+}
+.nw .challenge-punches > span {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 1px dashed #ffffff70;
+  border-radius: 50%;
+  font-size: 0.875rem;
+  opacity: 0.7;
+}
+.nw .challenge-punches .filled {
+  background: var(--surface);
+  color: var(--accent);
+  border-style: solid;
+  opacity: 1;
+}
+.nw .challenge-poster .primary {
+  background: var(--surface);
+  color: var(--accent);
+  width: 100%;
+  font-size: 0.875rem;
+}
+.nw .challenge-poster > span:last-child {
+  display: block;
+  text-align: center;
+  font-size: 0.6875rem;
+  margin-top: 15px;
+  opacity: 0.85;
+}
+.nw .challenge-side {
+  padding: 26px 0;
+}
+.nw .challenge-side h3 {
+  font-size: 2rem;
+  margin: 20px 0 14px;
+}
+.nw .challenge-side p {
+  color: var(--muted);
+  line-height: 1.8;
+  font-size: 0.9375rem;
+}
+.nw .challenge-side > div {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+.nw .challenge-side strong {
+  font-size: 3rem;
+  font-weight: 400;
+  letter-spacing: -0.065em;
+}
+.nw .challenge-side > div > span {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+.nw .challenge-side > p:last-child {
+  margin-top: 22px;
+}
+.nw .community-tempo .challenge-poster {
+  color: #2e210f;
+  border-radius: 0;
+}
+.nw .community-tempo .challenge-poster .primary {
+  background: #2e210f;
+  color: #fff;
+}
+.nw .community-mosaic .challenge-poster {
+  background: #e8f2b3;
+  color: #3e492a;
+}
+.nw .community-mosaic .challenge-punches > span {
+  border-color: #818d5d;
+  border-radius: 12px;
+}
+.nw .community-mosaic .challenge-punches .filled {
+  background: #3e492a;
+  color: #e8f2b3;
+}
+.nw .community-mosaic .challenge-poster .primary {
+  background: #3e492a;
+  color: #fff;
+}
+.nw .leaderboard {
+  max-width: 900px;
+}
+.nw .leaderboard h2 {
+  font-size: 2.5rem;
+  margin: 25px 0 15px;
+}
+.nw .leaderboard > .muted {
+  margin-bottom: 30px;
+}
+.nw .leader-row {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding: 23px 15px;
+  font-size: 0.875rem;
+}
+.nw .leader-row > span:first-child {
+  color: var(--muted);
+  font-size: 0.75rem;
+  width: 20px;
+}
+.nw .leader-avatar {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  background: var(--line);
+  font-size: 0.6875rem;
+}
+.nw .leader-row > strong {
+  min-width: 80px;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+.nw .leader-track {
+  height: 5px;
+  background: var(--line);
+  flex: 1;
+  max-width: 350px;
+  border-radius: 5px;
+  margin-left: auto;
+}
+.nw .leader-track > i {
+  display: block;
+  background: var(--accent);
+  height: 100%;
+  border-radius: 5px;
+}
+.nw .leader-row > b {
+  font-weight: 500;
+  font-size: 1.5rem;
+  min-width: 20px;
+  text-align: right;
+}
+.nw .leader-row > span:last-child {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.nw .leader-row.you {
+  background: #ffffff60;
+}

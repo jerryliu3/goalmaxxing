@@ -1,0 +1,136 @@
+/* 01 Prism: dimensional time, glass navigation, opaque reading plane. */
+.nw-prism {
+  --bg: #e7eeea;
+  --ink: #244236;
+  --accent: #2e5647;
+  --muted: #677f73;
+  --surface: #fafffa;
+  --line: #2c4a3424;
+}
+.nw .nw-prism.app-surface {
+  background:
+    radial-gradient(ellipse at 4% 50%, #e7dcc4 0, transparent 50%),
+    radial-gradient(ellipse at 60% 15%, #d0e4da 0, transparent 50%),
+    linear-gradient(145deg, #ebeeed, #e8f0ee);
+}
+.nw .nw-prism .app-header {
+  background: #ffffff28;
+  backdrop-filter: blur(20px);
+}
+.nw .prism-layout {
+  display: grid;
+  grid-template-columns: 1.08fr 1fr;
+  gap: 48px;
+}
+.nw .prism-time {
+  padding: 5px 6px;
+}
+.nw .prism-time h1 {
+  margin: 27px 0 16px;
+  font-size: clamp(2.6rem, 4vw, 3.8rem);
+}
+.nw .glass-week {
+  position: relative;
+  perspective: 1000px;
+  margin: 28px 0 0;
+  height: 330px;
+  transform-style: preserve-3d;
+}
+.nw .glass-day {
+  position: absolute;
+  width: 90%;
+  height: 96px;
+  left: 4%;
+  top: calc(var(--layer) * 48px);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 22px;
+  border-radius: 18px;
+  border: 1px solid #ffffffdb;
+  background: linear-gradient(120deg, #ffffff70, #d9e5ddaa 60%, #ffffff60);
+  backdrop-filter: blur(15px);
+  box-shadow:
+    0 14px 20px -18px #243f3280,
+    inset 1px 1px 0 #ffffff90;
+  transform: rotateX(37deg) rotateZ(-12deg) translateZ(0);
+  transform-origin: center center;
+  transition:
+    transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background 0.3s,
+    box-shadow 0.3s;
+  z-index: calc(var(--layer) + 1);
+}
+.nw .glass-day.selected {
+  transform: rotateX(26deg) rotateZ(-12deg) translate3d(15px, -8px, 60px);
+  background: linear-gradient(120deg, #ffffffec, #eef5edbd);
+  box-shadow:
+    0 20px 30px -17px #2b493a70,
+    inset 0 1px 0 white;
+  z-index: 10;
+}
+.nw .glass-day:hover {
+  transform: rotateX(20deg) rotateZ(-8deg) translate3d(15px, -14px, 85px);
+  z-index: 11;
+}
+.nw .glass-date {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 75px;
+}
+.nw .glass-date b {
+  font-size: 2.3rem;
+  letter-spacing: -0.065em;
+  font-weight: 400;
+}
+.nw .glass-date > span {
+  font-size: 0.8125rem;
+}
+.nw .glass-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.nw .glass-lines i {
+  display: block;
+  height: 5px;
+  background: var(--goal);
+  opacity: 0.5;
+  border-radius: 6px;
+}
+.nw .glass-count {
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+.nw .prism-foot {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 4px 0 0 18px;
+}
+.nw .glass-agenda {
+  background: #fafff6c9;
+  border: 1px solid #ffffffea;
+  border-radius: 23px;
+  padding: 26px 27px;
+  box-shadow:
+    0 10px 24px #26492c08,
+    inset 0 1px 0 white;
+  backdrop-filter: blur(24px);
+}
+.nw .glass-agenda h2 {
+  margin: 22px 0 9px;
+}
+.nw .glass-agenda > .muted {
+  font-size: 0.8125rem;
+}
+.nw .glass-agenda .day-rail {
+  margin-top: 10px;
+}
+.nw .glass-agenda .task-row {
+  padding: 15px 0;
+}

@@ -1,0 +1,221 @@
+/* 03 Weave: goal lanes, crisp cobalt and visible cadence. */
+.nw-weave {
+  --bg: #f5f7fd;
+  --ink: #243f91;
+  --accent: #3056cd;
+  --muted: #7583a4;
+  --surface: #fff;
+  --line: #3157a41c;
+}
+.nw .nw-weave .app-header {
+  background: #fff;
+}
+.nw .nw-weave h1 {
+  font-size: 3.5rem;
+}
+.nw .weave-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+}
+.nw .weave-heading h1 {
+  margin-top: 20px;
+}
+.nw .weave-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  padding-bottom: 4px;
+}
+.nw .weave-legend > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.nw .weave-legend i {
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+}
+.nw .weave-filters,
+.nw .goal-filters {
+  display: flex;
+  gap: 7px;
+  margin: 25px 0;
+  flex-wrap: wrap;
+}
+.nw .weave-filters button,
+.nw .goal-filters button {
+  font-size: 0.8125rem;
+  border: 1px solid var(--line);
+  padding: 9px 14px;
+  border-radius: 24px;
+  background: #ffffff50;
+  min-height: 40px;
+}
+.nw .weave-filters button[aria-pressed="true"],
+.nw .goal-filters button[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+}
+.nw .weave-scroll {
+  overflow: auto;
+  padding-bottom: 10px;
+}
+.nw .weave-board {
+  min-width: 840px;
+}
+.nw .weave-header,
+.nw .weave-lane {
+  display: grid;
+  grid-template-columns: 135px repeat(7, 1fr);
+}
+.nw .weave-header {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.nw .weave-header > span {
+  padding: 16px 0;
+}
+.nw .weave-header button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 7px 7px 0 0;
+}
+.nw .weave-header b {
+  font-size: 1rem;
+  font-weight: 550;
+}
+.nw .weave-header .chosen {
+  color: var(--accent);
+  background: #e5ebff;
+}
+.nw .weave-lane {
+  min-height: 101px;
+}
+.nw .lane-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: center;
+  gap: 5px 7px;
+  padding-right: 8px;
+}
+.nw .lane-name strong {
+  font-size: 0.8125rem;
+  font-weight: 550;
+}
+.nw .lane-name > span:last-child {
+  width: 100%;
+  padding-left: 15px;
+  color: var(--muted);
+  font-size: 0.6875rem;
+}
+.nw .lane-cell {
+  padding: 8px 4px;
+  position: relative;
+  border-bottom: 1px solid var(--line);
+}
+.nw .lane-cell:before {
+  content: "";
+  position: absolute;
+  height: 2px;
+  background: var(--soft);
+  top: 50%;
+  left: 0;
+  right: 0;
+}
+.nw .lane-cell.chosen {
+  background: #e9efff;
+}
+.nw .weave-knot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  min-height: 82px;
+  border: 1px solid color-mix(in srgb, var(--goal), transparent 62%);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--soft), white 72%);
+  padding: 9px;
+  color: var(--goal);
+  position: relative;
+  text-align: left;
+  box-shadow: 0 2px 3px #22366305;
+}
+.nw .weave-knot > span {
+  display: flex;
+  gap: 5px;
+  font-size: 0.625rem;
+  align-items: center;
+}
+.nw .weave-knot strong {
+  font-size: 0.75rem;
+  font-weight: 550;
+  line-height: 1.25;
+}
+.nw .weave-knot > small {
+  font-size: 0.625rem;
+  opacity: 0.8;
+}
+.nw .weave-knot.finished {
+  background: var(--goal);
+  color: #fff;
+  border-color: var(--goal);
+}
+.nw .weave-knot + .weave-knot {
+  margin-top: 4px;
+}
+.nw .weave-empty {
+  height: 82px;
+  width: 100%;
+  position: relative;
+  display: grid;
+  place-items: center;
+  color: var(--goal);
+}
+.nw .weave-empty > span {
+  width: 7px;
+  height: 7px;
+  background: var(--bg);
+  border: 1px solid var(--soft);
+  border-radius: 50%;
+}
+.nw .weave-empty > svg {
+  background: #fff;
+  border-radius: 50%;
+  box-sizing: content-box;
+  padding: 4px;
+  border: 1px solid var(--soft);
+}
+.nw .weave-bottom {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 50px;
+  margin-top: 26px;
+}
+.nw .weave-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  background: #e7ecfb;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.nw .weave-callout svg {
+  margin-top: 3px;
+}
+.nw .weave-callout strong {
+  font-weight: 550;
+}

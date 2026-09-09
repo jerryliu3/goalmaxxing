@@ -1,0 +1,161 @@
+/* 02 Tempo: editorial orange, time as a physical control. */
+.nw-tempo {
+  --bg: #f8f7f3;
+  --ink: #26241f;
+  --accent: #ff5a32;
+  --muted: #82766b;
+  --surface: #fff;
+  --line: #372b201c;
+}
+.nw .nw-tempo .app-header {
+  border-bottom-color: #d5d0c6;
+}
+.nw .nw-tempo .app-nav {
+  background: #ebe8e1;
+}
+.nw .nw-tempo .app-nav button[data-state="active"] {
+  background: var(--ink);
+}
+.nw .tempo-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 0.85fr;
+  gap: 56px;
+}
+.nw .tempo-main h1 {
+  margin: 26px 0 0;
+  font-size: clamp(2.5rem, 4.5vw, 4.3rem);
+}
+.nw .tempo-main h1 em {
+  color: #de522e;
+}
+.nw .tempo-number {
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid var(--ink);
+  padding: 13px 0 18px;
+  gap: 20px;
+}
+.nw .tempo-number > strong {
+  font-size: 7rem;
+  letter-spacing: -0.09em;
+  line-height: 1.1;
+  font-weight: 450;
+}
+.nw .tempo-number > div {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9375rem;
+  gap: 2px;
+}
+.nw .tempo-number > div > span + span {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.nw .tempo-number > svg {
+  margin-left: auto;
+  color: var(--accent);
+}
+.nw .tempo-session {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+  padding: 20px 0;
+  text-align: left;
+}
+.nw .tempo-index {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.nw .tempo-session-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.nw .tempo-session-body small {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.nw .tempo-session-body strong {
+  font-size: 1.45rem;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+.nw .tempo-session > span:last-child {
+  display: flex;
+  flex-direction: column;
+  font-size: 1.25rem;
+}
+.nw .tempo-session > span:last-child small {
+  font-size: 0.625rem;
+  letter-spacing: 0.05em;
+}
+.nw .tempo-session.finished .tempo-session-body strong {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.nw .tempo-aside {
+  padding-top: 0;
+}
+.nw .budget-card {
+  background: #ff5a32;
+  color: #2e210f;
+  border-radius: 4px 30px 4px 4px;
+  padding: 26px;
+  margin-top: 24px;
+}
+.nw .budget-card h2 {
+  font-size: 2.4rem;
+  margin: 20px 0 9px;
+}
+.nw .budget-card > p {
+  font-size: 0.9375rem;
+  max-width: 220px;
+}
+.nw .budget-value {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin: 30px 0 0;
+}
+.nw .budget-value strong {
+  font-size: 3.7rem;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.065em;
+}
+.nw .budget-value svg {
+  align-self: center;
+  margin-left: auto;
+}
+.nw .budget-card input {
+  width: 100%;
+  height: 28px;
+  accent-color: #342818;
+  margin: 20px 0 4px;
+  cursor: ew-resize;
+}
+.nw .range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6875rem;
+}
+.nw .budget-card .primary {
+  margin-top: 29px;
+  width: 100%;
+  background: #2e271f;
+  color: #fff9ed;
+  border-radius: 5px;
+  font-size: 0.875rem;
+}
+.nw .budget-note {
+  display: block;
+  text-align: center;
+  font-size: 0.75rem;
+  margin-top: 14px;
+}
+.nw .nw-tempo .unplanned {
+  padding: 26px 4px 0;
+}

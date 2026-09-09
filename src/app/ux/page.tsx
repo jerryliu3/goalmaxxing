@@ -12,7 +12,22 @@ export default function UxHubPage() {
         </h1>
         <ul className="mt-10 space-y-4">
           <li>
-            <Link className="text-lg font-semibold underline" href="/ux/concepts">
+            <Link
+              className="text-lg font-semibold underline"
+              href="/ux/next-wave"
+            >
+              Next Wave — five interactive directions
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Prism, Tempo, Weave, Mosaic, Script — planner, progress, and
+              community. Includes a mobile preview and comparison notes.
+            </p>
+          </li>
+          <li>
+            <Link
+              className="text-lg font-semibold underline"
+              href="/ux/concepts"
+            >
               Spatial Plan concept gallery
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -28,7 +43,10 @@ export default function UxHubPage() {
             </p>
           </li>
           <li>
-            <Link className="text-lg font-semibold underline" href="/ux/destinations">
+            <Link
+              className="text-lg font-semibold underline"
+              href="/ux/destinations"
+            >
               Progress and Community destinations
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -36,7 +54,10 @@ export default function UxHubPage() {
             </p>
           </li>
           <li>
-            <Link className="text-lg font-semibold underline" href="/ux/achievements">
+            <Link
+              className="text-lg font-semibold underline"
+              href="/ux/achievements"
+            >
               Achievements destination study
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -45,7 +66,10 @@ export default function UxHubPage() {
             </p>
           </li>
           <li>
-            <Link className="text-lg font-semibold underline" href="/ux/first-principles">
+            <Link
+              className="text-lg font-semibold underline"
+              href="/ux/first-principles"
+            >
               First-principles interface study
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">

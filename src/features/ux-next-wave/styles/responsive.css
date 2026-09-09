@@ -1,0 +1,810 @@
+/* Container queries make the mobile preview behave exactly like a narrow screen. */
+@container (max-width:1000px) {
+  .nw .app-content {
+    padding: 28px;
+  }
+  .nw .prism-layout {
+    gap: 28px;
+  }
+  .nw .tempo-layout {
+    gap: 32px;
+    grid-template-columns: 1.2fr 1fr;
+  }
+  .nw .script-layout {
+    gap: 32px;
+  }
+  .nw .script-intent h1 {
+    font-size: 2.7rem;
+  }
+  .nw .progress-columns {
+    gap: 28px;
+    grid-template-columns: 1.2fr 1fr;
+  }
+  .nw .evidence-mosaic {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .nw .glass-day {
+    padding: 12px 16px;
+    gap: 10px;
+  }
+  .nw .glass-count {
+    display: none;
+  }
+  .nw .weave-legend {
+    display: none;
+  }
+  .nw .mosaic-layout {
+    gap: 28px;
+  }
+  .nw .mosaic-period {
+    font-size: 4.5rem;
+    right: 0;
+  }
+  .nw .mosaic-layout h1 {
+    font-size: 3rem;
+  }
+  .nw .mosaic-receipt {
+    padding: 52px 20px 22px;
+  }
+  .nw .script-line {
+    gap: 10px;
+  }
+  .nw .person-card {
+    padding: 21px;
+  }
+  .nw .person-count {
+    gap: 10px;
+  }
+  .nw .person-count strong {
+    font-size: 3rem;
+  }
+  .nw .community-weave .person-card {
+    grid-template-columns: 48px 90px 80px 1fr;
+    gap: 14px;
+  }
+  .nw .person-week {
+    gap: 6px;
+  }
+}
+@container (max-width:740px) {
+  .nw .app-header {
+    padding: 18px 22px;
+    min-height: 80px;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .nw .app-wordmark {
+    font-size: 1.125rem;
+  }
+  .nw .profile-button {
+    order: 1;
+  }
+  .nw .destination-tabs {
+    order: 2;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 4px;
+  }
+  .nw .app-nav {
+    width: 100%;
+    justify-content: space-between;
+    padding: 4px;
+    border-radius: 14px;
+  }
+  .nw .app-nav button {
+    flex: 1;
+    justify-content: center;
+    padding: 11px 8px;
+    border-radius: 10px;
+    font-size: 0.8125rem;
+    gap: 6px;
+  }
+  .nw .app-nav button svg {
+    width: 16px;
+    height: 16px;
+  }
+  .nw .app-content {
+    padding: 26px 22px;
+    min-height: 570px;
+  }
+  .nw .app-footer {
+    padding: 15px 22px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .nw .app-footer > span {
+    font-size: 0.6875rem;
+    flex: 1;
+    min-width: 220px;
+  }
+  .nw .app-footer > div {
+    margin-left: auto;
+  }
+  .nw h1 {
+    font-size: 2.7rem !important;
+  }
+  .nw .prism-layout {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+  .nw .prism-time {
+    padding: 0;
+  }
+  .nw .prism-time h1 {
+    margin-top: 22px;
+  }
+  .nw .prism-time > .muted {
+    font-size: 0.875rem;
+  }
+  .nw .glass-week {
+    height: 270px;
+    margin: 20px -2px 0;
+  }
+  .nw .glass-day {
+    top: calc(var(--layer) * 39px);
+    height: 80px;
+    width: 87%;
+    left: 5%;
+    padding: 11px 18px;
+  }
+  .nw .glass-date b {
+    font-size: 1.9rem;
+  }
+  .nw .glass-count {
+    display: block;
+    font-size: 0.625rem;
+  }
+  .nw .glass-day.selected {
+    transform: rotateX(26deg) rotateZ(-12deg) translate3d(8px, -5px, 40px);
+  }
+  .nw .prism-foot {
+    margin: 0;
+    font-size: 0.6875rem;
+  }
+  .nw .glass-agenda {
+    padding: 20px;
+    border-radius: 20px;
+  }
+  .nw .glass-agenda h2 {
+    font-size: 1.5rem;
+    margin-top: 20px;
+  }
+  .nw .glass-agenda .day-rail {
+    gap: 2px;
+    margin-left: -7px;
+    margin-right: -7px;
+  }
+  .nw .glass-agenda .task-row {
+    gap: 9px;
+  }
+  .nw .glass-agenda .task-copy strong {
+    font-size: 0.9375rem;
+  }
+  .nw .glass-agenda .task-time {
+    font-size: 0.6875rem;
+  }
+  .nw .glass-agenda .task-time svg {
+    display: none;
+  }
+  .nw .task-copy > span {
+    font-size: 0.6875rem;
+    gap: 4px;
+  }
+  .nw .tempo-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  .nw .tempo-main h1 {
+    margin-top: 23px;
+  }
+  .nw .tempo-main > .section-label > span:last-child {
+    display: none;
+  }
+  .nw .tempo-number > strong {
+    font-size: 6rem;
+  }
+  .nw .tempo-number > div > span {
+    font-size: 0.875rem;
+  }
+  .nw .tempo-number > div > span + span {
+    font-size: 0.6875rem;
+  }
+  .nw .tempo-number {
+    gap: 18px;
+    margin-top: 8px;
+  }
+  .nw .tempo-number svg {
+    width: 30px;
+  }
+  .nw .tempo-session {
+    padding: 20px 0;
+    gap: 15px;
+  }
+  .nw .tempo-session-body strong {
+    font-size: 1.3rem;
+  }
+  .nw .tempo-aside {
+    display: flex;
+    flex-direction: column;
+  }
+  .nw .tempo-aside > .day-rail {
+    order: 0;
+  }
+  .nw .budget-card {
+    margin-top: 15px;
+    padding: 24px;
+  }
+  .nw .budget-card h2 {
+    font-size: 2.4rem;
+  }
+  .nw .budget-card > p {
+    max-width: 100%;
+  }
+  .nw .weave-heading {
+    display: block;
+  }
+  .nw .weave-filters {
+    gap: 5px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 22px -22px;
+    padding: 0 22px;
+  }
+  .nw .weave-filters button {
+    white-space: nowrap;
+    font-size: 0.75rem;
+    padding: 8px 12px;
+  }
+  .nw .weave-scroll {
+    margin: 0 -22px;
+    padding: 0 22px 10px;
+  }
+  .nw .weave-board {
+    min-width: 800px;
+  }
+  .nw .weave-bottom {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+  .nw .weave-bottom > section > .section-label {
+    font-size: 0.625rem;
+  }
+  .nw .weave-callout {
+    font-size: 0.8125rem;
+  }
+  .nw .mosaic-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .nw .mosaic-layout h1 {
+    margin-top: 22px;
+  }
+  .nw .mosaic-period {
+    font-size: 5rem;
+  }
+  .nw .mosaic-layout > section > .section-label > span:last-child {
+    display: none;
+  }
+  .nw .mosaic-board {
+    gap: 9px;
+  }
+  .nw .mosaic-tile {
+    padding: 18px;
+    min-height: 205px;
+    border-radius: 16px;
+  }
+  .nw .mosaic-tile > strong {
+    font-size: 1.4rem;
+  }
+  .nw .mosaic-tile > div {
+    font-size: 0.625rem;
+  }
+  .nw .mosaic-tile.wide {
+    min-height: 155px;
+  }
+  .nw .mosaic-tile.wide > strong {
+    font-size: 1.65rem;
+  }
+  .nw .mosaic-tile-number {
+    font-size: 4.4rem;
+    right: 13px;
+    top: 42px;
+  }
+  .nw .mosaic-aside {
+    padding: 0;
+  }
+  .nw .mosaic-receipt {
+    border-radius: 24px;
+    padding: 26px;
+  }
+  .nw .receipt-number {
+    font-size: 4rem;
+    margin: 12px 0 8px;
+  }
+  .nw .receipt-number > span {
+    font-size: 1.8rem;
+  }
+  .nw .mosaic-receipt p {
+    max-width: 240px;
+  }
+  .nw .script-layout {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .nw .script-intent {
+    padding-top: 0;
+  }
+  .nw .script-intent h1 {
+    margin: 24px 0 30px;
+  }
+  .nw .script-sentence {
+    font-size: 1.3rem;
+  }
+  .nw .script-sentence > button {
+    font-size: 1.2rem;
+  }
+  .nw .script-plan {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 24px 0 0;
+  }
+  .nw .script-intent > .eyebrow {
+    font-size: 0.5625rem;
+    letter-spacing: 0.08em;
+  }
+  .nw .script-line {
+    gap: 18px;
+  }
+  .nw .progress-heading,
+  .nw .community-heading {
+    display: block;
+  }
+  .nw .progress-heading > .muted {
+    text-align: left;
+    font-size: 0.875rem;
+    margin-top: 20px;
+  }
+  .nw .goal-filters {
+    gap: 5px;
+    margin: 22px -22px;
+    padding: 0 22px;
+    flex-wrap: nowrap;
+    overflow: auto;
+  }
+  .nw .goal-filters button {
+    white-space: nowrap;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+  }
+  .nw .progress-columns {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    margin-top: 22px;
+  }
+  .nw .progress-visual {
+    padding: 21px;
+    min-height: 340px;
+  }
+  .nw .progress-stack {
+    margin-left: 0;
+    margin-right: 0;
+    min-height: 235px;
+  }
+  .nw .evidence-slab {
+    padding: 18px 15px;
+    gap: 8px;
+    font-size: 0.75rem;
+  }
+  .nw .evidence-slab > span:last-child {
+    font-size: 0.625rem;
+  }
+  .nw .evidence-slab > span:first-child {
+    gap: 7px;
+  }
+  .nw .progress-stat strong {
+    font-size: 3.2rem;
+  }
+  .nw .evidence-mosaic {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .nw .evidence-mosaic > button,
+  .nw .empty-piece {
+    min-height: 174px;
+  }
+  .nw .tempo-progress-number {
+    font-size: 7rem;
+  }
+  .nw .tempo-progress-number span {
+    font-size: 0.6875rem;
+    padding-left: 10px;
+  }
+  .nw .tempo-bars {
+    gap: 10px;
+  }
+  .nw .progress-script .progress-visual {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .nw .script-progress-statement {
+    padding: 5px;
+  }
+  .nw .script-progress-statement > p:nth-child(2) {
+    font-size: 3rem;
+  }
+  .nw .progress-insight {
+    padding: 20px;
+    background: #ffffff80;
+  }
+  .nw .evidence-log > .section-label {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .nw .log-days {
+    gap: 5px;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .nw .log-days button {
+    width: 38px;
+    height: 38px;
+  }
+  .nw .record-row {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .nw .record-row > strong {
+    font-size: 0.8125rem;
+  }
+  .nw .record-row > span {
+    font-size: 0.6875rem;
+  }
+  .nw .record-row > svg:last-child {
+    display: none;
+  }
+  .nw .community-avatars {
+    margin-top: 22px;
+  }
+  .nw .community-tabs {
+    width: 100%;
+    gap: 20px;
+    justify-content: space-between;
+    margin: 22px 0 24px;
+  }
+  .nw .community-tabs > button {
+    font-size: 0.8125rem;
+  }
+  .nw .people-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .nw .person-card {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 48px 1fr auto;
+    gap: 0 14px;
+    align-items: center;
+    padding: 23px;
+  }
+  .nw .person-top {
+    grid-column: 1;
+    grid-row: 1/3;
+  }
+  .nw .person-avatar {
+    width: 44px;
+    height: 44px;
+    font-size: 0.75rem;
+  }
+  .nw .person-top > svg {
+    display: none;
+  }
+  .nw .person-card h2 {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+    font-size: 1.35rem;
+  }
+  .nw .person-card > p {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 0.75rem;
+  }
+  .nw .person-count {
+    grid-column: 3;
+    grid-row: 1/3;
+    margin: 0;
+  }
+  .nw .person-count strong {
+    font-size: 2.5rem;
+  }
+  .nw .person-count small {
+    font-size: 1.2rem;
+  }
+  .nw .person-count > span {
+    display: none;
+  }
+  .nw .person-marks {
+    grid-column: 1/4;
+    margin: 23px 0 18px;
+    gap: 8px;
+  }
+  .nw .person-bottom {
+    grid-column: 1/4;
+  }
+  .nw .community-prism .person-card:nth-child(2),
+  .nw .community-prism .person-card:nth-child(3) {
+    transform: none;
+  }
+  .nw .community-prism .team-note {
+    margin-top: 0;
+  }
+  .nw .team-note {
+    padding-top: 25px;
+  }
+  .nw .team-note h3 {
+    font-size: 0.9375rem;
+  }
+  .nw .team-note p {
+    font-size: 0.8125rem;
+  }
+  .nw .community-tempo .person-card {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 24px;
+  }
+  .nw .community-tempo .person-numeral {
+    display: none;
+  }
+  .nw .community-tempo .person-count strong {
+    font-size: 2.8rem;
+  }
+  .nw .community-weave .person-card {
+    grid-template-columns: 46px 1fr 65px;
+    gap: 0 14px;
+    padding: 23px;
+  }
+  .nw .community-weave .person-count {
+    justify-content: flex-end;
+  }
+  .nw .community-weave .person-week {
+    grid-column: 1/4;
+    grid-row: 3;
+    gap: 7px;
+    margin-top: 23px;
+  }
+  .nw .community-weave .person-week > span {
+    width: 30px;
+    height: 30px;
+  }
+  .nw .community-script .person-card {
+    grid-template-columns: 46px 1fr;
+    gap: 0 16px;
+    padding: 23px 0;
+  }
+  .nw .person-sentence {
+    grid-column: 1/3;
+    grid-row: 3;
+    font-size: 1.3rem;
+    margin-top: 20px;
+  }
+  .nw .challenge-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  .nw .challenge-poster {
+    padding: 25px;
+  }
+  .nw .challenge-poster h2 {
+    font-size: 3.7rem;
+  }
+  .nw .challenge-poster p {
+    font-size: 0.875rem;
+  }
+  .nw .challenge-punches {
+    gap: 8px;
+  }
+  .nw .challenge-side {
+    padding: 18px 0;
+  }
+  .nw .leaderboard h2 {
+    font-size: 2rem;
+  }
+  .nw .leader-row {
+    gap: 12px;
+    padding: 19px 9px;
+    flex-wrap: wrap;
+  }
+  .nw .leader-row > strong {
+    min-width: 55px;
+    font-size: 1rem;
+  }
+  .nw .leader-track {
+    display: none;
+  }
+  .nw .leader-row > b {
+    margin-left: auto;
+  }
+  .nw .leader-row > span:last-child {
+    font-size: 0.625rem;
+  }
+}
+@media (max-width: 800px) {
+  .nw .study-toolbar {
+    height: 65px;
+    padding: 0 16px;
+  }
+  .nw .study-status {
+    display: none;
+  }
+  .nw .study-controls {
+    gap: 14px;
+  }
+  .nw .study-controls > button > span {
+    display: none;
+  }
+  .nw .study-brand > div {
+    font-size: 0.625rem;
+  }
+  .nw .study-brand small {
+    font-size: 0.5rem;
+  }
+  .nw .concept-rail button {
+    padding: 14px 13px;
+    gap: 8px;
+    min-height: 58px;
+  }
+  .nw .concept-rail button > strong {
+    font-size: 0.875rem;
+  }
+  .nw .concept-swatch {
+    display: none;
+  }
+  .nw .concept-rail button[aria-current="page"]:after {
+    left: 13px;
+    right: 13px;
+  }
+  .nw .study-stage {
+    padding: 16px;
+  }
+  .nw .study-bottom {
+    padding: 0 18px 20px;
+  }
+  .nw .study-bottom > span {
+    max-width: 65%;
+    font-size: 0.6875rem;
+  }
+  .nw .study-bottom b {
+    display: block;
+    margin: 0 0 3px;
+  }
+  .nw .study-bottom > button {
+    font-size: 0.6875rem;
+  }
+}
+@media (max-width: 520px) {
+  .nw .study-controls {
+    gap: 12px;
+  }
+  .nw .study-controls > button {
+    font-size: 0.75rem;
+  }
+  .nw .study-controls > button:nth-child(2) {
+    display: none;
+  }
+  .nw .viewport-toggle {
+    display: none;
+  }
+  .nw .study-brand > div {
+    font-size: 0.5625rem;
+  }
+  .nw .study-brand small {
+    font-size: 0.4375rem;
+  }
+  .nw .concept-rail button {
+    padding: 12px 8px;
+    gap: 3px;
+    flex-direction: column;
+    min-height: 59px;
+  }
+  .nw .concept-rail button > span:first-child {
+    font-size: 0.5625rem;
+  }
+  .nw .concept-rail button > strong {
+    font-size: 0.8125rem;
+  }
+  .nw .concept-rail button[aria-current="page"]:after {
+    left: 10px;
+    right: 10px;
+  }
+  .nw .study-stage {
+    padding: 0;
+  }
+  .nw .app-surface {
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .nw .study-bottom {
+    padding: 18px;
+    background: #f4f5f4;
+  }
+  .nw-modal {
+    padding: 28px 24px;
+    border-radius: 22px;
+    max-height: calc(100dvh - 30px);
+  }
+  .nw-modal .modal-title {
+    font-size: 1.95rem;
+  }
+  .nw-comparison .comparison-option {
+    padding: 16px;
+    gap: 14px;
+  }
+  .nw-comparison .comparison-option p {
+    font-size: 0.75rem;
+  }
+  .nw-comparison .comparison-option h3 {
+    font-size: 1.2rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nw *,
+  .nw-modal * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .nw .glass-day,
+  .nw .glass-day.selected,
+  .nw .glass-day:hover {
+    transform: rotateZ(-5deg);
+  }
+  .nw .evidence-slab,
+  .nw .evidence-slab:hover {
+    transform: none;
+  }
+}
+@media (prefers-contrast: more) {
+  .nw,
+  .nw-modal {
+    --muted: #424b43;
+    --line: #596158;
+  }
+  .nw .glass-day,
+  .nw .glass-agenda,
+  .nw .person-card {
+    background: #fff;
+  }
+  .nw .app-nav {
+    background: #fff;
+  }
+}
+.nw .app-destinations {
+  display: block;
+}
+.nw .completion {
+  height: 36px;
+  width: 36px;
+  position: relative;
+}
+.nw .completion:before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+}
+.nw .completion > svg {
+  pointer-events: none;
+}
+.nw .app-content[data-state="active"] {
+  animation: nw-enter 0.4s ease both;
+}
+.nw .person-week {
+  justify-content: flex-end;
+  gap: 18px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nw .app-content[data-state="active"] {
+    animation: none;
+  }
+}

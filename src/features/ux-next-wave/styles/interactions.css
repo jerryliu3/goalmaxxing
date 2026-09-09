@@ -1,0 +1,138 @@
+/* Shared interactions */
+.nw .day-rail {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  padding: 12px 0;
+}
+.nw .day-rail button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  border-radius: 13px;
+  padding: 9px 2px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  min-width: 0;
+}
+.nw .day-rail button strong {
+  font-size: 1.0625rem;
+  font-weight: 550;
+  color: var(--ink);
+}
+.nw .day-rail button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--surface);
+}
+.nw .day-rail button[aria-pressed="true"] strong {
+  color: var(--surface);
+}
+.nw .day-dots {
+  display: flex;
+  gap: 3px;
+  height: 5px;
+}
+.nw .day-dots i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--goal);
+}
+.nw .day-rail button[aria-pressed="true"] .day-dots i {
+  background: currentColor;
+  opacity: 0.7;
+}
+.nw .task-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.nw .completion {
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  height: 26px;
+  width: 26px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+.nw .completion:hover {
+  border-color: var(--accent);
+  background: #ffffff60;
+}
+.nw .is-done .completion,
+.nw .script-line.finished .completion {
+  background: var(--accent);
+  color: var(--surface);
+  border-color: var(--accent);
+}
+.nw .task-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  flex: 1;
+  text-align: left;
+  padding: 0;
+}
+.nw .task-copy strong {
+  font-size: 1rem;
+  font-weight: 550;
+}
+.nw .task-copy > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.nw .is-done .task-copy strong {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+.nw .task-time {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  min-height: 44px;
+}
+.nw .unplanned {
+  padding-top: 26px;
+}
+.nw .unplanned > .section-label {
+  margin-bottom: 10px;
+}
+.nw .unplanned > button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  width: 100%;
+  text-align: left;
+  font-size: 0.875rem;
+}
+.nw .unplanned > button > span:nth-child(2) {
+  flex: 1;
+}
+.nw .empty-day {
+  padding: 35px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+.nw .empty-day p {
+  font-size: 1.25rem;
+}
+.nw .empty-day > span {
+  color: var(--muted);
+  font-size: 0.875rem;
+}

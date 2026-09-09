@@ -1,0 +1,187 @@
+/* The study owns its tokens; production AppShell and brand tokens are untouched. */
+.nw,
+.nw-modal {
+  --ink: #192524;
+  --muted: #60736e;
+  --line: #233f3024;
+  --accent: #244e40;
+  --surface: #fff;
+  --bg: #f2f5f1;
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: -0.015em;
+  font-weight: 450;
+}
+.nw *,
+.nw-modal * {
+  box-sizing: border-box;
+}
+.nw button,
+.nw input,
+.nw-modal button {
+  font: inherit;
+}
+.nw button,
+.nw-modal button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.nw button,
+.nw-modal button {
+  color: inherit;
+}
+.nw button:disabled,
+.nw-modal button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.nw button:focus-visible,
+.nw a:focus-visible,
+.nw input:focus-visible,
+.nw-modal button:focus-visible {
+  outline: 3px solid #4275d7;
+  outline-offset: 4px;
+}
+.nw h1,
+.nw h2,
+.nw h3,
+.nw p,
+.nw-modal p,
+.nw-modal h3 {
+  margin: 0;
+}
+.nw button {
+  border: 0;
+  background: none;
+}
+.nw {
+  min-height: 100dvh;
+  background: #e9ebec;
+}
+.nw svg,
+.nw-modal svg {
+  flex-shrink: 0;
+}
+.nw h1 {
+  font-size: clamp(2.5rem, 4.2vw, 4rem);
+  font-weight: 500;
+  line-height: 1.06;
+  letter-spacing: -0.065em;
+}
+.nw h1 em {
+  font-weight: 400;
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: -0.065em;
+}
+.nw h2 {
+  font-size: 1.75rem;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1.2;
+}
+.nw h3 {
+  font-size: 1.125rem;
+  font-weight: 550;
+  letter-spacing: -0.025em;
+}
+.nw .muted {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+.nw .eyebrow,
+.nw-modal .eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+.nw .section-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.055em;
+  font-weight: 550;
+}
+.nw .primary,
+.nw-modal .primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--accent);
+  color: var(--surface);
+  padding: 15px 20px;
+  border-radius: 12px;
+  border: 0;
+  font-weight: 600;
+  min-height: 48px;
+}
+.nw .secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  padding: 12px 18px;
+  border-radius: 10px;
+}
+.nw .primary:hover,
+.nw-modal .primary:hover {
+  filter: brightness(1.12);
+}
+.nw .text-button,
+.nw-modal .text-button {
+  background: none;
+  border: 0;
+  min-height: 44px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.nw .tag {
+  background: #ffffff70;
+  border-radius: 20px;
+  padding: 5px 10px;
+  letter-spacing: 0;
+  font-size: 0.75rem;
+}
+.nw .endurance,
+.nw-modal .endurance {
+  --goal: #b1532b;
+  --soft: #f6c6a2;
+}
+.nw .product,
+.nw-modal .product {
+  --goal: #4159a9;
+  --soft: #bacbeb;
+}
+.nw .strength,
+.nw-modal .strength {
+  --goal: #547052;
+  --soft: #c6d9b8;
+}
+.nw .personal,
+.nw-modal .personal {
+  --goal: #85673c;
+  --soft: #efdfa8;
+}
+.nw .goal-mark,
+.nw-modal .goal-mark {
+  width: 8px;
+  height: 8px;
+  display: inline-block;
+  border-radius: 50%;
+  background: var(--goal);
+  flex-shrink: 0;
+}
+.nw .tiny-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: #668b76;
+  border-radius: 50%;
+}
