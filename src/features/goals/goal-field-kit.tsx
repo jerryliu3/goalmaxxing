@@ -8,10 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getDisplayCategorySwatchColor } from "@/features/planner/goal-visuals";
 import {
   CATEGORY_PRESETS,
   type CategorySelection,
-  getCategorySwatchColor,
 } from "@/lib/goals/category";
 import {
   GOAL_TYPE_OPTIONS,
@@ -53,7 +53,7 @@ export function CategorySelect({
             <span className="inline-flex items-center gap-2">
               <span
                 className="size-2 rounded-full"
-                style={{ backgroundColor: getCategorySwatchColor(preset.id) }}
+                style={{ backgroundColor: getDisplayCategorySwatchColor(preset.id) }}
               />
               {preset.label}
             </span>
@@ -63,7 +63,7 @@ export function CategorySelect({
           <span className="inline-flex items-center gap-2">
             <span
               className="size-2 rounded-full"
-              style={{ backgroundColor: getCategorySwatchColor("custom") }}
+              style={{ backgroundColor: getDisplayCategorySwatchColor("custom") }}
             />
             Custom
           </span>

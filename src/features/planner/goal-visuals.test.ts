@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { GAZETTEER } from "@/lib/brand/gazetteer";
 import {
+  getDisplayCategorySwatchColor,
   getGoalVisual,
   getWorkPillDraftFillStyle,
   getWorkPillFillStyle,
@@ -132,6 +133,22 @@ describe("goal visuals", () => {
         color: "#112233",
         category: "Outdoor Adventure",
       }).color
+    ).toBe("#112233");
+  });
+
+  it("maps category swatches onto the active theme and keeps custom hexes", () => {
+    expect(getDisplayCategorySwatchColor("health")).toBe("#10b981");
+    expect(getDisplayCategorySwatchColor("health", "gazetteer")).toBe(GAZETTEER.gain);
+    expect(getDisplayCategorySwatchColor("custom", "gazetteer")).toBe(GAZETTEER.muted);
+    expect(
+      getGoalVisual(
+        {
+          goalId: "12000000-0000-4000-8000-000000000006",
+          color: "#112233",
+          category: "Outdoor Adventure",
+        },
+        "gazetteer"
+      ).color
     ).toBe("#112233");
   });
 });

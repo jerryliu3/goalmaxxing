@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { GoalEndMonthBadge } from "@/features/goals/goal-end-month-badge";
+import { toStyleDisplayColor } from "@/features/planner/goal-visuals";
 
 interface InsightsGoalCardHeaderProps {
   title: string;
@@ -32,7 +33,7 @@ export function InsightsGoalCardHeader({
       >
         <span
           className="size-2 shrink-0 rounded-full"
-          style={{ backgroundColor: color }}
+          style={{ backgroundColor: toStyleDisplayColor(color) }}
         />
         <p className="min-w-0 flex-1 truncate whitespace-nowrap text-sm font-semibold leading-tight">
           {title}

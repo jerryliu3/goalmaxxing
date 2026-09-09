@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { toStyleDisplayColor } from "@/features/planner/goal-visuals";
 
 export interface ProgressGoalListItem {
   id: string;
@@ -93,7 +94,7 @@ export function ProgressGoalList({
                   <span className="flex min-w-0 items-center gap-2">
                     <span
                       className="size-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: goal.color }}
+                      style={{ backgroundColor: toStyleDisplayColor(goal.color) }}
                       aria-hidden
                     />
                     <span className="truncate font-display text-sm font-semibold">{goal.title}</span>
