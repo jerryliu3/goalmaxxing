@@ -1,7 +1,7 @@
 # Achievements destination study
 
-Status: **Showcase (A6) is the leading hybrid take — not a production ship.**
-Production `/achievements` remains the two-card list.
+Status: **Showcase (A6) ships on production `/achievements`.**
+The UX study routes remain references for the other five concepts.
 
 Clickable study: `/ux/achievements`  
 Worktree: `.worktrees/achievements-ux` on branch `ux/achievements-study`
@@ -48,9 +48,8 @@ gain / copper carry tier and category — not purple-glow game UI.
 | A4 | **Records** | Personal Records band above an Awards grid. | Duolingo 2023 Records / Awards split |
 | A5 | **Rings** | Three completion rings first; inventory second. | Apple Fitness glance-then-detail |
 
-**Showcase is the current leading take** from review: keep A1’s trophy
-structure, A2’s premium metal/gradients, and A4’s personal records. The other
-five stay as references. Not a production lock yet.
+**Showcase is the production Achievements surface** (Case structure + Vault metal +
+Records band). The other five concepts stay as references in `/ux/achievements`.
 
 ## Visual bets
 
@@ -65,5 +64,5 @@ five stay as references. Not a production lock yet.
 
 ## Out of scope
 
-Production Achievements ship, XP formula changes, new reward types, and
-replacing Progress Atlas/Pins or Community Club locks.
+XP formula changes, new reward types, and replacing Progress Atlas/Pins or
+Community Club locks.
