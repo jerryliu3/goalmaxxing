@@ -47,7 +47,7 @@ function BootClimbAnimation() {
 
   useEffect(() => {
     if (reduceMotion) {
-      setProgress(0.42);
+      queueMicrotask(() => setProgress(0.42));
       return;
     }
     let frame = 0;
@@ -80,7 +80,11 @@ export function AppBootSplash() {
     }
 
     let cancelled = false;
-    setVisible(true);
+    queueMicrotask(() => {
+      if (!cancelled) {
+        setVisible(true);
+      }
+    });
     const finish = () => {
       if (cancelled) {
         return;

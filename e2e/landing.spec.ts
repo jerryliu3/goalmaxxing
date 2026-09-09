@@ -110,7 +110,7 @@ test.describe("marketing landing", () => {
     await expect(stage).toBeVisible();
     const checklistBox = await stage.boundingBox();
 
-    await page.getByRole("tab", { name: "Plan" }).click();
+    await page.getByRole("tab", { name: "Plan", exact: true }).click();
     const calendarBox = await stage.boundingBox();
 
     await page.getByRole("tab", { name: "Tasks" }).click();
