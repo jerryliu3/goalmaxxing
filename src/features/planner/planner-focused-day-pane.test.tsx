@@ -91,4 +91,50 @@ describe("PlannerFocusedDayPane", () => {
     expect(screen.getByRole("button", { name: "Open Alex profile" })).toBeInTheDocument();
     expect(screen.getByText("View only")).toBeInTheDocument();
   });
+
+  it("keeps scheduled sessions visible when checklist filters hide the goal", () => {
+    const dayChecklist = {
+      ready: true,
+      loading: false,
+      visibleGoalIds: new Set<string>(),
+      listModel: {
+        presentationByGoalId: new Map(),
+        upcoming: [],
+        pastGoals: [],
+        archivedGoals: [],
+      },
+      filters: {
+        showUpcomingGoals: false,
+        showEndedGoals: false,
+        showArchivedGoals: false,
+        upcomingOpen: false,
+        pastPanelOpen: false,
+        archiveOpen: false,
+        setUpcomingOpen: () => {},
+        setPastPanelOpen: () => {},
+        setArchiveOpen: () => {},
+      },
+      savingGoalId: null,
+      toggleCompletion: async () => {},
+    } as PlanDayChecklistModel;
+
+    renderWithDnd(
+      <PlannerFocusedDayPane
+        day="2026-08-06"
+        entries={[sampleEntry as never]}
+        completionFactMarkers={[]}
+        mutationLoading={false}
+        asOfDate="2026-08-06"
+        canMutatePlanItems
+        canMutateEntryOnDay={() => true}
+        onEntryOpen={() => {}}
+        onToggleCompletion={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+        dayChecklist={dayChecklist}
+      />
+    );
+
+    expect(screen.getByText("Run")).toBeInTheDocument();
+  });
 });
