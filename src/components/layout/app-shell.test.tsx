@@ -40,6 +40,9 @@ vi.mock("@/components/xp/xp-profile-provider", () => ({
 vi.mock("@/components/intro/journey-intro-overlay", () => ({
   JourneyIntroOverlay: () => <div data-testid="journey-intro-overlay" />,
 }));
+vi.mock("@/components/layout/app-boot-splash", () => ({
+  AppBootSplash: () => null,
+}));
 vi.mock("@/lib/cache/tab-data-cache", () => ({
   setTabDataCacheScope: (scope: string) => cacheScopeMock.setScope(scope),
 }));
@@ -165,7 +168,7 @@ describe("AppShell", () => {
 
     expect(screen.queryByText("Progress")).not.toBeInTheDocument();
     expect(screen.getByText("Goalmaxxing")).toBeInTheDocument();
-    expect(screen.getByText("Goalmaxxing")).toHaveClass("text-2xl");
+    expect(screen.getByText("Goalmaxxing")).toHaveClass("text-xl");
     expect(screen.getByText("XP Progress")).toBeInTheDocument();
   });
 
