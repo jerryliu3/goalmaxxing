@@ -5,12 +5,10 @@ import {
   type ReactNode,
   type TouchEvent,
   useCallback,
-  useEffect,
   useRef,
-  useState,
 } from "react";
+import { BottomSheet, BottomSheetHandle } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 
 interface GoalRouteSheetProps {
@@ -20,20 +18,8 @@ interface GoalRouteSheetProps {
   closeButtonLabel?: string;
 }
 
-const SHEET_TOP_OFFSET_VAR = "--goal-sheet-top-offset";
 const MOBILE_SHEET_BREAKPOINT_QUERY = "(max-width: 767px)";
 const SWIPE_CLOSE_MIN_DELTA_Y = 72;
-
-function getInitialHeaderBottomOffset() {
-  if (typeof document === "undefined") {
-    return 0;
-  }
-  const header = document.querySelector("header");
-  if (!header) {
-    return 0;
-  }
-  return Math.max(0, Math.round(header.getBoundingClientRect().bottom));
-}
 
 export function GoalRouteSheet({
   children,
@@ -43,46 +29,6 @@ export function GoalRouteSheet({
 }: GoalRouteSheetProps) {
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
   const isMobileViewport = useMediaQuery(MOBILE_SHEET_BREAKPOINT_QUERY);
-  const [headerBottomOffset, setHeaderBottomOffset] = useState(getInitialHeaderBottomOffset);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const header = document.querySelector("header");
-    if (!header) {
-      return;
-    }
-
-    const syncHeaderOffset = () => {
-      const nextOffset = Math.max(0, Math.round(header.getBoundingClientRect().bottom));
-      setHeaderBottomOffset(nextOffset);
-    };
-
-    syncHeaderOffset();
-    const observer =
-      typeof ResizeObserver !== "undefined"
-        ? new ResizeObserver(syncHeaderOffset)
-        : null;
-    observer?.observe(header);
-    window.addEventListener("resize", syncHeaderOffset);
-    window.addEventListener("scroll", syncHeaderOffset, { passive: true });
-
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", syncHeaderOffset);
-      window.removeEventListener("scroll", syncHeaderOffset);
-    };
-  }, []);
-
-  useEffect(() => {
-    const nextOffset = isMobileViewport ? headerBottomOffset : 0;
-    document.documentElement.style.setProperty(SHEET_TOP_OFFSET_VAR, `${nextOffset}px`);
-    return () => {
-      document.documentElement.style.removeProperty(SHEET_TOP_OFFSET_VAR);
-    };
-  }, [headerBottomOffset, isMobileViewport]);
 
   const onHeaderTouchStart = useCallback(
     (event: TouchEvent<HTMLDivElement>) => {
@@ -130,41 +76,24 @@ export function GoalRouteSheet({
     [isMobileViewport, onClose]
   );
 
-  const mobileConstrainedStyle =
-    isMobileViewport && headerBottomOffset > 0
-      ? {
-          top: `${headerBottomOffset}px`,
-          height: `calc(100dvh - ${headerBottomOffset}px)`,
-          maxHeight: `calc(100dvh - ${headerBottomOffset}px)`,
-        }
-      : undefined;
-
   return (
-    <Dialog
+    <BottomSheet
       open
       onOpenChange={(open) => {
         if (!open) {
           onClose();
         }
       }}
-    >
-      <DialogContent
-        showCloseButton={false}
-        style={mobileConstrainedStyle}
-        className="left-0 right-0 bottom-0 top-auto z-[70] grid h-dvh w-screen max-w-none translate-x-0 translate-y-0 grid-rows-[auto_minmax(0,1fr)] gap-0 rounded-none border-0 bg-background p-0 ring-0 data-open:slide-in-from-bottom-6 data-open:zoom-in-100 data-closed:slide-out-to-bottom-6 data-closed:zoom-out-100 sm:max-w-none md:left-1/2 md:right-auto md:w-[min(100vw-3rem,64rem)] md:max-w-[64rem] md:-translate-x-1/2 md:top-auto md:h-[88dvh] md:rounded-b-none md:rounded-t-3xl md:border-x md:border-b-0 md:border-t md:shadow-2xl"
-      >
-        <DialogTitle className="sr-only">{title}</DialogTitle>
+      title={title}
+      testId="goal-route-sheet"
+      contentClassName="h-[min(92dvh,100dvh)] max-h-[92dvh] md:w-[min(100vw-3rem,64rem)] md:max-w-[64rem] md:h-[88dvh] md:max-h-[88dvh]"
+      header={
         <div
-          className="sticky top-0 z-10 border-b bg-background/95 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.5rem)] backdrop-blur supports-[backdrop-filter]:bg-background/80"
+          className="border-b bg-background/95 px-4 pb-3 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur supports-[backdrop-filter]:bg-background/80"
           onTouchStart={onHeaderTouchStart}
           onTouchEnd={onHeaderTouchEnd}
         >
-          <div className="mb-2 flex justify-center md:hidden">
-            <span
-              className="h-1 w-12 rounded-full bg-border/80"
-              aria-hidden
-            />
-          </div>
+          <BottomSheetHandle />
           <div className="flex items-center justify-end">
             <Button
               type="button"
@@ -179,10 +108,9 @@ export function GoalRouteSheet({
             </Button>
           </div>
         </div>
-        <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 sm:px-6">
-          {children}
-        </div>
-      </DialogContent>
-    </Dialog>
+      }
+    >
+      {children}
+    </BottomSheet>
   );
 }

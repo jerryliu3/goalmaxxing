@@ -16,6 +16,7 @@ describe("GoalRouteSheet", () => {
     );
 
     expect(screen.getByText("Goal sheet body")).toBeVisible();
+    expect(screen.getByTestId("goal-route-sheet")).toHaveClass("rounded-t-3xl");
   });
 
   it("closes when the close button is pressed", async () => {
