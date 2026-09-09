@@ -17,10 +17,6 @@ import { PlanDaySection } from "@/features/planner/plan-day-section";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
 import { DuoLaneIdentity } from "@/features/social/duo/duo-lanes";
 import type { DuoLaneSubject } from "@cadence/shared/social/duo";
-import {
-  filterPlannerDayEntries,
-  filterPlannerDayMarkers,
-} from "@/features/planner/plan-day-filters";
 import { PlannerDayEntriesPanel } from "@/features/planner/planner-day-entries-panel";
 import { PlannerTasksPanel, PlannerTasksPrefetch } from "@/features/tasks/planner-tasks-panel";
 import { planDayViewTransitionName } from "@/features/planner/plan-view-transition";
@@ -79,18 +75,8 @@ export function PlannerFocusedDayPane({
   splitPartnerChecklist = false,
 }: PlannerFocusedDayPaneProps) {
   const TitleTag = titleAs;
-  const visibleEntries = useMemo(
-    () => filterPlannerDayEntries(entries, dayChecklist?.visibleGoalIds ?? null),
-    [dayChecklist?.visibleGoalIds, entries]
-  );
-  const visibleMarkers = useMemo(
-    () =>
-      filterPlannerDayMarkers(
-        completionFactMarkers,
-        dayChecklist?.visibleGoalIds ?? null
-      ),
-    [completionFactMarkers, dayChecklist?.visibleGoalIds]
-  );
+  const visibleEntries = entries;
+  const visibleMarkers = completionFactMarkers;
   const viewerMarkers = useMemo(
     () => visibleMarkers.filter((marker) => marker.owner !== "partner"),
     [visibleMarkers]

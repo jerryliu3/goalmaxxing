@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { PlannerDndProvider } from "@/features/planner/calendar-dnd";
 import { PlannerFocusedDayPane } from "@/features/planner/planner-focused-day-pane";
+import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 
 function renderWithDnd(ui: ReactNode) {
   return render(
@@ -89,5 +90,51 @@ describe("PlannerFocusedDayPane", () => {
     expect(screen.getByRole("button", { name: "Open Alice profile" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Open Alex profile" })).toBeInTheDocument();
     expect(screen.getByText("View only")).toBeInTheDocument();
+  });
+
+  it("keeps scheduled sessions visible when checklist filters hide the goal", () => {
+    const dayChecklist = {
+      ready: true,
+      loading: false,
+      visibleGoalIds: new Set<string>(),
+      listModel: {
+        presentationByGoalId: new Map(),
+        upcoming: [],
+        pastGoals: [],
+        archivedGoals: [],
+      },
+      filters: {
+        showUpcomingGoals: false,
+        showEndedGoals: false,
+        showArchivedGoals: false,
+        upcomingOpen: false,
+        pastPanelOpen: false,
+        archiveOpen: false,
+        setUpcomingOpen: () => {},
+        setPastPanelOpen: () => {},
+        setArchiveOpen: () => {},
+      },
+      savingGoalId: null,
+      toggleCompletion: async () => {},
+    } as unknown as PlanDayChecklistModel;
+
+    renderWithDnd(
+      <PlannerFocusedDayPane
+        day="2026-08-06"
+        entries={[sampleEntry as never]}
+        completionFactMarkers={[]}
+        mutationLoading={false}
+        asOfDate="2026-08-06"
+        canMutatePlanItems
+        canMutateEntryOnDay={() => true}
+        onEntryOpen={() => {}}
+        onToggleCompletion={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+        dayChecklist={dayChecklist}
+      />
+    );
+
+    expect(screen.getByText("Run")).toBeInTheDocument();
   });
 });
