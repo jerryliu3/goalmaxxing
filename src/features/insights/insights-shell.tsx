@@ -13,6 +13,7 @@ import {
 } from "@/features/insights/insights-tab";
 import { InsightsTrackerHeader } from "@/features/insights/insights-tracker-header";
 import { unionGoalsById } from "@/features/insights/insights-selectors";
+import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 import type { GoalDateSort } from "@/lib/goals/list-view";
 import type { Goal } from "@/lib/goals/types";
 
@@ -33,6 +34,9 @@ export function InsightsShell() {
   }, []);
   const handlePartnerGoalsChange = useCallback((goals: Goal[]) => {
     setPartnerGoals(goals);
+  }, []);
+  const handleCreditMoveSaved = useCallback(() => {
+    invalidatePlannerRelatedTabCaches();
   }, []);
   const sharedFilterGoals = useMemo(
     () => unionGoalsById([viewerGoals, partnerGoals]),
@@ -102,7 +106,10 @@ export function InsightsShell() {
         viewer={viewer}
         partner={partner}
         renderLane={(subject) => (
-          <CompletionCreditMoveProvider context={null}>
+          <CompletionCreditMoveProvider
+            context={null}
+            onMoved={handleCreditMoveSaved}
+          >
             <InsightsTab
               subjectUserId={subject.userId}
               readOnly={subject.readOnly}

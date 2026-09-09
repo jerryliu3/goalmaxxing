@@ -26,6 +26,7 @@ type SheetChromeProps = {
   contentStyle?: CSSProperties;
   testId?: string;
   frameClassName: string;
+  showHandle?: boolean;
 };
 
 function SheetDialog({
@@ -39,6 +40,7 @@ function SheetDialog({
   contentStyle,
   testId,
   frameClassName,
+  showHandle = false,
 }: SheetChromeProps) {
   return (
     <Dialog
@@ -58,8 +60,13 @@ function SheetDialog({
       >
         {header ?? (
           <div className="border-b px-4 pb-3">
-            <BottomSheetHandle />
-            <DialogTitle className="pt-2 font-display text-lg font-semibold tracking-tight">
+            {showHandle ? <BottomSheetHandle /> : null}
+            <DialogTitle
+              className={cn(
+                "font-display text-lg font-semibold tracking-tight",
+                showHandle ? "pt-2" : "pt-4"
+              )}
+            >
               {title}
             </DialogTitle>
             {description ? (
@@ -103,6 +110,7 @@ export function BottomSheet({
       {...props}
       testId={testId}
       frameClassName={cn(BOTTOM_SHEET_FRAME_CLASS, "max-h-[90dvh]")}
+      showHandle
     />
   );
 }

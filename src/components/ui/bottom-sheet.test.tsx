@@ -18,6 +18,7 @@ describe("BottomSheet", () => {
     expect(screen.getByTestId("app-bottom-sheet")).toHaveClass("rounded-t-3xl");
     expect(screen.getByRole("dialog", { name: "Preferences" })).toBeInTheDocument();
     expect(screen.getByText("Sheet body")).toBeVisible();
+    expect(document.querySelector('[aria-hidden="true"].rounded-full')).toBeTruthy();
   });
 
   it("notifies the caller when dismissed", async () => {
@@ -42,5 +43,6 @@ describe("BottomSheet", () => {
 
     expect(screen.getByTestId("app-side-panel")).toHaveClass("rounded-none");
     expect(screen.getByRole("dialog", { name: "Preferences" })).toBeInTheDocument();
+    expect(document.querySelector('[aria-hidden="true"].rounded-full')).toBeNull();
   });
 });
