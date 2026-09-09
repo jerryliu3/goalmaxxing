@@ -14,11 +14,10 @@ export interface CreditMoveSourceOption {
 }
 
 function canMoveToDate(unit: CreditMoveCandidateUnit, targetDate: string) {
-  const moveWindow = unit.draftMoveWindow ?? unit.placementWindow ?? unit.creditWindow;
-  if (!moveWindow) {
+  if (!unit.creditWindow) {
     return true;
   }
-  return dateIsInWindow(targetDate, moveWindow);
+  return dateIsInWindow(targetDate, unit.creditWindow);
 }
 
 export function buildCreditMoveSourceOptions({

@@ -88,7 +88,9 @@ describe("LeaderboardsPanel", () => {
 
     expect(await screen.findByRole("heading", { name: "Leaderboards" })).toBeInTheDocument();
     expect(screen.getByTestId("social-freshness-indicator")).toBeInTheDocument();
-    expect(screen.getByText("Swipe between seasons")).toBeInTheDocument();
+    expect(screen.queryByText("Swipe between seasons")).not.toBeInTheDocument();
+    expect(screen.queryByText("Open season")).not.toBeInTheDocument();
+    expect(screen.getByText("Ranked by total XP earned this season.")).toBeInTheDocument();
     expect(screen.getByTestId("compete-plaque")).toBeInTheDocument();
 
     await waitFor(() => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,7 @@ export function PlanLedgerCompletionControl({
         aria-label={`Move a planned session to complete ${label}`}
         onClick={(event) => onToggle(event.currentTarget)}
       >
-        <ArrowRight className="size-3.5" aria-hidden />
+        <ArrowUp className="size-3.5" aria-hidden />
       </button>
     );
   }

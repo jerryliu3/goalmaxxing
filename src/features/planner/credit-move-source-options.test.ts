@@ -52,6 +52,21 @@ describe("credit move source options", () => {
     ]);
   });
 
+  it("still lists a session whose draft window excludes the completion date", () => {
+    const options = buildCreditMoveSourceOptions({
+      goalId: "goal-a",
+      goalTitle: "Run",
+      workUnits: [
+        {
+          ...workUnits[0]!,
+          draftMoveWindow: { start: "2026-08-20", end: "2026-08-31" },
+        },
+      ],
+      targetDate: "2026-08-12",
+    });
+    expect(options.map((option) => option.unitKey)).toEqual(["cadence:2026-08-01:1"]);
+  });
+
   it("defaults to the kernel credit target", () => {
     const options = buildCreditMoveSourceOptions({
       goalId: "goal-a",

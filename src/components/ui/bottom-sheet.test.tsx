@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { BottomSheet, SidePanel } from "@/components/ui/bottom-sheet";
 
 describe("BottomSheet", () => {
   afterEach(() => {
@@ -31,5 +31,16 @@ describe("BottomSheet", () => {
 
     await user.keyboard("{Escape}");
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("slides a full-height side panel from the right", () => {
+    render(
+      <SidePanel open onOpenChange={vi.fn()} title="Preferences">
+        <p>Panel body</p>
+      </SidePanel>
+    );
+
+    expect(screen.getByTestId("app-side-panel")).toHaveClass("rounded-none");
+    expect(screen.getByRole("dialog", { name: "Preferences" })).toBeInTheDocument();
   });
 });

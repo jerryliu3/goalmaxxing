@@ -47,10 +47,23 @@ describe("InsightsGoalStatsFilters", () => {
       screen.getByTestId("insights-quick-filters")
     ).toHaveClass("flex", "overflow-x-auto");
     expect(
-      screen.getByText("All End Months").closest("button")
+      [...screen.getByTestId("insights-quick-filters").querySelectorAll("button")].map(
+        (button) => button.textContent
+      )
+    ).toEqual([
+      "Month View",
+      "Year View",
+      "All End Dates",
+      "This month",
+      "Next month",
+      "Year end",
+      "No end date",
+    ]);
+    expect(
+      screen.getByText("All End Dates").closest("button")
     ).toHaveClass("h-8", "shrink-0", "rounded-full");
     expect(
-      screen.getByText("All End Months").closest("button")
+      screen.getByText("All End Dates").closest("button")
     ).toHaveClass("bg-primary");
     expect(
       screen.getByText("Next month").closest("button")
@@ -60,10 +73,10 @@ describe("InsightsGoalStatsFilters", () => {
     fireEvent.click(screen.getByText("Next month"));
     expect(onEndMonthsChange).toHaveBeenCalledWith(["2026-09"]);
 
-    fireEvent.click(screen.getByText("All End Months"));
+    fireEvent.click(screen.getByText("All End Dates"));
     expect(onEndMonthsChange).toHaveBeenCalledWith([]);
 
-    fireEvent.click(screen.getByText("Year view"));
+    fireEvent.click(screen.getByText("Year View"));
     expect(onViewModeChange).toHaveBeenCalledWith("year");
 
     expect(
@@ -106,7 +119,7 @@ describe("InsightsGoalStatsFilters", () => {
 
     fireEvent.click(chips.getByText("This month"));
     expect(chips.getByText("This month").closest("button")).toHaveClass("bg-primary");
-    expect(chips.getByText("All End Months").closest("button")).not.toHaveClass(
+    expect(chips.getByText("All End Dates").closest("button")).not.toHaveClass(
       "bg-primary"
     );
 
@@ -117,7 +130,7 @@ describe("InsightsGoalStatsFilters", () => {
     );
 
     fireEvent.click(chips.getByText("Next month"));
-    expect(chips.getByText("All End Months").closest("button")).toHaveClass(
+    expect(chips.getByText("All End Dates").closest("button")).toHaveClass(
       "bg-primary"
     );
     expect(chips.getByText("Next month").closest("button")).not.toHaveClass(

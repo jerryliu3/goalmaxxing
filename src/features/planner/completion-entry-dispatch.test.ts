@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   getCompletionControlDisabledReason,
+  getPlannerCompletionTogglePresentation,
   planCompletionControlMode,
   planCompletionControlModeForDate,
   type DateFactDispatchForEntry,
@@ -126,5 +127,33 @@ describe("planCompletionControlModeForDate", () => {
         asOfDate: "2026-09-06",
       })
     ).toBe("toggle");
+  });
+});
+
+describe("getPlannerCompletionTogglePresentation", () => {
+  it("hides completion while a session is only in the plan draft", () => {
+    const entry = buildPlannerDayEntry({
+      draftDiffKind: "moved_to",
+      draftDiffFromDate: "2026-08-20",
+      draftDiffToDate: "2026-08-12",
+    });
+    expect(
+      getPlannerCompletionTogglePresentation({
+        entry,
+        selectedDay: "2026-08-12",
+        asOfDate: "2026-08-12",
+        canMutatePlanItems: true,
+        canMutateEntryOnDay: () => true,
+      })
+    ).toEqual({
+      currentlyCredited: false,
+      disabledReasonCopy: "Save the plan before marking this session done.",
+    });
+    expect(
+      planCompletionControlMode({
+        currentlyCredited: false,
+        disabledReasonCopy: "Save the plan before marking this session done.",
+      })
+    ).toBe("hidden");
   });
 });

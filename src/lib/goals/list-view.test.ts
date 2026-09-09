@@ -147,4 +147,13 @@ describe("goal list view helpers", () => {
       )
     ).toEqual(["2026-09", "2026-08"]);
   });
+
+  it("keeps goals with no end date when that filter is selected", () => {
+    expect(
+      filterGoalsByEndMonths(goals, ["none"]).map((goal) => goal.id)
+    ).toEqual(["ongoing"]);
+    expect(resolveEffectiveEndMonths(["none", "2026-07"], "2026-08")).toEqual([
+      "none",
+    ]);
+  });
 });

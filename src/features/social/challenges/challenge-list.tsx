@@ -117,9 +117,6 @@ export function ChallengeList({
       return {
         key: item.id,
         title: item.title,
-        kicker: `${item.participantCount} people · ${item.audienceKind}${
-          item.subjectKind === "team" ? " · team" : ""
-        }`,
         metric: challengeMetric(item),
         detail: item.description ?? `${item.status} · target ${item.targetValue}`,
         joined: item.viewerJoined,
@@ -222,7 +219,6 @@ export function ChallengeList({
       </div>
       <CompeteSnapRail
         label="Challenges"
-        hint="Your score first · ranks on click"
       >
         {tiles.map((tile) => {
           const challenge = challengeById.get(tile.key);

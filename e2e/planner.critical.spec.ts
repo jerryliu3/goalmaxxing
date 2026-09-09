@@ -160,7 +160,7 @@ async function waitForCalendarReady(page: Page) {
 }
 
 async function ensureCalendarMonthView(page: Page) {
-  const monthViewButton = page.getByRole("button", { name: "Month", exact: true });
+  const monthViewButton = page.getByRole("button", { name: "Month View", exact: true });
   if (await monthViewButton.isVisible().catch(() => false)) {
     const pressed = await monthViewButton.getAttribute("aria-pressed");
     if (pressed !== "true") {
@@ -175,7 +175,7 @@ async function ensureCalendarMonthView(page: Page) {
     const selectedLabel = (await viewModeSelect.textContent())?.trim() ?? "";
     if (!selectedLabel.startsWith("Month")) {
       await viewModeSelect.click();
-      await page.getByRole("option", { name: "Month", exact: true }).click();
+      await page.getByRole("option", { name: "Month View", exact: true }).click();
       await waitForCalendarReady(page);
     }
   }

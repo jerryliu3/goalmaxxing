@@ -186,7 +186,7 @@ export function CalendarDayPreviewList<
                     {...attributes}
                     {...(immovable ? {} : listeners)}
                   >
-                    {!entry.draftGhost && completionMode === "toggle" ? (
+                    {!isDraft && completionMode === "toggle" ? (
                       <div
                         className={
                           expanded
@@ -225,7 +225,7 @@ export function CalendarDayPreviewList<
                           title="Hold to change completion"
                         />
                       </div>
-                    ) : !entry.draftGhost && completionMode === "done" ? (
+                    ) : !isDraft && completionMode === "done" ? (
                       <div
                         className={
                           expanded

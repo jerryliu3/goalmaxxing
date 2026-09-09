@@ -35,6 +35,9 @@ interface MoveSessionDialogProps {
   onSubmit: () => void;
   submitDisabled: boolean;
   submitLabel?: string;
+  title?: string;
+  description?: string;
+  appendTargetDate?: boolean;
 }
 
 function isValidIsoDate(value: string) {
@@ -56,6 +59,9 @@ export function MoveSessionDialog({
   onSubmit,
   submitDisabled,
   submitLabel = "Move session",
+  title = "Move session here",
+  description = "Choose which existing session to move to this day.",
+  appendTargetDate = true,
 }: MoveSessionDialogProps) {
   const targetDateLabel =
     targetDate && isValidIsoDate(targetDate)
@@ -66,12 +72,10 @@ export function MoveSessionDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            Move session here
-            {targetDateLabel ? ` - ${targetDateLabel}` : ""}
+            {title}
+            {appendTargetDate && targetDateLabel ? ` - ${targetDateLabel}` : ""}
           </DialogTitle>
-          <DialogDescription>
-            Choose which existing session to move to this day.
-          </DialogDescription>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 text-sm">
           {targetDateLabel ? (

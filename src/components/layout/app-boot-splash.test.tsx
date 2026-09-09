@@ -26,7 +26,7 @@ describe("AppBootSplash", () => {
     expect(getJsonMock).not.toHaveBeenCalled();
   });
 
-  it("shows a branded stamp until planner context loads", async () => {
+  it("shows a branded climb until planner context loads", async () => {
     let resolveContext: ((value: unknown) => void) | undefined;
     getJsonMock.mockImplementation(
       () =>
@@ -36,6 +36,7 @@ describe("AppBootSplash", () => {
     );
     render(<AppBootSplash />);
     expect(await screen.findByTestId("app-boot-splash")).toBeInTheDocument();
+    expect(screen.getByTestId("app-boot-climb")).toBeInTheDocument();
     expect(screen.getByText("Goalmaxxing")).toBeInTheDocument();
     expect(screen.getByText("Preparing your plan…")).toBeInTheDocument();
     resolveContext?.({ preferences: { timezone: "UTC" } });

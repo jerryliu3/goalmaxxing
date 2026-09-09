@@ -17,6 +17,7 @@ import {
   peekSocialLeaderboardsCache,
 } from "@/features/social/data";
 import type { LeaderboardSeason, LeaderboardStanding } from "@/features/social/types";
+import { describeSeasonMetric } from "@/features/social/leaderboards/season-metric-copy";
 
 interface StandingsState {
   season: LeaderboardSeason;
@@ -110,17 +111,10 @@ export function LeaderboardsPanel({
         label: String(row.score),
         percent: Math.round((row.score / Math.max(leader, 1)) * 100),
       }));
-      const viewerRow = people.find((row) => row.you);
       return {
         key: season.id,
         title: season.title,
-        kicker: season.status === "open" ? "Open season" : "Season",
-        metric: viewerRow
-          ? `#${viewerRow.rank} · ${viewerRow.label}`
-          : standing?.viewerRank
-            ? `#${standing.viewerRank}`
-            : "—",
-        detail: season.metric,
+        detail: describeSeasonMetric(season.metric, season.metricTrackKey),
         joined: true,
         closed: false,
         people,
@@ -183,7 +177,6 @@ export function LeaderboardsPanel({
       </div>
       <CompeteSnapRail
         label="Leaderboards"
-        hint="Swipe between seasons"
       >
         {tiles.map((tile) => {
           const expanded = expandedId === tile.key;

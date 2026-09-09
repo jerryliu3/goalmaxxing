@@ -8,8 +8,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { format, parse } from "date-fns";
 import { toast } from "sonner";
 import { MoveSessionDialog } from "@/features/planner/move-session-dialog";
+import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
 import {
   buildCreditMoveSourceOptions,
   defaultCreditMoveSourceEntryKey,
@@ -27,6 +29,13 @@ interface CreditMoveDialogState {
   targetDate: string;
   options: CreditMoveSourceOption[];
   selectedEntryKey: string;
+}
+
+export interface CreditMoveDraftArgs {
+  goalId: string;
+  unitKey: string;
+  sourceDate: string;
+  scheduledDate: string;
 }
 
 interface CompletionCreditMoveContextValue {
@@ -51,12 +60,24 @@ async function resolvePlannerContext(
   });
 }
 
+function shouldConfirmCreditMove(viewMode?: PlannerCalendarViewMode | null) {
+  return viewMode == null || viewMode === "day";
+}
+
+function formatMoveDayLabel(date: string) {
+  return format(parse(date, "yyyy-MM-dd", new Date()), "EEE, MMM d");
+}
+
 export function CompletionCreditMoveProvider({
   context,
+  viewMode = null,
+  onDraftMove,
   onMoved,
   children,
 }: {
   context: PlannerContextPayload | null;
+  viewMode?: PlannerCalendarViewMode | null;
+  onDraftMove?: (move: CreditMoveDraftArgs) => boolean;
   onMoved?: () => void | Promise<void>;
   children: ReactNode;
 }) {
@@ -94,22 +115,42 @@ export function CompletionCreditMoveProvider({
         targetDate: completionDate,
       });
       if (options.length === 0) {
-        return false;
+        toast.error("Move a planned session here before marking this done.");
+        return true;
+      }
+      const selectedEntryKey = defaultCreditMoveSourceEntryKey({
+        goalId: goal.id,
+        workUnits: units,
+        targetDate: completionDate,
+        options,
+      });
+      if (!shouldConfirmCreditMove(viewMode) && onDraftMove) {
+        const selected =
+          options.find((option) => option.entryKey === selectedEntryKey) ?? options[0];
+        if (!selected) {
+          toast.error("Move a planned session here before marking this done.");
+          return true;
+        }
+        const moved = onDraftMove({
+          goalId: selected.goalId,
+          unitKey: selected.unitKey,
+          sourceDate: selected.sourceDay,
+          scheduledDate: completionDate,
+        });
+        if (moved) {
+          toast.success("Session moved into the plan draft. Save to keep it on this day.");
+        }
+        return true;
       }
       setDialog({
         goal,
         targetDate: completionDate,
         options,
-        selectedEntryKey: defaultCreditMoveSourceEntryKey({
-          goalId: goal.id,
-          workUnits: units,
-          targetDate: completionDate,
-          options,
-        }),
+        selectedEntryKey,
       });
       return true;
     },
-    [context]
+    [context, onDraftMove, viewMode]
   );
 
   const closeDialog = useCallback(() => {
@@ -161,6 +202,8 @@ export function CompletionCreditMoveProvider({
     [goalRequiresMove, requestMoveBeforeComplete, saving]
   );
 
+  const targetDateLabel = dialog ? formatMoveDayLabel(dialog.targetDate) : "";
+
   return (
     <CompletionCreditMoveContext.Provider value={value}>
       {children}
@@ -169,6 +212,13 @@ export function CompletionCreditMoveProvider({
         targetDate={dialog?.targetDate ?? ""}
         selectedSourceEntryKey={dialog?.selectedEntryKey ?? ""}
         sourceOptions={dialog?.options ?? []}
+        title={
+          targetDateLabel
+            ? `Schedule this goal for ${targetDateLabel}`
+            : "Schedule this goal"
+        }
+        description="This schedules the goal on this day by moving it from another planned slot."
+        appendTargetDate={false}
         onOpenChange={(open) => {
           if (!open) {
             closeDialog();

@@ -1,14 +1,20 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CompletionCreditMoveProvider, useCompletionCreditMove } from "@/features/planner/completion-credit-move";
+import { useChecklistCompletionActions } from "@/features/today/use-checklist-completion-actions";
 import { buildGoal } from "@/lib/goals/goal-test-fixtures";
 import type { PlannerContextPayload } from "@cadence/shared/planner/context";
 
 const persistImmediatePlannerMove = vi.hoisted(() => vi.fn());
+const runCompletionMutation = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/planner/persist-immediate-move", () => ({
   persistImmediatePlannerMove: (...args: unknown[]) =>
     persistImmediatePlannerMove(...args),
+}));
+
+vi.mock("@/features/planner/use-completion-mutation", () => ({
+  useCompletionMutation: () => runCompletionMutation,
 }));
 
 const goal = buildGoal({
@@ -77,22 +83,44 @@ function Probe() {
   );
 }
 
+function ChecklistProbe() {
+  const { toggleCompletion } = useChecklistCompletionActions({
+    readOnly: false,
+    viewDate: "2026-08-12",
+    todayLocalDate: "2026-08-12",
+    completionsByGoal: new Map(),
+    loadData: async () => undefined,
+    redirectToLogin: () => undefined,
+  });
+  return (
+    <button
+      type="button"
+      onClick={(event) => {
+        void toggleCompletion(goal, event.currentTarget);
+      }}
+    >
+      Complete
+    </button>
+  );
+}
+
 describe("CompletionCreditMoveProvider", () => {
   afterEach(() => {
     cleanup();
     persistImmediatePlannerMove.mockReset();
+    runCompletionMutation.mockReset();
   });
 
   it("opens the move dialog and persists immediately on save", async () => {
     persistImmediatePlannerMove.mockResolvedValue(undefined);
     render(
-      <CompletionCreditMoveProvider context={plannerContext()}>
+      <CompletionCreditMoveProvider context={plannerContext()} viewMode="day">
         <Probe />
       </CompletionCreditMoveProvider>
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Open move" }));
-    expect(await screen.findByRole("heading", { name: /Move session here/i })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: /Schedule this goal for/i })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => {
       expect(persistImmediatePlannerMove).toHaveBeenCalledWith(
@@ -104,5 +132,50 @@ describe("CompletionCreditMoveProvider", () => {
         })
       );
     });
+  });
+
+  it("opens the move dialog instead of completing from the day checklist", async () => {
+    render(
+      <CompletionCreditMoveProvider context={plannerContext()} viewMode="day">
+        <ChecklistProbe />
+      </CompletionCreditMoveProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Complete" }));
+    expect(await screen.findByRole("heading", { name: /Schedule this goal for/i })).toBeTruthy();
+    expect(
+      screen.getByText(
+        "This schedules the goal on this day by moving it from another planned slot."
+      )
+    ).toBeTruthy();
+    expect(runCompletionMutation).not.toHaveBeenCalled();
+  });
+
+  it("auto-stages a draft move in week view without opening the dialog", async () => {
+    const onDraftMove = vi.fn(() => true);
+    render(
+      <CompletionCreditMoveProvider
+        context={plannerContext()}
+        viewMode="week"
+        onDraftMove={onDraftMove}
+      >
+        <ChecklistProbe />
+      </CompletionCreditMoveProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Complete" }));
+    await waitFor(() => {
+      expect(onDraftMove).toHaveBeenCalledWith(
+        expect.objectContaining({
+          goalId: goal.id,
+          unitKey: "cadence:2026-08-01:1",
+          sourceDate: "2026-08-20",
+          scheduledDate: "2026-08-12",
+        })
+      );
+    });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(runCompletionMutation).not.toHaveBeenCalled();
+    expect(persistImmediatePlannerMove).not.toHaveBeenCalled();
   });
 });

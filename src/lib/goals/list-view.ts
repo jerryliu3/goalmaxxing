@@ -12,6 +12,12 @@ export interface GoalMonthOption {
   value: string;
 }
 
+export const NO_END_DATE_FILTER = "none";
+
+function isYearMonth(value: string) {
+  return /^\d{4}-\d{2}$/.test(value);
+}
+
 function buildMonthOptionsFromValues(
   monthValues: string[],
   startMonth: string
@@ -125,20 +131,28 @@ export function filterGoalsByEndMonths(goals: Goal[], endMonths: string[]): Goal
     return goals;
   }
 
-  const allowedMonths = new Set(endMonths);
-  return goals.filter(
-    (goal) => goal.end_date !== null && allowedMonths.has(goal.end_date.slice(0, 7))
+  const includeNoEndDate = endMonths.includes(NO_END_DATE_FILTER);
+  const allowedMonths = new Set(
+    endMonths.filter((endMonth) => endMonth !== NO_END_DATE_FILTER)
   );
+  return goals.filter((goal) => {
+    if (goal.end_date === null) {
+      return includeNoEndDate;
+    }
+    return allowedMonths.has(goal.end_date.slice(0, 7));
+  });
 }
 
 export function resolveEffectiveEndMonths(
   endMonths: string[],
   referenceMonth: string
 ): string[] {
+  const includeNoEndDate = endMonths.includes(NO_END_DATE_FILTER);
   const validMonths = endMonths.filter(
-    (endMonth) => /^\d{4}-\d{2}$/.test(endMonth) && endMonth >= referenceMonth
+    (endMonth) => isYearMonth(endMonth) && endMonth >= referenceMonth
   );
-  return Array.from(new Set(validMonths));
+  const uniqueMonths = Array.from(new Set(validMonths));
+  return includeNoEndDate ? [...uniqueMonths, NO_END_DATE_FILTER] : uniqueMonths;
 }
 
 export function partitionGoalsByVisibleStart(

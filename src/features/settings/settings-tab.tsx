@@ -12,7 +12,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { BottomSheet, BottomSheetHandle } from "@/components/ui/bottom-sheet";
+import { SidePanel } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { LoadingCard } from "@/components/ui/loading-card";
 import { OnboardingGuidesSettings } from "@/features/onboarding/onboarding-guides-settings";
@@ -165,19 +165,9 @@ export function SettingsTab() {
     <div
       data-testid="settings-pane"
       data-settings-pane={settingsPanelOpen ? "open" : "closed"}
-      className={cn(
-        "md:flex md:items-start md:overflow-x-hidden md:transition-[gap] md:duration-[var(--motion-duration-standard)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
-        isDesktopTwoPane && settingsPanelOpen ? "md:gap-10" : "md:gap-0"
-      )}
+      className="md:flex md:items-start md:overflow-hidden"
     >
-      <div
-        className={cn(
-          "min-w-0 space-y-5 md:transition-[flex-basis,max-width] md:duration-[var(--motion-duration-standard)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
-          isDesktopTwoPane && settingsPanelOpen
-            ? "md:max-w-96 md:flex-[0_0_24rem]"
-            : "md:max-w-none md:flex-1"
-        )}
-      >
+      <div className="min-w-0 flex-1 space-y-5">
         <ProfileSection
           userId={state.userId}
           profile={state.profile}
@@ -195,22 +185,17 @@ export function SettingsTab() {
       {isDesktopTwoPane ? (
         <div
           className={cn(
-            "min-w-0 overflow-hidden md:transition-[flex-basis,max-width,max-height,opacity] md:duration-[var(--motion-duration-standard)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
+            "min-w-0 overflow-hidden md:transition-[width] md:duration-[var(--motion-duration-hold)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
             settingsPanelOpen
-              ? "md:flex-1 md:opacity-100"
-              : "md:pointer-events-none md:max-h-0 md:min-h-0 md:max-w-0 md:flex-[0_0_0%] md:opacity-0"
+              ? "md:w-[min(100%,28rem)]"
+              : "md:pointer-events-none md:w-0"
           )}
           data-testid="settings-desktop-editor"
           data-settings-slide={settingsPanelOpen ? "in" : "out"}
           aria-hidden={!settingsPanelOpen}
           inert={!settingsPanelOpen ? true : undefined}
         >
-          <div
-            className={cn(
-              "space-y-3 md:w-full md:min-w-96 md:transition-transform md:duration-[var(--motion-duration-standard)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
-              settingsPanelOpen ? "md:translate-x-0" : "md:translate-x-full"
-            )}
-          >
+          <div className="space-y-3 md:w-[min(100%,28rem)] md:pl-10">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="font-display text-xl font-semibold tracking-tight">
@@ -234,7 +219,7 @@ export function SettingsTab() {
           </div>
         </div>
       ) : (
-        <BottomSheet
+        <SidePanel
           open={settingsPanelOpen}
           onOpenChange={(open) => {
             if (!open) {
@@ -243,11 +228,10 @@ export function SettingsTab() {
           }}
           title={settingsCopy.label}
           description={settingsCopy.description}
-          testId="settings-bottom-sheet"
+          testId="settings-side-panel"
           header={
             <div className="border-b px-4 pb-3">
-              <BottomSheetHandle />
-              <div className="flex items-center gap-2 pt-2">
+              <div className="flex items-center gap-2 pt-4">
                 <Button
                   type="button"
                   variant="ghost"
@@ -268,7 +252,7 @@ export function SettingsTab() {
           }
         >
           {editor}
-        </BottomSheet>
+        </SidePanel>
       )}
     </div>
   );

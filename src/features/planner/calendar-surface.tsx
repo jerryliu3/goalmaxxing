@@ -19,7 +19,10 @@ import {
   useCalendarSurfaceSelectedEventState,
   useEffectiveMoveDialogSourceEntryKey,
 } from "@/features/planner/use-calendar-surface-derived-state";
-import { CompletionCreditMoveProvider } from "@/features/planner/completion-credit-move";
+import {
+  CompletionCreditMoveProvider,
+  type CreditMoveDraftArgs,
+} from "@/features/planner/completion-credit-move";
 import { useCalendarSurfaceMoveSession } from "@/features/planner/use-calendar-surface-move-session";
 import { useCalendarSurfacePresentation } from "@/features/planner/use-calendar-surface-presentation";
 import {
@@ -817,9 +820,42 @@ export function CalendarSurface({
     rebuildLoading,
   });
 
+  const queueCreditMoveDraft = useCallback(
+    ({ goalId, unitKey, sourceDate, scheduledDate }: CreditMoveDraftArgs) => {
+      const sameDay = entriesByDate.get(sourceDate) ?? [];
+      const entry =
+        sameDay.find(
+          (candidate) =>
+            candidate.originalGoalId === goalId &&
+            candidate.unitKey === unitKey &&
+            !candidate.draftGhost
+        ) ??
+        [...entriesByDate.values()]
+          .flat()
+          .find(
+            (candidate) =>
+              candidate.originalGoalId === goalId &&
+              candidate.unitKey === unitKey &&
+              !candidate.draftGhost
+          );
+      if (!entry) {
+        toast.error("That planned session is not in this calendar window.");
+        return false;
+      }
+      return queueDraftMoveCommand({
+        entry,
+        nextDate: scheduledDate,
+        source: "date_input",
+      });
+    },
+    [entriesByDate, queueDraftMoveCommand]
+  );
+
   return (
     <CompletionCreditMoveProvider
       context={context}
+      viewMode={viewMode}
+      onDraftMove={queueCreditMoveDraft}
       onMoved={async () => {
         handlePlannerMutation();
         await loadContext({ showLoading: false, toastOnError: false });

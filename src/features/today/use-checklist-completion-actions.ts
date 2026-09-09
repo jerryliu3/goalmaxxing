@@ -113,12 +113,14 @@ export function useChecklistCompletionActions({
       const dispatchDate = mutation.date;
 
       if (routeDesiredFactState === "present" && creditMove) {
-        const openedMoveDialog = await creditMove.requestMoveBeforeComplete(
-          goal,
-          viewDate
-        );
-        if (openedMoveDialog) {
-          return;
+        if (creditMove.goalRequiresMove(goal.id, viewDate)) {
+          const openedMoveDialog = await creditMove.requestMoveBeforeComplete(
+            goal,
+            viewDate
+          );
+          if (openedMoveDialog) {
+            return;
+          }
         }
       }
 

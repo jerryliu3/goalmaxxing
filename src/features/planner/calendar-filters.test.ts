@@ -87,6 +87,30 @@ describe("calendar filters", () => {
     ).toBe(false);
   });
 
+  it("matches goals with no end date when that chip is selected", () => {
+    const goals = new Map([
+      ["goal-a", { category: "Personal", end_date: "2026-08-31" }],
+      ["goal-open", { category: "Health", end_date: null }],
+    ]);
+
+    expect(
+      goalPassesCalendarFilters({
+        goalId: "goal-open",
+        goalsByOriginalId: goals,
+        categoryFilters: [],
+        endMonthFilters: ["none"],
+      })
+    ).toBe(true);
+    expect(
+      goalPassesCalendarFilters({
+        goalId: "goal-a",
+        goalsByOriginalId: goals,
+        categoryFilters: [],
+        endMonthFilters: ["none"],
+      })
+    ).toBe(false);
+  });
+
   it("hides unknown goals when any filter is active", () => {
     const goals = new Map([
       ["goal-a", { category: "Personal", end_date: "2026-08-31" }],

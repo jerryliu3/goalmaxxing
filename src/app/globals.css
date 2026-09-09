@@ -488,10 +488,10 @@ body {
 
 @keyframes plan-draft-shimmer {
   0% {
-    background-position: 200% 0;
+    transform: translateX(-130%);
   }
   100% {
-    background-position: -200% 0;
+    transform: translateX(280%);
   }
 }
 
@@ -503,40 +503,24 @@ body {
 .plan-draft-shimmer::after {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 38%;
   background-image: linear-gradient(
     90deg,
     transparent 0%,
     color-mix(in srgb, var(--primary) 18%, transparent) 50%,
     transparent 100%
   );
-  background-size: 200% 100%;
   animation: plan-draft-shimmer 1.8s linear infinite;
   pointer-events: none;
-}
-
-@keyframes app-boot-stamp {
-  0%,
-  100% {
-    transform: rotate(-8deg) scale(1);
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 28%, transparent);
-  }
-  50% {
-    transform: rotate(-2deg) scale(1.06);
-    box-shadow: 0 0 0 10px color-mix(in srgb, var(--primary) 0%, transparent);
-  }
-}
-
-.app-boot-stamp {
-  animation: app-boot-stamp 1.4s var(--motion-ease-emphasized) infinite;
-  background: color-mix(in srgb, var(--primary) 18%, var(--background));
 }
 
 @media (prefers-reduced-motion: reduce) {
   .motion-popup-enter,
   .motion-collapsible-content,
-  .plan-draft-shimmer::after,
-  .app-boot-stamp {
+  .plan-draft-shimmer::after {
     animation: none !important;
   }
 

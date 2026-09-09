@@ -1,9 +1,9 @@
 "use client";
 
-import { addMonths, format, parseISO } from "date-fns";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { toggleExclusiveSelection } from "@/lib/filters/toggle-exclusive-selection";
+import { buildQuickEndDateChipOptions } from "@/lib/filters/quick-end-date-chips";
 
 export function PlannerEndMonthQuickFilterChips({
   referenceMonth,
@@ -17,30 +17,14 @@ export function PlannerEndMonthQuickFilterChips({
   testId?: string;
 }) {
   const quickEndMonths = useMemo(
-    () => {
-      const referenceDate = parseISO(`${referenceMonth}-01`);
-      return [
-        { key: "all-end-months", label: "All", value: null },
-        { key: "this-month", label: "This month", value: referenceMonth },
-        {
-          key: "next-month",
-          label: "Next month",
-          value: format(addMonths(referenceDate, 1), "yyyy-MM"),
-        },
-        {
-          key: "year-end",
-          label: "Year end",
-          value: `${referenceMonth.slice(0, 4)}-12`,
-        },
-      ];
-    },
+    () => buildQuickEndDateChipOptions(referenceMonth),
     [referenceMonth]
   );
 
   return (
     <div
       data-testid={testId}
-      className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1"
+      className="contents"
     >
       {quickEndMonths.map((option) => (
         <Button

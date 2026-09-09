@@ -1,6 +1,5 @@
 "use client";
 
-import { addMonths, format, parseISO } from "date-fns";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +12,7 @@ import {
 import { GoalListControls } from "@/features/goals/goal-list-controls";
 import type { HeatmapViewMode } from "@/features/insights/insights-tab";
 import { toggleExclusiveSelection } from "@/lib/filters/toggle-exclusive-selection";
+import { buildQuickEndDateChipOptions } from "@/lib/filters/quick-end-date-chips";
 import type { GoalDateSort } from "@/lib/goals/list-view";
 import type { Goal } from "@/lib/goals/types";
 
@@ -47,25 +47,10 @@ export function InsightsGoalStatsFilters({
   open,
   onOpenChange,
 }: InsightsGoalStatsFiltersProps) {
-  const quickEndMonths = useMemo<
-    Array<{ key: string; label: string; value: string | null }>
-  >(() => {
-    const referenceDate = parseISO(`${referenceMonth}-01`);
-    return [
-      { key: "all-end-months", label: "All End Months", value: null },
-      { key: "this-month", label: "This month", value: referenceMonth },
-      {
-        key: "next-month",
-        label: "Next month",
-        value: format(addMonths(referenceDate, 1), "yyyy-MM"),
-      },
-      {
-        key: "year-end",
-        label: "Year end",
-        value: `${referenceMonth.slice(0, 4)}-12`,
-      },
-    ];
-  }, [referenceMonth]);
+  const quickEndMonths = useMemo(
+    () => buildQuickEndDateChipOptions(referenceMonth),
+    [referenceMonth]
+  );
 
   return (
     <>
@@ -73,6 +58,18 @@ export function InsightsGoalStatsFilters({
         data-testid="insights-quick-filters"
         className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1"
       >
+        {(["month", "year"] as const).map((mode) => (
+          <Button
+            key={mode}
+            type="button"
+            variant={viewMode === mode ? "default" : "outline"}
+            size="sm"
+            className="h-8 shrink-0 rounded-full px-3 text-xs"
+            onClick={() => onViewModeChange(mode)}
+          >
+            {mode === "month" ? "Month View" : "Year View"}
+          </Button>
+        ))}
         {quickEndMonths.map((option) => (
           <Button
             key={option.key}
@@ -97,18 +94,6 @@ export function InsightsGoalStatsFilters({
             }}
           >
             {option.label}
-          </Button>
-        ))}
-        {(["month", "year"] as const).map((mode) => (
-          <Button
-            key={mode}
-            type="button"
-            variant={viewMode === mode ? "default" : "outline"}
-            size="sm"
-            className="h-8 shrink-0 rounded-full px-3 text-xs"
-            onClick={() => onViewModeChange(mode)}
-          >
-            {mode === "month" ? "Month view" : "Year view"}
           </Button>
         ))}
       </div>

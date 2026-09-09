@@ -12,25 +12,10 @@ import { cn } from "@/lib/utils";
 export const BOTTOM_SHEET_FRAME_CLASS =
   "left-0 right-0 top-auto bottom-0 z-[70] grid w-screen max-w-none translate-x-0 translate-y-0 gap-0 rounded-t-3xl rounded-b-none border-x-0 border-b-0 border-t bg-background p-0 ring-0 data-open:slide-in-from-bottom-6 data-open:zoom-in-100 data-closed:slide-out-to-bottom-6 data-closed:zoom-out-100 sm:max-w-none md:left-1/2 md:right-auto md:w-[min(100vw-3rem,40rem)] md:max-w-[40rem] md:-translate-x-1/2";
 
-export function BottomSheetHandle() {
-  return (
-    <div className="flex justify-center pt-2 md:hidden">
-      <span className="h-1 w-12 rounded-full bg-border/80" aria-hidden />
-    </div>
-  );
-}
+export const SIDE_PANEL_FRAME_CLASS =
+  "left-auto right-0 top-0 bottom-0 z-[70] grid h-[100dvh] max-h-[100dvh] w-[min(100vw,28rem)] max-w-none translate-x-0 translate-y-0 gap-0 rounded-none border-y-0 border-r-0 border-l bg-background p-0 ring-0 data-open:slide-in-from-right-8 data-open:zoom-in-100 data-closed:slide-out-to-right-8 data-closed:zoom-out-100 sm:max-w-none";
 
-export function BottomSheet({
-  open,
-  onOpenChange,
-  title,
-  description,
-  header,
-  children,
-  contentClassName,
-  contentStyle,
-  testId = "app-bottom-sheet",
-}: {
+type SheetChromeProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
@@ -40,7 +25,21 @@ export function BottomSheet({
   contentClassName?: string;
   contentStyle?: CSSProperties;
   testId?: string;
-}) {
+  frameClassName: string;
+};
+
+function SheetDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  header,
+  children,
+  contentClassName,
+  contentStyle,
+  testId,
+  frameClassName,
+}: SheetChromeProps) {
   return (
     <Dialog
       modal
@@ -52,8 +51,8 @@ export function BottomSheet({
         style={contentStyle}
         data-testid={testId}
         className={cn(
-          BOTTOM_SHEET_FRAME_CLASS,
-          "max-h-[90dvh] grid-rows-[auto_minmax(0,1fr)]",
+          frameClassName,
+          "grid-rows-[auto_minmax(0,1fr)]",
           contentClassName
         )}
       >
@@ -84,5 +83,39 @@ export function BottomSheet({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function BottomSheetHandle() {
+  return (
+    <div className="flex justify-center pt-2 md:hidden">
+      <span className="h-1 w-12 rounded-full bg-border/80" aria-hidden />
+    </div>
+  );
+}
+
+export function BottomSheet({
+  testId = "app-bottom-sheet",
+  ...props
+}: Omit<SheetChromeProps, "frameClassName" | "testId"> & { testId?: string }) {
+  return (
+    <SheetDialog
+      {...props}
+      testId={testId}
+      frameClassName={cn(BOTTOM_SHEET_FRAME_CLASS, "max-h-[90dvh]")}
+    />
+  );
+}
+
+export function SidePanel({
+  testId = "app-side-panel",
+  ...props
+}: Omit<SheetChromeProps, "frameClassName" | "testId"> & { testId?: string }) {
+  return (
+    <SheetDialog
+      {...props}
+      testId={testId}
+      frameClassName={SIDE_PANEL_FRAME_CLASS}
+    />
   );
 }

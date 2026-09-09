@@ -204,10 +204,14 @@ export function CalendarMonthDayCell<
       ? planCompletionControlMode(completionToggleState)
       : "hidden";
     const showCompletionToggle = Boolean(
-      layout === "agenda" && onToggleCompletion && completionMode === "toggle"
+      layout === "agenda" &&
+        onToggleCompletion &&
+        completionMode === "toggle" &&
+        !isDraft
     );
     const showStaticDoneMark =
       layout === "agenda" &&
+      !isDraft &&
       (completionMode === "done" || (!completionToggleState && credited));
     return (
       <PlannerDraggableEntry
