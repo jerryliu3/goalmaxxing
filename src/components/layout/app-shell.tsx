@@ -6,6 +6,7 @@ import { Fragment, type ReactNode, ViewTransition } from "react";
 import { JourneyIntroOverlay } from "@/components/intro/journey-intro-overlay";
 import { JourneyProvider } from "@/components/journey/journey-provider.web";
 import type { JourneyFeatureFlags } from "@/components/journey/types";
+import { AppBootSplash } from "@/components/layout/app-boot-splash";
 import { TabNav } from "@/components/navigation/tab-nav";
 import { Button } from "@/components/ui/button";
 import { AltitudeBackdrop } from "@/components/xp/altitude-backdrop";
@@ -90,6 +91,7 @@ export function AppShell({
             initialScopePreference={initialDuoScopePreference}
           >
             <PublicProfileSheetProvider>
+              <AppBootSplash />
               <div>
                 <div className="relative z-10 flex min-h-screen w-full justify-center bg-page px-4 py-4 sm:px-6 sm:py-6">
                   <div className="flex w-full max-w-6xl flex-col gap-4 md:gap-6">

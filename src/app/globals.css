@@ -515,10 +515,28 @@ body {
   pointer-events: none;
 }
 
+@keyframes app-boot-stamp {
+  0%,
+  100% {
+    transform: rotate(-8deg) scale(1);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 28%, transparent);
+  }
+  50% {
+    transform: rotate(-2deg) scale(1.06);
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--primary) 0%, transparent);
+  }
+}
+
+.app-boot-stamp {
+  animation: app-boot-stamp 1.4s var(--motion-ease-emphasized) infinite;
+  background: color-mix(in srgb, var(--primary) 18%, var(--background));
+}
+
 @media (prefers-reduced-motion: reduce) {
   .motion-popup-enter,
   .motion-collapsible-content,
-  .plan-draft-shimmer::after {
+  .plan-draft-shimmer::after,
+  .app-boot-stamp {
     animation: none !important;
   }
 
