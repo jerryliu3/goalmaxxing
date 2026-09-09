@@ -15,6 +15,7 @@ import {
   getCategorySwatchColor,
   resolveCategoryKey,
   type CategoryPresetId,
+  type CategorySelection,
 } from "@/lib/goals/category";
 
 const GOAL_ICONS: readonly LucideIcon[] = [
@@ -73,6 +74,13 @@ export function toStyleDisplayColor(color: string, styleId?: UiStyleId) {
     return toGazetteerDisplayColor(withHash);
   }
   return withHash;
+}
+
+export function getDisplayCategorySwatchColor(
+  selection: CategorySelection,
+  styleId?: UiStyleId
+) {
+  return toStyleDisplayColor(getCategorySwatchColor(selection), styleId);
 }
 
 export function normalizeGoalColor(color: string | null, styleId?: UiStyleId) {

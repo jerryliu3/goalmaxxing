@@ -10,6 +10,7 @@ import {
 
 afterEach(() => {
   cleanup();
+  delete document.documentElement.dataset.uiStyle;
 });
 
 describe("CategorySelect", () => {
@@ -39,6 +40,21 @@ describe("CategorySelect", () => {
     expect(within(listbox).getByRole("option", { name: "Relationships" })).toBeInTheDocument();
     expect(within(listbox).getByRole("option", { name: "Health" })).toBeInTheDocument();
     expect(within(listbox).getByRole("option", { name: "Custom" })).toBeInTheDocument();
+  });
+
+  it("shows Gazetteer category swatches when the document style is gazetteer", async () => {
+    const user = userEvent.setup();
+    document.documentElement.dataset.uiStyle = "gazetteer";
+    render(<CategorySelect value="health" onValueChange={vi.fn()} />);
+
+    await user.click(screen.getByRole("combobox"));
+    const health = screen.getByRole("option", { name: "Health" });
+    const swatch = health.querySelector("[style]");
+    expect(swatch).toHaveAttribute(
+      "style",
+      expect.stringContaining("rgb(74, 103, 64)")
+    );
+    delete document.documentElement.dataset.uiStyle;
   });
 });
 

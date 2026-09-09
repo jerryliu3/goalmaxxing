@@ -37,6 +37,7 @@ import CalendarHeatmap from "react-calendar-heatmap";
 import "react-calendar-heatmap/dist/styles.css";
 import { CalendarDayPreviewList } from "@/features/planner/calendar-day-preview-list";
 import { computeDayPreviewPosition } from "@/features/planner/day-preview-popup";
+import { getGoalVisual } from "@/features/planner/goal-visuals";
 import { getApiErrorMessage } from "@/lib/api/client";
 import {
   countCompletionsByDate,
@@ -346,7 +347,11 @@ export function InsightsTab({
         return {
           id: goal.id,
           title: goal.title,
-          color: goal.color ?? "var(--muted-foreground)",
+          color: getGoalVisual({
+            goalId: goal.id,
+            color: goal.color,
+            category: goal.category,
+          }).color,
           rateLabel: getCompletionCountLabel(goal, completionCount, progress),
         };
       }),
