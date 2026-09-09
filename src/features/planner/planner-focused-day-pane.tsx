@@ -192,6 +192,7 @@ export function PlannerFocusedDayPane({
               density="expanded"
               includeSourceElement={false}
               selectedEntryKey={selectedEntryKey}
+              shareEntryTransition={shareDayTransition}
             />
             {splitPartnerChecklist
               ? partnerMarkers.map((marker) => (

@@ -26,7 +26,7 @@ import {
 } from "@/features/planner/calendar-day-chrome";
 import { planCompletionControlMode } from "@/features/planner/completion-entry-dispatch";
 import { getGoalVisual, getWorkPillDraftFillStyle, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
-import { planDayViewTransitionName } from "@/features/planner/plan-view-transition";
+import { planDayViewTransitionName, planEntryViewTransitionName } from "@/features/planner/plan-view-transition";
 
 export interface CalendarMonthCellEntryBase {
   key: string;
@@ -222,7 +222,11 @@ export function CalendarMonthDayCell<
               setNodeRef(node);
               setActivatorNodeRef(node);
             }}
-            style={{ ...style, ...pillFillStyle }}
+            style={{
+              ...style,
+              ...pillFillStyle,
+              viewTransitionName: planEntryViewTransitionName(entry.key),
+            }}
             onClick={(event) => {
               if (
                 event.target instanceof Element &&
