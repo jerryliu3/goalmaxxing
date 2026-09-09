@@ -23,12 +23,11 @@ import type {
 import type { PlannerDayPreviewInteractions } from "@/features/planner/use-planner-day-preview-interactions";
 import { canOpenPlannerEventDetails } from "@/features/planner/calendar-task-entries";
 import { getPlannerCompletionTogglePresentation } from "@/features/planner/completion-entry-dispatch";
-import { useMediaQuery } from "@/lib/ui/use-media-query";
-
-export function resolveWeekAgendaSelectionViewMode(
-  isDesktopTwoPane: boolean
-): Extract<PlannerCalendarViewMode, "week" | "day"> {
-  return isDesktopTwoPane ? "week" : "day";
+export function resolveWeekAgendaSelectionViewMode(): Extract<
+  PlannerCalendarViewMode,
+  "week" | "day"
+> {
+  return "week";
 }
 
 interface PlannerCalendarCell {
@@ -141,7 +140,6 @@ export function usePlannerCalendarDayCellRenderer({
     lastTouchTapRef,
     suppressDayCellClickRef,
   } = dayPreviewInteractions;
-  const isDesktopTwoPane = useMediaQuery("(min-width: 768px)");
   const onboardingItemDay = selectOnboardingCalendarItemDay({
     calendarToday,
     visibleCells,
@@ -210,10 +208,7 @@ export function usePlannerCalendarDayCellRenderer({
               return;
             }
             if (viewMode === "week") {
-              selectDayForView(
-                day,
-                resolveWeekAgendaSelectionViewMode(isDesktopTwoPane)
-              );
+              selectDayForView(day, resolveWeekAgendaSelectionViewMode());
               return;
             }
             if (viewMode === "month") {
@@ -241,10 +236,7 @@ export function usePlannerCalendarDayCellRenderer({
               return;
             }
             if (viewMode === "week") {
-              selectDayForView(
-                cell.date,
-                resolveWeekAgendaSelectionViewMode(isDesktopTwoPane)
-              );
+              selectDayForView(cell.date, resolveWeekAgendaSelectionViewMode());
               return;
             }
             if (viewMode === "month") {
@@ -270,6 +262,7 @@ export function usePlannerCalendarDayCellRenderer({
             clearHoverPreviewCloseTimer();
             clearLongPressTimer();
             longPressTriggeredRef.current = false;
+            setDayPreview(null);
             openDayViewForDay(cell.date);
           }}
           onCellMouseEnter={(target) => {
@@ -305,6 +298,7 @@ export function usePlannerCalendarDayCellRenderer({
                   day: cell.date,
                   active: true,
                 };
+                setDayPreview(null);
                 openDayViewForDay(cell.date);
                 return;
               }
@@ -375,7 +369,6 @@ export function usePlannerCalendarDayCellRenderer({
       openDayPreview,
       openDayViewForDay,
       selectDayForView,
-      isDesktopTwoPane,
       plannerReadOnly,
       pointerPressActiveRef,
       scheduleHoverPreview,

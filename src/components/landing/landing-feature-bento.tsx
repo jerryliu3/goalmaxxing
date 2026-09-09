@@ -49,10 +49,10 @@ function RecoveryCard() {
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between rounded-lg bg-recover/15 px-3 py-2">
-          <span className="text-[9px] font-medium text-recover">
+          <span className="text-[9px] font-medium text-orange-950">
             2 sessions re-placed
           </span>
-          <span className="text-[8px] text-recover">Ready to save</span>
+          <span className="text-[8px] text-orange-950">Ready to save</span>
         </div>
       </div>
     </article>

@@ -73,8 +73,8 @@ export function CalendarDayPreviewList<
   const expanded = density === "expanded";
   return (
     <div
-      className={`overflow-y-auto overflow-x-hidden text-xs [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
-        expanded ? "max-h-[min(32rem,70dvh)] divide-y" : "max-h-44 space-y-1"
+      className={`overflow-x-hidden text-xs ${
+        expanded ? "divide-y" : "max-h-44 space-y-1 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       }`}
     >
       {entries.length === 0 && completionFactMarkers.length === 0 ? (

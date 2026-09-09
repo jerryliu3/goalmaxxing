@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { scheduleDelayedIdleTask } from "@/lib/browser/schedule-idle";
 import { createClient } from "@/lib/supabase/client";
 import { assertQueriesOk } from "@/lib/supabase/query-error";
 import {
@@ -110,9 +111,14 @@ export function usePartnerCompletionOverlay({
         });
       }
     };
-    void run();
+    const cancelDeferredRun = scheduleDelayedIdleTask(() => {
+      if (!cancelled) {
+        void run();
+      }
+    }, 800);
     return () => {
       cancelled = true;
+      cancelDeferredRun();
     };
   }, [enabled, month, partnerId]);
 

@@ -49,6 +49,7 @@ setup("authenticate seeded Alice account", async ({ page }) => {
         "done"
       );
     }
+    window.sessionStorage.setItem("gm-boot-ready", "1");
   });
   await mkdir(path.dirname(authStatePath), { recursive: true });
   await page.context().storageState({ path: authStatePath });

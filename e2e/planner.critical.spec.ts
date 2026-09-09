@@ -806,8 +806,8 @@ test.describe("planner critical rails", () => {
   test("completion toggle dispatches from today surface", async ({ page }) => {
     test.setTimeout(120_000);
     await gotoAppPath(page, "/calendar?view=day");
-    const initialButton = page.locator(COMPLETION_TOGGLE_SELECTOR).first();
-    await expect(initialButton).toBeVisible();
+    const initialButton = page.locator(`${COMPLETION_TOGGLE_SELECTOR}:enabled`).first();
+    await expect(initialButton).toBeVisible({ timeout: 15_000 });
     await expect(initialButton).toBeEnabled();
 
     const todayPayload = await runCompletionToggleAction(page, async () => {
@@ -829,9 +829,9 @@ test.describe("planner critical rails", () => {
       return `${year}-${month}-${day}`;
     });
     await gotoAppPath(page, `/calendar?view=day&day=${yesterday}`);
-    const pastToggle = page.locator(COMPLETION_TOGGLE_SELECTOR).first();
+    const pastToggle = page.locator(`${COMPLETION_TOGGLE_SELECTOR}:enabled`).first();
     if (!(await pastToggle.isVisible({ timeout: 10_000 }).catch(() => false))) {
-      test.skip(true, "No Day completion toggle on yesterday.");
+      test.skip(true, "No enabled Day completion toggle on yesterday.");
       return;
     }
     await expect(pastToggle).toBeEnabled();

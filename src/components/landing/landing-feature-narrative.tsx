@@ -76,7 +76,7 @@ function FeatureSceneVisual({ index }: { index: number }) {
   if (index === 1) {
     return (
       <div className="w-full rounded-xl border bg-recover/10 p-4">
-        <p className="text-xs font-medium text-recover">Keep the plan moving</p>
+        <p className="text-xs font-medium text-orange-950">Keep the plan moving</p>
         <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-[11px]">
           <div className="rounded-lg border border-dashed border-border bg-background p-2.5">
             <p className="font-semibold text-muted-foreground">Missed Thursday</p>
@@ -84,7 +84,7 @@ function FeatureSceneVisual({ index }: { index: number }) {
           </div>
           <span className="text-recover">→</span>
           <div className="rounded-lg border border-gain/35 bg-background p-2.5">
-            <p className="font-semibold text-gain">Next opening</p>
+            <p className="font-semibold text-emerald-900">Next opening</p>
             <p className="mt-1 text-foreground">Friday · 7:00 AM</p>
           </div>
         </div>

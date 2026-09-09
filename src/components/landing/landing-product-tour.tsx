@@ -135,7 +135,7 @@ function InsightsVisual() {
       <div className="mt-4 rounded-xl border bg-gain/10 p-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <LineChart className="size-3.5 text-gain" />
+            <LineChart className="size-3.5 text-emerald-700" />
             <span className="text-[10px] font-medium">30-day completion rate</span>
           </div>
           <span className="text-[9px] font-medium text-foreground">+14%</span>
