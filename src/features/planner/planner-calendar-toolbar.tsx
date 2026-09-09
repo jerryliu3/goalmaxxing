@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
+import { PlannerEndMonthQuickFilterChips } from "@/features/planner/planner-end-month-quick-filter-chips";
 import type { PlannerEligibilityNotices } from "@/features/planner/planner-eligibility-notices";
 
 const PLANNER_VIEW_MODES: ReadonlyArray<{
@@ -38,6 +39,9 @@ interface PlannerCalendarToolbarProps {
   canOpenSettings: boolean;
   linkedTargetDetails: PlannerEligibilityNotices["linkedTargetDetails"];
   searchQuery: string;
+  referenceMonth: string;
+  endMonthFilters: string[];
+  onEndMonthFiltersChange: (months: string[]) => void;
   onSave: () => void;
   onDiscardDraftChanges: () => void;
   onViewModeChange: (viewMode: PlannerCalendarViewMode) => void;
@@ -109,6 +113,9 @@ export function PlannerCalendarToolbar({
   canOpenSettings,
   linkedTargetDetails,
   searchQuery,
+  referenceMonth,
+  endMonthFilters,
+  onEndMonthFiltersChange,
   onSave,
   onDiscardDraftChanges,
   onViewModeChange,
@@ -154,6 +161,11 @@ export function PlannerCalendarToolbar({
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
+            <PlanViewModeSwitch
+              viewMode={viewMode}
+              loading={loading}
+              onViewModeChange={onViewModeChange}
+            />
             {!plannerReadOnly && canShowSaveAction && hasDraftSession ? (
               <Button
                 type="button"
@@ -183,6 +195,11 @@ export function PlannerCalendarToolbar({
             ) : null}
           </div>
         </div>
+        <PlannerEndMonthQuickFilterChips
+          referenceMonth={referenceMonth}
+          endMonthFilters={endMonthFilters}
+          onEndMonthFiltersChange={onEndMonthFiltersChange}
+        />
         <div className="flex w-full items-center gap-2">
           <div className="min-w-0 flex-1">
             <Input
@@ -200,11 +217,6 @@ export function PlannerCalendarToolbar({
             className="flex shrink-0 items-center gap-2"
             data-onboarding="planner.calendar.controls"
           >
-            <PlanViewModeSwitch
-              viewMode={viewMode}
-              loading={loading}
-              onViewModeChange={onViewModeChange}
-            />
             <Button
               type="button"
               variant="outline"

@@ -1038,9 +1038,9 @@ describe("CalendarSurface characterization", () => {
       />
     );
 
-    expect(await screen.findByTestId("plan-day-quick-filters")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "All types" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "All categories" })).toBeInTheDocument();
+    expect(await screen.findByTestId("planner-end-month-quick-filters")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "This month" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Filters" }));
     expect(await screen.findByRole("heading", { name: "Day filters" })).toBeInTheDocument();
