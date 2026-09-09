@@ -116,7 +116,7 @@ function ChecklistOutline() {
                 Career · Daily recurring
               </p>
             </div>
-            <span className="rounded-full bg-gain/15 px-2 py-0.5 text-[8px] font-medium text-gain">
+            <span className="rounded-full bg-gain/15 px-2 py-0.5 text-[8px] font-medium text-foreground">
               Done
             </span>
           </div>

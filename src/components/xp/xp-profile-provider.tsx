@@ -179,10 +179,6 @@ export function XpProfileProvider({
 
   useEffect(() => {
     if (!enabled) {
-      setLoading(false);
-      setProfile(null);
-      setTracks([]);
-      setNextReward(null);
       return;
     }
 
@@ -218,14 +214,15 @@ export function XpProfileProvider({
 
   const value = useMemo<XpProfileContextValue>(
     () => ({
-      loading,
-      profile,
-      tracks,
-      nextReward,
-      rewardSequence,
-      band: profile ? bandForTotalXp(profile.totalXp) : defaultBand,
+      loading: enabled ? loading : false,
+      profile: enabled ? profile : null,
+      tracks: enabled ? tracks : [],
+      nextReward: enabled ? nextReward : null,
+      rewardSequence: enabled ? rewardSequence : 0,
+      band:
+        enabled && profile ? bandForTotalXp(profile.totalXp) : defaultBand,
     }),
-    [loading, nextReward, profile, rewardSequence, tracks]
+    [enabled, loading, nextReward, profile, rewardSequence, tracks]
   );
 
   return <XpProfileContext.Provider value={value}>{children}</XpProfileContext.Provider>;

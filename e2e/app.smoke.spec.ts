@@ -70,7 +70,8 @@ test("public root route renders landing page", async ({
 test("goal creation entry stays on the app shell", async ({ page }) => {
   await page.goto("/calendar");
   await page.getByRole("link", { name: /new goal \+/i }).first().click();
-  await expect(page).toHaveURL(/\/goals\/new/);
+  await expect(page).toHaveURL(/\/calendar/);
+  await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Create goal" }).first()).toBeVisible();
 });
 
