@@ -116,7 +116,7 @@ describe("PlannerFocusedDayPane", () => {
       },
       savingGoalId: null,
       toggleCompletion: async () => {},
-    } as PlanDayChecklistModel;
+    } as unknown as PlanDayChecklistModel;
 
     renderWithDnd(
       <PlannerFocusedDayPane
