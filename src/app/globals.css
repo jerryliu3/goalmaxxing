@@ -243,6 +243,7 @@ body {
 
 .gm-gazetteer h1,
 .gm-gazetteer h2,
+.gm-gazetteer h3,
 .gm-gazetteer .font-display {
   font-family: var(--font-app-display), Georgia, "Times New Roman", serif;
 }

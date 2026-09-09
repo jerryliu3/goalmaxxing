@@ -258,7 +258,7 @@ export function CalendarDayPreviewList<
                           className={
                             expanded
                               ? "flex min-h-6 items-center font-display text-base font-medium leading-none tracking-tight"
-                              : "flex h-6 min-w-0 items-center truncate font-medium leading-none"
+                              : "flex h-6 min-w-0 items-center truncate font-display font-medium leading-none"
                           }
                         >
                           <span className="inline-flex items-center gap-1">

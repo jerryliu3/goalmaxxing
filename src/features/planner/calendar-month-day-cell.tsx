@@ -328,8 +328,7 @@ export function CalendarMonthDayCell<
             ) : null}
             <span
               className={cn(
-                "flex h-6 min-w-0 items-center truncate leading-none",
-                layout === "agenda" && "font-display",
+                "flex h-6 min-w-0 items-center truncate font-display leading-none",
                 credited && "line-through"
               )}
             >
