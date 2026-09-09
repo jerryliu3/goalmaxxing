@@ -456,7 +456,6 @@ export function buildDemoAchievements(): AchievementsShowcasePayload {
     asOfDate: snapshot.asOfDate,
     totalXp,
     weeklyAnchor: WEEKLY_ANCHOR,
-    weekStartsOn: DEMO_WEEK_STARTS_ON,
     rewardCatalog: [
       {
         id: "70000000-0000-4000-8000-000000000010",

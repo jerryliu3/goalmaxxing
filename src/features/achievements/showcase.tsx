@@ -17,9 +17,14 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
   const [featuredId, setFeaturedId] = useState(initialFeaturedId);
 
   useEffect(() => {
-    const nextFeaturedId =
+    const serverFeaturedId =
       payload.collection.featuredAwardId ?? payload.levelAwards[0]?.id ?? "";
-    setFeaturedId(nextFeaturedId);
+    setFeaturedId((current) => {
+      if (current && payload.levelAwards.some((award) => award.id === current)) {
+        return current;
+      }
+      return serverFeaturedId;
+    });
   }, [payload.collection.featuredAwardId, payload.levelAwards]);
 
   const featured = useMemo(

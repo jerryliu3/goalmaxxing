@@ -9,6 +9,7 @@ export function useAchievementsShowcase() {
   const [payload, setPayload] = useState<AchievementsShowcasePayload | null>(null);
 
   const loadAchievements = useCallback(async () => {
+    setLoading(true);
     setError(null);
     try {
       const response = await fetch("/api/xp/achievements", {

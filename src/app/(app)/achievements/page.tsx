@@ -13,17 +13,30 @@ function AchievementsLoadingState() {
   );
 }
 
-function AchievementsErrorState({ message }: { message: string }) {
+function AchievementsErrorState({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
   return (
     <div className="ach-showcase-root -mx-4 rounded-[20px] px-4 py-10 sm:-mx-6 sm:px-6">
       <AchievementsShowcaseStyles />
       <p className="text-sm text-[#e8b4b4]">{message}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-4 rounded-md border border-[#5a4a38] px-3 py-2 text-sm text-[#f8f1e3] transition hover:bg-[#2c241c]"
+      >
+        Try again
+      </button>
     </div>
   );
 }
 
 export default function AchievementsPage() {
-  const { loading, error, payload } = useAchievementsShowcase();
+  const { loading, error, payload, reload } = useAchievementsShowcase();
 
   if (loading) {
     return <AchievementsLoadingState />;
@@ -31,7 +44,12 @@ export default function AchievementsPage() {
 
   if (error || !payload) {
     return (
-      <AchievementsErrorState message={error ?? "Achievements could not be loaded."} />
+      <AchievementsErrorState
+        message={error ?? "Achievements could not be loaded."}
+        onRetry={() => {
+          void reload();
+        }}
+      />
     );
   }
 

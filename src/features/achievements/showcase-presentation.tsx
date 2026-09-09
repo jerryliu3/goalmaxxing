@@ -90,7 +90,11 @@ export type ShowcaseGoalView = {
   category: AchievementGoalCategory;
 };
 
-export function ShowcasePersonalRecords({ records }: { records: PersonalRecord[] }) {
+export function ShowcasePersonalRecords({
+  records,
+}: {
+  records: readonly PersonalRecord[];
+}) {
   return (
     <section aria-label="Personal records">
       <div className="flex items-baseline justify-between gap-3">
@@ -178,7 +182,7 @@ export function ShowcaseMedalShelf({
   featuredId,
   onSelect,
 }: {
-  awards: ShowcaseLevelAwardView[];
+  awards: readonly ShowcaseLevelAwardView[];
   featuredId: string;
   onSelect: (awardId: string) => void;
 }) {
@@ -208,7 +212,7 @@ export function ShowcaseMedalShelf({
   );
 }
 
-export function ShowcasePlaqueRail({ goals }: { goals: ShowcaseGoalView[] }) {
+export function ShowcasePlaqueRail({ goals }: { goals: readonly ShowcaseGoalView[] }) {
   return (
     <div className="mt-8">
       <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8a7a64]">

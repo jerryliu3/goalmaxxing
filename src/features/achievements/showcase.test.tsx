@@ -121,4 +121,23 @@ describe("AchievementsShowcase", () => {
     expect(screen.getByRole("heading", { name: "Still ahead" })).toBeInTheDocument();
     expect(screen.queryByText(/level 10 unlocked/i)).not.toBeInTheDocument();
   });
+
+  it("keeps a valid shelf selection across payload refresh", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<AchievementsShowcase payload={payload} />);
+
+    await user.click(screen.getByRole("button", { name: /lv 2/i }));
+    expect(screen.getAllByRole("heading", { name: "Level 2 unlocked" }).length).toBeGreaterThan(0);
+
+    rerender(
+      <AchievementsShowcase
+        payload={{
+          ...payload,
+          levelAwards: payload.levelAwards.map((award) => ({ ...award })),
+        }}
+      />
+    );
+
+    expect(screen.getAllByRole("heading", { name: "Level 2 unlocked" }).length).toBeGreaterThan(0);
+  });
 });

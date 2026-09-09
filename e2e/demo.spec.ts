@@ -54,8 +54,8 @@ test.describe("public demo sandbox", () => {
     });
 
     await page.goto("/demo/achievements");
-    await expect(page.getByLabelText("Personal records")).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByLabelText("Trophy showcase")).toBeVisible();
+    await expect(page.getByLabel("Personal records")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByLabel("Trophy showcase")).toBeVisible();
     await expect(page.getByText(/medal shelf/i)).toBeVisible();
     expect(leaked).toEqual([]);
   });

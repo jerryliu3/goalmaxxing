@@ -277,6 +277,32 @@ describe("demo fetch router", () => {
     ).toBe("2026-08-16");
   });
 
+  it("serves achievements showcase payload without calling through to the network", async () => {
+    initDemoStore(buildDemoSnapshot("2026-08-22"));
+    const originalFetch = vi.fn(() => {
+      throw new Error("network should not be used");
+    });
+
+    const response = await handleDemoFetch(
+      "/api/xp/achievements",
+      { method: "GET" },
+      originalFetch as unknown as typeof fetch
+    );
+    const payload = (await response.json()) as {
+      schemaVersion: string;
+      collection: { totalXp: number };
+      personalRecords: Array<{ label: string }>;
+    };
+
+    expect(originalFetch).not.toHaveBeenCalled();
+    expect(response.ok).toBe(true);
+    expect(payload.schemaVersion).toBe("2");
+    expect(payload.collection.totalXp).toBe(2460);
+    expect(payload.personalRecords.map((record) => record.label)).toContain(
+      "Best active week"
+    );
+  });
+
   it("keeps unsupported writes from pretending to succeed", async () => {
     initDemoStore(buildDemoSnapshot("2026-08-22"));
     const originalFetch = vi.fn();
