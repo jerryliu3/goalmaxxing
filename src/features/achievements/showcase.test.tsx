@@ -26,7 +26,7 @@ const payload: AchievementsShowcasePayload = {
     },
     {
       id: "rec-week",
-      label: "Best week",
+      label: "Best active week",
       value: "94%",
       hint: "Week of Aug 11",
       accent: "gain",
@@ -97,7 +97,6 @@ const payload: AchievementsShowcasePayload = {
       category: "career",
     },
   ],
-  globalAchievements: [],
   truncated: { goals: false, completions: false },
 };
 

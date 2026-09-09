@@ -1,7 +1,7 @@
 "use client";
 
 import { AchievementsShowcase } from "@/features/achievements/showcase";
-import { AchievementsShowcaseStyles } from "@/features/achievements/showcase-styles";
+import { AchievementsShowcaseStyles } from "@/features/achievements/showcase-presentation";
 import { useAchievementsShowcase } from "@/features/achievements/use-achievements-showcase";
 
 function AchievementsLoadingState() {
