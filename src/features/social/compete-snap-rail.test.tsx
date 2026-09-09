@@ -64,4 +64,31 @@ describe("CompeteTile", () => {
     expect(onJoin).toHaveBeenCalledTimes(1);
     expect(onExpand).not.toHaveBeenCalled();
   });
+
+  it("renders a paper plaque with stamped ranks when open", () => {
+    render(
+      <CompeteTile
+        tile={tile({
+          joined: true,
+          people: [
+            {
+              rank: 1,
+              name: "Ada",
+              you: true,
+              partner: false,
+              label: "120",
+              percent: 100,
+            },
+          ],
+        })}
+        density="ranks"
+        expanded
+        onExpand={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId("compete-plaque")).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.getByText("Ada · you")).toBeInTheDocument();
+  });
 });

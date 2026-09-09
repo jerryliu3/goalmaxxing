@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
   CountTrendInline,
-  InsightsLabelWithTooltip,
+  InsightsStatPlaque,
+  InsightsStatStrip,
 } from "@/features/insights/insights-stats-ui";
 import type { InsightsStatsGroup } from "@/lib/insights/types";
 
@@ -42,82 +43,50 @@ export function InsightsOverallStatsTiles({
 }) {
   return (
     <>
-      <div className="grid grid-cols-2 gap-2 sm:gap-3">
-        <div className="min-w-0 rounded-lg border bg-muted/20 p-2.5 sm:p-3">
-          <p className="text-xs">
-            <InsightsLabelWithTooltip
-              label="Total Activities"
-              tooltip="Numerator: every completion event ever logged."
+      <InsightsStatStrip>
+        <InsightsStatPlaque
+          label="Total Activities"
+          tooltip="Numerator: every completion event ever logged."
+          value={overallStats.totalActivities.toLocaleString()}
+        />
+        <InsightsStatPlaque
+          label="Total Goals Completed"
+          tooltip="Numerator: unique goals in achieved outcome."
+          value={overallStats.totalGoalsCompleted.toLocaleString()}
+        />
+        <InsightsStatPlaque
+          label="Current Month Activities"
+          tooltip="Numerator: completion events in the current month."
+          value={overallStats.currentMonthActivities.current.toLocaleString()}
+          hint={
+            <CountTrendInline
+              trend={overallStats.currentMonthActivities}
+              compareLabel="last month window"
             />
-          </p>
-          <p className="mt-1 font-display text-lg font-semibold sm:text-xl">
-            {overallStats.totalActivities.toLocaleString()}
-          </p>
-        </div>
-        <div className="min-w-0 rounded-lg border bg-muted/20 p-2.5 sm:p-3">
-          <p className="text-xs">
-            <InsightsLabelWithTooltip
-              label="Total Goals Completed"
-              tooltip="Numerator: unique goals in achieved outcome."
+          }
+        />
+        <InsightsStatPlaque
+          label="Current Week Activities"
+          tooltip="Numerator: completion events in the current week."
+          value={overallStats.currentWeekActivities.current.toLocaleString()}
+          hint={
+            <CountTrendInline
+              trend={overallStats.currentWeekActivities}
+              compareLabel="last week"
             />
-          </p>
-          <p className="mt-1 font-display text-lg font-semibold sm:text-xl">
-            {overallStats.totalGoalsCompleted.toLocaleString()}
-          </p>
-        </div>
-        <div className="min-w-0 rounded-lg border bg-muted/20 p-2.5 sm:p-3">
-          <p className="text-xs">
-            <InsightsLabelWithTooltip
-              label="Current Month Activities"
-              tooltip="Numerator: completion events in the current month."
-            />
-          </p>
-          <p className="mt-1 font-display text-lg font-semibold sm:text-xl">
-            {overallStats.currentMonthActivities.current.toLocaleString()}
-          </p>
-          <CountTrendInline
-            trend={overallStats.currentMonthActivities}
-            compareLabel="last month window"
-          />
-        </div>
-        <div className="min-w-0 rounded-lg border bg-muted/20 p-2.5 sm:p-3">
-          <p className="text-xs">
-            <InsightsLabelWithTooltip
-              label="Current Week Activities"
-              tooltip="Numerator: completion events in the current week."
-            />
-          </p>
-          <p className="mt-1 font-display text-lg font-semibold sm:text-xl">
-            {overallStats.currentWeekActivities.current.toLocaleString()}
-          </p>
-          <CountTrendInline
-            trend={overallStats.currentWeekActivities}
-            compareLabel="last week"
-          />
-        </div>
-        <div className="min-w-0 rounded-lg border bg-muted/20 p-2.5 sm:p-3">
-          <p className="text-xs">
-            <InsightsLabelWithTooltip
-              label="Today's Activities"
-              tooltip="Numerator: completion events on today's date."
-            />
-          </p>
-          <p className="mt-1 font-display text-lg font-semibold sm:text-xl">
-            {overallStats.todayActivities.toLocaleString()}
-          </p>
-        </div>
-        <div className="min-w-0 rounded-lg border bg-muted/20 p-2.5 sm:p-3">
-          <p className="text-xs">
-            <InsightsLabelWithTooltip
-              label="Active Streak"
-              tooltip="Numerator: consecutive days ending today with more than zero completions."
-            />
-          </p>
-          <p className="mt-1 font-display text-lg font-semibold sm:text-xl">
-            {overallStats.activeStreakDays.toLocaleString()} days
-          </p>
-        </div>
-      </div>
+          }
+        />
+        <InsightsStatPlaque
+          label="Today's Activities"
+          tooltip="Numerator: completion events on today's date."
+          value={overallStats.todayActivities.toLocaleString()}
+        />
+        <InsightsStatPlaque
+          label="Active Streak"
+          tooltip="Numerator: consecutive days ending today with more than zero completions."
+          value={`${overallStats.activeStreakDays.toLocaleString()} days`}
+        />
+      </InsightsStatStrip>
       {showMoreLink ? (
         <div className="text-right text-sm">
           <Link href="/insights/more" className="font-medium text-primary hover:underline">

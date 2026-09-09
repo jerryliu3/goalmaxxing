@@ -121,12 +121,17 @@ export function CompeteTile({
 
   return (
     <article
-      className={`relative flex min-h-[22.5rem] snap-start flex-col rounded-[16px] border border-border p-5 ${
+      data-testid="compete-plaque"
+      className={`relative flex min-h-[22.5rem] snap-start flex-col overflow-hidden rounded-[16px] border border-border bg-card p-5 shadow-[inset_0_1px_0_color-mix(in_srgb,white_40%,transparent),0_16px_28px_-18px_color-mix(in_srgb,var(--foreground)_30%,transparent)] ${
         wide
           ? "flex-[0_0_calc(100%-2.75rem)]"
           : "w-[28rem] max-w-[calc(100%-1.5rem)] shrink-0"
       }`}
     >
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -right-6 -top-8 size-24 rotate-12 rounded-[18px] border-2 border-primary/25"
+      />
       <button
         type="button"
         className="absolute inset-0 z-0 rounded-[16px]"
@@ -155,19 +160,28 @@ export function CompeteTile({
             {rows.map((row) => (
               <li
                 key={`${tile.key}-${row.name}-${row.rank}`}
-                className={row.you ? "rounded-md bg-muted px-2 py-2" : "px-2 py-1"}
+                className={row.you ? "rounded-md bg-muted/80 px-2 py-2" : "px-2 py-1"}
               >
-                <div className="flex items-center justify-between text-sm">
-                  <span>
-                    {density === "ranks" ? `${row.rank}. ` : null}
-                    {row.name}
-                    {row.you ? " · you" : row.partner ? " · team" : ""}
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="flex min-w-0 items-center gap-2">
+                    {density === "ranks" ? (
+                      <span
+                        aria-hidden
+                        className="inline-flex size-7 shrink-0 items-center justify-center rounded-[6px] border-2 border-primary font-display text-sm font-semibold text-primary [transform:rotate(-8deg)]"
+                      >
+                        {row.rank}
+                      </span>
+                    ) : null}
+                    <span className="truncate">
+                      {row.name}
+                      {row.you ? " · you" : row.partner ? " · team" : ""}
+                    </span>
                   </span>
-                  <span className="text-muted-foreground">{row.label}</span>
+                  <span className="shrink-0 text-muted-foreground">{row.label}</span>
                 </div>
-                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+                <div className="mt-1.5 h-2 overflow-hidden rounded-sm bg-muted shadow-[inset_0_1px_2px_color-mix(in_srgb,var(--foreground)_16%,transparent)]">
                   <div
-                    className="h-full rounded-full bg-primary"
+                    className="h-full rounded-sm bg-primary shadow-[inset_0_-2px_0_color-mix(in_srgb,black_18%,transparent)]"
                     style={{ width: `${Math.min(100, Math.max(0, row.percent))}%` }}
                   />
                 </div>
