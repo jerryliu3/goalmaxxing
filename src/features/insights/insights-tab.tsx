@@ -72,6 +72,7 @@ import {
   progressSummaryMap,
 } from "@/lib/goals/progress-context";
 import type { Goal } from "@/lib/goals/types";
+import { useCompletionCreditMove } from "@/features/planner/completion-credit-move";
 import { resolveInsightsCompletionIntent } from "@/lib/planner/completion-intent";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import { withPlannerRefreshTimeout } from "@/lib/planner/refresh-timeout";
@@ -210,6 +211,7 @@ export function InsightsTab({
   const aggregateHeatmapRef = useRef<HTMLDivElement | null>(null);
   const aggregateDrilldownRef = useRef<HTMLDivElement | null>(null);
   const runCompletionMutation = useCompletionMutation();
+  const creditMove = useCompletionCreditMove();
   const selectedYear = useMemo(() => format(monthCursor, "yyyy"), [monthCursor]);
   const { state, loading, laneError, loadData, redirectToLogin } = useInsightsData({
     subjectUserId,
@@ -431,6 +433,16 @@ export function InsightsTab({
         return;
       }
 
+      if (!isSelected && creditMove) {
+        const openedMoveDialog = await creditMove.requestMoveBeforeComplete(
+          goal,
+          completionDate
+        );
+        if (openedMoveDialog) {
+          return;
+        }
+      }
+
       setPendingRetroDate(completionDate);
       const currentScrollY = window.scrollY;
       const { decision, mutation } = intent;
@@ -461,7 +473,7 @@ export function InsightsTab({
       setPendingRetroDate(null);
       refreshInsightsInBackground(currentScrollY);
     },
-    [completionTimezone, pendingRetroDate, readOnly, refreshInsightsInBackground, runCompletionMutation, todayLocal]
+    [completionTimezone, creditMove, pendingRetroDate, readOnly, refreshInsightsInBackground, runCompletionMutation, todayLocal]
   );
 
   const toggleRecurringDateSelection = useCallback(
@@ -503,6 +515,16 @@ export function InsightsTab({
         return;
       }
 
+      if (!hasCompletionOnDate && creditMove) {
+        const openedMoveDialog = await creditMove.requestMoveBeforeComplete(
+          goal,
+          completionDate
+        );
+        if (openedMoveDialog) {
+          return;
+        }
+      }
+
       setPendingRetroDate(completionDate);
       const currentScrollY = window.scrollY;
       const { decision, mutation } = intent;
@@ -533,7 +555,7 @@ export function InsightsTab({
       setPendingRetroDate(null);
       refreshInsightsInBackground(currentScrollY);
     },
-    [completionTimezone, pendingRetroDate, readOnly, refreshInsightsInBackground, runCompletionMutation, todayLocal]
+    [completionTimezone, creditMove, pendingRetroDate, readOnly, refreshInsightsInBackground, runCompletionMutation, todayLocal]
   );
 
   const saveMilestoneNames = useCallback(

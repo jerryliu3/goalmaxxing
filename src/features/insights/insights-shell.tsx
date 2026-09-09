@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from "react";
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
 import { DuoLanes } from "@/features/social/duo/duo-lanes";
 import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
+import { CompletionCreditMoveProvider } from "@/features/planner/completion-credit-move";
 import {
   InsightsTab,
   type InsightsSharedGoalFilters,
@@ -101,20 +102,22 @@ export function InsightsShell() {
         viewer={viewer}
         partner={partner}
         renderLane={(subject) => (
-          <InsightsTab
-            subjectUserId={subject.userId}
-            readOnly={subject.readOnly}
-            sharedPeriod={sharedPeriod}
-            sharedGoalFilters={sharedGoalFilters}
-            contentMode={sharePeriodControls ? "lane" : undefined}
-            onPersonalGoalsChange={
-              sharePeriodControls
-                ? subject.id === "partner"
-                  ? handlePartnerGoalsChange
-                  : handleViewerGoalsChange
-                : undefined
-            }
-          />
+          <CompletionCreditMoveProvider context={null}>
+            <InsightsTab
+              subjectUserId={subject.userId}
+              readOnly={subject.readOnly}
+              sharedPeriod={sharedPeriod}
+              sharedGoalFilters={sharedGoalFilters}
+              contentMode={sharePeriodControls ? "lane" : undefined}
+              onPersonalGoalsChange={
+                sharePeriodControls
+                  ? subject.id === "partner"
+                    ? handlePartnerGoalsChange
+                    : handleViewerGoalsChange
+                  : undefined
+              }
+            />
+          </CompletionCreditMoveProvider>
         )}
       />
     </div>

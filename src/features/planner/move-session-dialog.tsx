@@ -34,6 +34,7 @@ interface MoveSessionDialogProps {
   onCancel: () => void;
   onSubmit: () => void;
   submitDisabled: boolean;
+  submitLabel?: string;
 }
 
 function isValidIsoDate(value: string) {
@@ -54,6 +55,7 @@ export function MoveSessionDialog({
   onCancel,
   onSubmit,
   submitDisabled,
+  submitLabel = "Move session",
 }: MoveSessionDialogProps) {
   const targetDateLabel =
     targetDate && isValidIsoDate(targetDate)
@@ -116,7 +118,7 @@ export function MoveSessionDialog({
               Cancel
             </Button>
             <Button type="button" onClick={onSubmit} disabled={submitDisabled}>
-              Move session
+              {submitLabel}
             </Button>
           </div>
         </div>

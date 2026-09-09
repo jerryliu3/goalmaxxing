@@ -19,6 +19,7 @@ import {
   useCalendarSurfaceSelectedEventState,
   useEffectiveMoveDialogSourceEntryKey,
 } from "@/features/planner/use-calendar-surface-derived-state";
+import { CompletionCreditMoveProvider } from "@/features/planner/completion-credit-move";
 import { useCalendarSurfaceMoveSession } from "@/features/planner/use-calendar-surface-move-session";
 import { useCalendarSurfacePresentation } from "@/features/planner/use-calendar-surface-presentation";
 import {
@@ -816,5 +817,15 @@ export function CalendarSurface({
     rebuildLoading,
   });
 
-  return <PlannerCalendarSurfaceLayout {...layoutProps} />;
+  return (
+    <CompletionCreditMoveProvider
+      context={context}
+      onMoved={async () => {
+        handlePlannerMutation();
+        await loadContext({ showLoading: false, toastOnError: false });
+      }}
+    >
+      <PlannerCalendarSurfaceLayout {...layoutProps} />
+    </CompletionCreditMoveProvider>
+  );
 }
