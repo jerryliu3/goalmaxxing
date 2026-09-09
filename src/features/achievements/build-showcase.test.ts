@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { toAchievementGoalCategory } from "@/features/achievements/category";
 import { buildAchievementsShowcasePayload, claimedProgress } from "@/features/achievements/build-showcase";
+import { awardTierForLevel } from "@/features/achievements/tier";
 import type { Completion, Goal } from "@/lib/goals/types";
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
@@ -38,6 +40,24 @@ function makeCompletion(overrides: Partial<Completion> = {}): Completion {
     ...overrides,
   };
 }
+
+describe("awardTierForLevel", () => {
+  it("maps XP reward levels to medal tiers", () => {
+    expect(awardTierForLevel(2)).toBe("bronze");
+    expect(awardTierForLevel(4)).toBe("copper");
+    expect(awardTierForLevel(6)).toBe("sage");
+    expect(awardTierForLevel(8)).toBe("gold");
+    expect(awardTierForLevel(12)).toBe("ink");
+  });
+});
+
+describe("toAchievementGoalCategory", () => {
+  it("prefers category keys and falls back to labels", () => {
+    expect(toAchievementGoalCategory("health", "Fitness")).toBe("health");
+    expect(toAchievementGoalCategory(null, "Work goals")).toBe("career");
+    expect(toAchievementGoalCategory("custom", "Random")).toBe("other");
+  });
+});
 
 describe("buildAchievementsShowcasePayload", () => {
   it("merges reward catalog with user unlocks and keeps locked mounts", () => {
@@ -84,6 +104,7 @@ describe("buildAchievementsShowcasePayload", () => {
     expect(payload.levelAwards[1]?.unlockedAt).toBeNull();
     expect(payload.collection.unlockedAwards).toBe(1);
     expect(payload.collection.featuredAwardId).toBe("reward-2");
+    expect(payload).not.toHaveProperty("globalAchievements");
   });
 
   it("maps achieved goals and personal records from goal snapshots", () => {
@@ -118,11 +139,26 @@ describe("buildAchievementsShowcasePayload", () => {
     expect(payload.achievedGoals[0]?.category).toBe("career");
     expect(payload.personalRecords.map((record) => record.label)).toEqual([
       "Best streak",
-      "Best week",
+      "Best active week",
       "Goals finished",
       "Highest level",
     ]);
     expect(payload.personalRecords[2]?.value).toBe("1");
+  });
+
+  it("qualifies personal records when the snapshot is truncated", () => {
+    const payload = buildAchievementsShowcasePayload({
+      goals: [],
+      completions: [makeCompletion()],
+      asOfDate: "2026-09-01",
+      totalXp: 100,
+      rewardCatalog: [],
+      userAwards: [],
+      truncated: { goals: false, completions: true },
+    });
+
+    expect(payload.personalRecords[0]?.hint).toBe("Based on a bounded snapshot");
+    expect(payload.personalRecords[1]?.hint).toBe("Based on a bounded snapshot");
   });
 });
 

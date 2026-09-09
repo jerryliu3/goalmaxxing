@@ -15,6 +15,30 @@ interface BuildPersonalRecordsInput {
   level: number;
   totalXp: number;
   weekStartsOn: number;
+  truncated: {
+    goals: boolean;
+    completions: boolean;
+  };
+}
+
+const TRUNCATED_SNAPSHOT_HINT = "Based on a bounded snapshot";
+
+function qualifyForTruncation(
+  records: PersonalRecord[],
+  truncated: BuildPersonalRecordsInput["truncated"]
+): PersonalRecord[] {
+  return records.map((record) => {
+    if (
+      truncated.completions &&
+      (record.id === "rec-streak" || record.id === "rec-week")
+    ) {
+      return { ...record, hint: TRUNCATED_SNAPSHOT_HINT };
+    }
+    if (truncated.goals && record.id === "rec-goals") {
+      return { ...record, hint: TRUNCATED_SNAPSHOT_HINT };
+    }
+    return record;
+  });
 }
 
 function bestStreakRecord(goalSnapshots: GoalStreakSnapshot[]): PersonalRecord {
@@ -39,7 +63,10 @@ function bestStreakRecord(goalSnapshots: GoalStreakSnapshot[]): PersonalRecord {
   };
 }
 
-function bestWeekRecord(completions: Completion[], weekStartsOn: number): PersonalRecord {
+function bestActiveWeekRecord(
+  completions: Completion[],
+  weekStartsOn: number
+): PersonalRecord {
   const activeDaysByWeek = new Map<string, Set<string>>();
 
   for (const completion of completions) {
@@ -64,12 +91,12 @@ function bestWeekRecord(completions: Completion[], weekStartsOn: number): Person
 
   return {
     id: "rec-week",
-    label: "Best week",
+    label: "Best active week",
     value: percent === null ? "—" : `${percent}%`,
     hint:
       bestWeekKey === null
         ? "Complete a goal to start tracking"
-        : `Week of ${format(parseISO(bestWeekKey), "MMM d")}`,
+        : `${bestActiveDays} active days · week of ${format(parseISO(bestWeekKey), "MMM d")}`,
     accent: "gain",
   };
 }
@@ -122,10 +149,12 @@ function highestLevelRecord(level: number, totalXp: number): PersonalRecord {
 export function buildPersonalRecords(
   input: BuildPersonalRecordsInput
 ): PersonalRecord[] {
-  return [
+  const records = [
     bestStreakRecord(input.goalSnapshots),
-    bestWeekRecord(input.completions, input.weekStartsOn),
+    bestActiveWeekRecord(input.completions, input.weekStartsOn),
     goalsFinishedRecord(input.achievedGoalsCount, input.achievedGoalDates),
     highestLevelRecord(input.level, input.totalXp),
   ];
+
+  return qualifyForTruncation(records, input.truncated);
 }

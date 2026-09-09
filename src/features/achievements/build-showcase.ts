@@ -51,7 +51,6 @@ export interface BuildAchievementsShowcaseInput {
   rewardCatalog: XpRewardRow[];
   userAwards: UserAwardRow[];
   weeklyAnchor?: { weekStartsOn: number };
-  weekStartsOn?: number;
   truncated: {
     goals: boolean;
     completions: boolean;
@@ -208,22 +207,7 @@ export function buildAchievementsShowcasePayload(
     achievedGoals.length,
     input.totalXp
   );
-
-  const globalAchievements = input.userAwards
-    .map((award) => {
-      const reward = resolveUserAwardReward(award);
-      return {
-        id: award.id,
-        unlockedAt: award.unlocked_at,
-        acknowledgedAt: award.acknowledged_at,
-        revokedAt: award.revoked_at,
-        level: reward?.level ?? null,
-        code: reward?.reward_code ?? null,
-        title: reward?.reward_title ?? null,
-        description: reward?.reward_description ?? null,
-      };
-    })
-    .sort((left, right) => right.unlockedAt.localeCompare(left.unlockedAt));
+  const weekStartsOn = input.weeklyAnchor?.weekStartsOn ?? 1;
 
   return {
     schemaVersion: "2",
@@ -237,11 +221,11 @@ export function buildAchievementsShowcasePayload(
       completions: input.completions,
       level: collection.level,
       totalXp: input.totalXp,
-      weekStartsOn: input.weekStartsOn ?? input.weeklyAnchor?.weekStartsOn ?? 1,
+      weekStartsOn,
+      truncated: input.truncated,
     }),
     levelAwards,
     achievedGoals,
-    globalAchievements,
     truncated: input.truncated,
   };
 }
