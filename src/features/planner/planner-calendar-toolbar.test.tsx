@@ -39,7 +39,7 @@ describe("PlannerCalendarToolbar", () => {
     cleanup();
   });
 
-  it("offers Day, Week, and Month without a 3 Day option", () => {
+  it("offers Day View, Week View, and Month View without a 3 Day option", () => {
     renderToolbar();
 
     const viewGroup = screen.getByRole("group", { name: "Plan view mode" });
@@ -47,14 +47,14 @@ describe("PlannerCalendarToolbar", () => {
       within(viewGroup)
         .getAllByRole("button")
         .map((button) => button.textContent)
-    ).toEqual(["Day", "Week", "Month"]);
-    expect(within(viewGroup).getByRole("button", { name: "Week" })).toHaveAttribute(
+    ).toEqual(["Day View", "Week View", "Month View"]);
+    expect(within(viewGroup).getByRole("button", { name: "Week View" })).toHaveAttribute(
       "aria-pressed",
       "true"
     );
     expect(within(viewGroup).queryByRole("button", { name: "3 Day" })).toBeNull();
     expect(screen.getByTestId("plan-view-mode-thumb")).toHaveClass("bg-primary");
-    expect(within(viewGroup).getByRole("button", { name: "Week" })).toHaveClass(
+    expect(within(viewGroup).getByRole("button", { name: "Week View" })).toHaveClass(
       "text-primary-foreground"
     );
   });

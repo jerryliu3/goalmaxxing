@@ -4,6 +4,7 @@ import type {
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import { mergeCompletionFactMarkers } from "@cadence/shared/planner/partner-completion";
+import { NO_END_DATE_FILTER } from "@/lib/goals/list-view";
 
 interface CalendarFilterGoalSnapshot {
   category: string;
@@ -69,7 +70,10 @@ export function goalPassesCalendarFilters({
   }
   if (endMonthFilters.length > 0) {
     const endMonth = goal.end_date?.slice(0, 7) ?? null;
-    return endMonth !== null && endMonthFilters.includes(endMonth);
+    if (endMonth === null) {
+      return endMonthFilters.includes(NO_END_DATE_FILTER);
+    }
+    return endMonthFilters.includes(endMonth);
   }
   return true;
 }

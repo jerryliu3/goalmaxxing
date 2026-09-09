@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { BottomSheet, SidePanel } from "@/components/ui/bottom-sheet";
 
 describe("BottomSheet", () => {
   afterEach(() => {
@@ -18,6 +18,7 @@ describe("BottomSheet", () => {
     expect(screen.getByTestId("app-bottom-sheet")).toHaveClass("rounded-t-3xl");
     expect(screen.getByRole("dialog", { name: "Preferences" })).toBeInTheDocument();
     expect(screen.getByText("Sheet body")).toBeVisible();
+    expect(document.querySelector('[aria-hidden="true"].rounded-full')).toBeTruthy();
   });
 
   it("notifies the caller when dismissed", async () => {
@@ -31,5 +32,17 @@ describe("BottomSheet", () => {
 
     await user.keyboard("{Escape}");
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("slides a full-height side panel from the right", () => {
+    render(
+      <SidePanel open onOpenChange={vi.fn()} title="Preferences">
+        <p>Panel body</p>
+      </SidePanel>
+    );
+
+    expect(screen.getByTestId("app-side-panel")).toHaveClass("rounded-none");
+    expect(screen.getByRole("dialog", { name: "Preferences" })).toBeInTheDocument();
+    expect(document.querySelector('[aria-hidden="true"].rounded-full')).toBeNull();
   });
 });

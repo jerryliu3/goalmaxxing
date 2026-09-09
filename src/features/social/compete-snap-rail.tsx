@@ -18,8 +18,9 @@ export type CompetePerson = {
 export type CompeteTileModel = {
   key: string;
   title: string;
-  kicker: string;
-  metric: string;
+  titleBadge?: string;
+  kicker?: string;
+  metric?: string;
   detail: string;
   joined: boolean;
   closed: boolean;
@@ -34,7 +35,7 @@ export function CompeteSnapRail({
   children,
 }: {
   label: string;
-  hint: string;
+  hint?: string;
   children: ReactNode;
 }) {
   const scroller = useRef<HTMLDivElement>(null);
@@ -54,7 +55,9 @@ export function CompeteSnapRail({
           <h2 className="font-display text-lg font-semibold tracking-tight">
             {label}
           </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+          {hint ? (
+            <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+          ) : null}
         </div>
         <div className="flex items-center">
           <Button
@@ -141,13 +144,30 @@ export function CompeteTile({
       />
       <div className="relative z-10 flex min-h-0 flex-1 flex-col pointer-events-none">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            {tile.kicker}
-          </p>
-          <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight">
-            {tile.title}
-          </h3>
-          <p className="mt-1 font-display text-lg tracking-tight">{tile.metric}</p>
+          {tile.kicker ? (
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              {tile.kicker}
+            </p>
+          ) : null}
+          <div
+            className={`flex flex-wrap items-center gap-2 ${
+              tile.kicker ? "mt-2" : ""
+            }`}
+          >
+            <h3 className="font-display text-2xl font-semibold tracking-tight">
+              {tile.title}
+            </h3>
+            {tile.titleBadge ? (
+              <span
+                className="rounded-full border border-border bg-muted/70 px-2 py-0.5 text-[11px] font-medium leading-none text-muted-foreground"
+              >
+                {tile.titleBadge}
+              </span>
+            ) : null}
+          </div>
+          {tile.metric ? (
+            <p className="mt-1 font-display text-lg tracking-tight">{tile.metric}</p>
+          ) : null}
           <p className="mt-1 text-sm text-muted-foreground">{tile.detail}</p>
         </div>
 

@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from "react";
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
 import { DuoLanes } from "@/features/social/duo/duo-lanes";
 import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
+import { CompletionCreditMoveProvider } from "@/features/planner/completion-credit-move";
 import {
   InsightsTab,
   type InsightsSharedGoalFilters,
@@ -12,6 +13,7 @@ import {
 } from "@/features/insights/insights-tab";
 import { InsightsTrackerHeader } from "@/features/insights/insights-tracker-header";
 import { unionGoalsById } from "@/features/insights/insights-selectors";
+import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 import type { GoalDateSort } from "@/lib/goals/list-view";
 import type { Goal } from "@/lib/goals/types";
 
@@ -32,6 +34,9 @@ export function InsightsShell() {
   }, []);
   const handlePartnerGoalsChange = useCallback((goals: Goal[]) => {
     setPartnerGoals(goals);
+  }, []);
+  const handleCreditMoveSaved = useCallback(() => {
+    invalidatePlannerRelatedTabCaches();
   }, []);
   const sharedFilterGoals = useMemo(
     () => unionGoalsById([viewerGoals, partnerGoals]),
@@ -101,20 +106,25 @@ export function InsightsShell() {
         viewer={viewer}
         partner={partner}
         renderLane={(subject) => (
-          <InsightsTab
-            subjectUserId={subject.userId}
-            readOnly={subject.readOnly}
-            sharedPeriod={sharedPeriod}
-            sharedGoalFilters={sharedGoalFilters}
-            contentMode={sharePeriodControls ? "lane" : undefined}
-            onPersonalGoalsChange={
-              sharePeriodControls
-                ? subject.id === "partner"
-                  ? handlePartnerGoalsChange
-                  : handleViewerGoalsChange
-                : undefined
-            }
-          />
+          <CompletionCreditMoveProvider
+            context={null}
+            onMoved={handleCreditMoveSaved}
+          >
+            <InsightsTab
+              subjectUserId={subject.userId}
+              readOnly={subject.readOnly}
+              sharedPeriod={sharedPeriod}
+              sharedGoalFilters={sharedGoalFilters}
+              contentMode={sharePeriodControls ? "lane" : undefined}
+              onPersonalGoalsChange={
+                sharePeriodControls
+                  ? subject.id === "partner"
+                    ? handlePartnerGoalsChange
+                    : handleViewerGoalsChange
+                  : undefined
+              }
+            />
+          </CompletionCreditMoveProvider>
         )}
       />
     </div>

@@ -21,9 +21,9 @@ const PLANNER_VIEW_MODES: ReadonlyArray<{
   value: PlannerCalendarViewMode;
   label: string;
 }> = [
-  { value: "day", label: "Day" },
-  { value: "week", label: "Week" },
-  { value: "month", label: "Month" },
+  { value: "day", label: "Day View" },
+  { value: "week", label: "Week View" },
+  { value: "month", label: "Month View" },
 ];
 
 interface PlannerCalendarToolbarProps {
@@ -69,7 +69,7 @@ function PlanViewModeSwitch({
     <div
       role="group"
       aria-label="Plan view mode"
-      className="relative isolate inline-grid grid-cols-3 rounded-[10px] bg-muted p-0.5 text-xs font-medium"
+      className="relative isolate inline-grid shrink-0 grid-cols-3 rounded-[10px] bg-muted p-0.5 text-xs font-medium"
     >
       <span
         aria-hidden
@@ -88,8 +88,8 @@ function PlanViewModeSwitch({
             onClick={() => onViewModeChange(modeOption.value)}
             className={
               selected
-                ? "relative z-10 min-h-8 rounded-[8px] px-3 text-primary-foreground"
-                : "relative z-10 min-h-8 rounded-[8px] px-3 text-muted-foreground"
+                ? "relative z-10 min-h-8 whitespace-nowrap rounded-[8px] px-3 text-primary-foreground"
+                : "relative z-10 min-h-8 whitespace-nowrap rounded-[8px] px-3 text-muted-foreground"
             }
           >
             {modeOption.label}
@@ -161,11 +161,6 @@ export function PlannerCalendarToolbar({
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <PlanViewModeSwitch
-              viewMode={viewMode}
-              loading={loading}
-              onViewModeChange={onViewModeChange}
-            />
             {!plannerReadOnly && canShowSaveAction && hasDraftSession ? (
               <Button
                 type="button"
@@ -195,11 +190,18 @@ export function PlannerCalendarToolbar({
             ) : null}
           </div>
         </div>
-        <PlannerEndMonthQuickFilterChips
-          referenceMonth={referenceMonth}
-          endMonthFilters={endMonthFilters}
-          onEndMonthFiltersChange={onEndMonthFiltersChange}
-        />
+        <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1">
+          <PlanViewModeSwitch
+            viewMode={viewMode}
+            loading={loading}
+            onViewModeChange={onViewModeChange}
+          />
+          <PlannerEndMonthQuickFilterChips
+            referenceMonth={referenceMonth}
+            endMonthFilters={endMonthFilters}
+            onEndMonthFiltersChange={onEndMonthFiltersChange}
+          />
+        </div>
         <div className="flex w-full items-center gap-2">
           <div className="min-w-0 flex-1">
             <Input

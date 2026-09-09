@@ -443,6 +443,56 @@ describe("calendar surface extracted components", () => {
     expect(onCellClick).toHaveBeenCalledTimes(1);
   });
 
+  it("hides the week agenda checkbox while a session is in the plan draft", () => {
+    renderWithDnd(
+      <ol>
+        <CalendarMonthDayCell
+          day="2026-08-12"
+          inMonth
+          isToday
+          isPastInMonth={false}
+          isSelected
+          layout="agenda"
+          ariaLabel="Wednesday, August 12, 2026. 1 planned item."
+          entriesForDay={[
+            {
+              ...sampleEntry,
+              draftDiffKind: "moved_to",
+              draftDiffFromDate: "2026-08-20",
+              draftDiffToDate: "2026-08-12",
+            },
+          ]}
+          completionFactMarkersForDay={[]}
+          isAnyEntryDragging={false}
+          getEntryDisplayTitle={(entry) => entry.label ?? "Untitled"}
+          isEntryCredited={() => false}
+          isEntryImmovableForDraft={() => false}
+          onEntryClick={() => {}}
+          onCellClick={() => {}}
+          onCellDoubleClick={() => {}}
+          onCellMouseEnter={() => {}}
+          onCellMouseLeave={() => {}}
+          onCellPointerDown={() => {}}
+          onCellPointerUp={() => {}}
+          onCellPointerCancel={() => {}}
+          onCellPointerLeave={() => {}}
+          onEntryPointerStart={() => {}}
+          onEntryPointerEnd={() => {}}
+          onToggleCompletion={vi.fn()}
+          getCompletionToggleState={() => ({
+            currentlyCredited: false,
+            disabledReasonCopy: null,
+          })}
+        />
+      </ol>
+    );
+
+    expect(screen.getByText("Easy run")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Mark session done" })
+    ).not.toBeInTheDocument();
+  });
+
   it("selects a week day from empty agenda space but not from a work item", async () => {
     const onCellClick = vi.fn();
     const onEntryClick = vi.fn();

@@ -2,6 +2,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LeaderboardsPanel } from "@/features/social/leaderboards/leaderboards-panel";
 import type { LeaderboardSeason, LeaderboardStanding } from "@/features/social/types";
+import * as timeLeftLabel from "@/lib/social/time-left-label";
 
 const fetchSocialLeaderboardsMock = vi.fn();
 const fetchSocialLeaderboardStandingsMock = vi.fn();
@@ -71,6 +72,28 @@ describe("LeaderboardsPanel", () => {
     expect(screen.getByText("Leaderboards")).toBeInTheDocument();
   });
 
+  it("shows a time-left badge when a season has an end date", async () => {
+    vi.spyOn(timeLeftLabel, "formatTimeLeftLabel").mockReturnValue("8 days left");
+    const season = {
+      ...makeSeason(),
+      endsAt: "2026-08-20T12:00:00.000Z",
+    };
+    fetchSocialLeaderboardsMock.mockResolvedValueOnce({
+      schemaVersion: "1",
+      items: [season],
+    });
+    fetchSocialLeaderboardStandingsMock.mockResolvedValueOnce({
+      schemaVersion: "1",
+      season,
+      standings: makeStandings(),
+      viewerRank: null,
+    });
+
+    render(<LeaderboardsPanel />);
+
+    expect(await screen.findByText("8 days left")).toBeInTheDocument();
+  });
+
   it("shows freshness indicator with the Leaderboards heading", async () => {
     const season = makeSeason();
     fetchSocialLeaderboardsMock.mockResolvedValueOnce({
@@ -88,7 +111,9 @@ describe("LeaderboardsPanel", () => {
 
     expect(await screen.findByRole("heading", { name: "Leaderboards" })).toBeInTheDocument();
     expect(screen.getByTestId("social-freshness-indicator")).toBeInTheDocument();
-    expect(screen.getByText("Swipe between seasons")).toBeInTheDocument();
+    expect(screen.queryByText("Swipe between seasons")).not.toBeInTheDocument();
+    expect(screen.queryByText("Open season")).not.toBeInTheDocument();
+    expect(screen.getByText("Ranked by total XP earned this season.")).toBeInTheDocument();
     expect(screen.getByTestId("compete-plaque")).toBeInTheDocument();
 
     await waitFor(() => {

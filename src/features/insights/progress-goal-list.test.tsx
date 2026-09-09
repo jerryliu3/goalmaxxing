@@ -29,7 +29,7 @@ describe("ProgressGoalList", () => {
     expect(onToggleGoal).toHaveBeenCalledWith("lift");
   });
 
-  it("uses a two-column grid on small widths and Select all / Clear all", async () => {
+  it("uses a two-row scrolling grid on small widths and Select all / Clear all", async () => {
     const onSelectAll = vi.fn();
     const onClearAll = vi.fn();
     const user = userEvent.setup();
@@ -46,7 +46,7 @@ describe("ProgressGoalList", () => {
       />
     );
 
-    expect(screen.getByRole("list")).toHaveClass("grid-cols-2", "md:flex-col");
+    expect(screen.getByRole("list")).toHaveClass("grid-rows-2", "md:flex-col");
     await user.click(screen.getByRole("button", { name: "Select all" }));
     expect(onSelectAll).toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Clear all" }));

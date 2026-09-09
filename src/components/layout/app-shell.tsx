@@ -96,6 +96,7 @@ export function AppShell({
                 <div className="relative z-10 flex min-h-screen w-full justify-center bg-page px-4 py-4 sm:px-6 sm:py-6">
                   <div className="flex w-full max-w-6xl flex-col gap-4 md:gap-6">
                   <header
+                    data-testid="app-shell-header"
                     className="sticky top-0 z-40 -mx-4 -mt-4 border-b border-border bg-page/90 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.7rem)] backdrop-blur supports-[backdrop-filter]:bg-page/80 md:static md:m-0 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none"
                     style={{ viewTransitionName: "app-shell-header" }}
                   >

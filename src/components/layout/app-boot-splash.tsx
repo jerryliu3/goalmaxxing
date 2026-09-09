@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LandingWowMountain } from "@/components/landing/landing-wow-mountain";
 import { getMonthInTimezone } from "@/features/planner/calendar-format";
 import type { PlannerContextPayload } from "@/features/planner/calendar-surface.types";
 import { getJson } from "@/lib/api/client";
@@ -14,6 +15,7 @@ import { resolveUserTimezone } from "@/lib/dates/timezone";
 
 export const APP_BOOT_READY_STORAGE_KEY = "gm-boot-ready";
 const BOOT_TIMEOUT_MS = 8000;
+const CLIMB_LOOP_MS = 14000;
 
 async function warmPlannerContext() {
   const month = getMonthInTimezone(resolveUserTimezone());
@@ -26,6 +28,47 @@ async function warmPlannerContext() {
     query: { scopeMonth: month },
   });
   writeTabDataCache(cacheKey, contextPayload);
+}
+
+function BootClimbAnimation() {
+  const [progress, setProgress] = useState(0.08);
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") {
+      return;
+    }
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReduceMotion(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      setProgress(0.42);
+      return;
+    }
+    let frame = 0;
+    const startedAt = performance.now();
+    const tick = (now: number) => {
+      const loop = ((now - startedAt) % CLIMB_LOOP_MS) / CLIMB_LOOP_MS;
+      setProgress(0.06 + loop * 0.88);
+      frame = window.requestAnimationFrame(tick);
+    };
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, [reduceMotion]);
+
+  return (
+    <div
+      data-testid="app-boot-climb"
+      className="relative h-64 w-[min(100vw-2rem,32rem)] overflow-hidden rounded-[20px] border border-border sm:h-80"
+    >
+      <LandingWowMountain progress={progress} />
+    </div>
+  );
 }
 
 export function AppBootSplash() {
@@ -70,14 +113,7 @@ export function AppBootSplash() {
       aria-live="polite"
     >
       <div className="flex flex-col items-center gap-5 px-6 text-center">
-        <span
-          aria-hidden
-          className="app-boot-stamp flex size-16 items-center justify-center rounded-[14px] border-2 border-primary"
-        >
-          <span className="font-display text-3xl font-semibold leading-none text-primary">
-            G
-          </span>
-        </span>
+        <BootClimbAnimation />
         <p className="font-display text-3xl font-semibold tracking-tight">Goalmaxxing</p>
         <p className="text-sm text-muted-foreground">Preparing your plan…</p>
       </div>

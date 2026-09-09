@@ -86,14 +86,17 @@ export function InsightsTrackerHeader({
       data-testid="insights-tracker-header"
     >
       <div className="pb-3">
-        <div className="flex w-full items-center justify-between gap-2">
+        <div
+          data-title-date-row="true"
+          className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2"
+        >
           <div className="flex min-w-0 items-center gap-2">
             <CalendarRange className="size-4 shrink-0 text-primary" />
             <h2 className="font-display text-lg font-semibold tracking-tight">
               Progress Tracker
             </h2>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 justify-self-center">
             <InsightsPeriodStepper
               monthCursor={monthCursor}
               onMonthCursorChange={onMonthCursorChange}

@@ -9,6 +9,7 @@ import {
 } from "@/lib/goals/progress-context";
 import type { CompletionDateFact, Goal } from "@/lib/goals/types";
 import { resolveChecklistCompletionIntent } from "@/lib/planner/completion-intent";
+import { useCompletionCreditMove } from "@/features/planner/completion-credit-move";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import { reportDuoTelemetry } from "@/lib/social/duo/telemetry";
 
@@ -41,6 +42,7 @@ export function useChecklistCompletionActions({
   );
   const recentlyCompletedTimerRef = useRef<number | null>(null);
   const runCompletionMutation = useCompletionMutation();
+  const creditMove = useCompletionCreditMove();
 
   const refreshChecklistInBackground = useCallback(
     (scrollY: number) => {
@@ -106,12 +108,24 @@ export function useChecklistCompletionActions({
         },
       });
 
-      setSavingGoalId(goal.id);
-      const currentScrollY = window.scrollY;
       const { decision, mutation } = intent;
       const routeDesiredFactState = mutation.desiredFactState;
       const dispatchDate = mutation.date;
 
+      if (routeDesiredFactState === "present" && creditMove) {
+        if (creditMove.goalRequiresMove(goal.id, viewDate)) {
+          const openedMoveDialog = await creditMove.requestMoveBeforeComplete(
+            goal,
+            viewDate
+          );
+          if (openedMoveDialog) {
+            return;
+          }
+        }
+      }
+
+      setSavingGoalId(goal.id);
+      const currentScrollY = window.scrollY;
       const result = await runCompletionMutation({
         decision,
         desiredFactState: routeDesiredFactState,
@@ -145,6 +159,7 @@ export function useChecklistCompletionActions({
     },
     [
       completionsByGoal,
+      creditMove,
       readOnly,
       refreshChecklistInBackground,
       runCompletionMutation,

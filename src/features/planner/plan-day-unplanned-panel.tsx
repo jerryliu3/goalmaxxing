@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useChecklistCompletionActions } from "@/features/today/use-checklist-completion-actions";
 import { useChecklistData } from "@/features/today/use-checklist-data";
 import { useChecklistProjection } from "@/features/today/use-checklist-projection";
+import { useCompletionCreditMove } from "@/features/planner/completion-credit-move";
 import { planCompletionControlModeForDate } from "@/features/planner/completion-entry-dispatch";
 import {
   placedGoalIdsForDay,
@@ -174,6 +175,7 @@ function PlanDayUnplannedRows({
   savingGoalId: string | null;
   onToggle: (goal: Goal, sourceElement: HTMLButtonElement) => void;
 }) {
+  const creditMove = useCompletionCreditMove();
   if (goals.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">Nothing unscheduled for this day.</p>
@@ -185,11 +187,18 @@ function PlanDayUnplannedRows({
       {goals.map((goal) => {
         const presentation = presentationByGoalId.get(goal.id);
         const completed = Boolean(presentation?.exactDateCompleted);
-        const completionMode = planCompletionControlModeForDate({
+        let completionMode = planCompletionControlModeForDate({
           currentlyCredited: completed,
           selectedDate: day,
           asOfDate,
         });
+        if (
+          completionMode === "toggle" &&
+          !completed &&
+          creditMove?.goalRequiresMove(goal.id, day)
+        ) {
+          completionMode = "move";
+        }
         return (
           <div
             key={goal.id}

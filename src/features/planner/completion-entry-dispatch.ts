@@ -167,6 +167,12 @@ export function getPlannerCompletionTogglePresentation({
   disabledReasonCopy: string | null;
 } {
   const currentlyCredited = isEntryCredited(entry);
+  if (entry.draftDiffKind) {
+    return {
+      currentlyCredited,
+      disabledReasonCopy: "Save the plan before marking this session done.",
+    };
+  }
   if (!canMutateEntryOnDay(entry, selectedDay)) {
     return {
       currentlyCredited,

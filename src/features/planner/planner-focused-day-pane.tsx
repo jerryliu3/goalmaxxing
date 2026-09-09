@@ -6,6 +6,7 @@ import {
   isEntryCredited,
   isEntryImmovableForDraft,
 } from "@/features/planner/calendar-format";
+import { useCompletionCreditMove } from "@/features/planner/completion-credit-move";
 import { planCompletionControlModeForDate } from "@/features/planner/completion-entry-dispatch";
 import { PlanLedgerCompletionControl } from "@/features/planner/plan-ledger-completion-control";
 import type {
@@ -75,6 +76,7 @@ export function PlannerFocusedDayPane({
   splitPartnerChecklist = false,
 }: PlannerFocusedDayPaneProps) {
   const TitleTag = titleAs;
+  const creditMove = useCompletionCreditMove();
   const visibleEntries = entries;
   const visibleMarkers = completionFactMarkers;
   const viewerMarkers = useMemo(
@@ -93,11 +95,19 @@ export function PlannerFocusedDayPane({
       dayChecklist.listModel.presentationByGoalId.get(goal.id)?.exactDateCompleted
     );
     const archived = options?.archived ?? false;
-    const completionMode = planCompletionControlModeForDate({
+    let completionMode = planCompletionControlModeForDate({
       currentlyCredited: completed,
       selectedDate: day,
       asOfDate,
     });
+    if (
+      completionMode === "toggle" &&
+      !completed &&
+      !archived &&
+      creditMove?.goalRequiresMove(goal.id, day)
+    ) {
+      completionMode = "move";
+    }
     return (
       <div
         key={options?.key ?? goal.id}

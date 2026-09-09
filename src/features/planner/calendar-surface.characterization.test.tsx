@@ -485,7 +485,7 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Day" }));
+    fireEvent.click(screen.getByRole("button", { name: "Day View" }));
 
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-20", "push", "day", {
       alignMonth: true,
@@ -524,7 +524,7 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Week" }));
+    fireEvent.click(screen.getByRole("button", { name: "Week View" }));
 
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-20", "push", "week", {
       alignMonth: true,
@@ -1039,7 +1039,7 @@ describe("CalendarSurface characterization", () => {
     );
 
     expect(await screen.findByTestId("planner-end-month-quick-filters")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "All End Dates" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "This month" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Filters" }));
