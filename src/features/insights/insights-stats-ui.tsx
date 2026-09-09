@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
 import { TooltipIcon } from "@/components/ui/tooltip-icon";
 import type { InsightsCountTrend, InsightsRateTrend } from "@/lib/insights/types";
@@ -65,5 +66,39 @@ export function RateTrendInline({
         {formatSigned(trend.deltaPercentPoints, 1)} pts vs {compareLabel}
       </span>
     </span>
+  );
+}
+
+export function InsightsStatStrip({ children }: { children: ReactNode }) {
+  return (
+    <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-[12px] border border-border bg-border shadow-[inset_0_1px_0_color-mix(in_srgb,white_35%,transparent),0_14px_28px_-18px_color-mix(in_srgb,var(--foreground)_28%,transparent)]">
+      {children}
+    </ul>
+  );
+}
+
+export function InsightsStatPlaque({
+  label,
+  value,
+  tooltip,
+  hint,
+}: {
+  label: string;
+  value: string;
+  tooltip?: string;
+  hint?: ReactNode;
+}) {
+  return (
+    <li className="bg-card px-3 py-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        {tooltip ? (
+          <InsightsLabelWithTooltip label={label} tooltip={tooltip} />
+        ) : (
+          label
+        )}
+      </p>
+      <p className="mt-1 font-display text-2xl font-semibold tracking-tight">{value}</p>
+      {hint}
+    </li>
   );
 }

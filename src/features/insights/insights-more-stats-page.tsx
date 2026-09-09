@@ -6,6 +6,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -17,9 +18,12 @@ import { ArrowLeft, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingCard } from "@/components/ui/loading-card";
+import { INSIGHTS_CHART_COLORS, insightsCategoryFill } from "@/features/insights/insights-chart-theme";
 import {
   InsightsLabelWithTooltip,
   CountTrendInline,
+  InsightsStatPlaque,
+  InsightsStatStrip,
   RateTrendInline,
 } from "@/features/insights/insights-stats-ui";
 import {
@@ -33,16 +37,16 @@ interface StatsSectionProps {
   stats: InsightsStatsGroup;
 }
 
-const CHART_COLORS = {
-  primary: "#16a34a",
-  secondary: "#0f766e",
-  accent: "#84cc16",
-  highlight: "#eab308",
-  grid: "rgba(148, 163, 184, 0.25)",
-  axis: "#64748b",
-  tooltipBg: "rgba(15, 23, 42, 0.95)",
-  tooltipText: "#e2e8f0",
-} as const;
+const CHART_COLORS = INSIGHTS_CHART_COLORS;
+
+function chartTooltipStyle() {
+  return {
+    background: CHART_COLORS.tooltipBg,
+    border: `1px solid ${CHART_COLORS.tooltipBorder}`,
+    borderRadius: "8px",
+    color: CHART_COLORS.tooltipText,
+  };
+}
 
 function formatPercent(value: number) {
   return `${Math.round(value)}%`;
@@ -95,6 +99,7 @@ function StatsSection({ title, stats }: StatsSectionProps) {
   );
   const hasCompletionsLineData = stats.completionsPerDay.some((point) => point.value > 0);
   const hasCategoryData = stats.completionRateByCategory.some((point) => point.denominator > 0);
+  const barGradientId = `insights-bar-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 
   return (
     <div className="space-y-4">
@@ -103,58 +108,42 @@ function StatsSection({ title, stats }: StatsSectionProps) {
         <h2 className="font-display text-base font-semibold">{title}</h2>
       </div>
 
-      <Card className="overflow-hidden border-border/70 shadow-sm">
+      <Card className="overflow-hidden border-border/70 shadow-[inset_0_1px_0_color-mix(in_srgb,white_35%,transparent),0_14px_28px_-18px_color-mix(in_srgb,var(--foreground)_22%,transparent)]">
         <CardHeader>
           <CardTitle className="text-sm">Summary percentages</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-lg border bg-muted/20 p-3">
-            <p className="text-xs">
-              <InsightsLabelWithTooltip
-                label="Current Week Completion %"
-                tooltip="Numerator: completed goals this week. Denominator: goal opportunities this week, with weekly/monthly/milestone opportunities only counted on completion days."
-              />
-            </p>
-            <p className="mt-1 text-xl font-semibold">
-              {formatPercent(stats.currentWeekCompletion.percent)}
-            </p>
-            <RateTrendInline trend={stats.currentWeekCompletion} compareLabel="last week" />
-          </div>
-          <div className="rounded-lg border bg-muted/20 p-3">
-            <p className="text-xs">
-              <InsightsLabelWithTooltip
-                label="Current Month Completion %"
-                tooltip="Numerator: completed goals this month. Denominator: goal opportunities this month, with weekly/monthly/milestone opportunities only counted on completion days."
-              />
-            </p>
-            <p className="mt-1 text-xl font-semibold">
-              {formatPercent(stats.currentMonthCompletion.percent)}
-            </p>
-            <RateTrendInline
-              trend={stats.currentMonthCompletion}
-              compareLabel="last month window"
+        <CardContent>
+          <InsightsStatStrip>
+            <InsightsStatPlaque
+              label="Current Week Completion %"
+              tooltip="Numerator: completed goals this week. Denominator: goal opportunities this week, with weekly/monthly/milestone opportunities only counted on completion days."
+              value={formatPercent(stats.currentWeekCompletion.percent)}
+              hint={
+                <RateTrendInline trend={stats.currentWeekCompletion} compareLabel="last week" />
+              }
             />
-          </div>
-          <div className="rounded-lg border bg-muted/20 p-3">
-            <p className="text-xs">
-              <InsightsLabelWithTooltip
-                label="Total Active Days %"
-                tooltip="Numerator: days since account creation with one or more completions. Denominator: total days since account creation."
-              />
-            </p>
-            <p className="mt-1 text-xl font-semibold">
-              {formatPercent(stats.totalActiveDaysPercent.percent)}
-            </p>
-          </div>
-          <div className="rounded-lg border bg-muted/20 p-3">
-            <p className="text-xs">
-              <InsightsLabelWithTooltip
-                label="Total Days #"
-                tooltip="Numerator: total days elapsed since account creation. Denominator: not applicable."
-              />
-            </p>
-            <p className="mt-1 text-xl font-semibold">{stats.totalDays.toLocaleString()}</p>
-          </div>
+            <InsightsStatPlaque
+              label="Current Month Completion %"
+              tooltip="Numerator: completed goals this month. Denominator: goal opportunities this month, with weekly/monthly/milestone opportunities only counted on completion days."
+              value={formatPercent(stats.currentMonthCompletion.percent)}
+              hint={
+                <RateTrendInline
+                  trend={stats.currentMonthCompletion}
+                  compareLabel="last month window"
+                />
+              }
+            />
+            <InsightsStatPlaque
+              label="Total Active Days %"
+              tooltip="Numerator: days since account creation with one or more completions. Denominator: total days since account creation."
+              value={formatPercent(stats.totalActiveDaysPercent.percent)}
+            />
+            <InsightsStatPlaque
+              label="Total Days #"
+              tooltip="Numerator: total days elapsed since account creation. Denominator: not applicable."
+              value={stats.totalDays.toLocaleString()}
+            />
+          </InsightsStatStrip>
         </CardContent>
       </Card>
 
@@ -171,20 +160,21 @@ function StatsSection({ title, stats }: StatsSectionProps) {
           {hasWeekdayData ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats.completionByWeekday}>
+                <defs>
+                  <linearGradient id={barGradientId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={CHART_COLORS.primary} stopOpacity={1} />
+                    <stop offset="100%" stopColor={CHART_COLORS.primary} stopOpacity={0.68} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
                 <XAxis dataKey="weekdayLabel" tick={{ fill: CHART_COLORS.axis, fontSize: 12 }} />
                 <YAxis domain={[0, 100]} tick={{ fill: CHART_COLORS.axis, fontSize: 12 }} />
                 <Tooltip
                   formatter={tooltipPercentFormatter}
-                  contentStyle={{
-                    background: CHART_COLORS.tooltipBg,
-                    border: "1px solid rgba(148, 163, 184, 0.35)",
-                    borderRadius: "8px",
-                    color: CHART_COLORS.tooltipText,
-                  }}
-                  cursor={{ fill: "rgba(148, 163, 184, 0.12)" }}
+                  contentStyle={chartTooltipStyle()}
+                  cursor={{ fill: CHART_COLORS.cursor }}
                 />
-                <Bar dataKey="percent" fill={CHART_COLORS.primary} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="percent" fill={`url(#${barGradientId})`} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -216,12 +206,7 @@ function StatsSection({ title, stats }: StatsSectionProps) {
                 <YAxis domain={[0, 100]} tick={{ fill: CHART_COLORS.axis, fontSize: 12 }} />
                 <Tooltip
                   formatter={tooltipPercentFormatter}
-                  contentStyle={{
-                    background: CHART_COLORS.tooltipBg,
-                    border: "1px solid rgba(148, 163, 184, 0.35)",
-                    borderRadius: "8px",
-                    color: CHART_COLORS.tooltipText,
-                  }}
+                  contentStyle={chartTooltipStyle()}
                   cursor={{ stroke: CHART_COLORS.accent, strokeWidth: 1 }}
                 />
                 <Line
@@ -263,12 +248,7 @@ function StatsSection({ title, stats }: StatsSectionProps) {
                 <YAxis tick={{ fill: CHART_COLORS.axis, fontSize: 12 }} />
                 <Tooltip
                   formatter={tooltipCountFormatter}
-                  contentStyle={{
-                    background: CHART_COLORS.tooltipBg,
-                    border: "1px solid rgba(148, 163, 184, 0.35)",
-                    borderRadius: "8px",
-                    color: CHART_COLORS.tooltipText,
-                  }}
+                  contentStyle={chartTooltipStyle()}
                   cursor={{ stroke: CHART_COLORS.secondary, strokeWidth: 1 }}
                 />
                 <Line
@@ -312,15 +292,17 @@ function StatsSection({ title, stats }: StatsSectionProps) {
                 <YAxis domain={[0, 100]} tick={{ fill: CHART_COLORS.axis, fontSize: 12 }} />
                 <Tooltip
                   formatter={tooltipPercentFormatter}
-                  contentStyle={{
-                    background: CHART_COLORS.tooltipBg,
-                    border: "1px solid rgba(148, 163, 184, 0.35)",
-                    borderRadius: "8px",
-                    color: CHART_COLORS.tooltipText,
-                  }}
-                  cursor={{ fill: "rgba(148, 163, 184, 0.12)" }}
+                  contentStyle={chartTooltipStyle()}
+                  cursor={{ fill: CHART_COLORS.cursor }}
                 />
-                <Bar dataKey="percent" fill={CHART_COLORS.accent} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="percent" radius={[6, 6, 0, 0]}>
+                  {stats.completionRateByCategory.map((point) => (
+                    <Cell
+                      key={point.categoryKey}
+                      fill={insightsCategoryFill(point.categoryKey)}
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (
