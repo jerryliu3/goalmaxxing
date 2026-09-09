@@ -20,6 +20,33 @@ function canMoveToDate(unit: CreditMoveCandidateUnit, targetDate: string) {
   return dateIsInWindow(targetDate, unit.creditWindow);
 }
 
+function canDraftMoveToDate(unit: CreditMoveCandidateUnit, targetDate: string) {
+  const moveWindow = unit.draftMoveWindow ?? unit.placementWindow;
+  if (!moveWindow) {
+    return false;
+  }
+  return dateIsInWindow(targetDate, moveWindow);
+}
+
+export function filterOptionsForDraftMove({
+  options,
+  workUnits,
+  targetDate,
+}: {
+  options: CreditMoveSourceOption[];
+  workUnits: CreditMoveCandidateUnit[];
+  targetDate: string;
+}) {
+  return options.filter((option) => {
+    const unit = workUnits.find(
+      (candidate) =>
+        candidate.originalGoalId === option.goalId &&
+        candidate.unitKey === option.unitKey
+    );
+    return unit ? canDraftMoveToDate(unit, targetDate) : false;
+  });
+}
+
 export function buildCreditMoveSourceOptions({
   goalId,
   goalTitle,

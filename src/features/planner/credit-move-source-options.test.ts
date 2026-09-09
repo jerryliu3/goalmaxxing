@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildCreditMoveSourceOptions,
   defaultCreditMoveSourceEntryKey,
+  filterOptionsForDraftMove,
+  goalRequiresCreditMove,
 } from "@/features/planner/credit-move-source-options";
 
 describe("credit move source options", () => {
@@ -52,6 +54,21 @@ describe("credit move source options", () => {
     ]);
   });
 
+  it("excludes sessions outside the credit window", () => {
+    const options = buildCreditMoveSourceOptions({
+      goalId: "goal-a",
+      goalTitle: "Run",
+      workUnits: [
+        {
+          ...workUnits[0]!,
+          creditWindow: { start: "2026-08-20", end: "2026-08-31" },
+        },
+      ],
+      targetDate: "2026-08-12",
+    });
+    expect(options).toEqual([]);
+  });
+
   it("still lists a session whose draft window excludes the completion date", () => {
     const options = buildCreditMoveSourceOptions({
       goalId: "goal-a",
@@ -65,6 +82,54 @@ describe("credit move source options", () => {
       targetDate: "2026-08-12",
     });
     expect(options.map((option) => option.unitKey)).toEqual(["cadence:2026-08-01:1"]);
+  });
+
+  it("filters draft moves to sessions inside the draft move window", () => {
+    const options = buildCreditMoveSourceOptions({
+      goalId: "goal-a",
+      goalTitle: "Run",
+      workUnits: [
+        {
+          ...workUnits[0]!,
+          draftMoveWindow: { start: "2026-08-20", end: "2026-08-31" },
+        },
+      ],
+      targetDate: "2026-08-12",
+    });
+    expect(
+      filterOptionsForDraftMove({
+        options,
+        workUnits: [
+          {
+            ...workUnits[0]!,
+            draftMoveWindow: { start: "2026-08-20", end: "2026-08-31" },
+          },
+        ],
+        targetDate: "2026-08-12",
+      })
+    ).toEqual([]);
+  });
+
+  it("reports when a goal needs a credit move", () => {
+    expect(
+      goalRequiresCreditMove({
+        goalId: "goal-a",
+        workUnits,
+        completionDate: "2026-08-12",
+      })
+    ).toBe(true);
+    expect(
+      goalRequiresCreditMove({
+        goalId: "goal-a",
+        workUnits: [
+          {
+            ...workUnits[0]!,
+            scheduledDate: "2026-08-12",
+          },
+        ],
+        completionDate: "2026-08-12",
+      })
+    ).toBe(false);
   });
 
   it("defaults to the kernel credit target", () => {

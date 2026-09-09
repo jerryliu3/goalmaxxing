@@ -15,6 +15,7 @@ import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surfac
 import {
   buildCreditMoveSourceOptions,
   defaultCreditMoveSourceEntryKey,
+  filterOptionsForDraftMove,
   goalRequiresCreditMove,
   type CreditMoveSourceOption,
 } from "@/features/planner/credit-move-source-options";
@@ -60,7 +61,7 @@ async function resolvePlannerContext(
   });
 }
 
-function shouldConfirmCreditMove(viewMode?: PlannerCalendarViewMode | null) {
+function usesImmediateCreditMovePersist(viewMode?: PlannerCalendarViewMode | null) {
   return viewMode == null || viewMode === "day";
 }
 
@@ -114,7 +115,15 @@ export function CompletionCreditMoveProvider({
         workUnits: units,
         targetDate: completionDate,
       });
-      if (options.length === 0) {
+      const immediatePersist = usesImmediateCreditMovePersist(viewMode);
+      const actionableOptions = immediatePersist
+        ? options
+        : filterOptionsForDraftMove({
+            options,
+            workUnits: units,
+            targetDate: completionDate,
+          });
+      if (actionableOptions.length === 0) {
         toast.error("Move a planned session here before marking this done.");
         return true;
       }
@@ -122,11 +131,10 @@ export function CompletionCreditMoveProvider({
         goalId: goal.id,
         workUnits: units,
         targetDate: completionDate,
-        options,
+        options: actionableOptions,
       });
-      if (!shouldConfirmCreditMove(viewMode) && onDraftMove) {
-        const selected =
-          options.find((option) => option.entryKey === selectedEntryKey) ?? options[0];
+      if (!immediatePersist && onDraftMove && actionableOptions.length === 1) {
+        const selected = actionableOptions[0];
         if (!selected) {
           toast.error("Move a planned session here before marking this done.");
           return true;
@@ -145,7 +153,7 @@ export function CompletionCreditMoveProvider({
       setDialog({
         goal,
         targetDate: completionDate,
-        options,
+        options: actionableOptions,
         selectedEntryKey,
       });
       return true;
@@ -173,6 +181,19 @@ export function CompletionCreditMoveProvider({
     }
     setSaving(true);
     try {
+      if (!usesImmediateCreditMovePersist(viewMode) && onDraftMove) {
+        const moved = onDraftMove({
+          goalId: selected.goalId,
+          unitKey: selected.unitKey,
+          sourceDate: selected.sourceDay,
+          scheduledDate: dialog.targetDate,
+        });
+        setDialog(null);
+        if (moved) {
+          toast.success("Session moved into the plan draft. Save to keep it on this day.");
+        }
+        return;
+      }
       const plannerContext = await resolvePlannerContext(context, dialog.targetDate);
       await persistImmediatePlannerMove({
         context: plannerContext,
@@ -191,7 +212,7 @@ export function CompletionCreditMoveProvider({
     } finally {
       setSaving(false);
     }
-  }, [context, dialog, onMoved]);
+  }, [context, dialog, onDraftMove, onMoved, viewMode]);
 
   const value = useMemo(
     () => ({

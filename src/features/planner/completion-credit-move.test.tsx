@@ -51,6 +51,7 @@ function plannerContext(): PlannerContextPayload {
           originalGoalId: "goal-run",
           unitKey: "cadence:2026-08-01:1",
           kind: "cadence",
+          label: "Tempo run",
           scheduledDate: "2026-08-20",
           creditState: "uncredited",
           classification: "open",
@@ -176,6 +177,72 @@ describe("CompletionCreditMoveProvider", () => {
     });
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(runCompletionMutation).not.toHaveBeenCalled();
+    expect(persistImmediatePlannerMove).not.toHaveBeenCalled();
+  });
+
+  it("blocks week auto-draft when the draft move window excludes the completion date", async () => {
+    const onDraftMove = vi.fn(() => true);
+    const context = plannerContext();
+    context.preview!.workUnits[0]!.draftMoveWindow = {
+      start: "2026-08-20",
+      end: "2026-08-31",
+    };
+    render(
+      <CompletionCreditMoveProvider
+        context={context}
+        viewMode="week"
+        onDraftMove={onDraftMove}
+      >
+        <ChecklistProbe />
+      </CompletionCreditMoveProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Complete" }));
+    await waitFor(() => {
+      expect(onDraftMove).not.toHaveBeenCalled();
+    });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(runCompletionMutation).not.toHaveBeenCalled();
+  });
+
+  it("opens the move dialog in week view when multiple sessions can be moved", async () => {
+    const onDraftMove = vi.fn(() => true);
+    const context = plannerContext();
+    context.preview!.workUnits.push({
+      originalGoalId: "goal-run",
+      unitKey: "cadence:2026-08-01:2",
+      kind: "cadence",
+      label: "Tempo run",
+      scheduledDate: "2026-08-18",
+      creditState: "uncredited",
+      classification: "open",
+      locked: false,
+      creditWindow: { start: "2026-08-01", end: "2026-08-31" },
+      draftMoveWindow: { start: "2026-08-12", end: "2026-08-31" },
+    });
+    render(
+      <CompletionCreditMoveProvider
+        context={context}
+        viewMode="week"
+        onDraftMove={onDraftMove}
+      >
+        <ChecklistProbe />
+      </CompletionCreditMoveProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Complete" }));
+    expect(await screen.findByRole("heading", { name: /Schedule this goal for/i })).toBeTruthy();
+    expect(onDraftMove).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => {
+      expect(onDraftMove).toHaveBeenCalledTimes(1);
+    });
+    expect(onDraftMove).toHaveBeenCalledWith(
+      expect.objectContaining({
+        goalId: goal.id,
+        scheduledDate: "2026-08-12",
+      })
+    );
     expect(persistImmediatePlannerMove).not.toHaveBeenCalled();
   });
 });
