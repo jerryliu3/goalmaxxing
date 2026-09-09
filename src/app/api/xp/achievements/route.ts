@@ -118,6 +118,9 @@ export async function GET(request: Request) {
       },
     });
 
-    return apiSuccessResponse(payload, correlationId);
+    return apiSuccessResponse(
+      { ...payload } as Record<string, unknown>,
+      correlationId
+    );
   });
 }

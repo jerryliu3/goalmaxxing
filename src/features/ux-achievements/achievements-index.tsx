@@ -47,14 +47,13 @@ export function AchievementsIndex() {
               className="mt-6 max-w-2xl text-lg leading-relaxed"
               style={{ color: GAZETTEER.mutedDeep }}
             >
-              Live Achievements is still two scrollable cards.{" "}
-              <span className="font-semibold text-[#241c14]">Showcase</span> is
-              the leading hybrid from review — Case shelves, Vault premium
+              Production <span className="font-semibold text-[#241c14]">/achievements</span>{" "}
+              now ships the Showcase hybrid — Case shelves, Vault premium
               metal, and Records personal bests — with the earlier concepts kept
               as references.
             </p>
             <p className="mt-4 text-sm" style={{ color: GAZETTEER.muted }}>
-              Study only. No lock. Production page unchanged. Worktree branch{" "}
+              Study only. No further product lock. Worktree branch{" "}
               <span className="font-mono">ux/achievements-study</span>.
             </p>
           </div>

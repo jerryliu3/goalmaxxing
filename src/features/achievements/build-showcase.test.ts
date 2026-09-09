@@ -21,6 +21,8 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
     start_date: "2026-01-01",
     end_date: null,
     reward_text: "New shoes",
+    photo_path: null,
+    team_id: null,
     is_deleted: false,
     archived_at: null,
     created_at: "2026-01-01T00:00:00.000Z",
@@ -159,6 +161,58 @@ describe("buildAchievementsShowcasePayload", () => {
 
     expect(payload.personalRecords[0]?.hint).toBe("Based on a bounded snapshot");
     expect(payload.personalRecords[1]?.hint).toBe("Based on a bounded snapshot");
+  });
+
+  it("hides revoked level awards behind locked mounts", () => {
+    const payload = buildAchievementsShowcasePayload({
+      goals: [],
+      completions: [],
+      asOfDate: "2026-09-01",
+      totalXp: 800,
+      rewardCatalog: [
+        {
+          id: "reward-2",
+          level: 2,
+          reward_code: "xp.level.2",
+          reward_title: "Level 2 unlocked",
+          reward_description: "You reached Level 2.",
+        },
+      ],
+      userAwards: [
+        {
+          id: "award-2",
+          unlocked_at: "2026-03-01T00:00:00.000Z",
+          acknowledged_at: null,
+          revoked_at: "2026-04-01T00:00:00.000Z",
+          xp_rewards: {
+            level: 2,
+            reward_code: "xp.level.2",
+            reward_title: "Level 2 unlocked",
+            reward_description: "You reached Level 2.",
+          },
+        },
+      ],
+      truncated: { goals: false, completions: false },
+    });
+
+    expect(payload.levelAwards[0]?.unlockedAt).toBeNull();
+    expect(payload.levelAwards[0]?.revokedAt).toBe("2026-04-01T00:00:00.000Z");
+    expect(payload.collection.unlockedAwards).toBe(0);
+  });
+
+  it("qualifies streak records when goals are truncated", () => {
+    const payload = buildAchievementsShowcasePayload({
+      goals: [makeGoal()],
+      completions: [],
+      asOfDate: "2026-09-01",
+      totalXp: 100,
+      rewardCatalog: [],
+      userAwards: [],
+      truncated: { goals: true, completions: false },
+    });
+
+    expect(payload.personalRecords[0]?.hint).toBe("Based on a bounded snapshot");
+    expect(payload.personalRecords[2]?.hint).toBe("Based on a bounded snapshot");
   });
 });
 

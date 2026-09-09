@@ -217,6 +217,7 @@ export function buildAchievementsShowcasePayload(
       achievedGoalDates: achievedGoals
         .map((goal) => goal.achievedOn)
         .filter((date): date is string => Boolean(date)),
+      asOfDate: input.asOfDate,
       goalSnapshots,
       completions: input.completions,
       level: collection.level,

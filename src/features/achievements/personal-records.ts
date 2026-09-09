@@ -1,4 +1,4 @@
-import { format, parseISO, startOfWeek } from "date-fns";
+import { type Day, format, parseISO, startOfWeek } from "date-fns";
 import type { PersonalRecord } from "@/features/achievements/types";
 import type { Completion } from "@/lib/goals/types";
 
@@ -10,6 +10,7 @@ interface GoalStreakSnapshot {
 interface BuildPersonalRecordsInput {
   achievedGoalsCount: number;
   achievedGoalDates: string[];
+  asOfDate: string;
   goalSnapshots: GoalStreakSnapshot[];
   completions: Completion[];
   level: number;
@@ -23,6 +24,19 @@ interface BuildPersonalRecordsInput {
 
 const TRUNCATED_SNAPSHOT_HINT = "Based on a bounded snapshot";
 
+function toWeekStartsOnDay(weekStartsOn: number): Day {
+  return weekStartsOn as Day;
+}
+
+function daysBetweenIsoDates(fromDate: string, toDate: string): number {
+  const from = parseISO(`${fromDate}T12:00:00`);
+  const to = parseISO(`${toDate}T12:00:00`);
+  return Math.max(
+    0,
+    Math.floor((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24))
+  );
+}
+
 function qualifyForTruncation(
   records: PersonalRecord[],
   truncated: BuildPersonalRecordsInput["truncated"]
@@ -34,7 +48,7 @@ function qualifyForTruncation(
     ) {
       return { ...record, hint: TRUNCATED_SNAPSHOT_HINT };
     }
-    if (truncated.goals && record.id === "rec-goals") {
+    if (truncated.goals && (record.id === "rec-goals" || record.id === "rec-streak")) {
       return { ...record, hint: TRUNCATED_SNAPSHOT_HINT };
     }
     return record;
@@ -70,7 +84,9 @@ function bestActiveWeekRecord(
   const activeDaysByWeek = new Map<string, Set<string>>();
 
   for (const completion of completions) {
-    const weekStart = startOfWeek(parseISO(completion.completed_on), { weekStartsOn });
+    const weekStart = startOfWeek(parseISO(completion.completed_on), {
+      weekStartsOn: toWeekStartsOnDay(weekStartsOn),
+    });
     const weekKey = format(weekStart, "yyyy-MM-dd");
     const activeDays = activeDaysByWeek.get(weekKey) ?? new Set<string>();
     activeDays.add(completion.completed_on);
@@ -80,8 +96,18 @@ function bestActiveWeekRecord(
   let bestWeekKey: string | null = null;
   let bestActiveDays = 0;
   for (const [weekKey, activeDays] of activeDaysByWeek) {
-    if (activeDays.size > bestActiveDays) {
-      bestActiveDays = activeDays.size;
+    const activeDayCount = activeDays.size;
+    const isBetterWeek =
+      activeDayCount > bestActiveDays ||
+      (activeDayCount === bestActiveDays &&
+        bestWeekKey !== null &&
+        weekKey > bestWeekKey);
+
+    if (isBetterWeek) {
+      bestActiveDays = activeDayCount;
+      bestWeekKey = weekKey;
+    } else if (bestWeekKey === null && activeDayCount > 0) {
+      bestActiveDays = activeDayCount;
       bestWeekKey = weekKey;
     }
   }
@@ -103,7 +129,8 @@ function bestActiveWeekRecord(
 
 function goalsFinishedRecord(
   achievedGoalsCount: number,
-  achievedGoalDates: string[]
+  achievedGoalDates: string[],
+  asOfDate: string
 ): PersonalRecord {
   const earliestAchievedOn = achievedGoalDates.reduce<string | null>((earliest, date) => {
     if (earliest === null || date < earliest) {
@@ -114,13 +141,7 @@ function goalsFinishedRecord(
 
   let hint = "Finish your first goal";
   if (earliestAchievedOn) {
-    const daysSince = Math.max(
-      0,
-      Math.floor(
-        (Date.now() - parseISO(`${earliestAchievedOn}T12:00:00`).getTime()) /
-          (1000 * 60 * 60 * 24)
-      )
-    );
+    const daysSince = daysBetweenIsoDates(earliestAchievedOn, asOfDate);
     hint =
       daysSince === 0
         ? "First finish today"
@@ -152,7 +173,11 @@ export function buildPersonalRecords(
   const records = [
     bestStreakRecord(input.goalSnapshots),
     bestActiveWeekRecord(input.completions, input.weekStartsOn),
-    goalsFinishedRecord(input.achievedGoalsCount, input.achievedGoalDates),
+    goalsFinishedRecord(
+      input.achievedGoalsCount,
+      input.achievedGoalDates,
+      input.asOfDate
+    ),
     highestLevelRecord(input.level, input.totalXp),
   ];
 
