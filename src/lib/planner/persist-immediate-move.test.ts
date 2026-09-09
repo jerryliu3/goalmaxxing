@@ -38,6 +38,7 @@ function context(): PlannerContextPayload {
         {
           originalGoalId: "goal-run",
           unitKey: "cadence:1",
+          label: null,
           scheduledDate: "2026-08-20",
           creditState: "uncredited",
           classification: "open",

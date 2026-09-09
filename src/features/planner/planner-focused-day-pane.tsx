@@ -8,7 +8,10 @@ import {
 } from "@/features/planner/calendar-format";
 import { useCompletionCreditMove } from "@/features/planner/completion-credit-move";
 import { planCompletionControlModeForDate } from "@/features/planner/completion-entry-dispatch";
-import { PlanLedgerCompletionControl } from "@/features/planner/plan-ledger-completion-control";
+import {
+  PlanLedgerCompletionControl,
+  type PlanLedgerCompletionMode,
+} from "@/features/planner/plan-ledger-completion-control";
 import type {
   PlannerCompletionFactMarker,
   PlannerDayDetailEntry,
@@ -95,7 +98,7 @@ export function PlannerFocusedDayPane({
       dayChecklist.listModel.presentationByGoalId.get(goal.id)?.exactDateCompleted
     );
     const archived = options?.archived ?? false;
-    let completionMode = planCompletionControlModeForDate({
+    let completionMode: PlanLedgerCompletionMode = planCompletionControlModeForDate({
       currentlyCredited: completed,
       selectedDate: day,
       asOfDate,
