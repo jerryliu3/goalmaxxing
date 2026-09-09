@@ -179,6 +179,12 @@ export function XpProfileProvider({
 
   useEffect(() => {
     if (!enabled) {
+      queueMicrotask(() => {
+        setLoading(false);
+        setProfile(null);
+        setTracks([]);
+        setNextReward(null);
+      });
       return;
     }
 
