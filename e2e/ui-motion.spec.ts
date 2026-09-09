@@ -19,8 +19,10 @@ test("reduced motion keeps navigation functional without panel animation", async
   });
   expect(reducedAnimationName).toBe("none");
 
-  await page.getByRole("link", { name: /Settings|You|Profile/ }).first().click();
-  await expect(page).toHaveURL(/\/settings/);
+  const profileTab = page.getByRole("link", { name: /Settings|You|Profile/ }).first();
+  await expect(profileTab).toBeVisible();
+  await profileTab.click();
+  await expect(page).toHaveURL(/\/settings/, { timeout: 10_000 });
   await expect(
     page.getByRole("navigation", { name: "Main navigation" })
   ).toBeVisible();

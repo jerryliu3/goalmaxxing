@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { claimedProgress } from "@/features/achievements/build-showcase";
 import {
   ShowcaseMedalShelf,
@@ -11,20 +11,16 @@ import {
 import type { AchievementsShowcasePayload } from "@/features/achievements/types";
 
 export function AchievementsShowcase({ payload }: { payload: AchievementsShowcasePayload }) {
-  const initialFeaturedId =
-    payload.collection.featuredAwardId ?? payload.levelAwards[0]?.id ?? "";
-  const [featuredId, setFeaturedId] = useState(initialFeaturedId);
-
-  useEffect(() => {
-    const serverFeaturedId =
-      payload.collection.featuredAwardId ?? payload.levelAwards[0]?.id ?? "";
-    setFeaturedId((current) => {
-      if (current && payload.levelAwards.some((award) => award.id === current)) {
-        return current;
-      }
-      return serverFeaturedId;
-    });
-  }, [payload.collection.featuredAwardId, payload.levelAwards]);
+  const serverFeaturedId = useMemo(
+    () => payload.collection.featuredAwardId ?? payload.levelAwards[0]?.id ?? "",
+    [payload.collection.featuredAwardId, payload.levelAwards]
+  );
+  const [selectedFeaturedId, setSelectedFeaturedId] = useState<string | null>(null);
+  const featuredId =
+    selectedFeaturedId &&
+    payload.levelAwards.some((award) => award.id === selectedFeaturedId)
+      ? selectedFeaturedId
+      : serverFeaturedId;
 
   const featured = useMemo(
     () => payload.levelAwards.find((award) => award.id === featuredId) ?? payload.levelAwards[0],
@@ -123,7 +119,7 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
           <ShowcaseMedalShelf
             awards={payload.levelAwards}
             featuredId={featuredId}
-            onSelect={setFeaturedId}
+            onSelect={setSelectedFeaturedId}
           />
           <div className="ach-showcase-shelf mx-auto mt-6 h-2.5 max-w-4xl rounded-sm opacity-85" />
           <ShowcasePlaqueRail goals={goals} />

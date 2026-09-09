@@ -138,7 +138,7 @@ function InsightsVisual() {
             <LineChart className="size-3.5 text-gain" />
             <span className="text-[10px] font-medium">30-day completion rate</span>
           </div>
-          <span className="text-[9px] font-medium text-gain">+14%</span>
+          <span className="text-[9px] font-medium text-foreground">+14%</span>
         </div>
         <svg
           viewBox="0 0 280 70"

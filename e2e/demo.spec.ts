@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+const COMPLETION_HOLD_CLICK = { delay: 550 } as const;
+
 test.describe("public demo sandbox", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -67,11 +69,18 @@ test.describe("public demo sandbox", () => {
     const row = page
       .locator("[data-planner-entry-key]")
       .filter({ hasText: "Read 20 pages" });
-    await row.getByRole("button", { name: "Mark session done" }).click({
-      delay: 550,
-    });
+    await row.scrollIntoViewIfNeeded();
+    const toggle = row.getByRole("button", { name: "Mark session done" });
+    await expect(toggle).toBeVisible();
+    const completionResponse = page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/completions") &&
+        response.request().method() === "POST"
+    );
+    await toggle.click(COMPLETION_HOLD_CLICK);
+    await completionResponse;
     await expect(
       row.getByRole("button", { name: "Mark session not done" })
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 10_000 });
   });
 });

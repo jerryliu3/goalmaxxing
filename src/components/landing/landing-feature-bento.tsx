@@ -38,14 +38,14 @@ function RecoveryCard() {
           </div>
           <ArrowRight className="size-4 text-recover" />
           <div className="rounded-xl border border-gain/35 bg-gain/10 p-3">
-            <div className="flex items-center gap-1.5 text-[9px] font-semibold text-gain">
-              <Check className="size-3" />
+            <div className="flex items-center gap-1.5 text-[9px] font-semibold text-foreground">
+              <Check className="size-3 text-gain" />
               Next opening
             </div>
             <p className="mt-2 text-[10px] font-medium text-foreground">
               Tempo run
             </p>
-            <p className="mt-1 text-[8px] text-gain">Friday · 7:00 AM</p>
+            <p className="mt-1 text-[8px] text-muted-foreground">Friday · 7:00 AM</p>
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between rounded-lg bg-recover/15 px-3 py-2">

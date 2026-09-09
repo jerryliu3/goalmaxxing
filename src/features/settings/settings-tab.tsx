@@ -8,7 +8,6 @@ import {
 import { useSearchParams } from "next/navigation";
 import {
   useCallback,
-  useEffect,
   useState,
   type Dispatch,
   type SetStateAction,
@@ -71,17 +70,9 @@ export function SettingsTab() {
   const { applySearchParams } = useClientSearchParamsUpdater();
   const isDesktopTwoPane = useMediaQuery("(min-width: 768px)");
   const requestedSection = resolveSettingsSection(searchParams.get("tab"));
-  const [cachedSection, setCachedSection] = useState<SettingsSection>(
-    () => requestedSection ?? "preferences"
-  );
+  const [cachedSection, setCachedSection] = useState<SettingsSection>("preferences");
   const settingsSection = requestedSection ?? cachedSection;
   const settingsPanelOpen = requestedSection !== null;
-
-  useEffect(() => {
-    if (requestedSection) {
-      setCachedSection(requestedSection);
-    }
-  }, [requestedSection]);
 
   const writeSettingsSection = useCallback(
     (section: SettingsSection | null) => {
@@ -100,8 +91,9 @@ export function SettingsTab() {
   );
 
   const closeSettingsPanel = useCallback(() => {
+    setCachedSection(requestedSection ?? cachedSection);
     writeSettingsSection(null);
-  }, [writeSettingsSection]);
+  }, [cachedSection, requestedSection, writeSettingsSection]);
 
   const settingsCopy = getSettingsSectionCopy(settingsSection);
 

@@ -79,6 +79,7 @@ export function ProgressMilestoneRunway({
                     <button
                       type="button"
                       onClick={() => onSelect?.(stop, index)}
+                      aria-current={selected ? "step" : undefined}
                       className="mt-1 text-left text-sm font-semibold"
                     >
                       {name}
