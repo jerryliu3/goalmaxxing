@@ -119,6 +119,7 @@ describe("SettingsTab", () => {
     render(<SettingsTab />);
 
     expect(screen.getByRole("dialog", { name: "Appearance" })).toBeInTheDocument();
+    expect(screen.getByTestId("settings-bottom-sheet")).toHaveClass("rounded-t-3xl");
     expect(screen.getByText("Appearance body")).toBeInTheDocument();
   });
 

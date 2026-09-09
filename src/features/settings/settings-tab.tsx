@@ -12,15 +12,9 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import { BottomSheet, BottomSheetHandle } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { LoadingCard } from "@/components/ui/loading-card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { OnboardingGuidesSettings } from "@/features/onboarding/onboarding-guides-settings";
 import { AppearanceSettings } from "@/features/settings/appearance-settings";
 import { IntegrationsSettings } from "@/features/settings/integrations-settings";
@@ -240,21 +234,20 @@ export function SettingsTab() {
           </div>
         </div>
       ) : (
-        <Dialog
-          modal
+        <BottomSheet
           open={settingsPanelOpen}
           onOpenChange={(open) => {
             if (!open) {
               closeSettingsPanel();
             }
           }}
-        >
-          <DialogContent
-            className="z-[60] !top-0 !right-0 !left-auto !translate-x-0 !translate-y-0 inset-y-0 h-dvh w-[min(100vw,72rem)] max-w-none overflow-hidden rounded-none border-l p-0 data-open:slide-in-from-right data-closed:slide-out-to-right data-open:zoom-in-100 data-closed:zoom-out-100"
-            showCloseButton={false}
-          >
-            <DialogHeader className="gap-3 border-b px-4 py-3">
-              <div className="flex items-center gap-2">
+          title={settingsCopy.label}
+          description={settingsCopy.description}
+          testId="settings-bottom-sheet"
+          header={
+            <div className="border-b px-4 pb-3">
+              <BottomSheetHandle />
+              <div className="flex items-center gap-2 pt-2">
                 <Button
                   type="button"
                   variant="ghost"
@@ -264,15 +257,18 @@ export function SettingsTab() {
                   <ArrowLeft className="size-4" />
                   Back
                 </Button>
-                <DialogTitle>{settingsCopy.label}</DialogTitle>
+                <p className="font-display text-lg font-semibold tracking-tight">
+                  {settingsCopy.label}
+                </p>
               </div>
-              <DialogDescription>{settingsCopy.description}</DialogDescription>
-            </DialogHeader>
-            <div className="h-[calc(100dvh-5.5rem)] overflow-y-auto overflow-x-hidden p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-              {editor}
+              <p className="pt-1 text-sm text-muted-foreground">
+                {settingsCopy.description}
+              </p>
             </div>
-          </DialogContent>
-        </Dialog>
+          }
+        >
+          {editor}
+        </BottomSheet>
       )}
     </div>
   );
