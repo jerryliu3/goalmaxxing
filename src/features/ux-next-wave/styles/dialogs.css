@@ -1,0 +1,241 @@
+/* Accessible review sheets reuse the app's Radix dialog primitive. */
+.nw-overlay {
+  position: fixed;
+  inset: 0;
+  background: #17222355;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+}
+.nw-modal {
+  position: fixed;
+  z-index: 1001;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 32px);
+  max-width: 480px;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  border-radius: 24px;
+  padding: 32px;
+  background: var(--bg, #fafbf8);
+  box-shadow: 0 25px 100px #18292440;
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  outline: none;
+  border: 1px solid #ffffff80;
+}
+.nw-modal .modal-close {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: none;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+.nw-modal .eyebrow {
+  padding-right: 25px;
+  color: var(--muted);
+}
+.nw-modal .modal-title {
+  font-family: inherit;
+  font-size: 2.15rem;
+  font-weight: 450;
+  line-height: 1.1;
+  letter-spacing: -0.055em;
+  padding-right: 22px;
+  margin: 0;
+}
+.nw-modal .modal-description {
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.nw-modal .session-detail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: 0.875rem;
+  margin: 5px 0;
+}
+.nw-modal .session-detail strong {
+  margin-left: auto;
+  font-weight: 500;
+}
+.nw-modal .field-label {
+  font-size: 0.8125rem;
+  margin: 10px 0 -6px;
+  font-weight: 550;
+}
+.nw-modal .move-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+.nw-modal .move-days button {
+  border: 1px solid var(--line);
+  background: #fff8;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6875rem;
+  padding: 12px 0;
+}
+.nw-modal .move-days strong {
+  font-size: 1rem;
+  font-weight: 500;
+}
+.nw-modal .move-days button:hover {
+  background: var(--accent);
+  color: var(--surface);
+}
+.nw-modal .change-list > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 17px 0;
+  border-top: 1px solid var(--line);
+}
+.nw-modal .change-list > div > span {
+  flex: 1;
+}
+.nw-modal .change-list strong {
+  font-size: 0.9375rem;
+  font-weight: 550;
+}
+.nw-modal .change-list small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.nw-modal .change-list b {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.nw-notes {
+  --bg: #fcfcfa;
+  --accent: #262e2c;
+  --surface: #fff;
+  --ink: #252e2b;
+  --muted: #6e7a75;
+  --line: #283b3020;
+  max-width: 540px;
+}
+.nw-notes .notes-section {
+  padding-top: 15px;
+  border-top: 1px solid var(--line);
+}
+.nw-notes .notes-section h3 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.nw-notes .notes-section p {
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.nw-notes .notes-disclaimer {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.nw-comparison {
+  max-width: 760px;
+}
+.nw-comparison .comparison-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.nw-comparison .comparison-option {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+  background: #f0f3ef;
+  color: #2c493b;
+}
+.nw-comparison .comparison-option > span {
+  font-size: 0.75rem;
+  align-self: flex-start;
+  opacity: 0.6;
+}
+.nw-comparison .comparison-option > div {
+  flex: 1;
+}
+.nw-comparison .comparison-option h3 {
+  font-size: 1.3rem;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  margin-bottom: 5px;
+}
+.nw-comparison .comparison-option p {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  opacity: 0.75;
+}
+.nw-comparison .comparison-tempo {
+  background: #fff0e8;
+  color: #ac4226;
+}
+.nw-comparison .comparison-weave {
+  background: #eef2ff;
+  color: #3052a8;
+}
+.nw-comparison .comparison-mosaic {
+  background: #f2e9fb;
+  color: #724c9c;
+}
+.nw-comparison .comparison-script {
+  background: #faf8f5;
+  color: #383730;
+}
+.nw-modal .profile-summary {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.nw-modal .profile-summary strong {
+  font-size: 5rem;
+  font-weight: 450;
+  line-height: 1.1;
+  letter-spacing: -0.07em;
+}
+.nw-modal .profile-summary small {
+  font-size: 2rem;
+  color: var(--muted);
+  letter-spacing: -0.05em;
+}
+.nw-modal .profile-summary > span {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+@keyframes nw-enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

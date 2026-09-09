@@ -1,0 +1,419 @@
+/* Progress: five different forms, one canonical completion record. */
+.nw .progress-heading,
+.nw .community-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 28px;
+}
+.nw .progress-heading h1,
+.nw .community-heading h1 {
+  margin-top: 21px;
+  font-size: 3.4rem;
+}
+.nw .progress-heading > .muted {
+  text-align: right;
+  padding-bottom: 5px;
+}
+.nw .progress-columns {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 42px;
+  margin-top: 30px;
+}
+.nw .progress-visual {
+  background: #ffffff45;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 26px;
+  min-height: 390px;
+  display: flex;
+  flex-direction: column;
+}
+.nw .progress-stat {
+  border-bottom: 1px solid var(--line);
+  padding: 0 0 24px;
+  margin-bottom: 26px;
+}
+.nw .progress-stat > span {
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.nw .progress-stat > div:nth-child(2) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+}
+.nw .progress-stat strong {
+  font-size: 3.5rem;
+  font-weight: 450;
+  line-height: 1.1;
+  letter-spacing: -0.065em;
+}
+.nw .progress-stat strong small {
+  font-size: 1.7rem;
+  color: var(--muted);
+  letter-spacing: -0.045em;
+}
+.nw .progress-stat > div > span {
+  text-align: right;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+.nw .progress-stat > div > span small {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.nw .linear-meter {
+  height: 5px;
+  background: var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.nw .linear-meter i {
+  height: 100%;
+  display: block;
+  background: var(--accent);
+  border-radius: 10px;
+  transition: width 0.5s;
+}
+.nw .progress-stat p {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.nw .goal-evidence {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.875rem;
+  text-align: left;
+}
+.nw .goal-evidence > span:nth-child(2) {
+  flex: 1;
+}
+.nw .goal-evidence strong {
+  font-weight: 550;
+}
+.nw .goal-evidence small {
+  font-size: inherit;
+  color: var(--muted);
+  font-weight: 400;
+}
+.nw .progress-insight {
+  background: #ffffff50;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 22px;
+}
+.nw .progress-insight h3 {
+  margin: 12px 0 8px;
+}
+.nw .progress-insight > p {
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+.nw .progress-insight > .muted {
+  display: block;
+  font-size: 0.6875rem;
+  margin-top: 15px;
+}
+.nw .visual-caption {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: auto !important;
+  padding-top: 22px;
+}
+.nw .evidence-log {
+  margin-top: 32px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+.nw .log-days {
+  display: flex;
+  gap: 3px;
+}
+.nw .log-days button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+}
+.nw .log-days button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--surface);
+}
+.nw .record-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 15px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  font-size: 0.875rem;
+}
+.nw .record-row strong {
+  font-weight: 550;
+  flex: 1;
+}
+.nw .record-row > span {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.nw .evidence-log > .muted {
+  padding-top: 20px;
+}
+.nw .progress-stack {
+  perspective: 1000px;
+  min-height: 265px;
+  position: relative;
+  margin: 24px 5px 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+}
+.nw .evidence-slab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid #ffffffd9;
+  border-radius: 12px;
+  background: linear-gradient(
+    130deg,
+    #ffffffe6,
+    color-mix(in srgb, var(--soft), transparent 35%)
+  );
+  transform: rotateX(32deg) rotateZ(-9deg);
+  box-shadow: 0 12px 16px -14px #254c45a0;
+  transition: transform 0.35s;
+  color: var(--goal);
+  font-size: 0.875rem;
+  margin-top: -8px;
+}
+.nw .evidence-slab:hover {
+  transform: rotateX(12deg) rotateZ(-3deg) translateY(-6px);
+}
+.nw .evidence-slab > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  text-align: left;
+}
+.nw .evidence-slab > span:last-child {
+  font-size: 0.6875rem;
+}
+.nw .evidence-slab b {
+  font-weight: 500;
+}
+.nw .tempo-progress-number {
+  font-size: 9rem;
+  line-height: 1.15;
+  letter-spacing: -0.09em;
+  font-weight: 450;
+  margin-top: 16px;
+  color: var(--accent);
+}
+.nw .tempo-progress-number span {
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+  padding-left: 14px;
+  color: var(--ink);
+}
+.nw .tempo-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 20px;
+  min-height: 160px;
+}
+.nw .tempo-bars > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  gap: 10px;
+  padding: 0;
+  font-size: 0.75rem;
+}
+.nw .tempo-bars b {
+  font-weight: 500;
+  color: var(--muted);
+}
+.nw .tempo-bars span {
+  display: block;
+  background: var(--accent);
+  width: 100%;
+  min-width: 14px;
+  max-width: 50px;
+  border-radius: 4px 4px 0 0;
+}
+.nw .tempo-bars button[aria-pressed="true"] span {
+  background: var(--ink);
+}
+.nw .tempo-bars small {
+  font-size: 0.75rem;
+}
+.nw .progress-tempo .progress-visual {
+  border-radius: 0;
+  border: 0;
+  background: #f0ece5;
+}
+.nw .progress-weave {
+  display: flex;
+  flex-direction: column;
+  gap: 27px;
+  padding: 28px 0;
+}
+.nw .progress-weave > div > strong {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--goal);
+}
+.nw .progress-weave > div > div {
+  display: flex;
+  position: relative;
+  gap: 8px;
+  margin-top: 12px;
+}
+.nw .progress-weave > div > div:before {
+  content: "";
+  height: 2px;
+  position: absolute;
+  background: var(--soft);
+  top: 13px;
+  left: 5%;
+  right: 5%;
+}
+.nw .progress-weave button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  position: relative;
+  padding: 0;
+}
+.nw .progress-weave button > span {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--soft);
+  background: #f9faff;
+  display: grid;
+  place-items: center;
+  color: white;
+}
+.nw .progress-weave .planned {
+  border: 2px solid var(--goal);
+  background: var(--soft);
+}
+.nw .progress-weave .solid {
+  background: var(--goal);
+  border-color: var(--goal);
+}
+.nw .progress-weave small {
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+.nw .evidence-mosaic {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  margin-top: 23px;
+}
+.nw .evidence-mosaic > button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 180px;
+  text-align: left;
+  padding: 15px;
+  background: var(--soft);
+  color: var(--goal);
+  border-radius: 12px;
+}
+.nw .evidence-mosaic > button > span {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.625rem;
+}
+.nw .evidence-mosaic b {
+  font-size: 3.3rem;
+  font-weight: 450;
+  letter-spacing: -0.08em;
+  line-height: 1;
+}
+.nw .evidence-mosaic strong {
+  font-size: 0.875rem;
+  font-weight: 550;
+  margin-top: auto;
+}
+.nw .empty-piece {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 180px;
+  border: 1px dashed #c8b9d7;
+  border-radius: 12px;
+  color: #ae9bbb;
+  font-size: 0.6875rem;
+}
+.nw .empty-piece span + span {
+  font-size: 1.8rem;
+}
+.nw .script-progress-statement {
+  padding: 25px 10px;
+}
+.nw .script-progress-statement > p:nth-child(2) {
+  font-size: 3.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.06em;
+  margin: 24px 0;
+}
+.nw .script-progress-statement strong {
+  font-weight: 450;
+}
+.nw .script-progress-statement > p:nth-child(2) > strong {
+  font-family: Georgia, serif;
+  font-style: italic;
+}
+.nw .script-progress-statement > p:nth-child(3) {
+  font-size: 1.5rem;
+  line-height: 1.5;
+  max-width: 300px;
+}
+.nw .script-underline {
+  width: 90px;
+  height: 3px;
+  background: #e8a8bc;
+  margin: 35px 0;
+}
+.nw .script-progress-statement > span:last-child {
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.nw .progress-script .progress-visual {
+  background: none;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+}

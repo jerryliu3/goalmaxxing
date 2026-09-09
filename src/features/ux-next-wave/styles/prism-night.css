@@ -1,0 +1,112 @@
+/* Prism's night setting gives depth a distinct role in the study. */
+.nw-prism {
+  --bg: #163936;
+  --ink: #eff4e8;
+  --accent: #dce9ca;
+  --muted: #a0bbb1;
+  --surface: #16392f;
+  --line: #d5ede22b;
+}
+.nw .nw-prism.app-surface {
+  background:
+    radial-gradient(ellipse at 8% 65%, #66715355, transparent 48%),
+    radial-gradient(ellipse at 54% 12%, #48766566, transparent 52%),
+    linear-gradient(140deg, #143237, #20483b);
+}
+.nw .nw-prism .app-header {
+  background: #173b3429;
+}
+.nw .nw-prism .app-nav {
+  background: #eaffec13;
+}
+.nw .nw-prism .app-nav button[data-state="active"] {
+  color: #214a3c;
+}
+.nw .nw-prism .glass-day {
+  color: #e8f4e5;
+  border-color: #dfffea55;
+  background: linear-gradient(120deg, #d7ffe73b, #54796b80 65%, #e5f2c32e);
+  box-shadow:
+    0 18px 24px -14px #081f29a0,
+    inset 1px 1px 0 #f4ffdd70;
+}
+.nw .nw-prism .glass-day.selected {
+  color: #284938;
+  background: linear-gradient(120deg, #eff5e7f2, #d5e6cbea);
+  border-color: #f0ffeac9;
+  box-shadow:
+    0 20px 40px -12px #07241bba,
+    inset 1px 1px 0 #fff;
+}
+.nw .nw-prism .glass-day:not(.selected) .glass-lines i {
+  background: var(--soft);
+  opacity: 0.7;
+}
+.nw .nw-prism .glass-agenda {
+  --ink: #284737;
+  --accent: #355941;
+  --muted: #6a7e6b;
+  --surface: #f6faf1;
+  --line: #35594120;
+  color: var(--ink);
+  background: #f3f6eaf2;
+  border-color: #faffec;
+  box-shadow: 0 22px 50px #061f1930;
+}
+.nw .community-prism .person-card {
+  background: linear-gradient(135deg, #dafbe51a, #e6ffee0a);
+  border-color: #e9ffef38;
+  box-shadow:
+    0 15px 30px -20px #071f18a0,
+    inset 0 1px 0 #efffea22;
+}
+.nw .progress-prism .progress-visual {
+  background: #c3e2d009;
+}
+.nw .progress-prism .progress-insight {
+  background: #d4f2d80d;
+}
+.nw .nw-prism .goal-filters button {
+  background: #ffffff0a;
+}
+.nw .nw-prism .goal-filters button[aria-pressed="true"] {
+  background: var(--accent);
+}
+.nw .nw-prism .leader-row.you {
+  background: #ffffff12;
+}
+.nw .nw-prism .challenge-poster {
+  --surface: #204b3b;
+  color: #204b3b;
+}
+.nw-modal.nw-prism {
+  --bg: #f2f5eb;
+  --ink: #284737;
+  --accent: #355941;
+  --muted: #6a7e6b;
+  --surface: #f6faf1;
+  --line: #35594120;
+}
+@container (max-width:740px) {
+  .nw .prism-time {
+    order: 2;
+    padding: 8px 6px;
+  }
+  .nw .prism-time h1 {
+    font-size: 2.2rem !important;
+  }
+  .nw .glass-agenda {
+    order: 1;
+  }
+}
+@media (prefers-contrast: more) {
+  .nw .nw-prism .glass-day {
+    background: #254a3e;
+  }
+  .nw .nw-prism .glass-day.selected {
+    background: #edf5e4;
+  }
+  .nw .nw-prism .glass-agenda {
+    background: #f5f8ef;
+  }
+}
