@@ -18,6 +18,7 @@ import {
 } from "@/features/social/data";
 import type { LeaderboardSeason, LeaderboardStanding } from "@/features/social/types";
 import { describeSeasonMetric } from "@/features/social/leaderboards/season-metric-copy";
+import { formatTimeLeftLabel } from "@/lib/social/time-left-label";
 
 interface StandingsState {
   season: LeaderboardSeason;
@@ -114,6 +115,7 @@ export function LeaderboardsPanel({
       return {
         key: season.id,
         title: season.title,
+        titleBadge: formatTimeLeftLabel(season.endsAt) ?? undefined,
         detail: describeSeasonMetric(season.metric, season.metricTrackKey),
         joined: true,
         closed: false,

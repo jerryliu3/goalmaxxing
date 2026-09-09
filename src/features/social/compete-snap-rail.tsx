@@ -18,6 +18,7 @@ export type CompetePerson = {
 export type CompeteTileModel = {
   key: string;
   title: string;
+  titleBadge?: string;
   kicker?: string;
   metric?: string;
   detail: string;
@@ -148,13 +149,22 @@ export function CompeteTile({
               {tile.kicker}
             </p>
           ) : null}
-          <h3
-            className={`font-display text-2xl font-semibold tracking-tight ${
+          <div
+            className={`flex flex-wrap items-center gap-2 ${
               tile.kicker ? "mt-2" : ""
             }`}
           >
-            {tile.title}
-          </h3>
+            <h3 className="font-display text-2xl font-semibold tracking-tight">
+              {tile.title}
+            </h3>
+            {tile.titleBadge ? (
+              <span
+                className="rounded-full border border-border bg-muted/70 px-2 py-0.5 text-[11px] font-medium leading-none text-muted-foreground"
+              >
+                {tile.titleBadge}
+              </span>
+            ) : null}
+          </div>
           {tile.metric ? (
             <p className="mt-1 font-display text-lg tracking-tight">{tile.metric}</p>
           ) : null}

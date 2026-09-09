@@ -44,6 +44,20 @@ describe("CompeteTile", () => {
     expect(onExpand).not.toHaveBeenCalled();
   });
 
+  it("renders a time-left badge beside the title when provided", () => {
+    render(
+      <CompeteTile
+        tile={tile({ titleBadge: "3 days left" })}
+        density="join-only"
+        expanded={false}
+        onExpand={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("heading", { name: "Weekly XP" })).toBeInTheDocument();
+    expect(screen.getByText("3 days left")).toBeInTheDocument();
+  });
+
   it("joins without expanding when Join is ready", async () => {
     const user = userEvent.setup();
     const onExpand = vi.fn();

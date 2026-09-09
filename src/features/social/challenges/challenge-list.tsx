@@ -18,6 +18,7 @@ import {
   peekSocialChallengesCache,
 } from "@/features/social/data";
 import type { SocialChallenge } from "@/features/social/types";
+import { formatTimeLeftLabel } from "@/lib/social/time-left-label";
 
 interface ChallengeListProps {
   isActive?: boolean;
@@ -117,6 +118,7 @@ export function ChallengeList({
       return {
         key: item.id,
         title: item.title,
+        titleBadge: formatTimeLeftLabel(item.endsAt) ?? undefined,
         metric: challengeMetric(item),
         detail: item.description ?? `${item.status} · target ${item.targetValue}`,
         joined: item.viewerJoined,

@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ChallengeList } from "@/features/social/challenges/challenge-list";
 import type { SocialChallenge } from "@/features/social/types";
+import * as timeLeftLabel from "@/lib/social/time-left-label";
 
 const fetchSocialChallengesMock = vi.fn();
 const joinSocialChallengeMock = vi.fn();
@@ -57,6 +58,19 @@ describe("ChallengeList", () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+  });
+
+  it("shows a time-left badge when a challenge is ending soon", async () => {
+    vi.spyOn(timeLeftLabel, "formatTimeLeftLabel").mockReturnValue("1 day left");
+    fetchSocialChallengesMock.mockResolvedValue({
+      schemaVersion: "1",
+      items: [
+        makeChallenge("11111111-1111-4111-8111-111111111111", "Weekly XP Sprint"),
+      ],
+    });
+
+    render(<ChallengeList />);
+    expect(await screen.findByText("1 day left")).toBeInTheDocument();
   });
 
   it("expands ranks on click without reloading the roster", async () => {
