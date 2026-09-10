@@ -18,6 +18,8 @@ describe("PlanDaySection", () => {
       "aria-expanded",
       "true"
     );
+    expect(screen.getByRole("button", { name: /Planned goals/ })).toHaveClass("font-sans");
+    expect(screen.getByText("2")).toHaveClass("font-mono");
     expect(screen.getByText("Row")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Planned goals/ }));

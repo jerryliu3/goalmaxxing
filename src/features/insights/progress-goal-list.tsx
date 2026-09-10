@@ -105,7 +105,7 @@ export function ProgressGoalList({
                   </span>
                   <span
                     className={cn(
-                      "hidden shrink-0 text-[10px] text-muted-foreground transition-opacity duration-150 md:inline group-hover:opacity-0 group-focus-within:opacity-0"
+                      "hidden shrink-0 font-mono text-[10px] text-muted-foreground transition-opacity duration-150 md:inline group-hover:opacity-0 group-focus-within:opacity-0"
                     )}
                   >
                     {goal.rateLabel}

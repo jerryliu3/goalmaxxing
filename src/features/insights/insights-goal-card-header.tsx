@@ -35,7 +35,7 @@ export function InsightsGoalCardHeader({
           className="size-2 shrink-0 rounded-full"
           style={{ backgroundColor: toStyleDisplayColor(color) }}
         />
-        <p className="min-w-0 flex-1 truncate whitespace-nowrap text-sm font-semibold leading-tight">
+        <p className="min-w-0 flex-1 truncate whitespace-nowrap font-display text-sm font-semibold leading-tight">
           {title}
         </p>
       </div>

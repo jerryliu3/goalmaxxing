@@ -87,7 +87,7 @@ export function InsightsScreen() {
         >
           <Text style={{ color: theme.colors.primary }}>Prev</Text>
         </Pressable>
-        <Text style={{ color: theme.colors.foreground, fontWeight: "700" }}>{month}</Text>
+        <Text style={{ color: theme.colors.foreground, fontWeight: "700", fontFamily: theme.fonts.display }}>{month}</Text>
         <Pressable
           onPress={() => {
             const next = new Date(`${month}-01T00:00:00`);

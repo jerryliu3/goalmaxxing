@@ -168,7 +168,7 @@ export function LandingFeatureNarrative() {
           <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
             Why Goalmaxxing
           </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
             Most productivity apps stop at today.
           </h2>
           <p className="mt-3 leading-relaxed text-muted-foreground">
@@ -196,7 +196,7 @@ export function LandingFeatureNarrative() {
                 <div className="inline-flex size-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
                   <Icon className="size-4" />
                 </div>
-                <h3 className="mt-3 text-2xl font-semibold tracking-tight">{title}</h3>
+                <h3 className="mt-3 font-display text-2xl font-semibold tracking-tight">{title}</h3>
                 <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
                   {summary}
                 </p>

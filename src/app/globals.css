@@ -248,6 +248,10 @@ body {
   font-family: var(--font-app-display), Georgia, "Times New Roman", serif;
 }
 
+.gm-gazetteer .font-sans {
+  font-family: var(--font-app-sans), Inter, system-ui, sans-serif;
+}
+
 .gm-gazetteer .font-mono {
   font-family: var(--font-app-mono), ui-monospace, monospace;
 }

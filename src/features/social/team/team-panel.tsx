@@ -86,7 +86,7 @@ function TeamInviteControls({
         ) : (
           pendingInvites.map((invite) => (
             <div key={invite.teamId} className="rounded border p-3">
-              <p className="font-medium">
+              <p className="font-display font-medium">
                 {invite.partnerDisplayName ?? invite.partnerUsername ?? invite.partnerId}
               </p>
               <p className="text-xs text-muted-foreground">
@@ -378,7 +378,7 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
               alt="Partner avatar"
             />
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{partnerName}</p>
+              <p className="truncate font-display text-sm font-medium">{partnerName}</p>
               <p className="truncate text-xs text-muted-foreground">Team partner</p>
             </div>
           </PublicProfileTrigger>

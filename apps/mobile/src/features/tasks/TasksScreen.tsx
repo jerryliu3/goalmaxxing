@@ -155,6 +155,7 @@ export function TasksScreen() {
                     color: complete ? theme.colors.mutedForeground : theme.colors.foreground,
                     textDecorationLine: complete ? "line-through" : "none",
                     flexShrink: 1,
+                    fontFamily: theme.fonts.display,
                   }}
                 >
                   {task.title}

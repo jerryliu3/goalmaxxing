@@ -21,7 +21,7 @@ export function CalendarPartnerReadOnlySection({
           { borderColor: theme.colors.border, backgroundColor: theme.colors.card },
         ]}
       >
-        <Text style={{ color: theme.colors.foreground, fontWeight: "700" }}>
+        <Text style={{ color: theme.colors.foreground, fontWeight: "700", fontFamily: theme.fonts.display }}>
           Partner completions (view only)
         </Text>
       </View>
@@ -35,7 +35,7 @@ export function CalendarPartnerReadOnlySection({
           key={visibleDay}
           style={[styles.dayCard, { borderColor: theme.colors.border }]}
         >
-          <Text style={{ color: theme.colors.foreground, fontWeight: "700" }}>
+          <Text style={{ color: theme.colors.foreground, fontWeight: "700", fontFamily: theme.fonts.display }}>
             {visibleDay}
           </Text>
           {(markersByDate.get(visibleDay) ?? []).map((marker) => (
@@ -52,7 +52,7 @@ export function CalendarPartnerReadOnlySection({
                 },
               ]}
             >
-              <Text style={{ color: theme.colors.foreground, fontWeight: "600" }}>
+              <Text style={{ color: theme.colors.foreground, fontWeight: "600", fontFamily: theme.fonts.display }}>
                 Partner marked this done: {marker.goalTitle}
               </Text>
             </View>

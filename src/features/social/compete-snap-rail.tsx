@@ -166,7 +166,7 @@ export function CompeteTile({
             ) : null}
           </div>
           {tile.metric ? (
-            <p className="mt-1 font-display text-lg tracking-tight">{tile.metric}</p>
+            <p className="mt-1 font-mono text-lg tracking-tight">{tile.metric}</p>
           ) : null}
           <p className="mt-1 text-sm text-muted-foreground">{tile.detail}</p>
         </div>

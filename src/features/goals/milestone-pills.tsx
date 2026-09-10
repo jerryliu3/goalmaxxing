@@ -43,7 +43,7 @@ export function MilestonePills({
                   : "border-border bg-muted/30 text-muted-foreground"
               }`}
             >
-              <p className="truncate font-medium">{milestoneName}</p>
+              <p className="truncate font-display font-medium">{milestoneName}</p>
               <p className={complete ? "text-foreground/75" : "text-muted-foreground"}>
                 {complete ? completionDate : "Pending"}
               </p>

@@ -382,7 +382,7 @@ export function CalendarScreen() {
         <Pressable onPress={() => apply({ month: shiftMonth(scopeMonth, -1) })}>
           <Text style={{ color: theme.colors.primary }}>Prev</Text>
         </Pressable>
-        <Text style={{ color: theme.colors.foreground, fontWeight: "700" }}>{scopeMonth}</Text>
+        <Text style={{ color: theme.colors.foreground, fontWeight: "700", fontFamily: theme.fonts.display }}>{scopeMonth}</Text>
         <Pressable onPress={() => apply({ month: shiftMonth(scopeMonth, 1) })}>
           <Text style={{ color: theme.colors.primary }}>Next</Text>
         </Pressable>
@@ -489,7 +489,7 @@ export function CalendarScreen() {
                     style={{
                       color: dayChrome.numberColor,
                       fontSize: 12,
-                      fontFamily: theme.fonts.mono,
+                      fontFamily: theme.fonts.display,
                     }}
                   >
                     {cell.date.slice(8)}
@@ -520,6 +520,7 @@ export function CalendarScreen() {
                         color: theme.colors.mutedForeground,
                         fontSize: 10,
                         fontWeight: "700",
+                        fontFamily: theme.fonts.mono,
                       }}
                     >
                       +{monthPills.overflowCount}
@@ -541,6 +542,7 @@ export function CalendarScreen() {
                         color: theme.colors.primary,
                         fontSize: 10,
                         fontWeight: "700",
+                        fontFamily: theme.fonts.mono,
                       }}
                     >
                       +{markerModel.overflowCount}
@@ -577,7 +579,7 @@ export function CalendarScreen() {
               },
             ]}
           >
-            <Text style={{ color: theme.colors.foreground, fontWeight: "700" }}>
+            <Text style={{ color: theme.colors.foreground, fontWeight: "700", fontFamily: theme.fonts.display }}>
               {visibleDay}
             </Text>
             {readOnlyState.showViewerSessions
@@ -620,7 +622,7 @@ export function CalendarScreen() {
                   },
                 ]}
               >
-                <Text style={{ color: theme.colors.foreground, fontWeight: "600" }}>
+                <Text style={{ color: theme.colors.foreground, fontWeight: "600", fontFamily: theme.fonts.display }}>
                   Partner done: {marker.goalTitle}
                 </Text>
               </View>

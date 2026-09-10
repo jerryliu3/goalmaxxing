@@ -46,7 +46,7 @@ export function PlannerViewWindowHeader({
             nextAriaLabel={nextWindowAriaLabel}
             center={
               <h3
-                className="truncate text-center text-base font-semibold"
+                className="font-display truncate text-center text-base font-semibold"
                 style={{ width: `${fixedViewHeadingWidthCh}ch` }}
               >
                 {viewHeading}

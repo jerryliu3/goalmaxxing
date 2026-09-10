@@ -116,8 +116,9 @@ surfaces. The default is to simplify and reuse what already exists.
   `docs/ux/goalmaxxing-application-brand-guide.md` and `/ux/brand`.
   Gazetteer + Soft paper + Nest is the preserved leading lock; Col is the
   runner-up. New atmosphere rounds are exploratory and do not replace that
-  lock. Production `AppShell` and Geist remain unchanged until an explicit
-  implementation decision.
+  lock. Original chrome stays Geist. Gazetteer type roles
+  (Newsreader / Source Sans 3 / IBM Plex Mono) apply on live
+  `font-display`, `font-sans`, and `font-mono` surfaces.
   First-principles interaction studies live in
   `docs/ux/goalmaxxing-first-principles-interface-study.md` and
   `/ux/first-principles`. They are divergent exploration, not a product lock.

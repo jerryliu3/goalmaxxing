@@ -55,7 +55,7 @@ function TourPanel({
           <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
             {eyebrow}
           </p>
-          <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h3 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
             {title}
           </h3>
           <p className="mt-4 max-w-xl leading-relaxed text-muted-foreground">
@@ -297,7 +297,7 @@ export function LandingProductTour() {
           <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
             Inside Goalmaxxing
           </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
             Built for the full loop
           </h2>
           <p className="mt-4 text-muted-foreground sm:text-lg">

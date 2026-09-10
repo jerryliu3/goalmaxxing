@@ -52,15 +52,15 @@ function XpProgressCardContents({ profile }: { profile: XpProfileSummary }) {
   return (
     <>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-medium text-muted-foreground">{band.name}</span>
-        <span className="text-xs text-muted-foreground">{levelLabel}</span>
+        <span className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{band.name}</span>
+        <span className="font-mono text-xs text-muted-foreground">{levelLabel}</span>
       </div>
       <Progress
         value={progressPercent}
         className="h-2 bg-muted"
         data-xp-reward-target="true"
       />
-      <span className="text-[11px] text-muted-foreground">{progressLabel}</span>
+      <span className="font-mono text-[11px] text-muted-foreground">{progressLabel}</span>
     </>
   );
 }
