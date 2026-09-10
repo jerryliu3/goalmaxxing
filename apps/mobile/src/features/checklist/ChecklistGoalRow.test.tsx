@@ -10,12 +10,19 @@ vi.mock("react-native", () => ({
     React.createElement("text", null, children),
   View: (props: Record<string, unknown>) =>
     React.createElement("view", props),
-  StyleSheet: { create: <T,>(styles: T) => styles },
+  StyleSheet: { create: <T,>(styles: T) => styles, hairlineWidth: 1 },
 }));
 
 vi.mock("expo-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) =>
     React.createElement("link", null, children),
+}));
+
+vi.mock("react-native-svg", () => ({
+  default: (props: Record<string, unknown>) =>
+    React.createElement("svg", props),
+  Rect: (props: Record<string, unknown>) =>
+    React.createElement("rect", props),
 }));
 
 vi.mock("../../theme", () => ({

@@ -311,11 +311,11 @@ export function ChecklistScreen({
   ];
 
   if (!ready) {
-    return <LoadingScreen />;
+    return <LoadingScreen label="Loading Plan…" />;
   }
 
   return (
-    <Screen title={plannerNavigation ? "Planner" : "Checklist"} scroll={false}>
+    <Screen title="Plan" kicker="Day" scroll={false}>
       {plannerNavigation}
       <DuoScopeSegmentedControl surface="checklist" />
       <Pressable

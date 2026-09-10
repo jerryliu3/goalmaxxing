@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { useSession } from "../../lib/session";
 import { useTheme } from "../../theme";
 import { PrimaryButton } from "../../ui/button";
+import { NestCompletionMark } from "../../ui/nest-completion-mark";
 import { Screen } from "../../ui/screen";
 
 interface PlannerTaskRow {
@@ -142,9 +143,13 @@ export function TasksScreen() {
               disabled={busy}
             >
               <View style={styles.taskLeft}>
-                <Text style={{ color: complete ? theme.colors.primary : theme.colors.mutedForeground }}>
-                  {complete ? "●" : "○"}
-                </Text>
+                <NestCompletionMark
+                  done={complete}
+                  color={
+                    complete ? theme.colors.primary : theme.colors.mutedForeground
+                  }
+                  size={20}
+                />
                 <Text
                   style={{
                     color: complete ? theme.colors.mutedForeground : theme.colors.foreground,

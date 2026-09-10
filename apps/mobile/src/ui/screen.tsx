@@ -12,11 +12,13 @@ import { useTheme } from "../theme";
 
 export function Screen({
   title,
+  kicker,
   children,
   scroll = true,
   journeyPresentation = null,
 }: {
   title: string;
+  kicker?: string;
   children: ReactNode;
   scroll?: boolean;
   journeyPresentation?: Parameters<typeof useJourneyPresentationPreference>[0];
@@ -25,9 +27,28 @@ export function Screen({
   useJourneyPresentationPreference(journeyPresentation);
   const body = (
     <View style={styles.body}>
+      {kicker ? (
+        <Text
+          style={[
+            styles.kicker,
+            {
+              color: theme.colors.mutedForeground,
+              fontFamily: theme.fonts?.sans,
+            },
+          ]}
+        >
+          {kicker}
+        </Text>
+      ) : null}
       <Text
         accessibilityRole="header"
-        style={[styles.title, { color: theme.colors.foreground }]}
+        style={[
+          styles.title,
+          {
+            color: theme.colors.foreground,
+            fontFamily: theme.fonts?.display,
+          },
+        ]}
       >
         {title}
       </Text>
@@ -43,13 +64,43 @@ export function Screen({
   );
 }
 
-export function LoadingScreen() {
+export function SectionKicker({ children }: { children: string }) {
+  const theme = useTheme();
+  return (
+    <Text
+      style={[
+        styles.kicker,
+        {
+          color: theme.colors.mutedForeground,
+          fontFamily: theme.fonts?.sans,
+          marginTop: 8,
+        },
+      ]}
+    >
+      {children}
+    </Text>
+  );
+}
+
+export function LoadingScreen({ label = "Loading…" }: { label?: string }) {
   const theme = useTheme();
   return (
     <SafeAreaView
       style={[styles.safe, styles.center, { backgroundColor: theme.colors.background }]}
     >
-      <ActivityIndicator />
+      <ActivityIndicator color={theme.colors.primary} />
+      <Text
+        style={{
+          color: theme.colors.mutedForeground,
+          marginTop: 12,
+          letterSpacing: 1.4,
+          textTransform: "uppercase",
+          fontSize: 11,
+          fontWeight: "600",
+        }}
+      >
+        {label}
+      </Text>
     </SafeAreaView>
   );
 }
@@ -59,5 +110,11 @@ const styles = StyleSheet.create({
   center: { alignItems: "center", justifyContent: "center" },
   scroll: { padding: 20 },
   body: { gap: 12, padding: 20, flex: 1 },
-  title: { fontSize: 24, fontWeight: "700" },
+  kicker: {
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 1.6,
+    textTransform: "uppercase",
+  },
+  title: { fontSize: 28, fontWeight: "600" },
 });

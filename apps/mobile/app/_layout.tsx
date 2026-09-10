@@ -1,6 +1,7 @@
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AppQueryProvider } from "../src/lib/query";
@@ -12,6 +13,11 @@ import { HealthSyncLifecycle } from "../src/features/health/health-sync-lifecycl
 
 initMobileSentry();
 
+function ThemedStatusBar() {
+  const scheme = useColorScheme();
+  return <StatusBar style={scheme === "dark" ? "light" : "dark"} />;
+}
+
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -20,7 +26,7 @@ export default function RootLayout() {
           <AppQueryProvider>
             <SessionProvider>
               <NotificationNavigation />
-              <StatusBar style="auto" />
+              <ThemedStatusBar />
               <HealthPrivacyIntentHandler />
               <HealthSyncLifecycle />
               <Stack screenOptions={{ headerShown: false }}>

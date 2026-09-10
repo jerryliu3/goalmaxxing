@@ -23,7 +23,11 @@ export function PrimaryButton({
       }}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: theme.colors.primary, opacity: pressed || props.disabled ? 0.7 : 1 },
+        {
+          backgroundColor: theme.colors.primary,
+          borderRadius: theme.radius?.md ?? 12,
+          opacity: pressed || props.disabled ? 0.7 : 1,
+        },
       ]}
     >
       <Text style={[styles.label, { color: theme.colors.primaryForeground }]}>
@@ -35,7 +39,6 @@ export function PrimaryButton({
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 10,
     paddingVertical: 12,
     alignItems: "center",
   },

@@ -22,7 +22,8 @@ import { useSession } from "../../lib/session";
 import { supabase } from "../../lib/supabase";
 import { useTheme } from "../../theme";
 import { PrimaryButton } from "../../ui/button";
-import { Screen } from "../../ui/screen";
+import { NestCompletionMark } from "../../ui/nest-completion-mark";
+import { Screen, SectionKicker } from "../../ui/screen";
 import { UserAvatar } from "../../ui/user-avatar";
 import { IntegrationsSection } from "./IntegrationsSection";
 import {
@@ -200,7 +201,7 @@ export function SettingsScreen() {
   };
 
   return (
-    <Screen title="Profile">
+    <Screen title="You" kicker="Account">
       <View style={[styles.profileCard, { borderColor: theme.colors.border }]}>
         <View style={styles.profileSummaryRow}>
           <UserAvatar
@@ -355,6 +356,7 @@ export function SettingsScreen() {
         </View>
       </View>
       <Text style={{ color: theme.colors.foreground }}>{session?.user.email}</Text>
+      <SectionKicker>Connected</SectionKicker>
       <Text style={{ color: theme.colors.mutedForeground }}>Reminder hour (0-23)</Text>
       <TextInput
         keyboardType="number-pad"
@@ -460,19 +462,11 @@ export function SettingsScreen() {
                 },
               ]}
             >
-              <View
-                style={[
-                  styles.preferenceCheckbox,
-                  {
-                    borderColor: theme.colors.border,
-                    backgroundColor: checked ? theme.colors.primary : theme.colors.card,
-                  },
-                ]}
-              >
-                <Text style={{ color: theme.colors.primaryForeground }}>
-                  {checked ? "✓" : ""}
-                </Text>
-              </View>
+              <NestCompletionMark
+                done={checked}
+                color={theme.colors.primary}
+                size={24}
+              />
               <View style={styles.preferenceCopy}>
                 <Text style={{ color: theme.colors.foreground, fontWeight: "600" }}>
                   {category.label}
@@ -486,6 +480,7 @@ export function SettingsScreen() {
         })
       )}
       <IntegrationsSection userId={userId} />
+      <SectionKicker>Account</SectionKicker>
       <PrimaryButton
         label="Sign out"
         onPress={async () => {
@@ -534,14 +529,6 @@ const styles = StyleSheet.create({
   },
   preferenceUnavailable: {
     gap: 12,
-  },
-  preferenceCheckbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
   },
   preferenceCopy: {
     flex: 1,
