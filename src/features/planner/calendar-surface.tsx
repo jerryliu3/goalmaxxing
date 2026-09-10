@@ -5,12 +5,14 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
 import {
   buildWeekdayLabels,
   getEntryGoalFirstTitleWithTime,
+  isEntryCredited,
   normalizeWeekStartsOn,
 } from "@/features/planner/calendar-format";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
@@ -74,6 +76,10 @@ import {
 import { PlannerCalendarSurfaceLayout } from "@/features/planner/planner-calendar-surface-layout";
 import { persistImmediatePlannerMove } from "@/lib/planner/persist-immediate-move";
 import { canConfirmDraftMove, resolveStagedDraftMove } from "@/features/planner/draft-move-confirm";
+import {
+  pruneOptimisticCompletionFacts,
+  type OptimisticCompletionFacts,
+} from "@/lib/planner/optimistic-completion-facts";
 
 
 export function CalendarSurface({
@@ -158,6 +164,8 @@ export function CalendarSurface({
     Record<string, string[]>
   >({});
   const [mutationLoadingKey, setMutationLoadingKey] = useState<string | null>(null);
+  const [optimisticCompletionFacts, setOptimisticCompletionFacts] =
+    useState<OptimisticCompletionFacts>(() => new Map());
   const [error, setError] = useState<string | null>(null);
   const [setupTimezone, setSetupTimezone] = useState(resolveUserTimezone());
   const [setupWeekStartsOn, setSetupWeekStartsOn] = useState(1);
@@ -344,6 +352,21 @@ export function CalendarSurface({
     canMutateEntryOnDay,
     plannerReadOnly,
   } = dayAccessors;
+  useEffect(() => {
+    setOptimisticCompletionFacts((overlay) =>
+      pruneOptimisticCompletionFacts(overlay, (goalId, date) => {
+        const creditedOnDay = getOrderedEntriesForDay(date).some(
+          (entry) => entry.originalGoalId === goalId && isEntryCredited(entry)
+        );
+        if (creditedOnDay) {
+          return true;
+        }
+        return getCompletionFactMarkersForDay(date).some(
+          (marker) => marker.originalGoalId === goalId && marker.owner !== "partner"
+        );
+      })
+    );
+  }, [getCompletionFactMarkersForDay, getOrderedEntriesForDay]);
   const effectiveSelectedDay = localSelectedDay;
   const {
     selectedEventEntry,
@@ -646,6 +669,7 @@ export function CalendarSurface({
       effectiveDraftItemEdits,
       effectiveSelectedDay,
       setMutationLoadingKey,
+      setOptimisticCompletionFacts,
       runCompletionMutation,
       handlePlannerMutation,
       loadContext,
@@ -853,6 +877,7 @@ export function CalendarSurface({
     focusedDayEntries,
     focusedDayCompletionFactMarkers,
     mutationLoadingKey,
+    optimisticCompletionFacts,
     canMutatePlanItems,
     toggleDateFact,
     pointerPressActiveRef,

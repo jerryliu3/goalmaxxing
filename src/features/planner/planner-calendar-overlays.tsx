@@ -23,6 +23,7 @@ import type { MoveSourceCandidate } from "@/features/planner/planner-move-source
 import { PlannerSettingsDialog } from "@/features/planner/planner-settings-dialog";
 import type { ChecklistFiltersFormProps } from "@/features/today/checklist-filters-dialog";
 import type { GoalMonthOption } from "@/lib/goals/list-view";
+import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
 
 export interface PlannerCalendarOverlaysProps {
   renderMonthScopedOverlays: boolean;
@@ -30,6 +31,7 @@ export interface PlannerCalendarOverlaysProps {
   expandedPreviewEntries: PlannerDayDetailEntry[];
   expandedPreviewCompletionFactMarkers: PlannerCompletionFactMarker[];
   mutationLoadingKey: string | null;
+  optimisticCompletionFacts?: OptimisticCompletionFacts;
   asOfDate: string | null;
   canMutatePlanItems: boolean;
   canMutateEntryOnDay: (entry: PlannerDayDetailEntry, day: string | null) => boolean;
@@ -105,6 +107,7 @@ export function PlannerCalendarOverlays({
   expandedPreviewEntries,
   expandedPreviewCompletionFactMarkers,
   mutationLoadingKey,
+  optimisticCompletionFacts,
   asOfDate,
   canMutatePlanItems,
   canMutateEntryOnDay,
@@ -161,7 +164,8 @@ export function PlannerCalendarOverlays({
             expandedPreviewDay={expandedPreviewDay}
             entries={expandedPreviewEntries}
             completionFactMarkers={expandedPreviewCompletionFactMarkers}
-            mutationLoading={Boolean(mutationLoadingKey)}
+            mutationLoadingKey={mutationLoadingKey}
+            optimisticCompletionFacts={optimisticCompletionFacts}
             asOfDate={asOfDate}
             canMutatePlanItems={canMutatePlanItems}
             canMutateEntryOnDay={canMutateEntryOnDay}

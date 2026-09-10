@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppRouter } from "@/lib/navigation/use-app-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { buildLoginHref } from "@/lib/auth/login-redirect";
 import { withAbortSignal } from "@/lib/async/abort";
 import {
@@ -76,19 +76,26 @@ export function useChecklistData({
   const router = useAppRouter();
   const todayLocalDate =
     asOfDate && asOfDate.length > 0 ? asOfDate : toLocalDateString();
-  const initialCacheKey = resolveChecklistCacheKey({
-    viewerUserId,
-    subjectUserId,
-    viewDate,
-    todayLocalDate,
-    partnerId,
-  });
-  const initialCachedData = initialCacheKey
-    ? readTabDataCache<TodayData>(initialCacheKey)
-    : null;
-  const [data, setData] = useState<TodayData>(initialCachedData ?? emptyTodayData);
-  const dataRef = useRef<TodayData>(initialCachedData ?? emptyTodayData);
-  const [loading, setLoading] = useState(!initialCachedData);
+  const [data, setData] = useState<TodayData>(emptyTodayData);
+  const dataRef = useRef<TodayData>(emptyTodayData);
+  const [loading, setLoading] = useState(true);
+
+  useLayoutEffect(() => {
+    const cacheKey = resolveChecklistCacheKey({
+      viewerUserId,
+      subjectUserId,
+      viewDate,
+      todayLocalDate,
+      partnerId,
+    });
+    const cached = cacheKey ? readTabDataCache<TodayData>(cacheKey) : null;
+    if (!cached) {
+      return;
+    }
+    dataRef.current = cached;
+    setData(cached);
+    setLoading(false);
+  }, [partnerId, subjectUserId, todayLocalDate, viewDate, viewerUserId]);
   const loadRequestIdRef = useRef(0);
   const viewDateProgressRequestIdRef = useRef(0);
   const visibleLoadCountRef = useRef(0);

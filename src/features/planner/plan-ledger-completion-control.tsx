@@ -58,7 +58,7 @@ export function PlanLedgerCompletionControl({
           onToggle(event.currentTarget);
         }
       }}
-      disabled={disabled || pending}
+      disabled={disabled}
       aria-label={completed ? `Mark ${label} not done` : `Mark ${label} done`}
     />
   );

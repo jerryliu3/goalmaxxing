@@ -204,7 +204,7 @@ describe("calendar surface extracted components", () => {
         day="2026-08-06"
         entries={[sampleEntry]}
         completionFactMarkers={[]}
-        mutationLoading={false}
+        mutationLoadingKey={null}
         getEntryDisplayTitle={(entry) => entry.goalTitle ?? "Untitled"}
         getEntrySubtitle={(entry) => entry.label}
         isEntryCredited={() => false}
@@ -254,7 +254,7 @@ describe("calendar surface extracted components", () => {
         day="2026-08-06"
         entries={[sampleEntry]}
         completionFactMarkers={[]}
-        mutationLoading={false}
+        mutationLoadingKey={null}
         getEntryDisplayTitle={(entry) => entry.goalTitle ?? "Untitled"}
         getEntrySubtitle={(entry) => entry.label}
         isEntryCredited={() => false}
@@ -378,7 +378,10 @@ describe("calendar surface extracted components", () => {
     );
 
     expect(within(view.container).getByText("+1 more")).toBeInTheDocument();
-    expect(within(view.container).getByText("Easy run")).toHaveClass("line-through");
+    expect(within(view.container).getByText("Easy run").closest("[data-testid='completion-title']")).toHaveAttribute(
+      "data-completed",
+      "true"
+    );
     expect(within(view.container).queryByLabelText("Completed")).not.toBeInTheDocument();
     expect(
       within(view.container).queryByRole("button", { name: "Mark session done" })
@@ -427,7 +430,10 @@ describe("calendar surface extracted components", () => {
 
     expect(screen.getByText("Thu")).toBeInTheDocument();
     expect(screen.getByText("6")).toBeInTheDocument();
-    expect(screen.getByText("Easy run")).toHaveClass("line-through");
+    expect(screen.getByText("Easy run").closest("[data-testid='completion-title']")).toHaveAttribute(
+      "data-completed",
+      "true"
+    );
     expect(document.querySelector('[data-calendar-week-row="true"]')).toHaveStyle({
       viewTransitionName: "plan-day-2026-08-06",
     });

@@ -21,6 +21,7 @@ import type {
   PlannerCompletionFactMarker,
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
+import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
 import styles from "@/features/planner/calendar-surface.module.css";
 import { PlannerDayPreviewPopover } from "@/features/planner/planner-day-preview-popover";
 import { PlannerFocusedDayPane } from "@/features/planner/planner-focused-day-pane";
@@ -78,6 +79,7 @@ export interface PlannerCalendarBoardProps {
   focusedDayEntries: PlannerDayDetailEntry[];
   focusedDayCompletionFactMarkers: PlannerCompletionFactMarker[];
   mutationLoadingKey: string | null;
+  optimisticCompletionFacts?: OptimisticCompletionFacts;
   asOfDate: string | null;
   canMutatePlanItems: boolean;
   canMutateEntryOnDay: (entry: PlannerDayDetailEntry, day: string | null) => boolean;
@@ -147,6 +149,7 @@ export function PlannerCalendarBoard({
   focusedDayEntries,
   focusedDayCompletionFactMarkers,
   mutationLoadingKey,
+  optimisticCompletionFacts,
   asOfDate,
   canMutatePlanItems,
   canMutateEntryOnDay,
@@ -243,7 +246,8 @@ export function PlannerCalendarBoard({
               day={focusedDay}
               entries={focusedDayEntries}
               completionFactMarkers={focusedDayCompletionFactMarkers}
-              mutationLoading={Boolean(mutationLoadingKey)}
+              mutationLoadingKey={mutationLoadingKey}
+              optimisticCompletionFacts={optimisticCompletionFacts}
               asOfDate={asOfDate}
               canMutatePlanItems={canMutatePlanItems}
               canMutateEntryOnDay={canMutateEntryOnDay}
@@ -384,7 +388,8 @@ export function PlannerCalendarBoard({
                     day={focusedDay}
                     entries={focusedDayEntries}
                     completionFactMarkers={focusedDayCompletionFactMarkers}
-                    mutationLoading={Boolean(mutationLoadingKey)}
+                    mutationLoadingKey={mutationLoadingKey}
+                    optimisticCompletionFacts={optimisticCompletionFacts}
                     asOfDate={asOfDate}
                     canMutatePlanItems={canMutatePlanItems}
                     canMutateEntryOnDay={canMutateEntryOnDay}
@@ -412,7 +417,8 @@ export function PlannerCalendarBoard({
               popupRef={dayPreviewRef}
               entries={previewDayEntries}
               completionFactMarkers={previewDayCompletionFactMarkers}
-              mutationLoading={Boolean(mutationLoadingKey)}
+              mutationLoadingKey={mutationLoadingKey}
+              optimisticCompletionFacts={optimisticCompletionFacts}
               asOfDate={asOfDate}
               canMutatePlanItems={canMutatePlanItems}
               canMutateEntryOnDay={canMutateEntryOnDay}

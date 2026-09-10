@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type Dispatch, type SetStateAction } from "react";
 import { toast } from "sonner";
 import { completionDisabledReasonCopy } from "@/features/planner/calendar-format";
 import type {
@@ -14,6 +14,11 @@ import { getApiErrorMessage, postJson } from "@/lib/api/client";
 import type { PlannerDraftCommand } from "@/lib/planner/draft-commands";
 import type { PlannerPolicy } from "@/lib/planner/policy";
 import { withPlannerRefreshTimeout } from "@/lib/planner/refresh-timeout";
+import {
+  withOptimisticCompletionFact,
+  withoutOptimisticCompletionFact,
+  type OptimisticCompletionFacts,
+} from "@/lib/planner/optimistic-completion-facts";
 import { captureViewportRect } from "@/lib/xp/events";
 
 interface UsePlannerEntryMutationsArgs {
@@ -24,6 +29,7 @@ interface UsePlannerEntryMutationsArgs {
   effectiveDraftItemEdits: Record<string, { scheduledDate?: string | null } | undefined>;
   effectiveSelectedDay: string | null;
   setMutationLoadingKey: (value: string | null) => void;
+  setOptimisticCompletionFacts: Dispatch<SetStateAction<OptimisticCompletionFacts>>;
   getDateFactDispatchForEntry: (
     entry: PlannerDayDetailEntry,
     selectedDate?: string | null
@@ -54,6 +60,7 @@ export function usePlannerEntryMutations({
   effectiveDraftItemEdits,
   effectiveSelectedDay,
   setMutationLoadingKey,
+  setOptimisticCompletionFacts,
   getDateFactDispatchForEntry,
   completionControlDisabledReasonForEntry,
   runCompletionMutation,
@@ -172,6 +179,14 @@ export function usePlannerEntryMutations({
             effectiveDraftItemEdits[entry.key]?.scheduledDate !== undefined)
       );
 
+      setOptimisticCompletionFacts((overlay) =>
+        withOptimisticCompletionFact(
+          overlay,
+          entry.originalGoalId,
+          selectedDate,
+          desiredFactState === "present"
+        )
+      );
       setMutationLoadingKey(mutationKey);
       let loadingReleased = false;
       const releaseLoading = () => {
@@ -207,6 +222,9 @@ export function usePlannerEntryMutations({
 
         if (!result.ok) {
           toast.error(result.message ?? "Planner completion update failed.");
+          setOptimisticCompletionFacts((overlay) =>
+            withoutOptimisticCompletionFact(overlay, entry.originalGoalId, selectedDate)
+          );
           return;
         }
 
@@ -257,6 +275,9 @@ export function usePlannerEntryMutations({
             );
           });
       } catch (error) {
+        setOptimisticCompletionFacts((overlay) =>
+          withoutOptimisticCompletionFact(overlay, entry.originalGoalId, selectedDate)
+        );
         toast.error(
           error instanceof Error ? error.message : "Planner completion update failed."
         );
@@ -278,6 +299,7 @@ export function usePlannerEntryMutations({
       refreshDraftPreview,
       runCompletionMutation,
       setMutationLoadingKey,
+      setOptimisticCompletionFacts,
     ]
   );
 

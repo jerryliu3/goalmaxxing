@@ -4,12 +4,14 @@ import { CalendarDayPreviewList } from "@/features/planner/calendar-day-preview-
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import type { PlannerCompletionFactMarker } from "@/features/planner/calendar-surface.types";
 import { getPlannerCompletionTogglePresentation } from "@/features/planner/completion-entry-dispatch";
+import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
 
 interface PlannerDayEntriesPanelProps {
   day: string;
   entries: PlannerDayDetailEntry[];
   completionFactMarkers: PlannerCompletionFactMarker[];
-  mutationLoading: boolean;
+  mutationLoadingKey: string | null;
+  optimisticCompletionFacts?: OptimisticCompletionFacts;
   asOfDate: string | null;
   canMutatePlanItems: boolean;
   canMutateEntryOnDay: (entry: PlannerDayDetailEntry, day: string | null) => boolean;
@@ -37,7 +39,8 @@ export function PlannerDayEntriesPanel({
   day,
   entries,
   completionFactMarkers,
-  mutationLoading,
+  mutationLoadingKey,
+  optimisticCompletionFacts,
   asOfDate,
   canMutatePlanItems,
   canMutateEntryOnDay,
@@ -61,7 +64,8 @@ export function PlannerDayEntriesPanel({
       day={day}
       entries={entries}
       completionFactMarkers={completionFactMarkers}
-      mutationLoading={mutationLoading}
+      mutationLoadingKey={mutationLoadingKey}
+      optimisticCompletionFacts={optimisticCompletionFacts}
       getEntryDisplayTitle={getEntryDisplayTitle}
       getEntrySubtitle={getEntrySubtitle}
       isEntryCredited={isEntryCredited}

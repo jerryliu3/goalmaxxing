@@ -26,6 +26,7 @@ import type { PlannerEligibilityNotices } from "@/features/planner/planner-eligi
 import { canOpenPlannerEventDetails } from "@/features/planner/calendar-task-entries";
 import type { MoveSourceCandidate } from "@/features/planner/planner-move-source-options";
 import type { GoalMonthOption } from "@/lib/goals/list-view";
+import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
 import { usePlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 import type { PlannerWorkUnit } from "@cadence/shared/planner/context";
 import type { DuoLaneSubject } from "@cadence/shared/social/duo";
@@ -114,6 +115,7 @@ export interface PlannerCalendarSurfaceLayoutProps {
   focusedDayEntries: PlannerDayDetailEntry[];
   focusedDayCompletionFactMarkers: PlannerCompletionFactMarker[];
   mutationLoadingKey: string | null;
+  optimisticCompletionFacts: OptimisticCompletionFacts;
   canMutatePlanItems: boolean;
   canMutateEntryOnDay: (
     entry: PlannerDayDetailEntry,
@@ -266,6 +268,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     focusedDayEntries,
     focusedDayCompletionFactMarkers,
     mutationLoadingKey,
+    optimisticCompletionFacts,
     canMutatePlanItems,
     canMutateEntryOnDay,
     setLocalSelectedDay,
@@ -483,6 +486,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             focusedDayEntries={focusedDayEntries}
             focusedDayCompletionFactMarkers={focusedDayCompletionFactMarkers}
             mutationLoadingKey={mutationLoadingKey}
+            optimisticCompletionFacts={optimisticCompletionFacts}
             asOfDate={context?.asOfDate ?? null}
             canMutatePlanItems={canMutatePlanItems}
             canMutateEntryOnDay={canMutateEntryOnDay}
@@ -587,6 +591,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         expandedPreviewEntries={expandedPreviewEntries}
         expandedPreviewCompletionFactMarkers={expandedPreviewCompletionFactMarkers}
         mutationLoadingKey={mutationLoadingKey}
+        optimisticCompletionFacts={optimisticCompletionFacts}
         asOfDate={context?.asOfDate ?? null}
         canMutatePlanItems={canMutatePlanItems}
         canMutateEntryOnDay={canMutateEntryOnDay}

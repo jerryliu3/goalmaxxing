@@ -16,6 +16,7 @@ vi.mock("@/features/today/use-checklist-completion-actions", () => ({
     savingGoalId: null,
     recentlyCompletedGoalId: null,
     toggleCompletion: vi.fn(),
+    optimisticFacts: new Map(),
   }),
 }));
 

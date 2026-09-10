@@ -340,14 +340,14 @@ describe("CompletionToggle", () => {
     vi.useRealTimers();
   });
 
-  it("clears optimistic state when the click handler settles", async () => {
+  it("keeps visual-completed true after the click handler settles until completed becomes true", async () => {
     vi.useFakeTimers();
     let resolveMutation!: () => void;
     const mutation = new Promise<void>((resolve) => {
       resolveMutation = resolve;
     });
 
-    render(
+    const { rerender } = render(
       <CompletionToggle
         completed={false}
         aria-label="Mark session done"
@@ -365,7 +365,58 @@ describe("CompletionToggle", () => {
       await mutation;
     });
 
+    expect(toggle).toHaveAttribute("data-visual-completed", "true");
+
+    rerender(
+      <CompletionToggle
+        completed
+        aria-label="Mark session done"
+        onClick={() => mutation}
+      />
+    );
+    expect(toggle).toHaveAttribute("data-visual-completed", "true");
+  });
+
+  it("clears optimistic state when the click handler rejects", async () => {
+    vi.useFakeTimers();
+    let rejectMutation!: (reason?: unknown) => void;
+    const mutation = new Promise<void>((_, reject) => {
+      rejectMutation = reject;
+    });
+
+    render(
+      <CompletionToggle
+        completed={false}
+        aria-label="Mark session done"
+        onClick={() => mutation}
+      />
+    );
+
+    const toggle = screen.getByRole("button", { name: "Mark session done" });
+    commitByHold(toggle);
+    expect(toggle).toHaveAttribute("data-visual-completed", "true");
+    vi.useRealTimers();
+
+    await act(async () => {
+      rejectMutation(new Error("failed"));
+      await mutation.catch(() => undefined);
+    });
+
     expect(toggle).toHaveAttribute("data-visual-completed", "false");
+  });
+
+  it("marks pending without disabling the button", () => {
+    render(
+      <CompletionToggle
+        completed={false}
+        pending
+        aria-label="Mark session done"
+      />
+    );
+
+    const toggle = screen.getByRole("button", { name: "Mark session done" });
+    expect(toggle).toHaveAttribute("aria-busy", "true");
+    expect(toggle).not.toBeDisabled();
   });
 
   it("clears optimistic state with a long fallback timer", () => {

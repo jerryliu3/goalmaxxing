@@ -93,11 +93,7 @@ export function useCompletionHold({
   );
 
   React.useEffect(() => {
-    if (
-      optimisticCompleted !== null &&
-      optimisticBaseStateRef.current !== null &&
-      completed !== optimisticBaseStateRef.current
-    ) {
+    if (optimisticCompleted !== null && completed === optimisticCompleted) {
       clearOptimisticState();
     }
   }, [clearOptimisticState, completed, optimisticCompleted]);
@@ -124,7 +120,7 @@ export function useCompletionHold({
         sourceElement
       );
       if (mutation) {
-        void Promise.resolve(mutation).then(clearOptimisticState, clearOptimisticState);
+        void Promise.resolve(mutation).then(undefined, clearOptimisticState);
       }
     },
     [clearFillTransitionTimer, clearOptimisticState, completed, onCommit]

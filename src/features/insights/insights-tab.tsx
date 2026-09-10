@@ -1040,7 +1040,7 @@ export function InsightsTab({
                 day={aggregateDrilldownDate}
                 entries={[]}
                 completionFactMarkers={aggregateDrilldownMarkers}
-                mutationLoading={false}
+                mutationLoadingKey={null}
                 getEntryDisplayTitle={() => ""}
                 getEntrySubtitle={() => null}
                 isEntryCredited={() => false}

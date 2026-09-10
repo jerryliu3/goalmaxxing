@@ -25,6 +25,12 @@ import {
   canConfirmDraftMove,
 } from "@/features/planner/draft-move-confirm";
 import { cn } from "@/lib/utils";
+import { CompletionTitle } from "@/components/ui/completion-title";
+import {
+  overlayCurrentlyCredited,
+  plannerFactMutationKey,
+  type OptimisticCompletionFacts,
+} from "@/lib/planner/optimistic-completion-facts";
 
 const draftMoveIconButtonClassName = cn(
   "grid size-7 shrink-0 place-items-center rounded-full border border-border text-muted-foreground",
@@ -48,7 +54,8 @@ interface CalendarDayPreviewListProps<
   day: string;
   entries: TEntry[];
   completionFactMarkers: TCompletionFactMarker[];
-  mutationLoading: boolean;
+  mutationLoadingKey: string | null;
+  optimisticCompletionFacts?: OptimisticCompletionFacts;
   getEntryDisplayTitle: (entry: TEntry) => string;
   getEntrySubtitle: (entry: TEntry) => string | null;
   isEntryCredited: (entry: TEntry) => boolean;
@@ -76,7 +83,8 @@ export function CalendarDayPreviewList<
   day,
   entries,
   completionFactMarkers,
-  mutationLoading,
+  mutationLoadingKey,
+  optimisticCompletionFacts,
   getEntryDisplayTitle,
   getEntrySubtitle,
   isEntryCredited,
@@ -118,7 +126,12 @@ export function CalendarDayPreviewList<
             });
             const displayTitle = getEntryDisplayTitle(entry);
             const subtitle = getEntrySubtitle(entry);
-            const credited = isEntryCredited(entry);
+            const credited = overlayCurrentlyCredited(
+              isEntryCredited(entry),
+              optimisticCompletionFacts,
+              entry.originalGoalId,
+              day
+            );
             const immovable = isEntryImmovableForDraft(entry);
             const draftDiffSummary = getEntryDraftDiffSummary(entry);
             const isDraft = Boolean(entry.draftDiffKind);
@@ -132,6 +145,13 @@ export function CalendarDayPreviewList<
                   ? undefined
                   : getWorkPillFillStyle(visual.color, credited);
             const completionToggleState = getCompletionToggleState(entry, day);
+            const currentlyCredited = overlayCurrentlyCredited(
+              completionToggleState.currentlyCredited,
+              optimisticCompletionFacts,
+              entry.originalGoalId,
+              day
+            );
+            const pending = plannerFactMutationKey(entry.key) === mutationLoadingKey;
             const completionMode = planCompletionControlMode(completionToggleState);
             const isSelectedRow = selectedEntryKey === entry.key;
             const showDraftMoveActions =
@@ -243,17 +263,16 @@ export function CalendarDayPreviewList<
                         }}
                       >
                         <CompletionToggle
-                          completed={completionToggleState.currentlyCredited}
-                          pending={mutationLoading}
+                          completed={currentlyCredited}
+                          pending={pending}
                           size="sm"
                           chrome="plain"
                           onClick={(event) => {
                             event.stopPropagation();
                             onToggleCompletion(entry, day, event.currentTarget);
                           }}
-                          disabled={mutationLoading}
                           aria-label={
-                            completionToggleState.currentlyCredited
+                            currentlyCredited
                               ? "Mark session not done"
                               : "Mark session done"
                           }
@@ -297,15 +316,11 @@ export function CalendarDayPreviewList<
                           }
                         >
                           <span className="inline-flex items-center gap-1">
-                            <span
-                              className={
-                                credited || completionToggleState.currentlyCredited
-                                  ? "line-through"
-                                  : undefined
-                              }
+                            <CompletionTitle
+                              completed={credited || currentlyCredited}
                             >
                               {displayTitle}
-                            </span>
+                            </CompletionTitle>
                             {entry.hasLinkedTargets ? (
                               <Link2
                                 className="size-3 shrink-0 text-muted-foreground"
@@ -353,7 +368,7 @@ export function CalendarDayPreviewList<
                           <button
                             type="button"
                             className={draftMoveIconButtonClassName}
-                            disabled={mutationLoading}
+                            disabled={Boolean(mutationLoadingKey)}
                             aria-label={`Cancel moving ${displayTitle} ${draftMoveDirectionLabel}`}
                             title="Undo this move"
                             onClick={(event) => {
@@ -367,7 +382,7 @@ export function CalendarDayPreviewList<
                         <button
                           type="button"
                           className={draftMoveIconButtonClassName}
-                          disabled={mutationLoading}
+                          disabled={Boolean(mutationLoadingKey)}
                           aria-label={`Confirm moving ${displayTitle} ${draftMoveDirectionLabel}`}
                           title="Confirm this move"
                           onClick={(event) => {
@@ -420,12 +435,12 @@ export function CalendarDayPreviewList<
                         <p
                           className={
                             expanded
-                              ? `${planLedgerTitleClass} line-through`
-                              : "truncate font-medium line-through"
+                              ? planLedgerTitleClass
+                              : "truncate font-medium"
                           }
                         >
-                    {marker.goalTitle}
-                  </p>
+                          <CompletionTitle completed>{marker.goalTitle}</CompletionTitle>
+                        </p>
                   {detail ? (
                     <p
                       className={

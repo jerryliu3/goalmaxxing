@@ -61,7 +61,7 @@ describe("PlannerFocusedDayPane", () => {
             owner: "partner",
           },
         ]}
-        mutationLoading={false}
+        mutationLoadingKey={null}
         asOfDate="2026-08-06"
         canMutatePlanItems
         canMutateEntryOnDay={() => true}
@@ -129,7 +129,7 @@ describe("PlannerFocusedDayPane", () => {
         day="2026-08-06"
         entries={[sampleEntry as never]}
         completionFactMarkers={[]}
-        mutationLoading={false}
+        mutationLoadingKey={null}
         asOfDate="2026-08-06"
         canMutatePlanItems
         canMutateEntryOnDay={() => true}
@@ -199,7 +199,7 @@ describe("PlannerFocusedDayPane", () => {
         day="2026-08-06"
         entries={[sampleEntry as never]}
         completionFactMarkers={[]}
-        mutationLoading={false}
+        mutationLoadingKey={null}
         asOfDate="2026-08-06"
         canMutatePlanItems
         canMutateEntryOnDay={() => true}
@@ -225,7 +225,7 @@ describe("PlannerFocusedDayPane", () => {
         day="2026-08-06"
         entries={[sampleEntry as never]}
         completionFactMarkers={[]}
-        mutationLoading={false}
+        mutationLoadingKey={null}
         asOfDate="2026-08-06"
         canMutatePlanItems
         canMutateEntryOnDay={() => true}
@@ -248,7 +248,7 @@ describe("PlannerFocusedDayPane", () => {
         day="2026-08-06"
         entries={[sampleEntry as never]}
         completionFactMarkers={[]}
-        mutationLoading={false}
+        mutationLoadingKey={null}
         asOfDate="2026-08-06"
         canMutatePlanItems
         canMutateEntryOnDay={() => true}
