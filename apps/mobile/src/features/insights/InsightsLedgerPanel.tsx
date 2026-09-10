@@ -1,4 +1,4 @@
-import { getHeatmapScaleHex } from "@cadence/shared/goals/heatmap";
+import { getGazetteerHeatmapScaleHex } from "@cadence/shared/brand/gazetteer";
 import type {
   ProgressContextFact,
   ProgressContextSummary,
@@ -185,7 +185,7 @@ function LedgerMonthHeatmap({
           editGoalId && isLedgerHeatmapDayMutable(date, today)
         );
         const isToday = date === today;
-        const fill = getHeatmapScaleHex(count);
+        const fill = getGazetteerHeatmapScaleHex(count);
         const label = insightsLedgerDayLabel(date, count);
         const cell = (
           <View

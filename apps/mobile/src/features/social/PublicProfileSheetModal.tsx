@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { PublicProfileHeatmapPoint, PublicProfileXpSummary } from "@cadence/shared/social/public-profile";
-import { getHeatmapScaleHex } from "@cadence/shared/goals/heatmap";
+import { getGazetteerHeatmapScaleHex } from "@cadence/shared/brand/gazetteer";
 import { useMemo } from "react";
 import {
   Modal,
@@ -137,7 +137,7 @@ function YearHeatmap({
             height={HEATMAP_CELL_SIZE}
             rx={2}
             ry={2}
-            fill={getHeatmapScaleHex(cell.count)}
+            fill={getGazetteerHeatmapScaleHex(cell.count)}
             stroke={theme.colors.background}
             strokeWidth={0.6}
           />
