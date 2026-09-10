@@ -109,7 +109,7 @@ export function MedalMark({
         x="44"
         y="43"
         textAnchor="middle"
-        fontFamily="IBM Plex Mono, ui-monospace, monospace"
+        fontFamily="var(--font-app-mono), ui-monospace, monospace"
         fontSize="18"
         fontWeight="600"
         fill={ink}

@@ -275,7 +275,7 @@ export function SocialScreen() {
           />
           <View style={{ gap: 2 }}>
             <Text
-              style={{ color: theme.colors.foreground, fontWeight: "700", fontSize: 22 }}
+              style={{ color: theme.colors.foreground, fontWeight: "700", fontSize: 22, fontFamily: theme.fonts.display }}
             >
               Signed in as{" "}
               {viewerProfile.data?.username
@@ -300,7 +300,7 @@ export function SocialScreen() {
               accessibilityLabel={`Open ${partnerLabel} profile`}
             />
             <Text
-              style={{ color: theme.colors.foreground, fontWeight: "700", fontSize: 22 }}
+              style={{ color: theme.colors.foreground, fontWeight: "700", fontSize: 22, fontFamily: theme.fonts.display }}
             >
               Active team with {partnerLabel}
             </Text>
@@ -309,12 +309,13 @@ export function SocialScreen() {
             Partner id: {activePartner.partnerId}
           </Text>
           <View style={[styles.teamXpSummary, { borderColor: theme.colors.border }]}>
-            <Text style={{ color: theme.colors.mutedForeground }}>Team XP</Text>
+            <Text style={{ color: theme.colors.mutedForeground, fontFamily: theme.fonts.sans }}>Team XP</Text>
             <Text
               style={{
                 color: theme.colors.foreground,
                 fontSize: 20,
                 fontWeight: "700",
+                fontFamily: theme.fonts.mono,
               }}
             >
               {activePartner.teamXp.toLocaleString()} XP
@@ -387,7 +388,7 @@ export function SocialScreen() {
               accessibilityLabel={`Open ${pendingLabel} profile`}
             />
             <Text
-              style={{ color: theme.colors.foreground, fontWeight: "700", fontSize: 22 }}
+              style={{ color: theme.colors.foreground, fontWeight: "700", fontSize: 22, fontFamily: theme.fonts.display }}
             >
               Incoming invite from {pendingLabel}
             </Text>
@@ -436,7 +437,7 @@ export function SocialScreen() {
               accessibilityLabel={`Open ${pendingLabel} profile`}
             />
             <Text
-              style={{ color: theme.colors.foreground, fontWeight: "700", fontSize: 22 }}
+              style={{ color: theme.colors.foreground, fontWeight: "700", fontSize: 22, fontFamily: theme.fonts.display }}
             >
               Invite pending with {pendingLabel}
             </Text>
@@ -447,7 +448,7 @@ export function SocialScreen() {
         </View>
       ) : (
         <View style={[styles.card, { borderColor: theme.colors.border }]}>
-          <Text style={{ color: theme.colors.foreground, fontWeight: "700" }}>
+          <Text style={{ color: theme.colors.foreground, fontWeight: "700", fontFamily: theme.fonts.display }}>
             Invite a partner
           </Text>
           <TextInput

@@ -89,7 +89,7 @@ export function GoalCard({
           >
             {goalCategoryLabel}
           </Badge>
-          <h3 className="truncate text-sm font-semibold">{goal.title}</h3>
+          <h3 className="truncate font-display text-sm font-semibold">{goal.title}</h3>
           {hasNoEndDate ? (
             <Badge variant="outline" className="h-4 px-1 text-[10px]">
               No end date

@@ -229,7 +229,7 @@ export function ChecklistScreen({
             }
             accessibilityLabel={`Open ${item.label} profile`}
           />
-          <Text style={{ color: theme.colors.foreground, fontWeight: "700", fontSize: 24 }}>
+          <Text style={{ color: theme.colors.foreground, fontWeight: "700", fontSize: 24, fontFamily: theme.fonts.display }}>
             {item.label}
           </Text>
           {item.readOnly ? (

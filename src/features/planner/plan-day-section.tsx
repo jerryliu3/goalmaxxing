@@ -31,7 +31,7 @@ export function PlanDaySection({
         <span className="flex min-w-0 items-center gap-2">
           {title}
           {typeof count === "number" ? (
-            <span className="text-muted-foreground">{count}</span>
+            <span className="font-mono text-muted-foreground">{count}</span>
           ) : null}
         </span>
         <ChevronDown

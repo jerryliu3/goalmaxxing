@@ -14,7 +14,7 @@ function RecoveryCard() {
           <span className="inline-flex size-9 items-center justify-center rounded-xl bg-recover text-primary-foreground">
             <RotateCcw className="size-4" />
           </span>
-          <h3 className="mt-4 text-xl font-semibold tracking-tight">
+          <h3 className="mt-4 font-display text-xl font-semibold tracking-tight">
             Recover your rhythm
           </h3>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -67,7 +67,7 @@ export function LandingFeatureBento() {
           <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
             Adapt without starting over
           </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
             Support when the plan gets complicated.
           </h2>
         </div>

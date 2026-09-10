@@ -118,7 +118,7 @@ export function DraggableSession({
           {done ? (
             <NestCompletionMark done color={theme.colors.primaryForeground} size={14} />
           ) : null}
-          <Text style={{ color: theme.colors.primaryForeground, flex: 1 }}>{label}</Text>
+          <Text style={{ color: theme.colors.primaryForeground, flex: 1, fontFamily: theme.fonts.display }}>{label}</Text>
         </Pressable>
       </Animated.View>
     </GestureDetector>

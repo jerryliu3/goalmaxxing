@@ -75,7 +75,7 @@ export function FeedEventCard({ event }: { event: SocialFeedEvent }) {
               size="sm"
               alt={`${actorName} avatar`}
             />
-            <p className="truncate text-xl font-medium">{actorName}</p>
+            <p className="truncate font-display text-xl font-medium">{actorName}</p>
           </PublicProfileTrigger>
           <span className="shrink-0 text-[11px] text-muted-foreground">
             {formatDistanceToNow(new Date(event.createdAt), { addSuffix: true })}

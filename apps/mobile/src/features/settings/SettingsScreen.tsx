@@ -218,7 +218,7 @@ export function SettingsScreen() {
           />
           <View style={{ gap: 4, flex: 1 }}>
             <Text
-              style={{ color: theme.colors.foreground, fontWeight: "700", fontSize: 24 }}
+              style={{ color: theme.colors.foreground, fontWeight: "700", fontSize: 24, fontFamily: theme.fonts.display }}
             >
               {profile.data?.display_name ?? profile.data?.username ?? "Cadence user"}
             </Text>

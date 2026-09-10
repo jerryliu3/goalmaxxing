@@ -270,7 +270,9 @@ document does not redesign it.
 - Light-first cool lavender-gray (`oklch` hue ~286) and blue primary (~255) in
   [`src/app/globals.css`](../../src/app/globals.css). Dark tokens exist; there
   is no product theme switcher.
-- Geist Sans / Mono. Radius `0.875rem`. Motion 120 / 200 / 560ms.
+- Original type: Geist Sans / Mono on `font-sans`, `font-display`, and
+  `font-mono`. Gazetteer overlay: Newsreader names, Source Sans 3 chrome,
+  IBM Plex Mono figures. Radius `0.875rem`. Motion 120 / 200 / 560ms.
 - shadcn / Radix primitives. **Card with `ring-1` is the default atom.**
 - Surface chips: blue/sky gradients, inset “pressed” shadows, 10px labels.
 - Sonner toasts, bottom-right.

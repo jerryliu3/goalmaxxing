@@ -88,12 +88,12 @@ function MonthHeatmapDay({
                 : "none",
             }}
           />
-          <span className="relative z-[1]">{dayNumber}</span>
+          <span className="relative z-[1] font-display">{dayNumber}</span>
         </span>
       ) : (
         <span
           className={cn(
-            "flex h-full w-full items-center justify-center",
+            "flex h-full w-full items-center justify-center font-display",
             DAY_INNER_ROUNDED_CLASS,
             getHeatmapScaleClass(value)
           )}
@@ -178,7 +178,7 @@ export function MonthHeatmap({
           onPrevious={onPreviousMonth}
           onNext={onNextMonth}
           center={
-            <p className="min-w-[120px] text-center text-sm font-medium">
+            <p className="min-w-[120px] text-center font-display text-sm font-medium">
               {format(month, "MMMM yyyy")}
             </p>
           }
@@ -186,14 +186,14 @@ export function MonthHeatmap({
           nextAriaLabel="Next month"
         />
       ) : showMonthLabel ? (
-        <p className="text-sm font-medium">{format(month, "MMMM yyyy")}</p>
+        <p className="font-display text-sm font-medium">{format(month, "MMMM yyyy")}</p>
       ) : null}
       <div className="w-full space-y-1 [--month-cell-size:clamp(2.2rem,4.1vw,3rem)]">
         <div className="grid w-full grid-cols-[repeat(7,var(--month-cell-size))] justify-between gap-y-1">
           {weekdayHeaders.map((label) => (
             <div
               key={label}
-              className="flex h-4 w-[var(--month-cell-size)] items-end justify-center text-[10px] font-medium text-muted-foreground"
+              className="flex h-4 w-[var(--month-cell-size)] items-end justify-center font-sans text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
             >
               {label}
             </div>

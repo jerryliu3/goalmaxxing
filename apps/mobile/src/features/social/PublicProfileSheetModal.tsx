@@ -236,7 +236,7 @@ export function PublicProfileSheetModal({
           <View style={styles.header}>
             <Text
               accessibilityRole="header"
-              style={{ color: theme.colors.foreground, fontSize: 18, fontWeight: "700" }}
+              style={{ color: theme.colors.foreground, fontSize: 18, fontWeight: "700", fontFamily: theme.fonts.display }}
             >
               Public profile
             </Text>
@@ -284,6 +284,7 @@ export function PublicProfileSheetModal({
                         style={{
                           color: theme.colors.foreground,
                           fontWeight: "700",
+                          fontFamily: theme.fonts.display,
                           fontSize: 22,
                         }}
                       >
@@ -324,11 +325,12 @@ export function PublicProfileSheetModal({
                             color: theme.colors.foreground,
                             fontWeight: "700",
                             fontSize: 18,
+                            fontFamily: theme.fonts.display,
                           }}
                         >
                           XP progress
                         </Text>
-                        <Text style={{ color: theme.colors.mutedForeground }}>
+                        <Text style={{ color: theme.colors.mutedForeground, fontFamily: theme.fonts.mono }}>
                           {bundle.xp.totalXp.toLocaleString()} XP total
                         </Text>
                         <View

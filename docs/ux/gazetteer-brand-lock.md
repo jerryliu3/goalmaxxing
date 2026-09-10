@@ -19,14 +19,22 @@ Native consumes the same hexes through `apps/mobile/src/theme.ts`.
 
 ## Type (Gazetteer)
 
+Production applies the study’s three roles through existing tokens
+(`--font-app-display`, `--font-app-sans`, `--font-app-mono`) and Tailwind
+`font-display` / `font-sans` / `font-mono`. Do not add a fourth family.
+
 - **Display / names:** Newsreader. Use on destination titles, day names, and
-  work-row titles. Native loads `Newsreader_600SemiBold` via `expo-font`.
+  work-row titles (`font-display`). Native loads `Newsreader_600SemiBold` via `expo-font`.
 - **Labels / running heads:** Source Sans 3, uppercase tracking on kickers,
-  tabs, and meta. Chrome sans must resolve through `--font-app-sans`, not a
+  tabs, and meta (`font-sans`). Chrome sans must resolve through `--font-app-sans`, not a
   baked Geist utility. Native loads Source Sans 3 regular and semibold.
-- **Rise / figures:** IBM Plex Mono. Native loads `IBMPlexMono_500Medium`.
-- Do not put Newsreader on chrome labels.
+- **Rise / figures:** IBM Plex Mono (`font-mono`). Native loads `IBMPlexMono_500Medium`.
+- Do not put Newsreader on chrome labels (weekday kickers, tabs, section
+  running heads). Day numbers stay display; weekday letters stay sans.
   System serif/sans/mono remain the fallback until fonts load.
+
+Original keeps Geist on the same three roles, so tagging a name `font-display`
+does not restyle Original — it only reveals Newsreader when Gazetteer is on.
 
 ## Color (Gazetteer)
 

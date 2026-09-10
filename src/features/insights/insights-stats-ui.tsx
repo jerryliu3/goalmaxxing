@@ -97,7 +97,7 @@ export function InsightsStatPlaque({
           label
         )}
       </p>
-      <p className="mt-1 font-display text-2xl font-semibold tracking-tight">{value}</p>
+      <p className="mt-1 font-mono text-2xl font-semibold tracking-tight">{value}</p>
       {hint}
     </li>
   );

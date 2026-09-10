@@ -256,7 +256,7 @@ export function GoalSharingSection({
                   <CardContent className="space-y-2 py-4">
                     <div className="flex items-center justify-between gap-2">
                       <div>
-                        <p className="text-sm font-semibold">{goal.title}</p>
+                        <p className="font-display text-sm font-semibold">{goal.title}</p>
                         <p className="text-xs text-muted-foreground">
                           Shared with {shares.length}{" "}
                           {shares.length === 1 ? "person" : "people"}
@@ -368,7 +368,7 @@ export function GoalSharingSection({
                   <CardContent className="space-y-3 py-4">
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold">{goal.title}</p>
+                        <p className="font-display text-sm font-semibold">{goal.title}</p>
                         <p className="text-xs text-muted-foreground">
                           shared by @{owner?.username ?? "unknown"}
                         </p>

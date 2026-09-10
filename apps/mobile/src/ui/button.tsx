@@ -30,7 +30,7 @@ export function PrimaryButton({
         },
       ]}
     >
-      <Text style={[styles.label, { color: theme.colors.primaryForeground }]}>
+      <Text style={[styles.label, { color: theme.colors.primaryForeground, fontFamily: theme.fonts?.sansMedium ?? theme.fonts?.sans }]}>
         {label}
       </Text>
     </Pressable>

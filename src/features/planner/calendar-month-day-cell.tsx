@@ -397,7 +397,7 @@ export function CalendarMonthDayCell<
           >
             <span
               className={cn(
-                "block font-display text-[11px] font-medium uppercase tracking-wide",
+                "block font-sans text-[11px] font-medium uppercase tracking-[0.12em]",
                 planFilledChromeMetaClass({ inMonth, isToday, isSelected })
               )}
             >
