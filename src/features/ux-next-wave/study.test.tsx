@@ -140,64 +140,71 @@ describe("Next Wave concept study", () => {
   });
 });
 
-describe("goal creation interaction", () => {
-  it("builds a recurring goal and uses the shared review before demo creation", () => {
+describe("distinct goal creation studies", () => {
+  it("keeps each concept's own creation surface inside a dialog", () => {
     render(<NextWaveStudy />);
     fireEvent.click(screen.getByRole("button", { name: /Create goal/ }));
-    fireEvent.change(screen.getByLabelText("I want to…"), {
-      target: { value: "Run regularly" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    fireEvent.click(screen.getByRole("button", { name: "More completions" }));
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    fireEvent.click(screen.getByRole("button", { name: "Review goals" }));
-    expect(screen.getByLabelText("Goal name")).toHaveValue("Run regularly");
-    expect(screen.getByText("4 completions per week")).toBeInTheDocument();
-    fireEvent.click(
-      screen.getByRole("button", { name: "Create goal in demo" }),
-    );
-    expect(screen.getByText("1 goal created in the demo")).toBeInTheDocument();
-  });
-  it("sends multiple names to the same editable review cards", () => {
-    render(<NextWaveStudy />);
-    fireEvent.click(screen.getByRole("button", { name: /Create goal/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Multiple goals" }));
-    fireEvent.change(screen.getByLabelText("One goal on each line"), {
-      target: { value: "Read books\nBuild a portfolio" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Review goals" }));
-    expect(screen.getAllByLabelText("Goal name")).toHaveLength(2);
-    fireEvent.change(screen.getAllByLabelText("Goal name")[0], {
-      target: { value: "" },
-    });
+    expect(screen.getByRole("dialog")).toHaveClass("goal-prism");
     expect(
-      screen.getByRole("button", { name: "Create 2 goals in demo" }),
-    ).toBeDisabled();
-  });
-
-  it("lets milestone goals be reordered before the shared review", () => {
-    render(<NextWaveStudy />);
-    fireEvent.click(screen.getByRole("button", { name: /Create goal/ }));
-    fireEvent.change(screen.getByLabelText("I want to…"), {
-      target: { value: "Launch my portfolio" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+      screen.getByText("Give your next chapter a center."),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText("Close goal builder"));
     fireEvent.click(
-      screen.getByRole("button", { name: /Reach milestones/ }),
+      within(
+        screen.getByRole("navigation", { name: "Design concepts" }),
+      ).getByRole("button", { name: /Tempo/ }),
     );
-    fireEvent.click(screen.getByRole("button", { name: "Move milestone 2 up" }));
-    expect(screen.getByLabelText("Milestone 1")).toHaveValue("Build momentum");
-    expect(screen.getByLabelText("Milestone 2")).toHaveValue("First step");
+    fireEvent.click(screen.getByRole("button", { name: /Create goal/ }));
+    expect(screen.getByText("How often feels true?")).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText("Close goal builder"));
+    fireEvent.click(
+      within(
+        screen.getByRole("navigation", { name: "Design concepts" }),
+      ).getByRole("button", { name: /Weave/ }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Create goal/ }));
+    expect(screen.getByText("GOAL THREAD")).toBeInTheDocument();
   });
 
-  it("starts a fresh draft after closing the builder", () => {
+  it("creates a prism preview and starts a fresh draft after close", () => {
     render(<NextWaveStudy />);
     fireEvent.click(screen.getByRole("button", { name: /Create goal/ }));
-    fireEvent.change(screen.getByLabelText("I want to…"), {
+    fireEvent.change(screen.getByLabelText("Name your goal"), {
       target: { value: "A draft I will abandon" },
     });
+    fireEvent.click(screen.getByRole("button", { name: "Create in demo" }));
+    expect(screen.getByText("Preview created")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Create another" }));
     fireEvent.click(screen.getByLabelText("Close goal builder"));
     fireEvent.click(screen.getByRole("button", { name: /Create goal/ }));
-    expect(screen.getByLabelText("I want to…")).toHaveValue("");
+    expect(screen.getByLabelText("Name your goal")).toHaveValue("");
+  });
+
+  it("lets Weave name milestones and Script turn a sentence into a plan", () => {
+    render(<NextWaveStudy />);
+    fireEvent.click(
+      within(
+        screen.getByRole("navigation", { name: "Design concepts" }),
+      ).getByRole("button", { name: /Weave/ }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Create goal/ }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "A thread with milestones" }),
+    );
+    fireEvent.change(screen.getByLabelText("Milestone 1"), {
+      target: { value: "Publish" },
+    });
+    expect(screen.getByLabelText("Milestone 1")).toHaveValue("Publish");
+    fireEvent.click(screen.getByLabelText("Close goal builder"));
+    fireEvent.click(
+      within(
+        screen.getByRole("navigation", { name: "Design concepts" }),
+      ).getByRole("button", { name: /Script/ }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Create goal/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Read more books" }));
+    expect(
+      screen.getByText("will be completed 3 times each week."),
+    ).toBeInTheDocument();
   });
 });
