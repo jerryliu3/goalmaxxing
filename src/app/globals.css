@@ -461,11 +461,12 @@ body {
 @keyframes plan-view-fade-in {
   from {
     opacity: 0;
+    transform: translateY(0.6rem);
   }
 }
 
 .plan-view-swap {
-  animation: plan-view-fade-in 220ms var(--motion-ease-emphasized) both;
+  animation: plan-view-fade-in 320ms var(--motion-ease-emphasized) both;
 }
 
 ::view-transition-old(.plan-view-fade) {

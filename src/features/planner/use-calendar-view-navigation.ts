@@ -8,7 +8,6 @@ import type {
   PlannerCalendarViewMode,
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
-import { runPlanViewTransition } from "@/features/planner/plan-view-transition";
 
 export interface OpenGoalInstance {
   entryKey: string;
@@ -205,9 +204,7 @@ export function useCalendarViewNavigation({
       }
       monthScrollAlignmentKeyRef.current = null;
       calendarHorizontalAlignmentKeyRef.current = null;
-      runPlanViewTransition(() => {
-        onRenderedViewModeChange(nextViewMode);
-      });
+      onRenderedViewModeChange(nextViewMode);
       onSelectedDayChange(focusedDay, "push", nextViewMode, { alignMonth: true });
     },
     [

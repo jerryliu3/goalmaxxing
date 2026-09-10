@@ -75,7 +75,6 @@ import {
 import { PlannerCalendarSurfaceLayout } from "@/features/planner/planner-calendar-surface-layout";
 import { persistImmediatePlannerMove } from "@/lib/planner/persist-immediate-move";
 import { canConfirmDraftMove, resolveStagedDraftMove } from "@/features/planner/draft-move-confirm";
-import { runPlanViewTransition } from "@/features/planner/plan-view-transition";
 
 
 export function CalendarSurface({
@@ -146,9 +145,7 @@ export function CalendarSurface({
       return;
     }
     committedViewModeRef.current = routeViewMode;
-    runPlanViewTransition(() => {
-      setViewMode(routeViewMode);
-    });
+    setViewMode(routeViewMode);
   }, [routeViewMode]);
   useEffect(() => {
     const resetTimer = window.setTimeout(() => setLocalSelectedDay(null), 0);
