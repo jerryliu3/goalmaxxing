@@ -11,7 +11,19 @@ export default function UxHubPage() {
           UX labs
         </h1>
         <ul className="mt-10 space-y-4">
-          <li><Link className="text-lg font-semibold underline" href="/ux/interaction-lab">Interaction Lab — Fold, Switchboard, Glide</Link><p className="mt-1 text-sm text-muted-foreground">Three practical interaction systems, with full calendar views, goal creation, large-list navigation, combined progress and community.</p></li>
+          <li>
+            <Link
+              className="text-lg font-semibold underline"
+              href="/ux/interaction-lab"
+            >
+              Interaction Lab — five practical interaction systems
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Fold, Switchboard, Index and Lens, plus optional tactile feedback
+              in Glide; with full calendar views, goal creation, large-list
+              navigation, combined progress and community.
+            </p>
+          </li>
           <li>
             <Link
               className="text-lg font-semibold underline"
