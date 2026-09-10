@@ -372,7 +372,7 @@ export function CalendarDayPreviewList<
                           title="Confirm this move"
                           onClick={(event) => {
                             event.stopPropagation();
-                            onConfirmDraftMove(entry, day);
+                            onConfirmDraftMove?.(entry, day);
                           }}
                         >
                           <Check className="size-4" strokeWidth={2.5} aria-hidden />

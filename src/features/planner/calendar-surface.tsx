@@ -5,7 +5,6 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
@@ -100,9 +99,12 @@ export function CalendarSurface({
     const cached = readTabDataCache<PlannerContextPayload>(
       buildPlannerContextCacheKey(month)
     );
-    if (cached) {
-      setContext(cached);
+    if (!cached) {
+      return;
     }
+    queueMicrotask(() => {
+      setContext(cached);
+    });
   }, [month]);
   const [loading, setLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
