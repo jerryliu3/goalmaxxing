@@ -1,1 +1,10 @@
-{"extends":"../../../tsconfig.base.json","compilerOptions":{"lib":["dom","dom.iterable","esnext"],"jsx":"react-jsx","noEmit":true,"paths":{"@/*":["../../../src/*"]}},"include":["./**/*.ts","./**/*.tsx"]}
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "paths": { "@/*": ["../../../src/*"] }
+  },
+  "include": ["./**/*.ts", "./**/*.tsx"]
+}
