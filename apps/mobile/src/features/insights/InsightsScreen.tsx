@@ -1,8 +1,6 @@
-import { getHeatmapScaleHex } from "@cadence/shared/goals/heatmap";
 import { format } from "date-fns";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import Svg, { Rect } from "react-native-svg";
 import { useTheme } from "../../theme";
 import { LoadingScreen, Screen } from "../../ui/screen";
 import { useSession } from "../../lib/session";
@@ -22,63 +20,9 @@ import {
 } from "../duo/lane-pager";
 import { buildInsightsLaneRenderModel } from "./insights-lane-render-model";
 import { InsightsLaneSection } from "./InsightsLaneSection";
+import { InsightsLedgerPanel } from "./InsightsLedgerPanel";
 import { useInsightsLaneData } from "./use-insights-lane-data";
 import { usePublicProfileSheet } from "../social/PublicProfileSheetProvider";
-
-function InsightsActivitySummaryRow({
-  totalActivities,
-  activeDays,
-  peakDayActivities,
-}: {
-  totalActivities: number;
-  activeDays: number;
-  peakDayActivities: number;
-}) {
-  const theme = useTheme();
-  return (
-    <View style={styles.summaryRow}>
-      <View
-        style={[
-          styles.summaryCard,
-          { borderColor: theme.colors.border, backgroundColor: theme.colors.card },
-        ]}
-      >
-        <Text style={{ color: theme.colors.mutedForeground, fontSize: 12 }}>
-          Activities
-        </Text>
-        <Text style={{ color: theme.colors.foreground, fontWeight: "700" }}>
-          {totalActivities}
-        </Text>
-      </View>
-      <View
-        style={[
-          styles.summaryCard,
-          { borderColor: theme.colors.border, backgroundColor: theme.colors.card },
-        ]}
-      >
-        <Text style={{ color: theme.colors.mutedForeground, fontSize: 12 }}>
-          Active days
-        </Text>
-        <Text style={{ color: theme.colors.foreground, fontWeight: "700" }}>
-          {activeDays}
-        </Text>
-      </View>
-      <View
-        style={[
-          styles.summaryCard,
-          { borderColor: theme.colors.border, backgroundColor: theme.colors.card },
-        ]}
-      >
-        <Text style={{ color: theme.colors.mutedForeground, fontSize: 12 }}>
-          Best day
-        </Text>
-        <Text style={{ color: theme.colors.foreground, fontWeight: "700" }}>
-          {peakDayActivities}
-        </Text>
-      </View>
-    </View>
-  );
-}
 
 export function InsightsScreen() {
   const theme = useTheme();
@@ -88,6 +32,7 @@ export function InsightsScreen() {
     useDuoSurfaceScope("insights");
   const { state } = useDuo();
   const activePartner = hasActivePartner ? state.activePartner : null;
+  const partnerId = activePartner?.partnerId ?? null;
   useReportMobileDuoScopeViewed({
     enabled: ready,
     surface: "insights",
@@ -106,11 +51,13 @@ export function InsightsScreen() {
   const viewerLane = useInsightsLaneData({
     subject: viewerSubject,
     month,
+    partnerId,
     enabled: true,
   });
   const partnerLane = useInsightsLaneData({
     subject: partnerSubject ?? viewerSubject,
     month,
+    partnerId,
     enabled: Boolean(activePartner) && scope !== "me",
   });
   const lanes = resolveMobileDuoLaneSubjects({
@@ -122,10 +69,6 @@ export function InsightsScreen() {
   const useLanePager = shouldUseLanePager(lanes.length);
   const lanePageWidth = resolveLanePageWidth(viewportWidth);
   const lanePageSnapInterval = resolveLanePageSnapInterval(lanePageWidth);
-
-  const cell = 16;
-  const gap = 4;
-  const width = 7 * (cell + gap);
 
   if (!ready) {
     return <LoadingScreen label="Loading Progress…" />;
@@ -228,8 +171,6 @@ export function InsightsScreen() {
               );
             }
 
-            const rows = Math.ceil((laneData.offset + laneData.days.length) / 7);
-            const height = rows * (cell + gap);
             return (
               <View key={lane.id} style={[styles.lanePage, { width: lanePageWidth }]}>
                 <InsightsLaneSection
@@ -240,28 +181,15 @@ export function InsightsScreen() {
                   readOnly={Boolean(renderModel.heading?.readOnly)}
                   onOpenProfile={openPublicProfile}
                 >
-                  <InsightsActivitySummaryRow
-                    totalActivities={laneData.monthSummary.totalActivities}
-                    activeDays={laneData.monthSummary.activeDays}
-                    peakDayActivities={laneData.monthSummary.peakDayActivities}
+                  <InsightsLedgerPanel
+                    goals={laneData.goals}
+                    facts={laneData.facts}
+                    summaries={laneData.summaries}
+                    days={laneData.days}
+                    offset={laneData.offset}
+                    readOnly={Boolean(renderModel.heading?.readOnly) || lane.readOnly}
+                    onToggleCompletion={laneData.toggleCompletion ?? undefined}
                   />
-                  <Svg width={width} height={height}>
-                    {laneData.days.map((date, index) => {
-                      const x = ((laneData.offset + index) % 7) * (cell + gap);
-                      const y = Math.floor((laneData.offset + index) / 7) * (cell + gap);
-                      return (
-                        <Rect
-                          key={date}
-                          x={x}
-                          y={y}
-                          width={cell}
-                          height={cell}
-                          rx={3}
-                          fill={getHeatmapScaleHex(laneData.factsByDay[date] ?? 0)}
-                        />
-                      );
-                    })}
-                  </Svg>
                 </InsightsLaneSection>
               </View>
             );
@@ -328,9 +256,7 @@ export function InsightsScreen() {
           );
         }
 
-        const rows = Math.ceil((laneData.offset + laneData.days.length) / 7);
-        const height = rows * (cell + gap);
-          return (
+        return (
             <InsightsLaneSection
               key={lane.id}
               showHeading={Boolean(renderModel.heading)}
@@ -340,28 +266,15 @@ export function InsightsScreen() {
               readOnly={Boolean(renderModel.heading?.readOnly)}
               onOpenProfile={openPublicProfile}
             >
-              <InsightsActivitySummaryRow
-                totalActivities={laneData.monthSummary.totalActivities}
-                activeDays={laneData.monthSummary.activeDays}
-                peakDayActivities={laneData.monthSummary.peakDayActivities}
+              <InsightsLedgerPanel
+                goals={laneData.goals}
+                facts={laneData.facts}
+                summaries={laneData.summaries}
+                days={laneData.days}
+                offset={laneData.offset}
+                readOnly={Boolean(renderModel.heading?.readOnly) || lane.readOnly}
+                onToggleCompletion={laneData.toggleCompletion ?? undefined}
               />
-              <Svg width={width} height={height}>
-                {laneData.days.map((date, index) => {
-                  const x = ((laneData.offset + index) % 7) * (cell + gap);
-                  const y = Math.floor((laneData.offset + index) / 7) * (cell + gap);
-                  return (
-                    <Rect
-                      key={date}
-                      x={x}
-                      y={y}
-                      width={cell}
-                      height={cell}
-                      rx={3}
-                      fill={getHeatmapScaleHex(laneData.factsByDay[date] ?? 0)}
-                    />
-                  );
-                })}
-              </Svg>
             </InsightsLaneSection>
           );
         })
@@ -372,18 +285,6 @@ export function InsightsScreen() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", justifyContent: "space-between" },
-  summaryRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  summaryCard: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    gap: 2,
-  },
   lanePagerContent: {
     paddingRight: 12,
     gap: 12,

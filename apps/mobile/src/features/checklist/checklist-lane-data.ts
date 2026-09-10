@@ -22,10 +22,11 @@ export interface MobileGoal {
   photo_path: string | null;
   archived_at: string | null;
   is_deleted: boolean;
+  color?: string | null;
 }
 
 export const MOBILE_CHECKLIST_GOALS_SELECT =
-  "id,owner_id,title,description,category,frequency_type,recurrence_interval,target_count,start_date,end_date,team_id,photo_path,archived_at,is_deleted";
+  "id,owner_id,title,description,category,color,frequency_type,recurrence_interval,target_count,start_date,end_date,team_id,photo_path,archived_at,is_deleted";
 
 export const CHECKLIST_COMPLETION_ERROR_MESSAGE =
   "Could not update completion. Try again.";
