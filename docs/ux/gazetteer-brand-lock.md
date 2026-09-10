@@ -13,8 +13,9 @@ in the `gm_ui_style` cookie and applied on `html` (`data-ui-style` plus an
 optional overlay class such as `.gm-gazetteer`). You → Appearance and the
 marketing header share the same picker.
 
-Canonical Gazetteer palette lives in `src/lib/brand/gazetteer.ts` and is
-applied only when Gazetteer is selected.
+Canonical Gazetteer palette lives in `packages/shared/src/brand/gazetteer.ts`.
+Web re-exports it from `src/lib/brand/gazetteer.ts` when Gazetteer is selected.
+Native consumes the same hexes through `apps/mobile/src/theme.ts`.
 
 ## Type (Gazetteer)
 
