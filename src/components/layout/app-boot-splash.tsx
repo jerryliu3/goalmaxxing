@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { LandingWowMountain } from "@/components/landing/landing-wow-mountain";
 import { getMonthInTimezone } from "@/features/planner/calendar-format";
 import type { PlannerContextPayload } from "@/features/planner/calendar-surface.types";
@@ -16,6 +16,21 @@ import { resolveUserTimezone } from "@/lib/dates/timezone";
 export const APP_BOOT_READY_STORAGE_KEY = "gm-boot-ready";
 const BOOT_TIMEOUT_MS = 8000;
 const CLIMB_LOOP_MS = 14000;
+
+function subscribeToBootReady() {
+  return () => undefined;
+}
+
+function getBootReadySnapshot() {
+  return (
+    typeof window !== "undefined" &&
+    window.sessionStorage.getItem(APP_BOOT_READY_STORAGE_KEY) === "1"
+  );
+}
+
+function getServerBootReadySnapshot() {
+  return true;
+}
 
 async function warmPlannerContext() {
   const month = getMonthInTimezone(resolveUserTimezone());
@@ -47,7 +62,6 @@ function BootClimbAnimation() {
 
   useEffect(() => {
     if (reduceMotion) {
-      setProgress(0.42);
       return;
     }
     let frame = 0;
@@ -66,27 +80,31 @@ function BootClimbAnimation() {
       data-testid="app-boot-climb"
       className="relative h-64 w-[min(100vw-2rem,32rem)] overflow-hidden rounded-[20px] border border-border sm:h-80"
     >
-      <LandingWowMountain progress={progress} />
+      <LandingWowMountain progress={reduceMotion ? 0.42 : progress} />
     </div>
   );
 }
 
 export function AppBootSplash() {
-  const [visible, setVisible] = useState(false);
+  const bootReady = useSyncExternalStore(
+    subscribeToBootReady,
+    getBootReadySnapshot,
+    getServerBootReadySnapshot
+  );
+  const [bootComplete, setBootComplete] = useState(false);
 
   useEffect(() => {
-    if (window.sessionStorage.getItem(APP_BOOT_READY_STORAGE_KEY) === "1") {
+    if (bootReady || bootComplete) {
       return;
     }
 
     let cancelled = false;
-    setVisible(true);
     const finish = () => {
       if (cancelled) {
         return;
       }
       window.sessionStorage.setItem(APP_BOOT_READY_STORAGE_KEY, "1");
-      setVisible(false);
+      setBootComplete(true);
     };
     const timeoutId = window.setTimeout(finish, BOOT_TIMEOUT_MS);
     void warmPlannerContext()
@@ -99,9 +117,9 @@ export function AppBootSplash() {
       cancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, []);
+  }, [bootComplete, bootReady]);
 
-  if (!visible) {
+  if (bootReady || bootComplete) {
     return null;
   }
 

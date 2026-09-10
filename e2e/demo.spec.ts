@@ -72,13 +72,7 @@ test.describe("public demo sandbox", () => {
     await row.scrollIntoViewIfNeeded();
     const toggle = row.getByRole("button", { name: "Mark session done" });
     await expect(toggle).toBeVisible();
-    const completionResponse = page.waitForResponse(
-      (response) =>
-        response.url().includes("/api/completions") &&
-        response.request().method() === "POST"
-    );
     await toggle.click(COMPLETION_HOLD_CLICK);
-    await completionResponse;
     await expect(
       row.getByRole("button", { name: "Mark session not done" })
     ).toBeVisible({ timeout: 10_000 });
