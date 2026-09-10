@@ -1,6 +1,6 @@
 import { FlashList } from "@shopify/flash-list";
 import { Link } from "expo-router";
-import { type ReactNode, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Modal,
   Pressable,
@@ -44,9 +44,11 @@ import { ChecklistGoalRow } from "./ChecklistGoalRow";
 import { useChecklistClock, useChecklistLaneData } from "./use-checklist-data";
 
 export function ChecklistScreen({
-  plannerNavigation,
+  embedded = false,
+  asOfDate: asOfDateOverride,
 }: {
-  plannerNavigation?: ReactNode;
+  embedded?: boolean;
+  asOfDate?: string;
 } = {}) {
   const theme = useTheme();
   const { userId } = useSession();
@@ -69,7 +71,7 @@ export function ChecklistScreen({
     scope,
     hasPartner: Boolean(activePartner),
   });
-  const { asOfDate } = useChecklistClock();
+  const { asOfDate } = useChecklistClock(asOfDateOverride);
   const viewerAvatarQuery = useViewerAvatarUrl();
   const viewerAvatarUrl = viewerAvatarQuery.data ?? null;
   const partnerId = activePartner?.partnerId ?? null;
@@ -82,11 +84,13 @@ export function ChecklistScreen({
     subject: viewerSubject,
     partnerId,
     enabled: true,
+    asOfDate,
   });
   const partnerLane = useChecklistLaneData({
     subject: partnerSubject ?? viewerSubject,
     partnerId,
     enabled: Boolean(activePartner) && scope !== "me",
+    asOfDate,
   });
   const lanes = resolveMobileDuoLaneSubjects({
     scope,
@@ -311,13 +315,12 @@ export function ChecklistScreen({
   ];
 
   if (!ready) {
-    return <LoadingScreen label="Loading Plan…" />;
+    return embedded ? null : <LoadingScreen label="Loading Plan…" />;
   }
 
-  return (
-    <Screen title="Plan" kicker="Day" scroll={false}>
-      {plannerNavigation}
-      <DuoScopeSegmentedControl surface="checklist" />
+  const body = (
+    <>
+      {embedded ? null : <DuoScopeSegmentedControl surface="checklist" />}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Open checklist filters"
@@ -325,7 +328,7 @@ export function ChecklistScreen({
         onPress={() => setFiltersOpen(true)}
       >
         <Text style={{ color: theme.colors.foreground, fontWeight: "700" }}>
-          Checklist filters
+          Filters
         </Text>
       </Pressable>
       <Modal
@@ -421,16 +424,28 @@ export function ChecklistScreen({
         >
           {lanePagedItems.map((page) => (
             <View key={page.laneId} style={[styles.lanePage, { width: lanePageWidth }]}>
-              <FlashList
-                data={page.items}
-                keyExtractor={(item) => item.key}
-                getItemType={(item) => item.type}
-                renderItem={renderItem}
-                contentContainerStyle={styles.listContent}
-              />
+              {embedded ? (
+                page.items.map((item) => (
+                  <View key={item.key}>{renderItem({ item })}</View>
+                ))
+              ) : (
+                <FlashList
+                  data={page.items}
+                  keyExtractor={(item) => item.key}
+                  getItemType={(item) => item.type}
+                  renderItem={renderItem}
+                  contentContainerStyle={styles.listContent}
+                />
+              )}
             </View>
           ))}
         </ScrollView>
+      ) : embedded ? (
+        <View style={styles.listContent}>
+          {listItems.map((item) => (
+            <View key={item.key}>{renderItem({ item })}</View>
+          ))}
+        </View>
       ) : (
         <FlashList
           data={listItems}
@@ -440,11 +455,22 @@ export function ChecklistScreen({
           contentContainerStyle={styles.listContent}
         />
       )}
+    </>
+  );
+
+  if (embedded) {
+    return <View style={styles.embedded}>{body}</View>;
+  }
+
+  return (
+    <Screen title="Plan" kicker="Day" scroll={false}>
+      {body}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  embedded: { gap: 12, minHeight: 220, flex: 1 },
   listContent: { paddingBottom: 12 },
   filterButton: {
     alignSelf: "flex-start",

@@ -1,4 +1,8 @@
 import { gazetteerFillForGoal } from "@cadence/shared/brand/gazetteer";
+import {
+  getGazetteerWorkPillDraftFillStyle,
+  getGazetteerWorkPillFillStyle,
+} from "@cadence/shared/planner/work-pill-visuals";
 import type {
   PlannerContextPayload,
   PlannerWorkUnit,
@@ -12,6 +16,19 @@ export function resolveMobileSessionFill(
     (entry) => entry.original_goal_id === unit.originalGoalId
   );
   return gazetteerFillForGoal(goal?.color ?? null, goal?.category ?? null);
+}
+
+export function resolveMobileMonthPillStyle(fill: string, credited: boolean) {
+  return credited
+    ? getGazetteerWorkPillFillStyle(fill)
+    : getGazetteerWorkPillDraftFillStyle(fill, "moved_to");
+}
+
+export function selectMobileMonthPills<T>(units: T[], maxVisible = 2) {
+  return {
+    visible: units.slice(0, maxVisible),
+    overflowCount: Math.max(0, units.length - maxVisible),
+  };
 }
 
 export function selectMobileRecoverCopy(

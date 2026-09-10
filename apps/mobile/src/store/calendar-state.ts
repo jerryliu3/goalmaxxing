@@ -5,7 +5,7 @@ import {
 import { format } from "date-fns";
 import { create } from "zustand";
 
-const defaultMonth = format(new Date(), "yyyy-MM");
+const defaultDay = format(new Date(), "yyyy-MM-dd");
 
 export const useCalendarStore = create<{
   tab: "today" | "not-today" | "calendar";
@@ -22,8 +22,9 @@ export const useCalendarStore = create<{
 }>((set, get) => ({
   ...normalizeCalendarState({
     tab: "calendar",
-    month: defaultMonth,
-    defaultCalendarViewMode: "month",
+    month: defaultDay.slice(0, 7),
+    day: defaultDay,
+    defaultCalendarViewMode: "day",
     surface: "calendar",
   }),
   apply: (partial) => {
@@ -34,7 +35,7 @@ export const useCalendarStore = create<{
         month: "month" in partial ? partial.month : current.month,
         day: "day" in partial ? partial.day : current.day,
         viewMode: partial.viewMode ?? current.viewMode,
-        defaultCalendarViewMode: "month",
+        defaultCalendarViewMode: "day",
         surface: "calendar",
       })
     );

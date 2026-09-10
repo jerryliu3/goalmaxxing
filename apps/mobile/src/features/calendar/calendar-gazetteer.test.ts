@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { GAZETTEER_CATEGORY_COLORS } from "@cadence/shared/brand/gazetteer";
 import type { PlannerContextPayload, PlannerWorkUnit } from "@cadence/shared/planner/context";
 import {
+  resolveMobileMonthPillStyle,
   resolveMobileSessionFill,
+  selectMobileMonthPills,
   selectMobileRecoverCopy,
 } from "./calendar-gazetteer";
 
@@ -43,6 +45,15 @@ describe("mobile Plan Gazetteer helpers", () => {
     expect(resolveMobileSessionFill(context as PlannerContextPayload, unit("missing"))).toBe(
       GAZETTEER_CATEGORY_COLORS.other
     );
+  });
+
+  it("clips month pills and uses opaque Gazetteer work-pill fills", () => {
+    expect(selectMobileMonthPills(["a", "b", "c"]).overflowCount).toBe(1);
+    expect(selectMobileMonthPills(["a", "b", "c"]).visible).toEqual(["a", "b"]);
+    const credited = resolveMobileMonthPillStyle(GAZETTEER_CATEGORY_COLORS.health, true);
+    const uncredited = resolveMobileMonthPillStyle(GAZETTEER_CATEGORY_COLORS.health, false);
+    expect(credited.backgroundColor).toBe(credited.borderColor);
+    expect(uncredited.backgroundColor).not.toBe(credited.backgroundColor);
   });
 
   it("uses Recover copy for unplaced and lock/capacity leftovers", () => {

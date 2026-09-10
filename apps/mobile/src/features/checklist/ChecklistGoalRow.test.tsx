@@ -36,6 +36,9 @@ vi.mock("../../theme", () => ({
       primary: "#0f0",
       primaryForeground: "#fff",
     },
+    fonts: {
+      display: "serif",
+    },
   }),
 }));
 
@@ -110,5 +113,23 @@ describe("ChecklistGoalRow partner boundary", () => {
       pressables[0]?.props.onPress();
     });
     expect(onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses the category color on the Nest mark when complete", () => {
+    let root!: ReactTestRenderer;
+    act(() => {
+      root = create(
+        <ChecklistGoalRow
+          title="Lift"
+          category="Health"
+          done
+          interactive
+          onToggle={() => undefined}
+        />
+      );
+    });
+
+    const rects = root.root.findAll((node) => String(node.type) === "rect");
+    expect(rects.some((rect) => rect.props.fill === "#4a6740")).toBe(true);
   });
 });

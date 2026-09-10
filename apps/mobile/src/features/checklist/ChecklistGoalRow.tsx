@@ -28,7 +28,7 @@ export function ChecklistGoalRow({
   const nest = (
     <NestCompletionMark
       done={done}
-      color={done ? theme.colors.primary : theme.colors.mutedForeground}
+      color={done ? categoryColor : theme.colors.mutedForeground}
       size={22}
     />
   );
