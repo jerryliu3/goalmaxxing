@@ -110,7 +110,7 @@ describe("InsightsLedgerPanel", () => {
       liftButton.props.onPress();
     });
 
-    expect(renderedText(root)).toContain("Tap a past or today cell");
+    expect(renderedText(root)).toContain("Hold a past or today cell");
     const pastDay = root.root.find(
       (node: ReactTestInstance) =>
         String(node.type) === "pressable" &&

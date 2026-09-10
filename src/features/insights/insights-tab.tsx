@@ -674,6 +674,8 @@ export function InsightsTab({
   const showGoalsSection = contentMode === "full" || contentMode === "lane";
   const stackLedgerAndHeatmap = contentMode !== "full";
   const heatmapEditable = ledgerMode === "edit" && !readOnly && Boolean(editableGoal);
+  const heatmapAllowsDrilldown = ledgerMode === "aggregate" && !readOnly;
+  const heatmapDayClickEnabled = heatmapEditable || heatmapAllowsDrilldown;
   const milestoneTargetCount =
     editableGoal?.frequency_type === "fixed_milestones"
       ? Math.max(editableGoal.target_count ?? 0, 1)
@@ -872,7 +874,7 @@ export function InsightsTab({
                 <MonthHeatmap
                   month={monthCursor}
                   countsByDate={ledgerCountsByDate}
-                  interactive
+                  interactive={heatmapEditable}
                   pendingDate={pendingRetroDate}
                   milestoneDates={milestonePinDates}
                   showMonthLabel={false}
@@ -881,8 +883,11 @@ export function InsightsTab({
                       ? (date) => !isLedgerHeatmapDayMutable(date, todayLocal)
                       : undefined
                   }
-                  onDayClick={(date, sourceElement) =>
-                    handleLedgerDayClick(date, sourceElement)
+                  onDayClick={
+                    heatmapDayClickEnabled
+                      ? (date, sourceElement) =>
+                          handleLedgerDayClick(date, sourceElement)
+                      : undefined
                   }
                 />
               ) : (
@@ -909,6 +914,9 @@ export function InsightsTab({
                       return `${value?.date ?? "N/A"}: ${count} ${unit}`;
                     }}
                     onClick={(value?: { date?: string }) => {
+                      if (!heatmapDayClickEnabled) {
+                        return;
+                      }
                       const selectedDate = value?.date;
                       if (!selectedDate) {
                         return;

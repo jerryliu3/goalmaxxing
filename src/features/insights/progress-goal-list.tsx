@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { toStyleDisplayColor } from "@/features/planner/goal-visuals";
+import { cn } from "@/lib/utils";
 
 export interface ProgressGoalListItem {
   id: string;
@@ -69,7 +69,7 @@ export function ProgressGoalList({
       <ul
         data-testid="progress-goal-list"
         className={cn(
-          "grid auto-cols-[minmax(10.5rem,13.5rem)] grid-flow-col grid-rows-2 gap-2 overflow-x-auto pb-1 md:mx-0 md:flex md:flex-col md:overflow-x-visible md:overflow-y-auto md:px-0 md:pb-0",
+          "grid auto-cols-[minmax(calc(50vw-1.25rem),13.5rem)] grid-flow-col grid-rows-2 gap-2 overflow-x-auto pb-1 md:mx-0 md:auto-cols-[minmax(10.5rem,13.5rem)] md:flex md:flex-col md:overflow-x-visible md:overflow-y-auto md:px-0 md:pb-0",
           goals.length >= VERTICAL_LIST_MAX_ITEMS &&
             "md:max-h-[calc(9.5*2.75rem+9*0.5rem)]"
         )}
@@ -84,25 +84,28 @@ export function ProgressGoalList({
                 data-onboarding={index === 0 && onboarding ? "insights.goal" : undefined}
                 onClick={() => onToggleGoal(goal.id)}
                 className={cn(
-                  "flex min-h-9 w-full flex-col items-start rounded-[10px] border px-2.5 py-1.5 text-left touch-manipulation",
+                  "flex min-h-10 w-full items-center rounded-[10px] border px-2 py-2 text-left touch-manipulation md:min-h-9 md:px-2.5 md:py-1.5",
                   selected
                     ? "border-primary/40 bg-primary/15 text-foreground"
                     : "border-border text-foreground"
                 )}
               >
-                <span className="flex w-full items-center justify-between gap-2">
-                  <span className="flex min-w-0 items-center gap-2">
+                <span className="flex w-full min-w-0 items-center gap-1.5 md:justify-between md:gap-2">
+                  <span className="flex min-w-0 flex-1 items-center gap-1.5 md:gap-2">
                     <span
                       className="size-2 shrink-0 rounded-full"
                       style={{ backgroundColor: toStyleDisplayColor(goal.color) }}
                       aria-hidden
                     />
-                    <span className="truncate font-display text-xs font-semibold">{goal.title}</span>
+                    <span
+                      className="min-w-0 flex-1 font-display text-xs font-medium tracking-tight leading-snug line-clamp-2 md:truncate md:leading-normal"
+                    >
+                      {goal.title}
+                    </span>
                   </span>
                   <span
                     className={cn(
-                      "shrink-0 text-[10px] text-muted-foreground transition-opacity duration-150 group-hover:opacity-0 group-focus-within:opacity-0",
-                      selected && "max-md:opacity-0"
+                      "hidden shrink-0 text-[10px] text-muted-foreground transition-opacity duration-150 md:inline group-hover:opacity-0 group-focus-within:opacity-0"
                     )}
                   >
                     {goal.rateLabel}
@@ -112,7 +115,7 @@ export function ProgressGoalList({
               {onSelectOnly ? (
                 <button
                   type="button"
-                  className="absolute top-1/2 right-2 z-10 -translate-y-1/2 text-[10px] font-semibold text-primary opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-visible:opacity-100"
+                  className="absolute top-1/2 right-2 z-10 hidden -translate-y-1/2 text-[10px] font-semibold text-primary opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-visible:opacity-100 md:inline"
                   onClick={(event) => {
                     event.stopPropagation();
                     onSelectOnly(goal.id);

@@ -1,5 +1,6 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { COMPLETION_HOLD_MS } from "@/components/ui/completion-toggle";
 import { MonthHeatmap } from "@/features/insights/month-heatmap";
 
 describe("MonthHeatmap", () => {
@@ -36,6 +37,32 @@ describe("MonthHeatmap", () => {
     );
 
     expect(screen.queryByText("September 2026")).not.toBeInTheDocument();
+  });
+
+  it("commits an interactive day only after a hold", () => {
+    vi.useFakeTimers();
+    const onDayClick = vi.fn();
+    render(
+      <MonthHeatmap
+        month={new Date(2026, 8, 1)}
+        countsByDate={{ "2026-09-01": 0 }}
+        interactive
+        onDayClick={onDayClick}
+      />
+    );
+
+    const day = screen.getByTitle("2026-09-01: 0 completions");
+    fireEvent.click(day);
+    expect(onDayClick).not.toHaveBeenCalled();
+    expect(day.querySelector("[data-completion-mark]")).not.toBeInTheDocument();
+
+    fireEvent.pointerDown(day);
+    expect(day.querySelector("[data-fill-progress='1']")).toBeInTheDocument();
+    act(() => {
+      vi.advanceTimersByTime(COMPLETION_HOLD_MS);
+    });
+    expect(onDayClick).toHaveBeenCalledWith("2026-09-01", day);
+    vi.useRealTimers();
   });
 
   it("marks milestone days with a quiet pin", () => {

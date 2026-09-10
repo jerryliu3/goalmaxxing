@@ -74,7 +74,7 @@ export function progressLedgerCaption(
     if (!editable) {
       return `This calendar shows this goal's ${unitPlural}.`;
     }
-    return `Tap a past or today cell to log or remove a ${unitLabel}. Future days are closed.`;
+    return `Hold a past or today cell to log or remove a ${unitLabel}. Future days are closed.`;
   }
   if (mode === "overlap") {
     return `Read-only overlap of ${selectedCount} goals.`;
