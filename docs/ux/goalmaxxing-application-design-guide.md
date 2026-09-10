@@ -47,9 +47,13 @@ language after web settles.
 - How tightly Checklist’s view date should follow the calendar’s selected day.
 - Whether team pairing also appears in You/settings, or only next to team
   goals.
+- Plan craft (not a destination lock): single-goal placement filter on Plan,
+  quieter past-day completions, collapsed Completed on Checklist. Prototypes:
+  `/ux/concepts/plan-clarity`.
 
 Current prototype: `/ux/concepts/spatial-home`. Pattern library:
 `/ux/concepts/patterns`. v1 archive: `/ux/concepts/spatial-plan`.
+Plan craft study: `/ux/concepts/plan-clarity`.
 
 ---
 
@@ -112,6 +116,27 @@ Written locks above are canonical. Clickable shells at `/ux/concepts` may
 lag (Checklist tab, month dots, single-goal heatmap only). Do not polish
 those shells into the product. Production `AppShell` stays untouched until
 we implement.
+
+### Plan craft (open inside B)
+
+Not a destination debate. Same Spatial Home. Clickable study:
+`/ux/concepts/plan-clarity`. Live calendar still uses strikethrough, has no
+one-goal placement filter, and leaves completed rows in the open list.
+Progress Ledger already isolates one goal — that heatmap is the
+**completion log**, including unscheduled days. These shells filter **placed
+work** on Plan.
+
+| | F1 Goal focus | F2 Past-day done | F3 Collapsed completed |
+|---|---|---|---|
+| **Object** | One goal’s placed days | Yesterday’s pills | The open queue |
+| **First viewport** | Tempo run on four Plan days | Quiet pills. Nest on a clear day. | Tempo run. Completed · 2 folded. |
+| **Steal** | Ledger’s one-goal select, on Plan | Gazetteer Nest; Continuity Map’s quiet history | Today Home’s Done section, closed |
+| **Reject** | Merging Plan with the Progress heatmap | Streak-threat stars as the default | A second Checklist product |
+| **Prototype** | `/ux/concepts/plan-clarity/focus` | `/ux/concepts/plan-clarity/history` | `/ux/concepts/plan-clarity/checklist` |
+
+Treatments on F2: **Strike** (live control), **Quiet** (color, no line),
+**Fold** (hide, expand the day), **Marks** (nest instead of a title). Clear
+days can take Nest (leading, from Gazetteer) or a star around the date number.
 
 ---
 
@@ -270,9 +295,7 @@ document does not redesign it.
 - Light-first cool lavender-gray (`oklch` hue ~286) and blue primary (~255) in
   [`src/app/globals.css`](../../src/app/globals.css). Dark tokens exist; there
   is no product theme switcher.
-- Original type: Geist Sans / Mono on `font-sans`, `font-display`, and
-  `font-mono`. Gazetteer overlay: Newsreader names, Source Sans 3 chrome,
-  IBM Plex Mono figures. Radius `0.875rem`. Motion 120 / 200 / 560ms.
+- Geist Sans / Mono. Radius `0.875rem`. Motion 120 / 200 / 560ms.
 - shadcn / Radix primitives. **Card with `ring-1` is the default atom.**
 - Surface chips: blue/sky gradients, inset “pressed” shadows, 10px labels.
 - Sonner toasts, bottom-right.

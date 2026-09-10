@@ -14,19 +14,6 @@ export default function UxHubPage() {
           <li>
             <Link
               className="text-lg font-semibold underline"
-              href="/ux/interaction-lab"
-            >
-              Interaction Lab — five practical interaction systems
-            </Link>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Fold, Switchboard, Index and Lens, plus optional tactile feedback
-              in Glide; with full calendar views, goal creation, large-list
-              navigation, combined progress and community.
-            </p>
-          </li>
-          <li>
-            <Link
-              className="text-lg font-semibold underline"
               href="/ux/next-wave"
             >
               Next Wave — five interactive directions
@@ -44,7 +31,8 @@ export default function UxHubPage() {
               Spatial Plan concept gallery
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">
-              Authenticated application directions and destination studies.
+              Authenticated application directions, destination studies, and Plan
+              craft (goal focus, quieter past days, collapsed completed).
             </p>
           </li>
           <li>
