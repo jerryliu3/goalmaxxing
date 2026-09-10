@@ -19,7 +19,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("expo-constants", () => ({ default: mocks.constants }));
 vi.mock("expo-device", () => ({ isDevice: true }));
-vi.mock("react-native", () => ({ Platform: { OS: "ios" } }));
+vi.mock("react-native", () => ({
+  Platform: { OS: "ios" },
+}));
 vi.mock("expo-notifications", () => ({
   AndroidImportance: { DEFAULT: 3 },
   setNotificationHandler: mocks.setNotificationHandler,
@@ -73,6 +75,20 @@ describe("native push lifecycle", () => {
     );
 
     expect(mocks.requestPermissionsAsync).not.toHaveBeenCalled();
+  });
+
+  it("registers the Android channel with stamp rust, not sky blue", async () => {
+    const reactNative = await import("react-native");
+    (reactNative.Platform as { OS: string }).OS = "android";
+    mocks.constants.easConfig = { projectId: "project-id" };
+
+    await registerNativePush();
+
+    expect(mocks.setNotificationChannelAsync).toHaveBeenCalledWith(
+      "default",
+      expect.objectContaining({ lightColor: "#9a4f2c" })
+    );
+    (reactNative.Platform as { OS: string }).OS = "ios";
   });
 
   it("persists the registered platform and token after the server accepts it", async () => {

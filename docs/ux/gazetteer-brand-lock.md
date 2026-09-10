@@ -20,12 +20,13 @@ Native consumes the same hexes through `apps/mobile/src/theme.ts`.
 ## Type (Gazetteer)
 
 - **Display / names:** Newsreader. Use on destination titles, day names, and
-  work-row titles.
+  work-row titles. Native loads `Newsreader_600SemiBold` via `expo-font`.
 - **Labels / running heads:** Source Sans 3, uppercase tracking on kickers,
   tabs, and meta. Chrome sans must resolve through `--font-app-sans`, not a
-  baked Geist utility.
-- **Rise / figures:** IBM Plex Mono.
+  baked Geist utility. Native loads Source Sans 3 regular and semibold.
+- **Rise / figures:** IBM Plex Mono. Native loads `IBMPlexMono_500Medium`.
 - Do not put Newsreader on chrome labels.
+  System serif/sans/mono remain the fallback until fonts load.
 
 ## Color (Gazetteer)
 
