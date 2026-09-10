@@ -200,7 +200,7 @@ describe("ordinal is identity, not sequence", () => {
     expect(earlyPlacementCount).toBeGreaterThan(0);
   });
 
-  it("does not rebalance clustered deadline_total sessions in stable preserve mode", () => {
+  it("places missing deadline_total sessions without rebalance in stable preserve mode", () => {
     const goal = makeGoal({
       target_count: 5,
       start_date: "2026-09-01",
@@ -249,7 +249,19 @@ describe("ordinal is identity, not sequence", () => {
       },
     });
 
-    expect(output.solver.issueCodes).toContain("placement_shortfall");
+    expect(output.solver.issueCodes).not.toContain("placement_shortfall");
+    expect(output.workUnits.every((unit) => unit.scheduledDate !== null)).toBe(
+      true
+    );
+    expect(
+      output.workUnits
+        .filter((unit) => ["total:1", "total:3", "total:5"].includes(unit.unitKey))
+        .map((unit) => [unit.unitKey, unit.scheduledDate])
+    ).toEqual([
+      ["total:1", "2026-12-19"],
+      ["total:3", "2026-12-20"],
+      ["total:5", "2026-12-31"],
+    ]);
   });
 
   it("is deterministic across repeated solves", () => {
