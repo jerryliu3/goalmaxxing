@@ -50,6 +50,7 @@ export const APP_BOOT_PRELOAD_SCRIPT = `(function(){
     var key=${JSON.stringify(APP_BOOT_READY_STORAGE_KEY)};
     var id=${JSON.stringify(APP_BOOT_PRELOAD_ELEMENT_ID)};
     if (sessionStorage.getItem(key) === ${JSON.stringify(APP_BOOT_READY_E2E_VALUE)}) return;
+    if (localStorage.getItem(key) === ${JSON.stringify(APP_BOOT_READY_E2E_VALUE)}) return;
     var path = location.pathname;
     if (path === "/demo" || path.indexOf("/demo/") === 0) path = path.slice(5) || "/";
     var prefixes = ${JSON.stringify(APP_BOOT_PATH_PREFIXES)};

@@ -23,9 +23,15 @@ export function isAppBootSplashSkipped(): boolean {
   if (typeof window === "undefined") {
     return false;
   }
-  const value = window.sessionStorage.getItem(APP_BOOT_READY_STORAGE_KEY);
+  if (typeof navigator !== "undefined" && navigator.webdriver) {
+    return true;
+  }
+  const sessionValue = window.sessionStorage.getItem(APP_BOOT_READY_STORAGE_KEY);
+  const localValue = window.localStorage.getItem(APP_BOOT_READY_STORAGE_KEY);
   return (
-    value === APP_BOOT_READY_E2E_VALUE || value === String(performance.timeOrigin)
+    sessionValue === APP_BOOT_READY_E2E_VALUE ||
+    localValue === APP_BOOT_READY_E2E_VALUE ||
+    sessionValue === String(performance.timeOrigin)
   );
 }
 

@@ -24,6 +24,14 @@ export { APP_BOOT_READY_STORAGE_KEY } from "@/components/layout/app-boot-ready";
 const BOOT_TIMEOUT_MS = 15000;
 const CLIMB_LOOP_MS = Math.round(14000 / 1.7);
 
+function readPrefersReducedMotion() {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
 async function warmPlannerContext() {
   const month = getMonthInTimezone(resolveUserTimezone());
   const cacheKey = buildPlannerContextCacheKey(month);
@@ -38,8 +46,8 @@ async function warmPlannerContext() {
 }
 
 function BootClimbAnimation() {
-  const [progress, setProgress] = useState(0.08);
-  const [reduceMotion, setReduceMotion] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(readPrefersReducedMotion);
+  const [loopProgress, setLoopProgress] = useState(0.08);
 
   useEffect(() => {
     if (typeof window.matchMedia !== "function") {
@@ -47,26 +55,26 @@ function BootClimbAnimation() {
     }
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const sync = () => setReduceMotion(media.matches);
-    sync();
     media.addEventListener("change", sync);
     return () => media.removeEventListener("change", sync);
   }, []);
 
   useEffect(() => {
     if (reduceMotion) {
-      setProgress(0.42);
       return;
     }
     let frame = 0;
     const startedAt = performance.now();
     const tick = (now: number) => {
       const loop = ((now - startedAt) % CLIMB_LOOP_MS) / CLIMB_LOOP_MS;
-      setProgress(0.06 + loop * 0.88);
+      setLoopProgress(0.06 + loop * 0.88);
       frame = window.requestAnimationFrame(tick);
     };
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
   }, [reduceMotion]);
+
+  const progress = reduceMotion ? 0.42 : loopProgress;
 
   return (
     <div
@@ -79,16 +87,14 @@ function BootClimbAnimation() {
 }
 
 export function AppBootSplash() {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(() => !isAppBootSplashSkipped());
 
   useLayoutEffect(() => {
     removeAppBootPreloadOverlay();
     if (isAppBootSplashSkipped()) {
-      setVisible(false);
       return;
     }
 
-    setVisible(true);
     let cancelled = false;
     let finished = false;
     const finish = () => {

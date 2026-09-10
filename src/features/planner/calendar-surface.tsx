@@ -6,6 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
 import {
   buildWeekdayLabels,
   getEntryGoalFirstTitleWithTime,
@@ -850,6 +851,8 @@ export function CalendarSurface({
     },
     [entriesByDate, queueDraftMoveCommand]
   );
+
+  useReportAppSurfaceReady(true);
 
   return (
     <CompletionCreditMoveProvider

@@ -19,11 +19,19 @@ vi.mock("@/features/planner/calendar-page-shell", () => ({
 describe("AppBootSplash", () => {
   afterEach(() => {
     window.sessionStorage.clear();
+    window.localStorage.clear();
     getJsonMock.mockReset();
   });
 
   it("stays hidden after the boot session is already ready", () => {
     window.sessionStorage.setItem(APP_BOOT_READY_STORAGE_KEY, "1");
+    render(<AppBootSplash />);
+    expect(screen.queryByTestId("app-boot-splash")).not.toBeInTheDocument();
+    expect(getJsonMock).not.toHaveBeenCalled();
+  });
+
+  it("stays hidden when Playwright persisted the skip flag in localStorage", () => {
+    window.localStorage.setItem(APP_BOOT_READY_STORAGE_KEY, "1");
     render(<AppBootSplash />);
     expect(screen.queryByTestId("app-boot-splash")).not.toBeInTheDocument();
     expect(getJsonMock).not.toHaveBeenCalled();
