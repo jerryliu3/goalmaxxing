@@ -320,7 +320,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     plannerSettingsForm,
   } = props;
   const dayChecklist = usePlanDayChecklistModel({
-    isActive: true,
+    isActive: viewMode === "day",
     viewDate: focusedDay,
     searchQuery,
     asOfDate: context?.asOfDate ?? null,

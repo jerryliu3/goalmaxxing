@@ -203,10 +203,13 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
   );
   const supabase = useMemo(() => createClient(), []);
   const [availableGoals, setAvailableGoals] = useState<Goal[]>([]);
+  const hasGoalDraftProposal = state.coachMessages.some((message) =>
+    message.proposal ? isCoachGoalDraftProposal(message.proposal) : false
+  );
 
   useEffect(() => {
     let cancelled = false;
-    if (!state.canUseCoach) {
+    if (!state.canUseCoach || !hasGoalDraftProposal) {
       return () => {
         cancelled = true;
       };
@@ -267,7 +270,7 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
     return () => {
       cancelled = true;
     };
-  }, [state.canUseCoach, supabase]);
+  }, [hasGoalDraftProposal, state.canUseCoach, supabase]);
 
   if (!state.canUseCoach) {
     return null;

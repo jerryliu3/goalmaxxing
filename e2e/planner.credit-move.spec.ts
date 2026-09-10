@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { clearPlannerTabCache } from "./planner-test-utils";
 
 const CADENCE_AFFINITY_GOAL_ID = "10000000-0000-4000-8000-000000000024";
 const CADENCE_AFFINITY_GOAL_TITLE = "E2E cadence gym 4x";
@@ -205,6 +206,7 @@ test.describe("planner credit move", () => {
       date: fixture.tomorrow,
       desiredFactState: "absent",
     });
+    await clearPlannerTabCache(page);
 
     await gotoAppPath(page, `/calendar?view=day&day=${fixture.tomorrow}`);
     await dismissTabOnboardingIfPresent(page);

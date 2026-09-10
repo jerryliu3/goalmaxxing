@@ -69,10 +69,13 @@ test("public root route renders landing page", async ({
 
 test("goal creation entry stays on the app shell", async ({ page }) => {
   await page.goto("/calendar");
+  await expect(page.getByTestId("app-boot-splash")).toBeHidden({ timeout: 10_000 });
   await page.getByRole("link", { name: /new goal \+/i }).first().click();
   await expect(page).toHaveURL(/\/calendar/);
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Create goal" }).first()).toBeVisible();
+  await expect(page.getByTestId("goal-route-sheet")).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page.getByRole("heading", { name: "Create goal" }).first()
+  ).toBeVisible();
 });
 
 test("login surface has no detectable WCAG A/AA violations", async ({
