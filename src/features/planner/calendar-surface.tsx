@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -92,12 +93,18 @@ export function CalendarSurface({
   viewerSubject = null,
   partnerSubject = null,
 }: CalendarSurfaceProps) {
-  const [context, setContext] = useState<PlannerContextPayload | null>(() => {
+  const [context, setContext] = useState<PlannerContextPayload | null>(null);
+  useLayoutEffect(() => {
     if (!month) {
-      return null;
+      return;
     }
-    return readTabDataCache<PlannerContextPayload>(buildPlannerContextCacheKey(month));
-  });
+    const cached = readTabDataCache<PlannerContextPayload>(
+      buildPlannerContextCacheKey(month)
+    );
+    if (cached) {
+      setContext(cached);
+    }
+  }, [month]);
   const [loading, setLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
