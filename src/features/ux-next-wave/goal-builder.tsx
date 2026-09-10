@@ -1,16 +1,17 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  ArrowUp,
   Check,
-  Layers3,
+  ChevronRight,
+  CircleDot,
+  Command,
   LockKeyhole,
   Minus,
+  Orbit,
+  Palette,
   Plus,
   Repeat2,
   Route,
+  Sparkles,
   X,
 } from "lucide-react";
 import {
@@ -19,259 +20,523 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
 import type { Concept } from "./model";
 import "./styles/goal-builder.css";
 
-type Draft = Pick<
-  GoalCreationFields,
-  | "title"
-  | "frequency_type"
-  | "recurrence_interval"
-  | "target_count"
-  | "target_basis"
-  | "milestone_names"
-  | "start_date"
-  | "end_date"
-  | "color"
-  | "is_private"
->;
+type Cadence = "daily" | "weekly" | "monthly" | "milestones";
+type Draft = {
+  title: string;
+  cadence: Cadence;
+  target: number;
+  color: string;
+  private: boolean;
+  milestones: string[];
+};
+
+const colors = ["#89b59b", "#87a6dc", "#d88cab", "#d9b26e", "#af9ad5"];
 const fresh = (): Draft => ({
   title: "",
-  frequency_type: "recurring",
-  recurrence_interval: "weekly",
-  target_count: "3",
-  target_basis: "period",
-  milestone_names: ["First step", "Build momentum", "Bring it together"],
-  start_date: "2026-09-08",
-  end_date: "",
-  color: "#9bb89e",
-  is_private: true,
+  cadence: "weekly",
+  target: 3,
+  color: colors[0],
+  private: true,
+  milestones: ["Begin", "Build", "Finish"],
 });
-const COLORS = ["#9bb89e", "#9aacdb", "#d3a0b8", "#d5b47e", "#baade0"];
-const steps = ["Intention", "Shape", "Make it yours", "Review"];
-function description(d: Draft) {
-  return d.frequency_type === "fixed_milestones"
-    ? `${d.milestone_names.length} milestones`
-    : `${d.target_count} ${d.target_count === "1" ? "completion" : "completions"} ${d.target_basis === "lifetime" ? "in total" : `per ${d.recurrence_interval === "daily" ? "day" : d.recurrence_interval === "weekly" ? "week" : "month"}`}`;
-}
-function valid(d: Draft) {
+const cadenceLabel = (draft: Draft) =>
+  draft.cadence === "milestones"
+    ? `${draft.milestones.filter(Boolean).length} milestones`
+    : `${draft.target} completion${draft.target === 1 ? "" : "s"} per ${draft.cadence === "daily" ? "day" : draft.cadence === "weekly" ? "week" : "month"}`;
+
+function Close({ close }: { close: () => void }) {
   return (
-    !!d.title.trim() &&
-    !!d.start_date &&
-    (!d.end_date || d.end_date >= d.start_date) &&
-    Number(d.target_count) > 0 &&
-    (d.frequency_type !== "fixed_milestones" ||
-      d.milestone_names.every((x) => x.trim()))
+    <button
+      className="goal-close"
+      onClick={close}
+      aria-label="Close goal builder"
+    >
+      <X size={19} />
+    </button>
+  );
+}
+function GoalName({
+  draft,
+  setDraft,
+  autoFocus = false,
+}: {
+  draft: Draft;
+  setDraft: (next: Draft) => void;
+  autoFocus?: boolean;
+}) {
+  return (
+    <label className="goal-name-field">
+      Name your goal
+      <input
+        autoFocus={autoFocus}
+        value={draft.title}
+        placeholder="Read more books"
+        onChange={(event) => setDraft({ ...draft, title: event.target.value })}
+      />
+    </label>
+  );
+}
+function Finish({ draft, onCreate }: { draft: Draft; onCreate: () => void }) {
+  return (
+    <button
+      className="goal-primary"
+      disabled={!draft.title.trim()}
+      onClick={onCreate}
+    >
+      Create in demo <ChevronRight size={18} />
+    </button>
+  );
+}
+function Success({ draft, reset }: { draft: Draft; reset: () => void }) {
+  return (
+    <section className="goal-success">
+      <span>
+        <Check size={30} />
+      </span>
+      <p>Preview created</p>
+      <h2>{draft.title}</h2>
+      <small>{cadenceLabel(draft)} · Nothing was saved to your account.</small>
+      <button className="goal-primary" onClick={reset}>
+        Create another <Plus size={17} />
+      </button>
+    </section>
   );
 }
 
-function GoalReview({
+function Prism({
   draft,
-  onChange,
-  onRemove,
-  index,
-  onMove,
-  isLast,
+  setDraft,
+  finish,
 }: {
   draft: Draft;
-  onChange: (d: Draft) => void;
-  onRemove?: () => void;
-  index: number;
-  onMove?: (direction: "up" | "down") => void;
-  isLast?: boolean;
+  setDraft: (next: Draft) => void;
+  finish: () => void;
 }) {
+  const rings = ["daily", "weekly", "monthly"] as const;
   return (
-    <article className="gb-review-card" style={{ borderTopColor: draft.color }}>
-      <div className="gb-review-top">
-        <span>GOAL {String(index + 1).padStart(2, "0")}</span>
-        <div className="gb-review-actions">
-          {onMove && (
-            <>
-              <button
-                type="button"
-                onClick={() => onMove("up")}
-                disabled={index === 0}
-                aria-label={`Move goal ${index + 1} up`}
-              >
-                <ArrowUp size={15} />
-              </button>
-              <button
-                type="button"
-                onClick={() => onMove("down")}
-                disabled={isLast}
-                aria-label={`Move goal ${index + 1} down`}
-              >
-                <ArrowDown size={15} />
-              </button>
-            </>
-          )}
-          {onRemove && (
-            <button
-              type="button"
-              onClick={onRemove}
-              aria-label={`Remove goal ${index + 1}`}
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
-      </div>
-      <label>
-        Goal name
-        <input
-          value={draft.title}
-          onChange={(e) => onChange({ ...draft, title: e.target.value })}
-        />
-      </label>
-      <p>{description(draft)}</p>
-      <details>
-        <summary>
-          Edit goal details <Plus size={15} />
-        </summary>
-        <label>
-          Goal type
-          <select
-            value={draft.frequency_type}
-            onChange={(e) =>
-              onChange({
-                ...draft,
-                frequency_type: e.target.value as Draft["frequency_type"],
-              })
-            }
-          >
-            <option value="recurring">Recurring goal</option>
-            <option value="fixed_milestones">Milestones</option>
-          </select>
-        </label>
-        {draft.frequency_type === "recurring" ? (
-          <>
-            <label>
-              Frequency
-              <select
-                value={draft.recurrence_interval}
-                onChange={(e) =>
-                  onChange({
-                    ...draft,
-                    recurrence_interval: e.target
-                      .value as Draft["recurrence_interval"],
-                    target_count: "1",
-                  })
-                }
-              >
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-              </select>
-            </label>
-            <label>
-              Target basis
-              <select
-                value={draft.target_basis}
-                onChange={(e) =>
-                  onChange({
-                    ...draft,
-                    target_basis: e.target.value as Draft["target_basis"],
-                    target_count: "1",
-                  })
-                }
-              >
-                <option value="period">Per period</option>
-                <option value="lifetime">Lifetime total</option>
-              </select>
-            </label>
-            <label>
-              Target completions
-              <input
-                type="number"
-                min="1"
-                max={
-                  draft.target_basis === "lifetime"
-                    ? 999
-                    : draft.recurrence_interval === "daily"
-                      ? 1
-                      : draft.recurrence_interval === "weekly"
-                        ? 7
-                        : 31
-                }
-                value={draft.target_count}
-                onChange={(e) => {
-                  const max =
-                    draft.target_basis === "lifetime"
-                      ? 999
-                      : draft.recurrence_interval === "daily"
-                        ? 1
-                        : draft.recurrence_interval === "weekly"
-                          ? 7
-                          : 31;
-                  onChange({
-                    ...draft,
-                    target_count: String(
-                      Math.min(max, Math.max(1, Number(e.target.value) || 1)),
-                    ),
-                  });
-                }}
-              />
-            </label>
-          </>
-        ) : (
-          draft.milestone_names.map((name, i) => (
-            <label key={i}>
-              Milestone {i + 1}
-              <input
-                value={name}
-                onChange={(e) =>
-                  onChange({
-                    ...draft,
-                    milestone_names: draft.milestone_names.map((x, j) =>
-                      j === i ? e.target.value : x,
-                    ),
-                  })
-                }
-              />
-            </label>
-          ))
-        )}
-        <div className="gb-date-fields">
-          <label>
-            Starts
-            <input
-              type="date"
-              value={draft.start_date}
-              onChange={(e) =>
-                onChange({ ...draft, start_date: e.target.value })
-              }
-            />
-          </label>
-          <label>
-            Ends · optional
-            <input
-              type="date"
-              min={draft.start_date}
-              value={draft.end_date}
-              onChange={(e) => onChange({ ...draft, end_date: e.target.value })}
-            />
-          </label>
-        </div>
-        <label className="gb-checkbox">
-          <input
-            type="checkbox"
-            checked={draft.is_private}
-            onChange={(e) =>
-              onChange({ ...draft, is_private: e.target.checked })
-            }
-          />
-          Private goal
-        </label>
-      </details>
-      {!valid(draft) && (
-        <p role="alert" className="gb-error">
-          Add a name, name each milestone, and check your date range.
+    <div className="goal-prism">
+      <div className="prism-copy">
+        <p className="goal-kicker">
+          <Sparkles size={14} /> A seed for the future
         </p>
-      )}
-    </article>
+        <DialogTitle>Give your next chapter a center.</DialogTitle>
+        <DialogDescription>
+          Set the intention, then choose the rhythm that will orbit it.
+        </DialogDescription>
+        <GoalName draft={draft} setDraft={setDraft} autoFocus />
+        <div className="prism-rings" aria-label="Choose a rhythm">
+          {rings.map((cadence, index) => (
+            <button
+              key={cadence}
+              aria-pressed={draft.cadence === cadence}
+              onClick={() =>
+                setDraft({
+                  ...draft,
+                  cadence,
+                  target: cadence === "daily" ? 1 : 3,
+                })
+              }
+            >
+              <i style={{ "--ring": index } as React.CSSProperties} />
+              <strong>{cadence}</strong>
+              <span>
+                {cadence === "daily"
+                  ? "A little every day"
+                  : cadence === "weekly"
+                    ? "A rhythm to return to"
+                    : "A monthly reset"}
+              </span>
+            </button>
+          ))}
+        </div>
+        <Finish draft={draft} onCreate={finish} />
+      </div>
+      <div
+        className="prism-world"
+        style={{ "--goal": draft.color } as React.CSSProperties}
+      >
+        <div className="prism-glow" />
+        <div className="prism-orbit orbit-a" />
+        <div className="prism-orbit orbit-b" />
+        <div className="prism-orbit orbit-c" />
+        <div className="prism-core">
+          <span>
+            <Orbit size={28} />
+          </span>
+          <strong>{draft.title || "Your intention"}</strong>
+          <small>{cadenceLabel(draft)}</small>
+        </div>
+        <p>Tap a ring to change the pull of this goal.</p>
+      </div>
+    </div>
   );
 }
+
+function Tempo({
+  draft,
+  setDraft,
+  finish,
+}: {
+  draft: Draft;
+  setDraft: (next: Draft) => void;
+  finish: () => void;
+}) {
+  const steps = [1, 2, 3, 4, 5, 6, 7];
+  return (
+    <div className="goal-tempo">
+      <header>
+        <p className="goal-kicker">BUILD A RHYTHM</p>
+        <DialogTitle>How often feels true?</DialogTitle>
+        <DialogDescription>
+          This is a completion target, never a measure of hours.
+        </DialogDescription>
+      </header>
+      <GoalName draft={draft} setDraft={setDraft} autoFocus />
+      <div className="tempo-beats" aria-label="Choose weekly completion target">
+        {steps.map((beat) => (
+          <button
+            key={beat}
+            aria-pressed={draft.target === beat && draft.cadence === "weekly"}
+            onClick={() =>
+              setDraft({ ...draft, cadence: "weekly", target: beat })
+            }
+          >
+            <span>
+              {beat <= draft.target && draft.cadence === "weekly" ? (
+                <Check size={16} />
+              ) : (
+                beat
+              )}
+            </span>
+            <small>{beat === 1 ? "once" : `${beat}×`}</small>
+          </button>
+        ))}
+      </div>
+      <div className="tempo-summary">
+        <div>
+          <Repeat2 size={20} />
+          <strong>{draft.target}</strong>
+          <span>times each week</span>
+        </div>
+        <button
+          onClick={() =>
+            setDraft({ ...draft, target: Math.max(1, draft.target - 1) })
+          }
+          aria-label="Fewer weekly completions"
+        >
+          <Minus size={17} />
+        </button>
+        <button
+          onClick={() =>
+            setDraft({ ...draft, target: Math.min(7, draft.target + 1) })
+          }
+          aria-label="More weekly completions"
+        >
+          <Plus size={17} />
+        </button>
+      </div>
+      <footer>
+        <button
+          className="goal-text"
+          onClick={() => setDraft({ ...draft, cadence: "milestones" })}
+        >
+          <Route size={16} /> I need milestones instead
+        </button>
+        <Finish draft={draft} onCreate={finish} />
+      </footer>
+    </div>
+  );
+}
+
+function Weave({
+  draft,
+  setDraft,
+  finish,
+}: {
+  draft: Draft;
+  setDraft: (next: Draft) => void;
+  finish: () => void;
+}) {
+  const active = draft.cadence === "milestones";
+  const updateMilestone = (index: number, value: string) =>
+    setDraft({
+      ...draft,
+      milestones: draft.milestones.map((entry, position) =>
+        position === index ? value : entry,
+      ),
+    });
+  return (
+    <div className="goal-weave">
+      <aside>
+        <p className="goal-kicker">GOAL THREAD</p>
+        <GoalName draft={draft} setDraft={setDraft} autoFocus />
+        <p>
+          Build a visible path from the first step to the moment it becomes
+          real.
+        </p>
+        <button
+          className="weave-kind"
+          aria-pressed={!active}
+          onClick={() => setDraft({ ...draft, cadence: "weekly" })}
+        >
+          <Repeat2 size={18} /> A repeating thread
+        </button>
+        <button
+          className="weave-kind"
+          aria-pressed={active}
+          onClick={() => setDraft({ ...draft, cadence: "milestones" })}
+        >
+          <Route size={18} /> A thread with milestones
+        </button>
+        <Finish draft={draft} onCreate={finish} />
+      </aside>
+      <section className="weave-canvas">
+        <span className="weave-label">
+          {active ? "Name the knots in your thread" : "A repeatable pattern"}
+        </span>
+        {active ? (
+          <div className="weave-steps">
+            {draft.milestones.map((milestone, index) => (
+              <label key={index}>
+                <b>{String(index + 1).padStart(2, "0")}</b>
+                <input
+                  aria-label={`Milestone ${index + 1}`}
+                  value={milestone}
+                  onChange={(event) =>
+                    updateMilestone(index, event.target.value)
+                  }
+                  placeholder="Name this step"
+                />
+                {index < draft.milestones.length - 1 && <i />}
+              </label>
+            ))}
+            <button
+              className="weave-add"
+              onClick={() =>
+                setDraft({
+                  ...draft,
+                  milestones: [...draft.milestones, ""],
+                })
+              }
+            >
+              <Plus size={16} /> Add a knot
+            </button>
+          </div>
+        ) : (
+          <div className="weave-pattern">
+            {Array.from({ length: 12 }, (_, index) => (
+              <button
+                key={index}
+                aria-pressed={index < draft.target}
+                onClick={() =>
+                  setDraft({
+                    ...draft,
+                    cadence: "weekly",
+                    target: index + 1,
+                  })
+                }
+              >
+                <i />
+              </button>
+            ))}
+            <p>
+              Choose the number of times you want to return to this goal each
+              week.
+            </p>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function Mosaic({
+  draft,
+  setDraft,
+  finish,
+}: {
+  draft: Draft;
+  setDraft: (next: Draft) => void;
+  finish: () => void;
+}) {
+  return (
+    <div className="goal-mosaic">
+      <header>
+        <p className="goal-kicker">
+          <Palette size={14} /> MAKE A PIECE OF YOUR WEEK
+        </p>
+        <DialogTitle>A goal should feel like it belongs to you.</DialogTitle>
+      </header>
+      <div className="mosaic-board">
+        <section
+          className="mosaic-tile large"
+          style={{ background: draft.color }}
+        >
+          <span>
+            {draft.cadence === "milestones" ? (
+              <Route size={30} />
+            ) : (
+              <CircleDot size={30} />
+            )}
+          </span>
+          <strong>{draft.title || "A new piece"}</strong>
+          <small>{cadenceLabel(draft)}</small>
+        </section>
+        <section className="mosaic-controls">
+          <GoalName draft={draft} setDraft={setDraft} autoFocus />
+          <p>Choose its color</p>
+          <div className="mosaic-colors">
+            {colors.map((color, index) => (
+              <button
+                key={color}
+                style={{ background: color }}
+                aria-label={`Color ${index + 1}`}
+                aria-pressed={draft.color === color}
+                onClick={() => setDraft({ ...draft, color })}
+              >
+                {draft.color === color && <Check size={16} />}
+              </button>
+            ))}
+          </div>
+          <button
+            className="mosaic-privacy"
+            aria-pressed={draft.private}
+            onClick={() => setDraft({ ...draft, private: !draft.private })}
+          >
+            <LockKeyhole size={18} />
+            <span>
+              <strong>
+                {draft.private
+                  ? "Kept with you"
+                  : "Visible outside your private space"}
+              </strong>
+              <small>Toggle the goal’s visibility setting.</small>
+            </span>
+            <i>{draft.private ? <Check size={15} /> : null}</i>
+          </button>
+          <Finish draft={draft} onCreate={finish} />
+        </section>
+        <div className="mosaic-tile mini one" />
+        <div className="mosaic-tile mini two" />
+        <div className="mosaic-tile mini three" />
+      </div>
+    </div>
+  );
+}
+
+function Script({
+  draft,
+  setDraft,
+  finish,
+}: {
+  draft: Draft;
+  setDraft: (next: Draft) => void;
+  finish: () => void;
+}) {
+  const [text, setText] = useState("");
+  const apply = (title: string, target = 3) => {
+    setText(`I want to ${title.toLowerCase()}, ${target} times each week`);
+    setDraft({ ...draft, title, cadence: "weekly", target });
+  };
+  const parsed = draft.title.trim();
+  return (
+    <div className="goal-script">
+      <header>
+        <span>
+          <Command size={18} />
+        </span>
+        <div>
+          <p className="goal-kicker">WRITE THE INTENTION</p>
+          <DialogTitle>Say what you mean.</DialogTitle>
+        </div>
+      </header>
+      <label className="script-input">
+        I want to
+        <input
+          autoFocus
+          aria-label="Describe your goal"
+          value={text}
+          placeholder="Read more books, 3 times each week"
+          onChange={(event) => {
+            setText(event.target.value);
+            const words = event.target.value
+              .replace(/^I want to\s*/i, "")
+              .split(/,|\d+\s+times?/i)[0]
+              .trim();
+            setDraft({
+              ...draft,
+              title: words ? words[0].toUpperCase() + words.slice(1) : "",
+            });
+          }}
+        />
+      </label>
+      <div className="script-suggestions">
+        <span>Try one</span>
+        <button onClick={() => apply("Read more books")}>
+          Read more books
+        </button>
+        <button onClick={() => apply("Run regularly", 2)}>
+          Run regularly, twice a week
+        </button>
+        <button
+          onClick={() => {
+            setText("Launch my portfolio in milestones");
+            setDraft({
+              ...draft,
+              title: "Launch my portfolio",
+              cadence: "milestones",
+            });
+          }}
+        >
+          Launch my portfolio in milestones
+        </button>
+      </div>
+      <section className="script-reading">
+        <p>The plan says</p>
+        {parsed ? (
+          <>
+            <strong>{draft.title}</strong>
+            <span>
+              {draft.cadence === "milestones"
+                ? "will unfold through milestones."
+                : `will be completed ${draft.target} times each week.`}
+            </span>
+            <button
+              className="goal-text"
+              onClick={() =>
+                setDraft({
+                  ...draft,
+                  target: draft.target === 3 ? 2 : 3,
+                })
+              }
+            >
+              Change to {draft.target === 3 ? "2" : "3"} times a week
+            </button>
+          </>
+        ) : (
+          <em>Your goal will become a clear, editable sentence here.</em>
+        )}
+      </section>
+      <footer>
+        <small>
+          Plain language is a starting point. You can always edit the result.
+        </small>
+        <Finish draft={draft} onCreate={finish} />
+      </footer>
+    </div>
+  );
+}
+
+const builders = {
+  prism: Prism,
+  tempo: Tempo,
+  weave: Weave,
+  mosaic: Mosaic,
+  script: Script,
+};
 
 export function GoalBuilder({
   concept,
@@ -280,615 +545,50 @@ export function GoalBuilder({
 }: {
   concept: Concept;
   open: boolean;
-  onOpenChange: (v: boolean) => void;
+  onOpenChange: (value: boolean) => void;
 }) {
-  const [step, setStep] = useState(0),
-    [draft, setDraft] = useState<Draft>(fresh),
-    [queue, setQueue] = useState<Draft[]>([]),
-    [batch, setBatch] = useState(false),
-    [lines, setLines] = useState(""),
-    [created, setCreated] = useState(0);
-  const resetBuilder = () => {
-    setStep(0);
+  const [draft, setDraft] = useState<Draft>(fresh);
+  const [created, setCreated] = useState(false);
+  const Builder = builders[concept];
+  const close = () => {
     setDraft(fresh());
-    setQueue([]);
-    setBatch(false);
-    setLines("");
-    setCreated(0);
+    setCreated(false);
+    onOpenChange(false);
   };
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) resetBuilder();
-    onOpenChange(nextOpen);
+  const reset = () => {
+    setDraft(fresh());
+    setCreated(false);
   };
-  const patch = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
-  const moveMilestone = (index: number, direction: "up" | "down") => {
-    const nextIndex = direction === "up" ? index - 1 : index + 1;
-    if (nextIndex < 0 || nextIndex >= draft.milestone_names.length) return;
-    const names = [...draft.milestone_names];
-    [names[index], names[nextIndex]] = [names[nextIndex], names[index]];
-    patch({ milestone_names: names });
-  };
-  const moveQueuedGoal = (index: number, direction: "up" | "down") => {
-    const nextIndex = direction === "up" ? index - 1 : index + 1;
-    if (nextIndex < 0 || nextIndex >= queue.length) return;
-    setQueue((goals) => {
-      const next = [...goals];
-      [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
-      return next;
-    });
-  };
-  const goReview = () => {
-    setQueue((q) => [...q, { ...draft, title: draft.title.trim() }]);
-    setStep(3);
-  };
-  const count = Number(draft.target_count);
-  const max =
-    draft.target_basis === "lifetime"
-      ? 30
-      : draft.recurrence_interval === "daily"
-        ? 1
-        : draft.recurrence_interval === "weekly"
-          ? 7
-          : 31;
-  const title = created
-    ? "A little intention.\nA new beginning."
-    : [
-        "What do you want\nto make happen?",
-        "What does showing\nup look like?",
-        "Give it a beginning.\nMake it yours.",
-        queue.length > 1
-          ? "Your next chapter,\nall together."
-          : "Meet your\nnew goal.",
-      ][step];
+  const dialogueTitle = useMemo(
+    () => `Create a goal with ${concept}`,
+    [concept],
+  );
+
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => (nextOpen ? onOpenChange(true) : close())}
+    >
       <DialogContent
-        className={`nw-modal gb-dialog nw-${concept}`}
+        className={`nw-modal goal-dialog goal-${concept}`}
         overlayClassName="nw-overlay"
         showCloseButton={false}
       >
-        <button
-          className="modal-close"
-          aria-label="Close goal builder"
-          onClick={() => handleOpenChange(false)}
-        >
-          <X size={20} />
-        </button>
-        <div className="gb-header">
-          <span className="eyebrow">GOALMAXXING / CREATE</span>
-          <span className="gb-demo-label">
-            Interactive study · Nothing saved to your account
-          </span>
-        </div>
-        {!created && (
-          <nav className="gb-steps" aria-label="Creation steps">
-            {steps.map((name, i) => (
-              <button
-                key={name}
-                type="button"
-                disabled={i !== step && (i > step || step === 3)}
-                aria-current={i === step ? "step" : undefined}
-                onClick={() => setStep(i)}
-              >
-                <span>{i < step ? <Check size={13} /> : i + 1}</span>
-                <b>{name}</b>
-              </button>
-            ))}
-          </nav>
-        )}
-        <div className={`gb-layout ${step === 3 || created ? "gb-wide" : ""}`}>
-          <section className="gb-work">
-            <DialogTitle className="gb-title">
-              {title.split("\n").map((t, i) => (
-                <span key={t}>{i === 1 ? <em>{t}</em> : t}</span>
-              ))}
-            </DialogTitle>
-            <DialogDescription className="gb-description">
-              {created
-                ? "Your goals have been created in this preview. They haven’t been scheduled or saved to the real app."
-                : step === 0
-                  ? "Start with something that matters to you."
-                  : step === 1
-                    ? "Count the times you do it, or the steps that get you there."
-                    : step === 2
-                      ? "Choose a starting point. You can adjust it later."
-                      : "One last look. Everything here is still editable."}
-            </DialogDescription>
-            {created ? (
-              <div className="gb-success">
-                <div className="gb-success-mark">
-                  <Check size={38} />
-                </div>
-                <h3>
-                  {created} {created === 1 ? "goal" : "goals"} created in the
-                  demo
-                </h3>
-                {queue.map((d, i) => (
-                  <div key={i}>
-                    <i style={{ background: d.color }} />
-                    <span>{d.title}</span>
-                    <small>{description(d)}</small>
-                  </div>
-                ))}
-                <button
-                  className="primary"
-                  onClick={() => {
-                    setCreated(0);
-                    setQueue([]);
-                    setDraft(fresh());
-                    setStep(0);
-                    setBatch(false);
-                    setLines("");
-                  }}
-                >
-                  Create another <Plus size={18} />
-                </button>
-              </div>
-            ) : (
-              <>
-                {step === 0 && (
-                  <div className="gb-intention">
-                    <div className="gb-mode">
-                      <button
-                        aria-pressed={!batch}
-                        onClick={() => setBatch(false)}
-                      >
-                        One goal
-                      </button>
-                      <button
-                        aria-pressed={batch}
-                        onClick={() => setBatch(true)}
-                      >
-                        <Layers3 size={15} />
-                        Multiple goals
-                      </button>
-                    </div>
-                    {batch ? (
-                      <>
-                        <label htmlFor="gb-batch">
-                          One goal on each line
-                          <textarea
-                            id="gb-batch"
-                            rows={5}
-                            placeholder={
-                              "Run regularly\nRead more books\nLaunch my portfolio"
-                            }
-                            value={lines}
-                            onChange={(e) => setLines(e.target.value)}
-                          />
-                        </label>
-                        <p className="gb-helper">
-                          Names only. The shared review starts each goal at 3
-                          completions per week; change each one there.
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <label htmlFor="gb-title">
-                          I want to…
-                          <input
-                            id="gb-title"
-                            placeholder="Run my first half marathon"
-                            value={draft.title}
-                            onChange={(e) => patch({ title: e.target.value })}
-                            maxLength={120}
-                          />
-                        </label>
-                        <div className="gb-inspirations">
-                          <span>A starting point</span>
-                          {[
-                            "Run regularly",
-                            "Read more books",
-                            "Launch my portfolio",
-                          ].map((t) => (
-                            <button key={t} onClick={() => patch({ title: t })}>
-                              {t}
-                              <ArrowRight size={14} />
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-                {step === 1 && (
-                  <div className="gb-shape">
-                    <div className="gb-type-options">
-                      <button
-                        aria-pressed={draft.frequency_type === "recurring"}
-                        onClick={() => patch({ frequency_type: "recurring" })}
-                      >
-                        <Repeat2 size={24} />
-                        <strong>Build a rhythm</strong>
-                        <span>Repeat an action over time.</span>
-                      </button>
-                      <button
-                        aria-pressed={
-                          draft.frequency_type === "fixed_milestones"
-                        }
-                        onClick={() =>
-                          patch({ frequency_type: "fixed_milestones" })
-                        }
-                      >
-                        <Route size={24} />
-                        <strong>Reach milestones</strong>
-                        <span>A few steps toward a bigger thing.</span>
-                      </button>
-                    </div>
-                    {draft.frequency_type === "recurring" ? (
-                      <>
-                        <div className="gb-mode">
-                          {(["daily", "weekly", "monthly"] as const).map(
-                            (interval) => (
-                              <button
-                                key={interval}
-                                aria-pressed={
-                                  draft.recurrence_interval === interval
-                                }
-                                onClick={() =>
-                                  patch({
-                                    recurrence_interval: interval,
-                                    target_count:
-                                      interval === "daily" ? "1" : "3",
-                                  })
-                                }
-                              >
-                                {interval[0].toUpperCase() + interval.slice(1)}
-                              </button>
-                            ),
-                          )}
-                        </div>
-                        <div className="gb-counter">
-                          <button
-                            aria-label="Fewer completions"
-                            disabled={count <= 1}
-                            onClick={() =>
-                              patch({ target_count: String(count - 1) })
-                            }
-                          >
-                            <Minus size={20} />
-                          </button>
-                          <div>
-                            <strong>{count}</strong>
-                            <span>
-                              {draft.target_basis === "lifetime"
-                                ? "completions in total"
-                                : `per ${draft.recurrence_interval === "daily" ? "day" : draft.recurrence_interval === "weekly" ? "week" : "month"}`}
-                            </span>
-                          </div>
-                          <button
-                            aria-label="More completions"
-                            disabled={count >= max}
-                            onClick={() =>
-                              patch({ target_count: String(count + 1) })
-                            }
-                          >
-                            <Plus size={20} />
-                          </button>
-                        </div>
-                        <div
-                          className="gb-completion-beads"
-                          aria-label={`${count} target completions`}
-                        >
-                          {Array.from({ length: count }, (_, i) => (
-                            <span
-                              key={i}
-                              style={{
-                                animationDelay: `${i * 25}ms`,
-                                background: draft.color,
-                              }}
-                            />
-                          ))}
-                        </div>
-                        <label className="gb-checkbox">
-                          <input
-                            type="checkbox"
-                            checked={draft.target_basis === "lifetime"}
-                            onChange={(e) =>
-                              patch({
-                                target_basis: e.target.checked
-                                  ? "lifetime"
-                                  : "period",
-                                target_count: "1",
-                              })
-                            }
-                          />
-                          Set a lifetime total instead
-                        </label>
-                        <p className="gb-helper">
-                          A flexible completion target, not fixed days or time
-                          spent.
-                        </p>
-                      </>
-                    ) : (
-                      <div className="gb-milestones">
-                        {draft.milestone_names.map((name, i) => (
-                          <label key={i}>
-                            <span>{String(i + 1).padStart(2, "0")}</span>
-                            <input
-                              aria-label={`Milestone ${i + 1}`}
-                              value={name}
-                              onChange={(e) =>
-                                patch({
-                                  milestone_names: draft.milestone_names.map(
-                                    (x, j) => (j === i ? e.target.value : x),
-                                  ),
-                                })
-                              }
-                            />
-                            {draft.milestone_names.length > 1 && (
-                              <div className="gb-milestone-actions">
-                                <button
-                                  aria-label={`Move milestone ${i + 1} up`}
-                                  disabled={i === 0}
-                                  onClick={() => moveMilestone(i, "up")}
-                                >
-                                  <ArrowUp size={15} />
-                                </button>
-                                <button
-                                  aria-label={`Move milestone ${i + 1} down`}
-                                  disabled={i === draft.milestone_names.length - 1}
-                                  onClick={() => moveMilestone(i, "down")}
-                                >
-                                  <ArrowDown size={15} />
-                                </button>
-                                <button
-                                  aria-label={`Remove milestone ${i + 1}`}
-                                  onClick={() =>
-                                    patch({
-                                      milestone_names:
-                                        draft.milestone_names.filter(
-                                          (_, j) => i !== j,
-                                        ),
-                                    })
-                                  }
-                                >
-                                  <X size={16} />
-                                </button>
-                              </div>
-                            )}
-                          </label>
-                        ))}
-                        <button
-                          className="text-button"
-                          onClick={() =>
-                            patch({
-                              milestone_names: [...draft.milestone_names, ""],
-                            })
-                          }
-                        >
-                          <Plus size={16} />
-                          Add a milestone
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {step === 2 && (
-                  <div className="gb-personalize">
-                    <div className="gb-date-fields">
-                      <label>
-                        Start date
-                        <input
-                          type="date"
-                          value={draft.start_date}
-                          onChange={(e) =>
-                            patch({ start_date: e.target.value })
-                          }
-                        />
-                      </label>
-                      <label>
-                        End date · optional
-                        <input
-                          type="date"
-                          min={draft.start_date}
-                          value={draft.end_date}
-                          onChange={(e) => patch({ end_date: e.target.value })}
-                        />
-                      </label>
-                    </div>
-                    <fieldset>
-                      <legend>Give it a color</legend>
-                      <div className="gb-colors">
-                        {COLORS.map((c, i) => (
-                          <button
-                            key={c}
-                            aria-label={`Color ${i + 1}`}
-                            aria-pressed={draft.color === c}
-                            style={{ background: c }}
-                            onClick={() => patch({ color: c })}
-                          >
-                            {draft.color === c ? <Check size={19} /> : null}
-                          </button>
-                        ))}
-                      </div>
-                    </fieldset>
-                    <button
-                      className="gb-privacy"
-                      aria-pressed={draft.is_private}
-                      onClick={() => patch({ is_private: !draft.is_private })}
-                    >
-                      <LockKeyhole size={20} />
-                      <span>
-                        <strong>
-                          {draft.is_private
-                            ? "Just for you"
-                            : "Not a private goal"}
-                        </strong>
-                        <small>
-                          {draft.is_private
-                            ? "Keep this goal private."
-                            : "Use the app’s non-private visibility setting."}
-                        </small>
-                      </span>
-                      <span
-                        className={`gb-switch ${draft.is_private ? "on" : ""}`}
-                      >
-                        <i />
-                      </span>
-                    </button>
-                    {!valid(draft) && (
-                      <p className="gb-error" role="alert">
-                        Check the goal name, milestone names, and date range.
-                      </p>
-                    )}
-                  </div>
-                )}
-                {step === 3 && (
-                  <>
-                    <div className="gb-review-grid">
-                      {queue.map((d, i) => (
-                        <GoalReview
-                          key={i}
-                          index={i}
-                          draft={d}
-                          onChange={(next) =>
-                            setQueue((q) =>
-                              q.map((x, j) => (j === i ? next : x)),
-                            )
-                          }
-                          onRemove={
-                            queue.length > 1
-                              ? () =>
-                                  setQueue((q) => q.filter((_, j) => j !== i))
-                              : undefined
-                          }
-                          onMove={(direction) => moveQueuedGoal(i, direction)}
-                          isLast={i === queue.length - 1}
-                        />
-                      ))}
-                    </div>
-                    <button
-                      className="gb-add-another"
-                      onClick={() => {
-                        setDraft(fresh());
-                        setStep(0);
-                        setBatch(false);
-                      }}
-                    >
-                      <Plus size={20} /> Add another goal
-                    </button>
-                    <p className="gb-helper">
-                      This is the same review card for a single goal or a whole
-                      collection.
-                    </p>
-                  </>
-                )}
-              </>
-            )}
-          </section>
-          {step < 3 && !created && (
-            <aside className="gb-preview">
-              <span className="eyebrow">YOUR GOAL, TAKING SHAPE</span>
-              <div
-                className={`gb-object ${draft.frequency_type === "fixed_milestones" ? "milestone-object" : ""}`}
-                style={{ "--goal-tint": draft.color } as React.CSSProperties}
-              >
-                <span className="gb-object-icon">
-                  {draft.frequency_type === "recurring" ? (
-                    <Repeat2 size={30} />
-                  ) : (
-                    <Route size={30} />
-                  )}
-                </span>
-                <h3>
-                  {batch
-                    ? "A collection of possibilities"
-                    : draft.title || "Something worth showing up for."}
-                </h3>
-                <div className="gb-object-rule" />
-                <p>
-                  {batch
-                    ? `${lines.split("\n").filter((x) => x.trim()).length} goals to shape`
-                    : description(draft)}
-                </p>
-                {draft.frequency_type === "fixed_milestones" && !batch ? (
-                  <ol>
-                    {draft.milestone_names.map((n, i) => (
-                      <li key={i}>{n || "Your next milestone"}</li>
-                    ))}
-                  </ol>
-                ) : (
-                  <div className="gb-object-dots">
-                    {Array.from({ length: Math.min(count, 14) }, (_, i) => (
-                      <i key={i} />
-                    ))}
-                  </div>
-                )}
-                <span>
-                  {draft.start_date
-                    ? `From ${draft.start_date}`
-                    : "Choose a beginning"}
-                </span>
-              </div>
-              <p>
-                One intention.
-                <br />A shape you can come back to.
-              </p>
-            </aside>
-          )}
-        </div>
-        {!created && (
-          <footer className="gb-footer">
-            <button
-              className="text-button"
-              onClick={() =>
-                step === 0
-                  ? handleOpenChange(false)
-                  : step === 3
-                    ? (setDraft(fresh()), setBatch(false), setStep(0))
-                    : setStep(step - 1)
-              }
-            >
-              <ArrowLeft size={16} />
-              {step === 0
-                ? "Close"
-                : step === 3
-                  ? "Add / build another"
-                  : "Back"}
-            </button>
-            <span>
-              {step === 3
-                ? `${queue.length} ${queue.length === 1 ? "goal" : "goals"} ready to review`
-                : `${step + 1} of 4`}
-            </span>
-            <button
-              className="primary"
-              disabled={
-                step === 0
-                  ? batch
-                    ? !lines.split("\n").some((x) => x.trim())
-                    : !draft.title.trim()
-                  : step === 3
-                    ? !queue.length || !queue.every(valid)
-                    : !valid(draft)
-              }
-              onClick={() => {
-                if (step === 3) {
-                  setCreated(queue.length);
-                } else if (step === 0 && batch) {
-                  const names = lines
-                    .split("\n")
-                    .map((x) => x.trim())
-                    .filter(Boolean);
-                  setQueue((q) => [
-                    ...q,
-                    ...names.map((title) => ({ ...fresh(), title })),
-                  ]);
-                  setStep(3);
-                } else if (step === 2) {
-                  goReview();
-                } else setStep(step + 1);
-              }}
-            >
-              {step === 3
-                ? `Create ${queue.length === 1 ? "goal" : `${queue.length} goals`} in demo`
-                : step === 2 || batch
-                  ? "Review goals"
-                  : "Continue"}
-              <ArrowRight size={18} />
-            </button>
-          </footer>
+        <Close close={close} />
+        {created ? (
+          <>
+            <DialogTitle className="sr-only">Goal preview created</DialogTitle>
+            <Success draft={draft} reset={reset} />
+          </>
+        ) : (
+          <>
+            <DialogTitle className="sr-only">{dialogueTitle}</DialogTitle>
+            <Builder
+              draft={draft}
+              setDraft={setDraft}
+              finish={() => setCreated(true)}
+            />
+          </>
         )}
       </DialogContent>
     </Dialog>
