@@ -21,11 +21,13 @@ vi.mock("../../theme", () => ({
       card: "#f8f1e3",
       foreground: "#241c14",
       mutedForeground: "#7a6a56",
+      primary: "#9a4f2c",
       primaryForeground: "#f8f1e3",
     },
     fonts: {
       display: "serif",
       sans: "sans-serif",
+      sansMedium: "sans-serif-medium",
       mono: "monospace",
     },
   }),
@@ -54,6 +56,13 @@ const lift: MobileGoal = {
   id: "lift",
   title: "Lift",
   category: "Career",
+};
+
+const swim: MobileGoal = {
+  ...run,
+  id: "swim",
+  title: "Swim",
+  category: "Personal",
 };
 
 function renderedText(root: ReactTestRenderer) {
@@ -89,8 +98,8 @@ describe("InsightsLedgerPanel", () => {
     expect(
       root.root.findAll(
         (node: ReactTestInstance) => String(node.type) === "pressable"
-      )
-    ).toHaveLength(2);
+      ).length
+    ).toBeGreaterThanOrEqual(2);
 
     const liftButton = root.root.find(
       (node: ReactTestInstance) =>
@@ -122,5 +131,32 @@ describe("InsightsLedgerPanel", () => {
         node.props.testID === "insights-ledger-day-2099-01-01"
     );
     expect(futureDay.props.onPress).toBeUndefined();
+  });
+
+  it("shows overlap mode when a partial multi-goal selection stays active", () => {
+    let root!: ReactTestRenderer;
+    act(() => {
+      root = create(
+        <InsightsLedgerPanel
+          goals={[run, lift, swim]}
+          facts={[]}
+          summaries={[]}
+          days={["2026-09-01"]}
+          offset={0}
+          readOnly={false}
+          onToggleCompletion={() => undefined}
+        />
+      );
+    });
+
+    const swimButton = root.root.find(
+      (node: ReactTestInstance) =>
+        String(node.type) === "pressable" &&
+        node.props.accessibilityLabel === "Swim"
+    );
+    act(() => {
+      swimButton.props.onPress();
+    });
+    expect(renderedText(root)).toContain("Read-only overlap of 2 goals");
   });
 });

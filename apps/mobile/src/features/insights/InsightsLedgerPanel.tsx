@@ -21,7 +21,7 @@ import {
   resolveProgressLedgerMode,
   resolveSelectedLedgerGoalIds,
   toggleLedgerGoalSelection,
-} from "./progress-ledger-selection";
+} from "@cadence/shared/insights/progress-ledger-selection";
 
 const WEEKDAY_HEADERS = ["M", "T", "W", "Th", "F", "S", "Su"];
 
@@ -79,7 +79,7 @@ export function InsightsLedgerPanel({
           fontFamily: theme.fonts.sans,
         }}
       >
-        {progressLedgerCaption(mode, selectedIds.length)}
+        {progressLedgerCaption(mode, selectedIds.length, "completion", canEdit)}
       </Text>
       {mode === "empty" ? null : (
         <LedgerMonthHeatmap
@@ -101,6 +101,27 @@ export function InsightsLedgerPanel({
             toggleLedgerGoalSelection(visibleGoalIds, selectedGoalIds, goalId)
           );
         }}
+        onSelectAll={
+          readOnly
+            ? undefined
+            : () => {
+                setSelectedGoalIds(null);
+              }
+        }
+        onClearAll={
+          readOnly
+            ? undefined
+            : () => {
+                setSelectedGoalIds([]);
+              }
+        }
+        onSelectOnly={
+          readOnly
+            ? undefined
+            : (goalId) => {
+                setSelectedGoalIds([goalId]);
+              }
+        }
       />
     </View>
   );
