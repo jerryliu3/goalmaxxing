@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getDateInTimezone } from "@/lib/dates/timezone";
-import { runAfterResponse } from "@/lib/api/after";
 import {
   applyPlannerGoalDateFact,
   applyPlannerItemDateFact,
@@ -14,15 +13,26 @@ import {
   requirePlannerRouteContext,
   withPlannerRoute,
 } from "@/lib/planner/api";
+import { previewQueuedXpDeltaThenDrain } from "@/lib/xp/outbox";
 
 export const runtime = "nodejs";
 
 const MAX_REQUEST_BYTES = 16 * 1024;
 
-function scheduleXpDrain(supabase: {
-  rpc: (fn: string, args?: Record<string, unknown>) => Promise<unknown>;
-}) {
-  runAfterResponse(() => supabase.rpc("drain_xp_recompute_outbox", { p_limit: 50 }));
+function completionSuccessResponse(
+  payload: Record<string, unknown>,
+  xpDelta: number,
+  correlationId: string
+) {
+  return NextResponse.json(
+    {
+      schemaVersion: "1",
+      ...payload,
+      xpDelta,
+      correlationId,
+    },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }
 
 export async function handleCompletionPost(request: Request) {
@@ -75,15 +85,8 @@ export async function handleCompletionPost(request: Request) {
       if (!result.ok) {
         throw new PlannerRouteError(result.status, result.code, result.message);
       }
-      scheduleXpDrain(routeContext.supabase);
-      return NextResponse.json(
-        {
-          schemaVersion: "1",
-          ...result.payload,
-          correlationId,
-        },
-        { headers: { "Cache-Control": "no-store" } }
-      );
+      const xpDelta = await previewQueuedXpDeltaThenDrain(routeContext.supabase);
+      return completionSuccessResponse(result.payload, xpDelta, correlationId);
     }
 
     if (plannerGoalExpectation) {
@@ -102,15 +105,8 @@ export async function handleCompletionPost(request: Request) {
       if (!result.ok) {
         throw new PlannerRouteError(result.status, result.code, result.message);
       }
-      scheduleXpDrain(routeContext.supabase);
-      return NextResponse.json(
-        {
-          schemaVersion: "1",
-          ...result.payload,
-          correlationId,
-        },
-        { headers: { "Cache-Control": "no-store" } }
-      );
+      const xpDelta = await previewQueuedXpDeltaThenDrain(routeContext.supabase);
+      return completionSuccessResponse(result.payload, xpDelta, correlationId);
     }
 
     if (desiredFactState === "present") {
@@ -156,16 +152,15 @@ export async function handleCompletionPost(request: Request) {
       );
     }
 
-    scheduleXpDrain(routeContext.supabase);
-    return NextResponse.json(
+    const xpDelta = await previewQueuedXpDeltaThenDrain(routeContext.supabase);
+    return completionSuccessResponse(
       {
-        schemaVersion: "1",
         goalId,
         date,
         factState: desiredFactState,
-        correlationId,
       },
-      { headers: { "Cache-Control": "no-store" } }
+      xpDelta,
+      correlationId
     );
   });
 }

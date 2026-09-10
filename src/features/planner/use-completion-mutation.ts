@@ -79,6 +79,7 @@ export function useCompletionMutation() {
           reason: "completion",
           desiredFactState,
           sourceRect,
+          xpDelta: result.xpDelta,
         });
         return {
           ok: true,

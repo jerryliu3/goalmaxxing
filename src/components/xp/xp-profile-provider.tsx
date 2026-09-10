@@ -13,7 +13,6 @@ import {
 import { toast } from "sonner";
 import { useXpReward } from "@/components/xp/xp-reward-provider";
 import { bandForTotalXp, type XpAltitudeBand } from "@/lib/xp/altitude";
-import { XP_MANUAL_COMPLETION_POINTS } from "@/lib/xp/points";
 import { progressionForTotalXp } from "@/lib/xp/progression";
 import {
   captureViewportRect,
@@ -229,12 +228,13 @@ export function XpProfileProvider({
       return;
     }
     return subscribeXpRefresh((detail) => {
-      if (detail && profileRef.current) {
-        const delta =
-          detail.desiredFactState === "present"
-            ? XP_MANUAL_COMPLETION_POINTS
-            : -XP_MANUAL_COMPLETION_POINTS;
-        const totalXp = Math.max(0, profileRef.current.totalXp + delta);
+      if (
+        detail &&
+        profileRef.current &&
+        typeof detail.xpDelta === "number" &&
+        Number.isFinite(detail.xpDelta)
+      ) {
+        const totalXp = Math.max(0, profileRef.current.totalXp + detail.xpDelta);
         const progression = progressionForTotalXp(totalXp);
         const nextProfile = {
           ...profileRef.current,

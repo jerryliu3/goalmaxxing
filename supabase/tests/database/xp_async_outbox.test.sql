@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, private, extensions, pg_catalog;
-select plan(4);
+select plan(5);
 
 set local role authenticated;
 select set_config(
@@ -68,20 +68,30 @@ select set_config(
 );
 select set_config('request.jwt.claim.role', 'authenticated', true);
 
+create temp table xp_preview on commit drop as
+  select public.preview_queued_xp_delta() as delta;
+
 select is(
   public.drain_xp_recompute_outbox(10),
   1,
   'drain applies one queued XP recompute'
 );
 
-select ok(
+select is(
   (
-    select coalesce(sum(l.xp_delta), 0)
+    select coalesce(sum(l.xp_delta), 0)::integer
     from public.xp_ledger l
     where l.user_id = '11111111-1111-4111-8111-111111111111'
       and l.goal_id = 'c4100000-0000-4000-8000-000000000001'
-  ) > 0,
-  'drain writes XP after the completion fact exists'
+  ),
+  (select delta from xp_preview),
+  'drain writes the previewed ledger delta'
+);
+
+select is(
+  public.preview_queued_xp_delta(),
+  0,
+  'preview is empty after drain'
 );
 
 select * from finish();

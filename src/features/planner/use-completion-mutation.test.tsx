@@ -35,6 +35,7 @@ describe("useCompletionMutation", () => {
     vi.mocked(executeCompletionDispatch).mockResolvedValue({
       ok: true,
       message: null,
+      xpDelta: 40,
     });
     const refreshDetails: XpRefreshRequestDetail[] = [];
     const unsubscribe = subscribeXpRefresh((detail) => {
@@ -66,6 +67,7 @@ describe("useCompletionMutation", () => {
         reason: "completion",
         desiredFactState: "present",
         sourceRect,
+        xpDelta: 40,
       },
     ]);
     expect(invalidateSocialFeedCache).toHaveBeenCalledTimes(1);

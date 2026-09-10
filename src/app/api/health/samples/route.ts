@@ -18,6 +18,7 @@ import {
   requireIntegrationsFlag,
 } from "@/lib/health/integrations-disabled";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { scheduleXpOutboxDrain } from "@/lib/xp/outbox";
 
 export const runtime = "nodejs";
 
@@ -173,6 +174,7 @@ export async function POST(request: Request) {
       }
       autocompleteResult = (autocompleteResponse.data ??
         autocompleteResult) as typeof autocompleteResult;
+      scheduleXpOutboxDrain(supabase);
     }
 
     reportHealthDiagnostic({

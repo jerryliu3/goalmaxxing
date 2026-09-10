@@ -1,7 +1,8 @@
 -- Keep linked-goal BFS inside the completion write, but move XP ledger
 -- recompute off that transaction. Completions enqueue (user, goal) rows;
--- drain_xp_recompute_outbox applies XP after commit. reconcile_goal_xp_service
--- remains the eventual-consistency backstop.
+-- HTTP handlers drain the outbox in after() so XP follows the fact write
+-- immediately without sharing a transaction.
+-- reconcile_goal_xp_service remains the eventual-consistency backstop.
 
 create table if not exists private.xp_recompute_outbox (
   user_id uuid not null,
@@ -73,6 +74,80 @@ $$;
 revoke all on function public.drain_xp_recompute_outbox(integer)
   from public, anon;
 grant execute on function public.drain_xp_recompute_outbox(integer)
+  to authenticated, service_role;
+
+-- Same desired-vs-ledger diff recompute_goal_xp_service writes, without the write.
+create or replace function private.goal_xp_pending_delta(
+  p_user_id uuid,
+  p_goal_id uuid
+)
+returns integer
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  with desired as (
+    select *
+    from private.goal_xp_credited_units(p_user_id, p_goal_id)
+  ),
+  current_balance as (
+    select
+      l.source_key,
+      l.track_key,
+      pg_catalog.min(l.event_type) as event_type,
+      pg_catalog.max(l.earned_on) as earned_on,
+      pg_catalog.sum(l.xp_delta)::integer as balance
+    from public.xp_ledger l
+    where l.user_id = p_user_id
+      and l.goal_id = p_goal_id
+    group by l.source_key, l.track_key
+    having pg_catalog.sum(l.xp_delta) <> 0
+  ),
+  diff as (
+    select coalesce(d.xp_amount, 0) - coalesce(c.balance, 0) as xp_delta
+    from desired d
+    full outer join current_balance c
+      on c.source_key = d.source_key
+     and c.track_key = d.track_key
+  )
+  select coalesce(sum(diff.xp_delta), 0)::integer
+  from diff
+  where diff.xp_delta <> 0;
+$$;
+
+revoke all on function private.goal_xp_pending_delta(uuid, uuid)
+  from public, anon, authenticated;
+grant execute on function private.goal_xp_pending_delta(uuid, uuid)
+  to service_role;
+
+create or replace function public.preview_queued_xp_delta()
+returns integer
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_total integer := 0;
+begin
+  if v_uid is null then
+    raise exception 'authentication required';
+  end if;
+
+  select coalesce(sum(private.goal_xp_pending_delta(v_uid, q.goal_id)), 0)::integer
+    into v_total
+  from private.xp_recompute_outbox q
+  where q.user_id = v_uid;
+
+  return v_total;
+end;
+$$;
+
+revoke all on function public.preview_queued_xp_delta()
+  from public, anon;
+grant execute on function public.preview_queued_xp_delta()
   to authenticated, service_role;
 
 create or replace function public.mark_goal_complete(
@@ -247,6 +322,9 @@ begin
   then
     return false;
   end if;
+  -- Product policy: unmarking does not permanently opt a date out of future
+  -- external_sync completion writes. If users do not want a synced completion
+  -- retained, they should unmark after the sync has applied for that day.
 
   if exists (
     select 1
@@ -333,29 +411,3 @@ begin
   return v_root_inserted;
 end;
 $$;
-
-do $cron$
-declare
-  v_job_id bigint;
-begin
-  if to_regnamespace('cron') is null then
-    return;
-  end if;
-
-  for v_job_id in
-    select jobid
-    from cron.job
-    where jobname = 'xp-recompute-outbox-minute'
-  loop
-    perform cron.unschedule(v_job_id);
-  end loop;
-
-  perform cron.schedule(
-    'xp-recompute-outbox-minute',
-    '* * * * *',
-    $xp$
-      select public.drain_xp_recompute_outbox(100);
-    $xp$
-  );
-end;
-$cron$;
