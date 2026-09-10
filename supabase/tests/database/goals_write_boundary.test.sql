@@ -307,6 +307,7 @@ select public.mark_goal_complete(
   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4',
   current_date
 );
+select public.drain_xp_recompute_outbox(50);
 
 select ok(
   (
@@ -354,6 +355,7 @@ select public.mark_goal_complete(
   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa5',
   current_date
 );
+select public.drain_xp_recompute_outbox(50);
 
 select ok(
   (
@@ -421,6 +423,7 @@ select public.mark_goal_complete(
   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa6',
   current_date
 );
+select public.drain_xp_recompute_outbox(50);
 
 select is(
   (

@@ -2969,6 +2969,10 @@ export type Database = {
           upserted_count: number
         }[]
       }
+      drain_xp_recompute_outbox: {
+        Args: { p_limit?: number }
+        Returns: number
+      }
       provision_synthetic_users_service: {
         Args: { p_goals_per_user?: number; p_target_count?: number }
         Returns: number

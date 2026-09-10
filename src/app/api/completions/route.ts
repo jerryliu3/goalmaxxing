@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDateInTimezone } from "@/lib/dates/timezone";
+import { runAfterResponse } from "@/lib/api/after";
 import {
   applyPlannerGoalDateFact,
   applyPlannerItemDateFact,
@@ -17,6 +18,12 @@ import {
 export const runtime = "nodejs";
 
 const MAX_REQUEST_BYTES = 16 * 1024;
+
+function scheduleXpDrain(supabase: {
+  rpc: (fn: string, args?: Record<string, unknown>) => Promise<unknown>;
+}) {
+  runAfterResponse(() => supabase.rpc("drain_xp_recompute_outbox", { p_limit: 50 }));
+}
 
 export async function handleCompletionPost(request: Request) {
   return withPlannerRoute(async ({ correlationId }) => {
@@ -68,6 +75,7 @@ export async function handleCompletionPost(request: Request) {
       if (!result.ok) {
         throw new PlannerRouteError(result.status, result.code, result.message);
       }
+      scheduleXpDrain(routeContext.supabase);
       return NextResponse.json(
         {
           schemaVersion: "1",
@@ -94,6 +102,7 @@ export async function handleCompletionPost(request: Request) {
       if (!result.ok) {
         throw new PlannerRouteError(result.status, result.code, result.message);
       }
+      scheduleXpDrain(routeContext.supabase);
       return NextResponse.json(
         {
           schemaVersion: "1",
@@ -147,6 +156,7 @@ export async function handleCompletionPost(request: Request) {
       );
     }
 
+    scheduleXpDrain(routeContext.supabase);
     return NextResponse.json(
       {
         schemaVersion: "1",

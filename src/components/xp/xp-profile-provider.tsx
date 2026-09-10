@@ -13,6 +13,8 @@ import {
 import { toast } from "sonner";
 import { useXpReward } from "@/components/xp/xp-reward-provider";
 import { bandForTotalXp, type XpAltitudeBand } from "@/lib/xp/altitude";
+import { XP_MANUAL_COMPLETION_POINTS } from "@/lib/xp/points";
+import { progressionForTotalXp } from "@/lib/xp/progression";
 import {
   captureViewportRect,
   subscribeXpRefresh,
@@ -126,6 +128,19 @@ export function XpProfileProvider({
         }
 
         const previousProfile = profileRef.current;
+        const serverTotal = payload.profile.totalXp;
+        const optimisticTotal = previousProfile?.totalXp ?? serverTotal;
+        const staleFetch =
+          request?.desiredFactState === "present" && serverTotal < optimisticTotal;
+        if (staleFetch) {
+          window.setTimeout(() => {
+            if (requestId === loadRequestIdRef.current) {
+              void loadProfile(null);
+            }
+          }, 250);
+          return;
+        }
+
         profileRef.current = payload.profile;
         setProfile(payload.profile);
         setTracks(payload.tracks ?? []);
@@ -214,9 +229,34 @@ export function XpProfileProvider({
       return;
     }
     return subscribeXpRefresh((detail) => {
+      if (detail && profileRef.current) {
+        const delta =
+          detail.desiredFactState === "present"
+            ? XP_MANUAL_COMPLETION_POINTS
+            : -XP_MANUAL_COMPLETION_POINTS;
+        const totalXp = Math.max(0, profileRef.current.totalXp + delta);
+        const progression = progressionForTotalXp(totalXp);
+        const nextProfile = {
+          ...profileRef.current,
+          totalXp,
+          ...progression,
+        };
+        profileRef.current = nextProfile;
+        setProfile(nextProfile);
+        if (detail.desiredFactState === "present") {
+          const target = document.querySelector("[data-xp-reward-target='true']");
+          if (target && detail.sourceRect) {
+            celebrate({
+              sourceRect: detail.sourceRect,
+              targetRect: captureViewportRect(target),
+            });
+          }
+          setRewardSequence((current) => current + 1);
+        }
+      }
       void loadProfile(detail ?? null);
     });
-  }, [enabled, loadProfile]);
+  }, [celebrate, enabled, loadProfile]);
 
   const value = useMemo<XpProfileContextValue>(
     () => ({

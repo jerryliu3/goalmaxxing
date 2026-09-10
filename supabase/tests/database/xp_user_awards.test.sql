@@ -72,6 +72,7 @@ select lives_ok(
       'b3500000-0000-4000-8000-000000000001',
       current_date
     );
+    select public.drain_xp_recompute_outbox(50);
   $tap$,
   'first completion reaches level-2 threshold and unlocks reward'
 );
@@ -94,6 +95,7 @@ select lives_ok(
       'b3500000-0000-4000-8000-000000000001',
       current_date
     );
+    select public.drain_xp_recompute_outbox(50);
   $tap$,
   'unmarking reverses xp below reward threshold'
 );
@@ -116,6 +118,7 @@ select lives_ok(
       'b3500000-0000-4000-8000-000000000001',
       current_date
     );
+    select public.drain_xp_recompute_outbox(50);
   $tap$,
   're-crossing threshold is allowed'
 );

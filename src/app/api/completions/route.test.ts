@@ -261,7 +261,9 @@ describe("completions route", () => {
         },
       })
     );
-    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.rpc).toHaveBeenCalledWith("drain_xp_recompute_outbox", {
+      p_limit: 50,
+    });
   });
 
   it("routes planner goal expectation payloads through planner goal dispatch", async () => {
@@ -295,7 +297,9 @@ describe("completions route", () => {
         },
       })
     );
-    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.rpc).toHaveBeenCalledWith("drain_xp_recompute_outbox", {
+      p_limit: 50,
+    });
   });
 
 });
