@@ -81,7 +81,7 @@ export function CalendarSurface({
   activeTab,
   month,
   selectedDay,
-  viewMode: routeViewMode,
+  viewMode,
   onMonthChange,
   onSelectedDayChange,
   onPlannerMutation,
@@ -134,19 +134,6 @@ export function CalendarSurface({
   // Intentionally session-scoped for now; dismissal resets on page reload.
   const [warningsDismissed, setWarningsDismissed] = useState(false);
   const [localSelectedDay, setLocalSelectedDay] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState(routeViewMode);
-  const committedViewModeRef = useRef(routeViewMode);
-  const commitViewMode = useCallback((nextViewMode: typeof routeViewMode) => {
-    committedViewModeRef.current = nextViewMode;
-    setViewMode(nextViewMode);
-  }, []);
-  useEffect(() => {
-    if (routeViewMode === committedViewModeRef.current) {
-      return;
-    }
-    committedViewModeRef.current = routeViewMode;
-    setViewMode(routeViewMode);
-  }, [routeViewMode]);
   useEffect(() => {
     const resetTimer = window.setTimeout(() => setLocalSelectedDay(null), 0);
     return () => window.clearTimeout(resetTimer);
@@ -383,7 +370,6 @@ export function CalendarSurface({
     setDayPreview,
     setSelectedEventEntryKey,
     setLocalSelectedDay,
-    onRenderedViewModeChange: commitViewMode,
     multiMonthGridScrollRef,
     monthScrollAlignmentKeyRef,
     calendarHorizontalAlignmentKeyRef,

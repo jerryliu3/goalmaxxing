@@ -452,47 +452,28 @@ body {
   animation: 220ms var(--motion-ease-emphasized) both app-nav-enter-back;
 }
 
-@keyframes plan-view-fade-out {
+@keyframes plan-view-zoom-out {
   to {
     opacity: 0;
+    scale: 0.86;
   }
 }
 
-@keyframes plan-view-fade-in {
+@keyframes plan-view-zoom-in {
   from {
     opacity: 0;
-    transform: translateY(0.6rem);
+    scale: 1.1;
   }
 }
 
-.plan-view-swap {
-  animation: plan-view-fade-in 320ms var(--motion-ease-emphasized) both;
+::view-transition-old(.plan-view-zoom) {
+  animation: 240ms ease-in both plan-view-zoom-out;
+  transform-origin: 50% 18%;
 }
 
-::view-transition-old(.plan-view-fade) {
-  animation: 180ms ease-out both plan-view-fade-out;
-}
-
-::view-transition-new(.plan-view-fade) {
-  animation: 260ms var(--motion-ease-emphasized) both plan-view-fade-in;
-}
-
-.plan-morph {
-  view-transition-class: plan-morph;
-}
-
-::view-transition-group(.plan-morph) {
-  animation-duration: 360ms;
-  animation-timing-function: var(--motion-ease-emphasized);
-  z-index: 3;
-}
-
-::view-transition-old(.plan-morph) {
-  animation: 160ms ease-out both plan-view-fade-out;
-}
-
-::view-transition-new(.plan-morph) {
-  animation: 260ms var(--motion-ease-emphasized) both plan-view-fade-in;
+::view-transition-new(.plan-view-zoom) {
+  animation: 320ms var(--motion-ease-emphasized) both plan-view-zoom-in;
+  transform-origin: 50% 18%;
 }
 
 ::view-transition-group(plan-focused-aside) {
@@ -569,8 +550,7 @@ body {
   .motion-collapsible-content,
   .plan-draft-shimmer::after,
   .plan-adjacent-month-nudge-up,
-  .plan-adjacent-month-nudge-down,
-  .plan-view-swap {
+  .plan-adjacent-month-nudge-down {
     animation: none !important;
   }
 

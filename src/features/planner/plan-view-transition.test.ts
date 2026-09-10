@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   PLAN_MORPH_CLASS,
-  PLAN_VIEW_SWAP_CLASS,
   planDayViewTransitionName,
   planEntryViewTransitionName,
 } from "@/features/planner/plan-view-transition";
@@ -17,6 +16,5 @@ describe("plan view transition names", () => {
 
   it("shares one morph class for day surfaces and session pills", () => {
     expect(PLAN_MORPH_CLASS).toBe("plan-morph");
-    expect(PLAN_VIEW_SWAP_CLASS).toBe("plan-view-swap");
   });
 });

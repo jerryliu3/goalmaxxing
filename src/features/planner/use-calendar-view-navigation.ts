@@ -32,7 +32,6 @@ export function useCalendarViewNavigation({
   setDayPreview,
   setSelectedEventEntryKey,
   setLocalSelectedDay,
-  onRenderedViewModeChange,
   multiMonthGridScrollRef,
   monthScrollAlignmentKeyRef,
   calendarHorizontalAlignmentKeyRef,
@@ -55,7 +54,6 @@ export function useCalendarViewNavigation({
   setDayPreview: (value: null) => void;
   setSelectedEventEntryKey: (value: string | null) => void;
   setLocalSelectedDay: (value: string | null) => void;
-  onRenderedViewModeChange: (viewMode: PlannerCalendarViewMode) => void;
   multiMonthGridScrollRef: React.RefObject<HTMLDivElement | null>;
   monthScrollAlignmentKeyRef: React.MutableRefObject<string | null>;
   calendarHorizontalAlignmentKeyRef: React.MutableRefObject<string | null>;
@@ -204,7 +202,6 @@ export function useCalendarViewNavigation({
       }
       monthScrollAlignmentKeyRef.current = null;
       calendarHorizontalAlignmentKeyRef.current = null;
-      onRenderedViewModeChange(nextViewMode);
       onSelectedDayChange(focusedDay, "push", nextViewMode, { alignMonth: true });
     },
     [
@@ -212,7 +209,6 @@ export function useCalendarViewNavigation({
       focusedDay,
       monthScrollAlignmentKeyRef,
       onSelectedDayChange,
-      onRenderedViewModeChange,
       resolveWeekStartDay,
       setDayPreview,
       viewMode,
