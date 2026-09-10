@@ -105,12 +105,40 @@ export function ConceptsIndex() {
               Open Spatial Home
             </Link>
             <Link
+              href="/ux/concepts/plan-zoom"
+              className="text-sm font-medium text-primary"
+            >
+              Plan zoom (expand / compress)
+            </Link>
+            <Link
               href="/ux/concepts/patterns"
               className="text-sm font-medium text-primary"
             >
               Pattern library
             </Link>
           </div>
+        </section>
+
+        <section className="mt-10 rounded-2xl border bg-card p-5 ring-1 ring-foreground/10">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Motion study · not a lock
+          </p>
+          <h2 className="mt-1 text-xl font-semibold tracking-tight">
+            Day, week, and month should zoom
+          </h2>
+          <p className="mt-2 text-sm">
+            Live Plan currently fades between views. This shell keeps Spatial
+            Home’s pills, rows, and chrome, then treats week and day as one
+            vertical stack that expands and compresses. Month uses the same
+            language on week bands. Production{" "}
+            <code className="text-foreground">AppShell</code> is untouched.
+          </p>
+          <Link
+            href="/ux/concepts/plan-zoom"
+            className="mt-4 inline-flex text-sm font-medium text-primary"
+          >
+            Open the zoom study
+          </Link>
         </section>
 
         {DESTINATION_FAMILIES.map((family) => (
