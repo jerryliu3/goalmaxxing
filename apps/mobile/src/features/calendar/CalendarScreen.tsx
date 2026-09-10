@@ -57,8 +57,18 @@ import {
 import { useCalendarPartnerOverlay } from "./use-calendar-partner-overlay";
 import { shiftMonth, usePlannerContext } from "./use-planner-context";
 import { resolveActivePlanItem } from "./resolve-active-plan-item";
+import {
+  resolveMobileSessionFill,
+  selectMobileRecoverCopy,
+} from "./calendar-gazetteer";
 
 const VIEW_MODES = ["month", "week", "three_day", "day"] as const;
+const VIEW_MODE_LABELS: Record<(typeof VIEW_MODES)[number], string> = {
+  month: "Month",
+  week: "Week",
+  three_day: "3-day",
+  day: "Day",
+};
 
 function MeasureableDay({
   onRect,
@@ -139,6 +149,7 @@ export function CalendarScreen({
   const effectivePreview = draft.preview ?? planner.data?.preview ?? null;
   const confirmationRequired =
     draft.preview?.solver?.confirmationRequired === true;
+  const recoverCopy = selectMobileRecoverCopy(planner.data?.unplaceableGoals);
 
   const unitsByDate = useMemo(() => {
     const map = new Map<string, PlannerWorkUnit[]>();
@@ -330,6 +341,30 @@ export function CalendarScreen({
           </Text>
         </View>
       ) : null}
+      {recoverCopy ? (
+        <View
+          style={[
+            styles.recoverBanner,
+            {
+              borderColor: theme.colors.recover,
+              backgroundColor: theme.colors.card,
+            },
+          ]}
+        >
+          <Text
+            style={{
+              color: theme.colors.recover,
+              fontWeight: "700",
+              letterSpacing: 1.4,
+              textTransform: "uppercase",
+              fontSize: 11,
+            }}
+          >
+            Recover
+          </Text>
+          <Text style={{ color: theme.colors.foreground }}>{recoverCopy}</Text>
+        </View>
+      ) : null}
       <View style={styles.row}>
         <Pressable onPress={() => apply({ month: shiftMonth(scopeMonth, -1) })}>
           <Text style={{ color: theme.colors.primary }}>Prev</Text>
@@ -341,14 +376,22 @@ export function CalendarScreen({
       </View>
       <View style={styles.row}>
         {VIEW_MODES.map((mode) => (
-          <Pressable key={mode} onPress={() => apply({ viewMode: mode, day: selectedDay })}>
+          <Pressable
+            key={mode}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: mode === viewMode }}
+            onPress={() => apply({ viewMode: mode, day: selectedDay })}
+          >
             <Text
               style={{
                 color: mode === viewMode ? theme.colors.primary : theme.colors.mutedForeground,
-                fontWeight: mode === viewMode ? "700" : "500",
+                fontWeight: mode === viewMode ? "700" : "600",
+                letterSpacing: 1.2,
+                textTransform: "uppercase",
+                fontSize: 11,
               }}
             >
-              {mode}
+              {VIEW_MODE_LABELS[mode]}
             </Text>
           </Pressable>
         ))}
@@ -463,7 +506,13 @@ export function CalendarScreen({
                 rect,
               });
             }}
-            style={[styles.dayCard, { borderColor: theme.colors.border }]}
+            style={[
+              styles.dayCard,
+              {
+                borderColor: theme.colors.border,
+                borderBottomWidth: StyleSheet.hairlineWidth,
+              },
+            ]}
           >
             <Text style={{ color: theme.colors.foreground, fontWeight: "700" }}>
               {visibleDay}
@@ -475,6 +524,8 @@ export function CalendarScreen({
                     unit={unit}
                     day={visibleDay}
                     label={sessionLabel(unit)}
+                    fill={resolveMobileSessionFill(planner.data, unit)}
+                    done={unit.creditState !== "uncredited"}
                     onPress={() => {
                       setMoveUnit(unit);
                       setMoveDate(visibleDay);
@@ -686,11 +737,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
+  recoverBanner: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 4,
+  },
   grid: { flexDirection: "row", flexWrap: "wrap" },
   cell: {
     width: "14.28%",
     aspectRatio: 1,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     padding: 4,
   },
   cellPress: { flex: 1 },
@@ -700,7 +758,11 @@ const styles = StyleSheet.create({
     borderRadius: 99,
     marginTop: 4,
   },
-  dayCard: { borderWidth: 1, borderRadius: 12, padding: 12, gap: 6 },
+  dayCard: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 12,
+    gap: 6,
+  },
   partnerMarker: {
     borderWidth: 1,
     borderRadius: 10,

@@ -9,6 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../theme";
+import { NestCompletionMark } from "../../ui/nest-completion-mark";
 import type { LayoutRect } from "./drop-targets";
 import { measureNodeInWindow } from "./drop-targets";
 import type { PlannerWorkUnit } from "@cadence/shared/planner/context";
@@ -19,6 +20,8 @@ export function DraggableSession({
   unit,
   day,
   label,
+  fill,
+  done,
   onPress,
   onDrop,
   onLayoutWindow,
@@ -27,6 +30,8 @@ export function DraggableSession({
   unit: PlannerWorkUnit;
   day: string;
   label: string;
+  fill: string;
+  done: boolean;
   onPress: () => void;
   onDrop: (input: {
     unit: PlannerWorkUnit;
@@ -105,12 +110,15 @@ export function DraggableSession({
           style={[
             styles.chip,
             {
-              backgroundColor: theme.colors.secondary,
-              borderColor: theme.colors.border,
+              backgroundColor: fill,
+              borderColor: fill,
             },
           ]}
         >
-          <Text style={{ color: theme.colors.foreground }}>{label}</Text>
+          {done ? (
+            <NestCompletionMark done color={theme.colors.primaryForeground} size={14} />
+          ) : null}
+          <Text style={{ color: theme.colors.primaryForeground, flex: 1 }}>{label}</Text>
         </Pressable>
       </Animated.View>
     </GestureDetector>
@@ -119,9 +127,12 @@ export function DraggableSession({
 
 const styles = StyleSheet.create({
   chip: {
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
 });
