@@ -2,6 +2,7 @@
 
 import { type ReactNode } from "react";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
+import { PLAN_VIEW_SWAP_CLASS } from "@/features/planner/plan-view-transition";
 
 export function PlanViewTransitionFrame({
   viewMode,
@@ -12,7 +13,13 @@ export function PlanViewTransitionFrame({
 }) {
   return (
     <div data-plan-view-frame="true">
-      <div data-plan-view={viewMode}>{children}</div>
+      <div
+        key={viewMode}
+        data-plan-view={viewMode}
+        className={PLAN_VIEW_SWAP_CLASS}
+      >
+        {children}
+      </div>
     </div>
   );
 }
