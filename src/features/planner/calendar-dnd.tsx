@@ -69,7 +69,6 @@ function sortableItemStyle(
       ? `translate3d(${transform.x}px, ${transform.y}px, 0) scaleX(${transform.scaleX}) scaleY(${transform.scaleY})`
       : undefined,
     transition,
-    touchAction: "none",
   };
 }
 
