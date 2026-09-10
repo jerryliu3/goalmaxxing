@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { LandingWowMountain } from "@/components/landing/landing-wow-mountain";
+import {
+  APP_SURFACE_READY_EVENT,
+  isAppBootSplashSkipped,
+  markAppBootReady,
+  removeAppBootPreloadOverlay,
+} from "@/components/layout/app-boot-ready";
 import { getMonthInTimezone } from "@/features/planner/calendar-format";
 import type { PlannerContextPayload } from "@/features/planner/calendar-surface.types";
 import { getJson } from "@/lib/api/client";
@@ -13,23 +19,17 @@ import {
 } from "@/lib/cache/tab-data-cache";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
 
-export const APP_BOOT_READY_STORAGE_KEY = "gm-boot-ready";
-const BOOT_TIMEOUT_MS = 8000;
-const CLIMB_LOOP_MS = 14000;
+export { APP_BOOT_READY_STORAGE_KEY } from "@/components/layout/app-boot-ready";
 
-function subscribeToBootReady() {
-  return () => undefined;
-}
+const BOOT_TIMEOUT_MS = 15000;
+const CLIMB_LOOP_MS = Math.round(14000 / 1.7);
 
-function getBootReadySnapshot() {
+function readPrefersReducedMotion() {
   return (
     typeof window !== "undefined" &&
-    window.sessionStorage.getItem(APP_BOOT_READY_STORAGE_KEY) === "1"
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
-}
-
-function getServerBootReadySnapshot() {
-  return true;
 }
 
 async function warmPlannerContext() {
@@ -46,8 +46,8 @@ async function warmPlannerContext() {
 }
 
 function BootClimbAnimation() {
-  const [progress, setProgress] = useState(0.08);
-  const [reduceMotion, setReduceMotion] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(readPrefersReducedMotion);
+  const [loopProgress, setLoopProgress] = useState(0.08);
 
   useEffect(() => {
     if (typeof window.matchMedia !== "function") {
@@ -55,7 +55,6 @@ function BootClimbAnimation() {
     }
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const sync = () => setReduceMotion(media.matches);
-    sync();
     media.addEventListener("change", sync);
     return () => media.removeEventListener("change", sync);
   }, []);
@@ -68,58 +67,61 @@ function BootClimbAnimation() {
     const startedAt = performance.now();
     const tick = (now: number) => {
       const loop = ((now - startedAt) % CLIMB_LOOP_MS) / CLIMB_LOOP_MS;
-      setProgress(0.06 + loop * 0.88);
+      setLoopProgress(0.06 + loop * 0.88);
       frame = window.requestAnimationFrame(tick);
     };
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
   }, [reduceMotion]);
 
+  const progress = reduceMotion ? 0.42 : loopProgress;
+
   return (
     <div
       data-testid="app-boot-climb"
       className="relative h-64 w-[min(100vw-2rem,32rem)] overflow-hidden rounded-[20px] border border-border sm:h-80"
     >
-      <LandingWowMountain progress={reduceMotion ? 0.42 : progress} />
+      <LandingWowMountain progress={progress} />
     </div>
   );
 }
 
 export function AppBootSplash() {
-  const bootReady = useSyncExternalStore(
-    subscribeToBootReady,
-    getBootReadySnapshot,
-    getServerBootReadySnapshot
-  );
-  const [bootComplete, setBootComplete] = useState(false);
+  const [visible, setVisible] = useState(() => !isAppBootSplashSkipped());
 
-  useEffect(() => {
-    if (bootReady || bootComplete) {
+  useLayoutEffect(() => {
+    removeAppBootPreloadOverlay();
+    if (isAppBootSplashSkipped()) {
       return;
     }
 
     let cancelled = false;
+    let finished = false;
     const finish = () => {
-      if (cancelled) {
+      if (cancelled || finished) {
         return;
       }
-      window.sessionStorage.setItem(APP_BOOT_READY_STORAGE_KEY, "1");
-      setBootComplete(true);
+      finished = true;
+      markAppBootReady();
+      removeAppBootPreloadOverlay();
+      setVisible(false);
     };
     const timeoutId = window.setTimeout(finish, BOOT_TIMEOUT_MS);
-    void warmPlannerContext()
-      .catch(() => undefined)
-      .finally(() => {
-        window.clearTimeout(timeoutId);
-        finish();
-      });
+    const onSurfaceReady = () => {
+      window.clearTimeout(timeoutId);
+      finish();
+    };
+    window.addEventListener(APP_SURFACE_READY_EVENT, onSurfaceReady);
+    void warmPlannerContext().catch(() => undefined);
+    void import("@/features/planner/calendar-page-shell");
     return () => {
       cancelled = true;
       window.clearTimeout(timeoutId);
+      window.removeEventListener(APP_SURFACE_READY_EVENT, onSurfaceReady);
     };
-  }, [bootComplete, bootReady]);
+  }, []);
 
-  if (bootReady || bootComplete) {
+  if (!visible) {
     return null;
   }
 

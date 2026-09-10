@@ -14,6 +14,7 @@ import {
 } from "react";
 import { SidePanel } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
+import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
 import { LoadingCard } from "@/components/ui/loading-card";
 import { OnboardingGuidesSettings } from "@/features/onboarding/onboarding-guides-settings";
 import { AppearanceSettings } from "@/features/settings/appearance-settings";
@@ -60,6 +61,7 @@ export function SettingsTab() {
     savePreferences,
     signOut,
   } = useSocialTabData();
+  useReportAppSurfaceReady(!(loading && !state.userId));
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();
   const isDesktopTwoPane = useMediaQuery("(min-width: 768px)");

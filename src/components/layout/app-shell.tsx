@@ -7,6 +7,10 @@ import { JourneyIntroOverlay } from "@/components/intro/journey-intro-overlay";
 import { JourneyProvider } from "@/components/journey/journey-provider.web";
 import type { JourneyFeatureFlags } from "@/components/journey/types";
 import { AppBootSplash } from "@/components/layout/app-boot-splash";
+import {
+  isAppBootGatedPath,
+  useReportAppSurfaceReady,
+} from "@/components/layout/app-boot-ready";
 import { TabNav } from "@/components/navigation/tab-nav";
 import { Button } from "@/components/ui/button";
 import { AltitudeBackdrop } from "@/components/xp/altitude-backdrop";
@@ -63,6 +67,7 @@ export function AppShell({
     hrefPrefix,
   });
   const pathname = usePathname();
+  useReportAppSurfaceReady(!isAppBootGatedPath(pathname));
   const searchParams = useSearchParams();
   const search = searchParams.toString();
   const returnTo = search.length > 0 ? `${pathname}?${search}` : pathname;
