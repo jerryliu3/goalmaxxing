@@ -5,6 +5,7 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
