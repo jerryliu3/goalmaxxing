@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
 import { bandForTotalXp } from "@/lib/xp/altitude";
+import { cn } from "@/lib/utils";
 
 interface XpProfileSummary {
   totalXp: number;
@@ -31,23 +32,10 @@ function resolveProgressPercent(profile: XpProfileSummary) {
   );
 }
 
-function resolveProgressLabel(profile: XpProfileSummary) {
-  const currentLevelMin = profile.currentLevelMinXp;
-  const nextLevelMin = profile.nextLevelMinXp;
-  if (nextLevelMin === null) {
-    return "Top level unlocked";
-  }
-  return `${formatNumber(profile.totalXp - currentLevelMin)} / ${formatNumber(
-    nextLevelMin - currentLevelMin
-  )} XP to Lv ${profile.nextLevel}`;
-}
-
 function XpProgressCardContents({ profile }: { profile: XpProfileSummary }) {
   const band = bandForTotalXp(profile.totalXp);
   const progressPercent = resolveProgressPercent(profile);
-  const progressLabel = resolveProgressLabel(profile);
-  const levelProgress = formatNumber(profile.totalXp - profile.currentLevelMinXp);
-  const levelLabel = `Lv ${profile.currentLevel} · ${levelProgress} XP`;
+  const levelLabel = `Lv ${profile.currentLevel} · ${formatNumber(profile.totalXp)} XP`;
 
   return (
     <>
@@ -60,7 +48,6 @@ function XpProgressCardContents({ profile }: { profile: XpProfileSummary }) {
         className="h-2 bg-muted"
         data-xp-reward-target="true"
       />
-      <span className="font-mono text-[11px] text-muted-foreground">{progressLabel}</span>
     </>
   );
 }
@@ -74,7 +61,7 @@ interface XpProgressCardProps {
 }
 
 const baseClassName =
-  "group flex min-w-[12rem] flex-col gap-1 rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-left transition-colors";
+  "group flex min-w-0 flex-col gap-1 rounded-lg border border-border/70 bg-background/70 px-2 py-1.5 text-left transition-colors sm:min-w-[12rem] sm:px-3 sm:py-2";
 
 export function XpProgressCard({
   profile,
@@ -83,9 +70,11 @@ export function XpProgressCard({
   className,
   ariaLabel,
 }: XpProgressCardProps) {
-  const resolvedClassName = `${baseClassName} ${
-    href ? "hover:border-primary/40" : ""
-  } ${className ?? ""}`.trim();
+  const resolvedClassName = cn(
+    baseClassName,
+    href && "hover:border-primary/40",
+    className
+  );
 
   if (href) {
     return (
