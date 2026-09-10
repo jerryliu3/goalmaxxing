@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import {
   Modal,
@@ -13,6 +14,7 @@ import {
   Text,
   TextInput,
   View,
+  useColorScheme,
 } from "react-native";
 import {
   reorderPreviewEntryKeys,
@@ -20,6 +22,10 @@ import {
 } from "@cadence/shared/planner/reorder-preview-entries";
 import { getApiErrorMessage } from "@cadence/shared/api-client";
 import { normalizeWeekStartsOn } from "@cadence/shared/dates/week-start";
+import {
+  buildGazetteerMonthDayChromePalette,
+  resolveGazetteerMonthDayChromeStyle,
+} from "@cadence/shared/planner/calendar-day-chrome";
 import { buildMonthCells } from "@cadence/shared/planner/month-cells";
 import type { PlannerWorkUnit } from "@cadence/shared/planner/context";
 import { api } from "../../lib/api";
@@ -29,6 +35,7 @@ import { PrimaryButton } from "../../ui/button";
 import { LoadingScreen, Screen } from "../../ui/screen";
 import { ChecklistScreen } from "../checklist/ChecklistScreen";
 import { CalendarPartnerReadOnlySection } from "./CalendarPartnerReadOnlySection";
+import { CoachPanel } from "./CoachPanel";
 import { useDuo, useDuoSurfaceScope } from "../duo/DuoProvider";
 import { DuoScopeSegmentedControl } from "../duo/DuoScopeSegmentedControl";
 import { useReportMobileDuoScopeViewed } from "../duo/telemetry";
@@ -57,7 +64,7 @@ import { useCalendarPartnerOverlay } from "./use-calendar-partner-overlay";
 import { shiftMonth, usePlannerContext } from "./use-planner-context";
 import { resolveActivePlanItem } from "./resolve-active-plan-item";
 import {
-  gazetteerFillWithAlpha,
+  resolveMobileMonthPillStyle,
   resolveMobileSessionFill,
   selectMobileMonthPills,
   selectMobileRecoverCopy,
@@ -96,6 +103,7 @@ function MeasureableDay({
 
 export function CalendarScreen() {
   const theme = useTheme();
+  const scheme = useColorScheme();
   const { month, day, viewMode, apply } = useCalendarStore();
   const { ready, scope, hasActivePartner } =
     useDuoSurfaceScope("calendar");
@@ -104,6 +112,15 @@ export function CalendarScreen() {
   const readOnlyState = resolveCalendarReadOnlyState(scope);
   const scopeMonth = month ?? format(new Date(), "yyyy-MM");
   const selectedDay = day ?? `${scopeMonth}-01`;
+  const todayIso = format(new Date(), "yyyy-MM-dd");
+  const monthDayChromePalette = useMemo(
+    () =>
+      buildGazetteerMonthDayChromePalette(
+        theme.colors,
+        scheme === "dark" ? "dark" : "light"
+      ),
+    [scheme, theme.colors]
+  );
   const planner = usePlannerContext(scopeMonth);
   const partnerOverlay = useCalendarPartnerOverlay({
     enabled: Boolean(activePartner) && (scope === "partner" || scope === "both"),
@@ -370,27 +387,40 @@ export function CalendarScreen() {
           <Text style={{ color: theme.colors.primary }}>Next</Text>
         </Pressable>
       </View>
-      <View style={styles.row}>
-        {VIEW_MODES.map((mode) => (
+      <View style={styles.viewToggleRow}>
+        {VIEW_MODES.map((mode) => {
+          const selected = mode === viewMode;
+          return (
           <Pressable
             key={mode}
             accessibilityRole="tab"
-            accessibilityState={{ selected: mode === viewMode }}
+            accessibilityState={{ selected }}
             onPress={() => apply({ viewMode: mode, day: selectedDay })}
+            style={[
+              styles.viewToggleTab,
+              selected && {
+                backgroundColor: theme.colors.primary,
+                borderRadius: theme.radius.sm,
+              },
+            ]}
           >
             <Text
               style={{
-                color: mode === viewMode ? theme.colors.primary : theme.colors.mutedForeground,
-                fontWeight: mode === viewMode ? "700" : "600",
+                color: selected
+                  ? theme.colors.primaryForeground
+                  : theme.colors.mutedForeground,
+                fontWeight: selected ? "700" : "600",
                 letterSpacing: 1.2,
                 textTransform: "uppercase",
                 fontSize: 11,
+                fontFamily: theme.fonts.sansMedium,
               }}
             >
               {VIEW_MODE_LABELS[mode]}
             </Text>
           </Pressable>
-        ))}
+        );
+        })}
       </View>
       {partnerOverlay.error ? (
         <Text style={{ color: theme.colors.mutedForeground }}>{partnerOverlay.error}</Text>
@@ -421,6 +451,15 @@ export function CalendarScreen() {
               partnerMarkers: markerModel.visibleMarkers,
               partnerOverflowCount: markerModel.overflowCount,
             });
+            const dayChrome = resolveGazetteerMonthDayChromeStyle(
+              {
+                inMonth: cell.inMonth,
+                isToday: cell.date === todayIso,
+                isSelected: cell.date === selectedDay,
+                isPastInMonth: cell.inMonth && cell.date < todayIso,
+              },
+              monthDayChromePalette
+            );
             return (
               <MeasureableDay
                 key={cell.date}
@@ -435,10 +474,9 @@ export function CalendarScreen() {
                 style={[
                   styles.cell,
                   {
-                    opacity: cell.inMonth ? 1 : 0.4,
-                    borderColor: theme.colors.border,
-                    backgroundColor:
-                      cell.date === selectedDay ? theme.colors.accent : theme.colors.card,
+                    backgroundColor: dayChrome.backgroundColor,
+                    borderColor: dayChrome.borderColor,
+                    borderWidth: dayChrome.selectedRing ? 2 : StyleSheet.hairlineWidth,
                   },
                 ]}
               >
@@ -447,13 +485,20 @@ export function CalendarScreen() {
                   style={styles.cellPress}
                   accessibilityLabel={accessibilityLabel}
                 >
-                  <Text style={{ color: theme.colors.foreground, fontSize: 12 }}>
+                  <Text
+                    style={{
+                      color: dayChrome.numberColor,
+                      fontSize: 12,
+                      fontFamily: theme.fonts.mono,
+                    }}
+                  >
                     {cell.date.slice(8)}
                   </Text>
                   {readOnlyState.showViewerSessions
                     ? monthPills.visible.map((unit) => {
                         const fill = resolveMobileSessionFill(planner.data, unit);
                         const credited = unit.creditState !== "uncredited";
+                        const pillStyle = resolveMobileMonthPillStyle(fill, credited);
                         return (
                           <View
                             key={unitEntryKey(unit)}
@@ -461,11 +506,8 @@ export function CalendarScreen() {
                             style={[
                               styles.monthPill,
                               {
-                                backgroundColor: gazetteerFillWithAlpha(
-                                  fill,
-                                  credited ? 0.4 : 0.18
-                                ),
-                                borderColor: fill,
+                                backgroundColor: pillStyle.backgroundColor,
+                                borderColor: pillStyle.borderColor,
                               },
                             ]}
                           />
@@ -755,6 +797,15 @@ export function CalendarScreen() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", justifyContent: "space-between", gap: 8, alignItems: "center" },
+  viewToggleRow: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  viewToggleTab: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
   readOnlyBanner: {
     borderWidth: 1,
     borderRadius: 12,
