@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { Geist, Geist_Mono, IBM_Plex_Mono, Newsreader, Source_Sans_3 } from "next/font/google";
 import { Toaster } from "sonner";
 import { UiStyleProvider } from "@/components/brand/ui-style-provider";
+import { APP_BOOT_PRELOAD_SCRIPT } from "@/components/layout/app-boot-preload";
 import { appIconHref } from "@/lib/brand/app-icon";
 import { getUiStyle, parseUiStyleId, UI_STYLE_COOKIE_NAME } from "@/lib/brand/ui-style";
 import "./globals.css";
@@ -109,6 +110,7 @@ export default async function RootLayout({
         className="min-h-full bg-background text-foreground flex flex-col"
         suppressHydrationWarning
       >
+        <script dangerouslySetInnerHTML={{ __html: APP_BOOT_PRELOAD_SCRIPT }} />
         <UiStyleProvider initialStyleId={style.id}>{children}</UiStyleProvider>
         <Toaster position="bottom-right" richColors />
       </body>

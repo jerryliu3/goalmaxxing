@@ -1,5 +1,6 @@
 "use client";
 
+import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
 import { AchievementsShowcase } from "@/features/achievements/showcase";
 import { useAchievementsShowcase } from "@/features/achievements/use-achievements-showcase";
 
@@ -34,6 +35,7 @@ function AchievementsErrorState({
 
 export default function AchievementsPage() {
   const { loading, error, payload, reload } = useAchievementsShowcase();
+  useReportAppSurfaceReady(!loading);
 
   if (loading) {
     return <AchievementsLoadingState />;

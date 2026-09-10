@@ -17,6 +17,7 @@ import {
 import { ArrowLeft, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
 import { LoadingCard } from "@/components/ui/loading-card";
 import { INSIGHTS_CHART_COLORS, insightsCategoryFill } from "@/features/insights/insights-chart-theme";
 import {
@@ -318,6 +319,7 @@ export function InsightsMoreStatsPage() {
   const [stats, setStats] = useState<InsightsStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  useReportAppSurfaceReady(!loading);
 
   useEffect(() => {
     let cancelled = false;
