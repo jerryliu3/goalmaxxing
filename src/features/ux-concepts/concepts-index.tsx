@@ -11,6 +11,7 @@ import { DESTINATION_FAMILIES } from "@/features/ux-concepts/destination-catalog
 const OPEN_QUESTIONS = [
   "Exact copy and default for Show unplanned on Day?",
   "Should team pairing also appear in You/settings, or only next to team goals?",
+  "Plan craft: single-goal placement filter, quieter past-day done, collapsed Checklist completed? See /ux/concepts/plan-clarity.",
 ] as const;
 
 const ARCHIVE = [
@@ -109,6 +110,67 @@ export function ConceptsIndex() {
               className="text-sm font-medium text-primary"
             >
               Pattern library
+            </Link>
+            <Link
+              href="/ux/concepts/plan-clarity"
+              className="text-sm font-medium text-primary"
+            >
+              Plan craft
+            </Link>
+          </div>
+        </section>
+
+        <section className="mt-10 rounded-2xl border bg-card p-5 ring-1 ring-foreground/10">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Open · inside B
+          </p>
+          <h2 className="mt-1 text-xl font-semibold tracking-tight">
+            Plan craft
+          </h2>
+          <p className="mt-2 text-sm">
+            Not a new destination. Same week / month / day. Three questions the
+            live calendar still answers poorly: where is one goal placed, how
+            should yesterday’s done look, and should Checklist hide completed by
+            default.
+          </p>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <Link
+              href="/ux/concepts/plan-clarity/focus"
+              className="rounded-xl border bg-background p-4 ring-1 ring-foreground/5"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                F1
+              </p>
+              <h3 className="mt-1 font-semibold tracking-tight">Goal focus</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Tempo run this week, then Sun 7. Other goals recede.
+              </p>
+            </Link>
+            <Link
+              href="/ux/concepts/plan-clarity/history"
+              className="rounded-xl border bg-background p-4 ring-1 ring-foreground/5"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                F2
+              </p>
+              <h3 className="mt-1 font-semibold tracking-tight">Past-day done</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Strike, quiet, fold, marks. Nest on a clear day.
+              </p>
+            </Link>
+            <Link
+              href="/ux/concepts/plan-clarity/checklist"
+              className="rounded-xl border bg-background p-4 ring-1 ring-foreground/5"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                F3
+              </p>
+              <h3 className="mt-1 font-semibold tracking-tight">
+                Collapsed completed
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Open work on top. Completed · 2 folded at the bottom.
+              </p>
             </Link>
           </div>
         </section>
