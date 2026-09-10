@@ -147,6 +147,8 @@ export interface PlannerCalendarSurfaceLayoutProps {
   pointerInsideDayPreviewRef: MutableRefObject<boolean>;
   coach: ReturnType<typeof usePlannerCoach>;
   expandedPreviewDay: string | null;
+  onConfirmDraftMove: (entry: PlannerDayDetailEntry, day: string) => void;
+  onCancelDraftMove: (entry: PlannerDayDetailEntry, day: string) => void;
   expandedPreviewEntries: PlannerDayDetailEntry[];
   expandedPreviewCompletionFactMarkers: PlannerCompletionFactMarker[];
   contractExpandedPreview: () => void;
@@ -186,6 +188,8 @@ export interface PlannerCalendarSurfaceLayoutProps {
   endMonthFilters: string[];
   setEndMonthFilters: (value: string[]) => void;
   endMonthOptions: GoalMonthOption[];
+  showCompletedGoals: boolean;
+  setShowCompletedGoals: (value: boolean) => void;
   settingsOpen: boolean;
   plannerSettingsForm: ReactNode;
 }
@@ -288,6 +292,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     pointerInsideDayPreviewRef,
     coach,
     expandedPreviewDay,
+    onConfirmDraftMove,
+    onCancelDraftMove,
     expandedPreviewEntries,
     expandedPreviewCompletionFactMarkers,
     contractExpandedPreview,
@@ -316,16 +322,20 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     endMonthFilters,
     setEndMonthFilters,
     endMonthOptions,
+    showCompletedGoals,
+    setShowCompletedGoals,
     settingsOpen,
     plannerSettingsForm,
   } = props;
   const dayChecklist = usePlanDayChecklistModel({
-    isActive: viewMode === "day",
+    isActive: true,
     viewDate: focusedDay,
     searchQuery,
     asOfDate: context?.asOfDate ?? null,
     timezone: context?.timezone ?? null,
     endMonthFilters: effectiveEndMonthFilters,
+    viewMode,
+    plannerShowCompletedGoals: showCompletedGoals,
   });
   const pendingMonthRowRestoreRef = useRef<{
     day: string;
@@ -563,6 +573,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
               clearHoverPreviewCloseTimer();
               setDayPreview(null);
             }}
+            onConfirmDraftMove={onConfirmDraftMove}
+            onCancelDraftMove={onCancelDraftMove}
           />
 
           <PlannerCoachPanel coach={coach} />
@@ -648,6 +660,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         endMonthFilters={effectiveEndMonthFilters}
         onEndMonthFiltersChange={setEndMonthFilters}
         endMonthOptions={endMonthOptions}
+        showCompletedGoals={showCompletedGoals}
+        onShowCompletedGoalsChange={setShowCompletedGoals}
         dayFilters={
           viewMode === "day" && dayChecklist
             ? dayChecklist.filterFormProps

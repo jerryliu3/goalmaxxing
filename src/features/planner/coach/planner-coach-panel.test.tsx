@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PlannerCoachPanel } from "@/features/planner/coach/planner-coach-panel";
@@ -85,6 +85,14 @@ function buildCoachModel(
   };
 }
 
+function renderCoachPanel(coach: PlannerCoachModel) {
+  const view = render(<PlannerCoachPanel coach={coach} />);
+  if (coach.state.canUseCoach) {
+    fireEvent.click(screen.getByRole("button", { name: "Show AI Coach" }));
+  }
+  return view;
+}
+
 describe("planner coach panel", () => {
   beforeEach(() => {
     authGetUserMock.mockReset();
@@ -109,8 +117,18 @@ describe("planner coach panel", () => {
 
   it("does not render when coach capability is unavailable", () => {
     const coach = buildCoachModel({ canUseCoach: false });
-    render(<PlannerCoachPanel coach={coach} />);
+    renderCoachPanel(coach);
     expect(screen.queryByText("AI Coach")).not.toBeInTheDocument();
+  });
+
+  it("starts collapsed until the user opens it", () => {
+    render(<PlannerCoachPanel coach={buildCoachModel()} />);
+    expect(screen.getByRole("button", { name: "Show AI Coach" })).toBeInTheDocument();
+    expect(screen.getByText("AI Coach")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send to coach" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show AI Coach" }));
+    expect(screen.getByRole("button", { name: "Send to coach" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Hide AI Coach" })).toBeInTheDocument();
   });
 
   it("wires save and send actions", async () => {
@@ -127,7 +145,7 @@ describe("planner coach panel", () => {
     });
     const user = userEvent.setup();
 
-    render(<PlannerCoachPanel coach={coach} />);
+    renderCoachPanel(coach);
     await user.click(screen.getByRole("button", { name: "Save" }));
     expect(coach.actions.saveCoachConversation).toHaveBeenCalledTimes(1);
 
@@ -186,7 +204,7 @@ describe("planner coach panel", () => {
     });
     const user = userEvent.setup();
 
-    render(<PlannerCoachPanel coach={coach} />);
+    renderCoachPanel(coach);
     expect(screen.queryByRole("button", { name: "Restore" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Saved conversations")).toBeInTheDocument();
 
@@ -234,7 +252,7 @@ describe("planner coach panel", () => {
     });
     const user = userEvent.setup();
 
-    render(<PlannerCoachPanel coach={coach} />);
+    renderCoachPanel(coach);
 
     expect(screen.getByText("Easy run")).toBeInTheDocument();
     expect(screen.getByText("Weekly · Aug 17 – Sep 13")).toBeInTheDocument();
@@ -311,7 +329,7 @@ describe("planner coach panel", () => {
     });
     const user = userEvent.setup();
 
-    render(<PlannerCoachPanel coach={coach} />);
+    renderCoachPanel(coach);
     await waitFor(() => expect(goalsOrderMock).toHaveBeenCalledTimes(1));
 
     await user.click(screen.getAllByRole("button", { name: /tap to edit/i })[0]!);
@@ -367,7 +385,7 @@ describe("planner coach panel", () => {
     });
     const user = userEvent.setup();
 
-    render(<PlannerCoachPanel coach={coach} />);
+    renderCoachPanel(coach);
     await waitFor(() => expect(goalsOrderMock).toHaveBeenCalledTimes(1));
     await user.click(screen.getAllByRole("button", { name: /tap to edit/i })[0]!);
     const dialog = await screen.findByRole("dialog");
@@ -399,7 +417,7 @@ describe("planner coach panel", () => {
       ],
     });
 
-    render(<PlannerCoachPanel coach={coach} />);
+    renderCoachPanel(coach);
     expect(screen.getByText("0 draft changes available.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Apply changes" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Undo proposal" })).toBeDisabled();
@@ -424,7 +442,7 @@ describe("planner coach panel", () => {
     });
     const user = userEvent.setup();
 
-    render(<PlannerCoachPanel coach={coach} />);
+    renderCoachPanel(coach);
     expect(
       screen.getByText(/Drafts are not generated yet/)
     ).toBeInTheDocument();
@@ -464,7 +482,7 @@ describe("planner coach panel", () => {
       },
     });
 
-    render(<PlannerCoachPanel coach={coach} />);
+    renderCoachPanel(coach);
 
     expect(screen.getByText("Mobility")).toBeInTheDocument();
     expect(
@@ -503,7 +521,7 @@ describe("planner coach panel", () => {
     });
     const user = userEvent.setup();
 
-    render(<PlannerCoachPanel coach={coach} />);
+    renderCoachPanel(coach);
 
     expect(
       screen.getByText(/AI goal draft limit has been reached/)
@@ -557,7 +575,7 @@ describe("planner coach panel", () => {
     });
     const user = userEvent.setup();
 
-    render(<PlannerCoachPanel coach={coach} />);
+    renderCoachPanel(coach);
 
     expect(screen.getByText(/links could not be confirmed/i)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Retry saving links" }));
@@ -591,7 +609,7 @@ describe("planner coach panel", () => {
       },
     });
 
-    render(<PlannerCoachPanel coach={coach} />);
+    renderCoachPanel(coach);
 
     expect(screen.getByText(/proposed more than five goals/i)).toBeInTheDocument();
     expect(
@@ -617,7 +635,7 @@ describe("planner coach panel", () => {
       ],
     });
 
-    render(<PlannerCoachPanel coach={coach} />);
+    renderCoachPanel(coach);
 
     expect(
       screen.getByText(
@@ -654,7 +672,7 @@ describe("planner coach panel", () => {
     });
     const user = userEvent.setup();
 
-    render(<PlannerCoachPanel coach={coach} />);
+    renderCoachPanel(coach);
 
     expect(
       screen.getByRole("button", { name: "Send to coach" })

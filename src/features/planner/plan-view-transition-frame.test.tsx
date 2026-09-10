@@ -7,7 +7,7 @@ describe("PlanViewTransitionFrame", () => {
     cleanup();
   });
 
-  it("tags the active plan view for shared-element transitions", () => {
+  it("tags the active plan view", () => {
     render(
       <PlanViewTransitionFrame viewMode="week">
         <p>Week board</p>

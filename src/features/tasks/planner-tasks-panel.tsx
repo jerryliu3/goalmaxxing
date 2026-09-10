@@ -22,6 +22,7 @@ import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cach
 import { toLocalDateString } from "@/lib/dates/day";
 import { createClient } from "@/lib/supabase/client";
 import { planCompletionControlModeForDate } from "@/features/planner/completion-entry-dispatch";
+import { planLedgerTitleClass } from "@/features/planner/calendar-day-chrome";
 import { useOutsidePointerDismiss } from "@/lib/ui/use-outside-pointer-dismiss";
 
 interface PlannerTaskRow {
@@ -54,11 +55,17 @@ export function clearPlannerTasksCacheForTests() {
 
 export function PlannerTasksPrefetch({
   scheduledDate,
+  onCountChange,
 }: {
   scheduledDate: string | null;
+  onCountChange?: (count: number) => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   useEffect(() => {
+    const cached = readPlannerTasksCache(scheduledDate);
+    if (cached) {
+      onCountChange?.(cached.length);
+    }
     let cancelled = false;
     void (async () => {
       const { data, error } = await supabase.rpc("list_planner_tasks", {
@@ -67,12 +74,14 @@ export function PlannerTasksPrefetch({
       if (cancelled || error) {
         return;
       }
-      writePlannerTasksCache(scheduledDate, (data ?? []) as PlannerTaskRow[]);
+      const tasks = (data ?? []) as PlannerTaskRow[];
+      writePlannerTasksCache(scheduledDate, tasks);
+      onCountChange?.(tasks.length);
     })();
     return () => {
       cancelled = true;
     };
-  }, [scheduledDate, supabase]);
+  }, [onCountChange, scheduledDate, supabase]);
   return null;
 }
 
@@ -86,6 +95,7 @@ interface PlannerTasksPanelProps {
   allowDelete?: boolean;
   hideWhenEmpty?: boolean;
   chrome?: "card" | "plain";
+  onCountChange?: (count: number) => void;
 }
 
 export function PlannerTasksPanel({
@@ -98,6 +108,7 @@ export function PlannerTasksPanel({
   allowDelete = false,
   hideWhenEmpty = false,
   chrome = "card",
+  onCountChange,
 }: PlannerTasksPanelProps) {
   const supabase = useMemo(() => createClient(), []);
   const cachedTasks = readPlannerTasksCache(scheduledDate);
@@ -119,6 +130,10 @@ export function PlannerTasksPanel({
   const canAddTask = newTaskTitle.trim().length > 0;
   const scheduledDateRef = useRef<string | null>(scheduledDate);
   const requestVersionRef = useRef(0);
+
+  useEffect(() => {
+    onCountChange?.(tasks.length);
+  }, [onCountChange, tasks.length]);
 
   const loadTasks = useCallback(
     async (
@@ -385,9 +400,9 @@ export function PlannerTasksPanel({
             asOfDate: completionAsOfDate,
           });
           const titleClass = complete
-            ? "font-display text-base font-medium tracking-tight text-muted-foreground line-through"
+            ? `${planLedgerTitleClass} text-muted-foreground line-through`
             : chrome === "plain"
-              ? "font-display text-base font-medium tracking-tight"
+              ? planLedgerTitleClass
               : undefined;
           const mark =
             toggling ? (

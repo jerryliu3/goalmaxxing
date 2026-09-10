@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { planDayViewTransitionName, planEntryViewTransitionName } from "@/features/planner/plan-view-transition";
+import {
+  PLAN_MORPH_CLASS,
+  planDayViewTransitionName,
+  planEntryViewTransitionName,
+} from "@/features/planner/plan-view-transition";
 
 describe("plan view transition names", () => {
   it("uses a CSS-safe shared name per local date", () => {
@@ -8,5 +12,9 @@ describe("plan view transition names", () => {
 
   it("sanitizes entry keys for CSS view-transition names", () => {
     expect(planEntryViewTransitionName("goal-a:total:1")).toBe("plan-entry-goal-a-total-1");
+  });
+
+  it("shares one morph class for day surfaces and session pills", () => {
+    expect(PLAN_MORPH_CLASS).toBe("plan-morph");
   });
 });

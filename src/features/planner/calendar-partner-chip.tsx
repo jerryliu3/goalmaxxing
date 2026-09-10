@@ -2,6 +2,7 @@
 
 import { UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { planLedgerTitleClass, planLedgerSubtitleClass } from "@/features/planner/calendar-day-chrome";
 
 export function CalendarPartnerChip({
   title,
@@ -40,7 +41,7 @@ export function CalendarPartnerChip({
           className={cn(
             "min-w-0 font-medium",
             expanded
-              ? "font-display text-base tracking-tight"
+              ? planLedgerTitleClass
               : "truncate",
             completed && "line-through"
           )}
@@ -51,8 +52,8 @@ export function CalendarPartnerChip({
           <p
             className={
               expanded
-                ? "text-[11px] uppercase tracking-[0.12em] text-muted-foreground"
-                : "truncate text-[11px]"
+                ? planLedgerSubtitleClass
+                : "truncate text-[11px] text-muted-foreground"
             }
           >
             {description}

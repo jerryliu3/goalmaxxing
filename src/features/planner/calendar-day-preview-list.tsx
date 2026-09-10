@@ -1,6 +1,6 @@
 "use client";
 
-import { Link2 } from "lucide-react";
+import { Check, Link2, X } from "lucide-react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
@@ -8,7 +8,7 @@ import {
   PlannerDraggablePreviewEntry,
   PlannerSortableDayList,
 } from "@/features/planner/calendar-dnd";
-import { planSelectedWorkRowClass } from "@/features/planner/calendar-day-chrome";
+import { planSelectedWorkRowClass, planLedgerTitleClass, planLedgerSubtitleClass } from "@/features/planner/calendar-day-chrome";
 import {
   getEntryDraftDiffSummary,
   getEntryDraftPillClasses,
@@ -19,7 +19,22 @@ import {
   type CalendarMonthCellEntryBase,
 } from "@/features/planner/calendar-month-day-cell";
 import { getGoalVisual, getWorkPillDraftFillStyle, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
-import { planEntryViewTransitionName } from "@/features/planner/plan-view-transition";
+import { PLAN_MORPH_CLASS, planEntryViewTransitionName } from "@/features/planner/plan-view-transition";
+import {
+  canCancelDraftMove,
+  canConfirmDraftMove,
+} from "@/features/planner/draft-move-confirm";
+import { cn } from "@/lib/utils";
+
+const draftMoveIconButtonClassName = cn(
+  "grid size-7 shrink-0 place-items-center rounded-full border border-border text-muted-foreground",
+  "transition-[color,background-color,border-color,transform] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)]",
+  "hover:border-primary hover:bg-primary/10 hover:text-primary",
+  "active:scale-90 active:border-primary active:bg-primary/20 active:text-primary",
+  "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+  "disabled:pointer-events-none disabled:opacity-50",
+  "motion-reduce:transform-none"
+);
 
 interface PreviewCompletionToggleState {
   currentlyCredited: boolean;
@@ -50,6 +65,8 @@ interface CalendarDayPreviewListProps<
   density?: "compact" | "expanded";
   selectedEntryKey?: string | null;
   shareEntryTransition?: boolean;
+  onConfirmDraftMove?: (entry: TEntry, day: string) => void;
+  onCancelDraftMove?: (entry: TEntry, day: string) => void;
 }
 
 export function CalendarDayPreviewList<
@@ -72,12 +89,16 @@ export function CalendarDayPreviewList<
   density = "compact",
   selectedEntryKey = null,
   shareEntryTransition = false,
+  onConfirmDraftMove,
+  onCancelDraftMove,
 }: CalendarDayPreviewListProps<TEntry, TCompletionFactMarker>) {
   const expanded = density === "expanded";
   return (
     <div
-      className={`overflow-x-hidden text-xs ${
-        expanded ? "divide-y" : "max-h-44 space-y-1 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      className={`overflow-x-hidden ${
+        expanded
+          ? "divide-y"
+          : "max-h-44 space-y-1 overflow-y-auto text-xs [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       }`}
     >
       {entries.length === 0 && completionFactMarkers.length === 0 ? (
@@ -113,6 +134,14 @@ export function CalendarDayPreviewList<
             const completionToggleState = getCompletionToggleState(entry, day);
             const completionMode = planCompletionControlMode(completionToggleState);
             const isSelectedRow = selectedEntryKey === entry.key;
+            const showDraftMoveActions =
+              expanded &&
+              Boolean(onConfirmDraftMove) &&
+              canConfirmDraftMove(entry);
+            const draftMoveDirectionLabel =
+              entry.draftDiffKind === "moved_from"
+                ? "from this day"
+                : "to this day";
             return (
               <PlannerDraggablePreviewEntry
                 key={`preview-entry-${entry.key}`}
@@ -144,13 +173,19 @@ export function CalendarDayPreviewList<
                     className={
                       expanded
                         ? `flex items-start transition-colors ${
-                            isDraft ? pillToneClasses : "bg-transparent"
+                            shareEntryTransition ? PLAN_MORPH_CLASS : ""
+                          } ${
+                            isDraft
+                              ? `${pillToneClasses} my-1 px-1.5`
+                              : "bg-transparent"
                           } ${planSelectedWorkRowClass(isSelectedRow)} ${
                             entry.draftGhost ? "opacity-75" : ""
                           } ${
                             immovable ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing"
                           } ${isDragging ? "pointer-events-none opacity-0" : ""}`
-                        : `flex items-start rounded-[10px] border px-1.5 py-1 transition-colors ${pillToneClasses} ${
+                        : `flex items-start rounded-[10px] border px-1.5 py-1 transition-colors ${
+                            shareEntryTransition ? PLAN_MORPH_CLASS : ""
+                          } ${pillToneClasses} ${
                             entry.draftGhost ? "opacity-75" : ""
                           } hover:border-primary/60 ${
                             immovable ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing"
@@ -257,7 +292,7 @@ export function CalendarDayPreviewList<
                         <p
                           className={
                             expanded
-                              ? "flex min-h-6 items-center font-display text-base font-medium leading-none tracking-tight"
+                              ? `flex min-h-6 items-center ${planLedgerTitleClass} leading-none`
                               : "flex h-6 min-w-0 items-center truncate font-display font-medium leading-none"
                           }
                         >
@@ -281,7 +316,7 @@ export function CalendarDayPreviewList<
                         </p>
                         {draftDiffSummary ? (
                           <p
-                            className={`${expanded ? "text-[11px] uppercase tracking-[0.12em]" : "truncate"} text-muted-foreground`}
+                            className={`${expanded ? planLedgerSubtitleClass : "truncate text-muted-foreground"}`}
                           >
                             {draftDiffSummary}
                           </p>
@@ -289,16 +324,61 @@ export function CalendarDayPreviewList<
                         {subtitle ? (
                           <p
                             className={`${
-                              expanded
-                                ? "text-[11px] uppercase tracking-[0.12em]"
-                                : "truncate"
-                            } text-muted-foreground`}
+                              expanded ? planLedgerSubtitleClass : "truncate text-muted-foreground"
+                            }`}
                           >
                             {subtitle}
                           </p>
                         ) : null}
                       </div>
                     </div>
+                    {showDraftMoveActions ? (
+                      <div
+                        className="flex items-center gap-1 py-3 pr-1"
+                        data-plan-completion-hit="true"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                        }}
+                        onPointerDown={(event) => {
+                          event.stopPropagation();
+                        }}
+                        onMouseDown={(event) => {
+                          event.stopPropagation();
+                        }}
+                        onTouchStart={(event) => {
+                          event.stopPropagation();
+                        }}
+                      >
+                        {onCancelDraftMove && canCancelDraftMove(entry) ? (
+                          <button
+                            type="button"
+                            className={draftMoveIconButtonClassName}
+                            disabled={mutationLoading}
+                            aria-label={`Cancel moving ${displayTitle} ${draftMoveDirectionLabel}`}
+                            title="Undo this move"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onCancelDraftMove(entry, day);
+                            }}
+                          >
+                            <X className="size-4" strokeWidth={2.5} aria-hidden />
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          className={draftMoveIconButtonClassName}
+                          disabled={mutationLoading}
+                          aria-label={`Confirm moving ${displayTitle} ${draftMoveDirectionLabel}`}
+                          title="Confirm this move"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onConfirmDraftMove?.(entry, day);
+                          }}
+                        >
+                          <Check className="size-4" strokeWidth={2.5} aria-hidden />
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 )}
               </PlannerDraggablePreviewEntry>
@@ -340,7 +420,7 @@ export function CalendarDayPreviewList<
                         <p
                           className={
                             expanded
-                              ? "font-display text-base font-medium tracking-tight line-through"
+                              ? `${planLedgerTitleClass} line-through`
                               : "truncate font-medium line-through"
                           }
                         >
@@ -350,8 +430,8 @@ export function CalendarDayPreviewList<
                     <p
                       className={
                         expanded
-                          ? "text-[11px] uppercase tracking-[0.12em] text-muted-foreground"
-                          : "truncate text-[11px]"
+                          ? planLedgerSubtitleClass
+                          : "truncate text-[11px] text-muted-foreground"
                       }
                     >
                       {detail}

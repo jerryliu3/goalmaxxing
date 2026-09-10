@@ -1,6 +1,12 @@
 "use client";
 
-import type { MutableRefObject, ReactNode } from "react";
+import {
+  Fragment,
+  useMemo,
+  useState,
+  type MutableRefObject,
+  type ReactNode,
+} from "react";
 import { PlannerDndProvider } from "@/features/planner/calendar-dnd";
 import type { PlannerDragTarget } from "@/features/planner/planner-drag-target";
 import {
@@ -18,6 +24,15 @@ import type {
 import styles from "@/features/planner/calendar-surface.module.css";
 import { PlannerDayPreviewPopover } from "@/features/planner/planner-day-preview-popover";
 import { PlannerFocusedDayPane } from "@/features/planner/planner-focused-day-pane";
+import { PlannerAdjacentMonthToggle } from "@/features/planner/planner-adjacent-month-toggle";
+import { useMonthGridEdgeVisibility } from "@/features/planner/use-month-grid-edge-visibility";
+import { PlannerCalendarSplit } from "@/features/planner/planner-calendar-split";
+import {
+  classifyMonthGridWeeks,
+  groupMonthGridWeeks,
+  isMonthWeekVisible,
+  shouldShowAdjacentMonthToggle,
+} from "@/features/planner/calendar-month-week-visibility";
 import type { DuoLaneSubject } from "@cadence/shared/social/duo";
 import { PlannerViewWindowHeader } from "@/features/planner/planner-view-window-header";
 import { PlanViewTransitionFrame } from "@/features/planner/plan-view-transition-frame";
@@ -104,6 +119,8 @@ export interface PlannerCalendarBoardProps {
   onDayPreviewPointerDownCapture: () => void;
   onDayPreviewMouseEnter: () => void;
   onDayPreviewMouseLeave: () => void;
+  onConfirmDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
+  onCancelDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
 }
 
 export function PlannerCalendarBoard({
@@ -163,7 +180,31 @@ export function PlannerCalendarBoard({
   onDayPreviewPointerDownCapture,
   onDayPreviewMouseEnter,
   onDayPreviewMouseLeave,
+  onConfirmDraftMove,
+  onCancelDraftMove,
 }: PlannerCalendarBoardProps) {
+  const monthRangeKey = `${cells[0]?.date ?? ""}:${cells.at(-1)?.date ?? ""}`;
+  const monthWeeks = useMemo(() => groupMonthGridWeeks(cells), [cells]);
+  const weekBands = useMemo(
+    () => classifyMonthGridWeeks(monthWeeks),
+    [monthWeeks]
+  );
+  const hasPreviousMonthWeeks = weekBands.includes("previous");
+  const hasNextMonthWeeks = weekBands.includes("next");
+  const [adjacentMonthPeek, setAdjacentMonthPeek] = useState({
+    rangeKey: monthRangeKey,
+    previous: false,
+    next: false,
+  });
+  const showPreviousMonth =
+    adjacentMonthPeek.rangeKey === monthRangeKey && adjacentMonthPeek.previous;
+  const showNextMonth =
+    adjacentMonthPeek.rangeKey === monthRangeKey && adjacentMonthPeek.next;
+  const { firstRowVisible, lastRowVisible } = useMonthGridEdgeVisibility(
+    multiMonthGridScrollRef,
+    `${monthRangeKey}:${showPreviousMonth}:${showNextMonth}:${expandedMonthRows}`
+  );
+
   return (
     <div
       className="border-b border-border pb-4"
@@ -217,20 +258,16 @@ export function PlannerCalendarBoard({
               viewerSubject={viewerSubject}
               partnerSubject={partnerSubject}
               splitPartnerChecklist={splitPartnerChecklist}
+              onConfirmDraftMove={onConfirmDraftMove}
+              onCancelDraftMove={onCancelDraftMove}
               titleAs="h2"
+              showDayHeading={false}
               shareDayTransition
             />
           ) : (
-            <div
-              data-testid="plan-calendar-split"
-              className={
-                viewMode === "month" && expandedMonthRows
-                  ? "grid grid-cols-1 gap-6"
-                  : "grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,3fr)_minmax(16rem,1fr)] md:items-start md:gap-8"
-              }
-            >
-              <div className="min-w-0">
-                {viewMode === "week" ? (
+            <PlannerCalendarSplit
+              calendar={
+                viewMode === "week" ? (
                   <ol
                     aria-label="Week agenda"
                     className="flex flex-col"
@@ -240,11 +277,28 @@ export function PlannerCalendarBoard({
                     {focusedWeekCells.map(renderCalendarDayCell)}
                   </ol>
                 ) : (
-                  <div className="mx-auto w-full max-w-[56rem]">
+                  <div className="w-full">
+                    {shouldShowAdjacentMonthToggle({
+                      hasAdjacentWeeks: hasPreviousMonthWeeks,
+                      adjacentShown: showPreviousMonth,
+                      edgeVisible: firstRowVisible,
+                    }) ? (
+                      <PlannerAdjacentMonthToggle
+                        direction="previous"
+                        shown={showPreviousMonth}
+                        onToggle={() =>
+                          setAdjacentMonthPeek({
+                            rangeKey: monthRangeKey,
+                            previous: !showPreviousMonth,
+                            next: showNextMonth,
+                          })
+                        }
+                      />
+                    ) : null}
                     <div
                       ref={calendarGridViewportRef}
                       onScroll={onCalendarGridViewportScroll}
-                      className="overflow-x-auto pb-1"
+                      className="min-w-0 overflow-x-auto pb-1"
                       data-calendar-horizontal-viewport="true"
                     >
                       {isMonthScopedCalendarViewMode(viewMode) ? (
@@ -275,40 +329,80 @@ export function PlannerCalendarBoard({
                               className="grid gap-2"
                               style={SEVEN_COLUMN_GRID_STYLE}
                             >
-                              {cells.map(renderCalendarDayCell)}
+                              {monthWeeks.map((week, weekIndex) => {
+                                const band = weekBands[weekIndex] ?? "current";
+                                const visible = isMonthWeekVisible(band, {
+                                  previous: showPreviousMonth,
+                                  next: showNextMonth,
+                                });
+                                return (
+                                  <div
+                                    key={`month-week-${week[0]?.date ?? weekIndex}`}
+                                    className={visible ? "contents" : "hidden"}
+                                    aria-hidden={!visible}
+                                    data-month-week-band={band}
+                                    data-month-week-visible={
+                                      visible ? "true" : "false"
+                                    }
+                                  >
+                                    {week.map((cell) => (
+                                      <Fragment key={cell.date}>
+                                        {renderCalendarDayCell(cell)}
+                                      </Fragment>
+                                    ))}
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
                       ) : null}
                     </div>
+                    {shouldShowAdjacentMonthToggle({
+                      hasAdjacentWeeks: hasNextMonthWeeks,
+                      adjacentShown: showNextMonth,
+                      edgeVisible: lastRowVisible,
+                    }) ? (
+                      <PlannerAdjacentMonthToggle
+                        direction="next"
+                        shown={showNextMonth}
+                        onToggle={() =>
+                          setAdjacentMonthPeek({
+                            rangeKey: monthRangeKey,
+                            previous: showPreviousMonth,
+                            next: !showNextMonth,
+                          })
+                        }
+                      />
+                    ) : null}
                   </div>
-                )}
-              </div>
-              <aside
-                className="min-w-0 md:mt-0"
-                data-testid="plan-desktop-day-pane"
-                style={{ viewTransitionName: "plan-focused-aside" }}
-              >
-                <PlannerFocusedDayPane
-                  day={focusedDay}
-                  entries={focusedDayEntries}
-                  completionFactMarkers={focusedDayCompletionFactMarkers}
-                  mutationLoading={Boolean(mutationLoadingKey)}
-                  asOfDate={asOfDate}
-                  canMutatePlanItems={canMutatePlanItems}
-                  canMutateEntryOnDay={canMutateEntryOnDay}
-                  onEntryOpen={onFocusedDayEntryOpen}
-                  onToggleCompletion={onToggleCompletion}
-                  onEntryPointerStart={onEntryPointerStart}
-                  onEntryPointerEnd={onEntryPointerEnd}
-                  showTasksInsteadOfGoals={showTasksInsteadOfGoals}
-                  selectedEntryKey={selectedEntryKey}
-                  dayChecklist={dayChecklist}
-                  partnerLabel={partnerLabel}
-                  splitPartnerChecklist={false}
-                />
-              </aside>
-            </div>
+                )
+              }
+              pane={
+                <div style={{ viewTransitionName: "plan-focused-aside" }}>
+                  <PlannerFocusedDayPane
+                    day={focusedDay}
+                    entries={focusedDayEntries}
+                    completionFactMarkers={focusedDayCompletionFactMarkers}
+                    mutationLoading={Boolean(mutationLoadingKey)}
+                    asOfDate={asOfDate}
+                    canMutatePlanItems={canMutatePlanItems}
+                    canMutateEntryOnDay={canMutateEntryOnDay}
+                    onEntryOpen={onFocusedDayEntryOpen}
+                    onToggleCompletion={onToggleCompletion}
+                    onEntryPointerStart={onEntryPointerStart}
+                    onEntryPointerEnd={onEntryPointerEnd}
+                    showTasksInsteadOfGoals={showTasksInsteadOfGoals}
+                    selectedEntryKey={selectedEntryKey}
+                    dayChecklist={dayChecklist}
+                    partnerLabel={partnerLabel}
+                    splitPartnerChecklist={false}
+                    onConfirmDraftMove={onConfirmDraftMove}
+                    onCancelDraftMove={onCancelDraftMove}
+                  />
+                </div>
+              }
+            />
           )}
           </PlanViewTransitionFrame>
 

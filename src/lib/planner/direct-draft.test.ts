@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { getAnchoredPeriod } from "@/lib/goals/periods";
+import { cadenceUnitKey } from "@/lib/goals/target-basis";
 import type { Goal } from "@/lib/goals/types";
 import type { PlannerCanonicalSnapshot } from "@/lib/planner/context-loader";
 import {
@@ -272,5 +274,201 @@ describe("buildDirectDraftPersistence", () => {
     expect(result.find((item) => item.unit_key === "milestone:2")).toMatchObject({
       scheduled_time_override: "18:00",
     });
+  });
+
+  it("lets an uncredited monthly cadence session move when another September session is already credited", () => {
+    const cadenceGoal: Goal = {
+      ...goal,
+      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      title: "Gym",
+      frequency_type: "recurring",
+      recurrence_interval: "monthly",
+      target_count: 4,
+      target_basis: "period",
+      milestone_names: null,
+      start_date: "2026-09-01",
+      end_date: "2026-09-30",
+    };
+    const period = getAnchoredPeriod(
+      cadenceGoal.start_date,
+      "monthly",
+      "2026-09-03",
+      { weekStartsOn: 1 }
+    );
+    const cadenceAssignments = [
+      {
+        goalId: cadenceGoal.id,
+        requirementFingerprint: computeRequirementFingerprint(cadenceGoal),
+        unitKey: cadenceUnitKey(period.periodKey, 1),
+        scheduledDate: "2026-09-01",
+        locked: false,
+      },
+      {
+        goalId: cadenceGoal.id,
+        requirementFingerprint: computeRequirementFingerprint(cadenceGoal),
+        unitKey: cadenceUnitKey(period.periodKey, 2),
+        scheduledDate: "2026-09-03",
+        locked: false,
+      },
+      {
+        goalId: cadenceGoal.id,
+        requirementFingerprint: computeRequirementFingerprint(cadenceGoal),
+        unitKey: cadenceUnitKey(period.periodKey, 3),
+        scheduledDate: "2026-09-10",
+        locked: false,
+      },
+      {
+        goalId: cadenceGoal.id,
+        requirementFingerprint: computeRequirementFingerprint(cadenceGoal),
+        unitKey: cadenceUnitKey(period.periodKey, 4),
+        scheduledDate: "2026-09-17",
+        locked: false,
+      },
+    ] as const;
+    const cadenceSnapshot = {
+      goals: [cadenceGoal],
+      completions: [
+        {
+          id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+          goal_id: cadenceGoal.id,
+          user_id: cadenceGoal.owner_id,
+          completed_on: "2026-09-01",
+          source: "manual",
+          created_at: "2026-09-01T12:00:00Z",
+        },
+      ],
+      links: [],
+      revisions: { canonicalRevision: 0, executionRevision: 0 },
+      preferences: null,
+      activePlan: {
+        goals: [{ id: cadenceGoal.id, original_goal_id: cadenceGoal.id }],
+        items: cadenceAssignments.map((assignment, index) => ({
+          id: `cadence-item-${index}`,
+          plan_goal_id: cadenceGoal.id,
+          unit_key: assignment.unitKey,
+          scheduled_date: assignment.scheduledDate,
+          original_scheduled_date: assignment.scheduledDate,
+          locked: assignment.locked,
+        })),
+        basePlan: {
+          assignments: cadenceAssignments,
+          completionToUnit: {},
+        },
+      },
+    } as unknown as PlannerCanonicalSnapshot;
+    const thursdayKey = cadenceUnitKey(period.periodKey, 2);
+
+    const result = buildDirectDraftPersistence({
+      snapshot: cadenceSnapshot,
+      commands: [
+        {
+          id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+          sequence: 1,
+          kind: "move_item",
+          goalId: cadenceGoal.id,
+          unitKey: thursdayKey,
+          sourceDate: "2026-09-03",
+          scheduledDate: "2026-09-09",
+        },
+      ],
+      asOfDate: "2026-09-09",
+    });
+
+    expect(result.find((item) => item.unit_key === thursdayKey)).toMatchObject({
+      scheduled_date: "2026-09-09",
+    });
+  });
+
+  it("still blocks moving the cadence session that actually received the completion", () => {
+    const cadenceGoal: Goal = {
+      ...goal,
+      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      title: "Gym",
+      frequency_type: "recurring",
+      recurrence_interval: "weekly",
+      target_count: 4,
+      target_basis: "period",
+      milestone_names: null,
+      start_date: "2026-08-31",
+      end_date: "2026-09-30",
+    };
+    const period = getAnchoredPeriod(
+      cadenceGoal.start_date,
+      "weekly",
+      "2026-09-03",
+      { weekStartsOn: 1 }
+    );
+    const tuesdayKey = cadenceUnitKey(period.periodKey, 2);
+    const cadenceAssignments = [
+      {
+        goalId: cadenceGoal.id,
+        requirementFingerprint: computeRequirementFingerprint(cadenceGoal),
+        unitKey: cadenceUnitKey(period.periodKey, 1),
+        scheduledDate: "2026-08-31",
+        locked: false,
+      },
+      {
+        goalId: cadenceGoal.id,
+        requirementFingerprint: computeRequirementFingerprint(cadenceGoal),
+        unitKey: tuesdayKey,
+        scheduledDate: "2026-09-01",
+        locked: false,
+      },
+    ] as const;
+    const cadenceSnapshot = {
+      goals: [cadenceGoal],
+      completions: [
+        {
+          id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+          goal_id: cadenceGoal.id,
+          user_id: cadenceGoal.owner_id,
+          completed_on: "2026-09-01",
+          source: "manual",
+          created_at: "2026-09-01T12:00:00Z",
+        },
+      ],
+      links: [],
+      revisions: { canonicalRevision: 0, executionRevision: 0 },
+      preferences: null,
+      activePlan: {
+        goals: [{ id: cadenceGoal.id, original_goal_id: cadenceGoal.id }],
+        items: cadenceAssignments.map((assignment, index) => ({
+          id: `cadence-item-${index}`,
+          plan_goal_id: cadenceGoal.id,
+          unit_key: assignment.unitKey,
+          scheduled_date: assignment.scheduledDate,
+          original_scheduled_date: assignment.scheduledDate,
+          locked: assignment.locked,
+        })),
+        basePlan: {
+          assignments: cadenceAssignments,
+          completionToUnit: {},
+        },
+      },
+    } as unknown as PlannerCanonicalSnapshot;
+
+    expect(() =>
+      buildDirectDraftPersistence({
+        snapshot: cadenceSnapshot,
+        commands: [
+          {
+            id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+            sequence: 1,
+            kind: "move_item",
+            goalId: cadenceGoal.id,
+            unitKey: tuesdayKey,
+            sourceDate: "2026-09-01",
+            scheduledDate: "2026-09-09",
+          },
+        ],
+        asOfDate: "2026-09-09",
+      })
+    ).toThrowError(
+      expect.objectContaining<Partial<PlannerDirectDraftValidationError>>({
+        code: "draft_item_unmovable",
+        message:
+          "This session is already credited by a completion, so it cannot be moved.",
+      })
+    );
   });
 });

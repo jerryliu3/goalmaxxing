@@ -6,6 +6,11 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Textarea } from "@/components/ui/textarea";
 import { BulkGoalDraftReview } from "@/features/goals/bulk-goal-draft-review";
 import {
@@ -21,6 +26,7 @@ import {
 } from "@/lib/goals/progress-context";
 import type { Goal } from "@/lib/goals/types";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 
 interface PlannerCoachPanelProps {
   coach: PlannerCoachModel;
@@ -203,6 +209,7 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
   );
   const supabase = useMemo(() => createClient(), []);
   const [availableGoals, setAvailableGoals] = useState<Goal[]>([]);
+  const [open, setOpen] = useState(false);
   const hasGoalDraftProposal = state.coachMessages.some((message) =>
     message.proposal ? isCoachGoalDraftProposal(message.proposal) : false
   );
@@ -277,14 +284,29 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
   }
 
   return (
+    <Collapsible open={open} onOpenChange={setOpen}>
     <div className="rounded-xl border bg-card p-4 shadow-sm">
-      <div className="mb-2 flex items-center gap-2">
-        <h3 className="text-base font-semibold">AI Coach</h3>
-        <Badge className="border-primary/40 bg-primary/10 text-primary">
-          Beta
-        </Badge>
-      </div>
-      <p className="mb-3 text-sm text-muted-foreground">
+      <CollapsibleTrigger asChild>
+        <button
+          type="button"
+          className="flex w-full cursor-pointer items-center gap-2 text-left"
+          aria-label={open ? "Hide AI Coach" : "Show AI Coach"}
+        >
+          <h3 className="text-base font-semibold">AI Coach</h3>
+          <Badge className="border-primary/40 bg-primary/10 text-primary">
+            Beta
+          </Badge>
+          <ChevronDown
+            className={cn(
+              "ml-auto size-4 shrink-0 text-muted-foreground transition-transform",
+              open && "rotate-180"
+            )}
+            aria-hidden
+          />
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+      <p className="mb-3 mt-3 text-sm text-muted-foreground">
         Ask for habit and training guidance based on your current monthly scope.
       </p>
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -500,6 +522,8 @@ export function PlannerCoachPanel({ coach }: PlannerCoachPanelProps) {
           </Button>
         </div>
       </div>
+      </CollapsibleContent>
     </div>
+    </Collapsible>
   );
 }

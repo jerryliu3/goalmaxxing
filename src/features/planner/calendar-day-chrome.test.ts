@@ -4,6 +4,8 @@ import {
   planAgendaDayRowClass,
   planFilledChromeMetaClass,
   planHiddenItemCountLabel,
+  planLedgerSubtitleClass,
+  planLedgerTitleClass,
   planMonthDayNumberClass,
   planMonthDaySurfaceClass,
   planSelectedWorkRowClass,
@@ -107,6 +109,14 @@ describe("plan calendar day chrome", () => {
     expect(planSelectedWorkRowClass(false)).toBe("");
     expect(planSelectedWorkRowClass(true)).toContain("bg-day-selected");
     expect(planSelectedWorkRowClass(true)).toContain("inset_3px_0_0");
+  });
+
+  it("keeps ledger titles slightly smaller than body text", () => {
+    expect(planLedgerTitleClass).toContain("text-sm");
+    expect(planLedgerTitleClass).not.toContain("text-base");
+    expect(planLedgerSubtitleClass).toContain("text-sm");
+    expect(planLedgerSubtitleClass).toContain("font-sans");
+    expect(planLedgerSubtitleClass).not.toContain("font-display");
   });
 
   it("inherits meta color on filled agenda chrome so weekday labels stay visible", () => {

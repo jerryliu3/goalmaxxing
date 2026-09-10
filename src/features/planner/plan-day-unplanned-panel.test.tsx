@@ -78,6 +78,7 @@ describe("PlanDayUnplannedPanel", () => {
     );
 
     expect(screen.getByText("Run")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Run" })).toHaveAttribute("href", "/goals/goal-run");
     expect(
       screen.queryByRole("button", { name: /mark run done/i })
     ).not.toBeInTheDocument();

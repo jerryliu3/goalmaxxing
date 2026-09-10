@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { captureViewportRect } from "@/lib/xp/events";
+import { resolveSelectedDateState } from "@/lib/dates/day";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
 import {
   isProgressContextAuthenticationError,
@@ -112,7 +113,12 @@ export function useChecklistCompletionActions({
       const routeDesiredFactState = mutation.desiredFactState;
       const dispatchDate = mutation.date;
 
-      if (routeDesiredFactState === "present" && creditMove) {
+      const dateState = resolveSelectedDateState(viewDate, todayLocalDate);
+      if (
+        routeDesiredFactState === "present" &&
+        creditMove &&
+        dateState !== "past"
+      ) {
         if (creditMove.goalRequiresMove(goal.id, viewDate)) {
           const openedMoveDialog = await creditMove.requestMoveBeforeComplete(
             goal,

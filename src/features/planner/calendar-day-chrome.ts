@@ -110,3 +110,8 @@ export function planSelectedWorkRowClass(selected: boolean) {
   }
   return "bg-day-selected text-day-selected-foreground shadow-[inset_3px_0_0_var(--color-selection)]";
 }
+
+export const planLedgerTitleClass =
+  "font-display text-sm font-medium tracking-tight";
+
+export const planLedgerSubtitleClass = "font-sans text-sm text-muted-foreground";

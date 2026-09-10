@@ -29,6 +29,8 @@ interface PlannerDayEntriesPanelProps {
   includeSourceElement?: boolean;
   selectedEntryKey?: string | null;
   shareEntryTransition?: boolean;
+  onConfirmDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
+  onCancelDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
 }
 
 export function PlannerDayEntriesPanel({
@@ -51,6 +53,8 @@ export function PlannerDayEntriesPanel({
   includeSourceElement = true,
   selectedEntryKey = null,
   shareEntryTransition = false,
+  onConfirmDraftMove,
+  onCancelDraftMove,
 }: PlannerDayEntriesPanelProps) {
   return (
     <CalendarDayPreviewList
@@ -84,6 +88,8 @@ export function PlannerDayEntriesPanel({
       density={density}
       selectedEntryKey={selectedEntryKey}
       shareEntryTransition={shareEntryTransition}
+      onConfirmDraftMove={onConfirmDraftMove}
+      onCancelDraftMove={onCancelDraftMove}
     />
   );
 }

@@ -39,4 +39,17 @@ describe("PlanDaySection", () => {
       "false"
     );
   });
+
+  it("keeps section titles on the body font, larger than ledger item titles", () => {
+    render(
+      <PlanDaySection title="Scheduled goals" count={3}>
+        <p>Row</p>
+      </PlanDaySection>
+    );
+
+    expect(screen.getByRole("button", { name: /Scheduled goals 3/ })).toHaveClass(
+      "font-sans",
+      "text-base"
+    );
+  });
 });

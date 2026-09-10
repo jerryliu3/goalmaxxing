@@ -61,4 +61,90 @@ describe("selectChecklistListModel", () => {
     expect([...model.filteredTodayGoalIds]).toEqual(["weekly"]);
     expect(model.upcoming.map((item) => item.id)).toEqual(["later"]);
   });
+
+  it("restores achieved milestones when showTargetAchievedGoals is on", () => {
+    const milestone = goal({
+      id: "milestone",
+      title: "Ship the site",
+      frequency_type: "fixed_milestones",
+      recurrence_interval: null,
+      target_count: 2,
+      target_basis: "lifetime",
+      end_date: null,
+    });
+    const data = {
+      ...emptyTodayData,
+      userId: "user-1",
+      goals: [milestone],
+      completions: [
+        {
+          goal_id: "milestone",
+          completed_on: "2026-08-10",
+          source: "manual" as const,
+        },
+        {
+          goal_id: "milestone",
+          completed_on: "2026-08-12",
+          source: "manual" as const,
+        },
+      ],
+      progress: {
+        schemaVersion: "1" as const,
+        asOfDate: "2026-08-13",
+        timezone: "UTC",
+        weekStartsOn: 1,
+        summaries: [
+          {
+            goalId: "milestone",
+            admissibleCompletionCount: 2,
+            creditedUnitCount: 2,
+            expectedUnitCount: 2,
+            percent: 100,
+            lifecycle: "active" as const,
+            outcome: "achieved" as const,
+            placementTerminal: false,
+            achievementDate: "2026-08-12",
+            periodSatisfied: false,
+            currentPeriodCompletionCount: 0,
+            currentPeriodTarget: null,
+            closedPeriodHitRatePercent: null,
+            currentStreak: 0,
+            longestStreak: 0,
+            milestoneDates: [],
+          },
+        ],
+        facts: [],
+        truncated: false as const,
+        correlationId: "test",
+      },
+    };
+    const hidden = selectChecklistListModel({
+      data,
+      viewDate: "2026-08-13",
+      todayLocalDate: "2026-08-13",
+      categoryFilters: [],
+      recurrenceFilters: [],
+      searchQuery: "",
+      todayEndMonths: [],
+      todaySort: "earliest_end",
+      showTargetAchievedGoals: false,
+      showSuppressedLinkedTargets: false,
+    });
+    const shown = selectChecklistListModel({
+      data,
+      viewDate: "2026-08-13",
+      todayLocalDate: "2026-08-13",
+      categoryFilters: [],
+      recurrenceFilters: [],
+      searchQuery: "",
+      todayEndMonths: [],
+      todaySort: "earliest_end",
+      showTargetAchievedGoals: true,
+      showSuppressedLinkedTargets: false,
+    });
+
+    expect([...hidden.filteredTodayGoalIds]).toEqual([]);
+    expect([...hidden.targetAchievedGoalIds]).toEqual(["milestone"]);
+    expect([...shown.filteredTodayGoalIds]).toEqual(["milestone"]);
+  });
 });

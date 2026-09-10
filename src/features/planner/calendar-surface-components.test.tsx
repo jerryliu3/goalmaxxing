@@ -279,7 +279,9 @@ describe("calendar surface extracted components", () => {
     expect(row).not.toHaveClass("rounded-[10px]");
     expect(screen.getByText("Run").closest("[data-plan-drag-handle]")).toHaveClass("py-3");
     expect(screen.getByText("Run").closest("p")).toHaveClass("font-display");
-    expect(screen.getByText("Easy run")).toHaveClass("uppercase");
+    expect(screen.getByText("Easy run")).toHaveClass("text-sm");
+    expect(screen.getByText("Easy run")).toHaveClass("font-sans");
+    expect(screen.getByText("Easy run")).not.toHaveClass("uppercase");
     const toggle = screen.getByRole("button", { name: "Mark session done" });
     expect(toggle).toHaveClass("size-6");
     expect(toggle.querySelector("[data-completion-mark]")).toHaveClass("size-6");

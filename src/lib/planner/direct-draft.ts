@@ -1,6 +1,7 @@
 import { getAnchoredPeriod } from "@/lib/goals/periods";
 import { matchesCadenceUnitKey } from "@/lib/goals/target-basis";
 import { getAdmissibleCompletions } from "@/lib/goals/admissible";
+import type { Goal, RecurrenceInterval } from "@/lib/goals/types";
 import type {
   PlannerCanonicalSnapshot,
   PlannerItemRow,
@@ -31,6 +32,60 @@ export class PlannerDirectDraftValidationError extends Error {
 
 function assignmentKey(assignment: { goalId: string; unitKey: string }) {
   return draftCommandEntryKey(assignment);
+}
+
+/**
+ * Cadence completions credit one session each, inside that period only.
+ * This must stay aligned with `pickCadenceCreditUnit` / kernel reconciliation:
+ * latest scheduled date on or before the completion, else earliest future slot.
+ * A completion never freezes every other slot in the same week/month.
+ */
+function pickCadenceItemForCompletion({
+  items,
+  completionDate,
+  goal,
+  interval,
+  weekStartsOn,
+}: {
+  items: PlannerItemRow[];
+  completionDate: string;
+  goal: Goal;
+  interval: RecurrenceInterval;
+  weekStartsOn: number | undefined;
+}) {
+  const candidates = items.filter((item) => {
+    if (!item.scheduled_date) {
+      return false;
+    }
+    const period = getAnchoredPeriod(
+      goal.start_date,
+      interval,
+      item.scheduled_date,
+      { weekStartsOn }
+    );
+    return (
+      completionDate >= period.start && completionDate <= period.end
+    );
+  });
+  if (candidates.length === 0) {
+    return null;
+  }
+  const pastOrSame = candidates.filter(
+    (item) => (item.scheduled_date ?? "") <= completionDate
+  );
+  const pool = pastOrSame.length > 0 ? pastOrSame : candidates;
+  const preferLatest = pastOrSame.length > 0;
+  return [...pool].sort((left, right) => {
+    const leftDate = left.scheduled_date ?? "";
+    const rightDate = right.scheduled_date ?? "";
+    const byDate = preferLatest
+      ? rightDate.localeCompare(leftDate)
+      : leftDate.localeCompare(rightDate);
+    if (byDate !== 0) {
+      return byDate;
+    }
+    return left.unit_key.localeCompare(right.unit_key);
+  })[0] ?? null;
 }
 
 function completedUnitKeysForGoal({
@@ -68,25 +123,28 @@ function completedUnitKeysForGoal({
     return completed;
   }
   if (requirement.kind === "cadence") {
-    for (const item of persistedItems.filter(
-      (candidate) => candidate.goal_id === goal.id
-    )) {
-      const period = getAnchoredPeriod(
-        goal.start_date,
-        requirement.interval,
-        item.scheduled_date,
-        {
-          weekStartsOn: snapshot.preferences?.default_policy.weekStartsOn,
-        }
+    const remaining = persistedItems.filter(
+      (candidate) => candidate.goal_id === goal.id && candidate.scheduled_date
+    );
+    const weekStartsOn =
+      snapshot.preferences?.default_policy.weekStartsOn;
+    for (const completion of completions) {
+      const picked = pickCadenceItemForCompletion({
+        items: remaining,
+        completionDate: completion.completed_on,
+        goal,
+        interval: requirement.interval,
+        weekStartsOn,
+      });
+      if (!picked) {
+        continue;
+      }
+      completed.add(picked.unit_key);
+      const pickedIndex = remaining.findIndex(
+        (item) => item.unit_key === picked.unit_key
       );
-      if (
-        completions.some(
-          (completion) =>
-            completion.completed_on >= period.start &&
-            completion.completed_on <= period.end
-        )
-      ) {
-        completed.add(item.unit_key);
+      if (pickedIndex >= 0) {
+        remaining.splice(pickedIndex, 1);
       }
     }
     return completed;
@@ -261,29 +319,41 @@ export function buildDirectDraftPersistence({
         { goalId: command.goalId, unitKey: command.unitKey }
       );
     }
-    const itemIsImmovable =
-      assignment.locked ||
-      completedUnitKeys.has(key) ||
-      assignment.scheduledDate === null;
-    if (command.kind === "set_item_time_override") {
-      if (itemIsImmovable) {
+    const itemIsLocked = assignment.locked;
+    const itemIsUnscheduled = assignment.scheduledDate === null;
+    const itemIsCredited = completedUnitKeys.has(key);
+    const throwIfImmovable = (action: "moved" | "changed") => {
+      if (itemIsLocked) {
         throw new PlannerDirectDraftValidationError(
           "draft_item_unmovable",
-          "Completed or locked sessions cannot be changed.",
+          "Unlock this session first.",
           { goalId: command.goalId, unitKey: command.unitKey }
         );
       }
+      if (itemIsUnscheduled) {
+        throw new PlannerDirectDraftValidationError(
+          "draft_item_unmovable",
+          "Unscheduled sessions cannot be moved from this draft.",
+          { goalId: command.goalId, unitKey: command.unitKey }
+        );
+      }
+      if (itemIsCredited) {
+        throw new PlannerDirectDraftValidationError(
+          "draft_item_unmovable",
+          action === "moved"
+            ? "This session is already credited by a completion, so it cannot be moved."
+            : "This session is already credited by a completion, so it cannot be changed.",
+          { goalId: command.goalId, unitKey: command.unitKey }
+        );
+      }
+    };
+    if (command.kind === "set_item_time_override") {
+      throwIfImmovable("changed");
       projectedTimeByKey.set(key, command.localTime);
       continue;
     }
     if (command.kind === "clear_item_time_override") {
-      if (itemIsImmovable) {
-        throw new PlannerDirectDraftValidationError(
-          "draft_item_unmovable",
-          "Completed or locked sessions cannot be changed.",
-          { goalId: command.goalId, unitKey: command.unitKey }
-        );
-      }
+      throwIfImmovable("changed");
       projectedTimeByKey.set(key, null);
       continue;
     }
@@ -299,15 +369,7 @@ export function buildDirectDraftPersistence({
         { goalId: command.goalId, unitKey: command.unitKey }
       );
     }
-    if (
-      itemIsImmovable
-    ) {
-      throw new PlannerDirectDraftValidationError(
-        "draft_item_unmovable",
-        "Completed or locked sessions cannot be moved.",
-        { goalId: command.goalId, unitKey: command.unitKey }
-      );
-    }
+    throwIfImmovable("moved");
     if (command.scheduledDate !== null) {
       const creditWindow =
         requirement.kind === "cadence"

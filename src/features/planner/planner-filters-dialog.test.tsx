@@ -190,4 +190,32 @@ describe("PlannerFiltersDialog", () => {
     await user.click(screen.getByRole("checkbox", { name: "September 2026" }));
     expect(onEndMonthFiltersChange).toHaveBeenCalledWith(["2026-08", "2026-09"]);
   });
+
+  it("lets week and month filters reveal completed future sessions", () => {
+    const onShowCompletedGoalsChange = vi.fn();
+    render(
+      <PlannerFiltersDialog
+        open
+        onOpenChange={vi.fn()}
+        showTasksInsteadOfGoals={false}
+        onShowTasksInsteadOfGoalsChange={vi.fn()}
+        categoryFilters={[]}
+        onCategoryFiltersChange={vi.fn()}
+        categoryOptions={[]}
+        endMonthFilters={[]}
+        onEndMonthFiltersChange={vi.fn()}
+        endMonthOptions={[]}
+        showCompletedGoals={false}
+        onShowCompletedGoalsChange={onShowCompletedGoalsChange}
+      />
+    );
+
+    const toggle = screen.getByRole("checkbox", { name: "Show completed goals" });
+    expect(toggle).not.toBeChecked();
+    expect(
+      screen.getByText(/completed goals in the checklist, including milestones/i)
+    ).toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(onShowCompletedGoalsChange).toHaveBeenCalledWith(true);
+  });
 });

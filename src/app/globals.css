@@ -486,6 +486,34 @@ body {
     var(--motion-ease-emphasized) both;
 }
 
+@keyframes plan-adjacent-month-nudge-up {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.2rem);
+  }
+}
+
+@keyframes plan-adjacent-month-nudge-down {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(0.2rem);
+  }
+}
+
+.plan-adjacent-month-nudge-up {
+  animation: plan-adjacent-month-nudge-up 1.6s ease-in-out infinite;
+}
+
+.plan-adjacent-month-nudge-down {
+  animation: plan-adjacent-month-nudge-down 1.6s ease-in-out infinite;
+}
+
 @keyframes plan-draft-shimmer {
   0% {
     transform: translateX(-130%);
@@ -520,7 +548,9 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .motion-popup-enter,
   .motion-collapsible-content,
-  .plan-draft-shimmer::after {
+  .plan-draft-shimmer::after,
+  .plan-adjacent-month-nudge-up,
+  .plan-adjacent-month-nudge-down {
     animation: none !important;
   }
 

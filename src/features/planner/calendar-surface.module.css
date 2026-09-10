@@ -1,10 +1,20 @@
 .monthGridTrack {
-  /* Seven mobile columns plus the six half-rem gaps. */
-  width: calc(233.333333% + 0.666667rem);
+  /*
+   * Keep day cells at a stable 7-column size instead of swapping between a
+   * 3-day zoom (233%) and a fitted week. That swap fires while the split
+   * slider crosses 42rem, so the calendar jumps smaller while the checklist
+   * still follows the pointer.
+   */
+  width: 100%;
+  min-width: 42rem;
 }
 
-@media (min-width: 48rem) {
+/*
+ * Follow the calendar pane width, not the viewport, so the split slider
+ * can still zoom the month grid the same way a narrower window would.
+ */
+@container (min-width: 42rem) {
   .monthGridTrack {
-    width: 100%;
+    min-width: 0;
   }
 }

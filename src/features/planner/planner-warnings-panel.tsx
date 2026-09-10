@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,6 +10,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { PlannerEligibilityNotices } from "@/features/planner/planner-eligibility-notices";
+
+const subscribeToNothing = () => () => {};
 
 interface PlannerWarningsPanelProps {
   hasPlannerWarnings: boolean;
@@ -60,9 +63,21 @@ export function PlannerWarningsPanel({
   onUnlockAllGoals,
   onOpenPlannerSettings,
 }: PlannerWarningsPanelProps) {
+  const isClient = useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false
+  );
+  const showRecoverBanner =
+    isClient &&
+    hasPlannerWarnings &&
+    !warningsDismissed &&
+    !showBlockingLoading &&
+    !error;
+
   return (
     <>
-      {hasPlannerWarnings && !warningsDismissed && !showBlockingLoading && !error ? (
+      {showRecoverBanner ? (
         <div
           className="rounded-[10px] border border-warning bg-warning-fill px-3 py-2 text-xs text-foreground shadow-[inset_3px_0_0_0_var(--color-warning)]"
           data-testid="plan-recover-banner"

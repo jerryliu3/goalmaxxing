@@ -1,14 +1,16 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import { useChecklistCompletionActions } from "@/features/today/use-checklist-completion-actions";
 import { useChecklistData } from "@/features/today/use-checklist-data";
 import { useChecklistProjection } from "@/features/today/use-checklist-projection";
 import { useCompletionCreditMove } from "@/features/planner/completion-credit-move";
-import { planCompletionControlModeForDate } from "@/features/planner/completion-entry-dispatch";
+import { planUnscheduledLedgerControlMode } from "@/features/planner/completion-entry-dispatch";
 import {
   placedGoalIdsForDay,
   selectUnplannedGoals,
+  selectVisibleUnplannedGoals,
 } from "@/features/planner/plan-day-unplanned";
 import {
   PlanLedgerCompletionControl,
@@ -16,6 +18,7 @@ import {
 } from "@/features/planner/plan-ledger-completion-control";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
+import { planLedgerTitleClass } from "@/features/planner/calendar-day-chrome";
 import {
   buildCompletableGoalIds,
   selectCompletableGoals,
@@ -47,7 +50,10 @@ export function PlanDayUnplannedPanel({
       checklist={checklist}
     />
   ) : (
-    <PlanDayUnplannedList day={day} placedGoalIds={placedGoalIds} />
+    <PlanDayUnplannedList
+      day={day}
+      placedGoalIds={placedGoalIds}
+    />
   );
 }
 
@@ -60,19 +66,19 @@ function PlanDayUnplannedFromChecklist({
   placedGoalIds: ReadonlySet<string>;
   checklist: PlanDayChecklistModel;
 }) {
-  const unplannedGoals = useMemo(() => {
-    const selected = selectUnplannedGoals({
-      goals: checklist.listModel.completableGoals,
-      placedGoalIds,
-      viewDate: day,
-    });
-    if (checklist.visibleGoalIds === null) {
-      return selected;
-    }
-    return selected.filter((goal) => checklist.visibleGoalIds?.has(goal.id));
-  }, [checklist.listModel.completableGoals, checklist.visibleGoalIds, day, placedGoalIds]);
+  const unplannedGoals = useMemo(
+    () =>
+      selectVisibleUnplannedGoals({
+        goals: checklist.listModel.completableGoals,
+        placedGoalIds,
+        viewDate: day,
+        visibleGoalIds: checklist.visibleGoalIds,
+      }),
+    [checklist.listModel.completableGoals, checklist.visibleGoalIds, day, placedGoalIds]
+  );
+  const loading = checklist.loading && checklist.data.goals.length === 0;
 
-  if (checklist.loading && checklist.data.goals.length === 0) {
+  if (loading) {
     return <p className="text-sm text-muted-foreground">Loading unscheduled work...</p>;
   }
 
@@ -146,8 +152,9 @@ function PlanDayUnplannedList({
     loadData,
     redirectToLogin,
   });
+  const loadingEmpty = loading && data.goals.length === 0;
 
-  if (loading && data.goals.length === 0) {
+  if (loadingEmpty) {
     return <p className="text-sm text-muted-foreground">Loading unscheduled work...</p>;
   }
 
@@ -190,18 +197,14 @@ function PlanDayUnplannedRows({
       {goals.map((goal) => {
         const presentation = presentationByGoalId.get(goal.id);
         const completed = Boolean(presentation?.exactDateCompleted);
-        let completionMode: PlanLedgerCompletionMode = planCompletionControlModeForDate({
+        const completionMode: PlanLedgerCompletionMode = planUnscheduledLedgerControlMode({
           currentlyCredited: completed,
           selectedDate: day,
           asOfDate,
+          canMoveScheduledSession: Boolean(
+            !completed && creditMove?.goalRequiresMove(goal.id, day)
+          ),
         });
-        if (
-          completionMode === "toggle" &&
-          !completed &&
-          creditMove?.goalRequiresMove(goal.id, day)
-        ) {
-          completionMode = "move";
-        }
         return (
           <div
             key={goal.id}
@@ -215,14 +218,16 @@ function PlanDayUnplannedRows({
               label={goal.title}
               onToggle={(sourceElement) => onToggle(goal, sourceElement)}
             />
-            <p
+            <Link
+              href={`/goals/${goal.id}`}
               className={cn(
-                "font-display min-w-0 flex-1 text-base font-medium tracking-tight",
+                planLedgerTitleClass,
+                "min-w-0 flex-1 hover:underline",
                 completed && "line-through"
               )}
             >
               {goal.title}
-            </p>
+            </Link>
           </div>
         );
       })}

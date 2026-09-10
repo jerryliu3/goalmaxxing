@@ -2,11 +2,13 @@ import {
   buildActiveGoalIndexes,
   orderEntriesForDay,
 } from "@/features/planner/calendar-entries";
+import { isEntryCredited } from "@/features/planner/calendar-format";
 import {
   applyCalendarCompletionMarkerFilters,
   buildCalendarCategoryFilterOptions,
   entryMatchesCalendarSearchQuery,
   goalPassesCalendarFilters,
+  shouldHideCompletedOnFutureCalendarDay,
 } from "@/features/planner/calendar-filters";
 import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import {
@@ -66,6 +68,7 @@ export interface CalendarDayAccessorsArgs {
   previewEntryOrderByDay: Record<string, string[]>;
   calendarTaskEntriesByDate?: Map<string, PlannerDayDetailEntry[]>;
   showTasksInsteadOfGoals?: boolean;
+  showCompletedGoals?: boolean;
 }
 
 export interface CalendarDayAccessorsMemoizedState {
@@ -115,6 +118,7 @@ export function selectCalendarDayAccessorsModel({
   previewEntryOrderByDay,
   calendarTaskEntriesByDate,
   showTasksInsteadOfGoals = false,
+  showCompletedGoals = false,
   memoizedState,
 }: CalendarDayAccessorsArgs & {
   memoizedState?: CalendarDayAccessorsMemoizedState;
@@ -227,8 +231,18 @@ export function selectCalendarDayAccessorsModel({
     return entryDayByKey.get(entry.key) === day;
   };
 
-  const filterEntries = (entries: PlannerDayDetailEntry[]) =>
+  const filterEntries = (entries: PlannerDayDetailEntry[], day: string | null) =>
     entries.filter((entry) => {
+      if (
+        shouldHideCompletedOnFutureCalendarDay({
+          day,
+          calendarToday,
+          showCompletedGoals,
+        }) &&
+        isEntryCredited(entry)
+      ) {
+        return false;
+      }
       if (isPlannerTaskCalendarEntry(entry)) {
         return entryMatchesCalendarSearchQuery(entry, searchQuery);
       }
@@ -243,9 +257,9 @@ export function selectCalendarDayAccessorsModel({
       return [];
     }
     if (showTasksInsteadOfGoals) {
-      return filterEntries(calendarTaskEntriesByDate?.get(day) ?? []);
+      return filterEntries(calendarTaskEntriesByDate?.get(day) ?? [], day);
     }
-    return filterEntries(getCalendarDayProjection(day).entries);
+    return filterEntries(getCalendarDayProjection(day).entries, day);
   };
 
   const getEntriesForDay = (day: string | null) => {
@@ -259,6 +273,15 @@ export function selectCalendarDayAccessorsModel({
     if (!day || duoScope === "me") {
       return [];
     }
+    if (
+      shouldHideCompletedOnFutureCalendarDay({
+        day,
+        calendarToday,
+        showCompletedGoals,
+      })
+    ) {
+      return [];
+    }
     return applyCalendarCompletionMarkerFilters({
       viewerMarkers: [],
       partnerMarkers: partnerCompletionMarkersByDate?.get(day) ?? [],
@@ -269,6 +292,15 @@ export function selectCalendarDayAccessorsModel({
 
   const getCompletionFactMarkersForDay = (day: string | null) => {
     if (showTasksInsteadOfGoals) {
+      return [];
+    }
+    if (
+      shouldHideCompletedOnFutureCalendarDay({
+        day,
+        calendarToday,
+        showCompletedGoals,
+      })
+    ) {
       return [];
     }
     const viewerMarkers = hideViewerPlan
@@ -293,7 +325,7 @@ export function selectCalendarDayAccessorsModel({
       day,
       entries: showTasksInsteadOfGoals
         ? entriesForDay(day)
-        : filterEntries(getCalendarDayProjection(day).orderedEntries),
+        : filterEntries(getCalendarDayProjection(day).orderedEntries, day),
       previewEntryOrderByDay,
     });
   };

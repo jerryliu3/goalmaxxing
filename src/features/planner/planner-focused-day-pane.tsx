@@ -1,5 +1,6 @@
 import { format, parse } from "date-fns";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   getEntryMilestoneFirstTitleWithTime,
   getEntrySubtitle,
@@ -7,7 +8,7 @@ import {
   isEntryImmovableForDraft,
 } from "@/features/planner/calendar-format";
 import { useCompletionCreditMove } from "@/features/planner/completion-credit-move";
-import { planCompletionControlModeForDate } from "@/features/planner/completion-entry-dispatch";
+import { planUnscheduledLedgerControlMode } from "@/features/planner/completion-entry-dispatch";
 import {
   PlanLedgerCompletionControl,
   type PlanLedgerCompletionMode,
@@ -17,13 +18,18 @@ import type {
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import { PlanDayUnplannedPanel } from "@/features/planner/plan-day-unplanned-panel";
+import {
+  placedGoalIdsForDay,
+  selectVisibleUnplannedGoals,
+} from "@/features/planner/plan-day-unplanned";
 import { PlanDaySection } from "@/features/planner/plan-day-section";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
 import { DuoLaneIdentity } from "@/features/social/duo/duo-lanes";
 import type { DuoLaneSubject } from "@cadence/shared/social/duo";
 import { PlannerDayEntriesPanel } from "@/features/planner/planner-day-entries-panel";
 import { PlannerTasksPanel, PlannerTasksPrefetch } from "@/features/tasks/planner-tasks-panel";
-import { planDayViewTransitionName } from "@/features/planner/plan-view-transition";
+import { planLedgerTitleClass } from "@/features/planner/calendar-day-chrome";
+import { PLAN_MORPH_CLASS, planDayViewTransitionName } from "@/features/planner/plan-view-transition";
 import { ChecklistPastPanels } from "@/features/today/checklist-past-panels";
 import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 import type { Goal } from "@/lib/goals/types";
@@ -47,6 +53,7 @@ interface PlannerFocusedDayPaneProps {
   onEntryPointerEnd: () => void;
   showTasksInsteadOfGoals?: boolean;
   titleAs?: "h2" | "p";
+  showDayHeading?: boolean;
   shareDayTransition?: boolean;
   selectedEntryKey?: string | null;
   dayChecklist?: PlanDayChecklistModel | null;
@@ -54,6 +61,8 @@ interface PlannerFocusedDayPaneProps {
   viewerSubject?: DuoLaneSubject | null;
   partnerSubject?: DuoLaneSubject | null;
   splitPartnerChecklist?: boolean;
+  onConfirmDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
+  onCancelDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
 }
 
 export function PlannerFocusedDayPane({
@@ -70,6 +79,7 @@ export function PlannerFocusedDayPane({
   onEntryPointerEnd,
   showTasksInsteadOfGoals = false,
   titleAs = "p",
+  showDayHeading = true,
   shareDayTransition = false,
   selectedEntryKey = null,
   dayChecklist = null,
@@ -77,10 +87,27 @@ export function PlannerFocusedDayPane({
   viewerSubject = null,
   partnerSubject = null,
   splitPartnerChecklist = false,
+  onConfirmDraftMove,
+  onCancelDraftMove,
 }: PlannerFocusedDayPaneProps) {
   const TitleTag = titleAs;
   const creditMove = useCompletionCreditMove();
+  const [todoCount, setTodoCount] = useState(0);
   const visibleEntries = entries;
+    const unscheduledCount = useMemo(() => {
+    if (!dayChecklist || showTasksInsteadOfGoals) {
+      return 0;
+    }
+    if (dayChecklist.loading && (dayChecklist.data?.goals.length ?? 0) === 0) {
+      return 0;
+    }
+    return selectVisibleUnplannedGoals({
+      goals: dayChecklist.listModel.completableGoals ?? [],
+      placedGoalIds: placedGoalIdsForDay(visibleEntries),
+      viewDate: day,
+      visibleGoalIds: dayChecklist.visibleGoalIds,
+    }).length;
+  }, [day, dayChecklist, showTasksInsteadOfGoals, visibleEntries]);
   const visibleMarkers = completionFactMarkers;
   const viewerMarkers = useMemo(
     () => visibleMarkers.filter((marker) => marker.owner !== "partner"),
@@ -98,19 +125,14 @@ export function PlannerFocusedDayPane({
       dayChecklist.listModel.presentationByGoalId.get(goal.id)?.exactDateCompleted
     );
     const archived = options?.archived ?? false;
-    let completionMode: PlanLedgerCompletionMode = planCompletionControlModeForDate({
+    const completionMode: PlanLedgerCompletionMode = planUnscheduledLedgerControlMode({
       currentlyCredited: completed,
       selectedDate: day,
       asOfDate,
+      canMoveScheduledSession: Boolean(
+        !completed && !archived && creditMove?.goalRequiresMove(goal.id, day)
+      ),
     });
-    if (
-      completionMode === "toggle" &&
-      !completed &&
-      !archived &&
-      creditMove?.goalRequiresMove(goal.id, day)
-    ) {
-      completionMode = "move";
-    }
     return (
       <div
         key={options?.key ?? goal.id}
@@ -127,21 +149,23 @@ export function PlannerFocusedDayPane({
             void dayChecklist.toggleCompletion(goal, sourceElement);
           }}
         />
-        <p
+        <Link
+          href={`/goals/${goal.id}`}
           className={cn(
-            "font-display min-w-0 flex-1 text-base font-medium tracking-tight",
+            planLedgerTitleClass,
+            "min-w-0 flex-1 hover:underline",
             completed && "line-through"
           )}
         >
           {goal.title}
-        </p>
+        </Link>
       </div>
     );
   };
 
   return (
     <div
-      className="space-y-3"
+      className={cn("space-y-3", shareDayTransition && PLAN_MORPH_CLASS)}
       data-testid="plan-day-pane"
       style={
         shareDayTransition
@@ -149,14 +173,16 @@ export function PlannerFocusedDayPane({
           : undefined
       }
     >
-      <div className="border-b border-border pb-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          Day
-        </p>
-        <TitleTag className="font-display mt-1 text-xl font-semibold tracking-tight">
-          {format(parse(day, "yyyy-MM-dd", new Date()), "EEEE, MMM d")}
-        </TitleTag>
-      </div>
+      {showDayHeading ? (
+        <div className="border-b border-border pb-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            Day
+          </p>
+          <TitleTag className="font-display mt-1 text-xl font-semibold tracking-tight">
+            {format(parse(day, "yyyy-MM-dd", new Date()), "EEEE, MMM d")}
+          </TitleTag>
+        </div>
+      ) : null}
       <div
         className={
           splitPartnerChecklist
@@ -206,6 +232,8 @@ export function PlannerFocusedDayPane({
               includeSourceElement={false}
               selectedEntryKey={selectedEntryKey}
               shareEntryTransition={shareDayTransition}
+              onConfirmDraftMove={onConfirmDraftMove}
+              onCancelDraftMove={onCancelDraftMove}
             />
             {splitPartnerChecklist
               ? partnerMarkers.map((marker) => (
@@ -221,7 +249,12 @@ export function PlannerFocusedDayPane({
               : null}
           </PlanDaySection>
           {showTasksInsteadOfGoals ? null : (
-            <PlanDaySection key={`${day}-unplanned`} title="Unscheduled goals" defaultOpen={false}>
+            <PlanDaySection
+              key={`${day}-unplanned`}
+              title="Unscheduled goals"
+              count={unscheduledCount}
+              defaultOpen={false}
+            >
               <PlanDayUnplannedPanel
                 day={day}
                 placedEntries={visibleEntries}
@@ -231,8 +264,8 @@ export function PlannerFocusedDayPane({
           )}
           {showTasksInsteadOfGoals ? null : (
             <>
-              <PlannerTasksPrefetch scheduledDate={day} />
-              <PlanDaySection key={`${day}-todos`} title="Todos" defaultOpen={false}>
+              <PlannerTasksPrefetch scheduledDate={day} onCountChange={setTodoCount} />
+              <PlanDaySection key={`${day}-todos`} title="Todos" count={todoCount} defaultOpen={false}>
                 <PlannerTasksPanel
                   key={day}
                   title="Todos"
@@ -242,6 +275,7 @@ export function PlannerFocusedDayPane({
                   allowCreate
                   hideWhenEmpty={false}
                   chrome="plain"
+                  onCountChange={setTodoCount}
                 />
               </PlanDaySection>
             </>

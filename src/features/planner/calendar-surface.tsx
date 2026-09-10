@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from "react";
@@ -41,6 +42,7 @@ import type {
   CalendarSurfaceProps,
   DayPreviewState,
   PlannerContextPayload,
+  PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import {
   getNonPublishablePreviewMessage,
@@ -70,6 +72,8 @@ import {
   useCalendarViewNavigation,
 } from "@/features/planner/use-calendar-view-navigation";
 import { PlannerCalendarSurfaceLayout } from "@/features/planner/planner-calendar-surface-layout";
+import { persistImmediatePlannerMove } from "@/lib/planner/persist-immediate-move";
+import { canConfirmDraftMove, resolveStagedDraftMove } from "@/features/planner/draft-move-confirm";
 
 
 export function CalendarSurface({
@@ -87,17 +91,27 @@ export function CalendarSurface({
   viewerSubject = null,
   partnerSubject = null,
 }: CalendarSurfaceProps) {
-  const [context, setContext] = useState<PlannerContextPayload | null>(() => {
+  const [context, setContext] = useState<PlannerContextPayload | null>(null);
+  useLayoutEffect(() => {
     if (!month) {
-      return null;
+      return;
     }
-    return readTabDataCache<PlannerContextPayload>(buildPlannerContextCacheKey(month));
-  });
+    const cached = readTabDataCache<PlannerContextPayload>(
+      buildPlannerContextCacheKey(month)
+    );
+    if (!cached) {
+      return;
+    }
+    queueMicrotask(() => {
+      setContext(cached);
+    });
+  }, [month]);
   const [loading, setLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
   const [endMonthFilters, setEndMonthFilters] = useState<string[]>([]);
+  const [showCompletedGoals, setShowCompletedGoals] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const {
     draftPolicy,
@@ -263,6 +277,7 @@ export function CalendarSurface({
     additionalProjectionDays,
     calendarTaskEntriesByDate: taskEntriesByDate,
     showTasksInsteadOfGoals,
+    showCompletedGoals: viewMode === "day" ? true : showCompletedGoals,
   });
   const {
     cells,
@@ -672,6 +687,59 @@ export function CalendarSurface({
       buildPlannerResetGoalOptions(context?.activePlan?.goals, context?.asOfDate ?? ""),
     [context?.activePlan?.goals, context?.asOfDate]
   );
+  const confirmStagedDraftMove = useCallback(
+    async (entry: PlannerDayDetailEntry, day: string) => {
+      if (!context) {
+        toast.error("Planner context is unavailable.");
+        return;
+      }
+      const resolvedMove = resolveStagedDraftMove(entry, day);
+      if (!resolvedMove) {
+        toast.error("This draft move is no longer available.");
+        return;
+      }
+      setMutationLoadingKey(entry.key);
+      try {
+        await persistImmediatePlannerMove({
+          context,
+          goalId: entry.originalGoalId,
+          unitKey: entry.unitKey,
+          sourceDate: resolvedMove.sourceDate,
+          scheduledDate: resolvedMove.scheduledDate,
+        });
+        handlePlannerMutation();
+        const loaded = await loadContext({ showLoading: false, toastOnError: false });
+        if (loaded) {
+          dispatchDraftCommand({
+            type: "remove_kind",
+            kind: "move_item",
+            goalId: entry.originalGoalId,
+            unitKey: entry.unitKey,
+          });
+          setDraftPreview(null);
+          setDraftPreviewWindow(null);
+        }
+        toast.success("Session move saved.");
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "The session could not be moved."
+        );
+      } finally {
+        setMutationLoadingKey(null);
+      }
+    },
+    [context, dispatchDraftCommand, handlePlannerMutation, loadContext]
+  );
+  const cancelStagedDraftMove = useCallback(
+    (entry: PlannerDayDetailEntry) => {
+      if (!canConfirmDraftMove(entry)) {
+        toast.error("This draft move is no longer available.");
+        return;
+      }
+      clearDraftMoveCommands([`${entry.originalGoalId}:${entry.unitKey}`]);
+    },
+    [clearDraftMoveCommands]
+  );
   const layoutProps = useCalendarSurfacePresentation({
     saveLoading,
     jumpToTodayBase,
@@ -785,6 +853,8 @@ export function CalendarSurface({
     previewDayEntries,
     previewDayCompletionFactMarkers,
     openMoveDialogForDay,
+    onConfirmDraftMove: confirmStagedDraftMove,
+    onCancelDraftMove: cancelStagedDraftMove,
     setExpandedPreviewDay,
     clearHoverPreviewTimer,
     clearHoverPreviewCloseTimer,
@@ -817,6 +887,8 @@ export function CalendarSurface({
     endMonthFilters,
     setEndMonthFilters,
     endMonthOptions,
+    showCompletedGoals,
+    setShowCompletedGoals,
     settingsOpen,
     rebuildLoading,
   });

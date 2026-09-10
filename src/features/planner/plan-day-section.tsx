@@ -24,8 +24,9 @@ export function PlanDaySection({
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger
-        className="flex w-full items-center justify-between gap-2 py-2 text-left text-sm font-medium touch-manipulation"
+        className="flex w-full items-center justify-between gap-2 py-2 text-left font-sans text-base font-medium touch-manipulation"
         aria-expanded={open}
+        aria-label={typeof count === "number" ? `${title} ${count}` : title}
       >
         <span className="flex min-w-0 items-center gap-2">
           {title}
