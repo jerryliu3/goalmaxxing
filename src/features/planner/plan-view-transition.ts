@@ -1,4 +1,5 @@
 export const PLAN_MORPH_CLASS = "plan-morph";
+export const PLAN_VIEW_SWAP_CLASS = "plan-view-swap";
 
 export function planDayViewTransitionName(day: string) {
   return `plan-day-${day}`;
