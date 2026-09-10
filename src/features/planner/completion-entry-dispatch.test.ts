@@ -4,6 +4,7 @@ import {
   getPlannerCompletionTogglePresentation,
   planCompletionControlMode,
   planCompletionControlModeForDate,
+  planUnscheduledLedgerControlMode,
   type DateFactDispatchForEntry,
 } from "@/features/planner/completion-entry-dispatch";
 import { buildPlannerDayEntry } from "@/features/planner/test-fixtures";
@@ -127,6 +128,49 @@ describe("planCompletionControlModeForDate", () => {
         asOfDate: "2026-09-06",
       })
     ).toBe("toggle");
+  });
+});
+
+describe("planUnscheduledLedgerControlMode", () => {
+  it("uses a move control for today and future dates when a session can be moved", () => {
+    expect(
+      planUnscheduledLedgerControlMode({
+        currentlyCredited: false,
+        selectedDate: "2026-09-06",
+        asOfDate: "2026-09-06",
+        canMoveScheduledSession: true,
+      })
+    ).toBe("move");
+    expect(
+      planUnscheduledLedgerControlMode({
+        currentlyCredited: false,
+        selectedDate: "2026-09-10",
+        asOfDate: "2026-09-06",
+        canMoveScheduledSession: true,
+      })
+    ).toBe("move");
+  });
+
+  it("keeps a completion checkbox on past dates even when a session exists elsewhere", () => {
+    expect(
+      planUnscheduledLedgerControlMode({
+        currentlyCredited: false,
+        selectedDate: "2026-09-01",
+        asOfDate: "2026-09-06",
+        canMoveScheduledSession: true,
+      })
+    ).toBe("toggle");
+  });
+
+  it("hides the control on future dates when nothing can be moved there", () => {
+    expect(
+      planUnscheduledLedgerControlMode({
+        currentlyCredited: false,
+        selectedDate: "2026-09-10",
+        asOfDate: "2026-09-06",
+        canMoveScheduledSession: false,
+      })
+    ).toBe("hidden");
   });
 });
 

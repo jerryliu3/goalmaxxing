@@ -1,5 +1,6 @@
 import type { GoalCategoryFilterOption } from "@/features/goals/goal-filters";
 import type {
+  PlannerCalendarViewMode,
   PlannerCompletionFactMarker,
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
@@ -15,7 +16,33 @@ type CalendarFilterGoalOverride = CalendarFilterGoalSnapshot | undefined;
 
 const MILESTONE_UNIT_KEY_PATTERN = /^milestone:\d+$/i;
 
-export function normalizeCalendarSearchQuery(searchQuery: string | null | undefined) {
+export function shouldHideCompletedOnFutureCalendarDay({
+  day,
+  calendarToday,
+  showCompletedGoals,
+}: {
+  day: string | null;
+  calendarToday: string;
+  showCompletedGoals: boolean;
+}) {
+  return Boolean(
+    !showCompletedGoals && day && calendarToday && day > calendarToday
+  );
+}
+
+export function resolvePlannerShowTargetAchievedGoals({
+  viewMode,
+  dayFilterValue,
+  plannerShowCompletedGoals,
+}: {
+  viewMode: PlannerCalendarViewMode;
+  dayFilterValue: boolean;
+  plannerShowCompletedGoals: boolean;
+}) {
+  return viewMode === "day" ? dayFilterValue : plannerShowCompletedGoals;
+}
+
+export function normalizeCalendarSearchQuery(searchQuery: string) {
   return (searchQuery ?? "").trim().toLocaleLowerCase();
 }
 

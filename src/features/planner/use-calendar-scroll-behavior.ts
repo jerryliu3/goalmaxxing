@@ -4,6 +4,7 @@ import { useCallback, useEffect } from "react";
 import {
   getCalendarTargetScrollLeft,
   getCalendarTargetScrollTop,
+  queryCalendarDayCell,
 } from "@/features/planner/calendar-scroll-position";
 import { shouldShowPlanTodayShortcut } from "@/features/planner/calendar-today-shortcut";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
@@ -96,12 +97,13 @@ export function useCalendarScrollBehavior({
       return;
     }
     const frame = window.requestAnimationFrame(() => {
-      const rowStartCell = verticalContainer.querySelector<HTMLElement>(
-        `[data-day-cell="true"][data-day="${rowStartDay}"]`
-      );
-      const focusCell = horizontalContainer.querySelector<HTMLElement>(
-        `[data-day-cell="true"][data-day="${focusDay}"]`
-      );
+      const verticalContainer = multiMonthGridScrollRef.current;
+      const horizontalContainer = calendarGridViewportRef.current;
+      if (!verticalContainer || !horizontalContainer) {
+        return;
+      }
+      const rowStartCell = queryCalendarDayCell(verticalContainer, rowStartDay);
+      const focusCell = queryCalendarDayCell(horizontalContainer, focusDay);
       if (!rowStartCell || !focusCell) {
         return;
       }

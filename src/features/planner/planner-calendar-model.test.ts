@@ -123,13 +123,13 @@ describe("selectPlannerCalendarModel", () => {
   });
 
   it("projects additional days outside the visible window", () => {
-    const offscreenDay = "2026-12-10";
+    const offscreenDay = "2026-05-10";
     const context = buildPlannerContext({
       workUnits: [
         buildPlannerWorkUnit({
           originalGoalId: "goal-1",
           unitKey: "unit-offscreen",
-          scheduledDate: "2026-12-09",
+          scheduledDate: "2026-05-09",
           creditedCompletionDate: offscreenDay,
         }),
       ],
@@ -402,5 +402,63 @@ describe("selectPlannerCalendarModel", () => {
         (marker) => marker.key
       )
     ).toEqual(["partner-marker"]);
+  });
+
+  it("hides completed sessions on future days until the filter is on", () => {
+    const context = buildContextWithPersistedPlan(
+      [
+        buildPlannerWorkUnit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          scheduledDate: "2026-08-20",
+          creditState: "completed_as_scheduled",
+        }),
+        buildPlannerWorkUnit({
+          originalGoalId: "goal-b",
+          unitKey: "total:1",
+          scheduledDate: "2026-08-20",
+          creditState: "uncredited",
+        }),
+        buildPlannerWorkUnit({
+          originalGoalId: "goal-a",
+          unitKey: "total:2",
+          scheduledDate: "2026-08-06",
+          creditState: "completed_as_scheduled",
+        }),
+      ],
+      { "goal-a": "Done run", "goal-b": "Open run" }
+    );
+
+    const hidden = selectPlannerCalendarModel(
+      buildArgs({
+        context,
+        viewMode: "month",
+        selectedDay: "2026-08-20",
+      })
+    );
+    expect(
+      hidden.dayAccessors.getOrderedEntriesForDay("2026-08-20").map(
+        (entry) => entry.goalTitle
+      )
+    ).toEqual(["Open run"]);
+    expect(
+      hidden.dayAccessors.getOrderedEntriesForDay("2026-08-06").map(
+        (entry) => entry.goalTitle
+      )
+    ).toEqual(["Done run"]);
+
+    const shown = selectPlannerCalendarModel(
+      buildArgs({
+        context,
+        viewMode: "month",
+        selectedDay: "2026-08-20",
+        showCompletedGoals: true,
+      })
+    );
+    expect(
+      shown.dayAccessors.getOrderedEntriesForDay("2026-08-20").map(
+        (entry) => entry.goalTitle
+      )
+    ).toEqual(["Open run", "Done run"]);
   });
 });

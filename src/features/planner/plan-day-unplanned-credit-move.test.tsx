@@ -109,4 +109,44 @@ describe("PlanDayUnplannedPanel credit move", () => {
       })
     ).toBeTruthy();
   });
+
+  it("shows a move arrow for a future day when a session can be moved there", () => {
+    render(
+      <CompletionCreditMoveProvider context={plannerContext()}>
+        <PlanDayUnplannedPanel
+          day="2026-08-18"
+          placedEntries={[]}
+          checklist={checklistModel()}
+        />
+      </CompletionCreditMoveProvider>
+    );
+
+    expect(
+      screen.getByRole("button", {
+        name: "Move a planned session to complete Tempo run",
+      })
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Mark Tempo run done" })
+    ).toBeNull();
+  });
+
+  it("shows a completion checkbox on past days instead of a move arrow", () => {
+    render(
+      <CompletionCreditMoveProvider context={plannerContext()}>
+        <PlanDayUnplannedPanel
+          day="2026-08-06"
+          placedEntries={[]}
+          checklist={checklistModel()}
+        />
+      </CompletionCreditMoveProvider>
+    );
+
+    expect(screen.getByRole("button", { name: "Mark Tempo run done" })).toBeTruthy();
+    expect(
+      screen.queryByRole("button", {
+        name: "Move a planned session to complete Tempo run",
+      })
+    ).toBeNull();
+  });
 });

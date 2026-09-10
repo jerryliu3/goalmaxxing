@@ -330,4 +330,73 @@ describe("checklist selectors", () => {
       })
     ).toEqual(new Set(["period-goal-default-target"]));
   });
+
+  it("hides achieved milestones after their achievement date unless the filter is on", () => {
+    const milestone = goal({
+      id: "milestone-goal",
+      owner_id: "me",
+      title: "Ship the site",
+      frequency_type: "fixed_milestones",
+      recurrence_interval: null,
+      target_basis: "lifetime",
+      target_count: 2,
+      start_date: "2026-08-01",
+    });
+    const targetAchievedGoalIds = selectTargetAchievedGoalIds({
+      goals: [milestone],
+      progressByGoal: new Map<string, ProgressContextSummary | undefined>([
+        [
+          "milestone-goal",
+          {
+            outcome: "achieved",
+            achievementDate: "2026-08-12",
+          } as ProgressContextSummary,
+        ],
+      ]),
+      completionsByGoal: new Map<string, CompletionDateFact[]>([
+        [
+          "milestone-goal",
+          [
+            {
+              completed_on: "2026-08-10",
+              goal_id: "milestone-goal",
+              source: "manual",
+            },
+            {
+              completed_on: "2026-08-12",
+              goal_id: "milestone-goal",
+              source: "manual",
+            },
+          ],
+        ],
+      ]),
+      asOfDate: "2026-08-13",
+    });
+
+    expect([...targetAchievedGoalIds]).toEqual(["milestone-goal"]);
+    expect(
+      selectFilteredTodayGoals({
+        activeGoals: [milestone],
+        todayDate: "2026-08-13",
+        categoryFilters: [],
+        recurrenceFilters: [],
+        searchQuery: "",
+        endMonths: [],
+        targetAchievedGoalIds,
+        showTargetAchievedGoals: false,
+      }).map((row) => row.id)
+    ).toEqual([]);
+    expect(
+      selectFilteredTodayGoals({
+        activeGoals: [milestone],
+        todayDate: "2026-08-13",
+        categoryFilters: [],
+        recurrenceFilters: [],
+        searchQuery: "",
+        endMonths: [],
+        targetAchievedGoalIds,
+        showTargetAchievedGoals: true,
+      }).map((row) => row.id)
+    ).toEqual(["milestone-goal"]);
+  });
 });

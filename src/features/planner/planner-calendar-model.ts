@@ -57,6 +57,7 @@ export interface PlannerCalendarModelArgs {
   additionalProjectionDays: string[];
   calendarTaskEntriesByDate?: Map<string, PlannerDayDetailEntry[]>;
   showTasksInsteadOfGoals?: boolean;
+  showCompletedGoals?: boolean;
   memoizedState: PlannerCalendarMemoizedState;
 }
 
@@ -95,6 +96,7 @@ export function selectPlannerCalendarModel({
   additionalProjectionDays,
   calendarTaskEntriesByDate,
   showTasksInsteadOfGoals = false,
+  showCompletedGoals = false,
   memoizedState,
 }: PlannerCalendarModelArgs): PlannerCalendarModel {
   const weekStartsOn = normalizeWeekStartsOn(
@@ -132,6 +134,7 @@ export function selectPlannerCalendarModel({
     previewEntryOrderByDay,
     calendarTaskEntriesByDate,
     showTasksInsteadOfGoals,
+    showCompletedGoals,
     memoizedState,
   });
   const eligibilityNotices = selectPlannerEligibilityNotices({

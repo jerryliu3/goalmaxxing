@@ -190,7 +190,7 @@ test.describe("planner credit move", () => {
     "Credit-move rail runs on chromium only."
   );
 
-  test("off-schedule day completion saves a move before marking done", async ({
+  test("off-schedule day completion stages a draft move before marking done", async ({
     page,
   }) => {
     test.setTimeout(120_000);
@@ -218,16 +218,21 @@ test.describe("planner credit move", () => {
     await expect(moveButton).toBeVisible({ timeout: 15_000 });
 
     await moveButton.click();
-    await expect(
-      page.getByRole("heading", { name: /Schedule this goal for/i })
-    ).toBeVisible();
+    const goalRow = page
+      .locator("[data-planner-entry-key]")
+      .filter({ hasText: CADENCE_AFFINITY_GOAL_TITLE });
+    await expect(goalRow).toBeVisible({ timeout: 30_000 });
+    const confirmButton = goalRow.getByRole("button", {
+      name: /Confirm moving .* to this day/,
+    });
+    await expect(confirmButton).toBeVisible({ timeout: 15_000 });
 
     const saveResponsePromise = page.waitForResponse(
       (response) =>
         response.url().includes("/api/planner/save") &&
         response.request().method() === "POST"
     );
-    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await confirmButton.click();
     const saveResponse = await saveResponsePromise;
     expect(saveResponse.ok()).toBe(true);
     const savePayload = saveResponse.request().postDataJSON() as {
@@ -260,9 +265,6 @@ test.describe("planner credit move", () => {
         { timeout: 30_000 }
       )
       .catch(() => undefined);
-    const goalRow = page
-      .locator("[data-planner-entry-key]")
-      .filter({ hasText: CADENCE_AFFINITY_GOAL_TITLE });
     await expect(goalRow).toBeVisible({ timeout: 30_000 });
 
     const completeButton = goalRow.getByRole("button", {

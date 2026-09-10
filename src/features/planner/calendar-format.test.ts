@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildWeekdayLabels,
   getEntryCompactTitle,
+  getEntryDraftDiffSummary,
   getEntryDraftPillClasses,
   getEntryMilestoneFirstTitle,
   getEntrySubtitle,
@@ -221,9 +222,26 @@ describe("calendar task immovability", () => {
 });
 
 describe("draft pill classes", () => {
+  it("keeps moved-from and moved-to copy in sentence case", () => {
+    expect(
+      getEntryDraftDiffSummary({
+        draftDiffKind: "moved_to",
+        draftDiffFromDate: "2026-08-20",
+        draftDiffToDate: "2026-08-12",
+      })
+    ).toBe("Moved from 2026-08-20.");
+    expect(
+      getEntryDraftDiffSummary({
+        draftDiffKind: "moved_from",
+        draftDiffFromDate: "2026-08-20",
+        draftDiffToDate: "2026-08-12",
+      })
+    ).toBe("Moved to 2026-08-12.");
+  });
+
   it("uses structural draft classes so goal color can darken in the fill", () => {
     expect(getEntryDraftPillClasses({ draftDiffKind: "moved_from" })).toContain(
-      "border-dashed"
+      "rounded-[10px]"
     );
     expect(getEntryDraftPillClasses({ draftDiffKind: "moved_to" })).toContain("border-2");
     expect(getEntryDraftPillClasses({ draftDiffKind: "moved_to" })).not.toContain(

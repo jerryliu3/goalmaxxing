@@ -1,9 +1,44 @@
 const DAY_CELL_SELECTOR = '[data-day-cell="true"][data-day]';
 
-function queryCalendarDayCell(container: HTMLElement, day: string) {
-  return container.querySelector<HTMLElement>(
+function isHiddenCalendarCell(element: HTMLElement) {
+  return (
+    element.closest("[hidden]") != null ||
+    element.closest('[data-month-week-visible="false"]') != null
+  );
+}
+
+export function queryCalendarDayCell(container: HTMLElement, day: string) {
+  const matches = container.querySelectorAll<HTMLElement>(
     `${DAY_CELL_SELECTOR}[data-day="${day}"]`
   );
+  for (const cell of matches) {
+    if (!isHiddenCalendarCell(cell)) {
+      return cell;
+    }
+  }
+  return null;
+}
+
+export function queryVisibleMonthWeekEdgeCell(
+  container: HTMLElement,
+  edge: "start" | "end"
+) {
+  const cells = container.querySelectorAll<HTMLElement>(DAY_CELL_SELECTOR);
+  if (edge === "start") {
+    for (const cell of cells) {
+      if (!isHiddenCalendarCell(cell)) {
+        return cell;
+      }
+    }
+    return null;
+  }
+  for (let index = cells.length - 1; index >= 0; index -= 1) {
+    const cell = cells[index];
+    if (cell && !isHiddenCalendarCell(cell)) {
+      return cell;
+    }
+  }
+  return null;
 }
 
 export function getCalendarTargetScrollTop(
@@ -28,12 +63,25 @@ export function getCalendarTargetScrollLeft(
   return Math.min(maxScrollLeft, Math.max(0, centeredLeft));
 }
 
+export function readMonthGridScrollEdges(
+  viewport: Pick<HTMLElement, "scrollTop" | "clientHeight" | "scrollHeight">,
+  slackPx = 12
+) {
+  const atStart = viewport.scrollTop <= slackPx;
+  const atEnd =
+    viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop <= slackPx;
+  return { atStart, atEnd };
+}
+
 export function getTopVisibleCalendarDay(container: HTMLElement) {
   const visibleTop = Math.max(container.getBoundingClientRect().top, 0) + 1;
   const dayCells =
     container.querySelectorAll<HTMLElement>(DAY_CELL_SELECTOR);
 
   for (const dayCell of dayCells) {
+    if (isHiddenCalendarCell(dayCell)) {
+      continue;
+    }
     if (dayCell.getBoundingClientRect().bottom > visibleTop) {
       return dayCell.dataset.day ?? null;
     }

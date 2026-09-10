@@ -1,15 +1,8 @@
 "use client";
 
-import { type ReactNode, ViewTransition } from "react";
+import { type ReactNode } from "react";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
-
-function canUseViewTransition() {
-  return (
-    typeof ViewTransition === "function" &&
-    typeof document !== "undefined" &&
-    typeof document.startViewTransition === "function"
-  );
-}
+import { PLAN_VIEW_SWAP_CLASS } from "@/features/planner/plan-view-transition";
 
 export function PlanViewTransitionFrame({
   viewMode,
@@ -18,15 +11,15 @@ export function PlanViewTransitionFrame({
   viewMode: PlannerCalendarViewMode;
   children: ReactNode;
 }) {
-  if (canUseViewTransition()) {
-    return (
-      <ViewTransition default="plan-view-zoom">
-        <div key={viewMode} data-plan-view={viewMode}>
-          {children}
-        </div>
-      </ViewTransition>
-    );
-  }
-
-  return <div data-plan-view={viewMode}>{children}</div>;
+  return (
+    <div data-plan-view-frame="true">
+      <div
+        key={viewMode}
+        data-plan-view={viewMode}
+        className={PLAN_VIEW_SWAP_CLASS}
+      >
+        {children}
+      </div>
+    </div>
+  );
 }

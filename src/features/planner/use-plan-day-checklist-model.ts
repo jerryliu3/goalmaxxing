@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import { resolvePlannerShowTargetAchievedGoals } from "@/features/planner/calendar-filters";
+import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
 import { selectChecklistListModel } from "@/features/today/checklist-list-model";
 import { useChecklistCompletionActions } from "@/features/today/use-checklist-completion-actions";
 import { useChecklistData } from "@/features/today/use-checklist-data";
@@ -14,6 +16,8 @@ export function usePlanDayChecklistModel({
   asOfDate = null,
   timezone = null,
   endMonthFilters = [],
+  viewMode = "day",
+  plannerShowCompletedGoals = false,
 }: {
   isActive: boolean;
   viewDate: string;
@@ -21,8 +25,15 @@ export function usePlanDayChecklistModel({
   asOfDate?: string | null;
   timezone?: string | null;
   endMonthFilters?: string[];
+  viewMode?: PlannerCalendarViewMode;
+  plannerShowCompletedGoals?: boolean;
 }) {
   const filters = useChecklistFilters();
+  const showTargetAchievedGoals = resolvePlannerShowTargetAchievedGoals({
+    viewMode,
+    dayFilterValue: filters.showTargetAchievedGoals,
+    plannerShowCompletedGoals,
+  });
   const { data, loading, loadData, redirectToLogin, todayLocalDate } =
     useChecklistData({
       isActive,
@@ -42,7 +53,7 @@ export function usePlanDayChecklistModel({
         searchQuery,
         todayEndMonths: endMonthFilters,
         todaySort: filters.todaySort,
-        showTargetAchievedGoals: filters.showTargetAchievedGoals,
+        showTargetAchievedGoals,
         showSuppressedLinkedTargets: filters.showSuppressedLinkedTargets,
       }),
     [
@@ -50,7 +61,7 @@ export function usePlanDayChecklistModel({
       filters.categoryFilters,
       filters.recurrenceFilters,
       filters.showSuppressedLinkedTargets,
-      filters.showTargetAchievedGoals,
+      showTargetAchievedGoals,
       endMonthFilters,
       filters.todaySort,
       searchQuery,
@@ -94,7 +105,7 @@ export function usePlanDayChecklistModel({
     {
       label: "Show completed goals",
       count: listModel.targetAchievedGoalIds.size,
-      checked: filters.showTargetAchievedGoals,
+      checked: showTargetAchievedGoals,
       onChange: filters.setShowTargetAchievedGoals,
     },
     {

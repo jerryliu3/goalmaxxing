@@ -115,7 +115,7 @@ describe("CompletionCreditMoveProvider", () => {
   it("opens the move dialog and persists immediately on save", async () => {
     persistImmediatePlannerMove.mockResolvedValue(undefined);
     render(
-      <CompletionCreditMoveProvider context={plannerContext()} viewMode="day">
+      <CompletionCreditMoveProvider context={plannerContext()}>
         <Probe />
       </CompletionCreditMoveProvider>
     );
@@ -135,9 +135,9 @@ describe("CompletionCreditMoveProvider", () => {
     });
   });
 
-  it("opens the move dialog instead of completing from the day checklist", async () => {
+  it("opens the move dialog instead of completing when draft staging is unavailable", async () => {
     render(
-      <CompletionCreditMoveProvider context={plannerContext()} viewMode="day">
+      <CompletionCreditMoveProvider context={plannerContext()}>
         <ChecklistProbe />
       </CompletionCreditMoveProvider>
     );
@@ -150,6 +150,34 @@ describe("CompletionCreditMoveProvider", () => {
       )
     ).toBeTruthy();
     expect(runCompletionMutation).not.toHaveBeenCalled();
+  });
+
+  it("auto-stages a draft move in day view without opening the dialog", async () => {
+    const onDraftMove = vi.fn(() => true);
+    render(
+      <CompletionCreditMoveProvider
+        context={plannerContext()}
+        viewMode="day"
+        onDraftMove={onDraftMove}
+      >
+        <ChecklistProbe />
+      </CompletionCreditMoveProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Complete" }));
+    await waitFor(() => {
+      expect(onDraftMove).toHaveBeenCalledWith(
+        expect.objectContaining({
+          goalId: goal.id,
+          unitKey: "cadence:2026-08-01:1",
+          sourceDate: "2026-08-20",
+          scheduledDate: "2026-08-12",
+        })
+      );
+    });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(runCompletionMutation).not.toHaveBeenCalled();
+    expect(persistImmediatePlannerMove).not.toHaveBeenCalled();
   });
 
   it("auto-stages a draft move in week view without opening the dialog", async () => {
@@ -205,7 +233,7 @@ describe("CompletionCreditMoveProvider", () => {
     expect(runCompletionMutation).not.toHaveBeenCalled();
   });
 
-  it("opens the move dialog in week view when multiple sessions can be moved", async () => {
+  it("auto-stages the default session in week view when multiple sessions can be moved", async () => {
     const onDraftMove = vi.fn(() => true);
     const context = plannerContext();
     context.preview!.workUnits.push({
@@ -231,18 +259,105 @@ describe("CompletionCreditMoveProvider", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Complete" }));
-    expect(await screen.findByRole("heading", { name: /Schedule this goal for/i })).toBeTruthy();
-    expect(onDraftMove).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => {
       expect(onDraftMove).toHaveBeenCalledTimes(1);
     });
+    expect(screen.queryByRole("dialog")).toBeNull();
     expect(onDraftMove).toHaveBeenCalledWith(
       expect.objectContaining({
         goalId: goal.id,
         scheduledDate: "2026-08-12",
       })
     );
+    expect(persistImmediatePlannerMove).not.toHaveBeenCalled();
+  });
+
+  it("completes unscheduled goals on past days instead of moving a session", async () => {
+    runCompletionMutation.mockResolvedValue({ ok: true, message: null });
+    function PastChecklistProbe() {
+      const { toggleCompletion } = useChecklistCompletionActions({
+        readOnly: false,
+        viewDate: "2026-08-06",
+        todayLocalDate: "2026-08-12",
+        completionsByGoal: new Map(),
+        loadData: async () => undefined,
+        redirectToLogin: () => undefined,
+      });
+      return (
+        <button
+          type="button"
+          onClick={(event) => {
+            void toggleCompletion(goal, event.currentTarget);
+          }}
+        >
+          Complete past
+        </button>
+      );
+    }
+
+    render(
+      <CompletionCreditMoveProvider context={plannerContext()} onDraftMove={vi.fn()}>
+        <PastChecklistProbe />
+      </CompletionCreditMoveProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Complete past" }));
+    await waitFor(() => {
+      expect(runCompletionMutation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          date: "2026-08-06",
+          desiredFactState: "present",
+          goalId: goal.id,
+        })
+      );
+    });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(persistImmediatePlannerMove).not.toHaveBeenCalled();
+  });
+
+  it("auto-stages a draft move onto a future day", async () => {
+    const onDraftMove = vi.fn(() => true);
+    function FutureChecklistProbe() {
+      const { toggleCompletion } = useChecklistCompletionActions({
+        readOnly: false,
+        viewDate: "2026-08-18",
+        todayLocalDate: "2026-08-12",
+        completionsByGoal: new Map(),
+        loadData: async () => undefined,
+        redirectToLogin: () => undefined,
+      });
+      return (
+        <button
+          type="button"
+          onClick={(event) => {
+            void toggleCompletion(goal, event.currentTarget);
+          }}
+        >
+          Schedule future
+        </button>
+      );
+    }
+
+    render(
+      <CompletionCreditMoveProvider
+        context={plannerContext()}
+        onDraftMove={onDraftMove}
+      >
+        <FutureChecklistProbe />
+      </CompletionCreditMoveProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Schedule future" }));
+    await waitFor(() => {
+      expect(onDraftMove).toHaveBeenCalledWith(
+        expect.objectContaining({
+          goalId: goal.id,
+          sourceDate: "2026-08-20",
+          scheduledDate: "2026-08-18",
+        })
+      );
+    });
+    expect(runCompletionMutation).not.toHaveBeenCalled();
     expect(persistImmediatePlannerMove).not.toHaveBeenCalled();
   });
 });

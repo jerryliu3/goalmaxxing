@@ -30,6 +30,8 @@ interface PlannerFiltersDialogProps {
   endMonthFilters: string[];
   onEndMonthFiltersChange: (value: string[]) => void;
   endMonthOptions: GoalMonthOption[];
+  showCompletedGoals?: boolean;
+  onShowCompletedGoalsChange?: (value: boolean) => void;
   dayFilters?: ChecklistFiltersFormProps | null;
 }
 
@@ -45,6 +47,8 @@ export function PlannerFiltersDialog({
   endMonthFilters,
   onEndMonthFiltersChange,
   endMonthOptions,
+  showCompletedGoals = false,
+  onShowCompletedGoalsChange,
   dayFilters = null,
 }: PlannerFiltersDialogProps) {
   const usingDayFilters = dayFilters !== null;
@@ -96,6 +100,27 @@ export function PlannerFiltersDialog({
               />
             </button>
           </div>
+          {usingDayFilters ? null : (
+            <label className="flex min-w-0 items-start gap-2">
+              <input
+                type="checkbox"
+                checked={showCompletedGoals}
+                onChange={(event) =>
+                  onShowCompletedGoalsChange?.(event.target.checked)
+                }
+                className="mt-1 size-4 shrink-0 accent-primary"
+                aria-label="Show completed goals"
+              />
+              <span className="min-w-0 space-y-1">
+                <span className="block text-sm font-medium">Show completed goals</span>
+                <span className="block text-xs text-muted-foreground">
+                  Show completed goals in the checklist, including milestones,
+                  and already-done sessions on future days. Past and today still
+                  show completed work on the calendar.
+                </span>
+              </span>
+            </label>
+          )}
           {showTasksInsteadOfGoals ? null : usingDayFilters && dayFilters ? (
             <ChecklistFiltersForm {...dayFilters} />
           ) : (

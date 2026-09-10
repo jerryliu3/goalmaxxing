@@ -18,5 +18,24 @@ describe("PlanViewTransitionFrame", () => {
       "data-plan-view",
       "week"
     );
+    expect(screen.getByText("Week board").parentElement).toHaveClass("plan-view-swap");
+  });
+
+  it("remounts the active view when the mode changes", () => {
+    const { rerender } = render(
+      <PlanViewTransitionFrame viewMode="week">
+        <p>Week board</p>
+      </PlanViewTransitionFrame>
+    );
+    rerender(
+      <PlanViewTransitionFrame viewMode="month">
+        <p>Month board</p>
+      </PlanViewTransitionFrame>
+    );
+
+    expect(screen.getByText("Month board").parentElement).toHaveAttribute(
+      "data-plan-view",
+      "month"
+    );
   });
 });

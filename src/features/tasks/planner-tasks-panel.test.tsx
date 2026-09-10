@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PlannerTasksPanel, clearPlannerTasksCacheForTests } from "@/features/tasks/planner-tasks-panel";
+import { PlannerTasksPanel, PlannerTasksPrefetch, clearPlannerTasksCacheForTests } from "@/features/tasks/planner-tasks-panel";
 
 const rpcMock = vi.hoisted(() => vi.fn());
 
@@ -339,5 +339,38 @@ describe("PlannerTasksPanel", () => {
     render(<PlannerTasksPanel scheduledDate="2026-09-07" allowCreate chrome="plain" />);
     expect(screen.getByText("Ship release notes")).toBeInTheDocument();
     expect(screen.queryByText("Loading tasks...")).toBeNull();
+  });
+
+  it("reports the cached task count from prefetch without opening the panel", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        {
+          task_id: "task-1",
+          title: "Ship release notes",
+          scheduled_date: "2026-09-07",
+          scheduled_time: null,
+          completed_at: null,
+          created_at: "2026-09-07T12:00:00.000Z",
+          updated_at: "2026-09-07T12:00:00.000Z",
+        },
+        {
+          task_id: "task-2",
+          title: "Pack bag",
+          scheduled_date: "2026-09-07",
+          scheduled_time: null,
+          completed_at: null,
+          created_at: "2026-09-07T12:00:00.000Z",
+          updated_at: "2026-09-07T12:00:00.000Z",
+        },
+      ],
+      error: null,
+    });
+    const onCountChange = vi.fn();
+    render(
+      <PlannerTasksPrefetch scheduledDate="2026-09-07" onCountChange={onCountChange} />
+    );
+    await waitFor(() => {
+      expect(onCountChange).toHaveBeenCalledWith(2);
+    });
   });
 });

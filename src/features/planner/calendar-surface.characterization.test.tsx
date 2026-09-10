@@ -324,6 +324,26 @@ describe("CalendarSurface characterization", () => {
     expect(
       document.querySelector('[data-month-context-label="Sep"]')
     ).toBeInstanceOf(HTMLElement);
+
+    const julySlot = document.querySelector(
+      '[data-month-week-band="previous"] [data-day="2026-07-01"]'
+    )?.closest("[data-month-week-band]");
+    const septemberOverlap = document.querySelector(
+      '[data-month-week-band="current"] [data-day="2026-09-01"]'
+    )?.closest("[data-month-week-band]");
+    const lateSeptemberSlot = document.querySelector(
+      '[data-month-week-band="next"] [data-day="2026-09-30"]'
+    )?.closest("[data-month-week-band]");
+    expect(julySlot).toHaveAttribute("data-month-week-visible", "false");
+    expect(septemberOverlap).toHaveAttribute("data-month-week-visible", "true");
+    expect(lateSeptemberSlot).toHaveAttribute("data-month-week-visible", "false");
+
+    fireEvent.click(screen.getByRole("button", { name: "Show previous month" }));
+    expect(julySlot).toHaveAttribute("data-month-week-visible", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Hide previous month" }));
+    expect(julySlot).toHaveAttribute("data-month-week-visible", "false");
+    fireEvent.click(screen.getByRole("button", { name: "Show next month" }));
+    expect(lateSeptemberSlot).toHaveAttribute("data-month-week-visible", "true");
   });
 
   it.each(["month", "week"] as const)(
@@ -715,6 +735,8 @@ describe("CalendarSurface characterization", () => {
   });
 
   it("releases the Today alignment target after the month grid is positioned", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-08-15T12:00:00.000Z"));
     postJsonMock.mockResolvedValue(buildContext([]));
     const rectSpy = vi
       .spyOn(HTMLElement.prototype, "getBoundingClientRect")
@@ -774,6 +796,12 @@ describe("CalendarSurface characterization", () => {
       );
 
       const todayButton = await screen.findByRole("button", { name: "Today" });
+      await waitFor(() => {
+        expect(postJsonMock).toHaveBeenCalledWith(
+          "/api/planner/prepare",
+          expect.any(Object)
+        );
+      });
       fireEvent.click(todayButton);
 
       rerender(
@@ -806,6 +834,11 @@ describe("CalendarSurface characterization", () => {
         const viewport = container.querySelector<HTMLElement>(
           '[data-calendar-month-vertical-viewport="true"]'
         );
+        expect(
+          container.querySelector(
+            '[data-day-cell="true"][data-day="2026-08-10"]'
+          )
+        ).not.toBeNull();
         expect(viewport?.scrollTop).toBe(200);
       });
       if (verticalViewport) {
@@ -836,6 +869,7 @@ describe("CalendarSurface characterization", () => {
         Reflect.deleteProperty(HTMLElement.prototype, "scrollTo");
       }
       rectSpy.mockRestore();
+      vi.useRealTimers();
     }
   });
 
@@ -1006,13 +1040,7 @@ describe("CalendarSurface characterization", () => {
       />
     );
 
-    const dayHeading = await screen.findByRole("heading", {
-      name: /monday, aug 31/i,
-    });
-    const dayPanel = dayHeading.closest("[data-testid='plan-day-pane']");
-    if (!dayPanel) {
-      throw new Error("Expected day panel container.");
-    }
+    const dayPanel = await screen.findByTestId("plan-day-pane");
 
     await waitFor(() => {
       expect(dayPanel.textContent ?? "").toContain("Tempo run 4x800");
@@ -1232,13 +1260,19 @@ describe("CalendarSurface characterization", () => {
     expect(actionGroup).toHaveClass("right-0");
     expect(heading).toBeInTheDocument();
     expect(screen.getByTestId("plan-calendar-split")).toHaveClass(
-      "md:grid-cols-[minmax(0,3fr)_minmax(16rem,1fr)]"
+      "md:grid-cols-[minmax(0,var(--plan-split-calendar))_minmax(0,var(--plan-split-pane))]"
     );
+    const monthViewport = document.querySelector(
+      '[data-calendar-month-vertical-viewport="true"]'
+    );
+    expect(monthViewport).toHaveClass("max-h-[34rem]");
 
     fireEvent.click(expandButton);
-    expect(screen.getByTestId("plan-calendar-split")).not.toHaveClass(
-      "md:grid-cols-[minmax(0,3fr)_minmax(16rem,1fr)]"
+    expect(screen.getByTestId("plan-calendar-split")).toHaveClass(
+      "md:grid-cols-[minmax(0,var(--plan-split-calendar))_minmax(0,var(--plan-split-pane))]"
     );
+    expect(monthViewport).not.toHaveClass("max-h-[34rem]");
+    expect(screen.getByTestId("plan-desktop-day-pane")).toBeInTheDocument();
   });
 
   it("dismisses unpinned day preview after pointer leaves preview surface", async () => {

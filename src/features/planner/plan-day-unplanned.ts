@@ -35,3 +35,25 @@ export function selectUnplannedGoals({
     return lifecycle === "active" && !placedGoalIds.has(goal.id);
   });
 }
+
+export function selectVisibleUnplannedGoals({
+  goals,
+  placedGoalIds,
+  viewDate,
+  visibleGoalIds,
+}: {
+  goals: Goal[];
+  placedGoalIds: ReadonlySet<string>;
+  viewDate: string;
+  visibleGoalIds: ReadonlySet<string> | null;
+}): Goal[] {
+  const selected = selectUnplannedGoals({
+    goals,
+    placedGoalIds,
+    viewDate,
+  });
+  if (visibleGoalIds === null) {
+    return selected;
+  }
+  return selected.filter((goal) => visibleGoalIds.has(goal.id));
+}

@@ -122,4 +122,40 @@ describe("checklist presentation", () => {
 
     expect(presentation.shouldHideWhenCompletedFilterOff).toBe(true);
   });
+
+  it("hides achieved milestones after the achievement date", () => {
+    const milestone = goal({
+      frequency_type: "fixed_milestones",
+      recurrence_interval: null,
+      target_count: 2,
+      target_basis: "lifetime",
+    });
+
+    expect(
+      shouldHideTargetAchievedGoal({
+        goal: milestone,
+        completions: [fact("2026-08-10"), fact("2026-08-12")],
+        progress: {
+          goalId: "goal-1",
+          outcome: "achieved",
+          achievementDate: "2026-08-12",
+          admissibleCompletionCount: 2,
+        } as ProgressContextSummary,
+        asOfDate: "2026-08-13",
+      })
+    ).toBe(true);
+    expect(
+      shouldHideTargetAchievedGoal({
+        goal: milestone,
+        completions: [fact("2026-08-10"), fact("2026-08-12")],
+        progress: {
+          goalId: "goal-1",
+          outcome: "achieved",
+          achievementDate: "2026-08-12",
+          admissibleCompletionCount: 2,
+        } as ProgressContextSummary,
+        asOfDate: "2026-08-12",
+      })
+    ).toBe(false);
+  });
 });

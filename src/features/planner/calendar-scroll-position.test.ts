@@ -5,6 +5,9 @@ import {
   getCalendarTargetScrollTop,
   getTopVisibleCalendarDay,
   isCalendarDayVisible,
+  queryCalendarDayCell,
+  queryVisibleMonthWeekEdgeCell,
+  readMonthGridScrollEdges,
   resolveMonthRowAnchorDay,
   restoreCalendarDayScreenTop,
 } from "@/features/planner/calendar-scroll-position";
@@ -48,6 +51,30 @@ describe("calendar scroll positions", () => {
     expect(getCalendarTargetScrollLeft(container, target)).toBe(420);
   });
 
+  it("treats the month grid as at an edge only near the scroll start or end", () => {
+    expect(
+      readMonthGridScrollEdges({
+        scrollTop: 0,
+        clientHeight: 400,
+        scrollHeight: 400,
+      })
+    ).toEqual({ atStart: true, atEnd: true });
+    expect(
+      readMonthGridScrollEdges({
+        scrollTop: 80,
+        clientHeight: 400,
+        scrollHeight: 1200,
+      })
+    ).toEqual({ atStart: false, atEnd: false });
+    expect(
+      readMonthGridScrollEdges({
+        scrollTop: 788,
+        clientHeight: 400,
+        scrollHeight: 1200,
+      })
+    ).toEqual({ atStart: false, atEnd: true });
+  });
+
   it("aligns a vertical target to the container top", () => {
     const container = document.createElement("div");
     const target = document.createElement("div");
@@ -74,6 +101,54 @@ describe("calendar scroll positions", () => {
         checkVertical: false,
       })
     ).toBe(true);
+  });
+
+  it("skips day cells in hidden month weeks", () => {
+    const container = document.createElement("div");
+    const hiddenWeek = document.createElement("div");
+    hiddenWeek.setAttribute("data-month-week-visible", "false");
+    const hidden = document.createElement("button");
+    hidden.dataset.dayCell = "true";
+    hidden.dataset.day = "2026-07-01";
+    hiddenWeek.append(hidden);
+    const visibleWeek = document.createElement("div");
+    visibleWeek.setAttribute("data-month-week-visible", "true");
+    const visible = document.createElement("button");
+    visible.dataset.dayCell = "true";
+    visible.dataset.day = "2026-08-15";
+    visibleWeek.append(visible);
+    container.append(hiddenWeek, visibleWeek);
+
+    expect(queryCalendarDayCell(container, "2026-07-01")).toBeNull();
+    expect(queryCalendarDayCell(container, "2026-08-15")).toBe(visible);
+    expect(queryVisibleMonthWeekEdgeCell(container, "start")).toBe(visible);
+    expect(queryVisibleMonthWeekEdgeCell(container, "end")).toBe(visible);
+  });
+
+  it("picks the first and last visible month-week cells as row edges", () => {
+    const container = document.createElement("div");
+    const hiddenWeek = document.createElement("div");
+    hiddenWeek.setAttribute("data-month-week-visible", "false");
+    const hidden = document.createElement("button");
+    hidden.dataset.dayCell = "true";
+    hidden.dataset.day = "2026-07-01";
+    hiddenWeek.append(hidden);
+    const firstWeek = document.createElement("div");
+    firstWeek.setAttribute("data-month-week-visible", "true");
+    const first = document.createElement("button");
+    first.dataset.dayCell = "true";
+    first.dataset.day = "2026-08-01";
+    firstWeek.append(first);
+    const lastWeek = document.createElement("div");
+    lastWeek.setAttribute("data-month-week-visible", "true");
+    const last = document.createElement("button");
+    last.dataset.dayCell = "true";
+    last.dataset.day = "2026-08-31";
+    lastWeek.append(last);
+    container.append(hiddenWeek, firstWeek, lastWeek);
+
+    expect(queryVisibleMonthWeekEdgeCell(container, "start")).toBe(first);
+    expect(queryVisibleMonthWeekEdgeCell(container, "end")).toBe(last);
   });
 
   it("uses the first day intersecting the viewport, even when the grid starts above the fold", () => {

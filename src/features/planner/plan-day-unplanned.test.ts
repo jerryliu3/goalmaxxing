@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   placedGoalIdsForDay,
   selectUnplannedGoals,
+  selectVisibleUnplannedGoals,
 } from "@/features/planner/plan-day-unplanned";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import type { Goal } from "@/lib/goals/types";
@@ -75,5 +76,29 @@ describe("plan day unplanned selection", () => {
     });
 
     expect(unplanned.map((item) => item.id)).toEqual(["goal-b"]);
+  });
+
+  it("counts only visible unplanned goals", () => {
+    const goals = [
+      goal({ id: "goal-a", title: "Placed run" }),
+      goal({ id: "goal-b", title: "Flexible walk" }),
+      goal({ id: "goal-c", title: "Hidden stretch" }),
+    ];
+    expect(
+      selectVisibleUnplannedGoals({
+        viewDate: "2026-09-06",
+        placedGoalIds: new Set(["goal-a"]),
+        visibleGoalIds: new Set(["goal-b"]),
+        goals,
+      }).map((item) => item.id)
+    ).toEqual(["goal-b"]);
+    expect(
+      selectVisibleUnplannedGoals({
+        viewDate: "2026-09-06",
+        placedGoalIds: new Set(["goal-a"]),
+        visibleGoalIds: null,
+        goals,
+      }).map((item) => item.id)
+    ).toEqual(["goal-b", "goal-c"]);
   });
 });
