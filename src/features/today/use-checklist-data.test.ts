@@ -1,4 +1,5 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { createElement } from "react";
+import { act, render, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CHECKLIST_DATA_CACHE_PREFIX } from "@/lib/cache/planner-tab-cache";
 import {
@@ -134,6 +135,35 @@ describe("useChecklistData cache behavior", () => {
       summaries: [],
       weekStartsOn: 1,
     });
+  });
+
+  it("applies session cache after the first paint so SSR stays empty", () => {
+    const cacheKey = `${CHECKLIST_DATA_CACHE_PREFIX}viewer-1:2026-08-12:2026-08-25:partner:none`;
+    const cached: TodayData = {
+      userId: "viewer-1",
+      goals: [{ ...baseGoal }],
+      completions: [],
+      memberTeamIds: [],
+      links: [],
+      photoUrls: {},
+      progress: null,
+    };
+    writeTabDataCache(cacheKey, cached);
+
+    const paints: Array<{ loading: boolean; goalCount: number }> = [];
+    function Probe() {
+      const { data, loading } = useChecklistData({
+        isActive: false,
+        viewDate: "2026-08-12",
+      });
+      paints.push({ loading, goalCount: data.goals.length });
+      return null;
+    }
+
+    render(createElement(Probe));
+
+    expect(paints[0]).toEqual({ loading: true, goalCount: 0 });
+    expect(paints.at(-1)).toEqual({ loading: false, goalCount: 1 });
   });
 
   it("returns cached checklist data without refetching goals on cache hit", async () => {

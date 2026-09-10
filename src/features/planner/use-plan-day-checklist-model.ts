@@ -8,6 +8,7 @@ import { useChecklistCompletionActions } from "@/features/today/use-checklist-co
 import { useChecklistData } from "@/features/today/use-checklist-data";
 import { useChecklistFilters } from "@/features/today/use-checklist-filters";
 import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
+import { applyOptimisticChecklistPresentations } from "@/lib/planner/optimistic-completion-facts";
 
 export function usePlanDayChecklistModel({
   isActive,
@@ -73,7 +74,7 @@ export function usePlanDayChecklistModel({
     () => groupCompletionsByGoalId(data.completions),
     [data.completions]
   );
-  const { savingGoalId, toggleCompletion } = useChecklistCompletionActions({
+  const { savingGoalId, toggleCompletion, optimisticFacts } = useChecklistCompletionActions({
     readOnly: false,
     viewDate,
     todayLocalDate: completionAsOfDate,
@@ -82,6 +83,17 @@ export function usePlanDayChecklistModel({
     loadData,
     redirectToLogin,
   });
+  const mergedListModel = useMemo(
+    () => ({
+      ...listModel,
+      presentationByGoalId: applyOptimisticChecklistPresentations(
+        listModel.presentationByGoalId,
+        optimisticFacts,
+        viewDate
+      ),
+    }),
+    [listModel, optimisticFacts, viewDate]
+  );
   const ready = isActive && data.userId.length > 0;
   const visibilityOptions = [
     {
@@ -138,7 +150,7 @@ export function usePlanDayChecklistModel({
     data,
     todayLocalDate: completionAsOfDate,
     filters,
-    listModel,
+    listModel: mergedListModel,
     visibilityOptions,
     quickCategories,
     filterFormProps,

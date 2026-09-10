@@ -11,13 +11,15 @@ import type {
   PlannerCompletionFactMarker,
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
+import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
 
 interface PlannerDayPreviewPopoverProps {
   dayPreview: DayPreviewState;
   popupRef: MutableRefObject<HTMLDivElement | null>;
   entries: PlannerDayDetailEntry[];
   completionFactMarkers: PlannerCompletionFactMarker[];
-  mutationLoading: boolean;
+  mutationLoadingKey: string | null;
+  optimisticCompletionFacts?: OptimisticCompletionFacts;
   asOfDate: string | null;
   canMutatePlanItems: boolean;
   canMutateEntryOnDay: (entry: PlannerDayDetailEntry, day: string | null) => boolean;
@@ -46,7 +48,8 @@ export function PlannerDayPreviewPopover({
   popupRef,
   entries,
   completionFactMarkers,
-  mutationLoading,
+  mutationLoadingKey,
+  optimisticCompletionFacts,
   asOfDate,
   canMutatePlanItems,
   canMutateEntryOnDay,
@@ -117,7 +120,8 @@ export function PlannerDayPreviewPopover({
         day={dayPreview.day}
         entries={entries}
         completionFactMarkers={completionFactMarkers}
-        mutationLoading={mutationLoading}
+        mutationLoadingKey={mutationLoadingKey}
+        optimisticCompletionFacts={optimisticCompletionFacts}
         asOfDate={asOfDate}
         canMutatePlanItems={canMutatePlanItems}
         canMutateEntryOnDay={canMutateEntryOnDay}

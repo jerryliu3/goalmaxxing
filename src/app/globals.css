@@ -320,6 +320,37 @@ body {
   display: none;
 }
 
+.gm-completion-title {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.gm-completion-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  pointer-events: none;
+  transform: translateY(-50%) scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.gm-completion-title[data-completed="true"]::after {
+  transform: translateY(-50%) scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gm-completion-title::after {
+    transition: none;
+  }
+}
+
 @layer base {
   a {
     color: inherit;

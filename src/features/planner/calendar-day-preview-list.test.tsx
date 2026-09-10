@@ -34,7 +34,7 @@ describe("CalendarDayPreviewList", () => {
             scheduledDate: "2026-08-15",
           },
         ]}
-        mutationLoading={false}
+        mutationLoadingKey={null}
         getEntryDisplayTitle={() => ""}
         getEntrySubtitle={() => null}
         isEntryCredited={() => false}
@@ -77,7 +77,7 @@ describe("CalendarDayPreviewList", () => {
           },
         ]}
         completionFactMarkers={[]}
-        mutationLoading={false}
+        mutationLoadingKey={null}
         getEntryDisplayTitle={(entry) => entry.goalTitle ?? "Untitled"}
         getEntrySubtitle={() => null}
         isEntryCredited={() => false}
@@ -121,7 +121,7 @@ describe("CalendarDayPreviewList", () => {
           },
         ]}
         completionFactMarkers={[]}
-        mutationLoading={false}
+        mutationLoadingKey={null}
         getEntryDisplayTitle={(entry) => entry.goalTitle ?? "Untitled"}
         getEntrySubtitle={() => null}
         isEntryCredited={() => false}
@@ -167,7 +167,7 @@ describe("CalendarDayPreviewList", () => {
           },
         ]}
         completionFactMarkers={[]}
-        mutationLoading={false}
+        mutationLoadingKey={null}
         getEntryDisplayTitle={(entry) => entry.goalTitle ?? "Untitled"}
         getEntrySubtitle={() => null}
         isEntryCredited={() => false}
@@ -233,7 +233,7 @@ describe("CalendarDayPreviewList", () => {
           },
         ]}
         completionFactMarkers={[]}
-        mutationLoading={false}
+        mutationLoadingKey={null}
         getEntryDisplayTitle={(entry) => entry.goalTitle ?? "Untitled"}
         getEntrySubtitle={() => null}
         isEntryCredited={() => false}
@@ -270,5 +270,48 @@ describe("CalendarDayPreviewList", () => {
       expect.objectContaining({ key: "goal-1:unit-1:ghost:2026-08-20" }),
       "2026-08-20"
     );
+  });
+
+  it("does not mark this row pending when another fact mutation is loading", () => {
+    renderWithDnd(
+      <CalendarDayPreviewList
+        day="2026-08-06"
+        entries={[
+          {
+            key: "goal-1:unit-1",
+            originalGoalId: "goal-1",
+            goalTitle: "Run",
+            unitKey: "unit-1",
+            label: null,
+            classification: "open",
+            creditState: "uncredited",
+            activeGoal: { color: "#10b981", category: "health" },
+            activeItem: { id: "item-1" },
+            draftDiffKind: null,
+            draftDiffFromDate: null,
+            draftDiffToDate: null,
+            draftGhost: false,
+          },
+        ]}
+        completionFactMarkers={[]}
+        mutationLoadingKey="fact:other"
+        getEntryDisplayTitle={(entry) => entry.goalTitle ?? "Untitled"}
+        getEntrySubtitle={() => null}
+        isEntryCredited={() => false}
+        isEntryImmovableForDraft={() => false}
+        getCompletionToggleState={() => ({
+          currentlyCredited: false,
+          disabledReasonCopy: null,
+        })}
+        onEntryOpen={vi.fn()}
+        onToggleCompletion={vi.fn()}
+        onEntryPointerStart={vi.fn()}
+        onEntryPointerEnd={vi.fn()}
+      />
+    );
+
+    const toggle = screen.getByRole("button", { name: "Mark session done" });
+    expect(toggle).not.toHaveAttribute("aria-busy");
+    expect(toggle).not.toBeDisabled();
   });
 });

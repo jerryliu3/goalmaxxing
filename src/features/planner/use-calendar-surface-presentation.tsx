@@ -160,6 +160,7 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     asOfDate: layoutProps.context?.asOfDate ?? null,
     canMutatePlanItems: layoutProps.canMutatePlanItems,
     mutationLoadingKey: layoutProps.mutationLoadingKey,
+    optimisticCompletionFacts: layoutProps.optimisticCompletionFacts,
     onToggleCompletion: (entry, day, sourceElement) => {
       void layoutProps.toggleDateFact(entry, day, sourceElement ?? undefined);
     },

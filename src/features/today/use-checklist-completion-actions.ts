@@ -10,6 +10,12 @@ import {
 } from "@/lib/goals/progress-context";
 import type { CompletionDateFact, Goal } from "@/lib/goals/types";
 import { resolveChecklistCompletionIntent } from "@/lib/planner/completion-intent";
+import {
+  pruneOptimisticCompletionFacts,
+  withOptimisticCompletionFact,
+  withoutOptimisticCompletionFact,
+  type OptimisticCompletionFacts,
+} from "@/lib/planner/optimistic-completion-facts";
 import { useCompletionCreditMove } from "@/features/planner/completion-credit-move";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import { reportDuoTelemetry } from "@/lib/social/duo/telemetry";
@@ -38,6 +44,9 @@ export function useChecklistCompletionActions({
   redirectToLogin,
 }: UseChecklistCompletionActionsOptions) {
   const [savingGoalId, setSavingGoalId] = useState<string | null>(null);
+  const [optimisticFacts, setOptimisticFacts] = useState<OptimisticCompletionFacts>(
+    () => new Map()
+  );
   const [recentlyCompletedGoalId, setRecentlyCompletedGoalId] = useState<string | null>(
     null
   );
@@ -93,6 +102,14 @@ export function useChecklistCompletionActions({
     []
   );
 
+  useEffect(() => {
+    setOptimisticFacts((overlay) =>
+      pruneOptimisticCompletionFacts(overlay, (goalId, date) =>
+        (completionsByGoal.get(goalId) ?? []).some((fact) => fact.completed_on === date)
+      )
+    );
+  }, [completionsByGoal]);
+
   const toggleCompletion = useCallback(
     async (goal: Goal, sourceElement: HTMLButtonElement) => {
       if (readOnly) {
@@ -131,6 +148,14 @@ export function useChecklistCompletionActions({
       }
 
       setSavingGoalId(goal.id);
+      setOptimisticFacts((overlay) =>
+        withOptimisticCompletionFact(
+          overlay,
+          goal.id,
+          dispatchDate,
+          routeDesiredFactState === "present"
+        )
+      );
       const currentScrollY = window.scrollY;
       const result = await runCompletionMutation({
         decision,
@@ -148,6 +173,9 @@ export function useChecklistCompletionActions({
 
       if (!result.ok) {
         toast.error(result.message ?? "The completion could not be updated.");
+        setOptimisticFacts((overlay) =>
+          withoutOptimisticCompletionFact(overlay, goal.id, dispatchDate)
+        );
         setSavingGoalId(null);
         return;
       }
@@ -180,5 +208,6 @@ export function useChecklistCompletionActions({
     savingGoalId,
     recentlyCompletedGoalId,
     toggleCompletion,
+    optimisticFacts,
   };
 }

@@ -24,6 +24,7 @@ import type { PlannerDayPreviewInteractions } from "@/features/planner/use-plann
 import { canOpenPlannerEventDetails } from "@/features/planner/calendar-task-entries";
 import { getPlannerCompletionTogglePresentation } from "@/features/planner/completion-entry-dispatch";
 import { scrollPlannerChecklistIntoView } from "@/features/planner/planner-checklist-scroll";
+import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
 export function resolveWeekAgendaSelectionViewMode(): Extract<
   PlannerCalendarViewMode,
   "week" | "day"
@@ -79,6 +80,7 @@ interface UsePlannerCalendarDayCellRendererArgs {
   asOfDate: string | null;
   canMutatePlanItems: boolean;
   mutationLoadingKey: string | null;
+  optimisticCompletionFacts?: OptimisticCompletionFacts;
   onToggleCompletion: (
     entry: PlannerDayDetailEntry,
     day: string,
@@ -120,6 +122,7 @@ export function usePlannerCalendarDayCellRenderer({
   asOfDate,
   canMutatePlanItems,
   mutationLoadingKey,
+  optimisticCompletionFacts,
   onToggleCompletion,
   visibleCells,
   dayPreviewInteractions,
@@ -357,7 +360,8 @@ export function usePlannerCalendarDayCellRenderer({
               canMutateEntryOnDay,
             })
           }
-          mutationLoading={Boolean(mutationLoadingKey)}
+          mutationLoadingKey={mutationLoadingKey}
+          optimisticCompletionFacts={optimisticCompletionFacts}
           onboardingFirstEntry={cell.date === onboardingItemDay}
         />
       );
@@ -393,6 +397,7 @@ export function usePlannerCalendarDayCellRenderer({
       asOfDate,
       canMutatePlanItems,
       mutationLoadingKey,
+      optimisticCompletionFacts,
       onToggleCompletion,
     ]
   );

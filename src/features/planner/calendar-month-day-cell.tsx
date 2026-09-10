@@ -7,6 +7,12 @@ import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
 import { cn } from "@/lib/utils";
+import { CompletionTitle } from "@/components/ui/completion-title";
+import {
+  overlayCurrentlyCredited,
+  plannerFactMutationKey,
+  type OptimisticCompletionFacts,
+} from "@/lib/planner/optimistic-completion-facts";
 import {
   PlannerDraggableEntry,
   PlannerDroppableDay,
@@ -105,7 +111,8 @@ interface CalendarMonthDayCellProps<
     currentlyCredited: boolean;
     disabledReasonCopy: string | null;
   };
-  mutationLoading?: boolean;
+  mutationLoadingKey?: string | null;
+  optimisticCompletionFacts?: OptimisticCompletionFacts;
   onboardingFirstEntry?: boolean;
 }
 
@@ -154,7 +161,8 @@ export function CalendarMonthDayCell<
   onEntryPointerEnd,
   onToggleCompletion,
   getCompletionToggleState,
-  mutationLoading = false,
+  mutationLoadingKey = null,
+  optimisticCompletionFacts,
   onboardingFirstEntry = false,
 }: CalendarMonthDayCellProps<TEntry, TCompletionFactMarker>) {
   const hasVisibleContent =
@@ -190,7 +198,12 @@ export function CalendarMonthDayCell<
       category: entry.activeGoal?.category ?? null,
     });
     const compactTitle = getEntryDisplayTitle(entry);
-    const credited = isEntryCredited(entry);
+    const credited = overlayCurrentlyCredited(
+      isEntryCredited(entry),
+      optimisticCompletionFacts,
+      entry.originalGoalId,
+      day
+    );
     const immovable = isEntryImmovableForDraft(entry);
     const draftDiffSummary = getEntryDraftDiffSummary(entry);
     const isDraft = Boolean(entry.draftDiffKind);
@@ -204,6 +217,13 @@ export function CalendarMonthDayCell<
           ? undefined
           : getWorkPillFillStyle(visual.color, credited);
     const completionToggleState = getCompletionToggleState?.(entry, day);
+    const currentlyCredited = overlayCurrentlyCredited(
+      completionToggleState?.currentlyCredited ?? credited,
+      optimisticCompletionFacts,
+      entry.originalGoalId,
+      day
+    );
+    const pending = plannerFactMutationKey(entry.key) === mutationLoadingKey;
     const completionMode = completionToggleState
       ? planCompletionControlMode(completionToggleState)
       : "hidden";
@@ -311,12 +331,12 @@ export function CalendarMonthDayCell<
                 }}
               >
                 <CompletionToggle
-                  completed={completionToggleState.currentlyCredited}
-                  pending={mutationLoading}
+                  completed={currentlyCredited}
+                  pending={pending}
                   size="sm"
                   chrome="plain"
                   aria-label={
-                    completionToggleState.currentlyCredited
+                    currentlyCredited
                       ? "Mark session not done"
                       : "Mark session done"
                   }
@@ -334,14 +354,12 @@ export function CalendarMonthDayCell<
                 label="Completed"
               />
             ) : null}
-            <span
-              className={cn(
-                "flex h-6 min-w-0 items-center truncate font-display leading-none",
-                credited && "line-through"
-              )}
+            <CompletionTitle
+              completed={credited}
+              className="flex h-6 min-w-0 items-center truncate font-display leading-none"
             >
               {compactTitle}
-            </span>
+            </CompletionTitle>
             {entry.hasLinkedTargets ? (
               <Link2
                 className="size-3 shrink-0"

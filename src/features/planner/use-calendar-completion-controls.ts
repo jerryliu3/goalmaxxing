@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, type Dispatch, type SetStateAction } from "react";
 import { toast } from "sonner";
 import {
   getCompletionControlDisabledReason,
@@ -20,6 +20,11 @@ import { usePlannerEntryMutations } from "@/features/planner/use-planner-entry-m
 import type { RunCompletionMutationInput } from "@/features/planner/use-completion-mutation";
 import type { PlannerDraftCommand } from "@/lib/planner/draft-commands";
 import type { PlannerPolicy } from "@/lib/planner/policy";
+import {
+  withOptimisticCompletionFact,
+  withoutOptimisticCompletionFact,
+  type OptimisticCompletionFacts,
+} from "@/lib/planner/optimistic-completion-facts";
 
 export function useCalendarCompletionControls({
   context,
@@ -29,6 +34,7 @@ export function useCalendarCompletionControls({
   effectiveDraftItemEdits,
   effectiveSelectedDay,
   setMutationLoadingKey,
+  setOptimisticCompletionFacts,
   runCompletionMutation,
   handlePlannerMutation,
   loadContext,
@@ -45,6 +51,7 @@ export function useCalendarCompletionControls({
   >;
   effectiveSelectedDay: string | null;
   setMutationLoadingKey: (value: string | null) => void;
+  setOptimisticCompletionFacts: Dispatch<SetStateAction<OptimisticCompletionFacts>>;
   runCompletionMutation: (
     input: RunCompletionMutationInput
   ) => Promise<{ ok: boolean; message: string | null }>;
@@ -97,6 +104,7 @@ export function useCalendarCompletionControls({
     effectiveDraftItemEdits,
     effectiveSelectedDay,
     setMutationLoadingKey,
+    setOptimisticCompletionFacts,
     getDateFactDispatchForEntry,
     completionControlDisabledReasonForEntry,
     runCompletionMutation,
@@ -116,12 +124,29 @@ export function useCalendarCompletionControls({
         if (!taskId || !completePlannerTask) {
           return;
         }
+        const selectedDate = selectedDateOverride ?? effectiveSelectedDay;
+        const nextPresent = !isEntryCredited(entry);
         const mutationKey = `fact:${entry.key}`;
         setMutationLoadingKey(mutationKey);
+        if (selectedDate) {
+          setOptimisticCompletionFacts((overlay) =>
+            withOptimisticCompletionFact(
+              overlay,
+              entry.originalGoalId,
+              selectedDate,
+              nextPresent
+            )
+          );
+        }
         try {
-          await completePlannerTask(taskId, !isEntryCredited(entry));
+          await completePlannerTask(taskId, nextPresent);
           handlePlannerMutation();
         } catch (error) {
+          if (selectedDate) {
+            setOptimisticCompletionFacts((overlay) =>
+              withoutOptimisticCompletionFact(overlay, entry.originalGoalId, selectedDate)
+            );
+          }
           toast.error(getApiErrorMessage(error, "Could not update the task."));
         } finally {
           setMutationLoadingKey(null);
@@ -132,8 +157,10 @@ export function useCalendarCompletionControls({
     },
     [
       completePlannerTask,
+      effectiveSelectedDay,
       handlePlannerMutation,
       setMutationLoadingKey,
+      setOptimisticCompletionFacts,
       toggleGoalDateFact,
     ]
   );

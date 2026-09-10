@@ -33,13 +33,16 @@ import { PLAN_MORPH_CLASS, planDayViewTransitionName } from "@/features/planner/
 import { ChecklistPastPanels } from "@/features/today/checklist-past-panels";
 import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 import type { Goal } from "@/lib/goals/types";
+import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
+import { CompletionTitle } from "@/components/ui/completion-title";
 import { cn } from "@/lib/utils";
 
 interface PlannerFocusedDayPaneProps {
   day: string;
   entries: PlannerDayDetailEntry[];
   completionFactMarkers: PlannerCompletionFactMarker[];
-  mutationLoading: boolean;
+  mutationLoadingKey: string | null;
+  optimisticCompletionFacts?: OptimisticCompletionFacts;
   asOfDate: string | null;
   canMutatePlanItems: boolean;
   canMutateEntryOnDay: (entry: PlannerDayDetailEntry, day: string | null) => boolean;
@@ -69,7 +72,8 @@ export function PlannerFocusedDayPane({
   day,
   entries,
   completionFactMarkers,
-  mutationLoading,
+  mutationLoadingKey,
+  optimisticCompletionFacts,
   asOfDate,
   canMutatePlanItems,
   canMutateEntryOnDay,
@@ -151,13 +155,9 @@ export function PlannerFocusedDayPane({
         />
         <Link
           href={`/goals/${goal.id}`}
-          className={cn(
-            planLedgerTitleClass,
-            "min-w-0 flex-1 hover:underline",
-            completed && "line-through"
-          )}
+          className={cn(planLedgerTitleClass, "min-w-0 flex-1 hover:underline")}
         >
-          {goal.title}
+          <CompletionTitle completed={completed}>{goal.title}</CompletionTitle>
         </Link>
       </div>
     );
@@ -211,7 +211,8 @@ export function PlannerFocusedDayPane({
               completionFactMarkers={
                 splitPartnerChecklist ? viewerMarkers : visibleMarkers
               }
-              mutationLoading={mutationLoading}
+              mutationLoadingKey={mutationLoadingKey}
+              optimisticCompletionFacts={optimisticCompletionFacts}
               asOfDate={asOfDate}
               canMutatePlanItems={canMutatePlanItems}
               canMutateEntryOnDay={canMutateEntryOnDay}

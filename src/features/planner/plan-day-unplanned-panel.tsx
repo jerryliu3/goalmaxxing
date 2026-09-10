@@ -27,6 +27,8 @@ import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
 import { progressSummaryMap } from "@/lib/goals/progress-context";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
 import type { Goal } from "@/lib/goals/types";
+import { applyOptimisticChecklistPresentations } from "@/lib/planner/optimistic-completion-facts";
+import { CompletionTitle } from "@/components/ui/completion-title";
 import { cn } from "@/lib/utils";
 
 export function PlanDayUnplannedPanel({
@@ -136,7 +138,7 @@ function PlanDayUnplannedList({
       }),
     [completableGoals, day, placedGoalIds]
   );
-  const { presentationByGoalId } = useChecklistProjection({
+  const { presentationByGoalId: projectedPresentationByGoalId } = useChecklistProjection({
     goals: unplannedGoals,
     completionsByGoal,
     progressByGoal,
@@ -144,7 +146,7 @@ function PlanDayUnplannedList({
     asOfDate: todayLocalDate,
     weeklyAnchor,
   });
-  const { savingGoalId, toggleCompletion } = useChecklistCompletionActions({
+  const { savingGoalId, toggleCompletion, optimisticFacts } = useChecklistCompletionActions({
     readOnly: false,
     viewDate: day,
     todayLocalDate,
@@ -152,6 +154,15 @@ function PlanDayUnplannedList({
     loadData,
     redirectToLogin,
   });
+  const presentationByGoalId = useMemo(
+    () =>
+      applyOptimisticChecklistPresentations(
+        projectedPresentationByGoalId,
+        optimisticFacts,
+        day
+      ),
+    [day, optimisticFacts, projectedPresentationByGoalId]
+  );
   const loadingEmpty = loading && data.goals.length === 0;
 
   if (loadingEmpty) {
@@ -220,13 +231,9 @@ function PlanDayUnplannedRows({
             />
             <Link
               href={`/goals/${goal.id}`}
-              className={cn(
-                planLedgerTitleClass,
-                "min-w-0 flex-1 hover:underline",
-                completed && "line-through"
-              )}
+              className={cn(planLedgerTitleClass, "min-w-0 flex-1 hover:underline")}
             >
-              {goal.title}
+              <CompletionTitle completed={completed}>{goal.title}</CompletionTitle>
             </Link>
           </div>
         );

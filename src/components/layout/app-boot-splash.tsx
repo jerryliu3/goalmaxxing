@@ -46,8 +46,12 @@ async function warmPlannerContext() {
 }
 
 function BootClimbAnimation() {
-  const [reduceMotion, setReduceMotion] = useState(readPrefersReducedMotion);
+  const [reduceMotion, setReduceMotion] = useState(false);
   const [loopProgress, setLoopProgress] = useState(0.08);
+
+  useLayoutEffect(() => {
+    setReduceMotion(readPrefersReducedMotion());
+  }, []);
 
   useEffect(() => {
     if (typeof window.matchMedia !== "function") {
@@ -87,11 +91,12 @@ function BootClimbAnimation() {
 }
 
 export function AppBootSplash() {
-  const [visible, setVisible] = useState(() => !isAppBootSplashSkipped());
+  const [visible, setVisible] = useState(true);
 
   useLayoutEffect(() => {
     removeAppBootPreloadOverlay();
     if (isAppBootSplashSkipped()) {
+      setVisible(false);
       return;
     }
 
