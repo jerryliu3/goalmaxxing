@@ -1,6 +1,7 @@
 "use client";
 
 import { eachDayOfInterval, endOfMonth, format, getISODay, startOfMonth } from "date-fns";
+import { useCompletionHold } from "@/components/ui/use-completion-hold";
 import { getHeatmapScaleClass } from "@/lib/goals/heatmap";
 import { PeriodStepper } from "@/components/ui/period-stepper";
 import { cn } from "@/lib/utils";
@@ -19,8 +20,15 @@ interface MonthHeatmapProps {
 }
 
 const weekdayHeaders = ["M", "T", "W", "Th", "F", "S", "Su"];
+const DAY_INNER_RADIUS = "4px";
+const DAY_INNER_ROUNDED_CLASS = "rounded-[4px]";
 const DAY_FRAME_CLASS =
   "relative flex h-[var(--month-cell-size)] w-[var(--month-cell-size)] items-center justify-center rounded-[8px] border border-border p-[3px] text-[10px] text-muted-foreground";
+
+function heatmapFillClipPath(fillProgress: number) {
+  const inset = (1 - fillProgress) * 50;
+  return `inset(${inset}% round ${DAY_INNER_RADIUS})`;
+}
 
 function MonthHeatmapDay({
   date,
@@ -39,38 +47,99 @@ function MonthHeatmapDay({
   disabled: boolean;
   onDayClick?: (date: string, sourceElement: HTMLButtonElement) => void;
 }) {
+  const completed = value > 0;
+  const interactiveEditable = interactive && Boolean(onDayClick);
+  const drilldownOnly = !interactive && Boolean(onDayClick);
   const title = `${date}: ${value} completion${value === 1 ? "" : "s"}`;
+  const {
+    holding,
+    fillTransition,
+    fillProgress,
+    holdProps,
+  } = useCompletionHold({
+    completed,
+    disabled: disabled || !interactiveEditable,
+    onCommit: interactiveEditable
+      ? (_event, sourceElement) => {
+          onDayClick?.(date, sourceElement ?? _event.currentTarget);
+        }
+      : undefined,
+  });
+  const fillScaleClass = getHeatmapScaleClass(Math.max(value, 1));
+
   const body = (
     <>
-      <span
-        className={cn(
-          "flex h-full w-full items-center justify-center rounded-[4px]",
-          getHeatmapScaleClass(value)
-        )}
-      >
-        {dayNumber}
-      </span>
+      {interactiveEditable ? (
+        <span
+          className={cn(
+            "relative flex h-full w-full overflow-hidden heatmap-scale-0",
+            DAY_INNER_ROUNDED_CLASS
+          )}
+        >
+          <span
+            aria-hidden
+            data-fill-progress={fillProgress}
+            data-fill-transition={fillTransition ? "true" : "false"}
+            className={cn("absolute inset-0", DAY_INNER_ROUNDED_CLASS, fillScaleClass)}
+            style={{
+              clipPath: heatmapFillClipPath(fillProgress),
+              transition: fillTransition
+                ? "clip-path var(--motion-duration-hold, 480ms) linear"
+                : "none",
+            }}
+          />
+          <span className="relative z-[1]">{dayNumber}</span>
+        </span>
+      ) : (
+        <span
+          className={cn(
+            "flex h-full w-full items-center justify-center",
+            DAY_INNER_ROUNDED_CLASS,
+            getHeatmapScaleClass(value)
+          )}
+        >
+          {dayNumber}
+        </span>
+      )}
       {pinned ? (
         <span
           data-testid={`milestone-pin-${date}`}
-          className="absolute right-1 top-1 size-1.5 rounded-full bg-foreground"
+          className="absolute right-1 top-1 z-[2] size-1.5 rounded-full bg-foreground"
           aria-hidden
         />
       ) : null}
     </>
   );
 
-  if (interactive && onDayClick) {
+  if (interactiveEditable) {
     return (
       <button
         type="button"
         title={title}
         disabled={disabled}
-        onClick={(event) => onDayClick(date, event.currentTarget)}
+        data-motion="completion-toggle"
         className={cn(
           DAY_FRAME_CLASS,
-          "transition-colors hover:border-primary/50 disabled:opacity-60"
+          "touch-manipulation transition-colors hover:border-primary/50 disabled:cursor-not-allowed disabled:opacity-60 [-webkit-tap-highlight-color:transparent]",
+          holding && "border-primary/60"
         )}
+        {...holdProps}
+      >
+        {body}
+      </button>
+    );
+  }
+
+  if (drilldownOnly) {
+    return (
+      <button
+        type="button"
+        title={title}
+        className={cn(
+          DAY_FRAME_CLASS,
+          "cursor-pointer transition-colors hover:border-primary/50"
+        )}
+        onClick={(event) => onDayClick?.(date, event.currentTarget)}
       >
         {body}
       </button>

@@ -1,6 +1,7 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { COMPLETION_HOLD_MS } from "@/components/ui/completion-toggle";
 import type { Goal } from "@/lib/goals/types";
 import { InsightsTab } from "@/features/insights/insights-tab";
 
@@ -101,6 +102,7 @@ describe("InsightsTab goal ledger", () => {
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
   });
 
   it("starts on the aggregate heatmap and makes a single goal editable", async () => {
@@ -137,17 +139,17 @@ describe("InsightsTab goal ledger", () => {
 
     expect(
       screen.getByText(
-        "Tap a past or today cell to log or remove a completion. Future days are closed."
+        "Hold a past or today cell to log or remove a completion. Future days are closed."
       )
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Yoga/ }));
 
     expect(screen.getByText("Read-only overlap of 2 goals.")).toBeInTheDocument();
+    expect(screen.getByTitle(/2026-09-01/)).not.toHaveAttribute("data-motion", "completion-toggle");
   });
 
-  it("logs or removes a completion from the selected goal heatmap", async () => {
-    const user = userEvent.setup();
+  it("logs or removes a completion from the selected goal heatmap", () => {
     render(
       <InsightsTab
         sharedPeriod={{
@@ -159,8 +161,15 @@ describe("InsightsTab goal ledger", () => {
       />
     );
 
-    await user.click(onlyButtonForGoal("Tempo run"));
-    await user.click(screen.getByTitle(/2026-09-01/));
+    fireEvent.click(onlyButtonForGoal("Tempo run"));
+
+    vi.useFakeTimers();
+    const day = screen.getByTitle(/2026-09-01/);
+    fireEvent.pointerDown(day);
+    act(() => {
+      vi.advanceTimersByTime(COMPLETION_HOLD_MS);
+    });
+    vi.useRealTimers();
 
     expect(runCompletionMutationMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -190,7 +199,7 @@ describe("InsightsTab goal ledger", () => {
 
     expect(
       screen.getByText(
-        "Tap a past or today cell to log or remove a milestone. Future days are closed."
+        "Hold a past or today cell to log or remove a milestone. Future days are closed."
       )
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Thesis" })).toBeInTheDocument();
