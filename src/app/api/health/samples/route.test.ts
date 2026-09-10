@@ -169,6 +169,9 @@ describe("POST /api/health/samples", () => {
     expect(mocks.rpc).toHaveBeenCalledWith("apply_health_autocomplete_service", {
       p_local_today: localToday,
     });
+    expect(mocks.rpc).toHaveBeenCalledWith("drain_xp_recompute_outbox", {
+      p_limit: 50,
+    });
     await expect(response.json()).resolves.toMatchObject({
       autocompleteAppliedCount: 1,
       autocompleteSkippedCount: 0,

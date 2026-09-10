@@ -42,15 +42,15 @@ select is(
 select ok(
   pg_catalog.pg_get_functiondef(
     'public.mark_goal_complete(uuid, date)'::regprocedure
-  ) like '%recompute_goal_xp_service%',
-  'mark_goal_complete still drives XP recompute'
+  ) like '%enqueue_goal_xp_recompute%',
+  'mark_goal_complete queues XP recompute'
 );
 
 select ok(
   pg_catalog.pg_get_functiondef(
     'public.unmark_goal_complete(uuid, date)'::regprocedure
-  ) like '%recompute_goal_xp_service%',
-  'unmark_goal_complete still drives XP recompute'
+  ) like '%enqueue_goal_xp_recompute%',
+  'unmark_goal_complete queues XP recompute'
 );
 
 -- Level progression is formula-only. IMMUTABLE is what lets it be inlined and

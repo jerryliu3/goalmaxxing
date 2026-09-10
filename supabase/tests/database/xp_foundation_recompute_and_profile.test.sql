@@ -89,6 +89,7 @@ select lives_ok(
       'b3400000-0000-4000-8000-000000000001',
       current_date - 2
     );
+    select public.drain_xp_recompute_outbox(50);
   $tap$,
   'third completion succeeds and hits achievement threshold'
 );
@@ -123,6 +124,7 @@ select lives_ok(
       'b3400000-0000-4000-8000-000000000001',
       current_date - 2
     );
+    select public.drain_xp_recompute_outbox(50);
   $tap$,
   'unmarking a credited completion succeeds'
 );
@@ -156,18 +158,18 @@ set local role service_role;
 
 select ok(
   position(
-    'RECOMPUTE_GOAL_XP_SERVICE'
+    'ENQUEUE_GOAL_XP_RECOMPUTE'
     in upper(pg_get_functiondef('public.mark_goal_complete(uuid, date)'::regprocedure))
   ) > 0,
-  'mark_goal_complete definition includes explicit xp recompute call'
+  'mark_goal_complete queues XP recompute instead of applying it inline'
 );
 
 select ok(
   position(
-    'RECOMPUTE_GOAL_XP_SERVICE'
+    'ENQUEUE_GOAL_XP_RECOMPUTE'
     in upper(pg_get_functiondef('public.unmark_goal_complete(uuid, date)'::regprocedure))
   ) > 0,
-  'unmark_goal_complete definition includes explicit xp recompute call'
+  'unmark_goal_complete queues XP recompute instead of applying it inline'
 );
 
 select ok(

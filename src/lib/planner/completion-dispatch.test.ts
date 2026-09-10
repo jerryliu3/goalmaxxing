@@ -117,6 +117,7 @@ describe("completion dispatch executor", () => {
     expect(result).toEqual({
       ok: true,
       message: null,
+      xpDelta: undefined,
     });
     expect(calls).toEqual([
       {
@@ -129,6 +130,33 @@ describe("completion dispatch executor", () => {
         },
       },
     ]);
+  });
+
+  it("parses the server XP ledger delta from a successful completions response", async () => {
+    const fetcher = async () =>
+      new Response(JSON.stringify({ schemaVersion: "1", xpDelta: 40 }), {
+        status: 200,
+      });
+
+    const result = await executeCompletionDispatch({
+      decision: {
+        route: "canonical_exact_date",
+        exactDateOnly: true,
+        allowed: true,
+        reason: "allowed",
+      },
+      desiredFactState: "present",
+      goalId: "12000000-0000-4000-8000-000000000001",
+      date: "2026-08-05",
+      timezone: "UTC",
+      fetcher: fetcher as typeof fetch,
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      message: null,
+      xpDelta: 40,
+    });
   });
 
   it("executes exact-date mutations through the completions API", async () => {
@@ -209,6 +237,7 @@ describe("completion dispatch executor", () => {
     expect(result).toEqual({
       ok: true,
       message: null,
+      xpDelta: undefined,
     });
     expect(calls).toEqual([
       {
@@ -261,6 +290,7 @@ describe("completion dispatch executor", () => {
     expect(result).toEqual({
       ok: true,
       message: null,
+      xpDelta: undefined,
     });
     expect(calls).toEqual([
       {
@@ -308,6 +338,7 @@ describe("completion dispatch executor", () => {
     expect(result).toEqual({
       ok: true,
       message: null,
+      xpDelta: undefined,
     });
     expect(calls).toEqual([
       {
@@ -351,6 +382,7 @@ describe("completion dispatch executor", () => {
     expect(result).toEqual({
       ok: true,
       message: null,
+      xpDelta: undefined,
     });
     expect(calls).toEqual([
       {
@@ -481,6 +513,7 @@ describe("completion dispatch executor", () => {
     expect(result).toEqual({
       ok: true,
       message: null,
+      xpDelta: undefined,
     });
     expect(calls).toEqual([
       {

@@ -94,7 +94,12 @@ describe("completions route", () => {
       data: { timezone: "UTC" },
       error: null,
     });
-    mocks.rpc.mockResolvedValue({ error: null });
+    mocks.rpc.mockImplementation(async (fn: string) => {
+      if (fn === "preview_queued_xp_delta") {
+        return { data: 20, error: null };
+      }
+      return { data: null, error: null };
+    });
     mocks.applyPlannerItemDateFact.mockReset();
     mocks.applyPlannerGoalDateFact.mockReset();
   });
@@ -130,6 +135,7 @@ describe("completions route", () => {
       p_goal_id: goalId,
       p_date: "2026-08-06",
     });
+    await expect(response.json()).resolves.toMatchObject({ xpDelta: 20 });
   });
 
   it("allows profile-local today even when the request timezone is still yesterday", async () => {
@@ -261,7 +267,11 @@ describe("completions route", () => {
         },
       })
     );
-    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.rpc).toHaveBeenCalledWith("preview_queued_xp_delta");
+    expect(mocks.rpc).toHaveBeenCalledWith("drain_xp_recompute_outbox", {
+      p_limit: 50,
+    });
+    await expect(response.json()).resolves.toMatchObject({ xpDelta: 20 });
   });
 
   it("routes planner goal expectation payloads through planner goal dispatch", async () => {
@@ -295,7 +305,11 @@ describe("completions route", () => {
         },
       })
     );
-    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.rpc).toHaveBeenCalledWith("preview_queued_xp_delta");
+    expect(mocks.rpc).toHaveBeenCalledWith("drain_xp_recompute_outbox", {
+      p_limit: 50,
+    });
+    await expect(response.json()).resolves.toMatchObject({ xpDelta: 20 });
   });
 
 });

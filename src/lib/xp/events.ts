@@ -9,6 +9,7 @@ export interface XpRefreshRequestDetail {
   reason: "completion";
   desiredFactState: "present" | "absent";
   sourceRect?: ViewportRectSnapshot;
+  xpDelta?: number;
 }
 
 type XpRefreshListener = (detail?: XpRefreshRequestDetail) => void;

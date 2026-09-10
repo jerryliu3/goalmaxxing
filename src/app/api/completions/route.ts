@@ -13,10 +13,27 @@ import {
   requirePlannerRouteContext,
   withPlannerRoute,
 } from "@/lib/planner/api";
+import { previewQueuedXpDeltaThenDrain } from "@/lib/xp/outbox";
 
 export const runtime = "nodejs";
 
 const MAX_REQUEST_BYTES = 16 * 1024;
+
+function completionSuccessResponse(
+  payload: Record<string, unknown>,
+  xpDelta: number,
+  correlationId: string
+) {
+  return NextResponse.json(
+    {
+      schemaVersion: "1",
+      ...payload,
+      xpDelta,
+      correlationId,
+    },
+    { headers: { "Cache-Control": "no-store" } }
+  );
+}
 
 export async function handleCompletionPost(request: Request) {
   return withPlannerRoute(async ({ correlationId }) => {
@@ -68,14 +85,8 @@ export async function handleCompletionPost(request: Request) {
       if (!result.ok) {
         throw new PlannerRouteError(result.status, result.code, result.message);
       }
-      return NextResponse.json(
-        {
-          schemaVersion: "1",
-          ...result.payload,
-          correlationId,
-        },
-        { headers: { "Cache-Control": "no-store" } }
-      );
+      const xpDelta = await previewQueuedXpDeltaThenDrain(routeContext.supabase);
+      return completionSuccessResponse(result.payload, xpDelta, correlationId);
     }
 
     if (plannerGoalExpectation) {
@@ -94,14 +105,8 @@ export async function handleCompletionPost(request: Request) {
       if (!result.ok) {
         throw new PlannerRouteError(result.status, result.code, result.message);
       }
-      return NextResponse.json(
-        {
-          schemaVersion: "1",
-          ...result.payload,
-          correlationId,
-        },
-        { headers: { "Cache-Control": "no-store" } }
-      );
+      const xpDelta = await previewQueuedXpDeltaThenDrain(routeContext.supabase);
+      return completionSuccessResponse(result.payload, xpDelta, correlationId);
     }
 
     if (desiredFactState === "present") {
@@ -147,15 +152,15 @@ export async function handleCompletionPost(request: Request) {
       );
     }
 
-    return NextResponse.json(
+    const xpDelta = await previewQueuedXpDeltaThenDrain(routeContext.supabase);
+    return completionSuccessResponse(
       {
-        schemaVersion: "1",
         goalId,
         date,
         factState: desiredFactState,
-        correlationId,
       },
-      { headers: { "Cache-Control": "no-store" } }
+      xpDelta,
+      correlationId
     );
   });
 }

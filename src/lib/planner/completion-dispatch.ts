@@ -49,6 +49,7 @@ export interface ExecuteCompletionDispatchInput {
 export interface CompletionDispatchExecutionResult {
   ok: boolean;
   message: string | null;
+  xpDelta?: number;
 }
 
 type ExecutableCompletionRoute = Exclude<CompletionDispatchRoute, "disabled">;
@@ -74,6 +75,19 @@ export type CompletionDispatchDecision =
 const DEFAULT_COMPLETION_DISPATCH_TIMEOUT_MS = 15_000;
 const COMPLETION_TIMEOUT_MESSAGE =
   "The completion request timed out. Please try again.";
+
+function parseXpDelta(payload: unknown): number | undefined {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "xpDelta" in payload &&
+    typeof payload.xpDelta === "number" &&
+    Number.isFinite(payload.xpDelta)
+  ) {
+    return payload.xpDelta;
+  }
+  return undefined;
+}
 
 function parseErrorMessage(payload: unknown, fallback: string) {
   if (
@@ -120,7 +134,12 @@ async function postJsonRoute({
     clearTimeout(timeoutId);
   }
   if (response.ok) {
-    return { ok: true as const, message: null };
+    const payload = await response.json().catch(() => null);
+    return {
+      ok: true as const,
+      message: null,
+      xpDelta: parseXpDelta(payload),
+    };
   }
   const payload = await response.json().catch(() => null);
   return {
