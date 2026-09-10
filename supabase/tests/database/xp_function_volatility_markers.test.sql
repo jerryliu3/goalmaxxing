@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, private, extensions, pg_catalog;
-select plan(7);
+select plan(10);
 
 select is(
   (
@@ -51,6 +51,27 @@ select ok(
     'public.unmark_goal_complete(uuid, date)'::regprocedure
   ) like '%enqueue_goal_xp_recompute%',
   'unmark_goal_complete queues XP recompute'
+);
+
+select ok(
+  pg_catalog.pg_get_functiondef(
+    'public.mark_goal_complete(uuid, date)'::regprocedure
+  ) like '%owned_linked_target_ids%',
+  'mark_goal_complete walks owned linked targets through one helper'
+);
+
+select ok(
+  pg_catalog.pg_get_functiondef(
+    'public.recompute_goal_xp_service(uuid, uuid, boolean)'::regprocedure
+  ) like '%goal_xp_ledger_diffs%',
+  'recompute applies the shared ledger diff'
+);
+
+select ok(
+  pg_catalog.pg_get_functiondef(
+    'private.goal_xp_pending_delta(uuid, uuid)'::regprocedure
+  ) like '%goal_xp_ledger_diffs%',
+  'pending delta sums the shared ledger diff'
 );
 
 -- Level progression is formula-only. IMMUTABLE is what lets it be inlined and
