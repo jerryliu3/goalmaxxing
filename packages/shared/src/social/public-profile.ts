@@ -51,6 +51,7 @@ export interface PublicProfileBundle {
   profile: PublicProfileIdentity;
   xp: PublicProfileXpSummary | null;
   globalAchievements: PublicProfileGlobalAchievement[];
+  awardCatalogCount: number;
   overallStats: PublicProfileOverallStats | null;
   yearHeatmap: PublicProfileHeatmapPoint[];
 }

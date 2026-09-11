@@ -20,6 +20,10 @@ import type { Database } from "@/lib/supabase/database.types";
 import { progressionForTotalXp } from "@/lib/xp/progression";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { MAX_COMPLETION_FACTS } from "@/lib/planner/contracts/bounds";
+import {
+  isValidPublicProfileUsername,
+  normalizePublicProfileUsername,
+} from "@/lib/social/public-profile-username";
 
 const PAGE_SIZE = 1_000;
 const MAX_PROFILE_GOALS = 1_000;
@@ -56,10 +60,11 @@ type UserAwardRow = {
 };
 
 export interface BuildPublicProfileBundleInput {
-  viewerUserId: string;
+  viewerUserId: string | null;
   subjectProfile: ProfileRow;
   globalXpProfile: XpProfileRow | null;
   globalAchievements: UserAwardRow[];
+  awardCatalogCount: number;
   goals: Goal[];
   completions: Completion[];
   selectedYear: number;
@@ -149,34 +154,48 @@ function buildYearHeatmap({
   );
 }
 
-export function buildPublicProfileBundle({
-  viewerUserId,
-  subjectProfile,
-  globalXpProfile,
-  globalAchievements,
-  goals,
-  completions,
-  selectedYear,
-}: BuildPublicProfileBundleInput): PublicProfileBundle {
-  const isViewerSubject = viewerUserId === subjectProfile.id;
-  const isPrivate = !isViewerSubject && subjectProfile.social_activity_visible === false;
-  const profile = {
+function buildProfileIdentity(subjectProfile: ProfileRow, isPrivate: boolean) {
+  return {
     subjectUserId: subjectProfile.id,
     username: subjectProfile.username,
     displayName: subjectProfile.display_name,
     avatarUrl: subjectProfile.avatar_url,
     isPrivate,
   };
+}
+
+function isPrivateForViewer(viewerUserId: string | null, subjectProfile: ProfileRow) {
+  const isViewerSubject = viewerUserId !== null && viewerUserId === subjectProfile.id;
+  return !isViewerSubject && subjectProfile.social_activity_visible === false;
+}
+
+function buildPrivatePublicProfileBundle(subjectProfile: ProfileRow): PublicProfileBundle {
+  return {
+    schemaVersion: "1",
+    profile: buildProfileIdentity(subjectProfile, true),
+    xp: null,
+    globalAchievements: [],
+    awardCatalogCount: 0,
+    overallStats: null,
+    yearHeatmap: [],
+  };
+}
+
+export function buildPublicProfileBundle({
+  viewerUserId,
+  subjectProfile,
+  globalXpProfile,
+  globalAchievements,
+  awardCatalogCount,
+  goals,
+  completions,
+  selectedYear,
+}: BuildPublicProfileBundleInput): PublicProfileBundle {
+  const isPrivate = isPrivateForViewer(viewerUserId, subjectProfile);
+  const profile = buildProfileIdentity(subjectProfile, isPrivate);
 
   if (isPrivate) {
-    return {
-      schemaVersion: "1",
-      profile,
-      xp: null,
-      globalAchievements: [],
-      overallStats: null,
-      yearHeatmap: [],
-    };
+    return buildPrivatePublicProfileBundle(subjectProfile);
   }
 
   const totalXp = globalXpProfile?.total_xp ?? 0;
@@ -239,6 +258,7 @@ export function buildPublicProfileBundle({
     profile,
     xp,
     globalAchievements: mapGlobalAchievements(globalAchievements),
+    awardCatalogCount,
     overallStats: mapOverallStats(statsGroup),
     yearHeatmap: buildYearHeatmap({
       completions: completableCompletions,
@@ -342,6 +362,77 @@ async function loadCompletionsForSubject({
   return completions;
 }
 
+async function loadAwardCatalogCount(admin: SupabaseClient<Database>) {
+  const response = await admin.from("xp_rewards").select("*", { count: "exact", head: true });
+  if (response.error) {
+    throw new ApiRouteError(
+      500,
+      "public_profile_load_failed",
+      "Public profile data could not be loaded."
+    );
+  }
+  return response.count ?? 0;
+}
+
+const PROFILE_SELECT =
+  "id,username,display_name,avatar_url,social_activity_visible,week_starts_on,created_at,timezone";
+
+async function loadPublicProfileBundleForProfile({
+  admin,
+  viewerUserId,
+  subjectProfile,
+  selectedYear,
+}: {
+  admin: SupabaseClient<Database>;
+  viewerUserId: string | null;
+  subjectProfile: ProfileRow;
+  selectedYear: number;
+}) {
+  if (isPrivateForViewer(viewerUserId, subjectProfile)) {
+    return buildPrivatePublicProfileBundle(subjectProfile);
+  }
+
+  const subjectUserId = subjectProfile.id;
+  const [xpResponse, globalAchievementsResponse, goals, completions, awardCatalogCount] =
+    await Promise.all([
+      admin
+        .from("xp_profiles")
+        .select("total_xp")
+        .eq("user_id", subjectUserId)
+        .eq("track_key", "global")
+        .maybeSingle(),
+      admin
+        .from("user_awards")
+        .select(
+          "id,unlocked_at,revoked_at,xp_rewards!inner(level,reward_code,reward_title,reward_description)"
+        )
+        .eq("user_id", subjectUserId)
+        .order("unlocked_at", { ascending: false }),
+      loadGoalsForSubject({ admin, subjectUserId }),
+      loadCompletionsForSubject({ admin, subjectUserId }),
+      loadAwardCatalogCount(admin),
+    ]);
+
+  if (xpResponse.error || globalAchievementsResponse.error) {
+    throw new ApiRouteError(
+      500,
+      "public_profile_load_failed",
+      "Public profile data could not be loaded."
+    );
+  }
+
+  return buildPublicProfileBundle({
+    viewerUserId,
+    subjectProfile,
+    globalXpProfile: xpResponse.data,
+    globalAchievements: (globalAchievementsResponse.data ?? []) as UserAwardRow[],
+    awardCatalogCount,
+    goals,
+    completions,
+    selectedYear,
+  });
+}
+
 export async function loadPublicProfileBundle({
   admin,
   viewerUserId,
@@ -355,7 +446,7 @@ export async function loadPublicProfileBundle({
 }) {
   const profileResponse = await admin
     .from("profiles")
-    .select("id,username,display_name,avatar_url,social_activity_visible,week_starts_on,created_at,timezone")
+    .select(PROFILE_SELECT)
     .eq("id", subjectUserId)
     .maybeSingle();
 
@@ -370,39 +461,51 @@ export async function loadPublicProfileBundle({
     throw new ApiRouteError(404, "profile_not_found", "Profile was not found.");
   }
 
-  const [xpResponse, globalAchievementsResponse, goals, completions] = await Promise.all([
-    admin
-      .from("xp_profiles")
-      .select("total_xp")
-      .eq("user_id", subjectUserId)
-      .eq("track_key", "global")
-      .maybeSingle(),
-    admin
-      .from("user_awards")
-      .select(
-        "id,unlocked_at,revoked_at,xp_rewards!inner(level,reward_code,reward_title,reward_description)"
-      )
-      .eq("user_id", subjectUserId)
-      .order("unlocked_at", { ascending: false }),
-    loadGoalsForSubject({ admin, subjectUserId }),
-    loadCompletionsForSubject({ admin, subjectUserId }),
-  ]);
+  return loadPublicProfileBundleForProfile({
+    admin,
+    viewerUserId,
+    subjectProfile: profileResponse.data,
+    selectedYear,
+  });
+}
 
-  if (xpResponse.error || globalAchievementsResponse.error) {
+export async function loadPublicProfileBundleByUsername({
+  admin,
+  username,
+  viewerUserId,
+  selectedYear,
+}: {
+  admin: SupabaseClient<Database>;
+  username: string;
+  viewerUserId: string | null;
+  selectedYear: number;
+}) {
+  const normalizedUsername = normalizePublicProfileUsername(username);
+  if (!isValidPublicProfileUsername(normalizedUsername)) {
+    throw new ApiRouteError(404, "profile_not_found", "Profile was not found.");
+  }
+
+  const profileResponse = await admin
+    .from("profiles")
+    .select(PROFILE_SELECT)
+    .eq("username", normalizedUsername)
+    .maybeSingle();
+
+  if (profileResponse.error) {
     throw new ApiRouteError(
       500,
       "public_profile_load_failed",
       "Public profile data could not be loaded."
     );
   }
+  if (!profileResponse.data) {
+    throw new ApiRouteError(404, "profile_not_found", "Profile was not found.");
+  }
 
-  return buildPublicProfileBundle({
+  return loadPublicProfileBundleForProfile({
+    admin,
     viewerUserId,
     subjectProfile: profileResponse.data,
-    globalXpProfile: xpResponse.data,
-    globalAchievements: (globalAchievementsResponse.data ?? []) as UserAwardRow[],
-    goals,
-    completions,
     selectedYear,
   });
 }

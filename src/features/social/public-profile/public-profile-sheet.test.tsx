@@ -26,16 +26,23 @@ vi.mock("@/features/goals/goal-route-sheet", () => ({
   ),
 }));
 
-vi.mock("@/components/xp/xp-progress-card", () => ({
-  XpProgressCard: () => <div>xp-card</div>,
-}));
-
-vi.mock("@/features/achievements/global-achievements-card", () => ({
-  GlobalAchievementsCard: () => <div>achievements-card</div>,
-}));
-
-vi.mock("@/features/insights/insights-overall-stats-card", () => ({
-  InsightsOverallStatsCard: () => <div>overall-stats-card</div>,
+vi.mock("@/features/social/public-profile/public-profile-content", () => ({
+  PublicProfileContent: ({
+    bundle,
+    headerActions,
+  }: {
+    bundle: { profile: { isPrivate: boolean } };
+    headerActions?: ReactNode;
+  }) => (
+    <div>
+      {headerActions}
+      {bundle.profile.isPrivate ? (
+        <p>This account is private</p>
+      ) : (
+        <div>public-profile-content</div>
+      )}
+    </div>
+  ),
 }));
 
 describe("PublicProfileSheet", () => {
@@ -56,6 +63,7 @@ describe("PublicProfileSheet", () => {
       },
       xp: null,
       globalAchievements: [],
+      awardCatalogCount: 0,
       overallStats: null,
       yearHeatmap: [],
     });
@@ -68,10 +76,10 @@ describe("PublicProfileSheet", () => {
     );
 
     expect(await screen.findByText("This account is private")).toBeInTheDocument();
-    expect(screen.queryByText("xp-card")).not.toBeInTheDocument();
+    expect(screen.queryByText("public-profile-content")).not.toBeInTheDocument();
   });
 
-  it("renders profile sections for public accounts", async () => {
+  it("renders profile content for public accounts", async () => {
     mocks.fetchPublicProfileBundle.mockResolvedValue({
       schemaVersion: "1",
       profile: {
@@ -90,6 +98,7 @@ describe("PublicProfileSheet", () => {
         xpToNextLevel: 300,
       },
       globalAchievements: [],
+      awardCatalogCount: 0,
       overallStats: {
         totalActivities: 20,
         totalGoalsCompleted: 4,
@@ -118,8 +127,34 @@ describe("PublicProfileSheet", () => {
       />
     );
 
-    expect(await screen.findByText("xp-card")).toBeInTheDocument();
-    expect(screen.getByText("achievements-card")).toBeInTheDocument();
-    expect(screen.getByText("overall-stats-card")).toBeInTheDocument();
+    expect(await screen.findByText("public-profile-content")).toBeInTheDocument();
+  });
+
+  it("shows copy link for the signed-in subject", async () => {
+    mocks.fetchPublicProfileBundle.mockResolvedValue({
+      schemaVersion: "1",
+      profile: {
+        subjectUserId: "22222222-2222-4222-8222-222222222222",
+        username: "visible-user",
+        displayName: "Visible User",
+        avatarUrl: null,
+        isPrivate: false,
+      },
+      xp: null,
+      globalAchievements: [],
+      awardCatalogCount: 0,
+      overallStats: null,
+      yearHeatmap: [],
+    });
+
+    render(
+      <PublicProfileSheet
+        subjectUserId="22222222-2222-4222-8222-222222222222"
+        viewerUserId="22222222-2222-4222-8222-222222222222"
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(await screen.findByRole("button", { name: /copy link/i })).toBeInTheDocument();
   });
 });

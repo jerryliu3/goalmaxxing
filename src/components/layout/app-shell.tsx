@@ -95,7 +95,7 @@ export function AppShell({
             availability={duoAvailability}
             initialScopePreference={initialDuoScopePreference}
           >
-            <PublicProfileSheetProvider>
+            <PublicProfileSheetProvider viewerUserId={userId} xpEnabled={xpEnabled}>
               <AppBootSplash />
               <div>
                 <div className="relative z-10 flex min-h-screen w-full justify-center bg-page px-4 py-4 sm:px-6 sm:py-6">
