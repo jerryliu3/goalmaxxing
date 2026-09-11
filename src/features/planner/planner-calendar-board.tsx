@@ -50,6 +50,7 @@ import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-chec
 const SEVEN_COLUMN_GRID_STYLE = {
   gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
 } as const;
+const WEEK_TRANSITION_ROW_HEIGHT_REM = 4.75;
 
 function isMonthScopedCalendarViewMode(viewMode: PlannerCalendarViewMode) {
   return viewMode === "month";
@@ -333,6 +334,9 @@ export function PlannerCalendarBoard({
                             className?: string;
                             style?: CSSProperties;
                           };
+                          const stackIndex =
+                            cell.columnIndex +
+                            (cell.weekIndex - resolvedFocusedWeekIndex) * 7;
                           return cloneElement(ghostNode as ReactElement, {
                             key: `week-month-placeholder-${ghostCell.date}`,
                             className: `${ghostProps.className ?? ""} pointer-events-none`,
@@ -341,7 +345,7 @@ export function PlannerCalendarBoard({
                               position: "absolute",
                               left: 0,
                               right: 0,
-                              top: `calc(((${cell.columnIndex} + (${cell.weekIndex - resolvedFocusedWeekIndex} * 7)) * 4.75rem))`,
+                              top: `${stackIndex * WEEK_TRANSITION_ROW_HEIGHT_REM}rem`,
                               viewTransitionName: planDayViewTransitionName(ghostCell.date),
                             },
                             "aria-hidden": true,
