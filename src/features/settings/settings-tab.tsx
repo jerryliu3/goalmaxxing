@@ -28,6 +28,7 @@ import {
   type SettingsSection,
 } from "@/features/settings/settings-section";
 import { NotificationsSection } from "@/features/social/notifications-section";
+import { buildPublicProfileUrl } from "@/lib/social/public-profile-username";
 import { ProfileSection } from "@/features/social/profile-section";
 import { useSocialTabData } from "@/features/social/use-social-tab-data";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
@@ -295,7 +296,8 @@ function SettingsSectionEditor({
           <div className="space-y-1">
             <p className="text-sm font-medium">Privacy</p>
             <p className="text-xs text-muted-foreground">
-              Control whether your social activity appears in leaderboards.
+              Control whether your activity appears in feed, leaderboards, and your
+              public profile page.
             </p>
           </div>
           <label className="flex items-start gap-3 text-sm">
@@ -313,10 +315,19 @@ function SettingsSectionEditor({
             <span>
               Social activity enabled
               <span className="block text-xs text-muted-foreground">
-                Turn off to hide your activity from leaderboard listings.
+                Turn off to hide your activity from feed, leaderboards, and your public
+                profile URL.
               </span>
             </span>
           </label>
+          {profileDraft.username.trim() ? (
+            <p className="text-xs text-muted-foreground">
+              Public profile:{" "}
+              <span className="font-mono text-foreground">
+                {buildPublicProfileUrl(profileDraft.username.trim())}
+              </span>
+            </p>
+          ) : null}
           <Button
             type="button"
             size="sm"

@@ -278,6 +278,11 @@ Authenticated product lives in `src/app/(app)/`, wrapped by
 | Insights | `/insights` | History, heatmaps, goal stats |
 | Profile | `/settings` | Preferences, account, integrations |
 
+Shareable public profiles live at `/user/[username]`. They show identity, XP,
+earned level medals, and the current-year activity heatmap when
+`social_activity_visible` is enabled; otherwise visitors see identity plus
+“This account is private.” Settings controls that flag and surfaces the URL.
+
 Planner is itself a three-surface hub
 ([`planner-page-shell.tsx`](../../src/features/planner/planner-page-shell.tsx)):
 Calendar, Checklist (default), Tasks, switched with pressed gradient chips.
