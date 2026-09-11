@@ -37,6 +37,11 @@ import {
 import type { DuoLaneSubject } from "@cadence/shared/social/duo";
 import { PlannerViewWindowHeader } from "@/features/planner/planner-view-window-header";
 import { PlanViewTransitionFrame } from "@/features/planner/plan-view-transition-frame";
+import {
+  PLAN_MORPH_CLASS,
+  PLAN_VIEW_WEEKDAYS_TRANSITION_NAME,
+  planDayViewTransitionName,
+} from "@/features/planner/plan-view-transition";
 import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 
 const SEVEN_COLUMN_GRID_STYLE = {
@@ -203,6 +208,28 @@ export function PlannerCalendarBoard({
     adjacentMonthPeek.rangeKey === monthRangeKey && adjacentMonthPeek.previous;
   const showNextMonth =
     adjacentMonthPeek.rangeKey === monthRangeKey && adjacentMonthPeek.next;
+  const focusedWeekStartDay = focusedWeekCells[0]?.date ?? focusedDay;
+  const focusedWeekIndex = useMemo(
+    () =>
+      monthWeeks.findIndex(
+        (week) => week[0]?.date === focusedWeekStartDay
+      ),
+    [focusedWeekStartDay, monthWeeks]
+  );
+  const resolvedFocusedWeekIndex = focusedWeekIndex >= 0 ? focusedWeekIndex : 0;
+  const transitionWeekPlaceholderCells = useMemo(
+    () =>
+      monthWeeks.flatMap((week, weekIndex) =>
+        weekIndex === resolvedFocusedWeekIndex
+          ? []
+          : week.map((cell, columnIndex) => ({
+              day: cell.date,
+              weekIndex,
+              columnIndex,
+            }))
+      ),
+    [monthWeeks, resolvedFocusedWeekIndex]
+  );
   const { firstRowVisible, lastRowVisible } = useMonthGridEdgeVisibility(
     multiMonthGridScrollRef,
     `${monthRangeKey}:${showPreviousMonth}:${showNextMonth}:${expandedMonthRows}`
@@ -272,14 +299,37 @@ export function PlannerCalendarBoard({
             <PlannerCalendarSplit
               calendar={
                 viewMode === "week" ? (
-                  <ol
-                    aria-label="Week agenda"
-                    className="flex flex-col overflow-clip"
-                    data-testid="week-agenda"
-                    data-calendar-week-agenda="true"
+                  <div
+                    className="relative overflow-clip"
+                    data-week-transition-stage="true"
                   >
-                    {focusedWeekCells.map(renderCalendarDayCell)}
-                  </ol>
+                    <ol
+                      aria-label="Week agenda"
+                      className="flex flex-col overflow-clip"
+                      data-testid="week-agenda"
+                      data-calendar-week-agenda="true"
+                    >
+                      {focusedWeekCells.map(renderCalendarDayCell)}
+                    </ol>
+                    <div
+                      aria-hidden
+                      data-week-transition-placeholders="true"
+                      className="pointer-events-none absolute inset-0 overflow-clip"
+                    >
+                      {transitionWeekPlaceholderCells.map((cell) => (
+                        <div
+                          key={`week-month-placeholder-${cell.day}`}
+                          className={`${PLAN_MORPH_CLASS} absolute left-0 right-0 h-[4.75rem] overflow-clip rounded-[10px] border border-border/65 bg-background/95`}
+                          style={{
+                            top: `calc(((${cell.columnIndex} + (${cell.weekIndex - resolvedFocusedWeekIndex} * 7)) * 4.75rem))`,
+                            viewTransitionName: planDayViewTransitionName(cell.day),
+                          }}
+                        >
+                          <span className="sr-only">{cell.day}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 ) : (
                   <div className="w-full overflow-clip">
                     {shouldShowAdjacentMonthToggle({
@@ -312,8 +362,12 @@ export function PlannerCalendarBoard({
                         >
                           <div
                             className="grid gap-2 text-center text-xs text-muted-foreground"
-                            style={SEVEN_COLUMN_GRID_STYLE}
+                            style={{
+                              ...SEVEN_COLUMN_GRID_STYLE,
+                              viewTransitionName: PLAN_VIEW_WEEKDAYS_TRANSITION_NAME,
+                            }}
                             data-calendar-weekday-grid="true"
+                            data-weekday-row="true"
                           >
                             {weekdayLabels.map((weekday) => (
                               <span key={weekday}>{weekday}</span>

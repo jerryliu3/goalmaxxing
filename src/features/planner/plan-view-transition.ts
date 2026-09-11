@@ -8,6 +8,7 @@ export const PLAN_VIEW_SWAP_CLASS = "plan-view-swap";
 export const PLAN_VIEW_ROOT_TRANSITION_NAME = "plan-view-root";
 export const PLAN_VIEW_CHROME_TRANSITION_NAME = "plan-view-chrome";
 export const PLAN_VIEW_TOOLBAR_TRANSITION_NAME = "plan-view-toolbar";
+export const PLAN_VIEW_WEEKDAYS_TRANSITION_NAME = "plan-view-weekdays";
 export const PLAN_VIEW_TRANSITION_CLASS = "plan-zoom-vt";
 export const PLAN_VIEW_WEEK_TO_MONTH_CLASS = "plan-zoom-week-to-month";
 

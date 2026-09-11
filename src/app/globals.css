@@ -570,6 +570,14 @@ html[data-plan-pair="week-month"] ::view-transition-new(.plan-view-fade) {
   animation: none;
 }
 
+[data-week-transition-placeholders="true"] {
+  display: none;
+}
+
+html[data-plan-pair="week-month"] [data-plan-view="week"] [data-week-transition-placeholders="true"] {
+  display: block;
+}
+
 ::view-transition-group(plan-view-chrome),
 ::view-transition-group(plan-view-toolbar) {
   z-index: 50;
@@ -586,6 +594,17 @@ html[data-plan-pair="week-month"] ::view-transition-new(.plan-view-fade) {
 ::view-transition-old(plan-view-chrome),
 ::view-transition-old(plan-view-toolbar) {
   display: none;
+}
+
+::view-transition-group(plan-view-weekdays) {
+  z-index: 55;
+  animation: none;
+}
+
+::view-transition-old(plan-view-weekdays),
+::view-transition-new(plan-view-weekdays) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 .plan-morph {
