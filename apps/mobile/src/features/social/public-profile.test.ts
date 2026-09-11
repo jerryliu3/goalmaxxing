@@ -32,6 +32,7 @@ describe("fetchMobilePublicProfile", () => {
         },
         xp: null,
         globalAchievements: [],
+        awardCatalogCount: 0,
         overallStats: null,
         yearHeatmap: [],
       },
