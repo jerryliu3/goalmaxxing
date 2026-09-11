@@ -1,10 +1,14 @@
 "use client";
 
 import {
+  cloneElement,
   Fragment,
+  isValidElement,
   useMemo,
   useState,
+  type CSSProperties,
   type MutableRefObject,
+  type ReactElement,
   type ReactNode,
 } from "react";
 import { PlannerDndProvider } from "@/features/planner/calendar-dnd";
@@ -38,7 +42,6 @@ import type { DuoLaneSubject } from "@cadence/shared/social/duo";
 import { PlannerViewWindowHeader } from "@/features/planner/planner-view-window-header";
 import { PlanViewTransitionFrame } from "@/features/planner/plan-view-transition-frame";
 import {
-  PLAN_MORPH_CLASS,
   PLAN_VIEW_WEEKDAYS_TRANSITION_NAME,
   planDayViewTransitionName,
 } from "@/features/planner/plan-view-transition";
@@ -223,7 +226,7 @@ export function PlannerCalendarBoard({
         weekIndex === resolvedFocusedWeekIndex
           ? []
           : week.map((cell, columnIndex) => ({
-              day: cell.date,
+              cell,
               weekIndex,
               columnIndex,
             }))
@@ -317,16 +320,33 @@ export function PlannerCalendarBoard({
                       className="pointer-events-none absolute inset-0 overflow-clip"
                     >
                       {transitionWeekPlaceholderCells.map((cell) => (
-                        <div
-                          key={`week-month-placeholder-${cell.day}`}
-                          className={`${PLAN_MORPH_CLASS} absolute left-0 right-0 h-[4.75rem] overflow-clip rounded-[10px] border border-border/65 bg-background/95`}
-                          style={{
-                            top: `calc(((${cell.columnIndex} + (${cell.weekIndex - resolvedFocusedWeekIndex} * 7)) * 4.75rem))`,
-                            viewTransitionName: planDayViewTransitionName(cell.day),
-                          }}
-                        >
-                          <span className="sr-only">{cell.day}</span>
-                        </div>
+                        (() => {
+                          const ghostCell = {
+                            date: cell.cell.date,
+                            inMonth: cell.cell.inMonth,
+                          };
+                          const ghostNode = renderCalendarDayCell(ghostCell);
+                          if (!isValidElement(ghostNode)) {
+                            return null;
+                          }
+                          const ghostProps = ghostNode.props as {
+                            className?: string;
+                            style?: CSSProperties;
+                          };
+                          return cloneElement(ghostNode as ReactElement, {
+                            key: `week-month-placeholder-${ghostCell.date}`,
+                            className: `${ghostProps.className ?? ""} pointer-events-none`,
+                            style: {
+                              ...(ghostProps.style ?? {}),
+                              position: "absolute",
+                              left: 0,
+                              right: 0,
+                              top: `calc(((${cell.columnIndex} + (${cell.weekIndex - resolvedFocusedWeekIndex} * 7)) * 4.75rem))`,
+                              viewTransitionName: planDayViewTransitionName(ghostCell.date),
+                            },
+                            "aria-hidden": true,
+                          });
+                        })()
                       ))}
                     </div>
                   </div>
@@ -361,7 +381,7 @@ export function PlannerCalendarBoard({
                           data-calendar-grid-track="true"
                         >
                           <div
-                            className="grid gap-2 text-center text-xs text-muted-foreground"
+                            className="grid gap-2 rounded-[10px] border border-border/70 bg-background/90 px-2 py-1 text-center text-xs text-muted-foreground"
                             style={{
                               ...SEVEN_COLUMN_GRID_STYLE,
                               viewTransitionName: PLAN_VIEW_WEEKDAYS_TRANSITION_NAME,

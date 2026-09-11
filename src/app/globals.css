@@ -598,13 +598,23 @@ html[data-plan-pair="week-month"] [data-plan-view="week"] [data-week-transition-
 
 ::view-transition-group(plan-view-weekdays) {
   z-index: 55;
-  animation: none;
+  animation-duration: var(--plan-view-morph-duration);
+  animation-timing-function: var(--plan-view-morph-ease);
 }
 
 ::view-transition-old(plan-view-weekdays),
 ::view-transition-new(plan-view-weekdays) {
-  animation: none;
   mix-blend-mode: normal;
+}
+
+::view-transition-old(plan-view-weekdays) {
+  animation: var(--plan-view-morph-fade) var(--plan-view-morph-ease) both
+    plan-morph-fade-out;
+}
+
+::view-transition-new(plan-view-weekdays) {
+  animation: var(--plan-view-morph-fade) var(--plan-view-morph-ease) both
+    plan-morph-fade-in;
 }
 
 .plan-morph {
