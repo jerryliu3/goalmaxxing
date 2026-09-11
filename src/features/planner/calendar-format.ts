@@ -39,6 +39,24 @@ export function monthToLabel(month: string) {
   return format(parseMonth(month), "MMMM yyyy");
 }
 
+export function resolvePlannerSessionDisplayTitle({
+  customLabel,
+  goalTitle,
+  fallbackLabel,
+  unitKey,
+}: {
+  customLabel?: string | null;
+  goalTitle?: string | null;
+  fallbackLabel?: string | null;
+  unitKey?: string | null;
+}) {
+  const custom = customLabel?.trim() || null;
+  if (custom) {
+    return custom;
+  }
+  return goalTitle ?? fallbackLabel ?? unitKey ?? null;
+}
+
 export function isDerivedCounterLabel(value: string | null) {
   if (!value) {
     return false;

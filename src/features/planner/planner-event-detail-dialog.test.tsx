@@ -56,7 +56,7 @@ describe("PlannerEventDetailDialog", () => {
       />
     )
 
-    const titleInput = await screen.findByPlaceholderText("Goal title")
+    const titleInput = await screen.findByPlaceholderText("Session title")
     expect(titleInput).not.toHaveFocus()
   })
 

@@ -8,6 +8,7 @@ import {
   getEntrySubtitle,
   isEntryImmovableForDraft,
   normalizeWeekStartsOn,
+  resolvePlannerSessionDisplayTitle,
 } from "@/features/planner/calendar-format";
 import { toPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import { buildPlannerDayEntry } from "@/features/planner/test-fixtures";
@@ -254,5 +255,23 @@ describe("draft pill classes", () => {
     expect(getEntryDraftPillClasses({ draftDiffKind: null })).toContain(
       "border-border"
     );
+  });
+
+  it("prefers a custom session label over the shared goal title", () => {
+    expect(
+      resolvePlannerSessionDisplayTitle({
+        customLabel: "Tempo run",
+        goalTitle: "Run",
+        fallbackLabel: "Session",
+        unitKey: "total:1",
+      })
+    ).toBe("Tempo run");
+    expect(
+      resolvePlannerSessionDisplayTitle({
+        customLabel: "  ",
+        goalTitle: "Run",
+        unitKey: "total:1",
+      })
+    ).toBe("Run");
   });
 });

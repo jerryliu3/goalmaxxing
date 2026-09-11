@@ -101,6 +101,7 @@ export interface PlannerActiveItemSnapshot {
   revision: number;
   scheduled_time_override?: string | null;
   effective_scheduled_local_time?: string | null;
+  label?: string | null;
 }
 
 export interface PlannerContextPayload {

@@ -135,6 +135,7 @@ export interface PlannerActiveItemRow {
   revision: number;
   scheduled_time_override: string | null;
   effective_scheduled_local_time: string | null;
+  label: string | null;
 }
 
 export interface ActiveExecutionPlanSnapshot {
@@ -547,6 +548,7 @@ async function loadActivePlanSnapshot(
       revision: 0,
       scheduled_time_override: item.scheduled_time,
       effective_scheduled_local_time: item.scheduled_time,
+      label: item.label,
     });
     assignments.push({
       goalId: goal.id,

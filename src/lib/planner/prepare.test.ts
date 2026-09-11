@@ -101,6 +101,7 @@ function persistedItem(
     original_scheduled_date: string | null;
     scheduled_time: string | null;
     locked: boolean;
+    label: string | null;
   }> = {}
 ) {
   return {
@@ -116,6 +117,7 @@ function persistedItem(
     scheduled_time:
       input.scheduled_time === undefined ? "09:30" : input.scheduled_time,
     locked: input.locked ?? true,
+    label: input.label === undefined ? null : input.label,
     created_at: "2026-08-01T00:00:00.000Z",
     updated_at: "2026-08-01T00:00:00.000Z",
   };
@@ -317,6 +319,7 @@ describe("preparePlannerSchedule", () => {
             original_scheduled_date: existing.original_scheduled_date,
             scheduled_time: existing.scheduled_time,
             locked: true,
+            label: existing.label,
           },
         ]),
       })

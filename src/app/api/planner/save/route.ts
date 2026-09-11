@@ -85,6 +85,7 @@ interface PlannerSaveScheduledItem {
   original_scheduled_date: string;
   scheduled_time: string | null;
   locked: boolean;
+  label: string | null;
 }
 
 function buildScheduleConflictPayloadDiagnostics(
@@ -497,6 +498,7 @@ export async function handlePlannerSave(request: Request) {
           item.effective_scheduled_local_time ??
           null,
         locked: item.locked,
+        label: item.label ?? null,
       }));
     const publishResponse = await routeContext.supabase.rpc(
       "set_planner_schedule",
@@ -545,6 +547,15 @@ export async function handlePlannerSave(request: Request) {
           422,
           "time_validation_failed",
           "Publish is blocked because one or more proposed session times are invalid."
+        );
+      }
+      if (
+        postgresErrorMatches(publishResponse.error, "22023", "invalid_item_label")
+      ) {
+        throw new PlannerRouteError(
+          422,
+          "label_validation_failed",
+          "Publish is blocked because one or more session titles are invalid."
         );
       }
       if (

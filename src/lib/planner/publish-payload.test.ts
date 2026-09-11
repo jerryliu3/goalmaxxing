@@ -208,3 +208,58 @@ describe("positional draft moves are kernel-owned", () => {
     expect(payload.items[0].scheduled_date).toBe("2026-08-20");
   });
 });
+
+describe("custom item labels persist independently of goal titles", () => {
+  it("writes a rename onto that item only", () => {
+    const snapshot = createSnapshot([]);
+    const kernel = createKernel("2026-08-10");
+
+    const payload = buildPlannerPublishPersistencePayload({
+      kernel,
+      snapshot,
+      draftCommands: [
+        {
+          id: "30000000-0000-4000-8000-000000000016",
+          sequence: 1,
+          kind: "rename_item",
+          goalId: GOAL_ID,
+          unitKey: "total:1",
+          label: "Tempo run",
+        },
+      ],
+    });
+
+    expect(payload.changeSummary.draftRelabeled).toBe(1);
+    expect(payload.items.find((item) => item.unit_key === "total:1")).toMatchObject({
+      label: "Tempo run",
+    });
+  });
+
+  it("keeps a previously saved custom label when the draft does not rename", () => {
+    const snapshot = {
+      ...createSnapshot([]),
+      activePlan: {
+        goals: [{ id: GOAL_ID, original_goal_id: GOAL_ID }],
+        items: [
+          {
+            id: "item-1",
+            plan_goal_id: GOAL_ID,
+            unit_key: "total:1",
+            label: "Hill repeats",
+          },
+        ],
+      },
+    } as unknown as PlannerCanonicalSnapshot;
+    const kernel = createKernel("2026-08-10");
+
+    const payload = buildPlannerPublishPersistencePayload({
+      kernel,
+      snapshot,
+      draftCommands: [],
+    });
+
+    expect(payload.items.find((item) => item.unit_key === "total:1")).toMatchObject({
+      label: "Hill repeats",
+    });
+  });
+});

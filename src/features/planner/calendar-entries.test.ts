@@ -264,4 +264,19 @@ describe("planner calendar entries", () => {
       creditState: "uncredited",
     });
   });
+
+  it("uses a persisted custom label for that session only", () => {
+    const entriesByDate = buildEntriesByDate({
+      workUnits: [unit("2026-08-05")],
+      activeItems: [{ ...persistedItem("2026-08-05"), label: "Tempo run" }],
+      activeGoalsByPlanGoalId: new Map([["goal-a", activeGoal()]]),
+      activeGoalsByOriginalGoalId: new Map([["goal-a", activeGoal()]]),
+      goalTitles: { "goal-a": "Goal A" },
+      draftItemEdits: {},
+    });
+
+    expect(entriesByDate.get("2026-08-05")?.[0]).toMatchObject({
+      goalTitle: "Tempo run",
+    });
+  });
 });

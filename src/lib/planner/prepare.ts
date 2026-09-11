@@ -74,6 +74,7 @@ interface PreparedItem {
   original_scheduled_date: string;
   scheduled_time: string | null;
   locked: boolean;
+  label: string | null;
 }
 
 interface GoalUnplaceablePayload {
@@ -132,6 +133,7 @@ function buildPreparedItem({
       original_scheduled_date: generated.scheduledDate,
       scheduled_time: generated.scheduledTimeOverride,
       locked: generated.locked,
+      label: null,
     };
   }
   if (!rebalanceExistingAssignments) {
@@ -143,6 +145,7 @@ function buildPreparedItem({
         existing.original_scheduled_date ?? existing.scheduled_date,
       scheduled_time: existing.scheduled_time,
       locked: existing.locked,
+      label: existing.label,
     };
   }
   return {
@@ -153,6 +156,7 @@ function buildPreparedItem({
       existing.original_scheduled_date ?? existing.scheduled_date,
     scheduled_time: generated.scheduledTimeOverride ?? existing.scheduled_time,
     locked: generated.locked,
+    label: existing.label,
   };
 }
 
@@ -944,6 +948,7 @@ async function prepareOnce({
           item.original_scheduled_date ?? item.scheduled_date,
         scheduled_time: item.scheduled_time,
         locked: item.locked,
+        label: item.label,
       },
     ])
   );

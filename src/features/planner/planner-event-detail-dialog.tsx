@@ -180,10 +180,14 @@ export function PlannerEventDetailDialog({
                     onChange={(event) =>
                       callbacks.onUpdateDraftLabel(selectedEventEntry, event.target.value)
                     }
-                    placeholder="Goal title"
+                    placeholder="Session title"
                     className="h-8 text-xs"
                   />
                 </label>
+                <p className="text-[11px] text-muted-foreground">
+                  This name applies to this session only. Use Edit goal to rename every
+                  occurrence.
+                </p>
                 <label className="flex items-center gap-2 text-xs text-muted-foreground">
                   Date
                   <Input

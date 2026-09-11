@@ -1947,6 +1947,7 @@ export type Database = {
           created_at: string
           goal_id: string
           id: string
+          label: string | null
           locked: boolean
           original_scheduled_date: string | null
           owner_id: string
@@ -1959,6 +1960,7 @@ export type Database = {
           created_at?: string
           goal_id: string
           id?: string
+          label?: string | null
           locked?: boolean
           original_scheduled_date?: string | null
           owner_id: string
@@ -1971,6 +1973,7 @@ export type Database = {
           created_at?: string
           goal_id?: string
           id?: string
+          label?: string | null
           locked?: boolean
           original_scheduled_date?: string | null
           owner_id?: string

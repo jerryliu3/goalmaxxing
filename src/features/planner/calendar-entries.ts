@@ -8,6 +8,7 @@ import { resolveWorkUnitDisplayDate } from "@/lib/planner/session-display-date";
 import {
   entryDisplayRank,
   getEntryGoalFirstTitle,
+  resolvePlannerSessionDisplayTitle,
 } from "@/features/planner/calendar-format";
 import type {
   DraftItemEdit,
@@ -135,10 +136,12 @@ export function buildEntriesByDateProjection({
       originalGoalId: unit.originalGoalId,
       goalTitle:
         overrideGoalTitle ??
-        activeGoal?.title ??
-        goalTitles?.[unit.originalGoalId] ??
-        unit.label ??
-        unit.unitKey,
+        resolvePlannerSessionDisplayTitle({
+          customLabel: activeItem?.label,
+          goalTitle: activeGoal?.title ?? goalTitles?.[unit.originalGoalId],
+          fallbackLabel: unit.label,
+          unitKey: unit.unitKey,
+        }),
       unitKey: unit.unitKey,
       label: unit.label,
       classification: unit.classification,
@@ -205,9 +208,10 @@ export function buildEntriesByDateProjection({
         ...existingEntry,
         goalTitle:
           existingEntry.goalTitle ??
-          activeGoal?.title ??
-          goalTitles?.[originalGoalId] ??
-          null,
+          resolvePlannerSessionDisplayTitle({
+            customLabel: item.label,
+            goalTitle: activeGoal?.title ?? goalTitles?.[originalGoalId],
+          }),
         activeGoal: existingEntry.activeGoal ?? activeGoal,
         activeItem: item,
         goalDefaultLocalTime:
@@ -234,7 +238,10 @@ export function buildEntriesByDateProjection({
     setEntryOnDay(item.scheduled_date, key, {
       key,
       originalGoalId,
-      goalTitle: activeGoal?.title ?? goalTitles?.[originalGoalId] ?? null,
+      goalTitle: resolvePlannerSessionDisplayTitle({
+        customLabel: item.label,
+        goalTitle: activeGoal?.title ?? goalTitles?.[originalGoalId],
+      }),
       unitKey: item.unit_key,
       label: activeGoal?.title ?? item.unit_key,
       // Identity-only snapshot rows are uncredited until a work unit supplies credit.
@@ -259,18 +266,18 @@ export function buildEntriesByDateProjection({
     const currentDay = existingEntry ? (entryDayByKey.get(key) ?? null) : null;
     const unit = unitByEntryKey.get(key) ?? null;
     const nextDay = edit.scheduledDate === undefined ? currentDay : edit.scheduledDate;
+    const defaultGoalTitle =
+      existingEntry?.activeGoal?.title ??
+      (unit
+        ? activeGoalsByOriginalGoalId.get(unit.originalGoalId)?.title ??
+          goalTitles?.[unit.originalGoalId] ??
+          unit.label ??
+          unit.unitKey
+        : null);
     const nextGoalTitle =
       edit.label === undefined
-        ? existingEntry?.goalTitle ??
-          (unit
-            ? activeGoalsByOriginalGoalId.get(unit.originalGoalId)?.title ??
-              goalTitles?.[unit.originalGoalId] ??
-              unit.label ??
-              unit.unitKey
-            : null)
-        : edit.label ??
-          existingEntry?.goalTitle ??
-          (unit ? goalTitles?.[unit.originalGoalId] ?? unit.label ?? unit.unitKey : null);
+        ? existingEntry?.goalTitle ?? defaultGoalTitle
+        : edit.label ?? defaultGoalTitle;
     const nextScheduledTimeOverride =
       edit.scheduledTimeOverride === undefined
         ? existingEntry?.scheduledTimeOverride ?? unit?.scheduledTimeOverride ?? null

@@ -212,6 +212,65 @@ describe("buildDirectDraftPersistence", () => {
     });
   });
 
+  it("projects a rename onto a draft with no move commands", () => {
+    const result = buildDirectDraftPersistence({
+      snapshot,
+      commands: [
+        {
+          id: "88888888-8888-4888-8888-888888888889",
+          sequence: 1,
+          kind: "rename_item",
+          goalId: goal.id,
+          unitKey: "milestone:1",
+          label: "Write the outline",
+        },
+      ],
+      asOfDate: "2026-08-05",
+    });
+
+    expect(result.find((item) => item.unit_key === "milestone:1")).toMatchObject({
+      label: "Write the outline",
+      scheduled_date: "2026-08-10",
+    });
+    expect(result.find((item) => item.unit_key === "milestone:2")).toMatchObject({
+      label: null,
+      scheduled_date: "2026-09-10",
+    });
+  });
+
+  it("clears a persisted custom label without moving the session", () => {
+    const labeledSnapshot = {
+      ...snapshot,
+      activePlan: {
+        ...snapshot.activePlan,
+        items: snapshot.activePlan?.items.map((item) =>
+          item.unit_key === "milestone:1"
+            ? { ...item, label: "Write the outline" }
+            : item
+        ),
+      },
+    } as typeof snapshot;
+    const result = buildDirectDraftPersistence({
+      snapshot: labeledSnapshot,
+      commands: [
+        {
+          id: "88888888-8888-4888-8888-888888888890",
+          sequence: 1,
+          kind: "rename_item",
+          goalId: goal.id,
+          unitKey: "milestone:1",
+          label: null,
+        },
+      ],
+      asOfDate: "2026-08-05",
+    });
+
+    expect(result.find((item) => item.unit_key === "milestone:1")).toMatchObject({
+      label: null,
+      scheduled_date: "2026-08-10",
+    });
+  });
+
   it("clears a time override without disturbing the scheduled date", () => {
     const result = buildDirectDraftPersistence({
       snapshot,

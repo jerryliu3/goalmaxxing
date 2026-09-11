@@ -273,6 +273,12 @@ export function buildDirectDraftPersistence({
       assignment.scheduledTimeOverride ?? null,
     ])
   );
+  const projectedLabelByKey = new Map(
+    Array.from(canonicalAssignmentByKey.values()).map((assignment) => [
+      assignmentKey(assignment),
+      activeItemByKey.get(assignmentKey(assignment))?.label ?? null,
+    ])
+  );
 
   for (const command of sortPlannerDraftCommands(commands)) {
     const key = assignmentKey(command);
@@ -355,6 +361,11 @@ export function buildDirectDraftPersistence({
     if (command.kind === "clear_item_time_override") {
       throwIfImmovable("changed");
       projectedTimeByKey.set(key, null);
+      continue;
+    }
+    if (command.kind === "rename_item") {
+      throwIfImmovable("changed");
+      projectedLabelByKey.set(key, command.label);
       continue;
     }
     if (command.kind !== "move_item") {
@@ -456,6 +467,7 @@ export function buildDirectDraftPersistence({
         resolvedTime.effectiveScheduledLocalTime,
       effective_scheduled_at_local: resolvedTime.effectiveScheduledAtLocal,
       locked: assignment.locked,
+      label: projectedLabelByKey.get(key) ?? null,
     };
   });
 }

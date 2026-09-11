@@ -187,7 +187,27 @@ export function usePlannerDraftCommands({
       }
       const baselineTitle =
         entry.activeGoal?.title ?? context.goalTitles?.[entry.originalGoalId] ?? null;
-      if (!label || label === baselineTitle) {
+      const persistedCustom = entry.activeItem?.label?.trim() || null;
+      const nextLabel = label.trim();
+      if (!nextLabel || nextLabel === baselineTitle) {
+        if (!persistedCustom) {
+          dispatchDraftCommand({
+            type: "remove_kind",
+            kind: "rename_item",
+            goalId: entry.originalGoalId,
+            unitKey: entry.unitKey,
+          });
+          return;
+        }
+        dispatchDraftCommand({
+          type: "upsert_rename",
+          goalId: entry.originalGoalId,
+          unitKey: entry.unitKey,
+          label: null,
+        });
+        return;
+      }
+      if (nextLabel === persistedCustom) {
         dispatchDraftCommand({
           type: "remove_kind",
           kind: "rename_item",
@@ -200,7 +220,7 @@ export function usePlannerDraftCommands({
         type: "upsert_rename",
         goalId: entry.originalGoalId,
         unitKey: entry.unitKey,
-        label,
+        label: nextLabel,
       });
     },
     [context, dispatchDraftCommand]

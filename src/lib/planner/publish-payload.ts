@@ -43,6 +43,7 @@ export interface PlannerPublishPersistencePayload {
     effective_scheduled_local_time: string | null;
     effective_scheduled_at_local: string | null;
     locked: boolean;
+    label: string | null;
   }>;
 };
 
@@ -247,9 +248,22 @@ export function buildPlannerPublishPersistencePayload({
       goalDefaultLocalTimeByGoalId,
       draftItemEdits,
     });
+  const projectedDraftEdits = projectPlannerDraftCommands(draftCommands);
+  const persistedLabelByKey = new Map(
+    (snapshot.activePlan?.items ?? []).map((item) => {
+      const originalGoalId =
+        snapshot.activePlan?.goals.find((goal) => goal.id === item.plan_goal_id)
+          ?.original_goal_id ?? item.plan_goal_id;
+      return [
+        buildDraftEditKey(originalGoalId, item.unit_key),
+        item.label ?? null,
+      ] as const;
+    })
+  );
 
   const items = workUnits.map((unit) => {
     const itemKey = buildDraftEditKey(unit.originalGoalId, unit.unitKey);
+    const draftLabel = projectedDraftEdits[itemKey]?.label;
     return {
       goal_id: unit.originalGoalId,
       unit_key: unit.unitKey,
@@ -260,6 +274,10 @@ export function buildPlannerPublishPersistencePayload({
       effective_scheduled_local_time: unit.effectiveScheduledLocalTime ?? null,
       effective_scheduled_at_local: unit.effectiveScheduledAtLocal ?? null,
       locked: unit.locked,
+      label:
+        draftLabel !== undefined
+          ? draftLabel
+          : (persistedLabelByKey.get(itemKey) ?? null),
     };
   });
 

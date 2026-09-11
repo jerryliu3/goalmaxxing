@@ -35,6 +35,7 @@ type PlannerItemRow = {
   unit_key: string;
   scheduled_date: string;
   scheduled_time: string | null;
+  label: string | null;
   goals:
     | {
         title: string;
@@ -103,7 +104,7 @@ export async function GET(
   const itemsResponse = await admin
     .from("planner_items")
     .select(
-      "goal_id,unit_key,scheduled_date,scheduled_time,goals!inner(title,default_local_time,is_deleted)"
+      "goal_id,unit_key,scheduled_date,scheduled_time,label,goals!inner(title,default_local_time,is_deleted)"
     )
     .eq("owner_id", verifiedUserId)
     .eq("goals.is_deleted", false)
@@ -137,7 +138,7 @@ export async function GET(
       scheduledDate: row.scheduled_date,
       scheduledTimeOverride: scheduled.scheduledTimeOverride,
       goalDefaultLocalTime: scheduled.goalDefaultLocalTime,
-      goalTitle: goal?.title ?? "Cadence Goal",
+      goalTitle: row.label?.trim() || goal?.title || "Cadence Goal",
     };
   });
 
