@@ -1,6 +1,6 @@
 export function scheduleIdleTask(task: () => void, timeoutMs = 2000) {
   if (typeof window === "undefined") {
-    return () => undefined;
+    return () => {};
   }
 
   if (typeof window.requestIdleCallback === "function") {
@@ -22,7 +22,7 @@ export function scheduleDelayedIdleTask(
   idleTimeoutMs = 2000
 ) {
   if (typeof window === "undefined") {
-    return () => undefined;
+    return () => {};
   }
 
   let cancelIdle: (() => void) | undefined;

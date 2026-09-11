@@ -44,6 +44,12 @@ export default withSentryConfig(nextConfig, {
   sourcemaps: {
     disable: !sentryAuthToken,
   },
+  release: sentryAuthToken
+    ? undefined
+    : {
+        create: false,
+        finalize: false,
+      },
   widenClientFileUpload: Boolean(sentryAuthToken),
   tunnelRoute: sentryDsn ? "/sentry-tunnel" : undefined,
   telemetry: false,
