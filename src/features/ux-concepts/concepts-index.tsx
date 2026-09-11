@@ -109,7 +109,7 @@ export function ConceptsIndex() {
               href="/ux/concepts/plan-zoom"
               className="text-sm font-medium text-primary"
             >
-              Plan zoom (expand / compress)
+              Carried pills and tickets
             </Link>
             <Link
               href="/ux/concepts/patterns"
@@ -186,20 +186,20 @@ export function ConceptsIndex() {
             Motion study · not a lock
           </p>
           <h2 className="mt-1 text-xl font-semibold tracking-tight">
-            Day, week, and month should zoom
+            Carried pills, then goal experiences
           </h2>
           <p className="mt-2 text-sm">
-            Live Plan currently fades between views. This shell keeps Spatial
-            Home’s pills, rows, and chrome, then treats week and day as one
-            vertical stack that expands and compresses. Month uses the same
-            language on week bands. Production{" "}
+            Anchor carried pills and Ribbon carried tickets keep one persistent
+            item and title from month through vertical week into day. Living
+            folio and Goal constellation stay separate goal experiences.
+            Production{" "}
             <code className="text-foreground">AppShell</code> is untouched.
           </p>
           <Link
             href="/ux/concepts/plan-zoom"
             className="mt-4 inline-flex text-sm font-medium text-primary"
           >
-            Open the zoom study
+            Open the interaction study
           </Link>
         </section>
 
