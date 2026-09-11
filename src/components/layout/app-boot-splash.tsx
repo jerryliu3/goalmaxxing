@@ -112,9 +112,12 @@ export function AppBootSplash() {
       setVisible(false);
     };
     const timeoutId = window.setTimeout(finish, BOOT_TIMEOUT_MS);
+    let paintFrame = 0;
     const onSurfaceReady = () => {
       window.clearTimeout(timeoutId);
-      finish();
+      paintFrame = window.requestAnimationFrame(() => {
+        finish();
+      });
     };
     window.addEventListener(APP_SURFACE_READY_EVENT, onSurfaceReady);
     void warmPlannerContext().catch(() => undefined);
@@ -122,6 +125,9 @@ export function AppBootSplash() {
     return () => {
       cancelled = true;
       window.clearTimeout(timeoutId);
+      if (paintFrame) {
+        window.cancelAnimationFrame(paintFrame);
+      }
       window.removeEventListener(APP_SURFACE_READY_EVENT, onSurfaceReady);
     };
   }, []);

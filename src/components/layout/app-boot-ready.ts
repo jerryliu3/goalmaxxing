@@ -19,6 +19,17 @@ export {
   normalizeAppBootPath,
 } from "@/components/layout/app-boot-preload";
 
+export const APP_BOOT_GATES = ["surface", "xp"] as const;
+export type AppBootGate = (typeof APP_BOOT_GATES)[number];
+
+const readyGates = new Set<AppBootGate>();
+let allReadyDispatched = false;
+
+export function resetAppBootGatesForTests(): void {
+  readyGates.clear();
+  allReadyDispatched = false;
+}
+
 export function isAppBootSplashSkipped(): boolean {
   if (typeof window === "undefined") {
     return false;
@@ -63,11 +74,31 @@ export function reportAppSurfaceReady(): void {
   window.dispatchEvent(new Event(APP_SURFACE_READY_EVENT));
 }
 
-export function useReportAppSurfaceReady(isReady: boolean): void {
+function maybeDispatchAppSurfaceReady(): void {
+  if (allReadyDispatched) {
+    return;
+  }
+  if (!APP_BOOT_GATES.every((gate) => readyGates.has(gate))) {
+    return;
+  }
+  allReadyDispatched = true;
+  reportAppSurfaceReady();
+}
+
+export function reportAppBootGateReady(gate: AppBootGate): void {
+  readyGates.add(gate);
+  maybeDispatchAppSurfaceReady();
+}
+
+export function useReportAppBootGateReady(gate: AppBootGate, isReady: boolean): void {
   useEffect(() => {
     if (!isReady) {
       return;
     }
-    reportAppSurfaceReady();
-  }, [isReady]);
+    reportAppBootGateReady(gate);
+  }, [gate, isReady]);
+}
+
+export function useReportAppSurfaceReady(isReady: boolean): void {
+  useReportAppBootGateReady("surface", isReady);
 }

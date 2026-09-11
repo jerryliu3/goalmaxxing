@@ -12,6 +12,7 @@ import {
 import { X } from "lucide-react";
 import { type TouchEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
 import { AnchoredPopupCard } from "@/components/ui/anchored-popup-card";
 import { Button } from "@/components/ui/button";
 import { LoadingCard } from "@/components/ui/loading-card";
@@ -218,6 +219,7 @@ export function InsightsTab({
     selectedYear,
     failClosed: Boolean(readOnly && subjectUserId),
   });
+  useReportAppSurfaceReady(!(loading && !state.userId));
   const todayLocal = state.asOfDate || toLocalDateString();
   const completionTimezone = state.timezone || "UTC";
   const supabase = useMemo(() => createClient(), []);
