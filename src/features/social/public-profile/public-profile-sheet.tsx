@@ -1,37 +1,28 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { PublicProfileBundle } from "@cadence/shared/social/public-profile";
-import { UserAvatar } from "@/components/user-avatar";
-import { XpProgressCard } from "@/components/xp/xp-progress-card";
-import { GlobalAchievementsCard } from "@/features/achievements/global-achievements-card";
-import { InsightsOverallStatsCard } from "@/features/insights/insights-overall-stats-card";
+import { useEffect, useMemo, useState } from "react";
 import { GoalRouteSheet } from "@/features/goals/goal-route-sheet";
+import { PublicProfileContent } from "@/features/social/public-profile/public-profile-content";
+import { PublicProfileShareButton } from "@/features/social/public-profile/public-profile-share-button";
+import { resolvePublicProfileLabel } from "@/features/social/public-profile/resolve-profile-label";
 import { fetchPublicProfileBundle } from "@/features/social/public-profile/data";
-import { getHeatmapScaleClass } from "@/lib/goals/heatmap";
-
-function resolveProfileLabel(profile: PublicProfileBundle["profile"]) {
-  if (profile.displayName?.trim()) {
-    return profile.displayName.trim();
-  }
-  if (profile.username?.trim()) {
-    return `@${profile.username.trim()}`;
-  }
-  return "Cadence user";
-}
+import type { PublicProfileBundle } from "@cadence/shared/social/public-profile";
 
 export function PublicProfileSheet({
   subjectUserId,
   onClose,
+  viewerUserId,
+  xpEnabled = true,
 }: {
   subjectUserId: string;
   onClose: () => void;
+  viewerUserId?: string | null;
+  xpEnabled?: boolean;
 }) {
   const selectedYear = useMemo(() => new Date().getUTCFullYear(), []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bundle, setBundle] = useState<PublicProfileBundle | null>(null);
-  const heatmapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,10 +61,15 @@ export function PublicProfileSheet({
 
   const title = useMemo(() => {
     if (bundle) {
-      return resolveProfileLabel(bundle.profile);
+      return resolvePublicProfileLabel(bundle.profile);
     }
     return "Profile";
   }, [bundle]);
+
+  const canShare =
+    Boolean(bundle?.profile.username) &&
+    viewerUserId !== undefined &&
+    viewerUserId === bundle?.profile.subjectUserId;
 
   return (
     <GoalRouteSheet onClose={onClose} title={title} closeButtonLabel="Close profile">
@@ -84,48 +80,17 @@ export function PublicProfileSheet({
           {error ?? "Public profile could not be loaded."}
         </p>
       ) : (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <UserAvatar
-              avatarUrl={bundle.profile.avatarUrl}
-              displayName={bundle.profile.displayName}
-              username={bundle.profile.username}
-              size="lg"
-              alt={`${title} avatar`}
-            />
-            <div className="min-w-0">
-              <p className="truncate font-display text-xl font-semibold">{title}</p>
-              {bundle.profile.username ? (
-                <p className="text-sm text-muted-foreground">@{bundle.profile.username}</p>
-              ) : null}
-            </div>
-          </div>
-
-          {bundle.profile.isPrivate ? (
-            <p className="text-sm text-muted-foreground">This account is private</p>
-          ) : (
-            <>
-              {bundle.xp ? <XpProgressCard profile={bundle.xp} /> : null}
-              <GlobalAchievementsCard achievements={bundle.globalAchievements} />
-              <InsightsOverallStatsCard
-                heatmapRef={heatmapRef}
-                selectedYearStart={new Date(`${selectedYear}-01-01`)}
-                selectedYearEnd={new Date(`${selectedYear}-12-31`)}
-                values={bundle.yearHeatmap}
-                overallCompletion={0}
-                overallStats={bundle.overallStats}
-                classForValue={(value) => getHeatmapScaleClass(value?.count ?? 0)}
-                titleForValue={(value) =>
-                  `${value?.date ?? "N/A"}: ${value?.count ?? 0} completion${
-                    (value?.count ?? 0) === 1 ? "" : "s"
-                  }`
-                }
-                onDayClick={() => undefined}
-                showMoreLink={false}
-              />
-            </>
-          )}
-        </div>
+        <PublicProfileContent
+          bundle={bundle}
+          selectedYear={selectedYear}
+          variant="sheet"
+          xpEnabled={xpEnabled}
+          headerActions={
+            canShare && bundle.profile.username ? (
+              <PublicProfileShareButton username={bundle.profile.username} />
+            ) : null
+          }
+        />
       )}
     </GoalRouteSheet>
   );
