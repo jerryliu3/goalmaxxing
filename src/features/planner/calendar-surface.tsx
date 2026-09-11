@@ -68,6 +68,7 @@ import { usePlannerContextLoader } from "@/features/planner/use-planner-context-
 import { usePlannerSetup } from "@/features/planner/use-planner-setup";
 import { usePlannerPreviewSession } from "@/features/planner/use-planner-preview-session";
 import { usePlannerDayPreviewInteractions } from "@/features/planner/use-planner-day-preview-interactions";
+import { runPlanViewTransition, planViewTransitionKind } from "@/features/planner/plan-view-transition";
 import { useCalendarScrollBehavior } from "@/features/planner/use-calendar-scroll-behavior";
 import {
   useCalendarEventDetail,
@@ -156,16 +157,21 @@ export function CalendarSurface({
   const [viewMode, setViewMode] = useState(routeViewMode);
   const committedViewModeRef = useRef(routeViewMode);
   const commitViewMode = useCallback((nextViewMode: typeof routeViewMode) => {
+    const fromViewMode = committedViewModeRef.current;
+    if (nextViewMode === fromViewMode) {
+      return;
+    }
     committedViewModeRef.current = nextViewMode;
-    setViewMode(nextViewMode);
+    runPlanViewTransition(() => {
+      setViewMode(nextViewMode);
+    }, planViewTransitionKind(fromViewMode, nextViewMode));
   }, []);
   useEffect(() => {
     if (routeViewMode === committedViewModeRef.current) {
       return;
     }
-    committedViewModeRef.current = routeViewMode;
-    setViewMode(routeViewMode);
-  }, [routeViewMode]);
+    commitViewMode(routeViewMode);
+  }, [commitViewMode, routeViewMode]);
   useEffect(() => {
     const resetTimer = window.setTimeout(() => setLocalSelectedDay(null), 0);
     return () => window.clearTimeout(resetTimer);
@@ -560,6 +566,7 @@ export function CalendarSurface({
     setSelectedEventEntryKey,
     setLocalSelectedDay,
     onSelectedDayChange,
+    onRenderedViewModeChange: commitViewMode,
     hoverPreviewTimerRef,
     hoverPreviewCloseTimerRef,
     longPressTimerRef,

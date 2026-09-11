@@ -19,7 +19,7 @@ import {
   type CalendarMonthCellEntryBase,
 } from "@/features/planner/calendar-month-day-cell";
 import { getGoalVisual, getWorkPillDraftFillStyle, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
-import { PLAN_MORPH_CLASS, planEntryViewTransitionName } from "@/features/planner/plan-view-transition";
+import { PLAN_ENTRY_MORPH_CLASS, planEntryViewTransitionName } from "@/features/planner/plan-view-transition";
 import {
   canCancelDraftMove,
   canConfirmDraftMove,
@@ -193,7 +193,7 @@ export function CalendarDayPreviewList<
                     className={
                       expanded
                         ? `flex items-start transition-colors ${
-                            shareEntryTransition ? PLAN_MORPH_CLASS : ""
+                            shareEntryTransition ? PLAN_ENTRY_MORPH_CLASS : ""
                           } ${
                             isDraft
                               ? `${pillToneClasses} my-1 px-1.5`
@@ -204,7 +204,7 @@ export function CalendarDayPreviewList<
                             immovable ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing"
                           } ${isDragging ? "pointer-events-none opacity-0" : ""}`
                         : `flex items-start rounded-[10px] border px-1.5 py-1 transition-colors ${
-                            shareEntryTransition ? PLAN_MORPH_CLASS : ""
+                            shareEntryTransition ? PLAN_ENTRY_MORPH_CLASS : ""
                           } ${pillToneClasses} ${
                             entry.draftGhost ? "opacity-75" : ""
                           } hover:border-primary/60 ${

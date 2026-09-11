@@ -33,6 +33,7 @@ import {
 import { planCompletionControlMode } from "@/features/planner/completion-entry-dispatch";
 import { getGoalVisual, getWorkPillDraftFillStyle, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
 import {
+  PLAN_ENTRY_MORPH_CLASS,
   PLAN_MORPH_CLASS,
   planDayViewTransitionName,
   planEntryViewTransitionName,
@@ -287,7 +288,7 @@ export function CalendarMonthDayCell<
             onPointerCancelCapture={() => {
               onEntryPointerEnd();
             }}
-            className={`flex items-center gap-1.5 rounded-[10px] border px-1.5 py-1 text-[11px] ${PLAN_MORPH_CLASS} ${pillToneClasses} ${
+            className={`flex items-center gap-1.5 rounded-[10px] border px-1.5 py-1 text-[11px] ${PLAN_ENTRY_MORPH_CLASS} ${pillToneClasses} ${
               entry.draftGhost ? "opacity-70 line-through" : ""
             } ${
               immovable
@@ -382,7 +383,7 @@ export function CalendarMonthDayCell<
         className={cn(
           PLAN_MORPH_CLASS,
           planAgendaDayRowClass({ inMonth, isToday, isSelected }),
-          "cursor-pointer"
+          "cursor-pointer overflow-clip"
         )}
         data-day={day}
         data-calendar-week-row="true"
@@ -536,7 +537,7 @@ export function CalendarMonthDayCell<
           onPointerLeave={onCellPointerLeave}
           className={cn(
             PLAN_MORPH_CLASS,
-            "relative min-h-24 rounded-[10px] border p-2 text-left transition-colors",
+            "relative min-h-24 overflow-clip rounded-[10px] border p-2 text-left transition-colors",
             planMonthDaySurfaceClass({
               inMonth,
               isToday,

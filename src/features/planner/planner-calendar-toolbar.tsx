@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
+import { PLAN_VIEW_TOOLBAR_TRANSITION_NAME } from "@/features/planner/plan-view-transition";
 import { PlannerEndMonthQuickFilterChips } from "@/features/planner/planner-end-month-quick-filter-chips";
 import type { PlannerEligibilityNotices } from "@/features/planner/planner-eligibility-notices";
 
@@ -131,6 +132,7 @@ export function PlannerCalendarToolbar({
     <div
       className="border-b border-border pb-4"
       data-testid="planner-calendar-toolbar"
+      style={{ viewTransitionName: PLAN_VIEW_TOOLBAR_TRANSITION_NAME }}
     >
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">

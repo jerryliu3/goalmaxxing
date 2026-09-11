@@ -31,6 +31,7 @@ interface UsePlannerDayPreviewInteractionsArgs {
     mode: "push" | "replace",
     nextViewMode?: PlannerCalendarViewMode
   ) => void;
+  onRenderedViewModeChange: (viewMode: PlannerCalendarViewMode) => void;
   hoverPreviewTimerRef: MutableRefObject<number | null>;
   hoverPreviewCloseTimerRef: MutableRefObject<number | null>;
   longPressTimerRef: MutableRefObject<number | null>;
@@ -86,6 +87,7 @@ export function usePlannerDayPreviewInteractions({
   setSelectedEventEntryKey,
   setLocalSelectedDay,
   onSelectedDayChange,
+  onRenderedViewModeChange,
   hoverPreviewTimerRef,
   hoverPreviewCloseTimerRef,
   longPressTimerRef,
@@ -160,10 +162,12 @@ export function usePlannerDayPreviewInteractions({
       setMoveDialogDay(null);
       setSelectedEventEntryKey(null);
       setLocalSelectedDay(day);
-      onSelectedDayChange(day, "push", nextViewMode);
       setDayPreview(null);
+      onRenderedViewModeChange(nextViewMode);
+      onSelectedDayChange(day, "push", nextViewMode);
     },
     [
+      onRenderedViewModeChange,
       onSelectedDayChange,
       setDayPreview,
       setExpandedPreviewDay,

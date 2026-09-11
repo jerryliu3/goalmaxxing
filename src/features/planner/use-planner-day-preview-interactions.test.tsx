@@ -43,6 +43,7 @@ function interactionArgs(
     setSelectedEventEntryKey: vi.fn(),
     setLocalSelectedDay: vi.fn(),
     onSelectedDayChange: vi.fn(),
+    onRenderedViewModeChange: vi.fn(),
     hoverPreviewTimerRef: { current: null as number | null },
     hoverPreviewCloseTimerRef: { current: null as number | null },
     longPressTimerRef: { current: null as number | null },
@@ -177,5 +178,25 @@ describe("usePlannerDayPreviewInteractions", () => {
     });
 
     expect(setDayPreview).not.toHaveBeenCalled();
+  });
+
+  it("commits the rendered view before pushing day-view navigation", () => {
+    const args = interactionArgs();
+    const { result } = renderHook(() => usePlannerDayPreviewInteractions(args));
+
+    act(() => {
+      result.current.openDayViewForDay("2026-09-02");
+    });
+
+    expect(args.setDayPreview).toHaveBeenCalledWith(null);
+    expect(args.onRenderedViewModeChange).toHaveBeenCalledWith("day");
+    expect(args.onSelectedDayChange).toHaveBeenCalledWith(
+      "2026-09-02",
+      "push",
+      "day"
+    );
+    expect(args.onRenderedViewModeChange.mock.invocationCallOrder[0]).toBeLessThan(
+      args.onSelectedDayChange.mock.invocationCallOrder[0]
+    );
   });
 });

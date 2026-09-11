@@ -4,6 +4,7 @@ import { Loader2, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PeriodStepper } from "@/components/ui/period-stepper";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
+import { PLAN_VIEW_CHROME_TRANSITION_NAME } from "@/features/planner/plan-view-transition";
 
 interface PlannerViewWindowHeaderProps {
   loading: boolean;
@@ -33,7 +34,10 @@ export function PlannerViewWindowHeader({
   onToggleExpandedMonthRows,
 }: PlannerViewWindowHeaderProps) {
   return (
-    <div className="mx-auto mb-3 w-full max-w-[56rem] space-y-3">
+    <div
+      className="mx-auto mb-3 w-full max-w-[56rem] space-y-3"
+      style={{ viewTransitionName: PLAN_VIEW_CHROME_TRANSITION_NAME }}
+    >
       <div className="space-y-2">
         <div className="relative flex w-full justify-center">
           <PeriodStepper

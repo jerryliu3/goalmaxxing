@@ -2,7 +2,10 @@
 
 import { type ReactNode } from "react";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
-import { PLAN_VIEW_SWAP_CLASS } from "@/features/planner/plan-view-transition";
+import {
+  PLAN_VIEW_ROOT_TRANSITION_NAME,
+  PLAN_VIEW_SWAP_CLASS,
+} from "@/features/planner/plan-view-transition";
 
 export function PlanViewTransitionFrame({
   viewMode,
@@ -17,6 +20,7 @@ export function PlanViewTransitionFrame({
         key={viewMode}
         data-plan-view={viewMode}
         className={PLAN_VIEW_SWAP_CLASS}
+        style={{ viewTransitionName: PLAN_VIEW_ROOT_TRANSITION_NAME }}
       >
         {children}
       </div>

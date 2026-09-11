@@ -12,6 +12,9 @@
   --motion-duration-hold: 480ms;
   --motion-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --motion-ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  --plan-view-morph-duration: 870ms;
+  --plan-view-morph-fade: 330ms;
+  --plan-view-morph-ease: cubic-bezier(0.16, 1, 0.36, 1);
 
   --background: oklch(0.985 0.003 286);
   --foreground: oklch(0.22 0.01 286);
@@ -500,38 +503,170 @@ body {
   }
 }
 
+@keyframes plan-morph-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes plan-morph-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
 .plan-view-swap {
   animation: plan-view-fade-in 320ms var(--motion-ease-emphasized) both;
+  view-transition-class: plan-view-fade;
+  view-transition-group: contain;
+}
+
+@supports (view-transition-name: none) {
+  .plan-view-swap {
+    animation: none;
+  }
+}
+
+html.plan-zoom-vt {
+  view-transition-name: none;
+}
+
+html.plan-zoom-week-to-month {
+  --plan-view-morph-duration: 1740ms;
+  --plan-view-morph-fade: 660ms;
+}
+
+html[data-plan-pair="scale"] [data-plan-calendar-scale] {
+  view-transition-name: plan-calendar-scale;
+}
+
+html[data-plan-pair="scale"] .plan-morph,
+html[data-plan-pair="scale"] [data-calendar-day-entry],
+html[data-plan-pair="scale"] [data-calendar-week-row],
+html[data-plan-pair="scale"] [data-day-cell="true"] {
+  view-transition-name: none !important;
 }
 
 ::view-transition-old(.plan-view-fade) {
-  animation: 180ms ease-out both plan-view-fade-out;
+  animation: var(--plan-view-morph-fade) var(--plan-view-morph-ease) both
+    plan-morph-fade-out;
 }
 
 ::view-transition-new(.plan-view-fade) {
-  animation: 260ms var(--motion-ease-emphasized) both plan-view-fade-in;
+  animation: var(--plan-view-morph-fade) var(--plan-view-morph-ease) both
+    plan-morph-fade-in;
+}
+
+::view-transition-group(plan-view-root) {
+  animation-duration: var(--plan-view-morph-duration);
+  animation-timing-function: var(--plan-view-morph-ease);
+  z-index: 1;
+  overflow: clip;
+}
+
+::view-transition-group(plan-calendar-scale) {
+  z-index: 1;
+  overflow: clip;
+  animation-duration: var(--plan-view-morph-duration);
+  animation-timing-function: var(--plan-view-morph-ease);
+}
+
+::view-transition-old(plan-calendar-scale),
+::view-transition-new(plan-calendar-scale) {
+  width: 100%;
+  height: 100%;
+  overflow: clip;
+  object-fit: none;
+  object-position: top left;
+  mix-blend-mode: normal;
+}
+
+::view-transition-group(plan-view-chrome),
+::view-transition-group(plan-view-toolbar) {
+  z-index: 50;
+  animation: none;
+}
+
+::view-transition-old(plan-view-chrome),
+::view-transition-new(plan-view-chrome),
+::view-transition-old(plan-view-toolbar),
+::view-transition-new(plan-view-toolbar) {
+  animation: none;
+}
+
+::view-transition-old(plan-view-chrome),
+::view-transition-old(plan-view-toolbar) {
+  display: none;
 }
 
 .plan-morph {
   view-transition-class: plan-morph;
+  view-transition-group: contain;
+}
+
+.plan-morph.plan-morph-pill {
+  view-transition-class: plan-morph-pill;
 }
 
 ::view-transition-group(.plan-morph) {
-  animation-duration: 360ms;
-  animation-timing-function: var(--motion-ease-emphasized);
-  z-index: 3;
+  animation-duration: var(--plan-view-morph-duration);
+  animation-timing-function: var(--plan-view-morph-ease);
+  z-index: 4;
+}
+
+::view-transition-image-pair(.plan-morph),
+::view-transition-image-pair(.plan-morph-pill) {
+  isolation: isolate;
+}
+
+::view-transition-old(.plan-morph),
+::view-transition-new(.plan-morph) {
+  height: 100%;
+  overflow: clip;
+  mix-blend-mode: plus-lighter;
 }
 
 ::view-transition-old(.plan-morph) {
-  animation: 160ms ease-out both plan-view-fade-out;
+  animation: var(--plan-view-morph-fade) var(--plan-view-morph-ease) both
+    plan-morph-fade-out;
 }
 
 ::view-transition-new(.plan-morph) {
-  animation: 260ms var(--motion-ease-emphasized) both plan-view-fade-in;
+  animation: var(--plan-view-morph-fade) var(--plan-view-morph-ease) both
+    plan-morph-fade-in;
+}
+
+::view-transition-group(.plan-morph-pill) {
+  overflow: clip;
+  animation-duration: var(--plan-view-morph-duration);
+  animation-timing-function: var(--plan-view-morph-ease);
+  z-index: 5;
+}
+
+::view-transition-old(.plan-morph-pill),
+::view-transition-new(.plan-morph-pill) {
+  width: 100%;
+  height: 100%;
+  object-fit: none;
+  object-position: left center;
+  overflow: clip;
+  mix-blend-mode: plus-lighter;
+}
+
+::view-transition-old(.plan-morph-pill) {
+  animation: var(--plan-view-morph-fade) var(--plan-view-morph-ease) both
+    plan-morph-fade-out;
+}
+
+::view-transition-new(.plan-morph-pill) {
+  animation: var(--plan-view-morph-fade) var(--plan-view-morph-ease) both
+    plan-morph-fade-in;
 }
 
 ::view-transition-group(plan-focused-aside) {
   z-index: 2;
+  animation-duration: var(--plan-view-morph-duration);
+  animation-timing-function: var(--plan-view-morph-ease);
 }
 
 .motion-popup-enter {
