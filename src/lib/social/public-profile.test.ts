@@ -68,6 +68,7 @@ describe("buildPublicProfileBundle", () => {
           },
         },
       ],
+      awardCatalogCount: 10,
       goals: [makeGoal()],
       completions: [makeCompletion()],
       selectedYear: 2026,
@@ -76,6 +77,7 @@ describe("buildPublicProfileBundle", () => {
     expect(bundle.profile.isPrivate).toBe(true);
     expect(bundle.xp).toBeNull();
     expect(bundle.globalAchievements).toEqual([]);
+    expect(bundle.awardCatalogCount).toBe(0);
     expect(bundle.overallStats).toBeNull();
     expect(bundle.yearHeatmap).toEqual([]);
   });
@@ -107,6 +109,7 @@ describe("buildPublicProfileBundle", () => {
           },
         },
       ],
+      awardCatalogCount: 10,
       goals: [makeGoal()],
       completions: [makeCompletion()],
       selectedYear: 2026,
@@ -114,6 +117,7 @@ describe("buildPublicProfileBundle", () => {
 
     expect(bundle.profile.isPrivate).toBe(false);
     expect(bundle.xp?.totalXp).toBe(480);
+    expect(bundle.awardCatalogCount).toBe(10);
     expect(bundle.globalAchievements).toHaveLength(1);
     expect(bundle.globalAchievements[0]).toMatchObject({
       id: "award-1",
@@ -126,5 +130,30 @@ describe("buildPublicProfileBundle", () => {
     expect(
       bundle.yearHeatmap.find((entry) => entry.date === "2026-01-02")?.count
     ).toBe(1);
+  });
+
+  it("treats a null viewer as non-self for private accounts", () => {
+    const bundle = buildPublicProfileBundle({
+      viewerUserId: null,
+      subjectProfile: {
+        id: "subject-1",
+        username: "subject",
+        display_name: "Subject User",
+        avatar_url: null,
+        social_activity_visible: false,
+        week_starts_on: 1,
+        created_at: "2026-01-01T00:00:00.000Z",
+        timezone: "America/New_York",
+      },
+      globalXpProfile: { total_xp: 480 },
+      globalAchievements: [],
+      awardCatalogCount: 0,
+      goals: [],
+      completions: [],
+      selectedYear: 2026,
+    });
+
+    expect(bundle.profile.isPrivate).toBe(true);
+    expect(bundle.xp).toBeNull();
   });
 });
