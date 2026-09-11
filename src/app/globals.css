@@ -538,6 +538,7 @@ html.plan-zoom-week-to-month {
 html[data-plan-pair="week-month"] {
   --plan-view-morph-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --plan-view-morph-fade: 180ms;
+  --plan-week-transition-row-height: 4.75rem;
 }
 
 html[data-plan-pair="week-month"] [data-calendar-day-entry],
@@ -576,6 +577,22 @@ html[data-plan-pair="week-month"] ::view-transition-new(.plan-view-fade) {
 
 html[data-plan-pair="week-month"] [data-plan-view="week"] [data-week-transition-placeholders="true"] {
   display: block;
+}
+
+html[data-plan-pair="week-month"] [data-plan-view="week"] [data-week-transition-stage="true"] {
+  min-height: calc(var(--plan-week-transition-row-height) * 7);
+  max-height: calc(var(--plan-week-transition-row-height) * 7);
+}
+
+html[data-plan-pair="week-month"] [data-plan-view="week"] [data-calendar-week-row] {
+  min-height: var(--plan-week-transition-row-height);
+  height: var(--plan-week-transition-row-height);
+  max-height: var(--plan-week-transition-row-height);
+  overflow: clip;
+}
+
+html[data-plan-pair="week-month"] [data-plan-view="week"] [data-calendar-week-work="true"] {
+  overflow: clip;
 }
 
 ::view-transition-group(plan-view-chrome),
