@@ -153,7 +153,7 @@ describe("runPlanViewTransition", () => {
 });
 
 describe("planViewTransitionKind", () => {
-  it("treats week and month as one grouped scale pair", () => {
+  it("treats week and month as one dedicated pair", () => {
     expect(planViewTransitionKind("week", "month")).toBe("week-to-month");
     expect(planViewTransitionKind("month", "week")).toBe("month-to-week");
     expect(planViewTransitionKind("week", "day")).toBe("default");
@@ -161,7 +161,7 @@ describe("planViewTransitionKind", () => {
   });
 });
 
-describe("week-to-month scale chrome", () => {
+describe("week-to-month chrome flags", () => {
   const originalMatchMedia = window.matchMedia;
   const originalStartViewTransition = document.startViewTransition;
 
@@ -180,7 +180,7 @@ describe("week-to-month scale chrome", () => {
     vi.restoreAllMocks();
   });
 
-  it("marks week-to-month as the slower scale pair during capture", async () => {
+  it("marks week-to-month as the slower week/month pair during capture", async () => {
     window.matchMedia = vi.fn((query: string) => ({
       matches: false,
       media: query,
@@ -192,7 +192,7 @@ describe("week-to-month scale chrome", () => {
       dispatchEvent: vi.fn(),
     })) as unknown as typeof window.matchMedia;
     const startViewTransition = vi.fn((update: () => void) => {
-      expect(document.documentElement.dataset.planPair).toBe("scale");
+      expect(document.documentElement.dataset.planPair).toBe("week-month");
       expect(document.documentElement).toHaveClass(PLAN_VIEW_WEEK_TO_MONTH_CLASS);
       update();
       return {

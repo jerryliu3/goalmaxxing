@@ -37,7 +37,6 @@ import {
 import type { DuoLaneSubject } from "@cadence/shared/social/duo";
 import { PlannerViewWindowHeader } from "@/features/planner/planner-view-window-header";
 import { PlanViewTransitionFrame } from "@/features/planner/plan-view-transition-frame";
-import { PLAN_CALENDAR_SCALE_ATTR } from "@/features/planner/plan-view-transition";
 import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 
 const SEVEN_COLUMN_GRID_STYLE = {
@@ -278,15 +277,11 @@ export function PlannerCalendarBoard({
                     className="flex flex-col overflow-clip"
                     data-testid="week-agenda"
                     data-calendar-week-agenda="true"
-                    {...{ [PLAN_CALENDAR_SCALE_ATTR]: "true" }}
                   >
                     {focusedWeekCells.map(renderCalendarDayCell)}
                   </ol>
                 ) : (
-                  <div
-                    className="w-full overflow-clip"
-                    data-plan-calendar-scale="true"
-                  >
+                  <div className="w-full overflow-clip">
                     {shouldShowAdjacentMonthToggle({
                       hasAdjacentWeeks: hasPreviousMonthWeeks,
                       adjacentShown: showPreviousMonth,

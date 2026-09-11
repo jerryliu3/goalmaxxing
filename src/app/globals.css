@@ -533,17 +533,15 @@ html.plan-zoom-vt {
 
 html.plan-zoom-week-to-month {
   --plan-view-morph-duration: 1740ms;
-  --plan-view-morph-fade: 660ms;
 }
 
-html[data-plan-pair="scale"] [data-plan-calendar-scale] {
-  view-transition-name: plan-calendar-scale;
+html[data-plan-pair="week-month"] {
+  --plan-view-morph-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --plan-view-morph-fade: 180ms;
 }
 
-html[data-plan-pair="scale"] .plan-morph,
-html[data-plan-pair="scale"] [data-calendar-day-entry],
-html[data-plan-pair="scale"] [data-calendar-week-row],
-html[data-plan-pair="scale"] [data-day-cell="true"] {
+html[data-plan-pair="week-month"] [data-calendar-day-entry],
+html[data-plan-pair="week-month"] [data-planner-entry-key] {
   view-transition-name: none !important;
 }
 
@@ -564,21 +562,12 @@ html[data-plan-pair="scale"] [data-day-cell="true"] {
   overflow: clip;
 }
 
-::view-transition-group(plan-calendar-scale) {
-  z-index: 1;
-  overflow: clip;
-  animation-duration: var(--plan-view-morph-duration);
-  animation-timing-function: var(--plan-view-morph-ease);
+html[data-plan-pair="week-month"] ::view-transition-old(.plan-view-fade) {
+  display: none;
 }
 
-::view-transition-old(plan-calendar-scale),
-::view-transition-new(plan-calendar-scale) {
-  width: 100%;
-  height: 100%;
-  overflow: clip;
-  object-fit: none;
-  object-position: top left;
-  mix-blend-mode: normal;
+html[data-plan-pair="week-month"] ::view-transition-new(.plan-view-fade) {
+  animation: none;
 }
 
 ::view-transition-group(plan-view-chrome),
@@ -609,6 +598,7 @@ html[data-plan-pair="scale"] [data-day-cell="true"] {
 }
 
 ::view-transition-group(.plan-morph) {
+  overflow: clip;
   animation-duration: var(--plan-view-morph-duration);
   animation-timing-function: var(--plan-view-morph-ease);
   z-index: 4;
@@ -621,9 +611,12 @@ html[data-plan-pair="scale"] [data-day-cell="true"] {
 
 ::view-transition-old(.plan-morph),
 ::view-transition-new(.plan-morph) {
+  width: 100%;
   height: 100%;
   overflow: clip;
-  mix-blend-mode: plus-lighter;
+  object-fit: none;
+  object-position: top left;
+  mix-blend-mode: normal;
 }
 
 ::view-transition-old(.plan-morph) {
@@ -650,7 +643,7 @@ html[data-plan-pair="scale"] [data-day-cell="true"] {
   object-fit: none;
   object-position: left center;
   overflow: clip;
-  mix-blend-mode: plus-lighter;
+  mix-blend-mode: normal;
 }
 
 ::view-transition-old(.plan-morph-pill) {

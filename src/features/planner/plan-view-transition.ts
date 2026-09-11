@@ -8,7 +8,6 @@ export const PLAN_VIEW_SWAP_CLASS = "plan-view-swap";
 export const PLAN_VIEW_ROOT_TRANSITION_NAME = "plan-view-root";
 export const PLAN_VIEW_CHROME_TRANSITION_NAME = "plan-view-chrome";
 export const PLAN_VIEW_TOOLBAR_TRANSITION_NAME = "plan-view-toolbar";
-export const PLAN_CALENDAR_SCALE_ATTR = "data-plan-calendar-scale";
 export const PLAN_VIEW_TRANSITION_CLASS = "plan-zoom-vt";
 export const PLAN_VIEW_WEEK_TO_MONTH_CLASS = "plan-zoom-week-to-month";
 
@@ -96,7 +95,9 @@ function applyPlanViewTransitionChrome(kind: PlanViewTransitionKind) {
     kind === "week-to-month"
   );
   document.documentElement.dataset.planPair =
-    kind === "week-to-month" || kind === "month-to-week" ? "scale" : "day";
+    kind === "week-to-month" || kind === "month-to-week"
+      ? "week-month"
+      : "day";
 }
 
 function clearPlanViewTransitionChrome() {
