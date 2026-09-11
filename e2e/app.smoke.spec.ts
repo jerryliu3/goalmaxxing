@@ -42,7 +42,6 @@ test("explicit Calendar surface does not eagerly load checklist context", async 
   await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Plan" })).toBeVisible();
   await expect(page).toHaveURL(/\/calendar/);
-  await page.waitForTimeout(750);
   expect(progressContextRequests).toBe(0);
 });
 

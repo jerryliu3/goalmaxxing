@@ -5,6 +5,7 @@ import {
   AppBootSplash,
 } from "@/components/layout/app-boot-splash";
 import { APP_SURFACE_READY_EVENT } from "@/components/layout/app-boot-preload";
+import { resetAppBootGatesForTests } from "@/components/layout/app-boot-ready";
 
 const getJsonMock = vi.fn();
 
@@ -21,6 +22,7 @@ describe("AppBootSplash", () => {
     window.sessionStorage.clear();
     window.localStorage.clear();
     getJsonMock.mockReset();
+    resetAppBootGatesForTests();
   });
 
   it("stays hidden after the boot session is already ready", () => {
@@ -57,6 +59,11 @@ describe("AppBootSplash", () => {
     expect(screen.getByTestId("app-boot-splash")).toBeInTheDocument();
     act(() => {
       window.dispatchEvent(new Event(APP_SURFACE_READY_EVENT));
+    });
+    await act(async () => {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve());
+      });
     });
     await waitFor(() => {
       expect(screen.queryByTestId("app-boot-splash")).not.toBeInTheDocument();

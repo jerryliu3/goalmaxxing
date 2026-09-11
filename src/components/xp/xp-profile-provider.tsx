@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
+import { useReportAppBootGateReady } from "@/components/layout/app-boot-ready";
 import { useXpReward } from "@/components/xp/xp-reward-provider";
 import { bandForTotalXp, type XpAltitudeBand } from "@/lib/xp/altitude";
 import { progressionForTotalXp } from "@/lib/xp/progression";
@@ -202,26 +203,10 @@ export function XpProfileProvider({
       return;
     }
 
-    const runLoad = () => {
-      void loadProfile();
-    };
-    const supportsIdleCallback = typeof window.requestIdleCallback === "function";
-    const idleCallbackId = supportsIdleCallback
-      ? window.requestIdleCallback(runLoad, { timeout: 1_000 })
-      : null;
-    const timeoutId = supportsIdleCallback
-      ? null
-      : window.setTimeout(runLoad, 0);
-
-    return () => {
-      if (idleCallbackId !== null) {
-        window.cancelIdleCallback(idleCallbackId);
-      }
-      if (timeoutId !== null) {
-        window.clearTimeout(timeoutId);
-      }
-    };
+    void loadProfile();
   }, [enabled, loadProfile]);
+
+  useReportAppBootGateReady("xp", !enabled || !loading);
 
   useEffect(() => {
     if (!enabled) {

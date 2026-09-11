@@ -97,7 +97,12 @@ export function CalendarSurface({
   viewerSubject = null,
   partnerSubject = null,
 }: CalendarSurfaceProps) {
-  const [context, setContext] = useState<PlannerContextPayload | null>(null);
+  const [context, setContext] = useState<PlannerContextPayload | null>(() => {
+    if (!month) {
+      return null;
+    }
+    return readTabDataCache<PlannerContextPayload>(buildPlannerContextCacheKey(month));
+  });
   useLayoutEffect(() => {
     if (!month) {
       return;
@@ -108,11 +113,17 @@ export function CalendarSurface({
     if (!cached) {
       return;
     }
-    queueMicrotask(() => {
-      setContext(cached);
-    });
+    setContext(cached);
   }, [month]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => {
+    if (!month) {
+      return false;
+    }
+    return (
+      readTabDataCache<PlannerContextPayload>(buildPlannerContextCacheKey(month)) ===
+      null
+    );
+  });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
@@ -963,7 +974,7 @@ export function CalendarSurface({
     [entriesByDate, queueDraftMoveCommand]
   );
 
-  useReportAppSurfaceReady(true);
+  useReportAppSurfaceReady(Boolean(error) || (context !== null && !loading));
 
   return (
     <CompletionCreditMoveProvider
