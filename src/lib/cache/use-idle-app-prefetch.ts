@@ -63,7 +63,7 @@ export function useIdleAppPrefetch({
 
     const cancelRouteIdle = scheduleIdleTask(prefetchRoutesAndModules);
     const cancelWarmIdle = scheduleIdleTask(warmNonProgressTabs);
-    let cancelProgressIdle = () => undefined;
+    let cancelProgressIdle: () => void = () => {};
     const startProgressWarm = () => {
       cancelProgressIdle();
       cancelProgressIdle = scheduleIdleTask(warmProgressTabs);
