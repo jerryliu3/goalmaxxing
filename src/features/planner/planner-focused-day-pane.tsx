@@ -28,7 +28,10 @@ import { DuoLaneIdentity } from "@/features/social/duo/duo-lanes";
 import type { DuoLaneSubject } from "@cadence/shared/social/duo";
 import { PlannerDayEntriesPanel } from "@/features/planner/planner-day-entries-panel";
 import { PlannerTasksPanel, PlannerTasksPrefetch } from "@/features/tasks/planner-tasks-panel";
-import { planLedgerTitleClass } from "@/features/planner/calendar-day-chrome";
+import {
+  planAgendaDayNumberClass,
+  planLedgerTitleClass,
+} from "@/features/planner/calendar-day-chrome";
 import { PLAN_MORPH_CLASS, planDayViewTransitionName } from "@/features/planner/plan-view-transition";
 import { ChecklistPastPanels } from "@/features/today/checklist-past-panels";
 import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
@@ -165,7 +168,13 @@ export function PlannerFocusedDayPane({
 
   return (
     <div
-      className={cn("space-y-3", shareDayTransition && PLAN_MORPH_CLASS)}
+      className={cn(
+        "space-y-3",
+        // Carries the week row's selected-day ring into day view so the emphasis is
+        // continuous through the morph instead of dropping at the end.
+        shareDayTransition &&
+          cn(PLAN_MORPH_CLASS, "rounded-[10px] p-3 ring-2 ring-inset ring-primary")
+      )}
       data-testid="plan-day-pane"
       data-plan-day={day}
       style={
@@ -182,6 +191,33 @@ export function PlannerFocusedDayPane({
           <TitleTag className="font-display mt-1 text-xl font-semibold tracking-tight">
             {format(parse(day, "yyyy-MM-dd", new Date()), "EEEE, MMM d")}
           </TitleTag>
+        </div>
+      ) : null}
+      {/*
+        Mirrors the week row's weekday/number treatment so the day view is a real
+        endpoint for the morph rather than a synthesised one, and gives the focused
+        day the same date affordance the zoom concept shows at its day level.
+      */}
+      {shareDayTransition ? (
+        <div className="w-14 shrink-0 px-1">
+          <span
+            data-plan-weekday="true"
+            className="block font-sans text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+          >
+            {format(parse(day, "yyyy-MM-dd", new Date()), "EEE")}
+          </span>
+          <span
+            data-plan-day-number="true"
+            className={cn(
+              "font-display",
+              planAgendaDayNumberClass({
+                isToday: asOfDate === day,
+                isSelected: true,
+              })
+            )}
+          >
+            {format(parse(day, "yyyy-MM-dd", new Date()), "d")}
+          </span>
         </div>
       ) : null}
       <div

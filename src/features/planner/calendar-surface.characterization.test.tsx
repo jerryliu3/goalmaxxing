@@ -1139,11 +1139,13 @@ describe("CalendarSurface characterization", () => {
     expect(within(previewPopover).queryByText("Next: Milestone 2")).not.toBeInTheDocument();
 
     fireEvent.click(within(previewPopover).getByText("07:30 Goal B"));
-    const dialog = await screen.findByRole("dialog");
+    const editor = await screen.findByRole("region", {
+      name: "Edit planned session",
+    });
     expect(
-      within(dialog).getByRole("heading", { name: "07:30 Goal B" })
+      within(editor).getByRole("heading", { name: "07:30 Goal B" })
     ).toBeInTheDocument();
-    expect(within(dialog).queryByText("Next: Milestone 2")).not.toBeInTheDocument();
+    expect(within(editor).queryByText("Next: Milestone 2")).not.toBeInTheDocument();
   });
 
   it("force-prepares planner context after coach goals are created", async () => {
@@ -1796,7 +1798,7 @@ describe("CalendarSurface characterization", () => {
     fireEvent.change(await screen.findByLabelText("Date"), {
       target: { value: "2026-08-30" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: "Done" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Save plan" }));
 

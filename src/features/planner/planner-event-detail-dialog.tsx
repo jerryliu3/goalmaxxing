@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-r
 import Link from "next/link";
 import { getEntryDraftDiffSummary, getEntrySubtitle } from "@/features/planner/calendar-format";
 import { LinkedTargetsNote } from "@/features/planner/linked-targets-note";
+import { prefersReducedMotion } from "@/features/planner/plan-view-transition";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 
 export interface PlannerEventDetailDialogCallbacks {
@@ -79,17 +80,26 @@ export function PlannerEventDetailDialog({
   callbacks,
 }: PlannerEventDetailDialogProps) {
   const [host, setHost] = useState<HTMLElement | null>(null);
+  const selectedEntryKey = selectedEventEntry?.key ?? null;
+  // Keyed on the entry itself, not its key: editing the date moves the slot to another
+  // day's list while the key stays the same, and the stale node would leave the editor
+  // portalled into a detached element.
   useLayoutEffect(() => {
-    const slot = selectedEventEntry
-      ? Array.from(document.querySelectorAll<HTMLElement>("[data-plan-editor-slot]"))
-          .find((node) => node.dataset.planEditorSlot === selectedEventEntry.key) ?? null
+    const slot = selectedEntryKey
+      ? Array.from(document.querySelectorAll<HTMLElement>("[data-plan-editor-slot]")).find(
+          (node) => node.dataset.planEditorSlot === selectedEntryKey
+        ) ?? null
       : null;
-    if (slot !== host) setHost(slot);
-  });
+    // The portal target is rendered by the day list in the same commit that opens this
+    // editor, so it can only be resolved afterwards. A node owned by a sibling subtree
+    // is reachable neither at render time nor through a callback ref.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHost((current) => (current === slot ? current : slot));
+  }, [selectedEntryKey, selectedEventEntry]);
   useLayoutEffect(() => {
-    if (!host || !selectedEventEntry) return;
-    host.scrollIntoView({ block: "nearest", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
-  }, [host, selectedEventEntry?.key]);
+    if (!host || !selectedEntryKey) return;
+    host.scrollIntoView({ block: "nearest", behavior: prefersReducedMotion() ? "instant" : "smooth" });
+  }, [host, selectedEntryKey]);
   if (!selectedEventEntry) return null;
   const content = (
 

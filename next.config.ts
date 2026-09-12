@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  // Pin the workspace root: a stray lockfile above the repo makes Turbopack infer
+  // the home directory instead, which balloons compile times.
+  turbopack: {
+    root: process.cwd(),
+  },
   experimental: {
     viewTransition: true,
     staleTimes: {

@@ -262,4 +262,29 @@ describe("PlannerFocusedDayPane", () => {
     expect(screen.getByText("Day")).toBeInTheDocument();
     expect(screen.getByText("Thursday, Aug 6")).toBeInTheDocument();
   });
+
+  it("exposes weekday and day-number morph anchors when sharing the day transition", () => {
+    const { container } = renderWithDnd(
+      <PlannerFocusedDayPane
+        day="2026-08-06"
+        entries={[sampleEntry as never]}
+        completionFactMarkers={[]}
+        mutationLoadingKey={null}
+        asOfDate="2026-08-06"
+        canMutatePlanItems
+        canMutateEntryOnDay={() => true}
+        onEntryOpen={() => {}}
+        onToggleCompletion={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+        showDayHeading={false}
+        shareDayTransition
+      />
+    );
+
+    expect(container.querySelector("[data-plan-weekday]")).toHaveTextContent("Thu");
+    expect(container.querySelector("[data-plan-day-number]")).toHaveTextContent("6");
+    // The verbose heading stays off in day view.
+    expect(screen.queryByText("Thursday, Aug 6")).not.toBeInTheDocument();
+  });
 });
