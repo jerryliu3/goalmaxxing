@@ -94,7 +94,7 @@ export function buildPlannerSettingsForm({
 }
 
 export function usePlannerEventDetailCallbacks({
-  setSelectedEventEntryKey,
+  resetPlannerEntrySelection,
   setLocalSelectedDay,
   updateDraftLabel,
   updateDraftScheduledDate,
@@ -104,7 +104,7 @@ export function usePlannerEventDetailCallbacks({
   selectedGoalOpenInstances,
   selectedGoalOpenInstanceIndex,
 }: {
-  setSelectedEventEntryKey: (value: string | null) => void;
+  resetPlannerEntrySelection: (options?: { clearGoalFocus?: boolean }) => void;
   setLocalSelectedDay: (value: string | null) => void;
   updateDraftLabel: (entry: PlannerDayDetailEntry, label: string) => void;
   updateDraftScheduledDate: (entry: PlannerDayDetailEntry, date: string) => void;
@@ -121,7 +121,7 @@ export function usePlannerEventDetailCallbacks({
     () => ({
       onOpenChange: (open) => {
         if (!open) {
-          setSelectedEventEntryKey(null);
+          resetPlannerEntrySelection();
           setLocalSelectedDay(null);
         }
       },
@@ -163,8 +163,8 @@ export function usePlannerEventDetailCallbacks({
       navigateToOpenInstance,
       selectedGoalOpenInstanceIndex,
       selectedGoalOpenInstances,
+      resetPlannerEntrySelection,
       setLocalSelectedDay,
-      setSelectedEventEntryKey,
       toggleItemLock,
       updateDraftLabel,
       updateDraftScheduledDate,

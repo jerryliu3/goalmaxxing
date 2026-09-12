@@ -45,6 +45,11 @@ type CalendarSurfacePresentationArgs = Omit<
   selectedEventEntryKey: string | null;
   setCalendarFocusedGoalId: (goalId: string | null) => void;
   calendarFocusedGoalId: string | null;
+  togglePlannerGoalSelection: (
+    entry: PlannerDayDetailEntry,
+    options: { applyGoalFocus: boolean }
+  ) => void;
+  resetPlannerEntrySelection: (options?: { clearGoalFocus?: boolean }) => void;
   calendarAsOfDate: string;
   setDayPreview: React.Dispatch<
     React.SetStateAction<
@@ -106,6 +111,8 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     selectedEventEntryKey,
     setCalendarFocusedGoalId,
     calendarFocusedGoalId,
+    togglePlannerGoalSelection,
+    resetPlannerEntrySelection,
     calendarAsOfDate,
     setDayPreview,
     canMutateEntryOnDay,
@@ -162,6 +169,8 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     selectedEventEntryKey,
     setCalendarFocusedGoalId,
     calendarFocusedGoalId,
+    togglePlannerGoalSelection,
+    resetPlannerEntrySelection,
     calendarAsOfDate,
     setDayPreview,
     canMutateEntryOnDay,
@@ -233,7 +242,7 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
   );
 
   const eventDetailCallbacks = usePlannerEventDetailCallbacks({
-    setSelectedEventEntryKey,
+    resetPlannerEntrySelection,
     setLocalSelectedDay,
     updateDraftLabel,
     updateDraftScheduledDate,
@@ -252,6 +261,7 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     plannerReadOnly,
     setLocalSelectedDay,
     setSelectedEventEntryKey,
+    togglePlannerGoalSelection,
     setDayPreview,
     canMutateEntryOnDay,
     cells,

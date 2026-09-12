@@ -123,6 +123,10 @@ export interface PlannerCalendarSurfaceLayoutProps {
   ) => boolean;
   setLocalSelectedDay: (day: string | null) => void;
   setSelectedEventEntryKey: (key: string | null) => void;
+  togglePlannerGoalSelection: (
+    entry: PlannerDayDetailEntry,
+    options: { applyGoalFocus: boolean }
+  ) => void;
   toggleDateFact: (
     entry: PlannerDayDetailEntry,
     selectedDateOverride?: string,
@@ -276,6 +280,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     canMutateEntryOnDay,
     setLocalSelectedDay,
     setSelectedEventEntryKey,
+    togglePlannerGoalSelection,
     toggleDateFact,
     pointerPressActiveRef,
     calendarGridViewportRef,
@@ -508,7 +513,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
                 return;
               }
               setLocalSelectedDay(focusedDay);
-              setSelectedEventEntryKey(entry.key);
+              togglePlannerGoalSelection(entry, {
+                applyGoalFocus: viewMode === "month",
+              });
             }}
             onToggleCompletion={(entry, day, sourceElement) => {
               void toggleDateFact(entry, day, sourceElement ?? undefined);
@@ -550,7 +557,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
                 return;
               }
               setLocalSelectedDay(day);
-              setSelectedEventEntryKey(entry.key);
+              togglePlannerGoalSelection(entry, {
+                applyGoalFocus: viewMode === "month",
+              });
             }}
             onPreviewToggleCompletion={(entry, day, sourceElement) => {
               if (!canMutateEntryOnDay(entry, day)) {
@@ -628,7 +637,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
           }
           setExpandedPreviewDay(null);
           setLocalSelectedDay(day);
-          setSelectedEventEntryKey(entry.key);
+          togglePlannerGoalSelection(entry, {
+            applyGoalFocus: viewMode === "month",
+          });
         }}
         onExpandedPreviewToggleCompletion={(entry, day, sourceElement) => {
           if (!canMutateEntryOnDay(entry, day)) {

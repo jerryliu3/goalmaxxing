@@ -599,35 +599,74 @@ body {
   pointer-events: none;
 }
 
-@keyframes plan-selected-shimmer {
-  0% {
-    transform: translateX(-130%);
+@property --plan-selected-border-angle-a {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@property --plan-selected-border-angle-b {
+  syntax: "<angle>";
+  initial-value: 180deg;
+  inherits: false;
+}
+
+@keyframes plan-selected-border-trace-a {
+  to {
+    --plan-selected-border-angle-a: 360deg;
   }
-  100% {
-    transform: translateX(280%);
+}
+
+@keyframes plan-selected-border-trace-b {
+  to {
+    --plan-selected-border-angle-b: 540deg;
   }
 }
 
 .plan-selected-shimmer {
   position: relative;
-  overflow: hidden;
+  isolation: isolate;
 }
 
+/* Dual conic-gradient traces on the pill border (not a content overlay). */
+.plan-selected-shimmer::before,
 .plan-selected-shimmer::after {
   content: "";
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 32%;
-  background-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    color-mix(in srgb, var(--primary) 12%, transparent) 50%,
-    transparent 100%
-  );
-  animation: plan-selected-shimmer 2.4s linear infinite;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
   pointer-events: none;
+}
+
+.plan-selected-shimmer::before {
+  background: conic-gradient(
+    from var(--plan-selected-border-angle-b),
+    transparent 0deg 250deg,
+    color-mix(in srgb, var(--plan-selected-shimmer-color, var(--primary)) 45%, transparent) 290deg,
+    color-mix(in srgb, var(--plan-selected-shimmer-color, var(--primary)) 75%, transparent) 320deg,
+    transparent 360deg
+  );
+  animation: plan-selected-border-trace-b 2.4s linear infinite;
+}
+
+.plan-selected-shimmer::after {
+  background: conic-gradient(
+    from var(--plan-selected-border-angle-a),
+    transparent 0deg 250deg,
+    color-mix(in srgb, var(--plan-selected-shimmer-color, var(--primary)) 55%, transparent) 290deg,
+    color-mix(in srgb, var(--plan-selected-shimmer-color, var(--primary)) 85%, transparent) 320deg,
+    transparent 360deg
+  );
+  animation: plan-selected-border-trace-a 2.4s linear infinite;
 }
 
 @keyframes plan-selected-pulse {
@@ -705,6 +744,7 @@ body {
   .motion-popup-enter,
   .motion-collapsible-content,
   .plan-draft-shimmer::after,
+  .plan-selected-shimmer::before,
   .plan-selected-shimmer::after,
   .plan-selected-pulse,
   .plan-adjacent-month-nudge-up,

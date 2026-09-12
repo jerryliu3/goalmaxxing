@@ -2,7 +2,7 @@
 
 import { format, parse } from "date-fns";
 import { Link2 } from "lucide-react";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
@@ -213,20 +213,14 @@ export function CalendarMonthDayCell<
     const immovable = isEntryImmovableForDraft(entry);
     const draftDiffSummary = getEntryDraftDiffSummary(entry);
     const isDraft = Boolean(entry.draftDiffKind);
-    const isDimmed =
-      layout === "month" &&
+    const isCompleted = credited && !isDraft;
+    const isGoalFocusDimmed =
       focusedGoalId &&
       entry.originalGoalId !== focusedGoalId &&
       !isPlannerTaskCalendarEntry(entry);
     const selectedPillClasses = getEntrySelectedPillClasses({
-      selected:
-        layout === "month" &&
-        Boolean(selectedEntryKey) &&
-        entry.key === selectedEntryKey &&
-        entry.originalGoalId === focusedGoalId,
+      selected: Boolean(selectedEntryKey) && entry.key === selectedEntryKey,
     });
-    const quietPastCompleted =
-      layout === "month" && isPastInMonth && credited && !isDraft;
     const pillToneClasses = getEntryDraftPillClasses({
       draftDiffKind: entry.draftDiffKind,
     });
@@ -258,6 +252,7 @@ export function CalendarMonthDayCell<
       !isDraft &&
       (completionMode === "done" || (!completionToggleState && credited));
     return (
+      <Fragment key={`cell-entry-wrap-${entry.key}`}>
       <PlannerDraggableEntry
         key={`cell-entry-${entry.key}`}
         entryKey={entry.key}
@@ -274,6 +269,11 @@ export function CalendarMonthDayCell<
               ...style,
               ...pillFillStyle,
               viewTransitionName: planEntryViewTransitionName(entry.key),
+              ...(selectedPillClasses
+                ? ({
+                    ["--plan-selected-shimmer-color" as string]: visual.color,
+                  } as const)
+                : {}),
             }}
             onClick={(event) => {
               if (
@@ -309,7 +309,7 @@ export function CalendarMonthDayCell<
             }}
             className={`flex items-center gap-1.5 rounded-[10px] border px-1.5 py-1 text-[11px] ${PLAN_MORPH_CLASS} ${pillToneClasses} ${selectedPillClasses} ${
               entry.draftGhost ? "opacity-70 line-through" : ""
-            } ${isDimmed ? "opacity-45" : ""} ${
+            } ${isGoalFocusDimmed ? "opacity-45" : ""} ${
               immovable
                 ? "cursor-not-allowed"
                 : "cursor-grab active:cursor-grabbing"
@@ -375,7 +375,7 @@ export function CalendarMonthDayCell<
               />
             ) : null}
             <CompletionTitle
-              completed={quietPastCompleted ? false : credited}
+              completed={isCompleted}
               className="flex h-6 min-w-0 items-center truncate font-display leading-none"
             >
               {compactTitle}
@@ -389,13 +389,13 @@ export function CalendarMonthDayCell<
           </div>
         )}
       </PlannerDraggableEntry>
+      </Fragment>
     );
   };
 
   const parsedDay = parse(day, "yyyy-MM-dd", new Date());
   const weekdayLabel = format(parsedDay, "EEE");
   const dayNumber = format(parsedDay, "d");
-  const quietPastFactMarker = layout === "month" && isPastInMonth;
 
   if (layout === "agenda") {
     return (
@@ -486,14 +486,7 @@ export function CalendarMonthDayCell<
                           aria-label={`${marker.goalTitle}. ${statusCopy}`}
                         >
                           <StyleCompletionMark done className="size-3 shrink-0" />
-                          <span
-                            className={cn(
-                              "truncate",
-                              quietPastFactMarker ? "opacity-90" : "line-through"
-                            )}
-                          >
-                            {marker.goalTitle}
-                          </span>
+                          <span className="truncate line-through">{marker.goalTitle}</span>
                         </div>
                       );
                     })}
@@ -625,14 +618,7 @@ export function CalendarMonthDayCell<
                   aria-label={`${marker.goalTitle}. ${statusCopy}`}
                 >
                   <StyleCompletionMark done className="size-3 shrink-0" />
-                  <span
-                    className={cn(
-                      "truncate",
-                      quietPastFactMarker ? "opacity-90" : "line-through"
-                    )}
-                  >
-                    {marker.goalTitle}
-                  </span>
+                  <span className="truncate line-through">{marker.goalTitle}</span>
                 </div>
                 );
               })}

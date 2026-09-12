@@ -214,7 +214,7 @@ export function getEntryDraftPillClasses(input: {
   return "rounded-[10px] border-border text-foreground";
 }
 
-/** Change this constant to prototype ring / pulse / shimmer selected pills. */
+/** Selected month pill treatment in Plan focus mode (border trace animation). */
 export const PLAN_SELECTED_PILL_TREATMENT = "shimmer" as const;
 
 export function getEntrySelectedPillClasses({

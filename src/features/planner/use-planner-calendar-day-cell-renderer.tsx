@@ -22,10 +22,6 @@ import type {
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import type { PlannerDayPreviewInteractions } from "@/features/planner/use-planner-day-preview-interactions";
-import {
-  canOpenPlannerEventDetails,
-  isPlannerTaskCalendarEntry,
-} from "@/features/planner/calendar-task-entries";
 import { getPlannerCompletionTogglePresentation } from "@/features/planner/completion-entry-dispatch";
 import { scrollPlannerChecklistIntoView } from "@/features/planner/planner-checklist-scroll";
 import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
@@ -80,6 +76,11 @@ interface UsePlannerCalendarDayCellRendererArgs {
   selectedEventEntryKey: string | null;
   setCalendarFocusedGoalId: (goalId: string | null) => void;
   calendarFocusedGoalId: string | null;
+  togglePlannerGoalSelection: (
+    entry: PlannerDayDetailEntry,
+    options: { applyGoalFocus: boolean }
+  ) => void;
+  resetPlannerEntrySelection: (options?: { clearGoalFocus?: boolean }) => void;
   calendarAsOfDate: string;
   setDayPreview: Dispatch<SetStateAction<DayPreviewState | null>>;
   canMutateEntryOnDay: (entry: PlannerDayDetailEntry, day: string) => boolean;
@@ -126,6 +127,8 @@ export function usePlannerCalendarDayCellRenderer({
   selectedEventEntryKey,
   setCalendarFocusedGoalId,
   calendarFocusedGoalId,
+  togglePlannerGoalSelection,
+  resetPlannerEntrySelection,
   calendarAsOfDate,
   setDayPreview,
   canMutateEntryOnDay,
@@ -227,21 +230,18 @@ export function usePlannerCalendarDayCellRenderer({
             if (!canMutateEntryOnDay(entry, day)) {
               return;
             }
-            if (viewMode === "week") {
-              selectDayForView(day, resolveWeekAgendaSelectionViewMode());
-              if (canOpenPlannerEventDetails(entry)) {
-                setSelectedEventEntryKey(entry.key);
+            if (viewMode === "week" || viewMode === "three_day") {
+              if (day !== focusedDay) {
+                selectDayForView(day, resolveWeekAgendaSelectionViewMode());
               }
+              togglePlannerGoalSelection(entry, { applyGoalFocus: false });
               return;
             }
             if (viewMode === "month") {
-              selectDayForView(day, "month");
-              if (!isPlannerTaskCalendarEntry(entry)) {
-                setCalendarFocusedGoalId(entry.originalGoalId);
+              if (day !== focusedDay) {
+                selectDayForView(day, "month");
               }
-              if (canOpenPlannerEventDetails(entry)) {
-                setSelectedEventEntryKey(entry.key);
-              }
+              togglePlannerGoalSelection(entry, { applyGoalFocus: true });
               return;
             }
             if (viewMode === "day") {
@@ -249,9 +249,7 @@ export function usePlannerCalendarDayCellRenderer({
                 setLocalSelectedDay(day);
                 onSelectedDayChange(day, "push", "day");
               }
-              if (canOpenPlannerEventDetails(entry)) {
-                setSelectedEventEntryKey(entry.key);
-              }
+              togglePlannerGoalSelection(entry, { applyGoalFocus: false });
               setDayPreview(null);
               return;
             }
@@ -269,7 +267,7 @@ export function usePlannerCalendarDayCellRenderer({
               return;
             }
             if (viewMode === "month") {
-              setCalendarFocusedGoalId(null);
+              resetPlannerEntrySelection();
               selectDayForView(cell.date, "month");
               return;
             }
@@ -417,6 +415,8 @@ export function usePlannerCalendarDayCellRenderer({
       selectedEventEntryKey,
       setCalendarFocusedGoalId,
       calendarFocusedGoalId,
+      togglePlannerGoalSelection,
+      resetPlannerEntrySelection,
       calendarAsOfDate,
       startLongPressPreview,
       suppressDayCellClickRef,

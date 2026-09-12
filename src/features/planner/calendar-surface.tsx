@@ -47,6 +47,10 @@ import type {
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import {
+  canOpenPlannerEventDetails,
+  isPlannerTaskCalendarEntry,
+} from "@/features/planner/calendar-task-entries";
+import {
   getNonPublishablePreviewMessage,
 } from "@/features/planner/planner-save-availability";
 import { buildMoveSourceOptions } from "@/features/planner/planner-move-source-options";
@@ -149,6 +153,40 @@ export function CalendarSurface({
   const [selectedEventEntryKey, setSelectedEventEntryKey] = useState<string | null>(
     null
   );
+  const resetPlannerEntrySelection = useCallback((options?: { clearGoalFocus?: boolean }) => {
+    setSelectedEventEntryKey(null);
+    if (options?.clearGoalFocus !== false) {
+      setCalendarFocusedGoalId(null);
+    }
+  }, []);
+  const togglePlannerGoalSelection = useCallback(
+    (
+      entry: PlannerDayDetailEntry,
+      options: {
+        applyGoalFocus: boolean;
+      }
+    ) => {
+      if (!canOpenPlannerEventDetails(entry)) {
+        return;
+      }
+      const isActive =
+        selectedEventEntryKey === entry.key &&
+        (!options.applyGoalFocus ||
+          isPlannerTaskCalendarEntry(entry) ||
+          calendarFocusedGoalId === entry.originalGoalId);
+      if (isActive) {
+        resetPlannerEntrySelection({ clearGoalFocus: options.applyGoalFocus });
+        return;
+      }
+      setSelectedEventEntryKey(entry.key);
+      if (options.applyGoalFocus && !isPlannerTaskCalendarEntry(entry)) {
+        setCalendarFocusedGoalId(entry.originalGoalId);
+      } else if (!options.applyGoalFocus) {
+        setCalendarFocusedGoalId(null);
+      }
+    },
+    [calendarFocusedGoalId, resetPlannerEntrySelection, selectedEventEntryKey]
+  );
   const [dayPreview, setDayPreview] = useState<DayPreviewState | null>(null);
   const [expandedPreviewDay, setExpandedPreviewDay] = useState<string | null>(null);
   const [moveDialogDay, setMoveDialogDay] = useState<string | null>(null);
@@ -175,9 +213,30 @@ export function CalendarSurface({
     return () => window.clearTimeout(resetTimer);
   }, [month, selectedDay, viewMode]);
   useEffect(() => {
-    const resetTimer = window.setTimeout(() => setCalendarFocusedGoalId(null), 0);
+    const resetTimer = window.setTimeout(() => resetPlannerEntrySelection(), 0);
     return () => window.clearTimeout(resetTimer);
-  }, [month]);
+  }, [month, resetPlannerEntrySelection]);
+  useEffect(() => {
+    if (!selectedEventEntryKey) {
+      return;
+    }
+    // pointerdown (not click) so outside dismiss runs before the next entry click handler.
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      if (target.closest("[data-plan-entry-editor='true']")) {
+        return;
+      }
+      if (target.closest(`[data-planner-entry-key="${selectedEventEntryKey}"]`)) {
+        return;
+      }
+      resetPlannerEntrySelection();
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [resetPlannerEntrySelection, selectedEventEntryKey]);
   const [expandedMonthRows, setExpandedMonthRows] = useState(false);
   const [previewEntryOrderByDay, setPreviewEntryOrderByDay] = useState<
     Record<string, string[]>
@@ -815,6 +874,8 @@ export function CalendarSurface({
     selectedEventEntryKey,
     setCalendarFocusedGoalId,
     calendarFocusedGoalId,
+    togglePlannerGoalSelection,
+    resetPlannerEntrySelection,
     calendarAsOfDate: context?.asOfDate ?? calendarToday,
     setDayPreview,
     canMutateEntryOnDay,
