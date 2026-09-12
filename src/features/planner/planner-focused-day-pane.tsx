@@ -167,6 +167,7 @@ export function PlannerFocusedDayPane({
     <div
       className={cn("space-y-3", shareDayTransition && PLAN_MORPH_CLASS)}
       data-testid="plan-day-pane"
+      data-plan-day={day}
       style={
         shareDayTransition
           ? { viewTransitionName: planDayViewTransitionName(day) }

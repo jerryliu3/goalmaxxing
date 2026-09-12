@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { Check, Link2, X } from "lucide-react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
@@ -163,8 +164,7 @@ export function CalendarDayPreviewList<
                 ? "from this day"
                 : "to this day";
             return (
-              <PlannerDraggablePreviewEntry
-                key={`preview-entry-${entry.key}`}
+              <Fragment key={`preview-entry-${entry.key}`}><PlannerDraggablePreviewEntry
                 day={day}
                 entryKey={entry.key}
                 surface="checklist"
@@ -397,6 +397,8 @@ export function CalendarDayPreviewList<
                   </div>
                 )}
               </PlannerDraggablePreviewEntry>
+              {expanded ? <div data-plan-editor-slot={entry.key} /> : null}
+              </Fragment>
             );
           })}
           </PlannerSortableDayList>
