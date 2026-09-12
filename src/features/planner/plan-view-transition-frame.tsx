@@ -72,6 +72,11 @@ export class PlanViewTransitionFrame extends Component<Props> {
       // This is the actual Day layout, not temporary space removed at handoff.
       root.style.setProperty("--plan-day-canvas-height", `${scene.clip.height}px`);
     }
+    // Section mount animations also change the geometry inside Day. Finish them
+    // before measuring; the calendar morph owns this reveal and movement.
+    content.querySelectorAll<HTMLElement>('[data-motion="collapsible-content"]').forEach(section => {
+      (section.getAnimations?.() ?? []).forEach(animation => animation.finish());
+    });
     const next = capturePlanScene(root, this.props.viewMode);
     this.pendingScene = null;
     this.animation = animatePlanScene(root, content, scene, next, () => {

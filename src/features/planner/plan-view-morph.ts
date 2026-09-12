@@ -53,6 +53,7 @@ export interface PlanScene {
     labels: Map<string, Mark>;
     residue: HTMLElement;
     header: { box: Box; node: HTMLElement } | null;
+    sections: Array<{ box: Box; node: HTMLElement; day: string; anchorKey: string | null; edge: 'top' | 'bottom' }>;
     aside: {
         box: Box;
         node: HTMLElement;
@@ -166,14 +167,19 @@ function clearChrome(node: HTMLElement) {
     node.style.borderColor = 'transparent';
     node.style.boxShadow = 'none';
 }
+function clonePlanNode(source: HTMLElement) {
+    const node = source.cloneNode(true) as HTMLElement;
+    node.querySelectorAll<HTMLElement>('[data-motion="collapsible-content"]').forEach(section => section.style.animation = 'none');
+    return node;
+}
 function residue(root: HTMLElement, mode: PlannerCalendarViewMode) {
     const source = root.querySelector<HTMLElement>('[data-plan-view]') ?? root;
-    const node = source.cloneNode(true) as HTMLElement;
+    const node = clonePlanNode(source);
     node.style.opacity = '1';
     node.style.visibility = 'visible';
     // Leave section headings, todos, empty states and other non-carried content.
     // They fade independently, without fading the moving items themselves.
-    node.querySelectorAll<HTMLElement>('[data-planner-entry-key], [data-plan-day-number], [data-plan-weekday], [data-calendar-weekday-grid], [data-testid="plan-desktop-day-pane"]').forEach(el => el.style.visibility = 'hidden');
+    node.querySelectorAll<HTMLElement>('[data-planner-entry-key], [data-plan-day-number], [data-plan-weekday], [data-calendar-weekday-grid], [data-testid="plan-desktop-day-pane"], [data-plan-day-section]').forEach(el => el.style.visibility = 'hidden');
     if (mode !== 'day') node.querySelectorAll<HTMLElement>(DAY).forEach(el => el.style.visibility = 'hidden');
     node.querySelectorAll<HTMLElement>('[data-plan-day]').forEach(clearChrome);
     return node;
@@ -227,9 +233,18 @@ export function capturePlanScene(root: HTMLElement, mode: PlannerCalendarViewMod
     }
     const aside = root.querySelector<HTMLElement>('[data-testid="plan-desktop-day-pane"]');
     const header = root.querySelector<HTMLElement>('[data-calendar-weekday-grid]');
+    const orderedItems = [...items.entries()].sort((a, b) => a[1].box.y - b[1].box.y);
+    const sections: PlanScene['sections'] = dayPane ? Array.from(dayPane.querySelectorAll<HTMLElement>('[data-plan-day-section]')).map(el => {
+        const own = box(el, r);
+        const containsItem = Boolean(el.querySelector('[data-planner-entry-key]'));
+        const anchor = containsItem ? orderedItems[0] : orderedItems.at(-1);
+        const node = clonePlanNode(el);
+        node.querySelectorAll<HTMLElement>('[data-planner-entry-key]').forEach(item => item.style.visibility = 'hidden');
+        return { box: own, node, day: dayPane.dataset.planDay!, anchorKey: anchor?.[0] ?? null, edge: containsItem ? 'top' : 'bottom' };
+    }) : [];
     return { mode, bounds: { x: r.x, y: r.y, width: r.width, height: r.height }, clip, days, items, labels,
-        residue: residue(root, mode), header: header ? { box: box(header, r), node: header.cloneNode(true) as HTMLElement } : null,
-        aside: aside ? { box: box(aside, r), node: aside.cloneNode(true) as HTMLElement } : null };
+        residue: residue(root, mode), sections, header: header ? { box: box(header, r), node: header.cloneNode(true) as HTMLElement } : null,
+        aside: aside ? { box: box(aside, r), node: clonePlanNode(aside) } : null };
 }
 /** Each date gets its own chronological slot, including dates outside the visible week. */
 function projectedDay(scene: PlanScene, day: string): Mark | undefined {
@@ -300,6 +315,7 @@ interface Glyph {
     el: HTMLElement;
     /** Text rect relative to its container's paint origin at measurement time. */
     own: Box;
+    destinationOwn?: Box;
 }
 const ORIGIN: Box = { x: 0, y: 0, width: 0, height: 0 };
 function glyph(parent: HTMLElement, m: Mark, overlay: DOMRect, origin: Box): Glyph | null {
@@ -307,7 +323,7 @@ function glyph(parent: HTMLElement, m: Mark, overlay: DOMRect, origin: Box): Gly
         return null;
     const el = document.createElement('div');
     Object.assign(el.style, { position: 'absolute', left: '0', top: '0', margin: '0', padding: '0', pointerEvents: 'none',
-        whiteSpace: 'nowrap', transformOrigin: '0 0', fontFamily: m.type.family, fontWeight: m.type.weight, fontStyle: m.type.style,
+        whiteSpace: 'nowrap', width: 'max-content', transformOrigin: '0 0', fontFamily: m.type.family, fontWeight: m.type.weight, fontStyle: m.type.style,
         fontSize: `${m.type.size}px`, letterSpacing: m.type.letterSpacing, textTransform: m.type.textTransform,
         lineHeight: m.type.lineHeight, color: m.type.color });
     el.textContent = m.text;
@@ -329,6 +345,19 @@ function paintGlyph(g: Glyph, target: Box, origin: Box, opacity: number) {
     g.el.style.opacity = `${opacity}`;
     g.el.style.width = 'max-content';
     g.el.style.overflow = 'visible';
+}
+function paintSharedGlyph(g: Glyph, target: Box, origin: Box, opacity: number, a: Typography, b: Typography, progress: number) {
+    // Render at the interpolated native font size. Scaling a small Newsreader glyph
+    // into a larger one does not match its optical sizing, advance width or baseline.
+    const own = lerp(g.own, g.destinationOwn ?? g.own, progress);
+    g.el.style.fontSize = `${mix(a.size, b.size, progress)}px`;
+    g.el.style.fontWeight = `${mix(parseFloat(a.weight) || 400, parseFloat(b.weight) || 400, progress)}`;
+    g.el.style.lineHeight = progress === 0 ? a.lineHeight : progress === 1 ? b.lineHeight
+        : `${mix(parseFloat(a.lineHeight) || a.size * 1.2, parseFloat(b.lineHeight) || b.size * 1.2, progress)}px`;
+    g.el.style.letterSpacing = `${mix(parseFloat(a.letterSpacing) || 0, parseFloat(b.letterSpacing) || 0, progress)}px`;
+    g.el.style.color = `color-mix(in srgb, ${a.color} ${(1 - progress) * 100}%, ${b.color})`;
+    g.el.style.transform = `translate(${target.x - origin.x - own.x}px,${target.y - origin.y - own.y}px)`;
+    g.el.style.opacity = `${opacity}`;
 }
 interface Track {
     /** Background, border and ring. */
@@ -388,8 +417,8 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
     const headerLayers = [from.header, to.header].map(header => {
         if (!header) return null;
         Object.assign(header.node.style, { position: 'absolute', left: '0', top: '0', margin: '0', pointerEvents: 'none' });
-        header.node.style.backgroundColor = getComputedStyle(root).getPropertyValue('--background').trim()
-            ? 'var(--background)' : getComputedStyle(document.body).backgroundColor;
+        // Keep the real strip's transparent background so the surrounding calendar
+        // surface shows through, including its theme-specific paper shade.
         overlay.append(header.node);
         paintBox(header.node, header.box);
         return header.node;
@@ -405,6 +434,13 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
             if (m.textClip) m.textClip = shift(m.textClip, shiftX, shiftY);
         }
     from.clip = shift(from.clip, shiftX, shiftY);
+    const sectionLayers = [from, to].flatMap((scene, side) => scene.sections.map(section => {
+        const node = section.node;
+        Object.assign(node.style, { position: 'absolute', left: '0', top: '0', margin: '0', pointerEvents: 'none' });
+        node.style.animation = 'none';
+        layer.append(node);
+        return { ...section, node, scene, side };
+    }));
     const tracks: Track[] = [];
     for (const kind of ['days', 'items', 'labels'] as const) {
         const keys = new Set([...from[kind].keys(), ...to[kind].keys()]);
@@ -478,8 +514,14 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
             ], { duration, fill: 'both', easing: 'linear' }) : null;
             chrome?.pause();
             if (el) el.style.borderWidth = '0';
-            tracks.push({ el, clip, from: a, to: b, fromGlyph: glyph(clip ?? host, a, overlayRect, origin),
-                toGlyph: singleGlyph ? null : glyph(clip ?? host, b, overlayRect, origin), current: a, kind, key, fade,
+            const fromGlyph = glyph(clip ?? host, a, overlayRect, origin);
+            const toGlyph = glyph(clip ?? host, b, overlayRect, origin);
+            if (singleGlyph && fromGlyph && toGlyph) {
+                fromGlyph.destinationOwn = toGlyph.own;
+                toGlyph.el.remove();
+            }
+            tracks.push({ el, clip, from: a, to: b, fromGlyph,
+                toGlyph: singleGlyph && fromGlyph ? null : toGlyph, current: a, kind, key, fade,
                 auxiliaryFrom: auxiliaryFrom ?? null, auxiliaryTo: auxiliaryTo ?? null, singleGlyph, chrome, borders });
         }
     }
@@ -498,8 +540,8 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
     hidePlanContent(content);
     content.toggleAttribute('inert', true);
     root.style.overflowAnchor = 'none';
-    // Held constant rather than interpolated: an animated clip edge is a visible line
-    // sweeping across the tiles. This still masks month-grid overflow.
+    // Week/Day retain the fixed canvas. Month must meet its actual scroll viewport
+    // at both ends, otherwise hidden rows are exposed before/after the handoff.
     const clipRect = union(from.clip, to.clip);
     layer.style.clipPath = `inset(${Math.max(0, clipRect.y)}px ${Math.max(0, to.bounds.width - clipRect.x - clipRect.width)}px ${Math.max(0, stage - clipRect.y - clipRect.height)}px ${Math.max(0, clipRect.x)}px)`;
     let frame = 0, progress = 0;
@@ -516,6 +558,10 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
     function draw(now: number) {
         const linear = Math.min(1, (now - start) / duration);
         progress = ease(linear);
+        if (from.mode === 'month' || to.mode === 'month') {
+            const viewport = lerp(from.clip, to.clip, progress);
+            clipTo(layer, { x: 0, y: 0, width: to.bounds.width, height: stage }, viewport);
+        }
         root.style.height = `${mix(from.bounds.height, to.bounds.height, progress)}px`;
         residueLayers[0].style.transform = `translate(${shiftX}px,${shiftY}px)`;
         residueLayers[0].style.opacity = `${1 - ramp(linear, 0, .3)}`;
@@ -559,17 +605,34 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
                 const a0 = tr.from.glyph ?? tr.from.box, z = tr.to.glyph ?? tr.to.box;
                 const g = lerp(a0, z, progress);
                 tr.current.glyph = g;
-                if (tr.singleGlyph && tr.fromGlyph && tr.from.type && tr.to.type) {
-                    const scale = g.height / tr.fromGlyph.own.height;
-                    tr.fromGlyph.el.style.fontWeight = `${mix(parseFloat(tr.from.type.weight) || 400, parseFloat(tr.to.type.weight) || 400, progress)}`;
-                    tr.fromGlyph.el.style.letterSpacing = `${mix(parseFloat(tr.from.type.letterSpacing) || 0, parseFloat(tr.to.type.letterSpacing) || 0, progress) / (scale || 1)}px`;
-                    tr.fromGlyph.el.style.color = `color-mix(in srgb, ${tr.from.type.color} ${(1 - progress) * 100}%, ${tr.to.type.color})`;
-                }
-                if (tr.fromGlyph)
+                if (tr.singleGlyph && tr.fromGlyph && tr.from.type && tr.to.type)
+                    paintSharedGlyph(tr.fromGlyph, g, origin, alpha, tr.from.type, tr.to.type, progress);
+                else if (tr.fromGlyph)
                     paintGlyph(tr.fromGlyph, g, origin, alpha * (tr.singleGlyph ? 1 : 1 - progress));
                 if (tr.toGlyph)
                     paintGlyph(tr.toGlyph, g, origin, alpha * progress);
             }
+        }
+        for (const section of sectionLayers) {
+            const referenceDay = section.scene.days.get(section.day)?.box;
+            const day = dayBoxes.get(section.day);
+            if (!referenceDay || !day) continue;
+            const anchor = section.anchorKey ? tracks.find(track => track.kind === 'items' && track.key === section.anchorKey) : null;
+            const referenceItem = section.anchorKey ? section.scene.items.get(section.anchorKey)?.box : null;
+            const sourceShiftY = section.side === 0 ? shiftY : 0;
+            const sourceShiftX = section.side === 0 ? shiftX : 0;
+            let y = day.y + (section.box.y + sourceShiftY - referenceDay.y);
+            if (anchor && referenceItem) {
+                const bottom = section.edge === 'bottom';
+                y = anchor.current.box.y + (bottom ? anchor.current.box.height : 0)
+                    + section.box.y + sourceShiftY - referenceItem.y - (bottom ? referenceItem.height : 0);
+            }
+            const widthRatio = day.width / Math.max(1, referenceDay.width);
+            const b = { x: day.x + (section.box.x + sourceShiftX - referenceDay.x) * widthRatio,
+                y, width: section.box.width * widthRatio, height: section.box.height };
+            paintBox(section.node, b);
+            clipTo(section.node, b, intersection(b, day));
+            section.node.style.opacity = `${section.side ? ramp(linear, .3, .8) : 1 - ramp(linear, .2, .7)}`;
         }
         if (asideNode && asideFrom && asideTo)
             paintBox(asideNode, lerp(asideFrom, asideTo, progress));
