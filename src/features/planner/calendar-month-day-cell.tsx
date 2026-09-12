@@ -33,6 +33,7 @@ import {
   planMonthDaySurfaceClass,
 } from "@/features/planner/calendar-day-chrome";
 import { planCompletionControlMode } from "@/features/planner/completion-entry-dispatch";
+import type { PlannerCalendarEntryKind } from "@/features/planner/calendar-surface.types";
 import { getGoalVisual, getWorkPillDraftFillStyle, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
 import {
   PLAN_MORPH_CLASS,
@@ -42,6 +43,7 @@ import {
 
 export interface CalendarMonthCellEntryBase {
   key: string;
+  entryKind?: PlannerCalendarEntryKind;
   originalGoalId: string;
   goalTitle: string | null;
   unitKey: string;

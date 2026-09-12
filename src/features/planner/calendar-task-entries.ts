@@ -1,4 +1,7 @@
-import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
+import type {
+  PlannerCalendarEntryKind,
+  PlannerDayDetailEntry,
+} from "@/features/planner/calendar-surface.types";
 import { normalizePlannerLocalTime } from "@/lib/planner/schedule-time";
 import type { PlannerCalendarTask } from "@/lib/tasks/calendar-tasks";
 
@@ -9,7 +12,7 @@ export function plannerTaskCalendarEntryKey(taskId: string) {
 }
 
 export function isPlannerTaskCalendarEntry(
-  entry: Pick<PlannerDayDetailEntry, "entryKind">
+  entry: { entryKind?: PlannerCalendarEntryKind }
 ) {
   return entry.entryKind === PLANNER_TASK_ENTRY_KIND;
 }
