@@ -599,6 +599,51 @@ body {
   pointer-events: none;
 }
 
+@keyframes plan-selected-shimmer {
+  0% {
+    transform: translateX(-130%);
+  }
+  100% {
+    transform: translateX(280%);
+  }
+}
+
+.plan-selected-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.plan-selected-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 32%;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--primary) 12%, transparent) 50%,
+    transparent 100%
+  );
+  animation: plan-selected-shimmer 2.4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes plan-selected-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.plan-selected-pulse {
+  animation: plan-selected-pulse 2.8s ease-in-out infinite;
+}
+
 [data-plan-zoom] {
   --plan-zoom-duration: 720ms;
 }
@@ -660,6 +705,8 @@ body {
   .motion-popup-enter,
   .motion-collapsible-content,
   .plan-draft-shimmer::after,
+  .plan-selected-shimmer::after,
+  .plan-selected-pulse,
   .plan-adjacent-month-nudge-up,
   .plan-adjacent-month-nudge-down,
   .plan-view-swap {

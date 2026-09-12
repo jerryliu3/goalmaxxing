@@ -21,7 +21,9 @@ import {
 import {
   getEntryDraftDiffSummary,
   getEntryDraftPillClasses,
+  getEntrySelectedPillClasses,
 } from "@/features/planner/calendar-format";
+import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import {
   planAgendaDayNumberClass,
   planAgendaDayRowClass,
@@ -114,6 +116,8 @@ interface CalendarMonthDayCellProps<
   mutationLoadingKey?: string | null;
   optimisticCompletionFacts?: OptimisticCompletionFacts;
   onboardingFirstEntry?: boolean;
+  focusedGoalId?: string | null;
+  selectedEntryKey?: string | null;
 }
 
 const DEFAULT_MAX_VISIBLE_ITEMS_PER_DAY_CELL = 2;
@@ -164,6 +168,8 @@ export function CalendarMonthDayCell<
   mutationLoadingKey = null,
   optimisticCompletionFacts,
   onboardingFirstEntry = false,
+  focusedGoalId = null,
+  selectedEntryKey = null,
 }: CalendarMonthDayCellProps<TEntry, TCompletionFactMarker>) {
   const hasVisibleContent =
     entriesForDay.length > 0 || completionFactMarkersForDay.length > 0;
@@ -207,6 +213,20 @@ export function CalendarMonthDayCell<
     const immovable = isEntryImmovableForDraft(entry);
     const draftDiffSummary = getEntryDraftDiffSummary(entry);
     const isDraft = Boolean(entry.draftDiffKind);
+    const isDimmed =
+      layout === "month" &&
+      focusedGoalId &&
+      entry.originalGoalId !== focusedGoalId &&
+      !isPlannerTaskCalendarEntry(entry);
+    const selectedPillClasses = getEntrySelectedPillClasses({
+      selected:
+        layout === "month" &&
+        Boolean(selectedEntryKey) &&
+        entry.key === selectedEntryKey &&
+        entry.originalGoalId === focusedGoalId,
+    });
+    const quietPastCompleted =
+      layout === "month" && isPastInMonth && credited && !isDraft;
     const pillToneClasses = getEntryDraftPillClasses({
       draftDiffKind: entry.draftDiffKind,
     });
@@ -287,9 +307,9 @@ export function CalendarMonthDayCell<
             onPointerCancelCapture={() => {
               onEntryPointerEnd();
             }}
-            className={`flex items-center gap-1.5 rounded-[10px] border px-1.5 py-1 text-[11px] ${PLAN_MORPH_CLASS} ${pillToneClasses} ${
+            className={`flex items-center gap-1.5 rounded-[10px] border px-1.5 py-1 text-[11px] ${PLAN_MORPH_CLASS} ${pillToneClasses} ${selectedPillClasses} ${
               entry.draftGhost ? "opacity-70 line-through" : ""
-            } ${
+            } ${isDimmed ? "opacity-45" : ""} ${
               immovable
                 ? "cursor-not-allowed"
                 : "cursor-grab active:cursor-grabbing"
@@ -355,7 +375,7 @@ export function CalendarMonthDayCell<
               />
             ) : null}
             <CompletionTitle
-              completed={credited}
+              completed={quietPastCompleted ? false : credited}
               className="flex h-6 min-w-0 items-center truncate font-display leading-none"
             >
               {compactTitle}
@@ -375,6 +395,7 @@ export function CalendarMonthDayCell<
   const parsedDay = parse(day, "yyyy-MM-dd", new Date());
   const weekdayLabel = format(parsedDay, "EEE");
   const dayNumber = format(parsedDay, "d");
+  const quietPastFactMarker = layout === "month" && isPastInMonth;
 
   if (layout === "agenda") {
     return (
@@ -465,7 +486,14 @@ export function CalendarMonthDayCell<
                           aria-label={`${marker.goalTitle}. ${statusCopy}`}
                         >
                           <StyleCompletionMark done className="size-3 shrink-0" />
-                          <span className="truncate line-through">{marker.goalTitle}</span>
+                          <span
+                            className={cn(
+                              "truncate",
+                              quietPastFactMarker ? "opacity-90" : "line-through"
+                            )}
+                          >
+                            {marker.goalTitle}
+                          </span>
                         </div>
                       );
                     })}
@@ -597,7 +625,14 @@ export function CalendarMonthDayCell<
                   aria-label={`${marker.goalTitle}. ${statusCopy}`}
                 >
                   <StyleCompletionMark done className="size-3 shrink-0" />
-                  <span className="truncate line-through">{marker.goalTitle}</span>
+                  <span
+                    className={cn(
+                      "truncate",
+                      quietPastFactMarker ? "opacity-90" : "line-through"
+                    )}
+                  >
+                    {marker.goalTitle}
+                  </span>
                 </div>
                 );
               })}

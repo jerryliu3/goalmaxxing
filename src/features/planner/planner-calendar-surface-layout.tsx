@@ -186,6 +186,9 @@ export interface PlannerCalendarSurfaceLayoutProps {
   categoryFilters: string[];
   setCategoryFilters: (value: string[]) => void;
   categoryOptions: GoalCategoryFilterOption[];
+  goalIdFilters: string[];
+  setGoalIdFilters: (value: string[]) => void;
+  goalFilterOptions: GoalCategoryFilterOption[];
   effectiveEndMonthFilters: string[];
   endMonthFilters: string[];
   setEndMonthFilters: (value: string[]) => void;
@@ -321,6 +324,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     categoryFilters,
     setCategoryFilters,
     categoryOptions,
+    goalIdFilters,
+    setGoalIdFilters,
+    goalFilterOptions,
     effectiveEndMonthFilters,
     endMonthFilters,
     setEndMonthFilters,
@@ -579,6 +585,13 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             }}
             onConfirmDraftMove={onConfirmDraftMove}
             onCancelDraftMove={onCancelDraftMove}
+            onCalendarViewModeChange={setCalendarViewMode}
+            pinchDisabled={
+              filtersOpen ||
+              settingsOpen ||
+              Boolean(moveDialogDay) ||
+              Boolean(selectedEventEntry)
+            }
           />
 
           <PlannerCoachPanel coach={coach} />
@@ -662,6 +675,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         categoryFilters={categoryFilters}
         onCategoryFiltersChange={setCategoryFilters}
         categoryOptions={categoryOptions}
+        goalIdFilters={goalIdFilters}
+        onGoalIdFiltersChange={setGoalIdFilters}
+        goalFilterOptions={goalFilterOptions}
         endMonthFilters={effectiveEndMonthFilters}
         onEndMonthFiltersChange={setEndMonthFilters}
         endMonthOptions={endMonthOptions}

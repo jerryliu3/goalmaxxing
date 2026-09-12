@@ -127,6 +127,10 @@ export function CalendarSurface({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
+  const [goalIdFilters, setGoalIdFilters] = useState<string[]>([]);
+  const [calendarFocusedGoalId, setCalendarFocusedGoalId] = useState<string | null>(
+    null
+  );
   const [endMonthFilters, setEndMonthFilters] = useState<string[]>([]);
   const [showCompletedGoals, setShowCompletedGoals] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -170,6 +174,10 @@ export function CalendarSurface({
     const resetTimer = window.setTimeout(() => setLocalSelectedDay(null), 0);
     return () => window.clearTimeout(resetTimer);
   }, [month, selectedDay, viewMode]);
+  useEffect(() => {
+    const resetTimer = window.setTimeout(() => setCalendarFocusedGoalId(null), 0);
+    return () => window.clearTimeout(resetTimer);
+  }, [month]);
   const [expandedMonthRows, setExpandedMonthRows] = useState(false);
   const [previewEntryOrderByDay, setPreviewEntryOrderByDay] = useState<
     Record<string, string[]>
@@ -302,6 +310,7 @@ export function CalendarSurface({
     setupTimezone,
     duoScope,
     categoryFilters: viewMode === "day" ? [] : categoryFilters,
+    goalIdFilters: viewMode === "day" ? [] : goalIdFilters,
     endMonthFilters,
     searchQuery,
     partnerCompletionMarkersByDate,
@@ -355,6 +364,7 @@ export function CalendarSurface({
     invalidLockGoalCount,
     capacityWarningGoalCount,
     categoryOptions,
+    goalFilterOptions,
     endMonthOptions,
     effectiveEndMonthFilters,
     getEntriesForDay,
@@ -802,6 +812,10 @@ export function CalendarSurface({
     onSelectedDayChange,
     setLocalSelectedDay,
     setSelectedEventEntryKey,
+    selectedEventEntryKey,
+    setCalendarFocusedGoalId,
+    calendarFocusedGoalId,
+    calendarAsOfDate: context?.asOfDate ?? calendarToday,
     setDayPreview,
     canMutateEntryOnDay,
     getOrderedEntriesForDay,
@@ -932,7 +946,10 @@ export function CalendarSurface({
     filtersOpen,
     categoryFilters,
     setCategoryFilters,
+    goalIdFilters,
+    setGoalIdFilters,
     categoryOptions,
+    goalFilterOptions,
     effectiveEndMonthFilters,
     endMonthFilters,
     setEndMonthFilters,

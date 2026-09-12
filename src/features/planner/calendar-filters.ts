@@ -69,20 +69,38 @@ export function buildCalendarCategoryFilterOptions(
     .map((label) => ({ value: label, label }));
 }
 
+export function buildCalendarGoalFilterOptions(
+  goalsByOriginalId: Map<string, CalendarFilterGoalSnapshot & { title?: string }>,
+  goalTitles: Record<string, string>
+): GoalCategoryFilterOption[] {
+  return Array.from(goalsByOriginalId.keys())
+    .map((goalId) => ({
+      value: goalId,
+      label: goalTitles[goalId] ?? goalsByOriginalId.get(goalId)?.title ?? goalId,
+    }))
+    .sort((left, right) => left.label.localeCompare(right.label));
+}
+
 export function goalPassesCalendarFilters({
   goalId,
   goalsByOriginalId,
   categoryFilters,
   endMonthFilters,
+  goalIdFilters = [],
   goalOverride,
 }: {
   goalId: string;
   goalsByOriginalId: Map<string, CalendarFilterGoalSnapshot>;
   categoryFilters: string[];
   endMonthFilters: string[];
+  goalIdFilters?: string[];
   goalOverride?: CalendarFilterGoalOverride;
 }) {
-  const hasActiveFilters = categoryFilters.length > 0 || endMonthFilters.length > 0;
+  if (goalIdFilters.length > 0 && !goalIdFilters.includes(goalId)) {
+    return false;
+  }
+  const hasActiveFilters =
+    categoryFilters.length > 0 || endMonthFilters.length > 0 || goalIdFilters.length > 0;
   const goal = goalOverride ?? goalsByOriginalId.get(goalId) ?? null;
   if (!goal) {
     return !hasActiveFilters;

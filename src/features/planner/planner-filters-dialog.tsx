@@ -30,6 +30,9 @@ interface PlannerFiltersDialogProps {
   endMonthFilters: string[];
   onEndMonthFiltersChange: (value: string[]) => void;
   endMonthOptions: GoalMonthOption[];
+  goalIdFilters?: string[];
+  onGoalIdFiltersChange?: (value: string[]) => void;
+  goalFilterOptions?: GoalCategoryFilterOption[];
   showCompletedGoals?: boolean;
   onShowCompletedGoalsChange?: (value: boolean) => void;
   dayFilters?: ChecklistFiltersFormProps | null;
@@ -47,6 +50,9 @@ export function PlannerFiltersDialog({
   endMonthFilters,
   onEndMonthFiltersChange,
   endMonthOptions,
+  goalIdFilters = [],
+  onGoalIdFiltersChange,
+  goalFilterOptions = [],
   showCompletedGoals = false,
   onShowCompletedGoalsChange,
   dayFilters = null,
@@ -72,7 +78,7 @@ export function PlannerFiltersDialog({
         <div className="max-h-[min(32rem,calc(85vh-8rem))] space-y-4 overflow-y-auto overflow-x-visible">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
-              <p className="text-sm font-medium">Show tasks instead of goals</p>
+              <p className="font-sans text-sm font-medium">Show tasks instead of goals</p>
               <p className="text-xs text-muted-foreground">
                 Hide scheduled goals and show tasks on their scheduled date. Drag a
                 task to change that date immediately.
@@ -112,7 +118,7 @@ export function PlannerFiltersDialog({
                 aria-label="Show completed goals"
               />
               <span className="min-w-0 space-y-1">
-                <span className="block text-sm font-medium">Show completed goals</span>
+                <span className="block font-sans text-sm font-medium">Show completed goals</span>
                 <span className="block text-xs text-muted-foreground">
                   Show completed goals in the checklist, including milestones,
                   and already-done sessions on future days. Past and today still
@@ -127,9 +133,13 @@ export function PlannerFiltersDialog({
             <GoalFilters
               categoryFilterEnabled
               endMonthFilterEnabled
+              goalFilterEnabled={goalFilterOptions.length > 0}
               categoryFilters={categoryFilters}
               onCategoryFiltersChange={onCategoryFiltersChange}
               categoryOptions={categoryOptions}
+              goalIdFilters={goalIdFilters}
+              onGoalIdFiltersChange={onGoalIdFiltersChange}
+              goalFilterOptions={goalFilterOptions}
               endMonthFilters={endMonthFilters}
               onEndMonthFiltersChange={onEndMonthFiltersChange}
               endMonthOptions={endMonthOptions}

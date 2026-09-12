@@ -13,9 +13,13 @@ export interface GoalCategoryFilterOption {
 interface GoalFiltersProps {
   categoryFilterEnabled?: boolean;
   endMonthFilterEnabled?: boolean;
+  goalFilterEnabled?: boolean;
   categoryFilters: string[];
   onCategoryFiltersChange: (nextCategories: string[]) => void;
   categoryOptions: GoalCategoryFilterOption[];
+  goalIdFilters?: string[];
+  onGoalIdFiltersChange?: (nextGoalIds: string[]) => void;
+  goalFilterOptions?: GoalCategoryFilterOption[];
   endMonthFilters: string[];
   onEndMonthFiltersChange: (nextEndMonths: string[]) => void;
   endMonthOptions: GoalMonthOption[];
@@ -25,15 +29,19 @@ interface GoalFiltersProps {
 export function GoalFilters({
   categoryFilterEnabled = true,
   endMonthFilterEnabled = true,
+  goalFilterEnabled = false,
   categoryFilters,
   onCategoryFiltersChange,
   categoryOptions,
+  goalIdFilters = [],
+  onGoalIdFiltersChange,
+  goalFilterOptions = [],
   endMonthFilters,
   onEndMonthFiltersChange,
   endMonthOptions,
   className,
 }: GoalFiltersProps) {
-  if (!categoryFilterEnabled && !endMonthFilterEnabled) {
+  if (!categoryFilterEnabled && !endMonthFilterEnabled && !goalFilterEnabled) {
     return null;
   }
 
@@ -48,6 +56,20 @@ export function GoalFilters({
             onSelectedValuesChange={onCategoryFiltersChange}
             placeholder="All categories"
             allLabel="All categories"
+            triggerClassName="h-8 rounded-full bg-background/90 text-xs"
+          />
+        </label>
+      ) : null}
+
+      {goalFilterEnabled && onGoalIdFiltersChange ? (
+        <label className="block min-w-0 space-y-1 sm:col-span-2">
+          <Label className="text-xs text-muted-foreground">Goals</Label>
+          <CheckboxDropdown
+            options={goalFilterOptions}
+            selectedValues={goalIdFilters}
+            onSelectedValuesChange={onGoalIdFiltersChange}
+            placeholder="All goals"
+            allLabel="All goals"
             triggerClassName="h-8 rounded-full bg-background/90 text-xs"
           />
         </label>

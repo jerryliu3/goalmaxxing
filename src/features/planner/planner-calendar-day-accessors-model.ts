@@ -6,6 +6,7 @@ import { isEntryCredited } from "@/features/planner/calendar-format";
 import {
   applyCalendarCompletionMarkerFilters,
   buildCalendarCategoryFilterOptions,
+  buildCalendarGoalFilterOptions,
   entryMatchesCalendarSearchQuery,
   goalPassesCalendarFilters,
   shouldHideCompletedOnFutureCalendarDay,
@@ -60,6 +61,7 @@ export interface CalendarDayAccessorsArgs {
   } | null;
   categoryFilters: string[];
   endMonthFilters: string[];
+  goalIdFilters?: string[];
   searchQuery?: string;
   duoScope: "me" | "partner" | "both";
   partnerCompletionMarkersByDate?: Map<string, PlannerCompletionFactMarker[]>;
@@ -86,6 +88,7 @@ export interface CalendarDayAccessorsResult {
   invalidLockGoalCount: number;
   capacityWarningGoalCount: number;
   categoryOptions: ReturnType<typeof buildCalendarCategoryFilterOptions>;
+  goalFilterOptions: ReturnType<typeof buildCalendarGoalFilterOptions>;
   endMonthOptions: ReturnType<typeof buildGoalEndMonthOptions>;
   effectiveEndMonthFilters: string[];
   getEntriesForDay: (day: string | null) => PlannerDayDetailEntry[];
@@ -110,6 +113,7 @@ export function selectCalendarDayAccessorsModel({
   editableDateWindow,
   categoryFilters,
   endMonthFilters,
+  goalIdFilters = [],
   searchQuery = "",
   duoScope,
   partnerCompletionMarkersByDate,
@@ -135,6 +139,10 @@ export function selectCalendarDayAccessorsModel({
   );
 
   const categoryOptions = buildCalendarCategoryFilterOptions(activeGoalsByOriginalGoalId);
+  const goalFilterOptions = buildCalendarGoalFilterOptions(
+    activeGoalsByOriginalGoalId,
+    context?.goalTitles ?? {}
+  );
   const endMonthOptions = (() => {
     const goalEndDates = Array.from(activeGoalsByOriginalGoalId.values()).map(
       (goal) => goal.end_date
@@ -155,6 +163,7 @@ export function selectCalendarDayAccessorsModel({
       goalsByOriginalId: activeGoalsByOriginalGoalId,
       categoryFilters,
       endMonthFilters: effectiveEndMonthFilters,
+      goalIdFilters,
       goalOverride,
     });
 
@@ -340,6 +349,7 @@ export function selectCalendarDayAccessorsModel({
     invalidLockGoalCount,
     capacityWarningGoalCount,
     categoryOptions,
+    goalFilterOptions,
     endMonthOptions,
     effectiveEndMonthFilters,
     getEntriesForDay,

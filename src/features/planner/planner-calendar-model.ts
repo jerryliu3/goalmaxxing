@@ -51,6 +51,7 @@ export interface PlannerCalendarModelArgs {
   duoScope: "me" | "partner" | "both";
   categoryFilters: string[];
   endMonthFilters: string[];
+  goalIdFilters?: string[];
   searchQuery?: string;
   partnerCompletionMarkersByDate?: Map<string, PlannerCompletionFactMarker[]>;
   previewEntryOrderByDay: Record<string, string[]>;
@@ -90,6 +91,7 @@ export function selectPlannerCalendarModel({
   duoScope,
   categoryFilters,
   endMonthFilters,
+  goalIdFilters = [],
   searchQuery = "",
   partnerCompletionMarkersByDate,
   previewEntryOrderByDay,
@@ -126,6 +128,7 @@ export function selectPlannerCalendarModel({
     editableDateWindow,
     categoryFilters,
     endMonthFilters,
+    goalIdFilters,
     searchQuery,
     duoScope,
     partnerCompletionMarkersByDate,

@@ -42,6 +42,10 @@ type CalendarSurfacePresentationArgs = Omit<
     : import("@/features/planner/calendar-surface.types").CalendarSurfaceProps["onSelectedDayChange"];
   setLocalSelectedDay: (day: string | null) => void;
   setSelectedEventEntryKey: (value: string | null) => void;
+  selectedEventEntryKey: string | null;
+  setCalendarFocusedGoalId: (goalId: string | null) => void;
+  calendarFocusedGoalId: string | null;
+  calendarAsOfDate: string;
   setDayPreview: React.Dispatch<
     React.SetStateAction<
       import("@/features/planner/calendar-surface.types").DayPreviewState | null
@@ -99,6 +103,10 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     onSelectedDayChange,
     setLocalSelectedDay,
     setSelectedEventEntryKey,
+    selectedEventEntryKey,
+    setCalendarFocusedGoalId,
+    calendarFocusedGoalId,
+    calendarAsOfDate,
     setDayPreview,
     canMutateEntryOnDay,
     getOrderedEntriesForDay,
@@ -151,6 +159,10 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     onSelectedDayChange,
     setLocalSelectedDay,
     setSelectedEventEntryKey,
+    selectedEventEntryKey,
+    setCalendarFocusedGoalId,
+    calendarFocusedGoalId,
+    calendarAsOfDate,
     setDayPreview,
     canMutateEntryOnDay,
     getOrderedEntriesForDay,
