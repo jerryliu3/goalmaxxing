@@ -86,9 +86,10 @@ export function PlannerEventDetailDialog({
   // portalled into a detached element.
   useLayoutEffect(() => {
     const slot = selectedEntryKey
-      ? Array.from(document.querySelectorAll<HTMLElement>("[data-plan-editor-slot]")).find(
-          (node) => node.dataset.planEditorSlot === selectedEntryKey
-        ) ?? null
+      ? Array.from(
+          document.querySelectorAll<HTMLElement>("[data-plan-checklist-editor-slot]")
+        ).find((node) => node.dataset.planChecklistEditorSlot === selectedEntryKey) ??
+        null
       : null;
     // The portal target is rendered by the day list in the same commit that opens this
     // editor, so it can only be resolved afterwards. A node owned by a sibling subtree
@@ -109,9 +110,6 @@ export function PlannerEventDetailDialog({
       className="plan-row-unfold my-2 min-w-0 rounded-lg border border-primary/20 bg-muted/30 p-3"
       onKeyDown={(event) => { if (event.key === "Escape") callbacks.onOpenChange(false); }}
     >
-      <div className="mb-2 flex justify-end">
-        <Button size="sm" variant="ghost" onClick={() => callbacks.onOpenChange(false)}>Done</Button>
-      </div>
         <div className="mb-3">
           <div className="flex items-center justify-center gap-1">
             <Button

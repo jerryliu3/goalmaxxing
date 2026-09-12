@@ -578,6 +578,25 @@ export function orderEntriesForDay({
   return [...entries].sort(compareWithinGroup);
 }
 
+export function promoteEntriesForDisplay<T extends { originalGoalId: string }>(
+  entries: T[],
+  promoteGoalId: string | null | undefined
+): T[] {
+  if (!promoteGoalId) {
+    return entries;
+  }
+  const promoted: T[] = [];
+  const rest: T[] = [];
+  for (const entry of entries) {
+    if (entry.originalGoalId === promoteGoalId) {
+      promoted.push(entry);
+    } else {
+      rest.push(entry);
+    }
+  }
+  return [...promoted, ...rest];
+}
+
 export function buildCoachSummaryWorkUnits(
   entriesByDate: Map<string, PlannerDayDetailEntry[]>
 ) {

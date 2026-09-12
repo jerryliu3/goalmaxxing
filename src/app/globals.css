@@ -599,6 +599,90 @@ body {
   pointer-events: none;
 }
 
+@property --plan-selected-border-angle-a {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@property --plan-selected-border-angle-b {
+  syntax: "<angle>";
+  initial-value: 180deg;
+  inherits: false;
+}
+
+@keyframes plan-selected-border-trace-a {
+  to {
+    --plan-selected-border-angle-a: 360deg;
+  }
+}
+
+@keyframes plan-selected-border-trace-b {
+  to {
+    --plan-selected-border-angle-b: 540deg;
+  }
+}
+
+.plan-selected-shimmer {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Dual conic-gradient traces on the pill border (not a content overlay). */
+.plan-selected-shimmer::before,
+.plan-selected-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.plan-selected-shimmer::before {
+  background: conic-gradient(
+    from var(--plan-selected-border-angle-b),
+    transparent 0deg 250deg,
+    color-mix(in srgb, var(--plan-selected-shimmer-color, var(--primary)) 45%, transparent) 290deg,
+    color-mix(in srgb, var(--plan-selected-shimmer-color, var(--primary)) 75%, transparent) 320deg,
+    transparent 360deg
+  );
+  animation: plan-selected-border-trace-b 2.4s linear infinite;
+}
+
+.plan-selected-shimmer::after {
+  background: conic-gradient(
+    from var(--plan-selected-border-angle-a),
+    transparent 0deg 250deg,
+    color-mix(in srgb, var(--plan-selected-shimmer-color, var(--primary)) 55%, transparent) 290deg,
+    color-mix(in srgb, var(--plan-selected-shimmer-color, var(--primary)) 85%, transparent) 320deg,
+    transparent 360deg
+  );
+  animation: plan-selected-border-trace-a 2.4s linear infinite;
+}
+
+@keyframes plan-selected-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.plan-selected-pulse {
+  animation: plan-selected-pulse 2.8s ease-in-out infinite;
+}
+
 [data-plan-zoom] {
   --plan-zoom-duration: 720ms;
 }
@@ -660,6 +744,9 @@ body {
   .motion-popup-enter,
   .motion-collapsible-content,
   .plan-draft-shimmer::after,
+  .plan-selected-shimmer::before,
+  .plan-selected-shimmer::after,
+  .plan-selected-pulse,
   .plan-adjacent-month-nudge-up,
   .plan-adjacent-month-nudge-down,
   .plan-view-swap {

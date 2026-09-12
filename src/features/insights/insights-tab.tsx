@@ -10,7 +10,7 @@ import {
   endOfYear,
 } from "date-fns";
 import { X } from "lucide-react";
-import { type TouchEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
 import { AnchoredPopupCard } from "@/components/ui/anchored-popup-card";
@@ -19,7 +19,11 @@ import { LoadingCard } from "@/components/ui/loading-card";
 import { InsightsTrackerHeader } from "@/features/insights/insights-tracker-header";
 import { ProgressGoalList } from "@/features/insights/progress-goal-list";
 import { InsightsOverallStatsTiles } from "@/features/insights/insights-overall-stats-card";
+import { ProgressWeekCurrentStrip } from "@/features/insights/progress-week-current-strip";
+import { ProgressAchievementsSection } from "@/features/insights/progress-achievements-section";
 import { ProgressMilestoneRunway } from "@/features/insights/progress-milestone-runway";
+import { WeekRhythmCard } from "@/features/insights/week-rhythm-card";
+import { useProgressWeekRhythm } from "@/features/insights/use-progress-week-rhythm";
 import {
   isLedgerHeatmapDayMutable,
   progressLedgerCaption,
@@ -208,7 +212,6 @@ export function InsightsTab({
   const [pendingRetroDate, setPendingRetroDate] = useState<string | null>(null);
   const [focusedLedgerDate, setFocusedLedgerDate] = useState<string | null>(null);
   const [milestoneNameDrafts, setMilestoneNameDrafts] = useState<Record<string, string[]>>({});
-  const monthSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
   const aggregateHeatmapRef = useRef<HTMLDivElement | null>(null);
   const aggregateDrilldownRef = useRef<HTMLDivElement | null>(null);
   const runCompletionMutation = useCompletionMutation();
@@ -604,47 +607,6 @@ export function InsightsTab({
     [loadData, readOnly, redirectToLogin, state.userId, supabase]
   );
 
-  const onMonthSectionTouchStart: TouchEventHandler<HTMLDivElement> = (event) => {
-    if (event.touches.length !== 1) {
-      monthSwipeStartRef.current = null;
-      return;
-    }
-
-    const target = event.target as HTMLElement | null;
-    const isInteractiveElement = target?.closest(
-      "button,a,input,textarea,select,label,[role='button']"
-    );
-    if (isInteractiveElement) {
-      monthSwipeStartRef.current = null;
-      return;
-    }
-
-    const touch = event.touches[0];
-    monthSwipeStartRef.current = {
-      x: touch.clientX,
-      y: touch.clientY,
-    };
-  };
-
-  const onMonthSectionTouchEnd: TouchEventHandler<HTMLDivElement> = (event) => {
-    const swipeStart = monthSwipeStartRef.current;
-    monthSwipeStartRef.current = null;
-
-    if (!swipeStart || event.changedTouches.length === 0) {
-      return;
-    }
-
-    const touch = event.changedTouches[0];
-    const deltaX = touch.clientX - swipeStart.x;
-    const deltaY = touch.clientY - swipeStart.y;
-
-    if (Math.abs(deltaX) < 70 || Math.abs(deltaX) <= Math.abs(deltaY)) {
-      return;
-    }
-
-    setMonthCursor((previous) => (deltaX < 0 ? addMonths(previous, 1) : subMonths(previous, 1)));
-  };
-
   const aggregateDrilldownItems = useMemo(
     () =>
       aggregateDrilldownDate
@@ -723,6 +685,18 @@ export function InsightsTab({
   const showOverallStats =
     Boolean(state.insightsStats?.overall) &&
     (contentMode === "full" || contentMode === "lane");
+  const weekRhythm = useProgressWeekRhythm({
+    goals: personalGoals,
+    completions: personalCompletions,
+    asOfDate: todayLocal,
+    weekStartsOn: state.insightsStats?.weekStartsOn ?? 1,
+    visibleGoalIds:
+      selectedLedgerGoalIds.length > 0 &&
+      selectedLedgerGoalIds.length < visibleGoalIds.length
+        ? selectedLedgerIdSet
+        : null,
+    enabled: showOverallStats && contentMode === "full",
+  });
   const ledgerCaption = progressLedgerCaption(
     ledgerMode,
     selectedLedgerGoalIds.length,
@@ -845,6 +819,10 @@ export function InsightsTab({
         />
       ) : null}
 
+      {showOverallStats && state.insightsStats ? (
+        <ProgressWeekCurrentStrip overallStats={state.insightsStats.overall} />
+      ) : null}
+
       {showGoalsSection || showHeatmap ? (
         <div
           data-testid="progress-ledger-layout"
@@ -864,12 +842,6 @@ export function InsightsTab({
                 }
                 data-onboarding="insights.overall"
                 data-no-swipe="true"
-                onTouchStart={
-                  perGoalViewMode === "month" ? onMonthSectionTouchStart : undefined
-                }
-                onTouchEnd={
-                  perGoalViewMode === "month" ? onMonthSectionTouchEnd : undefined
-                }
               >
                 {ledgerHelp}
                 {ledgerMode === "empty" ? null : perGoalViewMode === "month" ? (
@@ -1006,6 +978,16 @@ export function InsightsTab({
           <InsightsOverallStatsTiles overallStats={state.insightsStats.overall} />
         </section>
       ) : null}
+
+      {showOverallStats && contentMode === "full" ? (
+        <WeekRhythmCard
+          rows={weekRhythm.rows}
+          loading={weekRhythm.loading}
+          error={weekRhythm.error}
+        />
+      ) : null}
+
+      {contentMode === "full" ? <ProgressAchievementsSection /> : null}
 
       {showHeatmap && aggregateDrilldownDate && !heatmapEditable ? (
         <AnchoredPopupCard

@@ -42,6 +42,15 @@ type CalendarSurfacePresentationArgs = Omit<
     : import("@/features/planner/calendar-surface.types").CalendarSurfaceProps["onSelectedDayChange"];
   setLocalSelectedDay: (day: string | null) => void;
   setSelectedEventEntryKey: (value: string | null) => void;
+  selectedEventEntryKey: string | null;
+  setCalendarFocusedGoalId: (goalId: string | null) => void;
+  calendarFocusedGoalId: string | null;
+  togglePlannerGoalSelection: (
+    entry: PlannerDayDetailEntry,
+    options: { applyGoalFocus: boolean }
+  ) => void;
+  resetPlannerEntrySelection: (options?: { clearGoalFocus?: boolean }) => void;
+  calendarAsOfDate: string;
   setDayPreview: React.Dispatch<
     React.SetStateAction<
       import("@/features/planner/calendar-surface.types").DayPreviewState | null
@@ -99,6 +108,12 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     onSelectedDayChange,
     setLocalSelectedDay,
     setSelectedEventEntryKey,
+    selectedEventEntryKey,
+    setCalendarFocusedGoalId,
+    calendarFocusedGoalId,
+    togglePlannerGoalSelection,
+    resetPlannerEntrySelection,
+    calendarAsOfDate,
     setDayPreview,
     canMutateEntryOnDay,
     getOrderedEntriesForDay,
@@ -151,6 +166,12 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     onSelectedDayChange,
     setLocalSelectedDay,
     setSelectedEventEntryKey,
+    selectedEventEntryKey,
+    setCalendarFocusedGoalId,
+    calendarFocusedGoalId,
+    togglePlannerGoalSelection,
+    resetPlannerEntrySelection,
+    calendarAsOfDate,
     setDayPreview,
     canMutateEntryOnDay,
     getOrderedEntriesForDay,
@@ -221,7 +242,7 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
   );
 
   const eventDetailCallbacks = usePlannerEventDetailCallbacks({
-    setSelectedEventEntryKey,
+    resetPlannerEntrySelection,
     setLocalSelectedDay,
     updateDraftLabel,
     updateDraftScheduledDate,
@@ -240,6 +261,7 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     plannerReadOnly,
     setLocalSelectedDay,
     setSelectedEventEntryKey,
+    togglePlannerGoalSelection,
     setDayPreview,
     canMutateEntryOnDay,
     cells,

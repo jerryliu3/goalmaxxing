@@ -6,6 +6,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import { promoteEntriesForDisplay } from "@/features/planner/calendar-entries";
 import { CalendarMonthDayCell } from "@/features/planner/calendar-month-day-cell";
 import {
   getDayStatus,
@@ -21,7 +22,6 @@ import type {
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import type { PlannerDayPreviewInteractions } from "@/features/planner/use-planner-day-preview-interactions";
-import { canOpenPlannerEventDetails } from "@/features/planner/calendar-task-entries";
 import { getPlannerCompletionTogglePresentation } from "@/features/planner/completion-entry-dispatch";
 import { scrollPlannerChecklistIntoView } from "@/features/planner/planner-checklist-scroll";
 import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
@@ -73,6 +73,15 @@ interface UsePlannerCalendarDayCellRendererArgs {
   ) => void;
   setLocalSelectedDay: (day: string | null) => void;
   setSelectedEventEntryKey: (entryKey: string | null) => void;
+  selectedEventEntryKey: string | null;
+  setCalendarFocusedGoalId: (goalId: string | null) => void;
+  calendarFocusedGoalId: string | null;
+  togglePlannerGoalSelection: (
+    entry: PlannerDayDetailEntry,
+    options: { applyGoalFocus: boolean }
+  ) => void;
+  resetPlannerEntrySelection: (options?: { clearGoalFocus?: boolean }) => void;
+  calendarAsOfDate: string;
   setDayPreview: Dispatch<SetStateAction<DayPreviewState | null>>;
   canMutateEntryOnDay: (entry: PlannerDayDetailEntry, day: string) => boolean;
   getOrderedEntriesForDay: (day: string | null) => PlannerDayDetailEntry[];
@@ -113,8 +122,14 @@ export function usePlannerCalendarDayCellRenderer({
   focusedDay,
   plannerReadOnly,
   onSelectedDayChange,
-  setLocalSelectedDay,
+    setLocalSelectedDay,
   setSelectedEventEntryKey,
+  selectedEventEntryKey,
+  setCalendarFocusedGoalId,
+  calendarFocusedGoalId,
+  togglePlannerGoalSelection,
+  resetPlannerEntrySelection,
+  calendarAsOfDate,
   setDayPreview,
   canMutateEntryOnDay,
   getOrderedEntriesForDay,
@@ -150,7 +165,11 @@ export function usePlannerCalendarDayCellRenderer({
 
   return useCallback(
     (cell: PlannerCalendarCell) => {
-      const entriesForDay = getOrderedEntriesForDay(cell.date);
+      const entriesForDayRaw = getOrderedEntriesForDay(cell.date);
+      const entriesForDay =
+        viewMode === "month" && calendarFocusedGoalId
+          ? promoteEntriesForDisplay(entriesForDayRaw, calendarFocusedGoalId)
+          : entriesForDayRaw;
       const completionFactMarkersForDay = getCompletionFactMarkersForDay(cell.date);
       const status =
         entriesForDay.length > 0
@@ -185,6 +204,8 @@ export function usePlannerCalendarDayCellRenderer({
           layout={viewMode === "week" ? "agenda" : "month"}
           ariaLabel={ariaLabel}
           entriesForDay={entriesForDay}
+          focusedGoalId={viewMode === "month" ? calendarFocusedGoalId : null}
+          selectedEntryKey={viewMode === "month" ? selectedEventEntryKey : null}
           completionFactMarkersForDay={completionFactMarkersForDay}
           maxVisibleItems={
             viewMode === "week" || viewMode === "three_day"
@@ -209,15 +230,18 @@ export function usePlannerCalendarDayCellRenderer({
             if (!canMutateEntryOnDay(entry, day)) {
               return;
             }
-            if (viewMode === "week") {
-              selectDayForView(day, resolveWeekAgendaSelectionViewMode());
-              if (canOpenPlannerEventDetails(entry)) {
-                setSelectedEventEntryKey(entry.key);
+            if (viewMode === "week" || viewMode === "three_day") {
+              if (day !== focusedDay) {
+                selectDayForView(day, resolveWeekAgendaSelectionViewMode());
               }
+              togglePlannerGoalSelection(entry, { applyGoalFocus: false });
               return;
             }
             if (viewMode === "month") {
-              selectDayForView(day, "month");
+              if (day !== focusedDay) {
+                selectDayForView(day, "month");
+              }
+              togglePlannerGoalSelection(entry, { applyGoalFocus: true });
               return;
             }
             if (viewMode === "day") {
@@ -225,9 +249,7 @@ export function usePlannerCalendarDayCellRenderer({
                 setLocalSelectedDay(day);
                 onSelectedDayChange(day, "push", "day");
               }
-              if (canOpenPlannerEventDetails(entry)) {
-                setSelectedEventEntryKey(entry.key);
-              }
+              togglePlannerGoalSelection(entry, { applyGoalFocus: false });
               setDayPreview(null);
               return;
             }
@@ -245,6 +267,7 @@ export function usePlannerCalendarDayCellRenderer({
               return;
             }
             if (viewMode === "month") {
+              resetPlannerEntrySelection();
               selectDayForView(cell.date, "month");
               return;
             }
@@ -389,6 +412,12 @@ export function usePlannerCalendarDayCellRenderer({
       setDayPreview,
       setLocalSelectedDay,
       setSelectedEventEntryKey,
+      selectedEventEntryKey,
+      setCalendarFocusedGoalId,
+      calendarFocusedGoalId,
+      togglePlannerGoalSelection,
+      resetPlannerEntrySelection,
+      calendarAsOfDate,
       startLongPressPreview,
       suppressDayCellClickRef,
       lastTouchTapRef,

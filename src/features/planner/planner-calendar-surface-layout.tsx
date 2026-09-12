@@ -123,6 +123,10 @@ export interface PlannerCalendarSurfaceLayoutProps {
   ) => boolean;
   setLocalSelectedDay: (day: string | null) => void;
   setSelectedEventEntryKey: (key: string | null) => void;
+  togglePlannerGoalSelection: (
+    entry: PlannerDayDetailEntry,
+    options: { applyGoalFocus: boolean }
+  ) => void;
   toggleDateFact: (
     entry: PlannerDayDetailEntry,
     selectedDateOverride?: string,
@@ -186,6 +190,9 @@ export interface PlannerCalendarSurfaceLayoutProps {
   categoryFilters: string[];
   setCategoryFilters: (value: string[]) => void;
   categoryOptions: GoalCategoryFilterOption[];
+  goalIdFilters: string[];
+  setGoalIdFilters: (value: string[]) => void;
+  goalFilterOptions: GoalCategoryFilterOption[];
   effectiveEndMonthFilters: string[];
   endMonthFilters: string[];
   setEndMonthFilters: (value: string[]) => void;
@@ -273,6 +280,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     canMutateEntryOnDay,
     setLocalSelectedDay,
     setSelectedEventEntryKey,
+    togglePlannerGoalSelection,
     toggleDateFact,
     pointerPressActiveRef,
     calendarGridViewportRef,
@@ -321,6 +329,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     categoryFilters,
     setCategoryFilters,
     categoryOptions,
+    goalIdFilters,
+    setGoalIdFilters,
+    goalFilterOptions,
     effectiveEndMonthFilters,
     endMonthFilters,
     setEndMonthFilters,
@@ -502,7 +513,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
                 return;
               }
               setLocalSelectedDay(focusedDay);
-              setSelectedEventEntryKey(entry.key);
+              togglePlannerGoalSelection(entry, {
+                applyGoalFocus: viewMode === "month",
+              });
             }}
             onToggleCompletion={(entry, day, sourceElement) => {
               void toggleDateFact(entry, day, sourceElement ?? undefined);
@@ -544,7 +557,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
                 return;
               }
               setLocalSelectedDay(day);
-              setSelectedEventEntryKey(entry.key);
+              togglePlannerGoalSelection(entry, {
+                applyGoalFocus: viewMode === "month",
+              });
             }}
             onPreviewToggleCompletion={(entry, day, sourceElement) => {
               if (!canMutateEntryOnDay(entry, day)) {
@@ -579,6 +594,13 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             }}
             onConfirmDraftMove={onConfirmDraftMove}
             onCancelDraftMove={onCancelDraftMove}
+            onCalendarViewModeChange={setCalendarViewMode}
+            pinchDisabled={
+              filtersOpen ||
+              settingsOpen ||
+              Boolean(moveDialogDay) ||
+              Boolean(selectedEventEntry)
+            }
           />
 
           <PlannerCoachPanel coach={coach} />
@@ -615,7 +637,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
           }
           setExpandedPreviewDay(null);
           setLocalSelectedDay(day);
-          setSelectedEventEntryKey(entry.key);
+          togglePlannerGoalSelection(entry, {
+            applyGoalFocus: viewMode === "month",
+          });
         }}
         onExpandedPreviewToggleCompletion={(entry, day, sourceElement) => {
           if (!canMutateEntryOnDay(entry, day)) {
@@ -662,6 +686,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         categoryFilters={categoryFilters}
         onCategoryFiltersChange={setCategoryFilters}
         categoryOptions={categoryOptions}
+        goalIdFilters={goalIdFilters}
+        onGoalIdFiltersChange={setGoalIdFilters}
+        goalFilterOptions={goalFilterOptions}
         endMonthFilters={effectiveEndMonthFilters}
         onEndMonthFiltersChange={setEndMonthFilters}
         endMonthOptions={endMonthOptions}

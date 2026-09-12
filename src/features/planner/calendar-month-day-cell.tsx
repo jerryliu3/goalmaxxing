@@ -2,7 +2,7 @@
 
 import { format, parse } from "date-fns";
 import { Link2 } from "lucide-react";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
@@ -21,7 +21,9 @@ import {
 import {
   getEntryDraftDiffSummary,
   getEntryDraftPillClasses,
+  getEntrySelectedPillClasses,
 } from "@/features/planner/calendar-format";
+import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import {
   planAgendaDayNumberClass,
   planAgendaDayRowClass,
@@ -114,6 +116,8 @@ interface CalendarMonthDayCellProps<
   mutationLoadingKey?: string | null;
   optimisticCompletionFacts?: OptimisticCompletionFacts;
   onboardingFirstEntry?: boolean;
+  focusedGoalId?: string | null;
+  selectedEntryKey?: string | null;
 }
 
 const DEFAULT_MAX_VISIBLE_ITEMS_PER_DAY_CELL = 2;
@@ -164,6 +168,8 @@ export function CalendarMonthDayCell<
   mutationLoadingKey = null,
   optimisticCompletionFacts,
   onboardingFirstEntry = false,
+  focusedGoalId = null,
+  selectedEntryKey = null,
 }: CalendarMonthDayCellProps<TEntry, TCompletionFactMarker>) {
   const hasVisibleContent =
     entriesForDay.length > 0 || completionFactMarkersForDay.length > 0;
@@ -207,6 +213,14 @@ export function CalendarMonthDayCell<
     const immovable = isEntryImmovableForDraft(entry);
     const draftDiffSummary = getEntryDraftDiffSummary(entry);
     const isDraft = Boolean(entry.draftDiffKind);
+    const isCompleted = credited && !isDraft;
+    const isGoalFocusDimmed =
+      focusedGoalId &&
+      entry.originalGoalId !== focusedGoalId &&
+      !isPlannerTaskCalendarEntry(entry);
+    const selectedPillClasses = getEntrySelectedPillClasses({
+      selected: Boolean(selectedEntryKey) && entry.key === selectedEntryKey,
+    });
     const pillToneClasses = getEntryDraftPillClasses({
       draftDiffKind: entry.draftDiffKind,
     });
@@ -238,6 +252,7 @@ export function CalendarMonthDayCell<
       !isDraft &&
       (completionMode === "done" || (!completionToggleState && credited));
     return (
+      <Fragment key={`cell-entry-wrap-${entry.key}`}>
       <PlannerDraggableEntry
         key={`cell-entry-${entry.key}`}
         entryKey={entry.key}
@@ -254,6 +269,11 @@ export function CalendarMonthDayCell<
               ...style,
               ...pillFillStyle,
               viewTransitionName: planEntryViewTransitionName(entry.key),
+              ...(selectedPillClasses
+                ? ({
+                    ["--plan-selected-shimmer-color" as string]: visual.color,
+                  } as const)
+                : {}),
             }}
             onClick={(event) => {
               if (
@@ -287,9 +307,9 @@ export function CalendarMonthDayCell<
             onPointerCancelCapture={() => {
               onEntryPointerEnd();
             }}
-            className={`flex items-center gap-1.5 rounded-[10px] border px-1.5 py-1 text-[11px] ${PLAN_MORPH_CLASS} ${pillToneClasses} ${
+            className={`flex items-center gap-1.5 rounded-[10px] border px-1.5 py-1 text-[11px] ${PLAN_MORPH_CLASS} ${pillToneClasses} ${selectedPillClasses} ${
               entry.draftGhost ? "opacity-70 line-through" : ""
-            } ${
+            } ${isGoalFocusDimmed ? "opacity-45" : ""} ${
               immovable
                 ? "cursor-not-allowed"
                 : "cursor-grab active:cursor-grabbing"
@@ -355,7 +375,7 @@ export function CalendarMonthDayCell<
               />
             ) : null}
             <CompletionTitle
-              completed={credited}
+              completed={isCompleted}
               className="flex h-6 min-w-0 items-center truncate font-display leading-none"
             >
               {compactTitle}
@@ -369,6 +389,7 @@ export function CalendarMonthDayCell<
           </div>
         )}
       </PlannerDraggableEntry>
+      </Fragment>
     );
   };
 

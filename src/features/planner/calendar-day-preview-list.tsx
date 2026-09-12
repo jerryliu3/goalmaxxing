@@ -107,7 +107,7 @@ export function CalendarDayPreviewList<
       className={`overflow-x-hidden ${
         expanded
           ? "divide-y"
-          : "max-h-44 space-y-1 overflow-y-auto text-xs [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          : "max-h-44 space-y-1 overflow-y-auto overscroll-y-contain text-xs [touch-action:pan-y] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       }`}
     >
       {entries.length === 0 && completionFactMarkers.length === 0 ? (
@@ -398,7 +398,9 @@ export function CalendarDayPreviewList<
                   </div>
                 )}
               </PlannerDraggablePreviewEntry>
-              {expanded ? <div data-plan-editor-slot={entry.key} /> : null}
+              {expanded ? (
+                <div data-plan-checklist-editor-slot={entry.key} />
+              ) : null}
               </Fragment>
             );
           })}

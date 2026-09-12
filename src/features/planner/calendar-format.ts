@@ -214,6 +214,28 @@ export function getEntryDraftPillClasses(input: {
   return "rounded-[10px] border-border text-foreground";
 }
 
+/** Selected month pill treatment in Plan focus mode (border trace animation). */
+export const PLAN_SELECTED_PILL_TREATMENT = "shimmer" as const;
+
+export function getEntrySelectedPillClasses({
+  selected,
+  treatment = PLAN_SELECTED_PILL_TREATMENT,
+}: {
+  selected: boolean;
+  treatment?: "shimmer" | "ring" | "pulse";
+}) {
+  if (!selected) {
+    return "";
+  }
+  if (treatment === "ring") {
+    return "ring-1 ring-inset ring-primary/30";
+  }
+  if (treatment === "pulse") {
+    return "plan-selected-pulse border border-primary/35";
+  }
+  return "plan-selected-shimmer border border-primary/35";
+}
+
 export function entryDisplayRank(entry: {
   draftDiffKind: PlannerDraftVisualKind | null;
   creditState: string;
