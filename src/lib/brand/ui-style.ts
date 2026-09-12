@@ -96,8 +96,18 @@ export function applyDocumentUiStyle(style: UiStyle) {
   }
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta) {
-    themeMeta.setAttribute("content", style.themeColor);
+    themeMeta.setAttribute("content", style.backgroundColor);
   }
+  let statusBarMeta = document.querySelector<HTMLMetaElement>(
+    'meta[name="apple-mobile-web-app-status-bar-style"]'
+  );
+  if (!statusBarMeta) {
+    statusBarMeta = document.createElement("meta");
+    statusBarMeta.name = "apple-mobile-web-app-status-bar-style";
+    document.head.append(statusBarMeta);
+  }
+  statusBarMeta.content =
+    style.id === "gazetteer" ? "black-translucent" : "default";
   const iconHref = appIconHref(style.id);
   for (const link of document.querySelectorAll<HTMLLinkElement>(
     'link[rel="icon"], link[rel="apple-touch-icon"]'

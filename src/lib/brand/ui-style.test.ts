@@ -40,6 +40,29 @@ describe("ui style catalog", () => {
     expect(document.documentElement.dataset.uiStyle).toBe("original");
   });
 
+  it("updates theme-color and status bar when switching styles", () => {
+    let themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (!themeMeta) {
+      themeMeta = document.createElement("meta");
+      themeMeta.setAttribute("name", "theme-color");
+      document.head.append(themeMeta);
+    }
+
+    applyDocumentUiStyle(getUiStyle("gazetteer"));
+    expect(themeMeta.getAttribute("content")).toBe("#f3ead8");
+    expect(
+      document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
+        ?.getAttribute("content")
+    ).toBe("black-translucent");
+
+    applyDocumentUiStyle(getUiStyle("original"));
+    expect(themeMeta.getAttribute("content")).toBe("#fafafa");
+    expect(
+      document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
+        ?.getAttribute("content")
+    ).toBe("default");
+  });
+
   it("updates the favicon to the active style color", () => {
     const icon = document.createElement("link");
     icon.rel = "icon";
