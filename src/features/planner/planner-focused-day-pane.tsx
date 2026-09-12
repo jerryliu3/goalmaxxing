@@ -168,7 +168,13 @@ export function PlannerFocusedDayPane({
 
   return (
     <div
-      className={cn("space-y-3", shareDayTransition && PLAN_MORPH_CLASS)}
+      className={cn(
+        "space-y-3",
+        // Carries the week row's selected-day ring into day view so the emphasis is
+        // continuous through the morph instead of dropping at the end.
+        shareDayTransition &&
+          cn(PLAN_MORPH_CLASS, "rounded-[10px] p-3 ring-2 ring-inset ring-primary")
+      )}
       data-testid="plan-day-pane"
       data-plan-day={day}
       style={

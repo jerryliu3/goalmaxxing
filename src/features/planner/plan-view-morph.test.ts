@@ -104,6 +104,37 @@ describe("capturePlanScene", () => {
 });
 
 describe("animatePlanScene", () => {
+  it("positions surrogates before yielding, so none flash at the stage origin", () => {
+    const root = mount(`<div data-plan-view="week"><ol>${WEEK_ROW("2026-09-14")}</ol></div>`);
+    const content = root.firstElementChild as HTMLElement;
+    const from = capturePlanScene(root, "week");
+
+    const run = animatePlanScene(root, content, from, capturePlanScene(root, "day"), () => {});
+    const painted = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-plan-morph-overlay] [style*='translate']")
+    );
+
+    expect(painted.length).toBeGreaterThan(0);
+    run.cancel();
+  });
+
+  it("holds the clip constant so no edge sweeps across the tiles", () => {
+    const root = mount(`<div data-plan-view="week"><ol>${WEEK_ROW("2026-09-14")}</ol></div>`);
+    const content = root.firstElementChild as HTMLElement;
+
+    const run = animatePlanScene(
+      root,
+      content,
+      capturePlanScene(root, "week"),
+      capturePlanScene(root, "day"),
+      () => {}
+    );
+    // The root must not clip the overlay: its height animates, and hiding overflow
+    // dragged that shrinking edge up through the morph.
+    expect(root.style.overflow).toBe("");
+    run.cancel();
+  });
+
   it("restores the real view and removes its overlay when cancelled", () => {
     const root = mount(`<div data-plan-view="week"><ol>${WEEK_ROW("2026-09-14")}</ol></div>`);
     const content = root.firstElementChild as HTMLElement;
