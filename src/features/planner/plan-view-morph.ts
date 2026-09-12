@@ -148,13 +148,16 @@ function itemMark(el: HTMLElement, root: DOMRect, day: string, index: number): M
     auxiliary.querySelectorAll<HTMLElement>('[data-testid="completion-title"]').forEach(node => node.style.visibility = 'hidden');
     clearChrome(auxiliary);
     const titleBox = title ? box(title, root) : item.box;
-    // The inline title's Range includes overflowing text. Its containing block owns
-    // the ellipsis; measure that viewport separately from the glyph bounds.
-    const textViewport = title?.closest<HTMLElement>('.truncate') ?? title?.parentElement;
+    // Measure the available title column, not the intrinsic width of an inline span.
+    // Text stays at its natural width; only this viewport and the moving tile clip it.
+    const textViewport = title?.closest<HTMLElement>('[data-plan-title-viewport], .truncate');
     const viewport = textViewport ? box(textViewport, root) : item.box;
+    const viewportStyle = textViewport ? getComputedStyle(textViewport) : getComputedStyle(el);
+    const right = Math.min(item.box.x + item.box.width,
+        viewport.x + viewport.width - (parseFloat(viewportStyle.paddingRight) || 0) - (parseFloat(viewportStyle.borderRightWidth) || 0));
     return { ...item, auxiliary, textClip: {
         x: Math.max(item.box.x, titleBox.x, viewport.x), y: viewport.y,
-        width: Math.max(0, Math.min(item.box.x + item.box.width, viewport.x + viewport.width) - Math.max(item.box.x, titleBox.x, viewport.x)),
+        width: Math.max(0, right - Math.max(item.box.x, titleBox.x, viewport.x)),
         height: viewport.height,
     } };
 }
@@ -320,15 +323,12 @@ function glyph(parent: HTMLElement, m: Mark, overlay: DOMRect, origin: Box): Gly
     }
     return { el, own: shift(measured, -origin.x, -origin.y) };
 }
-function paintGlyph(g: Glyph, target: Box, origin: Box, opacity: number, bounded = false) {
+function paintGlyph(g: Glyph, target: Box, origin: Box, opacity: number) {
     const scale = g.own.height > 0 ? target.height / g.own.height : 1;
     g.el.style.transform = `translate(${target.x - origin.x - g.own.x * scale}px,${target.y - origin.y - g.own.y * scale}px) scale(${scale})`;
     g.el.style.opacity = `${opacity}`;
-    if (bounded) {
-        g.el.style.width = `${Math.max(0, (origin.width - (target.x - origin.x)) / scale)}px`;
-        g.el.style.overflow = 'hidden';
-        g.el.style.textOverflow = 'ellipsis';
-    }
+    g.el.style.width = 'max-content';
+    g.el.style.overflow = 'visible';
 }
 interface Track {
     /** Background, border and ring. */
@@ -348,6 +348,15 @@ interface Track {
     auxiliaryTo: HTMLElement | null;
     singleGlyph: boolean;
     chrome: Animation | null;
+    borders: [HTMLElement, HTMLElement] | null;
+}
+function borderLayer(parent: HTMLElement, mark: Mark) {
+    const node = document.createElement('div');
+    Object.assign(node.style, { position: 'absolute', inset: '0', pointerEvents: 'none',
+        boxSizing: 'border-box', borderRadius: 'inherit', borderColor: mark.border,
+        borderWidth: mark.borderWidths, borderStyle: mark.borderStyles });
+    parent.append(node);
+    return node;
 }
 export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: PlanScene, to: PlanScene, onFinish: () => void) {
     const duration = from.mode === 'month' || to.mode === 'month' ? PLAN_MORPH_MONTH_DURATION_MS : PLAN_MORPH_DURATION_MS;
@@ -462,15 +471,16 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
                 glyphs.append(auxiliary);
             }
             const singleGlyph = a.text === b.text && a.type?.family === b.type?.family && a.type?.style === b.type?.style && a.type?.textTransform === b.type?.textTransform;
+            const borders: Track['borders'] = el ? [borderLayer(el, a), borderLayer(el, b)] : null;
             const chrome = el && typeof el.animate === 'function' ? el.animate([
-                { backgroundColor: a.background, borderColor: a.border, borderWidth: a.borderWidths, borderRadius: `${a.radius}px`, boxShadow: a.shadow },
-                { backgroundColor: b.background, borderColor: b.border, borderWidth: b.borderWidths, borderRadius: `${b.radius}px`, boxShadow: b.shadow },
+                { backgroundColor: a.background, borderRadius: `${a.radius}px`, boxShadow: a.shadow },
+                { backgroundColor: b.background, borderRadius: `${b.radius}px`, boxShadow: b.shadow },
             ], { duration, fill: 'both', easing: 'linear' }) : null;
             chrome?.pause();
-            if (el) el.style.borderStyle = 'solid';
+            if (el) el.style.borderWidth = '0';
             tracks.push({ el, clip, from: a, to: b, fromGlyph: glyph(clip ?? host, a, overlayRect, origin),
                 toGlyph: singleGlyph ? null : glyph(clip ?? host, b, overlayRect, origin), current: a, kind, key, fade,
-                auxiliaryFrom: auxiliaryFrom ?? null, auxiliaryTo: auxiliaryTo ?? null, singleGlyph, chrome });
+                auxiliaryFrom: auxiliaryFrom ?? null, auxiliaryTo: auxiliaryTo ?? null, singleGlyph, chrome, borders });
         }
     }
     const aside = from.aside ?? to.aside;
@@ -530,6 +540,10 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
                 if (tr.kind === 'items') clipTo(tr.el, b, viewport);
                 // Chrome and geometry share the same clock and eased progress.
                 if (tr.chrome) tr.chrome.currentTime = progress * duration;
+                if (tr.borders) {
+                    tr.borders[0].style.opacity = `${1 - progress}`;
+                    tr.borders[1].style.opacity = `${progress}`;
+                }
             }
             const textViewport = intersection(viewport, lerp(tr.from.textClip ?? tr.from.box, tr.to.textClip ?? tr.to.box, progress));
             if (tr.clip) paintBox(tr.clip, textViewport);
@@ -552,9 +566,9 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
                     tr.fromGlyph.el.style.color = `color-mix(in srgb, ${tr.from.type.color} ${(1 - progress) * 100}%, ${tr.to.type.color})`;
                 }
                 if (tr.fromGlyph)
-                    paintGlyph(tr.fromGlyph, g, origin, alpha * (tr.singleGlyph ? 1 : 1 - progress), Boolean(tr.clip));
+                    paintGlyph(tr.fromGlyph, g, origin, alpha * (tr.singleGlyph ? 1 : 1 - progress));
                 if (tr.toGlyph)
-                    paintGlyph(tr.toGlyph, g, origin, alpha * progress, Boolean(tr.clip));
+                    paintGlyph(tr.toGlyph, g, origin, alpha * progress);
             }
         }
         if (asideNode && asideFrom && asideTo)

@@ -299,6 +299,7 @@ export function CalendarDayPreviewList<
                         expanded ? "py-3 pl-3" : "pl-2"
                       } ${immovable ? "" : "touch-none"}`}
                       data-plan-drag-handle="true"
+                      data-plan-title-viewport="true"
                       onClick={(event) => {
                         event.stopPropagation();
                         if (isDragging) {
@@ -463,4 +464,3 @@ export function CalendarDayPreviewList<
     </div>
   );
 }
-
