@@ -51,34 +51,36 @@ export function buildWeekRhythmRows({
     visibleGoalIds ? visibleGoalIds.has(goal.id) : true
   );
 
-  return filteredGoals.map((goal) => {
-    const goalUnits = workUnits.filter(
-      (unit) => unit.originalGoalId === goal.id && unit.scheduledDate
-    );
-    const days = weekDays.map((day) => {
-      const date = format(day, "yyyy-MM-dd");
-      const sessions = goalUnits.filter((unit) => unit.scheduledDate === date);
-      const credited = creditedGoalDates.has(`${goal.id}:${date}`);
-      let state: WeekRhythmKnotState = "empty";
-      if (sessions.length > 0) {
-        state =
-          credited || sessions.some((unit) => unit.creditState !== "uncredited")
-            ? "complete"
-            : "planned";
-      }
+  return filteredGoals
+    .map((goal) => {
+      const goalUnits = workUnits.filter(
+        (unit) => unit.originalGoalId === goal.id && unit.scheduledDate
+      );
+      const days = weekDays.map((day) => {
+        const date = format(day, "yyyy-MM-dd");
+        const sessions = goalUnits.filter((unit) => unit.scheduledDate === date);
+        const credited = creditedGoalDates.has(`${goal.id}:${date}`);
+        let state: WeekRhythmKnotState = "empty";
+        if (sessions.length > 0) {
+          state =
+            credited || sessions.some((unit) => unit.creditState !== "uncredited")
+              ? "complete"
+              : "planned";
+        }
+        return {
+          date,
+          weekdayLabel: format(day, "EEE"),
+          state,
+        };
+      });
       return {
-        date,
-        weekdayLabel: format(day, "EEE"),
-        state,
+        goalId: goal.id,
+        title: goal.title,
+        color: goal.color,
+        days,
       };
-    });
-    return {
-      goalId: goal.id,
-      title: goal.title,
-      color: goal.color,
-      days,
-    };
-  });
+    })
+    .filter((row) => row.days.some((day) => day.state !== "empty"));
 }
 
 export function buildCreditedGoalDateKeys(

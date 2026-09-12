@@ -7,7 +7,6 @@ import {
   buildWeekRhythmRows,
   type WeekRhythmGoalRow,
 } from "@/features/insights/week-rhythm-model";
-import { WeekRhythmCard } from "@/features/insights/week-rhythm-card";
 import { getJson } from "@/lib/api/client";
 import { buildPlannerContextCacheKey } from "@/lib/cache/planner-tab-cache";
 import { readTabDataCache, writeTabDataCache } from "@/lib/cache/tab-data-cache";
@@ -31,6 +30,7 @@ export function useProgressWeekRhythm({
 }) {
   const [context, setContext] = useState<PlannerContextPayload | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const scopeMonth = asOfDate ? asOfDate.slice(0, 7) : format(new Date(), "yyyy-MM");
 
   useEffect(() => {
@@ -41,10 +41,12 @@ export function useProgressWeekRhythm({
     const cached = readTabDataCache<PlannerContextPayload>(cacheKey);
     if (cached) {
       setContext(cached);
+      setError(null);
       return;
     }
     let cancelled = false;
     setLoading(true);
+    setError(null);
     void getJson<PlannerContextPayload>("/api/planner/context", {
       query: { scopeMonth },
     })
@@ -54,10 +56,16 @@ export function useProgressWeekRhythm({
         }
         writeTabDataCache(cacheKey, payload);
         setContext(payload);
+        setError(null);
       })
-      .catch(() => {
+      .catch((loadError) => {
         if (!cancelled) {
           setContext(null);
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Week rhythm could not be loaded."
+          );
         }
       })
       .finally(() => {
@@ -85,5 +93,5 @@ export function useProgressWeekRhythm({
     });
   }, [asOfDate, completions, context, goals, loading, visibleGoalIds, weekStartsOn]);
 
-  return { rows, loading: loading && !context };
+  return { rows, loading: loading && !context, error };
 }

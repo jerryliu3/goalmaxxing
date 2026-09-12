@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils";
 export function WeekRhythmCard({
   rows,
   loading,
+  error = null,
 }: {
   rows: WeekRhythmGoalRow[];
   loading?: boolean;
+  error?: string | null;
 }) {
   if (loading) {
     return (
@@ -22,6 +24,20 @@ export function WeekRhythmCard({
           Week rhythm
         </p>
         <p className="mt-3 text-sm text-muted-foreground">Loading planned sessions…</p>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section
+        className="rounded-xl border border-border bg-card p-4 shadow-sm"
+        data-testid="progress-week-rhythm"
+      >
+        <p className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Week rhythm
+        </p>
+        <p className="mt-3 text-sm text-destructive">{error}</p>
       </section>
     );
   }

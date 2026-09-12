@@ -20,6 +20,7 @@ import { InsightsTrackerHeader } from "@/features/insights/insights-tracker-head
 import { ProgressGoalList } from "@/features/insights/progress-goal-list";
 import { InsightsOverallStatsTiles } from "@/features/insights/insights-overall-stats-card";
 import { ProgressWeekCurrentStrip } from "@/features/insights/progress-week-current-strip";
+import { ProgressAchievementsSection } from "@/features/insights/progress-achievements-section";
 import { ProgressMilestoneRunway } from "@/features/insights/progress-milestone-runway";
 import { WeekRhythmCard } from "@/features/insights/week-rhythm-card";
 import { useProgressWeekRhythm } from "@/features/insights/use-progress-week-rhythm";
@@ -979,8 +980,14 @@ export function InsightsTab({
       ) : null}
 
       {showOverallStats && contentMode === "full" ? (
-        <WeekRhythmCard rows={weekRhythm.rows} loading={weekRhythm.loading} />
+        <WeekRhythmCard
+          rows={weekRhythm.rows}
+          loading={weekRhythm.loading}
+          error={weekRhythm.error}
+        />
       ) : null}
+
+      {contentMode === "full" ? <ProgressAchievementsSection /> : null}
 
       {showHeatmap && aggregateDrilldownDate && !heatmapEditable ? (
         <AnchoredPopupCard
