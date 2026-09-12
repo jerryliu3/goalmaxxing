@@ -14,6 +14,18 @@ export default function UxHubPage() {
           <li>
             <Link
               className="text-lg font-semibold underline"
+              href="/ux/journeys"
+            >
+              Journeys — Create, Remember, Grow
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Tempo, Weave, and Script: complete goal setup, six views of goal
+              history, and an interactive progress score experiment.
+            </p>
+          </li>
+          <li>
+            <Link
+              className="text-lg font-semibold underline"
               href="/ux/next-wave"
             >
               Next Wave — five interactive directions
@@ -31,8 +43,8 @@ export default function UxHubPage() {
               Spatial Plan concept gallery
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">
-              Authenticated application directions, destination studies, and Plan
-              craft (goal focus, quieter past days, collapsed completed).
+              Authenticated application directions, destination studies, and
+              Plan craft (goal focus, quieter past days, collapsed completed).
             </p>
           </li>
           <li>

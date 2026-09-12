@@ -1,5 +1,9 @@
 # Goalmaxxing — Next Wave
 
+Follow-up: [Create, Remember, Grow](./goalmaxxing-journeys-study.md) at
+`/ux/journeys` deepens Tempo, Weave, and Script with complete setup controls,
+past-goal treatments, and a score simulator.
+
 Status: **divergent interaction exploration, September 8, 2026.**
 
 Five concepts at `/ux/next-wave`, with a standalone private prototype at
