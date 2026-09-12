@@ -57,7 +57,8 @@ export {
 function sortableItemStyle(
   transform: { x: number; y: number; scaleX: number; scaleY: number } | null,
   transition: string | undefined,
-  isDragging: boolean
+  isDragging: boolean,
+  surface: PlannerSortableSurface = "calendar"
 ): CSSProperties {
   // Keep the source in its original slot while DragOverlay follows the pointer.
   // That hole stays a valid droppable so the item can be returned home.
@@ -69,6 +70,7 @@ function sortableItemStyle(
       ? `translate3d(${transform.x}px, ${transform.y}px, 0) scaleX(${transform.scaleX}) scaleY(${transform.scaleY})`
       : undefined,
     transition,
+    ...(surface === "checklist" ? { touchAction: "pan-y" } : null),
   };
 }
 
@@ -318,7 +320,7 @@ export function PlannerDraggableEntry({
     setActivatorNodeRef,
     attributes,
     listeners,
-    style: sortableItemStyle(transform, transition, isDragging),
+    style: sortableItemStyle(transform, transition, isDragging, surface),
     isDragging,
     isOver: isOver && !isDragging,
   });
@@ -388,7 +390,7 @@ export function PlannerDraggablePreviewEntry({
     setActivatorNodeRef,
     attributes,
     listeners,
-    style: sortableItemStyle(transform, transition, isDragging),
+    style: sortableItemStyle(transform, transition, isDragging, surface),
     isDragging,
     isOver: isOver && !isDragging,
   });

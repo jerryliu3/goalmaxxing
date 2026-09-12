@@ -3,11 +3,13 @@
 import {
   Fragment,
   useMemo,
+  useRef,
   useState,
   type MutableRefObject,
   type ReactNode,
 } from "react";
 import { PlannerDndProvider } from "@/features/planner/calendar-dnd";
+import { usePlanPinchViewChange } from "@/features/planner/use-plan-pinch-view-change";
 import type { PlannerDragTarget } from "@/features/planner/planner-drag-target";
 import {
   getEntryGoalFirstTitleWithTime,
@@ -123,6 +125,8 @@ export interface PlannerCalendarBoardProps {
   onDayPreviewMouseLeave: () => void;
   onConfirmDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
   onCancelDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
+  onCalendarViewModeChange: (mode: PlannerCalendarViewMode) => void;
+  pinchDisabled?: boolean;
 }
 
 export function PlannerCalendarBoard({
@@ -185,7 +189,19 @@ export function PlannerCalendarBoard({
   onDayPreviewMouseLeave,
   onConfirmDraftMove,
   onCancelDraftMove,
+  onCalendarViewModeChange,
+  pinchDisabled = false,
 }: PlannerCalendarBoardProps) {
+  const boardPinchRef = useRef<HTMLDivElement>(null);
+  const [isEntryDragging, setIsEntryDragging] = useState(false);
+
+  usePlanPinchViewChange({
+    containerRef: boardPinchRef,
+    viewMode,
+    onViewModeChange: onCalendarViewModeChange,
+    disabled: pinchDisabled || isEntryDragging,
+  });
+
   const monthRangeKey = `${cells[0]?.date ?? ""}:${cells.at(-1)?.date ?? ""}`;
   const monthWeeks = useMemo(() => groupMonthGridWeeks(cells), [cells]);
   const weekBands = useMemo(
@@ -230,12 +246,22 @@ export function PlannerCalendarBoard({
         getEntryLabel={getDragEntryLabel}
         getDayLabel={getDragDayLabel}
         renderDragOverlay={renderEntryDragOverlay}
-        onEntryDragStart={onEntryDragStart}
+        onEntryDragStart={(entryKey) => {
+          setIsEntryDragging(true);
+          onEntryDragStart(entryKey);
+        }}
         onEntryDragOverTarget={onEntryDragOverTarget}
-        onEntryDragEnd={onEntryDragEnd}
-        onEntryDragCancel={onEntryDragCancel}
+        onEntryDragEnd={(entryKey, target) => {
+          setIsEntryDragging(false);
+          onEntryDragEnd(entryKey, target);
+        }}
+        onEntryDragCancel={(entryKey) => {
+          setIsEntryDragging(false);
+          onEntryDragCancel(entryKey);
+        }}
       >
         <div
+          ref={boardPinchRef}
           className={`transition-opacity duration-150 motion-reduce:transition-none ${
             loading ? "opacity-70" : "opacity-100"
           } min-h-[34rem]`}
