@@ -171,13 +171,17 @@ function createRequestSignal(signal: AbortSignal | undefined, timeoutMs: number)
 
   const timeoutId = setTimeout(() => {
     timeoutState.hit = true;
-    controller.abort();
+    controller.abort(
+      new DOMException(`Request timed out after ${timeoutMs}ms`, "AbortError")
+    );
   }, timeoutMs);
 
-  const forwardAbort = () => controller.abort();
+  const forwardAbort = () => {
+    controller.abort(signal?.reason ?? new DOMException("Request aborted", "AbortError"));
+  };
   if (signal) {
     if (signal.aborted) {
-      controller.abort();
+      controller.abort(signal.reason);
     } else {
       signal.addEventListener("abort", forwardAbort, { once: true });
     }
@@ -252,7 +256,7 @@ export async function requestJson<TResponse, TBody = unknown>({
 
     return payload as TResponse;
   } catch (error) {
-    if (isAbortError(error) && timeout.timeoutState.hit) {
+    if (timeout.timeoutState.hit) {
       throw new ApiClientTransportError("timeout", error);
     }
     if (isAbortError(error)) {
