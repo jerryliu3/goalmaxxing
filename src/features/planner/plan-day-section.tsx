@@ -22,7 +22,7 @@ export function PlanDaySection({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
+    <Collapsible open={open} onOpenChange={setOpen} data-plan-day-section={title}>
       <CollapsibleTrigger
         className="flex w-full items-center justify-between gap-2 py-2 text-left font-sans text-base font-medium touch-manipulation"
         aria-expanded={open}
