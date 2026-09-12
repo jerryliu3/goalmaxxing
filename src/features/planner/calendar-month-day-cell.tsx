@@ -198,6 +198,20 @@ export function CalendarMonthDayCell<
     viewerCompletionFactMarkers.length -
     visibleEntries.length -
     visibleCompletionFactMarkers.length;
+  const hiddenItemCountLabel = planHiddenItemCountLabel(hiddenItemCount);
+  const monthOverflowLabel = (
+    <p
+      className={cn(
+        "text-[10px]",
+        hiddenItemCount > 0
+          ? planFilledChromeMetaClass({ inMonth, isToday, isSelected })
+          : "invisible"
+      )}
+      aria-hidden={hiddenItemCount === 0}
+    >
+      {hiddenItemCountLabel}
+    </p>
+  );
 
   const renderEntry = (entry: TEntry, entryIndex: number): ReactNode => {
     const visual = getGoalVisual({
@@ -506,7 +520,7 @@ export function CalendarMonthDayCell<
                           planFilledChromeMetaClass({ inMonth, isToday, isSelected })
                         )}
                       >
-                        {planHiddenItemCountLabel(hiddenItemCount)}
+                        {hiddenItemCountLabel}
                       </p>
                     ) : null}
                   </>
@@ -632,18 +646,11 @@ export function CalendarMonthDayCell<
                   className="rounded-md"
                 />
               ))}
-              {hiddenItemCount > 0 ? (
-                <p
-                  className={cn(
-                    "text-[10px]",
-                    planFilledChromeMetaClass({ inMonth, isToday, isSelected })
-                  )}
-                >
-                  {planHiddenItemCountLabel(hiddenItemCount)}
-                </p>
-              ) : null}
+              {monthOverflowLabel}
             </div>
-          ) : null}
+          ) : (
+            <div className="mt-4">{monthOverflowLabel}</div>
+          )}
         </button>
       )}
     </PlannerDroppableDay>

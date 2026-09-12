@@ -8,7 +8,6 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-r
 import Link from "next/link";
 import { getEntryDraftDiffSummary, getEntrySubtitle } from "@/features/planner/calendar-format";
 import { LinkedTargetsNote } from "@/features/planner/linked-targets-note";
-import { prefersReducedMotion } from "@/features/planner/plan-view-transition";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 
 export interface PlannerEventDetailDialogCallbacks {
@@ -97,10 +96,6 @@ export function PlannerEventDetailDialog({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHost((current) => (current === slot ? current : slot));
   }, [selectedEntryKey, selectedEventEntry]);
-  useLayoutEffect(() => {
-    if (!host || !selectedEntryKey) return;
-    host.scrollIntoView({ block: "nearest", behavior: prefersReducedMotion() ? "instant" : "smooth" });
-  }, [host, selectedEntryKey]);
   if (!selectedEventEntry) return null;
   const content = (
 

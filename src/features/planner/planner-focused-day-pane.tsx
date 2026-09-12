@@ -171,7 +171,7 @@ export function PlannerFocusedDayPane({
       className={cn(
         "space-y-3",
         !shareDayTransition &&
-          "max-h-[min(70dvh,calc(100dvh-8rem))] overflow-y-auto overscroll-y-contain [touch-action:pan-y]",
+          "max-h-[min(70dvh,calc(100dvh-8rem))] overflow-x-hidden overflow-y-auto overscroll-y-contain [touch-action:pan-y] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
         // Carries the week row's selected-day ring into day view so the emphasis is
         // continuous through the morph instead of dropping at the end.
         shareDayTransition &&

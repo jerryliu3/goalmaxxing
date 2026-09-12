@@ -263,6 +263,30 @@ describe("PlannerFocusedDayPane", () => {
     expect(screen.getByText("Thursday, Aug 6")).toBeInTheDocument();
   });
 
+  it("hides checklist overflow scrollbars on both axes", () => {
+    renderWithDnd(
+      <PlannerFocusedDayPane
+        day="2026-08-06"
+        entries={[sampleEntry as never]}
+        completionFactMarkers={[]}
+        mutationLoadingKey={null}
+        asOfDate="2026-08-06"
+        canMutatePlanItems
+        canMutateEntryOnDay={() => true}
+        onEntryOpen={() => {}}
+        onToggleCompletion={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+      />
+    );
+
+    const pane = screen.getByTestId("plan-day-pane");
+    expect(pane).toHaveClass("overflow-x-hidden");
+    expect(pane).toHaveClass("overflow-y-auto");
+    expect(pane.className).toContain("[scrollbar-width:none]");
+    expect(pane.className).toContain("[&::-webkit-scrollbar]:hidden");
+  });
+
   it("exposes weekday and day-number morph anchors when sharing the day transition", () => {
     const { container } = renderWithDnd(
       <PlannerFocusedDayPane
