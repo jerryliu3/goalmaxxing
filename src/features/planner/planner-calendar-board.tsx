@@ -205,7 +205,7 @@ export function PlannerCalendarBoard({
     adjacentMonthPeek.rangeKey === monthRangeKey && adjacentMonthPeek.next;
   const { firstRowVisible, lastRowVisible } = useMonthGridEdgeVisibility(
     multiMonthGridScrollRef,
-    `${monthRangeKey}:${showPreviousMonth}:${showNextMonth}:${expandedMonthRows}`
+    `${viewMode}:${monthRangeKey}:${showPreviousMonth}:${showNextMonth}:${expandedMonthRows}`
   );
 
   return (
