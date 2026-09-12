@@ -2,9 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CompeteSnapRail } from "@/features/social/compete-snap-rail";
-import { ChallengePosterTile } from "@/features/social/challenges/challenge-poster-tile";
+import {
+  CompeteSnapRail,
+  CompeteTile,
+  competeDensity,
+  sortJoinedFirst,
+  type CompeteTileModel,
+} from "@/features/social/compete-snap-rail";
 import { SocialFreshnessIndicator } from "@/features/social/social-freshness-indicator";
+import { useDuo } from "@/features/social/duo/duo-context";
 import {
   fetchSocialChallenges,
   joinSocialChallenge,
@@ -21,12 +27,20 @@ interface ChallengeListProps {
   hideWhenEmpty?: boolean;
 }
 
+function challengeMetric(item: SocialChallenge) {
+  if (!item.viewerJoined) {
+    return undefined;
+  }
+  return `${item.viewerProgress ?? 0} / ${item.targetValue}`;
+}
+
 export function ChallengeList({
   isActive = true,
   refreshToken = 0,
   onRefreshRequested,
   hideWhenEmpty = false,
 }: ChallengeListProps) {
+  const { viewerLabel } = useDuo();
   const cachedChallenges = peekSocialChallengesCache();
   const [items, setItems] = useState<SocialChallenge[]>(cachedChallenges?.items ?? []);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -64,8 +78,47 @@ export function ChallengeList({
     };
   }, [isActive, loadChallenges, refreshToken]);
 
-  const openItems = useMemo(
-    () => items.filter((item) => item.status !== "closed" && item.status !== "archived"),
+  const tiles = useMemo<CompeteTileModel[]>(() => {
+    const openItems = items.filter(
+      (item) => item.status !== "closed" && item.status !== "archived"
+    );
+    const mapped = openItems.map((item) => {
+      const progress = item.viewerProgress ?? 0;
+      const percent =
+        item.targetValue > 0 ? Math.round((progress / item.targetValue) * 100) : 0;
+      const people = item.viewerJoined
+        ? [
+            {
+              rank: 1,
+              name: viewerLabel,
+              you: true,
+              partner: false,
+              label: `${progress}/${item.targetValue}`,
+              percent,
+            },
+          ]
+        : [];
+      return {
+        key: item.id,
+        title: item.title,
+        titleBadge: formatTimeLeftLabel(item.endsAt) ?? undefined,
+        metric: challengeMetric(item),
+        detail: item.description ?? `${item.status} · target ${item.targetValue}`,
+        joined: item.viewerJoined,
+        closed: false,
+        people,
+        punchMarks: item.viewerJoined
+          ? { progress, target: item.targetValue }
+          : undefined,
+        joinLabel: "Join challenge",
+        leaveLabel: "Leave challenge",
+      } satisfies CompeteTileModel;
+    });
+    return sortJoinedFirst(mapped);
+  }, [items, viewerLabel]);
+
+  const challengeById = useMemo(
+    () => new Map(items.map((item) => [item.id, item])),
     [items]
   );
 
@@ -126,7 +179,7 @@ export function ChallengeList({
     );
   }
 
-  if (openItems.length === 0) {
+  if (tiles.length === 0) {
     if (hideWhenEmpty) {
       return null;
     }
@@ -153,20 +206,22 @@ export function ChallengeList({
         />
       </div>
       <CompeteSnapRail label="Challenges">
-        {openItems.map((challenge) => {
-          const expanded = expandedId === challenge.id;
+        {tiles.map((tile) => {
+          const challenge = challengeById.get(tile.key);
+          const expanded = expandedId === tile.key;
           return (
-            <ChallengePosterTile
-              key={challenge.id}
-              challenge={challenge}
-              timeLeftLabel={formatTimeLeftLabel(challenge.endsAt)}
+            <CompeteTile
+              key={tile.key}
+              tile={tile}
+              span="card"
+              density={competeDensity({ joined: tile.joined, expanded })}
               expanded={expanded}
-              joinPending={pendingId === challenge.id}
+              joinPending={pendingId === tile.key}
               joinError={expanded ? actionError : null}
               onExpand={() =>
-                setExpandedId((current) => (current === challenge.id ? null : challenge.id))
+                setExpandedId((current) => (current === tile.key ? null : tile.key))
               }
-              onJoin={() => void toggleJoin(challenge)}
+              onJoin={challenge ? () => void toggleJoin(challenge) : undefined}
             />
           );
         })}

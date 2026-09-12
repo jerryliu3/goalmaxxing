@@ -25,6 +25,7 @@ export type CompeteTileModel = {
   joined: boolean;
   closed: boolean;
   people: CompetePerson[];
+  punchMarks?: { progress: number; target: number };
   joinLabel?: string;
   leaveLabel?: string;
 };
@@ -113,6 +114,9 @@ export function CompeteTile({
   const rows = density === "peek" ? peekPeople : tile.people;
   const wide = span === "wide";
   const joinDisabled = tile.closed || joinPending;
+  const showExpandedLeaderboard = density === "ranks";
+  const showPunchFace = Boolean(tile.punchMarks) && !showExpandedLeaderboard;
+  const showPeople = !showPunchFace && density !== "join-only";
 
   function handleJoinClick(event: MouseEvent<HTMLButtonElement>) {
     event.stopPropagation();
@@ -125,10 +129,10 @@ export function CompeteTile({
   return (
     <article
       data-testid="compete-plaque"
-      className={`relative flex min-h-[22.5rem] snap-start flex-col overflow-hidden rounded-[16px] border border-border bg-card p-5 shadow-[inset_0_1px_0_color-mix(in_srgb,white_40%,transparent),0_16px_28px_-18px_color-mix(in_srgb,var(--foreground)_30%,transparent)] ${
+      className={`relative flex min-h-[15rem] snap-start flex-col overflow-hidden rounded-[14px] border border-border bg-card p-4 shadow-[inset_0_1px_0_color-mix(in_srgb,white_40%,transparent),0_12px_22px_-16px_color-mix(in_srgb,var(--foreground)_30%,transparent)] ${
         wide
           ? "flex-[0_0_calc(100%-2.75rem)]"
-          : "w-[28rem] max-w-[calc(100%-1.5rem)] shrink-0"
+          : "w-[18rem] max-w-[calc(100%-1.5rem)] shrink-0"
       }`}
     >
       <span
@@ -154,7 +158,7 @@ export function CompeteTile({
               tile.kicker ? "mt-2" : ""
             }`}
           >
-            <h3 className="font-display text-2xl font-semibold tracking-tight">
+            <h3 className="font-display text-xl font-semibold tracking-tight">
               {tile.title}
             </h3>
             {tile.titleBadge ? (
@@ -165,18 +169,27 @@ export function CompeteTile({
               </span>
             ) : null}
           </div>
-          {tile.metric ? (
+          {tile.metric && !showExpandedLeaderboard && !showPunchFace ? (
             <p className="mt-1 font-mono text-lg tracking-tight">{tile.metric}</p>
           ) : null}
-          <p className="mt-1 text-sm text-muted-foreground">{tile.detail}</p>
+          {!showExpandedLeaderboard ? (
+            <p className="mt-1 text-sm text-muted-foreground">{tile.detail}</p>
+          ) : null}
         </div>
 
+        {showPunchFace && tile.punchMarks ? (
+          <CompetePunchMarks
+            progress={tile.punchMarks.progress}
+            target={tile.punchMarks.target}
+          />
+        ) : null}
+
         {density === "join-only" ? (
-          <p className="mt-6 text-sm text-muted-foreground">
+          <p className="mt-3 text-sm text-muted-foreground">
             Ranked people stay hidden until you join or open this tile.
           </p>
-        ) : (
-          <ol className="mt-5 w-full space-y-2">
+        ) : showPeople ? (
+          <ol className="mt-3 w-full space-y-2">
             {rows.map((row) => (
               <li
                 key={`${tile.key}-${row.name}-${row.rank}`}
@@ -208,9 +221,9 @@ export function CompeteTile({
               </li>
             ))}
           </ol>
-        )}
+        ) : null}
 
-        {density === "peek" ? (
+        {density === "peek" && !showPunchFace ? (
           <p className="mt-3 text-xs text-muted-foreground">Tap to open</p>
         ) : null}
 
@@ -262,4 +275,38 @@ export function competeDensity({
 
 export function sortJoinedFirst<T extends { joined: boolean }>(items: readonly T[]): T[] {
   return [...items].sort((a, b) => Number(b.joined) - Number(a.joined));
+}
+
+const MAX_VISIBLE_PUNCHES = 12;
+
+function CompetePunchMarks({
+  progress,
+  target,
+}: {
+  progress: number;
+  target: number;
+}) {
+  const cappedTarget = Math.min(target, MAX_VISIBLE_PUNCHES);
+  const filled = Math.min(progress, cappedTarget);
+  const overflow = target > MAX_VISIBLE_PUNCHES ? target - MAX_VISIBLE_PUNCHES : 0;
+  return (
+    <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Challenge progress">
+      {Array.from({ length: cappedTarget }, (_, index) => (
+        <span
+          key={`punch-${index}`}
+          aria-hidden
+          className={`size-3 rounded-full border ${
+            index < filled
+              ? "border-primary bg-primary"
+              : "border-border bg-background"
+          }`}
+        />
+      ))}
+      {overflow > 0 ? (
+        <span className="self-center font-mono text-[11px] text-muted-foreground">
+          +{overflow}
+        </span>
+      ) : null}
+    </div>
+  );
 }
