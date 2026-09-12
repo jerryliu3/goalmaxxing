@@ -742,3 +742,13 @@ body {
     )
   ) !important;
 }
+
+/* The editor belongs to the selected checklist row, not a modal layer. */
+@keyframes plan-row-unfold {
+  from { clip-path: inset(0 0 100% 0); transform: translateY(-6px); }
+  to { clip-path: inset(0); transform: translateY(0); }
+}
+.plan-row-unfold { animation: plan-row-unfold 220ms var(--motion-ease-emphasized); }
+@media (prefers-reduced-motion: reduce) {
+  .plan-row-unfold { animation: none; }
+}

@@ -414,6 +414,7 @@ export function CalendarMonthDayCell<
             onDoubleClick={(event) => onCellDoubleClick(event.currentTarget)}
           >
             <span
+              data-plan-weekday="true"
               className={cn(
                 "block font-sans text-[11px] font-medium uppercase tracking-[0.12em]",
                 planFilledChromeMetaClass({ inMonth, isToday, isSelected })
@@ -422,6 +423,7 @@ export function CalendarMonthDayCell<
               {weekdayLabel}
             </span>
             <span
+              data-plan-day-number="true"
               className={cn(
                 "font-display",
                 planAgendaDayNumberClass({ isToday, isSelected })
@@ -554,6 +556,7 @@ export function CalendarMonthDayCell<
         >
           <div className="pointer-events-none absolute top-2 left-2 flex items-center gap-1.5">
             <p
+              data-plan-day-number="true"
               className={`text-xs font-semibold leading-none ${planMonthDayNumberClass({
                 inMonth,
                 isToday,

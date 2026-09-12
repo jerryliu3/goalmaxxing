@@ -315,8 +315,8 @@ export function PlannerCalendarBoard({
                             style={SEVEN_COLUMN_GRID_STYLE}
                             data-calendar-weekday-grid="true"
                           >
-                            {weekdayLabels.map((weekday) => (
-                              <span key={weekday}>{weekday}</span>
+                            {weekdayLabels.map((weekday, index) => (
+                              <span key={weekday} data-plan-weekday-index={new Date(`${focusedWeekCells[index]?.date ?? focusedDay}T12:00:00Z`).getUTCDay()}>{weekday}</span>
                             ))}
                           </div>
                           <div

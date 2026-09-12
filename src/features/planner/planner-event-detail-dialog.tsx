@@ -1,12 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useLayoutEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import Link from "next/link";
@@ -82,17 +78,31 @@ export function PlannerEventDetailDialog({
   getEntryGoalFirstTitleWithTime,
   callbacks,
 }: PlannerEventDetailDialogProps) {
-  const handleOpenAutoFocus = (event: Event) => {
-    event.preventDefault();
-  };
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    const slot = selectedEventEntry
+      ? Array.from(document.querySelectorAll<HTMLElement>("[data-plan-editor-slot]"))
+          .find((node) => node.dataset.planEditorSlot === selectedEventEntry.key) ?? null
+      : null;
+    if (slot !== host) setHost(slot);
+  });
+  useLayoutEffect(() => {
+    if (!host || !selectedEventEntry) return;
+    host.scrollIntoView({ block: "nearest", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+  }, [host, selectedEventEntry?.key]);
+  if (!selectedEventEntry) return null;
+  const content = (
 
-  return (
-    <Dialog open={Boolean(selectedEventEntry)} onOpenChange={callbacks.onOpenChange}>
-      <DialogContent
-        className="overflow-x-hidden"
-        onOpenAutoFocus={handleOpenAutoFocus}
-      >
-        <DialogHeader className="gap-1 pr-10">
+    <section
+      aria-label="Edit planned session"
+      data-plan-entry-editor="true"
+      className="plan-row-unfold my-2 min-w-0 rounded-lg border border-primary/20 bg-muted/30 p-3"
+      onKeyDown={(event) => { if (event.key === "Escape") callbacks.onOpenChange(false); }}
+    >
+      <div className="mb-2 flex justify-end">
+        <Button size="sm" variant="ghost" onClick={() => callbacks.onOpenChange(false)}>Done</Button>
+      </div>
+        <div className="mb-3">
           <div className="flex items-center justify-center gap-1">
             <Button
               type="button"
@@ -114,11 +124,11 @@ export function PlannerEventDetailDialog({
             >
               <ChevronLeft />
             </Button>
-            <DialogTitle className="mx-1 min-w-0 text-center">
+            <h3 className="mx-1 min-w-0 text-center font-medium">
               {selectedEventEntry
                 ? getEntryGoalFirstTitleWithTime(selectedEventEntry)
                 : "Event detail"}
-            </DialogTitle>
+            </h3>
             <Button
               type="button"
               variant="outline"
@@ -140,7 +150,7 @@ export function PlannerEventDetailDialog({
               <ChevronsRight />
             </Button>
           </div>
-        </DialogHeader>
+        </div>
         {selectedEventEntry ? (
           <div className="min-w-0 space-y-3 text-sm">
             {selectedEventEntry.hasLinkedTargets ? (
@@ -249,7 +259,7 @@ export function PlannerEventDetailDialog({
             )}
           </div>
         ) : null}
-      </DialogContent>
-    </Dialog>
+    </section>
   );
+  return host ? createPortal(content, host) : content;
 }
