@@ -94,7 +94,9 @@ describe("PlannerEventDetailDialog", () => {
       />
     )
 
-    const activeDialog = (await screen.findAllByRole("dialog")).at(-1)
+    const activeDialog = (
+      await screen.findAllByRole("region", { name: "Edit planned session" })
+    ).at(-1)
     expect(activeDialog).toBeDefined()
     expect(within(activeDialog!).getByRole("heading", { name: "Goal A" })).toHaveClass(
       "text-center"
