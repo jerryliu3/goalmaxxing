@@ -94,7 +94,7 @@ describe("ChallengeList", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Tap to open Cohort Health Push" }));
     expect(screen.getByRole("button", { name: "Collapse Cohort Health Push" })).toBeInTheDocument();
-    expect(screen.getByText("Tap to open")).toBeInTheDocument();
+    expect(screen.getByText("250/1000")).toBeInTheDocument();
     await nextTick();
 
     expect(fetchSocialChallengesMock).toHaveBeenCalledTimes(1);

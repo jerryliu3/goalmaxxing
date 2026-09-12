@@ -29,7 +29,7 @@ interface ChallengeListProps {
 
 function challengeMetric(item: SocialChallenge) {
   if (!item.viewerJoined) {
-    return "Join to track";
+    return undefined;
   }
   return `${item.viewerProgress ?? 0} / ${item.targetValue}`;
 }
@@ -40,8 +40,7 @@ export function ChallengeList({
   onRefreshRequested,
   hideWhenEmpty = false,
 }: ChallengeListProps) {
-  const { viewerLabel, state: duoState } = useDuo();
-  const partner = duoState.activePartner;
+  const { viewerLabel } = useDuo();
   const cachedChallenges = peekSocialChallengesCache();
   const [items, setItems] = useState<SocialChallenge[]>(cachedChallenges?.items ?? []);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -84,10 +83,9 @@ export function ChallengeList({
       (item) => item.status !== "closed" && item.status !== "archived"
     );
     const mapped = openItems.map((item) => {
+      const progress = item.viewerProgress ?? 0;
       const percent =
-        item.targetValue > 0
-          ? Math.round(((item.viewerProgress ?? 0) / item.targetValue) * 100)
-          : 0;
+        item.targetValue > 0 ? Math.round((progress / item.targetValue) * 100) : 0;
       const people = item.viewerJoined
         ? [
             {
@@ -95,24 +93,9 @@ export function ChallengeList({
               name: viewerLabel,
               you: true,
               partner: false,
-              label: `${item.viewerProgress ?? 0}/${item.targetValue}`,
+              label: `${progress}/${item.targetValue}`,
               percent,
             },
-            ...(item.subjectKind === "team" && partner
-              ? [
-                  {
-                    rank: 1,
-                    name:
-                      partner.partnerDisplayName ??
-                      partner.partnerUsername ??
-                      "Partner",
-                    you: false,
-                    partner: true,
-                    label: "Team",
-                    percent,
-                  },
-                ]
-              : []),
           ]
         : [];
       return {
@@ -124,12 +107,15 @@ export function ChallengeList({
         joined: item.viewerJoined,
         closed: false,
         people,
+        punchMarks: item.viewerJoined
+          ? { progress, target: item.targetValue }
+          : undefined,
         joinLabel: "Join challenge",
         leaveLabel: "Leave challenge",
       } satisfies CompeteTileModel;
     });
     return sortJoinedFirst(mapped);
-  }, [items, partner, viewerLabel]);
+  }, [items, viewerLabel]);
 
   const challengeById = useMemo(
     () => new Map(items.map((item) => [item.id, item])),
@@ -219,9 +205,7 @@ export function ChallengeList({
           onRefreshRequested={onRefreshRequested}
         />
       </div>
-      <CompeteSnapRail
-        label="Challenges"
-      >
+      <CompeteSnapRail label="Challenges">
         {tiles.map((tile) => {
           const challenge = challengeById.get(tile.key);
           const expanded = expandedId === tile.key;
