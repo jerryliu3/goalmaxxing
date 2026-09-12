@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useLayoutEffect } from "react";
 import {
   getCalendarTargetScrollLeft,
   getCalendarTargetScrollTop,
@@ -61,7 +61,7 @@ export function useCalendarScrollBehavior({
     return;
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isMonthScopedCalendarViewMode(viewMode)) {
       monthScrollAlignmentKeyRef.current = null;
       return;
@@ -96,7 +96,8 @@ export function useCalendarScrollBehavior({
     ) {
       return;
     }
-    const frame = window.requestAnimationFrame(() => {
+    // Commit scroll alignment before the morph's destination measurement.
+    {
       const verticalContainer = multiMonthGridScrollRef.current;
       const horizontalContainer = calendarGridViewportRef.current;
       if (!verticalContainer || !horizontalContainer) {
@@ -126,10 +127,7 @@ export function useCalendarScrollBehavior({
           current === pendingMonthAlignment ? null : current
         );
       }
-    });
-    return () => {
-      window.cancelAnimationFrame(frame);
-    };
+    }
   }, [
     calendarGridViewportRef,
     context,

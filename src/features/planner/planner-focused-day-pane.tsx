@@ -173,13 +173,16 @@ export function PlannerFocusedDayPane({
         // Carries the week row's selected-day ring into day view so the emphasis is
         // continuous through the morph instead of dropping at the end.
         shareDayTransition &&
-          cn(PLAN_MORPH_CLASS, "rounded-[10px] p-3 ring-2 ring-inset ring-primary")
+          cn(PLAN_MORPH_CLASS, "min-h-[34rem] rounded-[10px] p-3 ring-2 ring-inset ring-primary")
       )}
       data-testid="plan-day-pane"
       data-plan-day={day}
       style={
         shareDayTransition
-          ? { viewTransitionName: planDayViewTransitionName(day) }
+          ? {
+              viewTransitionName: planDayViewTransitionName(day),
+              minHeight: "max(34rem, var(--plan-day-canvas-height, 0px))",
+            }
           : undefined
       }
     >

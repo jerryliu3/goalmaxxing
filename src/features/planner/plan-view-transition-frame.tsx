@@ -9,7 +9,7 @@ import {
   revealPlanContent,
   type PlanScene,
 } from "./plan-view-morph";
-import { PLAN_VIEW_SWAP_CLASS, prefersReducedMotion } from "./plan-view-transition";
+import { prefersReducedMotion } from "./plan-view-transition";
 
 interface Props {
   viewMode: PlannerCalendarViewMode;
@@ -26,6 +26,7 @@ export class PlanViewTransitionFrame extends Component<Props> {
   private readonly contentRef = createRef<HTMLDivElement>();
   private animation: ReturnType<typeof animatePlanScene> | null = null;
   private frame = 0;
+  private pendingScene: PlanScene | null = null;
 
   getSnapshotBeforeUpdate(previous: Props): PlanScene | null {
     const root = this.rootRef.current;
@@ -34,7 +35,7 @@ export class PlanViewTransitionFrame extends Component<Props> {
     }
     // An interrupted morph hands over its in-flight geometry so the next one
     // continues from where the pixels actually are.
-    const scene = this.animation?.snapshot() ?? capturePlanScene(root, previous.viewMode);
+    const scene = this.animation?.snapshot() ?? this.pendingScene ?? capturePlanScene(root, previous.viewMode);
     this.animation?.cancel();
     this.animation = null;
     cancelAnimationFrame(this.frame);
@@ -47,9 +48,8 @@ export class PlanViewTransitionFrame extends Component<Props> {
       return;
     }
     hidePlanContent(content);
-    // Measured on the next frame so the destination has laid out. The month viewport
-    // aligns its scroll from a passive effect that can land later still, which the
-    // morph absorbs by re-reading a live anchor rather than by waiting here.
+    this.pendingScene = scene;
+    // Month alignment runs synchronously in layout effects before this frame.
     this.frame = requestAnimationFrame(() => this.begin(scene));
   }
 
@@ -67,7 +67,13 @@ export class PlanViewTransitionFrame extends Component<Props> {
       }
       return;
     }
+    if (this.props.viewMode === "day") {
+      // Retain the calendar's room on quiet days, including tall Week agendas.
+      // This is the actual Day layout, not temporary space removed at handoff.
+      root.style.setProperty("--plan-day-canvas-height", `${scene.clip.height}px`);
+    }
     const next = capturePlanScene(root, this.props.viewMode);
+    this.pendingScene = null;
     this.animation = animatePlanScene(root, content, scene, next, () => {
       this.animation = null;
     });
@@ -79,7 +85,6 @@ export class PlanViewTransitionFrame extends Component<Props> {
         <div
           ref={this.contentRef}
           data-plan-view={this.props.viewMode}
-          className={PLAN_VIEW_SWAP_CLASS}
         >
           {this.props.children}
         </div>

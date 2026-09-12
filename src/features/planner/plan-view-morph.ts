@@ -29,6 +29,8 @@ interface Mark {
     text: string;
     background: string;
     border: string;
+    borderWidths: string;
+    borderStyles: string;
     /** Selected-day emphasis is a ring, i.e. a box-shadow rather than a border. */
     shadow: string;
     radius: number;
@@ -37,6 +39,10 @@ interface Mark {
     /** Painted text rect, not the element rect: day numbers centre inside a pill in week view. */
     glyph?: Box;
     type?: Typography;
+    textClip?: Box;
+    auxiliary?: HTMLElement;
+    completed?: boolean;
+    opacity?: number;
 }
 export interface PlanScene {
     mode: PlannerCalendarViewMode;
@@ -45,14 +51,11 @@ export interface PlanScene {
     days: Map<string, Mark>;
     items: Map<string, Mark>;
     labels: Map<string, Mark>;
+    residue: HTMLElement;
+    header: { box: Box; node: HTMLElement } | null;
     aside: {
         box: Box;
         node: HTMLElement;
-    } | null;
-    /** Re-read each frame so a late scroll or reflow cannot leave the morph short of the real layout. */
-    anchor: {
-        selector: string;
-        box: Box;
     } | null;
 }
 const DAY = "[data-calendar-week-row], [data-day-cell]";
@@ -84,6 +87,13 @@ function lerp(a: Box, b: Box, t: number): Box {
 function union(a: Box, b: Box): Box {
     const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
     return { x, y, width: Math.max(a.x + a.width, b.x + b.width) - x, height: Math.max(a.y + a.height, b.y + b.height) - y };
+}
+function intersection(a: Box, b: Box): Box {
+    const x = Math.max(a.x, b.x), y = Math.max(a.y, b.y);
+    return { x, y, width: Math.max(0, Math.min(a.x + a.width, b.x + b.width) - x), height: Math.max(0, Math.min(a.y + a.height, b.y + b.height) - y) };
+}
+function clipTo(el: HTMLElement, b: Box, viewport: Box) {
+    el.style.clipPath = `inset(${Math.max(0, viewport.y - b.y)}px ${Math.max(0, b.x + b.width - viewport.x - viewport.width)}px ${Math.max(0, b.y + b.height - viewport.y - viewport.height)}px ${Math.max(0, viewport.x - b.x)}px)`;
 }
 function opaque(color: string) { return Boolean(color) && color !== 'transparent' && !/^rgba\(.*,\s*0\)$/.test(color); }
 function hasChrome(m: Mark) { return (m.shadow && m.shadow !== 'none') || opaque(m.background); }
@@ -121,21 +131,51 @@ function typography(style: CSSStyleDeclaration): Typography {
 function mark(el: HTMLElement, root: DOMRect, day: string, role: Role, index = 0, textEl?: HTMLElement | null): Mark {
     const style = getComputedStyle(el);
     const base: Mark = { box: box(el, root), day, index, role, text: "",
-        background: style.backgroundColor, border: style.borderColor, shadow: style.boxShadow, radius: parseFloat(style.borderRadius) || 0 };
+        background: style.backgroundColor, border: style.borderColor, borderWidths: style.borderWidth,
+        borderStyles: style.borderStyle, shadow: style.boxShadow, radius: parseFloat(style.borderRadius) || 0 };
     if (!textEl)
         return base;
-    return { ...base, text: textEl.textContent?.trim() ?? "", glyph: glyphBox(textEl, root), type: typography(getComputedStyle(textEl)) };
+    return { ...base, text: textEl.textContent?.trim() ?? "", glyph: glyphBox(textEl, root), type: typography(getComputedStyle(textEl)),
+        completed: textEl.dataset.completed === 'true' };
 }
 function labelMark(el: HTMLElement, root: DOMRect, day: string, role: Role): Mark {
     return mark(el, root, day, role, 0, el);
 }
 function itemMark(el: HTMLElement, root: DOMRect, day: string, index: number): Mark {
-    return mark(el, root, day, 'item', index, el.querySelector<HTMLElement>('[data-testid="completion-title"]'));
+    const title = el.querySelector<HTMLElement>('[data-testid="completion-title"]');
+    const item = mark(el, root, day, 'item', index, title);
+    const auxiliary = el.cloneNode(true) as HTMLElement;
+    auxiliary.querySelectorAll<HTMLElement>('[data-testid="completion-title"]').forEach(node => node.style.visibility = 'hidden');
+    clearChrome(auxiliary);
+    const titleBox = title ? box(title, root) : item.box;
+    // The inline title's Range includes overflowing text. Its containing block owns
+    // the ellipsis; measure that viewport separately from the glyph bounds.
+    const textViewport = title?.closest<HTMLElement>('.truncate') ?? title?.parentElement;
+    const viewport = textViewport ? box(textViewport, root) : item.box;
+    return { ...item, auxiliary, textClip: {
+        x: Math.max(item.box.x, titleBox.x, viewport.x), y: viewport.y,
+        width: Math.max(0, Math.min(item.box.x + item.box.width, viewport.x + viewport.width) - Math.max(item.box.x, titleBox.x, viewport.x)),
+        height: viewport.height,
+    } };
+}
+function clearChrome(node: HTMLElement) {
+    node.style.background = 'transparent';
+    node.style.borderColor = 'transparent';
+    node.style.boxShadow = 'none';
+}
+function residue(root: HTMLElement, mode: PlannerCalendarViewMode) {
+    const source = root.querySelector<HTMLElement>('[data-plan-view]') ?? root;
+    const node = source.cloneNode(true) as HTMLElement;
+    node.style.opacity = '1';
+    node.style.visibility = 'visible';
+    // Leave section headings, todos, empty states and other non-carried content.
+    // They fade independently, without fading the moving items themselves.
+    node.querySelectorAll<HTMLElement>('[data-planner-entry-key], [data-plan-day-number], [data-plan-weekday], [data-calendar-weekday-grid], [data-testid="plan-desktop-day-pane"]').forEach(el => el.style.visibility = 'hidden');
+    if (mode !== 'day') node.querySelectorAll<HTMLElement>(DAY).forEach(el => el.style.visibility = 'hidden');
+    node.querySelectorAll<HTMLElement>('[data-plan-day]').forEach(clearChrome);
+    return node;
 }
 function shown(el: HTMLElement) { return el.getBoundingClientRect().width > 0 && !el.closest('[aria-hidden="true"]'); }
-function anchorSelector(day: string) {
-    return `[data-plan-day="${day}"], [data-calendar-week-row][data-day="${day}"], [data-day-cell="true"][data-day="${day}"]`;
-}
 export function capturePlanScene(root: HTMLElement, mode: PlannerCalendarViewMode): PlanScene {
     const r = root.getBoundingClientRect();
     const days = new Map<string, Mark>(), items = new Map<string, Mark>(), labels = new Map<string, Mark>();
@@ -183,10 +223,10 @@ export function capturePlanScene(root: HTMLElement, mode: PlannerCalendarViewMod
         items.set(`${day}:${el.dataset.plannerEntryKey}`, itemMark(el, r, day, index));
     }
     const aside = root.querySelector<HTMLElement>('[data-testid="plan-desktop-day-pane"]');
-    const anchorDay = [...days.keys()].sort()[Math.floor(days.size / 2)];
+    const header = root.querySelector<HTMLElement>('[data-calendar-weekday-grid]');
     return { mode, bounds: { x: r.x, y: r.y, width: r.width, height: r.height }, clip, days, items, labels,
-        aside: aside ? { box: box(aside, r), node: aside.cloneNode(true) as HTMLElement } : null,
-        anchor: anchorDay ? { selector: anchorSelector(anchorDay), box: days.get(anchorDay)!.box } : null };
+        residue: residue(root, mode), header: header ? { box: box(header, r), node: header.cloneNode(true) as HTMLElement } : null,
+        aside: aside ? { box: box(aside, r), node: aside.cloneNode(true) as HTMLElement } : null };
 }
 /** Each date gets its own chronological slot, including dates outside the visible week. */
 function projectedDay(scene: PlanScene, day: string): Mark | undefined {
@@ -205,7 +245,7 @@ function projectedDay(scene: PlanScene, day: string): Mark | undefined {
     const pitch = scene.mode === 'day' ? Math.max(anchor.box.height, scene.clip.height) + 24 : anchor.box.height + gap;
     // Drop the anchor's emphasis: in day view the anchor is the selected pane, and
     // inheriting its ring drew a selected border around every projected date.
-    return { ...anchor, day, shadow: 'none', box: { ...anchor.box, y: anchor.box.y + distance(day, anchorDate) * pitch } };
+    return { ...anchor, day, shadow: 'none', borderWidths: '0px', box: { ...anchor.box, y: anchor.box.y + distance(day, anchorDate) * pitch } };
 }
 function projectedItem(scene: PlanScene, source: Mark): Mark | undefined {
     const day = projectedDay(scene, source.day);
@@ -221,7 +261,7 @@ function projectedItem(scene: PlanScene, source: Mark): Mark | undefined {
     const type = sample?.type ?? source.type;
     const glyph = { x: target.x + glyphSource.dx, y: target.y + glyphSource.dy + Math.max(0, (h - (type?.size ?? 12) * 1.2) / 2),
         width: Math.max(16, target.width - glyphSource.dx - 6), height: (type?.size ?? 12) * 1.2 };
-    return { ...source, box: target, glyph, type };
+    return { ...source, box: target, glyph, type, textClip: target };
 }
 /**
  * A label whose counterpart is missing travels with its own date instead of a fixed
@@ -242,7 +282,8 @@ function paintBox(el: HTMLElement, b: Box) {
 function surface(parent: HTMLElement, m: Mark) {
     const el = document.createElement('div');
     Object.assign(el.style, { position: 'absolute', left: '0', top: '0', margin: '0', boxSizing: 'border-box', overflow: 'hidden', pointerEvents: 'none',
-        background: m.background, border: `1px solid ${m.border}`, boxShadow: m.shadow === 'none' ? '' : m.shadow,
+        background: m.background, borderColor: m.border, borderWidth: m.borderWidths, borderStyle: m.borderStyles,
+        boxShadow: m.shadow === 'none' ? '' : m.shadow,
         borderRadius: `${m.radius}px`, transformOrigin: '0 0' });
     parent.append(el);
     return el;
@@ -267,6 +308,10 @@ function glyph(parent: HTMLElement, m: Mark, overlay: DOMRect, origin: Box): Gly
         fontSize: `${m.type.size}px`, letterSpacing: m.type.letterSpacing, textTransform: m.type.textTransform,
         lineHeight: m.type.lineHeight, color: m.type.color });
     el.textContent = m.text;
+    if (m.completed) {
+        el.className = 'gm-completion-title';
+        el.dataset.completed = 'true';
+    }
     parent.append(el);
     const measured = glyphBox(el, overlay);
     if (!measured) {
@@ -275,10 +320,15 @@ function glyph(parent: HTMLElement, m: Mark, overlay: DOMRect, origin: Box): Gly
     }
     return { el, own: shift(measured, -origin.x, -origin.y) };
 }
-function paintGlyph(g: Glyph, target: Box, origin: Box, opacity: number) {
+function paintGlyph(g: Glyph, target: Box, origin: Box, opacity: number, bounded = false) {
     const scale = g.own.height > 0 ? target.height / g.own.height : 1;
     g.el.style.transform = `translate(${target.x - origin.x - g.own.x * scale}px,${target.y - origin.y - g.own.y * scale}px) scale(${scale})`;
     g.el.style.opacity = `${opacity}`;
+    if (bounded) {
+        g.el.style.width = `${Math.max(0, (origin.width - (target.x - origin.x)) / scale)}px`;
+        g.el.style.overflow = 'hidden';
+        g.el.style.textOverflow = 'ellipsis';
+    }
 }
 interface Track {
     /** Background, border and ring. */
@@ -294,10 +344,10 @@ interface Track {
     key: string;
     /** Present on only one side: fade there rather than cut out at the end. */
     fade: 'in' | 'out' | null;
-    /** Endpoints play different structural roles: cross-fade in place instead of flying. */
-    hold: boolean;
-    /** Whether the month grid's scroll correction applies to this mark. */
-    corrected: boolean;
+    auxiliaryFrom: HTMLElement | null;
+    auxiliaryTo: HTMLElement | null;
+    singleGlyph: boolean;
+    chrome: Animation | null;
 }
 export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: PlanScene, to: PlanScene, onFinish: () => void) {
     const duration = from.mode === 'month' || to.mode === 'month' ? PLAN_MORPH_MONTH_DURATION_MS : PLAN_MORPH_DURATION_MS;
@@ -310,16 +360,31 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
     overlay.setAttribute('aria-hidden', 'true');
     Object.assign(overlay.style, { position: 'absolute', left: '0', top: '0', width: '100%', height: `${stage}px`, pointerEvents: 'none', zIndex: '20' });
     root.append(overlay);
+    // Build and measure invisibly; reveal only after every layer is positioned.
+    overlay.style.visibility = 'hidden';
     const layer = document.createElement('div');
     Object.assign(layer.style, { position: 'absolute', left: '0', top: '0', width: '100%', height: `${stage}px` });
     overlay.append(layer);
     const surfaces = document.createElement('div');
     const glyphs = document.createElement('div');
-    const headerGlyphs = document.createElement('div');
-    for (const el of [surfaces, glyphs, headerGlyphs])
+    for (const el of [surfaces, glyphs])
         Object.assign(el.style, { position: 'absolute', inset: '0' });
     layer.append(surfaces, glyphs);
-    overlay.append(headerGlyphs);
+    const residueLayers = [from.residue, to.residue];
+    residueLayers.forEach((node, index) => {
+        Object.assign(node.style, { position: 'absolute', left: '0', top: '0', pointerEvents: 'none' });
+        node.style.width = `${(index ? to : from).bounds.width}px`;
+        overlay.append(node);
+    });
+    const headerLayers = [from.header, to.header].map(header => {
+        if (!header) return null;
+        Object.assign(header.node.style, { position: 'absolute', left: '0', top: '0', margin: '0', pointerEvents: 'none' });
+        header.node.style.backgroundColor = getComputedStyle(root).getPropertyValue('--background').trim()
+            ? 'var(--background)' : getComputedStyle(document.body).backgroundColor;
+        overlay.append(header.node);
+        paintBox(header.node, header.box);
+        return header.node;
+    });
     const overlayRect = overlay.getBoundingClientRect();
     // Preserve screen coordinates if normal layout/scroll anchoring moved the frame at commit.
     const shiftX = from.bounds.x - to.bounds.x, shiftY = from.bounds.y - to.bounds.y;
@@ -328,6 +393,7 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
             m.box = shift(m.box, shiftX, shiftY);
             if (m.glyph)
                 m.glyph = shift(m.glyph, shiftX, shiftY);
+            if (m.textClip) m.textClip = shift(m.textClip, shiftX, shiftY);
         }
     from.clip = shift(from.clip, shiftX, shiftY);
     const tracks: Track[] = [];
@@ -336,9 +402,20 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
         for (const key of keys) {
             const realA = from[kind].get(key), realB = to[kind].get(key);
             let a = realA, b = realB;
+            // Month headings fade as one stationary strip. Week labels remain
+            // attached to their date, rather than flying into that strip.
+            if (kind === 'labels' && (a?.role === 'header' || b?.role === 'header')) {
+                if (a?.role === 'header') a = undefined;
+                if (b?.role === 'header') b = undefined;
+                if (!a && !b) continue;
+            }
+            const sourcePresent = Boolean(a), targetPresent = Boolean(b);
             if (kind === 'days') {
                 a ??= projectedDay(from, b!.day);
                 b ??= projectedDay(to, a!.day);
+                // Projection supplies coordinates, never another date's appearance.
+                if (!realA && a && realB) a = { ...realB, box: a.box };
+                if (!realB && b && realA) b = { ...realA, box: b.box };
             }
             if (kind === 'items') {
                 if (!a && b)
@@ -361,17 +438,10 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
                 b = { ...a, box: { ...a.box, y: to.clip.y + to.clip.height + 24 } };
             if (!a || !b)
                 continue;
-            const fade: Track['fade'] = !realA ? 'in' : !realB ? 'out' : null;
-            // A weekday label moving between a day cell and the month header changes role
-            // rather than position; flying it read as a jump at both ends.
-            const hold = kind === 'labels' && key.startsWith('weekday:')
-                && (a.role === 'header') !== (b.role === 'header');
-            // The correction tracks the month grid's scroll. The weekday header sits
-            // outside that viewport, so inheriting it pulled the header off its landing.
-            const corrected = a.role !== 'header' && b.role !== 'header';
-            const host = kind === 'labels' && (a.role === 'header' || b.role === 'header') ? headerGlyphs : glyphs;
+            const fade: Track['fade'] = !sourcePresent ? 'in' : !targetPresent ? 'out' : null;
+            const host = glyphs;
             // Labels normally carry no surface, but the selected date's ring and circle do.
-            const el = kind !== 'labels' || (!hold && (hasChrome(a) || hasChrome(b)))
+            const el = kind !== 'labels' || hasChrome(a) || hasChrome(b)
                 ? surface(surfaces, a)
                 : null;
             if (el)
@@ -384,11 +454,23 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
                 paintBox(clip, a.box);
             }
             const origin = clip ? a.box : ORIGIN;
-            if (el && typeof el.animate === 'function')
-                el.animate([{ backgroundColor: a.background, borderColor: a.border, borderRadius: `${a.radius}px`, boxShadow: a.shadow },
-                    { backgroundColor: b.background, borderColor: b.border, borderRadius: `${b.radius}px`, boxShadow: b.shadow }], { duration, fill: 'forwards' });
+            const auxiliaryFrom = kind === 'items' ? a.auxiliary?.cloneNode(true) as HTMLElement | undefined : undefined;
+            const auxiliaryTo = kind === 'items' ? b.auxiliary?.cloneNode(true) as HTMLElement | undefined : undefined;
+            for (const auxiliary of [auxiliaryFrom, auxiliaryTo]) {
+                if (!auxiliary) continue;
+                Object.assign(auxiliary.style, { position: 'absolute', left: '0', top: '0', margin: '0', overflow: 'hidden', pointerEvents: 'none' });
+                glyphs.append(auxiliary);
+            }
+            const singleGlyph = a.text === b.text && a.type?.family === b.type?.family && a.type?.style === b.type?.style && a.type?.textTransform === b.type?.textTransform;
+            const chrome = el && typeof el.animate === 'function' ? el.animate([
+                { backgroundColor: a.background, borderColor: a.border, borderWidth: a.borderWidths, borderRadius: `${a.radius}px`, boxShadow: a.shadow },
+                { backgroundColor: b.background, borderColor: b.border, borderWidth: b.borderWidths, borderRadius: `${b.radius}px`, boxShadow: b.shadow },
+            ], { duration, fill: 'both', easing: 'linear' }) : null;
+            chrome?.pause();
+            if (el) el.style.borderStyle = 'solid';
             tracks.push({ el, clip, from: a, to: b, fromGlyph: glyph(clip ?? host, a, overlayRect, origin),
-                toGlyph: glyph(clip ?? host, b, overlayRect, origin), current: a, kind, key, fade, hold, corrected });
+                toGlyph: singleGlyph ? null : glyph(clip ?? host, b, overlayRect, origin), current: a, kind, key, fade,
+                auxiliaryFrom: auxiliaryFrom ?? null, auxiliaryTo: auxiliaryTo ?? null, singleGlyph, chrome });
         }
     }
     const aside = from.aside ?? to.aside;
@@ -402,15 +484,15 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
         asideFrom = from.aside?.box ?? exit(aside.box);
         asideTo = to.aside?.box ?? exit(aside.box);
     }
-    // Opacity rather than visibility: the destination carries plenty the morph never
-    // models (checkboxes, section headings), and those need to fade rather than pop.
+    // The live tree stays hidden until handoff. Only ancillary layers dissolve.
     hidePlanContent(content);
     content.toggleAttribute('inert', true);
+    root.style.overflowAnchor = 'none';
     // Held constant rather than interpolated: an animated clip edge is a visible line
     // sweeping across the tiles. This still masks month-grid overflow.
     const clipRect = union(from.clip, to.clip);
     layer.style.clipPath = `inset(${Math.max(0, clipRect.y)}px ${Math.max(0, to.bounds.width - clipRect.x - clipRect.width)}px ${Math.max(0, stage - clipRect.y - clipRect.height)}px ${Math.max(0, clipRect.x)}px)`;
-    let frame = 0, progress = 0, correctX = 0, correctY = 0;
+    let frame = 0, progress = 0;
     const start = performance.now();
     const finish = () => {
         cancelAnimationFrame(frame);
@@ -418,57 +500,66 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
         revealPlanContent(content);
         content.toggleAttribute('inert', false);
         root.style.height = '';
+        root.style.overflowAnchor = '';
+        tracks.forEach(track => track.chrome?.cancel());
     };
-    /**
-     * The month viewport aligns its scroll in a later frame than the commit, so the
-     * measured destination can be stale. Re-reading one live element each frame keeps
-     * the end of the morph on the real layout instead of cutting to it.
-     */
-    function correction() {
-        if (!to.anchor)
-            return;
-        const live = root.querySelector<HTMLElement>(to.anchor.selector);
-        if (!live)
-            return;
-        const now = box(live, root.getBoundingClientRect());
-        correctX = now.x - to.anchor.box.x;
-        correctY = now.y - to.anchor.box.y;
-    }
     function draw(now: number) {
         const linear = Math.min(1, (now - start) / duration);
         progress = ease(linear);
-        correction();
-        const aim = (tr: Track, b: Box) => tr.corrected ? shift(b, correctX * progress, correctY * progress) : b;
         root.style.height = `${mix(from.bounds.height, to.bounds.height, progress)}px`;
-        // Cross-dissolve into the real view over the tail, once surrogates have all but
-        // converged, so unmodelled chrome settles in instead of appearing at the end.
-        content.style.opacity = `${ramp(progress, .68, 1)}`;
-        overlay.style.opacity = `${1 - ramp(progress, .82, 1)}`;
+        residueLayers[0].style.transform = `translate(${shiftX}px,${shiftY}px)`;
+        residueLayers[0].style.opacity = `${1 - ramp(linear, 0, .3)}`;
+        residueLayers[1].style.opacity = `${ramp(linear, .4, .85)}`;
+        headerLayers.forEach((node, index) => {
+            if (!node) return;
+            const header = index ? to.header! : from.header!;
+            paintBox(node, index ? header.box : shift(header.box, shiftX, shiftY));
+            node.style.opacity = `${index ? ramp(linear, .55, .9) : 1 - ramp(linear, 0, .3)}`;
+        });
+        const dayBoxes = new Map(tracks.filter(tr => tr.kind === 'days').map(tr => [tr.key, lerp(tr.from.box, tr.to.box, progress)]));
         for (const tr of tracks) {
-            const b = lerp(tr.from.box, aim(tr, tr.to.box), progress);
-            const alpha = tr.fade === 'in' ? ramp(progress, .05, .55)
-                : tr.fade === 'out' ? 1 - ramp(progress, .1, .6)
+            const b = lerp(tr.from.box, tr.to.box, progress);
+            const presence = tr.fade === 'in' ? ramp(linear, .05, .35)
+                : tr.fade === 'out' ? 1 - ramp(linear, .35, .85)
                 : 1;
+            const alpha = presence * mix(tr.from.opacity ?? 1, tr.to.opacity ?? 1, progress);
+            const viewport = tr.kind === 'items' ? intersection(b, dayBoxes.get(tr.to.day) ?? b) : b;
             if (tr.el) {
                 paintBox(tr.el, b);
                 tr.el.style.opacity = `${alpha}`;
+                if (tr.kind === 'items') clipTo(tr.el, b, viewport);
+                // Chrome and geometry share the same clock and eased progress.
+                if (tr.chrome) tr.chrome.currentTime = progress * duration;
             }
-            if (tr.clip)
-                paintBox(tr.clip, b);
-            tr.current = { ...tr.to, box: b };
+            const textViewport = intersection(viewport, lerp(tr.from.textClip ?? tr.from.box, tr.to.textClip ?? tr.to.box, progress));
+            if (tr.clip) paintBox(tr.clip, textViewport);
+            for (const [index, auxiliary] of [tr.auxiliaryFrom, tr.auxiliaryTo].entries()) {
+                if (!auxiliary) continue;
+                paintBox(auxiliary, b);
+                clipTo(auxiliary, b, viewport);
+                auxiliary.style.opacity = `${alpha * (index ? ramp(linear, .35, .8) : 1 - ramp(linear, .15, .6))}`;
+            }
+            tr.current = { ...tr.to, box: b, textClip: textViewport, opacity: alpha };
             if (tr.fromGlyph || tr.toGlyph) {
-                const origin = tr.clip ? b : ORIGIN;
-                const a0 = tr.from.glyph ?? tr.from.box, z = aim(tr, tr.to.glyph ?? tr.to.box);
+                const origin = tr.clip ? textViewport : ORIGIN;
+                const a0 = tr.from.glyph ?? tr.from.box, z = tr.to.glyph ?? tr.to.box;
                 const g = lerp(a0, z, progress);
                 tr.current.glyph = g;
+                if (tr.singleGlyph && tr.fromGlyph && tr.from.type && tr.to.type) {
+                    const scale = g.height / tr.fromGlyph.own.height;
+                    tr.fromGlyph.el.style.fontWeight = `${mix(parseFloat(tr.from.type.weight) || 400, parseFloat(tr.to.type.weight) || 400, progress)}`;
+                    tr.fromGlyph.el.style.letterSpacing = `${mix(parseFloat(tr.from.type.letterSpacing) || 0, parseFloat(tr.to.type.letterSpacing) || 0, progress) / (scale || 1)}px`;
+                    tr.fromGlyph.el.style.color = `color-mix(in srgb, ${tr.from.type.color} ${(1 - progress) * 100}%, ${tr.to.type.color})`;
+                }
                 if (tr.fromGlyph)
-                    paintGlyph(tr.fromGlyph, tr.hold ? a0 : g, origin, alpha * (tr.fade ? 1 : 1 - progress));
+                    paintGlyph(tr.fromGlyph, g, origin, alpha * (tr.singleGlyph ? 1 : 1 - progress), Boolean(tr.clip));
                 if (tr.toGlyph)
-                    paintGlyph(tr.toGlyph, tr.hold ? z : g, origin, alpha * (tr.fade ? 1 : progress));
+                    paintGlyph(tr.toGlyph, g, origin, alpha * progress, Boolean(tr.clip));
             }
         }
         if (asideNode && asideFrom && asideTo)
-            paintBox(asideNode, lerp(asideFrom, shift(asideTo, correctX * progress, correctY * progress), progress));
+            paintBox(asideNode, lerp(asideFrom, asideTo, progress));
+        if (asideNode) asideNode.style.opacity = `${!to.aside ? 1 - ramp(linear, .35, .85) : !from.aside ? ramp(linear, .15, .65) : 1}`;
         if (linear < 1)
             frame = requestAnimationFrame(draw);
         else {
@@ -479,7 +570,12 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
     // Painted synchronously, in the same task that inserted the surrogates: waiting for
     // the first frame let every unpositioned element show as a pile at the stage origin.
     draw(start);
-    return { cancel: finish, snapshot: (): PlanScene => ({ ...to, bounds: { ...to.bounds, height: mix(from.bounds.height, to.bounds.height, progress) }, clip: lerp(from.clip, to.clip, progress),
+    overlay.style.visibility = 'visible';
+    return { cancel: finish, snapshot: (): PlanScene => {
+        const currentResidue = document.createElement('div');
+        residueLayers.forEach(node => currentResidue.append(node.cloneNode(true)));
+        return ({ ...to, residue: currentResidue, bounds: { ...to.bounds, height: mix(from.bounds.height, to.bounds.height, progress) }, clip: lerp(from.clip, to.clip, progress),
             days: new Map(tracks.filter(t => t.kind === 'days').map(t => [t.key, { ...t.current }])), items: new Map(tracks.filter(t => t.kind === 'items').map(t => [t.key, { ...t.current }])), labels: new Map(tracks.filter(t => t.kind === 'labels').map(t => [t.key, { ...t.current }])),
-            aside: asideNode ? { box: lerp(asideFrom!, asideTo!, progress), node: asideNode.cloneNode(true) as HTMLElement } : null }) };
+            aside: asideNode ? { box: lerp(asideFrom!, asideTo!, progress), node: asideNode.cloneNode(true) as HTMLElement } : null });
+    } };
 }
