@@ -238,7 +238,7 @@ export function PlannerCalendarBoard({
         <div
           className={`transition-opacity duration-150 motion-reduce:transition-none ${
             loading ? "opacity-70" : "opacity-100"
-          } ${isMonthScopedCalendarViewMode(viewMode) ? "min-h-[34rem]" : "min-h-[26rem]"}`}
+          } min-h-[34rem]`}
         >
           <PlanViewTransitionFrame viewMode={viewMode}>
           {viewMode === "day" ? (
@@ -315,9 +315,21 @@ export function PlannerCalendarBoard({
                             style={SEVEN_COLUMN_GRID_STYLE}
                             data-calendar-weekday-grid="true"
                           >
-                            {weekdayLabels.map((weekday, index) => (
-                              <span key={weekday} data-plan-weekday-index={new Date(`${focusedWeekCells[index]?.date ?? focusedDay}T12:00:00Z`).getUTCDay()}>{weekday}</span>
-                            ))}
+                            {weekdayLabels.map((weekday, index) => {
+                              const columnDay =
+                                focusedWeekCells[index]?.date ?? focusedDay;
+                              return (
+                                <span
+                                  key={weekday}
+                                  data-plan-weekday-index={new Date(
+                                    `${columnDay}T12:00:00Z`
+                                  ).getUTCDay()}
+                                  data-plan-weekday-date={columnDay}
+                                >
+                                  {weekday}
+                                </span>
+                              );
+                            })}
                           </div>
                           <div
                             ref={multiMonthGridScrollRef}

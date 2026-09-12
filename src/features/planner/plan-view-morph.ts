@@ -1,22 +1,37 @@
 import type { PlannerCalendarViewMode } from "./calendar-surface.types";
+
 interface Box {
     x: number;
     y: number;
     width: number;
     height: number;
 }
+/**
+ * The CSS `font` shorthand omits letter-spacing and text-transform, so a surrogate
+ * built from it renders "Mon" at normal tracking where the week row paints "MON"
+ * wide-tracked. Every text property that changes glyph geometry is captured here.
+ */
+interface Typography {
+    family: string;
+    weight: string;
+    style: string;
+    size: number;
+    letterSpacing: string;
+    textTransform: string;
+    lineHeight: string;
+    color: string;
+}
 interface Mark {
     box: Box;
     day: string;
     text: string;
-    color: string;
     background: string;
     border: string;
     radius: number;
-    font: string;
-    fontSize: number;
-    title?: Box;
     index: number;
+    /** Painted text rect, not the element rect: day numbers centre inside a pill in week view. */
+    glyph?: Box;
+    type?: Typography;
 }
 export interface PlanScene {
     mode: PlannerCalendarViewMode;
@@ -29,27 +44,69 @@ export interface PlanScene {
         box: Box;
         node: HTMLElement;
     } | null;
+    /** Re-read each frame so a late scroll or reflow cannot leave the morph short of the real layout. */
+    anchor: {
+        selector: string;
+        box: Box;
+    } | null;
 }
 const DAY = "[data-calendar-week-row], [data-day-cell]";
 const DAY_MS = 86400000;
+const DURATION = 520;
 const distance = (a: string, b: string) => Math.round((Date.parse(`${a}T12:00:00Z`) - Date.parse(`${b}T12:00:00Z`)) / DAY_MS);
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 function lerp(a: Box, b: Box, t: number): Box {
     return { x: mix(a.x, b.x, t), y: mix(a.y, b.y, t), width: mix(a.width, b.width, t), height: mix(a.height, b.height, t) };
 }
+function shift(b: Box, dx: number, dy: number): Box {
+    return { x: b.x + dx, y: b.y + dy, width: b.width, height: b.height };
+}
 function box(el: Element, root: DOMRect): Box {
     const r = el.getBoundingClientRect();
     return { x: r.left - root.left, y: r.top - root.top, width: r.width, height: r.height };
 }
-function mark(el: HTMLElement, root: DOMRect, day: string, index = 0): Mark {
+/**
+ * Union of the client rects of an element's text, so centring and padding drop out.
+ * Falls back to the element box where range measurement is unavailable.
+ */
+function glyphBox(el: HTMLElement, root: DOMRect): Box | undefined {
+    const range = typeof document.createRange === 'function' ? document.createRange() : null;
+    if (!range || typeof range.getClientRects !== 'function')
+        return undefined;
+    range.selectNodeContents(el);
+    const rects = Array.from(range.getClientRects());
+    range.detach?.();
+    if (!rects.length)
+        return undefined;
+    const left = Math.min(...rects.map(r => r.left)), top = Math.min(...rects.map(r => r.top));
+    const right = Math.max(...rects.map(r => r.right)), bottom = Math.max(...rects.map(r => r.bottom));
+    if (right <= left || bottom <= top)
+        return undefined;
+    return { x: left - root.left, y: top - root.top, width: right - left, height: bottom - top };
+}
+function typography(style: CSSStyleDeclaration): Typography {
+    return { family: style.fontFamily, weight: style.fontWeight, style: style.fontStyle, size: parseFloat(style.fontSize) || 12,
+        letterSpacing: style.letterSpacing, textTransform: style.textTransform, lineHeight: style.lineHeight, color: style.color };
+}
+/** `textEl` is the single element whose glyphs travel; omit it for pure surfaces such as day cells. */
+function mark(el: HTMLElement, root: DOMRect, day: string, index = 0, textEl?: HTMLElement | null): Mark {
     const style = getComputedStyle(el);
-    const title = el.querySelector<HTMLElement>('[data-testid="completion-title"]');
-    const textStyle = getComputedStyle(title ?? el);
-    return { box: box(el, root), day, index, text: (title ?? el).textContent ?? "", color: textStyle.color,
-        background: style.backgroundColor, border: style.borderColor, radius: parseFloat(style.borderRadius) || 0,
-        font: textStyle.font, fontSize: parseFloat(textStyle.fontSize), title: title ? box(title, root) : undefined };
+    const base: Mark = { box: box(el, root), day, index, text: "",
+        background: style.backgroundColor, border: style.borderColor, radius: parseFloat(style.borderRadius) || 0 };
+    if (!textEl)
+        return base;
+    return { ...base, text: textEl.textContent?.trim() ?? "", glyph: glyphBox(textEl, root), type: typography(getComputedStyle(textEl)) };
+}
+function labelMark(el: HTMLElement, root: DOMRect, day: string): Mark {
+    return mark(el, root, day, 0, el);
+}
+function itemMark(el: HTMLElement, root: DOMRect, day: string, index: number): Mark {
+    return mark(el, root, day, index, el.querySelector<HTMLElement>('[data-testid="completion-title"]'));
 }
 function shown(el: HTMLElement) { return el.getBoundingClientRect().width > 0 && !el.closest('[aria-hidden="true"]'); }
+function anchorSelector(day: string) {
+    return `[data-plan-day="${day}"], [data-calendar-week-row][data-day="${day}"], [data-day-cell="true"][data-day="${day}"]`;
+}
 export function capturePlanScene(root: HTMLElement, mode: PlannerCalendarViewMode): PlanScene {
     const r = root.getBoundingClientRect();
     const days = new Map<string, Mark>(), items = new Map<string, Mark>(), labels = new Map<string, Mark>();
@@ -64,17 +121,27 @@ export function capturePlanScene(root: HTMLElement, mode: PlannerCalendarViewMod
         days.set(day, mark(el, r, day));
         const number = el.querySelector<HTMLElement>('[data-plan-day-number]');
         if (number)
-            labels.set(`date:${day}`, mark(number, r, day));
+            labels.set(`date:${day}`, labelMark(number, r, day));
         const weekday = el.querySelector<HTMLElement>('[data-plan-weekday]');
         if (weekday)
-            labels.set(`weekday:${new Date(`${day}T12:00:00Z`).getUTCDay()}`, mark(weekday, r, day));
+            labels.set(`weekday:${new Date(`${day}T12:00:00Z`).getUTCDay()}`, labelMark(weekday, r, day));
     }
     const dayPane = mode === 'day' ? root.querySelector<HTMLElement>('[data-testid="plan-day-pane"]') : null;
-    if (dayPane)
-        days.set(dayPane.dataset.planDay!, mark(dayPane, r, dayPane.dataset.planDay!));
+    if (dayPane) {
+        const day = dayPane.dataset.planDay!;
+        days.set(day, mark(dayPane, r, day));
+        // Day view carries its own number/weekday so week<->day has real endpoints
+        // instead of synthetic off-screen ones.
+        const number = dayPane.querySelector<HTMLElement>('[data-plan-day-number]');
+        if (number)
+            labels.set(`date:${day}`, labelMark(number, r, day));
+        const weekday = dayPane.querySelector<HTMLElement>('[data-plan-weekday]');
+        if (weekday)
+            labels.set(`weekday:${new Date(`${day}T12:00:00Z`).getUTCDay()}`, labelMark(weekday, r, day));
+    }
     root.querySelectorAll<HTMLElement>('[data-calendar-weekday-grid] [data-plan-weekday-index]').forEach(el => {
         if (shown(el))
-            labels.set(`weekday:${el.dataset.planWeekdayIndex}`, mark(el, r, ''));
+            labels.set(`weekday:${el.dataset.planWeekdayIndex}`, labelMark(el, r, el.dataset.planWeekdayDate ?? ''));
     });
     const source = dayPane ?? calendar;
     const counts = new Map<string, number>();
@@ -84,11 +151,13 @@ export function capturePlanScene(root: HTMLElement, mode: PlannerCalendarViewMod
         const day = el.closest<HTMLElement>('[data-day]')?.dataset.day ?? dayPane?.dataset.planDay ?? '';
         const index = counts.get(day) ?? 0;
         counts.set(day, index + 1);
-        items.set(`${day}:${el.dataset.plannerEntryKey}`, mark(el, r, day, index));
+        items.set(`${day}:${el.dataset.plannerEntryKey}`, itemMark(el, r, day, index));
     }
     const aside = root.querySelector<HTMLElement>('[data-testid="plan-desktop-day-pane"]');
+    const anchorDay = [...days.keys()].sort()[Math.floor(days.size / 2)];
     return { mode, bounds: { x: r.x, y: r.y, width: r.width, height: r.height }, clip, days, items, labels,
-        aside: aside ? { box: box(aside, r), node: aside.cloneNode(true) as HTMLElement } : null };
+        aside: aside ? { box: box(aside, r), node: aside.cloneNode(true) as HTMLElement } : null,
+        anchor: anchorDay ? { selector: anchorSelector(anchorDay), box: days.get(anchorDay)!.box } : null };
 }
 /** Each date gets its own chronological slot, including dates outside the visible week. */
 function projectedDay(scene: PlanScene, day: string): Mark | undefined {
@@ -117,57 +186,111 @@ function projectedItem(scene: PlanScene, source: Mark): Mark | undefined {
     const offsetY = sample && sampleDay ? sample.box.y - sampleDay.box.y : 12;
     const h = sample?.box.height ?? 34;
     const target = { x: day.box.x + offsetX, y: day.box.y + offsetY + source.index * (h + 6), width: Math.max(24, day.box.width - offsetX - 8), height: h };
-    const title = { x: target.x + 6, y: target.y + Math.max(0, (h - source.fontSize) / 2), width: Math.max(16, target.width - 12), height: source.fontSize * 1.3 };
-    return { ...source, box: target, title };
+    const glyphSource = sample?.glyph && sampleDay ? { dx: sample.glyph.x - sample.box.x, dy: sample.glyph.y - sample.box.y } : { dx: 6, dy: 0 };
+    const type = sample?.type ?? source.type;
+    const glyph = { x: target.x + glyphSource.dx, y: target.y + glyphSource.dy + Math.max(0, (h - (type?.size ?? 12) * 1.2) / 2),
+        width: Math.max(16, target.width - glyphSource.dx - 6), height: (type?.size ?? 12) * 1.2 };
+    return { ...source, box: target, glyph, type };
+}
+/**
+ * A label whose counterpart is missing travels with its own date instead of a fixed
+ * off-screen slot, which is what made week->day drag every label upward.
+ */
+function projectedLabel(target: PlanScene, source: PlanScene, seed: Mark): Mark | undefined {
+    const to = projectedDay(target, seed.day), from = source.days.get(seed.day) ?? projectedDay(source, seed.day);
+    if (!to || !from)
+        return;
+    const dx = to.box.x - from.box.x, dy = to.box.y - from.box.y;
+    return { ...seed, box: shift(seed.box, dx, dy), glyph: seed.glyph ? shift(seed.glyph, dx, dy) : undefined };
 }
 function paintBox(el: HTMLElement, b: Box) {
     el.style.transform = `translate(${b.x}px,${b.y}px)`;
     el.style.width = `${Math.max(0, b.width)}px`;
     el.style.height = `${Math.max(0, b.height)}px`;
 }
-function surface(parent: HTMLElement, m: Mark, text = false) {
+function surface(parent: HTMLElement, m: Mark) {
     const el = document.createElement('div');
     Object.assign(el.style, { position: 'absolute', left: '0', top: '0', margin: '0', boxSizing: 'border-box', overflow: 'hidden', pointerEvents: 'none',
-        background: text ? 'transparent' : m.background, border: text ? 'none' : `1px solid ${m.border}`, borderRadius: `${text ? 0 : m.radius}px`,
-        color: m.color, font: m.font, whiteSpace: 'nowrap', textOverflow: 'ellipsis', transformOrigin: '0 0' });
-    if (text)
-        el.textContent = m.text;
+        background: m.background, border: `1px solid ${m.border}`, borderRadius: `${m.radius}px`, transformOrigin: '0 0' });
     parent.append(el);
     return el;
 }
-interface Track {
+/**
+ * One layer per endpoint, each pinned to its own typography and cross-faded. Family,
+ * weight, tracking and casing cannot be interpolated, so both ends stay pixel-exact
+ * and the change reads as a dissolve rather than a snap.
+ */
+interface Glyph {
     el: HTMLElement;
+    own: Box;
+}
+function glyph(parent: HTMLElement, m: Mark, overlay: DOMRect): Glyph | null {
+    if (!m.glyph || !m.type || !m.text)
+        return null;
+    const el = document.createElement('div');
+    Object.assign(el.style, { position: 'absolute', left: '0', top: '0', margin: '0', padding: '0', pointerEvents: 'none',
+        whiteSpace: 'nowrap', transformOrigin: '0 0', fontFamily: m.type.family, fontWeight: m.type.weight, fontStyle: m.type.style,
+        fontSize: `${m.type.size}px`, letterSpacing: m.type.letterSpacing, textTransform: m.type.textTransform,
+        lineHeight: m.type.lineHeight, color: m.type.color });
+    el.textContent = m.text;
+    parent.append(el);
+    const own = glyphBox(el, overlay);
+    if (!own) {
+        el.remove();
+        return null;
+    }
+    return { el, own };
+}
+function paintGlyph(g: Glyph, target: Box, opacity: number) {
+    const scale = g.own.height > 0 ? target.height / g.own.height : 1;
+    g.el.style.transform = `translate(${target.x - g.own.x * scale}px,${target.y - g.own.y * scale}px) scale(${scale})`;
+    g.el.style.opacity = `${opacity}`;
+}
+interface Track {
+    el: HTMLElement | null;
     from: Mark;
     to: Mark;
-    title: HTMLElement | null;
+    fromGlyph: Glyph | null;
+    toGlyph: Glyph | null;
     current: Mark;
     kind: 'days' | 'items' | 'labels';
     key: string;
+    /** Absent on one side: hold the glyph still and fade rather than fly it somewhere invented. */
+    fade: 'in' | 'out' | null;
 }
 export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: PlanScene, to: PlanScene, onFinish: () => void) {
     const overlay = document.createElement('div');
     overlay.dataset.planMorphOverlay = 'true';
-    overlay.inert = true;
+    overlay.toggleAttribute('inert', true);
     overlay.setAttribute('aria-hidden', 'true');
     Object.assign(overlay.style, { position: 'absolute', inset: '0', overflow: 'hidden', pointerEvents: 'none', zIndex: '20' });
     root.append(overlay);
     const layer = document.createElement('div');
     Object.assign(layer.style, { position: 'absolute', inset: '0', overflow: 'hidden' });
     overlay.append(layer);
+    const surfaces = document.createElement('div');
+    const glyphs = document.createElement('div');
+    const headerGlyphs = document.createElement('div');
+    for (const el of [surfaces, glyphs, headerGlyphs])
+        Object.assign(el.style, { position: 'absolute', inset: '0' });
+    layer.append(surfaces, glyphs);
+    overlay.append(headerGlyphs);
+    const overlayRect = overlay.getBoundingClientRect();
     // Preserve screen coordinates if normal layout/scroll anchoring moved the frame at commit.
     const shiftX = from.bounds.x - to.bounds.x, shiftY = from.bounds.y - to.bounds.y;
     for (const group of [from.days, from.items, from.labels])
         for (const m of group.values()) {
-            m.box = { ...m.box, x: m.box.x + shiftX, y: m.box.y + shiftY };
-            if (m.title)
-                m.title = { ...m.title, x: m.title.x + shiftX, y: m.title.y + shiftY };
+            m.box = shift(m.box, shiftX, shiftY);
+            if (m.glyph)
+                m.glyph = shift(m.glyph, shiftX, shiftY);
         }
-    from.clip = { ...from.clip, x: from.clip.x + shiftX, y: from.clip.y + shiftY };
+    from.clip = shift(from.clip, shiftX, shiftY);
     const tracks: Track[] = [];
     for (const kind of ['days', 'items', 'labels'] as const) {
         const keys = new Set([...from[kind].keys(), ...to[kind].keys()]);
         for (const key of keys) {
             let a = from[kind].get(key), b = to[kind].get(key);
+            let fade: Track['fade'] = null;
             if (kind === 'days') {
                 a ??= projectedDay(from, b!.day);
                 b ??= projectedDay(to, a!.day);
@@ -179,18 +302,22 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
                     b = projectedItem(to, a);
             }
             if (kind === 'labels') {
-                const seed = a ?? b!;
-                if (key.startsWith('date:')) {
-                    const scene = a ? to : from, day = projectedDay(scene, seed.day);
-                    const virtual = day ? { ...seed, box: { ...seed.box, x: day.box.x + 8, y: scene.mode === 'day' && scene.days.has(seed.day) ? -32 : day.box.y + 8 } } : undefined;
-                    if (!a)
-                        a = virtual;
-                    if (!b)
-                        b = virtual;
+                if (!a && b) {
+                    a = projectedLabel(from, to, b);
+                    fade = 'in';
                 }
-                else {
-                    a ??= { ...seed, box: { ...seed.box, y: -28 } };
-                    b ??= { ...seed, box: { ...seed.box, y: -28 } };
+                else if (!b && a) {
+                    b = projectedLabel(to, from, a);
+                    fade = 'out';
+                }
+                // Weekday headers legitimately have no counterpart between views. Hold
+                // position and fade so nothing drifts to an invented coordinate.
+                if (fade && !(fade === 'in' ? a : b)) {
+                    const seed = (a ?? b)!;
+                    if (fade === 'in')
+                        a = seed;
+                    else
+                        b = seed;
                 }
             }
             if (!a && b)
@@ -199,16 +326,15 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
                 b = { ...a, box: { ...a.box, y: to.clip.y + to.clip.height + 24 } };
             if (!a || !b)
                 continue;
-            const el = surface(kind === 'labels' && key.startsWith('weekday:') ? overlay : layer, a, kind === 'labels');
-            el.dataset.morphKey = key;
-            if (kind === 'labels') {
-                el.style.overflow = 'visible';
-                el.style.textOverflow = 'clip';
+            const host = kind === 'labels' && key.startsWith('weekday:') && !a.day ? headerGlyphs : glyphs;
+            const el = kind === 'labels' ? null : surface(surfaces, a);
+            if (el) {
+                el.dataset.morphKey = key;
+                // Chrome changes are independent of position, so hand them to the compositor.
+                if (typeof el.animate === 'function')
+                    el.animate([{ backgroundColor: a.background, borderColor: a.border, borderRadius: `${a.radius}px` }, { backgroundColor: b.background, borderColor: b.border, borderRadius: `${b.radius}px` }], { duration: DURATION, fill: 'forwards' });
             }
-            const title = kind === 'items' ? surface(el, a, true) : null;
-            // Background changes are independent of position. The carried title never fades.
-            el.animate([{ backgroundColor: a.background, borderColor: a.border, borderRadius: `${a.radius}px` }, { backgroundColor: b.background, borderColor: b.border, borderRadius: `${b.radius}px` }], { duration: 520, fill: 'forwards' });
-            tracks.push({ el, from: a, to: b, title, current: a, kind, key });
+            tracks.push({ el, from: a, to: b, fromGlyph: glyph(host, a, overlayRect), toGlyph: glyph(host, b, overlayRect), current: a, kind, key, fade });
         }
     }
     const aside = from.aside ?? to.aside;
@@ -223,33 +349,53 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
         asideTo = to.aside?.box ?? exit(aside.box);
     }
     content.style.visibility = 'hidden';
-    content.inert = true;
+    content.toggleAttribute('inert', true);
     root.style.overflow = 'hidden';
-    let frame = 0, progress = 0;
-    const start = performance.now(), duration = 520;
-    const finish = () => { cancelAnimationFrame(frame); overlay.remove(); content.style.visibility = ''; content.inert = false; root.style.height = ''; root.style.overflow = ''; };
+    let frame = 0, progress = 0, correctX = 0, correctY = 0;
+    const start = performance.now();
+    const finish = () => { cancelAnimationFrame(frame); overlay.remove(); content.style.visibility = ''; content.toggleAttribute('inert', false); root.style.height = ''; root.style.overflow = ''; };
+    /**
+     * The month viewport aligns its scroll in a later frame than the commit, so the
+     * measured destination can be stale. Re-reading one live element each frame keeps
+     * the end of the morph on the real layout instead of cutting to it.
+     */
+    function correction() {
+        if (!to.anchor)
+            return;
+        const live = root.querySelector<HTMLElement>(to.anchor.selector);
+        if (!live)
+            return;
+        const now = box(live, root.getBoundingClientRect());
+        correctX = now.x - to.anchor.box.x;
+        correctY = now.y - to.anchor.box.y;
+    }
     function draw(now: number) {
-        const linear = Math.min(1, (now - start) / duration);
+        const linear = Math.min(1, (now - start) / DURATION);
         progress = linear * linear * (3 - 2 * linear);
+        correction();
+        const target = (b: Box) => shift(b, correctX * progress, correctY * progress);
         const height = mix(from.bounds.height, to.bounds.height, progress);
         root.style.height = `${height}px`;
-        const clip = lerp(from.clip, to.clip, progress);
+        const clip = lerp(from.clip, target(to.clip), progress);
         layer.style.clipPath = `inset(${Math.max(0, clip.y)}px ${Math.max(0, to.bounds.width - clip.x - clip.width)}px ${Math.max(0, height - clip.y - clip.height)}px ${Math.max(0, clip.x)}px)`;
         for (const tr of tracks) {
-            const b = lerp(tr.from.box, tr.to.box, progress);
-            paintBox(tr.el, b);
-            tr.current = { ...tr.to, box: b, fontSize: mix(tr.from.fontSize, tr.to.fontSize, progress) };
-            if (tr.kind === 'labels')
-                tr.el.style.fontSize = `${tr.current.fontSize}px`;
-            if (tr.title) {
-                const a = tr.from.title ?? tr.from.box, z = tr.to.title ?? tr.to.box, t = lerp(a, z, progress);
-                tr.current.title = t;
-                paintBox(tr.title, { x: t.x - b.x, y: t.y - b.y, width: Math.min(t.width, b.width - (t.x - b.x)), height: t.height });
-                tr.title.style.fontSize = `${mix(tr.from.fontSize, tr.to.fontSize, progress)}px`;
+            const b = lerp(tr.from.box, target(tr.to.box), progress);
+            if (tr.el)
+                paintBox(tr.el, b);
+            tr.current = { ...tr.to, box: b };
+            if (tr.fromGlyph || tr.toGlyph) {
+                const a = tr.from.glyph ?? tr.from.box, z = target(tr.to.glyph ?? tr.to.box);
+                const g = lerp(a, z, progress);
+                tr.current.glyph = g;
+                const enter = tr.fade === 'in' ? progress : tr.fade === 'out' ? 1 - progress : 1;
+                if (tr.fromGlyph)
+                    paintGlyph(tr.fromGlyph, g, tr.fade ? enter : 1 - progress);
+                if (tr.toGlyph)
+                    paintGlyph(tr.toGlyph, g, tr.fade ? enter : progress);
             }
         }
         if (asideNode && asideFrom && asideTo)
-            paintBox(asideNode, lerp(asideFrom, asideTo, progress));
+            paintBox(asideNode, lerp(asideFrom, target(asideTo), progress));
         if (linear < 1)
             frame = requestAnimationFrame(draw);
         else {
@@ -259,5 +405,6 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
     }
     frame = requestAnimationFrame(draw);
     return { cancel: finish, snapshot: (): PlanScene => ({ ...to, bounds: { ...to.bounds, height: mix(from.bounds.height, to.bounds.height, progress) }, clip: lerp(from.clip, to.clip, progress),
-            days: new Map(tracks.filter(t => t.kind === 'days').map(t => [t.key, { ...t.current }])), items: new Map(tracks.filter(t => t.kind === 'items').map(t => [t.key, { ...t.current }])), labels: new Map(tracks.filter(t => t.kind === 'labels').map(t => [t.key, { ...t.current }])), aside: asideNode ? { box: lerp(asideFrom!, asideTo!, progress), node: asideNode.cloneNode(true) as HTMLElement } : null }) };
+            days: new Map(tracks.filter(t => t.kind === 'days').map(t => [t.key, { ...t.current }])), items: new Map(tracks.filter(t => t.kind === 'items').map(t => [t.key, { ...t.current }])), labels: new Map(tracks.filter(t => t.kind === 'labels').map(t => [t.key, { ...t.current }])),
+            aside: asideNode ? { box: lerp(asideFrom!, asideTo!, progress), node: asideNode.cloneNode(true) as HTMLElement } : null }) };
 }
