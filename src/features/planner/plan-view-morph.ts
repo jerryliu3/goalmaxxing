@@ -64,6 +64,18 @@ export const PLAN_MORPH_MONTH_DURATION_MS = 820;
 const ease = (t: number) => t * t * t * (t * (6 * t - 15) + 10);
 /** Progress through a sub-window of the morph, for staggered fades. */
 const ramp = (t: number, a: number, b: number) => Math.max(0, Math.min(1, (t - a) / (b - a)));
+/**
+ * The frame hides the destination before the morph can measure it, and the morph
+ * reveals it again. Both go through here so the two can never disagree about which
+ * property is doing the hiding and leave the view stuck invisible.
+ */
+export function hidePlanContent(content: HTMLElement) {
+    content.style.opacity = '0';
+}
+export function revealPlanContent(content: HTMLElement) {
+    content.style.opacity = '';
+    content.style.visibility = '';
+}
 const distance = (a: string, b: string) => Math.round((Date.parse(`${a}T12:00:00Z`) - Date.parse(`${b}T12:00:00Z`)) / DAY_MS);
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 function lerp(a: Box, b: Box, t: number): Box {
@@ -392,7 +404,7 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
     }
     // Opacity rather than visibility: the destination carries plenty the morph never
     // models (checkboxes, section headings), and those need to fade rather than pop.
-    content.style.opacity = '0';
+    hidePlanContent(content);
     content.toggleAttribute('inert', true);
     // Held constant rather than interpolated: an animated clip edge is a visible line
     // sweeping across the tiles. This still masks month-grid overflow.
@@ -403,7 +415,7 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
     const finish = () => {
         cancelAnimationFrame(frame);
         overlay.remove();
-        content.style.opacity = '';
+        revealPlanContent(content);
         content.toggleAttribute('inert', false);
         root.style.height = '';
     };

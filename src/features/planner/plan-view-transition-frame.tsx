@@ -2,7 +2,13 @@
 
 import { Component, createRef, type ReactNode } from "react";
 import type { PlannerCalendarViewMode } from "./calendar-surface.types";
-import { animatePlanScene, capturePlanScene, type PlanScene } from "./plan-view-morph";
+import {
+  animatePlanScene,
+  capturePlanScene,
+  hidePlanContent,
+  revealPlanContent,
+  type PlanScene,
+} from "./plan-view-morph";
 import { PLAN_VIEW_SWAP_CLASS, prefersReducedMotion } from "./plan-view-transition";
 
 interface Props {
@@ -40,7 +46,7 @@ export class PlanViewTransitionFrame extends Component<Props> {
     if (!scene || !content) {
       return;
     }
-    content.style.visibility = "hidden";
+    hidePlanContent(content);
     // Measured on the next frame so the destination has laid out. The month viewport
     // aligns its scroll from a passive effect that can land later still, which the
     // morph absorbs by re-reading a live anchor rather than by waiting here.
@@ -57,7 +63,7 @@ export class PlanViewTransitionFrame extends Component<Props> {
     const content = this.contentRef.current;
     if (!root || !content) {
       if (content) {
-        content.style.visibility = "";
+        revealPlanContent(content);
       }
       return;
     }

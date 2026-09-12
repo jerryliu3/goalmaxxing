@@ -50,4 +50,29 @@ describe("PlanViewTransitionFrame", () => {
       "month"
     );
   });
+
+  it("leaves the destination visible once the morph completes", () => {
+    // Drive the morph to completion: the frame hides the destination before it can be
+    // measured, and only the morph brings it back.
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      callback(performance.now() + 10_000);
+      return 1;
+    });
+
+    const { rerender } = render(
+      <PlanViewTransitionFrame viewMode="week">
+        <p>Week board</p>
+      </PlanViewTransitionFrame>
+    );
+    rerender(
+      <PlanViewTransitionFrame viewMode="day">
+        <p>Day board</p>
+      </PlanViewTransitionFrame>
+    );
+
+    const view = screen.getByText("Day board").parentElement as HTMLElement;
+    expect(view.style.opacity).toBe("");
+    expect(view.style.visibility).toBe("");
+    expect(view.hasAttribute("inert")).toBe(false);
+  });
 });
