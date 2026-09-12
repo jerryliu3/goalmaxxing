@@ -79,7 +79,7 @@ export function useProgressWeekRhythm({
   }, [asOfDate, enabled, scopeMonth]);
 
   const rows = useMemo<WeekRhythmGoalRow[]>(() => {
-    const workUnits = context?.activePlan?.workUnits ?? [];
+    const workUnits = context?.preview?.workUnits ?? [];
     if (workUnits.length === 0 && !loading) {
       return [];
     }
