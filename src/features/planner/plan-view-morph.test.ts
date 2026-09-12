@@ -143,12 +143,64 @@ describe("animatePlanScene", () => {
 
     const run = animatePlanScene(root, content, from, to, () => {});
     expect(root.querySelector("[data-plan-morph-overlay]")).toBeInstanceOf(HTMLElement);
-    expect(content.style.visibility).toBe("hidden");
+    expect(content.style.opacity).toBe("0");
 
     run.cancel();
 
     expect(root.querySelector("[data-plan-morph-overlay]")).toBeNull();
-    expect(content.style.visibility).toBe("");
+    expect(content.style.opacity).toBe("");
     expect(content.hasAttribute("inert")).toBe(false);
+  });
+});
+
+describe("morph surrogates", () => {
+  const RINGED_PANE = `
+    <div data-testid="plan-day-pane" data-plan-day="2026-09-14" style="box-shadow: 0 0 0 2px rgb(180 83 9)">
+      <span data-plan-weekday="true">Mon</span>
+      <span data-plan-day-number="true">14</span>
+    </div>`;
+
+  it("does not lend the selected pane's ring to projected dates", () => {
+    const root = mount(`<div>${RINGED_PANE}</div>`);
+    const content = root.firstElementChild as HTMLElement;
+    const day = capturePlanScene(root, "day");
+    // A week scene whose dates are absent from day view, so they must be projected.
+    const week = capturePlanScene(mount(`<ol>${WEEK_ROW("2026-09-15")}</ol>`), "week");
+
+    const run = animatePlanScene(root, content, week, day, () => {});
+    const rings = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-plan-morph-overlay] [data-morph-key]")
+    ).filter((node) => node.style.boxShadow && node.style.boxShadow !== "none");
+
+    // Only the pane's own mark may carry it.
+    expect(rings.length).toBeLessThanOrEqual(1);
+    run.cancel();
+  });
+
+  it("bounds carried item text so month pills stay truncated mid-morph", () => {
+    const html = `
+      <div data-testid="plan-calendar-split-calendar">
+        <ol>
+          <li data-calendar-week-row="true" data-day="2026-09-14">
+            <button data-day-cell="true" data-day="2026-09-14"></button>
+            <div data-planner-entry-key="goal-1:cadence:0">
+              <span data-testid="completion-title">A very long scheduled goal title</span>
+            </div>
+          </li>
+        </ol>
+      </div>`;
+    const root = mount(`<div>${html}</div>`);
+    const content = root.firstElementChild as HTMLElement;
+    const scene = capturePlanScene(root, "week");
+
+    const run = animatePlanScene(root, content, scene, capturePlanScene(root, "month"), () => {});
+    const text = root.querySelector<HTMLElement>(
+      "[data-plan-morph-overlay] [style*='nowrap']"
+    );
+
+    expect(text).toBeInstanceOf(HTMLElement);
+    // Its container clips it rather than letting the title run past the tile.
+    expect(text!.parentElement!.style.overflow).toBe("hidden");
+    run.cancel();
   });
 });

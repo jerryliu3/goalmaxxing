@@ -62,6 +62,8 @@ export const PLAN_MORPH_DURATION_MS = 720;
 export const PLAN_MORPH_MONTH_DURATION_MS = 820;
 /** Smootherstep: zero velocity *and* zero acceleration at both ends, so nothing snaps into motion. */
 const ease = (t: number) => t * t * t * (t * (6 * t - 15) + 10);
+/** Progress through a sub-window of the morph, for staggered fades. */
+const ramp = (t: number, a: number, b: number) => Math.max(0, Math.min(1, (t - a) / (b - a)));
 const distance = (a: string, b: string) => Math.round((Date.parse(`${a}T12:00:00Z`) - Date.parse(`${b}T12:00:00Z`)) / DAY_MS);
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 function lerp(a: Box, b: Box, t: number): Box {
@@ -189,7 +191,9 @@ function projectedDay(scene: PlanScene, day: string): Mark | undefined {
     const adjacent = before ? ordered[1]?.[1] : ordered.at(-2)?.[1];
     const gap = adjacent ? Math.max(0, before ? adjacent.box.y - first.box.y - first.box.height : last.box.y - adjacent.box.y - adjacent.box.height) : 0;
     const pitch = scene.mode === 'day' ? Math.max(anchor.box.height, scene.clip.height) + 24 : anchor.box.height + gap;
-    return { ...anchor, day, box: { ...anchor.box, y: anchor.box.y + distance(day, anchorDate) * pitch } };
+    // Drop the anchor's emphasis: in day view the anchor is the selected pane, and
+    // inheriting its ring drew a selected border around every projected date.
+    return { ...anchor, day, shadow: 'none', box: { ...anchor.box, y: anchor.box.y + distance(day, anchorDate) * pitch } };
 }
 function projectedItem(scene: PlanScene, source: Mark): Mark | undefined {
     const day = projectedDay(scene, source.day);
@@ -238,9 +242,11 @@ function surface(parent: HTMLElement, m: Mark) {
  */
 interface Glyph {
     el: HTMLElement;
+    /** Text rect relative to its container's paint origin at measurement time. */
     own: Box;
 }
-function glyph(parent: HTMLElement, m: Mark, overlay: DOMRect): Glyph | null {
+const ORIGIN: Box = { x: 0, y: 0, width: 0, height: 0 };
+function glyph(parent: HTMLElement, m: Mark, overlay: DOMRect, origin: Box): Glyph | null {
     if (!m.glyph || !m.type || !m.text)
         return null;
     const el = document.createElement('div');
@@ -250,20 +256,23 @@ function glyph(parent: HTMLElement, m: Mark, overlay: DOMRect): Glyph | null {
         lineHeight: m.type.lineHeight, color: m.type.color });
     el.textContent = m.text;
     parent.append(el);
-    const own = glyphBox(el, overlay);
-    if (!own) {
+    const measured = glyphBox(el, overlay);
+    if (!measured) {
         el.remove();
         return null;
     }
-    return { el, own };
+    return { el, own: shift(measured, -origin.x, -origin.y) };
 }
-function paintGlyph(g: Glyph, target: Box, opacity: number) {
+function paintGlyph(g: Glyph, target: Box, origin: Box, opacity: number) {
     const scale = g.own.height > 0 ? target.height / g.own.height : 1;
-    g.el.style.transform = `translate(${target.x - g.own.x * scale}px,${target.y - g.own.y * scale}px) scale(${scale})`;
+    g.el.style.transform = `translate(${target.x - origin.x - g.own.x * scale}px,${target.y - origin.y - g.own.y * scale}px) scale(${scale})`;
     g.el.style.opacity = `${opacity}`;
 }
 interface Track {
+    /** Background, border and ring. */
     el: HTMLElement | null;
+    /** Bounds carried text to its tile, so month pills stay truncated mid-morph. */
+    clip: HTMLElement | null;
     from: Mark;
     to: Mark;
     fromGlyph: Glyph | null;
@@ -271,10 +280,12 @@ interface Track {
     current: Mark;
     kind: 'days' | 'items' | 'labels';
     key: string;
-    /** Absent on one side: hold the glyph still and fade rather than fly it somewhere invented. */
+    /** Present on only one side: fade there rather than cut out at the end. */
     fade: 'in' | 'out' | null;
     /** Endpoints play different structural roles: cross-fade in place instead of flying. */
     hold: boolean;
+    /** Whether the month grid's scroll correction applies to this mark. */
+    corrected: boolean;
 }
 export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: PlanScene, to: PlanScene, onFinish: () => void) {
     const duration = from.mode === 'month' || to.mode === 'month' ? PLAN_MORPH_MONTH_DURATION_MS : PLAN_MORPH_DURATION_MS;
@@ -311,8 +322,8 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
     for (const kind of ['days', 'items', 'labels'] as const) {
         const keys = new Set([...from[kind].keys(), ...to[kind].keys()]);
         for (const key of keys) {
-            let a = from[kind].get(key), b = to[kind].get(key);
-            let fade: Track['fade'] = null;
+            const realA = from[kind].get(key), realB = to[kind].get(key);
+            let a = realA, b = realB;
             if (kind === 'days') {
                 a ??= projectedDay(from, b!.day);
                 b ??= projectedDay(to, a!.day);
@@ -324,23 +335,13 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
                     b = projectedItem(to, a);
             }
             if (kind === 'labels') {
-                if (!a && b) {
+                if (!a && b)
                     a = projectedLabel(from, to, b);
-                    fade = 'in';
-                }
-                else if (!b && a) {
+                else if (!b && a)
                     b = projectedLabel(to, from, a);
-                    fade = 'out';
-                }
-                // Weekday headers legitimately have no counterpart between views. Hold
-                // position and fade so nothing drifts to an invented coordinate.
-                if (fade && !(fade === 'in' ? a : b)) {
-                    const seed = (a ?? b)!;
-                    if (fade === 'in')
-                        a = seed;
-                    else
-                        b = seed;
-                }
+                const seed = a ?? b;
+                a ??= seed;
+                b ??= seed;
             }
             if (!a && b)
                 a = { ...b, box: { ...b.box, y: from.clip.y + from.clip.height + 24 } };
@@ -348,23 +349,34 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
                 b = { ...a, box: { ...a.box, y: to.clip.y + to.clip.height + 24 } };
             if (!a || !b)
                 continue;
+            const fade: Track['fade'] = !realA ? 'in' : !realB ? 'out' : null;
             // A weekday label moving between a day cell and the month header changes role
             // rather than position; flying it read as a jump at both ends.
             const hold = kind === 'labels' && key.startsWith('weekday:')
                 && (a.role === 'header') !== (b.role === 'header');
+            // The correction tracks the month grid's scroll. The weekday header sits
+            // outside that viewport, so inheriting it pulled the header off its landing.
+            const corrected = a.role !== 'header' && b.role !== 'header';
             const host = kind === 'labels' && (a.role === 'header' || b.role === 'header') ? headerGlyphs : glyphs;
             // Labels normally carry no surface, but the selected date's ring and circle do.
             const el = kind !== 'labels' || (!hold && (hasChrome(a) || hasChrome(b)))
                 ? surface(surfaces, a)
                 : null;
-            if (el) {
-                el.dataset.morphKey = key;
-                // Chrome changes are independent of position, so hand them to the compositor.
-                if (typeof el.animate === 'function')
-                    el.animate([{ backgroundColor: a.background, borderColor: a.border, borderRadius: `${a.radius}px`, boxShadow: a.shadow },
-                        { backgroundColor: b.background, borderColor: b.border, borderRadius: `${b.radius}px`, boxShadow: b.shadow }], { duration, fill: 'forwards' });
+            if (el)
+                paintBox(el, a.box);
+            let clip: HTMLElement | null = null;
+            if (kind === 'items') {
+                clip = document.createElement('div');
+                Object.assign(clip.style, { position: 'absolute', left: '0', top: '0', overflow: 'hidden', pointerEvents: 'none', transformOrigin: '0 0' });
+                host.append(clip);
+                paintBox(clip, a.box);
             }
-            tracks.push({ el, from: a, to: b, fromGlyph: glyph(host, a, overlayRect), toGlyph: glyph(host, b, overlayRect), current: a, kind, key, fade, hold });
+            const origin = clip ? a.box : ORIGIN;
+            if (el && typeof el.animate === 'function')
+                el.animate([{ backgroundColor: a.background, borderColor: a.border, borderRadius: `${a.radius}px`, boxShadow: a.shadow },
+                    { backgroundColor: b.background, borderColor: b.border, borderRadius: `${b.radius}px`, boxShadow: b.shadow }], { duration, fill: 'forwards' });
+            tracks.push({ el, clip, from: a, to: b, fromGlyph: glyph(clip ?? host, a, overlayRect, origin),
+                toGlyph: glyph(clip ?? host, b, overlayRect, origin), current: a, kind, key, fade, hold, corrected });
         }
     }
     const aside = from.aside ?? to.aside;
@@ -374,19 +386,27 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
         asideNode.removeAttribute('id');
         Object.assign(asideNode.style, { position: 'absolute', left: '0', top: '0', margin: '0', pointerEvents: 'none' });
         overlay.prepend(asideNode);
-        const exit = (b: Box) => ({ ...b, x: b.x > to.bounds.width * .3 ? to.bounds.width + 24 : b.x, y: b.x > to.bounds.width * .3 ? b.y : Math.max(from.bounds.height, to.bounds.height) + 24 });
+        const exit = (b: Box) => ({ ...b, x: b.x > to.bounds.width * .3 ? to.bounds.width + 24 : b.x, y: b.x > to.bounds.width * .3 ? b.y : stage + 24 });
         asideFrom = from.aside?.box ?? exit(aside.box);
         asideTo = to.aside?.box ?? exit(aside.box);
     }
-    content.style.visibility = 'hidden';
+    // Opacity rather than visibility: the destination carries plenty the morph never
+    // models (checkboxes, section headings), and those need to fade rather than pop.
+    content.style.opacity = '0';
     content.toggleAttribute('inert', true);
     // Held constant rather than interpolated: an animated clip edge is a visible line
     // sweeping across the tiles. This still masks month-grid overflow.
-    const clip = union(from.clip, to.clip);
-    layer.style.clipPath = `inset(${Math.max(0, clip.y)}px ${Math.max(0, to.bounds.width - clip.x - clip.width)}px ${Math.max(0, stage - clip.y - clip.height)}px ${Math.max(0, clip.x)}px)`;
+    const clipRect = union(from.clip, to.clip);
+    layer.style.clipPath = `inset(${Math.max(0, clipRect.y)}px ${Math.max(0, to.bounds.width - clipRect.x - clipRect.width)}px ${Math.max(0, stage - clipRect.y - clipRect.height)}px ${Math.max(0, clipRect.x)}px)`;
     let frame = 0, progress = 0, correctX = 0, correctY = 0;
     const start = performance.now();
-    const finish = () => { cancelAnimationFrame(frame); overlay.remove(); content.style.visibility = ''; content.toggleAttribute('inert', false); root.style.height = ''; };
+    const finish = () => {
+        cancelAnimationFrame(frame);
+        overlay.remove();
+        content.style.opacity = '';
+        content.toggleAttribute('inert', false);
+        root.style.height = '';
+    };
     /**
      * The month viewport aligns its scroll in a later frame than the commit, so the
      * measured destination can be stale. Re-reading one live element each frame keeps
@@ -406,26 +426,37 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
         const linear = Math.min(1, (now - start) / duration);
         progress = ease(linear);
         correction();
-        const target = (b: Box) => shift(b, correctX * progress, correctY * progress);
+        const aim = (tr: Track, b: Box) => tr.corrected ? shift(b, correctX * progress, correctY * progress) : b;
         root.style.height = `${mix(from.bounds.height, to.bounds.height, progress)}px`;
+        // Cross-dissolve into the real view over the tail, once surrogates have all but
+        // converged, so unmodelled chrome settles in instead of appearing at the end.
+        content.style.opacity = `${ramp(progress, .68, 1)}`;
+        overlay.style.opacity = `${1 - ramp(progress, .82, 1)}`;
         for (const tr of tracks) {
-            const b = lerp(tr.from.box, target(tr.to.box), progress);
-            if (tr.el)
+            const b = lerp(tr.from.box, aim(tr, tr.to.box), progress);
+            const alpha = tr.fade === 'in' ? ramp(progress, .05, .55)
+                : tr.fade === 'out' ? 1 - ramp(progress, .1, .6)
+                : 1;
+            if (tr.el) {
                 paintBox(tr.el, b);
+                tr.el.style.opacity = `${alpha}`;
+            }
+            if (tr.clip)
+                paintBox(tr.clip, b);
             tr.current = { ...tr.to, box: b };
             if (tr.fromGlyph || tr.toGlyph) {
-                const a = tr.from.glyph ?? tr.from.box, z = target(tr.to.glyph ?? tr.to.box);
-                const g = lerp(a, z, progress);
+                const origin = tr.clip ? b : ORIGIN;
+                const a0 = tr.from.glyph ?? tr.from.box, z = aim(tr, tr.to.glyph ?? tr.to.box);
+                const g = lerp(a0, z, progress);
                 tr.current.glyph = g;
-                const enter = tr.fade === 'in' ? progress : tr.fade === 'out' ? 1 - progress : 1;
                 if (tr.fromGlyph)
-                    paintGlyph(tr.fromGlyph, tr.hold ? a : g, tr.fade ? enter : 1 - progress);
+                    paintGlyph(tr.fromGlyph, tr.hold ? a0 : g, origin, alpha * (tr.fade ? 1 : 1 - progress));
                 if (tr.toGlyph)
-                    paintGlyph(tr.toGlyph, tr.hold ? z : g, tr.fade ? enter : progress);
+                    paintGlyph(tr.toGlyph, tr.hold ? z : g, origin, alpha * (tr.fade ? 1 : progress));
             }
         }
         if (asideNode && asideFrom && asideTo)
-            paintBox(asideNode, lerp(asideFrom, target(asideTo), progress));
+            paintBox(asideNode, lerp(asideFrom, shift(asideTo, correctX * progress, correctY * progress), progress));
         if (linear < 1)
             frame = requestAnimationFrame(draw);
         else {
