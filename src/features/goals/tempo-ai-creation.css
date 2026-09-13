@@ -1,0 +1,451 @@
+.tempo-ai-composer,
+.tempo-ai-preview {
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+}
+.tempo-ai-heading {
+  margin-bottom: 1.65rem;
+}
+.tempo-ai-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  color: var(--muted-foreground);
+  margin-bottom: 0.9rem;
+}
+.tempo-ai-eyebrow button {
+  cursor: pointer;
+}
+.tempo-ai-heading h2 {
+  font-family: inherit;
+  font-size: clamp(1.85rem, 3.2vw, 2.6rem);
+  line-height: 1.08;
+  letter-spacing: -0.055em;
+  font-weight: 500;
+  margin: 0 0 0.85rem;
+}
+.tempo-ai-heading > p {
+  font-size: 0.85rem;
+  line-height: 1.65;
+  color: var(--muted-foreground);
+  max-width: 24rem;
+  margin: 0;
+}
+.tempo-ai-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.tempo-ai-writing {
+  border: 1px solid color-mix(in srgb, #b99060 30%, var(--border));
+  border-radius: 1rem;
+  background: color-mix(in srgb, #b99060 4%, var(--background));
+  padding: 1.2rem 1.25rem 1rem;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.tempo-ai-writing:focus-within {
+  border-color: #b99060;
+  box-shadow: 0 0 0 3px #b9906015;
+}
+.tempo-ai-writing > label {
+  display: block;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  color: var(--muted-foreground);
+  margin-bottom: 1rem;
+}
+.tempo-ai-writing textarea {
+  display: block;
+  resize: vertical;
+  width: 100%;
+  min-height: 155px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 1.1rem;
+  line-height: 1.65;
+  letter-spacing: -0.025em;
+  padding: 0;
+  outline: none;
+  box-shadow: none;
+}
+.tempo-ai-writing textarea::placeholder {
+  color: var(--muted-foreground);
+  opacity: 0.7;
+}
+.tempo-ai-writing-foot {
+  border-top: 1px solid color-mix(in srgb, #b99060 20%, var(--border));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 0.8rem;
+  margin-top: 0.8rem;
+  color: var(--muted-foreground);
+  font-size: 0.65rem;
+}
+.tempo-ai-ideas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.tempo-ai-ideas > span {
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+}
+.tempo-ai-ideas > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+.tempo-ai-ideas button {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.6rem 0.45rem 0;
+  font-size: 0.73rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  min-height: 36px;
+}
+.tempo-ai-ideas button > i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #84916d;
+}
+.tempo-ai-ideas button[data-tone="creative"] > i {
+  background: #c28b67;
+}
+.tempo-ai-ideas button[data-tone="personal"] > i {
+  background: #a497b4;
+}
+.tempo-ai-ideas button > span {
+  color: var(--muted-foreground);
+  margin-left: 0.05rem;
+}
+.tempo-ai-ideas button:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.tempo-ai-primary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  min-height: 49px;
+  border: 1px solid #9f482e;
+  border-radius: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  background: #a14c32;
+  color: #fffaf5;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition:
+    background 0.2s,
+    opacity 0.2s;
+}
+.tempo-ai-primary:hover:not(:disabled) {
+  background: #8f402b;
+}
+.tempo-ai-composer button:disabled,
+.tempo-ai-fields:disabled button {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.tempo-ai-primary:disabled {
+  background: color-mix(in srgb, #a14c32 18%, var(--background));
+  color: var(--muted-foreground);
+  border-color: color-mix(in srgb, #a14c32 20%, var(--border));
+  opacity: 1;
+}
+.tempo-ai-reassurance {
+  font-size: 0.66rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+  text-align: center;
+  margin: 0.75rem 0 0;
+  min-height: 1.5em;
+}
+.tempo-ai-alternative {
+  margin-top: 1.4rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+}
+.tempo-ai-alternative button,
+.tempo-ai-text-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 0;
+  padding: 0.25rem;
+  min-height: 36px;
+  font: inherit;
+  font-size: 0.73rem;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+.tempo-ai-composer button:focus-visible,
+.tempo-ai-composer summary:focus-visible {
+  outline: 2px solid #b99060;
+  outline-offset: 4px;
+}
+.tempo-ai-file {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 180px;
+  padding: 1.4rem;
+  border: 1px dashed #b9906080;
+  border-radius: 1rem;
+  background: color-mix(in srgb, #b99060 4%, var(--background));
+  cursor: pointer;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.tempo-ai-file-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #b9906015;
+  color: var(--muted-foreground);
+  margin-bottom: 0.3rem;
+}
+.tempo-ai-file strong {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.tempo-ai-file > span:last-child {
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+}
+.tempo-ai-paste summary {
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  padding: 0.35rem 0;
+}
+.tempo-ai-paste textarea {
+  display: block;
+  width: 100%;
+  min-height: 150px;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: var(--background);
+  font-family: monospace;
+  font-size: 0.75rem;
+  margin: 1rem 0;
+  resize: vertical;
+}
+.tempo-ai-format {
+  margin-top: 1rem;
+}
+.tempo-ai-format pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.65rem;
+  color: var(--muted-foreground);
+  padding: 0.8rem;
+  background: var(--muted);
+  border-radius: 0.5rem;
+  margin: 0.75rem 0;
+}
+.tempo-ai-format p {
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+.tempo-ai-preview {
+  padding: 2.5rem 0.5rem 0;
+  perspective: 1100px;
+}
+.tempo-ai-deck {
+  position: relative;
+  padding: 0 10px;
+}
+.tempo-ai-paper {
+  border-radius: 0.55rem;
+  border: 1px solid #29282320;
+}
+.tempo-ai-paper-back,
+.tempo-ai-paper-middle {
+  position: absolute;
+  inset: 0 12px 0;
+  transform-origin: 50% 85%;
+}
+.tempo-ai-paper-back {
+  transform: rotate(-7deg) translateY(3px);
+  background: #deded0;
+}
+.tempo-ai-paper-middle {
+  transform: rotate(4deg) translateY(-3px);
+  background: #eaded0;
+}
+.tempo-ai-paper-front {
+  position: relative;
+  background: #f1cfb5;
+  color: #292823;
+  box-shadow: 0 20px 30px #2928230b;
+  padding: 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-height: 390px;
+}
+.tempo-ai-paper-top,
+.tempo-ai-paper-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+}
+.tempo-ai-paper-mark {
+  height: 95px;
+  display: flex;
+  align-items: center;
+  font-size: 90px;
+  line-height: 1;
+  font-weight: 400;
+}
+.tempo-ai-paper-front h3 {
+  font-family: inherit;
+  font-size: clamp(1.65rem, 2.7vw, 2.15rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.05em;
+  margin: 0;
+}
+.tempo-ai-paper-rule {
+  height: 1px;
+  background: #29282330;
+  margin-top: auto;
+}
+.tempo-ai-paper-front > p {
+  font-size: 0.8rem;
+  line-height: 1.6;
+  max-width: 16rem;
+  margin: 0;
+}
+.tempo-ai-paper-bottom {
+  margin-top: 0.5rem;
+  opacity: 0.65;
+  font-size: 0.5rem;
+}
+.tempo-ai-preview-caption {
+  text-align: center;
+  font-size: 0.7rem;
+  line-height: 1.7;
+  color: var(--muted-foreground);
+  margin: 1.75rem 0 0;
+}
+.tempo-ai-drafting-dots {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.tempo-ai-drafting-dots i {
+  width: 13px;
+  height: 13px;
+  background: #8e452d;
+  border-radius: 50%;
+  animation: tempo-ai-breathe 1.4s ease-in-out infinite;
+}
+.tempo-ai-drafting-dots i:nth-child(2) {
+  animation-delay: 0.16s;
+}
+.tempo-ai-drafting-dots i:nth-child(3) {
+  animation-delay: 0.32s;
+}
+.tempo-ai-spinner {
+  animation: tempo-ai-spin 1s linear infinite;
+}
+@keyframes tempo-ai-breathe {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-5px);
+  }
+}
+@keyframes tempo-ai-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 767px) {
+  .tempo-creation.tempo-ai-entry {
+    grid-template-areas: "steps" "workspace" "preview";
+  }
+  .tempo-ai-heading h2 {
+    font-size: 2rem;
+  }
+  .tempo-ai-writing textarea {
+    min-height: 140px;
+  }
+  .tempo-ai-preview {
+    padding: 1rem 1rem 0;
+  }
+  .tempo-ai-paper-front {
+    min-height: 240px;
+    padding: 1.4rem;
+    gap: 1rem;
+  }
+  .tempo-ai-paper-mark {
+    height: 45px;
+    font-size: 50px;
+  }
+  .tempo-ai-paper-front h3 {
+    font-size: 1.6rem;
+  }
+  .tempo-ai-preview-caption {
+    margin-top: 1.2rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tempo-ai-spinner,
+  .tempo-ai-drafting-dots i {
+    animation: none;
+  }
+  .tempo-ai-composer * {
+    transition: none !important;
+  }
+}
+.tempo-ai-revise {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+.tempo-ai-revise > summary {
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-size: 0.75rem !important;
+  color: var(--muted-foreground);
+}
+.tempo-ai-revise[open] > .tempo-ai-composer {
+  max-width: 32rem;
+  margin: 1.5rem auto;
+}

@@ -31,6 +31,7 @@ export function MilestoneNameFields({
             value={values[index] ?? ""}
             onChange={(event) => onValueChange(index, event.target.value)}
             placeholder={defaultMilestoneName(index)}
+            aria-label={defaultMilestoneName(index)}
           />
         ))}
       </div>

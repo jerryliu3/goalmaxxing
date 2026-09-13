@@ -1,5 +1,7 @@
 "use client";
 
+import { TempoAiDraftPreview } from "@/features/goals/tempo-ai-draft-preview";
+
 import { useSearchParams } from "next/navigation";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
 import {
@@ -12,14 +14,14 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-import { LoadingCard } from "@/components/ui/loading-card";
 import {
   type BulkGoalDraft,
   buildBulkGoalDraftFromRow,
   buildBulkGoalDraftsFromLlmGoals,
 } from "@/features/goals/bulk-goal-drafts";
 import { parseLlmGoalDraftsFromPrompt } from "@/features/goals/bulk-goal-parse";
-import { BulkGoalDraftReview } from "@/features/goals/bulk-goal-draft-review";
+import { TempoStepNavigation } from "@/features/goals/tempo-step-navigation";
+import { TempoGoalStack } from "@/features/goals/tempo-goal-stack";
 import {
   type BulkGoalLinkRecovery,
   BulkGoalPersistenceError,
@@ -56,7 +58,9 @@ const csvExample = `title,description,category,color,frequency_type,recurrence_i
 Morning run,Train for a half marathon,Health,#16a34a,recurring,weekly,period,3,,2026-06-01,2026-12-31,06:45
 Read 12 books,One book per month,Personal,#6366f1,fixed,,lifetime,12,Book 1|Book 2|Book 3,2026-06-01,2026-12-31,`;
 
-async function parseRowsFromCsvText(csvText: string): Promise<Record<string, unknown>[]> {
+async function parseRowsFromCsvText(
+  csvText: string,
+): Promise<Record<string, unknown>[]> {
   const XLSX = await import("xlsx");
   const workbook = XLSX.read(csvText, { type: "string" });
   const sheetName = workbook.SheetNames[0];
@@ -64,14 +68,17 @@ async function parseRowsFromCsvText(csvText: string): Promise<Record<string, unk
     return [];
   }
 
-  return XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName], {
-    defval: "",
-    raw: false,
-  });
+  return XLSX.utils.sheet_to_json<Record<string, unknown>>(
+    workbook.Sheets[sheetName],
+    {
+      defval: "",
+      raw: false,
+    },
+  );
 }
 
 async function parseRowsFromSpreadsheetFile(
-  file: File
+  file: File,
 ): Promise<Record<string, unknown>[]> {
   const XLSX = await import("xlsx");
   const buffer = await file.arrayBuffer();
@@ -81,10 +88,13 @@ async function parseRowsFromSpreadsheetFile(
     return [];
   }
 
-  return XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName], {
-    defval: "",
-    raw: false,
-  });
+  return XLSX.utils.sheet_to_json<Record<string, unknown>>(
+    workbook.Sheets[sheetName],
+    {
+      defval: "",
+      raw: false,
+    },
+  );
 }
 
 export function BulkGoalForm({
@@ -112,7 +122,9 @@ export function BulkGoalForm({
   const [parsing, setParsing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [drafts, setDrafts] = useState<BulkGoalDraft[]>([]);
-  const [linkRecovery, setLinkRecovery] = useState<BulkGoalLinkRecovery | null>(null);
+  const [linkRecovery, setLinkRecovery] = useState<BulkGoalLinkRecovery | null>(
+    null,
+  );
   const [createRecovery, setCreateRecovery] = useState<{
     preparedRows: PreparedBulkGoalRow[];
   } | null>(null);
@@ -153,8 +165,8 @@ export function BulkGoalForm({
           goals.filter(
             (goal) =>
               goal.team_id === null &&
-              progressByGoal.get(goal.id)?.lifecycle === "active"
-          )
+              progressByGoal.get(goal.id)?.lifecycle === "active",
+          ),
         );
       }
 
@@ -166,15 +178,18 @@ export function BulkGoalForm({
       toast.error(
         error instanceof Error
           ? error.message
-          : "Could not load linkable goals."
+          : "Could not load linkable goals.",
       );
     });
   }, [router, supabase]);
 
-  const selectedDrafts = useMemo(() => drafts.filter((draft) => draft.include), [drafts]);
+  const selectedDrafts = useMemo(
+    () => drafts.filter((draft) => draft.include),
+    [drafts],
+  );
   const selectedInvalidCount = useMemo(
     () => selectedDrafts.filter((draft) => draft.errors.length > 0).length,
-    [selectedDrafts]
+    [selectedDrafts],
   );
 
   const loadDraftsFromRows = useCallback((rows: Record<string, unknown>[]) => {
@@ -184,10 +199,12 @@ export function BulkGoalForm({
     }
 
     const nextDrafts = rows.map((row, index) =>
-      buildBulkGoalDraftFromRow(row, index)
+      buildBulkGoalDraftFromRow(row, index),
     );
     setDrafts(nextDrafts);
-    toast.success(`Loaded ${nextDrafts.length} goal draft${nextDrafts.length === 1 ? "" : "s"}.`);
+    toast.success(
+      `Loaded ${nextDrafts.length} goal draft${nextDrafts.length === 1 ? "" : "s"}.`,
+    );
   }, []);
 
   useEffect(() => {
@@ -218,7 +235,7 @@ export function BulkGoalForm({
       loadDraftsFromRows(rows);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Could not parse CSV text."
+        error instanceof Error ? error.message : "Could not parse CSV text.",
       );
     } finally {
       setParsing(false);
@@ -247,17 +264,19 @@ export function BulkGoalForm({
       const nextDrafts = buildBulkGoalDraftsFromLlmGoals(goals);
       setDrafts(nextDrafts);
       toast.success(
-        `Loaded ${nextDrafts.length} goal draft${nextDrafts.length === 1 ? "" : "s"}.`
+        `Loaded ${nextDrafts.length} goal draft${nextDrafts.length === 1 ? "" : "s"}.`,
       );
       if (warnings.length > 0) {
         toast.warning(
           warnings.length === 1
             ? warnings[0]
-            : `${warnings.length} generated drafts need edits before saving.`
+            : `${warnings.length} generated drafts need edits before saving.`,
         );
       }
     } catch (error) {
-      toast.error(getApiErrorMessage(error, "Could not parse natural language input."));
+      toast.error(
+        getApiErrorMessage(error, "Could not parse natural language input."),
+      );
     } finally {
       setParsing(false);
     }
@@ -275,7 +294,9 @@ export function BulkGoalForm({
       loadDraftsFromRows(rows);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Could not parse uploaded file."
+        error instanceof Error
+          ? error.message
+          : "Could not parse uploaded file.",
       );
     } finally {
       setParsing(false);
@@ -288,7 +309,7 @@ export function BulkGoalForm({
 
   const finishCreatedGoals = (createdCount: number) => {
     toast.success(
-      `Created ${createdCount} goal${createdCount === 1 ? "" : "s"}.`
+      `Created ${createdCount} goal${createdCount === 1 ? "" : "s"}.`,
     );
     completeAndExit();
   };
@@ -360,7 +381,9 @@ export function BulkGoalForm({
         toast.error(error.message);
       } else {
         toast.error(
-          error instanceof Error ? error.message : "Failed to create bulk goals."
+          error instanceof Error
+            ? error.message
+            : "Failed to create bulk goals.",
         );
       }
     } finally {
@@ -368,37 +391,51 @@ export function BulkGoalForm({
     }
   };
 
-  if (initializing) {
-    return (
-      <LoadingCard
-        title="Loading bulk goal creator..."
-        description="Preparing your workspace."
-      />
-    );
-  }
-
+  const inputCard = (
+    <BulkGoalInputCard
+      inputMode={inputMode}
+      onInputModeChange={setInputMode}
+      modeSwitchControl={modeSwitchControl}
+      showBackButton={showBackButton}
+      onExit={onExit}
+      naturalLanguageInput={naturalLanguageInput}
+      onNaturalLanguageInputChange={setNaturalLanguageInput}
+      csvInput={csvInput}
+      onCsvInputChange={setCsvInput}
+      csvExample={csvExample}
+      onUseCsvExample={() => setCsvInput(csvExample)}
+      parsing={parsing}
+      onParseNaturalLanguage={parseNaturalLanguageInput}
+      onParseCsv={parseCsvInput}
+      onFileChange={onFileChange}
+      onParseUploadedFile={parseUploadedFile}
+      uploadedFileName={uploadedFile?.name ?? null}
+      disabled={Boolean(
+        initializing || parsing || saving || linkRecovery || createRecovery,
+      )}
+    />
+  );
   return (
-    <div className="space-y-5">
-      <BulkGoalInputCard
-        inputMode={inputMode}
-        onInputModeChange={setInputMode}
-        modeSwitchControl={modeSwitchControl}
-        showBackButton={showBackButton}
-        onExit={onExit}
-        naturalLanguageInput={naturalLanguageInput}
-        onNaturalLanguageInputChange={setNaturalLanguageInput}
-        csvInput={csvInput}
-        onCsvInputChange={setCsvInput}
-        csvExample={csvExample}
-        onUseCsvExample={() => setCsvInput(csvExample)}
-        parsing={parsing}
-        onParseNaturalLanguage={parseNaturalLanguageInput}
-        onParseCsv={parseCsvInput}
-        onFileChange={onFileChange}
-        onParseUploadedFile={parseUploadedFile}
-        uploadedFileName={uploadedFile?.name ?? null}
-        disabled={Boolean(saving || linkRecovery || createRecovery)}
-      />
+    <div className="flex flex-col gap-5">
+      {drafts.length === 0 ? (
+        <div className="tempo-creation tempo-ai-entry w-full">
+          <TempoStepNavigation step={1} disabled={parsing} />
+          <div className="tempo-workspace">{inputCard}</div>
+          <div className="tempo-preview">
+            <TempoAiDraftPreview
+              parsing={parsing}
+              importing={inputMode === "csv"}
+            />
+          </div>
+        </div>
+      ) : (
+        <details className="tempo-ai-revise order-last">
+          <summary className="cursor-pointer text-sm font-medium">
+            Revisit your starting point
+          </summary>
+          {inputCard}
+        </details>
+      )}
 
       {createRecovery ? (
         <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
@@ -434,28 +471,31 @@ export function BulkGoalForm({
         </div>
       ) : null}
 
-      <BulkGoalDraftReview
-        variant="full"
-        drafts={drafts}
-        setDrafts={setDrafts}
-        saving={saving}
-        onCreate={createSelectedGoals}
-        availableGoals={availableGoals}
-        editingDisabled={Boolean(saving || linkRecovery || createRecovery)}
-        createLabel={createRecovery ? "Retry creating goals" : undefined}
-        createDisabledMessage={
-          linkRecovery
-            ? "Goals were created, but their links still need to be saved."
-            : createRecovery
-              ? "Goal creation was not confirmed; retry to reconcile the retained draft."
-            : null
-        }
-        emptyMessage={
-          inputMode === "natural_language"
-            ? "Parse natural language input to generate drafts."
-            : "Parse CSV input or upload a file to generate drafts."
-        }
-      />
+      {drafts.length > 0 && (
+        <TempoGoalStack
+          drafts={drafts}
+          setDrafts={setDrafts}
+          saving={saving}
+          onCreate={createSelectedGoals}
+          availableGoals={availableGoals}
+          editingDisabled={Boolean(
+            initializing || parsing || saving || linkRecovery || createRecovery,
+          )}
+          createLabel={createRecovery ? "Retry creating goals" : undefined}
+          createDisabledMessage={
+            linkRecovery
+              ? "Goals were created, but their links still need to be saved."
+              : createRecovery
+                ? "Goal creation was not confirmed; retry to reconcile the retained draft."
+                : null
+          }
+          emptyMessage={
+            inputMode === "natural_language"
+              ? "Parse natural language input to generate drafts."
+              : "Parse CSV input or upload a file to generate drafts."
+          }
+        />
+      )}
     </div>
   );
 }

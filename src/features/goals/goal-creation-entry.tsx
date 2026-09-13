@@ -1,182 +1,158 @@
 "use client";
 
+import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
+import { createDefaultGoalCreationFields } from "@/features/goals/goal-creation-model";
+
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { Badge } from "@/components/ui/badge";
+import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  STARTER_PACKS,
-  type StarterPackKey,
-  isStarterPacksSeen,
-  markStarterPacksSeen,
-  resolveStarterPackKey,
-  subscribeStarterPacksSeen,
-} from "@/features/goals/starter-packs";
-import { TrainingPlanImportEntry } from "@/features/goals/training-plan-import-entry";
-import { BulkGoalForm } from "@/features/today/bulk-goal-form";
 import { GoalForm } from "@/features/today/goal-form";
-import { useDuo } from "@/features/social/duo/duo-context";
-import { cn } from "@/lib/utils";
+import { BulkGoalForm } from "@/features/today/bulk-goal-form";
+import { TrainingPlanImportEntry } from "./training-plan-import-entry";
+import {
+  TempoMethodContext,
+  TempoStepNavigation,
+} from "./tempo-step-navigation";
+import { STARTER_PACKS } from "./starter-packs";
+import "./tempo-goal-creation.css";
 
 type CreationMode = "single" | "multi" | "training";
 
-interface GoalCreationEntryProps {
-  onExit?: () => void;
-}
-
-const CREATION_MODE_TABS: Array<{ key: CreationMode; label: string }> = [
-  { key: "single", label: "Single" },
-  { key: "multi", label: "Multi" },
-  { key: "training", label: "Training Plan" },
-];
-
-function resolveMode(
-  rawMode: string | null,
-  allowTrainingPlan: boolean
-): CreationMode {
-  if (rawMode === "multi") {
-    return "multi";
-  }
-  if (rawMode === "training" && allowTrainingPlan) {
-    return "training";
-  }
-  return "single";
-}
-
-export function GoalCreationEntry({ onExit }: GoalCreationEntryProps) {
-  const pathname = usePathname();
+export function GoalCreationEntry({ onExit }: { onExit?: () => void }) {
   const searchParams = useSearchParams();
-  const { viewerUserId } = useDuo();
-  const allowTrainingPlan = process.env.NODE_ENV !== "production";
-
-  const mode = useMemo(
-    () => resolveMode(searchParams.get("mode"), allowTrainingPlan),
-    [allowTrainingPlan, searchParams]
-  );
-  const starterPacksSeen = useSyncExternalStore(
-    subscribeStarterPacksSeen,
-    () => isStarterPacksSeen(viewerUserId),
-    () => true
-  );
-  const [offerStarterPacks, setOfferStarterPacks] = useState(false);
-  if (mode === "multi" && !starterPacksSeen && !offerStarterPacks) {
-    setOfferStarterPacks(true);
-  }
-
-  useEffect(() => {
-    if (!offerStarterPacks) {
-      return;
-    }
-    const timeoutId = window.setTimeout(() => {
-      markStarterPacksSeen(viewerUserId);
-    }, 0);
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [offerStarterPacks, viewerUserId]);
-
-  const modeHref = (nextMode: CreationMode) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (nextMode === "single") {
-      params.delete("mode");
-      params.delete("starterPack");
-    } else if (nextMode === "training") {
-      params.set("mode", "training");
-      params.delete("starterPack");
-    } else {
-      params.set("mode", "multi");
-    }
-    const query = params.toString();
-    return query.length > 0 ? `${pathname}?${query}` : pathname;
-  };
-
-  const starterPack = resolveStarterPackKey(searchParams.get("starterPack"));
-  const starterPackHref = (pack: StarterPackKey) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("mode", "multi");
-    params.set("starterPack", pack);
-    const query = params.toString();
-    return query.length > 0 ? `${pathname}?${query}` : pathname;
-  };
-
+  const initialMode =
+    searchParams.get("mode") === "multi"
+      ? "multi"
+      : searchParams.get("mode") === "training" &&
+          process.env.NODE_ENV !== "production"
+        ? "training"
+        : null;
+  const [mode, setMode] = useState<CreationMode | null>(initialMode);
+  const [selection, setSelection] = useState<CreationMode | null>(initialMode);
+  const [choosing, setChoosing] = useState(initialMode === null);
   return (
-    <div className="mx-auto w-full max-w-5xl">
-      <div className="mb-4">
-        <div className="mx-auto flex w-full max-w-xl items-end border-b border-border/70">
-          {CREATION_MODE_TABS.map((tab) => {
-            const selected = mode === tab.key;
-            const trainingTabLocked = tab.key === "training" && !allowTrainingPlan;
-            if (trainingTabLocked) {
-              return (
-                <span
-                  key={tab.key}
-                  aria-disabled="true"
-                  className="relative flex flex-1 cursor-not-allowed items-center justify-center gap-2 py-2 text-center text-sm font-medium text-muted-foreground/70"
-                >
-                  <span>{tab.label}</span>
-                  <Badge variant="outline" className="h-5 px-1.5 text-[10px] uppercase">
-                    Coming soon
-                  </Badge>
-                </span>
-              );
-            }
-            return (
-              <Link
-                key={tab.key}
-                href={modeHref(tab.key)}
-                replace
-                aria-current={selected ? "page" : undefined}
-                className={cn(
-                  "relative flex-1 py-2 text-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
-                  selected ? "text-foreground" : ""
-                )}
+    <TempoMethodContext.Provider value={() => setChoosing(true)}>
+      <div className="mx-auto w-full max-w-5xl">
+        {choosing && (
+          <div className="tempo-creation">
+            <TempoStepNavigation step={0} />
+            <div className="tempo-workspace">
+              <p className="tempo-eyebrow">
+                A little intention goes a long way
+              </p>
+              <h2 className="tempo-heading">
+                How do you want
+                <br />
+                to begin?
+              </h2>
+              <div
+                className="tempo-methods"
+                role="group"
+                aria-label="Creation method"
               >
-                {tab.label}
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "pointer-events-none absolute inset-x-1 -bottom-px h-1 rounded-full bg-primary transition-opacity",
-                    selected ? "opacity-100" : "opacity-0"
-                  )}
-                />
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-      <div className="w-full">
-        {mode === "multi" && offerStarterPacks ? (
-          <div className="mb-4 rounded-xl border bg-muted/20 p-3">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-sm font-medium">Starter packs (optional)</p>
-              {starterPack ? (
-                <Badge variant="outline" className="capitalize">
-                  {STARTER_PACKS.find((pack) => pack.key === starterPack)?.label ?? starterPack} selected
-                </Badge>
-              ) : (
-                <Badge variant="outline">Pick one to prefill drafts</Badge>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {STARTER_PACKS.map((pack) => (
-                <Button key={pack.key} type="button" variant="outline" size="sm" asChild>
-                  <Link href={starterPackHref(pack.key)} replace>
-                    {pack.label} starter pack
-                  </Link>
+                <button
+                  type="button"
+                  aria-pressed={selection === "single"}
+                  onClick={() => setSelection("single")}
+                >
+                  <span aria-hidden="true">↗</span>
+                  <strong>A single goal</strong>
+                  <small>I know what I want to work on.</small>
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={selection === "multi"}
+                  onClick={() => setSelection("multi")}
+                >
+                  <span aria-hidden="true">✧</span>
+                  <strong>Shape it with AI</strong>
+                  <small>Turn an idea into one goal—or a few.</small>
+                </button>
+              </div>
+              <div className="tempo-footer">
+                <Button
+                  type="button"
+                  disabled={!selection}
+                  onClick={() => {
+                    setMode(selection);
+                    setChoosing(false);
+                  }}
+                >
+                  Continue →
                 </Button>
-              ))}
+              </div>
+              <details className="mt-6 text-xs text-muted-foreground">
+                <summary className="cursor-pointer">
+                  Start from a pack or import
+                </summary>
+                <div className="mt-3 flex flex-wrap gap-3">
+                  {STARTER_PACKS.map((pack) => {
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.set("mode", "multi");
+                    params.set("starterPack", pack.key);
+                    return (
+                      <Link
+                        key={pack.key}
+                        href={`?${params.toString()}`}
+                        replace
+                        onClick={() => {
+                          setMode("multi");
+                          setChoosing(false);
+                        }}
+                      >
+                        {pack.label} starter pack
+                      </Link>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("multi");
+                      setChoosing(false);
+                    }}
+                  >
+                    CSV / spreadsheet
+                  </button>
+                  {process.env.NODE_ENV !== "production" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode("training");
+                        setChoosing(false);
+                      }}
+                    >
+                      Training plan
+                    </button>
+                  )}
+                </div>
+              </details>
+            </div>
+            <div className="tempo-preview">
+              <TempoGoalCard
+                fields={createDefaultGoalCreationFields()}
+                visibility={{
+                  category: false,
+                  rhythm: false,
+                  interval: false,
+                  count: false,
+                  schedule: false,
+                  difficulty: false,
+                }}
+              />
             </div>
           </div>
-        ) : null}
-        {mode === "single" ? (
-          <GoalForm showBackButton={false} onExit={onExit} />
-        ) : mode === "multi" ? (
-          <BulkGoalForm showBackButton={false} onExit={onExit} />
-        ) : (
-          <TrainingPlanImportEntry onExit={onExit} />
         )}
+        <div hidden={choosing}>
+          {mode === "single" ? (
+            <GoalForm showBackButton={false} onExit={onExit} />
+          ) : mode === "multi" ? (
+            <BulkGoalForm showBackButton={false} onExit={onExit} />
+          ) : mode === "training" ? (
+            <TrainingPlanImportEntry onExit={onExit} />
+          ) : null}
+        </div>
       </div>
-    </div>
+    </TempoMethodContext.Provider>
   );
 }

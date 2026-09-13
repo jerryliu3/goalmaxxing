@@ -1,6 +1,8 @@
 import { format, isValid, parseISO } from "date-fns";
 import { toLocalDateString } from "@/lib/dates/day";
 import {
+  applyGoalCreationFieldChange,
+  type GoalCreationFieldChange,
   createDefaultGoalCreationFields,
   parseGoalCreationTargetCount,
   resolveGoalCreationTargetCountForSave,
@@ -389,4 +391,19 @@ export function prepareBulkGoalRows(
       },
     };
   });
+}
+export function applyBulkGoalCreationChange(
+  draft: Omit<BulkGoalDraft, "errors">,
+  change: GoalCreationFieldChange
+): Omit<BulkGoalDraft, "errors"> {
+  const clearsTargetBasisError =
+    change.type === "target_basis" ||
+    change.type === "frequency_type" ||
+    (change.type === "patch" &&
+      (Object.prototype.hasOwnProperty.call(change.value, "target_basis") ||
+        Object.prototype.hasOwnProperty.call(change.value, "frequency_type")));
+  return {
+    ...applyGoalCreationFieldChange(draft, change),
+    ...(clearsTargetBasisError ? { target_basis_error: undefined } : {}),
+  };
 }

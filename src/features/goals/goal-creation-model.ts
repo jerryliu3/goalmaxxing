@@ -47,6 +47,24 @@ export type GoalCreationFieldChange =
   | { type: "patch"; value: Partial<GoalCreationFields> };
 
 const localTimePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+// New creation choices; existing goal definitions keep their supported limits.
+export function getGoalCreationPeriodTargetMax(
+  interval: RecurrenceInterval,
+): number {
+  return interval === "weekly" ? 6 : interval === "monthly" ? 28 : 1;
+}
+
+export function getGoalCreationPeriodLimitError(
+  fields: GoalCreationFields,
+): string | null {
+  if (fields.frequency_type !== "recurring" || fields.target_basis !== "period")
+    return null;
+  const max = getGoalCreationPeriodTargetMax(fields.recurrence_interval);
+  return Number(fields.target_count) > max
+    ? `Choose up to ${max} days per ${fields.recurrence_interval === "weekly" ? "week" : fields.recurrence_interval === "monthly" ? "month" : "day"}, or choose Daily.`
+    : null;
+}
 const hexColorPattern = /^#[0-9a-f]{6}$/i;
 
 function parsePositiveTargetCount(value: string): number | null {
@@ -67,7 +85,7 @@ function defaultTargetCountForBasis(basis: GoalTargetBasis): string {
 
 function resolveTargetCountOnBasisSwitch(
   previousTargetCount: string,
-  nextBasis: GoalTargetBasis
+  nextBasis: GoalTargetBasis,
 ): string {
   const trimmed = previousTargetCount.trim();
   if (trimmed.length > 0 && parsePositiveTargetCount(trimmed) !== null) {
@@ -78,7 +96,7 @@ function resolveTargetCountOnBasisSwitch(
 
 function applyFrequencyTypeChange(
   fields: GoalCreationFields,
-  nextFrequency: GoalFrequencyType
+  nextFrequency: GoalFrequencyType,
 ): GoalCreationFields {
   if (nextFrequency === "fixed_milestones") {
     const nextTargetCount =
@@ -90,7 +108,7 @@ function applyFrequencyTypeChange(
       target_count: nextTargetCount,
       milestone_names: buildMilestoneNameDrafts(
         parsePositiveTargetCount(nextTargetCount) ?? 0,
-        fields.milestone_names
+        fields.milestone_names,
       ),
     };
   }
@@ -106,7 +124,7 @@ function applyFrequencyTypeChange(
 
 function applyRecurrenceIntervalChange(
   fields: GoalCreationFields,
-  nextInterval: RecurrenceInterval
+  nextInterval: RecurrenceInterval,
 ): GoalCreationFields {
   const parsedTarget = parsePositiveTargetCount(fields.target_count);
   const nextPeriodMax = getGoalPeriodTargetMax(nextInterval);
@@ -124,7 +142,7 @@ function applyRecurrenceIntervalChange(
 
 function applyTargetCountChange(
   fields: GoalCreationFields,
-  nextTargetCount: string
+  nextTargetCount: string,
 ): GoalCreationFields {
   const normalizedTargetCount =
     fields.frequency_type === "recurring" &&
@@ -140,7 +158,7 @@ function applyTargetCountChange(
       fields.frequency_type === "fixed_milestones"
         ? buildMilestoneNameDrafts(
             parsePositiveTargetCount(normalizedTargetCount) ?? 0,
-            fields.milestone_names
+            fields.milestone_names,
           )
         : fields.milestone_names,
   };
@@ -148,7 +166,7 @@ function applyTargetCountChange(
 
 function applyTargetBasisChange(
   fields: GoalCreationFields,
-  nextBasis: GoalTargetBasis
+  nextBasis: GoalTargetBasis,
 ): GoalCreationFields {
   const targetCount =
     fields.frequency_type === "recurring" &&
@@ -194,7 +212,7 @@ export function normalizeGoalCreationTarget(
   fields: Pick<
     GoalCreationFields,
     "frequency_type" | "recurrence_interval" | "target_basis" | "target_count"
-  >
+  >,
 ): string {
   if (fields.frequency_type !== "recurring") {
     return fields.target_count;
@@ -212,7 +230,7 @@ export function normalizeGoalCreationTarget(
 
 export function updateGoalCreationFields(
   fields: GoalCreationFields,
-  change: GoalCreationFieldChange
+  change: GoalCreationFieldChange,
 ): GoalCreationFields {
   switch (change.type) {
     case "frequency_type":
@@ -240,7 +258,7 @@ export function updateGoalCreationFields(
 
 export function applyGoalCreationFieldChange<T extends GoalCreationFields>(
   fields: T,
-  change: GoalCreationFieldChange
+  change: GoalCreationFieldChange,
 ): T {
   return {
     ...fields,
@@ -249,7 +267,7 @@ export function applyGoalCreationFieldChange<T extends GoalCreationFields>(
 }
 
 function resolveDefinitionTargetCount(
-  fields: GoalCreationFields
+  fields: GoalCreationFields,
 ): number | null {
   const parsedTarget = parsePositiveTargetCount(fields.target_count);
 
@@ -278,7 +296,7 @@ function collectGoalCreationDefinitionIssues(
     asOfDate?: string;
     completedCount?: number;
     currentPeriodCompletedCount?: number;
-  }
+  },
 ): GoalDefinitionValidationIssue[] {
   return validateGoalDefinition({
     frequencyType: fields.frequency_type,
@@ -300,7 +318,7 @@ export function validateGoalCreationFieldErrors(
   fields: GoalCreationFields,
   options?: {
     completedCount?: number;
-  }
+  },
 ): string[] {
   const errors: string[] = [];
   const parsedTarget = parsePositiveTargetCount(fields.target_count);
@@ -309,10 +327,7 @@ export function validateGoalCreationFieldErrors(
     errors.push("Title is required.");
   }
 
-  if (
-    fields.frequency_type === "recurring" &&
-    !fields.recurrence_interval
-  ) {
+  if (fields.frequency_type === "recurring" && !fields.recurrence_interval) {
     errors.push("Recurring goals require a frequency.");
   }
 
@@ -338,7 +353,10 @@ export function validateGoalCreationFieldErrors(
     if (parsedTarget === null) {
       errors.push("Milestone goals require a positive target count.");
     }
-    if (parsedTarget !== null && fields.milestone_names.length !== parsedTarget) {
+    if (
+      parsedTarget !== null &&
+      fields.milestone_names.length !== parsedTarget
+    ) {
       errors.push("Milestone names must align with target count.");
     }
   }
@@ -372,7 +390,8 @@ export function validateGoalCreationFieldErrors(
   const completedCount = options?.completedCount ?? 0;
   const isOrdinalTarget =
     fields.frequency_type === "fixed_milestones" ||
-    (fields.frequency_type === "recurring" && fields.target_basis === "lifetime");
+    (fields.frequency_type === "recurring" &&
+      fields.target_basis === "lifetime");
   if (
     isOrdinalTarget &&
     parsedTarget !== null &&
@@ -380,7 +399,7 @@ export function validateGoalCreationFieldErrors(
     parsedTarget < completedCount
   ) {
     errors.push(
-      `Target cannot be below ${completedCount} existing completions.`
+      `Target cannot be below ${completedCount} existing completions.`,
     );
   }
 
@@ -412,7 +431,7 @@ export function getGoalCreationValidationFeedback(
     asOfDate?: string;
     completedCount?: number;
     currentPeriodCompletedCount?: number;
-  }
+  },
 ): { validationError: string | null; validationWarning: string | null } {
   const fieldErrors = validateGoalCreationFieldErrors(fields, {
     completedCount: options?.completedCount,
@@ -422,7 +441,7 @@ export function getGoalCreationValidationFeedback(
   }
 
   return resolveGoalDefinitionValidationFeedback(
-    collectGoalCreationDefinitionIssues(fields, options)
+    collectGoalCreationDefinitionIssues(fields, options),
   );
 }
 
@@ -430,7 +449,7 @@ export function resolveGoalCreationTargetCountForSave(
   fields: Pick<
     GoalCreationFields,
     "frequency_type" | "recurrence_interval" | "target_basis" | "target_count"
-  >
+  >,
 ): number | null {
   if (fields.frequency_type === "fixed_milestones") {
     return parsePositiveTargetCount(fields.target_count);
@@ -448,12 +467,12 @@ export function resolveGoalCreationTargetCountForSave(
     return 1;
   }
 
-  return (
-    parsePositiveTargetCount(normalizeGoalCreationTarget(fields)) ?? 1
-  );
+  return parsePositiveTargetCount(normalizeGoalCreationTarget(fields)) ?? 1;
 }
 
-export function validateGoalCreationFields(fields: GoalCreationFields): string[] {
+export function validateGoalCreationFields(
+  fields: GoalCreationFields,
+): string[] {
   const errors = validateGoalCreationFieldErrors(fields);
 
   for (const issue of collectGoalCreationDefinitionIssues(fields)) {
@@ -469,7 +488,7 @@ export function parseGoalCreationTargetCount(raw: string): number | null {
 
 export function resolveGoalCreationColor(
   color: string | null | undefined,
-  categorySelection: CategorySelection
+  categorySelection: CategorySelection,
 ): string {
   const trimmed = typeof color === "string" ? color.trim() : "";
   return hexColorPattern.test(trimmed)

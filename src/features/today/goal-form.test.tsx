@@ -51,8 +51,10 @@ vi.mock("@/lib/supabase/client", () => ({
       if (table === "goal_links") {
         const query = {
           eq: vi.fn().mockReturnThis(),
-          then: (resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) =>
-            Promise.resolve(goalLinksMock()).then(resolve, reject),
+          then: (
+            resolve: (value: unknown) => unknown,
+            reject: (reason: unknown) => unknown,
+          ) => Promise.resolve(goalLinksMock()).then(resolve, reject),
         };
         return { select: vi.fn(() => query) };
       }
@@ -74,9 +76,9 @@ vi.mock("@/lib/supabase/client", () => ({
 }));
 
 vi.mock("@/lib/goals/progress-context", async () => {
-  const actual = await vi.importActual<typeof import("@/lib/goals/progress-context")>(
-    "@/lib/goals/progress-context"
-  );
+  const actual = await vi.importActual<
+    typeof import("@/lib/goals/progress-context")
+  >("@/lib/goals/progress-context");
   return { ...actual, fetchProgressContext: fetchProgressContextMock };
 });
 
@@ -213,9 +215,12 @@ describe("goal form definition validation adapter", () => {
       const feedback = resolveGoalDefinitionValidationFeedback(issues);
 
       expect(feedback.validationError, testCase.recurrenceInterval).toBe(
-        testCase.message
+        testCase.message,
       );
-      expect(feedback.validationWarning, testCase.recurrenceInterval).toBeNull();
+      expect(
+        feedback.validationWarning,
+        testCase.recurrenceInterval,
+      ).toBeNull();
     }
   });
 
@@ -269,24 +274,24 @@ describe("goal form definition validation adapter", () => {
           filteredLinkTargets: [],
           selectedTargetGoal: null,
         }}
-      />
+      />,
     );
 
     expect(
       screen.getByText(
-        "Goal type, frequency, and start date are fixed after creation. Archive this goal and create a new one to change them."
-      )
+        "Goal type, frequency, and start date are fixed after creation. Archive this goal and create a new one to change them.",
+      ),
     ).toBeInTheDocument();
 
     const comboboxes = screen.getAllByRole("combobox");
     const goalTypeCombobox = comboboxes.find((element) =>
-      element.textContent?.includes("Recurring")
+      element.textContent?.includes("Recurring"),
     );
     const frequencyCombobox = comboboxes.find((element) =>
-      element.textContent?.includes("Weekly")
+      element.textContent?.includes("Weekly"),
     );
     const targetField = document.querySelector<HTMLInputElement>(
-      "#recurring-target-count"
+      "#recurring-target-count",
     );
 
     expect(goalTypeCombobox).toBeDefined();
@@ -312,7 +317,7 @@ describe("GoalForm target validation", () => {
       start_date: "2026-08-17",
     });
     expect(feedback.validationError).toBe(
-      "Per-period target must be a positive whole number."
+      "Per-period target must be a positive whole number.",
     );
   });
 
@@ -327,7 +332,7 @@ describe("GoalForm target validation", () => {
       start_date: "2026-08-17",
     });
     expect(feedback.validationError).toBe(
-      "Total target completions requires a positive target."
+      "Total target completions requires a positive target.",
     );
   });
 
@@ -343,10 +348,10 @@ describe("GoalForm target validation", () => {
         start_date: "2026-08-17",
         end_date: "2026-12-31",
       },
-      { completedCount: 200 }
+      { completedCount: 200 },
     );
     expect(feedback.validationError).toBe(
-      "Target cannot be below 200 existing completions."
+      "Target cannot be below 200 existing completions.",
     );
   });
 
@@ -361,10 +366,10 @@ describe("GoalForm target validation", () => {
         start_date: "2026-08-17",
         end_date: "2026-12-31",
       },
-      { completedCount: 3 }
+      { completedCount: 3 },
     );
     expect(feedback.validationError).toBe(
-      "Target cannot be below 3 existing completions."
+      "Target cannot be below 3 existing completions.",
     );
   });
 
@@ -380,7 +385,7 @@ describe("GoalForm target validation", () => {
         start_date: "2026-08-17",
         end_date: "2026-12-31",
       },
-      { completedCount: 200 }
+      { completedCount: 200 },
     );
     expect(feedback.validationError).toBeNull();
   });
@@ -404,14 +409,14 @@ describe("GoalForm target validation", () => {
       },
     };
 
-    expect(getGoalCreationValidationFeedback(fields, capacity).validationWarning).toContain(
-      "6 sessions"
-    );
+    expect(
+      getGoalCreationValidationFeedback(fields, capacity).validationWarning,
+    ).toContain("6 sessions");
     expect(
       getGoalCreationValidationFeedback(fields, {
         ...capacity,
         completedCount: 2,
-      }).validationWarning
+      }).validationWarning,
     ).toBeNull();
   });
 
@@ -434,14 +439,14 @@ describe("GoalForm target validation", () => {
       },
     };
 
-    expect(getGoalCreationValidationFeedback(fields, capacity).validationWarning).toContain(
-      "6 sessions"
-    );
+    expect(
+      getGoalCreationValidationFeedback(fields, capacity).validationWarning,
+    ).toContain("6 sessions");
     expect(
       getGoalCreationValidationFeedback(fields, {
         ...capacity,
         currentPeriodCompletedCount: 2,
-      }).validationWarning
+      }).validationWarning,
     ).toBeNull();
   });
 });
@@ -451,9 +456,7 @@ describe("GoalForm persistence recovery", () => {
     cleanup();
   });
 
-  it(
-    "retains a saved goal and retries a rejected link without reporting success",
-    async () => {
+  it("retains a saved goal and retries a rejected link without reporting success", async () => {
     const randomUuidSpy = vi
       .spyOn(globalThis.crypto, "randomUUID")
       .mockReturnValue("99000000-0000-4000-8000-000000000001");
@@ -466,31 +469,37 @@ describe("GoalForm persistence recovery", () => {
 
     try {
       render(<GoalForm showBackButton={false} onExit={onExit} />);
-      await screen.findByText("New goal");
+      await screen.findByLabelText("Name");
       await user.type(screen.getByLabelText("Name"), "Daily reset");
+      await user.click(screen.getByRole("button", { name: /04Schedule/ }));
+      await user.click(screen.getByText("Advanced settings (optional)"));
       await user.click(
-        screen.getByRole("button", { name: /advanced settings/i })
+        screen.getByRole("button", { name: "Select link target" }),
       );
-      await user.click(screen.getByRole("button", { name: "Select link target" }));
-      await user.click(screen.getByRole("button", { name: "Save" }));
+      await user.click(screen.getByRole("button", { name: /05Review/ }));
+      await user.click(screen.getByRole("button", { name: "Create goal" }));
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: "Retry saving link" })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: "Retry saving link" }),
+        ).toBeInTheDocument();
       });
       expect(toastSuccessMock).not.toHaveBeenCalled();
       expect(onExit).not.toHaveBeenCalled();
       expect(toastErrorMock).toHaveBeenCalledWith(
-        "Could not save the selected goal link. Try again."
+        "Could not save the selected goal link. Try again.",
       );
       expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(1);
 
-      await user.click(screen.getByRole("button", { name: "Retry saving link" }));
+      await user.click(
+        screen.getByRole("button", { name: "Retry saving link" }),
+      );
 
       await waitFor(() => {
         expect(onExit).toHaveBeenCalledTimes(1);
       });
       const createGoalCalls = rpcMock.mock.calls.filter(
-        ([method]) => method === "create_goal"
+        ([method]) => method === "create_goal",
       );
       expect(createGoalCalls).toHaveLength(1);
       const stableGoalId = createGoalCalls[0]?.[1]?.p_id;
@@ -513,13 +522,9 @@ describe("GoalForm persistence recovery", () => {
     } finally {
       randomUuidSpy.mockRestore();
     }
-  },
-  15_000
-  );
+  }, 15_000);
 
-  it(
-    "retains a stable goal id when create_goal rejects ambiguously",
-    async () => {
+  it("retains a stable goal id when create_goal rejects ambiguously", async () => {
     const randomUuidSpy = vi
       .spyOn(globalThis.crypto, "randomUUID")
       .mockReturnValue("99000000-0000-4000-8000-000000000002");
@@ -532,22 +537,27 @@ describe("GoalForm persistence recovery", () => {
 
     try {
       render(<GoalForm showBackButton={false} onExit={onExit} />);
-      await screen.findByText("New goal");
+      await screen.findByLabelText("Name");
       await user.type(screen.getByLabelText("Name"), "Stable goal");
-      await user.click(screen.getByRole("button", { name: "Save" }));
+      await user.click(screen.getByRole("button", { name: /05Review/ }));
+      await user.click(screen.getByRole("button", { name: "Create goal" }));
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: "Retry creating goal" })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: "Retry creating goal" }),
+        ).toBeInTheDocument();
       });
       expect(onExit).not.toHaveBeenCalled();
 
-      await user.click(screen.getByRole("button", { name: "Retry creating goal" }));
+      await user.click(
+        screen.getByRole("button", { name: "Retry creating goal" }),
+      );
 
       await waitFor(() => {
         expect(onExit).toHaveBeenCalledTimes(1);
       });
       const createGoalCalls = rpcMock.mock.calls.filter(
-        ([method]) => method === "create_goal"
+        ([method]) => method === "create_goal",
       );
       expect(createGoalCalls).toHaveLength(2);
       const stableGoalId = createGoalCalls[0]?.[1]?.p_id;
@@ -567,9 +577,7 @@ describe("GoalForm persistence recovery", () => {
     } finally {
       randomUuidSpy.mockRestore();
     }
-  },
-  15_000
-  );
+  }, 15_000);
 
   it("keeps a returned create error editable instead of creating recovery state", async () => {
     const randomUuidSpy = vi
@@ -584,20 +592,22 @@ describe("GoalForm persistence recovery", () => {
 
     try {
       render(<GoalForm showBackButton={false} onExit={onExit} />);
-      await screen.findByText("New goal");
+      await screen.findByLabelText("Name");
       await user.type(screen.getByLabelText("Name"), "Resolved error goal");
-      await user.click(screen.getByRole("button", { name: "Save" }));
+      await user.click(screen.getByRole("button", { name: /05Review/ }));
+      await user.click(screen.getByRole("button", { name: "Create goal" }));
 
       expect(toastErrorMock).toHaveBeenCalledWith(
-        "Could not save goal. Try again."
+        "Could not save goal. Try again.",
       );
       expect(onExit).not.toHaveBeenCalled();
       expect(
-        screen.queryByRole("button", { name: "Retry creating goal" })
+        screen.queryByRole("button", { name: "Retry creating goal" }),
       ).not.toBeInTheDocument();
-      expect(screen.getByLabelText("Name")).toBeEnabled();
+      expect(screen.getByRole("button", { name: /02Intention/ })).toBeEnabled();
 
-      await user.click(screen.getByRole("button", { name: "Save" }));
+      await user.click(screen.getByRole("button", { name: /05Review/ }));
+      await user.click(screen.getByRole("button", { name: "Create goal" }));
 
       await waitFor(() => expect(onExit).toHaveBeenCalledTimes(1));
       expect(rpcMock).toHaveBeenNthCalledWith(
@@ -605,14 +615,14 @@ describe("GoalForm persistence recovery", () => {
         "create_goal",
         expect.objectContaining({
           p_id: "99000000-0000-4000-8000-000000000003",
-        })
+        }),
       );
       expect(rpcMock).toHaveBeenNthCalledWith(
         2,
         "create_goal",
         expect.objectContaining({
           p_id: "99000000-0000-4000-8000-000000000003",
-        })
+        }),
       );
     } finally {
       randomUuidSpy.mockRestore();
@@ -648,24 +658,20 @@ describe("GoalForm persistence recovery", () => {
     const user = userEvent.setup();
 
     render(
-      <GoalForm
-        goalId="goal-edit-1"
-        showBackButton={false}
-        onExit={vi.fn()}
-      />
+      <GoalForm goalId="goal-edit-1" showBackButton={false} onExit={vi.fn()} />,
     );
 
     await screen.findByText("Edit goal");
     await user.click(
-      screen.getByRole("button", { name: /advanced settings/i })
+      screen.getByRole("button", { name: /advanced settings/i }),
     );
     expect(
-      screen.getByRole("button", { name: "Select link target" })
+      screen.getByRole("button", { name: "Select link target" }),
     ).toHaveTextContent("goal-main-1");
     expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
     expect(screen.getByText("link candidates unavailable")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Retry loading link targets" })
+      screen.getByRole("button", { name: "Retry loading link targets" }),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Save changes" }));
@@ -680,18 +686,22 @@ describe("GoalForm persistence recovery", () => {
     const user = userEvent.setup();
 
     render(<GoalForm showBackButton={false} onExit={onExit} />);
-    await screen.findByText("New goal");
+    await screen.findByLabelText("Name");
     await user.type(screen.getByLabelText("Name"), "Editable link failure");
-    await user.click(screen.getByRole("button", { name: /advanced settings/i }));
-    await user.click(screen.getByRole("button", { name: "Select link target" }));
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: /04Schedule/ }));
+    await user.click(screen.getByText("Advanced settings (optional)"));
+    await user.click(
+      screen.getByRole("button", { name: "Select link target" }),
+    );
+    await user.click(screen.getByRole("button", { name: /05Review/ }));
+    await user.click(screen.getByRole("button", { name: "Create goal" }));
 
     await waitFor(() => {
       expect(toastErrorMock).toHaveBeenCalledWith("link rejected");
-      expect(screen.getByLabelText("Name")).toBeEnabled();
+      expect(screen.getByRole("button", { name: /02Intention/ })).toBeEnabled();
     });
     expect(
-      screen.queryByRole("button", { name: "Retry saving link" })
+      screen.queryByRole("button", { name: "Retry saving link" }),
     ).not.toBeInTheDocument();
     expect(onExit).not.toHaveBeenCalled();
     expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(1);
@@ -706,27 +716,31 @@ describe("GoalForm persistence recovery", () => {
     const user = userEvent.setup();
 
     render(<GoalForm showBackButton={false} onExit={onExit} />);
-    await screen.findByText("New goal");
+    await screen.findByLabelText("Name");
     await user.type(screen.getByLabelText("Name"), "Retryable link failure");
-    await user.click(screen.getByRole("button", { name: /advanced settings/i }));
-    await user.click(screen.getByRole("button", { name: "Select link target" }));
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: /04Schedule/ }));
+    await user.click(screen.getByText("Advanced settings (optional)"));
+    await user.click(
+      screen.getByRole("button", { name: "Select link target" }),
+    );
+    await user.click(screen.getByRole("button", { name: /05Review/ }));
+    await user.click(screen.getByRole("button", { name: "Create goal" }));
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: "Retry saving link" })
+        screen.getByRole("button", { name: "Retry saving link" }),
       ).toBeInTheDocument();
     });
-    expect(screen.getByLabelText("Name")).toBeDisabled();
+    expect(screen.getByRole("button", { name: /02Intention/ })).toBeDisabled();
 
     await user.click(screen.getByRole("button", { name: "Retry saving link" }));
 
     await waitFor(() => {
       expect(toastErrorMock).toHaveBeenCalledWith("link no longer allowed");
-      expect(screen.getByLabelText("Name")).toBeEnabled();
+      expect(screen.getByRole("button", { name: /02Intention/ })).toBeEnabled();
     });
     expect(
-      screen.queryByRole("button", { name: "Retry saving link" })
+      screen.queryByRole("button", { name: "Retry saving link" }),
     ).not.toBeInTheDocument();
     expect(onExit).not.toHaveBeenCalled();
   });
@@ -737,21 +751,24 @@ describe("GoalForm persistence recovery", () => {
       () =>
         new Promise<{ error: null }>((resolve) => {
           resolveCreate = resolve;
-        })
+        }),
     );
     rpcMock.mockResolvedValue({ error: null });
     const onExit = vi.fn();
     const user = userEvent.setup();
 
     render(<GoalForm onExit={onExit} />);
-    await screen.findByText("New goal");
+    await screen.findByLabelText("Name");
     await user.type(screen.getByLabelText("Name"), "Pending goal");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: /05Review/ }));
+    await user.click(screen.getByRole("button", { name: "Create goal" }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Name")).toBeDisabled();
+      expect(
+        screen.getByRole("button", { name: /02Intention/ }),
+      ).toBeDisabled();
       expect(screen.getByRole("button", { name: "Back" })).toBeDisabled();
-      expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Creating…" })).toBeDisabled();
     });
     expect(onExit).not.toHaveBeenCalled();
 
@@ -781,14 +798,14 @@ describe("GoalForm persistence recovery", () => {
     const user = userEvent.setup();
 
     render(
-      <GoalForm goalId="goal-edit-2" showBackButton={false} onExit={onExit} />
+      <GoalForm goalId="goal-edit-2" showBackButton={false} onExit={onExit} />,
     );
     await screen.findByText("Edit goal");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: "Retry saving goal" })
+        screen.getByRole("button", { name: "Retry saving goal" }),
       ).toBeInTheDocument();
     });
     expect(onExit).not.toHaveBeenCalled();
@@ -801,12 +818,12 @@ describe("GoalForm persistence recovery", () => {
     expect(rpcMock).toHaveBeenNthCalledWith(
       1,
       "update_goal",
-      expect.objectContaining({ p_id: "goal-edit-2" })
+      expect.objectContaining({ p_id: "goal-edit-2" }),
     );
     expect(rpcMock).toHaveBeenNthCalledWith(
       2,
       "update_goal",
-      expect.objectContaining({ p_id: "goal-edit-2" })
+      expect.objectContaining({ p_id: "goal-edit-2" }),
     );
     expect(rpcMock).toHaveBeenNthCalledWith(3, "replace_goal_source_link", {
       p_source_goal_id: "goal-edit-2",
@@ -840,7 +857,7 @@ describe("GoalForm persistence recovery", () => {
         showBackButton={false}
         onExit={onExit}
         onDismiss={onDismiss}
-      />
+      />,
     );
     await screen.findByText("Edit goal");
     await user.click(screen.getByRole("button", { name: "Archive goal" }));

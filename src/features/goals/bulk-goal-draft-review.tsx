@@ -25,13 +25,13 @@ import {
 } from "@/components/ui/dialog";
 import {
   type BulkGoalDraft,
+  applyBulkGoalCreationChange,
   bulkGoalDraftRequiresEndDate,
   summarizeBulkGoalDraftSchedule,
   withValidatedBulkGoalDraft,
 } from "@/features/goals/bulk-goal-drafts";
 import { GoalCreationFieldControls } from "@/features/goals/goal-creation-fields";
 import {
-  applyGoalCreationFieldChange,
   type GoalCreationFieldChange,
 } from "@/features/goals/goal-creation-model";
 import type { GoalCreateKind } from "@/lib/goals/form-options";
@@ -56,22 +56,6 @@ export interface BulkGoalDraftReviewProps {
   editingDisabled?: boolean;
 }
 
-function applyGoalCreationChange(
-  draft: Omit<BulkGoalDraft, "errors">,
-  change: GoalCreationFieldChange
-): Omit<BulkGoalDraft, "errors"> {
-  const clearsTargetBasisError =
-    change.type === "target_basis" ||
-    change.type === "frequency_type" ||
-    (change.type === "patch" &&
-      (Object.prototype.hasOwnProperty.call(change.value, "target_basis") ||
-        Object.prototype.hasOwnProperty.call(change.value, "frequency_type")));
-  return {
-    ...applyGoalCreationFieldChange(draft, change),
-    ...(clearsTargetBasisError ? { target_basis_error: undefined } : {}),
-  };
-}
-
 function applyCreateKindChange(
   draft: Omit<BulkGoalDraft, "errors">,
   kind: GoalCreateKind
@@ -79,7 +63,7 @@ function applyCreateKindChange(
   if (kind === "planner_task") {
     return draft;
   }
-  return applyGoalCreationChange(draft, {
+  return applyBulkGoalCreationChange(draft, {
     type: "frequency_type",
     value: kind,
   });
@@ -338,7 +322,7 @@ export function BulkGoalDraftReview(props: BulkGoalDraftReviewProps) {
                         fields={draft}
                         onFieldChange={(change) =>
                           updateDraft(draft.id, (previous) =>
-                            applyGoalCreationChange(previous, change)
+                            applyBulkGoalCreationChange(previous, change)
                           )
                         }
                         onPatch={(patch) =>
