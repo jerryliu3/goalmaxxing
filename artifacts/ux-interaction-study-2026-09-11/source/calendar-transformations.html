@@ -1,0 +1,49 @@
+<div id="calendar-motion-study" aria-label="Calendar transformation concepts">
+  <div class="cm-top"><span>PLAN / MOTION STUDY</span><span>Illustrative data</span></div>
+  <div class="cm-tools">
+    <label>Concept <select id="cm-model"><option value="anchor">1 · Anchor zoom</option><option value="pleat">2 · Accordion</option><option value="lens">3 · Focus lens</option><option value="ribbon">4 · Time ribbon</option></select></label>
+    <div class="cm-switch" aria-label="Calendar view"><button data-view="0" aria-pressed="true">Month</button><button data-view="1" aria-pressed="false">Week</button><button data-view="2" aria-pressed="false">Day</button></div>
+  </div>
+  <div class="cm-heading"><h3 id="cm-title">September 2026</h3><span id="cm-selected">Thursday 17</span></div>
+  <div id="cm-stage" aria-label="Calendar days"></div>
+  <div class="cm-bottom"><label for="cm-depth">Explore the transformation</label><input id="cm-depth" type="range" min="0" max="2" step="0.01" value="0" aria-label="Calendar depth: month, week, day"></div>
+  <div class="cm-legend"><span>Month</span><span>Week</span><span>Day</span></div>
+  <span id="cm-status" class="cm-sr" aria-live="polite">Month view. September 17 selected.</span>
+</div>
+<style>
+#calendar-motion-study{--cm-bg:light-dark(#f6f3eb,#242621);--cm-paper:light-dark(#fffdf7,#30332c);--cm-ink:light-dark(#31392f,#e5e8dc);--cm-line:light-dark(#d7d9cb,#525a4b);--cm-active:light-dark(#dce6d1,#44583d);--cm-mark:light-dark(#526b44,#adc897);--cm-muted:light-dark(#656d5e,#b7bfad);font-family:Arial,sans-serif;background:var(--cm-bg);color:var(--cm-ink);padding:20px;border-radius:16px}
+#calendar-motion-study *{box-sizing:border-box}#calendar-motion-study .cm-top,#calendar-motion-study .cm-heading,#calendar-motion-study .cm-tools{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}#calendar-motion-study .cm-top{font-size:11px;letter-spacing:.08em;color:var(--cm-muted);margin-bottom:18px}#calendar-motion-study label{font-size:12px;display:flex;gap:8px;align-items:center}#calendar-motion-study button,#calendar-motion-study select{font:inherit;color:var(--cm-ink);background:var(--cm-paper);border:1px solid var(--cm-line);border-radius:8px;padding:10px;cursor:pointer}#calendar-motion-study select{font-size:14px;max-width:100%}#calendar-motion-study .cm-switch{display:flex;gap:4px}#calendar-motion-study .cm-switch button{font-size:12px}#calendar-motion-study button[aria-pressed=true]{background:var(--cm-active)}#calendar-motion-study h3{font-family:Georgia,serif;font-size:24px;font-weight:400;margin:22px 0 16px}#calendar-motion-study #cm-selected{font-size:12px;color:var(--cm-muted)}#cm-stage{position:relative;height:350px;overflow:hidden;isolation:isolate}#calendar-motion-study .cm-day{position:absolute;left:0;top:0;text-align:left;overflow:hidden;border-radius:6px;padding:0;will-change:transform,width,height}#calendar-motion-study .cm-date{display:block;position:absolute;left:9px;top:8px;font-size:13px}#calendar-motion-study .cm-day[aria-pressed=true]{border-color:var(--cm-mark);z-index:2}#calendar-motion-study .cm-dot{position:absolute;top:33px;left:9px;background:var(--cm-mark);height:4px;width:13px;border-radius:3px}#calendar-motion-study .cm-content{position:absolute;left:10px;right:10px;top:48px;display:grid;gap:12px;font-size:14px;visibility:hidden}#calendar-motion-study .cm-content span{padding-top:12px;border-top:1px solid var(--cm-line)}#calendar-motion-study .cm-content small{display:block;color:var(--cm-muted);font-size:12px;margin-bottom:8px}#calendar-motion-study .cm-bottom{margin-top:18px;display:grid;gap:12px}#calendar-motion-study input{width:100%;accent-color:var(--cm-mark);cursor:ew-resize}#calendar-motion-study .cm-legend{display:flex;justify-content:space-between;color:var(--cm-muted);font-size:11px;margin-top:4px}#calendar-motion-study .cm-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}@media(max-width:420px){#calendar-motion-study{padding:12px}#calendar-motion-study .cm-date{left:5px}#calendar-motion-study .cm-dot{left:5px}#calendar-motion-study .cm-heading{gap:0}#calendar-motion-study h3{font-size:21px}#calendar-motion-study .cm-content{font-size:13px}}
+</style>
+<script>
+(()=>{
+ const root=document.getElementById('calendar-motion-study'),stage=root.querySelector('#cm-stage'),model=root.querySelector('#cm-model'),range=root.querySelector('#cm-depth');
+ const options={duration:620},reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ let selected=17,depth=0,animation=0,mode='anchor';
+ const days=Array.from({length:35},(_,i)=>{const date=i,b=document.createElement('button');b.className='cm-day';b.type='button';b.disabled=date<1||date>30;b.innerHTML='<span class="cm-date">'+(date<1?31:date>30?date-30:date)+'</span><span class="cm-dot"></span><div class="cm-content"></div>';b.setAttribute('aria-label',(date<1?'August 31':date>30?'October '+(date-30):'September '+date));b.style.color=date<1||date>30?'var(--cm-muted)':'';b.querySelector('.cm-dot').hidden=i%3===0;b.onclick=()=>{selected=date;go(2)};stage.appendChild(b);return b});
+ const lerp=(a,b,t)=>a+(b-a)*t;
+ function box(i,d){
+  const W=stage.clientWidth,H=350,g=5,c=i%7,r=Math.floor(i/7),si=selected,sr=Math.floor(si/7),sc=si%7,cw=(W-6*g)/7,rh=(H-4*g)/5;
+  let x=c*(cw+g),y=r*(rh+g),w=cw,h=rh;
+  if(d===0)return{x,y,w,h};
+  if(mode==='anchor'){
+   if(d===1){y=r===sr?0:(r<sr?-H-(sr-r)*rh:H+(r-sr)*rh);h=H;}
+   else{x=(c-sc)*(W+g);y=r===sr?0:(r-sr)*(H+g);w=W;h=H;}
+  }else if(mode==='pleat'){
+   const strip=14,focus=H-4*(strip+g);h=r===sr?focus:strip;y=r<sr?r*(strip+g):r===sr?sr*(strip+g):sr*(strip+g)+focus+g+(r-sr-1)*(strip+g);
+   if(d===2){const spine=15,wide=W-6*(spine+g);w=c===sc?wide:spine;x=c<sc?c*(spine+g):c===sc?sc*(spine+g):sc*(spine+g)+wide+g+(c-sc-1)*(spine+g);}
+  }else if(mode==='lens'){
+   if(d===1){const small=25,large=H-4*(small+g);h=r===sr?large:small;y=r<sr?r*(small+g):r===sr?sr*(small+g):sr*(small+g)+large+g+(r-sr-1)*(small+g);}
+   else if(i===si){x=0;y=170;w=W;h=180;}
+   else{h=26;y=r*31;}
+  }else{
+   if(d===1){w=cw;h=H;x=(i-sr*7)*(cw+g);y=0;}
+   else{w=W-32;h=H;x=16+(i-si)*(w+g);y=0;}
+  }
+  return{x,y,w,h};
+ }
+ function draw(d){depth=d;const low=Math.min(1,Math.floor(d)),t=d-low;days.forEach((el,i)=>{const a=box(i,low),b=box(i,low+1),p={};for(const k of ['x','y','w','h'])p[k]=lerp(a[k],b[k],t);el.style.transform='translate('+p.x+'px,'+p.y+'px)';el.style.width=Math.max(1,p.w)+'px';el.style.height=Math.max(1,p.h)+'px';const chosen=i===selected;el.setAttribute('aria-pressed',String(chosen));const visible=p.x+p.w>0&&p.x<stage.clientWidth&&p.y+p.h>0&&p.y<350;el.inert=!visible;el.setAttribute('aria-hidden',String(!visible));const compact=p.h<24||p.w<24;el.querySelector('.cm-date').style.visibility=compact?'hidden':'visible';el.querySelector('.cm-dot').style.visibility=compact||p.h<40?'hidden':'visible';const content=el.querySelector('.cm-content');content.style.visibility=chosen&&p.w>130&&p.h>140?'visible':'hidden';if(chosen){const label=selected===17?'Tempo run':'Planned session';content.innerHTML='<small>Placed work</small><span>○ '+label+'</span><span>○ Read 20 minutes</span>';}});range.value=d;root.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(Math.abs(+b.dataset.view-d)<.05)));root.querySelector('#cm-title').textContent=d<.5?'September 2026':d<1.5?'Week of '+(Math.floor(selected/7)*7)+' September':'September '+selected;root.querySelector('#cm-selected').textContent='Anchor · '+selected;}
+ function go(target){cancelAnimationFrame(animation);const from=depth,start=performance.now();function frame(now){const t=reduced.matches?1:Math.min(1,(now-start)/options.duration),e=1-Math.pow(1-t,3);draw(lerp(from,target,e));if(t<1)animation=requestAnimationFrame(frame);else root.querySelector('#cm-status').textContent=['Month','Week','Day'][target]+' view. September '+selected+' selected.';}animation=requestAnimationFrame(frame);}
+ root.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>go(+b.dataset.view));range.oninput=()=>{cancelAnimationFrame(animation);draw(+range.value)};range.onchange=()=>go(Math.round(+range.value));model.onchange=()=>{cancelAnimationFrame(animation);mode=model.value;draw(0)};new ResizeObserver(()=>draw(depth)).observe(stage);draw(0);
+ if(globalThis.Tweak){const tweak=new Tweak({container:root,onChange:()=>draw(depth)});tweak.addSlider(options,'duration',{label:'Transition duration',min:200,max:1000,step:20,unit:'ms'});}
+})();
+</script>
