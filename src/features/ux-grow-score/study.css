@@ -1,0 +1,640 @@
+.gs-study {
+  --gs-bg: #e7ebe8;
+  --gs-paper: #f7faf8;
+  --gs-ink: #1c2420;
+  --gs-muted: #5d6a63;
+  --gs-line: #c9d2cc;
+  --gs-accent: #1f6b4f;
+  --gs-soft: #d7e8df;
+  --gs-warn: #9a5b2f;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 12% 0%, #dfe9e3 0%, transparent 42%),
+    linear-gradient(180deg, #eef2ef 0%, var(--gs-bg) 48%, #dde4df 100%);
+  color: var(--gs-ink);
+  font-family: "Source Sans 3", "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  letter-spacing: -0.015em;
+  padding-bottom: 40px;
+  color-scheme: light;
+}
+
+.gs-baseline {
+  --gs-accent: #8a4b2f;
+  --gs-soft: #efe0d5;
+}
+
+.gs-pace-line {
+  --gs-accent: #1f6b4f;
+  --gs-soft: #d7e8df;
+}
+
+.gs-lagged-slope {
+  --gs-accent: #245f8a;
+  --gs-soft: #d5e4ef;
+}
+
+.gs-grace-decay {
+  --gs-accent: #6b4f8a;
+  --gs-soft: #e5dceb;
+}
+
+.gs-study *,
+.gs-study *::before,
+.gs-study *::after {
+  box-sizing: border-box;
+}
+
+.gs-study h1,
+.gs-study h2,
+.gs-study h3,
+.gs-study p {
+  margin: 0;
+}
+
+.gs-study button,
+.gs-study a,
+.gs-study summary {
+  color: inherit;
+}
+
+.gs-study button {
+  font: inherit;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  min-height: 42px;
+  touch-action: manipulation;
+}
+
+.gs-study button:focus-visible,
+.gs-study a:focus-visible,
+.gs-study summary:focus-visible {
+  outline: 3px solid var(--gs-accent);
+  outline-offset: 3px;
+}
+
+.gs-study input,
+.gs-study select {
+  font: inherit;
+  color: var(--gs-ink);
+}
+
+.gs-study h1,
+.gs-study h2,
+.gs-study h3 {
+  font-family: Newsreader, Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+}
+
+.gs-study h1 {
+  font-size: clamp(40px, 5vw, 64px);
+  max-width: 16ch;
+}
+
+.gs-study h2 {
+  font-size: clamp(28px, 3vw, 40px);
+}
+
+.gs-study h3 {
+  font-size: 24px;
+}
+
+.gs-toolbar,
+.gs-intro,
+.gs-formula-nav,
+.gs-layout,
+.gs-compare,
+.gs-formula {
+  width: min(1120px, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+.gs-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 0 10px;
+  flex-wrap: wrap;
+}
+
+.gs-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.gs-brand > span {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--gs-ink);
+  color: var(--gs-paper);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gs-brand small {
+  display: block;
+  color: var(--gs-muted);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+
+.gs-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  border: 1px solid var(--gs-line);
+  background: var(--gs-paper);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.gs-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(240px, 0.8fr);
+  gap: 22px;
+  align-items: end;
+  padding: 18px 0 10px;
+}
+
+.gs-intro p,
+.gs-main > .gs-between p,
+.gs-behavior,
+.gs-outcome p,
+.gs-cap-card p {
+  color: var(--gs-muted);
+  max-width: 58ch;
+}
+
+.gs-kicker {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gs-muted);
+  margin-bottom: 10px;
+}
+
+.gs-cap-card {
+  background: var(--gs-paper);
+  border: 1px solid var(--gs-line);
+  padding: 20px;
+  border-radius: 4px;
+}
+
+.gs-cap-card strong {
+  display: block;
+  font-size: 28px;
+  letter-spacing: -0.04em;
+  margin-bottom: 8px;
+}
+
+.gs-formula-nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px auto 22px;
+}
+
+.gs-formula-nav button {
+  text-align: left;
+  background: color-mix(in srgb, var(--gs-paper) 86%, transparent);
+  border: 1px solid var(--gs-line);
+  border-radius: 4px;
+  padding: 14px 14px 16px;
+  min-height: 108px;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.gs-formula-nav button[aria-pressed="true"] {
+  border-color: var(--gs-accent);
+  background: var(--gs-paper);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--gs-accent) 12%, transparent);
+}
+
+.gs-formula-nav span {
+  display: block;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--gs-muted);
+  margin-bottom: 8px;
+}
+
+.gs-formula-nav strong {
+  display: block;
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+
+.gs-formula-nav small {
+  display: block;
+  margin-top: 8px;
+  color: var(--gs-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.gs-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 18px;
+  align-items: start;
+}
+
+.gs-main,
+.gs-simulator,
+.gs-compare,
+.gs-formula {
+  background: var(--gs-paper);
+  border: 1px solid var(--gs-line);
+  border-radius: 4px;
+}
+
+.gs-main,
+.gs-simulator {
+  padding: 24px;
+}
+
+.gs-between {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  flex-wrap: wrap;
+}
+
+.gs-pill {
+  display: inline-block;
+  font-size: 10px;
+  color: var(--gs-muted);
+  border: 1px solid var(--gs-line);
+  padding: 8px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.gs-meter {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 28px 0 24px;
+}
+
+.gs-score-number {
+  font-size: clamp(64px, 10vw, 96px);
+  font-weight: 450;
+  letter-spacing: -0.08em;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+
+.gs-score-number > span {
+  font-size: 16px;
+  color: var(--gs-muted);
+  margin-left: 8px;
+  letter-spacing: -0.02em;
+}
+
+.gs-band {
+  display: inline-block;
+  background: var(--gs-soft);
+  color: var(--gs-accent);
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+.gs-meter p {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--gs-muted);
+}
+
+.gs-chart-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.gs-chart-title > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gs-muted);
+  font-size: 10px;
+}
+
+.gs-chart-title i {
+  width: 14px;
+  height: 2px;
+  background: var(--gs-accent);
+}
+
+.gs-chart-title i.forecast {
+  height: 0;
+  background: none;
+  border-top: 2px dashed var(--gs-accent);
+}
+
+.gs-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.gs-rate-title {
+  margin-top: 22px;
+}
+
+.gs-rate-title > span {
+  font-size: 10px;
+  color: var(--gs-muted);
+}
+
+.gs-rate-chart {
+  margin-bottom: 4px;
+}
+
+.gs-chart text {
+  font-size: 10px;
+  fill: var(--gs-muted);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+.gs-gridline {
+  stroke: var(--gs-line);
+  stroke-width: 0.7;
+}
+
+.gs-projection {
+  fill: var(--gs-soft);
+  opacity: 0.35;
+}
+
+.gs-history-line,
+.gs-forecast-line {
+  fill: none;
+  stroke: var(--gs-accent);
+  stroke-width: 2.2;
+}
+
+.gs-forecast-line {
+  stroke-dasharray: 5 4;
+}
+
+.gs-now-line {
+  stroke: var(--gs-ink);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  opacity: 0.45;
+}
+
+.gs-current-point {
+  fill: var(--gs-accent);
+}
+
+.gs-outcome {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: end;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gs-line);
+  flex-wrap: wrap;
+}
+
+.gs-outcome span {
+  display: block;
+  font-size: 11px;
+  color: var(--gs-muted);
+  margin-bottom: 4px;
+}
+
+.gs-outcome strong {
+  font-size: 34px;
+  letter-spacing: -0.05em;
+}
+
+.gs-outcome small {
+  font-size: 14px;
+  color: var(--gs-accent);
+}
+
+.gs-behavior {
+  margin-top: 18px;
+  font-size: 13px;
+}
+
+.gs-simulator {
+  background: var(--gs-soft);
+}
+
+.gs-simulator h3 {
+  margin: 8px 0 16px;
+}
+
+.gs-scenarios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.gs-scenarios button {
+  border: 1px solid var(--gs-line);
+  background: var(--gs-paper);
+  font-size: 11px;
+  padding: 7px 10px;
+  border-radius: 4px;
+  min-height: 34px;
+}
+
+.gs-field {
+  display: grid;
+  gap: 6px;
+  margin: 16px 0;
+  font-size: 12px;
+}
+
+.gs-field small {
+  color: var(--gs-muted);
+  font-size: 11px;
+}
+
+.gs-field input[type="range"] {
+  width: 100%;
+  accent-color: var(--gs-accent);
+}
+
+.gs-field select {
+  width: 100%;
+  border: 1px solid var(--gs-line);
+  background: var(--gs-paper);
+  border-radius: 4px;
+  padding: 10px 12px;
+  min-height: 42px;
+}
+
+.gs-cap-controls {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed color-mix(in srgb, var(--gs-line) 70%, transparent);
+}
+
+.gs-knob-legend {
+  margin: 12px 0 4px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--gs-paper) 70%, transparent);
+  border: 1px solid var(--gs-line);
+  border-radius: 4px;
+}
+
+.gs-knob-legend p {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--gs-muted);
+  line-height: 1.45;
+}
+
+.gs-knob-legend strong {
+  color: var(--gs-ink);
+  font-weight: 600;
+}
+
+.gs-small {
+  font-size: 12px;
+  color: var(--gs-muted);
+}
+
+.gs-compare {
+  margin-top: 18px;
+  padding: 22px;
+}
+
+.gs-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.gs-compare-grid button {
+  text-align: left;
+  border: 1px solid var(--gs-line);
+  background: color-mix(in srgb, var(--gs-soft) 55%, var(--gs-paper));
+  border-radius: 4px;
+  padding: 14px;
+  min-height: 110px;
+}
+
+.gs-compare-grid button.active {
+  border-color: var(--gs-accent);
+  background: var(--gs-paper);
+}
+
+.gs-compare-grid span {
+  display: block;
+  font-size: 12px;
+  color: var(--gs-muted);
+  margin-bottom: 10px;
+}
+
+.gs-compare-grid strong {
+  display: block;
+  font-size: 28px;
+  letter-spacing: -0.05em;
+}
+
+.gs-compare-grid small {
+  display: block;
+  margin-top: 8px;
+  color: var(--gs-muted);
+  font-size: 11px;
+}
+
+.gs-formula {
+  margin-top: 18px;
+  padding: 8px 22px 22px;
+}
+
+.gs-formula summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  font-size: 15px;
+}
+
+.gs-formula summary::-webkit-details-marker {
+  display: none;
+}
+
+.gs-formula-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  padding-top: 8px;
+}
+
+.gs-formula-grid p {
+  color: var(--gs-muted);
+  margin: 10px 0;
+  font-size: 13px;
+}
+
+.gs-formula-grid code {
+  display: block;
+  margin: 14px 0;
+  padding: 14px;
+  background: var(--gs-soft);
+  border-radius: 4px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 920px) {
+  .gs-intro,
+  .gs-layout,
+  .gs-formula-grid,
+  .gs-formula-nav,
+  .gs-compare-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gs-formula-nav {
+    grid-auto-rows: minmax(88px, auto);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-formula-nav button {
+    transition: none;
+  }
+}
