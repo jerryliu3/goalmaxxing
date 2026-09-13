@@ -276,6 +276,7 @@ describe("calendar surface extracted components", () => {
     expect(row).toBeInstanceOf(HTMLElement);
     expect(row).toHaveAttribute("aria-current", "true");
     expect(row).toHaveClass("bg-day-selected");
+    expect(row).not.toHaveClass("text-day-selected-foreground");
     expect(row).not.toHaveClass("rounded-[10px]");
     expect(screen.getByText("Run").closest("[data-plan-drag-handle]")).toHaveClass("py-3");
     expect(screen.getByText("Run").closest("p")).toHaveClass("font-display");
@@ -386,6 +387,41 @@ describe("calendar surface extracted components", () => {
     expect(
       within(view.container).queryByRole("button", { name: "Mark session done" })
     ).not.toBeInTheDocument();
+  });
+
+  it("reserves invisible +0 more space on month tiles without overflow", () => {
+    const view = renderWithDnd(
+      <CalendarMonthDayCell
+        day="2026-08-06"
+        inMonth
+        isToday={false}
+        isPastInMonth={false}
+        ariaLabel="Thursday, August 6, 2026."
+        entriesForDay={[sampleEntry]}
+        completionFactMarkersForDay={[]}
+        maxVisibleItems={2}
+        isAnyEntryDragging={false}
+        getEntryDisplayTitle={(entry) => entry.label ?? "Untitled"}
+        isEntryCredited={() => false}
+        isEntryImmovableForDraft={() => false}
+        onEntryClick={() => {}}
+        onCellClick={() => {}}
+        onCellDoubleClick={() => {}}
+        onCellMouseEnter={() => {}}
+        onCellMouseLeave={() => {}}
+        onCellPointerDown={() => {}}
+        onCellPointerUp={() => {}}
+        onCellPointerCancel={() => {}}
+        onCellPointerLeave={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+      />
+    );
+
+    const reserved = within(view.container).getByText("+0 more");
+    expect(reserved).toHaveClass("invisible");
+    expect(reserved).toHaveAttribute("aria-hidden", "true");
+    expect(within(view.container).queryByText("+1 more")).not.toBeInTheDocument();
   });
 
   it("renders week days as a vertical agenda with weekday labels", async () => {

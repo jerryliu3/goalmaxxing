@@ -99,8 +99,8 @@ describe("plan calendar day chrome", () => {
     ).toContain("text-today");
   });
 
-  it("hides overflow remainder as +N more", () => {
-    expect(planHiddenItemCountLabel(0)).toBeNull();
+  it("reserves overflow remainder as +N more, including zero", () => {
+    expect(planHiddenItemCountLabel(0)).toBe("+0 more");
     expect(planHiddenItemCountLabel(1)).toBe("+1 more");
     expect(planHiddenItemCountLabel(4)).toBe("+4 more");
   });
@@ -109,6 +109,7 @@ describe("plan calendar day chrome", () => {
     expect(planSelectedWorkRowClass(false)).toBe("");
     expect(planSelectedWorkRowClass(true)).toContain("bg-day-selected");
     expect(planSelectedWorkRowClass(true)).toContain("inset_3px_0_0");
+    expect(planSelectedWorkRowClass(true)).not.toContain("text-day-selected-foreground");
   });
 
   it("keeps ledger titles slightly smaller than body text", () => {

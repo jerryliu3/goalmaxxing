@@ -101,14 +101,14 @@ export function planFilledChromeMetaClass({
 }
 
 export function planHiddenItemCountLabel(hiddenCount: number) {
-  return hiddenCount > 0 ? `+${hiddenCount} more` : null;
+  return `+${Math.max(0, hiddenCount)} more`;
 }
 
 export function planSelectedWorkRowClass(selected: boolean) {
   if (!selected) {
     return "";
   }
-  return "bg-day-selected text-day-selected-foreground shadow-[inset_3px_0_0_var(--color-selection)]";
+  return "bg-day-selected shadow-[inset_3px_0_0_var(--color-selection)]";
 }
 
 export const planLedgerTitleClass =
