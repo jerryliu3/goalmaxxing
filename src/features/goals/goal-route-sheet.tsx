@@ -99,7 +99,7 @@ export function GoalRouteSheet({
               type="button"
               variant="ghost"
               size="icon-sm"
-              className="hidden md:inline-flex"
+              className="inline-flex"
               onClick={onClose}
               aria-label={closeButtonLabel}
               data-no-swipe="true"

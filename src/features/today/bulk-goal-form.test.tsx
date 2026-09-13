@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BulkGoalForm } from "@/features/today/bulk-goal-form";
@@ -33,9 +39,10 @@ vi.mock("@/lib/navigation/use-app-router", () => ({
 }));
 
 vi.mock("@/lib/api/client", async () => {
-  const actual = await vi.importActual<typeof import("@/lib/api/client")>(
-    "@/lib/api/client"
-  );
+  const actual =
+    await vi.importActual<typeof import("@/lib/api/client")>(
+      "@/lib/api/client",
+    );
   return {
     ...actual,
     postJson: postJsonMock,
@@ -69,9 +76,9 @@ vi.mock("@/lib/supabase/client", () => ({
 }));
 
 vi.mock("@/lib/goals/progress-context", async () => {
-  const actual = await vi.importActual<typeof import("@/lib/goals/progress-context")>(
-    "@/lib/goals/progress-context"
-  );
+  const actual = await vi.importActual<
+    typeof import("@/lib/goals/progress-context")
+  >("@/lib/goals/progress-context");
   return {
     ...actual,
     fetchProgressContext: fetchProgressContextMock,
@@ -139,12 +146,14 @@ const activeLinkTarget: Goal = {
 
 function parseNaturalLanguageGoals(
   goals: Array<Record<string, unknown>>,
-  user: ReturnType<typeof userEvent.setup>
+  user: ReturnType<typeof userEvent.setup>,
 ) {
   postJsonMock.mockResolvedValue({ goals, warnings: [] });
   const prompt =
     "Create one weekly strength goal and one lifetime presentation practice goal.";
-  const promptInput = screen.getByLabelText("Describe goals in natural language");
+  const promptInput = screen.getByLabelText(
+    "Describe goals in natural language",
+  );
   fireEvent.change(promptInput, { target: { value: prompt } });
   return user
     .click(screen.getByRole("button", { name: "Parse natural language" }))
@@ -158,14 +167,10 @@ function parseNaturalLanguageGoals(
           },
           {
             timeoutMs: 45_000,
-          }
+          },
         );
-      })
+      }),
     );
-}
-
-function firstTapToEditButton() {
-  return screen.getAllByRole("button", { name: /tap to edit/i })[0]!;
 }
 
 describe("BulkGoalForm", () => {
@@ -197,9 +202,7 @@ describe("BulkGoalForm", () => {
     cleanup();
   });
 
-  it(
-    "parses drafts into the shared editor and persists exact goal/link payloads",
-    async () => {
+  it("parses drafts into the shared editor and persists exact goal/link payloads", async () => {
     const randomUuidSpy = vi.spyOn(globalThis.crypto, "randomUUID");
     try {
       randomUuidSpy
@@ -237,35 +240,28 @@ describe("BulkGoalForm", () => {
             end_date: "2026-10-15",
           },
         ],
-        user
+        user,
       );
 
       expect(screen.getByText("Strength sessions")).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Next goal" }));
       expect(screen.getByText("Practice talks")).toBeInTheDocument();
-
-      await user.click(firstTapToEditButton());
-      const dialog = await screen.findByRole("dialog");
+      await user.click(screen.getByRole("button", { name: "Previous goal" }));
+      await user.click(screen.getByRole("button", { name: /04Schedule/ }));
+      await user.click(screen.getByRole("button", { name: /Hard ·/ }));
+      await user.click(screen.getByText("Advanced settings (optional)"));
       await user.click(
-        within(dialog).getByRole("button", { name: /advanced settings/i })
-      );
-      const difficultyTrigger = within(dialog)
-        .getAllByRole("combobox")
-        .find((element) => element.textContent?.includes("Medium"));
-      expect(difficultyTrigger).toBeTruthy();
-      await user.click(difficultyTrigger!);
-      await user.click(await screen.findByRole("option", { name: "Hard" }));
-      await user.click(
-        within(dialog).getByRole("checkbox", {
+        screen.getByRole("checkbox", {
           name: /make this goal private/i,
-        })
+        }),
       );
       await user.click(
-        within(dialog).getByRole("button", { name: "Select link target" })
+        screen.getByRole("button", { name: "Select link target" }),
       );
-      await user.click(screen.getByRole("button", { name: "Close" }));
 
+      await user.click(screen.getByRole("button", { name: /05Review/ }));
       await user.click(
-        screen.getByRole("button", { name: "Create selected goals" })
+        screen.getByRole("button", { name: /Create \d+ selected goals?/ }),
       );
 
       await waitFor(() => {
@@ -325,9 +321,7 @@ describe("BulkGoalForm", () => {
     } finally {
       randomUuidSpy.mockRestore();
     }
-  },
-  15_000
-  );
+  }, 15_000);
 
   it("keeps drafts frozen with a reconciliation action when create_goals is ambiguous", async () => {
     rpcMock.mockRejectedValueOnce(new Error("create request timed out"));
@@ -346,23 +340,26 @@ describe("BulkGoalForm", () => {
           start_date: "2026-08-17",
         },
       ],
-      user
+      user,
     );
 
+    await user.click(screen.getByRole("button", { name: /05Review/ }));
     await user.click(
-      screen.getByRole("button", { name: "Create selected goals" })
+      screen.getByRole("button", { name: /Create \d+ selected goals?/ }),
     );
 
     await waitFor(() => {
       expect(toastErrorMock).toHaveBeenCalledWith("create request timed out");
     });
-    expect(screen.getByText("Mobility")).toBeInTheDocument();
+    expect(screen.getAllByText("Mobility").length).toBeGreaterThan(0);
     const retryCreationButton = screen
       .getAllByRole("button", { name: "Retry creating goals" })
       .find((button) => !button.hasAttribute("disabled"));
     expect(retryCreationButton).toBeDefined();
     expect(retryCreationButton).toBeEnabled();
-    expect(firstTapToEditButton()).toHaveAttribute("aria-disabled", "true");
+    expect(
+      screen.getByRole("checkbox", { name: /Include this goal/ }),
+    ).toBeDisabled();
     expect(invalidatePlannerRelatedTabCachesMock).not.toHaveBeenCalled();
     expect(routerReplaceMock).not.toHaveBeenCalled();
 
@@ -395,40 +392,42 @@ describe("BulkGoalForm", () => {
           start_date: "2026-08-17",
         },
       ],
-      user
+      user,
     );
 
-    await user.click(firstTapToEditButton());
-    const dialog = await screen.findByRole("dialog");
+    await user.click(screen.getByRole("button", { name: /04Schedule/ }));
+    await user.click(screen.getByText("Advanced settings (optional)"));
     await user.click(
-      within(dialog).getByRole("button", { name: /advanced settings/i })
+      screen.getByRole("button", { name: "Select link target" }),
     );
+
+    await user.click(screen.getByRole("button", { name: /05Review/ }));
     await user.click(
-      within(dialog).getByRole("button", { name: "Select link target" })
-    );
-    await user.click(screen.getByRole("button", { name: "Close" }));
-    await user.click(
-      screen.getByRole("button", { name: "Create selected goals" })
+      screen.getByRole("button", { name: /Create \d+ selected goals?/ }),
     );
 
     await waitFor(() => {
       expect(toastErrorMock).toHaveBeenCalledWith(
-        "Some linked goals were not saved: link save failed"
+        "Some linked goals were not saved: link save failed",
       );
     });
     expect(toastSuccessMock).not.toHaveBeenCalledWith(
-      expect.stringContaining("Created")
+      expect.stringContaining("Created"),
     );
     expect(routerReplaceMock).not.toHaveBeenCalled();
-    expect(screen.getByText("Mobility")).toBeInTheDocument();
+    expect(screen.getAllByText("Mobility").length).toBeGreaterThan(0);
     expect(
-      screen.getByRole("button", { name: "Retry saving links" })
+      screen.getByRole("button", { name: "Retry saving links" }),
     ).toBeInTheDocument();
-    expect(firstTapToEditButton()).toHaveAttribute("aria-disabled", "true");
-    await user.click(firstTapToEditButton());
+    expect(
+      screen.getByRole("checkbox", { name: /Include this goal/ }),
+    ).toBeDisabled();
+
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Retry saving links" }));
+    await user.click(
+      screen.getByRole("button", { name: "Retry saving links" }),
+    );
 
     await waitFor(() => {
       expect(routerReplaceMock).toHaveBeenCalledWith("/");
@@ -467,12 +466,15 @@ describe("BulkGoalForm", () => {
           start_date: "2026-08-17",
         },
       ],
-      user
+      user,
     );
 
-    expect(screen.getByText("1 selected with errors")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Create selected goals" })
+      screen.getByRole("button", { name: "Fix untitled goal" }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /05Review/ }));
+    expect(
+      screen.getByRole("button", { name: /Create \d+ selected goals?/ }),
     ).toBeDisabled();
     expect(rpcMock).not.toHaveBeenCalled();
   });

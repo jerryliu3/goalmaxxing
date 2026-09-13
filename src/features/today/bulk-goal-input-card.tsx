@@ -1,15 +1,17 @@
 "use client";
 
-import type { ChangeEvent, ReactNode } from "react";
-import { ArrowLeft, FileSpreadsheet, ListChecks, LoaderCircle, Sparkles, Upload } from "lucide-react";
+import { type ChangeEvent, type ReactNode, useId, useRef } from "react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  FileUp,
+  LoaderCircle,
+  X,
+} from "lucide-react";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { BulkInputMode } from "@/features/today/bulk-goal-types";
+import "@/features/goals/tempo-ai-creation.css";
 
 interface BulkGoalInputCardProps {
   inputMode: BulkInputMode;
@@ -32,6 +34,27 @@ interface BulkGoalInputCardProps {
   disabled?: boolean;
 }
 
+const ideas = [
+  {
+    label: "Move more",
+    tone: "health",
+    prompt:
+      "I want to build a sustainable fitness routine, with a few achievable goals each week.",
+  },
+  {
+    label: "Make something",
+    tone: "creative",
+    prompt:
+      "I want to finish a creative project, with a regular practice and a few meaningful milestones.",
+  },
+  {
+    label: "Find balance",
+    tone: "personal",
+    prompt:
+      "I want to make more time for reading, friends, and rest. Help me start small.",
+  },
+];
+
 export function BulkGoalInputCard({
   inputMode,
   onInputModeChange,
@@ -52,180 +75,259 @@ export function BulkGoalInputCard({
   uploadedFileName,
   disabled = false,
 }: BulkGoalInputCardProps) {
+  const id = useId();
+  const promptRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const reducedMotion = useReducedMotion();
+  const locked = disabled || parsing;
+  const importing = inputMode === "csv";
   return (
-    <Card className="shadow-sm">
-      <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <CardTitle>Create multiple goals</CardTitle>
-              {modeSwitchControl}
-            </div>
-            <CardDescription>
-              Describe goals with AI, paste CSV, or upload CSV/XLSX, then approve in one click.
-            </CardDescription>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex items-center gap-1 rounded-lg border bg-muted/40 p-1">
-              <Button
+    <section className="tempo-ai-composer" aria-busy={parsing}>
+      <header className="tempo-ai-heading">
+        <div className="tempo-ai-eyebrow">
+          <span>
+            {importing ? "FROM YOUR LIST" : "A LITTLE HELP GETTING STARTED"}
+          </span>
+          {modeSwitchControl}
+          {showBackButton &&
+            (onExit ? (
+              <button
                 type="button"
-                size="sm"
-                variant={inputMode === "natural_language" ? "secondary" : "ghost"}
-                className="h-8 rounded-md px-3"
-                onClick={() => onInputModeChange("natural_language")}
-                disabled={disabled}
+                aria-label="Close goal creator"
+                disabled={locked}
+                onClick={onExit}
               >
-                Natural language
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={inputMode === "csv" ? "secondary" : "ghost"}
-                className="h-8 rounded-md px-3"
-                onClick={() => onInputModeChange("csv")}
-                disabled={disabled}
+                <X size={18} />
+              </button>
+            ) : (
+              <Link
+                href="/"
+                aria-label="Close goal creator"
+                aria-disabled={locked}
+                onClick={(event) => {
+                  if (locked) event.preventDefault();
+                }}
               >
-                CSV
-              </Button>
-            </div>
-            {showBackButton ? (
-              disabled ? (
-                <Button type="button" variant="outline" disabled>
-                  <ArrowLeft className="size-4" />
-                  Back
-                </Button>
-              ) : onExit ? (
-                <Button type="button" variant="outline" onClick={onExit}>
-                  <ArrowLeft className="size-4" />
-                  Back
-                </Button>
-              ) : (
-                <Button variant="outline" asChild>
-                  <Link href="/">
-                    <ArrowLeft className="size-4" />
-                    Back
-                  </Link>
-                </Button>
-              )
-            ) : null}
-          </div>
+                <X size={18} />
+              </Link>
+            ))}
         </div>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        {inputMode === "natural_language" ? (
-          <section className="space-y-2">
-            <Label htmlFor="bulk-natural-language">Describe goals in natural language</Label>
-            <Textarea
-              id="bulk-natural-language"
-              value={naturalLanguageInput}
-              onChange={(event) => onNaturalLanguageInputChange(event.target.value)}
-              maxLength={8000}
-              placeholder="Example: I want to run 4 times per week, read 20 books this year, and call my parents every Sunday."
-              className="min-h-28"
-              disabled={disabled}
-            />
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onParseNaturalLanguage}
-                disabled={parsing || disabled}
-              >
-                {parsing ? (
-                  <LoaderCircle className="size-4 animate-spin" />
-                ) : (
-                  <Sparkles className="size-4" />
-                )}
-                Parse natural language
-              </Button>
-            </div>
-          </section>
-        ) : (
-          <>
-            <section className="space-y-2">
-              <div className="rounded-lg border bg-muted/30 p-3 text-xs">
-                <p className="font-medium text-foreground">Example CSV (2 goals)</p>
-                <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-muted-foreground">
-                  {csvExample}
-                </pre>
-                <div className="mt-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={onUseCsvExample}
-                    disabled={disabled}
-                  >
-                    Use this example
-                  </Button>
+        <h2>
+          {importing ? (
+            <>
+              Bring your goals
+              <br />
+              with you.
+            </>
+          ) : (
+            <>
+              What would you like
+              <br />
+              to make room for?
+            </>
+          )}
+        </h2>
+        <p>
+          {importing
+            ? "Turn an existing list into cards you can make your own."
+            : "A rough idea is enough. We’ll help turn it into a few goals that fit your life."}
+        </p>
+      </header>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={inputMode}
+          initial={reducedMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: reducedMotion ? 0 : 0.16 }}
+        >
+          <fieldset className="tempo-ai-fields" disabled={locked}>
+            {!importing ? (
+              <>
+                <div className="tempo-ai-writing">
+                  <label htmlFor={id + "-prompt"}>YOUR STARTING POINT</label>
+                  <textarea
+                    ref={promptRef}
+                    id={id + "-prompt"}
+                    aria-label="Describe goals in natural language"
+                    value={naturalLanguageInput}
+                    onChange={(event) =>
+                      onNaturalLanguageInputChange(event.target.value)
+                    }
+                    maxLength={8000}
+                    placeholder={
+                      "I’d like to get outside more, read a little every week, and finally start that project…"
+                    }
+                    onKeyDown={(event) => {
+                      if (
+                        event.key === "Enter" &&
+                        (event.metaKey || event.ctrlKey) &&
+                        !event.nativeEvent.isComposing &&
+                        naturalLanguageInput.trim() &&
+                        !locked
+                      ) {
+                        event.preventDefault();
+                        onParseNaturalLanguage();
+                      }
+                    }}
+                  />
+                  <div className="tempo-ai-writing-foot">
+                    <span>Think out loud. Details can come later.</span>
+                    <ArrowUpRight size={17} aria-hidden="true" />
+                  </div>
                 </div>
-              </div>
-              <Label htmlFor="bulk-csv-input">Paste CSV content</Label>
-              <Textarea
-                id="bulk-csv-input"
-                value={csvInput}
-                onChange={(event) => onCsvInputChange(event.target.value)}
-                placeholder="title,description,category,color,frequency_type,recurrence_interval,target_basis,target_count,milestone_names,start_date,end_date,default_local_time"
-                className="min-h-36"
-                disabled={disabled}
-              />
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
+                <div className="tempo-ai-ideas">
+                  <span>Need a spark?</span>
+                  <div role="group" aria-label="Ideas to get started">
+                    {ideas.map((idea) => (
+                      <button
+                        type="button"
+                        key={idea.label}
+                        data-tone={idea.tone}
+                        onClick={() => {
+                          const existing = naturalLanguageInput.trim();
+                          onNaturalLanguageInputChange(
+                            existing
+                              ? existing + "\n\n" + idea.prompt
+                              : idea.prompt,
+                          );
+                          promptRef.current?.focus();
+                        }}
+                      >
+                        <i aria-hidden="true" />
+                        {idea.label}
+                        <span aria-hidden="true">+</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <button
                   type="button"
-                  variant="outline"
-                  onClick={onParseCsv}
-                  disabled={parsing || disabled}
+                  className="tempo-ai-primary"
+                  disabled={locked || !naturalLanguageInput.trim()}
+                  onClick={onParseNaturalLanguage}
                 >
+                  <span>
+                    {parsing ? "Shaping your goals…" : "Shape my goals"}
+                  </span>
                   {parsing ? (
-                    <LoaderCircle className="size-4 animate-spin" />
+                    <LoaderCircle size={18} className="tempo-ai-spinner" />
                   ) : (
-                    <ListChecks className="size-4" />
+                    <ArrowRight size={18} />
                   )}
-                  Parse pasted CSV
-                </Button>
-              </div>
-            </section>
-
-            <section className="space-y-2">
-              <Label htmlFor="bulk-file-upload">Upload file</Label>
-              <Input
-                id="bulk-file-upload"
-                type="file"
-                accept=".csv,.xlsx,.xls"
-                onChange={onFileChange}
-                disabled={disabled}
-              />
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
+                </button>
+              </>
+            ) : (
+              <>
+                <input
+                  ref={fileRef}
+                  id={id + "-file"}
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  onChange={onFileChange}
+                  hidden
+                />
+                <button
                   type="button"
-                  variant="outline"
-                  onClick={onParseUploadedFile}
-                  disabled={parsing || disabled}
+                  className="tempo-ai-file"
+                  onClick={() => fileRef.current?.click()}
+                  aria-label="Choose CSV or spreadsheet file"
                 >
-                  {parsing ? (
-                    <LoaderCircle className="size-4 animate-spin" />
-                  ) : (
-                    <Upload className="size-4" />
-                  )}
-                  Parse uploaded file
-                </Button>
-                {uploadedFileName ? (
-                  <Badge variant="secondary" className="inline-flex items-center gap-1">
-                    <FileSpreadsheet className="size-3.5" />
-                    {uploadedFileName}
-                  </Badge>
-                ) : null}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Supported columns: title, description, category, color,
-                frequency_type, recurrence_interval, target_basis (period or lifetime),
-                target_count (per-period count or lifetime total), milestone_names,
-                start_date, end_date, default_local_time.
-              </p>
-            </section>
-          </>
-        )}
-      </CardContent>
-    </Card>
+                  <span className="tempo-ai-file-icon">
+                    <FileUp size={23} strokeWidth={1.5} />
+                  </span>
+                  <strong>{uploadedFileName || "Choose a file"}</strong>
+                  <span>
+                    {uploadedFileName
+                      ? "Choose a different file"
+                      : "CSV or Excel spreadsheet"}
+                  </span>
+                </button>
+                {uploadedFileName && (
+                  <button
+                    type="button"
+                    className="tempo-ai-primary"
+                    onClick={onParseUploadedFile}
+                    disabled={locked}
+                  >
+                    <span>
+                      {parsing
+                        ? "Preparing your cards…"
+                        : "Preview file as goals"}
+                    </span>
+                    <ArrowRight size={18} />
+                  </button>
+                )}
+                <details className="tempo-ai-paste">
+                  <summary>Or paste a list in CSV format</summary>
+                  <label htmlFor={id + "-csv"} className="sr-only">
+                    Paste CSV content
+                  </label>
+                  <textarea
+                    id={id + "-csv"}
+                    value={csvInput}
+                    onChange={(event) => onCsvInputChange(event.target.value)}
+                    placeholder={
+                      "title,category,frequency_type,recurrence_interval,target_count\nRead,Personal,recurring,weekly,3"
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="tempo-ai-primary"
+                    disabled={locked || !csvInput.trim()}
+                    onClick={onParseCsv}
+                  >
+                    <span>
+                      {parsing
+                        ? "Preparing your cards…"
+                        : "Preview pasted goals"}
+                    </span>
+                    <ArrowRight size={18} />
+                  </button>
+                  <details className="tempo-ai-format">
+                    <summary>See an example & supported fields</summary>
+                    <pre>{csvExample}</pre>
+                    <button
+                      type="button"
+                      className="tempo-ai-text-button"
+                      onClick={onUseCsvExample}
+                    >
+                      Use this example
+                    </button>
+                    <p>
+                      Also supports description, color, target basis, milestone
+                      names, dates, and time of day.
+                    </p>
+                  </details>
+                </details>
+              </>
+            )}
+          </fieldset>
+        </motion.div>
+      </AnimatePresence>
+      <p className="tempo-ai-reassurance" role="status">
+        {parsing
+          ? "Finding a rhythm, a few clear targets, and room to adjust."
+          : "You’ll review every goal before anything is saved."}
+      </p>
+      <div className="tempo-ai-alternative">
+        <button
+          type="button"
+          disabled={locked}
+          onClick={() =>
+            onInputModeChange(importing ? "natural_language" : "csv")
+          }
+        >
+          {importing ? (
+            "Start with an idea instead"
+          ) : (
+            <>
+              <FileUp size={14} />
+              Already have a list? Import it
+            </>
+          )}
+        </button>
+      </div>
+    </section>
   );
 }

@@ -1,0 +1,683 @@
+.tempo-creation {
+  --goal-color: #b99060;
+  display: grid;
+  grid-template-areas: "steps" "preview" "workspace";
+  gap: 2rem;
+  align-items: start;
+  max-width: 68rem;
+  margin: auto;
+  padding: 0.5rem 0 1rem;
+}
+.tempo-preview {
+  grid-area: preview;
+  position: relative;
+  min-width: 0;
+  perspective: 1100px;
+}
+.tempo-card {
+  --goal-color: #6366f1;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  padding: 1.75rem;
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  background: color-mix(in srgb, var(--goal-color) 24%, #fff7de);
+  color: #20251e;
+  box-shadow: 0 14px 35px #17201512;
+  border: 1px solid #20251e12;
+  min-height: 330px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.tempo-card h2 {
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-size: 27px;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+  position: relative;
+  max-width: 95%;
+  margin: 0;
+}
+.tempo-card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+}
+.tempo-workspace {
+  grid-area: workspace;
+  min-width: 0;
+}
+.tempo-steps {
+  grid-area: steps;
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.9rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1rem;
+  margin-bottom: 0;
+  justify-content: space-between;
+}
+.tempo-steps button {
+  font-size: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  text-align: left;
+  opacity: 0.5;
+  cursor: pointer;
+}
+.tempo-steps button[aria-current] {
+  opacity: 1;
+  font-weight: 750;
+}
+.tempo-steps button span {
+  font-family: monospace;
+}
+.tempo-heading {
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: clamp(1.65rem, 3vw, 2.3rem);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 1.08;
+  margin-bottom: 1.5rem;
+  outline: none;
+}
+.tempo-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  min-height: 265px;
+}
+.tempo-fields label,
+.tempo-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.tempo-fields label {
+  display: grid;
+  gap: 0.5rem;
+}
+.tempo-title-input {
+  font-size: 1.15rem !important;
+  height: 3.25rem !important;
+  border-radius: 0.85rem;
+}
+.tempo-fields textarea {
+  display: block;
+  width: 100%;
+  min-height: 90px;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: var(--background);
+  font-weight: 400;
+}
+.tempo-fields details {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+.tempo-fields details > summary {
+  font-size: 0.8rem;
+  cursor: pointer;
+  min-height: 30px;
+}
+.tempo-fields details > summary span {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  margin-left: 0.5rem;
+}
+.tempo-fields details[open] > summary {
+  margin-bottom: 1rem;
+}
+.tempo-fields details > label {
+  margin-bottom: 1rem;
+}
+.tempo-choices {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.tempo-choices button {
+  border: 1px solid var(--border);
+  border-radius: 2rem;
+  padding: 0.7rem 1rem;
+  font-size: 0.8rem;
+  min-height: 44px;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    box-shadow 0.18s;
+}
+.tempo-choices button[aria-pressed="true"] {
+  background: color-mix(
+    in srgb,
+    var(--goal-color, #b99060) 17%,
+    var(--background)
+  );
+  color: var(--foreground);
+  border-color: var(--goal-color, #b99060);
+  box-shadow: 0 3px 0
+    color-mix(in srgb, var(--goal-color, #b99060) 35%, transparent);
+}
+.tempo-creation button:focus-visible,
+.tempo-fields summary:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 4px;
+}
+.tempo-creation button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.tempo-count {
+  font-size: 0.8rem;
+  margin: 0.6rem 0 1rem;
+}
+.tempo-count strong {
+  font-size: 2.8rem;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  margin-right: 0.3rem;
+}
+.tempo-beats {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+.tempo-beats button {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  cursor: pointer;
+  min-height: 32px;
+  box-shadow: 0 4px 0 var(--border);
+}
+.tempo-beats button[data-filled="true"] {
+  background: color-mix(in srgb, var(--goal-color) 32%, var(--background));
+  color: var(--foreground);
+  border-color: var(--goal-color);
+  box-shadow:
+    0 5px 0 color-mix(in srgb, var(--goal-color) 65%, var(--background)),
+    inset 0 2px 2px #ffffff60;
+}
+.tempo-hint {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+  font-weight: 400;
+}
+.tempo-beats + .tempo-hint {
+  margin-top: 1rem;
+}
+.tempo-advanced {
+  display: grid;
+  gap: 1.25rem;
+}
+.tempo-check {
+  display: flex !important;
+  align-items: center;
+}
+.tempo-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  gap: 1rem;
+}
+.tempo-footer > button:last-child {
+  border-radius: 2rem;
+  min-height: 44px;
+  padding-inline: 1.5rem;
+}
+.tempo-error {
+  font-size: 0.8rem;
+  color: var(--destructive);
+  margin-top: 1rem;
+}
+.tempo-stack {
+  position: relative;
+  padding: 12px 8px 0;
+  touch-action: pan-y;
+}
+.tempo-stack:before,
+.tempo-stack:after {
+  content: "";
+  position: absolute;
+  inset: 0 14px 25px;
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  background: var(--muted);
+  transform: rotate(-4deg);
+}
+.tempo-stack:after {
+  transform: rotate(3deg);
+  inset: 8px 8px 15px;
+}
+.tempo-stack-front {
+  position: relative;
+  z-index: 1;
+  touch-action: pan-y;
+}
+.tempo-stack-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 1.5rem 0 0.8rem;
+  font-size: 0.8rem;
+}
+.tempo-stack-nav button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+.tempo-stack-select {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  font-size: 0.8rem;
+  padding: 0.5rem;
+}
+.tempo-stack-select input {
+  width: 18px;
+  height: 18px;
+}
+.tempo-stack-jump {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.tempo-stack-jump button {
+  font-size: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+}
+.tempo-stack-jump button[aria-current="true"] {
+  background: var(--foreground);
+  color: var(--background);
+}
+@media (min-width: 768px) {
+  .tempo-creation {
+    grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.85fr);
+    grid-template-areas: "steps steps" "workspace preview";
+    gap: 2.5rem;
+    padding: 1rem;
+  }
+  .tempo-preview {
+    position: sticky;
+    top: 1rem;
+  }
+  .tempo-card {
+    min-height: 410px;
+  }
+  .tempo-workspace {
+    padding-top: 0.5rem;
+  }
+}
+@media (max-width: 767px) {
+  .tempo-card {
+    min-height: 180px;
+    padding: 1.25rem;
+    gap: 0.8rem;
+  }
+  .tempo-card h2 {
+    font-size: 1.9rem;
+  }
+  .tempo-card-rhythm {
+    display: none;
+  }
+  .tempo-card-bottom strong {
+    font-size: 1.1rem;
+  }
+  .tempo-card-meta {
+    font-size: 0.58rem;
+  }
+  .tempo-creation {
+    gap: 1.5rem;
+  }
+  .tempo-beats {
+    gap: 0.45rem;
+  }
+  .tempo-steps {
+    justify-content: space-between;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tempo-creation * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.tempo-card[data-empty="true"],
+.tempo-card-empty {
+  background: #f5efdf;
+}
+.tempo-card-placeholder {
+  margin-top: auto;
+  width: 70%;
+  height: 50px;
+  border-top: 2px dashed #20251e20;
+  border-bottom: 2px dashed #20251e10;
+}
+.tempo-card {
+  transition:
+    background 0.3s,
+    box-shadow 0.3s;
+}
+.tempo-card-effort {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.7rem;
+  margin-top: auto;
+}
+.tempo-effort-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 24px;
+}
+.tempo-effort-bars i {
+  width: 7px;
+  background: #20251e15;
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+.tempo-effort-bars i[data-active="true"] {
+  background: #20251e;
+}
+.tempo-card[data-effort="2"] {
+  box-shadow:
+    0 5px 0 color-mix(in srgb, var(--goal-color) 40%, #fff7de),
+    0 14px 35px #17201512;
+}
+.tempo-card[data-effort="3"] {
+  box-shadow:
+    0 5px 0 color-mix(in srgb, var(--goal-color) 45%, #fff7de),
+    0 10px 0 color-mix(in srgb, var(--goal-color) 25%, #fff7de),
+    0 20px 35px #17201512;
+}
+.tempo-eyebrow {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 1rem;
+  color: var(--muted-foreground);
+}
+.tempo-methods {
+  display: grid;
+  gap: 0.85rem;
+}
+.tempo-methods button {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 0.35rem 0.65rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 1.2rem;
+  text-align: left;
+  cursor: pointer;
+  background: color-mix(in srgb, #b99060 5%, var(--background));
+}
+.tempo-methods button > span {
+  grid-row: span 2;
+  font-size: 1.7rem;
+}
+.tempo-methods button strong {
+  font-size: 1rem;
+}
+.tempo-methods button small {
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+}
+.tempo-methods button[aria-pressed="true"] {
+  border-color: #b99060;
+  background: color-mix(in srgb, #b99060 16%, var(--background));
+  box-shadow: 0 3px 0 #b9906040;
+}
+.tempo-choices[aria-label="Category"] button::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--goal-color);
+  margin-right: 0.5rem;
+}
+.tempo-rope {
+  position: relative;
+}
+.tempo-rope-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+}
+.tempo-rope-heading strong {
+  font-size: 2.8rem;
+  letter-spacing: -0.06em;
+  line-height: 1;
+}
+.tempo-rope-viewport {
+  overflow-y: auto;
+  max-height: 260px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.tempo-rope-track {
+  position: relative;
+  min-height: 30px;
+}
+.tempo-rope-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 19px;
+  width: 4px;
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    165deg,
+    var(--goal-color) 0 4px,
+    color-mix(in srgb, var(--goal-color) 40%, var(--background)) 4px 7px
+  );
+}
+.tempo-rope-milestone {
+  position: absolute;
+  left: 0;
+  right: 4px;
+  height: 56px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+}
+.tempo-rope-knot {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-left: 6px;
+  font-size: 0.65rem;
+  border-radius: 50%;
+  border: 2px solid var(--goal-color);
+  background: color-mix(in srgb, var(--goal-color) 20%, var(--background));
+  z-index: 1;
+  box-shadow: 0 2px 0
+    color-mix(in srgb, var(--goal-color) 40%, var(--background));
+}
+.tempo-rope-milestone input {
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  font-size: 0.8rem;
+}
+.tempo-rope-tail {
+  position: relative;
+  padding-bottom: 12px;
+}
+.tempo-rope-tail:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 45px;
+  left: 19px;
+  width: 4px;
+  background: var(--goal-color);
+}
+.tempo-rope-handle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 44px;
+  border: 1px solid var(--goal-color);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--goal-color) 20%, var(--background));
+  padding: 0.5rem 1rem 0.5rem 0.65rem;
+  font-size: 0.75rem;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.tempo-rope-handle > span:first-child {
+  font-size: 1.2rem;
+}
+.tempo-rope-handle[data-pulling="true"] {
+  cursor: grabbing;
+  box-shadow: 0 5px 12px color-mix(in srgb, var(--goal-color) 25%, transparent);
+}
+.tempo-rope-exact {
+  margin-top: 1rem;
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+}
+.tempo-rope-exact input {
+  max-width: 100px;
+}
+
+.tempo-card-target {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin: 0.7rem 0;
+}
+.tempo-card-target strong {
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-size: 95px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.08em;
+  font-variant-numeric: tabular-nums;
+}
+.tempo-card-target > span {
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+  max-width: 7rem;
+}
+.tempo-card-period-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0;
+  margin-top: auto;
+}
+.tempo-card-period {
+  font-size: 0.85rem;
+}
+.tempo-card-period-row .tempo-card-effort {
+  margin: 0;
+  flex-shrink: 0;
+  margin-left: auto;
+  display: grid;
+  grid-template-columns: 27px;
+  text-align: right;
+}
+.tempo-card-effort .tempo-effort-bars {
+  justify-content: flex-end;
+}
+.tempo-card-dates {
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.tempo-card-footer {
+  margin-top: 0.2rem;
+}
+.tempo-card-arrow {
+  flex-shrink: 0;
+  margin-left: auto;
+  align-self: flex-start;
+}
+.tempo-creation.tempo-creation-review {
+  grid-template-areas: "steps steps" "preview preview" "action action";
+}
+.tempo-creation-review > .tempo-preview {
+  position: relative;
+  top: auto;
+  width: min(100%, 480px);
+  justify-self: center;
+  outline: none;
+}
+.tempo-creation-review .tempo-card {
+  min-height: 460px;
+}
+.tempo-creation-review .tempo-card-target strong {
+  font-size: clamp(6rem, 12vw, 8rem);
+}
+.tempo-review-action {
+  grid-area: action;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+.tempo-review-action > button {
+  border-radius: 2rem;
+  min-height: 44px;
+  padding-inline: 2rem;
+}
+@media (max-width: 767px) {
+  .tempo-card-target {
+    margin: 0.2rem 0;
+  }
+  .tempo-card-target strong {
+    font-size: 4.5rem;
+  }
+  .tempo-card h2 {
+    font-size: 1.5rem;
+  }
+  .tempo-creation.tempo-creation-review {
+    grid-template-areas: "steps" "preview" "action";
+  }
+  .tempo-creation-review .tempo-card {
+    min-height: 390px;
+  }
+}

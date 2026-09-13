@@ -1,12 +1,8 @@
 "use client";
 
-import {
-  Archive,
-  Trash2,
-  Undo2,
-} from "lucide-react";
+import { Archive, Trash2, Undo2 } from "lucide-react";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
-import { type ReactNode, useCallback } from "react";
+import { type ReactNode, useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,6 +27,8 @@ import {
 import { useGoalFormState } from "@/features/today/use-goal-form-state";
 import { useGoalFormSubmit } from "@/features/today/use-goal-form-submit";
 
+import { TempoGoalFields } from "@/features/goals/tempo-goal-fields";
+
 interface GoalFormProps {
   goalId?: string;
   showBackButton?: boolean;
@@ -47,6 +45,8 @@ export function GoalForm({
   onDismiss,
 }: GoalFormProps) {
   const router = useAppRouter();
+  const [createReady, setCreateReady] = useState(false);
+  const GoalFields = goalId ? GoalCreationFieldControls : TempoGoalFields;
   const exitHref = goalEditorFallbackHref;
   const dismissEditor = useCallback(() => {
     if (onDismiss) {
@@ -116,7 +116,7 @@ export function GoalForm({
 
   const goalFormId = isEditing ? "goal-form-edit" : "goal-form-create";
 
-  if (loading) {
+  if (loading && isEditing) {
     return (
       <LoadingCard
         title="Loading goal form..."
@@ -126,21 +126,43 @@ export function GoalForm({
   }
 
   return (
-    <Card className="gap-6 shadow-sm">
-      <GoalFormHeader
-        isEditing={isEditing}
-        isPlannerTask={isPlannerTask}
-        saving={saving}
-        hasRecovery={recovery !== null}
-        showBackButton={showBackButton}
-        exitHref={exitHref}
-        validationError={validationError}
-        submitDisabled={submitDisabled}
-        goalFormId={goalFormId}
-        modeSwitchControl={modeSwitchControl}
-        onBack={onExit || onDismiss ? dismissEditor : undefined}
-      />
-      <CardContent className="space-y-6">
+    <Card
+      className={
+        isEditing
+          ? "gap-6 shadow-sm"
+          : "gap-0 border-0 bg-transparent py-0 shadow-none"
+      }
+    >
+      {isEditing ? (
+        <GoalFormHeader
+          isEditing={isEditing}
+          isPlannerTask={isPlannerTask}
+          saving={saving}
+          hasRecovery={recovery !== null}
+          showBackButton={showBackButton}
+          exitHref={exitHref}
+          validationError={validationError}
+          submitDisabled={submitDisabled}
+          goalFormId={goalFormId}
+          modeSwitchControl={modeSwitchControl}
+          onBack={onExit || onDismiss ? dismissEditor : undefined}
+        />
+      ) : modeSwitchControl || showBackButton ? (
+        <div className="flex items-center justify-between px-4">
+          {modeSwitchControl}
+          {showBackButton && (
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={saving || recovery !== null}
+              onClick={dismissEditor}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
+      ) : null}
+      <CardContent className={isEditing ? "space-y-6" : "px-2 sm:px-4"}>
         {recovery ? (
           <GoalFormRecoveryAlert
             kind={recovery.kind}
@@ -149,7 +171,9 @@ export function GoalForm({
               recovery.kind === "link"
                 ? void retryGoalLink()
                 : void (
-                    document.getElementById(goalFormId) as HTMLFormElement | null
+                    document.getElementById(
+                      goalFormId,
+                    ) as HTMLFormElement | null
                   )?.requestSubmit()
             }
           />
@@ -163,19 +187,46 @@ export function GoalForm({
             onRetry={() => setLinkLoadAttempt((attempt) => attempt + 1)}
           />
         ) : null}
-        <form id={goalFormId} className="space-y-6" onSubmit={onSubmit}>
+        <form
+          id={goalFormId}
+          className="space-y-6"
+          onSubmit={(event) => {
+            if (!isEditing && !createReady && !recovery) {
+              event.preventDefault();
+              return;
+            }
+            void onSubmit(event);
+          }}
+        >
           {validationWarning ? (
             <div className="rounded-md border border-yellow-300 bg-yellow-100 px-3 py-2 text-xs text-orange-900 dark:border-yellow-300 dark:bg-yellow-100 dark:text-orange-900">
               {validationWarning}
             </div>
           ) : null}
-          <GoalCreationFieldControls
+          <GoalFields
+            taskSchedule={{
+              date: state.task_scheduled_date,
+              time: state.task_scheduled_time,
+            }}
+            onReviewChange={setCreateReady}
+            error={validationError}
+            action={
+              <Button type="submit" disabled={submitDisabled}>
+                {saving
+                  ? "Creating…"
+                  : isPlannerTask
+                    ? "Create task"
+                    : "Create goal"}
+              </Button>
+            }
             fields={toGoalCreationFields(state)}
             onFieldChange={(change) => {
               if (saving || recovery !== null) {
                 return;
               }
-              setState((previous) => applyGoalFormFieldChange(previous, change));
+              setState((previous) =>
+                applyGoalFormFieldChange(previous, change),
+              );
             }}
             onPatch={(patch) => {
               if (saving || recovery !== null) {
@@ -197,7 +248,9 @@ export function GoalForm({
             isEditing={isEditing}
             isPlannerTask={isPlannerTask}
             titlePlaceholder={
-              isPlannerTask ? "Write your top priority for today" : "Run 20 times by Dec 31"
+              isPlannerTask
+                ? "Write your top priority for today"
+                : "Run 20 times by Dec 31"
             }
             teamId={state.team_id}
             linkTarget={{
