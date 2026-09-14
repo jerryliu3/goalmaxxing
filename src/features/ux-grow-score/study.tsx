@@ -79,9 +79,9 @@ export function GrowScoreStudy() {
   const [accelGain, setAccelGain] = useState(DEFAULT_ACCEL_GAIN);
   const [shockGain, setShockGain] = useState(DEFAULT_SHOCK_GAIN);
   const [recoveryBias, setRecoveryBias] = useState(DEFAULT_RECOVERY_BIAS);
-  const [dayCap, setDayCap] = useState(DEFAULT_CAPS.day);
-  const [weekCap, setWeekCap] = useState(DEFAULT_CAPS.week);
-  const [monthCap, setMonthCap] = useState(DEFAULT_CAPS.month);
+  const [dayCap, setDayCap] = useState<number>(DEFAULT_CAPS.day);
+  const [weekCap, setWeekCap] = useState<number>(DEFAULT_CAPS.week);
+  const [monthCap, setMonthCap] = useState<number>(DEFAULT_CAPS.month);
 
   const currentFormula = FORMULAS.find((item) => item.id === formula)!;
   const caps = { day: dayCap, week: weekCap, month: monthCap };
