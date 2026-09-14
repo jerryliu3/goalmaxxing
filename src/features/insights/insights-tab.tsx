@@ -23,6 +23,7 @@ import { ProgressWeekCurrentStrip } from "@/features/insights/progress-week-curr
 import { ProgressAchievementsSection } from "@/features/insights/progress-achievements-section";
 import { ProgressMilestoneRunway } from "@/features/insights/progress-milestone-runway";
 import { WeekRhythmCard } from "@/features/insights/week-rhythm-card";
+import { GrowScoreTrendChart } from "@/features/insights/grow-score-trend-chart";
 import { useProgressWeekRhythm } from "@/features/insights/use-progress-week-rhythm";
 import {
   isLedgerHeatmapDayMutable,
@@ -984,6 +985,14 @@ export function InsightsTab({
           rows={weekRhythm.rows}
           loading={weekRhythm.loading}
           error={weekRhythm.error}
+        />
+      ) : null}
+
+      {contentMode === "full" && state.asOfDate ? (
+        <GrowScoreTrendChart
+          completions={state.completions}
+          goals={state.goals}
+          asOfDate={state.asOfDate}
         />
       ) : null}
 
