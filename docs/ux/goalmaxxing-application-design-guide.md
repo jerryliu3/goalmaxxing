@@ -54,6 +54,7 @@ language after web settles.
 Current prototype: `/ux/concepts/spatial-home`. Pattern library:
 `/ux/concepts/patterns`. v1 archive: `/ux/concepts/spatial-plan`.
 Plan craft study: `/ux/concepts/plan-clarity`.
+Day work inspect study (exploratory, not a lock): `/ux/day-work`.
 
 ---
 

@@ -203,6 +203,25 @@ export function ConceptsIndex() {
           </Link>
         </section>
 
+        <section className="mt-10 rounded-2xl border bg-card p-5 ring-1 ring-foreground/10">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Exploratory · not a lock
+          </p>
+          <h2 className="mt-1 text-xl font-semibold tracking-tight">
+            Day work
+          </h2>
+          <p className="mt-2 text-sm">
+            What shows up when you open a checklist goal, and three other ways
+            to hold today besides a list. Production Checklist is unchanged.
+          </p>
+          <Link
+            href="/ux/day-work"
+            className="mt-4 inline-flex text-sm font-medium text-primary"
+          >
+            Open the day work study
+          </Link>
+        </section>
+
         {DESTINATION_FAMILIES.map((family) => (
           <section
             key={family.family}
