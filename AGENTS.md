@@ -129,6 +129,9 @@ surfaces. The default is to simplify and reuse what already exists.
   Case/Vault/Gallery/Records/Rings concepts live in
   `docs/ux/goalmaxxing-achievements-destination-study.md` and
   `/ux/achievements` — Showcase is the leading study take, not a production lock.
+  Day work inspect and checklist-replacement concepts live in
+  `docs/ux/goalmaxxing-day-work-study.md` and `/ux/day-work`. They are
+  exploratory, not a product lock.
 - Reuse-first: before adding a new hook/component/helper, check whether an
   existing one can be extended or composed.
 - Prefer canonical homes for shared domain logic (`src/lib/planner/*`,

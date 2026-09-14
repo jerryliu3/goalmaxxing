@@ -80,6 +80,19 @@ export default function UxHubPage() {
           <li>
             <Link
               className="text-lg font-semibold underline"
+              href="/ux/day-work"
+            >
+              Day work — open a goal, or replace the list
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Folio, Phrase, and Peek for the checklist unfold. Deck, Gazette,
+              and Stations as other ways to hold today. Includes the live
+              form-under-the-row control.
+            </p>
+          </li>
+          <li>
+            <Link
+              className="text-lg font-semibold underline"
               href="/ux/grow-score"
             >
               Grow score — unbounded revisions
