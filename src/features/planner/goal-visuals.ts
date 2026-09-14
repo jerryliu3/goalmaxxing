@@ -162,16 +162,16 @@ export function contrastingInkForColor(color: string, styleId?: UiStyleId) {
   return luminance > 0.55 ? "#1c1917" : "#ffffff";
 }
 
-export function getWorkPillFillStyle(color: string, _credited = false, styleId?: UiStyleId) {
+export function getWorkPillFillStyle(color: string, credited = false, styleId?: UiStyleId) {
   const hex = toStyleDisplayColor(
     normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0],
     styleId
   );
-  const fill = mixOpaqueHex(hex, workPillPaper(styleId), WORK_PILL_HUE_AMOUNT);
+  const fill = mixOpaqueHex(hex, workPillPaper(styleId), credited ? WORK_PILL_HUE_AMOUNT * 0.45 : WORK_PILL_HUE_AMOUNT);
   return {
     backgroundColor: fill,
     borderColor: fill,
-    color: WORK_PILL_INK,
+    color: credited ? "#57534e" : WORK_PILL_INK,
   };
 }
 

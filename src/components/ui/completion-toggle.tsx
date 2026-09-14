@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Check } from "lucide-react";
 import { useUiStyle } from "@/components/brand/ui-style-provider";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import {
@@ -33,6 +34,7 @@ interface CompletionToggleProps
   pending?: boolean;
   size?: keyof typeof sizeClasses;
   chrome?: "button" | "plain";
+  completedMark?: "style" | "check";
   onClick?: CompletionHoldCommitHandler;
 }
 
@@ -41,6 +43,7 @@ export function CompletionToggle({
   pending = false,
   size = "md",
   chrome = "button",
+  completedMark = "style",
   className,
   onClick,
   onPointerDown,
@@ -108,7 +111,9 @@ export function CompletionToggle({
       }}
       title={title ?? "Hold to change completion"}
     >
-      <StyleCompletionMark
+      {completedMark === "check" && visualCompleted && !holding ? (
+        <Check className={classes.icon} aria-hidden="true" />
+      ) : <StyleCompletionMark
         done={visualCompleted}
         fillProgress={fillProgress}
         fillTransition={fillTransition}
@@ -117,7 +122,7 @@ export function CompletionToggle({
           visualCompleted || holding ? "text-primary" : "text-muted-foreground",
           chrome === "plain" ? classes.button : classes.icon
         )}
-      />
+      />}
     </button>
   );
 }

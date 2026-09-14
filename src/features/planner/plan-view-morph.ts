@@ -42,6 +42,7 @@ interface Mark {
     textClip?: Box;
     auxiliary?: HTMLElement;
     completed?: boolean;
+    completionTreatment?: string;
     opacity?: number;
 }
 export interface PlanScene {
@@ -137,7 +138,7 @@ function mark(el: HTMLElement, root: DOMRect, day: string, role: Role, index = 0
     if (!textEl)
         return base;
     return { ...base, text: textEl.textContent?.trim() ?? "", glyph: glyphBox(textEl, root), type: typography(getComputedStyle(textEl)),
-        completed: textEl.dataset.completed === 'true' };
+        completed: textEl.dataset.completed === 'true', completionTreatment: textEl.dataset.completionTreatment ?? 'strike' };
 }
 function labelMark(el: HTMLElement, root: DOMRect, day: string, role: Role): Mark {
     return mark(el, root, day, role, 0, el);
@@ -330,6 +331,7 @@ function glyph(parent: HTMLElement, m: Mark, overlay: DOMRect, origin: Box): Gly
     if (m.completed) {
         el.className = 'gm-completion-title';
         el.dataset.completed = 'true';
+        el.dataset.completionTreatment = m.completionTreatment ?? 'strike';
     }
     parent.append(el);
     const measured = glyphBox(el, overlay);
@@ -506,7 +508,7 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
                 Object.assign(auxiliary.style, { position: 'absolute', left: '0', top: '0', margin: '0', overflow: 'hidden', pointerEvents: 'none' });
                 glyphs.append(auxiliary);
             }
-            const singleGlyph = a.text === b.text && a.type?.family === b.type?.family && a.type?.style === b.type?.style && a.type?.textTransform === b.type?.textTransform;
+            const singleGlyph = a.completed === b.completed && a.completionTreatment === b.completionTreatment && a.text === b.text && a.type?.family === b.type?.family && a.type?.style === b.type?.style && a.type?.textTransform === b.type?.textTransform;
             const borders: Track['borders'] = el ? [borderLayer(el, a), borderLayer(el, b)] : null;
             const chrome = el && typeof el.animate === 'function' ? el.animate([
                 { backgroundColor: a.background, borderRadius: `${a.radius}px`, boxShadow: a.shadow },

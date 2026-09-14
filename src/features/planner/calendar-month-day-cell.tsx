@@ -1,10 +1,9 @@
 "use client";
 
 import { format, parse } from "date-fns";
-import { Link2 } from "lucide-react";
+import { Check, Link2 } from "lucide-react";
 import { Fragment, type ReactNode } from "react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
-import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
 import { cn } from "@/lib/utils";
 import { CompletionTitle } from "@/components/ui/completion-title";
@@ -264,9 +263,9 @@ export function CalendarMonthDayCell<
         !isDraft
     );
     const showStaticDoneMark =
-      layout === "agenda" &&
       !isDraft &&
-      (completionMode === "done" || (!completionToggleState && credited));
+      !showCompletionToggle &&
+      (completionMode === "done" || currentlyCredited);
     return (
       <Fragment key={`cell-entry-wrap-${entry.key}`}>
       <PlannerDraggableEntry
@@ -371,6 +370,7 @@ export function CalendarMonthDayCell<
                   pending={pending}
                   size="sm"
                   chrome="plain"
+                  completedMark="check"
                   aria-label={
                     currentlyCredited
                       ? "Mark session not done"
@@ -384,14 +384,15 @@ export function CalendarMonthDayCell<
                 />
               </div>
             ) : showStaticDoneMark ? (
-              <StyleCompletionMark
-                done
+              <Check
+                role="img"
                 className="block size-3.5 shrink-0 self-center"
-                label="Completed"
+                aria-label="Completed"
               />
             ) : null}
             <CompletionTitle
               completed={isCompleted}
+              treatment="quiet"
               className="flex h-6 min-w-0 items-center truncate font-display leading-none"
             >
               {compactTitle}
@@ -498,11 +499,11 @@ export function CalendarMonthDayCell<
                       return (
                         <div
                           key={`completion-fact-${marker.key}`}
-                          className="flex items-center gap-1.5 rounded-[10px] border border-primary/35 bg-primary/10 px-1.5 py-1 text-[11px] text-foreground"
+                          className="flex items-center gap-1.5 rounded-[10px] border border-primary/15 bg-primary/5 px-1.5 py-1 text-[11px] text-foreground"
                           aria-label={`${marker.goalTitle}. ${statusCopy}`}
                         >
-                          <StyleCompletionMark done className="size-3 shrink-0" />
-                          <span className="truncate line-through">{marker.goalTitle}</span>
+                          <Check className="size-3 shrink-0" aria-hidden="true" />
+                          <CompletionTitle completed treatment="quiet" className="truncate">{marker.goalTitle}</CompletionTitle>
                         </div>
                       );
                     })}
@@ -630,11 +631,11 @@ export function CalendarMonthDayCell<
                 return (
                 <div
                   key={`completion-fact-${marker.key}`}
-                  className="flex items-center gap-1.5 rounded-md border border-primary/35 bg-primary/10 px-1.5 py-1 text-[11px] text-foreground"
+                  className="flex items-center gap-1.5 rounded-md border border-primary/15 bg-primary/5 px-1.5 py-1 text-[11px] text-foreground"
                   aria-label={`${marker.goalTitle}. ${statusCopy}`}
                 >
-                  <StyleCompletionMark done className="size-3 shrink-0" />
-                  <span className="truncate line-through">{marker.goalTitle}</span>
+                  <Check className="size-3 shrink-0" aria-hidden="true" />
+                  <CompletionTitle completed treatment="quiet" className="truncate">{marker.goalTitle}</CompletionTitle>
                 </div>
                 );
               })}

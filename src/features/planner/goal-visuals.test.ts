@@ -49,14 +49,17 @@ describe("goal visuals", () => {
     ).toBe("#10b981");
   });
 
-  it("uses an opaque pastel fill that stays the same on every month tile", () => {
+  it("uses opaque pastel fills with quieter ink and hue for completed tiles", () => {
     const original = getWorkPillFillStyle("#10b981", false);
     const originalPastel = mixOpaqueHex("#10b981", "#ffffff", WORK_PILL_HUE_AMOUNT);
     expect(original.backgroundColor).toBe(originalPastel);
     expect(original.borderColor).toBe(originalPastel);
     expect(original.backgroundColor).not.toBe("#10b981");
     expect(original.color).toBe("#1c1917");
-    expect(getWorkPillFillStyle("#10b981", true).backgroundColor).toBe(originalPastel);
+    expect(getWorkPillFillStyle("#10b981", true).backgroundColor).toBe(
+      mixOpaqueHex("#10b981", "#ffffff", WORK_PILL_HUE_AMOUNT * 0.45)
+    );
+    expect(getWorkPillFillStyle("#10b981", true).color).toBe("#57534e");
 
     const originalBlue = getWorkPillFillStyle("#2563eb", false);
     expect(originalBlue.backgroundColor).toBe(
