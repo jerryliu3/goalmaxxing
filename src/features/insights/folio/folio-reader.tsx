@@ -40,8 +40,8 @@ export function FolioReader({ folio }: { folio: GoalFolio }) {
       }}
     >
       <header className={styles.readerHeader}>
-        <span>THE LIVING FOLIO <span className={styles.readerYear}>{folio.year}</span></span>
-        <span className={styles.pageNumber}>CHAPTER {String(page.index + 1).padStart(2, "0")} / {String(folio.entries.length).padStart(2, "0")}</span>
+        <span>PAST GOALS <span className={styles.readerYear}>{folio.year}</span></span>
+        <span className={styles.pageNumber}>GOAL {String(page.index + 1).padStart(2, "0")} / {String(folio.entries.length).padStart(2, "0")}</span>
       </header>
       <div className={styles.spread}>
         <div className={styles.notes}>
@@ -95,18 +95,18 @@ export function FolioReader({ folio }: { folio: GoalFolio }) {
               exit="exit"
               transition={{ duration: reduceMotion ? 0 : 0.38, ease: [0.22, 1, 0.36, 1] }}
             >
-              <TempoGoalCard fields={entry.fields} context="history" />
+              <TempoGoalCard fields={entry.fields} context="history" achieved={entry.status === "Completed"} />
             </motion.div>
           </AnimatePresence>
-          <div className={styles.openingCover} aria-hidden="true"><span>{folio.year}</span><small>THE LIVING FOLIO</small></div>
+          <div className={styles.openingCover} aria-hidden="true"><span>{folio.year}</span><small>YEAR IN GOALS</small></div>
         </div>
       </div>
       <footer className={styles.readerFooter}>
-        <Button variant="ghost" className={styles.turnButton} disabled={!previous} onClick={() => go(page.index - 1)} aria-label="Previous goal"><ArrowLeft size={18} /><span>Previous<small>{previous?.goal.title ?? "First chapter"}</small></span></Button>
+        <Button variant="ghost" className={styles.turnButton} disabled={!previous} onClick={() => go(page.index - 1)} aria-label="Previous goal"><ArrowLeft size={18} /><span>Previous<small>{previous?.goal.title ?? "First goal"}</small></span></Button>
         <p aria-live="polite" aria-atomic="true" className={styles.position}>{page.index + 1} <span>of {folio.entries.length}</span><span className="sr-only"> · {entry.goal.title}</span></p>
-        <Button variant="ghost" className={styles.turnButton} disabled={!next} onClick={() => go(page.index + 1)} aria-label="Next goal"><span>Next<small>{next?.goal.title ?? "Last chapter"}</small></span><ArrowRight size={18} /></Button>
+        <Button variant="ghost" className={styles.turnButton} disabled={!next} onClick={() => go(page.index + 1)} aria-label="Next goal"><span>Next<small>{next?.goal.title ?? "Last goal"}</small></span><ArrowRight size={18} /></Button>
       </footer>
-      <p className={styles.readerHint}>Swipe or use ← → to turn the page</p>
+      <p className={styles.readerHint}>Swipe or use ← → to move between goals</p>
     </section>
   );
 }

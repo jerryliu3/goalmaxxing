@@ -22,16 +22,16 @@ export function PastGoalsPage() {
       <button type="button" onClick={() => router.push("/insights#progress-achievements")} className={styles.back}><ArrowLeft size={15} aria-hidden="true" />Back to Progress</button>
       <header className={styles.pageHeader}>
         <div>
-          <p className={styles.eyebrow}>YOUR PERSONAL COLLECTION</p>
-          <h1 className={styles.pageTitle}>The living folio.</h1>
-          <p className={styles.intro}>The things you started. The steps you took.<br />A place for every chapter, wherever it led.</p>
+          <p className={styles.eyebrow}>EVERY GOAL YOU’VE SET</p>
+          <h1 className={styles.pageTitle}>The goal library.</h1>
+          <p className={styles.intro}>Everything you accomplished. The work you put in.</p>
         </div>
         {!loading && !loadError && <p className={styles.collectionCount}>{goalCount} past {goalCount === 1 ? "goal" : "goals"} · {folios.length} {folios.length === 1 ? "volume" : "volumes"}</p>}
       </header>
       {loadError ? <div className={styles.empty} role="alert"><h2>Your collection couldn’t be loaded.</h2><p>{loadError}</p><Button variant="outline" className="mt-5" onClick={reload}>Try again</Button></div>
         : loading || !state.progress ? <LoadingCard title="Opening your collection..." description="Gathering your past goals." />
         : folios.length ? <FolioShelf folios={folios} />
-        : <div className={styles.empty}><BookOpen size={36} strokeWidth={1.2} className="mx-auto" aria-hidden="true" /><h2>Your first volume is still being written.</h2><p>Completed, ended, and archived goals will find a home here. Keep showing up for what matters to you.</p><Button variant="outline" className="mt-5" onClick={() => router.push("/calendar")}>Back to your plan</Button></div>}
+        : <div className={styles.empty}><BookOpen size={36} strokeWidth={1.2} className="mx-auto" aria-hidden="true" /><h2>No past goals yet.</h2><p>Goals you complete, end, or archive will collect here. Keep showing up for what matters to you.</p><Button variant="outline" className="mt-5" onClick={() => router.push("/calendar")}>Back to your plan</Button></div>}
     </div>
   );
 }

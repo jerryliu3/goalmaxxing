@@ -20,7 +20,7 @@ export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
             type="button"
             className={styles.volume}
             style={{ "--folio-cloth": ["#344f45", "#785a3a", "#4d5266", "#704d50"][index % 4] } as CSSProperties}
-            aria-label={`Open ${folio.year} folio, ${folio.entries.length} ${folio.entries.length === 1 ? "goal" : "goals"}`}
+            aria-label={`Open ${folio.year}, ${folio.entries.length} ${folio.entries.length === 1 ? "goal" : "goals"}`}
             aria-haspopup="dialog"
             onClick={event => {
               returnFocus.current = event.currentTarget;
@@ -31,14 +31,14 @@ export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
               <span className={styles.pageEdges} aria-hidden="true" />
               <span className={styles.spine} aria-hidden="true">GOALMAXXING · {folio.year}</span>
               <span className={styles.cover}>
-                <span className={styles.coverTop}>THE LIVING FOLIO <ArrowUpRight size={17} aria-hidden="true" /></span>
+                <span className={styles.coverTop}>YEAR IN GOALS <ArrowUpRight size={17} aria-hidden="true" /></span>
                 <span className={styles.coverYear}>{folio.year}</span>
                 <span className={styles.coverRule} aria-hidden="true" />
                 <span className={styles.coverTitle}>A year of<br />showing up.</span>
                 <span className={styles.coverFooter}><BookOpen size={20} strokeWidth={1.3} aria-hidden="true" /><span>{folio.entries.length} {folio.entries.length === 1 ? "goal" : "goals"}<br />{folio.completions.toLocaleString()} completions</span></span>
               </span>
             </span>
-            <span className={styles.volumeCaption}><span>{folio.year} collection</span><span>Open folio ↗</span></span>
+            <span className={styles.volumeCaption}><span>{folio.year} goals</span><span>Open ↗</span></span>
           </button>
         ))}
       </div>
@@ -48,7 +48,7 @@ export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
           overlayClassName={styles.readerOverlay}
           onCloseAutoFocus={event => { event.preventDefault(); returnFocus.current?.focus(); }}
         >
-          <DialogTitle className="sr-only">{selected?.year} living folio</DialogTitle>
+          <DialogTitle className="sr-only">{selected?.year} past goals</DialogTitle>
           <DialogDescription className="sr-only">Your past goals, in chronological order. Use the previous and next buttons or left and right arrow keys. On touch screens, swipe a card. Press Escape to close.</DialogDescription>
           {selected && <FolioReader key={selected.year} folio={selected} />}
         </DialogContent>

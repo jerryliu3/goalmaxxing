@@ -27,14 +27,14 @@
 .empty h2 { font-family: var(--font-display); font-size: 1.8rem; color: var(--foreground); margin: 1rem 0 .5rem; }
 .empty p { max-width: 25rem; margin: auto; line-height: 1.7; }
 .readerOverlay { background: #1b261d55; backdrop-filter: blur(9px); }
-.readerDialog { width: min(1060px, calc(100% - 2rem)); max-width: none; padding: 0; gap: 0; border: 0; border-radius: 12px; background: #f5f0e5; color: #343d32; box-shadow: 0 35px 100px #1020164d; max-height: calc(100dvh - 2rem); overflow-y: auto; }
-.reader { padding: 1.5rem 2rem .85rem; }
-.readerHeader { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-right: 2rem; padding-bottom: 1.1rem; border-bottom: 1px solid #343d321c; font-family: var(--font-mono); font-size: .6rem; letter-spacing: .12em; }
+.readerDialog { width: min(1060px, calc(100% - 2rem)); max-width: none; height: min(760px, calc(100dvh - 2rem)); grid-template-rows: minmax(0, 1fr); padding: 0; gap: 0; border: 0; border-radius: 12px; background: #f5f0e5; color: #343d32; box-shadow: 0 35px 100px #1020164d; overflow: hidden; }
+.reader { display: flex; flex-direction: column; min-height: 0; padding: 1.5rem 2rem .85rem; }
+.readerHeader { flex: none; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-right: 2rem; padding-bottom: 1.1rem; border-bottom: 1px solid #343d321c; font-family: var(--font-mono); font-size: .6rem; letter-spacing: .12em; }
 .readerYear { margin-left: 1rem; color: #656959; }
 .pageNumber { font-size: .55rem; color: #656959; }
-.spread { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 3.5rem; padding: 2rem 1rem; perspective: 1400px; }
+.spread { position: relative; flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr); align-items: center; gap: 3.5rem; padding: 2rem 1rem; perspective: 1400px; }
 .spread::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 24px; transform: translateX(-50%); background: linear-gradient(90deg,transparent,#b5aa9717,#fff8,transparent); pointer-events: none; }
-.notes { min-width: 0; align-self: center; }
+.notes { min-width: 0; align-self: center; max-height: 100%; overflow-y: auto; overscroll-behavior: contain; padding-right: .5rem; }
 .notesTitle { font-family: var(--font-display); font-size: clamp(1.8rem,3vw,2.65rem); line-height: 1.05; letter-spacing: -.025em; margin: 1rem 0; overflow-wrap: anywhere; }
 .notes .eyebrow { color: #656959; }
 .status { display: inline-flex; gap: .4rem; align-items: center; font-size: .7rem; color: #666553; }
@@ -45,7 +45,7 @@
 .stats dd { font-family: var(--font-display); font-size: 2rem; margin-top: .15rem; }
 .stats small { font-family: var(--font-sans); font-size: .7rem; color: #656959; }
 .began { font-size: .65rem; color: #656959; margin-top: 1.75rem; }
-.milestones { margin-top: 1.5rem; max-height: 10rem; overflow-y: auto; }
+.milestones { margin-top: 1.5rem; }
 .milestones ol { margin-top: .5rem; }
 .milestones li { display: flex; justify-content: space-between; gap: .75rem; padding: .55rem 0; font-size: .7rem; border-bottom: 1px solid #343d3212; }
 .milestones li > span { display: flex; gap: .4rem; align-items: center; }
@@ -60,24 +60,25 @@
 .openingCover span { font-family: var(--font-display); font-size: 5rem; }
 .openingCover small { font-family: var(--font-mono); letter-spacing: .12em; font-size: .65rem; }
 @keyframes openCover { 0% { transform: rotateY(0deg); opacity: 1; } 65% { opacity: 1; } 100% { transform: rotateY(-160deg); opacity: 0; visibility: hidden; } }
-.readerFooter { display: flex; justify-content: space-between; align-items: center; gap: .5rem; border-top: 1px solid #343d321c; padding-top: .75rem; }
+.readerFooter { flex: none; display: flex; justify-content: space-between; align-items: center; gap: .5rem; border-top: 1px solid #343d321c; padding-top: .75rem; }
 .turnButton { min-height: 48px; height: auto; max-width: 42%; color: #343d32; border-radius: 7px; }
 .turnButton span { text-align: left; }
 .turnButton:last-child span { text-align: right; }
 .turnButton small { display: block; font-size: .6rem; color: #656959; font-weight: 400; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .position { font-family: var(--font-mono); font-size: .7rem; white-space: nowrap; }
 .position > span { color: #656959; }
-.readerHint { margin-top: .65rem; text-align: center; font-size: .6rem; color: #656959; }
+.readerHint { flex: none; margin-top: .65rem; text-align: center; font-size: .6rem; color: #656959; }
 @media (max-width: 640px) {
   .pageHeader { display: block; }
   .collectionCount { margin-top: 1rem; }
   .shelf { gap: 3rem; padding-top: 2.5rem; }
-  .readerDialog { width: calc(100% - 1rem); max-height: calc(100dvh - 1rem); }
+  .readerDialog { width: calc(100% - 1rem); height: min(680px, calc(100dvh - 1rem)); }
   .reader { padding: 1.2rem 1rem .8rem; }
   .readerHeader { font-size: .5rem; padding-right: 1.5rem; }
   .readerYear { margin-left: .35rem; }
   .pageNumber { font-size: .45rem; letter-spacing: .05em; }
-  .spread { grid-template-columns: 1fr; gap: 1.75rem; padding: 1.25rem .65rem; }
+  .spread { grid-template-columns: 1fr; grid-template-rows: auto auto; align-items: start; overflow-y: auto; overscroll-behavior: contain; gap: 1.75rem; padding: 1.25rem .65rem; }
+  .notes { max-height: none; overflow: visible; padding-right: 0; }
   .spread::before { display: none; }
   .cardStage { grid-row: 1; width: min(100%,360px); justify-self: center; }
   .cardLeaf :global(.tempo-card) { min-height: 330px; padding: 1.4rem; gap: 1.2rem; }
@@ -86,10 +87,14 @@
   .stats { margin-top: 1rem; }
   .began { margin-top: 1rem; }
   .turnButton small { max-width: 85px; }
-  .readerFooter { position: sticky; bottom: -.8rem; background: #f5f0e5; padding-bottom: .75rem; z-index: 4; }
+  .readerFooter { padding-bottom: .25rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .book { transition: none; }
   .volume:hover .book { transform: rotateY(-17deg) rotateX(5deg) rotateZ(-2deg); }
   .openingCover { display: none; animation: none; }
+}
+@media (min-width: 641px) and (max-height: 720px) {
+  .cardLeaf :global(.tempo-card) { min-height: 300px; }
+  .spread { gap: 2.25rem; padding: 1.25rem 1rem; }
 }
