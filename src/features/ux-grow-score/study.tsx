@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import {
   DEFAULT_ACCEL_GAIN,
@@ -117,16 +118,16 @@ export function GrowScoreStudy() {
   return (
     <main className={`gs-study gs-${formula}`}>
       <header className="gs-toolbar">
-        <a href="/ux" className="gs-brand">
+        <Link href="/ux" className="gs-brand">
           <span>g↗</span>
           <div>
             GOALMAXXING<small>GROW SCORE / UNBOUNDED REVISIONS</small>
           </div>
-        </a>
+        </Link>
         <span className="gs-small">Study only · does not edit /ux/journeys</span>
-        <a href="/ux/journeys" className="gs-back-link">
+        <Link href="/ux/journeys" className="gs-back-link">
           Journeys Grow <ArrowUpRight size={14} />
-        </a>
+        </Link>
       </header>
 
       <section className="gs-intro">
@@ -652,7 +653,7 @@ export function GrowScoreStudy() {
               <br />
               if v &lt; 0: score and v both × retention
               <br />
-              {"    "}// exponential decay; v eases back to 0
+              {"    // exponential decay; v eases back to 0"}
             </code>
             <p>
               <strong>Today vs average</strong> (default 0.20): rest and surges.

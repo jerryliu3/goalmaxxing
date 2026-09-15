@@ -1,5 +1,6 @@
 "use client";
 
+import { useReducedMotion } from "motion/react";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { LandingWowMountain } from "@/components/landing/landing-wow-mountain";
 import {
@@ -24,14 +25,6 @@ export { APP_BOOT_READY_STORAGE_KEY } from "@/components/layout/app-boot-ready";
 const BOOT_TIMEOUT_MS = 15000;
 const CLIMB_LOOP_MS = Math.round(14000 / 1.7);
 
-function readPrefersReducedMotion() {
-  return (
-    typeof window !== "undefined" &&
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
-
 async function warmPlannerContext() {
   const month = getMonthInTimezone(resolveUserTimezone());
   const cacheKey = buildPlannerContextCacheKey(month);
@@ -46,22 +39,8 @@ async function warmPlannerContext() {
 }
 
 function BootClimbAnimation() {
-  const [reduceMotion, setReduceMotion] = useState(false);
+  const reduceMotion = useReducedMotion() === true;
   const [loopProgress, setLoopProgress] = useState(0.08);
-
-  useLayoutEffect(() => {
-    setReduceMotion(readPrefersReducedMotion());
-  }, []);
-
-  useEffect(() => {
-    if (typeof window.matchMedia !== "function") {
-      return;
-    }
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReduceMotion(media.matches);
-    media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
-  }, []);
 
   useEffect(() => {
     if (reduceMotion) {

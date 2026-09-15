@@ -7,8 +7,8 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 describe("loadPublicProfileBundleByUsername", () => {
   it("is exported from the public profile loader module", async () => {
-    const module = await import("@/lib/social/public-profile");
-    expect(typeof module.loadPublicProfileBundleByUsername).toBe("function");
+    const loaderModule = await import("@/lib/social/public-profile");
+    expect(typeof loaderModule.loadPublicProfileBundleByUsername).toBe("function");
   });
 });
 
