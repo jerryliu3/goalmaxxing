@@ -1,6 +1,6 @@
 "use client";
 
-import { UserRound } from "lucide-react";
+import { Check, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { planLedgerTitleClass, planLedgerSubtitleClass } from "@/features/planner/calendar-day-chrome";
 
@@ -27,6 +27,7 @@ export function CalendarPartnerChip({
         expanded
           ? "gap-3 rounded-[10px] bg-muted px-2 py-3"
           : "gap-1.5 rounded-[10px] border-2 border-primary bg-background px-1.5 py-1 text-[11px]",
+        completed && "text-muted-foreground",
         className
       )}
       data-calendar-partner-chip=""
@@ -42,8 +43,7 @@ export function CalendarPartnerChip({
             "min-w-0 font-medium",
             expanded
               ? planLedgerTitleClass
-              : "truncate",
-            completed && "line-through"
+              : "truncate"
           )}
         >
           {title}
@@ -60,6 +60,7 @@ export function CalendarPartnerChip({
           </p>
         ) : null}
       </div>
+      {completed && <Check className="size-3.5 shrink-0" aria-hidden="true" />}
       <span className="sr-only">{statusCopy}</span>
     </div>
   );

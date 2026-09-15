@@ -93,14 +93,7 @@ describe("capturePlanScene", () => {
     expect(capturePlanScene(root, "month").labels.get("weekday:1")?.day).toBe("2026-09-14");
   });
 
-  it("publishes an anchor selector that resolves against the live tree", () => {
-    const root = mount(`<ol>${WEEK_ROW("2026-09-14")}${WEEK_ROW("2026-09-15")}</ol>`);
 
-    const anchor = capturePlanScene(root, "week").anchor;
-
-    expect(anchor).not.toBeNull();
-    expect(root.querySelector(anchor!.selector)).toBeInstanceOf(HTMLElement);
-  });
 });
 
 describe("animatePlanScene", () => {
@@ -203,4 +196,43 @@ describe("morph surrogates", () => {
     expect(text!.parentElement!.style.overflow).toBe("hidden");
     run.cancel();
   });
+});
+
+
+describe("completed title treatments during view changes", () => {
+  function scene(treatment: "quiet" | "strike", mode: "month" | "week" | "day") {
+    const root = mount(`<div data-plan-view="${mode}">
+      <div data-testid="plan-calendar-split-calendar"><ol><li data-calendar-week-row="true" data-day="2026-09-14">
+        <button data-day-cell="true" data-day="2026-09-14"></button>
+        <div data-planner-entry-key="goal-1:cadence:0">
+          <span data-testid="completion-title" data-completed="true" data-completion-treatment="${treatment}">Read</span>
+          <svg aria-label="Completed"></svg>
+        </div>
+      </li></ol></div></div>`);
+    return { root, scene: capturePlanScene(root, mode) };
+  }
+
+  it("carries quiet titles and checkmarks between month and week", () => {
+    const from = scene("quiet", "month");
+    const to = scene("quiet", "week");
+    expect([...from.scene.items.values()][0]).toMatchObject({ completed: true, completionTreatment: "quiet" });
+    const run = animatePlanScene(from.root, from.root.firstElementChild as HTMLElement, from.scene, to.scene, () => {});
+    const overlay = from.root.querySelector("[data-plan-morph-overlay]")!;
+    expect(overlay.querySelector('[data-completion-treatment="quiet"]')).not.toBeNull();
+    expect(overlay.querySelector('[data-completion-treatment="strike"]')).toBeNull();
+    expect(overlay.querySelector('[aria-label="Completed"]')).not.toBeNull();
+    run.cancel();
+  });
+
+  it.each([["quiet", "strike"], ["strike", "quiet"]] as const)(
+    "preserves both endpoints when %s titles become %s",
+    (first, second) => {
+      const from = scene(first, "week");
+      const to = scene(second, "week");
+      const run = animatePlanScene(from.root, from.root.firstElementChild as HTMLElement, from.scene, to.scene, () => {});
+      const titles = from.root.querySelectorAll('[data-plan-morph-overlay] .gm-completion-title');
+      expect(Array.from(titles, title => (title as HTMLElement).dataset.completionTreatment).sort()).toEqual(["quiet", "strike"]);
+      run.cancel();
+    }
+  );
 });

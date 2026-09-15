@@ -342,10 +342,10 @@ describe("calendar surface extracted components", () => {
     expect(partnerChip).not.toHaveClass("bg-transparent");
     expect(partnerChip.querySelector("svg")).not.toBeNull();
     expect(screen.getByText("Partner marked this done.")).toBeInTheDocument();
-    expect(screen.getByText("Partner stretch")).toHaveClass("line-through");
+    expect(screen.getByText("Partner stretch")).not.toHaveClass("line-through");
   });
 
-  it("shows overflow as +N without a completed mark on month cells", () => {
+  it("shows overflow as +N and a quiet completion check on month cells", () => {
     const view = renderWithDnd(
       <CalendarMonthDayCell
         day="2026-08-06"
@@ -383,7 +383,8 @@ describe("calendar surface extracted components", () => {
       "data-completed",
       "true"
     );
-    expect(within(view.container).queryByLabelText("Completed")).not.toBeInTheDocument();
+    expect(within(view.container).getByLabelText("Completed")).toBeInTheDocument();
+    expect(within(view.container).getByText("Easy run")).toHaveAttribute("data-completion-treatment", "quiet");
     expect(
       within(view.container).queryByRole("button", { name: "Mark session done" })
     ).not.toBeInTheDocument();
@@ -654,7 +655,7 @@ describe("CalendarPartnerChip", () => {
       "Partner run. Partner marked this done."
     );
     expect(doneChip.querySelector("svg")).not.toBeNull();
-    expect(screen.getByText("Partner run")).toHaveClass("line-through");
+    expect(screen.getByText("Partner run")).not.toHaveClass("line-through");
   });
 });
 

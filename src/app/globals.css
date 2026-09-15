@@ -341,7 +341,7 @@ body {
   transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
-.gm-completion-title[data-completed="true"]::after {
+.gm-completion-title[data-completed="true"]:not([data-completion-treatment="quiet"])::after {
   transform: translateY(-50%) scaleX(1);
 }
 

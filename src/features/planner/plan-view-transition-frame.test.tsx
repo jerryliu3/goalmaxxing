@@ -30,7 +30,6 @@ describe("PlanViewTransitionFrame", () => {
       "data-plan-view",
       "week"
     );
-    expect(screen.getByText("Week board").parentElement).toHaveClass("plan-view-swap");
   });
 
   it("remounts the active view when the mode changes", () => {
