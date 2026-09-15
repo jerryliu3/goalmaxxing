@@ -23,7 +23,7 @@ export function PastGoalsPage() {
       <header className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>EVERY GOAL YOU’VE SET</p>
-          <h1 className={styles.pageTitle}>The goal library.</h1>
+          <h1 className={styles.pageTitle}>The goal library</h1>
           <p className={styles.intro}>Everything you accomplished. The work you put in.</p>
         </div>
         {!loading && !loadError && <p className={styles.collectionCount}>{goalCount} past {goalCount === 1 ? "goal" : "goals"} · {folios.length} {folios.length === 1 ? "volume" : "volumes"}</p>}

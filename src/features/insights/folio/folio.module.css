@@ -20,8 +20,6 @@
 .coverTitle { font-family: var(--font-display); font-size: 1.6rem; line-height: 1.12; letter-spacing: -.015em; }
 .coverFooter { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-top: auto; padding-top: 1.5rem; font-size: .65rem; line-height: 1.6; color: #e6dbc4; }
 .coverFooter > span { text-align: right; }
-.volumeCaption { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.75rem; font-size: .8rem; }
-.volumeCaption > span:last-child { color: var(--muted-foreground); font-size: .7rem; }
 @media (hover: hover) { .volume:hover .book { transform: rotateY(-7deg) rotateX(2deg) rotateZ(0deg) translateY(-9px); } }
 .empty { padding: 4rem 1.5rem; text-align: center; color: var(--muted-foreground); }
 .empty h2 { font-family: var(--font-display); font-size: 1.8rem; color: var(--foreground); margin: 1rem 0 .5rem; }

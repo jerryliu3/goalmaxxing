@@ -38,7 +38,6 @@ export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
                 <span className={styles.coverFooter}><BookOpen size={20} strokeWidth={1.3} aria-hidden="true" /><span>{folio.entries.length} {folio.entries.length === 1 ? "goal" : "goals"}<br />{folio.completions.toLocaleString()} completions</span></span>
               </span>
             </span>
-            <span className={styles.volumeCaption}><span>{folio.year} goals</span><span>Open ↗</span></span>
           </button>
         ))}
       </div>
