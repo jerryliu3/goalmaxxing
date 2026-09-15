@@ -10,6 +10,7 @@ import "./tempo-goal-creation.css";
 export function TempoGoalCard({
   fields,
   context = "creation",
+  achieved = false,
   isTask = false,
   taskSchedule,
   visibility = {
@@ -23,6 +24,7 @@ export function TempoGoalCard({
 }: {
   fields: GoalCreationFields;
   context?: "creation" | "history";
+  achieved?: boolean;
   isTask?: boolean;
   taskSchedule?: { date: string; time: string };
   visibility?: TempoCardVisibility;
@@ -72,7 +74,13 @@ export function TempoGoalCard({
       aria-label={context === "history" ? `${fields.title} goal card` : "Goal card preview"}
     >
       <div className="tempo-card-meta">
-        <span>{context === "history" ? "A chapter in your story" : "Your commitment, taking shape"}</span>
+        <span>
+          {context === "history"
+            ? achieved
+              ? "A goal you accomplished"
+              : "A goal you showed up for"
+            : "Your commitment, taking shape"}
+        </span>
         {visibility.schedule && fields.is_private && <span>Private</span>}
         <ArrowUpRight
           className="tempo-card-arrow"
