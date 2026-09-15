@@ -14,6 +14,7 @@ import {
   readTabDataCache,
   writeTabDataCache,
 } from "@/lib/cache/tab-data-cache";
+import { reportError } from "@/lib/observability/report-error";
 import { toLocalDateString } from "@/lib/dates/day";
 import { createClient } from "@/lib/supabase/client";
 import { useDuoLaneError } from "@/features/social/duo/use-duo-lane-error";
@@ -77,6 +78,7 @@ export function useInsightsData({
     ? readTabDataCache<InsightsData>(initialCacheKey)
     : null;
   const [state, setState] = useState<InsightsData>(initialCachedState ?? emptyInsights);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(!initialCachedState);
   const loadRequestIdRef = useRef(0);
   const visibleLoadCountRef = useRef(0);
@@ -152,6 +154,7 @@ export function useInsightsData({
           setState(cachedState);
           stateRef.current = cachedState;
           clearLaneError();
+          setLoadError(null);
           if (!forceRefresh && insightsDataCacheKey && isTabDataCacheFresh(insightsDataCacheKey)) {
             setLoading(false);
             return;
@@ -185,6 +188,7 @@ export function useInsightsData({
             writeTabDataCache(insightsDataCacheKey, nextState);
           }
           clearLaneError();
+          setLoadError(null);
         } finally {
           if (shouldShowLoading) {
             visibleLoadCountRef.current = Math.max(visibleLoadCountRef.current - 1, 0);
@@ -195,7 +199,14 @@ export function useInsightsData({
             setLoading(false);
           }
         }
+      } catch (error) {
+        if (requestId === loadRequestIdRef.current) {
+          setLoadError(error instanceof Error ? error.message : "Goal history could not be loaded.");
+        }
+        reportError(error, { surface: "insights" });
+        throw error;
       } finally {
+        if (requestId === loadRequestIdRef.current) setLoading(false);
         window.clearTimeout(timeoutId);
       }
     },
@@ -240,6 +251,8 @@ export function useInsightsData({
     state,
     loading,
     laneError,
+    loadError,
+    reload: refreshInBackground,
     loadData,
     redirectToLogin,
   };
