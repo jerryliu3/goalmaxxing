@@ -9,7 +9,24 @@ export type Json =
 export type Database = {
   private: {
     Tables: {
-      [_ in never]: never
+      xp_recompute_outbox: {
+        Row: {
+          goal_id: string
+          queued_at: string
+          user_id: string
+        }
+        Insert: {
+          goal_id: string
+          queued_at?: string
+          user_id: string
+        }
+        Update: {
+          goal_id?: string
+          queued_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -85,6 +102,10 @@ export type Database = {
         }
         Returns: string
       }
+      enqueue_goal_xp_recompute: {
+        Args: { p_goal_id: string; p_user_id: string }
+        Returns: undefined
+      }
       enqueue_notification_outbox: {
         Args: {
           p_available_at?: string
@@ -140,6 +161,22 @@ export type Database = {
           track_key: string
           xp_amount: number
         }[]
+      }
+      goal_xp_ledger_diffs: {
+        Args: { p_force_zero?: boolean; p_goal_id: string; p_user_id: string }
+        Returns: {
+          completion_id: string
+          completion_source: Database["public"]["Enums"]["completion_source"]
+          earned_on: string
+          event_type: string
+          source_key: string
+          track_key: string
+          xp_delta: number
+        }[]
+      }
+      goal_xp_pending_delta: {
+        Args: { p_goal_id: string; p_user_id: string }
+        Returns: number
       }
       health_ingest_lock_key: { Args: { p_user_id: string }; Returns: number }
       health_metric_uses_fuzzy_cluster: {
@@ -238,6 +275,10 @@ export type Database = {
           p_target_count: number
         }
         Returns: number
+      }
+      owned_linked_target_ids: {
+        Args: { p_source_goal_id: string; p_user_id: string }
+        Returns: string[]
       }
       planner_cadence_period_key: {
         Args: {
@@ -2695,6 +2736,7 @@ export type Database = {
         Returns: Json
       }
       dissolve_team_service: { Args: never; Returns: boolean }
+      drain_xp_recompute_outbox: { Args: { p_limit?: number }; Returns: number }
       find_profile_by_username: {
         Args: { p_limit?: number; p_query: string }
         Returns: {
@@ -2969,14 +3011,7 @@ export type Database = {
           upserted_count: number
         }[]
       }
-      drain_xp_recompute_outbox: {
-        Args: { p_limit?: number }
-        Returns: number
-      }
-      preview_queued_xp_delta: {
-        Args: never
-        Returns: number
-      }
+      preview_queued_xp_delta: { Args: never; Returns: number }
       provision_synthetic_users_service: {
         Args: { p_goals_per_user?: number; p_target_count?: number }
         Returns: number
