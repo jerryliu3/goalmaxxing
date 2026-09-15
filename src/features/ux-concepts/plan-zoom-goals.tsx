@@ -26,7 +26,7 @@ export function PlanZoomGoals({
   );
   const [focusId, setFocusId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-  const coverRects = useRef(new Map<string, DOMRect>());
+  const [coverRect, setCoverRect] = useState<DOMRect | undefined>(undefined);
 
   const focus = goals.find((goal) => goal.id === focusId) ?? null;
 
@@ -46,7 +46,7 @@ export function PlanZoomGoals({
 
   const openGoal = (id: string, rect?: DOMRect) => {
     if (rect) {
-      coverRects.current.set("page", rect);
+      setCoverRect(rect);
     }
     setFocusId(id);
     setMessage(`${goals.find((goal) => goal.id === id)?.name ?? "Goal"} selected`);
@@ -60,7 +60,7 @@ export function PlanZoomGoals({
             goal={focus}
             goals={goals}
             reduceMotion={reduceMotion}
-            origin={coverRects.current.get("page")}
+            origin={coverRect}
             onBack={() => {
               setFocusId(null);
               setMessage("All goals");
