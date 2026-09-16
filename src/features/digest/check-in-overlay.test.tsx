@@ -121,14 +121,13 @@ describe("CheckInOverlay", () => {
 
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText("Your daily check-in is ready")).toBeInTheDocument();
-    expect(screen.queryByText("yesterday: 0 of 1 done")).toBeNull();
+    expect(screen.queryByRole("tab", { name: "Recap" })).toBeNull();
     await waitFor(() =>
       expect(mocks.postJson).toHaveBeenCalledWith("/api/digest/ack", {})
     );
     expect(mocks.postJson).not.toHaveBeenCalledWith("/api/digest/generate", {});
 
     await user.click(screen.getByRole("button", { name: "Open" }));
-    expect(screen.getByText("yesterday: 0 of 1 done")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Recap" })).toHaveAttribute(
       "data-state",
       "active"
@@ -140,6 +139,22 @@ describe("CheckInOverlay", () => {
 
     await user.click(screen.getByRole("tab", { name: "Coach" }));
     expect(await screen.findByText("Start with Tempo run.")).toBeInTheDocument();
+  });
+
+  it("recaps only the window that just closed", async () => {
+    finishOnboarding();
+    const user = userEvent.setup();
+    render(<CheckInOverlay />);
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Open" }));
+
+    expect(screen.getByText("0 of 1 done")).toBeInTheDocument();
+    expect(screen.getByText(/Yesterday · 2026-09-08/)).toBeInTheDocument();
+    expect(screen.getByText("Strength")).toBeInTheDocument();
+    expect(screen.getByText("Missed")).toBeInTheDocument();
+    // The window ahead is a decision, not a recap.
+    expect(screen.queryByText("Today")).toBeNull();
   });
 
   it("names the cadence in the prompt", async () => {

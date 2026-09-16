@@ -16,7 +16,6 @@ import {
   buildCheckInCoachQuestion,
   buildStructuredCheckInActions,
   checkInHeading,
-  checkInRecapSummary,
   primaryCheckInAction,
   type CheckInAction,
 } from "@/features/digest/check-in-actions";
@@ -36,6 +35,18 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+
+const CHECK_IN_TABS = [
+  { value: "recap", label: "Recap" },
+  { value: "decisions", label: "Decisions" },
+  { value: "coach", label: "Coach" },
+] as const;
+
+// The shared tab list styles a pill by default and positions its underline with
+// a `data-horizontal` variant this project does not define. Both are replaced
+// here with the underlined line used by the goal creation tabs.
+const CHECK_IN_TAB_TRIGGER_CLASS =
+  "relative h-auto flex-1 rounded-none border-0 py-2 text-sm font-medium after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-primary data-[state=active]:after:opacity-100";
 
 /**
  * The period check-in starts as a small, non-recurring prompt. Opening it
@@ -223,16 +234,24 @@ export function CheckInOverlay({
           <>
             <DialogHeader>
               <DialogTitle>{checkInHeading(kind)}</DialogTitle>
-              <DialogDescription>{checkInRecapSummary(facts)}</DialogDescription>
             </DialogHeader>
             <Tabs defaultValue="recap" className="flex flex-col gap-3">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="recap">Recap</TabsTrigger>
-                <TabsTrigger value="decisions">Decisions</TabsTrigger>
-                <TabsTrigger value="coach">Coach</TabsTrigger>
+              <TabsList
+                variant="line"
+                className="w-full gap-0 rounded-none border-b border-border/70 p-0"
+              >
+                {CHECK_IN_TABS.map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className={CHECK_IN_TAB_TRIGGER_CLASS}
+                  >
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
               </TabsList>
               <TabsContent value="recap">
-                <DigestFactsPanel recap={facts.recap} ahead={facts.ahead} />
+                <RecapPanel recap={facts.recap} />
               </TabsContent>
               <TabsContent value="decisions">
                 <CheckInActionList
@@ -289,30 +308,41 @@ export function CheckInOverlay({
   );
 }
 
-function DigestFactsPanel({
-  recap,
-  ahead,
-}: {
-  recap: DigestWindowFacts;
-  ahead: DigestWindowFacts;
-}) {
+/**
+ * Recap looks backwards only. What the window ahead implies is a decision, so
+ * it belongs on the Decisions tab rather than being restated here.
+ */
+function RecapPanel({ recap }: { recap: DigestWindowFacts }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      {[recap, ahead].map((window) => (
-        <div key={window.label} className="rounded-lg border p-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            {window.label}
-          </p>
-          <p className="mt-2 text-lg font-semibold">
-            {window.completed} of {window.placed} done
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {window.start === window.end
-              ? window.start
-              : `${window.start} – ${window.end}`}
-          </p>
-        </div>
-      ))}
+    <div className="space-y-3">
+      <div>
+        <p className="text-lg font-semibold">
+          {recap.placed === 0
+            ? "Nothing was placed"
+            : `${recap.completed} of ${recap.placed} done`}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {recap.label}
+          {recap.start === recap.end
+            ? ` · ${recap.start}`
+            : ` · ${recap.start} – ${recap.end}`}
+        </p>
+      </div>
+      {recap.items.length > 0 ? (
+        <ul className="space-y-1">
+          {recap.items.map((item) => (
+            <li
+              key={`${item.title}:${item.date}`}
+              className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
+            >
+              <span className="truncate text-sm">{item.title}</span>
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {item.state === "completed" ? "Done" : "Missed"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }

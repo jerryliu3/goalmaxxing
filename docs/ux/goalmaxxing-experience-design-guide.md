@@ -425,7 +425,9 @@ did not ask for it, so it must not take the screen hostage. Showing that prompt
 counts as the day's presentation, so it does not return after a refresh.
 Opening it reveals three tabs:
 
-1. **Recap** — the factual window as a score, not a grade.
+1. **Recap** — the window that just closed, as a score rather than a grade, with
+   the sessions it held. It looks backwards only; what the window ahead implies
+   is a decision, so it is not restated here.
 2. **Decisions** — work to recover, goals with nothing placed, and the hours the
    remaining sessions add up to. Ordered by what the cadence is for — a month
    starts by deciding what to take on, a week by cleaning up, a day by looking
