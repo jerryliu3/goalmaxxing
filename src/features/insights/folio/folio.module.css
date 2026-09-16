@@ -25,6 +25,7 @@
 .empty h2 { font-family: var(--font-display); font-size: 1.8rem; color: var(--foreground); margin: 1rem 0 .5rem; }
 .empty p { max-width: 25rem; margin: auto; line-height: 1.7; }
 .readerOverlay { background: #1b261d55; backdrop-filter: blur(9px); }
+.readerOverlayLeaving { animation: fadeOverlay .95s cubic-bezier(.22,1,.36,1) both; }
 .readerDialog { width: min(1060px, calc(100% - 2rem)); max-width: none; height: min(760px, calc(100dvh - 2rem)); grid-template-rows: minmax(0, 1fr); padding: 0; gap: 0; border: 0; border-radius: 12px; background: transparent; color: #343d32; box-shadow: none; overflow: visible; }
 .reader { display: flex; flex-direction: column; min-height: 0; padding: 1.5rem 2rem .85rem; }
 .readerHeader { flex: none; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-right: 2rem; padding-bottom: 1.1rem; border-bottom: 1px solid #343d321c; font-family: var(--font-mono); font-size: .6rem; letter-spacing: .12em; }
@@ -92,31 +93,78 @@
   .spread { gap: 2.25rem; padding: 1.25rem 1rem; }
 }
 
-/* One book travels from the shelf; the reader appears behind its opening cover. */
+/* Pages sit behind the reader; the cover opens on top so the panel is the page. */
 .volume[data-open="true"] .book { visibility: hidden; }
 .readerDialog[data-slot="dialog-content"] { animation: none; max-width: none; }
-.readerSurface { display: grid; min-height: 0; height: 100%; border-radius: inherit; overflow: hidden; background: #f5f0e5; box-shadow: 0 35px 100px #1020164d; }
-.readerDialog[data-entering="true"] .readerSurface { animation: revealReader .9s cubic-bezier(.22,1,.36,1) both; }
+.readerSurface { position: relative; z-index: 2; display: grid; min-height: 0; height: 100%; border-radius: inherit; overflow: hidden; background: #f5f0e5; box-shadow: 0 35px 100px #1020164d; transform-origin: center center; }
+.readerDialog[data-entering="true"] .readerSurface { animation: revealReader .95s cubic-bezier(.22,1,.36,1) both; }
+.readerDialog[data-leaving="true"] .readerSurface { animation: concealReader .95s cubic-bezier(.22,1,.36,1) both; }
 .readerDialog > [data-slot="dialog-close"] { z-index: 5; }
+.readerDialog[data-entering="true"] > [data-slot="dialog-close"],
+.readerDialog[data-leaving="true"] > [data-slot="dialog-close"] { opacity: 0; pointer-events: none; }
 .flightStage { position: absolute; inset: 0; display: grid; place-items: center; perspective: 1500px; pointer-events: none; }
-.flyingBook { transform-style: preserve-3d; animation: bookArrival .9s cubic-bezier(.22,1,.36,1) both; }
+.flightStage[data-folio-flight-layer="pages"] { z-index: 1; }
+.flightStage[data-folio-flight-layer="cover"] { z-index: 3; }
+.flightStage[data-folio-flight-layer="pages"] .cover { display: none; }
+.flightStage[data-folio-flight-layer="cover"] .pageEdges,
+.flightStage[data-folio-flight-layer="cover"] .spine { display: none; }
+.flightStage[data-folio-flight-layer="cover"] .book::after { display: none; }
+.flightStage[data-folio-flight-layer="pages"] .book::before {
+  content: "";
+  position: absolute;
+  inset: 7px 4px 6px 8px;
+  border-radius: 1px 6px 6px 1px;
+  background: #f5f0e5;
+  box-shadow: inset 0 0 0 1px #d9d0bc55;
+  transform: translateZ(1px);
+}
+.flyingBook { transform-style: preserve-3d; }
+.readerDialog[data-entering="true"] .flyingBook { animation: bookArrival .95s cubic-bezier(.22,1,.36,1) both; }
+.readerDialog[data-leaving="true"] .flyingBook { animation: bookReturn .95s cubic-bezier(.22,1,.36,1) both; }
 .flyingBook .book { width: 100%; height: 100%; transform: none; transition: none; }
-.flyingBook .cover { transform-origin: left center; backface-visibility: hidden; animation: unfoldBook .9s cubic-bezier(.22,1,.36,1) both; }
+.flyingBook .cover { transform-origin: left center; backface-visibility: hidden; }
+.readerDialog[data-entering="true"] .flyingBook .cover { animation: unfoldBook .95s cubic-bezier(.55,.05,.25,1) both; }
+.readerDialog[data-leaving="true"] .flyingBook .cover { animation: foldBook .95s cubic-bezier(.55,.05,.25,1) both; }
 @keyframes bookArrival {
   0% { transform: translate(var(--flight-x),var(--flight-y)) var(--flight-transform); opacity: 1; }
-  45% { transform: translate(0,0) rotateY(0deg) rotateX(0deg) rotateZ(0deg); opacity: 1; }
-  75% { transform: translate(0,0) scale(1.04); opacity: 1; }
-  100% { transform: translate(0,0) scale(1.06); opacity: 0; }
+  40% { transform: translate(0,0) rotateY(0deg) rotateX(0deg) rotateZ(0deg); opacity: 1; }
+  72% { transform: translate(0,0); opacity: 1; }
+  100% { transform: translate(0,0); opacity: 0; }
+}
+@keyframes bookReturn {
+  0%, 28% { transform: translate(0,0); opacity: 0; }
+  36% { transform: translate(0,0); opacity: 1; }
+  58% { transform: translate(0,0); opacity: 1; }
+  100% { transform: translate(var(--flight-x),var(--flight-y)) var(--flight-transform); opacity: 1; }
 }
 @keyframes unfoldBook {
-  0%, 38% { transform: translateZ(13px) rotateY(0deg); }
+  0%, 40% { transform: translateZ(13px) rotateY(0deg); }
+  72% { transform: translateZ(13px) rotateY(-128deg); }
   100% { transform: translateZ(13px) rotateY(-165deg); }
 }
+@keyframes foldBook {
+  0%, 30% { transform: translateZ(13px) rotateY(-165deg); }
+  62% { transform: translateZ(13px) rotateY(0deg); }
+  100% { transform: translateZ(13px) rotateY(0deg); }
+}
 @keyframes revealReader {
-  0%, 48% { opacity: 0; transform: scale(.88); }
+  0%, 36% { opacity: 0; transform: scale(var(--reveal-sx), var(--reveal-sy)); }
+  40% { opacity: 1; transform: scale(var(--reveal-sx), var(--reveal-sy)); }
+  70% { opacity: 1; transform: scale(var(--reveal-sx), var(--reveal-sy)); animation-timing-function: cubic-bezier(.4,0,.2,1); }
   100% { opacity: 1; transform: scale(1); }
+}
+@keyframes concealReader {
+  0% { opacity: 1; transform: scale(1); animation-timing-function: cubic-bezier(.4,0,.2,1); }
+  32% { opacity: 1; transform: scale(var(--reveal-sx), var(--reveal-sy)); }
+  58% { opacity: 1; transform: scale(var(--reveal-sx), var(--reveal-sy)); }
+  66%, 100% { opacity: 0; transform: scale(var(--reveal-sx), var(--reveal-sy)); }
+}
+@keyframes fadeOverlay {
+  0%, 58% { opacity: 1; }
+  100% { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .flightStage { display: none; }
-  .readerDialog[data-entering="true"] .readerSurface { animation: none; }
+  .readerDialog[data-entering="true"] .readerSurface,
+  .readerDialog[data-leaving="true"] .readerSurface { animation: none; }
 }

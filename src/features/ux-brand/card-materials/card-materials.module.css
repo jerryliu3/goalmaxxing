@@ -1,0 +1,107 @@
+.page { --study-ink: #303a32; --study-muted: #667066; --study-line: #344a3424; --study-ground: #f2f0e9; min-height: 100dvh; background: var(--study-ground); color: var(--study-ink); }
+.page[data-backdrop="ink"] { --study-ink: #eeeadd; --study-muted: #a9b3a6; --study-line: #d2ddc82a; --study-ground: #202923; }
+.container { max-width: 1260px; margin: auto; padding: 2rem 3rem 1rem; }
+.back { display: inline-flex; gap: .6rem; align-items: center; font-size: .8rem; color: var(--study-muted); min-height: 44px; }
+.hero { padding: 4rem 0 3rem; }
+.eyebrow, .conceptHeader > span { font-family: var(--font-mono); font-size: .65rem; letter-spacing: .13em; }
+.hero h1 { font-family: var(--font-display); font-size: clamp(3.8rem,8vw,7.5rem); font-weight: 400; line-height: .93; letter-spacing: -.05em; margin: 1.5rem 0; }
+.hero h1 em { font-weight: 400; color: var(--study-muted); }
+.hero > p:last-of-type { max-width: 34rem; font-size: 1rem; line-height: 1.8; color: var(--study-muted); }
+.hero nav { display: flex; flex-wrap: wrap; gap: .4rem 1.5rem; margin-top: 1.8rem; }
+.hero nav a { display: inline-flex; align-items: center; gap: .4rem; font-size: .8rem; min-height: 44px; border-bottom: 1px solid var(--study-line); }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 2rem; padding: 1.2rem 0; border-block: 1px solid var(--study-line); margin-bottom: 3rem; }
+.controls label { display: flex; align-items: center; gap: .6rem; min-height: 44px; font-size: .75rem; }
+.controls select { background: var(--study-ground); color: var(--study-ink); padding: .7rem; border: 1px solid var(--study-line); border-radius: 5px; max-width: 100%; }
+.controls input { accent-color: #66826d; width: 16px; height: 16px; }
+.page a:focus-visible, .page button:focus-visible, .page input:focus-visible, .page select:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
+.grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 4rem 2.5rem; }
+.concept { min-width: 0; scroll-margin-top: 2rem; }
+.conceptHeader { min-height: 195px; padding: 0 .25rem 1.5rem; }
+.conceptHeader > span { color: var(--study-muted); }
+.conceptHeader h2 { font-family: var(--font-display); font-size: 2.7rem; line-height: 1.1; font-weight: 400; letter-spacing: -.03em; margin: .8rem 0; }
+.conceptHeader p { font-size: .85rem; line-height: 1.75; color: var(--study-muted); max-width: 30rem; }
+.stage { --rx: 5deg; --ry: -9deg; --light-x: 25%; --light-y: 10%; position: relative; isolation: isolate; display: grid; place-items: center; min-height: 535px; padding: 3rem 2.25rem; border-radius: 16px; background: linear-gradient(150deg,#ffffff3b,#7f92750f); border: 1px solid var(--study-line); perspective: 1200px; }
+.stage[data-posed="true"] { --rx: -9deg; --ry: 17deg; --light-x: 80%; --light-y: 25%; }
+.object { position: relative; width: 100%; max-width: 330px; transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateY(var(--ry)); transition: transform .2s ease-out; }
+.object :global(.tempo-card) { min-height: 382px; height: auto; gap: 1.25rem; padding: 1.65rem; border-radius: 18px; transform-style: preserve-3d; overflow: visible; }
+.object :global(.tempo-card h2) { font-size: 27px; }
+.object :global(.tempo-card-target strong) { font-size: 90px; }
+.object :global(.tempo-card-meta) { font-size: .55rem; letter-spacing: .07em; }
+.object :global(.tempo-card-dates) { font-size: .6rem; letter-spacing: 0; }
+.object :global(.tempo-card-period) { font-size: .8rem; }
+.backplate, .middleLayer { position: absolute; inset: 0; border-radius: 18px; pointer-events: none; }
+.atmosphere { position: absolute; inset: 15%; pointer-events: none; z-index: -1; border-radius: 50%; background: radial-gradient(ellipse,color-mix(in srgb,var(--material-color) 15%,transparent),transparent 70%); }
+.interaction { display: flex; justify-content: space-between; align-items: center; gap: .6rem; min-height: 62px; border-bottom: 1px solid var(--study-line); padding: .5rem .25rem; font-size: .65rem; color: var(--study-muted); }
+.interaction button { display: inline-flex; gap: .4rem; align-items: center; justify-content: center; flex-shrink: 0; min-width: 70px; min-height: 44px; border-radius: 5px; border: 1px solid var(--study-line); color: var(--study-ink); cursor: pointer; }
+.interaction button:disabled { opacity: .4; cursor: default; }
+.notes { padding: 1.25rem .25rem 0; font-size: .8rem; line-height: 1.75; color: var(--study-muted); }
+.notes dl { margin-top: 1.2rem; display: grid; gap: .75rem; }
+.notes dl > div { display: grid; grid-template-columns: 75px 1fr; gap: .75rem; }
+.notes dt { color: var(--study-ink); font-size: .7rem; font-weight: 600; }
+
+/* 01 / Optical: a translucent face over a separate, visible colored lens. */
+.stage[data-material="glass"] { background: radial-gradient(ellipse at 15% 20%,#c6decc66,transparent 60%),linear-gradient(140deg,#e4ebec33,#ded7ec55); }
+[data-material="glass"] .atmosphere { inset: 21% 14% 15% 30%; border: 1px solid #ffffff8a; border-radius: 43% 57% 64% 36%; background: radial-gradient(circle at 30% 15%,#fff8,transparent 55%),linear-gradient(130deg,color-mix(in srgb,var(--material-color) 70%,#e8d3ae),#e9bd9366); transform: rotate(-22deg); box-shadow: 0 25px 70px color-mix(in srgb,var(--material-color) 20%,transparent); }
+[data-material="glass"] .backplate { background: linear-gradient(135deg,#fff9,#fff1); border: 1px solid #fffb; transform: translateZ(-15px) translate(5px,5px); box-shadow: 0 35px 45px #14261b24; }
+[data-material="glass"] .object :global(.tempo-card) { background: linear-gradient(145deg,#ffffffb8,#f8fff0ba),color-mix(in srgb,var(--material-color) 12%,transparent); backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2); border: 1px solid #fffe; box-shadow: inset 2px 2px 2px #fff, inset -2px -2px 2px #fff7, 0 2px 1px #72908c65, 0 16px 40px #172d2122; }
+[data-material="glass"] .object :global(.tempo-card)::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(ellipse at var(--light-x) var(--light-y),#fff9,transparent 62%); pointer-events: none; opacity: .65; }
+[data-material="glass"] .object :global(.tempo-card) > * { position: relative; z-index: 1; }
+[data-material="glass"] .object :global(.tempo-card-target) { text-shadow: 0 2px 1px #fff; }
+
+/* 02 / Sculptural: opaque glaze, extruded edge, raised readable type. */
+[data-material="ceramic"] .object :global(.tempo-card) { background: radial-gradient(ellipse at var(--light-x) var(--light-y),#ffffffb5,transparent 70%),color-mix(in srgb,var(--material-color) 23%,#f4eedb); border: 1px solid #fff9; border-radius: 24px; box-shadow: inset 2px 2px 3px #ffffffe6, inset -3px -4px 6px #29362120, 1px 2px 0 #b6bcad, 2px 4px 0 #a5ad9d, 3px 6px 0 #929f8c, 4px 8px 0 #85917f, 6px 15px 18px #17201520, 12px 36px 45px #17201524; }
+[data-material="ceramic"] .object :global(.tempo-card-target) { transform: translateZ(26px); text-shadow: 0 1px 0 #e4f1d2, 1px 3px 1px #73816a50, 3px 9px 9px #36493322; }
+[data-material="ceramic"] .object :global(.tempo-card h2) { transform: translateZ(13px); text-shadow: 0 1px 0 #fff9; }
+[data-material="ceramic"] .object :global(.tempo-card-period-row) { transform: translateZ(8px); }
+
+/* 03 / Spatial: the sheets and typography occupy different depth planes. */
+[data-material="diorama"] .stage { perspective: 1500px; }
+[data-material="diorama"] .backplate { background: color-mix(in srgb,var(--material-color) 52%,#273c30); transform: translateZ(-38px) translate(14px,13px) rotate(4deg); box-shadow: 12px 32px 38px #17201530; }
+[data-material="diorama"] .middleLayer { background: color-mix(in srgb,var(--material-color) 32%,#f4eaca); transform: translateZ(-18px) translate(7px,7px) rotate(-3deg); border: 1px solid #fffa; }
+[data-material="diorama"] .object :global(.tempo-card) { background: linear-gradient(145deg,#fff7,transparent 60%),color-mix(in srgb,var(--material-color) 13%,#f9f0d9); box-shadow: 2px 3px 0 #b4b7a8, 5px 10px 18px #17201518; border: 1px solid #fff9; }
+[data-material="diorama"] .object :global(.tempo-card)::before { content: ""; position: absolute; inset: 16px; border: 1px solid color-mix(in srgb,var(--material-color) 30%,transparent); border-radius: 8px; transform: translateZ(9px); pointer-events: none; }
+[data-material="diorama"] .object :global(.tempo-card-target) { transform: translateZ(42px); text-shadow: 6px 12px 2px #36493313; }
+[data-material="diorama"] .object :global(.tempo-card h2) { transform: translateZ(28px); text-shadow: 2px 5px 4px #36493313; }
+[data-material="diorama"] .object :global(.tempo-card-period-row) { transform: translateZ(18px); }
+
+/* 04 / Surface: a flat printed collectible with selective iridescent foil. */
+[data-material="foil"] .object { transform: none; }
+[data-material="foil"] .object :global(.tempo-card) { color: #f4edda; background: linear-gradient(130deg,#fff1,transparent 35%),color-mix(in srgb,var(--material-color) 15%,#1d2b2a); border: 1px solid #d7c59e; border-radius: 9px; box-shadow: inset 0 0 0 5px #243530, inset 0 0 0 6px #d7c59e66, 0 12px 28px #101d1a28; overflow: hidden; }
+[data-material="foil"] .object :global(.tempo-card)::before { content: ""; position: absolute; inset: 0; background: linear-gradient(118deg,transparent 28%,#8bd7c411 34%,#dbbfdd24 42%,#fff7b92e 46%,#a6e5d91c 49%,transparent 56%); pointer-events: none; }
+[data-material="foil"] .object :global(.tempo-card-target strong) { color: #e9d1a4; background: linear-gradient(125deg,#f8e6bd 8%,#a7d2c5 27%,#e6bee1 45%,#f4df9d 58%,#b5ddd1 80%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+[data-material="foil"] .object :global(.tempo-effort-bars i) { background: #f4edda26; }
+[data-material="foil"] .object :global(.tempo-effort-bars i[data-active="true"]) { background: #e9d1a4; }
+
+/* 05 / Surface: matte crosswoven fiber and a stitched inset. */
+[data-material="woven"] .object { transform: none; }
+[data-material="woven"] .object :global(.tempo-card) { border-radius: 5px; background: repeating-linear-gradient(0deg,#58483208 0px,#58483208 1px,transparent 1px,transparent 3px),repeating-linear-gradient(90deg,#ffffff45 0px,#ffffff45 1px,transparent 1px,transparent 3px),color-mix(in srgb,var(--material-color) 12%,#ece0c8); border: 1px solid #73613d40; box-shadow: 0 2px 3px #463c2b18,0 12px 20px #463c2b10; }
+[data-material="woven"] .object :global(.tempo-card)::after { content: ""; position: absolute; inset: 10px; border: 1px dashed #77674848; border-radius: 2px; pointer-events: none; }
+[data-material="woven"] .object :global(.tempo-card-target strong) { color: color-mix(in srgb,var(--material-color) 38%,#263d2b); text-shadow: 0 1px 0 #fff7; }
+.recommendation { border-top: 1px solid var(--study-line); margin-top: 5rem; padding: 3rem 0; }
+.recommendation h2 { font-family: var(--font-display); font-size: clamp(2.3rem,4vw,3.7rem); line-height: 1.06; letter-spacing: -.03em; margin: 1.2rem 0; font-weight: 400; }
+.recommendation > p:last-of-type { max-width: 39rem; line-height: 1.8; font-size: .9rem; color: var(--study-muted); }
+.recommendation a { display: inline-flex; gap: .5rem; align-items: center; min-height: 44px; font-size: .8rem; margin-top: 1rem; }
+.footer { padding: 1.5rem 0; border-top: 1px solid var(--study-line); font-family: var(--font-mono); font-size: .6rem; color: var(--study-muted); }
+.stage[data-still="true"] .object { transform: none; transition: none; }
+@supports not (backdrop-filter: blur(1px)) { [data-material="glass"] .object :global(.tempo-card) { background: color-mix(in srgb,var(--material-color) 12%,#f6f8ef); } }
+@media (max-width: 900px) {
+  .container { padding: 1.25rem; }
+  .grid { gap: 3.5rem 1.5rem; }
+  .stage { padding: 2.5rem 1.35rem; }
+  .object :global(.tempo-card) { padding: 1.3rem; }
+  .conceptHeader { min-height: 230px; }
+}
+@media (max-width: 680px) {
+  .grid { grid-template-columns: 1fr; }
+  .hero { padding-top: 2.5rem; }
+  .hero h1 { font-size: clamp(3rem,13vw,5rem); }
+  .conceptHeader { min-height: 0; }
+  .stage { min-height: 490px; padding: 2.75rem 1.75rem; }
+  .controls { column-gap: 1.2rem; }
+  .controls label:first-child { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .object { transform: none; transition: none; } }
+@media (forced-colors: active) {
+  .object :global(.tempo-card) { background: Canvas; color: CanvasText; border: 1px solid CanvasText; box-shadow: none; }
+  .object :global(.tempo-card-target strong) { color: CanvasText; -webkit-text-fill-color: CanvasText; }
+}
