@@ -386,7 +386,10 @@ export function PlannerFocusedDayPane({
                   shareEntryTransition={shareDayTransition}
                 />
               ) : null}
-              {showTasksInsteadOfGoals ? null : (
+              {/* Only with a checklist model in hand: without one the panel
+                  fetches its own, and a second copy here would mean two reads
+                  of the same day and two independent optimistic states. */}
+              {showTasksInsteadOfGoals || !dayChecklist ? null : (
                 <PlanDayUnplannedPanel
                   day={day}
                   placedEntries={visibleEntries}
