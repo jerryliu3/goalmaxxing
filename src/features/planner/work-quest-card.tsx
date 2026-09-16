@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, PointerEvent, ReactNode } from "react";
 import { Check, ChevronDown, ChevronUp, Link2, Lock } from "lucide-react";
 import { CompletionTitle } from "@/components/ui/completion-title";
 import { getGoalVisual } from "@/features/planner/goal-visuals";
@@ -27,6 +27,9 @@ export function WorkQuestCard({
     listeners?: Record<string, unknown>;
     style?: CSSProperties;
     className?: string;
+    onPointerDownCapture?: (event: PointerEvent<HTMLElement>) => void;
+    onPointerUpCapture?: () => void;
+    onPointerCancelCapture?: () => void;
   };
 }) {
   const visual = getGoalVisual({
@@ -66,6 +69,9 @@ export function WorkQuestCard({
         } as CSSProperties
       }
       aria-current={open ? "true" : undefined}
+      onPointerDownCapture={dragHandle?.onPointerDownCapture}
+      onPointerUpCapture={dragHandle?.onPointerUpCapture}
+      onPointerCancelCapture={dragHandle?.onPointerCancelCapture}
       {...(dragHandle?.attributes ?? {})}
       {...(dragHandle?.listeners ?? {})}
     >
@@ -83,6 +89,7 @@ export function WorkQuestCard({
             <button
               type="button"
               className="block w-full text-left"
+              data-plan-drag-handle="true"
               onClick={(event) => {
                 event.stopPropagation();
                 onOpen();
@@ -105,6 +112,9 @@ export function WorkQuestCard({
                 Today
               </p>
               <p className="mt-0.5 text-sm font-medium leading-snug">{quest.sittingLabel}</p>
+              {quest.detailLabel ? (
+                <p className="mt-0.5 text-xs text-muted-foreground">{quest.detailLabel}</p>
+              ) : null}
               {periodSummary ? (
                 <p className="mt-0.5 text-xs text-muted-foreground">{periodSummary}</p>
               ) : null}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useChecklistCompletionActions } from "@/features/today/use-checklist-completion-actions";
 import { useChecklistData } from "@/features/today/use-checklist-data";
@@ -18,7 +18,8 @@ import {
 } from "@/features/planner/plan-ledger-completion-control";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
-import { planLedgerTitleClass } from "@/features/planner/calendar-day-chrome";
+import { WorkQuestCard } from "@/features/planner/work-quest-card";
+import { projectWorkQuestModel } from "@/features/planner/work-quest-model";
 import {
   buildCompletableGoalIds,
   selectCompletableGoals,
@@ -28,8 +29,6 @@ import { progressSummaryMap } from "@/lib/goals/progress-context";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
 import type { Goal } from "@/lib/goals/types";
 import { applyOptimisticChecklistPresentations } from "@/lib/planner/optimistic-completion-facts";
-import { CompletionTitle } from "@/components/ui/completion-title";
-import { cn } from "@/lib/utils";
 
 export function PlanDayUnplannedPanel({
   day,
@@ -197,6 +196,7 @@ function PlanDayUnplannedRows({
   onToggle: (goal: Goal, sourceElement: HTMLButtonElement) => void;
 }) {
   const creditMove = useCompletionCreditMove();
+  const [openGoalId, setOpenGoalId] = useState<string | null>(null);
   if (goals.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">Nothing unscheduled for this day.</p>
@@ -204,7 +204,7 @@ function PlanDayUnplannedRows({
   }
 
   return (
-    <div className="divide-y">
+    <div className="work-quest-collection">
       {goals.map((goal) => {
         const presentation = presentationByGoalId.get(goal.id);
         const completed = Boolean(presentation?.exactDateCompleted);
@@ -216,26 +216,37 @@ function PlanDayUnplannedRows({
             !completed && creditMove?.goalRequiresMove(goal.id, day)
           ),
         });
+        const quest = projectWorkQuestModel({
+          id: goal.id,
+          title: goal.title,
+          goal,
+          unplaced: true,
+          completed,
+          presentation,
+          sittingDate: day,
+        });
         return (
-          <div
+          <WorkQuestCard
             key={goal.id}
-            className="flex items-center gap-3 py-3"
-            data-plan-work-row="ledger"
+            quest={quest}
+            open={openGoalId === goal.id}
+            onOpen={() =>
+              setOpenGoalId((current) => (current === goal.id ? null : goal.id))
+            }
+            completeControl={
+              <PlanLedgerCompletionControl
+                completed={completed}
+                pending={savingGoalId === goal.id}
+                mode={completionMode}
+                label={goal.title}
+                onToggle={(sourceElement) => onToggle(goal, sourceElement)}
+              />
+            }
           >
-            <PlanLedgerCompletionControl
-              completed={completed}
-              pending={savingGoalId === goal.id}
-              mode={completionMode}
-              label={goal.title}
-              onToggle={(sourceElement) => onToggle(goal, sourceElement)}
-            />
-            <Link
-              href={`/goals/${goal.id}`}
-              className={cn(planLedgerTitleClass, "min-w-0 flex-1 hover:underline")}
-            >
-              <CompletionTitle completed={completed}>{goal.title}</CompletionTitle>
+            <Link href={`/goals/${goal.id}`} className="text-sm font-medium hover:underline">
+              Edit goal
             </Link>
-          </div>
+          </WorkQuestCard>
         );
       })}
     </div>

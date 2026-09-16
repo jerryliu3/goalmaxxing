@@ -246,6 +246,57 @@ describe("calendar surface extracted components", () => {
     expect(onEntryOpen).toHaveBeenCalledWith(sampleEntry.key);
   });
 
+  it("renders expanded day rows as a compact quest collection", () => {
+    const onEntryOpen = vi.fn();
+    renderWithDnd(
+      <CalendarDayPreviewList
+        day="2026-08-06"
+        entries={[sampleEntry]}
+        completionFactMarkers={[]}
+        mutationLoadingKey={null}
+        getEntryDisplayTitle={(entry) => entry.goalTitle ?? "Untitled"}
+        getEntrySubtitle={(entry) => entry.label}
+        isEntryCredited={() => false}
+        isEntryImmovableForDraft={() => false}
+        getCompletionToggleState={() => ({
+          currentlyCredited: false,
+          disabledReasonCopy: null,
+        })}
+        onEntryOpen={onEntryOpen}
+        onToggleCompletion={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+        density="expanded"
+        getWorkQuest={() => ({
+          id: "goal-1",
+          title: "Run",
+          categoryLabel: "Health",
+          color: "#22c55e",
+          contribution: null,
+          sittingLabel: "Any time",
+          detailLabel: "Easy run",
+          cadenceLabel: "3 days a week",
+          horizonLabel: "Until Dec 31",
+          effort: { label: "steady", level: 2 },
+          periodDone: 1,
+          periodTarget: 3,
+          periodScopeLabel: "this week",
+          isPrivate: false,
+          completed: false,
+          locked: false,
+          linked: false,
+        })}
+      />
+    );
+
+    expect(document.querySelector('[data-plan-work-row="quest"]')).toBeInstanceOf(HTMLElement);
+    expect(screen.getByText("Any time")).toBeInTheDocument();
+    expect(screen.getByText("1 of 3 this week")).toBeInTheDocument();
+    expect(screen.queryByText("Rhythm")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Details" }));
+    expect(onEntryOpen).toHaveBeenCalledWith(sampleEntry.key);
+  });
+
   it("renders expanded day rows as a hairline ledger instead of filled pills", () => {
     const onEntryPointerStart = vi.fn();
     const onEntryOpen = vi.fn();

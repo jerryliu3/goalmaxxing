@@ -4,6 +4,10 @@ import { CalendarDayPreviewList } from "@/features/planner/calendar-day-preview-
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import type { PlannerCompletionFactMarker } from "@/features/planner/calendar-surface.types";
 import { getPlannerCompletionTogglePresentation } from "@/features/planner/completion-entry-dispatch";
+import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
+import { projectPlannerEntryWorkQuest } from "@/features/planner/work-quest-model";
+import type { ChecklistGoalPresentation } from "@/lib/goals/checklist-presentation";
+import type { Goal } from "@/lib/goals/types";
 import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
 
 interface PlannerDayEntriesPanelProps {
@@ -33,6 +37,8 @@ interface PlannerDayEntriesPanelProps {
   shareEntryTransition?: boolean;
   onConfirmDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
   onCancelDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
+  goalsById?: ReadonlyMap<string, Goal>;
+  presentationByGoalId?: ReadonlyMap<string, ChecklistGoalPresentation>;
 }
 
 export function PlannerDayEntriesPanel({
@@ -58,6 +64,8 @@ export function PlannerDayEntriesPanel({
   shareEntryTransition = false,
   onConfirmDraftMove,
   onCancelDraftMove,
+  goalsById,
+  presentationByGoalId,
 }: PlannerDayEntriesPanelProps) {
   return (
     <CalendarDayPreviewList
@@ -94,6 +102,22 @@ export function PlannerDayEntriesPanel({
       shareEntryTransition={shareEntryTransition}
       onConfirmDraftMove={onConfirmDraftMove}
       onCancelDraftMove={onCancelDraftMove}
+      getWorkQuest={
+        density === "expanded"
+          ? (entry) => {
+              if (isPlannerTaskCalendarEntry(entry)) {
+                return null;
+              }
+              return projectPlannerEntryWorkQuest({
+                entry,
+                day,
+                goal: goalsById?.get(entry.originalGoalId) ?? null,
+                presentation: presentationByGoalId?.get(entry.originalGoalId) ?? null,
+                completed: isEntryCredited(entry),
+              });
+            }
+          : undefined
+      }
     />
   );
 }

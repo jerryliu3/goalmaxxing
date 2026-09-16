@@ -27,6 +27,8 @@ import {
 } from "@/features/planner/draft-move-confirm";
 import { cn } from "@/lib/utils";
 import { CompletionTitle } from "@/components/ui/completion-title";
+import { WorkQuestCard } from "@/features/planner/work-quest-card";
+import type { WorkQuestModel } from "@/features/planner/work-quest-model";
 import {
   overlayCurrentlyCredited,
   plannerFactMutationKey,
@@ -75,6 +77,7 @@ interface CalendarDayPreviewListProps<
   shareEntryTransition?: boolean;
   onConfirmDraftMove?: (entry: TEntry, day: string) => void;
   onCancelDraftMove?: (entry: TEntry, day: string) => void;
+  getWorkQuest?: (entry: TEntry) => WorkQuestModel | null;
 }
 
 export function CalendarDayPreviewList<
@@ -100,12 +103,16 @@ export function CalendarDayPreviewList<
   shareEntryTransition = false,
   onConfirmDraftMove,
   onCancelDraftMove,
+  getWorkQuest,
 }: CalendarDayPreviewListProps<TEntry, TCompletionFactMarker>) {
   const expanded = density === "expanded";
+  const useQuestCollection = expanded && Boolean(getWorkQuest);
   return (
     <div
       className={`overflow-x-hidden ${
-        expanded
+        useQuestCollection
+          ? "work-quest-collection"
+          : expanded
           ? "divide-y"
           : "max-h-44 space-y-1 overflow-y-auto overscroll-y-contain text-xs [touch-action:pan-y] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       }`}
@@ -163,6 +170,164 @@ export function CalendarDayPreviewList<
               entry.draftDiffKind === "moved_from"
                 ? "from this day"
                 : "to this day";
+            const quest = useQuestCollection ? getWorkQuest?.(entry) ?? null : null;
+            const completionControl =
+              !isDraft && completionMode === "toggle" ? (
+                <div
+                  data-plan-completion-hit="true"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                  }}
+                  onPointerDown={(event) => {
+                    event.stopPropagation();
+                  }}
+                  onMouseDown={(event) => {
+                    event.stopPropagation();
+                  }}
+                  onTouchStart={(event) => {
+                    event.stopPropagation();
+                  }}
+                >
+                  <CompletionToggle
+                    completed={currentlyCredited}
+                    pending={pending}
+                    size="sm"
+                    chrome="plain"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onToggleCompletion(entry, day, event.currentTarget);
+                    }}
+                    aria-label={
+                      currentlyCredited
+                        ? "Mark session not done"
+                        : "Mark session done"
+                    }
+                    title="Hold to change completion"
+                  />
+                </div>
+              ) : !isDraft && completionMode === "done" ? (
+                <StyleCompletionMark
+                  done
+                  className="size-6 shrink-0"
+                  label="Completed"
+                />
+              ) : null;
+            const draftMoveActions = showDraftMoveActions ? (
+              <div
+                className="flex items-center gap-1"
+                data-plan-completion-hit="true"
+                onClick={(event) => {
+                  event.stopPropagation();
+                }}
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                }}
+              >
+                {onCancelDraftMove && canCancelDraftMove(entry) ? (
+                  <button
+                    type="button"
+                    className={draftMoveIconButtonClassName}
+                    disabled={Boolean(mutationLoadingKey)}
+                    aria-label={`Cancel moving ${displayTitle} ${draftMoveDirectionLabel}`}
+                    title="Undo this move"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onCancelDraftMove(entry, day);
+                    }}
+                  >
+                    <X className="size-4" strokeWidth={2.5} aria-hidden />
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className={draftMoveIconButtonClassName}
+                  disabled={Boolean(mutationLoadingKey)}
+                  aria-label={`Confirm moving ${displayTitle} ${draftMoveDirectionLabel}`}
+                  title="Confirm this move"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onConfirmDraftMove?.(entry, day);
+                  }}
+                >
+                  <Check className="size-4" strokeWidth={2.5} aria-hidden />
+                </button>
+              </div>
+            ) : null;
+            if (quest) {
+              return (
+                <Fragment key={`preview-entry-${entry.key}`}>
+                  <PlannerDraggablePreviewEntry
+                    day={day}
+                    entryKey={entry.key}
+                    surface="checklist"
+                    disabled={immovable}
+                  >
+                    {({
+                      setNodeRef,
+                      setActivatorNodeRef,
+                      attributes,
+                      listeners,
+                      style,
+                      isDragging,
+                    }) => (
+                      <WorkQuestCard
+                        quest={{ ...quest, completed: currentlyCredited || credited }}
+                        open={isSelectedRow}
+                        onOpen={() => {
+                          if (isDragging) {
+                            return;
+                          }
+                          onEntryOpen(entry.key);
+                        }}
+                        completeControl={completionControl}
+                        dragHandle={{
+                          ref: (node) => {
+                            setNodeRef(node);
+                            setActivatorNodeRef(node);
+                          },
+                          attributes: {
+                            ...(attributes as Record<string, unknown>),
+                            "data-planner-entry-key": entry.key,
+                          },
+                          listeners: (immovable ? {} : listeners) as Record<string, unknown>,
+                          style: {
+                            ...style,
+                            ...(shareEntryTransition
+                              ? { viewTransitionName: planEntryViewTransitionName(entry.key) }
+                              : {}),
+                          },
+                          className: cn(
+                            shareEntryTransition ? PLAN_MORPH_CLASS : "",
+                            isDragging ? "pointer-events-none opacity-0" : "",
+                            immovable ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing"
+                          ),
+                          onPointerDownCapture: (event) => {
+                            if (
+                              event.target instanceof Element &&
+                              event.target.closest(
+                                "[data-motion='completion-toggle'], [data-plan-completion-hit]"
+                              )
+                            ) {
+                              return;
+                            }
+                            onEntryPointerStart(immovable);
+                          },
+                          onPointerUpCapture: () => {
+                            onEntryPointerEnd();
+                          },
+                          onPointerCancelCapture: () => {
+                            onEntryPointerEnd();
+                          },
+                        }}
+                      >
+                        {draftMoveActions}
+                        <div data-plan-checklist-editor-slot={entry.key} />
+                      </WorkQuestCard>
+                    )}
+                  </PlannerDraggablePreviewEntry>
+                </Fragment>
+              );
+            }
             return (
               <Fragment key={`preview-entry-${entry.key}`}><PlannerDraggablePreviewEntry
                 day={day}

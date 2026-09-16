@@ -116,6 +116,11 @@ export function PlannerFocusedDayPane({
     }).length;
   }, [day, dayChecklist, showTasksInsteadOfGoals, visibleEntries]);
   const visibleMarkers = completionFactMarkers;
+  const questGoalsById = useMemo(() => {
+    const goals = dayChecklist?.data.goals ?? [];
+    return new Map(goals.map((goal) => [goal.id, goal]));
+  }, [dayChecklist?.data.goals]);
+  const questPresentations = dayChecklist?.listModel.presentationByGoalId;
   const viewerMarkers = useMemo(
     () => visibleMarkers.filter((marker) => marker.owner !== "partner"),
     [visibleMarkers]
@@ -277,6 +282,8 @@ export function PlannerFocusedDayPane({
               shareEntryTransition={shareDayTransition}
               onConfirmDraftMove={onConfirmDraftMove}
               onCancelDraftMove={onCancelDraftMove}
+              goalsById={questGoalsById}
+              presentationByGoalId={questPresentations}
             />
             {splitPartnerChecklist
               ? partnerMarkers.map((marker) => (

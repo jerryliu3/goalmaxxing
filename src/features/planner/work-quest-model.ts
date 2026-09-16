@@ -1,4 +1,9 @@
 import { format, isValid, parse, parseISO } from "date-fns";
+import {
+  getEntryMilestoneFirstTitle,
+  getEntrySubtitle,
+} from "@/features/planner/calendar-format";
+import { getGoalVisual } from "@/features/planner/goal-visuals";
 import type { ChecklistGoalPresentation } from "@/lib/goals/checklist-presentation";
 import { getGoalCategoryLabel } from "@/lib/goals/category";
 import {
@@ -7,7 +12,6 @@ import {
   isPeriodCadenceGoal,
 } from "@/lib/goals/target-basis";
 import type { Goal, GoalDifficulty } from "@/lib/goals/types";
-import { getGoalVisual } from "@/features/planner/goal-visuals";
 
 export type WorkQuestEffort = {
   label: "light" | "steady" | "heavy";
@@ -21,6 +25,7 @@ export interface WorkQuestModel {
   color: string;
   contribution: string | null;
   sittingLabel: string;
+  detailLabel: string | null;
   cadenceLabel: string | null;
   horizonLabel: string | null;
   effort: WorkQuestEffort | null;
@@ -138,6 +143,7 @@ export function projectWorkQuestModel({
   presentation,
   sittingDate = null,
   endDate = null,
+  detailLabel = null,
 }: {
   id: string;
   title: string;
@@ -152,6 +158,7 @@ export function projectWorkQuestModel({
   presentation?: ChecklistGoalPresentation | null;
   sittingDate?: string | null;
   endDate?: string | null;
+  detailLabel?: string | null;
 }): WorkQuestModel {
   const resolvedGoal = goal ?? null;
   const visual = getGoalVisual({
@@ -184,6 +191,7 @@ export function projectWorkQuestModel({
     color: visual.color,
     contribution: resolvedGoal?.description?.trim() || null,
     sittingLabel,
+    detailLabel,
     cadenceLabel: resolvedGoal ? describeGoalCadence(resolvedGoal) : null,
     horizonLabel: resolvedGoal
       ? describeGoalHorizon(resolvedGoal.end_date, { dueDate: sittingDate })
@@ -200,3 +208,48 @@ export function projectWorkQuestModel({
     linked,
   };
 }
+
+export function projectPlannerEntryWorkQuest({
+  entry,
+  day,
+  goal,
+  presentation,
+  completed,
+}: {
+  entry: {
+    key: string;
+    originalGoalId: string;
+    goalTitle: string | null;
+    label: string | null;
+    unitKey: string;
+    hasLinkedTargets?: boolean;
+    effectiveScheduledLocalTime?: string | null;
+    activeGoal?: {
+      category?: string | null;
+      color?: string | null;
+      end_date?: string | null;
+    } | null;
+    activeItem?: { locked?: boolean } | null;
+  };
+  day: string;
+  goal?: Goal | null;
+  presentation?: ChecklistGoalPresentation | null;
+  completed: boolean;
+}) {
+  return projectWorkQuestModel({
+    id: entry.originalGoalId,
+    title: getEntryMilestoneFirstTitle(entry),
+    goal,
+    category: goal?.category ?? entry.activeGoal?.category ?? null,
+    color: goal?.color ?? entry.activeGoal?.color ?? null,
+    sittingTime: entry.effectiveScheduledLocalTime ?? goal?.default_local_time ?? null,
+    completed,
+    locked: Boolean(entry.activeItem?.locked),
+    linked: Boolean(entry.hasLinkedTargets),
+    presentation,
+    sittingDate: day,
+    endDate: goal?.end_date ?? entry.activeGoal?.end_date ?? null,
+    detailLabel: getEntrySubtitle(entry),
+  });
+}
+
