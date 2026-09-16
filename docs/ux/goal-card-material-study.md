@@ -59,7 +59,9 @@ without delaying the user.
 
 ## Material refinement
 
-Glass, Ceramic, and Foil use one shared continuous seven-pixel edge treatment.
+Solid materials use a connected ten-pixel-deep CSS body with four side planes,
+rounded corner facets, and a rear face. The former downward edge shadows are
+removed. Side visibility and apparent thickness now come from perspective.
 They render no offset backplate or second sheet. Glass also loses the separate
 colored lens in its backdrop. The number and its rhythm label cast soft shadows;
 Ceramic uses a stronger category-color glaze. Foil preserves its ink, fine frame,
@@ -76,3 +78,18 @@ No external assets, graphics library, or animation loop is introduced.
 
 Verification remains approval-gated. Functional interaction coverage is included
 as code; no tests, lint, typecheck, browser checks, or CI were run for this update.
+
+## Perspective and reflection refinement
+
+The shared body uses front/back separation and connected side planes instead of
+shadow-based extrusion. Eight small quads per rounded corner keep the rim joined
+to the card silhouette. The existing goal card remains the front surface; no
+canvas, graphics runtime, or duplicate goal content is introduced.
+
+One short-lived animation-frame loop interpolates the card orientation and derives
+all lighting from that same angle. A fixed upper-left light is transformed into
+card space for rim shading and a stylized specular beam. Foil's beam position,
+angle, intensity, broad gloss, and numeral finish respond together. This is a
+bounded CSS lighting approximation, not physical refraction. The loop stops at
+rest and cancels on unmount or still/reduced-motion mode. Touch and keyboard Tilt
+use the identical pose and lighting path.

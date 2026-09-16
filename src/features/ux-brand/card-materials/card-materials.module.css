@@ -21,8 +21,7 @@
 .conceptHeader h2 { font-family: var(--font-display); font-size: 2.7rem; line-height: 1.1; font-weight: 400; letter-spacing: -.03em; margin: .8rem 0; }
 .conceptHeader p { font-size: .85rem; line-height: 1.75; color: var(--study-muted); max-width: 30rem; }
 .stage { --rx: 5deg; --ry: -9deg; --light-x: 25%; --light-y: 10%; position: relative; isolation: isolate; display: grid; place-items: center; min-height: 535px; padding: 3rem 2.25rem; border-radius: 16px; background: linear-gradient(150deg,#ffffff3b,#7f92750f); border: 1px solid var(--study-line); perspective: 1200px; }
-.stage[data-posed="true"] { --rx: -9deg; --ry: 17deg; --light-x: 80%; --light-y: 25%; }
-.object { position: relative; width: 100%; max-width: 330px; transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateY(var(--ry)); transition: transform .2s ease-out; }
+.object { position: relative; width: 100%; max-width: 330px; transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateY(var(--ry)); transition: none; }
 .object :global(.tempo-card) { min-height: 382px; height: auto; gap: 1.25rem; padding: 1.65rem; border-radius: 18px; transform-style: preserve-3d; overflow: visible; }
 .object :global(.tempo-card h2) { font-size: 27px; }
 .object :global(.tempo-card-target strong) { font-size: 90px; }
@@ -39,16 +38,14 @@
 .notes dl > div { display: grid; grid-template-columns: 75px 1fr; gap: .75rem; }
 .notes dt { color: var(--study-ink); font-size: .7rem; font-weight: 600; }
 
-/* A continuous shallow extrusion, not a detached second card. Only solid forms
-   use it; Diorama keeps its intentionally separated planes. */
-.stage[data-form="solid"] .object :global(.tempo-card) {
+/* Connected side planes are siblings of the front face, so face effects
+   cannot flatten the card body. Both share the object's perspective rotation. */
+.stage[data-form="solid"] .object {
+  --card-depth: 10px; --card-radius: 18px;
   --edge: color-mix(in srgb,var(--material-color) 35%,#73857d);
   --bevel: inset 1px 1px 2px #fffd, inset -1px -2px 2px #162a2626;
-  box-shadow: var(--bevel),
-    0 1px 0 var(--edge), 0 2px 0 var(--edge), 0 3px 0 var(--edge),
-    0 4px 0 var(--edge), 0 5px 0 var(--edge), 0 6px 0 var(--edge),
-    0 7px 0 var(--edge), 0 10px 8px #1720151c, 0 26px 32px #17201526;
 }
+.stage[data-form="solid"] .object :global(.tempo-card) { box-shadow: var(--bevel); border-radius: var(--card-radius); }
 .stage[data-form="solid"] .object :global(.tempo-card-target) { transform: translateZ(22px); }
 .stage[data-form="solid"] .object :global(.tempo-card-target strong) { text-shadow: 1px 2px 1px #fff4, 4px 9px 3px #243b3029; }
 .stage[data-form="solid"] .object :global(.tempo-card-target > span) { text-shadow: 2px 5px 2px #243b3029; }
@@ -56,13 +53,13 @@
 /* 01 / Optical: color held inside one beveled slab, with no rear lens. */
 .stage[data-material="glass"] { background: radial-gradient(ellipse at 15% 20%,#c6decc66,transparent 60%),linear-gradient(140deg,#e4ebec33,#ded7ec55); }
 [data-material="glass"] .object :global(.tempo-card) { background: linear-gradient(145deg,#ffffffb8,#f8fff0ba),color-mix(in srgb,var(--material-color) 20%,transparent); backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2); border: 1px solid #fffe; }
-.stage[data-material="glass"] .object :global(.tempo-card) { --edge: color-mix(in srgb,var(--material-color) 22%,#adccc5); --bevel: inset 2px 2px 2px #fff, inset -2px -2px 2px #fff8; }
+.stage[data-material="glass"] .object { --card-radius: 18px; --edge: color-mix(in srgb,var(--material-color) 22%,#adccc5); --bevel: inset 2px 2px 2px #fff, inset -2px -2px 2px #fff8; }
 [data-material="glass"] .object :global(.tempo-card)::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(ellipse at var(--light-x) var(--light-y),#fff9,transparent 62%); pointer-events: none; opacity: .65; }
 [data-material="glass"] .object :global(.tempo-card) > * { position: relative; z-index: 1; }
 
 /* 02 / Sculptural: saturated glaze and one continuous ceramic edge. */
 [data-material="ceramic"] .object :global(.tempo-card) { background: radial-gradient(ellipse at var(--light-x) var(--light-y),#ffffff70,transparent 65%),color-mix(in srgb,var(--material-color) 43%,#f4eedb); border: 1px solid #fff9; border-radius: 24px; }
-.stage[data-material="ceramic"] .object :global(.tempo-card) { --edge: color-mix(in srgb,var(--material-color) 46%,#68745c); --bevel: inset 2px 2px 3px #ffffffe6, inset -3px -4px 6px #29362120; }
+.stage[data-material="ceramic"] .object { --card-radius: 24px; --edge: color-mix(in srgb,var(--material-color) 46%,#68745c); --bevel: inset 2px 2px 3px #ffffffe6, inset -3px -4px 6px #29362120; }
 [data-material="ceramic"] .object :global(.tempo-card h2) { transform: translateZ(13px); text-shadow: 0 1px 0 #fff9; }
 [data-material="ceramic"] .object :global(.tempo-card-period-row) { transform: translateZ(8px); }
 
@@ -78,10 +75,12 @@
 
 /* 04 / Iridescent: the original print on a single gilded, dimensional card. */
 [data-material="foil"] .object :global(.tempo-card) { color: #f4edda; background: linear-gradient(130deg,#fff1,transparent 35%),color-mix(in srgb,var(--material-color) 15%,#1d2b2a); border: 1px solid #d7c59e; border-radius: 9px; overflow: visible; }
-.stage[data-material="foil"] .object :global(.tempo-card) { --edge: #92805a; --bevel: inset 0 0 0 5px #243530, inset 0 0 0 6px #d7c59e66; }
-[data-material="foil"] .object :global(.tempo-card)::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(118deg,transparent 28%,#8bd7c411 34%,#dbbfdd24 42%,#fff7b92e 46%,#a6e5d91c 49%,transparent 56%); pointer-events: none; }
+.stage[data-material="foil"] .object { --card-radius: 9px; --edge: #92805a; --bevel: inset 0 0 0 5px #243530, inset 0 0 0 6px #d7c59e66; }
+[data-material="foil"] .object :global(.tempo-card)::before { content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: var(--shine-strength); background: linear-gradient(var(--shine-angle),transparent calc(var(--shine-position) - 16%),#8bd7c41c calc(var(--shine-position) - 10%),#dbbfdd44 calc(var(--shine-position) - 4%),#fff8dba8 var(--shine-position),#a6e5d94a calc(var(--shine-position) + 3%),transparent calc(var(--shine-position) + 12%)); pointer-events: none; }
 .stage[data-material="foil"] .object :global(.tempo-card-target strong) { text-shadow: none; filter: drop-shadow(2px 5px 2px #0005); color: #e9d1a4; background: linear-gradient(125deg,#f8e6bd 8%,#a7d2c5 27%,#e6bee1 45%,#f4df9d 58%,#b5ddd1 80%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .stage[data-material="foil"] .object :global(.tempo-card-target > span) { text-shadow: 2px 4px 2px #0006; }
+[data-material="foil"] .object :global(.tempo-card)::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: radial-gradient(ellipse at var(--light-x) var(--light-y),#fff8d926,transparent 65%); opacity: var(--shine-strength); }
+.stage[data-material="foil"] .object :global(.tempo-card-target strong), .stage[data-material="pearl"] .object :global(.tempo-card-target strong) { background-size: 200% 200%; background-position: var(--metal-x) var(--metal-y); }
 [data-material="foil"] .object :global(.tempo-effort-bars i) { background: #f4edda26; }
 [data-material="foil"] .object :global(.tempo-effort-bars i[data-active="true"]) { background: #e9d1a4; }
 
@@ -93,7 +92,7 @@
 /* 06 / Pearl: luminous ivory with bronze-champagne foil, kept legible in light. */
 .stage[data-material="pearl"] { background: radial-gradient(ellipse at 25% 20%,#fffdf17a,transparent 70%),linear-gradient(130deg,#ece1d433,#e7d9e233); }
 [data-material="pearl"] .object :global(.tempo-card) { color: #493e31; border: 1px solid #c8b994; border-radius: 12px; background: radial-gradient(ellipse at var(--light-x) var(--light-y),#fffef6 0%,#fffef600 60%),linear-gradient(125deg,#f8f0e2 16%,#e4ecdf 38%,#f3e4e6 55%,#fcf3df 75%,#e9eadf); }
-.stage[data-material="pearl"] .object :global(.tempo-card) { --edge: #b29a72; --bevel: inset 0 0 0 5px #fbf5e9, inset 0 0 0 6px #b9a37b80, inset 0 2px 1px #fff; }
+.stage[data-material="pearl"] .object { --card-radius: 12px; --edge: #b29a72; --bevel: inset 0 0 0 5px #fbf5e9, inset 0 0 0 6px #b9a37b80, inset 0 2px 1px #fff; }
 [data-material="pearl"] .object :global(.tempo-card)::before { content: ""; position: absolute; inset: 14px; border: 1px solid #ad8e5929; border-radius: 3px; pointer-events: none; }
 .stage[data-material="pearl"] .object :global(.tempo-card-target strong) { text-shadow: none; color: #816333; background: linear-gradient(125deg,#6d5233 15%,#a1814c 30%,#74582e 42%,#b09056 57%,#694d31 78%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 1px 0 #fff) drop-shadow(2px 5px 2px #705c3b2b); }
 [data-material="pearl"] .object :global(.tempo-card h2) { transform: translateZ(10px); }
@@ -102,7 +101,7 @@
 /* 07 / Guilloché: a quiet enamel center with fine, engine-turned corners. */
 .stage[data-material="guilloche"] { background: radial-gradient(ellipse at 70% 25%,#829ba529,transparent 70%),linear-gradient(135deg,#8b9ba112,#3c506626); }
 [data-material="guilloche"] .object :global(.tempo-card) { color: #e2ebee; border: 1px solid #a6b7c4; border-radius: 14px; background: radial-gradient(ellipse at var(--light-x) var(--light-y),#38628070,transparent 68%),color-mix(in srgb,var(--material-color) 7%,#122438); }
-.stage[data-material="guilloche"] .object :global(.tempo-card) { --edge: #7b909f; --bevel: inset 0 0 0 4px #2f4658, inset 0 0 0 5px #b1c1c99c, inset 0 0 0 8px #122438; }
+.stage[data-material="guilloche"] .object { --card-radius: 14px; --edge: #7b909f; --bevel: inset 0 0 0 4px #2f4658, inset 0 0 0 5px #b1c1c99c, inset 0 0 0 8px #122438; }
 [data-material="guilloche"] .object :global(.tempo-card)::before { content: ""; position: absolute; inset: 11px; border-radius: 5px; background: repeating-radial-gradient(ellipse at 100% 0%,transparent 0px,transparent 6px,#b4d4e338 6.5px,transparent 7px,transparent 10px),repeating-radial-gradient(ellipse at 0% 100%,transparent 0px,transparent 8px,#9cc3dc24 8.5px,transparent 9px,transparent 13px); mask-image: linear-gradient(130deg,#000,transparent 33%,transparent 69%,#000); pointer-events: none; }
 [data-material="guilloche"] .object :global(.tempo-card)::after { content: ""; position: absolute; inset: 15px; border: 1px solid #bdd4de25; border-radius: 2px; pointer-events: none; }
 .stage[data-material="guilloche"] .object :global(.tempo-card-target strong) { text-shadow: none; color: #dce7ee; background: linear-gradient(135deg,#f0f5f7 10%,#a4becd 32%,#f5f8fa 45%,#9bb2c4 63%,#e6f0f3 80%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(2px 5px 2px #0006); }
@@ -114,13 +113,14 @@
 /* 08 / Atelier: blind-tooled leather, softly burnished light, hot-stamped gold. */
 .stage[data-material="atelier"] { background: radial-gradient(ellipse at 20% 30%,#d3a46b25,transparent 70%),linear-gradient(150deg,#98665a15,#6b323b17); }
 [data-material="atelier"] .object :global(.tempo-card) { color: #f6e6ca; border: 1px solid #c69d6685; border-radius: 10px; background: radial-gradient(ellipse at var(--light-x) var(--light-y),#ce99762b,transparent 70%),radial-gradient(ellipse at center,#14080845 .5px,transparent 1px) 0 0 / 4px 3px,radial-gradient(ellipse at center,#fff6c00a .5px,transparent 1px) 2px 1px / 5px 4px,color-mix(in srgb,var(--material-color) 5%,#582e38); }
-.stage[data-material="atelier"] .object :global(.tempo-card) { --edge: #372025; --bevel: inset 1px 1px 2px #f2c8a959, inset -2px -3px 3px #190a0b70, inset 0 0 0 7px #37192370, inset 0 0 0 8px #bc936456; }
+.stage[data-material="atelier"] .object { --card-radius: 10px; --edge: #372025; --bevel: inset 1px 1px 2px #f2c8a959, inset -2px -3px 3px #190a0b70, inset 0 0 0 7px #37192370, inset 0 0 0 8px #bc936456; }
 [data-material="atelier"] .object :global(.tempo-card)::before { content: ""; position: absolute; inset: 14px; border: 1px solid #1e0b0d80; box-shadow: 0 1px 0 #ce9f672b, inset 0 1px 0 #ce9f672b; border-radius: 2px; pointer-events: none; }
 .stage[data-material="atelier"] .object :global(.tempo-card-target strong) { text-shadow: none; color: #e5c185; background: linear-gradient(130deg,#f3d7a0 10%,#ba9055 30%,#ffdf9e 45%,#d3ac6b 65%,#f3dbad); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 -1px 0 #200c1266) drop-shadow(2px 5px 2px #18090e55); }
 .stage[data-material="atelier"] .object :global(.tempo-card-target > span) { text-shadow: 2px 5px 2px #18090e60; }
 [data-material="atelier"] .object :global(.tempo-card h2) { transform: translateZ(10px); }
 [data-material="atelier"] .object :global(.tempo-effort-bars i) { background: #f6e6ca25; }
 [data-material="atelier"] .object :global(.tempo-effort-bars i[data-active="true"]) { background: #e5c185; }
+.stage[data-material="pearl"] .object :global(.tempo-card-target strong) { background-size: 200% 200%; background-position: var(--metal-x) var(--metal-y); }
 .recommendation { border-top: 1px solid var(--study-line); margin-top: 5rem; padding: 3rem 0; }
 .recommendation h2 { font-family: var(--font-display); font-size: clamp(2.3rem,4vw,3.7rem); line-height: 1.06; letter-spacing: -.03em; margin: 1.2rem 0; font-weight: 400; }
 .recommendation > p:last-of-type { max-width: 39rem; line-height: 1.8; font-size: .9rem; color: var(--study-muted); }

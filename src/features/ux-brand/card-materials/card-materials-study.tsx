@@ -1,62 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import { useReducedMotion } from "motion/react";
-import { ArrowLeft, ArrowUpRight, Rotate3D } from "lucide-react";
-import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
-import { MATERIALS, MATERIAL_SAMPLES, type CardMaterial } from "./materials";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { MATERIALS, MATERIAL_SAMPLES } from "./materials";
+import { MaterialPreview } from "./material-preview";
 import styles from "./card-materials.module.css";
-
-function MaterialPreview({ material, fields, still, history }: {
-  material: CardMaterial; fields: GoalCreationFields; still: boolean; history: boolean;
-}) {
-  const [posed, setPosed] = useState(false);
-  const spatial = material.form !== "flat";
-  return (
-    <section className={styles.concept} id={material.id} aria-labelledby={`${material.id}-title`}>
-      <header className={styles.conceptHeader}>
-        <span>{material.tag}</span>
-        <h2 id={`${material.id}-title`}>{material.name}</h2>
-        <p>{material.premise}</p>
-      </header>
-      <div className={styles.stage} data-material={material.id} data-form={material.form} data-still={still} data-posed={posed}
-        style={{ "--material-color": fields.color } as CSSProperties}
-        onPointerMove={event => {
-          if (still || !spatial || event.pointerType !== "mouse") return;
-          const rect = event.currentTarget.getBoundingClientRect();
-          const x = (event.clientX - rect.left) / rect.width;
-          const y = (event.clientY - rect.top) / rect.height;
-          event.currentTarget.style.setProperty("--rx", `${(0.5 - y) * 16}deg`);
-          event.currentTarget.style.setProperty("--ry", `${(x - 0.5) * 22}deg`);
-          event.currentTarget.style.setProperty("--light-x", `${x * 100}%`);
-          event.currentTarget.style.setProperty("--light-y", `${y * 100}%`);
-        }}
-        onPointerLeave={event => {
-          for (const property of ["--rx", "--ry", "--light-x", "--light-y"]) event.currentTarget.style.removeProperty(property);
-        }}
-      >
-        <div className={styles.atmosphere} aria-hidden="true" />
-        <div className={styles.object}>
-          {material.form === "layered" && <>
-            <span className={styles.backplate} aria-hidden="true" />
-            <span className={styles.middleLayer} aria-hidden="true" />
-          </>}
-          <TempoGoalCard fields={fields} context={history ? "history" : "creation"} achieved={history} />
-        </div>
-      </div>
-      <div className={styles.interaction}>
-        <span>{spatial ? "Move your pointer to explore the depth." : "Material and light, with a still silhouette."}</span>
-        {spatial && <button type="button" disabled={still} aria-pressed={posed} onClick={() => setPosed(value => !value)} aria-label={`Tilt ${material.name}`}><Rotate3D size={16} aria-hidden="true" />{posed ? "Rest" : "Tilt"}</button>}
-      </div>
-      <div className={styles.notes}>
-        <p>{material.detail}</p>
-        <dl><div><dt>Best home</dt><dd>{material.use}</dd></div><div><dt>Tradeoff</dt><dd>{material.tradeoff}</dd></div></dl>
-      </div>
-    </section>
-  );
-}
 
 export function CardMaterialsStudy() {
   const [sample, setSample] = useState(0);
