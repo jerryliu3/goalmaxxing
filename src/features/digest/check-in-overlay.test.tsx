@@ -133,12 +133,10 @@ describe("CheckInOverlay", () => {
       "active"
     );
 
-    await user.click(screen.getByRole("tab", { name: "Decisions" }));
+    await user.click(screen.getByRole("tab", { name: "Next" }));
+    expect(await screen.findByText("Start with Tempo run.")).toBeInTheDocument();
     expect(screen.getByText("2 sessions in today, about 1h")).toBeInTheDocument();
     expect(screen.getByText("Recover 1 missed session")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("tab", { name: "Coach" }));
-    expect(await screen.findByText("Start with Tempo run.")).toBeInTheDocument();
   });
 
   it("recaps only the window that just closed", async () => {
@@ -222,7 +220,7 @@ describe("CheckInOverlay", () => {
 
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Open" }));
-    await user.click(screen.getByRole("tab", { name: "Decisions" }));
+    await user.click(screen.getByRole("tab", { name: "Next" }));
     expect(
       screen.getByText("Nothing needs a decision right now.")
     ).toBeInTheDocument();

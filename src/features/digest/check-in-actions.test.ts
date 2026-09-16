@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildCheckInActions,
   buildCoachCheckInActions,
   buildCheckInCoachQuestion,
   buildStructuredCheckInActions,
@@ -169,6 +170,29 @@ describe("check-in actions", () => {
       "coach:Look back",
     ]);
     expect(actions[1]?.action).toBeNull();
+  });
+
+  it("lists the coach's suggestions after the decisions the window implies", () => {
+    const actions = buildCheckInActions({
+      kind: "weekly",
+      facts: facts({ recover: { count: 1, items: [] } }),
+      suggestions: {
+        motivation: "Solid week.",
+        suggestions: [
+          {
+            title: "Protect Thursday",
+            body: "It is the only clear day.",
+            action: "plan",
+          },
+        ],
+      },
+    });
+
+    expect(actions.map((entry) => entry.id)).toEqual([
+      "recover",
+      "workload",
+      "coach:Protect Thursday",
+    ]);
   });
 
   it("exposes structured decisions and coach suggestions separately", () => {

@@ -423,18 +423,23 @@ First open shows a lightweight prompt that names the cadence and offers only
 **Open** and **Skip**. It does not dim or blur the surface behind it — the user
 did not ask for it, so it must not take the screen hostage. Showing that prompt
 counts as the day's presentation, so it does not return after a refresh.
-Opening it reveals three tabs:
+Opening it reveals two tabs, split by tense rather than by where the content
+came from:
 
-1. **Recap** — the window that just closed, as a score rather than a grade, with
-   the sessions it held. It looks backwards only; what the window ahead implies
-   is a decision, so it is not restated here.
-2. **Decisions** — work to recover, goals with nothing placed, and the hours the
-   remaining sessions add up to. Ordered by what the cadence is for — a month
+1. **Recap** — what happened. The window that just closed, as a score rather
+   than a grade, with the sessions it held. It looks backwards only; what the
+   window ahead implies belongs under Next.
+2. **Next** — what to do about it. The coach's generated paragraph introduces
+   the rows: work to recover, goals with nothing placed, and the hours the
+   remaining sessions add up to, ordered by what the cadence is for — a month
    starts by deciding what to take on, a week by cleaning up, a day by looking
-   at the day.
-3. **Coach** — one generated paragraph and up to three suggestions, grounded
-   strictly in the facts payload. It may not invent sessions, counts, or goal
-   titles. Do not generate this briefing until the user chooses **Open**.
+   at the day. The coach's own suggestions follow the computed rows.
+
+Do not give the coach its own tab. It reads the same facts the computed rows are
+built from, so presenting it separately implies a distinction the user does not
+have. Its paragraph and suggestions are grounded strictly in the facts payload —
+it may not invent sessions, counts, or goal titles — and it is not generated
+until the user chooses **Open**.
 
 The monthly check-in is the only one that offers goal creation, and it offers it
 unconditionally: a month boundary *is* the moment to decide what you are taking

@@ -151,6 +151,25 @@ export function buildCoachCheckInActions(
 }
 
 /**
+ * What the check-in offers to do next: the decisions the window implies, then
+ * whatever the coach added on top of them.
+ */
+export function buildCheckInActions({
+  kind,
+  facts,
+  suggestions,
+}: {
+  kind: DigestKind;
+  facts: DigestFacts;
+  suggestions: DigestSuggestions | null;
+}): CheckInAction[] {
+  return [
+    ...buildStructuredCheckInActions({ kind, facts }),
+    ...buildCoachCheckInActions(suggestions),
+  ];
+}
+
+/**
  * The check-in does not answer follow-ups itself — it hands the question to the
  * planner coach panel, which owns the conversation and the plan proposals.
  *

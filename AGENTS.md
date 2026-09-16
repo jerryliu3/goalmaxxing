@@ -199,8 +199,10 @@ surfaces. The default is to simplify and reuse what already exists.
   the last presented check-in; weekly and monthly windows stay calendar-based.
   First open shows only a lightweight Open/Skip prompt that names the cadence,
   does not dim or blur the page behind it, and counts as the day's
-  presentation, so it does not nag again. Opening reveals Recap, Decisions, and
-  Coach tabs and only then generates the AI briefing. Replay and auto-show live
+  presentation, so it does not nag again. Opening reveals two tabs split by
+  tense — Recap (what happened) and Next (what to do, with the coach paragraph
+  introducing the rows) — and only then generates the AI briefing. The coach
+  does not get its own tab: it reads the same facts the computed rows do. Replay and auto-show live
   in Settings. The check-in never mutates the plan: every row is a jump into
   the surface that owns the change, and "Ask coach" hands a seeded question to
   the planner coach panel. Goal creation is offered only on the monthly check-in.

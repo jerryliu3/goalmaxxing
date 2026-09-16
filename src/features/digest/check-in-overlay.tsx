@@ -12,9 +12,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  buildCoachCheckInActions,
+  buildCheckInActions,
   buildCheckInCoachQuestion,
-  buildStructuredCheckInActions,
   checkInHeading,
   primaryCheckInAction,
   type CheckInAction,
@@ -38,8 +37,7 @@ import {
 
 const CHECK_IN_TABS = [
   { value: "recap", label: "Recap" },
-  { value: "decisions", label: "Decisions" },
-  { value: "coach", label: "Coach" },
+  { value: "next", label: "Next" },
 ] as const;
 
 // The shared tab list styles a pill by default and positions its underline with
@@ -50,7 +48,7 @@ const CHECK_IN_TAB_TRIGGER_CLASS =
 
 /**
  * The period check-in starts as a small, non-recurring prompt. Opening it
- * separates facts, decisions, and coach output without mutating the plan.
+ * splits what happened from what to do next, without mutating the plan.
  */
 export function CheckInOverlay({
   hrefPrefix = "",
@@ -253,15 +251,7 @@ export function CheckInOverlay({
               <TabsContent value="recap">
                 <RecapPanel recap={facts.recap} />
               </TabsContent>
-              <TabsContent value="decisions">
-                <CheckInActionList
-                  actions={buildStructuredCheckInActions({ kind, facts })}
-                  hrefPrefix={hrefPrefix}
-                  onNavigate={leave}
-                  emptyMessage="Nothing needs a decision right now."
-                />
-              </TabsContent>
-              <TabsContent value="coach" className="space-y-3">
+              <TabsContent value="next" className="space-y-3">
                 <p className="text-sm">
                   {suggestions?.motivation ??
                     (briefingSettled
@@ -269,9 +259,10 @@ export function CheckInOverlay({
                       : "Reading your plan…")}
                 </p>
                 <CheckInActionList
-                  actions={buildCoachCheckInActions(suggestions)}
+                  actions={buildCheckInActions({ kind, facts, suggestions })}
                   hrefPrefix={hrefPrefix}
                   onNavigate={leave}
+                  emptyMessage="Nothing needs a decision right now."
                 />
               </TabsContent>
             </Tabs>
