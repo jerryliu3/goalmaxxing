@@ -189,23 +189,35 @@ export function CheckInOverlay({
         }
       }}
     >
-      <DialogContent className="sm:max-w-lg" showCloseButton={false}>
+      <DialogContent
+        className="sm:max-w-lg"
+        showCloseButton={false}
+        // The prompt is an interruption the user did not ask for, so it does
+        // not dim or blur what they were already looking at.
+        overlayClassName={
+          view === "prompt"
+            ? "bg-transparent supports-backdrop-filter:backdrop-blur-none"
+            : undefined
+        }
+      >
         {view === "prompt" ? (
           <>
             <DialogHeader>
-              <DialogTitle>Your check-in is ready</DialogTitle>
+              <DialogTitle>
+                Your {checkInHeading(kind).toLowerCase()} is ready
+              </DialogTitle>
               <DialogDescription>
                 A quick look at what changed and what may need your attention.
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter>
+            <div className="flex justify-center gap-2">
               <Button type="button" variant="outline" onClick={close}>
                 Skip
               </Button>
               <Button type="button" onClick={() => setView("details")}>
                 Open
               </Button>
-            </DialogFooter>
+            </div>
           </>
         ) : (
           <>
@@ -213,16 +225,16 @@ export function CheckInOverlay({
               <DialogTitle>{checkInHeading(kind)}</DialogTitle>
               <DialogDescription>{checkInRecapSummary(facts)}</DialogDescription>
             </DialogHeader>
-            <Tabs defaultValue="recap">
+            <Tabs defaultValue="recap" className="flex flex-col gap-3">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="recap">Recap</TabsTrigger>
                 <TabsTrigger value="decisions">Decisions</TabsTrigger>
                 <TabsTrigger value="coach">Coach</TabsTrigger>
               </TabsList>
-              <TabsContent value="recap" className="pt-2">
+              <TabsContent value="recap">
                 <DigestFactsPanel recap={facts.recap} ahead={facts.ahead} />
               </TabsContent>
-              <TabsContent value="decisions" className="pt-2">
+              <TabsContent value="decisions">
                 <CheckInActionList
                   actions={buildStructuredCheckInActions({ kind, facts })}
                   hrefPrefix={hrefPrefix}
@@ -230,7 +242,7 @@ export function CheckInOverlay({
                   emptyMessage="Nothing needs a decision right now."
                 />
               </TabsContent>
-              <TabsContent value="coach" className="space-y-3 pt-2">
+              <TabsContent value="coach" className="space-y-3">
                 <p className="text-sm">
                   {suggestions?.motivation ??
                     (briefingSettled

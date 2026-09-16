@@ -197,7 +197,8 @@ surfaces. The default is to simplify and reuse what already exists.
   month, weekly on the profile week-start day, daily otherwise — so exactly
   one check-in is owed per first open. Daily recaps cover the date range since
   the last presented check-in; weekly and monthly windows stay calendar-based.
-  First open shows only a lightweight Open/Skip prompt and counts as the day's
+  First open shows only a lightweight Open/Skip prompt that names the cadence,
+  does not dim or blur the page behind it, and counts as the day's
   presentation, so it does not nag again. Opening reveals Recap, Decisions, and
   Coach tabs and only then generates the AI briefing. Replay and auto-show live
   in Settings. The check-in never mutates the plan: every row is a jump into

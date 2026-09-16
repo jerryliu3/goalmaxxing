@@ -419,9 +419,11 @@ not offered that morning. Never stack them.
 The daily recap covers the date range since the last presented check-in.
 Weekly and monthly recaps remain anchored to their calendar periods.
 
-First open shows a lightweight prompt with only **Open** and **Skip**. Showing
-that prompt counts as the day's presentation, so it does not return after a
-refresh. Opening it reveals three tabs:
+First open shows a lightweight prompt that names the cadence and offers only
+**Open** and **Skip**. It does not dim or blur the surface behind it — the user
+did not ask for it, so it must not take the screen hostage. Showing that prompt
+counts as the day's presentation, so it does not return after a refresh.
+Opening it reveals three tabs:
 
 1. **Recap** — the factual window as a score, not a grade.
 2. **Decisions** — work to recover, goals with nothing placed, and the hours the

@@ -110,7 +110,7 @@ describe("CheckInOverlay", () => {
 
     window.dispatchEvent(new Event(DIGEST_OPEN_EVENT));
     expect(
-      await screen.findByRole("dialog", { name: /your check-in is ready/i })
+      await screen.findByRole("dialog", { name: /your daily check-in is ready/i })
     ).toBeInTheDocument();
   });
 
@@ -120,7 +120,7 @@ describe("CheckInOverlay", () => {
     render(<CheckInOverlay />);
 
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText("Your check-in is ready")).toBeInTheDocument();
+    expect(screen.getByText("Your daily check-in is ready")).toBeInTheDocument();
     expect(screen.queryByText("yesterday: 0 of 1 done")).toBeNull();
     await waitFor(() =>
       expect(mocks.postJson).toHaveBeenCalledWith("/api/digest/ack", {})
@@ -140,6 +140,16 @@ describe("CheckInOverlay", () => {
 
     await user.click(screen.getByRole("tab", { name: "Coach" }));
     expect(await screen.findByText("Start with Tempo run.")).toBeInTheDocument();
+  });
+
+  it("names the cadence in the prompt", async () => {
+    finishOnboarding();
+    mocks.getJson.mockResolvedValue({ ...digestPayload, kind: "weekly" });
+    render(<CheckInOverlay />);
+
+    expect(
+      await screen.findByText("Your weekly check-in is ready")
+    ).toBeInTheDocument();
   });
 
   it("marks the check-in presented before the user opens or skips it", async () => {
