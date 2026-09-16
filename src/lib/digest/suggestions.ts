@@ -1,12 +1,14 @@
 import {
+  digestSuggestionActionSchema,
   digestSuggestionsSchema,
+  type DigestSuggestionAction,
   type DigestSuggestions,
 } from "@/lib/digest/contract";
 import type { DigestKind } from "@/lib/digest/period";
 
 const FALLBACK_BY_KIND: Record<
   DigestKind,
-  { motivation: string; title: string; body: string; action: "plan" | "today" }
+  { motivation: string; title: string; body: string; action: DigestSuggestionAction }
 > = {
   monthly: {
     motivation: "Last month is closed. Decide what this month is actually for.",
@@ -58,8 +60,9 @@ function normalizeSuggestionPayload(value: unknown) {
           return entry;
         }
         const suggestion = entry as Record<string, unknown>;
-        const action = suggestion.action;
-        if (action === "plan" || action === "today" || action === "progress") {
+        // A model that invents an action target should still give us a usable
+        // suggestion, so drop the jump rather than the whole row.
+        if (digestSuggestionActionSchema.safeParse(suggestion.action).success) {
           return suggestion;
         }
         return { ...suggestion, action: null };

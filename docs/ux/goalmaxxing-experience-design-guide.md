@@ -425,8 +425,11 @@ One screen, three parts, in this order:
    work to recover, goals with nothing placed, and the hours the remaining
    sessions add up to. Ordered by what the cadence is for — a month starts by
    deciding what to take on, a week by cleaning up, a day by looking at the day.
-   Unplaced goals stay out of the daily check-in, where the list is noise rather
-   than a decision.
+
+The monthly check-in is the only one that offers goal creation, and it offers it
+unconditionally: a month boundary *is* the moment to decide what you are taking
+on, so that row does not have to be earned by the facts. Unplaced goals stay out
+of the daily check-in, where the list is noise rather than a decision.
 
 The check-in never rewrites the plan. Every row is a jump into the surface that
 owns the change — Plan, Today, or Progress — and "Ask coach" hands a seeded

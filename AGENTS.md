@@ -199,6 +199,7 @@ surfaces. The default is to simplify and reuse what already exists.
   acknowledge the period. Replay and auto-show live in Settings. The check-in
   never mutates the plan: every row is a jump into the surface that owns the
   change, and "Ask coach" hands a seeded question to the planner coach panel.
+  Goal creation is offered only on the monthly check-in.
   Its data layer keeps the `digest` name (`user_digests`, `/api/digest/*`);
   "check-in" is the surface. Do not copy concept shells into production
   `AppShell`, tabs, or planner chrome.

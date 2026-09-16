@@ -13,7 +13,7 @@ function horizonFor(kind: DigestKind) {
 
 function focusFor(kind: DigestKind) {
   if (kind === "monthly") {
-    return "Name what last month actually produced, then push on goals with nothing placed this month.";
+    return "Name what last month actually produced, then push on what this month should be for: goals worth adding, and goals with nothing placed.";
   }
   if (kind === "weekly") {
     return "Say how last week landed, then help shape the week: what to recover, what to drop.";
@@ -50,9 +50,10 @@ export function buildDigestPrompt({
     "",
     "OUTPUT CONTRACT",
     "Return only JSON with this shape:",
-    '{"motivation":"one or two sentences","suggestions":[{"title":"short","body":"one sentence","action":"plan"|"today"|"progress"|null}]}',
+    '{"motivation":"one or two sentences","suggestions":[{"title":"short","body":"one sentence","action":"plan"|"today"|"progress"|"goals"|null}]}',
     "motivation max 280 characters. 1-3 suggestions. title max 80. body max 240.",
-    "action=plan opens the calendar, action=today opens today's list, action=progress opens history. Use null when no jump is needed.",
+    "action=plan opens the calendar, action=today opens today's list, action=progress opens history, action=goals opens goal creation. Use null when no jump is needed.",
+    "Use action=goals only on a monthly check-in, and only to add or replace a goal.",
     `Focus suggestions on ${horizonFor(kind)}. ${focusFor(kind)}`,
     "",
     "READING THE FACTS",

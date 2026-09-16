@@ -77,6 +77,20 @@ function unscheduledAction(facts: DigestFacts): CheckInAction | null {
   };
 }
 
+/**
+ * Only on the monthly check-in, and unconditionally: the month boundary *is*
+ * the moment to decide what you are taking on, so this is a standing prompt
+ * rather than something the facts have to earn.
+ */
+function newGoalsAction(): CheckInAction {
+  return {
+    id: "new-goals",
+    title: "Set what this month is for",
+    detail: "Add what you're taking on, or retire what you're not.",
+    action: "goals",
+  };
+}
+
 function workloadAction(
   kind: DigestKind,
   facts: DigestFacts
@@ -99,6 +113,9 @@ function workloadAction(
  * deciding what to take on, a week starts by cleaning up and shaping, and a day
  * starts by looking at the day. Unscheduled goals are left out of the daily
  * check-in, where a list of unplaced goals is noise rather than a decision.
+ *
+ * Nothing here writes: every action is a jump into the surface that owns the
+ * change. The check-in describes decisions, it does not make them.
  */
 export function buildCheckInActions({
   kind,
@@ -114,7 +131,7 @@ export function buildCheckInActions({
   const workload = workloadAction(kind, facts);
   const ordered =
     kind === "monthly"
-      ? [unscheduled, recover, workload]
+      ? [newGoalsAction(), unscheduled, recover, workload]
       : kind === "weekly"
         ? [recover, unscheduled, workload]
         : [workload, recover];

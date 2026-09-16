@@ -61,7 +61,7 @@ describe("checkInRecapSummary", () => {
 });
 
 describe("buildCheckInActions", () => {
-  it("leads the monthly check-in with goals that have nothing placed", () => {
+  it("leads the monthly check-in with deciding what the month is for", () => {
     const actions = buildCheckInActions({
       kind: "monthly",
       facts: facts({
@@ -75,12 +75,31 @@ describe("buildCheckInActions", () => {
     });
 
     expect(actions.map((entry) => entry.id)).toEqual([
+      "new-goals",
       "unscheduled",
       "recover",
       "workload",
     ]);
-    expect(actions[0]?.title).toBe("3 goals have nothing in this week");
-    expect(actions[0]?.detail).toBe("Reading, Writing, and more.");
+    expect(actions[0]?.action).toBe("goals");
+    expect(actions[1]?.title).toBe("3 goals have nothing in this week");
+    expect(actions[1]?.detail).toBe("Reading, Writing, and more.");
+  });
+
+  it("still offers the monthly goal decision when the month is otherwise clear", () => {
+    const actions = buildCheckInActions({
+      kind: "monthly",
+      facts: facts({ ahead: { ...facts().ahead, placed: 2, completed: 2 } }),
+      suggestions: null,
+    });
+
+    expect(actions.map((entry) => entry.id)).toEqual(["new-goals"]);
+  });
+
+  it("keeps goal creation out of the weekly and daily check-ins", () => {
+    for (const kind of ["weekly", "daily"] as const) {
+      const actions = buildCheckInActions({ kind, facts: facts(), suggestions: null });
+      expect(actions.map((entry) => entry.id)).not.toContain("new-goals");
+    }
   });
 
   it("leads the weekly check-in with what needs recovering", () => {

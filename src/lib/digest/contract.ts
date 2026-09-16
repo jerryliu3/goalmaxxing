@@ -58,6 +58,7 @@ export const digestSuggestionActionSchema = z.enum([
   "plan",
   "today",
   "progress",
+  "goals",
 ]);
 
 export const digestSuggestionSchema = z
