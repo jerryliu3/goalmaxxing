@@ -198,7 +198,13 @@ export function getGoalHorizonEndDate(startDate: string): string | null {
 export function resolveGoalPlanningEndDate(
   input: Pick<
     GoalDefinitionValidationInput,
-    "frequencyType" | "targetCount" | "targetBasis" | "startDate" | "endDate" | "asOfDate"
+    | "frequencyType"
+    | "recurrenceInterval"
+    | "targetCount"
+    | "targetBasis"
+    | "startDate"
+    | "endDate"
+    | "asOfDate"
   >
 ) {
   if (isIsoDate(input.endDate)) {
