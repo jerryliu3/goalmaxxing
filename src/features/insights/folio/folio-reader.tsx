@@ -98,7 +98,6 @@ export function FolioReader({ folio }: { folio: GoalFolio }) {
               <TempoGoalCard fields={entry.fields} context="history" achieved={entry.status === "Completed"} />
             </motion.div>
           </AnimatePresence>
-          <div className={styles.openingCover} aria-hidden="true"><span>{folio.year}</span><small>YEAR IN GOALS</small></div>
         </div>
       </div>
       <footer className={styles.readerFooter}>
