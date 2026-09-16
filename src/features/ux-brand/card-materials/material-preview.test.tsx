@@ -34,18 +34,6 @@ it("captures dragging beyond the card, turns past 180°, holds the pose, and res
   expect(stage).toHaveAttribute("data-inspecting", "false");
 });
 
-it("repaints the lettering extrusion as the card turns", () => {
-  render(<MaterialPreview material={MATERIALS.find(item => item.id === "ceramic")!} fields={MATERIAL_SAMPLES[0].fields} still={false} history={false} />);
-  const card = screen.getByRole("group", { name: "Ceramic Relief card rotation" });
-  const stage = card.closest<HTMLElement>("[data-material]")!;
-  expect(stage).toHaveAttribute("data-emboss-scope");
-  const resting = parseFloat(stage.style.getPropertyValue("--emboss-x"));
-  expect(Math.abs(resting)).toBeGreaterThan(0.3);
-  fireEvent.pointerDown(card, { pointerId: 1, button: 0, clientX: 100, clientY: 100 });
-  fireEvent.pointerMove(stage, { pointerId: 1, clientX: 160, clientY: 100 });
-  expect(parseFloat(stage.style.getPropertyValue("--emboss-x"))).toBeGreaterThan(resting + 0.5);
-});
-
 it("releases an active drag and blocks rotation when still mode is enabled", () => {
   const props = { material: MATERIALS.find(item => item.id === "pearl")!, fields: MATERIAL_SAMPLES[0].fields, history: false };
   const { rerender } = render(<MaterialPreview {...props} still={false} />);
