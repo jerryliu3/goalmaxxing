@@ -13,12 +13,12 @@ import {
 } from "@/components/ui/dialog";
 import {
   buildCheckInActions,
+  buildCheckInCoachQuestion,
   checkInHeading,
   checkInRecapSummary,
   primaryCheckInAction,
   type CheckInAction,
 } from "@/features/digest/check-in-actions";
-import { buildCheckInCoachQuestion } from "@/features/digest/check-in-coach-handoff";
 import { canAutoShowDigestAfterOnboarding } from "@/features/digest/digest-eligibility";
 import {
   DIGEST_OPEN_EVENT,
@@ -85,6 +85,9 @@ export function CheckInOverlay({
     };
   }, [forced]);
 
+  // At most one generate per open. `close` re-arms the guard, so the cleanup
+  // must not: `payload` is a dependency and this effect writes it, so resetting
+  // on every dependency change would let a second request through.
   useEffect(() => {
     if (!open || !payload || payload.suggestions || generateStartedRef.current) {
       return;
@@ -116,7 +119,6 @@ export function CheckInOverlay({
       });
     return () => {
       cancelled = true;
-      generateStartedRef.current = false;
     };
   }, [open, payload]);
 
@@ -137,12 +139,16 @@ export function CheckInOverlay({
     }
   };
 
-  const facts = payload?.facts;
-  const kind = payload?.kind ?? "daily";
+  // The sheet has nothing to say until the facts land, and it only ever opens
+  // once they have. Bailing here keeps the body free of `facts &&` guards.
+  if (!payload) {
+    return null;
+  }
+  const { facts, kind, suggestions } = payload;
 
   return (
     <Dialog
-      open={open && Boolean(facts)}
+      open={open}
       onOpenChange={(nextOpen) => {
         if (!nextOpen) {
           close(true);
@@ -152,48 +158,38 @@ export function CheckInOverlay({
       <DialogContent className="sm:max-w-lg" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{checkInHeading(kind)}</DialogTitle>
-          <DialogDescription>
-            {facts ? checkInRecapSummary(facts) : "Pulling your plan together."}
-          </DialogDescription>
+          <DialogDescription>{checkInRecapSummary(facts)}</DialogDescription>
         </DialogHeader>
-        {facts ? (
-          <div className="space-y-4">
-            <p className="text-sm">
-              {payload?.suggestions?.motivation ??
-                (briefingSettled
-                  ? "Start with what’s already on the calendar."
-                  : "Reading your plan…")}
-            </p>
-            <CheckInActionList
-              actions={buildCheckInActions({
-                kind,
-                facts,
-                suggestions: payload?.suggestions ?? null,
-              })}
-              hrefPrefix={hrefPrefix}
-              onNavigate={leave}
-            />
-          </div>
-        ) : null}
+        <div className="space-y-4">
+          <p className="text-sm">
+            {suggestions?.motivation ??
+              (briefingSettled
+                ? "Start with what’s already on the calendar."
+                : "Reading your plan…")}
+          </p>
+          <CheckInActionList
+            actions={buildCheckInActions({ kind, facts, suggestions })}
+            hrefPrefix={hrefPrefix}
+            onNavigate={leave}
+          />
+        </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => close(true)}>
             Skip
           </Button>
-          {facts ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                stashCoachPromptSeed(
-                  window.sessionStorage,
-                  buildCheckInCoachQuestion({ kind, facts })
-                );
-                leave(digestActionHref("plan", hrefPrefix));
-              }}
-            >
-              Ask coach
-            </Button>
-          ) : null}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              stashCoachPromptSeed(
+                window.sessionStorage,
+                buildCheckInCoachQuestion({ kind, facts })
+              );
+              leave(digestActionHref("plan", hrefPrefix));
+            }}
+          >
+            Ask coach
+          </Button>
           <Button
             type="button"
             onClick={() => leave(digestActionHref(primaryCheckInAction(kind), hrefPrefix))}

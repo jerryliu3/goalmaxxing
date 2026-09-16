@@ -147,3 +147,31 @@ export function buildCheckInActions({
   }));
   return [...structured, ...coachActions];
 }
+
+/**
+ * The check-in does not answer follow-ups itself — it hands the question to the
+ * planner coach panel, which owns the conversation and the plan proposals.
+ *
+ * The question is built from the rows the sheet just rendered rather than from
+ * the facts again, so the coach opens knowing exactly what the user is looking
+ * at. The model's own suggestions are left out: they are its words, not the
+ * user's situation.
+ */
+export function buildCheckInCoachQuestion({
+  kind,
+  facts,
+}: {
+  kind: DigestKind;
+  facts: DigestFacts;
+}) {
+  const horizon = facts.ahead.label.toLowerCase();
+  const decisions = buildCheckInActions({ kind, facts, suggestions: null });
+  return [
+    `Following up on my ${checkInHeading(kind).toLowerCase()}.`,
+    `How it went — ${checkInRecapSummary(facts)}.`,
+    ...(decisions.length > 0
+      ? ["What the check-in flagged:", ...decisions.map((entry) => `- ${entry.title}`)]
+      : []),
+    `Help me decide how to tackle ${horizon}.`,
+  ].join("\n");
+}

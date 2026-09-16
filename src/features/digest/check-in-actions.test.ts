@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCheckInActions,
+  buildCheckInCoachQuestion,
   checkInHeading,
   checkInRecapSummary,
   primaryCheckInAction,
@@ -173,5 +174,36 @@ describe("buildCheckInActions", () => {
       "coach:Look back",
     ]);
     expect(actions[2]?.action).toBeNull();
+  });
+});
+
+describe("buildCheckInCoachQuestion", () => {
+  it("hands over the same decisions the sheet rendered", () => {
+    const question = buildCheckInCoachQuestion({
+      kind: "weekly",
+      facts: facts({
+        recover: { count: 1, items: [] },
+        unscheduled: { count: 2, titles: ["Reading"] },
+      }),
+    });
+
+    expect(question).toContain("Following up on my weekly check-in.");
+    expect(question).toContain("How it went — last week: 5 of 8 done.");
+    expect(question).toContain("- Recover 1 missed session");
+    expect(question).toContain("- 2 goals have nothing in this week");
+    expect(question).toContain("- 5 sessions in this week, about 2h 30m");
+    expect(question).toContain("Help me decide how to tackle this week.");
+  });
+
+  it("still asks for help when the window has nothing to decide", () => {
+    const question = buildCheckInCoachQuestion({
+      kind: "daily",
+      facts: facts({
+        ahead: { ...facts().ahead, label: "Today", placed: 2, completed: 2 },
+      }),
+    });
+
+    expect(question).not.toContain("What the check-in flagged");
+    expect(question).toContain("Help me decide how to tackle today.");
   });
 });
