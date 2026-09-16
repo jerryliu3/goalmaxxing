@@ -37,7 +37,6 @@
 .notes dl { margin-top: 1.2rem; display: grid; gap: .75rem; }
 .notes dl > div { display: grid; grid-template-columns: 75px 1fr; gap: .75rem; }
 .notes dt { color: var(--study-ink); font-size: .7rem; font-weight: 600; }
-
 /* Connected side planes are siblings of the front face, so face effects
    cannot flatten the card body. Both share the object's perspective rotation. */
 .stage[data-form="solid"] .object {
@@ -130,6 +129,34 @@
 .stage:is([data-material="ruby"],[data-material="sapphire"]) .object :global(.tempo-card-target > span) { text-shadow: 2px 4px 2px #03082180; }
 .stage:is([data-material="ruby"],[data-material="sapphire"],[data-material="platinum"]) .object :global(.tempo-card h2) { transform: translateZ(10px); }
 .stage[data-material="pearl"] .object :global(.tempo-card-target strong) { background-size: 200% 200%; background-position: var(--metal-x) var(--metal-y); }
+
+/* Relief pass: every readable element is attached to the face. The same
+   card-local light vector that shades the edge now lights the shallow type. */
+.stage .object :global(.tempo-card) { overflow: hidden; }
+.stage .object :global(.tempo-card > *) {
+  transform: translateZ(3px);
+  text-shadow:
+    var(--relief-light-x) var(--relief-light-y) 1px #fff9,
+    var(--relief-shadow-x) var(--relief-shadow-y) 2px #162a2645;
+}
+.stage .object :global(.tempo-card-target) { transform: translateZ(4px); }
+.stage .object :global(.tempo-card-target strong) {
+  filter:
+    drop-shadow(var(--relief-light-x) var(--relief-light-y) 0 #fff9)
+    drop-shadow(var(--relief-shadow-x) var(--relief-shadow-y) 2px #162a2655);
+}
+.stage .object :global(.tempo-card svg),
+.stage .object :global(.tempo-effort-bars) {
+  filter:
+    drop-shadow(var(--relief-light-x) var(--relief-light-y) 0 #fff8)
+    drop-shadow(var(--relief-shadow-x) var(--relief-shadow-y) 1px #162a2648);
+}
+.stage[data-material="foil"] .object :global(.tempo-card > *),
+.stage:is([data-material="ruby"],[data-material="sapphire"]) .object :global(.tempo-card > *) {
+  text-shadow:
+    var(--relief-light-x) var(--relief-light-y) 1px #fff5,
+    var(--relief-shadow-x) var(--relief-shadow-y) 2px #0009;
+}
 .recommendation { border-top: 1px solid var(--study-line); margin-top: 5rem; padding: 3rem 0; }
 .recommendation h2 { font-family: var(--font-display); font-size: clamp(2.3rem,4vw,3.7rem); line-height: 1.06; letter-spacing: -.03em; margin: 1.2rem 0; font-weight: 400; }
 .recommendation > p:last-of-type { max-width: 39rem; line-height: 1.8; font-size: .9rem; color: var(--study-muted); }
