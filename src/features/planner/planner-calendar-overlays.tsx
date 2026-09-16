@@ -22,7 +22,9 @@ import { PlannerFiltersDialog } from "@/features/planner/planner-filters-dialog"
 import type { MoveSourceCandidate } from "@/features/planner/planner-move-source-options";
 import { PlannerSettingsDialog } from "@/features/planner/planner-settings-dialog";
 import type { ChecklistFiltersFormProps } from "@/features/today/checklist-filters-dialog";
+import type { ChecklistGoalPresentation } from "@/lib/goals/checklist-presentation";
 import type { GoalMonthOption } from "@/lib/goals/list-view";
+import type { Goal } from "@/lib/goals/types";
 import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
 
 export interface PlannerCalendarOverlaysProps {
@@ -60,12 +62,13 @@ export interface PlannerCalendarOverlaysProps {
     targetSuppressionKind: "none" | "until" | "indefinite";
     targetResumesOn: string | null;
   }>;
+  selectedEventGoal: Goal | null;
+  selectedEventPresentation: ChecklistGoalPresentation | null;
   goalTitles: Record<string, string>;
   scopeMonth: string;
   selectedEventBaselineUnit:
     | {
         effectiveScheduledLocalTime?: string | null;
-        scheduledTimeOverride?: string | null;
       }
     | null;
   selectedEventDraftScheduledDate: string | null;
@@ -123,6 +126,8 @@ export function PlannerCalendarOverlays({
   onMoveDialogSubmit,
   selectedEventEntry,
   selectedEventLinkedTargets,
+  selectedEventGoal,
+  selectedEventPresentation,
   goalTitles,
   scopeMonth,
   selectedEventBaselineUnit,
@@ -199,6 +204,8 @@ export function PlannerCalendarOverlays({
           <PlannerEventDetailDialog
             selectedEventEntry={selectedEventEntry}
             selectedEventLinkedTargets={selectedEventLinkedTargets}
+            selectedEventGoal={selectedEventGoal}
+            selectedEventPresentation={selectedEventPresentation}
             goalTitles={goalTitles}
             scopeMonth={scopeMonth}
             selectedEventBaselineUnit={selectedEventBaselineUnit}
@@ -210,7 +217,6 @@ export function PlannerCalendarOverlays({
             canNavigateToPreviousOpenInstance={canNavigateToPreviousOpenInstance}
             canNavigateToNextOpenInstance={canNavigateToNextOpenInstance}
             canNavigateToLastOpenInstance={canNavigateToLastOpenInstance}
-            getEntryGoalFirstTitleWithTime={getEntryGoalFirstTitleWithTime}
             callbacks={eventDetailCallbacks}
           />
         </>

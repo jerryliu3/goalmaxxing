@@ -343,6 +343,16 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     viewMode,
     plannerShowCompletedGoals: showCompletedGoals,
   });
+  const selectedEventGoal = selectedEventEntry
+    ? dayChecklist.data.goals.find(
+        (goal) => goal.id === selectedEventEntry.originalGoalId
+      ) ?? null
+    : null;
+  const selectedEventPresentation = selectedEventEntry
+    ? dayChecklist.listModel.presentationByGoalId.get(
+        selectedEventEntry.originalGoalId
+      ) ?? null
+    : null;
   const pendingMonthRowRestoreRef = useRef<{
     day: string;
     previousTop: number;
@@ -659,6 +669,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         onMoveDialogSubmit={submitMoveDialog}
         selectedEventEntry={selectedEventEntry}
         selectedEventLinkedTargets={selectedEventLinkedTargets}
+        selectedEventGoal={selectedEventGoal}
+        selectedEventPresentation={selectedEventPresentation}
         goalTitles={context?.goalTitles ?? {}}
         scopeMonth={context?.scopeMonth ?? month ?? "1970-01"}
         selectedEventBaselineUnit={selectedEventBaselineUnit}
