@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardOptics, pointerPose, REST_POSE, TILTED_POSE } from "./card-optics";
+import { cardOptics, dragPose, nearestPose, pointerPose, REST_POSE, TILTED_POSE } from "./card-optics";
 
 describe("card optics", () => {
   it("tilts both axes with bounded pointer input", () => {
@@ -18,7 +18,7 @@ describe("card optics", () => {
     expect(parseFloat(left["--rim-light-x"])).toBeGreaterThan(parseFloat(right["--rim-light-x"]));
     const above = cardOptics({ x: -18, y: 0 });
     const below = cardOptics({ x: 18, y: 0 });
-    expect(above["--shine-position"]).not.toBe(below["--shine-position"]);
+    expect(above["--shine-strength"]).not.toBe(below["--shine-strength"]);
     expect(above["--rim-light-y"]).not.toBe(below["--rim-light-y"]);
   });
 
@@ -27,4 +27,23 @@ describe("card optics", () => {
     expect(cardOptics(TILTED_POSE)["--shine-position"]).not.toBe(cardOptics(REST_POSE)["--shine-position"]);
     expect(cardOptics(TILTED_POSE)["--metal-x"]).not.toBe(cardOptics(REST_POSE)["--metal-x"]);
   });
+
+  it("sweeps the beam across the face while keeping its angle nearly fixed", () => {
+    const left = cardOptics({ x: 0, y: -22 });
+    const right = cardOptics({ x: 0, y: 22 });
+    expect(Math.abs(parseFloat(left["--shine-position"]) - parseFloat(right["--shine-position"]))).toBeGreaterThan(90);
+    expect(Math.abs(parseFloat(left["--shine-angle"]) - parseFloat(right["--shine-angle"]))).toBeLessThan(4);
+    expect(left["--pearl-x"]).not.toBe(right["--pearl-x"]);
+    expect(cardOptics({ x: 20, y: 0 })["--pearl-y"]).not.toBe(cardOptics({ x: -20, y: 0 })["--pearl-y"]);
+  });
+
+  it("allows full revolutions and resets without unwinding them", () => {
+    const turned = dragPose({ x: 0, y: 0 }, 500, -300);
+    expect(turned).toEqual({ x: 240, y: 400 });
+    const reset = nearestPose(turned, REST_POSE);
+    expect(Math.abs(reset.x - turned.x)).toBeLessThanOrEqual(180);
+    expect(Math.abs(reset.y - turned.y)).toBeLessThanOrEqual(180);
+    expect((reset.y - REST_POSE.y) % 360).toBe(0);
+  });
+
 });
