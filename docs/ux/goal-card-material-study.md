@@ -11,8 +11,8 @@ has been selected yet.
 | Direction | Material and interaction | Best fit | Implementation scope / tradeoff |
 | --- | --- | --- | --- |
 | Liquid Glass | Translucent beveled face, continuous polished thickness, pointer lighting, perspective tilt | One featured goal or active folio card | CSS blur plus layered gradients; requires contrast checks over backgrounds. Milky face and opaque fallback preserve readability. Approximate optical glass, not a physical refraction shader. |
-| Ceramic Relief | Richer category glaze, continuous rounded edge, raised target and rhythm | Everyday goal creation and detail | CSS extrusion and depth planes; no blur or graphics runtime. Restrained elevation needed when several cards share a screen. Recommended starting point. |
-| Layered Diorama | Colored backplate and offset sheets behind one embossed reading face | Folio collection and large previews | CSS preserve-3d and transforms. Requires outer space; compress to a flat treatment in dense layouts. Most expressive dimensional option. |
+| Ceramic Relief | Richer category glaze, continuous rounded edge, glazed flat type | Everyday goal creation and detail | CSS body extrusion; no blur or graphics runtime. Restrained elevation needed when several cards share a screen. Recommended starting point. |
+| Layered Diorama | Colored backplate and offset sheets behind one flat reading face | Folio collection and large previews | CSS preserve-3d and transforms. Requires outer space; compress to a flat treatment in dense layouts. Most expressive dimensional option. |
 | Foil Print | Dark printed collectible, spectral foil numerals, narrow iridescent sheen, solid gilded edge | Completed goals and collection moments | Selective foil on one gilded card with perspective tilt. Preserve dark/light type contrast and avoid making routine goals feel like rarity tiers. |
 | Woven Paper | Matte cloth fibers, stitched inset, colored ink | Archive and warm everyday cards | Small CSS texture gradients; no tilt. Quietest match for the cloth folio. Texture should remain below text contrast. |
 | Pearl Reserve | Light ivory pearl lacquer, champagne foil, gilded thickness | A light premium everyday or collection card | Fine-stationery and mother-of-pearl cues. Bronze foil stays dark enough for the ivory face; no rear sheet. |
@@ -69,12 +69,10 @@ Solid materials use a connected ten-pixel-deep CSS body with four side planes,
 rounded corner facets, and a rear face. The former downward edge shadows are
 removed. Side visibility and apparent thickness now come from perspective.
 They render no offset backplate or second sheet. Glass also loses the separate
-colored lens in its backdrop. Every readable element now sits in shallow relief
-on the face. Its highlight and cast shadow use the same card-local light vector
-as the rim, so the embossing responds coherently while the card turns. Ceramic
-uses a stronger category-color glaze. Foil preserves its ink, fine frame, and
-spectral numerals while gaining tilt and a gilded edge. The original effort bars
-remain the difficulty cue.
+colored lens in its backdrop. Type is printed flat on the face; see
+`Flat lettering` below for why. Ceramic uses a stronger category-color glaze.
+Foil preserves its ink, fine frame, and spectral numerals while gaining tilt and
+a gilded edge. The original effort bars remain the difficulty cue.
 
 ## Precious finishes
 
@@ -126,13 +124,30 @@ full-rotation controls, and finished back face. Switch the sample goal between
 green, violet, and rose to compare the finish. The original material concepts
 remain available for comparison; these additions do not recolor them.
 
+## Flat lettering
+
+Two passes attempted embossed study type: first a one-pixel highlight and cast
+shadow driven by the card-local light vector, then an eight-step extruded wall
+with pose-driven side lighting. Neither read as dimensional in review; the
+second also muddied the metallic numerals it was meant to sculpt. The extruded
+wall was reverted on its own. This pass removes what remains: the `--relief-*`
+optics outputs, the per-material relief shadows on study text, and the depth
+planes that floated type above the face.
+
+Study type is now printed flat on the card face. Dimensionality comes from the
+card body, its connected side planes, its edges, and its moving reflections.
+Materials still style lettering by color and foil gradient only — the metallic
+numerals keep their pose-driven gradient position, since that is surface finish
+rather than geometry. Lettering depth is out of scope for this study unless a
+future pass can demonstrate it convincingly.
+
 ## Application formats and earned objects
 
 The study now has three views. Goal cards preserve the twelve-way comparison.
 “In the app” applies one selected material to a community challenge, compact
 leaderboard, and profile trading card. Their proportions and information
-hierarchies differ, but face treatment, shallow relief, and moving light remain
-one system.
+hierarchies differ, but face treatment, edge, and moving light remain one
+system.
 
 “Trophies & objects” moves beyond rectangular UI: an annual momentum cup, a
 hundred-milestone medal, and a momentum compass inherit the selected material.

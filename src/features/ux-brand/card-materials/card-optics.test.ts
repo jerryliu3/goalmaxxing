@@ -20,9 +20,6 @@ describe("card optics", () => {
     const below = cardOptics({ x: 18, y: 0 });
     expect(above["--shine-strength"]).not.toBe(below["--shine-strength"]);
     expect(above["--rim-light-y"]).not.toBe(below["--rim-light-y"]);
-    expect(above["--relief-shadow-y"]).not.toBe(below["--relief-shadow-y"]);
-    expect(parseFloat(above["--relief-light-y"])).toBeLessThan(0);
-    expect(parseFloat(above["--relief-shadow-y"])).toBeGreaterThan(0);
   });
 
   it("gives keyboard poses the same deterministic reflection as pointer poses", () => {
@@ -52,4 +49,8 @@ describe("card optics", () => {
     expect(Math.abs(hoverAfterReset.x - reset.x)).toBeLessThan(30);
   });
 
+  it("publishes only body and surface lighting, never text depth", () => {
+    const keys = Object.keys(cardOptics(TILTED_POSE));
+    expect(keys.some(key => /relief|emboss/.test(key))).toBe(false);
+  });
 });

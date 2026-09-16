@@ -12,10 +12,9 @@
 }
 .stage[data-material="prismatic"] :global(.tempo-card)::before { content: ""; position: absolute; inset: 12px; border: 1px solid color-mix(in srgb,var(--material-color) 14%,transparent); border-radius: 5px; pointer-events: none; }
 .stage[data-material="prismatic"][data-form="solid"] :global(.tempo-card-target strong) {
-  text-shadow: none; color: color-mix(in srgb,var(--material-color) 30%,#344247);
+  color: color-mix(in srgb,var(--material-color) 30%,#344247);
   background-image: linear-gradient(125deg,#344247,color-mix(in srgb,var(--material-color) 45%,#667577) 35%,#35454a 60%,color-mix(in srgb,var(--material-color) 32%,#758084));
   background-size: 200% 200%; background-position: var(--metal-x) var(--metal-y); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  filter: drop-shadow(var(--relief-light-x) var(--relief-light-y) 0 #fff9) drop-shadow(var(--relief-shadow-x) var(--relief-shadow-y) 2px #34424733);
 }
 .stage[data-material="prismatic"] :global(.tempo-effort-bars i[data-active="true"]) { background: color-mix(in srgb,var(--material-color) 50%,#344247); }
 
@@ -32,11 +31,10 @@
 }
 .stage[data-material="chromatic"] :global(.tempo-card)::before { content: ""; position: absolute; inset: 11px; border: 1px solid color-mix(in srgb,var(--material-color) 22%,transparent); border-radius: 3px; pointer-events: none; }
 .stage[data-material="chromatic"][data-form="solid"] :global(.tempo-card-target strong) {
-  text-shadow: none; color: #dce8e9;
+  color: #dce8e9;
   background-image: linear-gradient(125deg,#f5f8f9 10%,color-mix(in srgb,var(--material-color) 40%,#c2cdd1) 30%,#fff 44%,color-mix(in srgb,var(--material-color) 22%,#a7b9c0) 65%,#e8f1f3);
-  background-size: 200% 200%; background-position: var(--metal-x) var(--metal-y); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(var(--relief-light-x) var(--relief-light-y) 0 #fff5) drop-shadow(var(--relief-shadow-x) var(--relief-shadow-y) 2px #0008);
+  background-size: 200% 200%; background-position: var(--metal-x) var(--metal-y); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
-.stage[data-material="chromatic"][data-form="solid"] :global(.tempo-card-target > span) { text-shadow: var(--relief-light-x) var(--relief-light-y) 1px #fff4,var(--relief-shadow-x) var(--relief-shadow-y) 2px #0008; }
 .stage[data-material="chromatic"] :global(.tempo-effort-bars i) { background: #edf2f426; }
 .stage[data-material="chromatic"] :global(.tempo-effort-bars i[data-active="true"]) { background: color-mix(in srgb,var(--material-color) 35%,#dce8e9); }
 
@@ -52,7 +50,7 @@
   background: radial-gradient(ellipse at var(--light-x) var(--light-y),#fff8,transparent 60%),repeating-linear-gradient(0deg,#263c5409 0px,#263c5409 .5px,transparent .5px,transparent 2px),linear-gradient(135deg,color-mix(in srgb,var(--material-color) 30%,#dee5e8),color-mix(in srgb,var(--material-color) 14%,#f4f6f6) 42%,color-mix(in srgb,var(--material-color) 34%,#c9d4dc));
 }
 .stage[data-material="alloy"] :global(.tempo-card)::before { content: ""; position: absolute; inset: 11px; border: 1px solid #33455323; border-radius: 7px; pointer-events: none; }
-.stage[data-material="alloy"][data-form="solid"] :global(.tempo-card-target strong) { color: color-mix(in srgb,var(--material-color) 25%,#293946); text-shadow: var(--relief-light-x) var(--relief-light-y) 1px #fff8,var(--relief-shadow-x) var(--relief-shadow-y) 2px #21334240; }
+.stage[data-material="alloy"][data-form="solid"] :global(.tempo-card-target strong) { color: color-mix(in srgb,var(--material-color) 25%,#293946); }
 .stage[data-material="alloy"] :global(.tempo-effort-bars i[data-active="true"]) { background: color-mix(in srgb,var(--material-color) 38%,#293946); }
 
 .stage:is([data-material="chromatic"],[data-material="alloy"]) :global(.tempo-card)::after {
