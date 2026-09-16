@@ -206,7 +206,7 @@ surfaces. The default is to simplify and reuse what already exists.
   Replay and auto-show live in Settings. The check-in never mutates the plan:
   missed recap sessions can be marked complete inline through the canonical
   completion path, while complex planning changes may jump into the surface
-  that owns them. Informational workload totals do not become action rows.
+  that owns them. Informational workload rows may remain but must not get CTAs.
   Prefer inline controls over navigation where the owning workflow can be
   embedded without duplicating business logic. "Ask coach" hands a seeded
   question to the planner coach panel. Goal creation is offered only on the

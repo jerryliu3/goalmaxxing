@@ -1,4 +1,5 @@
 import type { DigestFactItem, DigestFacts } from "@/lib/digest/contract";
+import { DIGEST_DEFAULT_SESSION_MINUTES } from "@/lib/digest/hours";
 
 function matchesItem(
   item: DigestFactItem,
@@ -22,6 +23,10 @@ export function applyRecapCompletion(
     recap: {
       ...facts.recap,
       completed: facts.recap.completed + 1,
+      estimatedMinutes: Math.max(
+        0,
+        facts.recap.estimatedMinutes - DIGEST_DEFAULT_SESSION_MINUTES
+      ),
       items: facts.recap.items.map((item) =>
         matchesItem(item, completed) ? { ...item, state: "completed" } : item
       ),

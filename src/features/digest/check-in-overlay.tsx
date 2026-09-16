@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,15 +12,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  buildCheckInActions,
+  buildCheckInRows,
   buildCheckInCoachQuestion,
   checkInHeading,
   primaryCheckInAction,
-  type CheckInAction,
 } from "@/features/digest/check-in-actions";
+import { CheckInRowList } from "@/features/digest/check-in-action-list";
 import { applyRecapCompletion } from "@/features/digest/check-in-recap";
+import { CheckInRecapPanel } from "@/features/digest/check-in-recap-panel";
 import { canAutoShowDigestAfterOnboarding } from "@/features/digest/digest-eligibility";
-import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import {
   DIGEST_OPEN_EVENT,
   digestActionHref,
@@ -29,17 +28,8 @@ import {
 } from "@/features/digest/digest-api";
 import { getJson, postJson } from "@/lib/api/client";
 import { stashCoachPromptSeed } from "@/lib/coach/coach-prompt-seed";
-import {
-  resolveSelectedDateState,
-  toLocalDateString,
-} from "@/lib/dates/day";
-import type {
-  DigestFactItem,
-  DigestWindowFacts,
-} from "@/lib/digest/contract";
-import { resolveUserTimezone } from "@/lib/dates/timezone";
-import { resolveCompletionDispatch } from "@/lib/planner/completion-dispatch";
-import { captureViewportRect } from "@/lib/xp/events";
+import { toLocalDateString } from "@/lib/dates/day";
+import type { DigestFactItem } from "@/lib/digest/contract";
 import {
   Tabs,
   TabsContent,
@@ -58,32 +48,6 @@ const CHECK_IN_TABS = [
 const CHECK_IN_TAB_TRIGGER_CLASS =
   "relative h-auto flex-1 rounded-none border-0 py-2 text-sm font-medium after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-primary data-[state=active]:after:opacity-100";
 
-function recapItemKey(item: Pick<DigestFactItem, "goalId" | "date">) {
-  return `${item.goalId}:${item.date}`;
-}
-
-function checkInActionLabel(entry: CheckInAction) {
-  if (entry.id === "recover") {
-    return "Review calendar";
-  }
-  if (entry.id === "unscheduled") {
-    return "Schedule goals";
-  }
-  if (entry.id === "new-goals") {
-    return "Add goal";
-  }
-  if (entry.action === "today") {
-    return "View today";
-  }
-  if (entry.action === "progress") {
-    return "View progress";
-  }
-  if (entry.action === "goals") {
-    return "Add goal";
-  }
-  return "Review plan";
-}
-
 /**
  * The period check-in starts as a small, non-recurring prompt. Opening it
  * splits what happened from what to do next, without mutating the plan.
@@ -94,15 +58,11 @@ export function CheckInOverlay({
   hrefPrefix?: string;
 }) {
   const router = useRouter();
-  const runCompletionMutation = useCompletionMutation();
   const [open, setOpen] = useState(false);
   const [forced, setForced] = useState(false);
   const [view, setView] = useState<"prompt" | "details">("prompt");
   const [payload, setPayload] = useState<DigestPayload | null>(null);
   const [briefingSettled, setBriefingSettled] = useState(false);
-  const [savingCompletionKey, setSavingCompletionKey] = useState<string | null>(
-    null
-  );
   const generateStartedRef = useRef(false);
   const presentedKeyRef = useRef<string | null>(null);
 
@@ -224,52 +184,6 @@ export function CheckInOverlay({
     }
   };
 
-  const completeRecapItem = async (
-    item: DigestFactItem,
-    sourceElement: HTMLButtonElement
-  ) => {
-    if (!payload || item.state === "completed") {
-      return;
-    }
-    const key = recapItemKey(item);
-    setSavingCompletionKey(key);
-    const decision = resolveCompletionDispatch({
-      requirementKind: "deadline_total",
-      targetedRecurring: false,
-      activePlanMembership: false,
-      matchingItemState: "none",
-      selectedDateState: resolveSelectedDateState(
-        item.date,
-        payload.localDate
-      ),
-      existingExactFact: false,
-      desiredFactState: "present",
-    });
-    const result = await runCompletionMutation({
-      decision,
-      desiredFactState: "present",
-      goalId: item.goalId,
-      date: item.date,
-      timezone: resolveUserTimezone(),
-      sourceRect: captureViewportRect(sourceElement),
-      fallbackErrorMessage: "The completion could not be updated.",
-    });
-    setSavingCompletionKey(null);
-    if (!result.ok) {
-      toast.error(result.message ?? "The completion could not be updated.");
-      return;
-    }
-    setPayload((current) =>
-      current
-        ? {
-            ...current,
-            facts: applyRecapCompletion(current.facts, item),
-          }
-        : current
-    );
-    toast.success(`${item.title} marked complete for ${item.date}.`);
-  };
-
   // The sheet has nothing to say until the facts land, and it only ever opens
   // once they have. Bailing here keeps the body free of `facts &&` guards.
   if (!payload) {
@@ -337,10 +251,19 @@ export function CheckInOverlay({
                 ))}
               </TabsList>
               <TabsContent value="recap">
-                <RecapPanel
+                <CheckInRecapPanel
                   recap={facts.recap}
-                  savingCompletionKey={savingCompletionKey}
-                  onComplete={completeRecapItem}
+                  localDate={payload.localDate}
+                  onCompleted={(item: DigestFactItem) =>
+                    setPayload((current) =>
+                      current
+                        ? {
+                            ...current,
+                            facts: applyRecapCompletion(current.facts, item),
+                          }
+                        : current
+                    )
+                  }
                 />
               </TabsContent>
               <TabsContent value="next" className="space-y-3">
@@ -350,8 +273,8 @@ export function CheckInOverlay({
                       ? "Start with what’s already on the calendar."
                       : "Reading your plan…")}
                 </p>
-                <CheckInActionList
-                  actions={buildCheckInActions({ kind, facts, suggestions })}
+                <CheckInRowList
+                  rows={buildCheckInRows({ kind, facts, suggestions })}
                   hrefPrefix={hrefPrefix}
                   onNavigate={leave}
                   emptyMessage="Nothing needs a decision right now."
@@ -388,114 +311,5 @@ export function CheckInOverlay({
         )}
       </DialogContent>
     </Dialog>
-  );
-}
-
-/**
- * Recap looks backwards only. What the window ahead implies is a decision, so
- * it belongs on the Decisions tab rather than being restated here.
- */
-function RecapPanel({
-  recap,
-  savingCompletionKey,
-  onComplete,
-}: {
-  recap: DigestWindowFacts;
-  savingCompletionKey: string | null;
-  onComplete: (
-    item: DigestFactItem,
-    sourceElement: HTMLButtonElement
-  ) => Promise<void>;
-}) {
-  return (
-    <div className="space-y-3">
-      <div>
-        <p className="text-lg font-semibold">
-          {recap.placed === 0
-            ? "Nothing was placed"
-            : `${recap.completed} of ${recap.placed} done`}
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {recap.label}
-          {recap.start === recap.end
-            ? ` · ${recap.start}`
-            : ` · ${recap.start} – ${recap.end}`}
-        </p>
-      </div>
-      {recap.items.length > 0 ? (
-        <ul className="space-y-1">
-          {recap.items.map((item) => (
-            <li
-              key={`${item.title}:${item.date}`}
-              className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
-            >
-              <span className="truncate text-sm">{item.title}</span>
-              {item.state === "completed" ? (
-                <span className="shrink-0 text-xs text-muted-foreground">
-                  Done
-                </span>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0"
-                  disabled={savingCompletionKey !== null}
-                  onClick={(event) =>
-                    void onComplete(item, event.currentTarget)
-                  }
-                >
-                  {savingCompletionKey === recapItemKey(item)
-                    ? "Saving…"
-                    : "Mark done"}
-                </Button>
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
-  );
-}
-
-function CheckInActionList({
-  actions,
-  hrefPrefix,
-  onNavigate,
-  emptyMessage,
-}: {
-  actions: CheckInAction[];
-  hrefPrefix: string;
-  onNavigate: (href: string | null) => void;
-  emptyMessage?: string;
-}) {
-  if (actions.length === 0) {
-    return emptyMessage ? (
-      <p className="text-sm text-muted-foreground">{emptyMessage}</p>
-    ) : null;
-  }
-
-  return (
-    <ul className="space-y-2">
-      {actions.map((entry) => {
-        const href = digestActionHref(entry.action, hrefPrefix);
-        return (
-          <li key={entry.id} className="rounded-lg border p-3">
-            <p className="text-sm font-medium">{entry.title}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{entry.detail}</p>
-            {href ? (
-              <Button
-                type="button"
-                variant="link"
-                className="h-auto px-0"
-                onClick={() => onNavigate(href)}
-              >
-                {checkInActionLabel(entry)}
-              </Button>
-            ) : null}
-          </li>
-        );
-      })}
-    </ul>
   );
 }

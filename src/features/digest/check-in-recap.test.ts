@@ -62,6 +62,7 @@ describe("applyRecapCompletion", () => {
     });
 
     expect(next.recap.completed).toBe(1);
+    expect(next.recap.estimatedMinutes).toBe(30);
     expect(next.recap.items[0]?.state).toBe("completed");
     expect(next.recover.count).toBe(1);
     expect(next.recover.items.map((item) => item.goalId)).toEqual(["read"]);

@@ -3,9 +3,13 @@ import type {
   DigestSuggestionAction,
   DigestSuggestions,
 } from "@/lib/digest/contract";
+import {
+  DIGEST_DEFAULT_SESSION_MINUTES,
+  formatEstimatedDuration,
+} from "@/lib/digest/hours";
 import type { DigestKind } from "@/lib/digest/period";
 
-export interface CheckInAction {
+export interface CheckInRow {
   id: string;
   title: string;
   detail: string;
@@ -39,7 +43,7 @@ function pluralSessions(count: number) {
   return count === 1 ? "session" : "sessions";
 }
 
-function recoverAction(facts: DigestFacts): CheckInAction | null {
+function recoverAction(facts: DigestFacts): CheckInRow | null {
   const { recover } = facts;
   if (recover.count === 0) {
     return null;
@@ -56,7 +60,7 @@ function recoverAction(facts: DigestFacts): CheckInAction | null {
   };
 }
 
-function unscheduledAction(facts: DigestFacts): CheckInAction | null {
+function unscheduledAction(facts: DigestFacts): CheckInRow | null {
   const { unscheduled, ahead } = facts;
   if (unscheduled.count === 0) {
     return null;
@@ -78,7 +82,7 @@ function unscheduledAction(facts: DigestFacts): CheckInAction | null {
  * the moment to decide what you are taking on, so this is a standing prompt
  * rather than something the facts have to earn.
  */
-function newGoalsAction(): CheckInAction {
+function newGoalsAction(): CheckInRow {
   return {
     id: "new-goals",
     title: "Set what this month is for",
@@ -87,60 +91,73 @@ function newGoalsAction(): CheckInAction {
   };
 }
 
+function workloadInformation(facts: DigestFacts): CheckInRow | null {
+  const { ahead } = facts;
+  const open = ahead.placed - ahead.completed;
+  if (open <= 0) {
+    return null;
+  }
+  return {
+    id: "workload",
+    title: `${open} ${pluralSessions(open)} in ${ahead.label.toLowerCase()}, about ${formatEstimatedDuration(ahead.estimatedMinutes)}`,
+    detail: `Estimated at ${DIGEST_DEFAULT_SESSION_MINUTES} minutes a session.`,
+    action: null,
+  };
+}
+
 /**
- * Orders the structured actions by what the cadence is for. A month starts by
+ * Orders the structured rows by what the cadence is for. A month starts by
  * deciding what to take on, a week starts by cleaning up and shaping, and a day
  * starts by looking at the day. Unscheduled goals are left out of the daily
  * check-in, where a list of unplaced goals is noise rather than a decision.
  *
- * Nothing here writes: every action is a jump into the surface that owns the
- * change. The check-in describes decisions, it does not make them.
+ * Nothing here writes. Actionable rows jump into the surface that owns the
+ * change; informational rows deliberately have no action.
  */
-export function buildStructuredCheckInActions({
+export function buildStructuredCheckInRows({
   kind,
   facts,
 }: {
   kind: DigestKind;
   facts: DigestFacts;
-}): CheckInAction[] {
+}): CheckInRow[] {
   const recover = recoverAction(facts);
   const unscheduled = kind === "daily" ? null : unscheduledAction(facts);
+  const workload = workloadInformation(facts);
   const ordered =
     kind === "monthly"
-      ? [newGoalsAction(), unscheduled, recover]
+      ? [newGoalsAction(), unscheduled, recover, workload]
       : kind === "weekly"
-        ? [recover, unscheduled]
-        : [recover];
+        ? [recover, unscheduled, workload]
+        : [recover, workload];
 
   return ordered.filter(
-    (entry): entry is CheckInAction => entry !== null
+    (entry): entry is CheckInRow => entry !== null
   );
 }
 
-export function buildCoachCheckInActions(
+export function buildCoachCheckInRows(
   suggestions: DigestSuggestions | null
-): CheckInAction[] {
-  return (suggestions?.suggestions ?? [])
-    .filter(
-      (
-        suggestion
-      ): suggestion is typeof suggestion & {
-        action: DigestSuggestionAction;
-      } => suggestion.action !== null
-    )
-    .map((suggestion) => ({
-      id: `coach:${suggestion.title}`,
-      title: suggestion.title,
-      detail: suggestion.body,
-      action: suggestion.action,
-    }));
+): CheckInRow[] {
+  return (suggestions?.suggestions ?? []).flatMap((suggestion) =>
+    suggestion.action
+      ? [
+          {
+            id: `coach:${suggestion.title}`,
+            title: suggestion.title,
+            detail: suggestion.body,
+            action: suggestion.action,
+          },
+        ]
+      : []
+  );
 }
 
 /**
- * What the check-in offers to do next: the decisions the window implies, then
- * whatever the coach added on top of them.
+ * What the check-in shows next: facts and decisions implied by the window,
+ * followed by actionable suggestions the coach added.
  */
-export function buildCheckInActions({
+export function buildCheckInRows({
   kind,
   facts,
   suggestions,
@@ -148,10 +165,10 @@ export function buildCheckInActions({
   kind: DigestKind;
   facts: DigestFacts;
   suggestions: DigestSuggestions | null;
-}): CheckInAction[] {
+}): CheckInRow[] {
   return [
-    ...buildStructuredCheckInActions({ kind, facts }),
-    ...buildCoachCheckInActions(suggestions),
+    ...buildStructuredCheckInRows({ kind, facts }),
+    ...buildCoachCheckInRows(suggestions),
   ];
 }
 
@@ -172,7 +189,7 @@ export function buildCheckInCoachQuestion({
   facts: DigestFacts;
 }) {
   const horizon = facts.ahead.label.toLowerCase();
-  const decisions = buildStructuredCheckInActions({ kind, facts });
+  const decisions = buildStructuredCheckInRows({ kind, facts });
   return [
     `Following up on my ${checkInHeading(kind).toLowerCase()}.`,
     `How it went — ${checkInRecapSummary(facts)}.`,

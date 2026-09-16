@@ -162,7 +162,7 @@ describe("CheckInOverlay", () => {
 
     await user.click(screen.getByRole("tab", { name: "Next" }));
     expect(await screen.findByText("Start with Tempo run.")).toBeInTheDocument();
-    expect(screen.queryByText("2 sessions in today, about 1h")).toBeNull();
+    expect(screen.getByText("2 sessions in today, about 1h")).toBeInTheDocument();
     expect(screen.getByText("Recover 1 missed session")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Review calendar" })

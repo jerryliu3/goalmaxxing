@@ -431,12 +431,11 @@ came from:
    in place so forgotten checkoffs are easy to correct. It looks backwards
    only; what the window ahead implies belongs under Next.
 2. **Next** — what to do about it. The coach's generated paragraph introduces
-   only actionable rows: work to recover and goals with nothing placed, ordered
-   by what the cadence is for — a month starts by deciding what to take on, a
-   week by cleaning up. Workload totals such as "three sessions today" are
-   information, not actions, so they do not get a row. The coach's own
-   actionable suggestions follow the computed rows; suggestions without an
-   action remain out of the list.
+   work to recover and goals with nothing placed, ordered by what the cadence
+   is for — a month starts by deciding what to take on, a week by cleaning up.
+   Informational workload rows such as "three sessions today" may remain for
+   context, but they have no CTA. The coach's own actionable suggestions follow
+   the computed rows; suggestions without an action remain out of the list.
 
 Do not give the coach its own tab. It reads the same facts the computed rows are
 built from, so presenting it separately implies a distinction the user does not
