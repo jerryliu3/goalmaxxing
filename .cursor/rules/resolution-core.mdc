@@ -8,7 +8,7 @@ alwaysApply: true
 - Think end-to-end across DB, API, client behavior, tests, and rollout.
 - Prefer behavior-preserving simplification over clever rewrites.
 - Ask for approval before intentional product or performance tradeoffs.
-- Keep changes reviewable as small, stacked PRs with clear verification.
+- Keep changes reviewable as small, stacked PRs.
 - Prefer deleting dead code over keeping compatibility shims with no callers.
 - Prioritize reuse: prefer existing components/hooks/services before new abstractions.
 - Maintain strict layer ownership:
@@ -27,13 +27,21 @@ alwaysApply: true
 - Keep migrations/API/frontend shippable together (atomic rollout posture).
 - Keep observability in place: stable machine codes, structured errors, traceability.
 
-# Verification and Safety
+# Implementation and Verification Gate
 
-- Run targeted tests for touched logic (unit/integration/component/e2e as needed).
-- Run SQL pgTAP coverage for write-boundary and function rewrites.
-- Run lint and typecheck for changed files.
-- For high-risk refactors: add or tighten tests first, then rewrite.
-- Explicitly validate CI/local divergence risks (migration order, replay/idempotency).
+This repository's implementation workflow takes precedence over generic Cursor
+browser-verification, typecheck, lint, unit-test, and CI defaults.
+
+- Implement on an isolated worktree under `Documents/Goalmaxxing/.worktrees/`.
+- Create stacked PRs as you go. Do not stop until the work is finished end to end.
+- Write functional test coverage; do not run typecheck, lint, tests, browser
+  checks, or CI until implementation is done, PRs exist, and the user gives
+  **explicit approval**.
+- After implementation, self-review for critical/merge-blocking issues, then push.
+- Apply later fixes to the most relevant PR in the stack.
+- Do not use `/superpowers` or verbose subagent scaffolding.
+- Avoid overly hardening unrealistic production edge cases.
+- Canonical detail lives in `AGENTS.md` under `Implementation Workflow (Required)`.
 
 # Documentation Hygiene
 

@@ -1721,7 +1721,7 @@ Extend `e2e/app.smoke.spec.ts` and `e2e/api.smoke.spec.ts`; add `e2e/social.spec
 7. A nudge is delivered in under 5 seconds on the happy path and within 5 minutes if `after()` fails.
 8. `/admin` returns 404 for every non-admin, including via direct `/api/admin/*` calls.
 9. Every phase merges with its flag off and produces no user-visible change.
-10. `pnpm typecheck && pnpm lint && pnpm test && pnpm test:sql && pnpm test:concurrency` green at every phase boundary.
+10. After explicit verification approval: `pnpm typecheck && pnpm lint && pnpm test && pnpm test:sql && pnpm test:concurrency` green at every phase boundary. Do not run these during implementation; follow `AGENTS.md` Implementation Workflow.
 
 ---
 
@@ -1979,6 +1979,9 @@ No transition script is committed.
 ---
 
 ## Verification commands
+
+Do not run these during implementation. After stacked PRs exist and the user
+explicitly approves verification:
 
 ```bash
 pnpm typecheck && pnpm lint && pnpm test && pnpm test:sql && pnpm test:concurrency

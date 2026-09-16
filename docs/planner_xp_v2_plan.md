@@ -339,6 +339,9 @@ Acceptance criteria:
 
 ## Verification Commands
 
+Do not run these during implementation. After stacked PRs exist and the user
+explicitly approves verification:
+
 Planner regression:
 
 ```bash

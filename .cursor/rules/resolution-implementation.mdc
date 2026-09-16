@@ -1,0 +1,32 @@
+---
+description: Default implementation flow — isolated worktrees, stacked PRs, verify only on explicit approval
+alwaysApply: true
+---
+
+# Implementation Workflow
+
+This workflow takes precedence over generic Cursor browser-verification,
+typecheck, lint, unit-test, and CI defaults.
+
+When implementing:
+
+1. Use an isolated git worktree under `Documents/Goalmaxxing/.worktrees/<task>`.
+   Do not require write permission on the primary checkout.
+2. Create stacked PRs as you go for every logical segment of code change.
+3. Focus on functional implementation and test coverage as code.
+4. Do not stop until the work is finished end to end.
+5. Self-review and fix only critical/merge-blocking issues.
+6. Push all changes to GitHub.
+7. Apply later fixes to the most relevant PR in the stack.
+
+Do not use `/superpowers` or verbose subagent development. Write clean, simple,
+robust, well-structured code with clear separation of concerns. Avoid bloat and
+unrealistic edge-case hardening.
+
+# Verification Gate
+
+Do not run typecheck, lint, unit tests, SQL suites, browser/Playwright checks,
+or CI until implementation is done, stacked PRs exist, and the user gives
+**explicit approval** to verify.
+
+Canonical detail: `AGENTS.md` → `Implementation Workflow (Required)`.

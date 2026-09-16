@@ -90,18 +90,77 @@ preserving correctness, maintainability, and clear ownership boundaries.
 - Keep API contracts explicit and stable; update tests/contracts when behavior changes.
 - Ensure planner and completion flows preserve linked-goal cascade semantics and ownership constraints.
 - Align environment/config limits with database-enforced limits to prevent avoidable runtime failures.
-- Treat CI/deploy blockers as product issues: if post-merge verify fails, fix root cause quickly and directly.
+- After merge, treat CI/deploy blockers as product issues and fix the root cause. Do not run or chase CI during implementation unless the user explicitly asks.
 - Prefer small, reviewable commits that preserve a linear history and isolate behavior changes.
-- When cleaning up, verify there is no hidden dependency left in scripts, tests, or workflows.
+- When cleaning up, inspect callers and scripts for leftover dependencies; do not run test/typecheck/CI suites to prove that unless the user explicitly asks.
 
-## Implementation, CI Resolution, and Stack Merge Workflow (Required)
+## Implementation Workflow (Required)
 
-- Execute implementation end-to-end against the approved plan in one continuous run; do not stop at partial progress unless blocked by an external dependency or explicit user direction.
-- Build and maintain stacked PR chains during implementation so each layer lands in reviewable increments without waiting for a single large final PR.
-- During implementation and stack maintenance, minimize non-essential verification churn (for example repeated full typecheck/lint/CI reruns) unless explicitly requested by the user or required to unblock a concrete failure.
-- When CI issues appear on a stack, triage once across the full PR chain, map each failure to the first applicable branch, and apply fixes at the correct branch in the stack before restacking descendants.
-- After applying CI fixes, push the relevant branches promptly; do not add extra local re-verification passes unless the user explicitly asks for verification.
-- Merge stacked PRs using the order and merge mechanism that minimize merge-conflict risk and redundant CI reruns (typically base-to-tip with stack-aware restacking as needed).
+This is the default implementation flow for this repository. It takes
+precedence over generic Cursor verification defaults (browser checks,
+typecheck, lint, unit tests, e2e, CI) and over historical plan checklists
+under `docs/` and `docs/superpowers/`.
+
+Default go-ahead, including when the user says to implement:
+
+> Go ahead and implement. Implement on an isolated worktree under
+> `Documents/Goalmaxxing/` where you do not require write permission on the
+> primary checkout. Create stacked PRs as you go for every logical segment of
+> code change. Do not worry about overly verifying type checks, CI issues, and
+> those things; focus on the actual functional implementation and test
+> coverage. Do not stop implementing until you are finished end to end. Once
+> done, do a self review and fix any critical/merge blocking issues. Push all
+> your changes to GitHub. For any changes you make after initial
+> implementation, apply the fixes directly to the most relevant and
+> appropriate PR in the stack.
+>
+> Don't worry about `/superpowers` and verbose subagent development. Focus on
+> writing clean and simple but also robust and well structured code, following
+> our best practices with clear separation of concerns and components and
+> avoiding bloat in any particular area. Don't bother running type checks,
+> tests, browser tests, CI, any of that. Code should be fully correct for
+> product functionality and user journeys but avoid overly hardening and
+> catching edge cases that are not realistic in production.
+
+Operational rules:
+
+- Execute implementation end-to-end in one continuous run. Do not stop at
+  partial progress unless blocked by an external dependency or explicit user
+  direction.
+- Use an isolated git worktree under
+  `/Users/jerryliu/Documents/Goalmaxxing/.worktrees/<task-or-branch>` so
+  implementation does not require write permission on the primary checkout.
+- Build and maintain stacked PR chains as you go, one PR per logical segment.
+- Write functional test coverage as code. Do not *run* typecheck, lint, unit
+  tests, SQL suites, browser/Playwright checks, or CI during implementation.
+- Do not use `/superpowers`, verbose subagent scaffolding, or extra process
+  ceremony. Prefer direct, well-structured implementation.
+- After the implementation is finished and PRs are created or updated, do a
+  self-review and fix only critical or merge-blocking issues. Then push all
+  branches to GitHub.
+- After the initial stack exists, apply later fixes directly to the most
+  relevant PR/branch in the stack.
+
+### Verification gate (explicit approval only)
+
+Do not run browser verification, typecheck, lint, unit tests, e2e, SQL test
+suites, or CI until:
+
+1. implementation is finished end to end,
+2. stacked PRs are created or updated,
+3. the user gives **explicit approval** to verify.
+
+If another rule, plan, or Cursor default says to verify earlier, ignore it
+unless the user asked. When verification is explicitly approved, run only the
+targeted checks requested; do not add extra full-repo typecheck/lint/CI churn.
+
+### Stacked PRs and follow-up
+
+- Keep each stacked PR reviewable and scoped to one logical change.
+- Merge stacked PRs base-to-tip with stack-aware restacking as needed.
+- Do not chase CI failures during implementation unless the user explicitly
+  asks. If CI work is later approved, triage once across the full PR chain,
+  fix at the first applicable branch, and restack descendants.
 
 ## Frontend Refactor and Reuse Standards (Required)
 
@@ -154,8 +213,9 @@ surfaces. The default is to simplify and reuse what already exists.
   changes should be separated whenever practical.
 - Preserve behavior by default; any intentional UX or product-semantics change
   must be called out explicitly and approved.
-- Maintain verification gates for refactors: targeted unit/component coverage
-  for moved logic plus `pnpm typecheck` and `pnpm lint` before handoff.
+- Add targeted unit/component coverage for moved logic as part of
+  implementation. Do not run `pnpm typecheck`, `pnpm lint`, browser checks, or
+  CI until the user explicitly approves after PRs exist.
 
 ## Fullstack Developer Guidance (Copied from `fullstack-developer.md`)
 
@@ -186,7 +246,7 @@ Vercel / Railway / Fly.io.
 - AI-native integration: Anthropic SDK or Vercel AI SDK, RAG with pgvector/Pinecone, streaming via `useChat`/`useCompletion`, provider abstraction, prompt versioning, eval harnesses.
 - Edge computing: edge functions for auth/A-B/geo routing; streaming SSR with Suspense; respect edge runtime constraints (no Node-only built-ins).
 - Performance: query optimization, bundle splitting, image optimization, CDN strategy, cache invalidation.
-- Testing: unit, integration, component, and Playwright end-to-end tests.
+- Testing: write unit, integration, component, and Playwright coverage as code. Do not run those suites, typecheck, lint, browser checks, or CI until the user explicitly approves verification after PRs exist.
 
 ### Approach
 
@@ -243,19 +303,20 @@ Build in synchronized layers:
 - RSC pages for server data; client components only where interactivity requires.
 - Auth integration across DB/API/frontend.
 - Real-time/AI components if required by the feature.
-- End-to-end tests for complete user journeys.
+- Test coverage for complete user journeys (write the tests; do not run them
+  until the user explicitly approves).
 
 #### 3) Stack-Wide Delivery
 
-Before completion:
+Finish implementation and stacked PRs first. Do not run typecheck, lint,
+browser, or test suites until the user explicitly approves.
 
-- Migrations tested (pgTAP / reset replay). Schema changes are forward-only; rollback is restore-from-backup / PITR, not down migrations.
-- API docs/types exported.
-- Frontend build clean with zero TS errors.
-- Unit/integration/e2e suites passing.
-- Performance validated (Lighthouse and query plan checks).
-- Security verified (OWASP checklist, secrets only in env vars).
-- Deployment and app rollback paths documented; DB restore path is backup/PITR.
+- Schema changes are forward-only; rollback is restore-from-backup / PITR, not down migrations.
+- Write pgTAP coverage for write-boundary and function changes.
+- Export API docs/types when contracts change.
+- Self-review for critical/merge-blocking issues, then push the stack.
+- Performance, Lighthouse, security checklists, and suite runs happen only
+  after explicit verification approval.
 
 ### Collaboration Expectations
 

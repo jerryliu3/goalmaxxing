@@ -13,7 +13,8 @@ alwaysApply: false
 # Retrieval and Quality
 
 - For RAG-style work: deterministic chunk/embed strategy, stable vector storage, clear retrieval contract.
-- Validate retrieval and generation behavior against a golden/eval set before shipping risky changes.
+- Keep a golden/eval set for retrieval and generation quality. Do not run
+  evals, typecheck, or CI until the user explicitly approves verification.
 
 # Operational Guardrails
 

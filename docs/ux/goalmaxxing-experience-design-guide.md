@@ -580,6 +580,12 @@ of whether the change is local, saving, saved, or recoverable.
 
 ### Verification
 
+Write functional coverage for phase order, seed invariants, required content,
+and accurate claims as part of implementation. Do not run unit tests, browser
+tests, accessibility scans, typecheck, lint, or CI until implementation is
+done, stacked PRs exist, and the user explicitly approves verification. After
+that approval, the intended checks are:
+
 - Unit-test phase order and seed invariants.
 - Component-test required content and accurate claims.
 - Browser-test the rendered action sequence and save result.
@@ -599,10 +605,12 @@ Use the following when extending this design language:
 > disclosure, stable geometry, and responsive recomposition. Use motion only to
 > explain cause and effect, and provide a complete reduced-motion state. Keep
 > static sections server-rendered and isolate browser state in focused client
-> components. Verify task clarity, product truthfulness, continuity across
-> surfaces, mobile behavior, transient contrast, performance, and accessibility
-> before handoff. Follow
-> `docs/ux/goalmaxxing-experience-design-guide.md`.
+> components. Design for task clarity, product truthfulness, continuity across
+> surfaces, mobile behavior, transient contrast, performance, and accessibility.
+> Do not run browser, typecheck, lint, or test suites until implementation is
+> done, stacked PRs exist, and the user explicitly approves verification. Follow
+> `docs/ux/goalmaxxing-experience-design-guide.md` and `AGENTS.md`
+> Implementation Workflow.
 
 ## Research references
 
