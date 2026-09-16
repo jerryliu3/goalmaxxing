@@ -230,9 +230,13 @@ export function usePlannerCalendarDayCellRenderer({
             if (!canMutateEntryOnDay(entry, day)) {
               return;
             }
+            // Selecting an item takes two clicks: the first focuses its day, the
+            // second selects the item. Dragging is a separate pointer path and
+            // still moves an item straight out of an unfocused day.
             if (viewMode === "week" || viewMode === "three_day") {
               if (day !== focusedDay) {
                 selectDayForView(day, resolveWeekAgendaSelectionViewMode());
+                return;
               }
               togglePlannerGoalSelection(entry, { applyGoalFocus: false });
               return;
@@ -240,17 +244,19 @@ export function usePlannerCalendarDayCellRenderer({
             if (viewMode === "month") {
               if (day !== focusedDay) {
                 selectDayForView(day, "month");
+                return;
               }
               togglePlannerGoalSelection(entry, { applyGoalFocus: true });
               return;
             }
             if (viewMode === "day") {
+              setDayPreview(null);
               if (day !== focusedDay) {
                 setLocalSelectedDay(day);
                 onSelectedDayChange(day, "push", "day");
+                return;
               }
               togglePlannerGoalSelection(entry, { applyGoalFocus: false });
-              setDayPreview(null);
               return;
             }
             clearHoverPreviewTimer();

@@ -473,6 +473,138 @@ describe("CalendarSurface characterization", () => {
     vi.unstubAllGlobals();
   });
 
+  it("takes a second click to select a week agenda item on an unfocused day", async () => {
+    postJsonMock.mockResolvedValue(
+      buildContext([
+        unit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          label: "Goal A",
+          scheduledDate: "2026-08-16",
+        }),
+      ])
+    );
+    const onSelectedDayChange = vi.fn();
+
+    render(
+      <CalendarSurface
+        activeTab="calendar"
+        month="2026-08"
+        selectedDay="2026-08-15"
+        viewMode="week"
+        onMonthChange={vi.fn()}
+        onViewModeChange={vi.fn()}
+        onSelectedDayChange={onSelectedDayChange}
+        onPlannerMutation={vi.fn()}
+      />
+    );
+
+    expect(await screen.findByTestId("week-agenda")).toBeInTheDocument();
+    const entry = await waitFor(() => {
+      const match = document.querySelector(
+        '[data-calendar-week-row="true"][data-day="2026-08-16"] [data-calendar-day-entry="true"]'
+      );
+      if (!(match instanceof HTMLElement)) {
+        throw new Error("Expected a week agenda entry for 2026-08-16.");
+      }
+      return match;
+    });
+
+    fireEvent.click(entry);
+
+    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-16", "push", "week");
+    expect(
+      screen.queryByRole("region", { name: "Edit planned session" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("selects a week agenda item on the already focused day", async () => {
+    postJsonMock.mockResolvedValue(
+      buildContext([
+        unit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          label: "Goal A",
+          scheduledDate: "2026-08-15",
+        }),
+      ])
+    );
+
+    render(
+      <CalendarSurface
+        activeTab="calendar"
+        month="2026-08"
+        selectedDay="2026-08-15"
+        viewMode="week"
+        onMonthChange={vi.fn()}
+        onViewModeChange={vi.fn()}
+        onSelectedDayChange={vi.fn()}
+        onPlannerMutation={vi.fn()}
+      />
+    );
+
+    expect(await screen.findByTestId("week-agenda")).toBeInTheDocument();
+    const entry = await waitFor(() => {
+      const match = document.querySelector(
+        '[data-calendar-week-row="true"][data-day="2026-08-15"] [data-calendar-day-entry="true"]'
+      );
+      if (!(match instanceof HTMLElement)) {
+        throw new Error("Expected a week agenda entry for 2026-08-15.");
+      }
+      return match;
+    });
+
+    fireEvent.click(entry);
+
+    expect(
+      await screen.findByRole("region", { name: "Edit planned session" })
+    ).toBeInTheDocument();
+  });
+
+  it("takes a second click to select a month grid item on an unfocused day", async () => {
+    postJsonMock.mockResolvedValue(
+      buildContext([
+        unit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          label: "Goal A",
+          scheduledDate: "2026-08-31",
+        }),
+      ])
+    );
+    const onSelectedDayChange = vi.fn();
+
+    render(
+      <CalendarSurface
+        activeTab="calendar"
+        month="2026-08"
+        selectedDay="2026-08-15"
+        viewMode="month"
+        onMonthChange={vi.fn()}
+        onViewModeChange={vi.fn()}
+        onSelectedDayChange={onSelectedDayChange}
+        onPlannerMutation={vi.fn()}
+      />
+    );
+
+    const entry = await waitFor(() => {
+      const match = document.querySelector(
+        '[data-day-cell="true"][data-day="2026-08-31"] [data-calendar-day-entry="true"]'
+      );
+      if (!(match instanceof HTMLElement)) {
+        throw new Error("Expected a month grid entry for 2026-08-31.");
+      }
+      return match;
+    });
+
+    fireEvent.click(entry);
+
+    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-31", "push", "month");
+    expect(
+      screen.queryByRole("region", { name: "Edit planned session" })
+    ).not.toBeInTheDocument();
+  });
+
   it("keeps the selected day when switching from month to day view", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
