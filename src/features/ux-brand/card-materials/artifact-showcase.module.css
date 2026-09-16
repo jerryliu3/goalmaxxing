@@ -80,18 +80,10 @@
     0 23px 35px #1720152b;
   transform-style: preserve-3d;
 }
+/* Content is printed flat on the face and stays under the moving sheen. */
 .materialFace > :not(.faceSheen) {
   position: relative;
   z-index: 1;
-  transform: translateZ(3px);
-  text-shadow:
-    var(--relief-light-x) var(--relief-light-y) 1px #fff9,
-    var(--relief-shadow-x) var(--relief-shadow-y) 2px #18291f32;
-}
-.materialFace svg {
-  filter:
-    drop-shadow(var(--relief-light-x) var(--relief-light-y) 0 #fff8)
-    drop-shadow(var(--relief-shadow-x) var(--relief-shadow-y) 1px #18291f42);
 }
 .faceSheen {
   position: absolute;
@@ -107,7 +99,7 @@
     transparent calc(var(--shine-position) + 13%)
   );
 }
-.raisedRow {
+.metaRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -148,7 +140,7 @@
 .challengeCard > p { margin: .55rem 0 1.4rem; font-size: .72rem; line-height: 1.55; }
 .progress { height: 7px; margin-top: auto; border-radius: 10px; background: #15281f25; box-shadow: inset 0 1px 2px #0003, 0 1px 0 #fff8; }
 .progress i { display: block; height: 100%; border-radius: inherit; background: currentColor; box-shadow: 0 1px 0 #fff8, 0 2px 4px #17201555; }
-.challengeCard .raisedRow:last-child { margin-top: .75rem; letter-spacing: .02em; }
+.challengeCard .metaRow:last-child { margin-top: .75rem; letter-spacing: .02em; }
 
 .leaderboardCard {
   min-height: 410px;
@@ -267,8 +259,8 @@
 .trophy { grid-template-rows: 1fr auto auto; }
 .trophyGlow { position: absolute; top: 25px; width: 190px; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, var(--object-light), transparent 65%); opacity: .26; filter: blur(12px); }
 .cup { position: relative; align-self: end; width: 170px; height: 170px; border-radius: 24px 24px 70px 70px; color: var(--object-dark); background: radial-gradient(circle at var(--light-x) var(--light-y), var(--object-light), transparent 43%), linear-gradient(120deg, var(--object-color), var(--object-light) 45%, var(--object-color) 64%, var(--object-dark)); box-shadow: inset 5px 5px 7px #fff8, inset -8px -9px 14px #1117; clip-path: polygon(7% 0, 93% 0, 80% 72%, 65% 93%, 35% 93%, 20% 72%); }
-.cup > svg { position: absolute; top: 25px; left: 41px; opacity: .5; filter: drop-shadow(var(--relief-light-x) var(--relief-light-y) 1px #fff9) drop-shadow(var(--relief-shadow-x) var(--relief-shadow-y) 2px #0005); }
-.cup strong { position: absolute; top: 60px; right: 0; left: 0; font: 500 3.2rem/1 var(--font-display); text-align: center; text-shadow: var(--relief-light-x) var(--relief-light-y) 1px #fff9, var(--relief-shadow-x) var(--relief-shadow-y) 3px #0006; }
+.cup > svg { position: absolute; top: 25px; left: 41px; opacity: .5; }
+.cup strong { position: absolute; top: 60px; right: 0; left: 0; font: 500 3.2rem/1 var(--font-display); text-align: center; }
 .handleLeft, .handleRight { position: absolute; top: 16px; width: 60px; height: 85px; border: 12px solid var(--object-color); border-radius: 50%; box-shadow: inset 3px 3px 4px #fff8, 4px 7px 6px #0004; }
 .handleLeft { right: 82%; }
 .handleRight { left: 82%; }
@@ -284,18 +276,16 @@
 .medalEdge, .medalFace { position: absolute; top: 150px; width: 210px; aspect-ratio: 1; border-radius: 50%; }
 .medalEdge { background: repeating-conic-gradient(var(--object-dark) 0 4deg, var(--object-light) 4deg 8deg); transform: translateZ(-7px) scale(1.04); }
 .medalFace { display: grid; place-content: center; justify-items: center; gap: .15rem; border: 6px double var(--object-dark); background: radial-gradient(circle at var(--light-x) var(--light-y), var(--object-light), transparent 48%), linear-gradient(135deg, var(--object-color), var(--object-light) 45%, var(--object-color) 63%, var(--object-dark)); box-shadow: inset 5px 6px 7px #fff8, inset -8px -10px 12px #0005; }
-.medalFace strong { font: 500 3.5rem/.82 var(--font-display); letter-spacing: -.05em; text-shadow: var(--relief-light-x) var(--relief-light-y) 1px #fff9, var(--relief-shadow-x) var(--relief-shadow-y) 3px #0006; }
+.medalFace strong { font: 500 3.5rem/.82 var(--font-display); letter-spacing: -.05em; }
 .medalFace span { font: .55rem/1 var(--font-mono); letter-spacing: .13em; }
-.medalFace svg { filter: drop-shadow(var(--relief-shadow-x) var(--relief-shadow-y) 2px #0005); }
 
 .totem { align-content: end; padding-bottom: 30px; }
 .compassRing { position: relative; display: grid; width: 220px; aspect-ratio: 1; place-items: center; border: 13px ridge var(--object-color); border-radius: 50%; background: radial-gradient(circle at var(--light-x) var(--light-y), var(--object-light), transparent 48%), linear-gradient(145deg, var(--object-color), var(--object-dark)); box-shadow: inset 4px 5px 12px #fff7, inset -8px -9px 15px #0005, 0 9px 0 color-mix(in srgb, var(--object-dark) 75%, #000); }
-.compassRing > span { position: absolute; font: 600 .6rem/1 var(--font-mono); text-shadow: var(--relief-light-x) var(--relief-light-y) 1px #fff9, var(--relief-shadow-x) var(--relief-shadow-y) 2px #0006; }
+.compassRing > span { position: absolute; font: 600 .6rem/1 var(--font-mono); }
 .compassRing > span:nth-child(1) { top: 14px; }
 .compassRing > span:nth-child(2) { right: 17px; }
 .compassRing > span:nth-child(3) { bottom: 13px; }
 .compassRing > span:nth-child(4) { left: 17px; }
-.compassRing svg { filter: drop-shadow(var(--relief-shadow-x) var(--relief-shadow-y) 3px #0006); }
 .compassRing i { position: absolute; width: 3px; height: 75px; background: var(--object-light); box-shadow: 3px 4px 3px #0005; transform: translateY(-27px) rotate(28deg); transform-origin: 50% 100%; clip-path: polygon(50% 0, 100% 100%, 50% 84%, 0 100%); }
 .totemBase { display: grid; width: 175px; min-height: 105px; place-items: center; margin-top: 15px; border-radius: 50% 50% 12px 12px / 18% 18% 12px 12px; background: linear-gradient(110deg, var(--object-dark), var(--object-color) 35%, var(--object-light) 58%, var(--object-color)); box-shadow: inset 4px 3px 5px #fff7, inset -6px -7px 9px #0005, 0 8px 0 color-mix(in srgb, var(--object-dark) 70%, #000); text-align: center; }
 .totemBase strong { font: 500 1.35rem/.9 var(--font-display); }

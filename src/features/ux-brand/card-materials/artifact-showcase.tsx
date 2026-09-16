@@ -86,7 +86,7 @@ function ChallengeCard() {
   return (
     <article className={`${styles.materialFace} ${styles.challengeCard}`}>
       <div className={styles.faceSheen} aria-hidden="true" />
-      <div className={styles.raisedRow}>
+      <div className={styles.metaRow}>
         <span>COMMUNITY CHALLENGE</span>
         <Flame size={20} />
       </div>
@@ -100,7 +100,7 @@ function ChallengeCard() {
       <div className={styles.progress} aria-label="18 of 30 days complete">
         <i style={{ width: "60%" }} />
       </div>
-      <div className={styles.raisedRow}>
+      <div className={styles.metaRow}>
         <span>18 / 30 complete</span>
         <span>1,284 climbing</span>
       </div>

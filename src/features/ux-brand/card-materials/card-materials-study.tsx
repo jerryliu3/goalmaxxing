@@ -27,7 +27,7 @@ export function CardMaterialsStudy() {
         <header className={styles.hero}>
           <p className={styles.eyebrow}>MATERIAL STUDY / CARDS & OBJECTS</p>
           <h1>Something you<br /><em>want to hold.</em></h1>
-          <p>Twelve material directions, now extended into a system. Explore goal-responsive finishes with truly raised lettering, application formats cut from the same materials, and sculptural rewards that turn progress into an object.</p>
+          <p>Twelve material directions, now extended into a system. Explore goal-responsive finishes, application formats cut from the same materials, and sculptural rewards that turn progress into an object.</p>
           {view === "cards" && <nav aria-label="Card materials">{MATERIALS.map(item => <a key={item.id} href={`#${item.id}`}>{item.name}<ArrowUpRight size={13} /></a>)}</nav>}
         </header>
         <div className={styles.tabs} role="tablist" aria-label="Material study views">
@@ -47,14 +47,14 @@ export function CardMaterialsStudy() {
           <div className={styles.viewIntro}>
             <p className={styles.eyebrow}>{view === "application" ? "THE MATERIAL SYSTEM, APPLIED" : "PROGRESS WITH MASS"}</p>
             <h2>{view === "application" ? "One finish. Three product identities." : "Not a card. A thing earned."}</h2>
-            <p>{view === "application" ? "Challenge, leaderboard, and profile formats use the same face, edge, moving light, and shallow embossed lettering—without forcing every surface into the same rectangle." : "A cup for sustained momentum, a medal for accumulated milestones, and a compass for finding the next meaningful action. Each inherits the selected material and light model."}</p>
+            <p>{view === "application" ? "Challenge, leaderboard, and profile formats use the same face, edge, and moving light—without forcing every surface into the same rectangle." : "A cup for sustained momentum, a medal for accumulated milestones, and a compass for finding the next meaningful action. Each inherits the selected material and light model."}</p>
           </div>
           <ArtifactShowcase mode={view} material={MATERIALS[material]} still={motionStopped} />
         </>}
         <aside className={styles.recommendation}>
           <p className={styles.eyebrow}>THE PREMIUM EDIT</p>
           <h2>One material language.<br />More than one kind of reward.</h2>
-          <p>Prismatic Pearl, Chromatic Foil, and Anodized Alloy carry category color through light, foil, or metal. Embossing stays close to the face, with highlights and cast shadows driven by the card&apos;s light vector. The application and object studies test how far that language can stretch.</p>
+          <p>Prismatic Pearl, Chromatic Foil, and Anodized Alloy carry category color through light, foil, or metal. Type stays printed flat on the face, so depth comes from the body, edge, and reflections rather than the lettering. The application and object studies test how far that language can stretch.</p>
           <Link href="/demo/insights/folios">Try the folio opening <ArrowUpRight size={15} /></Link>
         </aside>
         <footer className={styles.footer}>Goalmaxxing · Material system study · Cards, identity, and earned objects</footer>
