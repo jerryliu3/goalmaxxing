@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,7 +19,9 @@ import {
   primaryCheckInAction,
   type CheckInAction,
 } from "@/features/digest/check-in-actions";
+import { applyRecapCompletion } from "@/features/digest/check-in-recap";
 import { canAutoShowDigestAfterOnboarding } from "@/features/digest/digest-eligibility";
+import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import {
   DIGEST_OPEN_EVENT,
   digestActionHref,
@@ -26,8 +29,17 @@ import {
 } from "@/features/digest/digest-api";
 import { getJson, postJson } from "@/lib/api/client";
 import { stashCoachPromptSeed } from "@/lib/coach/coach-prompt-seed";
-import { toLocalDateString } from "@/lib/dates/day";
-import type { DigestWindowFacts } from "@/lib/digest/contract";
+import {
+  resolveSelectedDateState,
+  toLocalDateString,
+} from "@/lib/dates/day";
+import type {
+  DigestFactItem,
+  DigestWindowFacts,
+} from "@/lib/digest/contract";
+import { resolveUserTimezone } from "@/lib/dates/timezone";
+import { resolveCompletionDispatch } from "@/lib/planner/completion-dispatch";
+import { captureViewportRect } from "@/lib/xp/events";
 import {
   Tabs,
   TabsContent,
@@ -46,6 +58,32 @@ const CHECK_IN_TABS = [
 const CHECK_IN_TAB_TRIGGER_CLASS =
   "relative h-auto flex-1 rounded-none border-0 py-2 text-sm font-medium after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-primary data-[state=active]:after:opacity-100";
 
+function recapItemKey(item: Pick<DigestFactItem, "goalId" | "date">) {
+  return `${item.goalId}:${item.date}`;
+}
+
+function checkInActionLabel(entry: CheckInAction) {
+  if (entry.id === "recover") {
+    return "Review calendar";
+  }
+  if (entry.id === "unscheduled") {
+    return "Schedule goals";
+  }
+  if (entry.id === "new-goals") {
+    return "Add goal";
+  }
+  if (entry.action === "today") {
+    return "View today";
+  }
+  if (entry.action === "progress") {
+    return "View progress";
+  }
+  if (entry.action === "goals") {
+    return "Add goal";
+  }
+  return "Review plan";
+}
+
 /**
  * The period check-in starts as a small, non-recurring prompt. Opening it
  * splits what happened from what to do next, without mutating the plan.
@@ -56,11 +94,15 @@ export function CheckInOverlay({
   hrefPrefix?: string;
 }) {
   const router = useRouter();
+  const runCompletionMutation = useCompletionMutation();
   const [open, setOpen] = useState(false);
   const [forced, setForced] = useState(false);
   const [view, setView] = useState<"prompt" | "details">("prompt");
   const [payload, setPayload] = useState<DigestPayload | null>(null);
   const [briefingSettled, setBriefingSettled] = useState(false);
+  const [savingCompletionKey, setSavingCompletionKey] = useState<string | null>(
+    null
+  );
   const generateStartedRef = useRef(false);
   const presentedKeyRef = useRef<string | null>(null);
 
@@ -182,6 +224,52 @@ export function CheckInOverlay({
     }
   };
 
+  const completeRecapItem = async (
+    item: DigestFactItem,
+    sourceElement: HTMLButtonElement
+  ) => {
+    if (!payload || item.state === "completed") {
+      return;
+    }
+    const key = recapItemKey(item);
+    setSavingCompletionKey(key);
+    const decision = resolveCompletionDispatch({
+      requirementKind: "deadline_total",
+      targetedRecurring: false,
+      activePlanMembership: false,
+      matchingItemState: "none",
+      selectedDateState: resolveSelectedDateState(
+        item.date,
+        payload.localDate
+      ),
+      existingExactFact: false,
+      desiredFactState: "present",
+    });
+    const result = await runCompletionMutation({
+      decision,
+      desiredFactState: "present",
+      goalId: item.goalId,
+      date: item.date,
+      timezone: resolveUserTimezone(),
+      sourceRect: captureViewportRect(sourceElement),
+      fallbackErrorMessage: "The completion could not be updated.",
+    });
+    setSavingCompletionKey(null);
+    if (!result.ok) {
+      toast.error(result.message ?? "The completion could not be updated.");
+      return;
+    }
+    setPayload((current) =>
+      current
+        ? {
+            ...current,
+            facts: applyRecapCompletion(current.facts, item),
+          }
+        : current
+    );
+    toast.success(`${item.title} marked complete for ${item.date}.`);
+  };
+
   // The sheet has nothing to say until the facts land, and it only ever opens
   // once they have. Bailing here keeps the body free of `facts &&` guards.
   if (!payload) {
@@ -249,7 +337,11 @@ export function CheckInOverlay({
                 ))}
               </TabsList>
               <TabsContent value="recap">
-                <RecapPanel recap={facts.recap} />
+                <RecapPanel
+                  recap={facts.recap}
+                  savingCompletionKey={savingCompletionKey}
+                  onComplete={completeRecapItem}
+                />
               </TabsContent>
               <TabsContent value="next" className="space-y-3">
                 <p className="text-sm">
@@ -303,7 +395,18 @@ export function CheckInOverlay({
  * Recap looks backwards only. What the window ahead implies is a decision, so
  * it belongs on the Decisions tab rather than being restated here.
  */
-function RecapPanel({ recap }: { recap: DigestWindowFacts }) {
+function RecapPanel({
+  recap,
+  savingCompletionKey,
+  onComplete,
+}: {
+  recap: DigestWindowFacts;
+  savingCompletionKey: string | null;
+  onComplete: (
+    item: DigestFactItem,
+    sourceElement: HTMLButtonElement
+  ) => Promise<void>;
+}) {
   return (
     <div className="space-y-3">
       <div>
@@ -327,9 +430,26 @@ function RecapPanel({ recap }: { recap: DigestWindowFacts }) {
               className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
             >
               <span className="truncate text-sm">{item.title}</span>
-              <span className="shrink-0 text-xs text-muted-foreground">
-                {item.state === "completed" ? "Done" : "Missed"}
-              </span>
+              {item.state === "completed" ? (
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  Done
+                </span>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  disabled={savingCompletionKey !== null}
+                  onClick={(event) =>
+                    void onComplete(item, event.currentTarget)
+                  }
+                >
+                  {savingCompletionKey === recapItemKey(item)
+                    ? "Saving…"
+                    : "Mark done"}
+                </Button>
+              )}
             </li>
           ))}
         </ul>
@@ -370,7 +490,7 @@ function CheckInActionList({
                 className="h-auto px-0"
                 onClick={() => onNavigate(href)}
               >
-                Open
+                {checkInActionLabel(entry)}
               </Button>
             ) : null}
           </li>

@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   getJson: vi.fn(),
   postJson: vi.fn(),
   push: vi.fn(),
+  runCompletionMutation: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -23,6 +24,10 @@ vi.mock("@/lib/api/client", () => ({
   getJson: mocks.getJson,
   postJson: mocks.postJson,
   getApiErrorMessage: () => "error",
+}));
+
+vi.mock("@/features/planner/use-completion-mutation", () => ({
+  useCompletionMutation: () => mocks.runCompletionMutation,
 }));
 
 const digestPayload = {
@@ -41,7 +46,14 @@ const digestPayload = {
       placed: 1,
       completed: 0,
       estimatedMinutes: 30,
-      items: [{ title: "Strength", date: "2026-09-08", state: "open" as const }],
+      items: [
+        {
+          goalId: "strength",
+          title: "Strength",
+          date: "2026-09-08",
+          state: "open" as const,
+        },
+      ],
     },
     ahead: {
       label: "Today",
@@ -50,11 +62,25 @@ const digestPayload = {
       placed: 2,
       completed: 0,
       estimatedMinutes: 60,
-      items: [{ title: "Tempo run", date: "2026-09-09", state: "open" as const }],
+      items: [
+        {
+          goalId: "tempo",
+          title: "Tempo run",
+          date: "2026-09-09",
+          state: "open" as const,
+        },
+      ],
     },
     recover: {
       count: 1,
-      items: [{ title: "Strength", date: "2026-09-08", state: "open" as const }],
+      items: [
+        {
+          goalId: "strength",
+          title: "Strength",
+          date: "2026-09-08",
+          state: "open" as const,
+        },
+      ],
     },
     unscheduled: { count: 0, titles: [] },
   },
@@ -77,6 +103,7 @@ describe("CheckInOverlay", () => {
         suggestions: [],
       },
     });
+    mocks.runCompletionMutation.mockResolvedValue({ ok: true, message: null });
   });
 
   afterEach(() => {
@@ -135,8 +162,12 @@ describe("CheckInOverlay", () => {
 
     await user.click(screen.getByRole("tab", { name: "Next" }));
     expect(await screen.findByText("Start with Tempo run.")).toBeInTheDocument();
-    expect(screen.getByText("2 sessions in today, about 1h")).toBeInTheDocument();
+    expect(screen.queryByText("2 sessions in today, about 1h")).toBeNull();
     expect(screen.getByText("Recover 1 missed session")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Review calendar" })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open" })).toBeNull();
   });
 
   it("recaps only the window that just closed", async () => {
@@ -150,9 +181,30 @@ describe("CheckInOverlay", () => {
     expect(screen.getByText("0 of 1 done")).toBeInTheDocument();
     expect(screen.getByText(/Yesterday · 2026-09-08/)).toBeInTheDocument();
     expect(screen.getByText("Strength")).toBeInTheDocument();
-    expect(screen.getByText("Missed")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Mark done" })).toBeInTheDocument();
     // The window ahead is a decision, not a recap.
     expect(screen.queryByText("Today")).toBeNull();
+  });
+
+  it("marks a missed recap item complete without leaving the check-in", async () => {
+    finishOnboarding();
+    const user = userEvent.setup();
+    render(<CheckInOverlay />);
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Open" }));
+    await user.click(screen.getByRole("button", { name: "Mark done" }));
+
+    expect(mocks.runCompletionMutation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        goalId: "strength",
+        date: "2026-09-08",
+        desiredFactState: "present",
+      })
+    );
+    expect(await screen.findByText("1 of 1 done")).toBeInTheDocument();
+    expect(screen.getByText("Done")).toBeInTheDocument();
+    expect(mocks.push).not.toHaveBeenCalled();
   });
 
   it("names the cadence in the prompt", async () => {

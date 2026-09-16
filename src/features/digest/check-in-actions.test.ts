@@ -70,7 +70,14 @@ describe("check-in actions", () => {
       facts: facts({
         recover: {
           count: 2,
-          items: [{ title: "Long run", date: "2026-08-12", state: "open" }],
+          items: [
+            {
+              goalId: "run",
+              title: "Long run",
+              date: "2026-08-12",
+              state: "open",
+            },
+          ],
         },
         unscheduled: { count: 3, titles: ["Reading", "Writing"] },
       }),
@@ -80,7 +87,6 @@ describe("check-in actions", () => {
       "new-goals",
       "unscheduled",
       "recover",
-      "workload",
     ]);
     expect(actions[0]?.action).toBe("goals");
     expect(actions[1]?.title).toBe("3 goals have nothing in this week");
@@ -112,15 +118,11 @@ describe("check-in actions", () => {
       }),
     });
 
-    expect(actions.map((entry) => entry.id)).toEqual([
-      "recover",
-      "unscheduled",
-      "workload",
-    ]);
+    expect(actions.map((entry) => entry.id)).toEqual(["recover", "unscheduled"]);
     expect(actions[0]?.title).toBe("Recover 1 missed session");
   });
 
-  it("leads the daily check-in with the day and leaves unplaced goals out", () => {
+  it("keeps informational workload and unplaced goals out of the daily actions", () => {
     const actions = buildStructuredCheckInActions({
       kind: "daily",
       facts: facts({
@@ -136,12 +138,10 @@ describe("check-in actions", () => {
       }),
     });
 
-    expect(actions.map((entry) => entry.id)).toEqual(["workload", "recover"]);
-    expect(actions[0]?.title).toBe("3 sessions in today, about 1h 30m");
-    expect(actions[0]?.detail).toContain("30 minutes a session");
+    expect(actions.map((entry) => entry.id)).toEqual(["recover"]);
   });
 
-  it("drops the workload row when nothing is left open ahead", () => {
+  it("returns no daily action when nothing needs recovering", () => {
     const actions = buildStructuredCheckInActions({
       kind: "daily",
       facts: facts({
@@ -167,9 +167,7 @@ describe("check-in actions", () => {
 
     expect(actions.map((entry) => entry.id)).toEqual([
       "coach:Protect Thursday",
-      "coach:Look back",
     ]);
-    expect(actions[1]?.action).toBeNull();
   });
 
   it("lists the coach's suggestions after the decisions the window implies", () => {
@@ -190,7 +188,6 @@ describe("check-in actions", () => {
 
     expect(actions.map((entry) => entry.id)).toEqual([
       "recover",
-      "workload",
       "coach:Protect Thursday",
     ]);
   });
@@ -211,7 +208,7 @@ describe("check-in actions", () => {
       buildStructuredCheckInActions({ kind: "weekly", facts: facts() }).map(
         (entry) => entry.id
       )
-    ).toEqual(["workload"]);
+    ).toEqual([]);
     expect(
       buildCoachCheckInActions(suggestions).map((entry) => entry.id)
     ).toEqual(["coach:Protect Thursday"]);
@@ -232,7 +229,7 @@ describe("buildCheckInCoachQuestion", () => {
     expect(question).toContain("How it went — last week: 5 of 8 done.");
     expect(question).toContain("- Recover 1 missed session");
     expect(question).toContain("- 2 goals have nothing in this week");
-    expect(question).toContain("- 5 sessions in this week, about 2h 30m");
+    expect(question).not.toContain("sessions in this week");
     expect(question).toContain("Help me decide how to tackle this week.");
   });
 

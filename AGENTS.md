@@ -202,10 +202,15 @@ surfaces. The default is to simplify and reuse what already exists.
   presentation, so it does not nag again. Opening reveals two tabs split by
   tense — Recap (what happened) and Next (what to do, with the coach paragraph
   introducing the rows) — and only then generates the AI briefing. The coach
-  does not get its own tab: it reads the same facts the computed rows do. Replay and auto-show live
-  in Settings. The check-in never mutates the plan: every row is a jump into
-  the surface that owns the change, and "Ask coach" hands a seeded question to
-  the planner coach panel. Goal creation is offered only on the monthly check-in.
+  does not get its own tab: it reads the same facts the computed rows do.
+  Replay and auto-show live in Settings. The check-in never mutates the plan:
+  missed recap sessions can be marked complete inline through the canonical
+  completion path, while complex planning changes may jump into the surface
+  that owns them. Informational workload totals do not become action rows.
+  Prefer inline controls over navigation where the owning workflow can be
+  embedded without duplicating business logic. "Ask coach" hands a seeded
+  question to the planner coach panel. Goal creation is offered only on the
+  monthly check-in.
   Its data layer keeps the `digest` name (`user_digests`, `/api/digest/*`);
   "check-in" is the surface. Do not copy concept shells into production
   `AppShell`, tabs, or planner chrome.

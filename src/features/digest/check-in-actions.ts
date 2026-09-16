@@ -3,10 +3,6 @@ import type {
   DigestSuggestionAction,
   DigestSuggestions,
 } from "@/lib/digest/contract";
-import {
-  DIGEST_DEFAULT_SESSION_MINUTES,
-  formatEstimatedDuration,
-} from "@/lib/digest/hours";
 import type { DigestKind } from "@/lib/digest/period";
 
 export interface CheckInAction {
@@ -91,23 +87,6 @@ function newGoalsAction(): CheckInAction {
   };
 }
 
-function workloadAction(
-  kind: DigestKind,
-  facts: DigestFacts
-): CheckInAction | null {
-  const { ahead } = facts;
-  const open = ahead.placed - ahead.completed;
-  if (open <= 0) {
-    return null;
-  }
-  return {
-    id: "workload",
-    title: `${open} ${pluralSessions(open)} in ${ahead.label.toLowerCase()}, about ${formatEstimatedDuration(ahead.estimatedMinutes)}`,
-    detail: `Estimated at ${DIGEST_DEFAULT_SESSION_MINUTES} minutes a session.`,
-    action: primaryCheckInAction(kind),
-  };
-}
-
 /**
  * Orders the structured actions by what the cadence is for. A month starts by
  * deciding what to take on, a week starts by cleaning up and shaping, and a day
@@ -126,13 +105,12 @@ export function buildStructuredCheckInActions({
 }): CheckInAction[] {
   const recover = recoverAction(facts);
   const unscheduled = kind === "daily" ? null : unscheduledAction(facts);
-  const workload = workloadAction(kind, facts);
   const ordered =
     kind === "monthly"
-      ? [newGoalsAction(), unscheduled, recover, workload]
+      ? [newGoalsAction(), unscheduled, recover]
       : kind === "weekly"
-        ? [recover, unscheduled, workload]
-        : [workload, recover];
+        ? [recover, unscheduled]
+        : [recover];
 
   return ordered.filter(
     (entry): entry is CheckInAction => entry !== null
@@ -142,12 +120,20 @@ export function buildStructuredCheckInActions({
 export function buildCoachCheckInActions(
   suggestions: DigestSuggestions | null
 ): CheckInAction[] {
-  return (suggestions?.suggestions ?? []).map((suggestion) => ({
-    id: `coach:${suggestion.title}`,
-    title: suggestion.title,
-    detail: suggestion.body,
-    action: suggestion.action,
-  }));
+  return (suggestions?.suggestions ?? [])
+    .filter(
+      (
+        suggestion
+      ): suggestion is typeof suggestion & {
+        action: DigestSuggestionAction;
+      } => suggestion.action !== null
+    )
+    .map((suggestion) => ({
+      id: `coach:${suggestion.title}`,
+      title: suggestion.title,
+      detail: suggestion.body,
+      action: suggestion.action,
+    }));
 }
 
 /**
