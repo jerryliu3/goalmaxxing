@@ -18,11 +18,11 @@ alwaysApply: false
 - Schema-qualify object references in privileged SQL.
 - Keep replay/digest/idempotency semantics intact when touching planner write boundaries.
 
-# Verification
+# Coverage and Verification Gate
 
-- After SQL changes run:
-  - `pnpm supabase:reset`
-  - `pnpm exec supabase db lint --local`
-  - `pnpm test:sql` (or relevant pgTAP subset)
-- Regenerate DB types when signatures/columns change:
-  - `pnpm types:supabase`
+- Write pgTAP coverage with write-boundary and function changes.
+- Regenerate DB types when signatures/columns change (`pnpm types:supabase`)
+  as part of the implementation, not as a post-hoc CI chase.
+- Do not run `pnpm supabase:reset`, `supabase db lint`, `pnpm test:sql`,
+  typecheck, or CI until implementation is done, stacked PRs exist, and the
+  user explicitly approves verification.

@@ -33,3 +33,6 @@ alwaysApply: false
 - Keep security explicit: least-privilege auth, RBAC/RLS-aware flows, no secret leakage to clients.
 - For monorepo/package changes, keep shared types/contracts in one source of truth.
 - Keep delivery atomic: migrations + API + UI ship together with rollback clarity.
+- Follow `AGENTS.md` Implementation Workflow: isolated worktree, stacked PRs,
+  functional coverage as code, no typecheck/lint/browser/CI runs until the
+  user explicitly approves after PRs exist.

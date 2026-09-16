@@ -889,6 +889,11 @@ Emit `select plan(N)` with N matching exactly — `scripts/run-sql-tests.ts` fai
 
 ### 9.4 Acceptance criteria
 
+Agent implementation follows `AGENTS.md` Implementation Workflow: do not run
+typecheck, lint, tests, browser checks, or CI until the work is done, stacked
+PRs exist, and the user explicitly approves verification. The commands below
+are the intended checks after that approval.
+
 1. `pnpm typecheck && pnpm lint && pnpm test && pnpm test:sql` green on every PR.
 2. `pnpm types:supabase && git diff --exit-code -- src/lib/supabase/database.types.ts` clean on every migration PR (CI gates this).
 3. Every mark/unmark cycle returns `total_xp` to its exact prior value, for every requirement kind.
@@ -1169,6 +1174,9 @@ constraint rather than a shim.
 ---
 
 ## Verification commands
+
+Do not run these during implementation. After stacked PRs exist and the user
+explicitly approves verification:
 
 ```bash
 pnpm typecheck && pnpm lint && pnpm test && pnpm test:sql

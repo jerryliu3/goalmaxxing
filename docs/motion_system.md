@@ -91,7 +91,11 @@ must follow strict guardrails:
 
 ## Verification
 
-For motion changes, run:
+Write focused component coverage for event gating, geometry, and reduced motion
+as part of implementation. Do not run `pnpm test`, `pnpm typecheck`,
+`pnpm lint`, `pnpm build`, Playwright, or a manual browser pass until
+implementation is done, stacked PRs exist, and the user explicitly approves
+verification. After that approval, the intended checks are:
 
 - focused component tests for event gating, geometry, and reduced motion;
 - `pnpm test`, `pnpm typecheck`, `pnpm lint`, and `pnpm build`;
