@@ -4,7 +4,12 @@ import { ApiRouteError } from "@/lib/api/route";
 import { digestSuggestionsSchema } from "@/lib/digest/contract";
 import type { DigestFacts, DigestSuggestions } from "@/lib/digest/contract";
 import { buildDigestFacts } from "@/lib/digest/facts";
-import { resolveDigestPeriod, type DigestKind, type DigestPeriod } from "@/lib/digest/period";
+import {
+  extendDailyRecapToLastCheckIn,
+  resolveDigestPeriod,
+  type DigestKind,
+  type DigestPeriod,
+} from "@/lib/digest/period";
 import { getDateInTimezone } from "@/lib/dates/timezone";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
 
@@ -64,15 +69,22 @@ export async function loadDigestSnapshot({
 }): Promise<DigestSnapshot> {
   const profile = await loadDigestProfile(supabase, userId);
   const localDate = getDateInTimezone(now, profile.timezone);
-  const period = resolveDigestPeriod({
+  const currentPeriod = resolveDigestPeriod({
     localDate,
     weekStartsOn: profile.weekStartsOn,
   });
-  const [goals, itemRows, completions, record] = await Promise.all([
+  const [record, lastAcknowledgedAt] = await Promise.all([
+    loadDigestRecord(supabase, userId, currentPeriod),
+    loadLastAcknowledgedDigestAt(supabase, userId),
+  ]);
+  const lastCheckInDate = lastAcknowledgedAt
+    ? getDateInTimezone(new Date(lastAcknowledgedAt), profile.timezone)
+    : null;
+  const period = extendDailyRecapToLastCheckIn(currentPeriod, lastCheckInDate);
+  const [goals, itemRows, completions] = await Promise.all([
     loadGoals(supabase, userId),
     loadPlacedItemRows(supabase, userId, period),
     loadCompletions(supabase, userId, period),
-    loadDigestRecord(supabase, userId, period),
   ]);
   const titleByGoalId = new Map(goals.map((goal) => [goal.id, goal.title]));
   const items = itemRows.flatMap((row) => {
@@ -197,6 +209,28 @@ async function loadDigestRecord(
     suggestions: suggestions.success ? suggestions.data : null,
     acknowledgedAt: data.acknowledged_at,
   };
+}
+
+async function loadLastAcknowledgedDigestAt(
+  supabase: DigestClient,
+  userId: string
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("user_digests")
+    .select("acknowledged_at")
+    .eq("owner_id", userId)
+    .not("acknowledged_at", "is", null)
+    .order("acknowledged_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    throw new ApiRouteError(
+      500,
+      "digest_history_load_failed",
+      "Digest data could not be loaded."
+    );
+  }
+  return data?.acknowledged_at ?? null;
 }
 
 export async function upsertDigestRow({

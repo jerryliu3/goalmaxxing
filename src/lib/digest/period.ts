@@ -11,8 +11,32 @@ export interface DigestPeriod {
   periodKey: string;
   recapStart: string;
   recapEnd: string;
+  recapLabel?: string;
   aheadStart: string;
   aheadEnd: string;
+}
+
+/**
+ * Daily check-ins recap from the date of the last check-in through yesterday.
+ * Digest facts are date-grained, so including that first date avoids pretending
+ * we can distinguish work done before and after the prior check-in's timestamp.
+ */
+export function extendDailyRecapToLastCheckIn(
+  period: DigestPeriod,
+  lastCheckInDate: string | null
+): DigestPeriod {
+  if (
+    period.kind !== "daily" ||
+    lastCheckInDate === null ||
+    lastCheckInDate >= period.periodKey
+  ) {
+    return period;
+  }
+  return {
+    ...period,
+    recapStart: lastCheckInDate,
+    recapLabel: "Since your last check-in",
+  };
 }
 
 /**

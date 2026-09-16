@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildDigestFacts } from "./facts";
 import { DIGEST_DEFAULT_SESSION_MINUTES } from "./hours";
-import { resolveDigestPeriod } from "./period";
+import { extendDailyRecapToLastCheckIn, resolveDigestPeriod } from "./period";
 
 describe("buildDigestFacts", () => {
   it("counts placed vs completed work in the recap and ahead windows", () => {
@@ -62,6 +62,32 @@ describe("buildDigestFacts", () => {
 
     expect(facts.recap.label).toBe("Last month");
     expect(facts.ahead.label).toBe("This month");
+  });
+
+  it("summarizes every date since the last daily check-in", () => {
+    const period = extendDailyRecapToLastCheckIn(
+      resolveDigestPeriod({
+        localDate: "2026-09-09",
+        weekStartsOn: 1,
+      }),
+      "2026-09-06"
+    );
+    const facts = buildDigestFacts({
+      period,
+      items: [
+        { goalId: "run", title: "Long run", scheduledDate: "2026-09-06" },
+        { goalId: "read", title: "Read", scheduledDate: "2026-09-08" },
+      ],
+      completions: [{ goalId: "run", completedOn: "2026-09-06" }],
+    });
+
+    expect(facts.recap).toMatchObject({
+      label: "Since your last check-in",
+      start: "2026-09-06",
+      end: "2026-09-08",
+      placed: 2,
+      completed: 1,
+    });
   });
 
   it("lists recap work that was never credited as recoverable", () => {

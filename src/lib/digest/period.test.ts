@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { resolveDigestPeriod } from "./period";
+import {
+  extendDailyRecapToLastCheckIn,
+  resolveDigestPeriod,
+} from "./period";
 
 describe("resolveDigestPeriod", () => {
   it("uses a daily window on midweek days", () => {
@@ -72,5 +75,32 @@ describe("resolveDigestPeriod", () => {
     expect(
       resolveDigestPeriod({ localDate: "2026-06-01", weekStartsOn: 1 }).kind
     ).toBe("monthly");
+  });
+
+  it("extends a daily recap back to the last displayed check-in", () => {
+    const daily = resolveDigestPeriod({
+      localDate: "2026-09-09",
+      weekStartsOn: 1,
+    });
+
+    expect(extendDailyRecapToLastCheckIn(daily, "2026-09-06")).toEqual({
+      ...daily,
+      recapStart: "2026-09-06",
+      recapLabel: "Since your last check-in",
+    });
+  });
+
+  it("does not alter weekly, monthly, or same-day recap windows", () => {
+    const weekly = resolveDigestPeriod({
+      localDate: "2026-09-07",
+      weekStartsOn: 1,
+    });
+    const daily = resolveDigestPeriod({
+      localDate: "2026-09-09",
+      weekStartsOn: 1,
+    });
+
+    expect(extendDailyRecapToLastCheckIn(weekly, "2026-09-03")).toBe(weekly);
+    expect(extendDailyRecapToLastCheckIn(daily, "2026-09-09")).toBe(daily);
   });
 });

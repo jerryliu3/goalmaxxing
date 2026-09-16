@@ -140,7 +140,7 @@ export function buildDigestFacts({
 
   return digestFactsSchema.parse({
     recap: summarizeWindow(
-      windowLabel(period.kind, "recap"),
+      period.recapLabel ?? windowLabel(period.kind, "recap"),
       period.recapStart,
       period.recapEnd,
       recapRows
