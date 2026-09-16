@@ -117,14 +117,12 @@ function workloadAction(
  * Nothing here writes: every action is a jump into the surface that owns the
  * change. The check-in describes decisions, it does not make them.
  */
-export function buildCheckInActions({
+export function buildStructuredCheckInActions({
   kind,
   facts,
-  suggestions,
 }: {
   kind: DigestKind;
   facts: DigestFacts;
-  suggestions: DigestSuggestions | null;
 }): CheckInAction[] {
   const recover = recoverAction(facts);
   const unscheduled = kind === "daily" ? null : unscheduledAction(facts);
@@ -136,16 +134,20 @@ export function buildCheckInActions({
         ? [recover, unscheduled, workload]
         : [workload, recover];
 
-  const structured = ordered.filter(
+  return ordered.filter(
     (entry): entry is CheckInAction => entry !== null
   );
-  const coachActions = (suggestions?.suggestions ?? []).map((suggestion) => ({
+}
+
+export function buildCoachCheckInActions(
+  suggestions: DigestSuggestions | null
+): CheckInAction[] {
+  return (suggestions?.suggestions ?? []).map((suggestion) => ({
     id: `coach:${suggestion.title}`,
     title: suggestion.title,
     detail: suggestion.body,
     action: suggestion.action,
   }));
-  return [...structured, ...coachActions];
 }
 
 /**
@@ -165,7 +167,7 @@ export function buildCheckInCoachQuestion({
   facts: DigestFacts;
 }) {
   const horizon = facts.ahead.label.toLowerCase();
-  const decisions = buildCheckInActions({ kind, facts, suggestions: null });
+  const decisions = buildStructuredCheckInActions({ kind, facts });
   return [
     `Following up on my ${checkInHeading(kind).toLowerCase()}.`,
     `How it went — ${checkInRecapSummary(facts)}.`,

@@ -416,15 +416,21 @@ of the month, weekly on the profile week-start day, daily otherwise. A month
 check-in already covers the day and week ahead, so the narrower ones are simply
 not offered that morning. Never stack them.
 
-One screen, three parts, in this order:
+The daily recap covers the date range since the last presented check-in.
+Weekly and monthly recaps remain anchored to their calendar periods.
 
-1. **How it went** — the recap window as a score, not a grade.
-2. **The coach's read** — one pre-generated paragraph, grounded strictly in the
-   facts payload. It may not invent sessions, counts, or goal titles.
-3. **Worth deciding** — the short list of decisions the window actually implies:
-   work to recover, goals with nothing placed, and the hours the remaining
-   sessions add up to. Ordered by what the cadence is for — a month starts by
-   deciding what to take on, a week by cleaning up, a day by looking at the day.
+First open shows a lightweight prompt with only **Open** and **Skip**. Showing
+that prompt counts as the day's presentation, so it does not return after a
+refresh. Opening it reveals three tabs:
+
+1. **Recap** — the factual window as a score, not a grade.
+2. **Decisions** — work to recover, goals with nothing placed, and the hours the
+   remaining sessions add up to. Ordered by what the cadence is for — a month
+   starts by deciding what to take on, a week by cleaning up, a day by looking
+   at the day.
+3. **Coach** — one generated paragraph and up to three suggestions, grounded
+   strictly in the facts payload. It may not invent sessions, counts, or goal
+   titles. Do not generate this briefing until the user chooses **Open**.
 
 The monthly check-in is the only one that offers goal creation, and it offers it
 unconditionally: a month boundary *is* the moment to decide what you are taking
@@ -438,10 +444,10 @@ follow-up question to the planner coach panel rather than answering in place.
 Time estimates are derived from a flat per-session figure, so always state the
 rate rather than presenting the number as measured.
 
-Skip, Escape, and click-outside all acknowledge the period. Replay and auto-show
-live in Settings; replay opens whichever check-in the current date is owed. Keep
-production chrome on the existing `AppShell` rather than copying concept-lab
-shells.
+Open, Skip, Escape, and click-outside all leave the period marked as presented.
+Replay and auto-show live in Settings; replay opens whichever check-in the
+current date is owed. Keep production chrome on the existing `AppShell` rather
+than copying concept-lab shells.
 
 ### Use progressive disclosure
 

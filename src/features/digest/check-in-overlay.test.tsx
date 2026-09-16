@@ -110,38 +110,58 @@ describe("CheckInOverlay", () => {
 
     window.dispatchEvent(new Event(DIGEST_OPEN_EVENT));
     expect(
-      await screen.findByRole("dialog", { name: /daily check-in/i })
+      await screen.findByRole("dialog", { name: /your check-in is ready/i })
     ).toBeInTheDocument();
   });
 
-  it("shows the recap score, the coach briefing, and the decisions to make", async () => {
+  it("offers a lightweight prompt and waits to generate until it is opened", async () => {
     finishOnboarding();
+    const user = userEvent.setup();
     render(<CheckInOverlay />);
 
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText("Your check-in is ready")).toBeInTheDocument();
+    expect(screen.queryByText("yesterday: 0 of 1 done")).toBeNull();
+    await waitFor(() =>
+      expect(mocks.postJson).toHaveBeenCalledWith("/api/digest/ack", {})
+    );
+    expect(mocks.postJson).not.toHaveBeenCalledWith("/api/digest/generate", {});
+
+    await user.click(screen.getByRole("button", { name: "Open" }));
     expect(screen.getByText("yesterday: 0 of 1 done")).toBeInTheDocument();
-    expect(await screen.findByText("Start with Tempo run.")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Recap" })).toHaveAttribute(
+      "data-state",
+      "active"
+    );
+
+    await user.click(screen.getByRole("tab", { name: "Decisions" }));
     expect(screen.getByText("2 sessions in today, about 1h")).toBeInTheDocument();
     expect(screen.getByText("Recover 1 missed session")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Coach" }));
+    expect(await screen.findByText("Start with Tempo run.")).toBeInTheDocument();
   });
 
-  it("acks when skipped", async () => {
+  it("marks the check-in presented before the user opens or skips it", async () => {
     finishOnboarding();
     const user = userEvent.setup();
     render(<CheckInOverlay />);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(mocks.postJson).toHaveBeenCalledWith("/api/digest/ack", {})
+    );
     await user.click(screen.getByRole("button", { name: "Skip" }));
-    expect(mocks.postJson).toHaveBeenCalledWith("/api/digest/ack", {});
+    expect(mocks.postJson).toHaveBeenCalledTimes(1);
   });
 
-  it("sends the day's primary button to today and acks on the way", async () => {
+  it("sends the day's primary button to today", async () => {
     finishOnboarding();
     const user = userEvent.setup();
     render(<CheckInOverlay />);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Open" }));
     await user.click(screen.getByRole("button", { name: "Let’s go" }));
 
-    expect(mocks.postJson).toHaveBeenCalledWith("/api/digest/ack", {});
     expect(mocks.push).toHaveBeenCalledWith("/calendar?surface=checklist");
   });
 
@@ -150,6 +170,7 @@ describe("CheckInOverlay", () => {
     const user = userEvent.setup();
     render(<CheckInOverlay />);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Open" }));
     await user.click(screen.getByRole("button", { name: "Ask coach" }));
 
     expect(window.sessionStorage.getItem(COACH_PROMPT_SEED_KEY)).toContain(
@@ -160,6 +181,7 @@ describe("CheckInOverlay", () => {
 
   it("says there is nothing to decide when the window is clear", async () => {
     finishOnboarding();
+    const user = userEvent.setup();
     mocks.getJson.mockResolvedValue({
       ...digestPayload,
       facts: {
@@ -174,6 +196,8 @@ describe("CheckInOverlay", () => {
     render(<CheckInOverlay />);
 
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Open" }));
+    await user.click(screen.getByRole("tab", { name: "Decisions" }));
     expect(
       screen.getByText("Nothing needs a decision right now.")
     ).toBeInTheDocument();
