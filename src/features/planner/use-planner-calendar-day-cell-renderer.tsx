@@ -243,6 +243,11 @@ export function usePlannerCalendarDayCellRenderer({
             }
             if (viewMode === "month") {
               if (day !== focusedDay) {
+                // Month selection dims the rest of the grid around a focused
+                // goal, so a click that only moves the day has to drop that
+                // focus the same way clicking the day's empty space does.
+                // Otherwise an unrelated goal stays lit through the first click.
+                resetPlannerEntrySelection();
                 selectDayForView(day, "month");
                 return;
               }

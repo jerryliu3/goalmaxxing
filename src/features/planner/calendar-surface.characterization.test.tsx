@@ -605,6 +605,63 @@ describe("CalendarSurface characterization", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("drops a stale goal focus when a month click only moves the day", async () => {
+    postJsonMock.mockResolvedValue(
+      buildContext([
+        unit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          label: "Goal A",
+          scheduledDate: "2026-08-15",
+        }),
+        unit({
+          originalGoalId: "goal-b",
+          unitKey: "total:1",
+          label: "Goal B",
+          scheduledDate: "2026-08-20",
+        }),
+      ])
+    );
+
+    render(
+      <CalendarSurface
+        activeTab="calendar"
+        month="2026-08"
+        selectedDay="2026-08-15"
+        viewMode="month"
+        onMonthChange={vi.fn()}
+        onViewModeChange={vi.fn()}
+        onSelectedDayChange={vi.fn()}
+        onPlannerMutation={vi.fn()}
+      />
+    );
+
+    const entryOn = (day: string) =>
+      waitFor(() => {
+        const match = document.querySelector(
+          `[data-day-cell="true"][data-day="${day}"] [data-calendar-day-entry="true"]`
+        );
+        if (!(match instanceof HTMLElement)) {
+          throw new Error(`Expected a month grid entry for ${day}.`);
+        }
+        return match;
+      });
+
+    // Selecting Goal A on the focused day dims every other goal in the grid.
+    fireEvent.click(await entryOn("2026-08-15"));
+    await waitFor(async () => {
+      expect((await entryOn("2026-08-20")).className).toContain("opacity-45");
+    });
+
+    // The first click on another day only moves the day, so it must also clear
+    // the focus rather than leaving Goal A lit from the previous selection.
+    fireEvent.click(await entryOn("2026-08-20"));
+    await waitFor(async () => {
+      expect((await entryOn("2026-08-15")).className).not.toContain("opacity-45");
+    });
+    expect((await entryOn("2026-08-20")).className).not.toContain("opacity-45");
+  });
+
   it("keeps the selected day when switching from month to day view", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
