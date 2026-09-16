@@ -1,0 +1,99 @@
+.work-quest-collection {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.work-quest-card {
+  --goal-color: var(--primary);
+  display: grid;
+  grid-template-columns: 4.75rem minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--goal-color) 28%, var(--border));
+  border-radius: 1rem;
+  background: var(--card);
+  color: var(--card-foreground);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+.work-quest-card[data-done="true"] {
+  border-color: color-mix(in srgb, var(--goal-color) 55%, var(--border));
+}
+
+.work-quest-card[data-open="true"] {
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+
+.work-quest-art {
+  position: relative;
+  overflow: hidden;
+  padding: 0.7rem 0.65rem 0.75rem;
+  background: color-mix(in srgb, var(--goal-color) 26%, var(--card));
+  color: var(--foreground);
+}
+
+.work-quest-art:after {
+  position: absolute;
+  right: -2.2rem;
+  bottom: -2.4rem;
+  width: 5.5rem;
+  height: 5.5rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  border-radius: 999px;
+  content: "";
+}
+
+.work-quest-emblem {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  height: 2.4rem;
+  margin: 0.45rem 0 0.55rem;
+}
+
+.work-quest-art button,
+.work-quest-art h2 {
+  position: relative;
+  z-index: 1;
+}
+
+.work-quest-body {
+  min-width: 0;
+  padding: 0.75rem 0.85rem 0.8rem;
+}
+
+.work-quest-body dt {
+  color: var(--muted-foreground);
+}
+
+.work-quest-body dd {
+  text-align: right;
+}
+
+.work-quest-meter {
+  display: flex;
+  gap: 0.2rem;
+  margin-top: 0.35rem;
+}
+
+.work-quest-meter span {
+  height: 0.35rem;
+  flex: 1;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border) 80%, transparent);
+}
+
+.work-quest-meter span[data-active="true"] {
+  background: var(--goal-color);
+}
+
+@media (min-width: 768px) {
+  .work-quest-collection {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .work-quest-card[data-open="true"] {
+    grid-column: 1 / -1;
+  }
+}
