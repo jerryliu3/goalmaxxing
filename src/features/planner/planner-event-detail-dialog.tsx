@@ -1,13 +1,17 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import Link from "next/link";
+import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
 import { getEntryDraftDiffSummary, getEntrySubtitle } from "@/features/planner/calendar-format";
 import { LinkedTargetsNote } from "@/features/planner/linked-targets-note";
+import {
+  formatSittingDate,
+  formatSittingTime,
+  snapshotToCreationFields,
+} from "@/features/planner/planner-folio-fields";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 
 export interface PlannerEventDetailDialogCallbacks {
@@ -24,6 +28,8 @@ export interface PlannerEventDetailDialogCallbacks {
   onNavigateToNextOpenInstance: () => void;
   onNavigateToLastOpenInstance: () => void;
 }
+
+type FolioFact = "title" | "date" | "time";
 
 interface PlannerEventDetailDialogProps {
   selectedEventEntry: PlannerDayDetailEntry | null;
@@ -79,10 +85,8 @@ export function PlannerEventDetailDialog({
   callbacks,
 }: PlannerEventDetailDialogProps) {
   const [host, setHost] = useState<HTMLElement | null>(null);
+  const [editingFact, setEditingFact] = useState<FolioFact | null>(null);
   const selectedEntryKey = selectedEventEntry?.key ?? null;
-  // Keyed on the entry itself, not its key: editing the date moves the slot to another
-  // day's list while the key stays the same, and the stale node would leave the editor
-  // portalled into a detached element.
   useLayoutEffect(() => {
     const slot = selectedEntryKey
       ? Array.from(
@@ -95,174 +99,241 @@ export function PlannerEventDetailDialog({
     // is reachable neither at render time nor through a callback ref.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHost((current) => (current === slot ? current : slot));
+    setEditingFact(null);
   }, [selectedEntryKey, selectedEventEntry]);
   if (!selectedEventEntry) return null;
-  const content = (
 
+  const title =
+    selectedEventDraftEdit?.label ??
+    selectedEventEntry.goalTitle ??
+    selectedEventEntry.label ??
+    "";
+  const fields = snapshotToCreationFields(selectedEventEntry.activeGoal, title);
+  const sittingTime =
+    selectedEventDraftTimeInputValue ||
+    selectedEventEntry.effectiveScheduledLocalTime ||
+    selectedEventBaselineUnit?.effectiveScheduledLocalTime ||
+    null;
+  const toggleFact = (fact: FolioFact) =>
+    setEditingFact((current) => (current === fact ? null : fact));
+
+  const content = (
     <section
       aria-label="Edit planned session"
       data-plan-entry-editor="true"
-      className="plan-row-unfold my-2 min-w-0 rounded-lg border border-primary/20 bg-muted/30 p-3"
-      onKeyDown={(event) => { if (event.key === "Escape") callbacks.onOpenChange(false); }}
+      className="plan-row-unfold my-2 min-w-0"
+      onKeyDown={(event) => {
+        if (event.key === "Escape") callbacks.onOpenChange(false);
+      }}
     >
-        <div className="mb-3">
-          <div className="flex items-center justify-center gap-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              aria-label="Go to first open instance"
-              onClick={callbacks.onNavigateToFirstOpenInstance}
-              disabled={!canNavigateToFirstOpenInstance}
-            >
-              <ChevronsLeft />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              aria-label="Go to previous open instance"
-              onClick={callbacks.onNavigateToPreviousOpenInstance}
-              disabled={!canNavigateToPreviousOpenInstance}
-            >
-              <ChevronLeft />
-            </Button>
-            <h3 className="mx-1 min-w-0 text-center font-medium">
-              {selectedEventEntry
-                ? getEntryGoalFirstTitleWithTime(selectedEventEntry)
-                : "Event detail"}
-            </h3>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              aria-label="Go to next open instance"
-              onClick={callbacks.onNavigateToNextOpenInstance}
-              disabled={!canNavigateToNextOpenInstance}
-            >
-              <ChevronRight />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              aria-label="Go to last open instance"
-              onClick={callbacks.onNavigateToLastOpenInstance}
-              disabled={!canNavigateToLastOpenInstance}
-            >
-              <ChevronsRight />
-            </Button>
-          </div>
+      {selectedEventEntry.hasLinkedTargets ? (
+        <LinkedTargetsNote
+          linkedTargets={selectedEventLinkedTargets}
+          goalTitles={goalTitles}
+          scopeMonth={scopeMonth}
+        />
+      ) : null}
+      {getEntryDraftDiffSummary(selectedEventEntry) ? (
+        <p className="mb-2 text-xs text-muted-foreground">
+          {getEntryDraftDiffSummary(selectedEventEntry)}
+        </p>
+      ) : null}
+      {getEntrySubtitle(selectedEventEntry) ? (
+        <p className="mb-2 text-xs text-muted-foreground">
+          {getEntrySubtitle(selectedEventEntry)}
+        </p>
+      ) : null}
+      {selectedEventEntry.draftGhost ? (
+        <div className="rounded-md border border-dashed p-2 text-xs text-muted-foreground">
+          This marker shows where the session was originally scheduled before your
+          preview move. Edit the moved session on its new date to change or undo the
+          move.
         </div>
-        {selectedEventEntry ? (
-          <div className="min-w-0 space-y-3 text-sm">
-            {selectedEventEntry.hasLinkedTargets ? (
-              <LinkedTargetsNote
-                linkedTargets={selectedEventLinkedTargets}
-                goalTitles={goalTitles}
-                scopeMonth={scopeMonth}
+      ) : (
+        <TempoGoalCard
+          fields={fields}
+          context="inspect"
+          density="compact"
+          visibility={{
+            category: true,
+            rhythm: true,
+            interval: true,
+            count: true,
+            schedule: true,
+            difficulty: Boolean(selectedEventEntry.activeGoal?.difficulty),
+          }}
+          titleContent={
+            editingFact === "title" ? (
+              <Input
+                value={title}
+                onChange={(event) =>
+                  callbacks.onUpdateDraftLabel(selectedEventEntry, event.target.value)
+                }
+                placeholder="Goal title"
+                aria-label="Title"
+                className="h-9 bg-transparent text-base"
+                autoFocus
               />
-            ) : null}
-            {getEntryDraftDiffSummary(selectedEventEntry) ? (
-              <p className="text-xs text-muted-foreground">
-                {getEntryDraftDiffSummary(selectedEventEntry)}
-              </p>
-            ) : null}
-            {getEntrySubtitle(selectedEventEntry) ? (
-              <p className="text-xs text-muted-foreground">
-                {getEntrySubtitle(selectedEventEntry)}
-              </p>
-            ) : null}
-            {selectedEventEntry.draftGhost ? (
-              <div className="rounded-md border border-dashed p-2 text-xs text-muted-foreground">
-                This marker shows where the session was originally scheduled before your
-                preview move. Edit the moved session on its new date to change or undo the
-                move.
-              </div>
             ) : (
-              <div className="space-y-2 rounded-md border border-dashed p-2">
-                <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                  Title
-                  <Input
-                    value={
-                      selectedEventDraftEdit?.label ??
-                      selectedEventEntry.goalTitle ??
-                      selectedEventEntry.label ??
-                      ""
-                    }
-                    onChange={(event) =>
-                      callbacks.onUpdateDraftLabel(selectedEventEntry, event.target.value)
-                    }
-                    placeholder="Goal title"
-                    className="h-8 text-xs"
-                  />
-                </label>
-                <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                  Date
-                  <Input
-                    type="date"
-                    value={selectedEventDraftScheduledDate ?? ""}
-                    onChange={(event) =>
-                      callbacks.onUpdateDraftScheduledDate(
-                        selectedEventEntry,
-                        event.target.value
-                      )
-                    }
-                    className="h-8 text-xs"
-                  />
-                </label>
-                <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                  Time
-                  <Input
-                    type="time"
-                    step={60}
-                    value={selectedEventDraftTimeInputValue}
-                    onChange={(event) =>
-                      callbacks.onUpdateDraftScheduledTimeOverride(
-                        selectedEventEntry,
-                        event.target.value
-                      )
-                    }
-                    className="h-8 text-xs"
-                  />
-                </label>
-                <p className="text-[11px] text-muted-foreground">
-                  Drag month-cell session pills to move quickly, or use this date/time editor
-                  as a keyboard-friendly fallback.
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  Effective local time:{" "}
-                  {selectedEventEntry.effectiveScheduledLocalTime ??
-                    selectedEventBaselineUnit?.effectiveScheduledLocalTime ??
-                    "date only"}
-                </p>
-                {selectedEventEntry.activeItem ? (
-                  <div className="flex flex-wrap gap-2">
-                    <Button type="button" size="sm" variant="outline" asChild>
-                      <Link href={`/goals/${selectedEventEntry.originalGoalId}`}>
-                        Edit goal
-                      </Link>
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => callbacks.onToggleItemLock(selectedEventEntry)}
-                      disabled={Boolean(mutationLoadingKey) || !canMutatePlanItems}
-                    >
-                      {mutationLoadingKey === `lock:${selectedEventEntry.activeItem.id}`
-                        ? "Saving..."
-                        : selectedEventEntry.activeItem.locked
-                          ? "Unlock"
-                          : "Lock"}
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
+              <button
+                type="button"
+                className="tempo-card-fact text-left"
+                onClick={() => toggleFact("title")}
+              >
+                {title.trim() || "Something worth starting."}
+              </button>
+            )
+          }
+          kickerEnd={
+            <span className="tempo-card-nav flex items-center gap-2">
+              <FolioNav
+                label="Go to first open instance"
+                disabled={!canNavigateToFirstOpenInstance}
+                onClick={callbacks.onNavigateToFirstOpenInstance}
+              >
+                First
+              </FolioNav>
+              <FolioNav
+                label="Go to previous open instance"
+                disabled={!canNavigateToPreviousOpenInstance}
+                onClick={callbacks.onNavigateToPreviousOpenInstance}
+              >
+                Prev
+              </FolioNav>
+              <FolioNav
+                label="Go to next open instance"
+                disabled={!canNavigateToNextOpenInstance}
+                onClick={callbacks.onNavigateToNextOpenInstance}
+              >
+                Next
+              </FolioNav>
+              <FolioNav
+                label="Go to last open instance"
+                disabled={!canNavigateToLastOpenInstance}
+                onClick={callbacks.onNavigateToLastOpenInstance}
+              >
+                Last
+              </FolioNav>
+            </span>
+          }
+        />
+      )}
+      {selectedEventEntry.draftGhost ? null : (
+        <div className="mt-3 space-y-2 px-0.5">
+          <p className="text-sm leading-relaxed">
+            This sitting{" "}
+            {editingFact === "date" ? (
+              <Input
+                type="date"
+                aria-label="Date"
+                value={selectedEventDraftScheduledDate ?? ""}
+                onChange={(event) =>
+                  callbacks.onUpdateDraftScheduledDate(
+                    selectedEventEntry,
+                    event.target.value
+                  )
+                }
+                className="inline-flex h-8 w-auto bg-transparent text-sm"
+                autoFocus
+              />
+            ) : (
+              <button
+                type="button"
+                className="tempo-card-fact"
+                onClick={() => toggleFact("date")}
+              >
+                {formatSittingDate(selectedEventDraftScheduledDate)}
+              </button>
+            )}{" "}
+            at{" "}
+            {editingFact === "time" ? (
+              <Input
+                type="time"
+                step={60}
+                aria-label="Time"
+                value={selectedEventDraftTimeInputValue}
+                onChange={(event) =>
+                  callbacks.onUpdateDraftScheduledTimeOverride(
+                    selectedEventEntry,
+                    event.target.value
+                  )
+                }
+                className="inline-flex h-8 w-auto bg-transparent text-sm"
+                autoFocus
+              />
+            ) : (
+              <button
+                type="button"
+                className="tempo-card-fact"
+                onClick={() => toggleFact("time")}
+              >
+                {formatSittingTime(sittingTime)}
+              </button>
             )}
-          </div>
-        ) : null}
+            {selectedEventEntry.activeItem ? (
+              <>
+                {" · "}
+                <button
+                  type="button"
+                  className="tempo-card-fact"
+                  onClick={() => {
+                    if (!canMutatePlanItems || mutationLoadingKey) return;
+                    callbacks.onToggleItemLock(selectedEventEntry);
+                  }}
+                  disabled={Boolean(mutationLoadingKey) || !canMutatePlanItems}
+                >
+                  {mutationLoadingKey === `lock:${selectedEventEntry.activeItem.id}`
+                    ? "Saving..."
+                    : selectedEventEntry.activeItem.locked
+                      ? "Locked"
+                      : "Unlocked"}
+                </button>
+              </>
+            ) : null}
+          </p>
+          {selectedEventEntry.activeItem ? (
+            <p className="text-[0.68rem] uppercase tracking-[0.12em] text-muted-foreground">
+              Tap a fact to change this sitting ·{" "}
+              <Link
+                href={`/goals/${selectedEventEntry.originalGoalId}`}
+                className="underline-offset-4 hover:underline"
+              >
+                Edit goal
+              </Link>
+            </p>
+          ) : (
+            <p className="text-[0.68rem] uppercase tracking-[0.12em] text-muted-foreground">
+              Tap a fact to change this sitting
+            </p>
+          )}
+        </div>
+      )}
+      <span className="sr-only">{getEntryGoalFirstTitleWithTime(selectedEventEntry)}</span>
     </section>
   );
   return host ? createPortal(content, host) : content;
+}
+
+function FolioNav({
+  label,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string;
+  disabled?: boolean;
+  onClick: () => void;
+  children: string;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className="opacity-70 disabled:opacity-25"
+    >
+      {children}
+    </button>
+  );
 }

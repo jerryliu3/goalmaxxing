@@ -1143,7 +1143,7 @@ describe("CalendarSurface characterization", () => {
       name: "Edit planned session",
     });
     expect(
-      within(editor).getByRole("heading", { name: "07:30 Goal B" })
+      within(editor).getByRole("heading", { name: "Goal B" })
     ).toBeInTheDocument();
     expect(within(editor).queryByText("Next: Milestone 2")).not.toBeInTheDocument();
   });

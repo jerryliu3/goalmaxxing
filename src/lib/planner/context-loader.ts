@@ -941,8 +941,22 @@ export async function loadPlannerContextPayload({
             ...mismatch,
           });
         }
+        const definitionById = new Map(
+          snapshot.goals.map((goal) => [goal.id, goal])
+        );
         return {
           ...snapshot.activePlan,
+          goals: snapshot.activePlan.goals.map((row) => {
+            const definition = definitionById.get(row.original_goal_id);
+            return {
+              ...row,
+              frequency_type: definition?.frequency_type,
+              recurrence_interval: definition?.recurrence_interval ?? null,
+              target_count: definition?.target_count ?? null,
+              target_basis: definition?.target_basis,
+              default_local_time: definition?.default_local_time ?? null,
+            };
+          }),
           basePlan: snapshot.activePlan.basePlan
             ? {
                 ...snapshot.activePlan.basePlan,

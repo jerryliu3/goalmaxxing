@@ -88,6 +88,13 @@ export interface PlannerActiveGoalSnapshot {
   color: string | null;
   start_date?: string;
   end_date?: string | null;
+  frequency_type?: "fixed_milestones" | "recurring";
+  recurrence_interval?: "daily" | "weekly" | "monthly" | null;
+  target_count?: number | null;
+  target_basis?: "period" | "lifetime";
+  difficulty?: "easy" | "medium" | "hard";
+  default_local_time?: string | null;
+  is_private?: boolean;
 }
 
 export interface PlannerActiveItemSnapshot {

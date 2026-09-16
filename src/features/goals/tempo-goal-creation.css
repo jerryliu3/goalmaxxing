@@ -14,6 +14,47 @@
   min-width: 0;
   perspective: 1100px;
 }
+.tempo-card[data-density="compact"] {
+  min-height: 0;
+  padding: 1.15rem 1.25rem 1.05rem;
+  gap: 0.75rem;
+}
+.tempo-card[data-density="compact"] .tempo-card-target {
+  margin: 0.15rem 0;
+}
+.tempo-card[data-density="compact"] .tempo-card-target strong {
+  font-size: 4.4rem;
+}
+.tempo-card[data-density="compact"] h2 {
+  font-size: 1.45rem;
+}
+.tempo-card-fact {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, currentColor 28%, transparent);
+}
+.tempo-card-fact:hover,
+.tempo-card-fact[data-active="true"] {
+  box-shadow: inset 0 -2px 0 currentColor;
+}
+.tempo-card-fact:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.tempo-card-nav {
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+}
 .tempo-card {
   --goal-color: #6366f1;
   position: relative;

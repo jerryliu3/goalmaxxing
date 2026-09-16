@@ -150,6 +150,13 @@ export function buildDemoPlannerContext(
     color: goal.color,
     start_date: goal.start_date,
     end_date: goal.end_date,
+    frequency_type: goal.frequency_type,
+    recurrence_interval: goal.recurrence_interval,
+    target_count: goal.target_count,
+    target_basis: goal.target_basis,
+    difficulty: goal.difficulty,
+    default_local_time: goal.default_local_time ?? null,
+    is_private: goal.is_private,
   }));
   const monthStart = `${scopeMonth}-01`;
   const windowStart = addDaysIso(monthStart, -40);
