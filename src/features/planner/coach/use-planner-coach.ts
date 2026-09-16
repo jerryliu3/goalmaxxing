@@ -41,6 +41,10 @@ import {
   updateAssistantProposalStatus,
 } from "@/features/planner/coach/coach-message-state";
 import { validateUndoProposal } from "@/features/planner/coach/coach-proposal-utils";
+import {
+  COACH_PROMPT_SEED_EVENT,
+  takeCoachPromptSeed,
+} from "@/lib/coach/coach-prompt-seed";
 import { useCoachConversationPersistence } from "@/features/planner/coach/use-coach-conversation-persistence";
 import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 import type {
@@ -92,6 +96,25 @@ export function usePlannerCoach({
 }: UsePlannerCoachArgs): PlannerCoachModel {
   const [coachLoading, setCoachLoading] = useState(false);
   const [coachInput, setCoachInput] = useState("");
+
+  // "Ask coach" on the period check-in leaves a question behind on its way to
+  // the plan surface. Read it on mount for the navigation case, and on the
+  // event for when this panel was already mounted under the overlay. Either
+  // way the read is one-shot, so a reload starts clean.
+  useEffect(() => {
+    const consumeSeed = () => {
+      const seed = takeCoachPromptSeed(window.sessionStorage);
+      if (seed) {
+        setCoachInput(seed);
+      }
+    };
+    consumeSeed();
+    window.addEventListener(COACH_PROMPT_SEED_EVENT, consumeSeed);
+    return () => {
+      window.removeEventListener(COACH_PROMPT_SEED_EVENT, consumeSeed);
+    };
+  }, []);
+
   const [coachMessages, setCoachMessages] = useState<CoachMessage[]>([]);
   const [coachWarnings, setCoachWarnings] = useState<string[]>([]);
   const [coachRecommendations, setCoachRecommendations] = useState<string[]>([]);

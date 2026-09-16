@@ -406,14 +406,61 @@ Keep context near the action:
 Users should not need to remember which view owns an action or what a color
 means on another screen.
 
-### First-open digest is skippable, not a ritual
+### The period check-in is skippable, not a ritual
 
-The digest is a briefing overlay on first open, not a fifth destination and not
-a mandatory morning ceremony. On the profile week-start day it recaps last week
-and this week; on other days it recaps yesterday and today. Never stack both.
-Skip, Escape, and click-outside all acknowledge the period. Replay and auto-show
-live in Settings. Suggestions can point at Plan, Today, or Progress; they must
-not rewrite the plan. Keep production chrome on the existing `AppShell` rather
+The check-in is a briefing overlay on first open, not a fifth destination and
+not a mandatory morning ceremony.
+
+Cadence resolves widest-first, so exactly one is ever owed: monthly on the first
+of the month, weekly on the profile week-start day, daily otherwise. A month
+check-in already covers the day and week ahead, so the narrower ones are simply
+not offered that morning. Never stack them.
+
+The daily recap covers the date range since the last presented check-in.
+Weekly and monthly recaps remain anchored to their calendar periods.
+
+First open shows a lightweight prompt that names the cadence and offers only
+**Open** and **Skip**. It does not dim or blur the surface behind it — the user
+did not ask for it, so it must not take the screen hostage. Showing that prompt
+counts as the day's presentation, so it does not return after a refresh.
+Opening it reveals two tabs, split by tense rather than by where the content
+came from:
+
+1. **Recap** — what happened. The window that just closed, as a score rather
+   than a grade, with the sessions it held. Missed sessions can be marked done
+   in place so forgotten checkoffs are easy to correct. It looks backwards
+   only; what the window ahead implies belongs under Next.
+2. **Next** — what to do about it. The coach's generated paragraph introduces
+   work to recover and goals with nothing placed, ordered by what the cadence
+   is for — a month starts by deciding what to take on, a week by cleaning up.
+   Informational workload rows such as "three sessions today" may remain for
+   context, but they have no CTA. The coach's own actionable suggestions follow
+   the computed rows; suggestions without an action remain out of the list.
+
+Do not give the coach its own tab. It reads the same facts the computed rows are
+built from, so presenting it separately implies a distinction the user does not
+have. Its paragraph and suggestions are grounded strictly in the facts payload —
+it may not invent sessions, counts, or goal titles — and it is not generated
+until the user chooses **Open**.
+
+The monthly check-in is the only one that offers goal creation, and it offers it
+unconditionally: a month boundary *is* the moment to decide what you are taking
+on, so that row does not have to be earned by the facts. Unplaced goals stay out
+of the daily check-in, where the list is noise rather than a decision.
+
+The check-in never rewrites the plan. Exact-date completion corrections happen
+in place through the canonical completion path. Other rows may jump into the
+surface that owns a more complex change — Plan, Today, or Progress — and "Ask
+coach" hands a seeded follow-up question to the planner coach panel rather than
+answering in place. Prefer an inline control over navigation whenever the
+owning workflow can be embedded without duplicating its business logic.
+
+Time estimates are derived from a flat per-session figure, so always state the
+rate rather than presenting the number as measured.
+
+Open, Skip, Escape, and click-outside all leave the period marked as presented.
+Replay and auto-show live in Settings; replay opens whichever check-in the
+current date is owed. Keep production chrome on the existing `AppShell` rather
 than copying concept-lab shells.
 
 ### Use progressive disclosure

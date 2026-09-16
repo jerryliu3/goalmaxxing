@@ -31,7 +31,7 @@ export function DigestSettings() {
         if (isApiClientError(error) && error.code === "digest_disabled") {
           setAvailable(false);
         } else {
-          toast.error(getApiErrorMessage(error, "Digest settings could not be loaded."));
+          toast.error(getApiErrorMessage(error, "Check-in settings could not be loaded."));
         }
       })
       .finally(() => {
@@ -51,7 +51,7 @@ export function DigestSettings() {
       await postJson("/api/digest/settings", { digestAutoShow: next });
     } catch (error) {
       setDigestAutoShow(!next);
-      toast.error(getApiErrorMessage(error, "Digest settings could not be saved."));
+      toast.error(getApiErrorMessage(error, "Check-in settings could not be saved."));
     } finally {
       setSaving(false);
     }
@@ -61,15 +61,16 @@ export function DigestSettings() {
     <div className="space-y-4">
       <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle>First open</CardTitle>
+          <CardTitle>Check-in</CardTitle>
           <CardDescription>
-            Show a daily briefing, or a weekly one on the first day of your week. Skip anytime.
+            A daily check-in, a weekly one on the first day of your week, and a
+            monthly one on the first of the month. Skip anytime.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {!available ? (
             <p className="text-sm text-muted-foreground">
-              Digest is not enabled on this environment.
+              Check-ins are not enabled on this environment.
             </p>
           ) : null}
           <label className="flex items-start gap-3 text-sm">
@@ -81,12 +82,16 @@ export function DigestSettings() {
               onChange={(event) => void saveAutoShow(event.target.checked)}
             />
             <span>
-              Show digest when I first open the app
+              Show my check-in when I first open the app
               <span className="block text-xs text-muted-foreground">
                 Replay below still works if this is off.
               </span>
             </span>
           </label>
+          <p className="text-xs text-muted-foreground">
+            Replay opens whichever check-in today is owed, so testing the
+            monthly one means being on the first of a month.
+          </p>
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
@@ -110,13 +115,13 @@ export function DigestSettings() {
                   })
                   .catch((error) => {
                     toast.error(
-                      getApiErrorMessage(error, "Suggestions could not be regenerated.")
+                      getApiErrorMessage(error, "The briefing could not be regenerated.")
                     );
                   })
                   .finally(() => setRegenerating(false));
               }}
             >
-              {regenerating ? "Regenerating..." : "Regenerate suggestions"}
+              {regenerating ? "Regenerating..." : "Regenerate briefing"}
             </Button>
           </div>
         </CardContent>

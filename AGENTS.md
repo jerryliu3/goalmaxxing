@@ -169,6 +169,7 @@ surfaces. The default is to simplify and reuse what already exists.
 
 - For Goalmaxxing web UX across product and marketing surfaces, follow
   `docs/ux/goalmaxxing-experience-design-guide.md`.
+<<<<<<< HEAD
 - Authenticated application leading direction is Spatial Plan (B). Use
   `docs/ux/goalmaxxing-application-design-guide.md` and `/ux/concepts`.
   Visual brand explorations live in
@@ -191,12 +192,28 @@ surfaces. The default is to simplify and reuse what already exists.
   Day work inspect and checklist-replacement concepts live in
   `docs/ux/goalmaxxing-day-work-study.md` and `/ux/day-work`. They are
   exploratory, not a product lock.
-- First-open digest is an `AppShell` overlay, not a tab or Progress
-  destination. Cadence is weekly on the profile week-start day and daily
-  otherwise. Skip, Escape, and click-outside all acknowledge the period.
-  Replay and auto-show live in Settings. Suggestions never mutate the plan.
-  Do not copy concept shells into production `AppShell`, tabs, or planner
-  chrome.
+- Period check-in is an `AppShell` overlay, not a tab or Progress
+  destination. Cadence resolves widest-first — monthly on the first of the
+  month, weekly on the profile week-start day, daily otherwise — so exactly
+  one check-in is owed per first open. Daily recaps cover the date range since
+  the last presented check-in; weekly and monthly windows stay calendar-based.
+  First open shows only a lightweight Open/Skip prompt that names the cadence,
+  does not dim or blur the page behind it, and counts as the day's
+  presentation, so it does not nag again. Opening reveals two tabs split by
+  tense — Recap (what happened) and Next (what to do, with the coach paragraph
+  introducing the rows) — and only then generates the AI briefing. The coach
+  does not get its own tab: it reads the same facts the computed rows do.
+  Replay and auto-show live in Settings. The check-in never mutates the plan:
+  missed recap sessions can be marked complete inline through the canonical
+  completion path, while complex planning changes may jump into the surface
+  that owns them. Informational workload rows may remain but must not get CTAs.
+  Prefer inline controls over navigation where the owning workflow can be
+  embedded without duplicating business logic. "Ask coach" hands a seeded
+  question to the planner coach panel. Goal creation is offered only on the
+  monthly check-in.
+  Its data layer keeps the `digest` name (`user_digests`, `/api/digest/*`);
+  "check-in" is the surface. Do not copy concept shells into production
+  `AppShell`, tabs, or planner chrome.
 - Reuse-first: before adding a new hook/component/helper, check whether an
   existing one can be extended or composed.
 - Prefer canonical homes for shared domain logic (`src/lib/planner/*`,

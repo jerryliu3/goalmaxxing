@@ -74,7 +74,7 @@ vi.mock("@/features/onboarding/onboarding-guides-settings", () => ({
 }));
 
 vi.mock("@/features/digest/digest-settings", () => ({
-  DigestSettings: () => <div>Digest body</div>,
+  DigestSettings: () => <div>Check-in body</div>,
 }));
 
 vi.mock("@/components/intro/journey-intro-overlay", () => ({
@@ -131,8 +131,8 @@ describe("SettingsTab", () => {
     mockSearch = "tab=digest";
     render(<SettingsTab />);
 
-    expect(screen.getByRole("dialog", { name: "Digest" })).toBeInTheDocument();
-    expect(screen.getByText("Digest body")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Check-in" })).toBeInTheDocument();
+    expect(screen.getByText("Check-in body")).toBeInTheDocument();
   });
 
   it("opens onboarding guides from the tab query", () => {

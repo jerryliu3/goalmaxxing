@@ -1,4 +1,8 @@
-import type { DigestFacts, DigestSuggestions } from "@/lib/digest/contract";
+import type {
+  DigestFacts,
+  DigestSuggestionAction,
+  DigestSuggestions,
+} from "@/lib/digest/contract";
 import type { DigestKind } from "@/lib/digest/period";
 
 export interface DigestPayload {
@@ -24,7 +28,7 @@ export function requestDigestOpen() {
 }
 
 export function digestActionHref(
-  action: "plan" | "today" | "progress" | null,
+  action: DigestSuggestionAction | null,
   hrefPrefix = ""
 ) {
   const prefix = hrefPrefix.endsWith("/") ? hrefPrefix.slice(0, -1) : hrefPrefix;
@@ -36,6 +40,11 @@ export function digestActionHref(
   }
   if (action === "progress") {
     return `${prefix}/insights`;
+  }
+  if (action === "goals") {
+    // No `returnTo`: the goal sheet falls back to `router.back()`, which lands
+    // the user wherever the check-in interrupted them.
+    return `${prefix}/goals/new`;
   }
   return null;
 }

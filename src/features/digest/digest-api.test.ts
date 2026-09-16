@@ -6,10 +6,12 @@ describe("digestActionHref", () => {
     expect(digestActionHref("plan")).toBe("/calendar?surface=calendar");
     expect(digestActionHref("today")).toBe("/calendar?surface=checklist");
     expect(digestActionHref("progress")).toBe("/insights");
+    expect(digestActionHref("goals")).toBe("/goals/new");
     expect(digestActionHref(null)).toBeNull();
   });
 
   it("prefixes demo paths", () => {
     expect(digestActionHref("plan", "/demo")).toBe("/demo/calendar?surface=calendar");
+    expect(digestActionHref("goals", "/demo")).toBe("/demo/goals/new");
   });
 });

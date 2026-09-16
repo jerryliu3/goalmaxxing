@@ -33,6 +33,16 @@ describe("parseDigestSuggestions", () => {
     expect(parsed?.suggestions[0]?.action).toBeNull();
   });
 
+  it("keeps the goal-creation action the monthly check-in can use", () => {
+    const parsed = parseDigestSuggestions({
+      motivation: "New month.",
+      suggestions: [
+        { title: "Add a goal", body: "Decide what this month is for.", action: "goals" },
+      ],
+    });
+    expect(parsed?.suggestions[0]?.action).toBe("goals");
+  });
+
   it("returns a static fallback for empty model output", () => {
     expect(parseDigestSuggestions(null)).toBeNull();
     expect(fallbackDigestSuggestions("daily").suggestions.length).toBeGreaterThan(0);
