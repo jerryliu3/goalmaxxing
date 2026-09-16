@@ -12,6 +12,15 @@ export default function UxHubPage() {
         </h1>
         <ul className="mt-10 space-y-4">
           <li>
+            <Link className="text-lg font-semibold underline" href="/ux/progress-overview">
+              Progress — section overview
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Expand the week and achievements in place; open focused history,
+              patterns, and the goal library. Concept B, with sample data.
+            </p>
+          </li>
+          <li>
             <Link
               className="text-lg font-semibold underline"
               href="/ux/next-wave"
