@@ -90,44 +90,28 @@ export function usePlanPinchViewChange({
     // A non-passive `touchmove` listener forces the browser to wait on this
     // handler before it can scroll, which stalls one-finger scrolling through
     // the board (the day checklist lives inside it). Keep it attached only
-    // while a real two-finger gesture is in flight.
-    let moveListening = false;
-
-    const listenForMove = () => {
-      if (moveListening) {
-        return;
-      }
-      node.addEventListener("touchmove", onTouchMove, { passive: false });
-      moveListening = true;
-    };
-
-    const stopListeningForMove = () => {
-      if (!moveListening) {
-        return;
-      }
-      node.removeEventListener("touchmove", onTouchMove);
-      moveListening = false;
-    };
-
-    const resetGesture = () => {
+    // while a real two-finger gesture is in flight. Re-adding the same
+    // callback is a no-op per the DOM spec, as is removing one that is not
+    // attached, so the pair needs no bookkeeping of its own.
+    const endGesture = () => {
       startDistanceRef.current = null;
       firedRef.current = false;
-      stopListeningForMove();
+      node.removeEventListener("touchmove", onTouchMove);
     };
 
     const onTouchStart = (event: TouchEvent) => {
       if (event.touches.length !== 2) {
-        resetGesture();
+        endGesture();
         return;
       }
       startDistanceRef.current = touchDistance(event.touches);
       firedRef.current = false;
-      listenForMove();
+      node.addEventListener("touchmove", onTouchMove, { passive: false });
     };
 
     const onTouchEnd = (event: TouchEvent) => {
       if (event.touches.length < 2) {
-        resetGesture();
+        endGesture();
       }
     };
 
@@ -139,7 +123,7 @@ export function usePlanPinchViewChange({
       node.removeEventListener("touchstart", onTouchStart);
       node.removeEventListener("touchend", onTouchEnd);
       node.removeEventListener("touchcancel", onTouchEnd);
-      stopListeningForMove();
+      node.removeEventListener("touchmove", onTouchMove);
     };
   }, [containerRef, disabled, onViewModeChange, viewMode]);
 }
