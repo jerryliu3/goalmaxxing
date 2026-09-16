@@ -20,6 +20,9 @@ describe("card optics", () => {
     const below = cardOptics({ x: 18, y: 0 });
     expect(above["--shine-strength"]).not.toBe(below["--shine-strength"]);
     expect(above["--rim-light-y"]).not.toBe(below["--rim-light-y"]);
+    expect(above["--relief-shadow-y"]).not.toBe(below["--relief-shadow-y"]);
+    expect(parseFloat(above["--relief-light-y"])).toBeLessThan(0);
+    expect(parseFloat(above["--relief-shadow-y"])).toBeGreaterThan(0);
   });
 
   it("gives keyboard poses the same deterministic reflection as pointer poses", () => {
