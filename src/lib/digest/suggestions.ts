@@ -4,20 +4,39 @@ import {
 } from "@/lib/digest/contract";
 import type { DigestKind } from "@/lib/digest/period";
 
+const FALLBACK_BY_KIND: Record<
+  DigestKind,
+  { motivation: string; title: string; body: string; action: "plan" | "today" }
+> = {
+  monthly: {
+    motivation: "Last month is closed. Decide what this month is actually for.",
+    title: "Set up the month",
+    body: "Place work for the goals that have nothing on the calendar yet.",
+    action: "plan",
+  },
+  weekly: {
+    motivation: "Last week is closed. Place the work that still matters this week.",
+    title: "Open this week",
+    body: "Scan the week, then move anything that no longer fits.",
+    action: "plan",
+  },
+  daily: {
+    motivation: "Yesterday is closed. Start with what is already on today.",
+    title: "Open today",
+    body: "Check off what’s placed, then recover anything still sitting unplaced.",
+    action: "today",
+  },
+};
+
 export function fallbackDigestSuggestions(kind: DigestKind): DigestSuggestions {
+  const fallback = FALLBACK_BY_KIND[kind];
   return digestSuggestionsSchema.parse({
-    motivation:
-      kind === "weekly"
-        ? "Last week is closed. Place the work that still matters this week."
-        : "Yesterday is closed. Start with what is already on today.",
+    motivation: fallback.motivation,
     suggestions: [
       {
-        title: kind === "weekly" ? "Open this week" : "Open today",
-        body:
-          kind === "weekly"
-            ? "Scan the week, then move anything that no longer fits."
-            : "Check off what’s placed, then recover anything still sitting unplaced.",
-        action: kind === "weekly" ? "plan" : "today",
+        title: fallback.title,
+        body: fallback.body,
+        action: fallback.action,
       },
     ],
   });
