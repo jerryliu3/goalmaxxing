@@ -229,6 +229,8 @@ export function materializeWorkUnits({
   const effectiveGoalEndDate = resolveGoalPlanningEndDate({
     frequencyType: goal.frequency_type,
     targetCount: goal.target_count,
+    targetBasis: goal.target_basis,
+    recurrenceInterval: goal.recurrence_interval,
     startDate: goal.start_date,
     endDate: goal.end_date,
     asOfDate,
