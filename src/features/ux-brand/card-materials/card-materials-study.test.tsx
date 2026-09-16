@@ -59,7 +59,6 @@ describe("card material comparison", () => {
     }
   });
 
-
   it("updates the goal color and shared card for all category-responsive finishes", async () => {
     const user = userEvent.setup();
     render(<CardMaterialsStudy />);
@@ -74,6 +73,24 @@ describe("card material comparison", () => {
         expect(within(region).getByRole("button", { name: `Reset ${name}` })).toBeEnabled();
       }
     }
+  });
+
+  it("applies every material to challenge, leaderboard, profile, and object studies", async () => {
+    const user = userEvent.setup();
+    render(<CardMaterialsStudy />);
+
+    await user.click(screen.getByRole("tab", { name: "02 In the app" }));
+    expect(screen.getByRole("region", { name: "Challenge card" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Leaderboard card" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Profile trading card" })).toBeInTheDocument();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Material" }), "7");
+    expect(screen.getByRole("combobox", { name: "Material" })).toHaveDisplayValue("Sapphire Prism");
+
+    await user.click(screen.getByRole("tab", { name: "03 Trophies & objects" }));
+    expect(screen.getByRole("region", { name: "Annual achievement trophy" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Milestone medal" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Momentum compass" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Material" })).toHaveDisplayValue("Sapphire Prism");
   });
 
 });

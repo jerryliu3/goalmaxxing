@@ -12,7 +12,7 @@ has been selected yet.
 | --- | --- | --- | --- |
 | Liquid Glass | Translucent beveled face, continuous polished thickness, pointer lighting, perspective tilt | One featured goal or active folio card | CSS blur plus layered gradients; requires contrast checks over backgrounds. Milky face and opaque fallback preserve readability. Approximate optical glass, not a physical refraction shader. |
 | Ceramic Relief | Richer category glaze, continuous rounded edge, raised target and rhythm | Everyday goal creation and detail | CSS extrusion and depth planes; no blur or graphics runtime. Restrained elevation needed when several cards share a screen. Recommended starting point. |
-| Layered Diorama | Colored backplate, offset sheets, floating type at different depths | Folio collection and large previews | CSS preserve-3d and transforms. Requires outer space; compress to a flat treatment in dense layouts. Most expressive dimensional option. |
+| Layered Diorama | Colored backplate and offset sheets behind one embossed reading face | Folio collection and large previews | CSS preserve-3d and transforms. Requires outer space; compress to a flat treatment in dense layouts. Most expressive dimensional option. |
 | Foil Print | Dark printed collectible, spectral foil numerals, narrow iridescent sheen, solid gilded edge | Completed goals and collection moments | Selective foil on one gilded card with perspective tilt. Preserve dark/light type contrast and avoid making routine goals feel like rarity tiers. |
 | Woven Paper | Matte cloth fibers, stitched inset, colored ink | Archive and warm everyday cards | Small CSS texture gradients; no tilt. Quietest match for the cloth folio. Texture should remain below text contrast. |
 | Pearl Reserve | Light ivory pearl lacquer, champagne foil, gilded thickness | A light premium everyday or collection card | Fine-stationery and mother-of-pearl cues. Bronze foil stays dark enough for the ivory face; no rear sheet. |
@@ -69,10 +69,12 @@ Solid materials use a connected ten-pixel-deep CSS body with four side planes,
 rounded corner facets, and a rear face. The former downward edge shadows are
 removed. Side visibility and apparent thickness now come from perspective.
 They render no offset backplate or second sheet. Glass also loses the separate
-colored lens in its backdrop. The number and its rhythm label cast soft shadows;
-Ceramic uses a stronger category-color glaze. Foil preserves its ink, fine frame,
-and spectral numerals while gaining tilt and a gilded edge. Diorama and Woven
-Paper are unchanged. The original effort bars remain the difficulty cue.
+colored lens in its backdrop. Every readable element now sits in shallow relief
+on the face. Its highlight and cast shadow use the same card-local light vector
+as the rim, so the embossing responds coherently while the card turns. Ceramic
+uses a stronger category-color glaze. Foil preserves its ink, fine frame, and
+spectral numerals while gaining tilt and a gilded edge. The original effort bars
+remain the difficulty cue.
 
 ## Precious finishes
 
@@ -123,3 +125,17 @@ competes with the category. They share the same goal component, moving optics,
 full-rotation controls, and finished back face. Switch the sample goal between
 green, violet, and rose to compare the finish. The original material concepts
 remain available for comparison; these additions do not recolor them.
+
+## Application formats and earned objects
+
+The study now has three views. Goal cards preserve the twelve-way comparison.
+“In the app” applies one selected material to a community challenge, compact
+leaderboard, and profile trading card. Their proportions and information
+hierarchies differ, but face treatment, shallow relief, and moving light remain
+one system.
+
+“Trophies & objects” moves beyond rectangular UI: an annual momentum cup, a
+hundred-milestone medal, and a momentum compass inherit the selected material.
+These are CSS prototypes without external assets or a graphics runtime. They
+test whether a chosen material can identify both everyday product surfaces and
+rare earned moments; they do not define achievement rules or production rewards.
