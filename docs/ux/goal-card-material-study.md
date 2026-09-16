@@ -70,8 +70,7 @@ rounded corner facets, and a rear face. The former downward edge shadows are
 removed. Side visibility and apparent thickness now come from perspective.
 They render no offset backplate or second sheet. Glass also loses the separate
 colored lens in its backdrop. Every readable element now sits in shallow relief
-on the face. Its highlight and cast shadow use the same card-local light vector
-as the rim, so the embossing responds coherently while the card turns. Ceramic
+on the face; see `Raised lettering` below for how that relief is built. Ceramic
 uses a stronger category-color glaze. Foil preserves its ink, fine frame, and
 spectral numerals while gaining tilt and a gilded edge. The original effort bars
 remain the difficulty cue.
@@ -125,6 +124,31 @@ competes with the category. They share the same goal component, moving optics,
 full-rotation controls, and finished back face. Switch the sample goal between
 green, violet, and rose to compare the finish. The original material concepts
 remain available for comparison; these additions do not recolor them.
+
+## Raised lettering
+
+The first relief pass offset a single highlight and shadow by roughly one pixel,
+and it offset them the wrong way: the highlight landed on the shaded side. Text
+read as flat at every angle. `card-emboss.css` replaces it and is now the only
+place study lettering defines depth.
+
+- Letters carry an eight-step extruded wall, so they read as solid bodies rather
+  than as text with a drop shadow.
+- The wall runs opposite the viewer, derived from the same card-space transform
+  used for edge shading: turn the card right and the wall swings left. A nearly
+  head-on card, which would truly show no side, falls back to a conventional
+  light-opposite emboss instead of collapsing.
+- The wall brightens only while the viewer and the light share a side, so turning
+  a card through the light moves its lettering from shadowed to lit.
+- A lit lip sits on the side facing the light, and the cast shadow falls opposite
+  it, both from the existing light vector.
+- Offsets are em-based, so one recipe serves a 90px target number and a 9px label.
+- Metallic numerals build the same wall from chained drop shadows, because
+  `text-shadow` would paint over a gradient clipped into the glyph.
+
+Materials now contribute only palette (`--emboss-body`, `--emboss-top`,
+`--emboss-cast`, `--emboss-scale`) and no longer redeclare shadows on study text.
+Woven stays near-flat by design: ink pressed into cloth, not a raised wall.
 
 ## Application formats and earned objects
 
