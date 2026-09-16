@@ -43,6 +43,9 @@ vi.mock("@/components/intro/journey-intro-overlay", () => ({
 vi.mock("@/components/layout/app-boot-splash", () => ({
   AppBootSplash: () => null,
 }));
+vi.mock("@/features/digest/digest-overlay", () => ({
+  DigestOverlay: () => <div data-testid="digest-overlay" />,
+}));
 vi.mock("@/lib/cache/tab-data-cache", () => ({
   setTabDataCacheScope: (scope: string) => cacheScopeMock.setScope(scope),
 }));
@@ -136,6 +139,22 @@ describe("AppShell", () => {
     );
 
     expect(screen.queryByTestId("journey-intro-overlay")).not.toBeInTheDocument();
+  });
+
+  it("mounts the digest overlay only when the flag is on", () => {
+    const { rerender } = render(
+      <AppShell userId="user-1" {...emptyDuoProps}>
+        <div>Child content</div>
+      </AppShell>
+    );
+    expect(screen.queryByTestId("digest-overlay")).not.toBeInTheDocument();
+
+    rerender(
+      <AppShell userId="user-1" digestEnabled {...emptyDuoProps}>
+        <div>Child content</div>
+      </AppShell>
+    );
+    expect(screen.getByTestId("digest-overlay")).toBeInTheDocument();
   });
 
   it("scopes tab data cache by authenticated user", () => {

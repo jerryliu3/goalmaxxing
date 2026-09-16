@@ -213,3 +213,25 @@ export async function upsertDigestRow({
     throw new ApiRouteError(500, "digest_upsert_failed", "Digest could not be saved.");
   }
 }
+
+export async function updateDigestAutoShow({
+  supabase,
+  userId,
+  digestAutoShow,
+}: {
+  supabase: DigestClient;
+  userId: string;
+  digestAutoShow: boolean;
+}) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ digest_auto_show: digestAutoShow })
+    .eq("id", userId);
+  if (error) {
+    throw new ApiRouteError(
+      500,
+      "digest_settings_update_failed",
+      "Digest settings could not be saved."
+    );
+  }
+}

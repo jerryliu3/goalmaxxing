@@ -78,6 +78,7 @@ export default async function AuthenticatedLayout({
       viewerAvatarUrl={viewerAvatarUrl}
       journeyFlags={journeyFlags}
       xpEnabled={flags.xpEnabled}
+      digestEnabled={flags.digestEnabled}
     >
       {children}
     </AppShell>

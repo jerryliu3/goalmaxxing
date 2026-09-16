@@ -198,6 +198,13 @@ export async function handleDemoFetch(
       correlationId: DEMO_CORRELATION_ID,
     });
   }
+  if (pathname === "/api/digest/settings" && method === "POST") {
+    return jsonResponse({
+      schemaVersion: "1",
+      digestAutoShow: false,
+      correlationId: DEMO_CORRELATION_ID,
+    });
+  }
 
   if (pathname === "/api/xp/profile" && method === "GET") {
     return jsonResponse(buildDemoXpProfile());

@@ -16,6 +16,7 @@ import { SidePanel } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
 import { LoadingCard } from "@/components/ui/loading-card";
+import { DigestSettings } from "@/features/digest/digest-settings";
 import { OnboardingGuidesSettings } from "@/features/onboarding/onboarding-guides-settings";
 import { AppearanceSettings } from "@/features/settings/appearance-settings";
 import { IntegrationsSettings } from "@/features/settings/integrations-settings";
@@ -347,6 +348,10 @@ function SettingsSectionEditor({
 
   if (settingsSection === "onboarding") {
     return <OnboardingGuidesSettings />;
+  }
+
+  if (settingsSection === "digest") {
+    return <DigestSettings />;
   }
 
   if (settingsSection === "appearance") {

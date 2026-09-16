@@ -4,6 +4,7 @@ import { ApiRouteError } from "@/lib/api/route";
 import type { DigestSuggestions } from "@/lib/digest/contract";
 import {
   loadDigestSnapshot,
+  updateDigestAutoShow,
   upsertDigestRow,
   type DigestClient,
 } from "@/lib/digest/load";
@@ -189,4 +190,17 @@ export async function acknowledgeCurrentDigest({
     periodKey: snapshot.period.periodKey,
     acknowledged: true,
   };
+}
+
+export async function setDigestAutoShow({
+  supabase,
+  userId,
+  digestAutoShow,
+}: {
+  supabase: DigestClient;
+  userId: string;
+  digestAutoShow: boolean;
+}) {
+  await updateDigestAutoShow({ supabase, userId, digestAutoShow });
+  return { digestAutoShow };
 }

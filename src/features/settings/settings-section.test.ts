@@ -11,6 +11,7 @@ describe("resolveSettingsSection", () => {
     expect(resolveSettingsSection("notifications")).toBe("notifications");
     expect(resolveSettingsSection("integrations")).toBe("integrations");
     expect(resolveSettingsSection("onboarding")).toBe("onboarding");
+    expect(resolveSettingsSection("digest")).toBe("digest");
     expect(resolveSettingsSection("appearance")).toBe("appearance");
     expect(resolveSettingsSection("report-issue")).toBe("report-issue");
   });
@@ -30,6 +31,7 @@ describe("resolveSettingsSection", () => {
     expect(SETTINGS_GROUPS.flatMap((group) => group.items.map((item) => item.key))).toEqual([
       "preferences",
       "onboarding",
+      "digest",
       "notifications",
       "integrations",
       "appearance",

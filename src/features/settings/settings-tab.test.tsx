@@ -73,6 +73,10 @@ vi.mock("@/features/onboarding/onboarding-guides-settings", () => ({
   OnboardingGuidesSettings: () => <div>Onboarding guides body</div>,
 }));
 
+vi.mock("@/features/digest/digest-settings", () => ({
+  DigestSettings: () => <div>Digest body</div>,
+}));
+
 vi.mock("@/components/intro/journey-intro-overlay", () => ({
   requestJourneyIntroOpen: vi.fn(),
 }));
@@ -121,6 +125,14 @@ describe("SettingsTab", () => {
     expect(screen.getByRole("dialog", { name: "Appearance" })).toBeInTheDocument();
     expect(screen.getByTestId("settings-side-panel")).toHaveClass("rounded-none");
     expect(screen.getByText("Appearance body")).toBeInTheDocument();
+  });
+
+  it("opens digest settings from the tab query", () => {
+    mockSearch = "tab=digest";
+    render(<SettingsTab />);
+
+    expect(screen.getByRole("dialog", { name: "Digest" })).toBeInTheDocument();
+    expect(screen.getByText("Digest body")).toBeInTheDocument();
   });
 
   it("opens onboarding guides from the tab query", () => {
