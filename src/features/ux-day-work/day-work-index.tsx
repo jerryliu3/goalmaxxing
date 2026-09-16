@@ -43,7 +43,7 @@ export function DayWorkIndex() {
             the goal’s rhythm and deadline, and it looks like settings. These
             shells keep the same day of work — Tempo run, Launch notes, Weekly
             reset, Review offer, Strength, Deep work — and try a read-first
-            inspect, then three other ways to hold the day besides a list.
+            inspect, then five other ways to hold the day besides a list.
           </p>
         </div>
       </section>
@@ -76,7 +76,8 @@ export function DayWorkIndex() {
             Family 2 · Replace the checklist
           </p>
           <h2 className="mt-3 max-w-3xl font-display text-3xl font-semibold tracking-tight">
-            Same work. A deck, a gazette, or a path through the day.
+            Same work. A deck, a gazette, an album, a quest collection, or a
+            path through the day.
           </h2>
           <ul className="mt-8 grid gap-4 md:grid-cols-3">
             {REPLACE_CONCEPTS.map((item) => (

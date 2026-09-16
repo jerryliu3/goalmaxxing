@@ -5,7 +5,9 @@ export type DayWorkConceptSlug =
   | "peek"
   | "deck"
   | "gazette"
-  | "stations";
+  | "stations"
+  | "sticker-album"
+  | "quest-collection";
 
 export type DayWorkFamily = "inspect" | "replace";
 
@@ -121,6 +123,34 @@ export const DAY_WORK_CONCEPTS: readonly DayWorkConcept[] = [
     complete: "Fill the station mark. The path shows what remains",
     risk: "Flexible work has no natural time, so anytime must stay first-class",
     steal: "Relay’s one-at-a-time focus, without hiding the shape of the day",
+  },
+  {
+    slug: "sticker-album",
+    number: "07",
+    name: "Sticker album",
+    family: "replace",
+    thesis:
+      "Today is a page of collected commitments. Every goal is readable at a glance; completing it adds a stamp, while opening it unfolds the editable brief in place.",
+    object: "A scrollable album of goal stickers",
+    open: "Tap a sticker’s title or Unfold. Its brief expands in the same place",
+    edit: "Touch a phrase in the expanded brief. The choice row is local and disposable",
+    complete: "A check mark on every sticker. Completion adds a Done stamp without moving the goal",
+    risk: "The playful material needs a compact form when the day is dense",
+    steal: "Scrapbook collecting: every completion leaves a visible, proud mark",
+  },
+  {
+    slug: "quest-collection",
+    number: "08",
+    name: "Quest collection",
+    family: "replace",
+    thesis:
+      "Today is a scrollable collection of goal cards. Each card makes today’s contribution, cadence, horizon, effort, and period progress visible before you open it.",
+    object: "A responsive collection of goal cards",
+    open: "Tap a card’s title or Details. The editable brief unfolds beneath its facts",
+    edit: "Touch a phrase in the expanded brief. The choice row stays with that card",
+    complete: "A check mark on every card. Completion changes the card’s emblem while it remains in place",
+    risk: "Progress treatments must stay factual and avoid turning goals into arbitrary game scores",
+    steal: "Collectible cards: recognizable identity plus an honest view of what remains",
   },
 ];
 
