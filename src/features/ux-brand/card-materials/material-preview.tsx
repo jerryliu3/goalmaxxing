@@ -1,21 +1,21 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { type CSSProperties } from "react";
 import { Rotate3D } from "lucide-react";
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
 import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
 import type { CardMaterial } from "./materials";
 import { CardSolidBody } from "./card-solid-body";
-import { cardOptics, FLAT_POSE, REST_POSE, pointerPose } from "./card-optics";
-import { useCardPose } from "./use-card-pose";
+import { cardOptics, FLAT_POSE, REST_POSE } from "./card-optics";
+import { useCardRotation } from "./use-card-rotation";
 import styles from "./card-materials.module.css";
 
 export function MaterialPreview({ material, fields, still, history }: {
   material: CardMaterial; fields: GoalCreationFields; still: boolean; history: boolean;
 }) {
-  const [posed, setPosed] = useState(false);
   const spatial = material.form !== "flat";
-  const pose = useCardPose(still || !spatial, posed);
+  const solid = material.form === "solid";
+  const rotation = useCardRotation(still || !spatial, solid);
   return (
     <section className={styles.concept} id={material.id} aria-labelledby={`${material.id}-title`}>
       <header className={styles.conceptHeader}>
@@ -23,20 +23,18 @@ export function MaterialPreview({ material, fields, still, history }: {
         <h2 id={`${material.id}-title`}>{material.name}</h2>
         <p>{material.premise}</p>
       </header>
-      <div ref={pose.stage} className={styles.stage} data-material={material.id} data-form={material.form} data-still={still} data-posed={posed}
+      <div ref={rotation.stage} className={styles.stage} data-material={material.id} data-form={material.form} data-still={still} data-inspecting={rotation.inspecting}
         style={{ ...cardOptics(still || !spatial ? FLAT_POSE : REST_POSE), "--material-color": fields.color } as CSSProperties}
-        onPointerMove={event => {
-          if (still || !spatial || event.pointerType !== "mouse") return;
-          const rect = event.currentTarget.getBoundingClientRect();
-          const x = (event.clientX - rect.left) / rect.width;
-          const y = (event.clientY - rect.top) / rect.height;
-          pose.moveTo(pointerPose(x, y));
-        }}
-        onPointerLeave={() => { if (!still && spatial) pose.reset(); }}
-        onPointerCancel={() => { if (!still && spatial) pose.reset(); }}
+        {...rotation.stageHandlers}
       >
         <div className={styles.atmosphere} aria-hidden="true" />
-        <div className={styles.object}>
+        <div className={styles.object}
+          role={solid ? "group" : undefined}
+          aria-label={solid ? `${material.name} card rotation` : undefined}
+          aria-describedby={solid ? `${material.id}-rotation-hint` : undefined}
+          tabIndex={solid && !still ? 0 : undefined}
+          {...rotation.cardHandlers}
+        >
           {material.form === "solid" && <CardSolidBody />}
           {material.form === "layered" && <>
             <span className={styles.backplate} aria-hidden="true" />
@@ -46,8 +44,11 @@ export function MaterialPreview({ material, fields, still, history }: {
         </div>
       </div>
       <div className={styles.interaction}>
-        <span>{spatial ? "Move your pointer to explore the depth." : "Material and light, with a still silhouette."}</span>
-        {spatial && <button type="button" disabled={still} aria-pressed={posed} onClick={() => setPosed(value => !value)} aria-label={`Tilt ${material.name}`}><Rotate3D size={16} aria-hidden="true" />{posed ? "Rest" : "Tilt"}</button>}
+        <span id={`${material.id}-rotation-hint`}>{solid ? "Hover to tilt. Drag to turn. Arrows rotate; Enter flips; Home resets." : spatial ? "Move your pointer to explore the depth." : "Material and light, with a still silhouette."}</span>
+        {spatial && <div className={styles.rotationButtons}>
+          <button type="button" disabled={still} aria-pressed={rotation.posed} onClick={rotation.togglePose} aria-label={`Tilt ${material.name}`}><Rotate3D size={16} aria-hidden="true" />{rotation.posed ? "Rest" : "Tilt"}</button>
+          {solid && <button type="button" disabled={still} onClick={rotation.reset} aria-label={`Reset ${material.name}`}>Reset</button>}
+        </div>}
       </div>
       <div className={styles.notes}>
         <p>{material.detail}</p>

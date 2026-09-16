@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { cardOptics, FLAT_POSE, REST_POSE, TILTED_POSE, type CardPose } from "./card-optics";
+import { cardOptics, nearestPose, FLAT_POSE, REST_POSE, TILTED_POSE, type CardPose } from "./card-optics";
 
 /** One short-lived frame loop drives both geometry and reflections. */
 export function useCardPose(still: boolean, posed: boolean) {
@@ -39,12 +39,15 @@ export function useCardPose(still: boolean, posed: boolean) {
   }, []);
 
   useEffect(() => {
-    moveTo(still ? FLAT_POSE : posed ? TILTED_POSE : REST_POSE, still);
+    moveTo(still ? FLAT_POSE : nearestPose(current.current, posed ? TILTED_POSE : REST_POSE), still);
     return () => {
       if (frame.current !== null) cancelAnimationFrame(frame.current);
       frame.current = null;
     };
   }, [moveTo, posed, still]);
 
-  return { stage, moveTo, reset: () => moveTo(posed ? TILTED_POSE : REST_POSE) };
+  return {
+    stage, moveTo, getTarget: () => target.current, getCurrent: () => current.current,
+    reset: () => moveTo(nearestPose(current.current, posed ? TILTED_POSE : REST_POSE)),
+  };
 }

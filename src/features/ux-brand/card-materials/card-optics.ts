@@ -9,6 +9,16 @@ export function pointerPose(x: number, y: number): CardPose {
   return { x: (0.5 - clamp(y, 0, 1)) * 36, y: (clamp(x, 0, 1) - 0.5) * 52 };
 }
 
+/** Drag keeps angles unbounded so repeated turns never jump at +/-180. */
+export function dragPose(start: CardPose, dx: number, dy: number): CardPose {
+  return { x: start.x - dy * 0.8, y: start.y + dx * 0.8 };
+}
+
+/** Return to a familiar view without unwinding every full revolution. */
+export function nearestPose(from: CardPose, to: CardPose): CardPose {
+  return { x: to.x + Math.round((from.x - to.x) / 360) * 360, y: to.y + Math.round((from.y - to.y) / 360) * 360 };
+}
+
 /** Fixed upper-left light, transformed into the rotating card's coordinates.
  * The highlight is a stylized specular lobe, not a refraction simulation. */
 export function cardOptics(pose: CardPose): Record<string, string> {
@@ -27,9 +37,10 @@ export function cardOptics(pose: CardPose): Record<string, string> {
     "--rx": `${pose.x}deg`, "--ry": `${pose.y}deg`,
     "--light-x": `${50 + light.x * 65}%`, "--light-y": `${50 + light.y * 65}%`,
     "--rim-light-x": String(light.x), "--rim-light-y": String(light.y),
-    "--shine-position": `${clamp(50 + half.x * 72 + half.y * 36, 8, 92)}%`,
-    "--shine-angle": `${116 + pose.y * 0.65 - pose.x * 0.4}deg`,
+    "--shine-position": `${clamp(50 + half.x * 165, -35, 135)}%`,
+    "--shine-angle": `${112 + Math.sin(x) * 4 - Math.sin(y) * 2}deg`,
     "--shine-strength": String(0.28 + 0.5 * Math.exp(-5 * (half.x ** 2 + half.y ** 2))),
+    "--pearl-x": `${50 + half.x * 45}%`, "--pearl-y": `${50 + half.y * 35}%`,
     "--metal-x": `${50 + half.x * 100}%`, "--metal-y": `${50 + half.y * 100}%`,
   };
 }

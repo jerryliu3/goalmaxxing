@@ -95,3 +95,18 @@ angle, intensity, broad gloss, and numeral finish respond together. This is a
 bounded CSS lighting approximation, not physical refraction. The loop stops at
 rest and cancels on unmount or still/reduced-motion mode. Touch and keyboard Tilt
 use the identical pose and lighting path.
+
+## Held rotation and quieter optics
+
+Pearl's pastel layer now shifts its background position gently with the pose;
+it does not receive a beam. Reflective cards sweep their beam mainly left/right,
+with a faster crossing and a tightly bounded angle rather than a rotating stripe.
+
+Solid study cards support primary-pointer capture and unlimited held rotation on
+both axes. Releasing keeps the inspection pose; Reset or Home returns to the
+nearest equivalent resting view without unwinding whole revolutions. Keyboard
+arrows rotate, Shift increases the step, and Enter turns the card over. A finished
+rear face replaces mirrored text at the back. Hover tilt remains the default
+until a drag or keyboard inspection. Touch dragging is confined to the card;
+the surrounding page remains scrollable. Still/reduced motion cancels capture.
+Study-card text is unselectable but stays available to assistive technology.
