@@ -39,18 +39,30 @@
 .notes dl > div { display: grid; grid-template-columns: 75px 1fr; gap: .75rem; }
 .notes dt { color: var(--study-ink); font-size: .7rem; font-weight: 600; }
 
-/* 01 / Optical: a translucent face over a separate, visible colored lens. */
+/* A continuous shallow extrusion, not a detached second card. Only solid forms
+   use it; Diorama keeps its intentionally separated planes. */
+.stage[data-form="solid"] .object :global(.tempo-card) {
+  --edge: color-mix(in srgb,var(--material-color) 35%,#73857d);
+  --bevel: inset 1px 1px 2px #fffd, inset -1px -2px 2px #162a2626;
+  box-shadow: var(--bevel),
+    0 1px 0 var(--edge), 0 2px 0 var(--edge), 0 3px 0 var(--edge),
+    0 4px 0 var(--edge), 0 5px 0 var(--edge), 0 6px 0 var(--edge),
+    0 7px 0 var(--edge), 0 10px 8px #1720151c, 0 26px 32px #17201526;
+}
+.stage[data-form="solid"] .object :global(.tempo-card-target) { transform: translateZ(22px); }
+.stage[data-form="solid"] .object :global(.tempo-card-target strong) { text-shadow: 1px 2px 1px #fff4, 4px 9px 3px #243b3029; }
+.stage[data-form="solid"] .object :global(.tempo-card-target > span) { text-shadow: 2px 5px 2px #243b3029; }
+
+/* 01 / Optical: color held inside one beveled slab, with no rear lens. */
 .stage[data-material="glass"] { background: radial-gradient(ellipse at 15% 20%,#c6decc66,transparent 60%),linear-gradient(140deg,#e4ebec33,#ded7ec55); }
-[data-material="glass"] .atmosphere { inset: 21% 14% 15% 30%; border: 1px solid #ffffff8a; border-radius: 43% 57% 64% 36%; background: radial-gradient(circle at 30% 15%,#fff8,transparent 55%),linear-gradient(130deg,color-mix(in srgb,var(--material-color) 70%,#e8d3ae),#e9bd9366); transform: rotate(-22deg); box-shadow: 0 25px 70px color-mix(in srgb,var(--material-color) 20%,transparent); }
-[data-material="glass"] .backplate { background: linear-gradient(135deg,#fff9,#fff1); border: 1px solid #fffb; transform: translateZ(-15px) translate(5px,5px); box-shadow: 0 35px 45px #14261b24; }
-[data-material="glass"] .object :global(.tempo-card) { background: linear-gradient(145deg,#ffffffb8,#f8fff0ba),color-mix(in srgb,var(--material-color) 12%,transparent); backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2); border: 1px solid #fffe; box-shadow: inset 2px 2px 2px #fff, inset -2px -2px 2px #fff7, 0 2px 1px #72908c65, 0 16px 40px #172d2122; }
+[data-material="glass"] .object :global(.tempo-card) { background: linear-gradient(145deg,#ffffffb8,#f8fff0ba),color-mix(in srgb,var(--material-color) 20%,transparent); backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2); border: 1px solid #fffe; }
+.stage[data-material="glass"] .object :global(.tempo-card) { --edge: color-mix(in srgb,var(--material-color) 22%,#adccc5); --bevel: inset 2px 2px 2px #fff, inset -2px -2px 2px #fff8; }
 [data-material="glass"] .object :global(.tempo-card)::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(ellipse at var(--light-x) var(--light-y),#fff9,transparent 62%); pointer-events: none; opacity: .65; }
 [data-material="glass"] .object :global(.tempo-card) > * { position: relative; z-index: 1; }
-[data-material="glass"] .object :global(.tempo-card-target) { text-shadow: 0 2px 1px #fff; }
 
-/* 02 / Sculptural: opaque glaze, extruded edge, raised readable type. */
-[data-material="ceramic"] .object :global(.tempo-card) { background: radial-gradient(ellipse at var(--light-x) var(--light-y),#ffffffb5,transparent 70%),color-mix(in srgb,var(--material-color) 23%,#f4eedb); border: 1px solid #fff9; border-radius: 24px; box-shadow: inset 2px 2px 3px #ffffffe6, inset -3px -4px 6px #29362120, 1px 2px 0 #b6bcad, 2px 4px 0 #a5ad9d, 3px 6px 0 #929f8c, 4px 8px 0 #85917f, 6px 15px 18px #17201520, 12px 36px 45px #17201524; }
-[data-material="ceramic"] .object :global(.tempo-card-target) { transform: translateZ(26px); text-shadow: 0 1px 0 #e4f1d2, 1px 3px 1px #73816a50, 3px 9px 9px #36493322; }
+/* 02 / Sculptural: saturated glaze and one continuous ceramic edge. */
+[data-material="ceramic"] .object :global(.tempo-card) { background: radial-gradient(ellipse at var(--light-x) var(--light-y),#ffffff70,transparent 65%),color-mix(in srgb,var(--material-color) 43%,#f4eedb); border: 1px solid #fff9; border-radius: 24px; }
+.stage[data-material="ceramic"] .object :global(.tempo-card) { --edge: color-mix(in srgb,var(--material-color) 46%,#68745c); --bevel: inset 2px 2px 3px #ffffffe6, inset -3px -4px 6px #29362120; }
 [data-material="ceramic"] .object :global(.tempo-card h2) { transform: translateZ(13px); text-shadow: 0 1px 0 #fff9; }
 [data-material="ceramic"] .object :global(.tempo-card-period-row) { transform: translateZ(8px); }
 
@@ -64,11 +76,12 @@
 [data-material="diorama"] .object :global(.tempo-card h2) { transform: translateZ(28px); text-shadow: 2px 5px 4px #36493313; }
 [data-material="diorama"] .object :global(.tempo-card-period-row) { transform: translateZ(18px); }
 
-/* 04 / Surface: a flat printed collectible with selective iridescent foil. */
-[data-material="foil"] .object { transform: none; }
-[data-material="foil"] .object :global(.tempo-card) { color: #f4edda; background: linear-gradient(130deg,#fff1,transparent 35%),color-mix(in srgb,var(--material-color) 15%,#1d2b2a); border: 1px solid #d7c59e; border-radius: 9px; box-shadow: inset 0 0 0 5px #243530, inset 0 0 0 6px #d7c59e66, 0 12px 28px #101d1a28; overflow: hidden; }
-[data-material="foil"] .object :global(.tempo-card)::before { content: ""; position: absolute; inset: 0; background: linear-gradient(118deg,transparent 28%,#8bd7c411 34%,#dbbfdd24 42%,#fff7b92e 46%,#a6e5d91c 49%,transparent 56%); pointer-events: none; }
-[data-material="foil"] .object :global(.tempo-card-target strong) { color: #e9d1a4; background: linear-gradient(125deg,#f8e6bd 8%,#a7d2c5 27%,#e6bee1 45%,#f4df9d 58%,#b5ddd1 80%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+/* 04 / Iridescent: the original print on a single gilded, dimensional card. */
+[data-material="foil"] .object :global(.tempo-card) { color: #f4edda; background: linear-gradient(130deg,#fff1,transparent 35%),color-mix(in srgb,var(--material-color) 15%,#1d2b2a); border: 1px solid #d7c59e; border-radius: 9px; overflow: visible; }
+.stage[data-material="foil"] .object :global(.tempo-card) { --edge: #92805a; --bevel: inset 0 0 0 5px #243530, inset 0 0 0 6px #d7c59e66; }
+[data-material="foil"] .object :global(.tempo-card)::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(118deg,transparent 28%,#8bd7c411 34%,#dbbfdd24 42%,#fff7b92e 46%,#a6e5d91c 49%,transparent 56%); pointer-events: none; }
+.stage[data-material="foil"] .object :global(.tempo-card-target strong) { text-shadow: none; filter: drop-shadow(2px 5px 2px #0005); color: #e9d1a4; background: linear-gradient(125deg,#f8e6bd 8%,#a7d2c5 27%,#e6bee1 45%,#f4df9d 58%,#b5ddd1 80%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.stage[data-material="foil"] .object :global(.tempo-card-target > span) { text-shadow: 2px 4px 2px #0006; }
 [data-material="foil"] .object :global(.tempo-effort-bars i) { background: #f4edda26; }
 [data-material="foil"] .object :global(.tempo-effort-bars i[data-active="true"]) { background: #e9d1a4; }
 

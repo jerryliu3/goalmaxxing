@@ -13,7 +13,7 @@ function MaterialPreview({ material, fields, still, history }: {
   material: CardMaterial; fields: GoalCreationFields; still: boolean; history: boolean;
 }) {
   const [posed, setPosed] = useState(false);
-  const spatial = ["glass", "ceramic", "diorama"].includes(material.id);
+  const spatial = material.form !== "flat";
   return (
     <section className={styles.concept} id={material.id} aria-labelledby={`${material.id}-title`}>
       <header className={styles.conceptHeader}>
@@ -21,7 +21,7 @@ function MaterialPreview({ material, fields, still, history }: {
         <h2 id={`${material.id}-title`}>{material.name}</h2>
         <p>{material.premise}</p>
       </header>
-      <div className={styles.stage} data-material={material.id} data-still={still} data-posed={posed}
+      <div className={styles.stage} data-material={material.id} data-form={material.form} data-still={still} data-posed={posed}
         style={{ "--material-color": fields.color } as CSSProperties}
         onPointerMove={event => {
           if (still || !spatial || event.pointerType !== "mouse") return;
@@ -39,8 +39,10 @@ function MaterialPreview({ material, fields, still, history }: {
       >
         <div className={styles.atmosphere} aria-hidden="true" />
         <div className={styles.object}>
-          <span className={styles.backplate} aria-hidden="true" />
-          <span className={styles.middleLayer} aria-hidden="true" />
+          {material.form === "layered" && <>
+            <span className={styles.backplate} aria-hidden="true" />
+            <span className={styles.middleLayer} aria-hidden="true" />
+          </>}
           <TempoGoalCard fields={fields} context={history ? "history" : "creation"} achieved={history} />
         </div>
       </div>
@@ -69,7 +71,7 @@ export function CardMaterialsStudy() {
         <header className={styles.hero}>
           <p className={styles.eyebrow}>MATERIAL STUDY / FIVE DIRECTIONS</p>
           <h1>Something you<br /><em>want to hold.</em></h1>
-          <p>The same goal card, through five different materials. Three explore physical depth; two explore the beauty of a surface.</p>
+          <p>The same goal card, through five different materials. Four explore physical depth; Woven Paper explores the beauty of a quiet surface.</p>
           <nav aria-label="Card materials">{MATERIALS.map(material => <a key={material.id} href={`#${material.id}`}>{material.name}<ArrowUpRight size={13} /></a>)}</nav>
         </header>
         <div className={styles.controls} aria-label="Comparison controls">
