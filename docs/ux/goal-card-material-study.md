@@ -10,10 +10,10 @@ has been selected yet.
 
 | Direction | Material and interaction | Best fit | Implementation scope / tradeoff |
 | --- | --- | --- | --- |
-| Liquid Glass | Translucent beveled face, separate rear lens, pointer lighting, perspective tilt | One featured goal or active folio card | CSS blur plus layered gradients; requires contrast checks over backgrounds. Milky face and opaque fallback preserve readability. Approximate optical glass, not a physical refraction shader. |
-| Ceramic Relief | Opaque glaze, thick rounded edge, raised target and title | Everyday goal creation and detail | CSS extrusion and depth planes; no blur or graphics runtime. Restrained elevation needed when several cards share a screen. Recommended starting point. |
+| Liquid Glass | Translucent beveled face, continuous polished thickness, pointer lighting, perspective tilt | One featured goal or active folio card | CSS blur plus layered gradients; requires contrast checks over backgrounds. Milky face and opaque fallback preserve readability. Approximate optical glass, not a physical refraction shader. |
+| Ceramic Relief | Richer category glaze, continuous rounded edge, raised target and rhythm | Everyday goal creation and detail | CSS extrusion and depth planes; no blur or graphics runtime. Restrained elevation needed when several cards share a screen. Recommended starting point. |
 | Layered Diorama | Colored backplate, offset sheets, floating type at different depths | Folio collection and large previews | CSS preserve-3d and transforms. Requires outer space; compress to a flat treatment in dense layouts. Most expressive dimensional option. |
-| Foil Print | Dark printed collectible, spectral foil numerals, narrow iridescent sheen | Completed goals and collection moments | Static gradients and selective foil; no tilt. Preserve dark/light type contrast and avoid making routine goals feel like rarity tiers. |
+| Foil Print | Dark printed collectible, spectral foil numerals, narrow iridescent sheen, solid gilded edge | Completed goals and collection moments | Selective foil on one gilded card with perspective tilt. Preserve dark/light type contrast and avoid making routine goals feel like rarity tiers. |
 | Woven Paper | Matte cloth fibers, stitched inset, colored ink | Archive and warm everyday cards | Small CSS texture gradients; no tilt. Quietest match for the cloth folio. Texture should remain below text contrast. |
 
 ## Comparison controls
@@ -51,3 +51,12 @@ owns Escape and focus from the start, holds reader controls inert during the
 entrance, and returns focus to the original shelf button on dismissal. Reduced
 motion goes directly to the reader. Closing interrupts the decorative animation
 without delaying the user.
+
+## Material refinement
+
+Glass, Ceramic, and Foil use one shared continuous seven-pixel edge treatment.
+They render no offset backplate or second sheet. Glass also loses the separate
+colored lens in its backdrop. The number and its rhythm label cast soft shadows;
+Ceramic uses a stronger category-color glaze. Foil preserves its ink, fine frame,
+and spectral numerals while gaining tilt and a gilded edge. Diorama and Woven
+Paper are unchanged. The original effort bars remain the difficulty cue.
