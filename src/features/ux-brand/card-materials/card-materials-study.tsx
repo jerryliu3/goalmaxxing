@@ -19,9 +19,9 @@ export function CardMaterialsStudy() {
       <div className={styles.container}>
         <Link className={styles.back} href="/ux/brand"><ArrowLeft size={15} />Visual language gallery</Link>
         <header className={styles.hero}>
-          <p className={styles.eyebrow}>MATERIAL STUDY / EIGHT DIRECTIONS</p>
+          <p className={styles.eyebrow}>MATERIAL STUDY / NINE DIRECTIONS</p>
           <h1>Something you<br /><em>want to hold.</em></h1>
-          <p>The same goal card, through eight different materials. Refined glass, ceramic, and foil meet three new collectible finishes: pearl, engraved enamel, and leather with gold.</p>
+          <p>The same goal card, through nine different materials. Foil and Pearl lead the collection, joined by polished ruby, cut sapphire, and platinum. Turn them to explore their edges and light.</p>
           <nav aria-label="Card materials">{MATERIALS.map(material => <a key={material.id} href={`#${material.id}`}>{material.name}<ArrowUpRight size={13} /></a>)}</nav>
         </header>
         <div className={styles.controls} aria-label="Comparison controls">
@@ -33,8 +33,8 @@ export function CardMaterialsStudy() {
         <div className={styles.grid}>{MATERIALS.map(material => <MaterialPreview key={material.id} material={material} fields={MATERIAL_SAMPLES[sample].fields} still={still || Boolean(reducedMotion)} history={history} />)}</div>
         <aside className={styles.recommendation}>
           <p className={styles.eyebrow}>THE PREMIUM EDIT</p>
-          <h2>Foil, with more to hold.<br />Three new ways to shine.</h2>
-          <p>Foil Print keeps its iridescent ink and gains a solid gilded edge. Pearl Reserve brings the same sense of occasion to a light card; Midnight Guilloché adds precision, and Oxblood Atelier adds warmth. Each uses the same goal content, so the choice comes down to what you want to hold.</p>
+          <h2>Precious color.<br />Light that follows your hand.</h2>
+          <p>Foil Print and Pearl Reserve remain the leading finishes. Ruby brings a warm, glossy stone; Sapphire explores cooler facets; Platinum is the bright metallic alternative. Their side geometry and reflections respond together as each card turns.</p>
           <Link href="/demo/insights/folios">Try the folio opening <ArrowUpRight size={15} /></Link>
         </aside>
         <footer className={styles.footer}>Goalmaxxing · Card materials study · Uses the shared Tempo goal card</footer>

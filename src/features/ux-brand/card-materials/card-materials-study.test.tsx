@@ -46,7 +46,7 @@ describe("card material comparison", () => {
   it("lets keyboard users pose and restore each new premium card", async () => {
     const user = userEvent.setup();
     render(<CardMaterialsStudy />);
-    for (const name of ["Pearl Reserve", "Midnight Guilloché", "Oxblood Atelier"]) {
+    for (const name of ["Pearl Reserve", "Ruby Cabochon", "Sapphire Prism", "Platinum Mirror"]) {
       const region = screen.getByRole("region", { name });
       expect(within(region).getByRole("article", { name: "Goal card preview" })).toHaveClass("tempo-card");
       const tilt = within(region).getByRole("button", { name: `Tilt ${name}` });
