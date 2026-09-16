@@ -1,7 +1,7 @@
-# Goal card materials — five directions
+# Goal card materials — eight directions
 
 Study route: `/ux/brand/card-materials` (existing UX labs access applies).
-All five render the real `TempoGoalCard`. Category color, information hierarchy,
+All eight render the real `TempoGoalCard`. Category color, information hierarchy,
 schedule, effort, and creation/history copy come from the same component used
 in the product. Study styles are scoped to the gallery; no production material
 has been selected yet.
@@ -15,6 +15,9 @@ has been selected yet.
 | Layered Diorama | Colored backplate, offset sheets, floating type at different depths | Folio collection and large previews | CSS preserve-3d and transforms. Requires outer space; compress to a flat treatment in dense layouts. Most expressive dimensional option. |
 | Foil Print | Dark printed collectible, spectral foil numerals, narrow iridescent sheen, solid gilded edge | Completed goals and collection moments | Selective foil on one gilded card with perspective tilt. Preserve dark/light type contrast and avoid making routine goals feel like rarity tiers. |
 | Woven Paper | Matte cloth fibers, stitched inset, colored ink | Archive and warm everyday cards | Small CSS texture gradients; no tilt. Quietest match for the cloth folio. Texture should remain below text contrast. |
+| Pearl Reserve | Light ivory pearl lacquer, champagne foil, gilded thickness | A light premium everyday or collection card | Fine-stationery and mother-of-pearl cues. Bronze foil stays dark enough for the ivory face; no rear sheet. |
+| Midnight Guilloché | Navy enamel, silver numerals, fine engraved corner patterns | Focused commitments and cooler collections | Watch-dial and engine-turning cues, built with faint radial line patterns. Calm center protects text clarity. |
+| Oxblood Atelier | Burgundy leather grain, blind tooling, hot-stamped gold | Personal archives and long commitments | Bookbinding cues, a restrained fine-grain texture, and one leather edge. Category color only subtly tints the material. |
 
 ## Comparison controls
 
@@ -28,10 +31,12 @@ has been selected yet.
 
 ## Recommendation and next implementation boundary
 
-Start with Ceramic Relief for a broadly reusable card. Keep Liquid Glass as the
-alternate if luminous transparency is the priority, and Woven Paper if the folio
-should feel more archival. Diorama suits a single focused collectible; Foil Print
-suits a completion moment. Do not combine all five into one material.
+Foil Print is the user’s preferred direction. Keep its existing iridescence while
+making it feel like one substantial card. The three additions explore the same
+premium intent through different physical references: light pearl stationery,
+precise silver-on-enamel engraving, and warm leather bookbinding. They share the
+same depth treatment and goal component rather than becoming separate card APIs.
+Glass and Ceramic remain useful alternatives; Diorama and Woven are preserved.
 
 After a direction is chosen, move only its selected styling into the canonical
 Tempo card stylesheet. Reconcile the current difficulty-dependent stacked edge
@@ -60,3 +65,14 @@ colored lens in its backdrop. The number and its rhythm label cast soft shadows;
 Ceramic uses a stronger category-color glaze. Foil preserves its ink, fine frame,
 and spectral numerals while gaining tilt and a gilded edge. Diorama and Woven
 Paper are unchanged. The original effort bars remain the difficulty cue.
+
+## Premium additions
+
+Pearl Reserve, Midnight Guilloché, and Oxblood Atelier are new study directions,
+not a production style selection. All support the existing comparison controls,
+mouse perspective, explicit Tilt/Rest, still mode, and OS reduced motion. The
+same category samples and long-title case remain available across all eight.
+No external assets, graphics library, or animation loop is introduced.
+
+Verification remains approval-gated. Functional interaction coverage is included
+as code; no tests, lint, typecheck, browser checks, or CI were run for this update.
