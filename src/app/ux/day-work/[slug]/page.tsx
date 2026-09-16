@@ -11,6 +11,8 @@ import { NowConcept } from "@/features/ux-day-work/now-concept";
 import { PeekConcept } from "@/features/ux-day-work/peek-concept";
 import { PhraseConcept } from "@/features/ux-day-work/phrase-concept";
 import { StationsConcept } from "@/features/ux-day-work/stations-concept";
+import { StickerAlbumConcept } from "@/features/ux-day-work/sticker-album-concept";
+import { QuestCollectionConcept } from "@/features/ux-day-work/quest-collection-concept";
 
 const CONCEPT_PAGES = {
   now: NowConcept,
@@ -20,6 +22,8 @@ const CONCEPT_PAGES = {
   deck: DeckConcept,
   gazette: GazetteConcept,
   stations: StationsConcept,
+  "sticker-album": StickerAlbumConcept,
+  "quest-collection": QuestCollectionConcept,
 } as const satisfies Record<DayWorkConceptSlug, ComponentType>;
 
 export function generateStaticParams() {

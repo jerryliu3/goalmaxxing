@@ -365,6 +365,216 @@
   box-shadow: 0 -18px 40px #241c1414;
 }
 
+.dw-collection-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 2px solid var(--dw-ink);
+  padding-bottom: 0.8rem;
+}
+
+.dw-sticker-album {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.6rem 1.25rem;
+  padding: 0.55rem 0.5rem 0.8rem;
+  background-image: radial-gradient(var(--dw-rule) 0.65px, transparent 0.65px);
+  background-size: 16px 16px;
+}
+
+.dw-sticker {
+  position: relative;
+  min-width: 0;
+  padding: 1.45rem 1.35rem 1.2rem;
+  border: 1px solid color-mix(in srgb, var(--goal-color) 36%, var(--dw-rule));
+  border-radius: 0.25rem 1.4rem 0.25rem 1.4rem;
+  background: color-mix(in srgb, var(--goal-color) 25%, var(--dw-cream));
+  box-shadow: 3px 5px 0 color-mix(in srgb, var(--dw-ink) 10%, transparent);
+  color: var(--dw-ink);
+}
+
+.dw-sticker:nth-child(even) {
+  transform: rotate(0.7deg);
+  border-radius: 1.35rem 0.25rem 1.35rem 0.25rem;
+}
+
+.dw-sticker:nth-child(3n) {
+  transform: rotate(-0.55deg);
+}
+
+.dw-sticker[data-open="true"] {
+  grid-column: span 2;
+}
+
+.dw-sticker[data-done="true"] {
+  background:
+    repeating-linear-gradient(
+      -18deg,
+      transparent,
+      transparent 11px,
+      color-mix(in srgb, var(--goal-color) 10%, transparent) 11px,
+      color-mix(in srgb, var(--goal-color) 10%, transparent) 12px
+    ),
+    color-mix(in srgb, var(--goal-color) 25%, var(--dw-cream));
+}
+
+.dw-tape {
+  position: absolute;
+  top: -0.55rem;
+  left: calc(50% - 2rem);
+  width: 4rem;
+  height: 1rem;
+  background: color-mix(in srgb, var(--dw-paper) 84%, transparent);
+  border-left: 1px dotted color-mix(in srgb, var(--dw-rule) 78%, transparent);
+  border-right: 1px dotted color-mix(in srgb, var(--dw-rule) 78%, transparent);
+  transform: rotate(-2deg);
+}
+
+.dw-sticker-open {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.dw-sticker-stamp {
+  position: absolute;
+  right: 1rem;
+  bottom: 4.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 2px solid var(--dw-stamp);
+  border-radius: 0.25rem;
+  padding: 0.15rem 0.35rem;
+  color: var(--dw-stamp);
+  font-family: var(--font-app-mono), ui-monospace, monospace;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: rotate(-8deg);
+}
+
+.dw-quest-collection {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.dw-quest-card {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--goal-color) 32%, var(--dw-rule));
+  border-radius: 1.15rem;
+  background: var(--dw-paper);
+  box-shadow: 0 8px 20px #241c140c;
+}
+
+.dw-quest-card[data-open="true"] {
+  grid-column: span 2;
+}
+
+.dw-quest-card[data-done="true"] {
+  border-color: var(--goal-color);
+}
+
+.dw-quest-art {
+  position: relative;
+  min-height: 12rem;
+  overflow: hidden;
+  padding: 1rem 1.1rem 1.25rem;
+  background: color-mix(in srgb, var(--goal-color) 28%, var(--dw-cream));
+}
+
+.dw-quest-art:after {
+  position: absolute;
+  right: -3.5rem;
+  bottom: -4.5rem;
+  width: 12rem;
+  height: 12rem;
+  border: 1px solid color-mix(in srgb, var(--dw-ink) 16%, transparent);
+  border-radius: 999px;
+  content: "";
+}
+
+.dw-quest-emblem {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  height: 5.8rem;
+}
+
+.dw-quest-art button {
+  position: relative;
+  z-index: 1;
+}
+
+.dw-quest-body {
+  padding: 1rem 1.1rem 1.2rem;
+}
+
+.dw-quest-body dt {
+  color: var(--dw-muted);
+}
+
+.dw-quest-body dd {
+  max-width: 62%;
+  text-align: right;
+}
+
+.dw-quest-meter {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.45rem;
+}
+
+.dw-quest-meter span {
+  height: 0.45rem;
+  flex: 1;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dw-rule) 85%, transparent);
+}
+
+.dw-quest-meter span[data-active="true"] {
+  background: var(--goal-color);
+}
+
+@media (max-width: 767px) {
+  .dw-collection-header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .dw-sticker-album,
+  .dw-quest-collection {
+    grid-template-columns: 1fr;
+  }
+
+  .dw-sticker[data-open="true"],
+  .dw-quest-card[data-open="true"] {
+    grid-column: span 1;
+  }
+
+  .dw-sticker:nth-child(n) {
+    transform: none;
+  }
+
+  .dw-quest-card {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+
+  .dw-quest-art {
+    min-height: 100%;
+  }
+
+  .dw-quest-card[data-open="true"] .dw-phrase {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (min-width: 900px) {
   .dw-peek-sheet {
     border-radius: 1.25rem;

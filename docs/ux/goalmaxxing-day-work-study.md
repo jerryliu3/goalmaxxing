@@ -69,6 +69,8 @@ are interaction hypotheses, not planner mutations.
 | 04 | **Deck** | Today is a hand of Tempo cards with an honest spine of titles. |
 | 05 | **Gazette** | Today is a newspaper spread. Articles expand; a stamp marks done. |
 | 06 | **Stations** | The day is a timed path. Anytime work is an island, not a lesser row. |
+| 07 | **Sticker album** | Today is a scrollable page of goal stickers. Facts are visible; done adds a stamp; opening unfolds the brief in place. |
+| 08 | **Quest collection** | Today is a responsive collection of goal cards. Today’s contribution, cadence, horizon, effort, and period progress are visible before opening. |
 
 ## Visual bets
 
