@@ -18,11 +18,11 @@ import type {
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import { PlanDayUnplannedPanel } from "@/features/planner/plan-day-unplanned-panel";
-import { partitionDayEntriesByCompletion, partitionUnplannedGoalsByCompletion } from "@/features/planner/plan-day-completed";
 import {
-  placedGoalIdsForDay,
-  selectVisibleUnplannedGoals,
-} from "@/features/planner/plan-day-unplanned";
+  partitionDayEntriesByCompletion,
+  selectUnplannedGoalsByCompletion,
+} from "@/features/planner/plan-day-completed";
+import { placedGoalIdsForDay } from "@/features/planner/plan-day-unplanned";
 import { PlanDaySection } from "@/features/planner/plan-day-section";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
 import { DuoLaneIdentity } from "@/features/social/duo/duo-lanes";
@@ -113,6 +113,8 @@ export function PlannerFocusedDayPane({
       }),
     [day, optimisticCompletionFacts, visibleEntries]
   );
+  // Section headers count what the panels below them will render, so both go
+  // through the same selector.
   const unscheduledCounts = useMemo(() => {
     if (!dayChecklist || showTasksInsteadOfGoals) {
       return { open: 0, completed: 0 };
@@ -120,15 +122,10 @@ export function PlannerFocusedDayPane({
     if (dayChecklist.loading && (dayChecklist.data?.goals.length ?? 0) === 0) {
       return { open: 0, completed: 0 };
     }
-    const unplanned = selectVisibleUnplannedGoals({
-      goals: dayChecklist.listModel.completableGoals ?? [],
+    const { open, completed } = selectUnplannedGoalsByCompletion({
+      checklist: dayChecklist,
       placedGoalIds: placedGoalIdsForDay(visibleEntries),
       viewDate: day,
-      visibleGoalIds: dayChecklist.visibleGoalIds,
-    });
-    const { open, completed } = partitionUnplannedGoalsByCompletion({
-      goals: unplanned,
-      presentationByGoalId: dayChecklist.listModel.presentationByGoalId,
     });
     return { open: open.length, completed: completed.length };
   }, [day, dayChecklist, showTasksInsteadOfGoals, visibleEntries]);
@@ -147,6 +144,52 @@ export function PlannerFocusedDayPane({
   const completedMarkers = splitPartnerChecklist ? viewerMarkers : visibleMarkers;
   const completedCount =
     completedEntries.length + completedMarkers.length + unscheduledCounts.completed;
+  // Scheduled goals and Completed render the same list of the same day's work;
+  // only which rows go in, the empty copy, and whether draft moves can be
+  // confirmed differ. Sharing the wiring keeps the two from drifting apart.
+  const renderDayEntriesPanel = ({
+    entries: panelEntries,
+    completionFactMarkers: panelMarkers,
+    emptyMessage,
+    allowDraftMoveActions = false,
+  }: {
+    entries: PlannerDayDetailEntry[];
+    completionFactMarkers: PlannerCompletionFactMarker[];
+    emptyMessage?: string;
+    allowDraftMoveActions?: boolean;
+  }) => (
+    <PlannerDayEntriesPanel
+      day={day}
+      entries={panelEntries}
+      completionFactMarkers={panelMarkers}
+      mutationLoadingKey={mutationLoadingKey}
+      optimisticCompletionFacts={optimisticCompletionFacts}
+      asOfDate={asOfDate}
+      canMutatePlanItems={canMutatePlanItems}
+      canMutateEntryOnDay={canMutateEntryOnDay}
+      getEntryDisplayTitle={getEntryMilestoneFirstTitleWithTime}
+      getEntrySubtitle={getEntrySubtitle}
+      isEntryCredited={isEntryCredited}
+      isEntryImmovableForDraft={isEntryImmovableForDraft}
+      onEntryOpen={onEntryOpen}
+      onToggleCompletion={(entry, selectedDay) => {
+        if (!canMutateEntryOnDay(entry, selectedDay)) {
+          return;
+        }
+        onToggleCompletion(entry, selectedDay);
+      }}
+      onEntryPointerStart={onEntryPointerStart}
+      onEntryPointerEnd={onEntryPointerEnd}
+      density="expanded"
+      includeSourceElement={false}
+      selectedEntryKey={selectedEntryKey}
+      shareEntryTransition={shareDayTransition}
+      emptyMessage={emptyMessage}
+      onConfirmDraftMove={allowDraftMoveActions ? onConfirmDraftMove : undefined}
+      onCancelDraftMove={allowDraftMoveActions ? onCancelDraftMove : undefined}
+    />
+  );
+
   const renderSupplementalGoal = (goal: Goal, options?: { archived?: boolean; key?: string }) => {
     if (!dayChecklist) {
       return null;
@@ -270,40 +313,15 @@ export function PlannerFocusedDayPane({
             title="Scheduled goals"
             count={openEntries.length}
           >
-            <PlannerDayEntriesPanel
-              day={day}
-              entries={openEntries}
-              completionFactMarkers={[]}
-              mutationLoadingKey={mutationLoadingKey}
-              optimisticCompletionFacts={optimisticCompletionFacts}
-              asOfDate={asOfDate}
-              canMutatePlanItems={canMutatePlanItems}
-              canMutateEntryOnDay={canMutateEntryOnDay}
-              getEntryDisplayTitle={getEntryMilestoneFirstTitleWithTime}
-              getEntrySubtitle={getEntrySubtitle}
-              isEntryCredited={isEntryCredited}
-              isEntryImmovableForDraft={isEntryImmovableForDraft}
-              onEntryOpen={onEntryOpen}
-              onToggleCompletion={(entry, selectedDay) => {
-                if (!canMutateEntryOnDay(entry, selectedDay)) {
-                  return;
-                }
-                onToggleCompletion(entry, selectedDay);
-              }}
-              onEntryPointerStart={onEntryPointerStart}
-              onEntryPointerEnd={onEntryPointerEnd}
-              density="expanded"
-              includeSourceElement={false}
-              selectedEntryKey={selectedEntryKey}
-              shareEntryTransition={shareDayTransition}
-              emptyMessage={
+            {renderDayEntriesPanel({
+              entries: openEntries,
+              completionFactMarkers: [],
+              emptyMessage:
                 completedEntries.length > 0
                   ? "Everything scheduled is done."
-                  : "No planned sessions."
-              }
-              onConfirmDraftMove={onConfirmDraftMove}
-              onCancelDraftMove={onCancelDraftMove}
-            />
+                  : "No planned sessions.",
+              allowDraftMoveActions: true,
+            })}
             {splitPartnerChecklist
               ? partnerMarkers.map((marker) => (
                   <div key={`mobile-partner-${marker.key}`} className="md:hidden">
@@ -357,35 +375,12 @@ export function PlannerFocusedDayPane({
               count={completedCount}
               defaultOpen={false}
             >
-              {completedEntries.length > 0 || completedMarkers.length > 0 ? (
-                <PlannerDayEntriesPanel
-                  day={day}
-                  entries={completedEntries}
-                  completionFactMarkers={completedMarkers}
-                  mutationLoadingKey={mutationLoadingKey}
-                  optimisticCompletionFacts={optimisticCompletionFacts}
-                  asOfDate={asOfDate}
-                  canMutatePlanItems={canMutatePlanItems}
-                  canMutateEntryOnDay={canMutateEntryOnDay}
-                  getEntryDisplayTitle={getEntryMilestoneFirstTitleWithTime}
-                  getEntrySubtitle={getEntrySubtitle}
-                  isEntryCredited={isEntryCredited}
-                  isEntryImmovableForDraft={isEntryImmovableForDraft}
-                  onEntryOpen={onEntryOpen}
-                  onToggleCompletion={(entry, selectedDay) => {
-                    if (!canMutateEntryOnDay(entry, selectedDay)) {
-                      return;
-                    }
-                    onToggleCompletion(entry, selectedDay);
-                  }}
-                  onEntryPointerStart={onEntryPointerStart}
-                  onEntryPointerEnd={onEntryPointerEnd}
-                  density="expanded"
-                  includeSourceElement={false}
-                  selectedEntryKey={selectedEntryKey}
-                  shareEntryTransition={shareDayTransition}
-                />
-              ) : null}
+              {completedEntries.length > 0 || completedMarkers.length > 0
+                ? renderDayEntriesPanel({
+                    entries: completedEntries,
+                    completionFactMarkers: completedMarkers,
+                  })
+                : null}
               {/* Only with a checklist model in hand: without one the panel
                   fetches its own, and a second copy here would mean two reads
                   of the same day and two independent optimistic states. */}

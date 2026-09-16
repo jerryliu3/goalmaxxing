@@ -1,5 +1,6 @@
 import { isEntryCredited } from "@/features/planner/calendar-format";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
+import { selectVisibleUnplannedGoals } from "@/features/planner/plan-day-unplanned";
 import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
 import type { Goal } from "@/lib/goals/types";
 import {
@@ -64,4 +65,29 @@ export function partitionUnplannedGoalsByCompletion({
   return partition(goals, (goal) =>
     Boolean(presentationByGoalId.get(goal.id)?.exactDateCompleted)
   );
+}
+
+/**
+ * The day pane needs these counts to decide which sections to show, and the
+ * panel needs the rows themselves. Both go through here so a section header can
+ * never disagree with the list under it.
+ */
+export function selectUnplannedGoalsByCompletion({
+  checklist,
+  placedGoalIds,
+  viewDate,
+}: {
+  checklist: PlanDayChecklistModel;
+  placedGoalIds: ReadonlySet<string>;
+  viewDate: string;
+}): PlanDayCompletionPartition<Goal> {
+  return partitionUnplannedGoalsByCompletion({
+    goals: selectVisibleUnplannedGoals({
+      goals: checklist.listModel.completableGoals ?? [],
+      placedGoalIds,
+      viewDate,
+      visibleGoalIds: checklist.visibleGoalIds,
+    }),
+    presentationByGoalId: checklist.listModel.presentationByGoalId,
+  });
 }

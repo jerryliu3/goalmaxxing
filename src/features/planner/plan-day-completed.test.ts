@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   partitionDayEntriesByCompletion,
   partitionUnplannedGoalsByCompletion,
+  selectUnplannedGoalsByCompletion,
 } from "@/features/planner/plan-day-completed";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import type { Goal } from "@/lib/goals/types";
@@ -25,6 +26,17 @@ function entry(overrides: Partial<PlannerDayDetailEntry>): PlannerDayDetailEntry
 
 function goal(id: string): Goal {
   return { id, title: id } as Goal;
+}
+
+/** Active on DAY, so `selectVisibleUnplannedGoals` keeps it. */
+function activeGoal(id: string): Goal {
+  return {
+    id,
+    title: id,
+    archived_at: null,
+    start_date: "2026-08-01",
+    end_date: null,
+  } as Goal;
 }
 
 describe("partitionDayEntriesByCompletion", () => {
@@ -123,5 +135,47 @@ describe("partitionUnplannedGoalsByCompletion", () => {
 
     expect(result.open).toEqual([todo]);
     expect(result.completed).toEqual([]);
+  });
+});
+
+describe("selectUnplannedGoalsByCompletion", () => {
+  const checklist = {
+    visibleGoalIds: null,
+    listModel: {
+      completableGoals: [
+        activeGoal("goal-done"),
+        activeGoal("goal-todo"),
+        activeGoal("goal-placed"),
+      ],
+      presentationByGoalId: new Map([
+        ["goal-done", { exactDateCompleted: true }],
+        ["goal-todo", { exactDateCompleted: false }],
+      ]),
+    },
+  } as never;
+
+  it("drops placed goals, then splits the rest on credit", () => {
+    const result = selectUnplannedGoalsByCompletion({
+      checklist,
+      placedGoalIds: new Set(["goal-placed"]),
+      viewDate: DAY,
+    });
+
+    expect(result.open.map((entry) => entry.id)).toEqual(["goal-todo"]);
+    expect(result.completed.map((entry) => entry.id)).toEqual(["goal-done"]);
+  });
+
+  it("honors the checklist's visible-goal filter", () => {
+    const result = selectUnplannedGoalsByCompletion({
+      checklist: {
+        ...(checklist as unknown as Record<string, unknown>),
+        visibleGoalIds: new Set(["goal-done"]),
+      } as never,
+      placedGoalIds: new Set<string>(),
+      viewDate: DAY,
+    });
+
+    expect(result.open).toEqual([]);
+    expect(result.completed.map((entry) => entry.id)).toEqual(["goal-done"]);
   });
 });

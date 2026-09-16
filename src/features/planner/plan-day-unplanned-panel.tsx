@@ -7,11 +7,13 @@ import { useChecklistData } from "@/features/today/use-checklist-data";
 import { useChecklistProjection } from "@/features/today/use-checklist-projection";
 import { useCompletionCreditMove } from "@/features/planner/completion-credit-move";
 import { planUnscheduledLedgerControlMode } from "@/features/planner/completion-entry-dispatch";
-import { partitionUnplannedGoalsByCompletion } from "@/features/planner/plan-day-completed";
+import {
+  partitionUnplannedGoalsByCompletion,
+  selectUnplannedGoalsByCompletion,
+} from "@/features/planner/plan-day-completed";
 import {
   placedGoalIdsForDay,
   selectUnplannedGoals,
-  selectVisibleUnplannedGoals,
 } from "@/features/planner/plan-day-unplanned";
 import {
   PlanLedgerCompletionControl,
@@ -37,6 +39,15 @@ import { cn } from "@/lib/utils";
  * under "Unscheduled goals", or the credited rows the Completed section owns.
  */
 export type PlanDayUnplannedFilter = "open" | "completed";
+
+/**
+ * An empty open list is worth saying out loud, because "Unscheduled goals" is a
+ * section the user opened on purpose. An empty completed list is not: the
+ * Completed section is already showing scheduled work alongside it.
+ */
+function emptyMessageFor(filter: PlanDayUnplannedFilter) {
+  return filter === "open" ? "Nothing unscheduled for this day." : null;
+}
 
 export function PlanDayUnplannedPanel({
   day,
@@ -81,15 +92,12 @@ function PlanDayUnplannedFromChecklist({
   checklist: PlanDayChecklistModel;
   filter: PlanDayUnplannedFilter;
 }) {
-  const unplannedGoals = useMemo(
+  const goals = useMemo(
     () =>
-      selectVisibleUnplannedGoals({
-        goals: checklist.listModel.completableGoals,
-        placedGoalIds,
-        viewDate: day,
-        visibleGoalIds: checklist.visibleGoalIds,
-      }),
-    [checklist.listModel.completableGoals, checklist.visibleGoalIds, day, placedGoalIds]
+      selectUnplannedGoalsByCompletion({ checklist, placedGoalIds, viewDate: day })[
+        filter
+      ],
+    [checklist, day, filter, placedGoalIds]
   );
   const loading = checklist.loading && checklist.data.goals.length === 0;
 
@@ -101,11 +109,11 @@ function PlanDayUnplannedFromChecklist({
     <PlanDayUnplannedRows
       day={day}
       asOfDate={checklist.todayLocalDate}
-      goals={unplannedGoals}
+      goals={goals}
       presentationByGoalId={checklist.listModel.presentationByGoalId}
       savingGoalId={checklist.savingGoalId}
       onToggle={checklist.toggleCompletion}
-      filter={filter}
+      emptyMessage={emptyMessageFor(filter)}
     />
   );
 }
@@ -189,11 +197,16 @@ function PlanDayUnplannedList({
     <PlanDayUnplannedRows
       day={day}
       asOfDate={todayLocalDate}
-      goals={unplannedGoals}
+      goals={
+        partitionUnplannedGoalsByCompletion({
+          goals: unplannedGoals,
+          presentationByGoalId,
+        })[filter]
+      }
       presentationByGoalId={presentationByGoalId}
       savingGoalId={savingGoalId}
       onToggle={toggleCompletion}
-      filter={filter}
+      emptyMessage={emptyMessageFor(filter)}
     />
   );
 }
@@ -205,7 +218,7 @@ function PlanDayUnplannedRows({
   presentationByGoalId,
   savingGoalId,
   onToggle,
-  filter,
+  emptyMessage,
 }: {
   day: string;
   asOfDate: string | null;
@@ -213,23 +226,19 @@ function PlanDayUnplannedRows({
   presentationByGoalId: PlanDayChecklistModel["listModel"]["presentationByGoalId"];
   savingGoalId: string | null;
   onToggle: (goal: Goal, sourceElement: HTMLButtonElement) => void;
-  filter: PlanDayUnplannedFilter;
+  emptyMessage: string | null;
 }) {
   const creditMove = useCompletionCreditMove();
-  const visibleGoals = partitionUnplannedGoalsByCompletion({
-    goals,
-    presentationByGoalId,
-  })[filter];
 
-  if (visibleGoals.length === 0) {
-    return filter === "completed" ? null : (
-      <p className="text-sm text-muted-foreground">Nothing unscheduled for this day.</p>
+  if (goals.length === 0) {
+    return emptyMessage === null ? null : (
+      <p className="text-sm text-muted-foreground">{emptyMessage}</p>
     );
   }
 
   return (
     <div className="divide-y">
-      {visibleGoals.map((goal) => {
+      {goals.map((goal) => {
         const presentation = presentationByGoalId.get(goal.id);
         const completed = Boolean(presentation?.exactDateCompleted);
         const completionMode: PlanLedgerCompletionMode = planUnscheduledLedgerControlMode({
