@@ -8,6 +8,8 @@ import { FolioReader } from "./folio-reader";
 import type { GoalFolio } from "./folio-model";
 import styles from "./folio.module.css";
 
+const CLOTH_COLORS = ["#344f45", "#785a3a", "#4d5266", "#704d50"];
+
 export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
   const [openYear, setOpenYear] = useState<string | null>(null);
   const [origin, setOrigin] = useState({ x: 0, y: 0, width: 296, height: 395, transform: "none" });
@@ -26,7 +28,7 @@ export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
             type="button"
             className={styles.volume}
             data-open={openYear === folio.year}
-            style={{ "--folio-cloth": ["#344f45", "#785a3a", "#4d5266", "#704d50"][index % 4] } as CSSProperties}
+            style={{ "--folio-cloth": CLOTH_COLORS[index % CLOTH_COLORS.length] } as CSSProperties}
             aria-label={`Open ${folio.year}, ${folio.entries.length} ${folio.entries.length === 1 ? "goal" : "goals"}`}
             aria-haspopup="dialog"
             onClick={event => {
@@ -49,7 +51,7 @@ export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
           ref={dialogRef}
           className={styles.readerDialog}
           data-entering={entering}
-          style={{ "--folio-cloth": ["#344f45", "#785a3a", "#4d5266", "#704d50"][folios.findIndex(folio => folio.year === openYear) % 4] } as CSSProperties}
+          style={{ "--folio-cloth": CLOTH_COLORS[folios.findIndex(folio => folio.year === openYear) % CLOTH_COLORS.length] } as CSSProperties}
           onOpenAutoFocus={event => { if (entering) { event.preventDefault(); dialogRef.current?.focus(); } }}
           overlayClassName={styles.readerOverlay}
           onCloseAutoFocus={event => { event.preventDefault(); returnFocus.current?.focus(); }}
