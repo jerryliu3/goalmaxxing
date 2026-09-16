@@ -11,6 +11,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  buildCheckInActions,
+  checkInHeading,
+  checkInRecapSummary,
+  primaryCheckInAction,
+  type CheckInAction,
+} from "@/features/digest/check-in-actions";
+import { buildCheckInCoachQuestion } from "@/features/digest/check-in-coach-handoff";
 import { canAutoShowDigestAfterOnboarding } from "@/features/digest/digest-eligibility";
 import {
   DIGEST_OPEN_EVENT,
@@ -18,12 +26,15 @@ import {
   type DigestPayload,
 } from "@/features/digest/digest-api";
 import { getJson, postJson } from "@/lib/api/client";
+import { stashCoachPromptSeed } from "@/lib/coach/coach-prompt-seed";
 import { toLocalDateString } from "@/lib/dates/day";
-import type { DigestFacts } from "@/lib/digest/contract";
 
-type OverlayStep = "recap" | "ahead" | "suggestions";
-
-export function DigestOverlay({
+/**
+ * The period check-in: one screen that says how the last window went, what the
+ * coach makes of it, and the short list of decisions worth making now. It never
+ * mutates the plan — every row is a jump into the surface that owns the change.
+ */
+export function CheckInOverlay({
   hrefPrefix = "",
 }: {
   hrefPrefix?: string;
@@ -31,15 +42,13 @@ export function DigestOverlay({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [forced, setForced] = useState(false);
-  const [step, setStep] = useState<OverlayStep>("recap");
   const [payload, setPayload] = useState<DigestPayload | null>(null);
-  const [generateSettled, setGenerateSettled] = useState(false);
+  const [briefingSettled, setBriefingSettled] = useState(false);
   const generateStartedRef = useRef(false);
 
   useEffect(() => {
     const handleOpenRequest = () => {
       setForced(true);
-      setStep("recap");
       setOpen(true);
     };
     window.addEventListener(DIGEST_OPEN_EVENT, handleOpenRequest);
@@ -102,7 +111,7 @@ export function DigestOverlay({
       .catch(() => undefined)
       .finally(() => {
         if (!cancelled) {
-          setGenerateSettled(true);
+          setBriefingSettled(true);
         }
       });
     return () => {
@@ -114,16 +123,22 @@ export function DigestOverlay({
   const close = (acknowledge: boolean) => {
     setOpen(false);
     setForced(false);
-    setStep("recap");
     generateStartedRef.current = false;
-    setGenerateSettled(false);
+    setBriefingSettled(false);
     if (acknowledge) {
       void postJson("/api/digest/ack", {}).catch(() => undefined);
     }
   };
 
+  const leave = (href: string | null) => {
+    close(true);
+    if (href) {
+      router.push(href);
+    }
+  };
+
   const facts = payload?.facts;
-  const heading = payload?.kind === "weekly" ? "Weekly digest" : "Daily digest";
+  const kind = payload?.kind ?? "daily";
 
   return (
     <Dialog
@@ -136,83 +151,90 @@ export function DigestOverlay({
     >
       <DialogContent className="sm:max-w-lg" showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>{heading}</DialogTitle>
+          <DialogTitle>{checkInHeading(kind)}</DialogTitle>
           <DialogDescription>
-            {step === "recap"
-              ? "How it went."
-              : step === "ahead"
-                ? "What’s ahead."
-                : "A short suggestion, then back to the plan."}
+            {facts ? checkInRecapSummary(facts) : "Pulling your plan together."}
           </DialogDescription>
         </DialogHeader>
         {facts ? (
-          <DigestStepBody
-            step={step}
-            facts={facts}
-            suggestions={payload?.suggestions ?? null}
-            generateSettled={generateSettled}
-            hrefPrefix={hrefPrefix}
-            onNavigate={(href) => {
-              close(true);
-              router.push(href);
-            }}
-          />
+          <div className="space-y-4">
+            <p className="text-sm">
+              {payload?.suggestions?.motivation ??
+                (briefingSettled
+                  ? "Start with what’s already on the calendar."
+                  : "Reading your plan…")}
+            </p>
+            <CheckInActionList
+              actions={buildCheckInActions({
+                kind,
+                facts,
+                suggestions: payload?.suggestions ?? null,
+              })}
+              hrefPrefix={hrefPrefix}
+              onNavigate={leave}
+            />
+          </div>
         ) : null}
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => close(true)}>
             Skip
           </Button>
-          {step === "recap" ? (
-            <Button type="button" onClick={() => setStep("ahead")}>
-              Continue
+          {facts ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                stashCoachPromptSeed(
+                  window.sessionStorage,
+                  buildCheckInCoachQuestion({ kind, facts })
+                );
+                leave(digestActionHref("plan", hrefPrefix));
+              }}
+            >
+              Ask coach
             </Button>
           ) : null}
-          {step === "ahead" ? (
-            <Button type="button" onClick={() => setStep("suggestions")}>
-              Continue
-            </Button>
-          ) : null}
-          {step === "suggestions" ? (
-            <Button type="button" onClick={() => close(true)}>
-              Let’s go
-            </Button>
-          ) : null}
+          <Button
+            type="button"
+            onClick={() => leave(digestActionHref(primaryCheckInAction(kind), hrefPrefix))}
+          >
+            Let’s go
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-function DigestStepBody({
-  step,
-  facts,
-  suggestions,
-  generateSettled,
+function CheckInActionList({
+  actions,
   hrefPrefix,
   onNavigate,
 }: {
-  step: OverlayStep;
-  facts: DigestFacts;
-  suggestions: DigestPayload["suggestions"];
-  generateSettled: boolean;
+  actions: CheckInAction[];
   hrefPrefix: string;
-  onNavigate: (href: string) => void;
+  onNavigate: (href: string | null) => void;
 }) {
-  if (step === "suggestions") {
+  if (actions.length === 0) {
     return (
-      <div className="space-y-3">
-        <p className="text-sm">
-          {suggestions?.motivation ??
-            (generateSettled
-              ? "Start with what’s already on the calendar."
-              : "Writing a short note…")}
-        </p>
-        {(suggestions?.suggestions ?? []).map((suggestion) => {
-          const href = digestActionHref(suggestion.action, hrefPrefix);
+      <p className="text-sm text-muted-foreground">
+        Nothing needs a decision right now.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        Worth deciding
+      </p>
+      <ul className="space-y-2">
+        {actions.map((entry) => {
+          const href = digestActionHref(entry.action, hrefPrefix);
           return (
-            <div key={suggestion.title} className="rounded-lg border p-3">
-              <p className="text-sm font-medium">{suggestion.title}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{suggestion.body}</p>
+            <li key={entry.id} className="rounded-lg border p-3">
+              <p className="text-sm font-medium">{entry.title}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{entry.detail}</p>
               {href ? (
                 <Button
                   type="button"
@@ -223,40 +245,10 @@ function DigestStepBody({
                   Open
                 </Button>
               ) : null}
-            </div>
+            </li>
           );
         })}
-      </div>
-    );
-  }
-
-  const windowFacts = step === "recap" ? facts.recap : facts.ahead;
-  return (
-    <div className="space-y-3">
-      <p className="text-2xl font-semibold tracking-tight">
-        {windowFacts.completed} of {windowFacts.placed}
-        <span className="ml-2 text-sm font-normal text-muted-foreground">
-          {windowFacts.label.toLowerCase()}
-        </span>
-      </p>
-      {windowFacts.placed === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          {step === "recap"
-            ? "Nothing to recap yet."
-            : "Nothing is placed here yet."}
-        </p>
-      ) : (
-        <ul className="space-y-2">
-          {windowFacts.items.map((item) => (
-            <li key={`${item.title}:${item.date}`} className="text-sm">
-              {item.title}
-              <span className="ml-2 text-muted-foreground">
-                {item.state === "completed" ? "done" : "open"}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      </ul>
     </div>
   );
 }

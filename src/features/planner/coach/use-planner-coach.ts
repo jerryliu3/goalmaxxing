@@ -41,6 +41,7 @@ import {
   updateAssistantProposalStatus,
 } from "@/features/planner/coach/coach-message-state";
 import { validateUndoProposal } from "@/features/planner/coach/coach-proposal-utils";
+import { takeCoachPromptSeed } from "@/lib/coach/coach-prompt-seed";
 import { useCoachConversationPersistence } from "@/features/planner/coach/use-coach-conversation-persistence";
 import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 import type {
@@ -92,6 +93,16 @@ export function usePlannerCoach({
 }: UsePlannerCoachArgs): PlannerCoachModel {
   const [coachLoading, setCoachLoading] = useState(false);
   const [coachInput, setCoachInput] = useState("");
+
+  // "Ask coach" on the period check-in leaves a question behind on its way to
+  // the plan surface. Reading it is one-shot, so a reload starts clean.
+  useEffect(() => {
+    const seed = takeCoachPromptSeed(window.sessionStorage);
+    if (seed) {
+      setCoachInput(seed);
+    }
+  }, []);
+
   const [coachMessages, setCoachMessages] = useState<CoachMessage[]>([]);
   const [coachWarnings, setCoachWarnings] = useState<string[]>([]);
   const [coachRecommendations, setCoachRecommendations] = useState<string[]>([]);

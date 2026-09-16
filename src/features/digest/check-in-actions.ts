@@ -1,0 +1,132 @@
+import type {
+  DigestFacts,
+  DigestSuggestionAction,
+  DigestSuggestions,
+} from "@/lib/digest/contract";
+import {
+  DIGEST_DEFAULT_SESSION_MINUTES,
+  formatEstimatedDuration,
+} from "@/lib/digest/hours";
+import type { DigestKind } from "@/lib/digest/period";
+
+export interface CheckInAction {
+  id: string;
+  title: string;
+  detail: string;
+  action: DigestSuggestionAction | null;
+}
+
+/** The one thing the primary button should do for each cadence. */
+export function primaryCheckInAction(kind: DigestKind): DigestSuggestionAction {
+  return kind === "daily" ? "today" : "plan";
+}
+
+export function checkInHeading(kind: DigestKind) {
+  if (kind === "monthly") {
+    return "Monthly check-in";
+  }
+  if (kind === "weekly") {
+    return "Weekly check-in";
+  }
+  return "Daily check-in";
+}
+
+export function checkInRecapSummary(facts: DigestFacts) {
+  const { recap } = facts;
+  if (recap.placed === 0) {
+    return `${recap.label.toLowerCase()}: nothing was placed`;
+  }
+  return `${recap.label.toLowerCase()}: ${recap.completed} of ${recap.placed} done`;
+}
+
+function pluralSessions(count: number) {
+  return count === 1 ? "session" : "sessions";
+}
+
+function recoverAction(facts: DigestFacts): CheckInAction | null {
+  const { recover } = facts;
+  if (recover.count === 0) {
+    return null;
+  }
+  const named = recover.items.map((item) => item.title).join(", ");
+  return {
+    id: "recover",
+    title: `Recover ${recover.count} missed ${pluralSessions(recover.count)}`,
+    detail:
+      named.length > 0
+        ? `${named}${recover.count > recover.items.length ? ", and more" : ""}.`
+        : "Give the work a new day, or let it go.",
+    action: "plan",
+  };
+}
+
+function unscheduledAction(facts: DigestFacts): CheckInAction | null {
+  const { unscheduled, ahead } = facts;
+  if (unscheduled.count === 0) {
+    return null;
+  }
+  const named = unscheduled.titles.join(", ");
+  return {
+    id: "unscheduled",
+    title: `${unscheduled.count} ${unscheduled.count === 1 ? "goal has" : "goals have"} nothing in ${ahead.label.toLowerCase()}`,
+    detail:
+      named.length > 0
+        ? `${named}${unscheduled.count > unscheduled.titles.length ? ", and more" : ""}.`
+        : "Place work for them, or park them for now.",
+    action: "plan",
+  };
+}
+
+function workloadAction(
+  kind: DigestKind,
+  facts: DigestFacts
+): CheckInAction | null {
+  const { ahead } = facts;
+  const open = ahead.placed - ahead.completed;
+  if (open <= 0) {
+    return null;
+  }
+  return {
+    id: "workload",
+    title: `${open} ${pluralSessions(open)} in ${ahead.label.toLowerCase()}, about ${formatEstimatedDuration(ahead.estimatedMinutes)}`,
+    detail: `Estimated at ${DIGEST_DEFAULT_SESSION_MINUTES} minutes a session.`,
+    action: primaryCheckInAction(kind),
+  };
+}
+
+/**
+ * Orders the structured actions by what the cadence is for. A month starts by
+ * deciding what to take on, a week starts by cleaning up and shaping, and a day
+ * starts by looking at the day. Unscheduled goals are left out of the daily
+ * check-in, where a list of unplaced goals is noise rather than a decision.
+ */
+export function buildCheckInActions({
+  kind,
+  facts,
+  suggestions,
+}: {
+  kind: DigestKind;
+  facts: DigestFacts;
+  suggestions: DigestSuggestions | null;
+}): CheckInAction[] {
+  const recover = recoverAction(facts);
+  const unscheduled = kind === "daily" ? null : unscheduledAction(facts);
+  const workload = workloadAction(kind, facts);
+  const ordered =
+    kind === "monthly"
+      ? [unscheduled, recover, workload]
+      : kind === "weekly"
+        ? [recover, unscheduled, workload]
+        : [workload, recover];
+
+  const structured = ordered.filter(
+    (entry): entry is CheckInAction => entry !== null
+  );
+  const coachActions = (suggestions?.suggestions ?? []).map((suggestion) => ({
+    id: `coach:${suggestion.title}`,
+    title: suggestion.title,
+    detail: suggestion.body,
+    action: suggestion.action,
+  }));
+  return [...structured, ...coachActions];
+}

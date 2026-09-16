@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Fragment, type ReactNode, ViewTransition } from "react";
 import { JourneyIntroOverlay } from "@/components/intro/journey-intro-overlay";
-import { DigestOverlay } from "@/features/digest/digest-overlay";
+import { CheckInOverlay } from "@/features/digest/check-in-overlay";
 import { JourneyProvider } from "@/components/journey/journey-provider.web";
 import type { JourneyFeatureFlags } from "@/components/journey/types";
 import { AppBootSplash } from "@/components/layout/app-boot-splash";
@@ -89,7 +89,7 @@ export function AppShell({
         <JourneyProvider flags={journeyFlags}>
           <AltitudeBackdrop journeyFlags={journeyFlags} />
           {showJourneyIntro ? <JourneyIntroOverlay userId={userId} /> : null}
-          {digestEnabled ? <DigestOverlay hrefPrefix={hrefPrefix} /> : null}
+          {digestEnabled ? <CheckInOverlay hrefPrefix={hrefPrefix} /> : null}
           <DuoProvider
             key={`${duoAvailability}:${duoState.activePartner?.partnerId ?? "none"}`}
             viewerUserId={userId}

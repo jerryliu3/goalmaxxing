@@ -31,8 +31,8 @@ export const SETTINGS_GROUPS: Array<{
       },
       {
         key: "digest",
-        label: "Digest",
-        description: "Replay the first-open briefing or turn auto-show off.",
+        label: "Check-in",
+        description: "Replay your daily, weekly, or monthly check-in, or turn auto-show off.",
       },
     ],
   },

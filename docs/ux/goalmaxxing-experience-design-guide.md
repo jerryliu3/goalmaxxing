@@ -406,15 +406,39 @@ Keep context near the action:
 Users should not need to remember which view owns an action or what a color
 means on another screen.
 
-### First-open digest is skippable, not a ritual
+### The period check-in is skippable, not a ritual
 
-The digest is a briefing overlay on first open, not a fifth destination and not
-a mandatory morning ceremony. On the profile week-start day it recaps last week
-and this week; on other days it recaps yesterday and today. Never stack both.
+The check-in is a briefing overlay on first open, not a fifth destination and
+not a mandatory morning ceremony.
+
+Cadence resolves widest-first, so exactly one is ever owed: monthly on the first
+of the month, weekly on the profile week-start day, daily otherwise. A month
+check-in already covers the day and week ahead, so the narrower ones are simply
+not offered that morning. Never stack them.
+
+One screen, three parts, in this order:
+
+1. **How it went** — the recap window as a score, not a grade.
+2. **The coach's read** — one pre-generated paragraph, grounded strictly in the
+   facts payload. It may not invent sessions, counts, or goal titles.
+3. **Worth deciding** — the short list of decisions the window actually implies:
+   work to recover, goals with nothing placed, and the hours the remaining
+   sessions add up to. Ordered by what the cadence is for — a month starts by
+   deciding what to take on, a week by cleaning up, a day by looking at the day.
+   Unplaced goals stay out of the daily check-in, where the list is noise rather
+   than a decision.
+
+The check-in never rewrites the plan. Every row is a jump into the surface that
+owns the change — Plan, Today, or Progress — and "Ask coach" hands a seeded
+follow-up question to the planner coach panel rather than answering in place.
+
+Time estimates are derived from a flat per-session figure, so always state the
+rate rather than presenting the number as measured.
+
 Skip, Escape, and click-outside all acknowledge the period. Replay and auto-show
-live in Settings. Suggestions can point at Plan, Today, or Progress; they must
-not rewrite the plan. Keep production chrome on the existing `AppShell` rather
-than copying concept-lab shells.
+live in Settings; replay opens whichever check-in the current date is owed. Keep
+production chrome on the existing `AppShell` rather than copying concept-lab
+shells.
 
 ### Use progressive disclosure
 

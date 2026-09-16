@@ -169,6 +169,7 @@ surfaces. The default is to simplify and reuse what already exists.
 
 - For Goalmaxxing web UX across product and marketing surfaces, follow
   `docs/ux/goalmaxxing-experience-design-guide.md`.
+<<<<<<< HEAD
 - Authenticated application leading direction is Spatial Plan (B). Use
   `docs/ux/goalmaxxing-application-design-guide.md` and `/ux/concepts`.
   Visual brand explorations live in
@@ -191,12 +192,16 @@ surfaces. The default is to simplify and reuse what already exists.
   Day work inspect and checklist-replacement concepts live in
   `docs/ux/goalmaxxing-day-work-study.md` and `/ux/day-work`. They are
   exploratory, not a product lock.
-- First-open digest is an `AppShell` overlay, not a tab or Progress
-  destination. Cadence is weekly on the profile week-start day and daily
-  otherwise. Skip, Escape, and click-outside all acknowledge the period.
-  Replay and auto-show live in Settings. Suggestions never mutate the plan.
-  Do not copy concept shells into production `AppShell`, tabs, or planner
-  chrome.
+- Period check-in is an `AppShell` overlay, not a tab or Progress
+  destination. Cadence resolves widest-first — monthly on the first of the
+  month, weekly on the profile week-start day, daily otherwise — so exactly
+  one check-in is owed per first open. Skip, Escape, and click-outside all
+  acknowledge the period. Replay and auto-show live in Settings. The check-in
+  never mutates the plan: every row is a jump into the surface that owns the
+  change, and "Ask coach" hands a seeded question to the planner coach panel.
+  Its data layer keeps the `digest` name (`user_digests`, `/api/digest/*`);
+  "check-in" is the surface. Do not copy concept shells into production
+  `AppShell`, tabs, or planner chrome.
 - Reuse-first: before adding a new hook/component/helper, check whether an
   existing one can be extended or composed.
 - Prefer canonical homes for shared domain logic (`src/lib/planner/*`,

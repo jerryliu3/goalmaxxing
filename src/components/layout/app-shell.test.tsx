@@ -43,8 +43,8 @@ vi.mock("@/components/intro/journey-intro-overlay", () => ({
 vi.mock("@/components/layout/app-boot-splash", () => ({
   AppBootSplash: () => null,
 }));
-vi.mock("@/features/digest/digest-overlay", () => ({
-  DigestOverlay: () => <div data-testid="digest-overlay" />,
+vi.mock("@/features/digest/check-in-overlay", () => ({
+  CheckInOverlay: () => <div data-testid="check-in-overlay" />,
 }));
 vi.mock("@/lib/cache/tab-data-cache", () => ({
   setTabDataCacheScope: (scope: string) => cacheScopeMock.setScope(scope),
@@ -141,20 +141,20 @@ describe("AppShell", () => {
     expect(screen.queryByTestId("journey-intro-overlay")).not.toBeInTheDocument();
   });
 
-  it("mounts the digest overlay only when the flag is on", () => {
+  it("mounts the check-in overlay only when the flag is on", () => {
     const { rerender } = render(
       <AppShell userId="user-1" {...emptyDuoProps}>
         <div>Child content</div>
       </AppShell>
     );
-    expect(screen.queryByTestId("digest-overlay")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("check-in-overlay")).not.toBeInTheDocument();
 
     rerender(
       <AppShell userId="user-1" digestEnabled {...emptyDuoProps}>
         <div>Child content</div>
       </AppShell>
     );
-    expect(screen.getByTestId("digest-overlay")).toBeInTheDocument();
+    expect(screen.getByTestId("check-in-overlay")).toBeInTheDocument();
   });
 
   it("scopes tab data cache by authenticated user", () => {
