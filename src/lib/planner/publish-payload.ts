@@ -13,7 +13,6 @@ export interface PlannerDraftItemEdit {
   goalId: string;
   unitKey: string;
   scheduledDate: string | null;
-  label: string | null;
   scheduledTimeOverride?: string | null;
 }
 
@@ -70,7 +69,6 @@ function buildDraftItemEditsFromCommands(commands: PlannerDraftCommand[]) {
         unitKey: entryKey.slice(separatorIndex + 1),
         scheduledDate:
           edit.scheduledDate === undefined ? null : edit.scheduledDate,
-        label: edit.label === undefined ? null : edit.label,
         scheduledTimeOverride: edit.scheduledTimeOverride,
       } as PlannerDraftItemEdit;
     })
@@ -161,17 +159,11 @@ function applyValidatedDraftItemEdits({
     }
   }
 
-  let draftRelabeledCount = 0;
-
   for (const edit of draftItemEdits) {
     const key = buildDraftEditKey(edit.goalId, edit.unitKey);
     const unit = unitByKey.get(key);
     if (!unit) {
       continue;
-    }
-    if (edit.label !== null && edit.label !== unit.label) {
-      unit.label = edit.label;
-      draftRelabeledCount += 1;
     }
     if (edit.scheduledTimeOverride !== undefined) {
       unit.scheduledTimeOverride = edit.scheduledTimeOverride;
@@ -218,7 +210,7 @@ function applyValidatedDraftItemEdits({
     }
   }
 
-  return { workUnits, draftRelabeledCount, draftRetimedCount };
+  return { workUnits, draftRetimedCount };
 }
 
 export function buildPlannerPublishPersistencePayload({
@@ -241,7 +233,7 @@ export function buildPlannerPublishPersistencePayload({
       unit.scheduledDate,
     ])
   );
-  const { workUnits, draftRelabeledCount, draftRetimedCount } =
+  const { workUnits, draftRetimedCount } =
     applyValidatedDraftItemEdits({
       kernelWorkUnits: kernel.workUnits,
       goalDefaultLocalTimeByGoalId,
@@ -274,7 +266,6 @@ export function buildPlannerPublishPersistencePayload({
       moved,
       lockChanged,
       draftCommands: draftCommands.length,
-      draftRelabeled: draftRelabeledCount,
       draftRetimed: draftRetimedCount,
       confirmationRequired: kernel.solver.confirmationRequired,
       publishable: kernel.solver.publishable,

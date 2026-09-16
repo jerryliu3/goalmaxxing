@@ -62,13 +62,6 @@ export interface PlannerCalendarOverlaysProps {
   }>;
   goalTitles: Record<string, string>;
   scopeMonth: string;
-  selectedEventDraftEdit:
-    | {
-        label?: string | null;
-        scheduledDate?: string | null;
-        scheduledTimeOverride?: string | null;
-      }
-    | undefined;
   selectedEventBaselineUnit:
     | {
         effectiveScheduledLocalTime?: string | null;
@@ -132,7 +125,6 @@ export function PlannerCalendarOverlays({
   selectedEventLinkedTargets,
   goalTitles,
   scopeMonth,
-  selectedEventDraftEdit,
   selectedEventBaselineUnit,
   selectedEventDraftScheduledDate,
   selectedEventDraftTimeInputValue,
@@ -209,7 +201,6 @@ export function PlannerCalendarOverlays({
             selectedEventLinkedTargets={selectedEventLinkedTargets}
             goalTitles={goalTitles}
             scopeMonth={scopeMonth}
-            selectedEventDraftEdit={selectedEventDraftEdit}
             selectedEventBaselineUnit={selectedEventBaselineUnit}
             selectedEventDraftScheduledDate={selectedEventDraftScheduledDate}
             selectedEventDraftTimeInputValue={selectedEventDraftTimeInputValue}

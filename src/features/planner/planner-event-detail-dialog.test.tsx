@@ -21,27 +21,27 @@ function buildEntry(): PlannerDayDetailEntry {
   }
 }
 
-describe("PlannerEventDetailDialog", () => {
-  it("does not auto-focus the title field on open", async () => {
-    const callbacks = {
-      onOpenChange: vi.fn(),
-      onUpdateDraftLabel: vi.fn(),
-      onUpdateDraftScheduledDate: vi.fn(),
-      onUpdateDraftScheduledTimeOverride: vi.fn(),
-      onToggleItemLock: vi.fn(),
-      onNavigateToFirstOpenInstance: vi.fn(),
-      onNavigateToPreviousOpenInstance: vi.fn(),
-      onNavigateToNextOpenInstance: vi.fn(),
-      onNavigateToLastOpenInstance: vi.fn(),
-    }
+function buildCallbacks() {
+  return {
+    onOpenChange: vi.fn(),
+    onUpdateDraftScheduledDate: vi.fn(),
+    onUpdateDraftScheduledTimeOverride: vi.fn(),
+    onToggleItemLock: vi.fn(),
+    onNavigateToFirstOpenInstance: vi.fn(),
+    onNavigateToPreviousOpenInstance: vi.fn(),
+    onNavigateToNextOpenInstance: vi.fn(),
+    onNavigateToLastOpenInstance: vi.fn(),
+  }
+}
 
+describe("PlannerEventDetailDialog", () => {
+  it("does not auto-focus date or time fields on open", async () => {
     render(
       <PlannerEventDetailDialog
         selectedEventEntry={buildEntry()}
         selectedEventLinkedTargets={[]}
         goalTitles={{}}
         scopeMonth="2026-08"
-        selectedEventDraftEdit={undefined}
         selectedEventBaselineUnit={null}
         selectedEventDraftScheduledDate="2026-08-31"
         selectedEventDraftTimeInputValue=""
@@ -52,26 +52,16 @@ describe("PlannerEventDetailDialog", () => {
         canNavigateToNextOpenInstance={false}
         canNavigateToLastOpenInstance={false}
         getEntryGoalFirstTitleWithTime={() => "Goal A"}
-        callbacks={callbacks}
+        callbacks={buildCallbacks()}
       />
     )
 
-    const titleInput = await screen.findByPlaceholderText("Goal title")
-    expect(titleInput).not.toHaveFocus()
+    expect(await screen.findByLabelText("Date")).not.toHaveFocus()
+    expect(screen.getByLabelText("Time")).not.toHaveFocus()
   })
 
   it("renders centered title and instance navigation controls", async () => {
-    const callbacks = {
-      onOpenChange: vi.fn(),
-      onUpdateDraftLabel: vi.fn(),
-      onUpdateDraftScheduledDate: vi.fn(),
-      onUpdateDraftScheduledTimeOverride: vi.fn(),
-      onToggleItemLock: vi.fn(),
-      onNavigateToFirstOpenInstance: vi.fn(),
-      onNavigateToPreviousOpenInstance: vi.fn(),
-      onNavigateToNextOpenInstance: vi.fn(),
-      onNavigateToLastOpenInstance: vi.fn(),
-    }
+    const callbacks = buildCallbacks()
 
     render(
       <PlannerEventDetailDialog
@@ -79,7 +69,6 @@ describe("PlannerEventDetailDialog", () => {
         selectedEventLinkedTargets={[]}
         goalTitles={{}}
         scopeMonth="2026-08"
-        selectedEventDraftEdit={undefined}
         selectedEventBaselineUnit={null}
         selectedEventDraftScheduledDate="2026-08-31"
         selectedEventDraftTimeInputValue=""
@@ -101,6 +90,7 @@ describe("PlannerEventDetailDialog", () => {
     expect(within(activeDialog!).getByRole("heading", { name: "Goal A" })).toHaveClass(
       "text-center"
     )
+    expect(within(activeDialog!).queryByLabelText("Title")).not.toBeInTheDocument()
     expect(within(activeDialog!).getByLabelText("Date")).toHaveValue("2026-08-31")
     expect(
       within(activeDialog!).getByRole("button", { name: "Go to previous open instance" })
@@ -134,7 +124,6 @@ describe("PlannerEventDetailDialog", () => {
           selectedEventLinkedTargets={[]}
           goalTitles={{}}
           scopeMonth="2026-08"
-          selectedEventDraftEdit={undefined}
           selectedEventBaselineUnit={null}
           selectedEventDraftScheduledDate="2026-08-31"
           selectedEventDraftTimeInputValue=""
@@ -145,17 +134,7 @@ describe("PlannerEventDetailDialog", () => {
           canNavigateToNextOpenInstance={false}
           canNavigateToLastOpenInstance={false}
           getEntryGoalFirstTitleWithTime={() => "Goal A"}
-          callbacks={{
-            onOpenChange: vi.fn(),
-            onUpdateDraftLabel: vi.fn(),
-            onUpdateDraftScheduledDate: vi.fn(),
-            onUpdateDraftScheduledTimeOverride: vi.fn(),
-            onToggleItemLock: vi.fn(),
-            onNavigateToFirstOpenInstance: vi.fn(),
-            onNavigateToPreviousOpenInstance: vi.fn(),
-            onNavigateToNextOpenInstance: vi.fn(),
-            onNavigateToLastOpenInstance: vi.fn(),
-          }}
+          callbacks={buildCallbacks()}
         />
       )
 

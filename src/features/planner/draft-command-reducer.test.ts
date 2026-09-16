@@ -16,10 +16,9 @@ describe("draftCommandReducer remove_entries", () => {
       sourceDate: "2026-08-01",
     });
     state = draftCommandReducer(state, {
-      type: "upsert_rename",
+      type: "clear_time_override",
       goalId: "goal-a",
       unitKey: "unit-1",
-      label: "Renamed",
     });
     state = draftCommandReducer(state, {
       type: "upsert_time_override",

@@ -73,10 +73,10 @@ describe("planner draft visual diff", () => {
         {
           id: "33333333-3333-4333-8333-333333333333",
           sequence: 1,
-          kind: "rename_item",
+          kind: "set_item_time_override",
           goalId: GOAL_ID,
           unitKey: "total:1",
-          label: "Renamed",
+          localTime: "07:30",
         },
       ])
     ).toEqual([]);

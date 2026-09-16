@@ -18,12 +18,6 @@ export type DraftCommandAction =
       sourceDate: string;
     }
   | {
-      type: "upsert_rename";
-      goalId: string;
-      unitKey: string;
-      label: string | null;
-    }
-  | {
       type: "upsert_time_override";
       goalId: string;
       unitKey: string;
@@ -38,7 +32,6 @@ export type DraftCommandAction =
       type: "remove_kind";
       kind:
         | "move_item"
-        | "rename_item"
         | "set_item_time_override"
         | "clear_item_time_override";
       goalId: string;
@@ -101,11 +94,9 @@ export function draftCommandReducer(
   const actionKind =
     action.type === "upsert_move"
       ? "move_item"
-      : action.type === "upsert_rename"
-        ? "rename_item"
-        : action.type === "upsert_time_override"
-          ? "set_item_time_override"
-          : "clear_item_time_override";
+      : action.type === "upsert_time_override"
+        ? "set_item_time_override"
+        : "clear_item_time_override";
 
   const existingIndex = state.commands.findIndex(
     (command) =>
@@ -132,22 +123,16 @@ export function draftCommandReducer(
                 ? existingCommand.sourceDate
                 : action.sourceDate,
           }
-        : action.type === "upsert_rename"
+        : action.type === "upsert_time_override"
           ? {
               ...identity,
-              kind: "rename_item",
-              label: action.label,
+              kind: "set_item_time_override",
+              localTime: action.localTime,
             }
-          : action.type === "upsert_time_override"
-            ? {
-                ...identity,
-                kind: "set_item_time_override",
-                localTime: action.localTime,
-              }
-            : {
-                ...identity,
-                kind: "clear_item_time_override",
-              };
+          : {
+              ...identity,
+              kind: "clear_item_time_override",
+            };
     const nextCommands = [...state.commands];
     nextCommands[existingIndex] = nextCommand;
     return {
@@ -168,31 +153,22 @@ export function draftCommandReducer(
           scheduledDate: action.scheduledDate,
           sourceDate: action.sourceDate,
         }
-      : action.type === "upsert_rename"
+      : action.type === "upsert_time_override"
         ? {
             id: createClientUuid(),
             sequence: nextSequence,
-            kind: "rename_item",
+            kind: "set_item_time_override",
             goalId: action.goalId,
             unitKey: action.unitKey,
-            label: action.label,
+            localTime: action.localTime,
           }
-        : action.type === "upsert_time_override"
-          ? {
-              id: createClientUuid(),
-              sequence: nextSequence,
-              kind: "set_item_time_override",
-              goalId: action.goalId,
-              unitKey: action.unitKey,
-              localTime: action.localTime,
-            }
-          : {
-              id: createClientUuid(),
-              sequence: nextSequence,
-              kind: "clear_item_time_override",
-              goalId: action.goalId,
-              unitKey: action.unitKey,
-            };
+        : {
+            id: createClientUuid(),
+            sequence: nextSequence,
+            kind: "clear_item_time_override",
+            goalId: action.goalId,
+            unitKey: action.unitKey,
+          };
 
   return {
     commands: [...state.commands, nextCommand],

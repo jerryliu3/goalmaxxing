@@ -180,32 +180,6 @@ export function usePlannerDraftCommands({
     ]
   );
 
-  const updateDraftLabel = useCallback(
-    (entry: PlannerDayDetailEntry, label: string) => {
-      if (entry.draftGhost || !context?.scopeMonth) {
-        return;
-      }
-      const baselineTitle =
-        entry.activeGoal?.title ?? context.goalTitles?.[entry.originalGoalId] ?? null;
-      if (!label || label === baselineTitle) {
-        dispatchDraftCommand({
-          type: "remove_kind",
-          kind: "rename_item",
-          goalId: entry.originalGoalId,
-          unitKey: entry.unitKey,
-        });
-        return;
-      }
-      dispatchDraftCommand({
-        type: "upsert_rename",
-        goalId: entry.originalGoalId,
-        unitKey: entry.unitKey,
-        label,
-      });
-    },
-    [context, dispatchDraftCommand]
-  );
-
   const updateDraftScheduledTimeOverride = useCallback(
     (entry: PlannerDayDetailEntry, localTime: string) => {
       if (!context?.scopeMonth) {
@@ -253,7 +227,6 @@ export function usePlannerDraftCommands({
 
   return {
     queueDraftMoveCommand,
-    updateDraftLabel,
     updateDraftScheduledDate,
     updateDraftScheduledTimeOverride,
   };

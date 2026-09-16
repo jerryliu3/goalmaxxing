@@ -171,13 +171,6 @@ export interface PlannerCalendarSurfaceLayoutProps {
     targetSuppressionKind: "none" | "until" | "indefinite";
     targetResumesOn: string | null;
   }>;
-  selectedEventDraftEdit:
-    | {
-        label?: string | null;
-        scheduledDate?: string | null;
-        scheduledTimeOverride?: string | null;
-      }
-    | undefined;
   selectedEventBaselineUnit: PlannerWorkUnit | null;
   selectedEventDraftScheduledDate: string | null;
   selectedEventDraftTimeInputValue: string;
@@ -316,7 +309,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     submitMoveDialog,
     selectedEventEntry,
     selectedEventLinkedTargets,
-    selectedEventDraftEdit,
     selectedEventBaselineUnit,
     selectedEventDraftScheduledDate,
     selectedEventDraftTimeInputValue,
@@ -669,7 +661,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         selectedEventLinkedTargets={selectedEventLinkedTargets}
         goalTitles={context?.goalTitles ?? {}}
         scopeMonth={context?.scopeMonth ?? month ?? "1970-01"}
-        selectedEventDraftEdit={selectedEventDraftEdit}
         selectedEventBaselineUnit={selectedEventBaselineUnit}
         selectedEventDraftScheduledDate={selectedEventDraftScheduledDate}
         selectedEventDraftTimeInputValue={selectedEventDraftTimeInputValue}
