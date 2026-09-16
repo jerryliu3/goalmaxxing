@@ -128,6 +128,25 @@ export function ConceptsIndex() {
 
         <section className="mt-10 rounded-2xl border bg-card p-5 ring-1 ring-foreground/10">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Exploratory · goal detail
+          </p>
+          <h2 className="mt-1 text-xl font-semibold tracking-tight">
+            Flip or expand a goal card
+          </h2>
+          <p className="mt-2 text-sm">
+            Two ways to keep a goal’s essential progress and next action compact while
+            revealing its motivation and setup. Completion remains separate from opening detail.
+          </p>
+          <Link
+            href="/ux/concepts/goal-cards"
+            className="mt-4 inline-flex text-sm font-medium text-primary"
+          >
+            Open goal card studies
+          </Link>
+        </section>
+
+        <section className="mt-10 rounded-2xl border bg-card p-5 ring-1 ring-foreground/10">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Open · inside B
           </p>
           <h2 className="mt-1 text-xl font-semibold tracking-tight">

@@ -54,6 +54,9 @@ language after web settles.
 Current prototype: `/ux/concepts/spatial-home`. Pattern library:
 `/ux/concepts/patterns`. v1 archive: `/ux/concepts/spatial-plan`.
 Plan craft study: `/ux/concepts/plan-clarity`.
+Goal detail study: `/ux/concepts/goal-cards`. It compares a labeled flip for
+occasional goal setup inspection with an expand treatment for frequently read
+details. Both keep completion separate from opening detail.
 Day work inspect study (exploratory, not a lock): `/ux/day-work`.
 
 ---

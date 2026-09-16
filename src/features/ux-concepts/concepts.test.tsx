@@ -12,6 +12,7 @@ import { APPLICATION_PRINCIPLES } from "@/features/ux-concepts/pattern-library";
 import { ProgressPulseDestination, ProgressLedgerDestination, ProgressMapDestination } from "@/features/ux-concepts/progress-destinations";
 import { CommunityCompeteDestination, CommunityDuoDestination, CommunityBoardDestination, CommunityQuietDestination } from "@/features/ux-concepts/community-destinations";
 import { YouAccountDestination, YouListDestination, YouPersonDestination, YouControlsDestination } from "@/features/ux-concepts/you-destinations";
+import { GoalCardConcept } from "@/features/ux-concepts/goal-card-concept";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -114,6 +115,27 @@ describe("ux concept gallery", () => {
     expect(
       screen.getByRole("button", { name: /remove completion for tempo run/i })
     ).toBeInTheDocument();
+  });
+
+  it("makes goal-card detail disclosure explicit and keeps completion separate", async () => {
+    const user = userEvent.setup();
+    render(<GoalCardConcept />);
+    const details = screen.getAllByRole("button", { name: "Details" });
+    expect(details).toHaveLength(2);
+    expect(details[0]).toHaveAttribute("aria-expanded", "false");
+    await user.click(details[0]);
+    expect(screen.getByRole("button", { name: "Overview" })).toHaveAttribute(
+      "aria-expanded",
+      "true"
+    );
+    await user.click(details[1]);
+    expect(screen.getByRole("button", { name: "Less detail" })).toHaveAttribute(
+      "aria-expanded",
+      "true"
+    );
+    const complete = screen.getAllByRole("button", { name: /mark today’s session done/i });
+    await user.click(complete[0]);
+    expect(screen.getByRole("button", { name: "Session complete" })).toBeInTheDocument();
   });
 
   it("treats the calendar grid as Spatial Plan home", () => {
