@@ -20,9 +20,34 @@ describe("card optics", () => {
     const below = cardOptics({ x: 18, y: 0 });
     expect(above["--shine-strength"]).not.toBe(below["--shine-strength"]);
     expect(above["--rim-light-y"]).not.toBe(below["--rim-light-y"]);
-    expect(above["--relief-shadow-y"]).not.toBe(below["--relief-shadow-y"]);
-    expect(parseFloat(above["--relief-light-y"])).toBeLessThan(0);
-    expect(parseFloat(above["--relief-shadow-y"])).toBeGreaterThan(0);
+  });
+
+  it("extrudes raised lettering away from the side the viewer is on", () => {
+    // A negative rotateY brings the card's right edge toward the viewer, so the
+    // lit sides face right and the letter bodies run left, behind the glyph.
+    expect(parseFloat(cardOptics({ x: 0, y: -30 })["--emboss-x"])).toBeLessThan(-0.3);
+    expect(parseFloat(cardOptics({ x: 0, y: 30 })["--emboss-x"])).toBeGreaterThan(0.3);
+    expect(parseFloat(cardOptics({ x: -30, y: 0 })["--emboss-y"])).toBeGreaterThan(0.3);
+    expect(parseFloat(cardOptics({ x: 30, y: 0 })["--emboss-y"])).toBeLessThan(-0.3);
+  });
+
+  it("gives the resting card a wall deep enough to read as raised", () => {
+    // Under 0.3 the eight-step wall collapses into a sub-pixel smudge on body text.
+    const rest = cardOptics(REST_POSE);
+    expect(Math.abs(parseFloat(rest["--emboss-x"]))).toBeGreaterThan(0.3);
+    expect(Math.abs(parseFloat(cardOptics(TILTED_POSE)["--emboss-x"]))).toBeGreaterThan(0.6);
+  });
+
+  it("keeps a head-on card raised and bounds the wall on extreme turns", () => {
+    const flat = cardOptics({ x: 0, y: 0 });
+    // Lit from the upper left, so a head-on letter still casts down and right.
+    expect(parseFloat(flat["--emboss-x"])).toBeGreaterThan(0);
+    expect(parseFloat(flat["--emboss-y"])).toBeGreaterThan(0);
+    for (const pose of [{ x: 80, y: 75 }, { x: -85, y: -80 }]) {
+      const optics = cardOptics(pose);
+      expect(Math.abs(parseFloat(optics["--emboss-x"]))).toBeLessThanOrEqual(1.35);
+      expect(Math.abs(parseFloat(optics["--emboss-y"]))).toBeLessThanOrEqual(1.35);
+    }
   });
 
   it("gives keyboard poses the same deterministic reflection as pointer poses", () => {

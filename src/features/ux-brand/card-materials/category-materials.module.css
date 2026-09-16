@@ -4,6 +4,9 @@
   --card-radius: 15px;
   --edge: color-mix(in srgb,var(--material-color) 28%,#bfc6c7);
   --bevel: inset 0 0 0 2px #fffc,inset 0 0 0 4px color-mix(in srgb,var(--material-color) 15%,#e7e5de),inset 0 0 0 5px #fff9;
+  --emboss-body: color-mix(in srgb,var(--material-color) 22%,#3e4e52);
+  --emboss-top: #fffefa;
+  --emboss-cast: #3442474a;
 }
 .stage[data-material="prismatic"] :global(.tempo-card) {
   color: #303638; border: 1px solid color-mix(in srgb,var(--material-color) 20%,#d2d7d3);
@@ -15,7 +18,6 @@
   text-shadow: none; color: color-mix(in srgb,var(--material-color) 30%,#344247);
   background-image: linear-gradient(125deg,#344247,color-mix(in srgb,var(--material-color) 45%,#667577) 35%,#35454a 60%,color-mix(in srgb,var(--material-color) 32%,#758084));
   background-size: 200% 200%; background-position: var(--metal-x) var(--metal-y); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  filter: drop-shadow(var(--relief-light-x) var(--relief-light-y) 0 #fff9) drop-shadow(var(--relief-shadow-x) var(--relief-shadow-y) 2px #34424733);
 }
 .stage[data-material="prismatic"] :global(.tempo-effort-bars i[data-active="true"]) { background: color-mix(in srgb,var(--material-color) 50%,#344247); }
 
@@ -25,6 +27,9 @@
   --edge: color-mix(in srgb,var(--material-color) 40%,#8e9aa2);
   --bevel: inset 0 0 0 4px #242c31,inset 0 0 0 5px color-mix(in srgb,var(--material-color) 40%,#c4cbd0);
   --shine-tint: color-mix(in srgb,var(--material-color) 35%,#fff);
+  --emboss-body: color-mix(in srgb,var(--material-color) 26%,#5b6469);
+  --emboss-top: #f7fbfc;
+  --emboss-cast: #0a0f1296;
 }
 .stage[data-material="chromatic"] :global(.tempo-card) {
   color: #edf2f4; border: 1px solid color-mix(in srgb,var(--material-color) 35%,#b8c0c5);
@@ -34,9 +39,8 @@
 .stage[data-material="chromatic"][data-form="solid"] :global(.tempo-card-target strong) {
   text-shadow: none; color: #dce8e9;
   background-image: linear-gradient(125deg,#f5f8f9 10%,color-mix(in srgb,var(--material-color) 40%,#c2cdd1) 30%,#fff 44%,color-mix(in srgb,var(--material-color) 22%,#a7b9c0) 65%,#e8f1f3);
-  background-size: 200% 200%; background-position: var(--metal-x) var(--metal-y); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(var(--relief-light-x) var(--relief-light-y) 0 #fff5) drop-shadow(var(--relief-shadow-x) var(--relief-shadow-y) 2px #0008);
+  background-size: 200% 200%; background-position: var(--metal-x) var(--metal-y); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
-.stage[data-material="chromatic"][data-form="solid"] :global(.tempo-card-target > span) { text-shadow: var(--relief-light-x) var(--relief-light-y) 1px #fff4,var(--relief-shadow-x) var(--relief-shadow-y) 2px #0008; }
 .stage[data-material="chromatic"] :global(.tempo-effort-bars i) { background: #edf2f426; }
 .stage[data-material="chromatic"] :global(.tempo-effort-bars i[data-active="true"]) { background: color-mix(in srgb,var(--material-color) 35%,#dce8e9); }
 
@@ -46,13 +50,16 @@
   --edge: color-mix(in srgb,var(--material-color) 40%,#87959e);
   --bevel: inset 0 1px 2px #ffffffe0,inset 0 0 0 3px color-mix(in srgb,var(--material-color) 27%,#b4c1c8),inset 0 0 0 4px #ffffff80;
   --shine-tint: color-mix(in srgb,var(--material-color) 12%,#fff);
+  --emboss-body: color-mix(in srgb,var(--material-color) 24%,#46596b);
+  --emboss-top: #fdffff;
+  --emboss-cast: #21334247;
 }
 .stage[data-material="alloy"] :global(.tempo-card) {
   color: #27333d; border: 1px solid color-mix(in srgb,var(--material-color) 25%,#d9e1e4);
   background: radial-gradient(ellipse at var(--light-x) var(--light-y),#fff8,transparent 60%),repeating-linear-gradient(0deg,#263c5409 0px,#263c5409 .5px,transparent .5px,transparent 2px),linear-gradient(135deg,color-mix(in srgb,var(--material-color) 30%,#dee5e8),color-mix(in srgb,var(--material-color) 14%,#f4f6f6) 42%,color-mix(in srgb,var(--material-color) 34%,#c9d4dc));
 }
 .stage[data-material="alloy"] :global(.tempo-card)::before { content: ""; position: absolute; inset: 11px; border: 1px solid #33455323; border-radius: 7px; pointer-events: none; }
-.stage[data-material="alloy"][data-form="solid"] :global(.tempo-card-target strong) { color: color-mix(in srgb,var(--material-color) 25%,#293946); text-shadow: var(--relief-light-x) var(--relief-light-y) 1px #fff8,var(--relief-shadow-x) var(--relief-shadow-y) 2px #21334240; }
+.stage[data-material="alloy"][data-form="solid"] :global(.tempo-card-target strong) { color: color-mix(in srgb,var(--material-color) 25%,#293946); }
 .stage[data-material="alloy"] :global(.tempo-effort-bars i[data-active="true"]) { background: color-mix(in srgb,var(--material-color) 38%,#293946); }
 
 .stage:is([data-material="chromatic"],[data-material="alloy"]) :global(.tempo-card)::after {

@@ -17,6 +17,7 @@ import type { CardMaterial } from "./materials";
 import { cardOptics, FLAT_POSE, REST_POSE, pointerPose } from "./card-optics";
 import { useCardPose } from "./use-card-pose";
 import styles from "./artifact-showcase.module.css";
+import "./card-emboss.css";
 
 type ShowcaseMode = "application" | "objects";
 
@@ -41,6 +42,7 @@ function ArtifactStage({
       <div
         ref={pose.stage}
         className={styles.stage}
+        data-emboss-scope=""
         data-material={material.id}
         data-shape={shape}
         data-still={still}
@@ -84,7 +86,7 @@ function ArtifactStage({
 
 function ChallengeCard() {
   return (
-    <article className={`${styles.materialFace} ${styles.challengeCard}`}>
+    <article className={`${styles.materialFace} ${styles.challengeCard}`} data-emboss-face="">
       <div className={styles.faceSheen} aria-hidden="true" />
       <div className={styles.raisedRow}>
         <span>COMMUNITY CHALLENGE</span>
@@ -92,7 +94,7 @@ function ChallengeCard() {
       </div>
       <div className={styles.challengeMark}>
         <Mountain size={44} strokeWidth={1.35} />
-        <strong>30</strong>
+        <strong data-emboss="hero">30</strong>
         <span>DAYS</span>
       </div>
       <h2>Sunrise club</h2>
@@ -110,7 +112,7 @@ function ChallengeCard() {
 
 function LeaderboardCard() {
   return (
-    <article className={`${styles.materialFace} ${styles.leaderboardCard}`}>
+    <article className={`${styles.materialFace} ${styles.leaderboardCard}`} data-emboss-face="">
       <div className={styles.faceSheen} aria-hidden="true" />
       <div className={styles.leaderHeading}>
         <div>
@@ -131,7 +133,7 @@ function LeaderboardCard() {
 
 function ProfileCard() {
   return (
-    <article className={`${styles.materialFace} ${styles.profileCard}`}>
+    <article className={`${styles.materialFace} ${styles.profileCard}`} data-emboss-face="">
       <div className={styles.faceSheen} aria-hidden="true" />
       <div className={styles.profileTop}>
         <span>MEMBER / 2026</span>
@@ -165,14 +167,14 @@ function TrophyObject() {
   return (
     <div className={`${styles.objectSculpture} ${styles.trophy}`}>
       <div className={styles.trophyGlow} />
-      <div className={styles.cup}>
+      <div className={styles.cup} data-emboss-face="">
         <span className={styles.handleLeft} />
         <span className={styles.handleRight} />
         <Trophy size={88} strokeWidth={1.05} />
-        <strong>12</strong>
+        <strong data-emboss="hero">12</strong>
       </div>
       <div className={styles.stem} />
-      <div className={styles.plinth}><span>YEAR OF MOMENTUM</span><b>2026</b></div>
+      <div className={styles.plinth} data-emboss-face=""><span>YEAR OF MOMENTUM</span><b>2026</b></div>
     </div>
   );
 }
@@ -182,9 +184,9 @@ function MedalObject() {
     <div className={`${styles.objectSculpture} ${styles.medal}`}>
       <div className={styles.ribbon}><i /><i /></div>
       <div className={styles.medalEdge} />
-      <div className={styles.medalFace}>
+      <div className={styles.medalFace} data-emboss-face="">
         <Medal size={42} strokeWidth={1.15} />
-        <strong>100</strong>
+        <strong data-emboss="hero">100</strong>
         <span>MILESTONES</span>
       </div>
     </div>
@@ -194,13 +196,13 @@ function MedalObject() {
 function TotemObject() {
   return (
     <div className={`${styles.objectSculpture} ${styles.totem}`}>
-      <div className={styles.compassRing}>
+      <div className={styles.compassRing} data-emboss-face="">
         <span>N</span><span>E</span><span>S</span><span>W</span>
         <Mountain size={72} strokeWidth={1.05} />
         <i />
       </div>
-      <div className={styles.totemBase}>
-        <strong>KEEP<br />GOING</strong>
+      <div className={styles.totemBase} data-emboss-face="">
+        <strong data-emboss="hero">KEEP<br />GOING</strong>
         <span>84% RHYTHM</span>
       </div>
     </div>
