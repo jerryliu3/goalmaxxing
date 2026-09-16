@@ -89,7 +89,7 @@ export function BrandIndex() {
         </p>
 
         <Link href="/ux/brand/card-materials" className="mt-8 flex items-center justify-between gap-4 rounded-2xl border border-zinc-300 bg-white/60 p-5">
-          <span><span className="block text-xs uppercase tracking-wide text-zinc-500">Material study · nine directions</span><span className="mt-1 block text-xl font-medium">Goal cards you want to hold</span><span className="mt-1 block text-sm text-zinc-600">Foil and Pearl, joined by Ruby, Sapphire, and Platinum. Tilt the same Tempo card through dimensional edges and moving light.</span></span>
+          <span><span className="block text-xs uppercase tracking-wide text-zinc-500">Material study · twelve directions</span><span className="mt-1 block text-xl font-medium">Goal cards you want to hold</span><span className="mt-1 block text-sm text-zinc-600">New category-colored Pearl, Foil, and Alloy. Tilt or turn the same Tempo card through dimensional edges and moving light.</span></span>
           <ArrowRight className="size-5 shrink-0" aria-hidden="true" />
         </Link>
 
