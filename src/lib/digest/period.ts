@@ -4,7 +4,7 @@ import {
   getAnchoredPeriod,
 } from "@/lib/goals/periods";
 
-export type DigestKind = "daily" | "weekly";
+export type DigestKind = "daily" | "weekly" | "monthly";
 
 export interface DigestPeriod {
   kind: DigestKind;
@@ -15,6 +15,12 @@ export interface DigestPeriod {
   aheadEnd: string;
 }
 
+/**
+ * At most one check-in is owed per open, so the widest cadence that starts today
+ * wins: a month start is also a possible week start, and every day is a day
+ * start. The narrower check-ins for that date are simply not offered — a month
+ * check-in already covers the day and week ahead.
+ */
 export function resolveDigestPeriod({
   localDate,
   weekStartsOn,
@@ -23,6 +29,19 @@ export function resolveDigestPeriod({
   weekStartsOn: number | null | undefined;
 }): DigestPeriod {
   const normalizedWeekStartsOn = normalizeWeekStartsOn(weekStartsOn);
+  const thisMonth = getAnchoredPeriod(localDate, "monthly", localDate);
+  if (localDate === thisMonth.start) {
+    const lastMonthEnd = addDaysToDateString(thisMonth.start, -1);
+    return {
+      kind: "monthly",
+      periodKey: thisMonth.start,
+      recapStart: getAnchoredPeriod(lastMonthEnd, "monthly", lastMonthEnd).start,
+      recapEnd: lastMonthEnd,
+      aheadStart: thisMonth.start,
+      aheadEnd: thisMonth.end,
+    };
+  }
+
   const thisWeek = getAnchoredPeriod(localDate, "weekly", localDate, {
     weekStartsOn: normalizedWeekStartsOn,
   });
@@ -36,6 +55,7 @@ export function resolveDigestPeriod({
       aheadEnd: thisWeek.end,
     };
   }
+
   const yesterday = addDaysToDateString(localDate, -1);
   return {
     kind: "daily",

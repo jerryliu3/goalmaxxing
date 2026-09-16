@@ -69,18 +69,45 @@ export async function loadDigestSnapshot({
     localDate,
     weekStartsOn: profile.weekStartsOn,
   });
-  const [items, completions, record] = await Promise.all([
+  const [items, completions, goals, record] = await Promise.all([
     loadPlacedItems(supabase, userId, period),
     loadCompletions(supabase, userId, period),
+    loadActiveGoals(supabase, userId, period),
     loadDigestRecord(supabase, userId, period),
   ]);
   return {
     profile,
     localDate,
     period,
-    facts: buildDigestFacts({ period, items, completions }),
+    facts: buildDigestFacts({ period, items, completions, goals }),
     record,
   };
+}
+
+/**
+ * Goals live enough to want work in the window ahead. Used to surface the ones
+ * with nothing placed, which is the monthly check-in's main prompt.
+ */
+async function loadActiveGoals(
+  supabase: DigestClient,
+  userId: string,
+  period: DigestPeriod
+) {
+  const { data, error } = await supabase
+    .from("goals")
+    .select("id,title,start_date,end_date")
+    .eq("owner_id", userId)
+    .eq("is_deleted", false)
+    .is("archived_at", null)
+    .lte("start_date", period.aheadEnd)
+    .order("start_date")
+    .limit(MAX_DIGEST_ROWS);
+  if (error) {
+    throw new ApiRouteError(500, "digest_goals_load_failed", "Digest data could not be loaded.");
+  }
+  return (data ?? [])
+    .filter((goal) => goal.end_date === null || goal.end_date >= period.aheadStart)
+    .map((goal) => ({ goalId: goal.id, title: goal.title }));
 }
 
 async function loadPlacedItems(

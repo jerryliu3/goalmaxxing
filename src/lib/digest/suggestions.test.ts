@@ -37,4 +37,20 @@ describe("parseDigestSuggestions", () => {
     expect(parseDigestSuggestions(null)).toBeNull();
     expect(fallbackDigestSuggestions("daily").suggestions.length).toBeGreaterThan(0);
   });
+
+  it("has a fallback for every cadence, each pointing somewhere useful", () => {
+    for (const kind of ["daily", "weekly", "monthly"] as const) {
+      const fallback = fallbackDigestSuggestions(kind);
+      expect(fallback.motivation.length).toBeGreaterThan(0);
+      expect(fallback.suggestions).toHaveLength(1);
+      expect(fallback.suggestions[0]?.action).not.toBeNull();
+    }
+  });
+
+  it("sends the monthly fallback at setting the month up", () => {
+    expect(fallbackDigestSuggestions("monthly").suggestions[0]).toMatchObject({
+      title: "Set up the month",
+      action: "plan",
+    });
+  });
 });

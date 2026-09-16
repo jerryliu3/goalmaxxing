@@ -40,4 +40,37 @@ describe("resolveDigestPeriod", () => {
       aheadEnd: "2026-09-12",
     });
   });
+
+  it("recaps last month and looks over this one on the first of the month", () => {
+    expect(
+      resolveDigestPeriod({ localDate: "2026-09-01", weekStartsOn: 1 })
+    ).toEqual({
+      kind: "monthly",
+      periodKey: "2026-09-01",
+      recapStart: "2026-08-01",
+      recapEnd: "2026-08-31",
+      aheadStart: "2026-09-01",
+      aheadEnd: "2026-09-30",
+    });
+  });
+
+  it("crosses the year boundary on January 1", () => {
+    expect(
+      resolveDigestPeriod({ localDate: "2027-01-01", weekStartsOn: 1 })
+    ).toEqual({
+      kind: "monthly",
+      periodKey: "2027-01-01",
+      recapStart: "2026-12-01",
+      recapEnd: "2026-12-31",
+      aheadStart: "2027-01-01",
+      aheadEnd: "2027-01-31",
+    });
+  });
+
+  it("prefers monthly when the first of the month is also the week start", () => {
+    // 2026-06-01 is a Monday.
+    expect(
+      resolveDigestPeriod({ localDate: "2026-06-01", weekStartsOn: 1 }).kind
+    ).toBe("monthly");
+  });
 });

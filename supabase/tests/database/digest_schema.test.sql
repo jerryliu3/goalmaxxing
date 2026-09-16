@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, private, extensions, pg_catalog;
-select plan(8);
+select plan(9);
 
 insert into auth.users (id, email)
 values
@@ -122,6 +122,25 @@ select throws_ok(
   'owners cannot insert a digest for another user'
 );
 
+insert into public.user_digests (owner_id, kind, period_key, facts)
+values (
+  'a1111111-1111-4111-8111-111111111111',
+  'monthly',
+  '2026-09-01',
+  '{"placed":4}'::jsonb
+);
+
+select is(
+  (
+    select count(*)::int
+    from public.user_digests
+    where owner_id = 'a1111111-1111-4111-8111-111111111111'
+      and kind = 'monthly'
+  ),
+  1,
+  'monthly check-ins are a valid digest kind'
+);
+
 reset role;
 
 select throws_ok(
@@ -129,13 +148,13 @@ select throws_ok(
     insert into public.user_digests (owner_id, kind, period_key)
     values (
       'a1111111-1111-4111-8111-111111111111',
-      'monthly',
-      '2026-09-01'
+      'quarterly',
+      '2026-10-01'
     )
   $$,
   '23514'::character(5),
   'new row for relation "user_digests" violates check constraint "user_digests_kind_check"',
-  'digest kind is daily or weekly'
+  'digest kind is daily, weekly, or monthly'
 );
 
 select * from finish();
