@@ -398,7 +398,7 @@ export function CalendarDayPreviewList<
                   </div>
                 )}
               </PlannerDraggablePreviewEntry>
-              {expanded ? (
+              {expanded || isSelectedRow ? (
                 <div data-plan-checklist-editor-slot={entry.key} />
               ) : null}
               </Fragment>

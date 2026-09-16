@@ -6,9 +6,17 @@ import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import Link from "next/link";
-import { getEntryDraftDiffSummary, getEntrySubtitle } from "@/features/planner/calendar-format";
+import { getEntryDraftDiffSummary, isEntryCredited } from "@/features/planner/calendar-format";
 import { LinkedTargetsNote } from "@/features/planner/linked-targets-note";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
+import { QuestFact, WorkQuestCard } from "@/features/planner/work-quest-card";
+import {
+  formatQuestSittingDate,
+  formatQuestSittingTime,
+  projectPlannerEntryWorkQuest,
+} from "@/features/planner/work-quest-model";
+import type { ChecklistGoalPresentation } from "@/lib/goals/checklist-presentation";
+import type { Goal } from "@/lib/goals/types";
 
 export interface PlannerEventDetailDialogCallbacks {
   onOpenChange: (open: boolean) => void;
@@ -32,12 +40,13 @@ interface PlannerEventDetailDialogProps {
     targetSuppressionKind: "none" | "until" | "indefinite";
     targetResumesOn: string | null;
   }>;
+  selectedEventGoal: Goal | null;
+  selectedEventPresentation: ChecklistGoalPresentation | null;
   goalTitles: Record<string, string>;
   scopeMonth: string;
   selectedEventBaselineUnit:
     | {
         effectiveScheduledLocalTime?: string | null;
-        scheduledTimeOverride?: string | null;
       }
     | null;
   selectedEventDraftScheduledDate: string | null;
@@ -48,13 +57,14 @@ interface PlannerEventDetailDialogProps {
   canNavigateToPreviousOpenInstance: boolean;
   canNavigateToNextOpenInstance: boolean;
   canNavigateToLastOpenInstance: boolean;
-  getEntryGoalFirstTitleWithTime: (entry: PlannerDayDetailEntry) => string;
   callbacks: PlannerEventDetailDialogCallbacks;
 }
 
 export function PlannerEventDetailDialog({
   selectedEventEntry,
   selectedEventLinkedTargets,
+  selectedEventGoal,
+  selectedEventPresentation,
   goalTitles,
   scopeMonth,
   selectedEventBaselineUnit,
@@ -66,14 +76,27 @@ export function PlannerEventDetailDialog({
   canNavigateToPreviousOpenInstance,
   canNavigateToNextOpenInstance,
   canNavigateToLastOpenInstance,
-  getEntryGoalFirstTitleWithTime,
   callbacks,
 }: PlannerEventDetailDialogProps) {
   const [host, setHost] = useState<HTMLElement | null>(null);
+  const [factEditor, setFactEditor] = useState<{
+    entryKey: string;
+    fact: "date" | "time";
+  } | null>(null);
   const selectedEntryKey = selectedEventEntry?.key ?? null;
-  // Keyed on the entry itself, not its key: editing the date moves the slot to another
-  // day's list while the key stays the same, and the stale node would leave the editor
-  // portalled into a detached element.
+  const editingFact =
+    factEditor?.entryKey === selectedEntryKey ? factEditor.fact : null;
+  const toggleFactEditor = (fact: "date" | "time") => {
+    setFactEditor((current) =>
+      current?.entryKey === selectedEntryKey && current.fact === fact
+        ? null
+        : selectedEntryKey
+          ? { entryKey: selectedEntryKey, fact }
+          : null
+    );
+  };
+  // Re-resolve when the projected entry changes because editing the date can move
+  // the slot to another day's list while the entry key stays the same.
   useLayoutEffect(() => {
     const slot = selectedEntryKey
       ? Array.from(
@@ -88,91 +111,168 @@ export function PlannerEventDetailDialog({
     setHost((current) => (current === slot ? current : slot));
   }, [selectedEntryKey, selectedEventEntry]);
   if (!selectedEventEntry) return null;
-  const content = (
 
+  const dateLabel =
+    formatQuestSittingDate(selectedEventDraftScheduledDate) ?? "an unset date";
+  const effectiveTimeInputValue =
+    selectedEventDraftTimeInputValue ||
+    selectedEventEntry.effectiveScheduledLocalTime ||
+    selectedEventBaselineUnit?.effectiveScheduledLocalTime ||
+    "";
+  const timeLabel = formatQuestSittingTime(effectiveTimeInputValue) ?? "any time";
+  const activeItem = selectedEventEntry.activeItem;
+  const mutationPending = Boolean(mutationLoadingKey);
+  const lockPending = activeItem
+    ? mutationLoadingKey === `lock:${activeItem.id}`
+    : false;
+  const draftDiffSummary = getEntryDraftDiffSummary(selectedEventEntry);
+
+  const leadingNav = (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        aria-label="Go to first open instance"
+        onClick={callbacks.onNavigateToFirstOpenInstance}
+        disabled={!canNavigateToFirstOpenInstance}
+      >
+        <ChevronsLeft />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        aria-label="Go to previous open instance"
+        onClick={callbacks.onNavigateToPreviousOpenInstance}
+        disabled={!canNavigateToPreviousOpenInstance}
+      >
+        <ChevronLeft />
+      </Button>
+    </>
+  );
+  const trailingNav = (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        aria-label="Go to next open instance"
+        onClick={callbacks.onNavigateToNextOpenInstance}
+        disabled={!canNavigateToNextOpenInstance}
+      >
+        <ChevronRight />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        aria-label="Go to last open instance"
+        onClick={callbacks.onNavigateToLastOpenInstance}
+        disabled={!canNavigateToLastOpenInstance}
+      >
+        <ChevronsRight />
+      </Button>
+    </>
+  );
+
+  const editor = (
     <section
       aria-label="Edit planned session"
       data-plan-entry-editor="true"
-      className="plan-row-unfold my-2 min-w-0 rounded-lg border border-primary/20 bg-muted/30 p-3"
-      onKeyDown={(event) => { if (event.key === "Escape") callbacks.onOpenChange(false); }}
+      className="plan-row-unfold my-2 min-w-0"
+      onKeyDown={(event) => {
+        if (event.key !== "Escape") {
+          return;
+        }
+        if (editingFact) {
+          event.stopPropagation();
+          setFactEditor(null);
+          return;
+        }
+        callbacks.onOpenChange(false);
+      }}
     >
-        <div className="mb-3">
-          <div className="flex items-center justify-center gap-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              aria-label="Go to first open instance"
-              onClick={callbacks.onNavigateToFirstOpenInstance}
-              disabled={!canNavigateToFirstOpenInstance}
-            >
-              <ChevronsLeft />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              aria-label="Go to previous open instance"
-              onClick={callbacks.onNavigateToPreviousOpenInstance}
-              disabled={!canNavigateToPreviousOpenInstance}
-            >
-              <ChevronLeft />
-            </Button>
-            <h3 className="mx-1 min-w-0 text-center font-medium">
-              {selectedEventEntry
-                ? getEntryGoalFirstTitleWithTime(selectedEventEntry)
-                : "Event detail"}
-            </h3>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              aria-label="Go to next open instance"
-              onClick={callbacks.onNavigateToNextOpenInstance}
-              disabled={!canNavigateToNextOpenInstance}
-            >
-              <ChevronRight />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              aria-label="Go to last open instance"
-              onClick={callbacks.onNavigateToLastOpenInstance}
-              disabled={!canNavigateToLastOpenInstance}
-            >
-              <ChevronsRight />
-            </Button>
-          </div>
-        </div>
-        {selectedEventEntry ? (
-          <div className="min-w-0 space-y-3 text-sm">
-            {selectedEventEntry.hasLinkedTargets ? (
-              <LinkedTargetsNote
-                linkedTargets={selectedEventLinkedTargets}
-                goalTitles={goalTitles}
-                scopeMonth={scopeMonth}
-              />
-            ) : null}
-            {getEntryDraftDiffSummary(selectedEventEntry) ? (
-              <p className="text-xs text-muted-foreground">
-                {getEntryDraftDiffSummary(selectedEventEntry)}
+      <WorkQuestCard
+        quest={projectPlannerEntryWorkQuest({
+          entry: selectedEventEntry,
+          goal: selectedEventGoal,
+          presentation: selectedEventPresentation,
+          completed: isEntryCredited(selectedEventEntry),
+        })}
+        leadingNav={leadingNav}
+        trailingNav={trailingNav}
+      >
+        <div className="min-w-0 space-y-2 text-sm">
+          {selectedEventEntry.hasLinkedTargets ? (
+            <LinkedTargetsNote
+              linkedTargets={selectedEventLinkedTargets}
+              goalTitles={goalTitles}
+              scopeMonth={scopeMonth}
+            />
+          ) : null}
+          {draftDiffSummary ? (
+            <p className="text-sm text-muted-foreground">{draftDiffSummary}</p>
+          ) : null}
+          {selectedEventEntry.draftGhost ? (
+            <p className="text-sm text-muted-foreground">
+              This marker shows where the session was originally scheduled before your
+              preview move. Edit the moved session on its new date to change or undo the
+              move.
+            </p>
+          ) : (
+            <>
+              <p className="leading-relaxed">
+                Session scheduled for{" "}
+                {canMutatePlanItems ? (
+                  <QuestFact
+                    active={editingFact === "date"}
+                    onSelect={() => toggleFactEditor("date")}
+                  >
+                    {dateLabel}
+                  </QuestFact>
+                ) : (
+                  dateLabel
+                )}{" "}
+                at{" "}
+                {canMutatePlanItems ? (
+                  <QuestFact
+                    active={editingFact === "time"}
+                    onSelect={() => toggleFactEditor("time")}
+                  >
+                    {timeLabel}
+                  </QuestFact>
+                ) : (
+                  timeLabel
+                )}
+                {activeItem ? (
+                  <>
+                    , and is{" "}
+                    <QuestFact
+                      pressed={activeItem.locked}
+                      disabled={mutationPending || !canMutatePlanItems}
+                      onSelect={() => {
+                        callbacks.onToggleItemLock(selectedEventEntry);
+                      }}
+                    >
+                      {lockPending
+                        ? "saving…"
+                        : activeItem.locked
+                          ? "locked to today"
+                          : "not locked to today"}
+                    </QuestFact>
+                  </>
+                ) : null}
+                .{" "}
+                <Link
+                  href={`/goals/${selectedEventEntry.originalGoalId}`}
+                  className="font-medium underline underline-offset-4"
+                >
+                  Edit goal
+                </Link>
               </p>
-            ) : null}
-            {getEntrySubtitle(selectedEventEntry) ? (
-              <p className="text-xs text-muted-foreground">
-                {getEntrySubtitle(selectedEventEntry)}
-              </p>
-            ) : null}
-            {selectedEventEntry.draftGhost ? (
-              <div className="rounded-md border border-dashed p-2 text-xs text-muted-foreground">
-                This marker shows where the session was originally scheduled before your
-                preview move. Edit the moved session on its new date to change or undo the
-                move.
-              </div>
-            ) : (
-              <div className="space-y-2 rounded-md border border-dashed p-2">
-                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              {canMutatePlanItems && editingFact === "date" ? (
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
                   Date
                   <Input
                     type="date"
@@ -183,61 +283,33 @@ export function PlannerEventDetailDialog({
                         event.target.value
                       )
                     }
-                    className="h-8 text-xs"
+                    className="h-9 text-sm"
                   />
                 </label>
-                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              ) : null}
+              {canMutatePlanItems && editingFact === "time" ? (
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
                   Time
                   <Input
                     type="time"
                     step={60}
-                    value={selectedEventDraftTimeInputValue}
+                    value={effectiveTimeInputValue}
                     onChange={(event) =>
                       callbacks.onUpdateDraftScheduledTimeOverride(
                         selectedEventEntry,
                         event.target.value
                       )
                     }
-                    className="h-8 text-xs"
+                    className="h-9 text-sm"
                   />
                 </label>
-                <p className="text-[11px] text-muted-foreground">
-                  Drag month-cell session pills to move quickly, or use this date/time editor
-                  as a keyboard-friendly fallback.
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  Effective local time:{" "}
-                  {selectedEventEntry.effectiveScheduledLocalTime ??
-                    selectedEventBaselineUnit?.effectiveScheduledLocalTime ??
-                    "date only"}
-                </p>
-                {selectedEventEntry.activeItem ? (
-                  <div className="flex flex-wrap gap-2">
-                    <Button type="button" size="sm" variant="outline" asChild>
-                      <Link href={`/goals/${selectedEventEntry.originalGoalId}`}>
-                        Edit goal
-                      </Link>
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => callbacks.onToggleItemLock(selectedEventEntry)}
-                      disabled={Boolean(mutationLoadingKey) || !canMutatePlanItems}
-                    >
-                      {mutationLoadingKey === `lock:${selectedEventEntry.activeItem.id}`
-                        ? "Saving..."
-                        : selectedEventEntry.activeItem.locked
-                          ? "Unlock"
-                          : "Lock"}
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
-            )}
-          </div>
-        ) : null}
+              ) : null}
+            </>
+          )}
+        </div>
+      </WorkQuestCard>
     </section>
   );
-  return host ? createPortal(content, host) : content;
+
+  return host ? createPortal(editor, host) : editor;
 }

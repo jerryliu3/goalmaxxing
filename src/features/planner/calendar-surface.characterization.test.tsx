@@ -1984,6 +1984,7 @@ describe("CalendarSurface characterization", () => {
     });
 
     fireEvent.click(await screen.findByText("Next: Baseline"));
+    fireEvent.click(await screen.findByRole("button", { name: "Mon, Aug 31" }));
     fireEvent.change(await screen.findByLabelText("Date"), {
       target: { value: "2026-08-30" },
     });
@@ -2098,7 +2099,7 @@ describe("CalendarSurface characterization", () => {
       "/goals/goal-a"
     );
     expect(screen.queryByText("Mark done")).not.toBeInTheDocument();
-    fireEvent.click(await screen.findByRole("button", { name: "Lock" }));
+    fireEvent.click(await screen.findByRole("button", { name: "not locked to today" }));
 
     await waitFor(() => {
       expect(postJsonMock).toHaveBeenCalledWith(
@@ -2172,13 +2173,13 @@ describe("CalendarSurface characterization", () => {
     });
 
     fireEvent.click(await screen.findByText("Next: Middle"));
-    expect(await screen.findByLabelText("Date")).toHaveValue("2026-08-31");
+    expect(await screen.findByRole("button", { name: "Mon, Aug 31" })).toBeInTheDocument();
     expect(onSelectedDayChange).not.toHaveBeenCalled();
     expect(onMonthChange).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: "Go to next open instance" }));
     await waitFor(() => {
-      expect(screen.getByLabelText("Date")).toHaveValue("2026-09-02");
+      expect(screen.getByRole("button", { name: "Wed, Sep 2" })).toBeInTheDocument();
     });
     expect(onSelectedDayChange).toHaveBeenLastCalledWith(
       "2026-09-02",
@@ -2195,7 +2196,7 @@ describe("CalendarSurface characterization", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Go to first open instance" }));
     await waitFor(() => {
-      expect(screen.getByLabelText("Date")).toHaveValue("2026-08-29");
+      expect(screen.getByRole("button", { name: "Sat, Aug 29" })).toBeInTheDocument();
     });
     expect(onSelectedDayChange).toHaveBeenLastCalledWith(
       "2026-08-29",
@@ -2346,7 +2347,6 @@ describe("CalendarSurface characterization", () => {
     expect(
       screen.queryByRole("button", { name: "Mark session done" })
     ).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Lock" })).not.toBeInTheDocument();
   });
 
   it("keeps cross-month day scope read-only for planner day actions", async () => {
@@ -2384,10 +2384,6 @@ describe("CalendarSurface characterization", () => {
     expect(
       screen.queryByRole("button", { name: "Mark session done" })
     ).not.toBeInTheDocument();
-    const lockButton = screen.queryByRole("button", { name: "Lock" });
-    if (lockButton) {
-      expect(lockButton).toBeDisabled();
-    }
   });
 
   it("aligns the current week using scroll-container coordinates", async () => {
