@@ -136,6 +136,9 @@ import { POST as calendarFeedRotatePost } from "@/app/api/integrations/calendar/
 import { GET as xpAchievementsGet } from "@/app/api/xp/achievements/route";
 import { GET as healthStatusGet } from "@/app/api/health/status/route";
 import { GET as insightsStatsGet } from "@/app/api/insights/stats/route";
+import { GET as digestGet } from "@/app/api/digest/route";
+import { POST as digestGeneratePost } from "@/app/api/digest/generate/route";
+import { POST as digestAckPost } from "@/app/api/digest/ack/route";
 import { POST as healthSamplesPost } from "@/app/api/health/samples/route";
 import { POST as supportIssuesPost } from "@/app/api/support/issues/route";
 import {
@@ -292,6 +295,9 @@ const auditedRouteCases: AuditedRouteCase[] = [
   routeCase("GET /api/xp/profile", xpProfileGet),
   routeCase("GET /api/xp/achievements", xpAchievementsGet),
   routeCase("GET /api/insights/stats", insightsStatsGet),
+  routeCase("GET /api/digest", digestGet),
+  routeCase("POST /api/digest/generate", digestGeneratePost),
+  routeCase("POST /api/digest/ack", digestAckPost),
   routeCase("POST /api/support/issues", supportIssuesPost),
   routeCase("POST /api/integrations/calendar/feed/rotate", calendarFeedRotatePost),
   routeCase("GET /api/health/status", healthStatusGet),
