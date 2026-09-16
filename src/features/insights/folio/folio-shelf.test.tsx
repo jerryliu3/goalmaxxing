@@ -14,13 +14,17 @@ vi.mock("motion/react", async importOriginal => ({
 
 afterEach(() => { cleanup(); motionPreference.reduced = false; vi.restoreAllMocks(); });
 
-function finishOpening(reader: HTMLElement) {
+function finishFlight(reader: HTMLElement) {
   const flight = reader.querySelector("[data-folio-flight]");
   expect(flight).not.toBeNull();
   // React selects the WebKit event in jsdom, which lacks AnimationEvent.
   fireEvent(flight!, new Event("webkitAnimationEnd", { bubbles: true }));
 }
 
+async function dismissReader(user: ReturnType<typeof userEvent.setup>) {
+  await user.keyboard("{Escape}");
+  finishFlight(screen.getByRole("dialog"));
+}
 
 describe("folio reader", () => {
   it("opens the shared Tempo card, navigates goals, bounds arrows, and restores focus", async () => {
@@ -31,7 +35,7 @@ describe("folio reader", () => {
     const book = screen.getByRole("button", { name: "Open 2026, 2 goals" });
     await user.click(book);
     const reader = screen.getByRole("dialog");
-    finishOpening(reader);
+    finishFlight(reader);
     expect(within(reader).getByRole("article", { name: "Learn piano goal card" })).toHaveClass("tempo-card");
     expect(within(reader).getByRole("button", { name: "Previous goal" })).toBeDisabled();
     await user.click(within(reader).getByRole("button", { name: "Next goal" }));
@@ -41,7 +45,7 @@ describe("folio reader", () => {
     within(reader).getByRole("button", { name: "Previous goal" }).focus();
     await user.keyboard("{ArrowLeft}");
     expect(within(reader).getByRole("button", { name: "Previous goal" })).toBeDisabled();
-    await user.keyboard("{Escape}");
+    await dismissReader(user);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(book).toHaveFocus();
   });
@@ -53,7 +57,7 @@ describe("folio reader", () => {
     render(<FolioShelf folios={folios} />);
     await user.click(screen.getByRole("button", { name: "Open 2026, 2 goals" }));
     const reader = screen.getByRole("dialog");
-    finishOpening(reader);
+    finishFlight(reader);
     expect(within(reader).getByText("A goal you accomplished")).toBeInTheDocument();
     await user.click(within(reader).getByRole("button", { name: "Next goal" }));
     expect(within(reader).getByText("A goal you showed up for")).toBeInTheDocument();
@@ -75,6 +79,16 @@ describe("folio reader", () => {
     expect(flight.style.getPropertyValue("--flight-x")).toBe(`${220 - window.innerWidth / 2}px`);
     expect(flight.style.getPropertyValue("--flight-y")).toBe(`${360 - window.innerHeight / 2}px`);
     expect(dialog.style.getPropertyValue("--folio-cloth")).toBe(book.style.getPropertyValue("--folio-cloth"));
+    expect(Number(dialog.style.getPropertyValue("--reveal-sx"))).toBeGreaterThan(0);
+    expect(Number(dialog.style.getPropertyValue("--reveal-sy"))).toBeGreaterThan(0);
+    const pages = dialog.querySelector("[data-folio-flight-layer='pages']");
+    const coverLayer = dialog.querySelector("[data-folio-flight-layer='cover']");
+    const surface = dialog.querySelector("[data-folio-reader]");
+    expect(pages).not.toBeNull();
+    expect(coverLayer).not.toBeNull();
+    expect(surface).not.toBeNull();
+    expect(pages!.compareDocumentPosition(surface!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(surface!.compareDocumentPosition(coverLayer!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(dialog.querySelector("[inert]")).not.toBeNull();
     expect(dialog).toHaveFocus();
     await user.keyboard("{Escape}");
@@ -83,9 +97,29 @@ describe("folio reader", () => {
     expect(book).toHaveAttribute("data-open", "false");
     await user.click(book);
     const reopened = screen.getByRole("dialog");
-    finishOpening(reopened);
+    finishFlight(reopened);
     expect(reopened.querySelector("[inert]")).toBeNull();
     expect(reopened.querySelector("[data-folio-flight]")).toBeNull();
+  });
+
+  it("folds the reader back into the book and returns it to the shelf", async () => {
+    const user = userEvent.setup();
+    const goals = [buildGoal({ id: "one", end_date: "2026-07-01" })];
+    const folios = buildGoalFolios(goals, [summary("one")], "user-1");
+    render(<FolioShelf folios={folios} />);
+    const book = screen.getByRole("button", { name: "Open 2026, 1 goal" });
+    await user.click(book);
+    finishFlight(screen.getByRole("dialog"));
+    await user.keyboard("{Escape}");
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveAttribute("data-leaving", "true");
+    expect(dialog.querySelector("[data-folio-flight]")).not.toBeNull();
+    expect(dialog.querySelector("[inert]")).not.toBeNull();
+    expect(book).toHaveAttribute("data-open", "true");
+    finishFlight(dialog);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(book).toHaveFocus();
+    expect(book).toHaveAttribute("data-open", "false");
   });
 
   it("focuses the reader after arrival and opens directly with reduced motion", async () => {
@@ -95,9 +129,9 @@ describe("folio reader", () => {
     const { rerender } = render(<FolioShelf folios={folios} />);
     const book = screen.getByRole("button", { name: "Open 2026, 2 goals" });
     await user.click(book);
-    finishOpening(screen.getByRole("dialog"));
+    finishFlight(screen.getByRole("dialog"));
     await waitFor(() => expect(screen.getByRole("button", { name: "Next goal" })).toHaveFocus());
-    await user.keyboard("{Escape}");
+    await dismissReader(user);
     motionPreference.reduced = true;
     rerender(<FolioShelf folios={folios} />);
     await user.click(book);
@@ -105,6 +139,8 @@ describe("folio reader", () => {
     expect(reader.querySelector("[data-folio-flight]")).toBeNull();
     expect(reader.querySelector("[inert]")).toBeNull();
     expect(within(reader).getByRole("button", { name: "Next goal" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
 });
