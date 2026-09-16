@@ -1,7 +1,7 @@
-# Goal card materials — nine directions
+# Goal card materials — twelve directions
 
 Study route: `/ux/brand/card-materials` (existing UX labs access applies).
-All nine render the real `TempoGoalCard`. Category color, information hierarchy,
+All twelve render the real `TempoGoalCard`. Category color, information hierarchy,
 schedule, effort, and creation/history copy come from the same component used
 in the product. Study styles are scoped to the gallery; no production material
 has been selected yet.
@@ -20,6 +20,10 @@ has been selected yet.
 | Ruby Cabochon | Glossy ruby, rose-gold setting, moving soft reflection | Warm gemstone keepsake | Smooth cabochon lighting with a calm dark-red center. Shares the perspective body and synchronized reflection path. |
 | Sapphire Prism | Blue crystal, platinum rim, angular corner facets | Cooler jewel-like collection | Faceted highlights stay near the border. Narrow cyan-white reflection and silver numerals move with the pose. |
 | Platinum Mirror | Light satin silver, polished rim, graphite-metal numerals | Bright metallic alternative to Pearl | Brushed center and reflective perimeter keep the material metallic without washing out the text. |
+
+| Prismatic Pearl | Warm-white pearl with category-tinted moving color | Light everyday premium card | Category color controls wash, rim, and numeral finish; no beam. |
+| Chromatic Foil | Graphite face and category-tinted foil | Dark premium collectible | Category color controls beam, metal, frame, and edge; pale text stays readable. |
+| Anodized Alloy | Brushed metal infused with category color | More visibly colored everyday card | Category color controls metal body and rim; broad reflection and dark numerals soften the finish. |
 
 ## Comparison controls
 
@@ -110,3 +114,12 @@ rear face replaces mirrored text at the back. Hover tilt remains the default
 until a drag or keyboard inspection. Touch dragging is confined to the card;
 the surrounding page remains scrollable. Still/reduced motion cancels capture.
 Study-card text is unselectable but stays available to assistive technology.
+
+## Category-responsive additions
+
+Prismatic Pearl, Chromatic Foil, and Anodized Alloy use `fields.color` as their
+only chromatic input. Their mixing colors are neutral; no fixed gemstone hue
+competes with the category. They share the same goal component, moving optics,
+full-rotation controls, and finished back face. Switch the sample goal between
+green, violet, and rose to compare the finish. The original material concepts
+remain available for comparison; these additions do not recolor them.

@@ -59,4 +59,21 @@ describe("card material comparison", () => {
     }
   });
 
+
+  it("updates the goal color and shared card for all category-responsive finishes", async () => {
+    const user = userEvent.setup();
+    render(<CardMaterialsStudy />);
+    for (const sample of ["0", "1", "2"]) {
+      await user.selectOptions(screen.getByRole("combobox", { name: "Sample goal" }), sample);
+      const expected = ["#10b981", "#8b5cf6", "#f43f5e"][Number(sample)];
+      for (const name of ["Prismatic Pearl", "Chromatic Foil", "Anodized Alloy"]) {
+        const region = screen.getByRole("region", { name });
+        const card = within(region).getByRole("article", { name: "Goal card preview" });
+        expect(card.style.getPropertyValue("--goal-color")).toBe(expected);
+        expect(card.closest<HTMLElement>("[data-material]")!.style.getPropertyValue("--material-color")).toBe(expected);
+        expect(within(region).getByRole("button", { name: `Reset ${name}` })).toBeEnabled();
+      }
+    }
+  });
+
 });

@@ -9,6 +9,7 @@ import { CardSolidBody } from "./card-solid-body";
 import { cardOptics, FLAT_POSE, REST_POSE } from "./card-optics";
 import { useCardRotation } from "./use-card-rotation";
 import styles from "./card-materials.module.css";
+import categoryStyles from "./category-materials.module.css";
 
 export function MaterialPreview({ material, fields, still, history }: {
   material: CardMaterial; fields: GoalCreationFields; still: boolean; history: boolean;
@@ -23,12 +24,12 @@ export function MaterialPreview({ material, fields, still, history }: {
         <h2 id={`${material.id}-title`}>{material.name}</h2>
         <p>{material.premise}</p>
       </header>
-      <div ref={rotation.stage} className={styles.stage} data-material={material.id} data-form={material.form} data-still={still} data-inspecting={rotation.inspecting}
+      <div ref={rotation.stage} className={`${styles.stage} ${categoryStyles.stage}`} data-material={material.id} data-form={material.form} data-still={still} data-inspecting={rotation.inspecting}
         style={{ ...cardOptics(still || !spatial ? FLAT_POSE : REST_POSE), "--material-color": fields.color } as CSSProperties}
         {...rotation.stageHandlers}
       >
         <div className={styles.atmosphere} aria-hidden="true" />
-        <div className={styles.object}
+        <div className={styles.object} data-card-object=""
           role={solid ? "group" : undefined}
           aria-label={solid ? `${material.name} card rotation` : undefined}
           aria-describedby={solid ? `${material.id}-rotation-hint` : undefined}

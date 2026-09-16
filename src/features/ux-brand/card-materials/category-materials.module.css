@@ -1,0 +1,68 @@
+/* The goal color is the only chromatic input; all mixing partners are neutral. */
+.stage[data-material="prismatic"] { background: radial-gradient(ellipse at 25% 30%,color-mix(in srgb,var(--material-color) 8%,transparent),transparent 70%); }
+.stage[data-material="prismatic"][data-form="solid"] [data-card-object] {
+  --card-radius: 15px;
+  --edge: color-mix(in srgb,var(--material-color) 28%,#bfc6c7);
+  --bevel: inset 0 0 0 2px #fffc,inset 0 0 0 4px color-mix(in srgb,var(--material-color) 15%,#e7e5de),inset 0 0 0 5px #fff9;
+}
+.stage[data-material="prismatic"] :global(.tempo-card) {
+  color: #303638; border: 1px solid color-mix(in srgb,var(--material-color) 20%,#d2d7d3);
+  background: radial-gradient(ellipse at var(--light-x) var(--light-y),#fff9,transparent 65%),linear-gradient(120deg,#fbfaf2 12%,color-mix(in srgb,var(--material-color) 18%,#f5f7f4) 35%,#fffaf1 55%,color-mix(in srgb,var(--material-color) 11%,#eef1f3) 78%,#fffaf1);
+  background-size: 100% 100%,175% 175%; background-position: 0 0,var(--pearl-x) var(--pearl-y);
+}
+.stage[data-material="prismatic"] :global(.tempo-card)::before { content: ""; position: absolute; inset: 12px; border: 1px solid color-mix(in srgb,var(--material-color) 14%,transparent); border-radius: 5px; pointer-events: none; }
+.stage[data-material="prismatic"][data-form="solid"] :global(.tempo-card-target strong) {
+  text-shadow: none; color: color-mix(in srgb,var(--material-color) 30%,#344247);
+  background-image: linear-gradient(125deg,#344247,color-mix(in srgb,var(--material-color) 45%,#667577) 35%,#35454a 60%,color-mix(in srgb,var(--material-color) 32%,#758084));
+  background-size: 200% 200%; background-position: var(--metal-x) var(--metal-y); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 #fff) drop-shadow(2px 5px 2px #34424722);
+}
+.stage[data-material="prismatic"] :global(.tempo-effort-bars i[data-active="true"]) { background: color-mix(in srgb,var(--material-color) 50%,#344247); }
+
+.stage[data-material="chromatic"] { background: radial-gradient(ellipse at 70% 25%,color-mix(in srgb,var(--material-color) 10%,transparent),transparent 70%); }
+.stage[data-material="chromatic"][data-form="solid"] [data-card-object] {
+  --card-radius: 10px;
+  --edge: color-mix(in srgb,var(--material-color) 40%,#8e9aa2);
+  --bevel: inset 0 0 0 4px #242c31,inset 0 0 0 5px color-mix(in srgb,var(--material-color) 40%,#c4cbd0);
+  --shine-tint: color-mix(in srgb,var(--material-color) 35%,#fff);
+}
+.stage[data-material="chromatic"] :global(.tempo-card) {
+  color: #edf2f4; border: 1px solid color-mix(in srgb,var(--material-color) 35%,#b8c0c5);
+  background: radial-gradient(ellipse at var(--light-x) var(--light-y),color-mix(in srgb,var(--material-color) 14%,transparent),transparent 65%),linear-gradient(145deg,#ffffff0c,transparent 40%),color-mix(in srgb,var(--material-color) 9%,#192127);
+}
+.stage[data-material="chromatic"] :global(.tempo-card)::before { content: ""; position: absolute; inset: 11px; border: 1px solid color-mix(in srgb,var(--material-color) 22%,transparent); border-radius: 3px; pointer-events: none; }
+.stage[data-material="chromatic"][data-form="solid"] :global(.tempo-card-target strong) {
+  text-shadow: none; color: #dce8e9;
+  background-image: linear-gradient(125deg,#f5f8f9 10%,color-mix(in srgb,var(--material-color) 40%,#c2cdd1) 30%,#fff 44%,color-mix(in srgb,var(--material-color) 22%,#a7b9c0) 65%,#e8f1f3);
+  background-size: 200% 200%; background-position: var(--metal-x) var(--metal-y); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(2px 5px 2px #0005);
+}
+.stage[data-material="chromatic"][data-form="solid"] :global(.tempo-card-target > span) { text-shadow: 2px 4px 2px #0006; }
+.stage[data-material="chromatic"] :global(.tempo-effort-bars i) { background: #edf2f426; }
+.stage[data-material="chromatic"] :global(.tempo-effort-bars i[data-active="true"]) { background: color-mix(in srgb,var(--material-color) 35%,#dce8e9); }
+
+.stage[data-material="alloy"] { background: radial-gradient(ellipse at 30% 15%,color-mix(in srgb,var(--material-color) 10%,transparent),transparent 70%); }
+.stage[data-material="alloy"][data-form="solid"] [data-card-object] {
+  --card-radius: 17px;
+  --edge: color-mix(in srgb,var(--material-color) 40%,#87959e);
+  --bevel: inset 0 1px 2px #ffffffe0,inset 0 0 0 3px color-mix(in srgb,var(--material-color) 27%,#b4c1c8),inset 0 0 0 4px #ffffff80;
+  --shine-tint: color-mix(in srgb,var(--material-color) 12%,#fff);
+}
+.stage[data-material="alloy"] :global(.tempo-card) {
+  color: #27333d; border: 1px solid color-mix(in srgb,var(--material-color) 25%,#d9e1e4);
+  background: radial-gradient(ellipse at var(--light-x) var(--light-y),#fff8,transparent 60%),repeating-linear-gradient(0deg,#263c5409 0px,#263c5409 .5px,transparent .5px,transparent 2px),linear-gradient(135deg,color-mix(in srgb,var(--material-color) 30%,#dee5e8),color-mix(in srgb,var(--material-color) 14%,#f4f6f6) 42%,color-mix(in srgb,var(--material-color) 34%,#c9d4dc));
+}
+.stage[data-material="alloy"] :global(.tempo-card)::before { content: ""; position: absolute; inset: 11px; border: 1px solid #33455323; border-radius: 7px; pointer-events: none; }
+.stage[data-material="alloy"][data-form="solid"] :global(.tempo-card-target strong) { color: color-mix(in srgb,var(--material-color) 25%,#293946); text-shadow: 0 1px 0 #fff8,3px 6px 2px #21334229; }
+.stage[data-material="alloy"] :global(.tempo-effort-bars i[data-active="true"]) { background: color-mix(in srgb,var(--material-color) 38%,#293946); }
+
+.stage:is([data-material="chromatic"],[data-material="alloy"]) :global(.tempo-card)::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: var(--shine-strength);
+  background: linear-gradient(var(--shine-angle),transparent calc(var(--shine-position) - 16%),color-mix(in srgb,var(--shine-tint) 16%,transparent) calc(var(--shine-position) - 5%),color-mix(in srgb,var(--shine-tint) 60%,transparent) var(--shine-position),color-mix(in srgb,var(--shine-tint) 16%,transparent) calc(var(--shine-position) + 5%),transparent calc(var(--shine-position) + 16%));
+}
+.stage[data-material="alloy"] :global(.tempo-card)::after { opacity: calc(var(--shine-strength) * .65); }
+
+@media (forced-colors: active) {
+  .stage[data-form="solid"] :global(.tempo-card) { background: Canvas; color: CanvasText; border-color: CanvasText; }
+  .stage[data-form="solid"] :global(.tempo-card-target strong) { background: none; color: CanvasText; -webkit-text-fill-color: CanvasText; filter: none; }
+  .stage[data-form="solid"] :global(.tempo-card)::before, .stage[data-form="solid"] :global(.tempo-card)::after { display: none; }
+}
