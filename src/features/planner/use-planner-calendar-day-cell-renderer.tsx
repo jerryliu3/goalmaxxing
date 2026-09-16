@@ -230,27 +230,38 @@ export function usePlannerCalendarDayCellRenderer({
             if (!canMutateEntryOnDay(entry, day)) {
               return;
             }
+            // Selecting an item takes two clicks: the first focuses its day, the
+            // second selects the item. Dragging is a separate pointer path and
+            // still moves an item straight out of an unfocused day.
             if (viewMode === "week" || viewMode === "three_day") {
               if (day !== focusedDay) {
                 selectDayForView(day, resolveWeekAgendaSelectionViewMode());
+                return;
               }
               togglePlannerGoalSelection(entry, { applyGoalFocus: false });
               return;
             }
             if (viewMode === "month") {
               if (day !== focusedDay) {
+                // Month selection dims the rest of the grid around a focused
+                // goal, so a click that only moves the day has to drop that
+                // focus the same way clicking the day's empty space does.
+                // Otherwise an unrelated goal stays lit through the first click.
+                resetPlannerEntrySelection();
                 selectDayForView(day, "month");
+                return;
               }
               togglePlannerGoalSelection(entry, { applyGoalFocus: true });
               return;
             }
             if (viewMode === "day") {
+              setDayPreview(null);
               if (day !== focusedDay) {
                 setLocalSelectedDay(day);
                 onSelectedDayChange(day, "push", "day");
+                return;
               }
               togglePlannerGoalSelection(entry, { applyGoalFocus: false });
-              setDayPreview(null);
               return;
             }
             clearHoverPreviewTimer();

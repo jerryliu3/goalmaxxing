@@ -473,6 +473,195 @@ describe("CalendarSurface characterization", () => {
     vi.unstubAllGlobals();
   });
 
+  it("takes a second click to select a week agenda item on an unfocused day", async () => {
+    postJsonMock.mockResolvedValue(
+      buildContext([
+        unit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          label: "Goal A",
+          scheduledDate: "2026-08-16",
+        }),
+      ])
+    );
+    const onSelectedDayChange = vi.fn();
+
+    render(
+      <CalendarSurface
+        activeTab="calendar"
+        month="2026-08"
+        selectedDay="2026-08-15"
+        viewMode="week"
+        onMonthChange={vi.fn()}
+        onViewModeChange={vi.fn()}
+        onSelectedDayChange={onSelectedDayChange}
+        onPlannerMutation={vi.fn()}
+      />
+    );
+
+    expect(await screen.findByTestId("week-agenda")).toBeInTheDocument();
+    const entry = await waitFor(() => {
+      const match = document.querySelector(
+        '[data-calendar-week-row="true"][data-day="2026-08-16"] [data-calendar-day-entry="true"]'
+      );
+      if (!(match instanceof HTMLElement)) {
+        throw new Error("Expected a week agenda entry for 2026-08-16.");
+      }
+      return match;
+    });
+
+    fireEvent.click(entry);
+
+    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-16", "push", "week");
+    expect(
+      screen.queryByRole("region", { name: "Edit planned session" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("selects a week agenda item on the already focused day", async () => {
+    postJsonMock.mockResolvedValue(
+      buildContext([
+        unit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          label: "Goal A",
+          scheduledDate: "2026-08-15",
+        }),
+      ])
+    );
+
+    render(
+      <CalendarSurface
+        activeTab="calendar"
+        month="2026-08"
+        selectedDay="2026-08-15"
+        viewMode="week"
+        onMonthChange={vi.fn()}
+        onViewModeChange={vi.fn()}
+        onSelectedDayChange={vi.fn()}
+        onPlannerMutation={vi.fn()}
+      />
+    );
+
+    expect(await screen.findByTestId("week-agenda")).toBeInTheDocument();
+    const entry = await waitFor(() => {
+      const match = document.querySelector(
+        '[data-calendar-week-row="true"][data-day="2026-08-15"] [data-calendar-day-entry="true"]'
+      );
+      if (!(match instanceof HTMLElement)) {
+        throw new Error("Expected a week agenda entry for 2026-08-15.");
+      }
+      return match;
+    });
+
+    fireEvent.click(entry);
+
+    expect(
+      await screen.findByRole("region", { name: "Edit planned session" })
+    ).toBeInTheDocument();
+  });
+
+  it("takes a second click to select a month grid item on an unfocused day", async () => {
+    postJsonMock.mockResolvedValue(
+      buildContext([
+        unit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          label: "Goal A",
+          scheduledDate: "2026-08-31",
+        }),
+      ])
+    );
+    const onSelectedDayChange = vi.fn();
+
+    render(
+      <CalendarSurface
+        activeTab="calendar"
+        month="2026-08"
+        selectedDay="2026-08-15"
+        viewMode="month"
+        onMonthChange={vi.fn()}
+        onViewModeChange={vi.fn()}
+        onSelectedDayChange={onSelectedDayChange}
+        onPlannerMutation={vi.fn()}
+      />
+    );
+
+    const entry = await waitFor(() => {
+      const match = document.querySelector(
+        '[data-day-cell="true"][data-day="2026-08-31"] [data-calendar-day-entry="true"]'
+      );
+      if (!(match instanceof HTMLElement)) {
+        throw new Error("Expected a month grid entry for 2026-08-31.");
+      }
+      return match;
+    });
+
+    fireEvent.click(entry);
+
+    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-31", "push", "month");
+    expect(
+      screen.queryByRole("region", { name: "Edit planned session" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("drops a stale goal focus when a month click only moves the day", async () => {
+    postJsonMock.mockResolvedValue(
+      buildContext([
+        unit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          label: "Goal A",
+          scheduledDate: "2026-08-15",
+        }),
+        unit({
+          originalGoalId: "goal-b",
+          unitKey: "total:1",
+          label: "Goal B",
+          scheduledDate: "2026-08-20",
+        }),
+      ])
+    );
+
+    render(
+      <CalendarSurface
+        activeTab="calendar"
+        month="2026-08"
+        selectedDay="2026-08-15"
+        viewMode="month"
+        onMonthChange={vi.fn()}
+        onViewModeChange={vi.fn()}
+        onSelectedDayChange={vi.fn()}
+        onPlannerMutation={vi.fn()}
+      />
+    );
+
+    const entryOn = (day: string) =>
+      waitFor(() => {
+        const match = document.querySelector(
+          `[data-day-cell="true"][data-day="${day}"] [data-calendar-day-entry="true"]`
+        );
+        if (!(match instanceof HTMLElement)) {
+          throw new Error(`Expected a month grid entry for ${day}.`);
+        }
+        return match;
+      });
+
+    // Selecting Goal A on the focused day dims every other goal in the grid.
+    fireEvent.click(await entryOn("2026-08-15"));
+    await waitFor(async () => {
+      expect((await entryOn("2026-08-20")).className).toContain("opacity-45");
+    });
+
+    // The first click on another day only moves the day, so it must also clear
+    // the focus rather than leaving Goal A lit from the previous selection.
+    fireEvent.click(await entryOn("2026-08-20"));
+    await waitFor(async () => {
+      expect((await entryOn("2026-08-15")).className).not.toContain("opacity-45");
+    });
+    expect((await entryOn("2026-08-20")).className).not.toContain("opacity-45");
+  });
+
   it("keeps the selected day when switching from month to day view", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
