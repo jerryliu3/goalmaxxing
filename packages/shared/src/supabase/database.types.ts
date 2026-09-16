@@ -2093,6 +2093,7 @@ export type Database = {
           planner_primary_tab: string
           rest_weekdays: number[]
           social_activity_visible: boolean
+          digest_auto_show: boolean
           timezone: string
           timezone_confirmed_at: string | null
           username: string
@@ -2103,6 +2104,7 @@ export type Database = {
           blackout_ranges?: Json
           calendar_feed_token_version?: number
           created_at?: string
+          digest_auto_show?: boolean
           display_name?: string | null
           id: string
           notification_preferences?: Json
@@ -2119,6 +2121,7 @@ export type Database = {
           blackout_ranges?: Json
           calendar_feed_token_version?: number
           created_at?: string
+          digest_auto_show?: boolean
           display_name?: string | null
           id?: string
           notification_preferences?: Json
@@ -2375,6 +2378,50 @@ export type Database = {
           {
             foreignKeyName: "user_awards_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_digests: {
+        Row: {
+          acknowledged_at: string | null
+          created_at: string
+          facts: Json
+          id: string
+          kind: string
+          owner_id: string
+          period_key: string
+          suggestions: Json | null
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          created_at?: string
+          facts?: Json
+          id?: string
+          kind: string
+          owner_id: string
+          period_key: string
+          suggestions?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          created_at?: string
+          facts?: Json
+          id?: string
+          kind?: string
+          owner_id?: string
+          period_key?: string
+          suggestions?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_digests_owner_id_fkey"
+            columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
