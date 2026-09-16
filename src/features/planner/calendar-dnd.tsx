@@ -76,8 +76,12 @@ function sortableItemStyle(
 
 const MOUSE_PRESS_TO_DRAG_DELAY_MS = 120;
 const MOUSE_PRESS_TO_DRAG_TOLERANCE_PX = 24;
-const TOUCH_PRESS_TO_DRAG_DELAY_MS = 180;
-const TOUCH_PRESS_TO_DRAG_TOLERANCE_PX = 10;
+// Checklist rows are the drag handle *and* the thing you scroll past, and a
+// vertical reorder is indistinguishable from a vertical pan except by intent.
+// A deliberate hold claims the gesture for dragging; any earlier movement
+// beyond the tolerance releases it back to the browser so the page scrolls.
+const TOUCH_PRESS_TO_DRAG_DELAY_MS = 400;
+const TOUCH_PRESS_TO_DRAG_TOLERANCE_PX = 8;
 
 interface PlannerDndProviderProps {
   children: ReactNode;

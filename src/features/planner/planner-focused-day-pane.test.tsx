@@ -263,7 +263,7 @@ describe("PlannerFocusedDayPane", () => {
     expect(screen.getByText("Thursday, Aug 6")).toBeInTheDocument();
   });
 
-  it("hides checklist overflow scrollbars on both axes", () => {
+  it("keeps the checklist on the page scroll below md and scrolls it in place above", () => {
     renderWithDnd(
       <PlannerFocusedDayPane
         day="2026-08-06"
@@ -282,7 +282,11 @@ describe("PlannerFocusedDayPane", () => {
 
     const pane = screen.getByTestId("plan-day-pane");
     expect(pane).toHaveClass("overflow-x-hidden");
-    expect(pane).toHaveClass("overflow-y-auto");
+    // No vertical scroller of its own on phones, so the gesture reaches the page.
+    expect(pane).not.toHaveClass("overflow-y-auto");
+    expect(pane).not.toHaveClass("max-h-[min(70dvh,calc(100dvh-8rem))]");
+    expect(pane).toHaveClass("md:overflow-y-auto");
+    expect(pane).toHaveClass("md:max-h-[min(70dvh,calc(100dvh-8rem))]");
     expect(pane.className).toContain("[scrollbar-width:none]");
     expect(pane.className).toContain("[&::-webkit-scrollbar]:hidden");
   });

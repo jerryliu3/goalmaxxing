@@ -60,20 +60,6 @@ export function usePlanPinchViewChange({
       return;
     }
 
-    const resetGesture = () => {
-      startDistanceRef.current = null;
-      firedRef.current = false;
-    };
-
-    const onTouchStart = (event: TouchEvent) => {
-      if (event.touches.length !== 2) {
-        resetGesture();
-        return;
-      }
-      startDistanceRef.current = touchDistance(event.touches);
-      firedRef.current = false;
-    };
-
     const onTouchMove = (event: TouchEvent) => {
       if (
         event.touches.length !== 2 ||
@@ -101,6 +87,44 @@ export function usePlanPinchViewChange({
       onViewModeChange(nextMode);
     };
 
+    // A non-passive `touchmove` listener forces the browser to wait on this
+    // handler before it can scroll, which stalls one-finger scrolling through
+    // the board (the day checklist lives inside it). Keep it attached only
+    // while a real two-finger gesture is in flight.
+    let moveListening = false;
+
+    const listenForMove = () => {
+      if (moveListening) {
+        return;
+      }
+      node.addEventListener("touchmove", onTouchMove, { passive: false });
+      moveListening = true;
+    };
+
+    const stopListeningForMove = () => {
+      if (!moveListening) {
+        return;
+      }
+      node.removeEventListener("touchmove", onTouchMove);
+      moveListening = false;
+    };
+
+    const resetGesture = () => {
+      startDistanceRef.current = null;
+      firedRef.current = false;
+      stopListeningForMove();
+    };
+
+    const onTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 2) {
+        resetGesture();
+        return;
+      }
+      startDistanceRef.current = touchDistance(event.touches);
+      firedRef.current = false;
+      listenForMove();
+    };
+
     const onTouchEnd = (event: TouchEvent) => {
       if (event.touches.length < 2) {
         resetGesture();
@@ -108,15 +132,14 @@ export function usePlanPinchViewChange({
     };
 
     node.addEventListener("touchstart", onTouchStart, { passive: true });
-    node.addEventListener("touchmove", onTouchMove, { passive: false });
     node.addEventListener("touchend", onTouchEnd, { passive: true });
     node.addEventListener("touchcancel", onTouchEnd, { passive: true });
 
     return () => {
       node.removeEventListener("touchstart", onTouchStart);
-      node.removeEventListener("touchmove", onTouchMove);
       node.removeEventListener("touchend", onTouchEnd);
       node.removeEventListener("touchcancel", onTouchEnd);
+      stopListeningForMove();
     };
   }, [containerRef, disabled, onViewModeChange, viewMode]);
 }
