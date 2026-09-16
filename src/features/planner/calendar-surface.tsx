@@ -450,7 +450,6 @@ export function CalendarSurface({
   const effectiveSelectedDay = localSelectedDay;
   const {
     selectedEventEntry,
-    selectedEventDraftEdit,
     selectedEventBaselineUnit,
     selectedEventDraftScheduledDate,
     selectedEventDraftTimeInputValue,
@@ -548,7 +547,6 @@ export function CalendarSurface({
   const scopeMonth = context?.scopeMonth ?? null;
   const {
     queueDraftMoveCommand,
-    updateDraftLabel,
     updateDraftScheduledDate,
     updateDraftScheduledTimeOverride,
   } = usePlannerDraftCommands({
@@ -900,7 +898,6 @@ export function CalendarSurface({
     rebuildSchedule,
     resetPlanFully,
     resetPlanForGoals,
-    updateDraftLabel,
     updateDraftScheduledDate,
     updateDraftScheduledTimeOverride,
     toggleItemLock,
@@ -996,7 +993,6 @@ export function CalendarSurface({
     submitMoveDialog,
     selectedEventEntry,
     selectedEventLinkedTargets,
-    selectedEventDraftEdit,
     selectedEventBaselineUnit,
     selectedEventDraftScheduledDate,
     selectedEventDraftTimeInputValue,

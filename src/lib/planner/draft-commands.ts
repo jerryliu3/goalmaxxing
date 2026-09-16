@@ -27,13 +27,6 @@ const moveItemCommandSchema = itemDraftCommandBaseSchema
   })
   .strict();
 
-const renameItemCommandSchema = itemDraftCommandBaseSchema
-  .extend({
-    kind: z.literal("rename_item"),
-    label: z.string().trim().min(1).max(200).nullable(),
-  })
-  .strict();
-
 const setItemTimeOverrideCommandSchema = itemDraftCommandBaseSchema
   .extend({
     kind: z.literal("set_item_time_override"),
@@ -49,7 +42,6 @@ const clearItemTimeOverrideCommandSchema = itemDraftCommandBaseSchema
 
 export const plannerDraftCommandSchema = z.discriminatedUnion("kind", [
   moveItemCommandSchema,
-  renameItemCommandSchema,
   setItemTimeOverrideCommandSchema,
   clearItemTimeOverrideCommandSchema,
 ]);
@@ -58,7 +50,6 @@ export type PlannerDraftCommand = z.infer<typeof plannerDraftCommandSchema>;
 
 export interface PlannerDraftItemProjection {
   scheduledDate?: string | null;
-  label?: string | null;
   scheduledTimeOverride?: string | null;
 }
 
@@ -66,7 +57,6 @@ const commandKindOrder: Record<PlannerDraftCommand["kind"], number> = {
   move_item: 0,
   set_item_time_override: 1,
   clear_item_time_override: 2,
-  rename_item: 3,
 };
 
 function readCommandUnitKey(command: PlannerDraftCommand) {
@@ -82,13 +72,6 @@ function commandPayloadTiebreak(command: PlannerDraftCommand) {
         unitKey: command.unitKey,
         scheduledDate: command.scheduledDate,
         sourceDate: command.sourceDate,
-      });
-    case "rename_item":
-      return canonicalHash({
-        kind: command.kind,
-        goalId: command.goalId,
-        unitKey: command.unitKey,
-        label: command.label,
       });
     case "set_item_time_override":
       return canonicalHash({
@@ -163,8 +146,6 @@ export function projectPlannerDraftCommands(
     const next = projection[key] ?? {};
     if (command.kind === "move_item") {
       next.scheduledDate = command.scheduledDate;
-    } else if (command.kind === "rename_item") {
-      next.label = command.label;
     } else if (command.kind === "set_item_time_override") {
       next.scheduledTimeOverride = command.localTime;
     } else {

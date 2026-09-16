@@ -96,7 +96,6 @@ export function buildPlannerSettingsForm({
 export function usePlannerEventDetailCallbacks({
   resetPlannerEntrySelection,
   setLocalSelectedDay,
-  updateDraftLabel,
   updateDraftScheduledDate,
   updateDraftScheduledTimeOverride,
   toggleItemLock,
@@ -106,7 +105,6 @@ export function usePlannerEventDetailCallbacks({
 }: {
   resetPlannerEntrySelection: (options?: { clearGoalFocus?: boolean }) => void;
   setLocalSelectedDay: (value: string | null) => void;
-  updateDraftLabel: (entry: PlannerDayDetailEntry, label: string) => void;
   updateDraftScheduledDate: (entry: PlannerDayDetailEntry, date: string) => void;
   updateDraftScheduledTimeOverride: (
     entry: PlannerDayDetailEntry,
@@ -125,7 +123,6 @@ export function usePlannerEventDetailCallbacks({
           setLocalSelectedDay(null);
         }
       },
-      onUpdateDraftLabel: updateDraftLabel,
       onUpdateDraftScheduledDate: updateDraftScheduledDate,
       onUpdateDraftScheduledTimeOverride: updateDraftScheduledTimeOverride,
       onToggleItemLock: (entry) => {
@@ -166,7 +163,6 @@ export function usePlannerEventDetailCallbacks({
       resetPlannerEntrySelection,
       setLocalSelectedDay,
       toggleItemLock,
-      updateDraftLabel,
       updateDraftScheduledDate,
       updateDraftScheduledTimeOverride,
     ]

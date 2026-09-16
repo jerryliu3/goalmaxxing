@@ -14,10 +14,10 @@ describe("planner draft commands", () => {
       {
         id: "11000000-0000-4000-8000-000000000001",
         sequence: 3,
-        kind: "rename_item",
+        kind: "set_item_time_override",
         goalId: GOAL_A,
         unitKey: "total:1",
-        label: "Tempo run",
+        localTime: "07:15",
       },
       {
         id: "11000000-0000-4000-8000-000000000002",
@@ -42,7 +42,7 @@ describe("planner draft commands", () => {
     const projection = projectPlannerDraftCommands(commands);
     expect(projection[`${GOAL_A}:total:1`]).toEqual({
       scheduledDate: "2026-08-07",
-      label: "Tempo run",
+      scheduledTimeOverride: "07:15",
     });
   });
 
@@ -51,10 +51,10 @@ describe("planner draft commands", () => {
       {
         id: "22000000-0000-4000-8000-000000000003",
         sequence: 1,
-        kind: "rename_item",
+        kind: "set_item_time_override",
         goalId: GOAL_B,
         unitKey: "total:1",
-        label: "B",
+        localTime: "08:00",
       },
       {
         id: "22000000-0000-4000-8000-000000000001",

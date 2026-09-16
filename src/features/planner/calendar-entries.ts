@@ -260,17 +260,13 @@ export function buildEntriesByDateProjection({
     const unit = unitByEntryKey.get(key) ?? null;
     const nextDay = edit.scheduledDate === undefined ? currentDay : edit.scheduledDate;
     const nextGoalTitle =
-      edit.label === undefined
-        ? existingEntry?.goalTitle ??
-          (unit
-            ? activeGoalsByOriginalGoalId.get(unit.originalGoalId)?.title ??
-              goalTitles?.[unit.originalGoalId] ??
-              unit.label ??
-              unit.unitKey
-            : null)
-        : edit.label ??
-          existingEntry?.goalTitle ??
-          (unit ? goalTitles?.[unit.originalGoalId] ?? unit.label ?? unit.unitKey : null);
+      existingEntry?.goalTitle ??
+      (unit
+        ? activeGoalsByOriginalGoalId.get(unit.originalGoalId)?.title ??
+          goalTitles?.[unit.originalGoalId] ??
+          unit.label ??
+          unit.unitKey
+        : null);
     const nextScheduledTimeOverride =
       edit.scheduledTimeOverride === undefined
         ? existingEntry?.scheduledTimeOverride ?? unit?.scheduledTimeOverride ?? null

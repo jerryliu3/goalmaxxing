@@ -82,7 +82,6 @@ type CalendarSurfacePresentationArgs = Omit<
   resetPlanFully: () => Promise<void>;
   resetPlanForGoals: (goals: PlannerResetGoalOption[]) => Promise<void>;
   rebuildLoading: boolean;
-  updateDraftLabel: (entry: PlannerDayDetailEntry, label: string) => void;
   updateDraftScheduledDate: (entry: PlannerDayDetailEntry, date: string) => void;
   updateDraftScheduledTimeOverride: (
     entry: PlannerDayDetailEntry,
@@ -136,7 +135,6 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     resetPlanFully,
     resetPlanForGoals,
     rebuildLoading,
-    updateDraftLabel,
     updateDraftScheduledDate,
     updateDraftScheduledTimeOverride,
     toggleItemLock,
@@ -244,7 +242,6 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
   const eventDetailCallbacks = usePlannerEventDetailCallbacks({
     resetPlannerEntrySelection,
     setLocalSelectedDay,
-    updateDraftLabel,
     updateDraftScheduledDate,
     updateDraftScheduledTimeOverride,
     toggleItemLock,

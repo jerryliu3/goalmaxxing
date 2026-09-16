@@ -12,7 +12,6 @@ import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.
 
 export interface PlannerEventDetailDialogCallbacks {
   onOpenChange: (open: boolean) => void;
-  onUpdateDraftLabel: (entry: PlannerDayDetailEntry, nextLabel: string) => void;
   onUpdateDraftScheduledDate: (entry: PlannerDayDetailEntry, nextDate: string) => void;
   onUpdateDraftScheduledTimeOverride: (
     entry: PlannerDayDetailEntry,
@@ -35,13 +34,6 @@ interface PlannerEventDetailDialogProps {
   }>;
   goalTitles: Record<string, string>;
   scopeMonth: string;
-  selectedEventDraftEdit:
-    | {
-        label?: string | null;
-        scheduledDate?: string | null;
-        scheduledTimeOverride?: string | null;
-      }
-    | undefined;
   selectedEventBaselineUnit:
     | {
         effectiveScheduledLocalTime?: string | null;
@@ -65,7 +57,6 @@ export function PlannerEventDetailDialog({
   selectedEventLinkedTargets,
   goalTitles,
   scopeMonth,
-  selectedEventDraftEdit,
   selectedEventBaselineUnit,
   selectedEventDraftScheduledDate,
   selectedEventDraftTimeInputValue,
@@ -181,22 +172,6 @@ export function PlannerEventDetailDialog({
               </div>
             ) : (
               <div className="space-y-2 rounded-md border border-dashed p-2">
-                <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                  Title
-                  <Input
-                    value={
-                      selectedEventDraftEdit?.label ??
-                      selectedEventEntry.goalTitle ??
-                      selectedEventEntry.label ??
-                      ""
-                    }
-                    onChange={(event) =>
-                      callbacks.onUpdateDraftLabel(selectedEventEntry, event.target.value)
-                    }
-                    placeholder="Goal title"
-                    className="h-8 text-xs"
-                  />
-                </label>
                 <label className="flex items-center gap-2 text-xs text-muted-foreground">
                   Date
                   <Input

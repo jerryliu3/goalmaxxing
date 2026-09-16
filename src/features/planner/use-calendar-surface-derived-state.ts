@@ -124,7 +124,6 @@ export function useCalendarSurfaceSelectedEventState({
 
   return {
     selectedEventEntry,
-    selectedEventDraftEdit,
     selectedEventBaselineUnit,
     selectedEventDraftScheduledDate,
     selectedEventDraftTimeInputValue,
