@@ -75,7 +75,7 @@ export async function loadDigestSnapshot({
   });
   const [record, lastAcknowledgedAt] = await Promise.all([
     loadDigestRecord(supabase, userId, currentPeriod),
-    loadLastAcknowledgedDigestAt(supabase, userId),
+    loadLastAcknowledgedDigestAt(supabase, userId, localDate),
   ]);
   const lastCheckInDate = lastAcknowledgedAt
     ? getDateInTimezone(new Date(lastAcknowledgedAt), profile.timezone)
@@ -213,12 +213,17 @@ async function loadDigestRecord(
 
 async function loadLastAcknowledgedDigestAt(
   supabase: DigestClient,
-  userId: string
+  userId: string,
+  beforeLocalDate: string
 ): Promise<string | null> {
+  // Exclude today's row: the lightweight prompt acknowledges it before the
+  // optional AI request reloads the snapshot, but both reads must use the same
+  // prior check-in as the recap boundary.
   const { data, error } = await supabase
     .from("user_digests")
     .select("acknowledged_at")
     .eq("owner_id", userId)
+    .lt("period_key", beforeLocalDate)
     .not("acknowledged_at", "is", null)
     .order("acknowledged_at", { ascending: false })
     .limit(1)
