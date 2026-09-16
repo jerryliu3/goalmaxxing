@@ -73,6 +73,7 @@ interface CalendarDayPreviewListProps<
   density?: "compact" | "expanded";
   selectedEntryKey?: string | null;
   shareEntryTransition?: boolean;
+  emptyMessage?: string;
   onConfirmDraftMove?: (entry: TEntry, day: string) => void;
   onCancelDraftMove?: (entry: TEntry, day: string) => void;
 }
@@ -98,6 +99,7 @@ export function CalendarDayPreviewList<
   density = "compact",
   selectedEntryKey = null,
   shareEntryTransition = false,
+  emptyMessage = "No planned sessions.",
   onConfirmDraftMove,
   onCancelDraftMove,
 }: CalendarDayPreviewListProps<TEntry, TCompletionFactMarker>) {
@@ -111,7 +113,7 @@ export function CalendarDayPreviewList<
       }`}
     >
       {entries.length === 0 && completionFactMarkers.length === 0 ? (
-        <p className="text-muted-foreground">No planned sessions.</p>
+        <p className="text-muted-foreground">{emptyMessage}</p>
       ) : (
         <>
           <PlannerSortableDayList

@@ -219,6 +219,118 @@ describe("PlannerFocusedDayPane", () => {
     );
   });
 
+  it("files credited sessions under a collapsed Completed section", () => {
+    renderWithDnd(
+      <PlannerFocusedDayPane
+        day="2026-08-06"
+        entries={[
+          sampleEntry as never,
+          {
+            ...sampleEntry,
+            key: "goal-2:cadence:0",
+            originalGoalId: "goal-2",
+            goalTitle: "Stretch",
+            label: "Stretch",
+            creditState: "credited",
+          } as never,
+        ]}
+        completionFactMarkers={[]}
+        mutationLoadingKey={null}
+        asOfDate="2026-08-06"
+        canMutatePlanItems
+        canMutateEntryOnDay={() => true}
+        onEntryOpen={() => {}}
+        onToggleCompletion={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+        showTasksInsteadOfGoals
+      />
+    );
+
+    const completed = screen.getByRole("button", { name: /Completed 1/ });
+    expect(completed).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: /Scheduled goals 1/ })).toHaveAttribute(
+      "aria-expanded",
+      "true"
+    );
+    expect(screen.getByText("Run")).toBeInTheDocument();
+    expect(screen.queryByText("Stretch")).not.toBeInTheDocument();
+  });
+
+  it("files completion facts earned elsewhere under Completed", () => {
+    renderWithDnd(
+      <PlannerFocusedDayPane
+        day="2026-08-06"
+        entries={[sampleEntry as never]}
+        completionFactMarkers={[
+          {
+            key: "elsewhere-marker",
+            originalGoalId: "goal-elsewhere",
+            unitKey: "elsewhere-fact",
+            goalTitle: "Read",
+            scheduledDate: "2026-08-06",
+          } as never,
+        ]}
+        mutationLoadingKey={null}
+        asOfDate="2026-08-06"
+        canMutatePlanItems
+        canMutateEntryOnDay={() => true}
+        onEntryOpen={() => {}}
+        onToggleCompletion={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+        showTasksInsteadOfGoals
+      />
+    );
+
+    expect(screen.getByRole("button", { name: /Completed 1/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Scheduled goals 1/ })).toBeInTheDocument();
+    expect(screen.queryByText("Read")).not.toBeInTheDocument();
+  });
+
+  it("omits the Completed section when nothing on the day is done", () => {
+    renderWithDnd(
+      <PlannerFocusedDayPane
+        day="2026-08-06"
+        entries={[sampleEntry as never]}
+        completionFactMarkers={[]}
+        mutationLoadingKey={null}
+        asOfDate="2026-08-06"
+        canMutatePlanItems
+        canMutateEntryOnDay={() => true}
+        onEntryOpen={() => {}}
+        onToggleCompletion={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+        showTasksInsteadOfGoals
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: /Completed/ })).not.toBeInTheDocument();
+  });
+
+  it("says the day is done rather than empty once every session is credited", () => {
+    renderWithDnd(
+      <PlannerFocusedDayPane
+        day="2026-08-06"
+        entries={[{ ...sampleEntry, creditState: "credited" } as never]}
+        completionFactMarkers={[]}
+        mutationLoadingKey={null}
+        asOfDate="2026-08-06"
+        canMutatePlanItems
+        canMutateEntryOnDay={() => true}
+        onEntryOpen={() => {}}
+        onToggleCompletion={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+        showTasksInsteadOfGoals
+      />
+    );
+
+    expect(screen.getByText("Everything scheduled is done.")).toBeInTheDocument();
+    expect(screen.queryByText("No planned sessions.")).not.toBeInTheDocument();
+  });
+
   it("hides the redundant day heading when the date picker already names the day", () => {
     renderWithDnd(
       <PlannerFocusedDayPane

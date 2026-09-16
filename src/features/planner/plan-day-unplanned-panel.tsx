@@ -7,6 +7,7 @@ import { useChecklistData } from "@/features/today/use-checklist-data";
 import { useChecklistProjection } from "@/features/today/use-checklist-projection";
 import { useCompletionCreditMove } from "@/features/planner/completion-credit-move";
 import { planUnscheduledLedgerControlMode } from "@/features/planner/completion-entry-dispatch";
+import { partitionUnplannedGoalsByCompletion } from "@/features/planner/plan-day-completed";
 import {
   placedGoalIdsForDay,
   selectUnplannedGoals,
@@ -31,14 +32,22 @@ import { applyOptimisticChecklistPresentations } from "@/lib/planner/optimistic-
 import { CompletionTitle } from "@/components/ui/completion-title";
 import { cn } from "@/lib/utils";
 
+/**
+ * `filter` selects which half of the unscheduled work to render: the open list
+ * under "Unscheduled goals", or the credited rows the Completed section owns.
+ */
+export type PlanDayUnplannedFilter = "open" | "completed";
+
 export function PlanDayUnplannedPanel({
   day,
   placedEntries,
   checklist = null,
+  filter = "open",
 }: {
   day: string;
   placedEntries: PlannerDayDetailEntry[];
   checklist?: PlanDayChecklistModel | null;
+  filter?: PlanDayUnplannedFilter;
 }) {
   const placedGoalIds = useMemo(
     () => placedGoalIdsForDay(placedEntries),
@@ -50,11 +59,13 @@ export function PlanDayUnplannedPanel({
       day={day}
       placedGoalIds={placedGoalIds}
       checklist={checklist}
+      filter={filter}
     />
   ) : (
     <PlanDayUnplannedList
       day={day}
       placedGoalIds={placedGoalIds}
+      filter={filter}
     />
   );
 }
@@ -63,10 +74,12 @@ function PlanDayUnplannedFromChecklist({
   day,
   placedGoalIds,
   checklist,
+  filter,
 }: {
   day: string;
   placedGoalIds: ReadonlySet<string>;
   checklist: PlanDayChecklistModel;
+  filter: PlanDayUnplannedFilter;
 }) {
   const unplannedGoals = useMemo(
     () =>
@@ -92,6 +105,7 @@ function PlanDayUnplannedFromChecklist({
       presentationByGoalId={checklist.listModel.presentationByGoalId}
       savingGoalId={checklist.savingGoalId}
       onToggle={checklist.toggleCompletion}
+      filter={filter}
     />
   );
 }
@@ -99,9 +113,11 @@ function PlanDayUnplannedFromChecklist({
 function PlanDayUnplannedList({
   day,
   placedGoalIds,
+  filter,
 }: {
   day: string;
   placedGoalIds: ReadonlySet<string>;
+  filter: PlanDayUnplannedFilter;
 }) {
   const { data, loading, loadData, redirectToLogin, todayLocalDate } = useChecklistData({
     isActive: true,
@@ -177,6 +193,7 @@ function PlanDayUnplannedList({
       presentationByGoalId={presentationByGoalId}
       savingGoalId={savingGoalId}
       onToggle={toggleCompletion}
+      filter={filter}
     />
   );
 }
@@ -188,6 +205,7 @@ function PlanDayUnplannedRows({
   presentationByGoalId,
   savingGoalId,
   onToggle,
+  filter,
 }: {
   day: string;
   asOfDate: string | null;
@@ -195,17 +213,23 @@ function PlanDayUnplannedRows({
   presentationByGoalId: PlanDayChecklistModel["listModel"]["presentationByGoalId"];
   savingGoalId: string | null;
   onToggle: (goal: Goal, sourceElement: HTMLButtonElement) => void;
+  filter: PlanDayUnplannedFilter;
 }) {
   const creditMove = useCompletionCreditMove();
-  if (goals.length === 0) {
-    return (
+  const visibleGoals = partitionUnplannedGoalsByCompletion({
+    goals,
+    presentationByGoalId,
+  })[filter];
+
+  if (visibleGoals.length === 0) {
+    return filter === "completed" ? null : (
       <p className="text-sm text-muted-foreground">Nothing unscheduled for this day.</p>
     );
   }
 
   return (
     <div className="divide-y">
-      {goals.map((goal) => {
+      {visibleGoals.map((goal) => {
         const presentation = presentationByGoalId.get(goal.id);
         const completed = Boolean(presentation?.exactDateCompleted);
         const completionMode: PlanLedgerCompletionMode = planUnscheduledLedgerControlMode({

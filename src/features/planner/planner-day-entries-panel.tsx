@@ -31,6 +31,7 @@ interface PlannerDayEntriesPanelProps {
   includeSourceElement?: boolean;
   selectedEntryKey?: string | null;
   shareEntryTransition?: boolean;
+  emptyMessage?: string;
   onConfirmDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
   onCancelDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
 }
@@ -56,6 +57,7 @@ export function PlannerDayEntriesPanel({
   includeSourceElement = true,
   selectedEntryKey = null,
   shareEntryTransition = false,
+  emptyMessage,
   onConfirmDraftMove,
   onCancelDraftMove,
 }: PlannerDayEntriesPanelProps) {
@@ -92,6 +94,7 @@ export function PlannerDayEntriesPanel({
       density={density}
       selectedEntryKey={selectedEntryKey}
       shareEntryTransition={shareEntryTransition}
+      emptyMessage={emptyMessage}
       onConfirmDraftMove={onConfirmDraftMove}
       onCancelDraftMove={onCancelDraftMove}
     />
