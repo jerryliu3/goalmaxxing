@@ -42,4 +42,21 @@ describe("card material comparison", () => {
     expect(still).toBeDisabled();
     for (const button of screen.getAllByRole("button", { name: /^Tilt / })) expect(button).toBeDisabled();
   });
+
+  it("lets keyboard users pose and restore each new premium card", async () => {
+    const user = userEvent.setup();
+    render(<CardMaterialsStudy />);
+    for (const name of ["Pearl Reserve", "Midnight Guilloché", "Oxblood Atelier"]) {
+      const region = screen.getByRole("region", { name });
+      expect(within(region).getByRole("article", { name: "Goal card preview" })).toHaveClass("tempo-card");
+      const tilt = within(region).getByRole("button", { name: `Tilt ${name}` });
+      tilt.focus();
+      await user.keyboard("{Enter}");
+      expect(tilt).toHaveAttribute("aria-pressed", "true");
+      expect(tilt).toHaveTextContent("Rest");
+      await user.keyboard("{Enter}");
+      expect(tilt).toHaveAttribute("aria-pressed", "false");
+    }
+  });
+
 });
