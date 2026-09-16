@@ -21,6 +21,17 @@ function focusFor(kind: DigestKind) {
   return "Point at the first session of the day and at anything still owed from yesterday.";
 }
 
+function factsForPrompt(facts: DigestFacts) {
+  const withoutGoalIds = (items: DigestFacts["recap"]["items"]) =>
+    items.map(({ goalId: _goalId, ...item }) => item);
+  return {
+    ...facts,
+    recap: { ...facts.recap, items: withoutGoalIds(facts.recap.items) },
+    ahead: { ...facts.ahead, items: withoutGoalIds(facts.ahead.items) },
+    recover: { ...facts.recover, items: withoutGoalIds(facts.recover.items) },
+  };
+}
+
 export function buildDigestPrompt({
   kind,
   facts,
@@ -51,7 +62,7 @@ export function buildDigestPrompt({
     "estimatedMinutes is derived from a flat per-session estimate, so describe it as approximate or leave it out.",
     "",
     "FACTS JSON",
-    JSON.stringify(facts),
+    JSON.stringify(factsForPrompt(facts)),
   ].join("\n");
 }
 

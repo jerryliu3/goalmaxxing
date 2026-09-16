@@ -64,6 +64,7 @@ function windowRows({
   return items
     .filter((item) => inRange(item.scheduledDate, start, end))
     .map((item) => ({
+      goalId: item.goalId,
       title: item.title,
       date: item.scheduledDate,
       state: completedKeys.has(`${item.goalId}:${item.scheduledDate}`)

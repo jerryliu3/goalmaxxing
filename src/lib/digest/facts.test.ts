@@ -44,10 +44,12 @@ describe("buildDigestFacts", () => {
       completed: 0,
     });
     expect(facts.recap.items[0]).toMatchObject({
+      goalId: "tempo",
       title: "Tempo run",
       state: "completed",
     });
     expect(facts.recap.items[1]).toMatchObject({
+      goalId: "strength",
       title: "Strength",
       state: "open",
     });
@@ -107,7 +109,12 @@ describe("buildDigestFacts", () => {
 
     expect(facts.recover.count).toBe(1);
     expect(facts.recover.items).toEqual([
-      { title: "Long run", date: "2026-08-31", state: "open" },
+      {
+        goalId: "run",
+        title: "Long run",
+        date: "2026-08-31",
+        state: "open",
+      },
     ]);
   });
 

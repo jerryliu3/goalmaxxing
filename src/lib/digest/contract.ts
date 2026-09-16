@@ -6,6 +6,7 @@ export const digestCreditStateSchema = z.enum(["completed", "open"]);
 
 export const digestFactItemSchema = z
   .object({
+    goalId: z.string().trim().min(1).max(100),
     title: z.string().trim().min(1).max(200),
     date: z.iso.date(),
     state: digestCreditStateSchema,

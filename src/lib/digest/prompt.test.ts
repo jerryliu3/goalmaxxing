@@ -14,6 +14,7 @@ describe("buildDigestPrompt", () => {
     });
     const prompt = buildDigestPrompt({ kind: "daily", facts });
     expect(prompt).toContain("Tempo run");
+    expect(prompt).not.toContain("goalId");
     expect(prompt).toContain("Do not invent sessions");
     expect(prompt).toContain("today");
   });
