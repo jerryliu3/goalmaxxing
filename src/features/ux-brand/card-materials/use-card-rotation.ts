@@ -46,7 +46,7 @@ export function useCardRotation(disabled: boolean, solid: boolean) {
       pose.moveTo(dragPose(active.start, dx, dy), true);
     } else if (!inspecting && event.pointerType === "mouse") {
       const rect = event.currentTarget.getBoundingClientRect();
-      pose.moveTo(pointerPose((event.clientX - rect.left) / rect.width, (event.clientY - rect.top) / rect.height));
+      pose.moveTo(nearestPose(pose.getCurrent(), pointerPose((event.clientX - rect.left) / rect.width, (event.clientY - rect.top) / rect.height)));
     }
   };
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {

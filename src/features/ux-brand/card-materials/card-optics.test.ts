@@ -44,6 +44,9 @@ describe("card optics", () => {
     expect(Math.abs(reset.x - turned.x)).toBeLessThanOrEqual(180);
     expect(Math.abs(reset.y - turned.y)).toBeLessThanOrEqual(180);
     expect((reset.y - REST_POSE.y) % 360).toBe(0);
+    const hoverAfterReset = nearestPose(reset, pointerPose(0.5, 0.5));
+    expect(Math.abs(hoverAfterReset.y - reset.y)).toBeLessThan(30);
+    expect(Math.abs(hoverAfterReset.x - reset.x)).toBeLessThan(30);
   });
 
 });
