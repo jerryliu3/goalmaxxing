@@ -81,6 +81,8 @@ export function evaluateGoalEligibility({
   const effectiveEndDate = resolveGoalPlanningEndDate({
     frequencyType: goal.frequency_type,
     targetCount: goal.target_count,
+    targetBasis: goal.target_basis,
+    recurrenceInterval: goal.recurrence_interval,
     startDate: goal.start_date,
     endDate: goal.end_date,
     asOfDate,
@@ -99,6 +101,8 @@ export function evaluateGoalEligibility({
   const isOrdinalGoal = isOrdinalGoalDefinition({
     frequencyType: goal.frequency_type,
     targetCount: goal.target_count,
+    targetBasis: goal.target_basis,
+    recurrenceInterval: goal.recurrence_interval,
   });
   if (
     decision.eligible &&
