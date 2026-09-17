@@ -33,21 +33,24 @@ export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]>
   ],
   "insights.main": [
     {
-      title: "Progress Tracker",
-      description: "The heatmap is the aggregate of selected goals.",
-      target: "insights.overall",
+      title: "Goalmaxxing score",
+      description:
+        "Your effort remembered over time, charted across the last four weeks.",
+      target: "insights.score",
+      fallbackTargets: ["insights.week", "insights.history"],
     },
     {
-      title: "Choose goals",
-      description: "Open filters to focus the list, then select one goal to edit completions.",
-      target: "insights.goal-stats",
+      title: "Current and Past",
+      description:
+        "Current holds your score, this week and completion history. Past keeps achievements and finished goals.",
+      target: "insights.views",
     },
     {
       title: "Log a missed day",
       description:
-        "Select one goal, then tap a past or today cell. Multi-select stays a read-only overlap.",
-      target: "insights.goal",
-      fallbackTargets: ["insights.goal-stats"],
+        "Open Completion history, select one goal, then tap a past or today cell.",
+      target: "insights.history",
+      fallbackTargets: ["insights.overall", "insights.goal-stats"],
     },
   ],
   "social.main": [

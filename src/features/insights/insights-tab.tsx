@@ -20,10 +20,11 @@ import { InsightsTrackerHeader } from "@/features/insights/insights-tracker-head
 import { ProgressGoalList } from "@/features/insights/progress-goal-list";
 import { InsightsOverallStatsTiles } from "@/features/insights/insights-overall-stats-card";
 import { ProgressWeekCurrentStrip } from "@/features/insights/progress-week-current-strip";
-import { ProgressAchievementsSection } from "@/features/insights/progress-achievements-section";
 import { ProgressMilestoneRunway } from "@/features/insights/progress-milestone-runway";
-import { WeekRhythmCard } from "@/features/insights/week-rhythm-card";
-import { GrowScoreTrendChart } from "@/features/insights/grow-score-trend-chart";
+import { buildProgressSections } from "@/features/insights/progress-overview/build-progress-sections";
+import { ProgressOverviewLayout } from "@/features/insights/progress-overview/progress-overview-layout";
+import { useProgressPastSections } from "@/features/insights/progress-overview/progress-past-sections";
+import { useGrowScoreSeries } from "@/features/insights/use-grow-score-series";
 import { useProgressWeekRhythm } from "@/features/insights/use-progress-week-rhythm";
 import {
   isLedgerHeatmapDayMutable,
@@ -698,6 +699,21 @@ export function InsightsTab({
         : null,
     enabled: showOverallStats && contentMode === "full",
   });
+  const weekStartsOn = state.insightsStats?.weekStartsOn ?? 1;
+  const growSeries = useGrowScoreSeries({
+    completions: personalCompletions,
+    goals: personalGoals,
+    asOfDate: todayLocal,
+    weekStartsOn,
+  });
+  // Achievements and the goal library are the viewer's own, so they stay off
+  // read-only partner lanes.
+  const pastSections = useProgressPastSections({
+    goals: state.goals,
+    summaries: state.progress?.summaries ?? [],
+    userId: state.userId,
+    enabled: contentMode === "full" && !readOnly,
+  });
   const ledgerCaption = progressLedgerCaption(
     ledgerMode,
     selectedLedgerGoalIds.length,
@@ -800,258 +816,289 @@ export function InsightsTab({
     );
   }
 
-  return (
-    <div className="space-y-5">
-      {showGoalStatsSection ? (
-        <InsightsTrackerHeader
-          goals={personalGoals}
-          monthCursor={monthCursor}
-          onMonthCursorChange={(next) => setMonthCursor(next)}
-          perGoalViewMode={perGoalViewMode}
-          onPerGoalViewModeChange={setPerGoalViewMode}
-          goalSearchQuery={goalSearchQuery}
-          onGoalSearchQueryChange={setGoalSearchQuery}
-          goalEndMonths={goalEndMonths}
-          onGoalEndMonthsChange={setGoalEndMonths}
-          goalSort={goalSort}
-          onGoalSortChange={setGoalSort}
-          showHistoricalGoals={showHistoricalGoals}
-          onShowHistoricalGoalsChange={setShowHistoricalGoals}
-        />
-      ) : null}
+  const trackerHeaderNode = showGoalStatsSection ? (
+    <InsightsTrackerHeader
+      goals={personalGoals}
+      monthCursor={monthCursor}
+      onMonthCursorChange={(next) => setMonthCursor(next)}
+      perGoalViewMode={perGoalViewMode}
+      onPerGoalViewModeChange={setPerGoalViewMode}
+      goalSearchQuery={goalSearchQuery}
+      onGoalSearchQueryChange={setGoalSearchQuery}
+      goalEndMonths={goalEndMonths}
+      onGoalEndMonthsChange={setGoalEndMonths}
+      goalSort={goalSort}
+      onGoalSortChange={setGoalSort}
+      showHistoricalGoals={showHistoricalGoals}
+      onShowHistoricalGoalsChange={setShowHistoricalGoals}
+    />
+  ) : null;
 
-      {showOverallStats && state.insightsStats ? (
-        <ProgressWeekCurrentStrip overallStats={state.insightsStats.overall} />
-      ) : null}
+  const weekCurrentStripNode =
+    showOverallStats && state.insightsStats ? (
+      <ProgressWeekCurrentStrip overallStats={state.insightsStats.overall} />
+    ) : null;
 
-      {showGoalsSection || showHeatmap ? (
-        <div
-          data-testid="progress-ledger-layout"
-          className={
-            stackLedgerAndHeatmap
-              ? "space-y-3"
-              : "flex flex-col gap-6 md:grid md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] md:items-start"
-          }
-        >
-          {showHeatmap ? (
-              <div
-                ref={aggregateHeatmapRef}
-                className={
-                  stackLedgerAndHeatmap
-                    ? "space-y-1"
-                    : "md:col-start-2 md:row-start-1"
-                }
-                data-onboarding="insights.overall"
-                data-no-swipe="true"
-              >
-                {ledgerHelp}
-                {ledgerMode === "empty" ? null : perGoalViewMode === "month" ? (
-                <MonthHeatmap
-                  month={monthCursor}
-                  countsByDate={ledgerCountsByDate}
-                  interactive={heatmapEditable}
-                  pendingDate={pendingRetroDate}
-                  milestoneDates={milestonePinDates}
-                  showMonthLabel={false}
-                  isDayDisabled={
-                    heatmapEditable
-                      ? (date) => !isLedgerHeatmapDayMutable(date, todayLocal)
-                      : undefined
-                  }
-                  onDayClick={
-                    heatmapDayClickEnabled
-                      ? (date, sourceElement) =>
-                          handleLedgerDayClick(date, sourceElement)
-                      : undefined
-                  }
-                />
-              ) : (
-                <div className="overflow-x-auto py-1">
-                  <CalendarHeatmap
-                    startDate={selectedYearStart}
-                    endDate={selectedYearEnd}
-                    values={ledgerHeatmapData}
-                    showWeekdayLabels
-                    weekdayLabels={aggregateWeekdayLabels}
-                    classForValue={(value) =>
-                      `${getHeatmapScaleClass(value?.count ?? 0)} cursor-pointer ${getAggregateDrilldownDayClass(value?.date)}`
-                    }
-                    titleForValue={(value) => {
-                      const count = value?.count ?? 0;
-                      const unit =
-                        editableGoal?.frequency_type === "fixed_milestones"
-                          ? count === 1
-                            ? "milestone"
-                            : "milestones"
-                          : count === 1
-                            ? "completion"
-                            : "completions";
-                      return `${value?.date ?? "N/A"}: ${count} ${unit}`;
-                    }}
-                    onClick={(value?: { date?: string }) => {
-                      if (!heatmapDayClickEnabled) {
-                        return;
-                      }
-                      const selectedDate = value?.date;
-                      if (!selectedDate) {
-                        return;
-                      }
-                      handleLedgerDayClick(selectedDate);
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          ) : null}
-
-          {showGoalsSection ? (
-            <div className={stackLedgerAndHeatmap ? undefined : "md:col-start-1 md:row-start-1"}>
-              <ProgressGoalList
-                goals={ledgerGoalItems}
-                selectedGoalIds={selectedLedgerIdSet}
-                onboarding={!readOnly}
-                onSelectAll={() => setSelectedGoalIds(null)}
-                onClearAll={() => setSelectedGoalIds([])}
-                onSelectOnly={(goalId) => setSelectedGoalIds([goalId])}
-                onToggleGoal={(goalId) => {
-                  setSelectedGoalIds((current) =>
-                    toggleLedgerGoalSelection(visibleGoalIds, current, goalId)
-                  );
-                }}
-              />
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-
-      {showHeatmap && editableGoal?.frequency_type === "fixed_milestones" ? (
-        <ProgressMilestoneRunway
-          title={editableGoal.title}
-          countLabel={getCompletionCountLabel(
-            editableGoal,
-            editableProgress?.admissibleCompletionCount ?? mappedMilestoneDates.length,
-            editableProgress
-          )}
-          stops={milestoneStops}
-          activeDate={focusedLedgerDate}
-          onSelect={(stop) => {
-            if (stop.date) {
-              handleLedgerDayClick(stop.date);
-            }
-          }}
-          onNameChange={
-            heatmapEditable
-              ? (index, name) => {
-                  setMilestoneNameDrafts((previous) => {
-                    const nextGoalNames = [
-                      ...(previous[editableGoal.id] ?? persistedMilestoneNames),
-                    ];
-                    nextGoalNames[index] = name;
-                    return {
-                      ...previous,
-                      [editableGoal.id]: nextGoalNames,
-                    };
-                  });
-                }
-              : undefined
-          }
-          onNameCommit={
-            heatmapEditable
-              ? (index, name) => {
-                  const nextNames = [...draftMilestoneNames];
-                  nextNames[index] = name;
-                  const names = buildMilestoneNames(milestoneTargetCount, nextNames);
-                  if (areMilestoneNamesEqual(names, persistedMilestoneNames)) {
-                    return;
-                  }
-                  void saveMilestoneNames(editableGoal, names);
-                }
-              : undefined
-          }
-        />
-      ) : null}
-
-      {showOverallStats && state.insightsStats ? (
-        <section className="rounded-[12px] border border-border p-4">
-          <h2 className="mb-3 font-display text-base font-semibold tracking-tight">
-            Overall stats
-          </h2>
-          <InsightsOverallStatsTiles overallStats={state.insightsStats.overall} />
-        </section>
-      ) : null}
-
-      {showOverallStats && contentMode === "full" ? (
-        <WeekRhythmCard
-          rows={weekRhythm.rows}
-          loading={weekRhythm.loading}
-          error={weekRhythm.error}
-        />
-      ) : null}
-
-      {contentMode === "full" && state.asOfDate ? (
-        <GrowScoreTrendChart
-          completions={state.completions}
-          goals={state.goals}
-          asOfDate={state.asOfDate}
-        />
-      ) : null}
-
-      {contentMode === "full" ? <ProgressAchievementsSection /> : null}
-
-      {showHeatmap && aggregateDrilldownDate && !heatmapEditable ? (
-        <AnchoredPopupCard
-          popupRef={aggregateDrilldownRef}
-          position={aggregateDrilldownPosition}
-          fallbackTop={16}
-          fallbackLeft={16}
-          fallbackWidth={320}
-          title={`Completions on ${format(parseISO(aggregateDrilldownDate), "MMM d, yyyy")}`}
-          actions={
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-xs"
-              onClick={clearAggregateDrilldown}
-              aria-label="Close drilldown"
+  const ledgerLayoutNode =
+    showGoalsSection || showHeatmap ? (
+      <div
+        data-testid="progress-ledger-layout"
+        className={
+          stackLedgerAndHeatmap
+            ? "space-y-3"
+            : "flex flex-col gap-6 md:grid md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] md:items-start"
+        }
+      >
+        {showHeatmap ? (
+            <div
+              ref={aggregateHeatmapRef}
+              className={
+                stackLedgerAndHeatmap
+                  ? "space-y-1"
+                  : "md:col-start-2 md:row-start-1"
+              }
+              data-onboarding="insights.overall"
+              data-no-swipe="true"
             >
-              <X className="size-3" />
-            </Button>
-          }
-        >
-          <p className="text-xs text-muted-foreground">
-            {ledgerCountsByDate[aggregateDrilldownDate] ?? 0} completion
-            {(ledgerCountsByDate[aggregateDrilldownDate] ?? 0) === 1 ? "" : "s"}
-          </p>
-          <div className="mt-2 max-h-56 space-y-2 overflow-y-auto pr-1">
-            {aggregateDrilldownItems.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No completed items on this date.
-              </p>
-            ) : (
-              <CalendarDayPreviewList
-                day={aggregateDrilldownDate}
-                entries={[]}
-                completionFactMarkers={aggregateDrilldownMarkers}
-                mutationLoadingKey={null}
-                getEntryDisplayTitle={() => ""}
-                getEntrySubtitle={() => null}
-                isEntryCredited={() => false}
-                isEntryImmovableForDraft={() => true}
-                getCompletionToggleState={() => ({
-                  currentlyCredited: false,
-                  disabledReasonCopy: "View-only completion history.",
-                })}
-                onEntryOpen={() => undefined}
-                onToggleCompletion={() => undefined}
-                onEntryPointerStart={() => undefined}
-                onEntryPointerEnd={() => undefined}
-                density="expanded"
+              {ledgerHelp}
+              {ledgerMode === "empty" ? null : perGoalViewMode === "month" ? (
+              <MonthHeatmap
+                month={monthCursor}
+                countsByDate={ledgerCountsByDate}
+                interactive={heatmapEditable}
+                pendingDate={pendingRetroDate}
+                milestoneDates={milestonePinDates}
+                showMonthLabel={false}
+                isDayDisabled={
+                  heatmapEditable
+                    ? (date) => !isLedgerHeatmapDayMutable(date, todayLocal)
+                    : undefined
+                }
+                onDayClick={
+                  heatmapDayClickEnabled
+                    ? (date, sourceElement) =>
+                        handleLedgerDayClick(date, sourceElement)
+                    : undefined
+                }
               />
+            ) : (
+              <div className="overflow-x-auto py-1">
+                <CalendarHeatmap
+                  startDate={selectedYearStart}
+                  endDate={selectedYearEnd}
+                  values={ledgerHeatmapData}
+                  showWeekdayLabels
+                  weekdayLabels={aggregateWeekdayLabels}
+                  classForValue={(value) =>
+                    `${getHeatmapScaleClass(value?.count ?? 0)} cursor-pointer ${getAggregateDrilldownDayClass(value?.date)}`
+                  }
+                  titleForValue={(value) => {
+                    const count = value?.count ?? 0;
+                    const unit =
+                      editableGoal?.frequency_type === "fixed_milestones"
+                        ? count === 1
+                          ? "milestone"
+                          : "milestones"
+                        : count === 1
+                          ? "completion"
+                          : "completions";
+                    return `${value?.date ?? "N/A"}: ${count} ${unit}`;
+                  }}
+                  onClick={(value?: { date?: string }) => {
+                    if (!heatmapDayClickEnabled) {
+                      return;
+                    }
+                    const selectedDate = value?.date;
+                    if (!selectedDate) {
+                      return;
+                    }
+                    handleLedgerDayClick(selectedDate);
+                  }}
+                />
+              </div>
             )}
           </div>
-        </AnchoredPopupCard>
-      ) : null}
+        ) : null}
+
+        {showGoalsSection ? (
+          <div className={stackLedgerAndHeatmap ? undefined : "md:col-start-1 md:row-start-1"}>
+            <ProgressGoalList
+              goals={ledgerGoalItems}
+              selectedGoalIds={selectedLedgerIdSet}
+              onboarding={!readOnly}
+              onSelectAll={() => setSelectedGoalIds(null)}
+              onClearAll={() => setSelectedGoalIds([])}
+              onSelectOnly={(goalId) => setSelectedGoalIds([goalId])}
+              onToggleGoal={(goalId) => {
+                setSelectedGoalIds((current) =>
+                  toggleLedgerGoalSelection(visibleGoalIds, current, goalId)
+                );
+              }}
+            />
+          </div>
+        ) : null}
+      </div>
+    ) : null;
+
+  const milestoneRunwayNode =
+    showHeatmap && editableGoal?.frequency_type === "fixed_milestones" ? (
+      <ProgressMilestoneRunway
+        title={editableGoal.title}
+        countLabel={getCompletionCountLabel(
+          editableGoal,
+          editableProgress?.admissibleCompletionCount ?? mappedMilestoneDates.length,
+          editableProgress
+        )}
+        stops={milestoneStops}
+        activeDate={focusedLedgerDate}
+        onSelect={(stop) => {
+          if (stop.date) {
+            handleLedgerDayClick(stop.date);
+          }
+        }}
+        onNameChange={
+          heatmapEditable
+            ? (index, name) => {
+                setMilestoneNameDrafts((previous) => {
+                  const nextGoalNames = [
+                    ...(previous[editableGoal.id] ?? persistedMilestoneNames),
+                  ];
+                  nextGoalNames[index] = name;
+                  return {
+                    ...previous,
+                    [editableGoal.id]: nextGoalNames,
+                  };
+                });
+              }
+            : undefined
+        }
+        onNameCommit={
+          heatmapEditable
+            ? (index, name) => {
+                const nextNames = [...draftMilestoneNames];
+                nextNames[index] = name;
+                const names = buildMilestoneNames(milestoneTargetCount, nextNames);
+                if (areMilestoneNamesEqual(names, persistedMilestoneNames)) {
+                  return;
+                }
+                void saveMilestoneNames(editableGoal, names);
+              }
+            : undefined
+        }
+      />
+    ) : null;
+
+  const overallStatsTiles =
+    showOverallStats && state.insightsStats ? (
+      <InsightsOverallStatsTiles overallStats={state.insightsStats.overall} />
+    ) : null;
+
+  // Lane surfaces keep the standalone card; the Progress page tucks the tiles
+  // under the score chart.
+  const overallStatsNode = overallStatsTiles ? (
+    <section className="rounded-[12px] border border-border p-4">
+      <h3 className="mb-3 font-display text-base font-semibold tracking-tight">
+        Overall stats
+      </h3>
+      {overallStatsTiles}
+    </section>
+  ) : null;
+
+  const overallStatsPanel = overallStatsTiles ? (
+    <div>
+      <h4 className="mb-3 font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        Overall stats
+      </h4>
+      {overallStatsTiles}
+    </div>
+  ) : null;
+
+  const drilldownNode =
+    showHeatmap && aggregateDrilldownDate && !heatmapEditable ? (
+      <AnchoredPopupCard
+        popupRef={aggregateDrilldownRef}
+        position={aggregateDrilldownPosition}
+        fallbackTop={16}
+        fallbackLeft={16}
+        fallbackWidth={320}
+        title={`Completions on ${format(parseISO(aggregateDrilldownDate), "MMM d, yyyy")}`}
+        actions={
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-xs"
+            onClick={clearAggregateDrilldown}
+            aria-label="Close drilldown"
+          >
+            <X className="size-3" />
+          </Button>
+        }
+      >
+        <p className="text-xs text-muted-foreground">
+          {ledgerCountsByDate[aggregateDrilldownDate] ?? 0} completion
+          {(ledgerCountsByDate[aggregateDrilldownDate] ?? 0) === 1 ? "" : "s"}
+        </p>
+        <div className="mt-2 max-h-56 space-y-2 overflow-y-auto pr-1">
+          {aggregateDrilldownItems.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No completed items on this date.
+            </p>
+          ) : (
+            <CalendarDayPreviewList
+              day={aggregateDrilldownDate}
+              entries={[]}
+              completionFactMarkers={aggregateDrilldownMarkers}
+              mutationLoadingKey={null}
+              getEntryDisplayTitle={() => ""}
+              getEntrySubtitle={() => null}
+              isEntryCredited={() => false}
+              isEntryImmovableForDraft={() => true}
+              getCompletionToggleState={() => ({
+                currentlyCredited: false,
+                disabledReasonCopy: "View-only completion history.",
+              })}
+              onEntryOpen={() => undefined}
+              onToggleCompletion={() => undefined}
+              onEntryPointerStart={() => undefined}
+              onEntryPointerEnd={() => undefined}
+              density="expanded"
+            />
+          )}
+        </div>
+      </AnchoredPopupCard>
+    ) : null;
+
+  if (contentMode === "full") {
+    return (
+      <>
+        <ProgressOverviewLayout
+          sections={buildProgressSections({
+            growSeries,
+            overallStats: overallStatsPanel,
+            weekRhythm,
+            history: (
+              <div className="space-y-5">
+                {trackerHeaderNode}
+                {ledgerLayoutNode}
+                {milestoneRunwayNode}
+              </div>
+            ),
+            pastSections,
+          })}
+        />
+        {drilldownNode}
+      </>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      {weekCurrentStripNode}
+      {ledgerLayoutNode}
+      {milestoneRunwayNode}
+      {overallStatsNode}
+      {drilldownNode}
     </div>
   );
 }
