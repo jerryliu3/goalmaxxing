@@ -34,7 +34,7 @@ export function TempoGoalCard({
   taskSchedule?: { date: string; time: string };
   /** `plain` leaves the surface unstyled for material exploration studies. */
   surface?: "material" | "plain";
-  /** Hosts that own a swipe gesture keep the tilt but not the held rotation. */
+  /** Hosts with a competing swipe (bulk draft stack, day-work deck) keep tilt only. */
   rotatable?: boolean;
   visibility?: TempoCardVisibility;
   renderLettering?: (text: ReactNode, size: "display" | "title" | "supporting") => ReactNode;

@@ -116,7 +116,7 @@ export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
           onCloseAutoFocus={event => { event.preventDefault(); returnFocus.current?.focus(); }}
         >
           <DialogTitle className="sr-only">{selected?.year} past goals</DialogTitle>
-          <DialogDescription className="sr-only">Your past goals, in chronological order. Use the previous and next buttons or left and right arrow keys. On touch screens, swipe a card. Press Escape to close.</DialogDescription>
+          <DialogDescription className="sr-only">Your past goals, in chronological order. Use the previous and next buttons or left and right arrow keys. Drag a goal card to turn it in place. On touch screens, swipe beside the card to change pages. Press Escape to close.</DialogDescription>
           {selected && <>
             {inFlight && <div className={styles.flightStage} data-folio-flight-layer="pages" aria-hidden="true">
               <div className={styles.flyingBook} style={flightStyle}><FolioBook folio={selected} /></div>

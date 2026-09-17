@@ -28,6 +28,8 @@ export function useCardRotation(disabled: boolean, solid: boolean) {
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (disabled || !solid || event.button !== 0 || event.isPrimary === false || drag.current) return;
     event.preventDefault();
+    // Hosts with their own swipe (folio page turn, etc.) must not also claim this.
+    event.stopPropagation();
     event.currentTarget.focus({ preventScroll: true });
     pose.moveTo(pose.getCurrent(), true);
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -51,7 +53,7 @@ export function useCardRotation(disabled: boolean, solid: boolean) {
   };
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (disabled || !solid || event.altKey || event.ctrlKey || event.metaKey) return;
-    if (event.key === "Home" || event.key === "Escape") { event.preventDefault(); reset(); return; }
+    if (event.key === "Home" || event.key === "Escape") { event.preventDefault(); event.stopPropagation(); reset(); return; }
     const step = event.shiftKey ? 45 : 15;
     const current = pose.getTarget();
     const changes: Record<string, CardPose> = {
@@ -61,6 +63,7 @@ export function useCardRotation(disabled: boolean, solid: boolean) {
     };
     if (!changes[event.key]) return;
     event.preventDefault();
+    event.stopPropagation();
     setInspecting(true);
     pose.moveTo(changes[event.key]);
   };

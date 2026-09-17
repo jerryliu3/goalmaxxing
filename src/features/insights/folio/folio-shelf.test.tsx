@@ -37,6 +37,8 @@ describe("folio reader", () => {
     const reader = screen.getByRole("dialog");
     finishFlight(reader);
     expect(within(reader).getByRole("article", { name: "Learn piano goal card" })).toHaveClass("tempo-card");
+    expect(within(reader).getByRole("group", { name: "Learn piano goal card rotation" })).toBeInTheDocument();
+    expect(reader.querySelector(".tempo-card-surface")).toHaveAttribute("data-rotatable", "true");
     expect(within(reader).getByRole("button", { name: "Previous goal" })).toBeDisabled();
     await user.click(within(reader).getByRole("button", { name: "Next goal" }));
     expect(within(reader).getByRole("article", { name: "Run a 10k goal card" })).toBeInTheDocument();
