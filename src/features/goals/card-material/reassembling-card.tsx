@@ -16,15 +16,16 @@ export function ReassemblingCard({ children, completed, target, still }: {
   const { required, credited, earned } = getRewardProgress(completed, target);
   const pieces = useMemo(() => buildRewardPieces(required), [required]);
   const [arrival, setArrival] = useState({ observed: credited, settled: credited });
-  if (arrival.observed !== credited) {
-    setArrival({ observed: credited, settled: Math.min(arrival.settled, credited) });
+  if (arrival.observed !== credited || (still && arrival.settled !== credited)) {
+    setArrival({ observed: credited, settled: still ? credited : Math.min(arrival.settled, credited) });
   }
   const fused = earned && (still || arrival.settled >= required);
   useEffect(() => {
-    // Also finish if animation events are interrupted or motion settings change.
-    const timer = window.setTimeout(() => setArrival({ observed: credited, settled: credited }), still ? 0 : 1200);
+    if (still || arrival.settled >= credited) return;
+    // Also finish if animation events are interrupted.
+    const timer = window.setTimeout(() => setArrival({ observed: credited, settled: credited }), 1200);
     return () => window.clearTimeout(timer);
-  }, [credited, still]);
+  }, [credited, still, arrival.settled]);
 
   return (
     <div className={styles.surface} data-reassembly="" data-fused={fused} data-still={still}>

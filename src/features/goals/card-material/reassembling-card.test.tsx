@@ -31,5 +31,7 @@ describe("saved card assembly", () => {
     rerender(card(2, true));
     rerender(card(3, true));
     expect(container.querySelectorAll('[data-ghost], [data-reward-piece]')).toHaveLength(0);
+    rerender(card(3, false));
+    expect(container.querySelector('[data-reassembly]')).toHaveAttribute("data-fused", "true");
   });
 });
