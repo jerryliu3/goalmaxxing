@@ -29,6 +29,9 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 .tempo-card h2 {
   font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
@@ -415,22 +418,50 @@
 
 /* The surface owns perspective and pose; the card stays the front face and the
    connected side planes give it real thickness. */
+/* These mirror cardOptics(REST_POSE); the surface overwrites them from the live
+   pose, so they only stand in before the pose is applied. */
 .tempo-card-surface {
   --card-depth: 10px;
-  --light-x: 24%;
-  --light-y: 14%;
-  --shine-position: 56%;
-  --shine-angle: 124deg;
-  --shine-strength: 0.48;
-  --metal-x: 50%;
-  --metal-y: 50%;
+  --rx: 7deg;
+  --ry: -14deg;
+  --light-x: 40.4%;
+  --light-y: 27.5%;
+  --rim-light-x: -0.147;
+  --rim-light-y: -0.346;
+  --shine-position: 55.4%;
+  --shine-angle: 113deg;
+  --shine-strength: 0.73;
+  --metal-x: 53.3%;
+  --metal-y: 36.2%;
   position: relative;
   perspective: 1200px;
 }
+/* The card reads as a held object: no selection, no drag ghost, no callout. */
 .tempo-card-object {
   position: relative;
   transform-style: preserve-3d;
   transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.tempo-card-surface[data-rotatable="true"] .tempo-card-object {
+  cursor: grab;
+  touch-action: none;
+}
+.tempo-card-object:focus-visible {
+  outline: 2px solid var(--ring, currentColor);
+  outline-offset: 12px;
+  border-radius: var(--card-radius, 0.5rem);
+}
+/* Turning past a profile must not reveal mirrored type or reflections. */
+.tempo-card-object .tempo-card *,
+.tempo-card-object .tempo-card::before,
+.tempo-card-object .tempo-card::after {
+  backface-visibility: hidden;
+}
+.tempo-card-surface[data-dragging="true"] .tempo-card-object {
+  cursor: grabbing;
 }
 .tempo-card-surface[data-material="glass"] .tempo-card-object {
   --card-radius: 1.1rem;
@@ -446,11 +477,14 @@
 }
 .tempo-card-surface[data-still="true"] .tempo-card-object {
   transform: none;
+  cursor: default;
+  touch-action: auto;
 }
 /* Lighting variables are inherited from the surface so the pose drives them. */
 .tempo-card[data-material] {
   isolation: isolate;
   transform-style: preserve-3d;
+  backface-visibility: hidden;
   overflow: visible;
 }
 .tempo-card[data-material] > * {

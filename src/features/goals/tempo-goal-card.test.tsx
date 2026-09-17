@@ -1,5 +1,5 @@
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
 import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
 
@@ -103,5 +103,114 @@ describe("TempoGoalCard materials", () => {
     expect(
       renderCard({ surface: "plain" }).closest(".tempo-card-surface")
     ).toBeNull();
+  });
+});
+
+describe("TempoGoalCard rotation", () => {
+  beforeEach(() => {
+    // jsdom has no native PointerEvent; keep the fields pointer capture reads.
+    vi.stubGlobal(
+      "PointerEvent",
+      class extends MouseEvent {
+        pointerId: number;
+        pointerType: string;
+        isPrimary: boolean;
+        constructor(type: string, init: PointerEventInit = {}) {
+          super(type, init);
+          this.pointerId = init.pointerId ?? 1;
+          this.pointerType = init.pointerType ?? "mouse";
+          this.isPrimary = init.isPrimary ?? true;
+        }
+      }
+    );
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  function renderPosed() {
+    const card = renderCard();
+    const object = screen.getByRole("group", { name: "Build momentum rotation" });
+
+    return { object, surface: card.closest<HTMLElement>(".tempo-card-surface")! };
+  }
+
+  it("captures a drag past a half turn and holds the inspected pose", () => {
+    const { object, surface } = renderPosed();
+    const capture = vi.spyOn(object, "setPointerCapture");
+
+    fireEvent.pointerDown(object, {
+      pointerId: 1,
+      button: 0,
+      clientX: 100,
+      clientY: 100,
+    });
+    expect(capture).toHaveBeenCalledWith(1);
+    expect(surface).toHaveAttribute("data-dragging", "true");
+
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 450, clientY: 380 });
+    expect(parseFloat(surface.style.getPropertyValue("--ry"))).toBeGreaterThan(180);
+    expect(parseFloat(surface.style.getPropertyValue("--rx"))).toBeLessThan(-180);
+
+    fireEvent.pointerUp(surface, { pointerId: 1 });
+    const held = surface.style.getPropertyValue("--ry");
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 120, clientY: 120 });
+
+    expect(surface.style.getPropertyValue("--ry")).toBe(held);
+    expect(surface).toHaveAttribute("data-inspecting", "true");
+    expect(surface).not.toHaveAttribute("data-dragging");
+  });
+
+  it("returns a turned card to rest once the pointer leaves", () => {
+    const { object, surface } = renderPosed();
+
+    fireEvent.pointerDown(object, {
+      pointerId: 1,
+      button: 0,
+      clientX: 100,
+      clientY: 100,
+    });
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 300, clientY: 200 });
+    fireEvent.pointerUp(surface, { pointerId: 1 });
+    fireEvent.pointerLeave(surface);
+
+    expect(surface).toHaveAttribute("data-inspecting", "false");
+  });
+
+  it("leaves the drag gesture to a host that owns swiping", () => {
+    const card = renderCard({ rotatable: false });
+    const surface = card.closest<HTMLElement>(".tempo-card-surface")!;
+    const object = surface.querySelector<HTMLElement>(".tempo-card-object")!;
+    const capture = vi.spyOn(object, "setPointerCapture");
+
+    expect(
+      screen.queryByRole("group", { name: /rotation$/ })
+    ).not.toBeInTheDocument();
+
+    fireEvent.pointerDown(object, {
+      pointerId: 1,
+      button: 0,
+      clientX: 100,
+      clientY: 100,
+    });
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 450, clientY: 380 });
+
+    expect(capture).not.toHaveBeenCalled();
+    expect(surface).not.toHaveAttribute("data-dragging");
+  });
+
+  it("rotates and flips from the keyboard", () => {
+    const { object, surface } = renderPosed();
+
+    expect(object).toHaveAttribute("tabindex", "0");
+
+    fireEvent.keyDown(object, { key: "Enter" });
+    expect(surface).toHaveAttribute("data-inspecting", "true");
+
+    fireEvent.keyDown(object, { key: "Home" });
+    expect(surface).toHaveAttribute("data-inspecting", "false");
   });
 });

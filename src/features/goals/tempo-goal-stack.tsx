@@ -74,7 +74,8 @@ export function TempoGoalStack({
           animate={{ opacity: 1, rotateY: 0, x: 0 }}
           transition={{ type: "spring", stiffness: 230, damping: 25 }}
         >
-          <TempoGoalCard fields={draft} visibility={visibility} />
+          {/* The stack swipes between drafts, so the card only tilts. */}
+          <TempoGoalCard fields={draft} visibility={visibility} rotatable={false} />
         </motion.div>
       </div>
       <div className="tempo-stack-nav">

@@ -1,61 +1,76 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import { useId, type CSSProperties, type ReactNode } from "react";
 import { useReducedMotion } from "motion/react";
 import { CardSolidBody } from "./card-solid-body";
-import { cardOptics, FLAT_POSE, REST_POSE, pointerPose } from "./card-optics";
+import { cardOptics, FLAT_POSE, REST_POSE } from "./card-optics";
 import type { TempoCardMaterial } from "./tempo-card-material";
-import { useCardPose } from "./use-card-pose";
+import { useCardRotation } from "./use-card-rotation";
 
 /**
- * Gives a material goal card its extruded body and pointer-driven light. The card
- * itself stays the front face, so the surface adds depth without owning content.
+ * Gives a material goal card its extruded body and pose-driven light. The card
+ * itself stays the front face, so the surface adds depth and interaction
+ * without owning content. Pointer movement tilts the card; a drag turns it in
+ * the hand unless the host owns that gesture.
  */
 export function TempoCardSurface({
   material,
   goalColor,
+  label,
+  rotatable,
   children,
 }: {
   material: TempoCardMaterial;
   goalColor: string;
+  label: string;
+  rotatable: boolean;
   children: ReactNode;
 }) {
+  const hintId = useId();
   const still = Boolean(useReducedMotion());
-  const pose = useCardPose(still, false);
+  const rotation = useCardRotation(still, rotatable);
+  const held = rotatable && !still;
+
+  // A product card must never be left stranded face-down, so letting go returns
+  // it to rest instead of holding the inspected angle the way the study does.
+  const releaseToRest = () => {
+    if (!still && !rotation.isDragging()) rotation.reset();
+  };
 
   return (
     <div
-      ref={pose.stage}
+      ref={rotation.stage}
       className="tempo-card-surface"
       data-material={material}
       data-still={still}
+      data-rotatable={held}
+      data-inspecting={rotation.inspecting}
       style={
         {
           ...cardOptics(still ? FLAT_POSE : REST_POSE),
           "--goal-color": goalColor,
         } as CSSProperties
       }
-      onPointerMove={(event) => {
-        if (still || event.pointerType !== "mouse") return;
-        const rect = event.currentTarget.getBoundingClientRect();
-        pose.moveTo(
-          pointerPose(
-            (event.clientX - rect.left) / rect.width,
-            (event.clientY - rect.top) / rect.height,
-          ),
-        );
-      }}
-      onPointerLeave={() => {
-        if (!still) pose.reset();
-      }}
-      onPointerCancel={() => {
-        if (!still) pose.reset();
-      }}
+      {...rotation.stageHandlers}
+      onPointerLeave={releaseToRest}
     >
-      <div className="tempo-card-object">
+      <div
+        className="tempo-card-object"
+        role={held ? "group" : undefined}
+        aria-label={held ? `${label} rotation` : undefined}
+        aria-describedby={held ? hintId : undefined}
+        tabIndex={held ? 0 : undefined}
+        {...rotation.cardHandlers}
+      >
         <CardSolidBody />
         {children}
       </div>
+      {/* Keyboard affordances are announced without adding chrome to the card. */}
+      {held ? (
+        <p id={hintId} className="sr-only">
+          Drag to turn the card. Arrows rotate, Enter flips, Home resets.
+        </p>
+      ) : null}
     </div>
   );
 }

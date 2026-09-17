@@ -27,14 +27,24 @@ Scope notes:
 - Planner tasks have no difficulty of their own and stay on Liquid Glass.
 - Every material card is dimensional: `TempoCardSurface` wraps it with
   perspective, the connected side planes of `CardSolidBody`, and pointer-driven
-  lighting. Mouse movement tilts the card and moves the reflection; the card
-  returns to its rest pose on pointer leave. Touch and keyboard use the rest
-  pose, and OS reduced motion renders it flat with no frame loop.
+  lighting. Mouse movement tilts the card and moves the reflection, a drag turns
+  it in the hand, and arrows, Enter, and Home rotate, flip, and reset it from the
+  keyboard. Letting go returns the card to its rest pose. OS reduced motion
+  renders it flat with no frame loop.
+- The card is treated as an object rather than a document: its text is not
+  selectable, and it exposes no drag ghost or long-press callout.
+- Hosts that own a swipe gesture — the bulk draft stack, the folio reader, and
+  the day-work deck concept — pass `rotatable={false}`. They keep the finish and
+  the tilt, and the host keeps the drag.
 - Studies that explore their own finishes render the card with
   `surface="plain"`, which omits the production material and surface entirely.
 
-The pose, optics, and extruded body now live in `src/features/goals/card-material/`
-so the product and the study share one implementation instead of two copies.
+The pose, optics, extruded body, and rotation behavior now live in
+`src/features/goals/card-material/` so the product and the study share one
+implementation instead of two copies. `useCardRotation` is the single source of
+that interaction: the light is a fixed upper-left source transformed into the
+card's own coordinates, so the highlight travels across the face instead of
+orbiting with the card.
 
 ## Directions
 

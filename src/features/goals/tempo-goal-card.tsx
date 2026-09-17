@@ -16,6 +16,7 @@ export function TempoGoalCard({
   isTask = false,
   taskSchedule,
   surface = "material",
+  rotatable = true,
   renderLettering = text => text,
   visibility = {
     category: true,
@@ -33,6 +34,8 @@ export function TempoGoalCard({
   taskSchedule?: { date: string; time: string };
   /** `plain` leaves the surface unstyled for material exploration studies. */
   surface?: "material" | "plain";
+  /** Hosts that own a swipe gesture keep the tilt but not the held rotation. */
+  rotatable?: boolean;
   visibility?: TempoCardVisibility;
   renderLettering?: (text: ReactNode, size: "display" | "title" | "supporting") => ReactNode;
 }) {
@@ -155,7 +158,12 @@ export function TempoGoalCard({
   }
 
   return (
-    <TempoCardSurface material={material} goalColor={goalColor}>
+    <TempoCardSurface
+      material={material}
+      goalColor={goalColor}
+      label={fields.title.trim() || "Goal card"}
+      rotatable={rotatable}
+    >
       {card}
     </TempoCardSurface>
   );

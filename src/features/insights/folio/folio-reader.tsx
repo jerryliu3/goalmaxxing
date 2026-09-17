@@ -95,7 +95,8 @@ export function FolioReader({ folio }: { folio: GoalFolio }) {
               exit="exit"
               transition={{ duration: reduceMotion ? 0 : 0.38, ease: [0.22, 1, 0.36, 1] }}
             >
-              <TempoGoalCard fields={entry.fields} context="history" achieved={entry.status === "Completed"} />
+              {/* Swiping turns the page here, so the card only tilts. */}
+              <TempoGoalCard fields={entry.fields} context="history" achieved={entry.status === "Completed"} rotatable={false} />
             </motion.div>
           </AnimatePresence>
         </div>
