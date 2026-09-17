@@ -46,7 +46,13 @@ export async function loadDigestProfile(
     .eq("id", userId)
     .maybeSingle();
   if (error) {
-    throw new ApiRouteError(500, "digest_profile_load_failed", "Digest data could not be loaded.");
+    throw new ApiRouteError(
+      500,
+      "digest_profile_load_failed",
+      "Digest data could not be loaded.",
+      undefined,
+      error
+    );
   }
   if (!data) {
     throw new ApiRouteError(404, "profile_not_found", "Profile is required for digest.");
@@ -122,7 +128,13 @@ async function loadGoals(supabase: DigestClient, userId: string) {
     .order("start_date")
     .limit(MAX_DIGEST_ROWS);
   if (error) {
-    throw new ApiRouteError(500, "digest_goals_load_failed", "Digest data could not be loaded.");
+    throw new ApiRouteError(
+      500,
+      "digest_goals_load_failed",
+      "Digest data could not be loaded.",
+      undefined,
+      error
+    );
   }
   return data ?? [];
 }
@@ -156,7 +168,13 @@ async function loadPlacedItemRows(
     .order("scheduled_date")
     .limit(MAX_DIGEST_ROWS);
   if (error) {
-    throw new ApiRouteError(500, "digest_items_load_failed", "Digest data could not be loaded.");
+    throw new ApiRouteError(
+      500,
+      "digest_items_load_failed",
+      "Digest data could not be loaded.",
+      undefined,
+      error
+    );
   }
   return data ?? [];
 }
@@ -174,7 +192,13 @@ async function loadCompletions(
     .lte("completed_on", period.aheadEnd)
     .limit(MAX_DIGEST_ROWS);
   if (error) {
-    throw new ApiRouteError(500, "digest_completions_load_failed", "Digest data could not be loaded.");
+    throw new ApiRouteError(
+      500,
+      "digest_completions_load_failed",
+      "Digest data could not be loaded.",
+      undefined,
+      error
+    );
   }
   return (data ?? []).map((row) => ({
     goalId: row.goal_id,
@@ -199,7 +223,13 @@ async function loadDigestRecord(
     .eq("period_key", period.periodKey)
     .maybeSingle();
   if (error) {
-    throw new ApiRouteError(500, "digest_record_load_failed", "Digest data could not be loaded.");
+    throw new ApiRouteError(
+      500,
+      "digest_record_load_failed",
+      "Digest data could not be loaded.",
+      undefined,
+      error
+    );
   }
   if (!data) {
     return null;
@@ -232,7 +262,9 @@ async function loadLastAcknowledgedDigestAt(
     throw new ApiRouteError(
       500,
       "digest_history_load_failed",
-      "Digest data could not be loaded."
+      "Digest data could not be loaded.",
+      undefined,
+      error
     );
   }
   return data?.acknowledged_at ?? null;
@@ -267,7 +299,13 @@ export async function upsertDigestRow({
     { onConflict: "owner_id,kind,period_key" }
   );
   if (error) {
-    throw new ApiRouteError(500, "digest_upsert_failed", "Digest could not be saved.");
+    throw new ApiRouteError(
+      500,
+      "digest_upsert_failed",
+      "Digest could not be saved.",
+      undefined,
+      error
+    );
   }
 }
 
@@ -288,7 +326,9 @@ export async function updateDigestAutoShow({
     throw new ApiRouteError(
       500,
       "digest_settings_update_failed",
-      "Digest settings could not be saved."
+      "Digest settings could not be saved.",
+      undefined,
+      error
     );
   }
 }

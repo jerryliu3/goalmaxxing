@@ -62,6 +62,22 @@ export function apiSuccessResponse<T extends Record<string, unknown>>(
   );
 }
 
+/**
+ * Postgres and fetch failures carry the actionable part of a 500 (`code`,
+ * `hint`), so the server log repeats it. It stays out of the response body,
+ * which only ever exposes `details`.
+ */
+function causeSummary(cause: unknown) {
+  if (!cause || typeof cause !== "object") {
+    return undefined;
+  }
+  const { code, message, hint } = cause as Record<string, unknown>;
+  if (code === undefined && message === undefined) {
+    return undefined;
+  }
+  return { code, message, hint };
+}
+
 function logApiRouteError(error: unknown, correlationId: string) {
   if (error instanceof ApiRouteError) {
     if (error.status >= 500) {
@@ -78,6 +94,7 @@ function logApiRouteError(error: unknown, correlationId: string) {
         code: error.code,
         status: error.status,
         message: error.message,
+        cause: causeSummary((error as Error & { cause?: unknown }).cause),
       });
     }
     return;
