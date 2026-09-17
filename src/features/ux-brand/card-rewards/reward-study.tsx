@@ -8,6 +8,7 @@ import materialStyles from "../card-materials/card-materials.module.css";
 import { RewardCardPreview } from "./reward-card-preview";
 import { getRewardFields, getRewardProgress, REWARD_CONCEPTS, REWARD_MATERIALS, REWARD_SAMPLES, REWARD_TARGETS } from "./reward-model";
 import styles from "./reward-study.module.css";
+import { MAX_REWARD_PIECES } from "./reward-pieces";
 
 export function RewardStudy() {
   const [sampleIndex, setSampleIndex] = useState(0);
@@ -30,7 +31,7 @@ export function RewardStudy() {
         <header className={styles.hero}>
           <p>REWARD STUDY</p>
           <h1>Becoming yours.</h1>
-          <p>The same material card. Three ways to earn it.</p>
+          <p>The same material card. Four ways to earn it.</p>
         </header>
         <div className={styles.settings} aria-label="Reward study settings">
           <label>Goal<select value={sampleIndex} onChange={event => {
@@ -46,6 +47,7 @@ export function RewardStudy() {
           <label className={styles.check}><input type="checkbox" checked={still || reducedMotion} disabled={reducedMotion} onChange={event => setStill(event.target.checked)} />Still mode</label>
         </div>
         {sample.id === "ongoing" && <p className={styles.note}>A successful week meets the card’s weekly target. Weeks accumulate without a streak; earning this reward keeps the goal open.</p>}
+        {target > MAX_REWARD_PIECES && <p className={styles.note}>Reassemble groups {target} {sample.unit} into {MAX_REWARD_PIECES} pieces. The final piece arrives with the final completion.</p>}
         <div className={styles.progressControls} aria-label="Simulate progress">
           <p role="status" aria-live="polite">{progress.credited} / {progress.required} {sample.unit}{progress.earned ? " · Reward earned" : ""}</p>
           <div>

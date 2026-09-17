@@ -12,6 +12,16 @@ counter control every treatment.
 - **Transmute:** grey becomes the selected finish's color. No intermediate hue
   or material switching.
 - **Illuminate + Transmute:** brightness and saturation increase together.
+- **Reassemble:** a faint outline receives newly earned fragments thrown in from
+  alternating directions. Landed pieces remain in place. After the final piece
+  lands, replace the entire fragment/outline layer with the unclipped material
+  card and solid body; no seams or cracks remain. Reduced motion fuses immediately.
+
+Reassemble uses one piece per credited unit up to 24 pieces. Above that cap,
+piece `i` (one-based) arrives at `ceil(i * target / pieceCount)`. Groups differ
+by at most one completion and the final threshold always equals the target.
+Deterministic polygon partitions and a scattered acquisition order keep the
+shape stable without resembling a left-to-right fill. The cap is a study choice.
 
 At completion the filters are neutral, preserving the material exactly. Still
 mode and OS reduced motion show the same states without animated transitions.
