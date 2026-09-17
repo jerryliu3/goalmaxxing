@@ -56,8 +56,14 @@ export function ProgressOverviewLayout({
     () => orderedSections.map((section) => section.definition.id),
     [orderedSections]
   );
+  const availableViews = PROGRESS_VIEWS.filter((definition) =>
+    orderedSections.some((section) => section.definition.view === definition.value)
+  );
+  const activeView = availableViews.some((definition) => definition.value === view)
+    ? view
+    : (availableViews[0]?.value ?? "current");
   const visibleSections = orderedSections.filter(
-    (section) => section.definition.view === view
+    (section) => section.definition.view === activeView
   );
 
   useEffect(() => {
@@ -78,7 +84,7 @@ export function ProgressOverviewLayout({
   }, [clearPendingSection, pendingSectionId]);
 
   const highlightedSectionId =
-    activeSectionId && progressViewForSection(activeSectionId) === view
+    activeSectionId && progressViewForSection(activeSectionId) === activeView
       ? activeSectionId
       : null;
 
@@ -102,22 +108,25 @@ export function ProgressOverviewLayout({
         </h1>
       </div>
 
-      <SegmentedTabs
-        className="md:hidden"
-        items={PROGRESS_VIEWS.map((definition) => ({
-          value: definition.value,
-          label: definition.label,
-          controlsId: VIEW_PANEL_ID,
-        }))}
-        value={view}
-        onChange={selectView}
-        label="Progress views"
-        highlightLayoutId={VIEW_TAB_LAYOUT_ID}
-      />
+      {availableViews.length > 1 ? (
+        <div className="md:hidden" data-onboarding="insights.views">
+          <SegmentedTabs
+            items={availableViews.map((definition) => ({
+              value: definition.value,
+              label: definition.label,
+              controlsId: VIEW_PANEL_ID,
+            }))}
+            value={activeView}
+            onChange={selectView}
+            label="Progress views"
+            highlightLayoutId={VIEW_TAB_LAYOUT_ID}
+          />
+        </div>
+      ) : null}
 
       <div className="md:grid md:grid-cols-[minmax(9rem,13rem)_minmax(0,1fr)] md:gap-8">
         <ProgressSectionIndex
-          className="hidden md:block md:sticky md:top-6 md:self-start"
+          className="hidden md:sticky md:top-6 md:block md:self-start"
           availableSectionIds={availableSectionIds}
           activeSectionId={highlightedSectionId}
           onSelect={selectSection}
@@ -125,11 +134,11 @@ export function ProgressOverviewLayout({
         <div
           id={VIEW_PANEL_ID}
           role="tabpanel"
-          aria-labelledby={`${VIEW_TAB_LAYOUT_ID}-${view}`}
+          aria-labelledby={`${VIEW_TAB_LAYOUT_ID}-${activeView}`}
           className="min-w-0"
         >
           <h2 className="border-b border-border pb-3 font-display text-lg font-semibold tracking-tight">
-            {progressViewTitle(view)}
+            {progressViewTitle(activeView)}
           </h2>
           <div className="pt-6">
             {visibleSections.map(({ definition, content }) => (

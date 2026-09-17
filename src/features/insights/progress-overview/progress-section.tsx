@@ -44,6 +44,7 @@ export function ProgressSection({
     <section
       id={progressSectionElementId(id)}
       data-testid={progressSectionElementId(id)}
+      data-onboarding={`insights.${id}`}
       aria-labelledby={headingId}
       className="scroll-mt-28 border-t border-border py-6 first:border-t-0 first:pt-0"
     >

@@ -38,6 +38,7 @@ export function ProgressSectionIndex({
     <nav
       aria-label="Progress sections"
       data-testid="progress-section-index"
+      data-onboarding="insights.views"
       className={cn("space-y-6", className)}
     >
       {groups.map((group) => (

@@ -109,4 +109,19 @@ describe("ProgressOverviewLayout", () => {
     expect(within(index).queryByRole("button", { name: "Past goals" })).toBeNull();
     expect(within(index).getByRole("button", { name: "Achievements" })).toBeInTheDocument();
   });
+
+  it("drops the view tabs when only one view has sections", () => {
+    window.history.replaceState(null, "", "/insights?view=past");
+    render(
+      <ProgressOverviewLayout
+        sections={sections().filter((section) => section.id === "week")}
+      />
+    );
+
+    expect(screen.queryByRole("tab")).toBeNull();
+    expect(
+      screen.getByRole("heading", { name: "Current progress" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("6 of 12")).toBeInTheDocument();
+  });
 });
