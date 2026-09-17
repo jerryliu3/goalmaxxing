@@ -118,6 +118,31 @@ describe("CompeteTile", () => {
     expect(screen.getByText("03")).toBeInTheDocument();
   });
 
+  it("numbers a two-row grid at the cutoff and switches to a readout one step over", () => {
+    const { rerender } = render(
+      <CompeteTile
+        tile={tile({
+          requirement: { progress: 0, target: 10, unitLabel: "active days" },
+        })}
+        density="join-only"
+      />
+    );
+
+    expect(screen.getAllByTestId("requirement-mark")).toHaveLength(10);
+
+    rerender(
+      <CompeteTile
+        tile={tile({
+          requirement: { progress: 0, target: 11, unitLabel: "active days" },
+        })}
+        density="join-only"
+      />
+    );
+
+    expect(screen.queryByTestId("requirement-marks")).not.toBeInTheDocument();
+    expect(screen.getByText("11 active days to go")).toBeInTheDocument();
+  });
+
   it("falls back to a single readout when the target is too large to number", () => {
     render(
       <CompeteTile

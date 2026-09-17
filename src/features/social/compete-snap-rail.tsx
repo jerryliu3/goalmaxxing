@@ -293,8 +293,13 @@ export function sortJoinedFirst<T extends { joined: boolean }>(items: readonly T
   return [...items].sort((a, b) => Number(b.joined) - Number(a.joined));
 }
 
-/** Above this, one mark per unit stops being legible inside a tile. */
-const MAX_NUMBERED_MARKS = 20;
+/**
+ * Two rows of five. Tiles in the rail share the tallest tile's height, so a
+ * taller mark grid would leave every other tile with a large empty gap above
+ * its button. Two rows is also close to the height of the readout below, which
+ * keeps mixed rails even.
+ */
+const MAX_NUMBERED_MARKS = 10;
 
 const EYEBROW_CLASS =
   "text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground";
