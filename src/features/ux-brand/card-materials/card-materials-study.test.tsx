@@ -9,35 +9,34 @@ vi.mock("motion/react", () => ({ useReducedMotion: () => preference.reduced }));
 afterEach(() => { cleanup(); preference.reduced = false; });
 
 describe("card material comparison", () => {
-  it("switches real glyph filters, retains engraving between views, and fully removes relief for print", async () => {
+  it("uses geometric embossing and keeps depth independent of printed/engraved comparisons", async () => {
     const user = userEvent.setup();
     render(<CardMaterialsStudy />);
     const page = screen.getByRole("main");
-    const activeFilter = (size: "text" | "display") => {
-      const property = size === "text" ? "--letter-relief" : "--letter-relief-display";
-      const value = page.style.getPropertyValue(property);
-      const id = value.match(/url\("#(.+)"\)/)?.[1];
-      expect(id).toBeTruthy();
-      const filter = document.getElementById(id!);
-      expect(filter?.tagName.toLowerCase()).toBe("filter");
-      return filter!;
-    };
-    const raised = activeFilter("display");
-    expect(raised.querySelector('feMergeNode[in="wall"]')).not.toBeNull();
-    expect(activeFilter("text")).not.toBe(raised);
-    await user.click(screen.getByRole("checkbox", { name: "Still mode" }));
-    expect(activeFilter("display")).toBe(raised);
-    await user.selectOptions(screen.getByRole("combobox", { name: "Lettering" }), "recessed");
-    const engraved = activeFilter("display");
-    expect(engraved).not.toBe(raised);
-    expect(engraved.querySelector('[result="innerShadow"]')).toHaveAttribute("in2", "insideTop");
-    expect(engraved.querySelector('feMergeNode[in="wall"]')).toBeNull();
-    await user.click(screen.getByRole("tab", { name: "02 In the app" }));
-    expect(activeFilter("display")).toBe(engraved);
-    await user.selectOptions(screen.getByRole("combobox", { name: "Lettering" }), "flat");
-    expect(page.style.getPropertyValue("--letter-relief")).toBe("none");
+    const foil = screen.getByRole("region", { name: "Foil Print" });
+    const card = within(foil).getByRole("article", { name: "Goal card preview" });
+    // The filtered material is a sibling, never an ancestor of the raised type.
+    expect(card.parentElement!.querySelector(":scope > [data-material-surface]")).not.toBeNull();
+    expect(card.closest("[data-material-surface]")).toBeNull();
+    expect(card.querySelector('[data-lettering-solid="display"] [data-lettering-face]')).not.toBeNull();
     expect(page.style.getPropertyValue("--letter-relief-display")).toBe("none");
+    expect(page.style.getPropertyValue("--raised-text-depth")).toBe("6px");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Text depth" }), "4");
+    await user.click(screen.getByRole("checkbox", { name: "Still mode" }));
+    expect(page.style.getPropertyValue("--raised-text-depth")).toBe("4px");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Lettering" }), "flat");
     expect(page).toHaveAttribute("data-lettering", "flat");
+    expect(screen.getByRole("combobox", { name: "Text depth" })).toBeDisabled();
+    expect(page.style.getPropertyValue("--letter-relief-display")).toBe("none");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Lettering" }), "recessed");
+    const id = page.style.getPropertyValue("--letter-relief-display").match(/url\("#(.+)"\)/)?.[1];
+    expect(document.getElementById(id!)?.querySelector('[result="innerShadow"]')).not.toBeNull();
+    await user.click(screen.getByRole("tab", { name: "02 In the app" }));
+    await user.selectOptions(screen.getByRole("combobox", { name: "Lettering" }), "raised");
+    expect(page.style.getPropertyValue("--raised-text-depth")).toBe("4px");
+    const team = screen.getByRole("region", { name: "Team membership card" });
+    expect(within(team).getByRole("heading", { name: "The Early Hours Club" })).toBeInTheDocument();
+    expect(team.querySelector('[data-lettering-solid="display"]')).not.toBeNull();
   });
 
   it("keeps shared goal content and history copy consistent across materials", async () => {

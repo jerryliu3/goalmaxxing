@@ -158,21 +158,27 @@ rare earned moments; they do not define achievement rules or production rewards.
 
 ## Surface lettering comparison
 
-The Lettering control compares embossed, engraved and printed treatments across
-all three views. The original fractional-pixel drop shadows were too subtle, and
-reversing their direction never produced an inset cut. The revised comparison
-uses shared SVG filters on the glyph alpha, preserving foil color:
+Embossed card lettering now uses CSS depth geometry. Sixteen tightly spaced glyph
+slices connect the card surface to the front face. The complete assembly shares
+the card's perspective and rotation, so its projected thickness changes during
+hover, drag, and keyboard rotation. This replaces the previous embossed SVG
+shading on HTML cards. It is a stepped extrusion, not a triangulated font mesh.
 
-- Embossed: a 2.8px wall on large numerals, a contact shadow, and a lit upper bevel.
-- Engraved: a darker letter floor, a shadow clipped inside the top edge, and a lit
-  lower cut lip. There is no raised wall or outward cast shadow.
-- Printed: no filter. Original type and material gradients are preserved.
+The material coating is an empty sibling face, outside the content's 3D chain.
+This keeps glass backdrop filters from flattening the type. Layout ancestors
+preserve 3D; metallic gradients live on the raised front face. Decorative side
+slices use generated content and are hidden from accessibility, leaving one copy
+of the original text. A renderer slot keeps TempoGoalCard's default production
+output unchanged while reusing its goal content in the study.
 
-Headlines and supporting lettering use a smaller 1.1px bevel to stay readable.
-Inline HTML lettering receives an explicit inline-block box. Fine metadata stays
-printed; forced-colors disables the treatment. Filter definitions have unique IDs
-per study instance and remain mounted while switching views. This is deliberately
-amplified for comparison and does not change production goal-card typography.
+Text depth compares 2px, 4px, and an intentionally exaggerated 6px on large
+numerals. Titles use 60% and supporting text 35% of that depth. Printed hides
+side slices and places the face at zero depth. Engraved remains explicitly
+labeled as a surface-shading comparison; it does not cut a hole in the card.
+The SVG object gallery retains its existing lighting-based lettering effects.
+
+Still mode stops movement without changing lettering selection. Forced-colors
+removes geometric and shading treatments. No production typography is changed.
 
 ## Application card editions
 
