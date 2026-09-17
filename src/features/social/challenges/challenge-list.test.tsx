@@ -20,6 +20,8 @@ vi.mock("@/features/social/social-freshness-indicator", () => ({
   SocialFreshnessIndicator: () => <div data-testid="social-freshness-indicator" />,
 }));
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 function makeChallenge(
   id: string,
   title: string,
@@ -35,8 +37,8 @@ function makeChallenge(
     metric: "total_xp",
     metricTrackKey: null,
     targetValue: 1000,
-    startsAt: "2026-08-01T00:00:00.000Z",
-    endsAt: "2026-08-31T23:59:59.000Z",
+    startsAt: new Date(Date.now() - DAY_MS).toISOString(),
+    endsAt: new Date(Date.now() + 7 * DAY_MS).toISOString(),
     rewardXp: 100,
     maxParticipants: null,
     participantCount: 10,
@@ -189,5 +191,24 @@ describe("ChallengeList", () => {
     render(<ChallengeList />);
     expect(await screen.findByRole("heading", { name: "Live Sprint" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Closed Sprint" })).not.toBeInTheDocument();
+  });
+
+  it("hides challenges whose window has elapsed but whose status has not caught up", async () => {
+    fetchSocialChallengesMock.mockResolvedValue({
+      schemaVersion: "1",
+      items: [
+        makeChallenge("11111111-1111-4111-8111-111111111111", "Elapsed Sprint", {
+          status: "active",
+          endsAt: new Date(Date.now() - DAY_MS).toISOString(),
+        }),
+        makeChallenge("22222222-2222-4222-8222-222222222222", "Live Sprint"),
+      ],
+    });
+
+    render(<ChallengeList />);
+    expect(await screen.findByRole("heading", { name: "Live Sprint" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Elapsed Sprint" })
+    ).not.toBeInTheDocument();
   });
 });

@@ -50,8 +50,12 @@ function mapLeaveRpcError(message: string) {
   if (message === "challenge_not_found") {
     return new ApiRouteError(404, "challenge_not_found", "Challenge was not found.");
   }
-  if (message === "challenge_not_leaveable") {
-    return new ApiRouteError(409, "challenge_not_leaveable", "Challenge is not open for leaving.");
+  if (message === "challenge_already_ended") {
+    return new ApiRouteError(
+      409,
+      "challenge_already_ended",
+      "This challenge has ended, so you can no longer leave it."
+    );
   }
   if (message === "team_required") {
     return new ApiRouteError(409, "team_required", "An active team is required for this challenge.");

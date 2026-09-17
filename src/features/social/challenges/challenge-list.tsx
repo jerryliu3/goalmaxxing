@@ -79,8 +79,15 @@ export function ChallengeList({
   }, [isActive, loadChallenges, refreshToken]);
 
   const tiles = useMemo<CompeteTileModel[]>(() => {
+    // Mirrors the leave window in `leave_challenge_service`: a challenge whose
+    // window has elapsed keeps an 'active' status until the refresh cron runs,
+    // and offering Leave on one of those only produces a failed request.
+    const now = Date.now();
     const openItems = items.filter(
-      (item) => item.status !== "closed" && item.status !== "archived"
+      (item) =>
+        item.status !== "closed" &&
+        item.status !== "archived" &&
+        new Date(item.endsAt).getTime() > now
     );
     const mapped = openItems.map((item) => {
       const progress = item.viewerProgress ?? 0;

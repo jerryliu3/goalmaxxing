@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(6);
+select plan(10);
 
 insert into auth.users (id, email)
 values
@@ -127,6 +127,36 @@ values (
 )
 on conflict (id) do nothing;
 
+insert into public.challenges (
+  id,
+  slug,
+  title,
+  status,
+  subject_kind,
+  metric,
+  target_value,
+  starts_at,
+  ends_at,
+  reward_xp,
+  audience_kind,
+  cohort_id
+)
+values (
+  'aa400000-0000-4000-8000-000000000004',
+  'cohort-challenge-closed',
+  'Closed challenge',
+  'closed',
+  'user',
+  'total_xp',
+  10,
+  pg_catalog.now() - interval '9 days',
+  pg_catalog.now() - interval '2 days',
+  5,
+  'cohort',
+  'aa300000-0000-4000-8000-000000000001'
+)
+on conflict (id) do nothing;
+
 insert into public.challenge_participants (
   challenge_id,
   subject_kind,
@@ -136,15 +166,25 @@ insert into public.challenge_participants (
   completed_at,
   awarded_at
 )
-values (
-  'aa400000-0000-4000-8000-000000000003',
-  'user',
-  'aa111111-1111-4111-8111-111111111111',
-  10,
-  pg_catalog.now() - interval '1 hour',
-  pg_catalog.now() - interval '1 hour',
-  pg_catalog.now() - interval '1 hour'
-)
+values
+  (
+    'aa400000-0000-4000-8000-000000000003',
+    'user',
+    'aa111111-1111-4111-8111-111111111111',
+    10,
+    pg_catalog.now() - interval '1 hour',
+    pg_catalog.now() - interval '1 hour',
+    pg_catalog.now() - interval '1 hour'
+  ),
+  (
+    'aa400000-0000-4000-8000-000000000004',
+    'user',
+    'aa111111-1111-4111-8111-111111111111',
+    3,
+    pg_catalog.now() - interval '3 days',
+    null,
+    null
+  )
 on conflict (challenge_id, subject_kind, subject_id) do nothing;
 
 reset role;
@@ -198,13 +238,43 @@ select is(
   'expired scheduled challenge is hidden from challenge list'
 );
 
+select ok(
+  public.leave_challenge_service('aa400000-0000-4000-8000-000000000003'),
+  'completed challenge participant can leave'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from public.challenge_participants participant
+    where participant.challenge_id = 'aa400000-0000-4000-8000-000000000003'
+      and participant.subject_id = 'aa111111-1111-4111-8111-111111111111'
+  ),
+  0,
+  'leaving removes the completed participant row'
+);
+
+select ok(
+  public.leave_challenge_service('aa400000-0000-4000-8000-000000000003'),
+  'leaving a challenge the viewer is not in succeeds as a no-op'
+);
+
 select throws_ok(
   $$
-    select public.leave_challenge_service('aa400000-0000-4000-8000-000000000003');
+    select public.leave_challenge_service('aa400000-0000-4000-8000-000000000004');
   $$,
   '22023',
-  'challenge_not_leaveable',
-  'completed challenge participant cannot leave silently'
+  'challenge_already_ended',
+  'participant cannot leave a challenge that is over'
+);
+
+select throws_ok(
+  $$
+    select public.leave_challenge_service('aa400000-0000-4000-8000-000000000002');
+  $$,
+  '22023',
+  'challenge_already_ended',
+  'an elapsed window blocks leaving before the status refresh catches up'
 );
 
 select * from finish();
