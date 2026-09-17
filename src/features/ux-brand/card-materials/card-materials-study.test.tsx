@@ -21,9 +21,15 @@ describe("card material comparison", () => {
     expect(card.querySelector('[data-lettering-solid="display"] [data-lettering-face]')).not.toBeNull();
     expect(page.style.getPropertyValue("--letter-relief-display")).toBe("none");
     expect(page.style.getPropertyValue("--raised-text-depth")).toBe("6px");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Text depth" }), "12");
+    expect(page.style.getPropertyValue("--raised-text-depth")).toBe("12px");
     await user.selectOptions(screen.getByRole("combobox", { name: "Text depth" }), "4");
     await user.click(screen.getByRole("checkbox", { name: "Still mode" }));
     expect(page.style.getPropertyValue("--raised-text-depth")).toBe("4px");
+    const category = card.querySelector(".tempo-card-period");
+    expect(category?.querySelector("[data-lettering-solid]")).toBeNull();
+    expect(card.querySelector(".tempo-card-target [data-lettering-solid=\"supporting\"]")).not.toBeNull();
+    expect(card.querySelector("h2 [data-lettering-solid=\"title\"]")).not.toBeNull();
     await user.selectOptions(screen.getByRole("combobox", { name: "Lettering" }), "flat");
     expect(page).toHaveAttribute("data-lettering", "flat");
     expect(screen.getByRole("combobox", { name: "Text depth" })).toBeDisabled();

@@ -23,7 +23,7 @@ it("keeps one readable label and matching multiline geometry when text changes",
   }
 });
 
-it("leaves production typography unchanged and preserves goal content with the study renderer", () => {
+it("leaves production typography unchanged and embosses number, period, and title only", () => {
   const fields = MATERIAL_SAMPLES[0].fields;
   const { container, rerender } = render(<TempoGoalCard fields={fields} />);
   expect(container.querySelector("[data-lettering-solid]")).toBeNull();
@@ -31,5 +31,9 @@ it("leaves production typography unchanged and preserves goal content with the s
   rerender(<TempoGoalCard fields={fields} renderLettering={renderSolidLettering} />);
   expect(screen.getByRole("article").textContent).toBe(text);
   expect(container.querySelectorAll('[data-lettering-solid="display"]')).toHaveLength(1);
+  expect(container.querySelectorAll('[data-lettering-solid="title"]')).toHaveLength(1);
   expect(container.querySelector('[data-lettering-solid="supporting"] [data-glyphs]')).toHaveAttribute("data-glyphs", "days\na week");
+  const category = container.querySelector(".tempo-card-period");
+  expect(category?.querySelector("[data-lettering-solid]")).toBeNull();
+  expect(category?.textContent).toMatch(/./);
 });

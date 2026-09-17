@@ -171,11 +171,11 @@ slices use generated content and are hidden from accessibility, leaving one copy
 of the original text. A renderer slot keeps TempoGoalCard's default production
 output unchanged while reusing its goal content in the study.
 
-Text depth compares 2px, 4px, and an intentionally exaggerated 6px on large
-numerals. Titles use 60% and supporting text 35% of that depth. Printed hides
-side slices and places the face at zero depth. Engraved remains explicitly
-labeled as a surface-shading comparison; it does not cut a hole in the card.
-The SVG object gallery retains its existing lighting-based lettering effects.
+Text depth compares 2px through 12px. Number, period, and title share the same
+extrusion height; category stays flat on the face. Printed hides side slices and
+places the face at zero depth. Engraved remains explicitly labeled as a
+surface-shading comparison; it does not cut a hole in the card. The SVG object
+gallery retains its existing lighting-based lettering effects.
 
 Still mode stops movement without changing lettering selection. Forced-colors
 removes geometric and shading treatments. No production typography is changed.

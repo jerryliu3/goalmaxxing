@@ -100,12 +100,12 @@ export function TempoGoalCard({
       <h2>{renderLettering(fields.title.trim() || "Something worth starting.", "title")}</h2>
       <div className="tempo-card-period-row">
         <span className="tempo-card-period">
-          {renderLettering(visibility.category && !isTask
+          {visibility.category && !isTask
             ? getCategoryLabel(
                 fields.category_selection,
                 fields.custom_category,
               )
-            : "", "supporting")}
+            : ""}
         </span>
         {visibility.difficulty && !isTask && (
           <div className="tempo-card-effort">
