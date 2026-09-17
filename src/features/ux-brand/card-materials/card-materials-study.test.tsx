@@ -107,6 +107,17 @@ describe("card material comparison", () => {
     expect(screen.getByRole("region", { name: "Annual achievement trophy" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Milestone medal" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Momentum compass" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Summit award" })).toBeInTheDocument();
+    const medal = screen.getByRole("region", { name: "Milestone medal" });
+    const sculpture = within(medal).getByRole("img");
+    expect(sculpture.closest("[data-material]")).toHaveAttribute("data-material", "sapphire");
+    expect(sculpture.closest<HTMLElement>("[data-material]")!.style.getPropertyValue("--material-color")).toBe("#8b5cf6");
+    const definitions = Array.from(document.querySelectorAll("svg defs [id]"), element => element.id);
+    expect(new Set(definitions).size).toBe(definitions.length);
+    await user.click(within(medal).getByRole("button", { name: "Tilt Milestone medal" }));
+    expect(within(medal).getByRole("button", { name: "Tilt Milestone medal" })).toHaveAttribute("aria-pressed", "true");
+    await user.click(screen.getByRole("checkbox", { name: "Still mode" }));
+    for (const button of screen.getAllByRole("button", { name: /^Tilt / })) expect(button).toBeDisabled();
     expect(screen.getByRole("combobox", { name: "Material" })).toHaveDisplayValue("Sapphire Prism");
   });
 

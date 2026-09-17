@@ -171,3 +171,15 @@ rounded sidewalls, reverse face, tilt, held rotation, and keyboard controls.
 Application CSS owns layout only. The team edition adapts into a readable vertical
 layout on phones. Category color and lettering controls work across all editions.
 The data and identities are illustrative, not connected account records.
+
+## Objects of progress
+
+Four new vector sculptures replace the original icon-based objects: a hollow,
+fluted annual chalice with open handles; a reeded milestone medal and woven
+ribbon; an asymmetric faceted summit award; and an enamel compass with a jewel
+bearing. They are dimensional illustrations with bounded perspective tilt, not
+full 360-degree meshes. Unique per-instance SVG definitions supply metal, rim,
+cavity, enamel and moving spectral coatings. All twelve finish selections and
+category-responsive colors are supported. Still mode and OS reduced motion
+stop movement; each sculpture has an accessible description and a tilt control.
+These are illustrative achievement concepts, not new award eligibility rules.

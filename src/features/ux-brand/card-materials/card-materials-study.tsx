@@ -50,7 +50,7 @@ export function CardMaterialsStudy() {
           <div className={styles.viewIntro}>
             <p className={styles.eyebrow}>{view === "application" ? "THE MATERIAL SYSTEM, APPLIED" : "PROGRESS WITH MASS"}</p>
             <h2>{view === "application" ? "One finish. Four ways to belong." : "Not a card. A thing earned."}</h2>
-            <p>{view === "application" ? "A challenge to join. A place in the league. An identity to keep. A membership shared with your people. Sample cards, all cut from the same material." : "A cup for sustained momentum, a medal for accumulated milestones, and a compass for finding the next meaningful action. Each inherits the selected material and light model."}</p>
+            <p>{view === "application" ? "A challenge to join. A place in the league. An identity to keep. A membership shared with your people. Sample cards, all cut from the same material." : "Four collectible reward concepts: a fluted chalice, a machined medallion, a faceted summit, and a precision compass. Different silhouettes, with the same family of finishes and responsive light."}</p>
           </div>
           <ArtifactShowcase mode={view} material={MATERIALS[material]} still={motionStopped} color={MATERIAL_SAMPLES[sample].fields.color} />
         </>}
