@@ -162,3 +162,12 @@ offers engraved and printed treatments, retained between all three study views.
 Opposed subpixel highlights and shadows bevel the headline and numerals without
 separating text into floating depth planes. Small metadata stays printed for
 legibility; forced-colors removes the effect. Production cards are unchanged.
+
+## Application card editions
+
+Challenge, league, profile, and landscape team membership studies now compose
+the same MaterialStage as the original goal previews: all twelve face recipes,
+rounded sidewalls, reverse face, tilt, held rotation, and keyboard controls.
+Application CSS owns layout only. The team edition adapts into a readable vertical
+layout on phones. Category color and lettering controls work across all editions.
+The data and identities are illustrative, not connected account records.

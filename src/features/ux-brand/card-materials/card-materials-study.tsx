@@ -41,6 +41,7 @@ export function CardMaterialsStudy() {
             <label>Sample goal<select value={sample} onChange={event => setSample(Number(event.target.value))}>{MATERIAL_SAMPLES.map((item, index) => <option key={item.label} value={index}>{item.label}</option>)}</select></label>
             <label><input type="checkbox" checked={history} onChange={event => setHistory(event.target.checked)} />Completed goal</label>
           </> : <label>Material<select value={material} onChange={event => setMaterial(Number(event.target.value))}>{MATERIALS.map((item, index) => <option key={item.id} value={index}>{item.name}</option>)}</select></label>}
+          {view !== "cards" && <label>Category color<select value={sample} onChange={event => setSample(Number(event.target.value))}>{MATERIAL_SAMPLES.map((item, index) => <option key={item.label} value={index}>{item.label}</option>)}</select></label>}
           <label>Lettering<select value={lettering} onChange={event => setLettering(event.target.value)}><option value="raised">Embossed</option><option value="recessed">Engraved</option><option value="flat">Printed</option></select></label>
           <label><input type="checkbox" checked={dark} onChange={event => setDark(event.target.checked)} />Ink backdrop</label>
           <label><input type="checkbox" checked={motionStopped} disabled={Boolean(reducedMotion)} onChange={event => setStill(event.target.checked)} />Still mode</label>
@@ -48,10 +49,10 @@ export function CardMaterialsStudy() {
         {view === "cards" ? <div className={styles.grid}>{MATERIALS.map(item => <MaterialPreview key={item.id} material={item} fields={MATERIAL_SAMPLES[sample].fields} still={motionStopped} history={history} />)}</div> : <>
           <div className={styles.viewIntro}>
             <p className={styles.eyebrow}>{view === "application" ? "THE MATERIAL SYSTEM, APPLIED" : "PROGRESS WITH MASS"}</p>
-            <h2>{view === "application" ? "One finish. Three product identities." : "Not a card. A thing earned."}</h2>
-            <p>{view === "application" ? "Challenge, leaderboard, and profile formats use the same face, edge, and moving light—without forcing every surface into the same rectangle." : "A cup for sustained momentum, a medal for accumulated milestones, and a compass for finding the next meaningful action. Each inherits the selected material and light model."}</p>
+            <h2>{view === "application" ? "One finish. Four ways to belong." : "Not a card. A thing earned."}</h2>
+            <p>{view === "application" ? "A challenge to join. A place in the league. An identity to keep. A membership shared with your people. Sample cards, all cut from the same material." : "A cup for sustained momentum, a medal for accumulated milestones, and a compass for finding the next meaningful action. Each inherits the selected material and light model."}</p>
           </div>
-          <ArtifactShowcase mode={view} material={MATERIALS[material]} still={motionStopped} />
+          <ArtifactShowcase mode={view} material={MATERIALS[material]} still={motionStopped} color={MATERIAL_SAMPLES[sample].fields.color} />
         </>}
         <aside className={styles.recommendation}>
           <p className={styles.eyebrow}>THE PREMIUM EDIT</p>
