@@ -37,7 +37,10 @@ describe("reward card study", () => {
     expect(screen.getByRole("status")).toHaveTextContent("0 / 12 successful weeks");
     await user.click(screen.getByRole("button", { name: "Almost earned" }));
     await user.click(screen.getByRole("button", { name: "Complete one" }));
-    expect(screen.getAllByText("03")).toHaveLength(REWARD_CONCEPTS.length);
+    for (const concept of REWARD_CONCEPTS) {
+      const region = screen.getByRole("region", { name: concept.name });
+      expect(within(within(region).getByRole("article", { name: "Make time for the long run. goal card" })).getByText("03")).toBeInTheDocument();
+    }
     expect(screen.queryByText("A goal you accomplished")).not.toBeInTheDocument();
   });
 

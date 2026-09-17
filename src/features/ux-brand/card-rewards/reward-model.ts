@@ -3,6 +3,7 @@ import { buildMilestoneNameDrafts } from "@/lib/goals/milestones";
 import { MATERIALS, MATERIAL_SAMPLES } from "../card-materials/materials";
 
 export const REWARD_CONCEPTS = [
+  { id: "reassemble", name: "Reassemble", description: "Pieces fly into an outline, then fuse into one card." },
   { id: "illuminate", name: "Illuminate", description: "Dim material gradually catches the light." },
   { id: "transmute", name: "Transmute", description: "Neutral grey becomes the selected material’s color." },
   { id: "illuminate-transmute", name: "Illuminate + Transmute", description: "Light and color return together." },
@@ -29,6 +30,7 @@ export function getRewardProgress(completed: number, target: number) {
 }
 
 export function getRewardFilter(concept: RewardConcept["id"], fraction: number) {
+  if (concept === "reassemble") return "saturate(1) brightness(1)";
   const progress = Math.max(0, Math.min(1, fraction));
   const saturation = concept === "illuminate" ? 1 : progress;
   const brightness = concept === "transmute" ? 1 : 0.28 + progress * 0.72;

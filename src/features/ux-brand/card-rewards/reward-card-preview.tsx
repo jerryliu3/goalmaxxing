@@ -9,6 +9,7 @@ import { useCardPose } from "../card-materials/use-card-pose";
 import materialStyles from "../card-materials/card-materials.module.css";
 import categoryStyles from "../card-materials/category-materials.module.css";
 import { RewardCardFace } from "./reward-card-face";
+import { ReassemblingCard } from "./reassembling-card";
 import { getRewardFilter, getRewardProgress, type RewardConcept } from "./reward-model";
 import styles from "./reward-study.module.css";
 
@@ -44,7 +45,9 @@ export function RewardCardPreview({ concept, material, fields, completed, target
         <div className={styles.artwork} data-reward-treatment={concept.id}
           style={{ "--reward-filter": getRewardFilter(concept.id, progress.fraction) } as CSSProperties}>
           <div className={materialStyles.object} data-card-object="">
-            <RewardCardFace fields={fields} earned={progress.earned} />
+            {concept.id === "reassemble"
+              ? <ReassemblingCard fields={fields} completed={completed} target={target} still={still} />
+              : <RewardCardFace fields={fields} earned={progress.earned} />}
           </div>
         </div>
       </div>
