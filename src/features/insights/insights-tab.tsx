@@ -1,12 +1,10 @@
 "use client";
 
 import {
-  addMonths,
   format,
   parseISO,
   startOfMonth,
   startOfYear,
-  subMonths,
   endOfYear,
 } from "date-fns";
 import { X } from "lucide-react";
@@ -308,7 +306,7 @@ export function InsightsTab({
     () => selectSearchedGoals(personalGoals, goalSearchQuery),
     [goalSearchQuery, personalGoals]
   );
-  const { historicalGoals, visiblePerGoalHeatmaps } = useMemo(
+  const { visiblePerGoalHeatmaps } = useMemo(
     () =>
       selectVisiblePerGoalHeatmaps({
         goals: searchedPersonalGoals,

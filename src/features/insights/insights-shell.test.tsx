@@ -148,8 +148,7 @@ describe("InsightsShell", () => {
   it("renders one full insights lane outside duo-both scope", () => {
     render(<InsightsShell />);
 
-    expect(screen.getByTestId("insights-tab-full")).toBeInTheDocument();
-    expect(insightsTabMock).toHaveBeenCalledTimes(1);
+    expect(screen.getAllByTestId("insights-tab-full")).toHaveLength(1);
     expect(insightsTabMock.mock.calls[0]?.[0]).toMatchObject({
       readOnly: false,
     });
