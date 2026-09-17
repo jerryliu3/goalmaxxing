@@ -3,8 +3,8 @@
 import { useState, type CSSProperties } from "react";
 import { Rotate3D } from "lucide-react";
 import type { CardMaterial } from "./materials";
-import { cardOptics, FLAT_POSE, REST_POSE, pointerPose } from "./card-optics";
-import { useCardPose } from "./use-card-pose";
+import { cardOptics, FLAT_POSE, REST_POSE, pointerPose } from "@/features/goals/card-material/card-optics";
+import { useCardPose } from "@/features/goals/card-material/use-card-pose";
 import { RewardSculpture, type RewardShape } from "./reward-sculptures";
 import styles from "./reward-showcase.module.css";
 

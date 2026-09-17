@@ -25,10 +25,16 @@ Scope notes:
 - The material follows the same progressive disclosure as the effort bars, so
   early creation steps and the empty entry preview keep the neutral surface.
 - Planner tasks have no difficulty of their own and stay on Liquid Glass.
-- Production lighting is static. Pointer tilt and the extruded card body remain
-  study-only, as the study recommendation intended.
+- Every material card is dimensional: `TempoCardSurface` wraps it with
+  perspective, the connected side planes of `CardSolidBody`, and pointer-driven
+  lighting. Mouse movement tilts the card and moves the reflection; the card
+  returns to its rest pose on pointer leave. Touch and keyboard use the rest
+  pose, and OS reduced motion renders it flat with no frame loop.
 - Studies that explore their own finishes render the card with
-  `surface="plain"`, which omits the production material entirely.
+  `surface="plain"`, which omits the production material and surface entirely.
+
+The pose, optics, and extruded body now live in `src/features/goals/card-material/`
+so the product and the study share one implementation instead of two copies.
 
 ## Directions
 

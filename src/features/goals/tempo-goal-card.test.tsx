@@ -91,4 +91,17 @@ describe("TempoGoalCard materials", () => {
       "data-material"
     );
   });
+
+  it("gives a material card a posed surface carrying the goal color", () => {
+    const surface = renderCard().closest(".tempo-card-surface");
+
+    expect(surface).toHaveAttribute("data-material", "alloy");
+    expect(surface).toHaveStyle({ "--goal-color": baseFields.color });
+  });
+
+  it("does not wrap a card that has no material", () => {
+    expect(
+      renderCard({ surface: "plain" }).closest(".tempo-card-surface")
+    ).toBeNull();
+  });
 });

@@ -412,7 +412,11 @@
 /* Difficulty-mapped card materials:
    easy/unspecified -> liquid glass, medium -> anodized alloy, hard -> chromatic foil.
    Surfaces that explore their own finishes render the card without a material. */
-.tempo-card[data-material] {
+
+/* The surface owns perspective and pose; the card stays the front face and the
+   connected side planes give it real thickness. */
+.tempo-card-surface {
+  --card-depth: 10px;
   --light-x: 24%;
   --light-y: 14%;
   --shine-position: 56%;
@@ -420,11 +424,44 @@
   --shine-strength: 0.48;
   --metal-x: 50%;
   --metal-y: 50%;
+  position: relative;
+  perspective: 1200px;
+}
+.tempo-card-object {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+}
+.tempo-card-surface[data-material="glass"] .tempo-card-object {
+  --card-radius: 1.1rem;
+  --edge: color-mix(in srgb, var(--goal-color) 22%, #adccc5);
+}
+.tempo-card-surface[data-material="alloy"] .tempo-card-object {
+  --card-radius: 0.9rem;
+  --edge: color-mix(in srgb, var(--goal-color) 18%, #8c98a5);
+}
+.tempo-card-surface[data-material="foil"] .tempo-card-object {
+  --card-radius: 0.7rem;
+  --edge: #92805a;
+}
+.tempo-card-surface[data-still="true"] .tempo-card-object {
+  transform: none;
+}
+/* Lighting variables are inherited from the surface so the pose drives them. */
+.tempo-card[data-material] {
   isolation: isolate;
+  transform-style: preserve-3d;
+  overflow: visible;
 }
 .tempo-card[data-material] > * {
   position: relative;
   z-index: 1;
+}
+.tempo-card[data-material] .tempo-card-target {
+  transform: translateZ(20px);
+}
+.tempo-card[data-material] h2 {
+  transform: translateZ(10px);
 }
 .tempo-card[data-material="glass"] {
   color: #1f2a24;

@@ -3,24 +3,11 @@
 import type { CSSProperties, ReactNode } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/goals/category";
+import { resolveTempoCardMaterial } from "./card-material/tempo-card-material";
+import { TempoCardSurface } from "./card-material/tempo-card-surface";
 import type { GoalCreationFields } from "./goal-creation-model";
 import type { TempoCardVisibility } from "./tempo-creation-progress";
 import "./tempo-goal-creation.css";
-
-type TempoCardMaterial = "glass" | "alloy" | "foil";
-
-/** Difficulty picks the card material; anything without a difficulty reads as glass. */
-function resolveTempoCardMaterial(
-  difficulty: GoalCreationFields["difficulty"] | null | undefined,
-): TempoCardMaterial {
-  if (difficulty === "hard") {
-    return "foil";
-  }
-  if (difficulty === "medium") {
-    return "alloy";
-  }
-  return "glass";
-}
 
 export function TempoGoalCard({
   fields,
@@ -87,17 +74,14 @@ export function TempoGoalCard({
     surface === "plain" || !visibility.difficulty
       ? undefined
       : resolveTempoCardMaterial(isTask ? "easy" : fields.difficulty);
-  return (
+  const goalColor = visibility.category ? fields.color : "#b99060";
+  const card = (
     <article
       className="tempo-card"
       data-empty={!visibility.category}
       data-effort={visibility.difficulty ? effort : undefined}
       data-material={material}
-      style={
-        {
-          "--goal-color": visibility.category ? fields.color : "#b99060",
-        } as CSSProperties
-      }
+      style={{ "--goal-color": goalColor } as CSSProperties}
       aria-label={context === "history" ? `${fields.title} goal card` : "Goal card preview"}
     >
       <div className="tempo-card-meta">
@@ -164,5 +148,15 @@ export function TempoGoalCard({
         </div>
       )}
     </article>
+  );
+
+  if (!material) {
+    return card;
+  }
+
+  return (
+    <TempoCardSurface material={material} goalColor={goalColor}>
+      {card}
+    </TempoCardSurface>
   );
 }
