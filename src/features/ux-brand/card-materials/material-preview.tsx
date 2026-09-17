@@ -18,7 +18,14 @@ export function MaterialPreview({ material, fields, still, history }: {
         <p>{material.premise}</p>
       </header>
       <MaterialStage material={material} color={fields.color} still={still}>
-        <TempoGoalCard fields={fields} context={history ? "history" : "creation"} achieved={history} renderLettering={renderSolidLettering} />
+        {/* The study owns its own finishes, so it opts out of the production material. */}
+        <TempoGoalCard
+          fields={fields}
+          context={history ? "history" : "creation"}
+          achieved={history}
+          surface="plain"
+          renderLettering={renderSolidLettering}
+        />
       </MaterialStage>
       <div className={styles.notes}>
         <p>{material.detail}</p>

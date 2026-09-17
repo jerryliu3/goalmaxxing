@@ -7,12 +7,28 @@ import type { GoalCreationFields } from "./goal-creation-model";
 import type { TempoCardVisibility } from "./tempo-creation-progress";
 import "./tempo-goal-creation.css";
 
+type TempoCardMaterial = "glass" | "alloy" | "foil";
+
+/** Difficulty picks the card material; anything without a difficulty reads as glass. */
+function resolveTempoCardMaterial(
+  difficulty: GoalCreationFields["difficulty"] | null | undefined,
+): TempoCardMaterial {
+  if (difficulty === "hard") {
+    return "foil";
+  }
+  if (difficulty === "medium") {
+    return "alloy";
+  }
+  return "glass";
+}
+
 export function TempoGoalCard({
   fields,
   context = "creation",
   achieved = false,
   isTask = false,
   taskSchedule,
+  surface = "material",
   renderLettering = text => text,
   visibility = {
     category: true,
@@ -28,6 +44,8 @@ export function TempoGoalCard({
   achieved?: boolean;
   isTask?: boolean;
   taskSchedule?: { date: string; time: string };
+  /** `plain` leaves the surface unstyled for material exploration studies. */
+  surface?: "material" | "plain";
   visibility?: TempoCardVisibility;
   renderLettering?: (text: ReactNode, size: "display" | "title" | "supporting") => ReactNode;
 }) {
@@ -63,11 +81,18 @@ export function TempoGoalCard({
   );
   const effort =
     fields.difficulty === "easy" ? 1 : fields.difficulty === "medium" ? 2 : 3;
+  // The material expresses difficulty, so it appears with the same disclosure as the
+  // effort bars. Tasks carry no difficulty and read as the neutral glass finish.
+  const material =
+    surface === "plain" || !visibility.difficulty
+      ? undefined
+      : resolveTempoCardMaterial(isTask ? "easy" : fields.difficulty);
   return (
     <article
       className="tempo-card"
       data-empty={!visibility.category}
       data-effort={visibility.difficulty ? effort : undefined}
+      data-material={material}
       style={
         {
           "--goal-color": visibility.category ? fields.color : "#b99060",

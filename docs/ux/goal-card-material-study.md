@@ -3,8 +3,32 @@
 Study route: `/ux/brand/card-materials` (existing UX labs access applies).
 All twelve render the real `TempoGoalCard`. Category color, information hierarchy,
 schedule, effort, and creation/history copy come from the same component used
-in the product. Study styles are scoped to the gallery; no production material
-has been selected yet.
+in the product. The full nine-material exploration remains scoped to this
+gallery, while the selected production trio is now mapped in the canonical card
+stylesheet (see below).
+
+## Current production mapping
+
+The canonical `TempoGoalCard` now maps goal difficulty to three selected
+materials:
+
+- `easy` (and unavailable difficulty) -> Liquid Glass
+- `medium` -> Anodized Alloy
+- `hard` -> Chromatic Foil
+
+This mapping keeps the existing effort bars as the explicit difficulty cue and
+applies the material finish as the card surface treatment. The stacked
+difficulty edge shadows are removed, since the material now carries that signal.
+
+Scope notes:
+
+- The material follows the same progressive disclosure as the effort bars, so
+  early creation steps and the empty entry preview keep the neutral surface.
+- Planner tasks have no difficulty of their own and stay on Liquid Glass.
+- Production lighting is static. Pointer tilt and the extruded card body remain
+  study-only, as the study recommendation intended.
+- Studies that explore their own finishes render the card with
+  `surface="plain"`, which omits the production material entirely.
 
 ## Directions
 
