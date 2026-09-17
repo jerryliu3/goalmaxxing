@@ -62,7 +62,7 @@ function TeamCard() {
       <div className={styles.teamIdentity}><span className={styles.kicker}>Good mornings start with good company.</span><h2>The Early<br />Hours Club</h2><p>Four people. One shared promise.<br />A little movement before the world wakes.</p>
         <div className={styles.roster} aria-label="Members: Alex, Maya, Jordan, Sam">{["AM", "MK", "JL", "SR"].map(initials => <span className={styles.avatar} key={initials}>{initials}</span>)}<span>4 / 6 members</span></div>
       </div>
-      <div className={styles.teamRecord}><span className={styles.kicker}>THIS WEEK</span><strong data-relief-text>18<span>/24</span></strong><span>shared sessions</span><div className={styles.progress} role="progressbar" aria-label="Team weekly sessions" aria-valuenow={18} aria-valuemin={0} aria-valuemax={24}><i style={{ width: "75%" }} /></div><p>6 more small steps<br />to a shared finish.</p></div>
+      <div className={styles.teamRecord}><span className={styles.kicker}>THIS WEEK</span><strong data-relief-text="display">18<span>/24</span></strong><span>shared sessions</span><div className={styles.progress} role="progressbar" aria-label="Team weekly sessions" aria-valuenow={18} aria-valuemin={0} aria-valuemax={24}><i style={{ width: "75%" }} /></div><p>6 more small steps<br />to a shared finish.</p></div>
     </div>
     <div className={styles.teamFooter}><span>FOCUS<br /><b>Movement & wellbeing</b></span><span>RITUAL<br /><b>Before 8am · Mon–Sat</b></span><span>MEMBERSHIP<br /><b>EH — 0004</b></span></div>
   </article>;
