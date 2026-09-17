@@ -6,11 +6,14 @@ import type { SocialChallenge } from "@/features/social/types";
 import * as timeLeftLabel from "@/lib/social/time-left-label";
 
 const fetchSocialChallengesMock = vi.fn();
+const fetchSocialChallengeStandingsMock = vi.fn();
 const joinSocialChallengeMock = vi.fn();
 const leaveSocialChallengeMock = vi.fn();
 
 vi.mock("@/features/social/data", () => ({
   fetchSocialChallenges: (...args: unknown[]) => fetchSocialChallengesMock(...args),
+  fetchSocialChallengeStandings: (...args: unknown[]) =>
+    fetchSocialChallengeStandingsMock(...args),
   joinSocialChallenge: (...args: unknown[]) => joinSocialChallengeMock(...args),
   leaveSocialChallenge: (...args: unknown[]) => leaveSocialChallengeMock(...args),
   peekSocialChallengesCache: () => null,
@@ -116,6 +119,137 @@ describe("ChallengeList", () => {
     ).toBeInTheDocument();
     expect(screen.getAllByTestId("requirement-mark")).toHaveLength(10);
     expect(screen.getByText("10")).toBeInTheDocument();
+  });
+
+  it("flips a joined challenge from progress to ranked participants", async () => {
+    const challenge = makeChallenge(
+      "11111111-1111-4111-8111-111111111111",
+      "Ten Sessions",
+      {
+        metric: "completions_count",
+        targetValue: 10,
+        viewerJoined: true,
+        viewerProgress: 5,
+      }
+    );
+    fetchSocialChallengesMock.mockResolvedValue({
+      schemaVersion: "1",
+      items: [challenge],
+    });
+    fetchSocialChallengeStandingsMock.mockResolvedValue({
+      schemaVersion: "1",
+      totalCount: 2,
+      standings: [
+        {
+          challengeId: challenge.id,
+          subjectKind: "user",
+          subjectId: "user-2",
+          displayName: "Avery",
+          avatarUrl: null,
+          score: 8,
+          rank: 1,
+          isViewer: false,
+        },
+        {
+          challengeId: challenge.id,
+          subjectKind: "user",
+          subjectId: "viewer-1",
+          displayName: "Alice",
+          avatarUrl: null,
+          score: 5,
+          rank: 2,
+          isViewer: true,
+        },
+      ],
+    });
+
+    render(<ChallengeList />);
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Show rankings for Ten Sessions",
+      })
+    );
+
+    expect(fetchSocialChallengeStandingsMock).toHaveBeenCalledWith(
+      challenge.id,
+      { limit: 50, offset: 0 }
+    );
+    expect(await screen.findByText("Challenge standings")).toBeInTheDocument();
+    expect(screen.getByText("Avery")).toBeInTheDocument();
+    expect(screen.getByText("Alice · you")).toBeInTheDocument();
+    expect(screen.queryByText("Your progress")).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Show progress for Ten Sessions" })
+    );
+    expect(screen.getByText("Your progress")).toBeInTheDocument();
+  });
+
+  it("loads later standings pages from the expanded card", async () => {
+    const challenge = makeChallenge(
+      "11111111-1111-4111-8111-111111111111",
+      "Ten Sessions",
+      {
+        metric: "completions_count",
+        targetValue: 10,
+        viewerJoined: true,
+      }
+    );
+    fetchSocialChallengesMock.mockResolvedValue({
+      schemaVersion: "1",
+      items: [challenge],
+    });
+    fetchSocialChallengeStandingsMock
+      .mockResolvedValueOnce({
+        schemaVersion: "1",
+        totalCount: 2,
+        standings: [
+          {
+            challengeId: challenge.id,
+            subjectKind: "user",
+            subjectId: "user-1",
+            displayName: "Avery",
+            avatarUrl: null,
+            score: 8,
+            rank: 1,
+            isViewer: false,
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        schemaVersion: "1",
+        totalCount: 2,
+        standings: [
+          {
+            challengeId: challenge.id,
+            subjectKind: "user",
+            subjectId: "viewer-1",
+            displayName: "Alice",
+            avatarUrl: null,
+            score: 5,
+            rank: 2,
+            isViewer: true,
+          },
+        ],
+      });
+
+    render(<ChallengeList />);
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Show rankings for Ten Sessions",
+      })
+    );
+    await user.click(
+      await screen.findByRole("button", { name: "Show more participants" })
+    );
+
+    expect(fetchSocialChallengeStandingsMock).toHaveBeenLastCalledWith(
+      challenge.id,
+      { limit: 50, offset: 1 }
+    );
+    expect(await screen.findByText("Alice · you")).toBeInTheDocument();
   });
 
   it("joins and leaves from the tile foot", async () => {

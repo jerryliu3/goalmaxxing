@@ -2819,6 +2819,20 @@ export type Database = {
           viewer_progress: number
         }[]
       }
+      get_challenge_standings: {
+        Args: { p_challenge_id: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          avatar_url: string
+          challenge_id: string
+          display_name: string
+          is_viewer: boolean
+          rank: number
+          score: number
+          subject_id: string
+          subject_kind: Database["public"]["Enums"]["social_subject_kind"]
+          total_count: number
+        }[]
+      }
       get_leaderboard_standings: {
         Args: { p_limit?: number; p_offset?: number; p_season_id: string }
         Returns: {

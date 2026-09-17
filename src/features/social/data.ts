@@ -1,4 +1,5 @@
 import type {
+  ChallengeStanding,
   LeaderboardSeason,
   LeaderboardStanding,
   SocialFreshness,
@@ -28,6 +29,12 @@ interface SocialChallengesResponse {
 interface SocialChallengeDetailResponse {
   schemaVersion: "1";
   item: SocialChallenge;
+}
+
+interface SocialChallengeStandingsResponse {
+  schemaVersion: "1";
+  standings: ChallengeStanding[];
+  totalCount: number;
 }
 
 interface SocialLeaderboardsResponse {
@@ -211,6 +218,26 @@ export async function fetchSocialChallengeDetail(challengeId: string) {
     path: `/api/social/challenges/${challengeId}`,
     fallbackMessage: "Failed to load challenge.",
   });
+}
+
+export async function fetchSocialChallengeStandings(
+  challengeId: string,
+  { limit = 50, offset = 0 }: { limit?: number; offset?: number } = {}
+) {
+  const params = new URLSearchParams();
+  params.set("limit", String(limit));
+  params.set("offset", String(offset));
+  const response = await fetch(
+    `/api/social/challenges/${challengeId}/standings?${params.toString()}`,
+    {
+      cache: "no-store",
+      credentials: "include",
+    }
+  );
+  if (!response.ok) {
+    await parseApiError(response, "Failed to load challenge standings.");
+  }
+  return (await response.json()) as SocialChallengeStandingsResponse;
 }
 
 export async function joinSocialChallenge(challengeId: string) {

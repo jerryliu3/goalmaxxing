@@ -94,7 +94,7 @@ export function CompeteSnapRail({
       </div>
       <div
         ref={scroller}
-        className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:thin]"
+        className="-mx-4 flex items-start snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:thin]"
       >
         {children}
       </div>
@@ -109,8 +109,12 @@ export function CompeteTile({
   span = "card",
   joinPending = false,
   joinError = null,
+  rankingsLoading = false,
+  rankingsError = null,
+  rankingsHasMore = false,
   onExpand,
   onJoin,
+  onLoadMoreRankings,
 }: {
   tile: CompeteTileModel;
   density: CompeteDensity;
@@ -118,15 +122,19 @@ export function CompeteTile({
   span?: "card" | "wide";
   joinPending?: boolean;
   joinError?: string | null;
+  rankingsLoading?: boolean;
+  rankingsError?: string | null;
+  rankingsHasMore?: boolean;
   onExpand?: () => void;
   onJoin?: () => void;
+  onLoadMoreRankings?: () => void;
 }) {
   const peekPeople = tile.people.filter((row) => row.you || row.partner);
   const rows = density === "peek" ? peekPeople : tile.people;
   const wide = span === "wide";
   const joinDisabled = tile.closed || joinPending;
   const showExpandedLeaderboard = density === "ranks";
-  const showRequirement = Boolean(tile.requirement);
+  const showRequirement = Boolean(tile.requirement) && !showExpandedLeaderboard;
   const showPeople = !showRequirement && density !== "join-only";
   const showFoot = Boolean(onJoin) || Boolean(joinError);
 
@@ -136,6 +144,14 @@ export function CompeteTile({
       return;
     }
     onJoin?.();
+  }
+
+  function handleLoadMoreClick(event: MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    if (rankingsLoading) {
+      return;
+    }
+    onLoadMoreRankings?.();
   }
 
   return (
@@ -156,7 +172,11 @@ export function CompeteTile({
           type="button"
           className="absolute inset-0 z-0 rounded-[16px]"
           aria-expanded={expanded}
-          aria-label={expanded ? `Collapse ${tile.title}` : `Tap to open ${tile.title}`}
+          aria-label={
+            expanded
+              ? `Show progress for ${tile.title}`
+              : `Show rankings for ${tile.title}`
+          }
           onClick={onExpand}
         />
       ) : null}
@@ -186,7 +206,9 @@ export function CompeteTile({
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
               {tile.detail}
             </p>
-          ) : null}
+          ) : (
+            <p className={`mt-3 ${EYEBROW_CLASS}`}>Challenge standings</p>
+          )}
         </div>
 
         {showRequirement && tile.requirement ? (
@@ -201,42 +223,76 @@ export function CompeteTile({
             Ranked people stay hidden until you join or open this tile.
           </p>
         ) : showPeople ? (
-          <ol className="mt-3 w-full space-y-2">
-            {rows.map((row) => (
-              <li
-                key={`${tile.key}-${row.name}-${row.rank}`}
-                className={row.you ? "rounded-md bg-muted/80 px-2 py-2" : "px-2 py-1"}
-              >
-                <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="flex min-w-0 items-center gap-2">
-                    {density === "ranks" ? (
-                      <span
-                        aria-hidden
-                        className="inline-flex size-7 shrink-0 items-center justify-center rounded-[6px] border-2 border-primary font-display text-sm font-semibold text-primary [transform:rotate(-8deg)]"
-                      >
-                        {row.rank}
+          <div
+            className={`pointer-events-auto mt-3 w-full ${
+              showExpandedLeaderboard
+                ? "max-h-56 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]"
+                : ""
+            }`}
+          >
+            {rankingsError ? (
+              <p className="text-sm text-destructive">{rankingsError}</p>
+            ) : rows.length > 0 ? (
+              <ol className="space-y-2">
+                {rows.map((row) => (
+                  <li
+                    key={`${tile.key}-${row.name}-${row.rank}`}
+                    className={
+                      row.you ? "rounded-md bg-muted/80 px-2 py-2" : "px-2 py-1"
+                    }
+                  >
+                    <div className="flex items-center justify-between gap-3 text-sm">
+                      <span className="flex min-w-0 items-center gap-2">
+                        {density === "ranks" ? (
+                          <span
+                            aria-hidden
+                            className="inline-flex size-7 shrink-0 items-center justify-center rounded-[6px] border-2 border-primary font-display text-sm font-semibold text-primary [transform:rotate(-8deg)]"
+                          >
+                            {row.rank}
+                          </span>
+                        ) : null}
+                        <span className="truncate">
+                          {row.name}
+                          {row.you ? " · you" : row.partner ? " · team" : ""}
+                        </span>
                       </span>
-                    ) : null}
-                    <span className="truncate">
-                      {row.name}
-                      {row.you ? " · you" : row.partner ? " · team" : ""}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-muted-foreground">{row.label}</span>
-                </div>
-                <div className="mt-1.5 h-2 overflow-hidden rounded-sm bg-muted shadow-[inset_0_1px_2px_color-mix(in_srgb,var(--foreground)_16%,transparent)]">
-                  <div
-                    className="h-full rounded-sm bg-primary shadow-[inset_0_-2px_0_color-mix(in_srgb,black_18%,transparent)]"
-                    style={{ width: `${Math.min(100, Math.max(0, row.percent))}%` }}
-                  />
-                </div>
-              </li>
-            ))}
-          </ol>
+                      <span className="shrink-0 text-muted-foreground">
+                        {row.label}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 h-2 overflow-hidden rounded-sm bg-muted shadow-[inset_0_1px_2px_color-mix(in_srgb,var(--foreground)_16%,transparent)]">
+                      <div
+                        className="h-full rounded-sm bg-primary shadow-[inset_0_-2px_0_color-mix(in_srgb,black_18%,transparent)]"
+                        style={{
+                          width: `${Math.min(100, Math.max(0, row.percent))}%`,
+                        }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            ) : rankingsLoading ? (
+              <p className="text-sm text-muted-foreground">Loading standings…</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">No standings yet.</p>
+            )}
+            {rankingsHasMore ? (
+              <button
+                type="button"
+                onClick={handleLoadMoreClick}
+                aria-disabled={rankingsLoading}
+                className="mt-3 w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold aria-disabled:opacity-40"
+              >
+                {rankingsLoading ? "Loading…" : "Show more participants"}
+              </button>
+            ) : null}
+          </div>
         ) : null}
 
-        {density === "peek" && !showRequirement ? (
-          <p className="mt-3 text-xs text-muted-foreground">Tap to open</p>
+        {density === "peek" ? (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Tap card to view rankings
+          </p>
         ) : null}
 
         {showFoot ? (
