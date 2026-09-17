@@ -1,38 +1,31 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { SegmentedTabs } from "@/components/navigation/segmented-tabs";
-import { ProgressSection } from "@/features/insights/progress-overview/progress-section";
 import { ProgressSectionIndex } from "@/features/insights/progress-overview/progress-section-index";
 import {
-  PROGRESS_SECTIONS,
   PROGRESS_VIEWS,
   progressSectionElementId,
   progressViewForSection,
   type ProgressSectionId,
+  type ProgressView,
 } from "@/features/insights/progress-overview/progress-view-model";
 import { useProgressView } from "@/features/insights/progress-overview/use-progress-view";
 
 const VIEW_TAB_LAYOUT_ID = "progress-view";
 const VIEW_PANEL_ID = "progress-view-panel";
 
-export interface ProgressOverviewSectionContent {
-  id: ProgressSectionId;
-  /** Overrides the canonical section label when a section needs live context. */
-  title?: string;
-  /** Set when the content renders the section heading itself. */
-  hideTitle?: boolean;
-  content: ReactNode;
-}
-
 /**
- * Progress page frame: one section stack per view, with mobile tabs and a
- * wide-screen side index selecting between them.
+ * Progress page frame: title, mobile view tabs and the wide-screen side index.
+ * The body is rendered by the caller — one section stack on the personal page,
+ * one per lane in duo — so every scope shares this chrome.
  */
 export function ProgressOverviewLayout({
-  sections,
+  availableSectionIds,
+  children,
 }: {
-  sections: readonly ProgressOverviewSectionContent[];
+  availableSectionIds: readonly ProgressSectionId[];
+  children: (view: ProgressView) => ReactNode;
 }) {
   const { view, pendingSectionId, selectView, selectSection, clearPendingSection } =
     useProgressView();
@@ -40,27 +33,14 @@ export function ProgressOverviewLayout({
     null
   );
 
-  const orderedSections = useMemo(
-    () =>
-      PROGRESS_SECTIONS.flatMap((definition) => {
-        const content = sections.find((section) => section.id === definition.id);
-        return content ? [{ definition, content }] : [];
-      }),
-    [sections]
-  );
-  const availableSectionIds = useMemo(
-    () => orderedSections.map((section) => section.definition.id),
-    [orderedSections]
-  );
   const availableViews = PROGRESS_VIEWS.filter((definition) =>
-    orderedSections.some((section) => section.definition.view === definition.value)
+    availableSectionIds.some(
+      (id) => progressViewForSection(id) === definition.value
+    )
   );
   const activeView = availableViews.some((definition) => definition.value === view)
     ? view
     : (availableViews[0]?.value ?? "current");
-  const visibleSections = orderedSections.filter(
-    (section) => section.definition.view === activeView
-  );
   const showViewTabs = availableViews.length > 1;
 
   useEffect(() => {
@@ -122,18 +102,9 @@ export function ProgressOverviewLayout({
           aria-labelledby={
             showViewTabs ? `${VIEW_TAB_LAYOUT_ID}-${activeView}` : undefined
           }
-          className="min-w-0"
+          className="min-w-0 space-y-4"
         >
-          {visibleSections.map(({ definition, content }) => (
-            <ProgressSection
-              key={definition.id}
-              id={definition.id}
-              title={content.title ?? definition.label}
-              hideTitle={content.hideTitle}
-            >
-              {content.content}
-            </ProgressSection>
-          ))}
+          {children(activeView)}
         </div>
       </div>
     </div>

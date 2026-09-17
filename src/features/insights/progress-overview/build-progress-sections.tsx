@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { GrowScoreTrendChart } from "@/features/insights/grow-score-trend-chart";
-import type { ProgressOverviewSectionContent } from "@/features/insights/progress-overview/progress-overview-layout";
+import type { ProgressOverviewSectionContent } from "@/features/insights/progress-overview/progress-section-stack";
 import { hasGrowScoreSignal } from "@/features/insights/use-grow-score-series";
 import { WeekRhythmCard } from "@/features/insights/week-rhythm-card";
 import type { WeekRhythmGoalRow } from "@/features/insights/week-rhythm-model";

@@ -23,6 +23,7 @@ import { ProgressWeekCurrentStrip } from "@/features/insights/progress-week-curr
 import { ProgressMilestoneRunway } from "@/features/insights/progress-milestone-runway";
 import { buildProgressSections } from "@/features/insights/progress-overview/build-progress-sections";
 import { ProgressOverviewLayout } from "@/features/insights/progress-overview/progress-overview-layout";
+import { ProgressSectionStack } from "@/features/insights/progress-overview/progress-section-stack";
 import { useProgressPastSections } from "@/features/insights/progress-overview/progress-past-sections";
 import { useGrowScoreSeries } from "@/features/insights/use-grow-score-series";
 import { useProgressWeekRhythm } from "@/features/insights/use-progress-week-rhythm";
@@ -1070,23 +1071,28 @@ export function InsightsTab({
     ) : null;
 
   if (contentMode === "full") {
+    const progressSections = buildProgressSections({
+      growSeries,
+      overallStats: overallStatsPanel,
+      weekRhythm,
+      history: (
+        <div className="space-y-5">
+          {trackerHeaderNode}
+          {ledgerLayoutNode}
+          {milestoneRunwayNode}
+        </div>
+      ),
+      pastSections,
+    });
     return (
       <>
         <ProgressOverviewLayout
-          sections={buildProgressSections({
-            growSeries,
-            overallStats: overallStatsPanel,
-            weekRhythm,
-            history: (
-              <div className="space-y-5">
-                {trackerHeaderNode}
-                {ledgerLayoutNode}
-                {milestoneRunwayNode}
-              </div>
-            ),
-            pastSections,
-          })}
-        />
+          availableSectionIds={progressSections.map((section) => section.id)}
+        >
+          {(view) => (
+            <ProgressSectionStack sections={progressSections} view={view} />
+          )}
+        </ProgressOverviewLayout>
         {drilldownNode}
       </>
     );

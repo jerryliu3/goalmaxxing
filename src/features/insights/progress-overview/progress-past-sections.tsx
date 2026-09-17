@@ -7,7 +7,7 @@ import { AchievementsShowcase } from "@/features/achievements/showcase";
 import { useAchievementsShowcase } from "@/features/achievements/use-achievements-showcase";
 import { buildGoalFolios } from "@/features/insights/folio/folio-model";
 import { FolioShelf } from "@/features/insights/folio/folio-shelf";
-import type { ProgressOverviewSectionContent } from "@/features/insights/progress-overview/progress-overview-layout";
+import type { ProgressOverviewSectionContent } from "@/features/insights/progress-overview/progress-section-stack";
 import type { Goal } from "@/lib/goals/types";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 
