@@ -16,12 +16,25 @@ import {
 } from "@/features/social/challenges/challenge-metric-copy";
 import {
   fetchSocialChallenges,
+  fetchSocialChallengeStandings,
   joinSocialChallenge,
   leaveSocialChallenge,
   peekSocialChallengesCache,
 } from "@/features/social/data";
-import type { SocialChallenge } from "@/features/social/types";
+import type {
+  ChallengeStanding,
+  SocialChallenge,
+} from "@/features/social/types";
 import { formatTimeLeftLabel } from "@/lib/social/time-left-label";
+
+const STANDINGS_PAGE_SIZE = 50;
+
+interface ChallengeStandingsState {
+  standings: ChallengeStanding[];
+  totalCount: number;
+  isLoading: boolean;
+  error: string | null;
+}
 
 interface ChallengeListProps {
   isActive?: boolean;
@@ -38,6 +51,10 @@ export function ChallengeList({
 }: ChallengeListProps) {
   const cachedChallenges = peekSocialChallengesCache();
   const [items, setItems] = useState<SocialChallenge[]>(cachedChallenges?.items ?? []);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [standingsByChallenge, setStandingsByChallenge] = useState<
+    Record<string, ChallengeStandingsState>
+  >({});
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<{
     challengeId: string;
@@ -75,6 +92,56 @@ export function ChallengeList({
     };
   }, [isActive, loadChallenges, refreshToken]);
 
+  const loadStandings = useCallback(
+    async (challengeId: string, offset = 0) => {
+      setStandingsByChallenge((current) => ({
+        ...current,
+        [challengeId]: {
+          standings:
+            offset > 0 ? current[challengeId]?.standings ?? [] : [],
+          totalCount: current[challengeId]?.totalCount ?? 0,
+          isLoading: true,
+          error: null,
+        },
+      }));
+      try {
+        const response = await fetchSocialChallengeStandings(challengeId, {
+          limit: STANDINGS_PAGE_SIZE,
+          offset,
+        });
+        setStandingsByChallenge((current) => ({
+          ...current,
+          [challengeId]: {
+            standings:
+              offset > 0
+                ? [
+                    ...(current[challengeId]?.standings ?? []),
+                    ...response.standings,
+                  ]
+                : response.standings,
+            totalCount: response.totalCount,
+            isLoading: false,
+            error: null,
+          },
+        }));
+      } catch (standingsError) {
+        setStandingsByChallenge((current) => ({
+          ...current,
+          [challengeId]: {
+            standings: current[challengeId]?.standings ?? [],
+            totalCount: current[challengeId]?.totalCount ?? 0,
+            isLoading: false,
+            error:
+              standingsError instanceof Error
+                ? standingsError.message
+                : "Could not load challenge standings.",
+          },
+        }));
+      }
+    },
+    []
+  );
+
   const tiles = useMemo<CompeteTileModel[]>(() => {
     // Mirrors the leave window in `leave_challenge_service`: a challenge whose
     // window has elapsed keeps an 'active' status until the refresh cron runs,
@@ -86,9 +153,10 @@ export function ChallengeList({
         item.status !== "archived" &&
         new Date(item.endsAt).getTime() > now
     );
-    const mapped = openItems.map(
-      (item) =>
-        ({
+    const mapped = openItems.map((item) => {
+      const unitLabel = challengeUnitLabel(item.metric, item.metricTrackKey);
+      const standings = standingsByChallenge[item.id]?.standings ?? [];
+      return {
           key: item.id,
           title: item.title,
           titleBadge: formatTimeLeftLabel(item.endsAt) ?? undefined,
@@ -105,18 +173,28 @@ export function ChallengeList({
             ),
           joined: item.viewerJoined,
           closed: false,
-          people: [],
+          people: standings.map((standing) => ({
+            rank: standing.rank,
+            name: standing.displayName,
+            you: standing.isViewer,
+            partner: false,
+            label: `${standing.score.toLocaleString()}/${item.targetValue.toLocaleString()} ${unitLabel}`,
+            percent:
+              item.targetValue > 0
+                ? Math.round((standing.score / item.targetValue) * 100)
+                : 0,
+          })),
           requirement: {
             progress: item.viewerProgress ?? 0,
             target: item.targetValue,
-            unitLabel: challengeUnitLabel(item.metric, item.metricTrackKey),
+            unitLabel,
           },
           joinLabel: "Join challenge",
           leaveLabel: "Leave challenge",
-        }) satisfies CompeteTileModel
-    );
+        } satisfies CompeteTileModel;
+    });
     return sortJoinedFirst(mapped);
-  }, [items]);
+  }, [items, standingsByChallenge]);
 
   const challengeById = useMemo(
     () => new Map(items.map((item) => [item.id, item])),
@@ -129,6 +207,9 @@ export function ChallengeList({
     try {
       if (challenge.viewerJoined) {
         await leaveSocialChallenge(challenge.id);
+        setExpandedId((current) =>
+          current === challenge.id ? null : current
+        );
       } else {
         await joinSocialChallenge(challenge.id);
       }
@@ -210,15 +291,45 @@ export function ChallengeList({
       <CompeteSnapRail label="Challenges">
         {tiles.map((tile) => {
           const challenge = challengeById.get(tile.key);
+          const expanded = expandedId === tile.key;
+          const standingsState = standingsByChallenge[tile.key];
           return (
             <CompeteTile
               key={tile.key}
               tile={tile}
               span="card"
-              density={competeDensity({ joined: tile.joined, expanded: false })}
+              density={competeDensity({ joined: tile.joined, expanded })}
+              expanded={expanded}
               joinPending={pendingId === tile.key}
               joinError={
                 actionError?.challengeId === tile.key ? actionError.message : null
+              }
+              rankingsLoading={standingsState?.isLoading}
+              rankingsError={standingsState?.error}
+              rankingsHasMore={
+                Boolean(standingsState) &&
+                standingsState.standings.length < standingsState.totalCount
+              }
+              onExpand={
+                tile.joined
+                  ? () => {
+                      const opening = expandedId !== tile.key;
+                      setExpandedId(opening ? tile.key : null);
+                      if (opening) {
+                        void loadStandings(tile.key);
+                      }
+                    }
+                  : undefined
+              }
+              onLoadMoreRankings={
+                standingsState &&
+                standingsState.standings.length < standingsState.totalCount
+                  ? () =>
+                      void loadStandings(
+                        tile.key,
+                        standingsState.standings.length
+                      )
+                  : undefined
               }
               onJoin={challenge ? () => void toggleJoin(challenge) : undefined}
             />

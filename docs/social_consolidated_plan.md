@@ -1555,6 +1555,7 @@ PUT    /api/social/goals/[goalId]/visibility              feed_visibility, partn
 
 GET    /api/social/challenges                             list (audience-filtered)
 GET    /api/social/challenges/[challengeId]               detail + self-progress recompute
+GET    /api/social/challenges/[challengeId]/standings     ranked participants (members only)
 POST   /api/social/challenges/[challengeId]/join
 DELETE /api/social/challenges/[challengeId]/join
 

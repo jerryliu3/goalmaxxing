@@ -58,6 +58,17 @@ export interface SocialChallenge {
   groupId: string | null;
 }
 
+export interface ChallengeStanding {
+  challengeId: string;
+  subjectKind: SocialSubjectKind;
+  subjectId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  score: number;
+  rank: number;
+  isViewer: boolean;
+}
+
 export type LeaderboardSeasonStatus = "upcoming" | "open" | "closed";
 export type LeaderboardRollover = "none" | "weekly" | "monthly" | "quarterly" | "yearly";
 
