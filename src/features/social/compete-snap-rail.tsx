@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, type MouseEvent, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export type CompeteDensity = "join-only" | "peek" | "ranks";
@@ -15,6 +15,17 @@ export type CompetePerson = {
   percent: number;
 };
 
+/**
+ * What a participant has to do to finish, rendered as the tile's centrepiece.
+ * Countable targets get one numbered mark each; larger ones fall back to a
+ * single readout because a few hundred marks would be unreadable.
+ */
+export type CompeteRequirement = {
+  progress: number;
+  target: number;
+  unitLabel: string;
+};
+
 export type CompeteTileModel = {
   key: string;
   title: string;
@@ -25,7 +36,7 @@ export type CompeteTileModel = {
   joined: boolean;
   closed: boolean;
   people: CompetePerson[];
-  punchMarks?: { progress: number; target: number };
+  requirement?: CompeteRequirement;
   joinLabel?: string;
   leaveLabel?: string;
 };
@@ -94,7 +105,7 @@ export function CompeteSnapRail({
 export function CompeteTile({
   tile,
   density,
-  expanded,
+  expanded = false,
   span = "card",
   joinPending = false,
   joinError = null,
@@ -103,11 +114,11 @@ export function CompeteTile({
 }: {
   tile: CompeteTileModel;
   density: CompeteDensity;
-  expanded: boolean;
+  expanded?: boolean;
   span?: "card" | "wide";
   joinPending?: boolean;
   joinError?: string | null;
-  onExpand: () => void;
+  onExpand?: () => void;
   onJoin?: () => void;
 }) {
   const peekPeople = tile.people.filter((row) => row.you || row.partner);
@@ -115,8 +126,9 @@ export function CompeteTile({
   const wide = span === "wide";
   const joinDisabled = tile.closed || joinPending;
   const showExpandedLeaderboard = density === "ranks";
-  const showPunchFace = Boolean(tile.punchMarks) && !showExpandedLeaderboard;
-  const showPeople = !showPunchFace && density !== "join-only";
+  const showRequirement = Boolean(tile.requirement);
+  const showPeople = !showRequirement && density !== "join-only";
+  const showFoot = Boolean(onJoin) || Boolean(joinError);
 
   function handleJoinClick(event: MouseEvent<HTMLButtonElement>) {
     event.stopPropagation();
@@ -129,30 +141,28 @@ export function CompeteTile({
   return (
     <article
       data-testid="compete-plaque"
-      className={`relative flex min-h-[15rem] snap-start flex-col overflow-hidden rounded-[14px] border border-border bg-card p-4 shadow-[inset_0_1px_0_color-mix(in_srgb,white_40%,transparent),0_12px_22px_-16px_color-mix(in_srgb,var(--foreground)_30%,transparent)] ${
+      className={`relative flex min-h-[16rem] snap-start flex-col overflow-hidden rounded-[14px] border border-border bg-card p-5 shadow-[inset_0_1px_0_color-mix(in_srgb,white_40%,transparent),0_12px_22px_-16px_color-mix(in_srgb,var(--foreground)_30%,transparent)] ${
         wide
           ? "flex-[0_0_calc(100%-2.75rem)]"
-          : "w-[18rem] max-w-[calc(100%-1.5rem)] shrink-0"
+          : "w-[21rem] max-w-[calc(100%-1.5rem)] shrink-0"
       }`}
     >
       <span
         aria-hidden
         className="pointer-events-none absolute -right-6 -top-8 size-24 rotate-12 rounded-[18px] border-2 border-primary/25"
       />
-      <button
-        type="button"
-        className="absolute inset-0 z-0 rounded-[16px]"
-        aria-expanded={expanded}
-        aria-label={expanded ? `Collapse ${tile.title}` : `Tap to open ${tile.title}`}
-        onClick={onExpand}
-      />
+      {onExpand ? (
+        <button
+          type="button"
+          className="absolute inset-0 z-0 rounded-[16px]"
+          aria-expanded={expanded}
+          aria-label={expanded ? `Collapse ${tile.title}` : `Tap to open ${tile.title}`}
+          onClick={onExpand}
+        />
+      ) : null}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col pointer-events-none">
         <div>
-          {tile.kicker ? (
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              {tile.kicker}
-            </p>
-          ) : null}
+          {tile.kicker ? <p className={EYEBROW_CLASS}>{tile.kicker}</p> : null}
           <div
             className={`flex flex-wrap items-center gap-2 ${
               tile.kicker ? "mt-2" : ""
@@ -169,22 +179,24 @@ export function CompeteTile({
               </span>
             ) : null}
           </div>
-          {tile.metric && !showExpandedLeaderboard && !showPunchFace ? (
+          {tile.metric && !showExpandedLeaderboard && !showRequirement ? (
             <p className="mt-1 font-mono text-lg tracking-tight">{tile.metric}</p>
           ) : null}
           {!showExpandedLeaderboard ? (
-            <p className="mt-1 text-sm text-muted-foreground">{tile.detail}</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+              {tile.detail}
+            </p>
           ) : null}
         </div>
 
-        {showPunchFace && tile.punchMarks ? (
-          <CompetePunchMarks
-            progress={tile.punchMarks.progress}
-            target={tile.punchMarks.target}
+        {showRequirement && tile.requirement ? (
+          <CompeteRequirementFace
+            requirement={tile.requirement}
+            joined={tile.joined}
           />
         ) : null}
 
-        {density === "join-only" ? (
+        {density === "join-only" && !showRequirement ? (
           <p className="mt-3 text-sm text-muted-foreground">
             Ranked people stay hidden until you join or open this tile.
           </p>
@@ -223,32 +235,36 @@ export function CompeteTile({
           </ol>
         ) : null}
 
-        {density === "peek" && !showPunchFace ? (
+        {density === "peek" && !showRequirement ? (
           <p className="mt-3 text-xs text-muted-foreground">Tap to open</p>
         ) : null}
 
-        {joinError ? <p className="mt-3 text-xs text-destructive">{joinError}</p> : null}
-
-        {onJoin && !tile.joined ? (
-          <button
-            type="button"
-            aria-disabled={joinDisabled}
-            onClick={handleJoinClick}
-            className={`pointer-events-auto mt-auto min-h-10 rounded-md bg-primary text-sm font-semibold text-primary-foreground aria-disabled:opacity-40 ${
-              wide ? "w-full sm:max-w-xs" : "w-full"
-            }`}
-          >
-            {tile.closed ? "Closed" : tile.joinLabel ?? "Join"}
-          </button>
-        ) : onJoin && tile.joined && expanded ? (
-          <button
-            type="button"
-            aria-disabled={joinDisabled}
-            onClick={handleJoinClick}
-            className="pointer-events-auto mt-auto self-start rounded-md bg-background px-2 py-1 text-xs font-medium text-destructive aria-disabled:opacity-40"
-          >
-            {tile.leaveLabel ?? "Leave"}
-          </button>
+        {showFoot ? (
+          <div className={`mt-auto pt-5 ${wide ? "sm:max-w-xs" : ""}`}>
+            {joinError ? (
+              <p className="mb-2 text-xs text-destructive">{joinError}</p>
+            ) : null}
+            {onJoin && !tile.joined ? (
+              <button
+                type="button"
+                aria-disabled={joinDisabled}
+                onClick={handleJoinClick}
+                className="pointer-events-auto flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-[inset_0_1px_0_color-mix(in_srgb,white_28%,transparent)] aria-disabled:opacity-40"
+              >
+                {tile.closed ? "Closed" : tile.joinLabel ?? "Join"}
+                {tile.closed ? null : <ArrowRight aria-hidden className="size-4" />}
+              </button>
+            ) : onJoin && tile.joined ? (
+              <button
+                type="button"
+                aria-disabled={joinDisabled}
+                onClick={handleJoinClick}
+                className="pointer-events-auto flex min-h-11 w-full items-center justify-center rounded-xl border border-border bg-background px-4 text-sm font-medium text-muted-foreground aria-disabled:opacity-40"
+              >
+                {tile.leaveLabel ?? "Leave"}
+              </button>
+            ) : null}
+          </div>
         ) : (
           <div className="mt-auto" />
         )}
@@ -277,36 +293,94 @@ export function sortJoinedFirst<T extends { joined: boolean }>(items: readonly T
   return [...items].sort((a, b) => Number(b.joined) - Number(a.joined));
 }
 
-const MAX_VISIBLE_PUNCHES = 12;
+/**
+ * Two rows of five. Tiles in the rail share the tallest tile's height, so a
+ * taller mark grid would leave every other tile with a large empty gap above
+ * its button. Two rows is also close to the height of the readout below, which
+ * keeps mixed rails even.
+ */
+const MAX_NUMBERED_MARKS = 10;
 
-function CompetePunchMarks({
-  progress,
-  target,
+const EYEBROW_CLASS =
+  "text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground";
+
+function CompeteRequirementFace({
+  requirement,
+  joined,
 }: {
-  progress: number;
-  target: number;
+  requirement: CompeteRequirement;
+  joined: boolean;
 }) {
-  const cappedTarget = Math.min(target, MAX_VISIBLE_PUNCHES);
-  const filled = Math.min(progress, cappedTarget);
-  const overflow = target > MAX_VISIBLE_PUNCHES ? target - MAX_VISIBLE_PUNCHES : 0;
+  const target = Math.max(0, Math.round(requirement.target));
+  const done = joined
+    ? Math.max(0, Math.min(Math.round(requirement.progress), target))
+    : 0;
+  const eyebrow = joined ? "Your progress" : "What you’ll need to do";
+
+  if (target > 0 && target <= MAX_NUMBERED_MARKS) {
+    return (
+      <div className="mt-4">
+        <p className={EYEBROW_CLASS}>{eyebrow}</p>
+        {/* One graphic, not a list: reading out "01, 02, 03..." helps nobody. */}
+        <div
+          role="img"
+          aria-label={`${done} of ${target} ${requirement.unitLabel} complete`}
+          data-testid="requirement-marks"
+          className="mt-2.5 grid max-w-[20rem] grid-cols-5 gap-2"
+        >
+          {Array.from({ length: target }, (_, index) => {
+            const complete = index < done;
+            return (
+              <span
+                key={`mark-${index}`}
+                data-testid="requirement-mark"
+                className={`grid aspect-square place-items-center rounded-full font-display text-sm font-semibold tabular-nums ${
+                  complete
+                    ? "border-2 border-primary bg-primary text-primary-foreground"
+                    : "border-2 border-dashed border-border text-muted-foreground"
+                }`}
+              >
+                {complete ? (
+                  <Check className="size-4" strokeWidth={3} />
+                ) : (
+                  String(index + 1).padStart(2, "0")
+                )}
+              </span>
+            );
+          })}
+        </div>
+        {joined ? (
+          <p className="mt-2.5 text-xs text-muted-foreground">
+            {done} of {target} {requirement.unitLabel}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
+  const percent = target > 0 ? Math.min(100, Math.round((done / target) * 100)) : 0;
+  const remaining = Math.max(0, target - done);
   return (
-    <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Challenge progress">
-      {Array.from({ length: cappedTarget }, (_, index) => (
-        <span
-          key={`punch-${index}`}
-          aria-hidden
-          className={`size-3 rounded-full border ${
-            index < filled
-              ? "border-primary bg-primary"
-              : "border-border bg-background"
-          }`}
-        />
-      ))}
-      {overflow > 0 ? (
-        <span className="self-center font-mono text-[11px] text-muted-foreground">
-          +{overflow}
+    <div className="mt-4">
+      <p className={EYEBROW_CLASS}>{eyebrow}</p>
+      <p className="mt-1.5 font-display text-3xl font-semibold tracking-tight tabular-nums">
+        {done.toLocaleString()}
+        <span className="text-lg font-medium text-muted-foreground">
+          {" / "}
+          {target.toLocaleString()} {requirement.unitLabel}
         </span>
-      ) : null}
+      </p>
+      <div className="mt-2.5 h-2.5 overflow-hidden rounded-full bg-muted shadow-[inset_0_1px_2px_color-mix(in_srgb,var(--foreground)_16%,transparent)]">
+        <div
+          className="h-full rounded-full bg-primary"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">
+        {remaining > 0
+          ? `${remaining.toLocaleString()} ${requirement.unitLabel} to go`
+          : "Target reached"}
+      </p>
     </div>
   );
 }

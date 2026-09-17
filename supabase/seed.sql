@@ -1789,6 +1789,246 @@ values
     now() - interval '10 days'
   );
 
+-- Challenge card gallery for Alice.
+--
+-- Covers every metric, both requirement faces (numbered marks at or below a
+-- target of 10, single readout above it), and the viewer states that change
+-- what the card renders: not joined, part way, and finished. Ordered by id so
+-- the rail reads as a comparison set.
+insert into public.challenges (
+  id,
+  slug,
+  title,
+  description,
+  status,
+  subject_kind,
+  metric,
+  metric_track_key,
+  target_value,
+  starts_at,
+  ends_at,
+  reward_xp,
+  max_participants,
+  created_by,
+  audience_kind,
+  cohort_id
+)
+values
+  -- Numbered marks, one full row, nobody joined. No description, so the card
+  -- states its own target.
+  (
+    '72000000-0000-4000-8000-000000000010',
+    'seed-card-sessions-open',
+    'Ten Sessions',
+    null,
+    'active',
+    'user',
+    'completions_count',
+    null,
+    10,
+    now() - interval '2 days',
+    now() + interval '12 days',
+    60,
+    null,
+    '11111111-1111-4111-8111-111111111111',
+    'global',
+    null
+  ),
+  -- Full two-row grid nearly finished: 10 marks is the cutoff before the
+  -- readout takes over, and the 9 day window lands Alice around 9 of 10.
+  (
+    '72000000-0000-4000-8000-000000000011',
+    'seed-card-days-progress',
+    'Ten Day Rhythm',
+    null,
+    'active',
+    'user',
+    'distinct_active_days',
+    null,
+    10,
+    now() - interval '9 days',
+    now() + interval '16 days',
+    150,
+    null,
+    '11111111-1111-4111-8111-111111111111',
+    'global',
+    null
+  ),
+  -- Finished while the challenge is still running: every mark stamped, and the
+  -- case that used to refuse Leave.
+  (
+    '72000000-0000-4000-8000-000000000012',
+    'seed-card-streak-complete',
+    'Five Day Streak',
+    null,
+    'active',
+    'user',
+    'max_streak_days',
+    null,
+    5,
+    now() - interval '5 days',
+    now() + interval '5 days',
+    40,
+    null,
+    '11111111-1111-4111-8111-111111111111',
+    'global',
+    null
+  ),
+  -- Target too large to number: single readout with a progress bar, around 40%.
+  (
+    '72000000-0000-4000-8000-000000000013',
+    'seed-card-xp-progress',
+    'Twelve Hundred XP',
+    null,
+    'active',
+    'user',
+    'total_xp',
+    null,
+    1200,
+    now() - interval '14 days',
+    now() + interval '8 days',
+    200,
+    null,
+    '11111111-1111-4111-8111-111111111111',
+    'global',
+    null
+  ),
+  -- Readout before joining, and the only metric that names its track.
+  (
+    '72000000-0000-4000-8000-000000000014',
+    'seed-card-category-open',
+    'Health Category Push',
+    null,
+    'active',
+    'user',
+    'category_xp',
+    'health',
+    300,
+    now() - interval '1 day',
+    now() + interval '13 days',
+    110,
+    null,
+    '11111111-1111-4111-8111-111111111111',
+    'global',
+    null
+  ),
+  -- Partial single row of marks: the 2 day window lands Alice around 3 of 4.
+  (
+    '72000000-0000-4000-8000-000000000015',
+    'seed-card-days-small',
+    'Four Day Warm-Up',
+    null,
+    'active',
+    'user',
+    'distinct_active_days',
+    null,
+    4,
+    now() - interval '2 days',
+    now() + interval '10 days',
+    25,
+    null,
+    '11111111-1111-4111-8111-111111111111',
+    'global',
+    null
+  ),
+  -- Same metric one step over the cutoff, to compare against Ten Day Rhythm.
+  (
+    '72000000-0000-4000-8000-000000000016',
+    'seed-card-days-readout',
+    'Eleven Day Stretch',
+    null,
+    'active',
+    'user',
+    'distinct_active_days',
+    null,
+    11,
+    now() - interval '3 days',
+    now() + interval '18 days',
+    160,
+    null,
+    '11111111-1111-4111-8111-111111111111',
+    'global',
+    null
+  ),
+  -- No reward, so no card eyebrow, and an admin description that replaces the
+  -- generated target sentence.
+  (
+    '72000000-0000-4000-8000-000000000017',
+    'seed-card-no-reward',
+    'Six For The Fun Of It',
+    'No XP attached. Log six sessions because you felt like it.',
+    'active',
+    'user',
+    'completions_count',
+    null,
+    6,
+    now() - interval '5 days',
+    now() + interval '9 days',
+    0,
+    null,
+    '11111111-1111-4111-8111-111111111111',
+    'global',
+    null
+  );
+
+insert into public.challenge_participants (
+  challenge_id,
+  subject_kind,
+  subject_id,
+  joined_at,
+  progress_value,
+  progress_at,
+  completed_at,
+  awarded_at
+)
+-- `progress_value` is left at 0 on purpose: the refresh at the end of this file
+-- fills every row from the XP ledger, the same way cron does.
+values
+  -- Most of a full two-row grid stamped.
+  (
+    '72000000-0000-4000-8000-000000000011',
+    'user',
+    '11111111-1111-4111-8111-111111111111',
+    now() - interval '9 days',
+    0,
+    null,
+    null,
+    null
+  ),
+  -- Target reached and reward paid while the challenge is still running.
+  (
+    '72000000-0000-4000-8000-000000000012',
+    'user',
+    '11111111-1111-4111-8111-111111111111',
+    now() - interval '5 days',
+    0,
+    null,
+    now() - interval '2 days',
+    now() - interval '2 days'
+  ),
+  -- Readout part way to a large target.
+  (
+    '72000000-0000-4000-8000-000000000013',
+    'user',
+    '11111111-1111-4111-8111-111111111111',
+    now() - interval '14 days',
+    0,
+    null,
+    null,
+    null
+  ),
+  -- Partial single row.
+  (
+    '72000000-0000-4000-8000-000000000015',
+    'user',
+    '11111111-1111-4111-8111-111111111111',
+    now() - interval '2 days',
+    0,
+    null,
+    null,
+    null
+  );
+
 insert into public.leaderboard_seasons (
   id,
   slug,
@@ -2205,3 +2445,25 @@ begin
     (v_owner_id, v_goal_id, format('cadence:%s:4', v_period_key), v_slot4, false);
 end $$;
 
+
+-- Materialize XP from the seeded completions.
+--
+-- Challenge progress and leaderboard standings are recomputed every minute by
+-- cron, and both read `public.xp_ledger` rather than `public.completions`.
+-- Without this the ledger stays empty, every recompute lands on zero, and the
+-- `progress_value` columns seeded above are wiped within a minute of a reset.
+--
+-- `private.recompute_xp_for_goal_users` is the same path the app uses, so the
+-- seeded ledger follows the real crediting rules instead of invented rows.
+do $$
+declare
+  v_goal_id uuid;
+begin
+  for v_goal_id in select goal.id from public.goals goal loop
+    perform private.recompute_xp_for_goal_users(v_goal_id);
+  end loop;
+end $$;
+
+-- Bring the seeded challenge rows in line with the ledger immediately, so the
+-- first page load matches what cron would produce a minute later.
+select public.refresh_challenge_progress_service();
