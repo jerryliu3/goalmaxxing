@@ -1,0 +1,46 @@
+.page { min-height: 100dvh; }
+.container { max-width: 1180px; margin: auto; padding: 1.5rem 2rem 4rem; }
+.back { display: inline-flex; gap: .5rem; align-items: center; min-height: 44px; font-size: .8rem; color: var(--study-muted); }
+.hero { padding: 2rem 0 1.75rem; }
+.hero > p:first-child { font-family: var(--font-mono); font-size: .7rem; letter-spacing: .14em; }
+.hero h1 { font-family: var(--font-display); font-size: clamp(2.75rem,6vw,4.5rem); font-weight: 400; letter-spacing: -.04em; line-height: 1; margin: .75rem 0; }
+.hero > p:last-child { color: var(--study-muted); }
+.settings { display: flex; flex-wrap: wrap; gap: 1rem; align-items: end; padding: 1rem 0; border-block: 1px solid var(--study-line); }
+.settings label { display: grid; gap: .4rem; font-size: .8rem; min-width: 0; }
+.settings select, .settings input:not([type="checkbox"]) { min-height: 44px; max-width: 100%; border: 1px solid var(--study-line); border-radius: 6px; padding: .5rem .7rem; background: var(--study-ground); color: var(--study-ink); font-size: 1rem; }
+.settings .rewardInput { flex: 1 1 220px; }
+.settings .check { display: flex; align-items: center; gap: .5rem; min-height: 44px; }
+.check input { width: 16px; height: 16px; }
+.note { font-size: .8rem; color: var(--study-muted); max-width: 48rem; padding-top: 1rem; }
+.progressControls { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; padding: 1rem 0; background: var(--study-ground); border-bottom: 1px solid var(--study-line); margin-bottom: 1.5rem; }
+.progressControls p { font-size: .85rem; font-variant-numeric: tabular-nums; }
+.progressControls > div { display: flex; flex-wrap: wrap; gap: .4rem; }
+.page button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 44px; min-width: 44px; padding: .5rem .7rem; border: 1px solid var(--study-line); border-radius: 6px; font-size: .8rem; color: var(--study-ink); background: var(--study-ground); cursor: pointer; }
+.page button:disabled { cursor: default; opacity: .45; }
+.page button:focus-visible, .page input:focus-visible, .page select:focus-visible, .page a:focus-visible { outline: 2px solid var(--study-ink); outline-offset: 4px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,380px),1fr)); gap: 2rem 1.5rem; }
+.concept { min-width: 0; }
+.conceptHeader { min-height: 80px; }
+.conceptHeader h2 { font-family: var(--font-display); font-size: 1.8rem; font-weight: 400; letter-spacing: -.03em; margin: 0 0 .25rem; }
+.conceptHeader p { font-size: .8rem; color: var(--study-muted); margin: 0 0 1rem; }
+.stage { overflow: hidden; min-height: 480px; padding: 2.5rem; background: var(--study-ground) !important; }
+.artwork { width: 100%; max-width: 330px; container-type: inline-size; perspective: 1200px; filter: var(--reward-filter); transition: filter 850ms ease; }
+.stage [data-card-object] :global(.tempo-card-target) { gap: clamp(.5rem,3.5cqi,1rem); }
+.stage [data-card-object] :global(.tempo-card-target strong) { font-size: clamp(58px,27cqi,90px); }
+.stage [data-card-object] :global(.tempo-card-target > span) { font-size: clamp(.875rem,5cqi,1.125rem); }
+/* The preview uses tilt, leaving touch available for scrolling the gallery. */
+.stage [data-card-object] { cursor: default !important; touch-action: pan-y !important; }
+.caption { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-top: .8rem; }
+.caption p { display: grid; gap: .2rem; min-width: 0; overflow-wrap: anywhere; font-size: .9rem; }
+.caption p > span { font-family: var(--font-mono); font-size: .65rem; letter-spacing: .08em; text-transform: uppercase; color: var(--study-muted); }
+.caption p[data-earned="true"] > span { color: var(--study-ink); }
+.caption button { flex-shrink: 0; }
+.stage[data-still="true"] .artwork { transition: none; }
+@media (max-width: 720px) {
+  .container { padding: 1rem 1rem 3rem; }
+  .grid { grid-template-columns: 1fr; }
+  .stage { padding: 2rem 1.5rem; min-height: 450px; }
+  .settings > label:not(.check) { flex: 1 1 220px; }
+}
+@media (prefers-reduced-motion: reduce) { .artwork { transition: none; } }
+@media (forced-colors: active) { .artwork { filter: none; } }
