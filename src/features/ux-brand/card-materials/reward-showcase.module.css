@@ -1,0 +1,48 @@
+.grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 3rem 2rem; }
+.item { min-width: 0; }
+.stage {
+  --metal-light: #fff9e5; --metal-mid: #d7bf8c; --metal-dark: #7c6039; --engraving: #64502d;
+  --enamel: #b1a17e; --enamel-light: #fff6df; --dial-ink: #493e31;
+  --pearl-a: #d3ecdf; --pearl-b: #efd4df;
+  --ribbon: color-mix(in srgb,var(--material-color) 35%,#344a43); --ribbon-dark: #1d302a; --ribbon-light: #759285;
+  position: relative; isolation: isolate; min-height: 500px; display: grid; place-items: center; padding: 2.5rem 1rem;
+  perspective: 1100px; border: 1px solid var(--study-line); border-radius: 5px;
+  background: radial-gradient(ellipse at 50% 35%,#fff5,transparent 65%),linear-gradient(145deg,#acb1a909,#76847212);
+}
+.stage::after { content: ""; position: absolute; inset: 65% 0 0; border-top: 1px solid var(--study-line); background: linear-gradient(#9aa38a05,#6577650e); z-index: -1; pointer-events: none; }
+.object { width: min(100%,400px); transform: rotateX(calc(var(--rx) * .45)) rotateY(calc(var(--ry) * .55)); user-select: none; -webkit-user-select: none; }
+.sculpture { display: block; width: 100%; overflow: visible; }
+.reflection { transform-box: view-box; transform: translateX(calc(var(--shine-position) - 50%)); opacity: calc(var(--shine-strength) * .65); }
+.editionLabel, .finishLabel { position: absolute; left: 1.4rem; font: .5rem var(--font-mono); letter-spacing: .12em; color: var(--study-muted); }
+.editionLabel { top: 1.4rem; }
+.finishLabel { bottom: 1.4rem; text-transform: uppercase; }
+.heroNumber { font: 48px var(--font-display); letter-spacing: -3px; }
+.medalNumber { font: 66px var(--font-display); letter-spacing: -4px; }
+.smallType { font: 6px var(--font-mono); letter-spacing: 1.2px; }
+.plaque { font: 6px var(--font-mono); letter-spacing: .6px; }
+.edition { font: 4.1px var(--font-mono); letter-spacing: .35px; }
+.direction { font: 11px var(--font-display); }
+.compassCaption { font: italic 17px var(--font-display); }
+.caption { display: grid; grid-template-columns: 1fr auto; gap: .8rem 1rem; padding: 1.5rem .25rem 0; }
+.caption span { font: .55rem var(--font-mono); color: var(--study-muted); letter-spacing: .1em; }
+.caption h3 { font: 2rem/1.1 var(--font-display); margin: .7rem 0 0; letter-spacing: -.025em; }
+.caption p { grid-column: 1 / -1; max-width: 29rem; color: var(--study-muted); font-size: .8rem; line-height: 1.7; }
+.caption button { display: flex; gap: .4rem; align-items: center; align-self: start; justify-content: center; min-height: 44px; min-width: 72px; border: 1px solid var(--study-line); border-radius: 5px; font-size: .65rem; cursor: pointer; }
+.caption button:disabled { opacity: .4; cursor: default; }
+/* Sculptural equivalents of the card finishes: body, edge, cavity and dial.
+   Neutral mixing preserves the three category-responsive material identities. */
+.stage[data-material="foil"] { --metal-light: #f4dfac; --metal-mid: #a98f5f; --metal-dark: #32453f; --enamel: #1d2b2a; --enamel-light: #4e675d; --dial-ink: #edddba; --engraving: #263830; }
+.stage[data-material="ruby"] { --metal-light: #ffd6ba; --metal-mid: #c07778; --metal-dark: #520f2b; --enamel: #6a1231; --enamel-light: #cf6c80; --dial-ink: #ffe3c9; --engraving: #421126; --pearl-a: #ff947f; --pearl-b: #a34ad1; }
+.stage[data-material="sapphire"] { --metal-light: #e2f6ff; --metal-mid: #7ea7d7; --metal-dark: #173873; --enamel: #11265e; --enamel-light: #397ccb; --dial-ink: #e5f4ff; --engraving: #122957; --pearl-a: #65e5ee; --pearl-b: #afa3ff; }
+.stage[data-material="platinum"] { --metal-light: #fbfdff; --metal-mid: #b1bdc9; --metal-dark: #485768; --enamel: #a5b4c2; --enamel-light: #eef5fc; --dial-ink: #283d51; --engraving: #354454; }
+.stage[data-material="pearl"] { --metal-light: #fffdf2; --metal-mid: #e5dfcc; --metal-dark: #9f8968; --enamel: #e3ddcb; --enamel-light: #fffdf1; }
+.stage:is([data-material="glass"],[data-material="prismatic"]) { --metal-light: #fbfff9; --metal-mid: color-mix(in srgb,var(--material-color) 16%,#dce6e0); --metal-dark: color-mix(in srgb,var(--material-color) 25%,#8a9b95); --enamel: color-mix(in srgb,var(--material-color) 13%,#c4d4cd); --enamel-light: #f8fff9; --engraving: #32483d; --dial-ink: #31463a; --pearl-a: color-mix(in srgb,var(--material-color) 50%,#fff); --pearl-b: color-mix(in srgb,var(--material-color) 20%,#e6eced); }
+.stage:is([data-material="ceramic"],[data-material="diorama"]) { --metal-light: color-mix(in srgb,var(--material-color) 12%,#fff9e6); --metal-mid: color-mix(in srgb,var(--material-color) 43%,#e0dbc0); --metal-dark: color-mix(in srgb,var(--material-color) 36%,#69715b); --enamel: color-mix(in srgb,var(--material-color) 45%,#d4cfb5); --enamel-light: #fcf5df; --engraving: #344134; --dial-ink: #344134; }
+.stage[data-material="woven"] { --metal-light: #f5e9cf; --metal-mid: #d7c5a1; --metal-dark: #9a8762; --enamel: #d5c7aa; --enamel-light: #f5ead2; --engraving: #594c34; --dial-ink: #594c34; }
+.stage[data-material="woven"] .reflection { opacity: .1; }
+.stage[data-material="chromatic"] { --metal-light: #edf6f6; --metal-mid: color-mix(in srgb,var(--material-color) 35%,#a5babe); --metal-dark: #25333b; --enamel: #1d2a30; --enamel-light: color-mix(in srgb,var(--material-color) 22%,#56696c); --engraving: #1e3034; --dial-ink: #e9f2f1; --pearl-a: var(--material-color); --pearl-b: #d7e0e9; }
+.stage[data-material="alloy"] { --metal-light: #f1f6f7; --metal-mid: color-mix(in srgb,var(--material-color) 32%,#aebfc7); --metal-dark: color-mix(in srgb,var(--material-color) 23%,#536674); --enamel: color-mix(in srgb,var(--material-color) 24%,#b3c3c7); --enamel-light: #edf6f6; --engraving: #293d46; --dial-ink: #293d46; --pearl-a: var(--material-color); --pearl-b: #d7e0e9; }
+.stage[data-still="true"] .object { transform: none; }
+@media (max-width: 680px) { .grid { grid-template-columns: 1fr; gap: 2.5rem; } .stage { min-height: 410px; } }
+@media (prefers-reduced-motion: reduce) { .object { transform: none; } }
+@media (forced-colors: active) { .stage { --metal-light: Canvas; --metal-mid: CanvasText; --metal-dark: CanvasText; --engraving: Canvas; --enamel: Canvas; --enamel-light: Canvas; --dial-ink: CanvasText; } .reflection { display: none; } }

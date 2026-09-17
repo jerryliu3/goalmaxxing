@@ -6,7 +6,8 @@ import { useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { MATERIALS, MATERIAL_SAMPLES } from "./materials";
 import { MaterialPreview } from "./material-preview";
-import { ArtifactShowcase } from "./artifact-showcase";
+import { ApplicationCards } from "./application-cards";
+import { RewardShowcase } from "./reward-showcase";
 import styles from "./card-materials.module.css";
 
 type StudyView = "cards" | "application" | "objects";
@@ -50,9 +51,11 @@ export function CardMaterialsStudy() {
           <div className={styles.viewIntro}>
             <p className={styles.eyebrow}>{view === "application" ? "THE MATERIAL SYSTEM, APPLIED" : "PROGRESS WITH MASS"}</p>
             <h2>{view === "application" ? "One finish. Four ways to belong." : "Not a card. A thing earned."}</h2>
-            <p>{view === "application" ? "A challenge to join. A place in the league. An identity to keep. A membership shared with your people. Sample cards, all cut from the same material." : "A cup for sustained momentum, a medal for accumulated milestones, and a compass for finding the next meaningful action. Each inherits the selected material and light model."}</p>
+            <p>{view === "application" ? "A challenge to join. A place in the league. An identity to keep. A membership shared with your people. Sample cards, all cut from the same material." : "Four collectible reward concepts: a fluted chalice, a machined medallion, a faceted summit, and a precision compass. Different silhouettes, with the same family of finishes and responsive light."}</p>
           </div>
-          <ArtifactShowcase mode={view} material={MATERIALS[material]} still={motionStopped} color={MATERIAL_SAMPLES[sample].fields.color} />
+          {view === "application"
+            ? <ApplicationCards material={MATERIALS[material]} still={motionStopped} color={MATERIAL_SAMPLES[sample].fields.color} />
+            : <RewardShowcase material={MATERIALS[material]} still={motionStopped} color={MATERIAL_SAMPLES[sample].fields.color} />}
         </>}
         <aside className={styles.recommendation}>
           <p className={styles.eyebrow}>THE PREMIUM EDIT</p>
