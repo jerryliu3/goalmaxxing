@@ -28,30 +28,31 @@ export function TempoCardSurface({
 }) {
   const hintId = useId();
   const still = Boolean(useReducedMotion());
-  const rotation = useCardRotation(still, rotatable);
+  const { stage, inspecting, isDragging, reset, stageHandlers, cardHandlers } =
+    useCardRotation(still, rotatable);
   const held = rotatable && !still;
 
   // A product card must never be left stranded face-down, so letting go returns
   // it to rest instead of holding the inspected angle the way the study does.
   const releaseToRest = () => {
-    if (!still && !rotation.isDragging()) rotation.reset();
+    if (!still && !isDragging()) reset();
   };
 
   return (
     <div
-      ref={rotation.stage}
+      ref={stage}
       className="tempo-card-surface"
       data-material={material}
       data-still={still}
       data-rotatable={held}
-      data-inspecting={rotation.inspecting}
+      data-inspecting={inspecting}
       style={
         {
           ...cardOptics(still ? FLAT_POSE : REST_POSE),
           "--goal-color": goalColor,
         } as CSSProperties
       }
-      {...rotation.stageHandlers}
+      {...stageHandlers}
       onPointerLeave={releaseToRest}
     >
       <div
@@ -60,7 +61,7 @@ export function TempoCardSurface({
         aria-label={held ? `${label} rotation` : undefined}
         aria-describedby={held ? hintId : undefined}
         tabIndex={held ? 0 : undefined}
-        {...rotation.cardHandlers}
+        {...cardHandlers}
       >
         <CardSolidBody />
         {children}

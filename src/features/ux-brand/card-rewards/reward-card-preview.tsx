@@ -3,9 +3,9 @@
 import { useState, type CSSProperties } from "react";
 import { Rotate3D } from "lucide-react";
 import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
-import { cardOptics, FLAT_POSE, REST_POSE, pointerPose } from "../card-materials/card-optics";
+import { cardOptics, FLAT_POSE, REST_POSE, pointerPose } from "@/features/goals/card-material/card-optics";
 import type { CardMaterial } from "../card-materials/materials";
-import { useCardPose } from "../card-materials/use-card-pose";
+import { useCardPose } from "@/features/goals/card-material/use-card-pose";
 import materialStyles from "../card-materials/card-materials.module.css";
 import categoryStyles from "../card-materials/category-materials.module.css";
 import { RewardCardFace } from "./reward-card-face";
