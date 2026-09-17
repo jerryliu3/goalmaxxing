@@ -213,10 +213,32 @@ describe("InsightsTab goal ledger", () => {
     expect(screen.queryByRole("heading", { name: "Thesis" })).not.toBeInTheDocument();
   });
 
-  it("frames the personal progress page as full sections per view", async () => {
-    const user = userEvent.setup();
+  it("renders the requested progress view as full sections", () => {
+    const period = {
+      monthCursor: new Date(2026, 8, 6),
+      onMonthCursorChange: () => {},
+      perGoalViewMode: "month" as const,
+      onPerGoalViewModeChange: () => {},
+    };
+    const { rerender } = render(<InsightsTab sharedPeriod={period} />);
+
+    expect(screen.getByTestId("progress-section-history")).toBeInTheDocument();
+    expect(screen.getByTestId("progress-ledger-layout")).toBeInTheDocument();
+    expect(screen.queryByTestId("progress-section-past-goals")).toBeNull();
+
+    rerender(<InsightsTab sharedPeriod={period} progressView="past" />);
+
+    expect(screen.getByTestId("progress-section-past-goals")).toBeInTheDocument();
+    expect(screen.queryByTestId("progress-ledger-layout")).toBeNull();
+  });
+
+  it("reports its sections and drops anchors on a secondary lane", () => {
+    const onSectionsChange = vi.fn();
     render(
       <InsightsTab
+        contentMode="lane"
+        anchorSections={false}
+        onSectionsChange={onSectionsChange}
         sharedPeriod={{
           monthCursor: new Date(2026, 8, 6),
           onMonthCursorChange: () => {},
@@ -226,13 +248,10 @@ describe("InsightsTab goal ledger", () => {
       />
     );
 
-    expect(screen.getByTestId("progress-section-history")).toBeInTheDocument();
+    expect(onSectionsChange).toHaveBeenCalled();
+    expect(onSectionsChange.mock.calls.at(-1)?.[0]).toContain("history");
+    expect(screen.queryByTestId("progress-section-history")).toBeNull();
     expect(screen.getByTestId("progress-ledger-layout")).toBeInTheDocument();
-    expect(screen.queryByTestId("progress-section-past-goals")).toBeNull();
-
-    await user.click(screen.getByRole("tab", { name: "Past" }));
-    expect(screen.getByTestId("progress-section-past-goals")).toBeInTheDocument();
-    expect(screen.queryByTestId("progress-ledger-layout")).toBeNull();
   });
 
   it("stacks heatmap then goals in lane mode without the shared tracker", () => {

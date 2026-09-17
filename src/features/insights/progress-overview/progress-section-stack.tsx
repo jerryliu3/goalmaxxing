@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { ProgressSection } from "@/features/insights/progress-overview/progress-section";
 import {
   PROGRESS_SECTIONS,
@@ -27,12 +27,23 @@ export function ProgressSectionStack({
   sections,
   view,
   anchored = true,
+  onSectionsChange,
 }: {
   sections: readonly ProgressOverviewSectionContent[];
   view: ProgressView;
   /** False for secondary duo lanes, which must not duplicate element ids. */
   anchored?: boolean;
+  /** Reports the sections this stack can show, for the shared side index. */
+  onSectionsChange?: (sectionIds: ProgressSectionId[]) => void;
 }) {
+  // Keyed by id so a freshly built sections array does not re-fire the report.
+  const sectionKey = sections.map((section) => section.id).join(",");
+  useEffect(() => {
+    onSectionsChange?.(
+      sectionKey.length > 0 ? (sectionKey.split(",") as ProgressSectionId[]) : []
+    );
+  }, [onSectionsChange, sectionKey]);
+
   const visibleSections = useMemo(
     () =>
       PROGRESS_SECTIONS.flatMap((definition) => {

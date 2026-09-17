@@ -19,11 +19,13 @@ import { LoadingCard } from "@/components/ui/loading-card";
 import { InsightsTrackerHeader } from "@/features/insights/insights-tracker-header";
 import { ProgressGoalList } from "@/features/insights/progress-goal-list";
 import { InsightsOverallStatsTiles } from "@/features/insights/insights-overall-stats-card";
-import { ProgressWeekCurrentStrip } from "@/features/insights/progress-week-current-strip";
 import { ProgressMilestoneRunway } from "@/features/insights/progress-milestone-runway";
 import { buildProgressSections } from "@/features/insights/progress-overview/build-progress-sections";
-import { ProgressOverviewLayout } from "@/features/insights/progress-overview/progress-overview-layout";
 import { ProgressSectionStack } from "@/features/insights/progress-overview/progress-section-stack";
+import type {
+  ProgressSectionId,
+  ProgressView,
+} from "@/features/insights/progress-overview/progress-view-model";
 import { useProgressPastSections } from "@/features/insights/progress-overview/progress-past-sections";
 import { useGrowScoreSeries } from "@/features/insights/use-grow-score-series";
 import { useProgressWeekRhythm } from "@/features/insights/use-progress-week-rhythm";
@@ -153,6 +155,15 @@ interface InsightsTabProps {
   sharedGoalFilters?: InsightsSharedGoalFilters;
   contentMode?: InsightsTabContentMode;
   onPersonalGoalsChange?: (goals: Goal[]) => void;
+  /** Which Progress view to render. The shell owns the frame that picks it. */
+  progressView?: ProgressView;
+  /**
+   * False on secondary duo lanes so section anchors, test ids and onboarding
+   * targets stay unique in the document.
+   */
+  anchorSections?: boolean;
+  /** Reports which sections this lane can show, for the shared side index. */
+  onSectionsChange?: (sectionIds: ProgressSectionId[]) => void;
 }
 
 export interface InsightsSharedGoalFilters {
@@ -173,6 +184,9 @@ export function InsightsTab({
   sharedGoalFilters,
   contentMode = "full",
   onPersonalGoalsChange,
+  progressView = "current",
+  anchorSections = true,
+  onSectionsChange,
 }: InsightsTabProps = {}) {
   const [internalMonthCursor, setInternalMonthCursor] = useState(new Date());
   const [internalPerGoalViewMode, setInternalPerGoalViewMode] =
@@ -685,9 +699,7 @@ export function InsightsTab({
     }
     return dates;
   }, [completionsByGoal, progressByGoal, selectedLedgerIdSet, visiblePerGoalHeatmaps]);
-  const showOverallStats =
-    Boolean(state.insightsStats?.overall) &&
-    (contentMode === "full" || contentMode === "lane");
+  const showOverallStats = Boolean(state.insightsStats?.overall);
   const weekRhythm = useProgressWeekRhythm({
     goals: personalGoals,
     completions: personalCompletions,
@@ -698,7 +710,7 @@ export function InsightsTab({
       selectedLedgerGoalIds.length < visibleGoalIds.length
         ? selectedLedgerIdSet
         : null,
-    enabled: showOverallStats && contentMode === "full",
+    enabled: showOverallStats,
   });
   const weekStartsOn = state.insightsStats?.weekStartsOn ?? 1;
   const growSeries = useGrowScoreSeries({
@@ -707,13 +719,13 @@ export function InsightsTab({
     asOfDate: todayLocal,
     weekStartsOn,
   });
-  // Achievements and the goal library are the viewer's own, so they stay off
-  // read-only partner lanes.
+  // The goal library is per subject, so a partner lane keeps theirs. Medals
+  // are only fetchable for the viewer, so that section stays on their lane.
   const pastSections = useProgressPastSections({
     goals: state.goals,
     summaries: state.progress?.summaries ?? [],
-    userId: state.userId,
-    enabled: contentMode === "full" && !readOnly,
+    userId: subjectUserId ?? state.userId,
+    includeAchievements: !readOnly,
   });
   const ledgerCaption = progressLedgerCaption(
     ledgerMode,
@@ -834,11 +846,6 @@ export function InsightsTab({
       onShowHistoricalGoalsChange={setShowHistoricalGoals}
     />
   ) : null;
-
-  const weekCurrentStripNode =
-    showOverallStats && state.insightsStats ? (
-      <ProgressWeekCurrentStrip overallStats={state.insightsStats.overall} />
-    ) : null;
 
   const ledgerLayoutNode =
     showGoalsSection || showHeatmap ? (
@@ -989,30 +996,15 @@ export function InsightsTab({
       />
     ) : null;
 
-  const overallStatsTiles =
+  const overallStatsPanel =
     showOverallStats && state.insightsStats ? (
-      <InsightsOverallStatsTiles overallStats={state.insightsStats.overall} />
+      <div>
+        <h4 className="mb-3 font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Overall stats
+        </h4>
+        <InsightsOverallStatsTiles overallStats={state.insightsStats.overall} />
+      </div>
     ) : null;
-
-  // Lane surfaces keep the standalone card; the Progress page tucks the tiles
-  // under the score chart.
-  const overallStatsNode = overallStatsTiles ? (
-    <section className="rounded-[12px] border border-border p-4">
-      <h3 className="mb-3 font-display text-base font-semibold tracking-tight">
-        Overall stats
-      </h3>
-      {overallStatsTiles}
-    </section>
-  ) : null;
-
-  const overallStatsPanel = overallStatsTiles ? (
-    <div>
-      <h4 className="mb-3 font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-        Overall stats
-      </h4>
-      {overallStatsTiles}
-    </div>
-  ) : null;
 
   const drilldownNode =
     showHeatmap && aggregateDrilldownDate && !heatmapEditable ? (
@@ -1070,41 +1062,29 @@ export function InsightsTab({
       </AnchoredPopupCard>
     ) : null;
 
-  if (contentMode === "full") {
-    const progressSections = buildProgressSections({
-      growSeries,
-      overallStats: overallStatsPanel,
-      weekRhythm,
-      history: (
-        <div className="space-y-5">
-          {trackerHeaderNode}
-          {ledgerLayoutNode}
-          {milestoneRunwayNode}
-        </div>
-      ),
-      pastSections,
-    });
-    return (
-      <>
-        <ProgressOverviewLayout
-          availableSectionIds={progressSections.map((section) => section.id)}
-        >
-          {(view) => (
-            <ProgressSectionStack sections={progressSections} view={view} />
-          )}
-        </ProgressOverviewLayout>
-        {drilldownNode}
-      </>
-    );
-  }
+  const progressSections = buildProgressSections({
+    growSeries,
+    overallStats: overallStatsPanel,
+    weekRhythm,
+    history: (
+      <div className="space-y-5">
+        {trackerHeaderNode}
+        {ledgerLayoutNode}
+        {milestoneRunwayNode}
+      </div>
+    ),
+    pastSections,
+  });
 
   return (
-    <div className="space-y-5">
-      {weekCurrentStripNode}
-      {ledgerLayoutNode}
-      {milestoneRunwayNode}
-      {overallStatsNode}
+    <>
+      <ProgressSectionStack
+        sections={progressSections}
+        view={progressView}
+        anchored={anchorSections}
+        onSectionsChange={onSectionsChange}
+      />
       {drilldownNode}
-    </div>
+    </>
   );
 }
