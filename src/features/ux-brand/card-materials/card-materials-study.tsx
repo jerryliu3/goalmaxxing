@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useId, useState, type CSSProperties } from "react";
 import { useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { MATERIALS, MATERIAL_SAMPLES } from "./materials";
+import { LetteringFilters } from "./lettering-filters";
 import { MaterialPreview } from "./material-preview";
 import { ApplicationCards } from "./application-cards";
 import { RewardShowcase } from "./reward-showcase";
@@ -14,6 +15,7 @@ type StudyView = "cards" | "application" | "objects";
 
 export function CardMaterialsStudy() {
   const [lettering, setLettering] = useState("raised");
+  const letteringId = `lettering-${useId().replace(/:/g, "")}`;
   const [sample, setSample] = useState(0);
   const [material, setMaterial] = useState(5);
   const [view, setView] = useState<StudyView>("cards");
@@ -23,7 +25,12 @@ export function CardMaterialsStudy() {
   const reducedMotion = useReducedMotion();
   const motionStopped = still || Boolean(reducedMotion);
   return (
-    <main className={styles.page} data-backdrop={dark ? "ink" : "paper"} data-lettering={lettering}>
+    <main className={styles.page} data-backdrop={dark ? "ink" : "paper"} data-lettering={lettering}
+      style={{
+        "--letter-relief": lettering === "flat" ? "none" : `url("#${letteringId}-${lettering}-text")`,
+        "--letter-relief-display": lettering === "flat" ? "none" : `url("#${letteringId}-${lettering}-display")`,
+      } as CSSProperties}>
+      <LetteringFilters id={letteringId} />
       <div className={styles.container}>
         <Link className={styles.back} href="/ux/brand"><ArrowLeft size={15} />Visual language gallery</Link>
         <header className={styles.hero}>
@@ -61,7 +68,7 @@ export function CardMaterialsStudy() {
         <aside className={styles.recommendation}>
           <p className={styles.eyebrow}>THE PREMIUM EDIT</p>
           <h2>One material language.<br />More than one kind of reward.</h2>
-          <p>Prismatic Pearl, Chromatic Foil, and Anodized Alloy carry category color through light, foil, or metal. Compare a shallow embossed edge, an engraved impression, and clean printed type. Lettering sits against the material, like a finely stamped membership card. The application and object studies test how far that language can stretch.</p>
+          <p>Prismatic Pearl, Chromatic Foil, and Anodized Alloy carry category color through light, foil, or metal. Compare a raised bevel with a visible edge, an engraved cut with an inner shadow, and clean printed type. Depth is deliberately amplified here so the difference is easy to judge. Lettering sits against the material, like a finely stamped membership card. The application and object studies test how far that language can stretch.</p>
           <Link href="/demo/insights/folios">Try the folio opening <ArrowUpRight size={15} /></Link>
         </aside>
         <footer className={styles.footer}>Goalmaxxing · Material system study · Cards, identity, and earned objects</footer>

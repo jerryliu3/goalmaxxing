@@ -9,15 +9,35 @@ vi.mock("motion/react", () => ({ useReducedMotion: () => preference.reduced }));
 afterEach(() => { cleanup(); preference.reduced = false; });
 
 describe("card material comparison", () => {
-  it("compares shallow lettering finishes without losing the choice between views", async () => {
+  it("switches real glyph filters, retains engraving between views, and fully removes relief for print", async () => {
     const user = userEvent.setup();
     render(<CardMaterialsStudy />);
-    expect(screen.getByRole("main")).toHaveAttribute("data-lettering", "raised");
+    const page = screen.getByRole("main");
+    const activeFilter = (size: "text" | "display") => {
+      const property = size === "text" ? "--letter-relief" : "--letter-relief-display";
+      const value = page.style.getPropertyValue(property);
+      const id = value.match(/url\("#(.+)"\)/)?.[1];
+      expect(id).toBeTruthy();
+      const filter = document.getElementById(id!);
+      expect(filter?.tagName.toLowerCase()).toBe("filter");
+      return filter!;
+    };
+    const raised = activeFilter("display");
+    expect(raised.querySelector('feMergeNode[in="wall"]')).not.toBeNull();
+    expect(activeFilter("text")).not.toBe(raised);
+    await user.click(screen.getByRole("checkbox", { name: "Still mode" }));
+    expect(activeFilter("display")).toBe(raised);
     await user.selectOptions(screen.getByRole("combobox", { name: "Lettering" }), "recessed");
+    const engraved = activeFilter("display");
+    expect(engraved).not.toBe(raised);
+    expect(engraved.querySelector('[result="innerShadow"]')).toHaveAttribute("in2", "insideTop");
+    expect(engraved.querySelector('feMergeNode[in="wall"]')).toBeNull();
     await user.click(screen.getByRole("tab", { name: "02 In the app" }));
-    expect(screen.getByRole("main")).toHaveAttribute("data-lettering", "recessed");
+    expect(activeFilter("display")).toBe(engraved);
     await user.selectOptions(screen.getByRole("combobox", { name: "Lettering" }), "flat");
-    expect(screen.getByRole("main")).toHaveAttribute("data-lettering", "flat");
+    expect(page.style.getPropertyValue("--letter-relief")).toBe("none");
+    expect(page.style.getPropertyValue("--letter-relief-display")).toBe("none");
+    expect(page).toHaveAttribute("data-lettering", "flat");
   });
 
   it("keeps shared goal content and history copy consistent across materials", async () => {

@@ -58,7 +58,7 @@ function Chalice() {
     <ellipse cx="200" cy="110" rx="78" ry="17" fill={p("edge")} stroke="var(--metal-light)" />
     <ellipse cx="200" cy="109" rx="71" ry="12" fill={p("cavity")} />
     <path d="M137 109Q200 92 263 109" fill="none" stroke="var(--metal-dark)" opacity=".5" />
-    <g fill="var(--engraving)" textAnchor="middle"><text x="200" y="185" className={styles.heroNumber} data-relief-text>12</text><text x="200" y="204" className={styles.smallType}>MONTHS OF MOMENTUM</text></g>
+    <g fill="var(--engraving)" textAnchor="middle"><text x="200" y="185" className={styles.heroNumber} data-relief-text="display">12</text><text x="200" y="204" className={styles.smallType}>MONTHS OF MOMENTUM</text></g>
   </>}</Sculpture>;
 }
 
@@ -76,7 +76,7 @@ function Medal() {
     <circle cx="200" cy="260" r="83" fill={p("metal")} stroke="var(--metal-dark)" strokeWidth=".7" />
     <circle cx="200" cy="260" r="77" fill="none" stroke="var(--metal-light)" strokeWidth=".6" strokeDasharray="1 4" />
     <Sheen paint={p} clip={`url(#${id}-disc)`} />
-    <g fill="var(--engraving)" textAnchor="middle"><text x="200" y="224" className={styles.smallType}>ONE SMALL STEP, AGAIN</text><text x="197" y="281" className={styles.medalNumber} data-relief-text>100</text><text x="200" y="304" className={styles.smallType}>SESSIONS COMPLETED</text><path d="M173 320H191M209 320H227M200 316L204 320L200 324L196 320Z" stroke="currentColor" fill="none" strokeWidth=".7" /></g>
+    <g fill="var(--engraving)" textAnchor="middle"><text x="200" y="224" className={styles.smallType}>ONE SMALL STEP, AGAIN</text><text x="197" y="281" className={styles.medalNumber} data-relief-text="display">100</text><text x="200" y="304" className={styles.smallType}>SESSIONS COMPLETED</text><path d="M173 320H191M209 320H227M200 316L204 320L200 324L196 320Z" stroke="currentColor" fill="none" strokeWidth=".7" /></g>
   </>}</Sculpture>;
 }
 

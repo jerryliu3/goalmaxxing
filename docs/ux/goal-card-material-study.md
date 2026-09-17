@@ -158,11 +158,21 @@ rare earned moments; they do not define achievement rules or production rewards.
 
 ## Surface lettering comparison
 
-The study defaults to shallow embossed lettering. The Lettering control also
-offers engraved and printed treatments, retained between all three study views.
-Opposed subpixel highlights and shadows bevel the headline and numerals without
-separating text into floating depth planes. Small metadata stays printed for
-legibility; forced-colors removes the effect. Production cards are unchanged.
+The Lettering control compares embossed, engraved and printed treatments across
+all three views. The original fractional-pixel drop shadows were too subtle, and
+reversing their direction never produced an inset cut. The revised comparison
+uses shared SVG filters on the glyph alpha, preserving foil color:
+
+- Embossed: a 2.8px wall on large numerals, a contact shadow, and a lit upper bevel.
+- Engraved: a darker letter floor, a shadow clipped inside the top edge, and a lit
+  lower cut lip. There is no raised wall or outward cast shadow.
+- Printed: no filter. Original type and material gradients are preserved.
+
+Headlines and supporting lettering use a smaller 1.1px bevel to stay readable.
+Inline HTML lettering receives an explicit inline-block box. Fine metadata stays
+printed; forced-colors disables the treatment. Filter definitions have unique IDs
+per study instance and remain mounted while switching views. This is deliberately
+amplified for comparison and does not change production goal-card typography.
 
 ## Application card editions
 
