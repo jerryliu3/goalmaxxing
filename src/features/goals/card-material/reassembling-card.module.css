@@ -6,15 +6,15 @@
 .ghost :global(.tempo-card) {
   height: 100% !important;
   background: transparent !important;
-  border: 1px dashed var(--study-muted) !important;
+  border: 1px dashed var(--muted-foreground) !important;
   box-shadow: none !important;
-  color: var(--study-muted) !important;
+  color: var(--muted-foreground) !important;
 }
 .ghost :global(.tempo-card) > * { opacity: .22; }
 .ghost :global(.tempo-card)::before, .ghost :global(.tempo-card)::after { display: none; }
-.ghost :global(.tempo-card-target strong) { background: none !important; color: var(--study-muted) !important; -webkit-text-fill-color: var(--study-muted) !important; }
-.outlines { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--study-muted); stroke-width: .55; opacity: .22; }
-.piece { animation: land-piece 780ms cubic-bezier(.2,.75,.25,1) both; animation-delay: var(--arrival-delay); }
+.ghost :global(.tempo-card-target strong) { background: none !important; color: var(--muted-foreground) !important; -webkit-text-fill-color: var(--muted-foreground) !important; }
+.outlines { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--muted-foreground); stroke-width: .55; opacity: .22; }
+.piece[data-arriving="true"] { animation: land-piece 780ms cubic-bezier(.2,.75,.25,1) both; animation-delay: var(--arrival-delay); }
 .pieceFace { filter: drop-shadow(0 2px 1px #15241825); }
 .pieceFace :global(.tempo-card) { height: 100% !important; }
 @keyframes land-piece {
@@ -23,8 +23,8 @@
   78% { opacity: 1; transform: translate3d(0,3px,0) rotate(0deg) scale(.995); }
   100% { opacity: 1; transform: translate3d(0,0,0) rotate(0deg) scale(1); }
 }
-.surface[data-still="true"] .piece { animation: none; }
-@media (prefers-reduced-motion: reduce) { .piece { animation: none; } }
+.surface[data-still="true"] .piece[data-arriving="true"] { animation: none; }
+@media (prefers-reduced-motion: reduce) { .piece[data-arriving="true"] { animation: none; } }
 @media (forced-colors: active) {
   .outlines { stroke: CanvasText; }
   .ghost :global(.tempo-card) { color: CanvasText !important; border-color: CanvasText !important; }

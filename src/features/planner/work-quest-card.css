@@ -1,4 +1,5 @@
 .work-quest-card {
+  container-type: inline-size;
   --goal-color: var(--primary);
   min-width: 0;
   overflow: hidden;
@@ -44,4 +45,10 @@
   height: 100%;
   border-radius: inherit;
   background: var(--goal-color);
+}
+
+.work-quest-material { width: min(100%, 340px); justify-self: center; padding: .75rem; }
+.work-quest-body[data-has-card="true"] { display: grid; gap: 1rem; }
+@container (min-width: 640px) {
+  .work-quest-body[data-has-card="true"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
 }

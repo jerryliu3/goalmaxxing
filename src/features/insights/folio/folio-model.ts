@@ -1,7 +1,7 @@
 import { format, parseISO } from "date-fns";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 import type { Goal } from "@/lib/goals/types";
-import { getCategorySelectionFromValue, getCategorySwatchColor } from "@/lib/goals/category";
+import { goalCardFields } from "@/features/goals/goal-card-fields";
 import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
 
 export interface FolioEntry {
@@ -20,28 +20,6 @@ export interface GoalFolio {
 
 export function folioDate(date: string) {
   return format(parseISO(date), "MMM d, yyyy");
-}
-
-function cardFields(goal: Goal): GoalCreationFields {
-  const category = getCategorySelectionFromValue(goal.category);
-  return {
-    title: goal.title,
-    description: goal.description ?? "",
-    category_selection: category.selection,
-    custom_category: category.customValue,
-    color: goal.color ?? getCategorySwatchColor(category.selection),
-    frequency_type: goal.frequency_type,
-    recurrence_interval: goal.recurrence_interval ?? "daily",
-    target_count: String(goal.target_count ?? 1),
-    target_basis: goal.target_basis,
-    milestone_names: goal.milestone_names ?? [],
-    start_date: goal.start_date,
-    end_date: goal.end_date ?? "",
-    default_local_time: goal.default_local_time ?? "",
-    difficulty: goal.difficulty ?? "medium",
-    is_private: goal.is_private ?? false,
-    linked_target_goal_id: "none",
-  };
 }
 
 /** Use canonical lifetime summaries, never the currently selected year's facts. */
@@ -65,7 +43,7 @@ export function buildGoalFolios(
     entries.push({
       goal, progress, closedOn,
       status: progress.outcome === "achieved" ? "Completed" : progress.lifecycle === "archived" ? "Archived" : "Ended",
-      fields: cardFields(goal),
+      fields: goalCardFields(goal),
     });
     volumes.set(year, entries);
   }
@@ -76,4 +54,15 @@ export function buildGoalFolios(
       entries: entries.sort((a, b) => a.closedOn.localeCompare(b.closedOn) || a.goal.start_date.localeCompare(b.goal.start_date) || a.goal.id.localeCompare(b.goal.id)),
       completions: entries.reduce((total, entry) => total + entry.progress.admissibleCompletionCount, 0),
     }));
+}
+
+/** Current includes unscheduled and upcoming goals, not just today's checklist. */
+export function buildCurrentGoals(goals: Goal[], summaries: ProgressContextSummary[], userId: string) {
+  const byId = new Map(summaries.map(summary => [summary.goalId, summary]));
+  return goals.flatMap(goal => {
+    const progress = byId.get(goal.id);
+    return goal.owner_id === userId && !goal.is_deleted && progress && !progress.placementTerminal
+      ? [{ goal, progress }] : [];
+  }).sort((a, b) => Number(a.progress.lifecycle === "upcoming") - Number(b.progress.lifecycle === "upcoming")
+    || a.goal.start_date.localeCompare(b.goal.start_date) || a.goal.id.localeCompare(b.goal.id));
 }

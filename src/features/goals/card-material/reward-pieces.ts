@@ -1,4 +1,4 @@
-import { getRewardProgress } from "./reward-model";
+import { getRewardProgress } from "./reassembly-progress";
 
 export const MAX_REWARD_PIECES = 24;
 export type PiecePoint = { x: number; y: number };

@@ -214,3 +214,17 @@ describe("TempoGoalCard rotation", () => {
     expect(surface).toHaveAttribute("data-inspecting", "false");
   });
 });
+
+
+describe("material card reassembly", () => {
+  afterEach(cleanup);
+
+  it("shares one material surface and hides duplicate faces from accessibility", () => {
+    const { container } = render(<TempoGoalCard fields={{ ...baseFields, difficulty: "hard" }} assembly={{ completed: 2, target: 3 }} rotatable={false} />);
+    expect(container.querySelectorAll(".tempo-card-surface")).toHaveLength(1);
+    expect(container.querySelector(".tempo-card-surface")).toHaveAttribute("data-material", "foil");
+    expect(screen.getAllByRole("article")).toHaveLength(1);
+    for (const face of container.querySelectorAll(".tempo-card")) expect(face).toHaveAttribute("data-material", "foil");
+    expect(container.querySelector('[data-reward-piece="0"]')).toHaveAttribute("data-arriving", "false");
+  });
+});

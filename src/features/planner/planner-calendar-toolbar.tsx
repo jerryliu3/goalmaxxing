@@ -1,6 +1,7 @@
 "use client";
 
-import { CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
+import Link from "next/link";
+import { BookOpen, CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -161,6 +162,7 @@ export function PlannerCalendarToolbar({
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
+            {!plannerReadOnly && <Button asChild variant="outline" size="sm"><Link href="/insights/folios?view=current&from=plan"><BookOpen aria-hidden="true" />Goals</Link></Button>}
             {!plannerReadOnly && canShowSaveAction && hasDraftSession ? (
               <Button
                 type="button"

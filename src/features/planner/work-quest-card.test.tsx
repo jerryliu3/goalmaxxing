@@ -23,6 +23,13 @@ const quest: WorkQuestModel = {
 };
 
 describe("WorkQuestCard", () => {
+  it("shows the material card instead of a second progress bar", () => {
+    render(<WorkQuestCard quest={quest} goalCard={<div>Assembling material</div>}><p>Session details</p></WorkQuestCard>);
+    expect(screen.getByText("Assembling material")).toBeInTheDocument();
+    expect(screen.getByText("Session details")).toBeInTheDocument();
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+  });
+
   it("heads the card with the goal name and the instance navigation", () => {
     render(
       <WorkQuestCard

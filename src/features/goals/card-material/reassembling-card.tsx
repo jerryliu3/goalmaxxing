@@ -1,0 +1,56 @@
+"use client";
+
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { CardSolidBody } from "./card-solid-body";
+import { getRewardProgress } from "./reassembly-progress";
+import { buildRewardPieces } from "./reward-pieces";
+import styles from "./reassembling-card.module.css";
+
+/** One accessible face, clipped visual copies, and a seamless solid on completion. */
+export function ReassemblingCard({ children, completed, target, still }: {
+  children: ReactNode;
+  completed: number;
+  target: number;
+  still: boolean;
+}) {
+  const { required, credited, earned } = getRewardProgress(completed, target);
+  const pieces = useMemo(() => buildRewardPieces(required), [required]);
+  const [arrival, setArrival] = useState({ observed: credited, settled: credited });
+  if (arrival.observed !== credited) {
+    setArrival({ observed: credited, settled: Math.min(arrival.settled, credited) });
+  }
+  const fused = earned && (still || arrival.settled >= required);
+  useEffect(() => {
+    // Also finish if animation events are interrupted or motion settings change.
+    const timer = window.setTimeout(() => setArrival({ observed: credited, settled: credited }), still ? 0 : 1200);
+    return () => window.clearTimeout(timer);
+  }, [credited, still]);
+
+  return (
+    <div className={styles.surface} data-reassembly="" data-fused={fused} data-still={still}>
+      <div className={styles.fused} data-visible={fused}>
+        {fused && <CardSolidBody />}
+        {children}
+      </div>
+      {!fused && <>
+        <div className={styles.ghost} data-ghost="" aria-hidden="true">
+          {children}
+          <svg className={styles.outlines} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            {pieces.map(piece => <polygon key={piece.id} points={piece.points.map(point => `${point.x},${point.y}`).join(" ")} />)}
+          </svg>
+        </div>
+        {pieces.filter(piece => piece.earnedAt <= credited).map(piece => (
+          <div key={piece.id} className={styles.piece} data-reward-piece={piece.id} data-earned-at={piece.earnedAt}
+            data-arriving={!still && piece.earnedAt > arrival.settled} aria-hidden="true"
+            style={{ "--throw-x": `${piece.throwX}px`, "--throw-y": `${piece.throwY}px`, "--throw-turn": `${piece.turn}deg`, "--arrival-delay": `${Math.min(piece.id * 20, 260)}ms` } as CSSProperties}
+            onAnimationEnd={event => {
+              if (event.target === event.currentTarget) setArrival(current => ({ ...current, settled: Math.max(current.settled, piece.earnedAt) }));
+            }}
+          >
+            <div className={styles.pieceFace} style={{ clipPath: piece.clipPath }}>{children}</div>
+          </div>
+        ))}
+      </>}
+    </div>
+  );
+}

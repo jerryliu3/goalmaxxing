@@ -33,3 +33,24 @@ credited units; production eligibility remains owned by the goal domain.
 
 Functional coverage is included as code. Tests, typecheck, lint, browser checks,
 and CI have not been run; verification remains approval-gated by AGENTS.md.
+
+
+## Application placement: quest and library
+
+Reassemble now decorates the production material card in the expanded Plan quest.
+It uses canonical overall credited units for milestone and lifetime-target goals,
+not the selected day's completion or cadence hit rate. The same presentation is
+used in the Goal Library's Current collection, including upcoming and unscheduled
+goals. Plan's Goals link opens Current; Past keeps the existing yearly folios.
+Canonical terminal status moves goals out of Current, and rewards remain readable
+in the past-goal reader.
+
+Saved fragments appear immediately when opening a card. New confirmed credits
+animate into place; undo removes the corresponding pieces. The 24-piece cap and
+rounded thresholds are shared with the study. After the final landing all fragment
+layers disappear, leaving PR #950's material face and solid body unchanged.
+
+Ongoing cadence cards remain whole with a small current-period count. Configurable
+reward milestones for ongoing goals are deferred; a perfect cadence hit rate must
+not silently become a whole-goal reward threshold. This release adds no reward
+configuration or new completion mutation path.

@@ -8,7 +8,7 @@ import materialStyles from "../card-materials/card-materials.module.css";
 import { RewardCardPreview } from "./reward-card-preview";
 import { getRewardFields, getRewardProgress, REWARD_CONCEPTS, REWARD_MATERIALS, REWARD_SAMPLES, REWARD_TARGETS } from "./reward-model";
 import styles from "./reward-study.module.css";
-import { MAX_REWARD_PIECES } from "./reward-pieces";
+import { MAX_REWARD_PIECES } from "@/features/goals/card-material/reward-pieces";
 
 export function RewardStudy() {
   const [sampleIndex, setSampleIndex] = useState(0);

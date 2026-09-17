@@ -671,6 +671,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         selectedEventLinkedTargets={selectedEventLinkedTargets}
         selectedEventGoal={selectedEventGoal}
         selectedEventPresentation={selectedEventPresentation}
+        selectedEventProgress={dayChecklist.data.progress?.summaries.find(summary => summary.goalId === selectedEventGoal?.id) ?? null}
         goalTitles={context?.goalTitles ?? {}}
         scopeMonth={context?.scopeMonth ?? month ?? "1970-01"}
         selectedEventBaselineUnit={selectedEventBaselineUnit}

@@ -16,11 +16,13 @@ export function WorkQuestCard({
   leadingNav,
   trailingNav,
   children,
+  goalCard,
 }: {
   quest: WorkQuestModel;
   leadingNav?: ReactNode;
   trailingNav?: ReactNode;
   children?: ReactNode;
+  goalCard?: ReactNode;
 }) {
   const Emblem = getGoalVisual({
     goalId: quest.id,
@@ -47,47 +49,50 @@ export function WorkQuestCard({
           </div>
         </div>
       </div>
-      <div className="work-quest-body">
-        <dl className="grid gap-2 text-sm leading-snug">
-          {quest.cadenceLabel ? (
+      <div className="work-quest-body" data-has-card={Boolean(goalCard)}>
+        {goalCard && <div className="work-quest-material">{goalCard}</div>}
+        <div className="min-w-0">
+          <dl className="grid gap-2 text-sm leading-snug">
+            {quest.cadenceLabel ? (
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Cadence</dt>
+                <dd className="text-right">{quest.cadenceLabel}</dd>
+              </div>
+            ) : null}
             <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Cadence</dt>
-              <dd className="text-right">{quest.cadenceLabel}</dd>
+              <dt className="text-muted-foreground">Deadline</dt>
+              <dd className="text-right">{quest.deadlineLabel}</dd>
+            </div>
+          </dl>
+          {quest.progress && !goalCard ? (
+            <div className="mt-3">
+              <div className="mb-1 flex items-center justify-between gap-3 text-sm text-muted-foreground">
+                <span>Progress</span>
+                <span>{quest.progress.label}</span>
+              </div>
+              <div
+                className="work-quest-progress"
+                role="progressbar"
+                aria-label={quest.progress.label}
+                aria-valuemin={0}
+                aria-valuemax={quest.progress.target}
+                aria-valuenow={quest.progress.completed}
+              >
+                <span
+                  style={
+                    {
+                      "--quest-progress": `${Math.min(
+                        100,
+                        (quest.progress.completed / quest.progress.target) * 100
+                      )}%`,
+                    } as CSSProperties
+                  }
+                />
+              </div>
             </div>
           ) : null}
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted-foreground">Deadline</dt>
-            <dd className="text-right">{quest.deadlineLabel}</dd>
-          </div>
-        </dl>
-        {quest.progress ? (
-          <div className="mt-3">
-            <div className="mb-1 flex items-center justify-between gap-3 text-sm text-muted-foreground">
-              <span>Progress</span>
-              <span>{quest.progress.label}</span>
-            </div>
-            <div
-              className="work-quest-progress"
-              role="progressbar"
-              aria-label={quest.progress.label}
-              aria-valuemin={0}
-              aria-valuemax={quest.progress.target}
-              aria-valuenow={quest.progress.completed}
-            >
-              <span
-                style={
-                  {
-                    "--quest-progress": `${Math.min(
-                      100,
-                      (quest.progress.completed / quest.progress.target) * 100
-                    )}%`,
-                  } as CSSProperties
-                }
-              />
-            </div>
-          </div>
-        ) : null}
-        <div className="mt-3">{children}</div>
+          <div className="mt-3">{children}</div>
+        </div>
       </div>
     </article>
   );

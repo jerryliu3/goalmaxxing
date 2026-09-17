@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildRewardPieces, MAX_REWARD_PIECES, polygonArea } from "./reward-pieces";
+import { buildRewardPieces, MAX_REWARD_PIECES, polygonArea } from "@/features/goals/card-material/reward-pieces";
 
 describe("reward fragments", () => {
   it.each([1, 2, 6, 12, 17, 24, 25, 60, 120, 365])("partitions the whole card deterministically for a target of %i", target => {

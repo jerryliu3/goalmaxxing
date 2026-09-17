@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { PastGoalsPage } from "@/features/insights/folio/past-goals-page";
+import { GoalLibraryPage } from "@/features/insights/folio/goal-library-page";
 
-export const metadata: Metadata = { title: "Past goals · Goalmaxxing" };
+export const metadata: Metadata = { title: "Goal library · Goalmaxxing" };
 
-export default function GoalFoliosPage() {
-  return <PastGoalsPage />;
+export default async function GoalFoliosPage({ searchParams }: { searchParams: Promise<{ view?: string; from?: string }> }) {
+  const params = await searchParams;
+  return <GoalLibraryPage view={params.view === "past" ? "past" : "current"} fromPlan={params.from === "plan"} />;
 }
