@@ -28,6 +28,7 @@ export function CardMaterialsStudy() {
           <p className={styles.eyebrow}>MATERIAL STUDY / CARDS & OBJECTS</p>
           <h1>Something you<br /><em>want to hold.</em></h1>
           <p>Twelve material directions, now extended into a system. Explore goal-responsive finishes, application formats cut from the same materials, and sculptural rewards that turn progress into an object.</p>
+          <Link className={styles.back} href="/ux/brand/card-rewards">Explore reward transformations <ArrowUpRight size={15} aria-hidden="true" /></Link>
           {view === "cards" && <nav aria-label="Card materials">{MATERIALS.map(item => <a key={item.id} href={`#${item.id}`}>{item.name}<ArrowUpRight size={13} /></a>)}</nav>}
         </header>
         <div className={styles.tabs} role="tablist" aria-label="Material study views">

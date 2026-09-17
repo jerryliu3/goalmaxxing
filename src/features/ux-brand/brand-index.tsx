@@ -93,6 +93,11 @@ export function BrandIndex() {
           <ArrowRight className="size-5 shrink-0" aria-hidden="true" />
         </Link>
 
+        <Link href="/ux/brand/card-rewards" className="mt-3 flex items-center justify-between gap-4 rounded-2xl border border-zinc-300 bg-white/60 p-5">
+          <span><span className="block text-xs uppercase tracking-wide text-zinc-500">Reward study</span><span className="mt-1 block text-xl font-medium">Becoming yours</span><span className="mt-1 block text-sm text-zinc-600">Explore how the material goal card changes as you earn it.</span></span>
+          <ArrowRight className="size-5 shrink-0" aria-hidden="true" />
+        </Link>
+
         <section className="mt-10">
           <h2 className="text-lg font-semibold tracking-tight">
             Studies
