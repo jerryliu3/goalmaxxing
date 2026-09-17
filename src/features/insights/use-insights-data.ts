@@ -68,22 +68,17 @@ export function useInsightsData({
   const { viewerUserId, state: duoState } = useDuo();
   const partnerId = duoState.activePartner?.partnerId ?? null;
   const router = useAppRouter();
-  const initialCacheKey = resolveInsightsCacheKey({
-    viewerUserId,
-    subjectUserId,
-    selectedYear,
-    partnerId,
-  });
-  const initialCachedState = initialCacheKey
-    ? readTabDataCache<InsightsData>(initialCacheKey)
-    : null;
-  const [state, setState] = useState<InsightsData>(initialCachedState ?? emptyInsights);
+  // The cache is sessionStorage-backed, so it must not be read while
+  // rendering: the server has no cache, and a warm client cache would then
+  // disagree with the server markup. `loadData` reads it on mount before any
+  // network await, so a warm cache still paints without the round trip.
+  const [state, setState] = useState<InsightsData>(emptyInsights);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(!initialCachedState);
+  const [loading, setLoading] = useState(true);
   const loadRequestIdRef = useRef(0);
   const visibleLoadCountRef = useRef(0);
   const authRedirectStartedRef = useRef(false);
-  const stateRef = useRef(initialCachedState ?? emptyInsights);
+  const stateRef = useRef(emptyInsights);
 
   useEffect(() => {
     stateRef.current = state;
