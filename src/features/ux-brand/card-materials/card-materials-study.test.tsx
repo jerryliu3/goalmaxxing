@@ -94,6 +94,12 @@ describe("card material comparison", () => {
     expect(screen.getByRole("region", { name: "Challenge card" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Leaderboard card" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Profile trading card" })).toBeInTheDocument();
+    const team = screen.getByRole("region", { name: "Team membership card" });
+    expect(within(team).getByRole("progressbar", { name: "Team weekly sessions" })).toHaveAttribute("aria-valuenow", "18");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Category color" }), "1");
+    expect(within(team).getByRole("article").closest<HTMLElement>("[data-material]")!.style.getPropertyValue("--material-color")).toBe("#8b5cf6");
+    await user.click(within(team).getByRole("button", { name: "Tilt Team membership card" }));
+    expect(within(team).getByRole("button", { name: "Tilt Team membership card" })).toHaveAttribute("aria-pressed", "true");
     await user.selectOptions(screen.getByRole("combobox", { name: "Material" }), "7");
     expect(screen.getByRole("combobox", { name: "Material" })).toHaveDisplayValue("Sapphire Prism");
 

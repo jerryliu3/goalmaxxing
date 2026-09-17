@@ -1,18 +1,8 @@
 "use client";
 
 import { useState, type CSSProperties, type ReactNode } from "react";
-import {
-  Award,
-  ChevronUp,
-  Crown,
-  Flame,
-  Footprints,
-  Medal,
-  Mountain,
-  Rotate3D,
-  Sparkles,
-  Trophy,
-} from "lucide-react";
+import { Medal, Mountain, Rotate3D, Trophy } from "lucide-react";
+import { ApplicationCards } from "./application-cards";
 import type { CardMaterial } from "./materials";
 import { cardOptics, FLAT_POSE, REST_POSE, pointerPose } from "./card-optics";
 import { useCardPose } from "./use-card-pose";
@@ -82,85 +72,6 @@ function ArtifactStage({
   );
 }
 
-function ChallengeCard() {
-  return (
-    <article className={`${styles.materialFace} ${styles.challengeCard}`}>
-      <div className={styles.faceSheen} aria-hidden="true" />
-      <div className={styles.metaRow}>
-        <span>COMMUNITY CHALLENGE</span>
-        <Flame size={20} />
-      </div>
-      <div className={styles.challengeMark}>
-        <Mountain size={44} strokeWidth={1.35} />
-        <strong>30</strong>
-        <span>DAYS</span>
-      </div>
-      <h2>Sunrise club</h2>
-      <p>Move before 8am. Build a month that starts on purpose.</p>
-      <div className={styles.progress} aria-label="18 of 30 days complete">
-        <i style={{ width: "60%" }} />
-      </div>
-      <div className={styles.metaRow}>
-        <span>18 / 30 complete</span>
-        <span>1,284 climbing</span>
-      </div>
-    </article>
-  );
-}
-
-function LeaderboardCard() {
-  return (
-    <article className={`${styles.materialFace} ${styles.leaderboardCard}`}>
-      <div className={styles.faceSheen} aria-hidden="true" />
-      <div className={styles.leaderHeading}>
-        <div>
-          <span>SEPTEMBER LEAGUE</span>
-          <h2>Trailblazers</h2>
-        </div>
-        <Crown size={28} />
-      </div>
-      <ol>
-        <li><b>01</b><span className={styles.miniPortrait}>MK</span><span><strong>Maya K.</strong><small>42 wins</small></span><em>980</em></li>
-        <li><b>02</b><span className={styles.miniPortrait}>JL</span><span><strong>Jordan L.</strong><small>38 wins</small></span><em>920</em></li>
-        <li data-self="true"><b>03</b><span className={styles.miniPortrait}>YO</span><span><strong>You</strong><small>36 wins</small></span><em>875</em></li>
-      </ol>
-      <p className={styles.leaderNote}><ChevronUp size={14} /> 24 points to second place</p>
-    </article>
-  );
-}
-
-function ProfileCard() {
-  return (
-    <article className={`${styles.materialFace} ${styles.profileCard}`}>
-      <div className={styles.faceSheen} aria-hidden="true" />
-      <div className={styles.profileTop}>
-        <span>MEMBER / 2026</span>
-        <Sparkles size={19} />
-      </div>
-      <div className={styles.portrait} role="img" aria-label="Stylized profile portrait of Alex">
-        <div className={styles.sun} />
-        <div className={styles.ridgeBack} />
-        <div className={styles.ridgeFront} />
-        <div className={styles.person}><i /><b /></div>
-      </div>
-      <div className={styles.profileIdentity}>
-        <div><h2>Alex Morgan</h2><p>Building a life with more open sky.</p></div>
-        <strong>LV. 18</strong>
-      </div>
-      <div className={styles.profileStats}>
-        <span><b>12</b> goals</span>
-        <span><b>84%</b> rhythm</span>
-        <span><b>146</b> days</span>
-      </div>
-      <div className={styles.badges}>
-        <span><Footprints size={14} /> First 100</span>
-        <span><Mountain size={14} /> High point</span>
-        <span><Award size={14} /> Year one</span>
-      </div>
-    </article>
-  );
-}
-
 function TrophyObject() {
   return (
     <div className={`${styles.objectSculpture} ${styles.trophy}`}>
@@ -211,20 +122,14 @@ export function ArtifactShowcase({
   mode,
   material,
   still,
+  color,
 }: {
+  color: string;
   mode: ShowcaseMode;
   material: CardMaterial;
   still: boolean;
 }) {
-  if (mode === "application") {
-    return (
-      <div className={styles.grid}>
-        <ArtifactStage material={material} still={still} label="Challenge card" shape="challenge"><ChallengeCard /></ArtifactStage>
-        <ArtifactStage material={material} still={still} label="Leaderboard card" shape="leaderboard"><LeaderboardCard /></ArtifactStage>
-        <ArtifactStage material={material} still={still} label="Profile trading card" shape="profile"><ProfileCard /></ArtifactStage>
-      </div>
-    );
-  }
+  if (mode === "application") return <ApplicationCards material={material} still={still} color={color} />;
 
   return (
     <div className={styles.grid}>
