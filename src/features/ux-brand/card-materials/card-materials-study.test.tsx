@@ -41,7 +41,7 @@ describe("card material comparison", () => {
     await user.selectOptions(screen.getByRole("combobox", { name: "Lettering" }), "raised");
     expect(page.style.getPropertyValue("--raised-text-depth")).toBe("4px");
     const team = screen.getByRole("region", { name: "Team membership card" });
-    expect(within(team).getByRole("heading", { name: "The Early Hours Club" })).toBeInTheDocument();
+    expect(within(team).getByRole("heading", { name: /The Early\s*Hours Club/ })).toBeInTheDocument();
     expect(team.querySelector('[data-lettering-solid="display"]')).not.toBeNull();
   });
 

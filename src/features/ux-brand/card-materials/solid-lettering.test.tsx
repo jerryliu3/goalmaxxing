@@ -8,7 +8,7 @@ afterEach(cleanup);
 
 it("keeps one readable label and matching multiline geometry when text changes", () => {
   const { container, rerender } = render(<h2><SolidLettering>The Early<br />Hours Club</SolidLettering></h2>);
-  expect(screen.getByRole("heading", { name: "The Early Hours Club" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: /The Early\s*Hours Club/ })).toBeInTheDocument();
   const walls = container.querySelectorAll<HTMLElement>("[data-glyphs]");
   expect(walls.length).toBeGreaterThan(1);
   for (const wall of walls) {

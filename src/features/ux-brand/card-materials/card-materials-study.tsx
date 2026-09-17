@@ -43,9 +43,9 @@ export function CardMaterialsStudy() {
           {view === "cards" && <nav aria-label="Card materials">{MATERIALS.map(item => <a key={item.id} href={`#${item.id}`}>{item.name}<ArrowUpRight size={13} /></a>)}</nav>}
         </header>
         <div className={styles.tabs} role="tablist" aria-label="Material study views">
-          <button type="button" role="tab" aria-selected={view === "cards"} onClick={() => setView("cards")}><span>01</span>Goal cards</button>
-          <button type="button" role="tab" aria-selected={view === "application"} onClick={() => setView("application")}><span>02</span>In the app</button>
-          <button type="button" role="tab" aria-selected={view === "objects"} onClick={() => setView("objects")}><span>03</span>Trophies & objects</button>
+          <button type="button" role="tab" aria-selected={view === "cards"} onClick={() => setView("cards")}><span>01</span> Goal cards</button>
+          <button type="button" role="tab" aria-selected={view === "application"} onClick={() => setView("application")}><span>02</span> In the app</button>
+          <button type="button" role="tab" aria-selected={view === "objects"} onClick={() => setView("objects")}><span>03</span> Trophies & objects</button>
         </div>
         <div className={styles.controls} aria-label="Comparison controls">
           {view === "cards" ? <>
