@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ArrowUpRight, Compass, Sunrise, Sparkles } from "lucide-react";
 import type { CardMaterial } from "./materials";
+import { SolidLettering } from "./solid-lettering";
 import { MaterialStage } from "./material-stage";
 import styles from "./application-cards.module.css";
 
@@ -15,15 +16,15 @@ function Horizon({ portrait = false }: { portrait?: boolean }) {
 }
 
 function Metric({ value, label }: { value: string; label: string }) {
-  return <div><strong data-relief-text>{value}</strong><span>{label}</span></div>;
+  return <div><strong><SolidLettering>{value}</SolidLettering></strong><span>{label}</span></div>;
 }
 
 function ChallengeCard() {
   return <article className={`tempo-card ${styles.face}`} aria-label="Sunrise club challenge preview">
     <div className={styles.micro}><span>CHALLENGE / 009</span><Sunrise size={18} strokeWidth={1.2} /></div>
     <Horizon />
-    <div className={styles.titleBlock}><span className={styles.kicker}>A little earlier. A little further.</span><h2>Sunrise club</h2><p>Thirty mornings. Move before 8am.<br />Make room for a brighter start.</p></div>
-    <div className={styles.challengeCount}><div className="tempo-card-target"><strong>18</strong></div><span>of 30 mornings<br /><b>12 still to come</b></span></div>
+    <div className={styles.titleBlock}><span className={styles.kicker}>A little earlier. A little further.</span><h2><SolidLettering>Sunrise club</SolidLettering></h2><p>Thirty mornings. Move before 8am.<br />Make room for a brighter start.</p></div>
+    <div className={styles.challengeCount}><div className="tempo-card-target"><strong><SolidLettering size="display">18</SolidLettering></strong></div><span>of 30 mornings<br /><b>12 still to come</b></span></div>
     <div className={styles.progress} role="progressbar" aria-label="Challenge mornings completed" aria-valuenow={18} aria-valuemin={0} aria-valuemax={30}><i style={{ width: "60%" }} /></div>
     <div className={styles.micro}><span>SEPT 01 — 30</span><span>1,284 TOGETHER</span></div>
   </article>;
@@ -33,8 +34,8 @@ const LEADERS = [{ name: "Maya K.", initials: "MK", points: 980 }, { name: "Jord
 function LeaderboardCard() {
   return <article className={`tempo-card ${styles.face}`} aria-label="Trailblazers leaderboard preview">
     <div className={styles.micro}><span>SEPTEMBER / LEAGUE</span><Compass size={18} strokeWidth={1.2} /></div>
-    <div className={styles.titleBlock}><span className={styles.kicker}>The company you keep</span><h2>Trailblazers</h2></div>
-    <div className={styles.rank}><div className="tempo-card-target"><strong>03</strong></div><span>YOUR PLACE<small>Among 24 trailblazers</small></span></div>
+    <div className={styles.titleBlock}><span className={styles.kicker}>The company you keep</span><h2><SolidLettering>Trailblazers</SolidLettering></h2></div>
+    <div className={styles.rank}><div className="tempo-card-target"><strong><SolidLettering size="display">03</SolidLettering></strong></div><span>YOUR PLACE<small>Among 24 trailblazers</small></span></div>
     <ol className={styles.standings}>{LEADERS.map((person, index) => <li key={person.name} data-self={index === 2}>
       <span className={styles.place}>{String(index + 1).padStart(2, "0")}</span><span className={styles.avatar}>{person.initials}</span><span>{person.name}</span><b>{person.points}</b>
     </li>)}</ol>
@@ -47,9 +48,9 @@ function ProfileCard() {
   return <article className={`tempo-card ${styles.face}`} aria-label="Alex Morgan profile preview">
     <div className={styles.micro}><span>GOALMAXXING / MEMBER</span><Sparkles size={17} strokeWidth={1.2} /></div>
     <div className={styles.identityArt}><Horizon portrait /><span className={styles.serial}>NO. 00146</span></div>
-    <div className={styles.titleBlock}><span className={styles.kicker}>Curiosity. Consistency. Open sky.</span><h2>Alex Morgan</h2><p>Building a life worth showing up for.</p></div>
+    <div className={styles.titleBlock}><span className={styles.kicker}>Curiosity. Consistency. Open sky.</span><h2><SolidLettering>Alex Morgan</SolidLettering></h2><p>Building a life worth showing up for.</p></div>
     <div className={styles.metrics}><Metric value="12" label="goals completed" /><Metric value="84%" label="rhythm" /><Metric value="146" label="active days" /></div>
-    <div className={styles.signature}><span data-relief-text>Alex M.</span><span>MEMBER SINCE<br />JANUARY 2026</span></div>
+    <div className={styles.signature}><span><SolidLettering>Alex M.</SolidLettering></span><span>MEMBER SINCE<br />JANUARY 2026</span></div>
     <div className={styles.micro}><span>FIRST 100 · HIGH POINT</span><span>LEVEL 18</span></div>
   </article>;
 }
@@ -59,10 +60,10 @@ function TeamCard() {
     <div className={styles.micro}><span>GOALMAXXING / TEAM MEMBERSHIP</span><span>EST. 2026</span></div>
     <div className={styles.teamBody}>
       <div className={styles.teamSeal} aria-hidden="true"><Sunrise size={52} strokeWidth={.85} /><span>EARLY HOURS</span><i>EH</i><span>SHOW UP TOGETHER</span></div>
-      <div className={styles.teamIdentity}><span className={styles.kicker}>Good mornings start with good company.</span><h2>The Early<br />Hours Club</h2><p>Four people. One shared promise.<br />A little movement before the world wakes.</p>
+      <div className={styles.teamIdentity}><span className={styles.kicker}>Good mornings start with good company.</span><h2><SolidLettering>The Early<br />Hours Club</SolidLettering></h2><p>Four people. One shared promise.<br />A little movement before the world wakes.</p>
         <div className={styles.roster} aria-label="Members: Alex, Maya, Jordan, Sam">{["AM", "MK", "JL", "SR"].map(initials => <span className={styles.avatar} key={initials}>{initials}</span>)}<span>4 / 6 members</span></div>
       </div>
-      <div className={styles.teamRecord}><span className={styles.kicker}>THIS WEEK</span><strong data-relief-text="display">18<span>/24</span></strong><span>shared sessions</span><div className={styles.progress} role="progressbar" aria-label="Team weekly sessions" aria-valuenow={18} aria-valuemin={0} aria-valuemax={24}><i style={{ width: "75%" }} /></div><p>6 more small steps<br />to a shared finish.</p></div>
+      <div className={styles.teamRecord}><span className={styles.kicker}>THIS WEEK</span><strong><SolidLettering size="display">18</SolidLettering><small><SolidLettering size="supporting">/24</SolidLettering></small></strong><span>shared sessions</span><div className={styles.progress} role="progressbar" aria-label="Team weekly sessions" aria-valuenow={18} aria-valuemin={0} aria-valuemax={24}><i style={{ width: "75%" }} /></div><p>6 more small steps<br />to a shared finish.</p></div>
     </div>
     <div className={styles.teamFooter}><span>FOCUS<br /><b>Movement & wellbeing</b></span><span>RITUAL<br /><b>Before 8am · Mon–Sat</b></span><span>MEMBERSHIP<br /><b>EH — 0004</b></span></div>
   </article>;

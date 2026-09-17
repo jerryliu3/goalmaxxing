@@ -36,6 +36,7 @@ export function MaterialStage({ material, color, still, label = material.name, l
             <span className={styles.backplate} aria-hidden="true" />
             <span className={styles.middleLayer} aria-hidden="true" />
           </>}
+          <div className="tempo-card" data-material-surface="" aria-hidden="true" />
           {children}
         </div>
       </div>

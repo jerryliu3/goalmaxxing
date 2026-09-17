@@ -38,7 +38,7 @@
 .metrics { display: grid; grid-template-columns: 1.1fr 1fr 1fr; padding: 1rem 0; border-block: 1px solid color-mix(in srgb,currentColor 22%,transparent); }
 .metrics > div { display: flex; flex-direction: column; gap: .4rem; }
 .metrics strong { font: 1.6rem var(--font-display); }
-.metrics span { font-size: .52rem; opacity: .7; }
+.metrics > div > span { font-size: .52rem; opacity: .7; }
 .signature { display: flex; justify-content: space-between; align-items: center; }
 .signature > span:first-child { font: italic 1.9rem var(--font-display); }
 .signature > span:last-child { font: .48rem/1.7 var(--font-mono); text-align: right; opacity: .6; }
@@ -52,7 +52,7 @@
 .roster > span:last-child { font-size: .6rem; margin-left: .3rem; }
 .teamRecord { align-self: stretch; display: flex; flex-direction: column; justify-content: center; gap: .7rem; border-left: 1px solid color-mix(in srgb,currentColor 22%,transparent); padding-left: 1.2rem; }
 .teamRecord > strong { font: 3.5rem/.9 var(--font-display); letter-spacing: -.05em; }
-.teamRecord strong span { font-size: 1.3rem; opacity: .65; }
+.teamRecord strong > small { font-size: 1.3rem; }
 .teamRecord > span, .teamRecord p { font-size: .65rem; line-height: 1.6; }
 .teamRecord p { opacity: .65; }
 .teamFooter { display: flex; justify-content: space-between; gap: 1rem; padding-top: 1rem; border-top: 1px solid color-mix(in srgb,currentColor 23%,transparent); font: .45rem/1.8 var(--font-mono); }
