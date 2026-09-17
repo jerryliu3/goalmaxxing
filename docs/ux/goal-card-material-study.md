@@ -69,8 +69,8 @@ Solid materials use a connected ten-pixel-deep CSS body with four side planes,
 rounded corner facets, and a rear face. The former downward edge shadows are
 removed. Side visibility and apparent thickness now come from perspective.
 They render no offset backplate or second sheet. Glass also loses the separate
-colored lens in its backdrop. Type is printed flat on the face; see
-`Flat lettering` below for why. Ceramic uses a stronger category-color glaze.
+colored lens in its backdrop. Lettering now has a shallow relief comparison; see
+`Surface lettering comparison` below. Ceramic uses a stronger category-color glaze.
 Foil preserves its ink, fine frame, and spectral numerals while gaining tilt and
 a gilded edge. The original effort bars remain the difficulty cue.
 
@@ -124,7 +124,7 @@ full-rotation controls, and finished back face. Switch the sample goal between
 green, violet, and rose to compare the finish. The original material concepts
 remain available for comparison; these additions do not recolor them.
 
-## Flat lettering
+## Previous flat-lettering pass
 
 Two passes attempted embossed study type: first a one-pixel highlight and cast
 shadow driven by the card-local light vector, then an eight-step extruded wall
@@ -134,12 +134,12 @@ wall was reverted on its own. This pass removes what remains: the `--relief-*`
 optics outputs, the per-material relief shadows on study text, and the depth
 planes that floated type above the face.
 
-Study type is now printed flat on the card face. Dimensionality comes from the
+That pass printed study type flat on the card face. Dimensionality comes from the
 card body, its connected side planes, its edges, and its moving reflections.
 Materials still style lettering by color and foil gradient only — the metallic
 numerals keep their pose-driven gradient position, since that is surface finish
-rather than geometry. Lettering depth is out of scope for this study unless a
-future pass can demonstrate it convincingly.
+rather than geometry. The new surface-lettering comparison below revisits relief with a much smaller
+bevel and keeps this printed treatment as an option.
 
 ## Application formats and earned objects
 
