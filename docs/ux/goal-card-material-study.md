@@ -145,13 +145,14 @@ bevel and keeps this printed treatment as an option.
 
 The study now has three views. Goal cards preserve the twelve-way comparison.
 “In the app” applies one selected material to a community challenge, compact
-leaderboard, and profile trading card. Their proportions and information
+leaderboard, profile trading card, and landscape team membership card. Their proportions and information
 hierarchies differ, but face treatment, edge, and moving light remain one
 system.
 
 “Trophies & objects” moves beyond rectangular UI: an annual momentum cup, a
-hundred-milestone medal, and a momentum compass inherit the selected material.
-These are CSS prototypes without external assets or a graphics runtime. They
+hundred-session medal, a faceted summit, and a momentum compass inherit the
+selected material. These are SVG illustrations with CSS lighting and bounded
+perspective tilt, without external assets or a graphics runtime. They
 test whether a chosen material can identify both everyday product surfaces and
 rare earned moments; they do not define achievement rules or production rewards.
 
