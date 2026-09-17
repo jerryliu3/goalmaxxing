@@ -582,6 +582,24 @@
     background: color-mix(in srgb, var(--goal-color) 12%, #f6f8ef);
   }
 }
+@media (forced-colors: active) {
+  .tempo-card[data-material] {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+  .tempo-card[data-material]::before,
+  .tempo-card[data-material]::after {
+    display: none;
+  }
+  .tempo-card[data-material] .tempo-card-target strong {
+    background: none;
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+    filter: none;
+  }
+}
 .tempo-eyebrow {
   font-size: 0.65rem;
   text-transform: uppercase;
