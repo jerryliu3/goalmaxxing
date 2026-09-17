@@ -10,7 +10,10 @@ import {
   type CompeteTileModel,
 } from "@/features/social/compete-snap-rail";
 import { SocialFreshnessIndicator } from "@/features/social/social-freshness-indicator";
-import { useDuo } from "@/features/social/duo/duo-context";
+import {
+  challengeUnitLabel,
+  describeChallengeTarget,
+} from "@/features/social/challenges/challenge-metric-copy";
 import {
   fetchSocialChallenges,
   joinSocialChallenge,
@@ -27,25 +30,19 @@ interface ChallengeListProps {
   hideWhenEmpty?: boolean;
 }
 
-function challengeMetric(item: SocialChallenge) {
-  if (!item.viewerJoined) {
-    return undefined;
-  }
-  return `${item.viewerProgress ?? 0} / ${item.targetValue}`;
-}
-
 export function ChallengeList({
   isActive = true,
   refreshToken = 0,
   onRefreshRequested,
   hideWhenEmpty = false,
 }: ChallengeListProps) {
-  const { viewerLabel } = useDuo();
   const cachedChallenges = peekSocialChallengesCache();
   const [items, setItems] = useState<SocialChallenge[]>(cachedChallenges?.items ?? []);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<{
+    challengeId: string;
+    message: string;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(!cachedChallenges);
   const [error, setError] = useState<string | null>(null);
   const hasPaintedChallengesRef = useRef(Boolean(cachedChallenges));
@@ -89,40 +86,37 @@ export function ChallengeList({
         item.status !== "archived" &&
         new Date(item.endsAt).getTime() > now
     );
-    const mapped = openItems.map((item) => {
-      const progress = item.viewerProgress ?? 0;
-      const percent =
-        item.targetValue > 0 ? Math.round((progress / item.targetValue) * 100) : 0;
-      const people = item.viewerJoined
-        ? [
-            {
-              rank: 1,
-              name: viewerLabel,
-              you: true,
-              partner: false,
-              label: `${progress}/${item.targetValue}`,
-              percent,
-            },
-          ]
-        : [];
-      return {
-        key: item.id,
-        title: item.title,
-        titleBadge: formatTimeLeftLabel(item.endsAt) ?? undefined,
-        metric: challengeMetric(item),
-        detail: item.description ?? `${item.status} · target ${item.targetValue}`,
-        joined: item.viewerJoined,
-        closed: false,
-        people,
-        punchMarks: item.viewerJoined
-          ? { progress, target: item.targetValue }
-          : undefined,
-        joinLabel: "Join challenge",
-        leaveLabel: "Leave challenge",
-      } satisfies CompeteTileModel;
-    });
+    const mapped = openItems.map(
+      (item) =>
+        ({
+          key: item.id,
+          title: item.title,
+          titleBadge: formatTimeLeftLabel(item.endsAt) ?? undefined,
+          kicker:
+            item.rewardXp > 0
+              ? `${item.rewardXp.toLocaleString()} XP reward`
+              : undefined,
+          detail:
+            item.description ??
+            describeChallengeTarget(
+              item.metric,
+              item.metricTrackKey,
+              item.targetValue
+            ),
+          joined: item.viewerJoined,
+          closed: false,
+          people: [],
+          requirement: {
+            progress: item.viewerProgress ?? 0,
+            target: item.targetValue,
+            unitLabel: challengeUnitLabel(item.metric, item.metricTrackKey),
+          },
+          joinLabel: "Join challenge",
+          leaveLabel: "Leave challenge",
+        }) satisfies CompeteTileModel
+    );
     return sortJoinedFirst(mapped);
-  }, [items, viewerLabel]);
+  }, [items]);
 
   const challengeById = useMemo(
     () => new Map(items.map((item) => [item.id, item])),
@@ -139,15 +133,16 @@ export function ChallengeList({
         await joinSocialChallenge(challenge.id);
       }
       await loadChallenges();
-      setExpandedId(challenge.id);
     } catch (joinError) {
-      setActionError(
-        joinError instanceof Error
-          ? joinError.message
-          : challenge.viewerJoined
-            ? "Could not leave challenge."
-            : "Could not join challenge."
-      );
+      setActionError({
+        challengeId: challenge.id,
+        message:
+          joinError instanceof Error
+            ? joinError.message
+            : challenge.viewerJoined
+              ? "Could not leave challenge."
+              : "Could not join challenge.",
+      });
     } finally {
       setPendingId(null);
     }
@@ -215,18 +210,15 @@ export function ChallengeList({
       <CompeteSnapRail label="Challenges">
         {tiles.map((tile) => {
           const challenge = challengeById.get(tile.key);
-          const expanded = expandedId === tile.key;
           return (
             <CompeteTile
               key={tile.key}
               tile={tile}
               span="card"
-              density={competeDensity({ joined: tile.joined, expanded })}
-              expanded={expanded}
+              density={competeDensity({ joined: tile.joined, expanded: false })}
               joinPending={pendingId === tile.key}
-              joinError={expanded ? actionError : null}
-              onExpand={() =>
-                setExpandedId((current) => (current === tile.key ? null : tile.key))
+              joinError={
+                actionError?.challengeId === tile.key ? actionError.message : null
               }
               onJoin={challenge ? () => void toggleJoin(challenge) : undefined}
             />

@@ -52,10 +52,6 @@ function makeChallenge(
   };
 }
 
-async function nextTick() {
-  await new Promise((resolve) => setTimeout(resolve, 0));
-}
-
 describe("ChallengeList", () => {
   afterEach(() => {
     cleanup();
@@ -75,31 +71,51 @@ describe("ChallengeList", () => {
     expect(await screen.findByText("1 day left")).toBeInTheDocument();
   });
 
-  it("expands ranks on click without reloading the roster", async () => {
-    const challenges = [
-      makeChallenge("11111111-1111-4111-8111-111111111111", "Weekly XP Sprint"),
-      makeChallenge("22222222-2222-4222-8222-222222222222", "Cohort Health Push"),
-    ];
+  it("reads out progress for targets too large to number", async () => {
     fetchSocialChallengesMock.mockResolvedValue({
       schemaVersion: "1",
-      items: challenges,
+      items: [
+        makeChallenge("11111111-1111-4111-8111-111111111111", "Weekly XP Sprint"),
+      ],
     });
 
     render(<ChallengeList />);
     expect(
       await screen.findByRole("heading", { name: "Weekly XP Sprint" })
     ).toBeInTheDocument();
-    await nextTick();
 
-    expect(fetchSocialChallengesMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Your progress")).toBeInTheDocument();
+    expect(screen.getByText("750 XP to go")).toBeInTheDocument();
+    expect(screen.getByText("100 XP reward")).toBeInTheDocument();
+  });
 
-    const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Tap to open Cohort Health Push" }));
-    expect(screen.getByRole("button", { name: "Collapse Cohort Health Push" })).toBeInTheDocument();
-    expect(screen.getByText("250/1000")).toBeInTheDocument();
-    await nextTick();
+  it("numbers each requirement mark for countable targets", async () => {
+    fetchSocialChallengesMock.mockResolvedValue({
+      schemaVersion: "1",
+      items: [
+        makeChallenge("11111111-1111-4111-8111-111111111111", "Ten Sessions", {
+          description: null,
+          metric: "completions_count",
+          targetValue: 10,
+          viewerJoined: false,
+          viewerProgress: null,
+        }),
+      ],
+    });
 
-    expect(fetchSocialChallengesMock).toHaveBeenCalledTimes(1);
+    render(<ChallengeList />);
+    expect(
+      await screen.findByRole("heading", { name: "Ten Sessions" })
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText("Complete 10 sessions before this challenge ends.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "0 of 10 sessions complete" })
+    ).toBeInTheDocument();
+    expect(screen.getAllByTestId("requirement-mark")).toHaveLength(10);
+    expect(screen.getByText("10")).toBeInTheDocument();
   });
 
   it("joins and leaves from the tile foot", async () => {
@@ -122,19 +138,37 @@ describe("ChallengeList", () => {
 
     render(<ChallengeList />);
     expect(await screen.findByRole("button", { name: "Join challenge" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Leave challenge" })).not.toBeInTheDocument();
-    expect(screen.getByText("Ranked people stay hidden until you join or open this tile.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Leave challenge" })).toBeInTheDocument();
 
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Join challenge" }));
     await waitFor(() => {
       expect(joinSocialChallengeMock).toHaveBeenCalledWith(open.id);
     });
-    await user.click(screen.getByRole("button", { name: /Tap to open Joined Sprint/ }));
     await user.click(screen.getByRole("button", { name: "Leave challenge" }));
     await waitFor(() => {
       expect(leaveSocialChallengeMock).toHaveBeenCalledWith(joined.id);
     });
+  });
+
+  it("surfaces a leave failure on the challenge that failed", async () => {
+    fetchSocialChallengesMock.mockResolvedValue({
+      schemaVersion: "1",
+      items: [
+        makeChallenge("22222222-2222-4222-8222-222222222222", "Joined Sprint"),
+      ],
+    });
+    leaveSocialChallengeMock.mockRejectedValueOnce(
+      new Error("Challenge leave failed.")
+    );
+
+    render(<ChallengeList />);
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", { name: "Leave challenge" })
+    );
+
+    expect(await screen.findByText("Challenge leave failed.")).toBeInTheDocument();
   });
 
   it("keeps the Challenges title when the roster fails to load", async () => {
