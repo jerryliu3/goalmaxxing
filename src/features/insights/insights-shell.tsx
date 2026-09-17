@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
 import { DuoLanes } from "@/features/social/duo/duo-lanes";
 import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
@@ -42,21 +42,6 @@ export function InsightsShell() {
     () => unionGoalsById([viewerGoals, partnerGoals]),
     [partnerGoals, viewerGoals]
   );
-
-  useEffect(() => {
-    const scrollToAchievements = () => {
-      if (typeof window === "undefined" || window.location.hash !== "#progress-achievements") {
-        return;
-      }
-      document.getElementById("progress-achievements")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    };
-    scrollToAchievements();
-    window.addEventListener("hashchange", scrollToAchievements);
-    return () => window.removeEventListener("hashchange", scrollToAchievements);
-  }, []);
 
   const sharedPeriod = useMemo(
     () =>

@@ -154,19 +154,21 @@ describe("TabOnboardingOverlay", () => {
     });
   });
 
-  it("walks through insights including the missed-day goal step", async () => {
+  it("walks through insights including the missed-day history step", async () => {
     render(
       <>
-        <div data-onboarding="insights.overall">Overall</div>
-        <div data-onboarding="insights.goal-stats">Goal stats</div>
-        <div data-onboarding="insights.goal">First goal</div>
+        <div data-onboarding="insights.score">Score</div>
+        <div data-onboarding="insights.views">Views</div>
+        <div data-onboarding="insights.history">History</div>
         <TabOnboardingOverlay onboardingKey="insights.main" />
       </>
     );
 
-    expect(await screen.findByRole("dialog", { name: "Progress Tracker" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("dialog", { name: "Goalmaxxing score" })
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Choose goals" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Current and Past" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(await screen.findByRole("dialog", { name: "Log a missed day" })).toBeInTheDocument();
   });

@@ -213,6 +213,28 @@ describe("InsightsTab goal ledger", () => {
     expect(screen.queryByRole("heading", { name: "Thesis" })).not.toBeInTheDocument();
   });
 
+  it("frames the personal progress page as full sections per view", async () => {
+    const user = userEvent.setup();
+    render(
+      <InsightsTab
+        sharedPeriod={{
+          monthCursor: new Date(2026, 8, 6),
+          onMonthCursorChange: () => {},
+          perGoalViewMode: "month",
+          onPerGoalViewModeChange: () => {},
+        }}
+      />
+    );
+
+    expect(screen.getByTestId("progress-section-history")).toBeInTheDocument();
+    expect(screen.getByTestId("progress-ledger-layout")).toBeInTheDocument();
+    expect(screen.queryByTestId("progress-section-past-goals")).toBeNull();
+
+    await user.click(screen.getByRole("tab", { name: "Past" }));
+    expect(screen.getByTestId("progress-section-past-goals")).toBeInTheDocument();
+    expect(screen.queryByTestId("progress-ledger-layout")).toBeNull();
+  });
+
   it("stacks heatmap then goals in lane mode without the shared tracker", () => {
     render(
       <InsightsTab

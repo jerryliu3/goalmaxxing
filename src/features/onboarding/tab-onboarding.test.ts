@@ -45,12 +45,12 @@ describe("tab onboarding storage", () => {
       "social.team",
     ]);
     expect(TAB_ONBOARDING_TOURS["insights.main"][2]?.description).toContain(
-      "read-only overlap"
+      "Completion history"
     );
     expect(TAB_ONBOARDING_TOURS["insights.main"].map((step) => step.target)).toEqual([
-      "insights.overall",
-      "insights.goal-stats",
-      "insights.goal",
+      "insights.score",
+      "insights.views",
+      "insights.history",
     ]);
     expect(TAB_ONBOARDING_TOURS["planner.calendar"].map((step) => [
       step.target,
