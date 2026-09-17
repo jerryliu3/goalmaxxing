@@ -9,6 +9,17 @@ vi.mock("motion/react", () => ({ useReducedMotion: () => preference.reduced }));
 afterEach(() => { cleanup(); preference.reduced = false; });
 
 describe("card material comparison", () => {
+  it("compares shallow lettering finishes without losing the choice between views", async () => {
+    const user = userEvent.setup();
+    render(<CardMaterialsStudy />);
+    expect(screen.getByRole("main")).toHaveAttribute("data-lettering", "raised");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Lettering" }), "recessed");
+    await user.click(screen.getByRole("tab", { name: "02 In the app" }));
+    expect(screen.getByRole("main")).toHaveAttribute("data-lettering", "recessed");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Lettering" }), "flat");
+    expect(screen.getByRole("main")).toHaveAttribute("data-lettering", "flat");
+  });
+
   it("keeps shared goal content and history copy consistent across materials", async () => {
     const user = userEvent.setup();
     render(<CardMaterialsStudy />);

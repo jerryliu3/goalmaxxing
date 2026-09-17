@@ -55,10 +55,7 @@
   --bevel: inset 1px 1px 2px #fffd, inset -1px -2px 2px #162a2626;
 }
 .stage[data-form="solid"] .object :global(.tempo-card) { box-shadow: var(--bevel); border-radius: var(--card-radius); }
-/* Study type is printed flat on the face: no depth planes, no raised lighting.
-   Dimensionality belongs to the card body, its edges, and its reflections.
-   Face content still needs its own layer, because every material draws its
-   glazes and sheens as absolutely positioned pseudo-elements. */
+/* Keep content above the material glaze without separating type from its face. */
 .stage .object :global(.tempo-card) > * { position: relative; z-index: 1; }
 
 /* 01 / Optical: color held inside one beveled slab, with no rear lens. */
@@ -173,3 +170,13 @@
 .stage[data-form="solid"] .object :global(.tempo-card)::after { backface-visibility: hidden; }
 .stage[data-material="pearl"] .object :global(.tempo-card) { background-size: 100% 100%,170% 170%; background-position: 0 0,var(--pearl-x) var(--pearl-y); }
 .rotationButtons { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+/* Subpixel opposing edges suggest a stamped bevel, not a floating type plane.
+   Drop shadows preserve the transparent interiors of foil-filled glyphs. */
+.page[data-lettering="raised"] { --letter-relief: drop-shadow(-.35px -.5px .15px #ffffffb3) drop-shadow(.55px .8px .35px #111b2870); }
+.page[data-lettering="recessed"] { --letter-relief: drop-shadow(-.45px -.65px .25px #111b2880) drop-shadow(.4px .65px .2px #ffffffba); }
+.page[data-lettering="flat"] { --letter-relief: none; }
+.page :is(:global(.tempo-card h2), :global(.tempo-card-target strong), :global(.tempo-card-period), [data-relief-text]) { filter: var(--letter-relief); }
+@media (forced-colors: active) {
+  .page :is(:global(.tempo-card h2), :global(.tempo-card-target strong), :global(.tempo-card-period), [data-relief-text]) { filter: none; }
+}

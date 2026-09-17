@@ -154,3 +154,11 @@ hundred-milestone medal, and a momentum compass inherit the selected material.
 These are CSS prototypes without external assets or a graphics runtime. They
 test whether a chosen material can identify both everyday product surfaces and
 rare earned moments; they do not define achievement rules or production rewards.
+
+## Surface lettering comparison
+
+The study defaults to shallow embossed lettering. The Lettering control also
+offers engraved and printed treatments, retained between all three study views.
+Opposed subpixel highlights and shadows bevel the headline and numerals without
+separating text into floating depth planes. Small metadata stays printed for
+legibility; forced-colors removes the effect. Production cards are unchanged.

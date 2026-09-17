@@ -12,6 +12,7 @@ import styles from "./card-materials.module.css";
 type StudyView = "cards" | "application" | "objects";
 
 export function CardMaterialsStudy() {
+  const [lettering, setLettering] = useState("raised");
   const [sample, setSample] = useState(0);
   const [material, setMaterial] = useState(5);
   const [view, setView] = useState<StudyView>("cards");
@@ -21,7 +22,7 @@ export function CardMaterialsStudy() {
   const reducedMotion = useReducedMotion();
   const motionStopped = still || Boolean(reducedMotion);
   return (
-    <main className={styles.page} data-backdrop={dark ? "ink" : "paper"}>
+    <main className={styles.page} data-backdrop={dark ? "ink" : "paper"} data-lettering={lettering}>
       <div className={styles.container}>
         <Link className={styles.back} href="/ux/brand"><ArrowLeft size={15} />Visual language gallery</Link>
         <header className={styles.hero}>
@@ -40,6 +41,7 @@ export function CardMaterialsStudy() {
             <label>Sample goal<select value={sample} onChange={event => setSample(Number(event.target.value))}>{MATERIAL_SAMPLES.map((item, index) => <option key={item.label} value={index}>{item.label}</option>)}</select></label>
             <label><input type="checkbox" checked={history} onChange={event => setHistory(event.target.checked)} />Completed goal</label>
           </> : <label>Material<select value={material} onChange={event => setMaterial(Number(event.target.value))}>{MATERIALS.map((item, index) => <option key={item.id} value={index}>{item.name}</option>)}</select></label>}
+          <label>Lettering<select value={lettering} onChange={event => setLettering(event.target.value)}><option value="raised">Embossed</option><option value="recessed">Engraved</option><option value="flat">Printed</option></select></label>
           <label><input type="checkbox" checked={dark} onChange={event => setDark(event.target.checked)} />Ink backdrop</label>
           <label><input type="checkbox" checked={motionStopped} disabled={Boolean(reducedMotion)} onChange={event => setStill(event.target.checked)} />Still mode</label>
         </div>
@@ -54,7 +56,7 @@ export function CardMaterialsStudy() {
         <aside className={styles.recommendation}>
           <p className={styles.eyebrow}>THE PREMIUM EDIT</p>
           <h2>One material language.<br />More than one kind of reward.</h2>
-          <p>Prismatic Pearl, Chromatic Foil, and Anodized Alloy carry category color through light, foil, or metal. Type stays printed flat on the face, so depth comes from the body, edge, and reflections rather than the lettering. The application and object studies test how far that language can stretch.</p>
+          <p>Prismatic Pearl, Chromatic Foil, and Anodized Alloy carry category color through light, foil, or metal. Compare a shallow embossed edge, an engraved impression, and clean printed type. Lettering sits against the material, like a finely stamped membership card. The application and object studies test how far that language can stretch.</p>
           <Link href="/demo/insights/folios">Try the folio opening <ArrowUpRight size={15} /></Link>
         </aside>
         <footer className={styles.footer}>Goalmaxxing · Material system study · Cards, identity, and earned objects</footer>
