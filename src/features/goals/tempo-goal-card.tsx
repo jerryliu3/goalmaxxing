@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/goals/category";
 import type { GoalCreationFields } from "./goal-creation-model";
@@ -13,6 +13,7 @@ export function TempoGoalCard({
   achieved = false,
   isTask = false,
   taskSchedule,
+  renderLettering = text => text,
   visibility = {
     category: true,
     rhythm: true,
@@ -28,6 +29,7 @@ export function TempoGoalCard({
   isTask?: boolean;
   taskSchedule?: { date: string; time: string };
   visibility?: TempoCardVisibility;
+  renderLettering?: (text: ReactNode, size: "display" | "title" | "supporting") => ReactNode;
 }) {
   const milestones = fields.frequency_type === "fixed_milestones";
   const count = Number(fields.target_count) || 1;
@@ -91,19 +93,19 @@ export function TempoGoalCard({
       </div>
       <div className="tempo-card-target">
         <strong>
-          {hasCount ? String(isTask ? 1 : count).padStart(2, "0") : "—"}
+          {renderLettering(hasCount ? String(isTask ? 1 : count).padStart(2, "0") : "—", "display")}
         </strong>
-        {hasCount && <span>{unit}</span>}
+        {hasCount && <span>{renderLettering(unit, "supporting")}</span>}
       </div>
-      <h2>{fields.title.trim() || "Something worth starting."}</h2>
+      <h2>{renderLettering(fields.title.trim() || "Something worth starting.", "title")}</h2>
       <div className="tempo-card-period-row">
         <span className="tempo-card-period">
-          {visibility.category && !isTask
+          {renderLettering(visibility.category && !isTask
             ? getCategoryLabel(
                 fields.category_selection,
                 fields.custom_category,
               )
-            : ""}
+            : "", "supporting")}
         </span>
         {visibility.difficulty && !isTask && (
           <div className="tempo-card-effort">

@@ -1,0 +1,20 @@
+.solid {
+  --size-scale: .6;
+  --glyph-depth: calc(var(--text-depth,0px) * var(--size-scale));
+  position: relative; display: inline-block; max-width: 100%; vertical-align: baseline;
+  white-space: pre-line; transform-style: preserve-3d;
+}
+.solid[data-lettering-solid="display"] { --size-scale: 1; }
+.solid[data-lettering-solid="supporting"] { --size-scale: .35; }
+.face { position: relative; display: block; transform: translateZ(var(--glyph-depth)); backface-visibility: hidden; }
+.wall {
+  position: absolute; inset: 0; display: var(--text-walls,none); pointer-events: none;
+  transform: translateZ(calc(var(--glyph-depth) * var(--slice)));
+  backface-visibility: hidden; -webkit-text-fill-color: currentColor;
+  color: color-mix(in srgb,var(--edge,var(--material-color,#9c9786)) 65%,#17211f);
+}
+.wall::before { content: attr(data-glyphs); }
+@media (forced-colors: active) {
+  .wall { display: none; }
+  .face { transform: none; color: CanvasText; -webkit-text-fill-color: CanvasText; background: none; text-shadow: none; }
+}

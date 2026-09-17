@@ -3,6 +3,7 @@
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
 import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
 import type { CardMaterial } from "./materials";
+import { renderSolidLettering } from "./solid-lettering";
 import { MaterialStage } from "./material-stage";
 import styles from "./card-materials.module.css";
 
@@ -17,7 +18,7 @@ export function MaterialPreview({ material, fields, still, history }: {
         <p>{material.premise}</p>
       </header>
       <MaterialStage material={material} color={fields.color} still={still}>
-        <TempoGoalCard fields={fields} context={history ? "history" : "creation"} achieved={history} />
+        <TempoGoalCard fields={fields} context={history ? "history" : "creation"} achieved={history} renderLettering={renderSolidLettering} />
       </MaterialStage>
       <div className={styles.notes}>
         <p>{material.detail}</p>
