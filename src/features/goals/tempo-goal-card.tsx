@@ -20,7 +20,7 @@ export function TempoGoalCard({
   surface = "material",
   rotatable = true,
   assembly,
-  renderLettering = text => text,
+  renderLettering = (text) => text,
   visibility = {
     category: true,
     rhythm: true,
@@ -41,7 +41,10 @@ export function TempoGoalCard({
   rotatable?: boolean;
   assembly?: { completed: number; target: number };
   visibility?: TempoCardVisibility;
-  renderLettering?: (text: ReactNode, size: "display" | "title" | "supporting") => ReactNode;
+  renderLettering?: (
+    text: ReactNode,
+    size: "display" | "title" | "supporting",
+  ) => ReactNode;
 }) {
   const still = Boolean(useReducedMotion());
   const milestones = fields.frequency_type === "fixed_milestones";
@@ -90,7 +93,11 @@ export function TempoGoalCard({
       data-effort={visibility.difficulty ? effort : undefined}
       data-material={material}
       style={{ "--goal-color": goalColor } as CSSProperties}
-      aria-label={context === "history" ? `${fields.title} goal card` : "Goal card preview"}
+      aria-label={
+        context === "history"
+          ? `${fields.title} goal card`
+          : "Goal card preview"
+      }
     >
       <div className="tempo-card-meta">
         <span>
@@ -110,11 +117,19 @@ export function TempoGoalCard({
       </div>
       <div className="tempo-card-target">
         <strong>
-          {renderLettering(hasCount ? String(isTask ? 1 : count).padStart(2, "0") : "—", "display")}
+          {renderLettering(
+            hasCount ? String(isTask ? 1 : count).padStart(2, "0") : "—",
+            "display",
+          )}
         </strong>
         {hasCount && <span>{renderLettering(unit, "supporting")}</span>}
       </div>
-      <h2>{renderLettering(fields.title.trim() || "Something worth starting.", "title")}</h2>
+      <h2>
+        {renderLettering(
+          fields.title.trim() || "Something worth starting.",
+          "title",
+        )}
+      </h2>
       <div className="tempo-card-period-row">
         <span className="tempo-card-period">
           {visibility.category && !isTask
@@ -170,7 +185,18 @@ export function TempoGoalCard({
       rotatable={rotatable}
       solid={!assembly}
     >
-      {assembly ? <ReassemblingCard key={assembly.target} completed={assembly.completed} target={assembly.target} still={still}>{card}</ReassemblingCard> : card}
+      {assembly ? (
+        <ReassemblingCard
+          key={assembly.target}
+          completed={assembly.completed}
+          target={assembly.target}
+          still={still}
+        >
+          {card}
+        </ReassemblingCard>
+      ) : (
+        card
+      )}
     </TempoCardSurface>
   );
 }

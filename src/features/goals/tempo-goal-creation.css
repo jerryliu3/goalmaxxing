@@ -471,9 +471,10 @@
   --card-radius: 0.9rem;
   --edge: color-mix(in srgb, var(--goal-color) 18%, #8c98a5);
 }
-.tempo-card-surface[data-material="foil"] .tempo-card-object {
+.tempo-card-surface[data-material="chromatic"] .tempo-card-object {
   --card-radius: 0.7rem;
-  --edge: #92805a;
+  --edge: color-mix(in srgb, var(--goal-color) 40%, #8e9aa2);
+  --shine-tint: color-mix(in srgb, var(--goal-color) 35%, #fff);
 }
 .tempo-card-surface[data-still="true"] .tempo-card-object {
   transform: none;
@@ -580,19 +581,32 @@
   background: #46586c;
 }
 
-.tempo-card[data-material="foil"] {
-  color: #f4edda;
-  border-color: #d7c59e;
+.tempo-card[data-material="chromatic"] {
+  color: #edf2f4;
+  border-color: color-mix(in srgb, var(--goal-color) 35%, #b8c0c5);
   border-radius: 0.7rem;
   background:
-    linear-gradient(130deg, #fff1, transparent 35%),
-    color-mix(in srgb, var(--goal-color) 15%, #1d2b2a);
+    radial-gradient(
+      ellipse at var(--light-x) var(--light-y),
+      color-mix(in srgb, var(--goal-color) 14%, transparent),
+      transparent 65%
+    ),
+    linear-gradient(145deg, #ffffff0c, transparent 40%),
+    color-mix(in srgb, var(--goal-color) 9%, #192127);
   box-shadow:
-    inset 0 0 0 5px #243530,
-    inset 0 0 0 6px #d7c59e66,
+    inset 0 0 0 4px #242c31,
+    inset 0 0 0 5px color-mix(in srgb, var(--goal-color) 40%, #c4cbd0),
     0 16px 36px #1720152b;
 }
-.tempo-card[data-material="foil"]::before {
+.tempo-card[data-material="chromatic"]::before {
+  content: "";
+  position: absolute;
+  inset: 11px;
+  pointer-events: none;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--goal-color) 22%, transparent);
+}
+.tempo-card[data-material="chromatic"]::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -602,35 +616,24 @@
   background: linear-gradient(
     var(--shine-angle),
     transparent calc(var(--shine-position) - 16%),
-    #8bd7c41c calc(var(--shine-position) - 10%),
-    #dbbfdd44 calc(var(--shine-position) - 4%),
-    #fff8dba8 var(--shine-position),
-    #a6e5d94a calc(var(--shine-position) + 3%),
-    transparent calc(var(--shine-position) + 12%)
+    color-mix(in srgb, var(--shine-tint, #fff) 16%, transparent)
+      calc(var(--shine-position) - 5%),
+    color-mix(in srgb, var(--shine-tint, #fff) 60%, transparent)
+      var(--shine-position),
+    color-mix(in srgb, var(--shine-tint, #fff) 16%, transparent)
+      calc(var(--shine-position) + 5%),
+    transparent calc(var(--shine-position) + 16%)
   );
 }
-.tempo-card[data-material="foil"]::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  opacity: var(--shine-strength);
-  background: radial-gradient(
-    ellipse at var(--light-x) var(--light-y),
-    #fff8d926,
-    transparent 65%
-  );
-}
-.tempo-card[data-material="foil"] .tempo-card-target strong {
-  color: #e9d1a4;
-  background: linear-gradient(
+.tempo-card[data-material="chromatic"] .tempo-card-target strong {
+  color: #dce8e9;
+  background-image: linear-gradient(
     125deg,
-    #f8e6bd 8%,
-    #a7d2c5 27%,
-    #e6bee1 45%,
-    #f4df9d 58%,
-    #b5ddd1 80%
+    #f5f8f9 10%,
+    color-mix(in srgb, var(--goal-color) 40%, #c2cdd1) 30%,
+    #fff 44%,
+    color-mix(in srgb, var(--goal-color) 22%, #a7b9c0) 65%,
+    #e8f1f3
   );
   background-size: 200% 200%;
   background-position: var(--metal-x) var(--metal-y);
@@ -639,14 +642,14 @@
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(2px 5px 2px #0005);
 }
-.tempo-card[data-material="foil"] .tempo-card-target > span {
+.tempo-card[data-material="chromatic"] .tempo-card-target > span {
   text-shadow: 2px 4px 2px #0006;
 }
-.tempo-card[data-material="foil"] .tempo-effort-bars i {
-  background: #f4edda26;
+.tempo-card[data-material="chromatic"] .tempo-effort-bars i {
+  background: #edf2f426;
 }
-.tempo-card[data-material="foil"] .tempo-effort-bars i[data-active="true"] {
-  background: #e9d1a4;
+.tempo-card[data-material="chromatic"] .tempo-effort-bars i[data-active="true"] {
+  background: color-mix(in srgb, var(--goal-color) 35%, #dce8e9);
 }
 @supports not (backdrop-filter: blur(1px)) {
   .tempo-card[data-material="glass"] {
@@ -911,7 +914,29 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
+  width: min(100%, 420px);
+  justify-self: center;
+}
+.tempo-plaque-copy {
+  margin: 0;
+  text-align: center;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+.tempo-plaque-input {
+  display: inline-flex;
+  vertical-align: baseline;
+}
+.tempo-plaque-input input {
+  width: 3.4rem;
+  height: 2rem;
+  padding: 0 0.35rem;
+  text-align: center;
+  font: inherit;
+  font-weight: 600;
+  color: var(--foreground);
 }
 .tempo-review-action > button {
   border-radius: 2rem;

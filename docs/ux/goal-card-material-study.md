@@ -22,8 +22,13 @@ difficulty edge shadows are removed, since the material now carries that signal.
 
 Scope notes:
 
+- Difficulty is chosen on the intention step, directly under category, so the
+  card material can borrow a real category color as soon as it appears.
+  Chromatic Foil uses `data-material="chromatic"` (category-tinted foil), not
+  the rainbow Foil Print study finish.
 - The material follows the same progressive disclosure as the effort bars, so
-  early creation steps and the empty entry preview keep the neutral surface.
+  early creation steps and the empty entry preview keep the neutral surface
+  until difficulty is chosen.
 - Planner tasks have no difficulty of their own and stay on Liquid Glass.
 - Every material card is dimensional: `TempoCardSurface` wraps it with
   perspective, the connected side planes of `CardSolidBody`, and pointer-driven

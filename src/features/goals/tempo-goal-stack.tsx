@@ -74,7 +74,15 @@ export function TempoGoalStack({
           animate={{ opacity: 1, rotateY: 0, x: 0 }}
           transition={{ type: "spring", stiffness: 230, damping: 25 }}
         >
-          <TempoGoalCard fields={draft} visibility={visibility} />
+          <TempoGoalCard
+            fields={draft}
+            visibility={visibility}
+            assembly={
+              visibility.review && visibility.plaqueTarget
+                ? { completed: 0, target: visibility.plaqueTarget }
+                : undefined
+            }
+          />
         </motion.div>
       </div>
       <div className="tempo-stack-nav">

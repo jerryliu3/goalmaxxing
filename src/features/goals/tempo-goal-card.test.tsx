@@ -56,7 +56,7 @@ describe("TempoGoalCard materials", () => {
   it("maps hard goals to chromatic foil", () => {
     expect(
       renderCard({ fields: { ...baseFields, difficulty: "hard" } })
-    ).toHaveAttribute("data-material", "foil");
+    ).toHaveAttribute("data-material", "chromatic");
   });
 
   it("falls back to liquid glass when a goal has no difficulty", () => {
@@ -222,9 +222,9 @@ describe("material card reassembly", () => {
   it("shares one material surface and hides duplicate faces from accessibility", () => {
     const { container } = render(<TempoGoalCard fields={{ ...baseFields, difficulty: "hard" }} assembly={{ completed: 2, target: 3 }} rotatable={false} />);
     expect(container.querySelectorAll(".tempo-card-surface")).toHaveLength(1);
-    expect(container.querySelector(".tempo-card-surface")).toHaveAttribute("data-material", "foil");
+    expect(container.querySelector(".tempo-card-surface")).toHaveAttribute("data-material", "chromatic");
     expect(screen.getAllByRole("article")).toHaveLength(1);
-    for (const face of container.querySelectorAll(".tempo-card")) expect(face).toHaveAttribute("data-material", "foil");
+    for (const face of container.querySelectorAll(".tempo-card")) expect(face).toHaveAttribute("data-material", "chromatic");
     expect(container.querySelector('[data-reward-piece="0"]')).toHaveAttribute("data-arriving", "false");
   });
 });

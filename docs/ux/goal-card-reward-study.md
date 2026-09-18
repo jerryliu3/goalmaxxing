@@ -56,5 +56,6 @@ leaving PR #950's material face and solid body unchanged.
 Ongoing cadence cards use a presentation-only artificial shard target: count
 full periods from start through the goal's end date (or start + ≈62 days when
 open-ended), take 90% rounded, and clamp to 1–20 successful periods. Credited
-successful periods drive the shards; domain achievement is unchanged. Configurable
-reward milestones for ongoing goals remain deferred.
+successful periods drive the shards; domain achievement is unchanged. Goal
+creation's review step seeds that same formula into an adjustable plaque-target
+field for the preview; persisting a custom reward milestone remains deferred.
