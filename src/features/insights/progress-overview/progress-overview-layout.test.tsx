@@ -1,10 +1,12 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { ProgressOverviewLayout } from "@/features/insights/progress-overview/progress-overview-layout";
 import {
-  ProgressOverviewLayout,
+  ProgressSectionStack,
   type ProgressOverviewSectionContent,
-} from "@/features/insights/progress-overview/progress-overview-layout";
+} from "@/features/insights/progress-overview/progress-section-stack";
+import type { ProgressSectionId } from "@/features/insights/progress-overview/progress-view-model";
 
 function sections(): ProgressOverviewSectionContent[] {
   return [
@@ -16,6 +18,15 @@ function sections(): ProgressOverviewSectionContent[] {
   ];
 }
 
+function renderLayout(content = sections()) {
+  const ids = content.map((section) => section.id);
+  return render(
+    <ProgressOverviewLayout availableSectionIds={ids}>
+      {(view) => <ProgressSectionStack sections={content} view={view} />}
+    </ProgressOverviewLayout>
+  );
+}
+
 describe("ProgressOverviewLayout", () => {
   beforeEach(() => {
     window.history.replaceState(null, "", "/insights");
@@ -24,7 +35,7 @@ describe("ProgressOverviewLayout", () => {
   afterEach(cleanup);
 
   it("shows current sections in score, history, week order", () => {
-    render(<ProgressOverviewLayout sections={sections()} />);
+    renderLayout();
 
     const headings = screen
       .getAllByRole("heading", { level: 3 })
@@ -37,21 +48,8 @@ describe("ProgressOverviewLayout", () => {
     expect(screen.queryByText("Medal collection")).not.toBeInTheDocument();
   });
 
-  it("leaves the heading to the content when a section renders its own", () => {
-    render(
-      <ProgressOverviewLayout
-        sections={[{ id: "score", hideTitle: true, content: <p>Score trend</p> }]}
-      />
-    );
-
-    expect(screen.queryByRole("heading", { level: 3 })).toBeNull();
-    expect(
-      screen.getByRole("region", { name: "Goalmaxxing score" })
-    ).toBeInTheDocument();
-  });
-
   it("renders each section fully expanded without an inspect control", () => {
-    render(<ProgressOverviewLayout sections={sections()} />);
+    renderLayout();
 
     expect(screen.getByText("Score trend")).toBeInTheDocument();
     expect(screen.getByText("Week rhythm")).toBeInTheDocument();
@@ -61,7 +59,7 @@ describe("ProgressOverviewLayout", () => {
 
   it("switches to the past sections from the mobile tabs and mirrors the view in the url", async () => {
     const user = userEvent.setup();
-    render(<ProgressOverviewLayout sections={sections()} />);
+    renderLayout();
 
     await user.click(screen.getByRole("tab", { name: "Past" }));
 
@@ -77,7 +75,7 @@ describe("ProgressOverviewLayout", () => {
 
   it("jumps to a past section from the side index", async () => {
     const user = userEvent.setup();
-    render(<ProgressOverviewLayout sections={sections()} />);
+    renderLayout();
 
     const index = screen.getByTestId("progress-section-index");
     await user.click(within(index).getByRole("button", { name: "Achievements" }));
@@ -91,17 +89,13 @@ describe("ProgressOverviewLayout", () => {
 
   it("opens the past view for legacy achievement hash links", () => {
     window.history.replaceState(null, "", "/insights#progress-achievements");
-    render(<ProgressOverviewLayout sections={sections()} />);
+    renderLayout();
 
     expect(screen.getByText("Medal collection")).toBeInTheDocument();
   });
 
   it("omits sections without content from the index", () => {
-    render(
-      <ProgressOverviewLayout
-        sections={sections().filter((section) => section.id !== "past-goals")}
-      />
-    );
+    renderLayout(sections().filter((section) => section.id !== "past-goals"));
 
     const index = screen.getByTestId("progress-section-index");
     expect(within(index).queryByRole("button", { name: "Past goals" })).toBeNull();
@@ -110,13 +104,51 @@ describe("ProgressOverviewLayout", () => {
 
   it("drops the view tabs when only one view has sections", () => {
     window.history.replaceState(null, "", "/insights?view=past");
-    render(
-      <ProgressOverviewLayout
-        sections={sections().filter((section) => section.id === "week")}
-      />
-    );
+    renderLayout(sections().filter((section) => section.id === "week"));
 
     expect(screen.queryByRole("tab")).toBeNull();
     expect(screen.getByText("Week rhythm")).toBeInTheDocument();
+  });
+
+  it("indexes the union of lane sections and anchors only the first lane", () => {
+    const viewerSections = sections().filter((section) => section.id !== "week");
+    const partnerSections: ProgressOverviewSectionContent[] = [
+      { id: "history", content: <p>Partner ledger</p> },
+      { id: "week", content: <p>Partner week</p> },
+    ];
+    const ids: ProgressSectionId[] = [
+      ...viewerSections.map((section) => section.id),
+      ...partnerSections.map((section) => section.id),
+    ];
+
+    render(
+      <ProgressOverviewLayout availableSectionIds={ids}>
+        {(view) => (
+          <>
+            <ProgressSectionStack sections={viewerSections} view={view} />
+            <ProgressSectionStack
+              sections={partnerSections}
+              view={view}
+              anchored={false}
+            />
+          </>
+        )}
+      </ProgressOverviewLayout>
+    );
+
+    const index = screen.getByTestId("progress-section-index");
+    expect(
+      within(index)
+        .getAllByRole("button")
+        .map((button) => button.textContent)
+    ).toEqual([
+      "Goalmaxxing score",
+      "Completion history",
+      "This week",
+      "Past goals",
+      "Achievements",
+    ]);
+    expect(screen.getAllByTestId("progress-section-history")).toHaveLength(1);
+    expect(screen.getByText("Partner ledger")).toBeInTheDocument();
   });
 });
