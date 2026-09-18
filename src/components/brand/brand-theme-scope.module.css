@@ -1,0 +1,27 @@
+/* Double scope specificity overrides the existing Gazetteer heading rules. */
+.scope.scope :is(h1, h2, h3, :global(.font-display)) {
+  font-family: var(--font-app-display);
+  font-weight: var(--brand-display-weight);
+  letter-spacing: var(--brand-display-tracking);
+  line-height: var(--brand-display-leading);
+  font-style: var(--brand-display-style);
+  text-transform: var(--brand-display-transform);
+  color: var(--brand-display-color);
+}
+
+.scope.scope :global(.font-sans) {
+  font-family: var(--font-app-sans);
+}
+
+.scope.scope :global(.font-mono) {
+  font-family: var(--font-app-mono);
+}
+
+.scope [data-brand-surface] {
+  background-color: var(--card);
+  background-image: var(--brand-surface-image);
+  color: var(--card-foreground);
+  border: var(--brand-border-width) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--brand-shadow);
+}

@@ -375,3 +375,10 @@ explore applied atoms only in the kits. Explore IA only inside `/ux/concepts`.
 > restyle production `AppShell` until we explicitly implement the lock.
 > Spatial Plan remains the UX direction.
 > Keep Forge as the only screenshot-lineage dark serif.
+
+## Shared brand and category catalog
+
+The subsequent pigment, brand-world, and strong-brand explorations are captured
+in the [brand library](./brand-library.md), with typed shared colors, fonts,
+semantic tokens, and a reusable web scope. These remain catalogued concepts;
+the existing production style selector and saved category colors are unchanged.
