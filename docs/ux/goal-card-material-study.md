@@ -3,8 +3,50 @@
 Study route: `/ux/brand/card-materials` (existing UX labs access applies).
 All twelve render the real `TempoGoalCard`. Category color, information hierarchy,
 schedule, effort, and creation/history copy come from the same component used
-in the product. Study styles are scoped to the gallery; no production material
-has been selected yet.
+in the product. The full nine-material exploration remains scoped to this
+gallery, while the selected production trio is now mapped in the canonical card
+stylesheet (see below).
+
+## Current production mapping
+
+The canonical `TempoGoalCard` now maps goal difficulty to three selected
+materials:
+
+- `easy` (and unavailable difficulty) -> Liquid Glass
+- `medium` -> Anodized Alloy
+- `hard` -> Chromatic Foil
+
+This mapping keeps the existing effort bars as the explicit difficulty cue and
+applies the material finish as the card surface treatment. The stacked
+difficulty edge shadows are removed, since the material now carries that signal.
+
+Scope notes:
+
+- The material follows the same progressive disclosure as the effort bars, so
+  early creation steps and the empty entry preview keep the neutral surface.
+- Planner tasks have no difficulty of their own and stay on Liquid Glass.
+- Every material card is dimensional: `TempoCardSurface` wraps it with
+  perspective, the connected side planes of `CardSolidBody`, and pointer-driven
+  lighting. Mouse movement tilts the card and moves the reflection, a drag turns
+  it in the hand, and arrows, Enter, and Home rotate, flip, and reset it from the
+  keyboard. Letting go returns the card to its rest pose. OS reduced motion
+  renders it flat with no frame loop.
+- The card is treated as an object rather than a document: its text is not
+  selectable, and it exposes no drag ghost or long-press callout.
+- Hosts that own a competing swipe gesture — the bulk draft stack and the
+  day-work deck concept — pass `rotatable={false}`. They keep the finish and the
+  tilt, and the host keeps the drag. The goal-library folio reader leaves the
+  card rotatable; page turns use the prev/next controls, keyboard when focus is
+  outside the card, and touch swipes on the stage chrome around it.
+- Studies that explore their own finishes render the card with
+  `surface="plain"`, which omits the production material and surface entirely.
+
+The pose, optics, extruded body, and rotation behavior now live in
+`src/features/goals/card-material/` so the product and the study share one
+implementation instead of two copies. `useCardRotation` is the single source of
+that interaction: the light is a fixed upper-left source transformed into the
+card's own coordinates, so the highlight travels across the face instead of
+orbiting with the card.
 
 ## Directions
 

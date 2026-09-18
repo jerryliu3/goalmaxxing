@@ -3,6 +3,8 @@
 import type { CSSProperties, ReactNode } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/goals/category";
+import { resolveTempoCardMaterial } from "./card-material/tempo-card-material";
+import { TempoCardSurface } from "./card-material/tempo-card-surface";
 import type { GoalCreationFields } from "./goal-creation-model";
 import type { TempoCardVisibility } from "./tempo-creation-progress";
 import "./tempo-goal-creation.css";
@@ -13,6 +15,8 @@ export function TempoGoalCard({
   achieved = false,
   isTask = false,
   taskSchedule,
+  surface = "material",
+  rotatable = true,
   renderLettering = text => text,
   visibility = {
     category: true,
@@ -28,6 +32,10 @@ export function TempoGoalCard({
   achieved?: boolean;
   isTask?: boolean;
   taskSchedule?: { date: string; time: string };
+  /** `plain` leaves the surface unstyled for material exploration studies. */
+  surface?: "material" | "plain";
+  /** Hosts with a competing swipe (bulk draft stack, day-work deck) keep tilt only. */
+  rotatable?: boolean;
   visibility?: TempoCardVisibility;
   renderLettering?: (text: ReactNode, size: "display" | "title" | "supporting") => ReactNode;
 }) {
@@ -63,16 +71,20 @@ export function TempoGoalCard({
   );
   const effort =
     fields.difficulty === "easy" ? 1 : fields.difficulty === "medium" ? 2 : 3;
-  return (
+  // The material expresses difficulty, so it appears with the same disclosure as the
+  // effort bars. Tasks carry no difficulty and read as the neutral glass finish.
+  const material =
+    surface === "plain" || !visibility.difficulty
+      ? undefined
+      : resolveTempoCardMaterial(isTask ? "easy" : fields.difficulty);
+  const goalColor = visibility.category ? fields.color : "#b99060";
+  const card = (
     <article
       className="tempo-card"
       data-empty={!visibility.category}
       data-effort={visibility.difficulty ? effort : undefined}
-      style={
-        {
-          "--goal-color": visibility.category ? fields.color : "#b99060",
-        } as CSSProperties
-      }
+      data-material={material}
+      style={{ "--goal-color": goalColor } as CSSProperties}
       aria-label={context === "history" ? `${fields.title} goal card` : "Goal card preview"}
     >
       <div className="tempo-card-meta">
@@ -139,5 +151,20 @@ export function TempoGoalCard({
         </div>
       )}
     </article>
+  );
+
+  if (!material) {
+    return card;
+  }
+
+  return (
+    <TempoCardSurface
+      material={material}
+      goalColor={goalColor}
+      label={fields.title.trim() || "Goal card"}
+      rotatable={rotatable}
+    >
+      {card}
+    </TempoCardSurface>
   );
 }

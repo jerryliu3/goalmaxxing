@@ -17,10 +17,12 @@ export function CardSolidBody() {
       {CORNERS.map((corner, quadrant) => <span key={corner} className={`${styles.corner} ${styles[corner]}`}>
         {Array.from({ length: 8 }, (_, index) => {
           const angle = quadrant * Math.PI / 2 + (index + 0.5) * STEP;
+          // Trig differs in its last bits between the server and the browser, so
+          // the facets are rounded to keep server and client markup identical.
           return <span key={index} className={`${styles.side} ${styles.facet}`} style={{
-            "--nx": Math.cos(angle), "--ny": Math.sin(angle),
-            "--cx": Math.cos(angle) * Math.cos(STEP / 2), "--cy": Math.sin(angle) * Math.cos(STEP / 2),
-            "--turn": `${angle * 180 / Math.PI - 90}deg`,
+            "--nx": Math.cos(angle).toFixed(6), "--ny": Math.sin(angle).toFixed(6),
+            "--cx": (Math.cos(angle) * Math.cos(STEP / 2)).toFixed(6), "--cy": (Math.sin(angle) * Math.cos(STEP / 2)).toFixed(6),
+            "--turn": `${(angle * 180 / Math.PI - 90).toFixed(4)}deg`,
           } as CSSProperties} />;
         })}
       </span>)}

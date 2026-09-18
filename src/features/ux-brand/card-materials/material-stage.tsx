@@ -3,9 +3,9 @@
 import { useId, type CSSProperties, type ReactNode } from "react";
 import { Rotate3D } from "lucide-react";
 import type { CardMaterial } from "./materials";
-import { CardSolidBody } from "./card-solid-body";
-import { cardOptics, FLAT_POSE, REST_POSE } from "./card-optics";
-import { useCardRotation } from "./use-card-rotation";
+import { CardSolidBody } from "@/features/goals/card-material/card-solid-body";
+import { cardOptics, FLAT_POSE, REST_POSE } from "@/features/goals/card-material/card-optics";
+import { useCardRotation } from "@/features/goals/card-material/use-card-rotation";
 import styles from "./card-materials.module.css";
 import categoryStyles from "./category-materials.module.css";
 

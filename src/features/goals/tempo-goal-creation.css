@@ -29,6 +29,9 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 .tempo-card h2 {
   font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
@@ -382,6 +385,8 @@
 .tempo-card {
   transition:
     background 0.3s,
+    border-color 0.3s,
+    color 0.3s,
     box-shadow 0.3s;
 }
 .tempo-card-effort {
@@ -406,16 +411,265 @@
 .tempo-effort-bars i[data-active="true"] {
   background: #20251e;
 }
-.tempo-card[data-effort="2"] {
-  box-shadow:
-    0 5px 0 color-mix(in srgb, var(--goal-color) 40%, #fff7de),
-    0 14px 35px #17201512;
+
+/* Difficulty-mapped card materials:
+   easy/unspecified -> liquid glass, medium -> anodized alloy, hard -> chromatic foil.
+   Surfaces that explore their own finishes render the card without a material. */
+
+/* The surface owns perspective and pose; the card stays the front face and the
+   connected side planes give it real thickness. */
+/* These mirror cardOptics(REST_POSE); the surface overwrites them from the live
+   pose, so they only stand in before the pose is applied. */
+.tempo-card-surface {
+  --card-depth: 10px;
+  --rx: 7deg;
+  --ry: -14deg;
+  --light-x: 40.4%;
+  --light-y: 27.5%;
+  --rim-light-x: -0.147;
+  --rim-light-y: -0.346;
+  --shine-position: 55.4%;
+  --shine-angle: 113deg;
+  --shine-strength: 0.73;
+  --metal-x: 53.3%;
+  --metal-y: 36.2%;
+  position: relative;
+  perspective: 1200px;
 }
-.tempo-card[data-effort="3"] {
+/* The card reads as a held object: no selection, no drag ghost, no callout. */
+.tempo-card-object {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.tempo-card-surface[data-rotatable="true"] .tempo-card-object {
+  cursor: grab;
+  touch-action: none;
+}
+.tempo-card-object:focus-visible {
+  outline: 2px solid var(--ring, currentColor);
+  outline-offset: 12px;
+  border-radius: var(--card-radius, 0.5rem);
+}
+/* Turning past a profile must not reveal mirrored type or reflections. */
+.tempo-card-object .tempo-card *,
+.tempo-card-object .tempo-card::before,
+.tempo-card-object .tempo-card::after {
+  backface-visibility: hidden;
+}
+.tempo-card-surface[data-dragging="true"] .tempo-card-object {
+  cursor: grabbing;
+}
+.tempo-card-surface[data-material="glass"] .tempo-card-object {
+  --card-radius: 1.1rem;
+  --edge: color-mix(in srgb, var(--goal-color) 22%, #adccc5);
+}
+.tempo-card-surface[data-material="alloy"] .tempo-card-object {
+  --card-radius: 0.9rem;
+  --edge: color-mix(in srgb, var(--goal-color) 18%, #8c98a5);
+}
+.tempo-card-surface[data-material="foil"] .tempo-card-object {
+  --card-radius: 0.7rem;
+  --edge: #92805a;
+}
+.tempo-card-surface[data-still="true"] .tempo-card-object {
+  transform: none;
+  cursor: default;
+  touch-action: auto;
+}
+/* Lighting variables are inherited from the surface so the pose drives them. */
+.tempo-card[data-material] {
+  isolation: isolate;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  overflow: visible;
+}
+.tempo-card[data-material] > * {
+  position: relative;
+  z-index: 1;
+}
+.tempo-card[data-material] .tempo-card-target {
+  transform: translateZ(20px);
+}
+.tempo-card[data-material] h2 {
+  transform: translateZ(10px);
+}
+.tempo-card[data-material="glass"] {
+  color: #1f2a24;
+  border-radius: 1.1rem;
+  border-color: #fffe;
+  background:
+    linear-gradient(145deg, #ffffffb8, #f8fff0ba),
+    color-mix(in srgb, var(--goal-color) 20%, transparent);
   box-shadow:
-    0 5px 0 color-mix(in srgb, var(--goal-color) 45%, #fff7de),
-    0 10px 0 color-mix(in srgb, var(--goal-color) 25%, #fff7de),
-    0 20px 35px #17201512;
+    inset 2px 2px 2px #fff,
+    inset -2px -2px 2px #fff8,
+    0 14px 35px #17201514;
+  backdrop-filter: blur(16px) saturate(1.12);
+  -webkit-backdrop-filter: blur(16px) saturate(1.12);
+}
+.tempo-card[data-material="glass"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse at var(--light-x) var(--light-y),
+    #fff9,
+    transparent 62%
+  );
+  opacity: 0.65;
+}
+
+.tempo-card[data-material="alloy"] {
+  color: #2f3f4e;
+  border-radius: 0.9rem;
+  border-color: #eef3fa;
+  background:
+    radial-gradient(ellipse at var(--light-x) var(--light-y), #fff9, transparent 58%),
+    repeating-linear-gradient(
+      0deg,
+      #52658007 0px,
+      #52658007 0.5px,
+      transparent 0.5px,
+      transparent 2px
+    ),
+    linear-gradient(
+      130deg,
+      color-mix(in srgb, var(--goal-color) 14%, #d4dde5),
+      #f2f5f7 28%,
+      color-mix(in srgb, var(--goal-color) 8%, #d8e0e9) 61%,
+      #f4f5f6
+    );
+  box-shadow:
+    inset 0 0 0 1px #fff,
+    inset 0 0 0 3px #8e9aaa66,
+    inset 0 0 0 5px #f4f7fb80,
+    0 14px 35px #17201516;
+}
+.tempo-card[data-material="alloy"]::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  pointer-events: none;
+  border-radius: 0.55rem;
+  border: 1px solid #5c6c832b;
+  box-shadow: 0 1px 0 #fff9;
+}
+.tempo-card[data-material="alloy"] .tempo-card-target strong {
+  color: #46586c;
+  background-image: linear-gradient(
+    125deg,
+    #25374d 8%,
+    #687d92 30%,
+    #354860 43%,
+    #788899 59%,
+    #293d56 80%
+  );
+  background-size: 200% 200%;
+  background-position: var(--metal-x) var(--metal-y);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.tempo-card[data-material="alloy"] .tempo-effort-bars i[data-active="true"] {
+  background: #46586c;
+}
+
+.tempo-card[data-material="foil"] {
+  color: #f4edda;
+  border-color: #d7c59e;
+  border-radius: 0.7rem;
+  background:
+    linear-gradient(130deg, #fff1, transparent 35%),
+    color-mix(in srgb, var(--goal-color) 15%, #1d2b2a);
+  box-shadow:
+    inset 0 0 0 5px #243530,
+    inset 0 0 0 6px #d7c59e66,
+    0 16px 36px #1720152b;
+}
+.tempo-card[data-material="foil"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: var(--shine-strength);
+  background: linear-gradient(
+    var(--shine-angle),
+    transparent calc(var(--shine-position) - 16%),
+    #8bd7c41c calc(var(--shine-position) - 10%),
+    #dbbfdd44 calc(var(--shine-position) - 4%),
+    #fff8dba8 var(--shine-position),
+    #a6e5d94a calc(var(--shine-position) + 3%),
+    transparent calc(var(--shine-position) + 12%)
+  );
+}
+.tempo-card[data-material="foil"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: var(--shine-strength);
+  background: radial-gradient(
+    ellipse at var(--light-x) var(--light-y),
+    #fff8d926,
+    transparent 65%
+  );
+}
+.tempo-card[data-material="foil"] .tempo-card-target strong {
+  color: #e9d1a4;
+  background: linear-gradient(
+    125deg,
+    #f8e6bd 8%,
+    #a7d2c5 27%,
+    #e6bee1 45%,
+    #f4df9d 58%,
+    #b5ddd1 80%
+  );
+  background-size: 200% 200%;
+  background-position: var(--metal-x) var(--metal-y);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(2px 5px 2px #0005);
+}
+.tempo-card[data-material="foil"] .tempo-card-target > span {
+  text-shadow: 2px 4px 2px #0006;
+}
+.tempo-card[data-material="foil"] .tempo-effort-bars i {
+  background: #f4edda26;
+}
+.tempo-card[data-material="foil"] .tempo-effort-bars i[data-active="true"] {
+  background: #e9d1a4;
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .tempo-card[data-material="glass"] {
+    background: color-mix(in srgb, var(--goal-color) 12%, #f6f8ef);
+  }
+}
+@media (forced-colors: active) {
+  .tempo-card[data-material] {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+  .tempo-card[data-material]::before,
+  .tempo-card[data-material]::after {
+    display: none;
+  }
+  .tempo-card[data-material] .tempo-card-target strong {
+    background: none;
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+    filter: none;
+  }
 }
 .tempo-eyebrow {
   font-size: 0.65rem;

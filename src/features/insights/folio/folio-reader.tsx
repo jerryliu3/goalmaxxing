@@ -30,6 +30,9 @@ export function FolioReader({ folio }: { folio: GoalFolio }) {
       aria-label="Goal card reader"
       onKeyDown={event => {
         if (event.altKey || event.ctrlKey || event.metaKey) return;
+        // Focus on the card object means arrows/Home rotate the material, not
+        // the page — leave those keys to TempoCardSurface.
+        if ((event.target as Element | null)?.closest?.(".tempo-card-object")) return;
         if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
           event.preventDefault();
           go(page.index + (event.key === "ArrowRight" ? 1 : -1));
@@ -67,7 +70,10 @@ export function FolioReader({ folio }: { folio: GoalFolio }) {
         </div>
         <div className={styles.cardStage}
           onPointerDown={event => {
+            // Mouse and card-object drags belong to the held material card; only
+            // touch swipes on the stage chrome turn the page.
             if (event.pointerType === "mouse") return;
+            if ((event.target as Element | null)?.closest?.(".tempo-card-object")) return;
             pointerStart.current = { x: event.clientX, y: event.clientY };
           }}
           onPointerCancel={() => { pointerStart.current = null; }}
@@ -105,7 +111,7 @@ export function FolioReader({ folio }: { folio: GoalFolio }) {
         <p aria-live="polite" aria-atomic="true" className={styles.position}>{page.index + 1} <span>of {folio.entries.length}</span><span className="sr-only"> · {entry.goal.title}</span></p>
         <Button variant="ghost" className={styles.turnButton} disabled={!next} onClick={() => go(page.index + 1)} aria-label="Next goal"><span>Next<small>{next?.goal.title ?? "Last goal"}</small></span><ArrowRight size={18} /></Button>
       </footer>
-      <p className={styles.readerHint}>Swipe or use ← → to move between goals</p>
+      <p className={styles.readerHint}>Drag the card to turn it. Swipe beside it, or use ← →, to move between goals</p>
     </section>
   );
 }
