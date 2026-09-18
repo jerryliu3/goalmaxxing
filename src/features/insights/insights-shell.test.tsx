@@ -1,4 +1,5 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useEffect } from "react";
 import { InsightsShell } from "./insights-shell";
@@ -37,7 +38,7 @@ function goal(id: string, title: string, endDate: string): Goal {
 }
 
 vi.mock("next/navigation", () => ({
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(window.location.search),
 }));
 
 vi.mock("@/features/social/duo/use-duo-surface", () => ({
@@ -67,28 +68,61 @@ vi.mock("@/features/insights/insights-tab", () => ({
     contentMode?: string;
     subjectUserId?: string;
     readOnly?: boolean;
+    progressView?: string;
+    anchorSections?: boolean;
+    onSectionsChange?: (ids: string[]) => void;
     onPersonalGoalsChange?: (goals: Goal[]) => void;
   }) => {
     insightsTabMock(props);
     const onPersonalGoalsChange = props.onPersonalGoalsChange;
+    const onSectionsChange = props.onSectionsChange;
     const subjectUserId = props.subjectUserId;
+    const isPartner = subjectUserId === "partner-1";
     useEffect(() => {
       onPersonalGoalsChange?.(
-        subjectUserId === "partner-1"
+        isPartner
           ? [goal("partner-goal", "Partner lift", "2026-11-30")]
           : [goal("viewer-goal", "Viewer run", "2026-06-30")]
       );
-    }, [onPersonalGoalsChange, subjectUserId]);
+    }, [isPartner, onPersonalGoalsChange]);
+    useEffect(() => {
+      onSectionsChange?.(
+        isPartner
+          ? ["history", "week", "past-goals"]
+          : ["score", "history", "achievements"]
+      );
+    }, [isPartner, onSectionsChange]);
     return (
       <div
         data-testid={`insights-tab-${String(props.contentMode ?? "full")}`}
+        data-view={props.progressView}
+        data-anchored={String(props.anchorSections ?? true)}
       />
     );
   },
 }));
 
+function duoBothSurface() {
+  return {
+    scope: "both",
+    activePartner: {
+      partnerId: "partner-1",
+      partnerUsername: "partner",
+      partnerDisplayName: "Partner",
+    },
+    viewer: { id: "viewer", label: "Solo", userId: "viewer-1", readOnly: false },
+    partner: {
+      id: "partner",
+      label: "Partner",
+      userId: "partner-1",
+      readOnly: true,
+    },
+  };
+}
+
 describe("InsightsShell", () => {
   beforeEach(() => {
+    window.history.replaceState(null, "", "/insights");
     insightsTabMock.mockClear();
     invalidatePlannerRelatedTabCachesMock.mockClear();
     useDuoSurfaceMock.mockReset();
@@ -114,8 +148,7 @@ describe("InsightsShell", () => {
   it("renders one full insights lane outside duo-both scope", () => {
     render(<InsightsShell />);
 
-    expect(screen.getByTestId("insights-tab-full")).toBeInTheDocument();
-    expect(insightsTabMock).toHaveBeenCalledTimes(1);
+    expect(screen.getAllByTestId("insights-tab-full")).toHaveLength(1);
     expect(insightsTabMock.mock.calls[0]?.[0]).toMatchObject({
       readOnly: false,
     });
@@ -123,21 +156,7 @@ describe("InsightsShell", () => {
   });
 
   it("renders shared tracker above duo lanes of heatmap, goals, and stats", () => {
-    useDuoSurfaceMock.mockReturnValue({
-      scope: "both",
-      activePartner: {
-        partnerId: "partner-1",
-        partnerUsername: "partner",
-        partnerDisplayName: "Partner",
-      },
-      viewer: { id: "viewer", label: "Solo", userId: "viewer-1", readOnly: false },
-      partner: {
-        id: "partner",
-        label: "Partner",
-        userId: "partner-1",
-        readOnly: true,
-      },
-    });
+    useDuoSurfaceMock.mockReturnValue(duoBothSurface());
 
     render(<InsightsShell />);
 
@@ -160,5 +179,41 @@ describe("InsightsShell", () => {
     );
     expect(screen.queryByTestId("insights-tab-goal-stats-only")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Progress Tracker" })).toBeInTheDocument();
+  });
+
+  it("indexes the sections both lanes report and anchors only the first lane", () => {
+    useDuoSurfaceMock.mockReturnValue(duoBothSurface());
+
+    render(<InsightsShell />);
+
+    const index = screen.getByTestId("progress-section-index");
+    expect(
+      within(index)
+        .getAllByRole("button")
+        .map((button) => button.textContent)
+    ).toEqual([
+      "Goalmaxxing score",
+      "Completion history",
+      "This week",
+      "Past goals",
+      "Achievements",
+    ]);
+
+    const lanes = screen.getAllByTestId("insights-tab-lane");
+    expect(lanes.map((lane) => lane.dataset.anchored)).toEqual(["true", "false"]);
+  });
+
+  it("moves every lane to the past view from the view tabs", async () => {
+    const user = userEvent.setup();
+    useDuoSurfaceMock.mockReturnValue(duoBothSurface());
+
+    render(<InsightsShell />);
+
+    await user.click(screen.getByRole("tab", { name: "Past" }));
+
+    expect(
+      screen.getAllByTestId("insights-tab-lane").map((lane) => lane.dataset.view)
+    ).toEqual(["past", "past"]);
+    expect(screen.queryByTestId("insights-tracker-header")).not.toBeInTheDocument();
   });
 });

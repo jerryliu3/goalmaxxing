@@ -12,22 +12,25 @@ import type { Goal } from "@/lib/goals/types";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 
 /**
- * Past-view sections. Achievements and the goal library own their own loading,
- * so the ledger surface does not need to know about either payload.
+ * Past-view sections for one subject. The goal library is built from that
+ * subject's goals, so a partner lane keeps their own; medals are only
+ * fetchable for the signed-in viewer, so that section is opt-in.
  */
 export function useProgressPastSections({
   goals,
   summaries,
   userId,
-  enabled,
+  includeAchievements,
 }: {
   goals: Goal[];
   summaries: ProgressContextSummary[];
   userId: string;
-  enabled: boolean;
+  includeAchievements: boolean;
 }): ProgressOverviewSectionContent[] {
   const { profile } = useXpProfile();
-  const { loading, error, payload, reload } = useAchievementsShowcase({ enabled });
+  const { loading, error, payload, reload } = useAchievementsShowcase({
+    enabled: includeAchievements,
+  });
   const folios = useMemo(
     () => buildGoalFolios(goals, summaries, userId),
     [goals, summaries, userId]
@@ -35,11 +38,7 @@ export function useProgressPastSections({
 
   const sections: ProgressOverviewSectionContent[] = [];
 
-  if (!enabled) {
-    return sections;
-  }
-
-  if (profile) {
+  if (includeAchievements && profile) {
     sections.push({
       id: "achievements",
       content: loading ? (
@@ -76,7 +75,7 @@ export function useProgressPastSections({
         <FolioShelf folios={folios} />
       ) : (
         <p className="font-sans text-sm text-muted-foreground">
-          No past goals yet. Goals you complete, end, or archive collect here.
+          No past goals yet. Goals completed, ended, or archived collect here.
         </p>
       ),
   });

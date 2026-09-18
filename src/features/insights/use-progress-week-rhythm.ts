@@ -79,19 +79,18 @@ export function useProgressWeekRhythm({
   }, [asOfDate, enabled, scopeMonth]);
 
   const rows = useMemo<WeekRhythmGoalRow[]>(() => {
-    const workUnits = context?.preview?.workUnits ?? [];
-    if (workUnits.length === 0 && !loading) {
+    if (!enabled || !asOfDate) {
       return [];
     }
     return buildWeekRhythmRows({
       goals,
-      workUnits,
+      workUnits: context?.preview?.workUnits ?? [],
       creditedGoalDates: buildCreditedGoalDateKeys(completions),
       asOfDate,
       weekStartsOn,
       visibleGoalIds,
     });
-  }, [asOfDate, completions, context, goals, loading, visibleGoalIds, weekStartsOn]);
+  }, [asOfDate, completions, context, enabled, goals, visibleGoalIds, weekStartsOn]);
 
   return { rows, loading: loading && !context, error };
 }

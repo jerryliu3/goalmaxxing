@@ -59,13 +59,14 @@ export function buildWeekRhythmRows({
       const days = weekDays.map((day) => {
         const date = format(day, "yyyy-MM-dd");
         const sessions = goalUnits.filter((unit) => unit.scheduledDate === date);
-        const credited = creditedGoalDates.has(`${goal.id}:${date}`);
+        const credited =
+          creditedGoalDates.has(`${goal.id}:${date}`) ||
+          sessions.some((unit) => unit.creditState !== "uncredited");
         let state: WeekRhythmKnotState = "empty";
-        if (sessions.length > 0) {
-          state =
-            credited || sessions.some((unit) => unit.creditState !== "uncredited")
-              ? "complete"
-              : "planned";
+        if (credited) {
+          state = "complete";
+        } else if (sessions.length > 0) {
+          state = "planned";
         }
         return {
           date,
