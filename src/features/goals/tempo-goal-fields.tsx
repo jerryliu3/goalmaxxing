@@ -3,6 +3,7 @@
 import {
   type CSSProperties,
   type ReactNode,
+  useEffect,
   useId,
   useRef,
   useState,
@@ -18,6 +19,10 @@ import {
 import type { GoalCreationFieldControlsProps } from "./goal-creation-fields";
 import { GoalLinkTargetSelect } from "./goal-link-target-select";
 import { GoalDefaultTimeField } from "./goal-schedule-fields";
+import {
+  clampPlaqueTarget,
+  creationPlaqueTarget,
+} from "./card-material/creation-plaque-target";
 import { TempoGoalCard } from "./tempo-goal-card";
 import { TempoGoalChoices as Choices } from "./tempo-goal-choices";
 import { TempoGoalRhythm } from "./tempo-goal-rhythm";
@@ -71,10 +76,16 @@ export function TempoGoalFields({
     difficulty: prefilled,
   });
   const [furthestStep, setFurthestStep] = useState(0);
+  const [plaqueTarget, setPlaqueTarget] = useState(() =>
+    creationPlaqueTarget(fields),
+  );
+  const [plaqueTouched, setPlaqueTouched] = useState(false);
   const choose = (patch: Partial<TempoChoicesMade>) =>
     setChosen((previous) => ({ ...previous, ...patch }));
+  // Category first: chromatic foil and effort bars borrow the category color.
   const intentionValid =
-    fields.title.trim().length > 0 && (isPlannerTask || chosen.category);
+    fields.title.trim().length > 0 &&
+    (isPlannerTask || (chosen.category && chosen.difficulty));
   const rhythmValid =
     chosen.kind &&
     (isPlannerTask ||
@@ -85,7 +96,7 @@ export function TempoGoalFields({
         (milestones
           ? Number(fields.target_count) <= 999
           : chosen.interval && chosen.basis)));
-  const scheduleValid = (isPlannerTask || chosen.difficulty) && !error;
+  const scheduleValid = !error;
   const canVisit = [
     true,
     intentionValid,
@@ -101,7 +112,8 @@ export function TempoGoalFields({
     interval: chosen.interval,
     count: chosen.count,
     schedule: furthestStep >= 2,
-    difficulty: chosen.difficulty && furthestStep >= 2,
+    difficulty: chosen.difficulty,
+    plaqueTarget: step === 3 ? plaqueTarget : undefined,
   };
   const go = (next: number) => {
     setStep(next);
@@ -113,6 +125,27 @@ export function TempoGoalFields({
       (next === 3 ? previewRef.current : heading.current)?.focus(),
     );
   };
+
+  useEffect(() => {
+    if (plaqueTouched || isPlannerTask) {
+      return;
+    }
+    setPlaqueTarget(creationPlaqueTarget(fields));
+  }, [
+    fields.frequency_type,
+    fields.recurrence_interval,
+    fields.target_basis,
+    fields.target_count,
+    fields.start_date,
+    fields.end_date,
+    plaqueTouched,
+    isPlannerTask,
+  ]);
+
+  const reviewAssembly =
+    step === 3 && !isPlannerTask
+      ? { completed: 0, target: plaqueTarget }
+      : undefined;
 
   return (
     <div
@@ -142,6 +175,7 @@ export function TempoGoalFields({
             visibility={visibility}
             isTask={isPlannerTask}
             taskSchedule={taskSchedule}
+            assembly={reviewAssembly}
           />
         )}
       </motion.div>
@@ -204,6 +238,29 @@ export function TempoGoalFields({
                           });
                         }}
                       />
+                      {chosen.category && (
+                        <>
+                          <p className="tempo-label">How much of a stretch?</p>
+                          <Choices
+                            label="Difficulty"
+                            value={
+                              chosen.difficulty ? fields.difficulty : null
+                            }
+                            options={[
+                              { value: "easy", label: "Easy · a little lift" },
+                              {
+                                value: "medium",
+                                label: "Medium · a good push",
+                              },
+                              { value: "hard", label: "Hard · a big stretch" },
+                            ]}
+                            onChange={(difficulty) => {
+                              choose({ difficulty: true });
+                              onPatch({ difficulty });
+                            }}
+                          />
+                        </>
+                      )}
                     </>
                   )}
                 </>
@@ -267,20 +324,6 @@ export function TempoGoalFields({
                         onClear={() => onPatch({ default_local_time: "" })}
                       />
                     </details>
-                    <p className="tempo-label">How much of a stretch?</p>
-                    <Choices
-                      label="Difficulty"
-                      value={chosen.difficulty ? fields.difficulty : null}
-                      options={[
-                        { value: "easy", label: "Easy · a little lift" },
-                        { value: "medium", label: "Medium · a good push" },
-                        { value: "hard", label: "Hard · a big stretch" },
-                      ]}
-                      onChange={(difficulty) => {
-                        choose({ difficulty: true });
-                        onPatch({ difficulty });
-                      }}
-                    />
                     <details>
                       <summary>Advanced settings (optional)</summary>
                       <div className="tempo-advanced">
@@ -335,6 +378,32 @@ export function TempoGoalFields({
       )}
       {step === 3 && (
         <div className="tempo-review-action">
+          {!isPlannerTask && (
+            <p className="tempo-plaque-copy">
+              Your target before earning this achievement plaque will be{" "}
+              <label className="tempo-plaque-input">
+                <span className="sr-only">Plaque completion target</span>
+                <Input
+                  type="number"
+                  min={1}
+                  max={20}
+                  inputMode="numeric"
+                  value={plaqueTarget}
+                  disabled={disabled}
+                  onChange={(event) => {
+                    setPlaqueTouched(true);
+                    const next = Number(event.target.value);
+                    setPlaqueTarget(
+                      event.target.value === ""
+                        ? 1
+                        : clampPlaqueTarget(next),
+                    );
+                  }}
+                />
+              </label>{" "}
+              completions.
+            </p>
+          )}
           {action}
           {error && error !== "Title is required." && (
             <p className="tempo-error" role="status">

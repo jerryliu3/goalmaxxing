@@ -15,4 +15,6 @@ export interface TempoCardVisibility {
   count?: boolean;
   schedule: boolean;
   difficulty: boolean;
+  /** Presentation plaque / reassembly target shown on the review step. */
+  plaqueTarget?: number;
 }
