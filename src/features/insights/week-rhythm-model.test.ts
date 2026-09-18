@@ -42,6 +42,24 @@ describe("week rhythm model", () => {
     expect(states["2026-09-07"]).toBe("empty");
   });
 
+  it("marks a completion with no planned session complete", () => {
+    const rows = buildWeekRhythmRows({
+      goals: [goal],
+      workUnits: [],
+      creditedGoalDates: buildCreditedGoalDateKeys([
+        { goal_id: "goal-a", completed_on: "2026-09-08" },
+      ]),
+      asOfDate: "2026-09-09",
+      weekStartsOn: 1,
+      visibleGoalIds: null,
+    });
+
+    expect(rows).toHaveLength(1);
+    const states = Object.fromEntries(rows[0].days.map((day) => [day.date, day.state]));
+    expect(states["2026-09-08"]).toBe("complete");
+    expect(states["2026-09-09"]).toBe("empty");
+  });
+
   it("omits goals with no planned or completed sessions in the week", () => {
     const rows = buildWeekRhythmRows({
       goals: [

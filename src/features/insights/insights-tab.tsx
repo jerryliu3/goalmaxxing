@@ -709,6 +709,7 @@ export function InsightsTab({
         ? selectedLedgerIdSet
         : null,
     enabled: showOverallStats,
+    includePlannedSessions: !readOnly,
   });
   const weekStartsOn = state.insightsStats?.weekStartsOn ?? 1;
   const growSeries = useGrowScoreSeries({
