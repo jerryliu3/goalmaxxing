@@ -20,7 +20,6 @@ export function useProgressWeekRhythm({
   weekStartsOn,
   visibleGoalIds,
   enabled,
-  includePlannedSessions,
 }: {
   goals: Goal[];
   completions: CompletionDateFact[];
@@ -28,11 +27,6 @@ export function useProgressWeekRhythm({
   weekStartsOn: number;
   visibleGoalIds: ReadonlySet<string> | null;
   enabled: boolean;
-  /**
-   * Planner sessions only exist for the signed-in user, so a partner lane
-   * builds its week from that subject's completions alone.
-   */
-  includePlannedSessions: boolean;
 }) {
   const [context, setContext] = useState<PlannerContextPayload | null>(null);
   const [loading, setLoading] = useState(false);
@@ -40,7 +34,7 @@ export function useProgressWeekRhythm({
   const scopeMonth = asOfDate ? asOfDate.slice(0, 7) : format(new Date(), "yyyy-MM");
 
   useEffect(() => {
-    if (!enabled || !includePlannedSessions || !asOfDate) {
+    if (!enabled || !asOfDate) {
       return;
     }
     const cacheKey = buildPlannerContextCacheKey(scopeMonth);
@@ -82,7 +76,7 @@ export function useProgressWeekRhythm({
     return () => {
       cancelled = true;
     };
-  }, [asOfDate, enabled, includePlannedSessions, scopeMonth]);
+  }, [asOfDate, enabled, scopeMonth]);
 
   const rows = useMemo<WeekRhythmGoalRow[]>(() => {
     if (!enabled || !asOfDate) {
@@ -90,22 +84,13 @@ export function useProgressWeekRhythm({
     }
     return buildWeekRhythmRows({
       goals,
-      workUnits: includePlannedSessions ? context?.preview?.workUnits ?? [] : [],
+      workUnits: context?.preview?.workUnits ?? [],
       creditedGoalDates: buildCreditedGoalDateKeys(completions),
       asOfDate,
       weekStartsOn,
       visibleGoalIds,
     });
-  }, [
-    asOfDate,
-    completions,
-    context,
-    enabled,
-    goals,
-    includePlannedSessions,
-    visibleGoalIds,
-    weekStartsOn,
-  ]);
+  }, [asOfDate, completions, context, enabled, goals, visibleGoalIds, weekStartsOn]);
 
   return { rows, loading: loading && !context, error };
 }

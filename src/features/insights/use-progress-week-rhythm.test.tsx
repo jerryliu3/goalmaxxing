@@ -18,7 +18,7 @@ vi.mock("@/lib/cache/tab-data-cache", () => ({
 
 const goals = [{ id: "goal-a", title: "Tempo run", color: "#2563eb" } as Goal];
 
-function renderWeekRhythm(overrides: { includePlannedSessions: boolean }) {
+function renderWeekRhythm(enabled: boolean) {
   return renderHook(() =>
     useProgressWeekRhythm({
       goals,
@@ -28,8 +28,7 @@ function renderWeekRhythm(overrides: { includePlannedSessions: boolean }) {
       asOfDate: "2026-09-09",
       weekStartsOn: 1,
       visibleGoalIds: null,
-      enabled: true,
-      ...overrides,
+      enabled,
     })
   );
 }
@@ -54,8 +53,8 @@ describe("useProgressWeekRhythm", () => {
     vi.clearAllMocks();
   });
 
-  it("adds planned sessions from the planner on the viewer lane", async () => {
-    const { result } = renderWeekRhythm({ includePlannedSessions: true });
+  it("loads planned sessions when the lane can show This week", async () => {
+    const { result } = renderWeekRhythm(true);
 
     await waitFor(() => {
       const states = Object.fromEntries(
@@ -68,14 +67,10 @@ describe("useProgressWeekRhythm", () => {
     });
   });
 
-  it("builds a partner week from completions without fetching the viewer planner", () => {
-    const { result } = renderWeekRhythm({ includePlannedSessions: false });
+  it("does not fetch planner context when This week is off", () => {
+    const { result } = renderWeekRhythm(false);
 
     expect(mocks.getJson).not.toHaveBeenCalled();
-    const states = Object.fromEntries(
-      (result.current.rows[0]?.days ?? []).map((day) => [day.date, day.state])
-    );
-    expect(states["2026-09-08"]).toBe("complete");
-    expect(states["2026-09-11"]).toBe("empty");
+    expect(result.current.rows).toEqual([]);
   });
 });

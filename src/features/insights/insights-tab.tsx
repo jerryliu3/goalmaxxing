@@ -708,8 +708,9 @@ export function InsightsTab({
       selectedLedgerGoalIds.length < visibleGoalIds.length
         ? selectedLedgerIdSet
         : null,
-    enabled: showOverallStats,
-    includePlannedSessions: !readOnly,
+    // Planner sessions are viewer-only, so a partner lane would render a
+    // completions-only week under the same "This week" legend. Omit it.
+    enabled: showOverallStats && !readOnly,
   });
   const weekStartsOn = state.insightsStats?.weekStartsOn ?? 1;
   const growSeries = useGrowScoreSeries({
