@@ -33,7 +33,7 @@ export function getBrandThemeStyle(id: BrandThemeId, fontFamilies: BrandFontFami
     "--brand-shadow": theme.effects.shadow,
   };
   for (const name of Object.keys(cssTokenNames) as ThemeTokenName[]) {
-    style[cssTokenNames[name]] = theme.colors[name];
+    style[cssTokenNames[name] as `--${string}`] = theme.colors[name];
   }
   return style;
 }
