@@ -20,4 +20,18 @@
 @keyframes motion-study-credit-pulse { from { transform: translateY(0); opacity: 0; } 25% { opacity: 1; } to { transform: translateY(27px); opacity: 0; } }
 @keyframes motion-study-tear { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
 .motion-study[data-still="true"] .motion-study-thread,.motion-study[data-still="true"] .motion-study-tear { display: none; }
+.motion-study-milestones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 20px 0; }
+.motion-study-stop { display: block; width: 100%; min-height: 135px; padding: 10px 5px; border: 1px solid transparent; border-radius: 10px; text-align: center; }
+.motion-study-stop[aria-pressed="true"] { border-color: var(--border); background: var(--muted); }
+.motion-study-flag-space { display: block; height: 45px; position: relative; perspective: 500px; }
+.motion-study-flagpole { position: absolute; bottom: 0; left: calc(50% - 1px); height: 40px; width: 2px; background: var(--primary); transform-origin: bottom; }
+.motion-study-flag { position: absolute; left: 2px; top: 0; width: 36px; height: 22px; padding-left: 6px; text-align: left; background: var(--primary); color: var(--primary-foreground); clip-path: polygon(0 0,100% 0,80% 50%,100% 100%,0 100%); transform-origin: left; font-family: var(--font-mono); font-size: 11px; line-height: 22px; }
+.motion-study-stop-dot { display: grid; place-items: center; margin: 0 auto; width: 22px; height: 22px; border: 1px solid var(--border); border-radius: 50%; background: var(--background); }
+.motion-study-stop-dot[data-done="true"] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+.motion-study-library { min-width: 0; }
+.motion-study-library-stage { min-height: 520px; overflow: hidden; }
+.motion-study-binding-volume { position: relative; perspective: 1100px; width: min(calc(100% - 3rem), 280px); aspect-ratio: 3 / 4; margin: 3.5rem auto 2rem; }
+.motion-study-binding-page { position: absolute; inset: 0; padding: 24px; background: var(--card); border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 5px 12px color-mix(in srgb, var(--foreground) 12%, transparent); }
+.motion-study-binding-cover { position: absolute; inset: 0; transform-origin: left; transform-style: preserve-3d; }
+.motion-study[data-still="true"] .motion-study-milestones * { transition: none; }
 @media (prefers-reduced-motion: reduce) { .motion-study-thread,.motion-study-tear { display: none; } }

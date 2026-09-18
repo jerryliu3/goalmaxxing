@@ -8,6 +8,7 @@ import { UiStyleProvider } from "@/components/brand/ui-style-provider";
 import { DailyWork } from "./daily-work";
 import { SCENARIOS, type Scenario } from "./seed";
 import { TaskCapture } from "./task-capture";
+import { MilestoneJourney } from "./milestone-journey";
 import "./study.css";
 
 export function MotionProductStudy() {
@@ -15,6 +16,7 @@ export function MotionProductStudy() {
   const [forceStill, setForceStill] = useState(false);
   const [scenario, setScenario] = useState<Scenario>("cascade");
   const [revision, setRevision] = useState(0);
+  const [view, setView] = useState<"daily" | "milestones">("daily");
   const still = forceStill || Boolean(systemStill);
 
   return <UiStyleProvider initialStyleId="gazetteer"><MotionConfig reducedMotion={still ? "always" : "user"}>
@@ -25,18 +27,23 @@ export function MotionProductStudy() {
       </div></header>
       <div className="mx-auto max-w-6xl px-4 py-7 sm:px-6">
         <h1 className="font-display text-4xl">Make progress tangible.</h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Complete the run, inspect its weekly target, and capture a task. The floating parents appear only when linked credit is recorded.</p>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Try the accepted ideas in a sample day plan and a milestone journey, using the current quest cards and yearly goal library.</p>
         <div className="my-6 flex flex-wrap items-center gap-4 rounded-xl border border-border p-3">
-          <label className="flex flex-wrap items-center gap-2 text-sm">Sample outcome
+          {view === "daily" && <label className="flex flex-wrap items-center gap-2 text-sm">Sample outcome
             <select aria-label="Sample completion outcome" className="min-h-10 rounded-md border border-input bg-background px-2"
               value={scenario} onChange={event => { const next = SCENARIOS.find(item => item.id === event.target.value); if (next) setScenario(next.id); }}>
               {SCENARIOS.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
             </select>
-          </label>
+          </label>}
           <label className="inline-flex min-h-10 items-center gap-2 text-sm"><input type="checkbox" checked={forceStill} onChange={event => setForceStill(event.target.checked)} />Still motion</label>
           {systemStill && <span className="text-xs text-muted-foreground">System reduced motion is active.</span>}
           <Button variant="outline" onClick={() => setRevision(value => value + 1)}>Reset sample</Button>
         </div>
+        <nav className="mb-6 flex flex-wrap gap-2" aria-label="Motion study journeys">
+          <Button variant={view === "daily" ? "default" : "outline"} aria-pressed={view === "daily"} onClick={() => setView("daily")}>Daily work</Button>
+          <Button variant={view === "milestones" ? "default" : "outline"} aria-pressed={view === "milestones"} onClick={() => setView("milestones")}>Milestones & library</Button>
+        </nav>
+        <div hidden={view !== "daily"}>
         <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_16rem]">
           <div key={`${scenario}-${revision}`}><DailyWork scenario={scenario} still={still} /><TaskCapture still={still} /></div>
           <aside className="space-y-5 text-sm text-muted-foreground" aria-label="Prototype placement notes">
@@ -45,6 +52,8 @@ export function MotionProductStudy() {
             <div><h2 className="mb-1 font-medium text-foreground">A fresh task slip</h2><p>Enter a task and press Add. The input remains ready while the new row settles into today's list.</p></div>
           </aside>
         </div>
+        </div>
+        <div hidden={view !== "milestones"} key={`milestones-${revision}`}><MilestoneJourney still={still} /></div>
       </div>
     </main>
   </MotionConfig></UiStyleProvider>;
