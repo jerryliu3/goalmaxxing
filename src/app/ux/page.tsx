@@ -12,6 +12,15 @@ export default function UxHubPage() {
         </h1>
         <ul className="mt-10 space-y-4">
           <li>
+            <Link className="text-lg font-semibold underline" href="/ux/motion">
+              Motion in context — daily work and earned progress
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Floating linked credit, a weekly quest clasp, and task slips in a
+              local sample plan.
+            </p>
+          </li>
+          <li>
             <Link className="text-lg font-semibold underline" href="/ux/progress-overview">
               Progress — section overview
             </Link>
