@@ -16,8 +16,8 @@ export default function UxHubPage() {
               Motion in context — daily work and earned progress
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">
-              Floating linked credit, a weekly quest clasp, and task slips in a
-              local sample plan.
+              Floating linked credit, a weekly quest clasp, task slips, milestone
+              flags, and finished goals binding into a yearly volume.
             </p>
           </li>
           <li>
