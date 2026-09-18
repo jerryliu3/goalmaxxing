@@ -35,6 +35,7 @@ export function WorkQuestCard({
       className="work-quest-card"
       data-plan-work-quest="true"
       data-done={quest.completed}
+      data-has-card={Boolean(goalCard)}
       style={{ "--goal-color": quest.color } as CSSProperties}
     >
       <div className="work-quest-header">

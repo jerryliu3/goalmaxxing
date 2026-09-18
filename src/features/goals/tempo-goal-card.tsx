@@ -37,7 +37,7 @@ export function TempoGoalCard({
   taskSchedule?: { date: string; time: string };
   /** `plain` leaves the surface unstyled for material exploration studies. */
   surface?: "material" | "plain";
-  /** Hosts with a competing swipe (bulk draft stack, day-work deck) keep tilt only. */
+  /** Prefer leaving this on; hosts with competing swipes still work because card pointer events stop bubbling. */
   rotatable?: boolean;
   assembly?: { completed: number; target: number };
   visibility?: TempoCardVisibility;

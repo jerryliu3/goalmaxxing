@@ -90,7 +90,6 @@ export function DeckConcept() {
                   <TempoGoalCard
                     fields={toCreationFields(front)}
                     context="history"
-                    rotatable={false}
                     isTask={front.kind === "task"}
                     taskSchedule={{
                       date: currentInstance(front).short,
