@@ -53,7 +53,8 @@ removes the corresponding pieces. The 24-piece cap and rounded thresholds are
 shared with the study. After the final landing all fragment layers disappear,
 leaving PR #950's material face and solid body unchanged.
 
-Ongoing cadence cards remain whole with a small current-period count. Configurable
-reward milestones for ongoing goals are deferred; a perfect cadence hit rate must
-not silently become a whole-goal reward threshold. This release adds no reward
-configuration or new completion mutation path.
+Ongoing cadence cards use a presentation-only artificial shard target: count
+full periods from start through the goal's end date (or start + ≈62 days when
+open-ended), take 90% rounded, and clamp to 1–20 successful periods. Credited
+successful periods drive the shards; domain achievement is unchanged. Configurable
+reward milestones for ongoing goals remain deferred.

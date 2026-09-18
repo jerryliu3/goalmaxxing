@@ -10,16 +10,33 @@ describe("goal card progress", () => {
     expect(model.assembly).toEqual({ completed: 5, target: 12 });
     expect(model.achieved).toBe(false);
   });
+
   it("uses milestone units and canonical achievement", () => {
     const goal = buildGoal({ frequency_type: "fixed_milestones", target_count: 3 });
     const model = goalCardProgress(goal, summary(goal.id, { creditedUnitCount: 3, expectedUnitCount: 3, outcome: "achieved" }));
     expect(model.label).toBe("3 / 3 milestones");
     expect(model.achieved).toBe(true);
   });
-  it("does not award ongoing goals for a perfect hit rate", () => {
-    const goal = buildGoal({ target_basis: "period", recurrence_interval: "weekly", target_count: 3 });
-    const model = goalCardProgress(goal, summary(goal.id, { creditedUnitCount: 12, expectedUnitCount: 12, percent: 100, outcome: "in_progress", currentPeriodCompletionCount: 2, currentPeriodTarget: 3 }));
-    expect(model.assembly).toBeUndefined();
+
+  it("gives period goals an artificial assembly target without treating hit rate as achievement", () => {
+    const goal = buildGoal({
+      target_basis: "period",
+      recurrence_interval: "weekly",
+      target_count: 3,
+      start_date: "2026-01-05",
+      end_date: "2026-03-30",
+    });
+    const model = goalCardProgress(goal, summary(goal.id, {
+      creditedUnitCount: 2,
+      expectedUnitCount: 12,
+      percent: 100,
+      outcome: "in_progress",
+      currentPeriodCompletionCount: 2,
+      currentPeriodTarget: 3,
+    }));
+    expect(model.assembly).toEqual({ completed: 2, target: expect.any(Number) });
+    expect(model.assembly?.target).toBeGreaterThanOrEqual(1);
+    expect(model.assembly?.target).toBeLessThanOrEqual(20);
     expect(model.achieved).toBe(false);
     expect(model.label).toBe("2 / 3 this week");
   });
