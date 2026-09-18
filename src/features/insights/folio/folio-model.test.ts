@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { summary } from "./folio-test-fixtures";
 import { buildGoal } from "@/lib/goals/goal-test-fixtures";
-import { buildGoalFolios } from "./folio-model";
+import { buildCurrentGoals, buildGoalFolios } from "./folio-model";
 
 
 
@@ -38,5 +38,19 @@ describe("past goal folios", () => {
     const [folio] = buildGoalFolios([goal], [summary(goal.id)], goal.owner_id);
     expect(folio.entries[0].fields).toMatchObject({ category_selection: "custom", custom_category: "Music", color: "#f49a70", difficulty: "hard", is_private: true, milestone_names: goal.milestone_names, target_count: "3" });
     expect(buildGoalFolios([goal], [], goal.owner_id)).toEqual([]);
+  });
+});
+
+describe("current goal collection", () => {
+  it("includes active and upcoming goals without requiring a planned session", () => {
+    const goals = [buildGoal({ id: "active" }), buildGoal({ id: "upcoming", start_date: "2027-01-01" }), buildGoal({ id: "past", end_date: "2026-09-01" }), buildGoal({ id: "partner", owner_id: "other" }), buildGoal({ id: "deleted", is_deleted: true })];
+    const summaries = goals.map(goal => summary(goal.id, { lifecycle: goal.id === "upcoming" ? "upcoming" : "active", placementTerminal: goal.id === "past", outcome: "in_progress" }));
+    expect(buildCurrentGoals(goals, summaries, "user-1").map(entry => entry.goal.id)).toEqual(["active", "upcoming"]);
+  });
+  it("moves a newly accomplished goal out of Current and into Past", () => {
+    const goal = buildGoal({ target_basis: "lifetime", target_count: 3 });
+    const earned = summary(goal.id, { outcome: "achieved", achievementDate: "2026-09-17", lifecycle: "active", placementTerminal: true });
+    expect(buildCurrentGoals([goal], [earned], "user-1")).toEqual([]);
+    expect(buildGoalFolios([goal], [earned], "user-1")[0].entries[0].status).toBe("Completed");
   });
 });

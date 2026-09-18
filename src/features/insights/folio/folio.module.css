@@ -168,3 +168,10 @@
   .readerDialog[data-entering="true"] .readerSurface,
   .readerDialog[data-leaving="true"] .readerSurface { animation: none; }
 }
+
+.collections { display: flex; gap: 1.5rem; border-bottom: 1px solid var(--border); }
+.collections button { min-height: 44px; padding: .65rem .2rem; color: var(--muted-foreground); border-bottom: 2px solid transparent; }
+.collections button[aria-current="page"] { color: var(--foreground); border-color: var(--foreground); }
+.currentGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 3rem 2rem; padding: 2.5rem .75rem; }
+.currentGoal { min-width: 0; width: min(100%, 360px); justify-self: center; }
+.goalDetails { display: block; margin: .75rem auto 0; padding: .5rem; font-size: .75rem; color: var(--muted-foreground); text-decoration: underline; text-underline-offset: 4px; }

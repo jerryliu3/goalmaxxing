@@ -22,12 +22,7 @@ export const REWARD_SAMPLES = [
 
 export type RewardSample = (typeof REWARD_SAMPLES)[number];
 
-/** This study consumes credited units; it does not invent completion eligibility. */
-export function getRewardProgress(completed: number, target: number) {
-  const required = Number.isFinite(target) ? Math.max(1, Math.floor(target)) : 1;
-  const credited = Number.isFinite(completed) ? Math.max(0, Math.min(required, Math.floor(completed))) : 0;
-  return { required, credited, fraction: credited / required, earned: credited === required };
-}
+export { getRewardProgress } from "@/features/goals/card-material/reassembly-progress";
 
 export function getRewardFilter(concept: RewardConcept["id"], fraction: number) {
   if (concept === "reassemble") return "saturate(1) brightness(1)";

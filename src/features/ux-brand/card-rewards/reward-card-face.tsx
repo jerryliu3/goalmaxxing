@@ -10,6 +10,6 @@ export function RewardCardFace({ fields, earned, solid = true }: {
   const ongoing = fields.target_basis === "period";
   return <>
     {solid && <CardSolidBody />}
-    <TempoGoalCard fields={fields} context={earned ? "history" : "creation"} achieved={earned && !ongoing} />
+    <TempoGoalCard surface="plain" fields={fields} context={earned ? "history" : "creation"} achieved={earned && !ongoing} />
   </>;
 }

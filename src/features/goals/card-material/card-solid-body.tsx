@@ -8,7 +8,7 @@ const STEP = Math.PI / 16;
 
 export function CardSolidBody() {
   return (
-    <span className={styles.body} aria-hidden="true">
+    <span className={styles.body} aria-hidden="true" data-card-solid="">
       <span className={styles.back}><span className={styles.backMark}>G<span>GOALMAXXING</span></span></span>
       <span className={`${styles.side} ${styles.top}`} />
       <span className={`${styles.side} ${styles.right}`} />

@@ -55,6 +55,7 @@ export function FolioReader({ folio }: { folio: GoalFolio }) {
             {entry.status} · {folioDate(entry.closedOn)}
           </span>
           {entry.goal.description && <p className={styles.description}>{entry.goal.description}</p>}
+          {entry.goal.reward_text?.trim() && <p className={styles.description}><span>{entry.status === "Completed" ? "Earned · " : "Reward · "}</span>{entry.goal.reward_text}</p>}
           <dl className={styles.stats}>
             <div><dt>Completions</dt><dd>{entry.progress.admissibleCompletionCount.toLocaleString()}</dd></div>
             <div><dt>Longest streak</dt><dd>{entry.progress.longestStreak.toLocaleString()} <small>{entry.goal.recurrence_interval === "weekly" ? "weeks" : entry.goal.recurrence_interval === "monthly" ? "months" : "days"}</small></dd></div>

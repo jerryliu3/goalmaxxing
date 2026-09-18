@@ -1,4 +1,5 @@
 .work-quest-card {
+  container-type: inline-size;
   --goal-color: var(--primary);
   min-width: 0;
   overflow: hidden;
@@ -6,6 +7,11 @@
   border-radius: 0.75rem;
   background: var(--card);
   color: var(--card-foreground);
+}
+
+/* Held rotation needs room outside the face; keep the shell from clipping it. */
+.work-quest-card[data-has-card="true"] {
+  overflow: visible;
 }
 
 .work-quest-card[data-done="true"] {
@@ -17,6 +23,7 @@
   gap: 0.15rem;
   padding: 0.5rem 0.5rem 0.55rem;
   background: color-mix(in srgb, var(--goal-color) 22%, var(--card));
+  border-radius: 0.75rem 0.75rem 0 0;
 }
 
 .work-quest-header-row {
@@ -44,4 +51,26 @@
   height: 100%;
   border-radius: inherit;
   background: var(--goal-color);
+}
+
+/*
+ * Checklist inspect used to slot a full creation-scale face (~340×410). That
+ * read as a tall tower beside the facts column. Zoom the material face to about
+ * half so width and height shrink together and the aspect matches other surfaces.
+ */
+.work-quest-material {
+  --work-quest-card-scale: 0.52;
+  width: min(100%, calc(340px * var(--work-quest-card-scale)));
+  justify-self: center;
+  padding: 0.4rem;
+}
+.work-quest-material [data-goal-progress-card] > .tempo-card-surface {
+  zoom: var(--work-quest-card-scale);
+}
+.work-quest-material [data-goal-progress-card] > p {
+  margin-top: 0.65rem;
+}
+.work-quest-body[data-has-card="true"] { display: grid; gap: 1rem; }
+@container (min-width: 640px) {
+  .work-quest-body[data-has-card="true"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
 }

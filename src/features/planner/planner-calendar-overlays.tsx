@@ -1,5 +1,7 @@
 "use client";
 
+import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
+
 import type { ReactNode } from "react";
 import {
   getEntryGoalFirstTitleWithTime,
@@ -64,6 +66,7 @@ export interface PlannerCalendarOverlaysProps {
   }>;
   selectedEventGoal: Goal | null;
   selectedEventPresentation: ChecklistGoalPresentation | null;
+  selectedEventProgress?: ProgressContextSummary | null;
   goalTitles: Record<string, string>;
   scopeMonth: string;
   selectedEventBaselineUnit:
@@ -128,6 +131,7 @@ export function PlannerCalendarOverlays({
   selectedEventLinkedTargets,
   selectedEventGoal,
   selectedEventPresentation,
+  selectedEventProgress,
   goalTitles,
   scopeMonth,
   selectedEventBaselineUnit,
@@ -206,6 +210,7 @@ export function PlannerCalendarOverlays({
             selectedEventLinkedTargets={selectedEventLinkedTargets}
             selectedEventGoal={selectedEventGoal}
             selectedEventPresentation={selectedEventPresentation}
+        selectedEventProgress={selectedEventProgress}
             goalTitles={goalTitles}
             scopeMonth={scopeMonth}
             selectedEventBaselineUnit={selectedEventBaselineUnit}

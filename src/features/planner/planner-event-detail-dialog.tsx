@@ -1,5 +1,8 @@
 "use client";
 
+import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
+
+import { GoalProgressCard } from "@/features/goals/goal-progress-card";
 import { Button } from "@/components/ui/button";
 import { useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -42,6 +45,7 @@ interface PlannerEventDetailDialogProps {
   }>;
   selectedEventGoal: Goal | null;
   selectedEventPresentation: ChecklistGoalPresentation | null;
+  selectedEventProgress?: ProgressContextSummary | null;
   goalTitles: Record<string, string>;
   scopeMonth: string;
   selectedEventBaselineUnit:
@@ -65,6 +69,7 @@ export function PlannerEventDetailDialog({
   selectedEventLinkedTargets,
   selectedEventGoal,
   selectedEventPresentation,
+  selectedEventProgress,
   goalTitles,
   scopeMonth,
   selectedEventBaselineUnit,
@@ -194,6 +199,7 @@ export function PlannerEventDetailDialog({
       }}
     >
       <WorkQuestCard
+        goalCard={selectedEventGoal && selectedEventProgress ? <GoalProgressCard goal={selectedEventGoal} progress={selectedEventProgress} /> : undefined}
         quest={projectPlannerEntryWorkQuest({
           entry: selectedEventEntry,
           goal: selectedEventGoal,

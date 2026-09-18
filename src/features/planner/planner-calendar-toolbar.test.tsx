@@ -39,6 +39,11 @@ describe("PlannerCalendarToolbar", () => {
     cleanup();
   });
 
+  it("links from Plan directly to the current goal collection", () => {
+    renderToolbar();
+    expect(screen.getByRole("link", { name: "Goals" })).toHaveAttribute("href", "/insights/folios?view=current&from=plan");
+  });
+
   it("offers Day View, Week View, and Month View without a 3 Day option", () => {
     renderToolbar();
 

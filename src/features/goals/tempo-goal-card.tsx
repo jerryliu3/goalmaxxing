@@ -1,6 +1,8 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
+import { useReducedMotion } from "motion/react";
+import { ReassemblingCard } from "./card-material/reassembling-card";
 import { ArrowUpRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/goals/category";
 import { resolveTempoCardMaterial } from "./card-material/tempo-card-material";
@@ -17,6 +19,7 @@ export function TempoGoalCard({
   taskSchedule,
   surface = "material",
   rotatable = true,
+  assembly,
   renderLettering = text => text,
   visibility = {
     category: true,
@@ -34,11 +37,13 @@ export function TempoGoalCard({
   taskSchedule?: { date: string; time: string };
   /** `plain` leaves the surface unstyled for material exploration studies. */
   surface?: "material" | "plain";
-  /** Hosts with a competing swipe (bulk draft stack, day-work deck) keep tilt only. */
+  /** Prefer leaving this on; hosts with competing swipes still work because card pointer events stop bubbling. */
   rotatable?: boolean;
+  assembly?: { completed: number; target: number };
   visibility?: TempoCardVisibility;
   renderLettering?: (text: ReactNode, size: "display" | "title" | "supporting") => ReactNode;
 }) {
+  const still = Boolean(useReducedMotion());
   const milestones = fields.frequency_type === "fixed_milestones";
   const count = Number(fields.target_count) || 1;
   const hasCount = visibility.rhythm && (isTask || visibility.count);
@@ -163,8 +168,9 @@ export function TempoGoalCard({
       goalColor={goalColor}
       label={fields.title.trim() || "Goal card"}
       rotatable={rotatable}
+      solid={!assembly}
     >
-      {card}
+      {assembly ? <ReassemblingCard key={assembly.target} completed={assembly.completed} target={assembly.target} still={still}>{card}</ReassemblingCard> : card}
     </TempoCardSurface>
   );
 }

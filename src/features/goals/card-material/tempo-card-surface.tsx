@@ -19,12 +19,14 @@ export function TempoCardSurface({
   label,
   rotatable,
   children,
+  solid = true,
 }: {
   material: TempoCardMaterial;
   goalColor: string;
   label: string;
   rotatable: boolean;
   children: ReactNode;
+  solid?: boolean;
 }) {
   const hintId = useId();
   const still = Boolean(useReducedMotion());
@@ -63,7 +65,7 @@ export function TempoCardSurface({
         tabIndex={held ? 0 : undefined}
         {...cardHandlers}
       >
-        <CardSolidBody />
+        {solid && <CardSolidBody />}
         {children}
       </div>
       {/* Keyboard affordances are announced without adding chrome to the card. */}

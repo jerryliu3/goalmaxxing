@@ -33,11 +33,10 @@ Scope notes:
   renders it flat with no frame loop.
 - The card is treated as an object rather than a document: its text is not
   selectable, and it exposes no drag ghost or long-press callout.
-- Hosts that own a competing swipe gesture — the bulk draft stack and the
-  day-work deck concept — pass `rotatable={false}`. They keep the finish and the
-  tilt, and the host keeps the drag. The goal-library folio reader leaves the
-  card rotatable; page turns use the prev/next controls, keyboard when focus is
-  outside the card, and touch swipes on the stage chrome around it.
+- Material cards are rotatable wherever they appear. Hosts that also swipe
+  (bulk draft stack, day-work deck, folio stage chrome) keep their navigation;
+  a drag that starts on the card stops bubbling so the held turn wins on the
+  object itself.
 - Studies that explore their own finishes render the card with
   `surface="plain"`, which omits the production material and surface entirely.
 

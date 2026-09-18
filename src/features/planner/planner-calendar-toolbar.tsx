@@ -1,6 +1,9 @@
 "use client";
 
-import { CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { isDemoPathname } from "@/lib/navigation/demo-path";
+import { BookOpen, CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -123,6 +126,8 @@ export function PlannerCalendarToolbar({
   onOpenSettings,
   onSearchQueryChange,
 }: PlannerCalendarToolbarProps) {
+  const pathname = usePathname() ?? "";
+  const goalsHref = `${isDemoPathname(pathname) ? "/demo" : ""}/insights/folios?view=current&from=plan`;
   const [helpOpen, setHelpOpen] = useState(false);
   const [showHiddenGoals, setShowHiddenGoals] = useState(false);
   const hiddenLinkedGoalCount = linkedTargetDetails.length;
@@ -161,6 +166,7 @@ export function PlannerCalendarToolbar({
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
+            {!plannerReadOnly && <Button asChild variant="outline" size="sm"><Link href={goalsHref}><BookOpen aria-hidden="true" />Goals</Link></Button>}
             {!plannerReadOnly && canShowSaveAction && hasDraftSession ? (
               <Button
                 type="button"
