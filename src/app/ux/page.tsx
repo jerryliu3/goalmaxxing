@@ -12,6 +12,15 @@ export default function UxHubPage() {
         </h1>
         <ul className="mt-10 space-y-4">
           <li>
+            <Link className="text-lg font-semibold underline" href="/ux/brand/plaque-motion">
+              Plaque motion — intention to keepsake
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Review sharding, editable outlines, and a final-completion ceremony
+              that seals the plaque and places it into the goal book.
+            </p>
+          </li>
+          <li>
             <Link className="text-lg font-semibold underline" href="/ux/motion">
               Motion in context — daily work and earned progress
             </Link>

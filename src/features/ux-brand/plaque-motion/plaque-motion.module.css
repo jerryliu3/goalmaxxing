@@ -1,0 +1,105 @@
+.page { min-height: 100dvh; background: var(--background); color: var(--foreground); padding: 2rem clamp(1rem,4vw,4rem) 4rem; }
+.container { max-width: 1120px; margin: auto; }
+.back { color: var(--muted-foreground); font-size: .8rem; }
+.header { margin: 3.5rem 0 2.5rem; }
+.eyebrow { font-family: var(--font-mono); font-size: .65rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-foreground); }
+.header h1 { font-family: var(--font-display); font-size: clamp(3.2rem,7vw,6rem); line-height: .96; letter-spacing: -.055em; font-weight: 400; margin: 1rem 0; }
+.header > p:last-child { color: var(--muted-foreground); }
+.settings { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; padding: 1.25rem 0; border-block: 1px solid var(--border); }
+.settings label { display: flex; flex-direction: column; gap: .4rem; font-size: .7rem; color: var(--muted-foreground); }
+.settings select, .settings input:not([type="checkbox"]) { border: 1px solid var(--border); background: var(--background); color: var(--foreground); border-radius: .4rem; padding: .6rem; min-height: 44px; max-width: 100%; font-size: .85rem; }
+.settings .still { flex-direction: row; align-items: center; gap: .55rem; }
+.settings input[type="checkbox"] { width: 18px; height: 18px; }
+.scenes { display: flex; gap: 1.5rem; margin-top: 2rem; border-bottom: 1px solid var(--border); }
+.scenes button { padding: .8rem 0; color: var(--muted-foreground); font-size: .8rem; border-bottom: 2px solid transparent; min-height: 44px; }
+.scenes button[aria-pressed="true"] { color: var(--foreground); border-bottom-color: var(--foreground); }
+.review { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem,6vw,5rem); padding: 3.5rem 0; align-items: center; }
+.reviewCopy h2 { font-family: var(--font-display); font-size: clamp(2.3rem,4vw,3.6rem); line-height: 1.02; letter-spacing: -.035em; font-weight: 400; margin: 1rem 0; }
+.reviewCopy > p:not(.eyebrow) { color: var(--muted-foreground); font-size: .9rem; line-height: 1.6; margin-bottom: 1.3rem; }
+.targetLabel { display: block; font-size: .8rem; margin-top: 2rem; }
+.targetControls { display: flex; gap: .6rem; align-items: center; margin: .75rem 0; }
+.targetControls input { width: 5rem; border: 0; border-bottom: 1px solid var(--border); background: transparent; text-align: center; font-family: var(--font-display); font-size: 2.1rem; }
+.reviewCopy .targetReadout { font-family: var(--font-mono); font-size: .7rem; }
+.actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1.5rem; }
+.reviewStage { min-width: 0; padding: 2rem 0; }
+.caption { text-align: center; font-size: .75rem; color: var(--muted-foreground); margin-top: 2rem; }
+.notes { border-top: 1px solid var(--border); padding-top: 1.5rem; color: var(--muted-foreground); font-size: .8rem; line-height: 1.7; }
+.notes summary { color: var(--foreground); cursor: pointer; }
+.notes p { max-width: 52rem; margin-top: 1rem; }
+
+/* Whole face, clipped material copies, and the existing empty face share bounds. */
+.plaque { position: relative; isolation: isolate; }
+.plaque :global(.tempo-card-object) { transform: none; }
+.plaque :global(.tempo-card-surface) { perspective: none; }
+.solid { opacity: 0; pointer-events: none; }
+.solid[data-visible="true"] { opacity: 1; }
+.ghost { opacity: 0; }
+.ghost[data-visible="true"] { opacity: 1; }
+.ghost :global([data-ghost]) > svg { display: none; }
+.ghost :global([data-reassembly]) { height: 100%; }
+.outlines { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--muted-foreground); stroke-width: .32; opacity: .6; }
+.fragments, .fragment { position: absolute; inset: 0; pointer-events: none; }
+.fragment { transition: transform .8s cubic-bezier(.2,.75,.2,1), opacity .7s ease; transition-delay: var(--delay); }
+.plaque[data-phase="etched"] .fragment { transform: translate(calc(var(--scatter-x) * .06),calc(var(--scatter-y) * .06)); }
+.plaque[data-phase="released"] .fragment { transform: translate(var(--scatter-x),var(--scatter-y)) rotate(var(--turn)) scale(.96); opacity: 0; }
+.plaque[data-phase="almost"] .fragment { transform: translate(calc(var(--scatter-x) * .06),calc(var(--scatter-y) * .06)); }
+.plaque[data-phase="almost"] .fragment[data-last="true"] { opacity: 0; transform: translate(55px,-90px) rotate(12deg) scale(1.08); }
+.plaque[data-phase="gather"] .fragment { transform: translate(0,0); opacity: 1; }
+.plaque[data-still="true"] .fragment { transition: none; }
+
+.ceremonyBackdrop { position: fixed; inset: 0; z-index: 90; background: color-mix(in srgb,var(--background) 92%,transparent); backdrop-filter: blur(12px); }
+.ceremony { position: fixed; inset: 0; z-index: 91; color: var(--foreground); overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; padding: 3rem 1.5rem 2rem; isolation: isolate; }
+.ceremonyHeader { position: relative; text-align: center; z-index: 3; padding: 1.5rem 2rem 0; }
+.ceremonyHeader h2 { font-family: var(--font-display); font-size: clamp(2rem,5vw,3.7rem); line-height: 1.08; font-weight: 400; letter-spacing: -.035em; margin: .8rem 0; }
+.ceremonyHeader > p:last-child { font-size: .85rem; color: var(--muted-foreground); }
+.close { position: absolute; right: 1rem; top: 1rem; z-index: 5; }
+.ceremonyStage { flex: 1 0 380px; position: relative; min-height: 380px; width: 100%; max-width: 1000px; margin: 0 auto; }
+.heroAnchor { position: absolute; left: 50%; top: 50%; width: min(420px,calc(100% - 32px)); transform: translate(-50%,-50%); z-index: 2; }
+.ceremony[data-ready="false"] .heroFlight { visibility: hidden; }
+.heroFlight { position: relative; }
+.ceremony[data-phase="lift"][data-ready="true"] .heroFlight { animation: lift .72s cubic-bezier(.22,1,.36,1) both; }
+@keyframes lift { from { transform: translate(var(--origin-x),var(--origin-y)) scale(var(--origin-scale)); } 75% { transform: translateY(-10px) scale(1.025); } to { transform: none; } }
+.sealLight { position: absolute; inset: -12px; border-radius: 20px; box-shadow: 0 0 55px 15px #b6a3ff80; pointer-events: none; animation: seal .42s ease-out both; }
+@keyframes seal { from { opacity: 0; transform: scale(.97); } 35% { opacity: .75; } to { opacity: 0; transform: scale(1.1); } }
+.atmosphere { position: absolute; inset: 0; pointer-events: none; z-index: -1; opacity: 0; background: radial-gradient(ellipse at 25% 48%,#8b5cf630,transparent 55%),radial-gradient(ellipse at 80% 60%,#dda67730,transparent 50%); transition: opacity 1.2s; }
+.ceremony[data-grand="true"][data-phase="celebrate"] .atmosphere { opacity: 1; }
+.ceremonyFooter { min-height: 150px; text-align: center; position: relative; z-index: 3; max-width: 600px; width: 100%; margin: 0 auto; }
+.ceremonyFooter h3 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 400; }
+.ceremonyFooter p { font-size: .9rem; color: var(--muted-foreground); margin-top: .6rem; overflow-wrap: anywhere; }
+.ceremonyFooter .actions { justify-content: center; }
+.fireworks { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.burst { position: absolute; left: 17%; top: 30%; }
+.burst:nth-child(2) { left: 83%; top: 25%; }
+.burst:nth-child(3) { left: 77%; top: 75%; }
+.burst i { position: absolute; width: 4px; height: 15px; border-radius: 3px; background: #b89668; opacity: 0; animation: spark 1.3s cubic-bezier(.15,.65,.25,1) both; animation-delay: calc(var(--burst) * .18s); }
+.burst:nth-child(2) i { background: #9c84df; }
+@keyframes spark { 0% { opacity: 0; transform: rotate(var(--angle)) translateY(0) scaleY(.2); } 15% { opacity: 1; } 65% { opacity: .8; } 100% { opacity: 0; transform: rotate(var(--angle)) translateY(-125px) scaleY(.35); } }
+.bookDock { position: absolute; width: 210px; height: 280px; left: 50%; top: 50%; transform: translate(-50%,-50%); perspective: 1200px; z-index: 1; }
+.bookDock :global([data-folio-book]) { width: 100%; height: 100%; }
+.bookDock > span > span:last-child { transform-origin: left center; }
+.bookPages { position: absolute; inset: 6px 2px 6px 8px; padding: 1.25rem; background: #f5f0e5; color: #443e36; display: flex; flex-direction: column; justify-content: space-between; font-family: var(--font-display); font-size: 1.2rem; border-radius: 4px; }
+.bookPages small { font-family: var(--font-mono); font-size: .6rem; }
+.ceremony[data-phase="shelve"] .bookDock { animation: book-appear .5s ease-out both; }
+.ceremony[data-phase="shelve"] .bookDock > span > span:last-child { animation: book-close 1.5s ease-in-out both; }
+.ceremony[data-phase="shelve"] .heroFlight { animation: keep 1.5s cubic-bezier(.4,0,.2,1) both; }
+.ceremony[data-phase="kept"] .heroAnchor { visibility: hidden; }
+@keyframes book-appear { from { opacity: 0; transform: translate(-50%,-35%) scale(.9); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+@keyframes book-close { 0% { transform: translateZ(13px) rotateY(0); } 25%,65% { transform: translateZ(13px) rotateY(-145deg); } 100% { transform: translateZ(13px) rotateY(0); } }
+@keyframes keep { 0% { transform: translateY(0) scale(1); opacity: 1; } 50% { transform: translateY(5px) scale(.31) rotate(-4deg); opacity: 1; } 64% { transform: translateY(8px) scale(.29); opacity: 0; } 100% { transform: translateY(8px) scale(.29); opacity: 0; } }
+.ceremony[data-still="true"] *, .ceremony[data-still="true"] *::after { animation: none !important; transition: none !important; }
+@media (max-width: 700px) {
+  .header { margin-top: 2rem; }
+  .review { grid-template-columns: 1fr; padding-top: 2rem; gap: 1rem; }
+  .reviewStage { grid-row: 1; max-width: 420px; width: 100%; margin: auto; padding: 1rem 0; }
+  .reviewCopy h2 br { display: none; }
+  .settings label { flex: 1 1 140px; min-width: 0; }
+  .settings input:not([type="checkbox"]), .settings select { font-size: 16px; }
+  .ceremony { padding: 2.5rem .75rem 1.5rem; }
+  .ceremonyHeader { padding: 1rem 1rem 0; }
+  .ceremonyStage { flex-basis: 400px; min-height: 400px; }
+  .heroAnchor { width: min(370px,calc(100% - 20px)); }
+  .burst { left: 12%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page *, .ceremony *, .ceremony *::after { animation: none !important; transition: none !important; }
+}
