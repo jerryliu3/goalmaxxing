@@ -13,9 +13,11 @@ counter control every treatment.
   or material switching.
 - **Illuminate + Transmute:** brightness and saturation increase together.
 - **Reassemble:** a faint outline receives newly earned fragments thrown in from
-  alternating directions. Landed pieces remain in place. After the final piece
-  lands, replace the entire fragment/outline layer with the unclipped material
-  card and solid body; no seams or cracks remain. Reduced motion fuses immediately.
+  alternating directions. Landed pieces remain in place and carry the same
+  extruded solid body as the finished card, so a tilt shows thickness on each
+  shard. After the final piece lands, replace the entire fragment/outline layer
+  with the unclipped material card and solid body; no seams or cracks remain.
+  Reduced motion fuses immediately. The empty ghost shell stays a flat outline.
 
 Reassemble uses one piece per credited unit up to 24 pieces. Above that cap,
 piece `i` (one-based) arrives at `ceil(i * target / pieceCount)`. Groups differ
@@ -45,10 +47,11 @@ goals. Plan's Goals link opens Current; Past keeps the existing yearly folios.
 Canonical terminal status moves goals out of Current, and rewards remain readable
 in the past-goal reader.
 
-Saved fragments appear immediately when opening a card. New confirmed credits
-animate into place; undo removes the corresponding pieces. The 24-piece cap and
-rounded thresholds are shared with the study. After the final landing all fragment
-layers disappear, leaving PR #950's material face and solid body unchanged.
+Saved fragments appear immediately when opening a card and keep their extruded
+thickness while incomplete. New confirmed credits animate into place; undo
+removes the corresponding pieces. The 24-piece cap and rounded thresholds are
+shared with the study. After the final landing all fragment layers disappear,
+leaving PR #950's material face and solid body unchanged.
 
 Ongoing cadence cards remain whole with a small current-period count. Configurable
 reward milestones for ongoing goals are deferred; a perfect cadence hit rate must

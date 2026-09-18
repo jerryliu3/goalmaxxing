@@ -14,8 +14,12 @@
 .ghost :global(.tempo-card)::before, .ghost :global(.tempo-card)::after { display: none; }
 .ghost :global(.tempo-card-target strong) { background: none !important; color: var(--muted-foreground) !important; -webkit-text-fill-color: var(--muted-foreground) !important; }
 .outlines { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--muted-foreground); stroke-width: .55; opacity: .22; }
+.piece { transform-style: preserve-3d; }
 .piece[data-arriving="true"] { animation: land-piece 780ms cubic-bezier(.2,.75,.25,1) both; animation-delay: var(--arrival-delay); }
-.pieceFace { filter: drop-shadow(0 2px 1px #15241825); }
+.pieceFace {
+  transform-style: preserve-3d;
+  /* Avoid filter here: it flattens preserve-3d and would erase the extrusion. */
+}
 .pieceFace :global(.tempo-card) { height: 100% !important; }
 @keyframes land-piece {
   0% { opacity: 0; transform: translate3d(var(--throw-x),var(--throw-y),130px) rotate(var(--throw-turn)) scale(1.16); }

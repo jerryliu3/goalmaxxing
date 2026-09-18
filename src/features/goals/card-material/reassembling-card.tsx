@@ -48,7 +48,12 @@ export function ReassemblingCard({ children, completed, target, still }: {
               if (event.target === event.currentTarget) setArrival(current => ({ ...current, settled: Math.max(current.settled, piece.earnedAt) }));
             }}
           >
-            <div className={styles.pieceFace} style={{ clipPath: piece.clipPath }}>{children}</div>
+            {/* Each fragment keeps the same extruded body as the finished card so a
+                tilt shows thickness on the shards, not only after fusion. */}
+            <div className={styles.pieceFace} style={{ clipPath: piece.clipPath }}>
+              <CardSolidBody />
+              {children}
+            </div>
           </div>
         ))}
       </>}

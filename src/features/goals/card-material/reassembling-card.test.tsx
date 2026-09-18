@@ -25,6 +25,15 @@ describe("saved card assembly", () => {
     rerender(card(3));
     expect(container.querySelector('[data-reward-piece="2"]')).toHaveAttribute("data-arriving", "true");
   });
+  it("extrudes each landed fragment; the ghost outline stays flat", () => {
+    const { container } = render(card(2));
+    expect(container.querySelector('[data-ghost] [data-card-solid]')).toBeNull();
+    const pieces = container.querySelectorAll('[data-reward-piece]');
+    expect(pieces).toHaveLength(2);
+    for (const piece of pieces) {
+      expect(piece.querySelector('[data-card-solid]')).not.toBeNull();
+    }
+  });
   it("opens earned cards seamlessly and completes without animation in still mode", () => {
     const { container, rerender } = render(card(3));
     expect(container.querySelector('[data-reassembly]')).toHaveAttribute("data-fused", "true");
