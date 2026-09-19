@@ -187,6 +187,7 @@ export function useGoalFormState(goalId?: string) {
           title: goal.title,
           description: goal.description ?? "",
           reward_text: goal.reward_text ?? "",
+          plaque_target: goal.plaque_target ?? null,
           category_selection: categoryState.selection,
           custom_category: categoryState.customValue,
           color: resolveGoalCreationColor(goal.color, categoryState.selection),

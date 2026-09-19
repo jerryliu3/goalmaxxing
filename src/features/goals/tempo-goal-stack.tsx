@@ -79,7 +79,7 @@ export function TempoGoalStack({
             visibility={visibility}
             assembly={
               visibility.review && visibility.plaqueTarget
-                ? { completed: 0, target: visibility.plaqueTarget }
+                ? { completed: 0, target: visibility.plaqueTarget, preview: true }
                 : undefined
             }
           />

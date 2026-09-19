@@ -26,6 +26,15 @@ function center(points: PiecePoint[]): PiecePoint {
   };
 }
 
+/** Direction from the finished card's center for preview-only shattering. */
+export function pieceScatter(piece: Pick<RewardPiece, "points">) {
+  const centroid = center(piece.points);
+  return {
+    x: (centroid.x - 50) * 0.85,
+    y: (centroid.y - 50) * 0.85,
+  };
+}
+
 /** Clip a convex polygon to one side of a line through its interior. */
 function clipHalf(points: PiecePoint[], origin: PiecePoint, nx: number, ny: number): PiecePoint[] {
   const result: PiecePoint[] = [];

@@ -1,8 +1,16 @@
-.surface { position: relative; transform-style: preserve-3d; }
+.surface { position: relative; overflow: visible; transform-style: preserve-3d; }
+.previewWhole {
+  position: absolute; inset: 0; pointer-events: none; transform-style: preserve-3d;
+}
+.previewWhole :global(.tempo-card-frame),
+.ghost :global(.tempo-card-frame),
+.pieceFace :global(.tempo-card-frame) { height: 100%; aspect-ratio: auto; }
+.previewWhole :global(.tempo-card) { height: 100%; }
 .fused { position: relative; transform-style: preserve-3d; opacity: 0; pointer-events: none; }
 .fused[data-visible="true"] { opacity: 1; }
 .ghost, .piece, .pieceFace { position: absolute; inset: 0; pointer-events: none; }
 .ghost { border-radius: var(--card-radius,18px); overflow: hidden; }
+.surface[data-preview="true"][data-preview-phase="whole"] .ghost { opacity: 0; }
 .ghost :global(.tempo-card) {
   height: 100% !important;
   background: transparent !important;
@@ -27,8 +35,26 @@
   78% { opacity: 1; transform: translate3d(0,3px,0) rotate(0deg) scale(.995); }
   100% { opacity: 1; transform: translate3d(0,0,0) rotate(0deg) scale(1); }
 }
+.surface[data-preview="true"] .piece {
+  animation: none;
+  /* Match the prototype: every polygon travels directly away from the
+     plaque's center, instead of using the normal upward arrival vector. */
+  transition: transform .8s cubic-bezier(.2,.75,.2,1), opacity .7s ease;
+  transition-delay: var(--delay);
+}
+.surface[data-preview="true"][data-preview-phase="etched"] .piece {
+  transform: translate(calc(var(--scatter-x) * .06), calc(var(--scatter-y) * .06));
+}
+.surface[data-preview="true"][data-preview-phase="released"] .piece {
+  transform: translate(var(--scatter-x), var(--scatter-y)) rotate(var(--scatter-turn)) scale(.96);
+  opacity: 0;
+}
 .surface[data-still="true"] .piece[data-arriving="true"] { animation: none; }
-@media (prefers-reduced-motion: reduce) { .piece[data-arriving="true"] { animation: none; } }
+.surface[data-still="true"] .piece { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .piece[data-arriving="true"] { animation: none; }
+  .surface[data-preview="true"] .piece { transition: none; }
+}
 @media (forced-colors: active) {
   .outlines { stroke: CanvasText; }
   .ghost :global(.tempo-card) { color: CanvasText !important; border-color: CanvasText !important; }

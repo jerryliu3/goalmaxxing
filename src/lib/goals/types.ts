@@ -23,6 +23,7 @@ export interface Goal {
   start_date: string;
   end_date: string | null;
   reward_text?: string | null;
+  plaque_target?: number | null;
   default_local_time?: string | null;
   photo_path: string | null;
   team_id: string | null;

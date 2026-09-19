@@ -977,6 +977,7 @@ export type Database = {
           milestone_names: string[] | null
           owner_id: string
           photo_path: string | null
+          plaque_target: number | null
           recurrence_interval:
             | Database["public"]["Enums"]["recurrence_interval"]
             | null
@@ -1005,6 +1006,7 @@ export type Database = {
           milestone_names?: string[] | null
           owner_id: string
           photo_path?: string | null
+          plaque_target?: number | null
           recurrence_interval?:
             | Database["public"]["Enums"]["recurrence_interval"]
             | null
@@ -1033,6 +1035,7 @@ export type Database = {
           milestone_names?: string[] | null
           owner_id?: string
           photo_path?: string | null
+          plaque_target?: number | null
           recurrence_interval?:
             | Database["public"]["Enums"]["recurrence_interval"]
             | null
@@ -2737,6 +2740,7 @@ export type Database = {
           p_id: string
           p_is_private?: boolean
           p_milestone_names?: string[]
+          p_plaque_target?: number
           p_recurrence_interval?: Database["public"]["Enums"]["recurrence_interval"]
           p_reward_text?: string
           p_start_date?: string
@@ -3238,6 +3242,7 @@ export type Database = {
           p_id: string
           p_is_private?: boolean
           p_milestone_names?: string[]
+          p_plaque_target?: number
           p_recurrence_interval?: Database["public"]["Enums"]["recurrence_interval"]
           p_reward_text?: string
           p_start_date?: string

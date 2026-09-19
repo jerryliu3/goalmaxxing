@@ -80,6 +80,7 @@ export function useCompletionMutation() {
           desiredFactState,
           sourceRect,
           xpDelta: result.xpDelta,
+          goalId,
         });
         return {
           ok: true,

@@ -47,6 +47,12 @@ describe("TempoGoalCard materials", () => {
     ).toHaveAttribute("data-material", "glass");
   });
 
+  it("renders every production card inside the canonical scalable face", () => {
+    const card = renderCard();
+    expect(card).toHaveAttribute("data-tempo-goal-card", "");
+    expect(card.parentElement).toHaveClass("tempo-card-frame");
+  });
+
   it("maps medium goals to anodized alloy", () => {
     expect(
       renderCard({ fields: { ...baseFields, difficulty: "medium" } })
@@ -57,6 +63,22 @@ describe("TempoGoalCard materials", () => {
     expect(
       renderCard({ fields: { ...baseFields, difficulty: "hard" } })
     ).toHaveAttribute("data-material", "chromatic");
+  });
+
+  it("embosses material card lettering at the production depth", () => {
+    const { container } = render(
+      <TempoGoalCard fields={{ ...baseFields, difficulty: "hard" }} />,
+    );
+    expect(container.querySelector(".tempo-card-surface")).toHaveAttribute(
+      "data-material",
+      "chromatic",
+    );
+    expect(
+      container.querySelectorAll("[data-lettering-solid]").length,
+    ).toBeGreaterThan(0);
+    expect(
+      container.querySelector('[data-lettering-solid="display"]'),
+    ).not.toBeNull();
   });
 
   it("falls back to liquid glass when a goal has no difficulty", () => {

@@ -11,7 +11,9 @@
 .tempo-preview {
   grid-area: preview;
   position: relative;
+  width: 72%;
   min-width: 0;
+  justify-self: center;
   perspective: 1100px;
 }
 .tempo-card {
@@ -33,6 +35,27 @@
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
+.tempo-card[data-tempo-goal-card] {
+  /* Match the 330×382 card-material reference exactly. The parent only
+     chooses the rendered size; the component owns this physical geometry. */
+  --card-radius: 5.45cqi;
+  box-sizing: border-box;
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  min-height: 0;
+  padding: 8cqi;
+  gap: 6.06cqi;
+  border-radius: 5.45cqi;
+  box-shadow: 0 4.24cqi 10.61cqi #17201512;
+}
+.tempo-card-frame {
+  position: relative;
+  container-type: inline-size;
+  inline-size: 100%;
+  aspect-ratio: 330 / 382;
+}
 .tempo-card h2 {
   font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
   font-size: 27px;
@@ -53,6 +76,13 @@
   font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
   font-weight: 500;
   letter-spacing: 0.09em;
+}
+.tempo-card[data-tempo-goal-card] h2 {
+  font-size: 8.18cqi;
+}
+.tempo-card[data-tempo-goal-card] .tempo-card-meta {
+  gap: 4.85cqi;
+  font-size: 2.67cqi;
 }
 .tempo-workspace {
   grid-area: workspace;
@@ -328,31 +358,11 @@
     position: sticky;
     top: 1rem;
   }
-  .tempo-card {
-    min-height: 410px;
-  }
   .tempo-workspace {
     padding-top: 0.5rem;
   }
 }
 @media (max-width: 767px) {
-  .tempo-card {
-    min-height: 180px;
-    padding: 1.25rem;
-    gap: 0.8rem;
-  }
-  .tempo-card h2 {
-    font-size: 1.9rem;
-  }
-  .tempo-card-rhythm {
-    display: none;
-  }
-  .tempo-card-bottom strong {
-    font-size: 1.1rem;
-  }
-  .tempo-card-meta {
-    font-size: 0.58rem;
-  }
   .tempo-creation {
     gap: 1.5rem;
   }
@@ -396,11 +406,19 @@
   font-size: 0.7rem;
   margin-top: auto;
 }
+.tempo-card[data-tempo-goal-card] .tempo-card-effort {
+  gap: 2.91cqi;
+  font-size: 3.39cqi;
+}
 .tempo-effort-bars {
   display: flex;
   align-items: flex-end;
   gap: 3px;
   height: 24px;
+}
+.tempo-card[data-tempo-goal-card] .tempo-effort-bars {
+  gap: .91cqi;
+  height: 7.27cqi;
 }
 .tempo-effort-bars i {
   width: 7px;
@@ -408,6 +426,13 @@
   border-radius: 3px;
   transition: background 0.2s;
 }
+.tempo-card[data-tempo-goal-card] .tempo-effort-bars i {
+  width: 2.12cqi;
+  border-radius: .91cqi;
+}
+.tempo-card[data-tempo-goal-card] .tempo-effort-bars i[data-level="1"] { height: 3.64cqi; }
+.tempo-card[data-tempo-goal-card] .tempo-effort-bars i[data-level="2"] { height: 5.45cqi; }
+.tempo-card[data-tempo-goal-card] .tempo-effort-bars i[data-level="3"] { height: 7.27cqi; }
 .tempo-effort-bars i[data-active="true"] {
   background: #20251e;
 }
@@ -421,7 +446,7 @@
 /* These mirror cardOptics(REST_POSE); the surface overwrites them from the live
    pose, so they only stand in before the pose is applied. */
 .tempo-card-surface {
-  --card-depth: 10px;
+  --card-depth: 3.03cqi;
   --rx: 7deg;
   --ry: -14deg;
   --light-x: 40.4%;
@@ -433,12 +458,18 @@
   --shine-strength: 0.73;
   --metal-x: 53.3%;
   --metal-y: 36.2%;
+  /* 4px at the 330px reference face; scale it with the card itself. */
+  --text-depth: 1.21cqi;
+  --text-walls: block;
+  container-type: inline-size;
+  inline-size: 100%;
   position: relative;
   perspective: 1200px;
 }
 /* The card reads as a held object: no selection, no drag ghost, no callout. */
 .tempo-card-object {
   position: relative;
+  inline-size: 100%;
   transform-style: preserve-3d;
   transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   user-select: none;
@@ -464,15 +495,15 @@
   cursor: grabbing;
 }
 .tempo-card-surface[data-material="glass"] .tempo-card-object {
-  --card-radius: 1.1rem;
+  --card-radius: 5.33cqi;
   --edge: color-mix(in srgb, var(--goal-color) 22%, #adccc5);
 }
 .tempo-card-surface[data-material="alloy"] .tempo-card-object {
-  --card-radius: 0.9rem;
+  --card-radius: 4.36cqi;
   --edge: color-mix(in srgb, var(--goal-color) 18%, #8c98a5);
 }
 .tempo-card-surface[data-material="chromatic"] .tempo-card-object {
-  --card-radius: 0.7rem;
+  --card-radius: 3.39cqi;
   --edge: color-mix(in srgb, var(--goal-color) 40%, #8e9aa2);
   --shine-tint: color-mix(in srgb, var(--goal-color) 35%, #fff);
 }
@@ -486,29 +517,31 @@
   isolation: isolate;
   transform-style: preserve-3d;
   backface-visibility: hidden;
-  overflow: visible;
+  /* The solid body is a sibling in the surface, so card content itself must
+     stay clipped to the physical face. */
+  overflow: hidden;
 }
 .tempo-card[data-material] > * {
   position: relative;
   z-index: 1;
 }
 .tempo-card[data-material] .tempo-card-target {
-  transform: translateZ(20px);
+  transform: translateZ(6.06cqi);
 }
 .tempo-card[data-material] h2 {
-  transform: translateZ(10px);
+  transform: translateZ(3.03cqi);
 }
 .tempo-card[data-material="glass"] {
   color: #1f2a24;
-  border-radius: 1.1rem;
+  border-radius: 5.33cqi;
   border-color: #fffe;
   background:
     linear-gradient(145deg, #ffffffb8, #f8fff0ba),
     color-mix(in srgb, var(--goal-color) 20%, transparent);
   box-shadow:
-    inset 2px 2px 2px #fff,
-    inset -2px -2px 2px #fff8,
-    0 14px 35px #17201514;
+    inset .61cqi .61cqi .61cqi #fff,
+    inset -.61cqi -.61cqi .61cqi #fff8,
+    0 4.24cqi 10.61cqi #17201514;
   backdrop-filter: blur(16px) saturate(1.12);
   -webkit-backdrop-filter: blur(16px) saturate(1.12);
 }
@@ -528,7 +561,7 @@
 
 .tempo-card[data-material="alloy"] {
   color: #2f3f4e;
-  border-radius: 0.9rem;
+  border-radius: 4.36cqi;
   border-color: #eef3fa;
   background:
     radial-gradient(ellipse at var(--light-x) var(--light-y), #fff9, transparent 58%),
@@ -547,19 +580,19 @@
       #f4f5f6
     );
   box-shadow:
-    inset 0 0 0 1px #fff,
-    inset 0 0 0 3px #8e9aaa66,
-    inset 0 0 0 5px #f4f7fb80,
-    0 14px 35px #17201516;
+    inset 0 0 0 .3cqi #fff,
+    inset 0 0 0 .91cqi #8e9aaa66,
+    inset 0 0 0 1.52cqi #f4f7fb80,
+    0 4.24cqi 10.61cqi #17201516;
 }
 .tempo-card[data-material="alloy"]::before {
   content: "";
   position: absolute;
-  inset: 9px;
+  inset: 2.73cqi;
   pointer-events: none;
-  border-radius: 0.55rem;
+  border-radius: 2.67cqi;
   border: 1px solid #5c6c832b;
-  box-shadow: 0 1px 0 #fff9;
+  box-shadow: 0 .3cqi 0 #fff9;
 }
 .tempo-card[data-material="alloy"] .tempo-card-target strong {
   color: #46586c;
@@ -584,7 +617,7 @@
 .tempo-card[data-material="chromatic"] {
   color: #edf2f4;
   border-color: color-mix(in srgb, var(--goal-color) 35%, #b8c0c5);
-  border-radius: 0.7rem;
+  border-radius: 3.39cqi;
   background:
     radial-gradient(
       ellipse at var(--light-x) var(--light-y),
@@ -594,16 +627,16 @@
     linear-gradient(145deg, #ffffff0c, transparent 40%),
     color-mix(in srgb, var(--goal-color) 9%, #192127);
   box-shadow:
-    inset 0 0 0 4px #242c31,
-    inset 0 0 0 5px color-mix(in srgb, var(--goal-color) 40%, #c4cbd0),
-    0 16px 36px #1720152b;
+    inset 0 0 0 1.21cqi #242c31,
+    inset 0 0 0 1.52cqi color-mix(in srgb, var(--goal-color) 40%, #c4cbd0),
+    0 4.85cqi 10.91cqi #1720152b;
 }
 .tempo-card[data-material="chromatic"]::before {
   content: "";
   position: absolute;
-  inset: 11px;
+  inset: 3.33cqi;
   pointer-events: none;
-  border-radius: 3px;
+  border-radius: .91cqi;
   border: 1px solid color-mix(in srgb, var(--goal-color) 22%, transparent);
 }
 .tempo-card[data-material="chromatic"]::after {
@@ -640,16 +673,22 @@
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(2px 5px 2px #0005);
+  filter: drop-shadow(.61cqi 1.52cqi .61cqi #0005);
 }
 .tempo-card[data-material="chromatic"] .tempo-card-target > span {
-  text-shadow: 2px 4px 2px #0006;
+  text-shadow: .61cqi 1.21cqi .61cqi #0006;
 }
 .tempo-card[data-material="chromatic"] .tempo-effort-bars i {
   background: #edf2f426;
 }
 .tempo-card[data-material="chromatic"] .tempo-effort-bars i[data-active="true"] {
   background: color-mix(in srgb, var(--goal-color) 35%, #dce8e9);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tempo-card-surface {
+    --text-depth: 0px;
+    --text-walls: none;
+  }
 }
 @supports not (backdrop-filter: blur(1px)) {
   .tempo-card[data-material="glass"] {
@@ -842,6 +881,10 @@
   gap: 1.25rem;
   margin: 0.7rem 0;
 }
+.tempo-card[data-tempo-goal-card] .tempo-card-target {
+  gap: 6.06cqi;
+  margin: 3.39cqi 0;
+}
 .tempo-card-target strong {
   font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
   font-size: 95px;
@@ -850,12 +893,19 @@
   letter-spacing: -0.08em;
   font-variant-numeric: tabular-nums;
 }
+.tempo-card[data-tempo-goal-card] .tempo-card-target strong {
+  font-size: 27.27cqi;
+}
 .tempo-card-target > span {
   font-size: 18px;
   font-weight: 400;
   letter-spacing: -0.015em;
   line-height: 1.35;
   max-width: 7rem;
+}
+.tempo-card[data-tempo-goal-card] .tempo-card-target > span {
+  font-size: 5.45cqi;
+  max-width: 21.21cqi;
 }
 .tempo-card-period-row {
   display: flex;
@@ -865,8 +915,14 @@
   padding-top: 0;
   margin-top: auto;
 }
+.tempo-card[data-tempo-goal-card] .tempo-card-period-row {
+  gap: 4.85cqi;
+}
 .tempo-card-period {
   font-size: 0.85rem;
+}
+.tempo-card[data-tempo-goal-card] .tempo-card-period {
+  font-size: 3.88cqi;
 }
 .tempo-card-period-row .tempo-card-effort {
   margin: 0;
@@ -875,6 +931,9 @@
   display: grid;
   grid-template-columns: 27px;
   text-align: right;
+}
+.tempo-card[data-tempo-goal-card] .tempo-card-period-row .tempo-card-effort {
+  grid-template-columns: 8.18cqi;
 }
 .tempo-card-effort .tempo-effort-bars {
   justify-content: flex-end;
@@ -885,6 +944,9 @@
   letter-spacing: 0.02em;
   text-transform: none;
 }
+.tempo-card[data-tempo-goal-card] .tempo-card-dates {
+  font-size: 2.91cqi;
+}
 .tempo-card-footer {
   margin-top: 0.2rem;
 }
@@ -893,21 +955,24 @@
   margin-left: auto;
   align-self: flex-start;
 }
+.tempo-card[data-tempo-goal-card] .tempo-card-arrow {
+  inline-size: 7.88cqi;
+  block-size: 7.88cqi;
+}
 .tempo-creation.tempo-creation-review {
   grid-template-areas: "steps steps" "preview preview" "action action";
 }
 .tempo-creation-review > .tempo-preview {
   position: relative;
   top: auto;
-  width: min(100%, 480px);
+  /*
+   * Review has the step rail above and the plaque/action row below. Reserve
+   * that space first, then let the reference-ratio card grow into any
+   * remaining height instead of pushing Create goal below the fold.
+   */
+  width: min(72%, max(14rem, calc((100dvh - 20rem) * 330 / 382 * .72)));
   justify-self: center;
   outline: none;
-}
-.tempo-creation-review .tempo-card {
-  min-height: 460px;
-}
-.tempo-creation-review .tempo-card-target strong {
-  font-size: clamp(6rem, 12vw, 8rem);
 }
 .tempo-review-action {
   grid-area: action;
@@ -944,19 +1009,27 @@
   padding-inline: 2rem;
 }
 @media (max-width: 767px) {
-  .tempo-card-target {
-    margin: 0.2rem 0;
+  .tempo-creation.tempo-creation-review {
+    grid-template-areas: "steps" "preview" "action";
   }
-  .tempo-card-target strong {
-    font-size: 4.5rem;
-  }
-  .tempo-card h2 {
-    font-size: 1.5rem;
+}
+/* Vertical creation layouts reserve more space for controls by rendering the
+   reference face at 66% of the horizontal-layout preview size. */
+@media (max-width: 767px), (max-height: 540px) {
+  .tempo-creation {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "steps" "preview" "workspace";
   }
   .tempo-creation.tempo-creation-review {
     grid-template-areas: "steps" "preview" "action";
   }
-  .tempo-creation-review .tempo-card {
-    min-height: 390px;
+  .tempo-preview,
+  .tempo-creation-review > .tempo-preview {
+    container-type: inline-size;
+    position: relative;
+    top: auto;
+    width: min(66%, calc(48dvh * 330 / 382 * .66), 13.2rem);
+    margin-inline: auto;
+    justify-self: center;
   }
 }

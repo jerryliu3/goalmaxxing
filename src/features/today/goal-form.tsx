@@ -209,6 +209,7 @@ export function GoalForm({
               time: state.task_scheduled_time,
             }}
             onReviewChange={setCreateReady}
+            onPlaqueTargetChange={(target) => setState((previous) => ({ ...previous, plaque_target: target }))}
             error={validationError}
             action={
               <Button type="submit" disabled={submitDisabled}>

@@ -16,7 +16,7 @@ describe("card material comparison", () => {
     const foil = screen.getByRole("region", { name: "Foil Print" });
     const card = within(foil).getByRole("article", { name: "Goal card preview" });
     // The filtered material is a sibling, never an ancestor of the raised type.
-    expect(card.parentElement!.querySelector(":scope > [data-material-surface]")).not.toBeNull();
+    expect(card.closest("[data-card-object]")?.querySelector(":scope > [data-material-surface]")).not.toBeNull();
     expect(card.closest("[data-material-surface]")).toBeNull();
     expect(card.querySelector('[data-lettering-solid="display"] [data-lettering-face]')).not.toBeNull();
     expect(page.style.getPropertyValue("--letter-relief-display")).toBe("none");
