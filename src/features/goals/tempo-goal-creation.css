@@ -722,12 +722,14 @@
 }
 .tempo-methods {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.85rem;
 }
 .tempo-methods button {
   display: grid;
   grid-template-columns: 30px 1fr;
   gap: 0.25rem 0.55rem;
+  min-width: 0;
   padding: 1rem;
   border: 1px solid var(--border);
   border-radius: 1rem;
