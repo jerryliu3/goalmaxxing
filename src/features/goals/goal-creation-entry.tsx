@@ -33,24 +33,25 @@ export function GoalCreationEntry({ onExit }: { onExit?: () => void }) {
   const [choosing, setChoosing] = useState(initialMode === null);
   return (
     <TempoMethodContext.Provider value={() => setChoosing(true)}>
-      <div className="mx-auto w-full max-w-5xl">
+      <div className="mx-auto h-full min-h-0 w-full max-w-5xl">
         {choosing && (
           <div className="tempo-creation">
             <TempoStepNavigation step={0} />
-            <div className="tempo-workspace">
-              <p className="tempo-eyebrow">
-                A little intention goes a long way
-              </p>
-              <h2 className="tempo-heading">
-                How do you want
-                <br />
-                to begin?
-              </h2>
-              <div
-                className="tempo-methods"
-                role="group"
-                aria-label="Creation method"
-              >
+            <div className="tempo-creation-body">
+              <div className="tempo-workspace">
+                <p className="tempo-eyebrow">
+                  A little intention goes a long way
+                </p>
+                <h2 className="tempo-heading">
+                  How do you want
+                  <br />
+                  to begin?
+                </h2>
+                <div
+                  className="tempo-methods"
+                  role="group"
+                  aria-label="Creation method"
+                >
                 <button
                   type="button"
                   aria-pressed={selection === "single"}
@@ -69,9 +70,70 @@ export function GoalCreationEntry({ onExit }: { onExit?: () => void }) {
                   <strong>Shape it with AI</strong>
                   <small>Turn an idea into one goal—or a few.</small>
                 </button>
+                </div>
+                <details className="mt-6 text-xs text-muted-foreground">
+                  <summary className="cursor-pointer">
+                    Start from a pack or import
+                  </summary>
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    {STARTER_PACKS.map((pack) => {
+                      const params = new URLSearchParams(searchParams.toString());
+                      params.set("mode", "multi");
+                      params.set("starterPack", pack.key);
+                      return (
+                        <Link
+                          key={pack.key}
+                          href={`?${params.toString()}`}
+                          replace
+                          onClick={() => {
+                            setMode("multi");
+                            setChoosing(false);
+                          }}
+                        >
+                          {pack.label} starter pack
+                        </Link>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode("multi");
+                        setChoosing(false);
+                      }}
+                    >
+                      CSV / spreadsheet
+                    </button>
+                    {process.env.NODE_ENV !== "production" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMode("training");
+                          setChoosing(false);
+                        }}
+                      >
+                        Training plan
+                      </button>
+                    )}
+                  </div>
+                </details>
               </div>
+              <div className="tempo-preview">
+                <TempoGoalCard
+                  fields={createDefaultGoalCreationFields()}
+                  visibility={{
+                    category: false,
+                    rhythm: false,
+                    interval: false,
+                    count: false,
+                    schedule: false,
+                    difficulty: false,
+                  }}
+                />
+              </div>
+            </div>
+            <div className="tempo-creation-actions">
               <div className="tempo-footer">
-                <Button
+                <button
                   type="button"
                   disabled={!selection}
                   onClick={() => {
@@ -80,70 +142,12 @@ export function GoalCreationEntry({ onExit }: { onExit?: () => void }) {
                   }}
                 >
                   Continue →
-                </Button>
+                </button>
               </div>
-              <details className="mt-6 text-xs text-muted-foreground">
-                <summary className="cursor-pointer">
-                  Start from a pack or import
-                </summary>
-                <div className="mt-3 flex flex-wrap gap-3">
-                  {STARTER_PACKS.map((pack) => {
-                    const params = new URLSearchParams(searchParams.toString());
-                    params.set("mode", "multi");
-                    params.set("starterPack", pack.key);
-                    return (
-                      <Link
-                        key={pack.key}
-                        href={`?${params.toString()}`}
-                        replace
-                        onClick={() => {
-                          setMode("multi");
-                          setChoosing(false);
-                        }}
-                      >
-                        {pack.label} starter pack
-                      </Link>
-                    );
-                  })}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode("multi");
-                      setChoosing(false);
-                    }}
-                  >
-                    CSV / spreadsheet
-                  </button>
-                  {process.env.NODE_ENV !== "production" && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMode("training");
-                        setChoosing(false);
-                      }}
-                    >
-                      Training plan
-                    </button>
-                  )}
-                </div>
-              </details>
-            </div>
-            <div className="tempo-preview">
-              <TempoGoalCard
-                fields={createDefaultGoalCreationFields()}
-                visibility={{
-                  category: false,
-                  rhythm: false,
-                  interval: false,
-                  count: false,
-                  schedule: false,
-                  difficulty: false,
-                }}
-              />
             </div>
           </div>
         )}
-        <div hidden={choosing}>
+        <div hidden={choosing} className="h-full min-h-0">
           {mode === "single" ? (
             <GoalForm showBackButton={false} onExit={onExit} />
           ) : mode === "multi" ? (

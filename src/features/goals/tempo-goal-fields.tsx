@@ -167,33 +167,34 @@ export function TempoGoalFields({
         canVisit={canVisit}
         disabled={disabled}
       />
-      <motion.div
-        ref={previewRef}
-        tabIndex={-1}
-        className="tempo-preview"
-        layout={!reducedMotion}
-        transition={{ type: "spring", stiffness: 180, damping: 26 }}
-      >
-        {(typeof preview === "function" ? preview(visibility) : preview) ?? (
-          <TempoGoalCard
-            fields={fields}
-            visibility={visibility}
-            isTask={isPlannerTask}
-            taskSchedule={taskSchedule}
-            assembly={reviewAssembly}
-          />
-        )}
-      </motion.div>
-      {step < 3 && (
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={step}
-            className="tempo-workspace"
-            initial={reducedMotion ? false : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-          >
+      <div className="tempo-creation-body" data-tempo-creation-body="">
+        <motion.div
+          ref={previewRef}
+          tabIndex={-1}
+          className="tempo-preview"
+          layout={!reducedMotion}
+          transition={{ type: "spring", stiffness: 180, damping: 26 }}
+        >
+          {(typeof preview === "function" ? preview(visibility) : preview) ?? (
+            <TempoGoalCard
+              fields={fields}
+              visibility={visibility}
+              isTask={isPlannerTask}
+              taskSchedule={taskSchedule}
+              assembly={reviewAssembly}
+            />
+          )}
+        </motion.div>
+        {step < 3 && (
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={step}
+              className="tempo-workspace"
+              initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+            >
             <h2 ref={heading} tabIndex={-1} className="tempo-heading">
               {
                 [
@@ -369,20 +370,24 @@ export function TempoGoalFields({
                 {error}
               </p>
             )}
-            <div className="tempo-footer">
-              <Button
-                type="button"
-                disabled={disabled || !currentValid}
-                onClick={() => go(step + 1)}
-              >
-                Continue →
-              </Button>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      )}
-      {step === 3 && (
-        <div className="tempo-review-action">
+            </motion.div>
+          </AnimatePresence>
+        )}
+      </div>
+      <div className="tempo-creation-actions" data-tempo-creation-actions="">
+        {step < 3 && (
+          <div className="tempo-footer">
+            <Button
+              type="button"
+              disabled={disabled || !currentValid}
+              onClick={() => go(step + 1)}
+            >
+              Continue →
+            </Button>
+          </div>
+        )}
+        {step === 3 && (
+          <div className="tempo-review-action">
           {!isPlannerTask && (
             <p className="tempo-plaque-copy">
               Your target before earning this achievement plaque will be{" "}
@@ -416,8 +421,9 @@ export function TempoGoalFields({
               {error}
             </p>
           )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

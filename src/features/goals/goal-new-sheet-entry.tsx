@@ -33,8 +33,14 @@ export function GoalNewSheetEntry() {
   }, [closeSheet, router]);
 
   return (
-    <GoalRouteSheet onClose={handleDismiss} title="Create goal">
-      <GoalCreationEntry onExit={handleComplete} />
+    <GoalRouteSheet
+      onClose={handleDismiss}
+      title="Create goal"
+      bodyClassName="overflow-hidden"
+    >
+      <div className="h-full min-h-0" data-tempo-creation-panel="">
+        <GoalCreationEntry onExit={handleComplete} />
+      </div>
     </GoalRouteSheet>
   );
 }

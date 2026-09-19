@@ -416,16 +416,18 @@ export function BulkGoalForm({
     />
   );
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex h-full min-h-0 flex-col gap-5">
       {drafts.length === 0 ? (
         <div className="tempo-creation tempo-ai-entry w-full">
           <TempoStepNavigation step={1} disabled={parsing} />
-          <div className="tempo-workspace">{inputCard}</div>
-          <div className="tempo-preview">
-            <TempoAiDraftPreview
-              parsing={parsing}
-              importing={inputMode === "csv"}
-            />
+          <div className="tempo-creation-body">
+            <div className="tempo-workspace">{inputCard}</div>
+            <div className="tempo-preview">
+              <TempoAiDraftPreview
+                parsing={parsing}
+                importing={inputMode === "csv"}
+              />
+            </div>
           </div>
         </div>
       ) : (
@@ -472,29 +474,31 @@ export function BulkGoalForm({
       ) : null}
 
       {drafts.length > 0 && (
-        <TempoGoalStack
-          drafts={drafts}
-          setDrafts={setDrafts}
-          saving={saving}
-          onCreate={createSelectedGoals}
-          availableGoals={availableGoals}
-          editingDisabled={Boolean(
-            initializing || parsing || saving || linkRecovery || createRecovery,
-          )}
-          createLabel={createRecovery ? "Retry creating goals" : undefined}
-          createDisabledMessage={
-            linkRecovery
-              ? "Goals were created, but their links still need to be saved."
-              : createRecovery
-                ? "Goal creation was not confirmed; retry to reconcile the retained draft."
-                : null
-          }
-          emptyMessage={
-            inputMode === "natural_language"
-              ? "Parse natural language input to generate drafts."
-              : "Parse CSV input or upload a file to generate drafts."
-          }
-        />
+        <div className="min-h-0 flex-1">
+          <TempoGoalStack
+            drafts={drafts}
+            setDrafts={setDrafts}
+            saving={saving}
+            onCreate={createSelectedGoals}
+            availableGoals={availableGoals}
+            editingDisabled={Boolean(
+              initializing || parsing || saving || linkRecovery || createRecovery,
+            )}
+            createLabel={createRecovery ? "Retry creating goals" : undefined}
+            createDisabledMessage={
+              linkRecovery
+                ? "Goals were created, but their links still need to be saved."
+                : createRecovery
+                  ? "Goal creation was not confirmed; retry to reconcile the retained draft."
+                  : null
+            }
+            emptyMessage={
+              inputMode === "natural_language"
+                ? "Parse natural language input to generate drafts."
+                : "Parse CSV input or upload a file to generate drafts."
+            }
+          />
+        </div>
       )}
     </div>
   );

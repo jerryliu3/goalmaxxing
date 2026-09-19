@@ -50,6 +50,14 @@ function renderCreation(
 }
 
 describe("TempoGoalFields creation flow", () => {
+  it("keeps the current step action outside the scrollable creation body", () => {
+    renderCreation();
+
+    const continueButton = screen.getByRole("button", { name: /Continue/ });
+    expect(continueButton.closest("[data-tempo-creation-actions]")).not.toBeNull();
+    expect(continueButton.closest("[data-tempo-creation-body]")).toBeNull();
+  });
+
   it("keeps difficulty on the intention step under category", () => {
     const { onPatch } = renderCreation();
     expect(screen.queryByRole("group", { name: "Difficulty" })).toBeNull();
@@ -91,7 +99,9 @@ describe("TempoGoalFields creation flow", () => {
     const input = screen.getByLabelText("Plaque completion target");
     expect(input).toHaveAttribute("type", "number");
     expect(Number((input as HTMLInputElement).value)).toBeGreaterThanOrEqual(1);
-    expect(screen.getByRole("button", { name: "Create goal" })).toBeVisible();
+    const createGoal = screen.getByRole("button", { name: "Create goal" });
+    expect(createGoal).toBeVisible();
+    expect(createGoal.closest("[data-tempo-creation-actions]")).not.toBeNull();
 
     fireEvent.change(input, { target: { value: "9" } });
     expect(input).toHaveValue(9);

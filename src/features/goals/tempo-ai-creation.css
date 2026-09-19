@@ -398,8 +398,8 @@
   }
 }
 @media (max-width: 767px) {
-  .tempo-creation.tempo-ai-entry {
-    grid-template-areas: "steps" "workspace" "preview";
+  .tempo-creation.tempo-ai-entry .tempo-creation-body {
+    grid-template-areas: "workspace" "preview";
   }
   .tempo-ai-heading h2 {
     font-size: 2rem;

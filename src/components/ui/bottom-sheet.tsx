@@ -23,6 +23,7 @@ type SheetChromeProps = {
   header?: ReactNode;
   children: ReactNode;
   contentClassName?: string;
+  bodyClassName?: string;
   contentStyle?: CSSProperties;
   testId?: string;
   frameClassName: string;
@@ -37,6 +38,7 @@ function SheetDialog({
   header,
   children,
   contentClassName,
+  bodyClassName,
   contentStyle,
   testId,
   frameClassName,
@@ -85,7 +87,13 @@ function SheetDialog({
         {!header && !description ? (
           <DialogDescription className="sr-only">{title}</DialogDescription>
         ) : null}
-        <div className="min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div
+          data-slot="sheet-body"
+          className={cn(
+            "min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+            bodyClassName,
+          )}
+        >
           {children}
         </div>
       </DialogContent>

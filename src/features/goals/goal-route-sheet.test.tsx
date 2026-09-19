@@ -10,13 +10,20 @@ describe("GoalRouteSheet", () => {
 
   it("renders sheet content", () => {
     render(
-      <GoalRouteSheet onClose={vi.fn()} title="Create goal">
+      <GoalRouteSheet
+        onClose={vi.fn()}
+        title="Create goal"
+        bodyClassName="overflow-hidden"
+      >
         <div>Goal sheet body</div>
       </GoalRouteSheet>
     );
 
     expect(screen.getByText("Goal sheet body")).toBeVisible();
     expect(screen.getByTestId("goal-route-sheet")).toHaveClass("rounded-t-3xl");
+    expect(
+      screen.getByText("Goal sheet body").closest('[data-slot="sheet-body"]'),
+    ).toHaveClass("overflow-hidden");
   });
 
   it("closes when the close button is pressed", async () => {

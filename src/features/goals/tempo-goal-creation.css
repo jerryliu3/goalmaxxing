@@ -1,12 +1,27 @@
 .tempo-creation {
   --goal-color: #b99060;
   display: grid;
-  grid-template-areas: "steps" "preview" "workspace";
+  grid-template-areas: "steps" "body" "actions";
+  grid-template-rows: auto auto auto;
   gap: 2rem;
   align-items: start;
   max-width: 68rem;
   margin: auto;
   padding: 0.5rem 0 1rem;
+}
+.tempo-creation-body {
+  grid-area: body;
+  display: grid;
+  grid-template-areas: "preview" "workspace";
+  gap: 2rem;
+  min-width: 0;
+}
+.tempo-creation-actions {
+  grid-area: actions;
+  min-width: 0;
+}
+.tempo-creation-actions .tempo-footer {
+  margin-top: 0;
 }
 .tempo-preview {
   grid-area: preview;
@@ -347,10 +362,13 @@
 }
 @media (min-width: 768px) {
   .tempo-creation {
-    grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.85fr);
-    grid-template-areas: "steps steps" "workspace preview";
     gap: 2.5rem;
     padding: 1rem;
+  }
+  .tempo-creation-body {
+    grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.85fr);
+    grid-template-areas: "workspace preview";
+    gap: 2.5rem;
   }
   .tempo-preview {
     position: sticky;
@@ -957,18 +975,14 @@
   inline-size: 7.88cqi;
   block-size: 7.88cqi;
 }
-.tempo-creation.tempo-creation-review {
-  grid-template-areas: "steps steps" "preview preview" "action action";
+.tempo-creation-review .tempo-creation-body {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "preview";
 }
-.tempo-creation-review > .tempo-preview {
+.tempo-creation-review .tempo-preview {
   position: relative;
   top: auto;
-  /*
-   * Review has the step rail above and the plaque/action row below. Reserve
-   * that space first, then let the reference-ratio card grow into any
-   * remaining height instead of pushing Create goal below the fold.
-   */
-  width: min(100%, max(14rem, calc((100dvh - 20rem) * 330 / 382)));
+  width: min(100%, 20.625rem);
   justify-self: center;
   outline: none;
 }
@@ -979,6 +993,7 @@
   align-items: center;
   gap: 0.85rem;
   width: min(100%, 420px);
+  margin-inline: auto;
   justify-self: center;
 }
 .tempo-plaque-copy {
@@ -1007,22 +1022,22 @@
   padding-inline: 2rem;
 }
 @media (max-width: 767px) {
-  .tempo-creation.tempo-creation-review {
-    grid-template-areas: "steps" "preview" "action";
+  .tempo-creation-review .tempo-creation-body {
+    grid-template-areas: "preview";
   }
 }
 /* Phones, including landscape, contain the same reference face against their
    shorter axis rather than changing its proportion or internal type scale. */
 @media (max-width: 767px), (max-height: 540px) {
-  .tempo-creation {
+  .tempo-creation-body {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "steps" "preview" "workspace";
+    grid-template-areas: "preview" "workspace";
   }
-  .tempo-creation.tempo-creation-review {
-    grid-template-areas: "steps" "preview" "action";
+  .tempo-creation-review .tempo-creation-body {
+    grid-template-areas: "preview";
   }
   .tempo-preview,
-  .tempo-creation-review > .tempo-preview {
+  .tempo-creation-review .tempo-preview {
     container-type: inline-size;
     position: relative;
     top: auto;
@@ -1030,4 +1045,39 @@
     margin-inline: auto;
     justify-self: center;
   }
+}
+
+/* The intercepted new-goal sheet gives creation a fixed panel. The rail and
+   action row stay present while the middle region owns deliberate scrolling. */
+[data-tempo-creation-panel] .tempo-creation {
+  flex: 1 1 auto;
+  block-size: 100%;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+[data-tempo-creation-panel] .tempo-creation-body {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-inline: .25rem;
+  scrollbar-width: none;
+}
+[data-tempo-creation-panel] .tempo-creation-body::-webkit-scrollbar {
+  display: none;
+}
+[data-tempo-creation-panel] .tempo-creation-actions {
+  position: relative;
+  z-index: 1;
+  padding-top: 1rem;
+}
+[data-tempo-creation-panel] .tempo-creation-review .tempo-creation-body {
+  container-type: size;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+[data-tempo-creation-panel] .tempo-creation-review .tempo-preview {
+  width: min(100%, calc(100cqh * 330 / 382));
+  max-block-size: 100%;
 }

@@ -16,6 +16,7 @@ interface GoalRouteSheetProps {
   onClose: () => void;
   title: string;
   closeButtonLabel?: string;
+  bodyClassName?: string;
 }
 
 const MOBILE_SHEET_BREAKPOINT_QUERY = "(max-width: 767px)";
@@ -26,6 +27,7 @@ export function GoalRouteSheet({
   onClose,
   title,
   closeButtonLabel = "Close goal editor",
+  bodyClassName,
 }: GoalRouteSheetProps) {
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
   const isMobileViewport = useMediaQuery(MOBILE_SHEET_BREAKPOINT_QUERY);
@@ -87,6 +89,7 @@ export function GoalRouteSheet({
       title={title}
       testId="goal-route-sheet"
       contentClassName="h-[min(92dvh,100dvh)] max-h-[92dvh] md:w-[min(100vw-3rem,64rem)] md:max-w-[64rem] md:h-[88dvh] md:max-h-[88dvh]"
+      bodyClassName={bodyClassName}
       header={
         <div
           className="border-b bg-background/95 px-4 pb-3 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur supports-[backdrop-filter]:bg-background/80"

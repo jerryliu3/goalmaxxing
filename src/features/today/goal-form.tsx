@@ -130,7 +130,7 @@ export function GoalForm({
       className={
         isEditing
           ? "gap-6 shadow-sm"
-          : "gap-0 border-0 bg-transparent py-0 shadow-none"
+          : "h-full min-h-0 gap-0 border-0 bg-transparent py-0 shadow-none"
       }
     >
       {isEditing ? (
@@ -162,7 +162,7 @@ export function GoalForm({
           )}
         </div>
       ) : null}
-      <CardContent className={isEditing ? "space-y-6" : "px-2 sm:px-4"}>
+      <CardContent className={isEditing ? "space-y-6" : "flex h-full min-h-0 flex-col px-2 sm:px-4"}>
         {recovery ? (
           <GoalFormRecoveryAlert
             kind={recovery.kind}
@@ -189,7 +189,7 @@ export function GoalForm({
         ) : null}
         <form
           id={goalFormId}
-          className="space-y-6"
+          className={isEditing ? "space-y-6" : "flex min-h-0 flex-1 flex-col"}
           onSubmit={(event) => {
             if (!isEditing && !createReady && !recovery) {
               event.preventDefault();
