@@ -116,11 +116,11 @@
 }
 .tempo-heading {
   font-family: var(--font-geist-sans), sans-serif;
-  font-size: clamp(1.65rem, 3vw, 2.3rem);
+  font-size: clamp(1.45rem, 2.6vw, 2rem);
   font-weight: 800;
   letter-spacing: -0.055em;
   line-height: 1.08;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.2rem;
   outline: none;
 }
 .tempo-fields {
@@ -143,9 +143,9 @@
   gap: 0.5rem;
 }
 .tempo-title-input {
-  font-size: 1.15rem !important;
-  height: 3.25rem !important;
-  border-radius: 0.85rem;
+  font-size: 1rem !important;
+  height: 2.875rem !important;
+  border-radius: 0.75rem;
 }
 .tempo-fields textarea {
   display: block;
@@ -726,24 +726,24 @@
 }
 .tempo-methods button {
   display: grid;
-  grid-template-columns: 36px 1fr;
-  gap: 0.35rem 0.65rem;
-  padding: 1.25rem;
+  grid-template-columns: 30px 1fr;
+  gap: 0.25rem 0.55rem;
+  padding: 1rem;
   border: 1px solid var(--border);
-  border-radius: 1.2rem;
+  border-radius: 1rem;
   text-align: left;
   cursor: pointer;
   background: color-mix(in srgb, #b99060 5%, var(--background));
 }
 .tempo-methods button > span {
   grid-row: span 2;
-  font-size: 1.7rem;
+  font-size: 1.45rem;
 }
 .tempo-methods button strong {
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 .tempo-methods button small {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--muted-foreground);
 }
 .tempo-methods button[aria-pressed="true"] {
