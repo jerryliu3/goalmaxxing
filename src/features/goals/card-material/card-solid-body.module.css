@@ -1,5 +1,5 @@
 .body { position: absolute; inset: 0; pointer-events: none; transform-style: preserve-3d; }
-.back { position: absolute; inset: 0; border-radius: var(--card-radius); display: grid; place-items: center; background: radial-gradient(ellipse at 25% 20%,#fff3,transparent 65%),var(--edge); transform: translateZ(calc(-1 * var(--card-depth))) rotateY(180deg); backface-visibility: hidden; box-shadow: 0 22px 30px #1720152e; }
+.back { position: absolute; inset: 0; border-radius: var(--card-radius); display: grid; place-items: center; background: radial-gradient(ellipse at 25% 20%,#fff3,transparent 65%),var(--edge); transform: translateZ(calc(-1 * var(--card-depth))) rotateY(180deg); backface-visibility: hidden; box-shadow: 0 5.37cqi 7.32cqi #1720152e; }
 .side { position: absolute; background: linear-gradient(0deg,#0003,#fff5),var(--edge); backface-visibility: hidden; filter: brightness(calc(.85 + .3 * (var(--nx) * var(--rim-light-x, -.4) + var(--ny) * var(--rim-light-y, -.4)))); }
 .top, .bottom { left: var(--card-radius); width: calc(100% - 2 * var(--card-radius)); height: var(--card-depth); transform-origin: top center; }
 .top { --nx: 0; --ny: -1; top: 0; transform: translateZ(calc(-1 * var(--card-depth))) rotateX(90deg); }
@@ -12,9 +12,9 @@
 .topRight { top: 0; right: 0; }
 .bottomLeft { bottom: 0; left: 0; }
 .bottomRight { bottom: 0; right: 0; }
-.facet { left: calc(50% + var(--card-radius) * var(--cx)); top: calc(50% + var(--card-radius) * var(--cy)); width: calc(var(--card-radius) * .19603428 + .3px); margin-left: calc(var(--card-radius) * -.09801714 - .15px); height: var(--card-depth); transform-origin: top center; transform: translateZ(calc(-1 * var(--card-depth))) rotateZ(var(--turn)) rotateX(90deg); }
+.facet { left: calc(50% + var(--card-radius) * var(--cx)); top: calc(50% + var(--card-radius) * var(--cy)); width: calc(var(--card-radius) * .19603428 + .073cqi); margin-left: calc(var(--card-radius) * -.09801714 - .037cqi); height: var(--card-depth); transform-origin: top center; transform: translateZ(calc(-1 * var(--card-depth))) rotateZ(var(--turn)) rotateX(90deg); }
 @media (forced-colors: active) { .body { display: none; } }
 
-.back::after { content: ""; position: absolute; inset: 12px; border: 1px solid #ffffff40; border-radius: max(2px,calc(var(--card-radius) - 8px)); }
-.backMark { text-align: center; font-family: var(--font-display); font-size: 4rem; color: #fff9; text-shadow: 0 1px 2px #0005; }
-.backMark > span { display: block; font-family: var(--font-mono); letter-spacing: .2em; font-size: .55rem; margin-top: .75rem; }
+.back::after { content: ""; position: absolute; inset: 2.93cqi; border: 1px solid #ffffff40; border-radius: max(.49cqi,calc(var(--card-radius) - 1.95cqi)); }
+.backMark { text-align: center; font-family: var(--font-display); font-size: 15.61cqi; color: #fff9; text-shadow: 0 .24cqi .49cqi #0005; }
+.backMark > span { display: block; font-family: var(--font-mono); letter-spacing: .2em; font-size: 2.15cqi; margin-top: 2.93cqi; }

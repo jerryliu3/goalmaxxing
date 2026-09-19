@@ -47,6 +47,12 @@ describe("TempoGoalCard materials", () => {
     ).toHaveAttribute("data-material", "glass");
   });
 
+  it("renders every production card inside the canonical scalable face", () => {
+    const card = renderCard();
+    expect(card).toHaveAttribute("data-tempo-goal-card", "");
+    expect(card.parentElement).toHaveClass("tempo-card-frame");
+  });
+
   it("maps medium goals to anodized alloy", () => {
     expect(
       renderCard({ fields: { ...baseFields, difficulty: "medium" } })

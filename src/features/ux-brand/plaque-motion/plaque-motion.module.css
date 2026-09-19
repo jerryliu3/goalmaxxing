@@ -27,18 +27,19 @@
 .notes summary { color: var(--foreground); cursor: pointer; }
 .notes p { max-width: 52rem; margin-top: 1rem; }
 
-/* Whole face, clipped material copies, and the existing empty face share a 3:4
-   box. Viewport tempo-card min-heights must not squash or stretch it. */
+/* Whole face, clipped material copies, and the empty face share the canonical
+   TempoGoalCard square. */
 .plaque {
   position: relative;
   isolation: isolate;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 1;
   width: min(18rem, 100%);
   min-height: 0;
   margin-inline: auto;
 }
 .plaque :global(.tempo-card-object) { transform: none; width: 100%; height: 100%; }
 .plaque :global(.tempo-card-surface) { perspective: none; width: 100%; height: 100%; }
+.plaque :global(.tempo-card-frame) { width: 100%; height: 100%; aspect-ratio: auto; }
 .plaque :global(.tempo-card) { width: 100%; height: 100%; min-height: 0; }
 .solid { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
 .solid[data-visible="true"] { opacity: 1; }
@@ -78,46 +79,13 @@
   top: 50%;
   z-index: 2;
   transform: translate(-50%,-50%);
-  aspect-ratio: 3 / 4;
-  container-type: inline-size;
+  aspect-ratio: 1;
   /* Shorter Cursor panes and taller desktop windows share one contain-fit. */
   width: min(15.5rem, calc(100% - 32px));
-  width: min(15.5rem, calc(100% - 32px), calc(100cqh * 3 / 4));
+  width: min(15.5rem, calc(100% - 32px), 100cqh);
   height: auto;
 }
 .heroAnchor .plaque { width: 100%; height: 100%; aspect-ratio: auto; }
-.heroAnchor :global(.tempo-card) {
-  box-sizing: border-box;
-  min-width: 0;
-  min-height: 0;
-  padding: clamp(.85rem, 7cqi, 1.1rem);
-  gap: clamp(.5rem, 5cqi, .8rem);
-}
-.heroAnchor :global(.tempo-card > *) { min-width: 0; }
-.heroAnchor :global(.tempo-card-meta) {
-  gap: clamp(.4rem, 4cqi, .65rem);
-  font-size: clamp(.48rem, 3cqi, .62rem);
-}
-.heroAnchor :global(.tempo-card-arrow) {
-  width: clamp(1rem, 7cqi, 1.35rem);
-  height: clamp(1rem, 7cqi, 1.35rem);
-}
-.heroAnchor :global(.tempo-card-target) {
-  gap: clamp(.4rem, 4cqi, .65rem);
-  margin: .15rem 0;
-}
-.heroAnchor :global(.tempo-card-target strong) { font-size: clamp(3.5rem, 28cqi, 4.5rem); }
-.heroAnchor :global(.tempo-card-target > span) {
-  min-width: 0;
-  max-width: 5.25rem;
-  font-size: clamp(.75rem, 5cqi, .95rem);
-}
-.heroAnchor :global(.tempo-card h2) {
-  max-width: 100%;
-  font-size: clamp(1.05rem, 8cqi, 1.4rem);
-}
-.heroAnchor :global(.tempo-card-period) { font-size: clamp(.65rem, 3.5cqi, .8rem); }
-.heroAnchor :global(.tempo-card-dates) { font-size: clamp(.52rem, 2.7cqi, .62rem); }
 .ceremony[data-ready="false"] .heroFlight { visibility: hidden; }
 .heroFlight { position: absolute; inset: 0; }
 .ceremony[data-phase="lift"][data-ready="true"] .heroFlight { animation: lift .72s cubic-bezier(.22,1,.36,1) both; }
@@ -161,7 +129,7 @@
   .ceremonyHeader { padding: 1rem 1rem 0; }
   .heroAnchor {
     width: min(14.5rem, calc(100% - 20px));
-    width: min(14.5rem, calc(100% - 20px), calc(100cqh * 3 / 4));
+    width: min(14.5rem, calc(100% - 20px), 100cqh);
   }
   .burst { left: 12%; }
 }

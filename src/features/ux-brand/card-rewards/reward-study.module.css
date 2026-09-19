@@ -25,9 +25,6 @@
 .conceptHeader p { font-size: .8rem; color: var(--study-muted); margin: 0 0 1rem; }
 .stage { overflow: hidden; min-height: 480px; padding: 2.5rem; background: var(--study-ground) !important; }
 .artwork { width: 100%; max-width: 330px; container-type: inline-size; perspective: 1200px; filter: var(--reward-filter); transition: filter 850ms ease; }
-.stage [data-card-object] :global(.tempo-card-target) { gap: clamp(.5rem,3.5cqi,1rem); }
-.stage [data-card-object] :global(.tempo-card-target strong) { font-size: clamp(58px,27cqi,90px); }
-.stage [data-card-object] :global(.tempo-card-target > span) { font-size: clamp(.875rem,5cqi,1.125rem); }
 /* The preview uses tilt, leaving touch available for scrolling the gallery. */
 .stage [data-card-object] { cursor: default !important; touch-action: pan-y !important; }
 .caption { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-top: .8rem; }

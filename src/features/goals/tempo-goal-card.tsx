@@ -88,90 +88,93 @@ export function TempoGoalCard({
       : resolveTempoCardMaterial(isTask ? "easy" : fields.difficulty);
   const goalColor = visibility.category ? fields.color : "#b99060";
   const card = (
-    <article
-      className="tempo-card"
-      data-empty={!visibility.category}
-      data-effort={visibility.difficulty ? effort : undefined}
-      data-material={material}
-      style={{ "--goal-color": goalColor } as CSSProperties}
-      aria-label={
-        context === "history"
-          ? `${fields.title} goal card`
-          : "Goal card preview"
-      }
-    >
-      <div className="tempo-card-meta">
-        <span>
-          {context === "history"
-            ? achieved
-              ? "A goal you accomplished"
-              : "A goal you showed up for"
-            : "Your commitment, taking shape"}
-        </span>
-        {visibility.schedule && fields.is_private && <span>Private</span>}
-        <ArrowUpRight
-          className="tempo-card-arrow"
-          size={26}
-          strokeWidth={1.5}
-          aria-hidden="true"
-        />
-      </div>
-      <div className="tempo-card-target">
-        <strong>
+    <div className="tempo-card-frame">
+      <article
+        className="tempo-card"
+        data-tempo-goal-card=""
+        data-empty={!visibility.category}
+        data-effort={visibility.difficulty ? effort : undefined}
+        data-material={material}
+        style={{ "--goal-color": goalColor } as CSSProperties}
+        aria-label={
+          context === "history"
+            ? `${fields.title} goal card`
+            : "Goal card preview"
+        }
+      >
+        <div className="tempo-card-meta">
+          <span>
+            {context === "history"
+              ? achieved
+                ? "A goal you accomplished"
+                : "A goal you showed up for"
+              : "Your commitment, taking shape"}
+          </span>
+          {visibility.schedule && fields.is_private && <span>Private</span>}
+          <ArrowUpRight
+            className="tempo-card-arrow"
+            size={26}
+            strokeWidth={1.5}
+            aria-hidden="true"
+          />
+        </div>
+        <div className="tempo-card-target">
+          <strong>
+            {renderLettering(
+              hasCount ? String(isTask ? 1 : count).padStart(2, "0") : "—",
+              "display",
+            )}
+          </strong>
+          {hasCount && <span>{renderLettering(unit, "supporting")}</span>}
+        </div>
+        <h2>
           {renderLettering(
-            hasCount ? String(isTask ? 1 : count).padStart(2, "0") : "—",
-            "display",
+            fields.title.trim() || "Something worth starting.",
+            "title",
           )}
-        </strong>
-        {hasCount && <span>{renderLettering(unit, "supporting")}</span>}
-      </div>
-      <h2>
-        {renderLettering(
-          fields.title.trim() || "Something worth starting.",
-          "title",
-        )}
-      </h2>
-      <div className="tempo-card-period-row">
-        <span className="tempo-card-period">
-          {visibility.category && !isTask
-            ? getCategoryLabel(
-                fields.category_selection,
-                fields.custom_category,
-              )
-            : ""}
-        </span>
-        {visibility.difficulty && !isTask && (
-          <div className="tempo-card-effort">
-            <span className="tempo-effort-bars" aria-hidden="true">
-              {[1, 2, 3].map((level) => (
-                <i
-                  key={level}
-                  data-active={level <= effort}
-                  style={{ height: 6 + level * 6 }}
-                />
-              ))}
+        </h2>
+        <div className="tempo-card-period-row">
+          <span className="tempo-card-period">
+            {visibility.category && !isTask
+              ? getCategoryLabel(
+                  fields.category_selection,
+                  fields.custom_category,
+                )
+              : ""}
+          </span>
+          {visibility.difficulty && !isTask && (
+            <div className="tempo-card-effort">
+              <span className="tempo-effort-bars" aria-hidden="true">
+                {[1, 2, 3].map((level) => (
+                  <i
+                    key={level}
+                    data-active={level <= effort}
+                    data-level={level}
+                  />
+                ))}
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="tempo-card-meta tempo-card-dates">
+          <span>{isTask ? taskSchedule?.date : `From ${fields.start_date}`}</span>
+          {visibility.schedule && (
+            <span>
+              {isTask
+                ? taskSchedule?.time || "Any time"
+                : fields.end_date
+                  ? `Until ${fields.end_date}`
+                  : ""}
             </span>
+          )}
+        </div>
+        {visibility.schedule && !isTask && fields.default_local_time && (
+          <div className="tempo-card-meta">
+            <span>{fields.default_local_time}</span>
           </div>
         )}
-      </div>
-      <div className="tempo-card-meta tempo-card-dates">
-        <span>{isTask ? taskSchedule?.date : `From ${fields.start_date}`}</span>
-        {visibility.schedule && (
-          <span>
-            {isTask
-              ? taskSchedule?.time || "Any time"
-              : fields.end_date
-                ? `Until ${fields.end_date}`
-                : ""}
-          </span>
-        )}
-      </div>
-      {visibility.schedule && !isTask && fields.default_local_time && (
-        <div className="tempo-card-meta">
-          <span>{fields.default_local_time}</span>
-        </div>
-      )}
-    </article>
+      </article>
+    </div>
   );
 
   if (!material) {
