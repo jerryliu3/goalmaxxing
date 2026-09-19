@@ -7,6 +7,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { XpProgressCard } from "@/components/xp/xp-progress-card";
 import { ProfileMedalShelf } from "@/features/achievements/profile-medal-shelf";
 import { InsightsOverallStatsCard } from "@/features/insights/insights-overall-stats-card";
+import { ProfileMembershipCard } from "@/features/social/profile-membership-card";
 import { ProfilePresenceSection } from "@/features/social/profile-presence";
 import { PublicProfileCurrentGoals } from "@/features/social/public-profile/public-profile-current-goals";
 import { resolvePublicProfileLabel } from "@/features/social/public-profile/resolve-profile-label";
@@ -55,6 +56,11 @@ export function PublicProfileContent({
         <p className="text-sm text-muted-foreground">This account is private</p>
       ) : variant === "page" ? (
         <>
+          <ProfileMembershipCard
+            profile={bundle.profile}
+            overallStats={bundle.overallStats}
+            currentLevel={bundle.xp?.currentLevel ?? null}
+          />
           <ProfilePresenceSection
             growSeries={bundle.growSeries}
             heatmap={bundle.yearHeatmap}

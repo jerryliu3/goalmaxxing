@@ -53,6 +53,10 @@ vi.mock("@/features/social/profile-section", () => ({
   ProfileSection: () => <div>Profile</div>,
 }));
 
+vi.mock("@/features/social/profile-membership-card", () => ({
+  ProfileMembershipCard: () => null,
+}));
+
 vi.mock("@/features/social/notifications-section", () => ({
   NotificationsSection: () => <div>Notifications body</div>,
 }));
