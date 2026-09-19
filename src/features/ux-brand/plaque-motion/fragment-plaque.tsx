@@ -3,7 +3,7 @@
 import { useMemo, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
-import { buildRewardPieces } from "@/features/goals/card-material/reward-pieces";
+import { buildRewardPieces, pieceScatter } from "@/features/goals/card-material/reward-pieces";
 import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
 import ghostStyles from "@/features/goals/card-material/reassembling-card.module.css";
 import type { PlaquePhase } from "./study-model";
@@ -35,10 +35,9 @@ export function FragmentPlaque({ fields, target, phase, still }: {
     </div>
     {fragmented && <div className={styles.fragments} aria-hidden="true">
       {pieces.map(piece => {
-        const x = piece.points.reduce((sum, p) => sum + p.x, 0) / piece.points.length - 50;
-        const y = piece.points.reduce((sum, p) => sum + p.y, 0) / piece.points.length - 50;
+        const scatter = pieceScatter(piece);
         return <div key={piece.id} className={styles.fragment} data-last={piece.id === pieces.length - 1}
-          style={{ "--scatter-x": `${x * 0.85}px`, "--scatter-y": `${y * 0.85}px`,
+          style={{ "--scatter-x": `${scatter.x}px`, "--scatter-y": `${scatter.y}px`,
             "--turn": `${piece.turn / 8}deg`, "--delay": `${piece.id * 10}ms` } as CSSProperties}>
           <div style={{ clipPath: piece.clipPath }}>{face}</div>
         </div>;

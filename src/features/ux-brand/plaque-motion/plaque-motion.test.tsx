@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PlaqueMotionStudy } from "./plaque-motion-study";
 import { ReviewPreview } from "./review-preview";
@@ -49,19 +49,26 @@ describe("earned plaque ceremony", () => {
     fireEvent.click(screen.getByRole("button", { name: "Complete the final one" }));
   }
 
-  it("fuses before congratulations, waits for the user, and then keeps the book", () => {
+  it("flies in one shard short, seats it, then fuses before congratulations", () => {
     start();
-    expect(screen.getByRole("dialog")).toHaveAttribute("data-phase", "lift");
+    const dialog = screen.getByRole("dialog");
+    const plaque = () => within(dialog).getByTestId("plaque");
+    expect(dialog).toHaveAttribute("data-ready", "true");
+    expect(dialog).toHaveAttribute("data-phase", "lift");
+    expect(plaque()).toHaveAttribute("data-phase", "almost");
     advance(720);
-    expect(screen.getByRole("dialog")).toHaveAttribute("data-phase", "gather");
+    expect(dialog).toHaveAttribute("data-phase", "gather");
+    expect(plaque()).toHaveAttribute("data-phase", "gather");
     advance(1050);
-    expect(screen.getByRole("dialog")).toHaveAttribute("data-phase", "seal");
+    expect(dialog).toHaveAttribute("data-phase", "seal");
+    expect(plaque()).toHaveAttribute("data-phase", "gather");
     advance(420);
     expect(screen.getByText("Your reward · A weekend away")).toBeVisible();
     advance(15000);
-    expect(screen.getByRole("dialog")).toHaveAttribute("data-phase", "celebrate");
+    expect(dialog).toHaveAttribute("data-phase", "celebrate");
+    expect(plaque()).toHaveAttribute("data-phase", "fused");
     fireEvent.click(screen.getByRole("button", { name: "Keep in my book" }));
-    expect(screen.getByRole("dialog")).toHaveAttribute("data-phase", "shelve");
+    expect(dialog).toHaveAttribute("data-phase", "shelve");
     advance(1500);
     expect(screen.getByText("Saved in your 2026 goal book.")).toBeVisible();
   });
@@ -71,6 +78,7 @@ describe("earned plaque ceremony", () => {
     fireEvent.click(screen.getByRole("button", { name: "Skip animation" }));
     advance(5000);
     expect(screen.getByRole("dialog")).toHaveAttribute("data-phase", "celebrate");
+    expect(within(screen.getByRole("dialog")).getByTestId("plaque")).toHaveAttribute("data-phase", "fused");
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     advance(1000);
     expect(screen.queryByRole("dialog")).toBeNull();

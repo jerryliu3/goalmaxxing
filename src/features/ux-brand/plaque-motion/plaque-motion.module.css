@@ -27,11 +27,20 @@
 .notes summary { color: var(--foreground); cursor: pointer; }
 .notes p { max-width: 52rem; margin-top: 1rem; }
 
-/* Whole face, clipped material copies, and the existing empty face share bounds. */
-.plaque { position: relative; isolation: isolate; min-height: 330px; }
-.plaque :global(.tempo-card-object) { transform: none; }
-.plaque :global(.tempo-card-surface) { perspective: none; }
-.solid { opacity: 0; pointer-events: none; }
+/* Whole face, clipped material copies, and the existing empty face share a 3:4
+   box. Viewport tempo-card min-heights must not squash or stretch it. */
+.plaque {
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: 3 / 4;
+  width: min(18rem, 100%);
+  min-height: 0;
+  margin-inline: auto;
+}
+.plaque :global(.tempo-card-object) { transform: none; width: 100%; height: 100%; }
+.plaque :global(.tempo-card-surface) { perspective: none; width: 100%; height: 100%; }
+.plaque :global(.tempo-card) { width: 100%; height: 100%; min-height: 0; }
+.solid { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
 .solid[data-visible="true"] { opacity: 1; }
 .ghost { opacity: 0; }
 .ghost[data-visible="true"] { opacity: 1; }
@@ -39,31 +48,85 @@
 .ghost :global([data-reassembly]) { height: 100%; }
 .outlines { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--muted-foreground); stroke-width: .32; opacity: .6; }
 .fragments, .fragment { position: absolute; inset: 0; pointer-events: none; }
+.fragment > * { width: 100%; height: 100%; }
 .fragment { transition: transform .8s cubic-bezier(.2,.75,.2,1), opacity .7s ease; transition-delay: var(--delay); }
 .plaque[data-phase="etched"] .fragment { transform: translate(calc(var(--scatter-x) * .06),calc(var(--scatter-y) * .06)); }
 .plaque[data-phase="released"] .fragment { transform: translate(var(--scatter-x),var(--scatter-y)) rotate(var(--turn)) scale(.96); opacity: 0; }
 .plaque[data-phase="almost"] .fragment { transform: translate(calc(var(--scatter-x) * .06),calc(var(--scatter-y) * .06)); }
-.plaque[data-phase="almost"] .fragment[data-last="true"] { opacity: 0; transform: translate(55px,-90px) rotate(12deg) scale(1.08); }
+.plaque[data-phase="almost"] .fragment[data-last="true"] { opacity: 0; transform: translate(18%,-22%) rotate(12deg) scale(1.08); }
 .plaque[data-phase="gather"] .fragment { transform: translate(0,0); opacity: 1; }
 .plaque[data-still="true"] .fragment { transition: none; }
 
 .ceremonyBackdrop { position: fixed; inset: 0; z-index: 90; background: color-mix(in srgb,var(--background) 92%,transparent); backdrop-filter: blur(12px); }
 .ceremony { position: fixed; inset: 0; z-index: 91; color: var(--foreground); overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; padding: 3rem 1.5rem 2rem; isolation: isolate; }
-.ceremonyHeader { position: relative; text-align: center; z-index: 3; padding: 1.5rem 2rem 0; }
-.ceremonyHeader h2 { font-family: var(--font-display); font-size: clamp(2rem,5vw,3.7rem); line-height: 1.08; font-weight: 400; letter-spacing: -.035em; margin: .8rem 0; }
+.ceremonyHeader { position: relative; text-align: center; z-index: 3; flex: 0 0 auto; padding: 1.5rem 2rem 0; }
+.ceremonyHeader h2 { font-family: var(--font-display); font-size: clamp(1.7rem,4vw,2.6rem); line-height: 1.08; font-weight: 400; letter-spacing: -.035em; margin: .8rem 0; }
 .ceremonyHeader > p:last-child { font-size: .85rem; color: var(--muted-foreground); }
 .close { position: absolute; right: 1rem; top: 1rem; z-index: 5; }
-.ceremonyStage { flex: 1 0 380px; position: relative; min-height: 380px; width: 100%; max-width: 1000px; margin: 0 auto; }
-.heroAnchor { position: absolute; left: 50%; top: 50%; width: min(420px,calc(100% - 32px)); transform: translate(-50%,-50%); z-index: 2; }
+.ceremonyStage {
+  flex: 1 1 auto;
+  position: relative;
+  min-height: 0;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  container-type: size;
+}
+.heroAnchor {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  transform: translate(-50%,-50%);
+  aspect-ratio: 3 / 4;
+  container-type: inline-size;
+  /* Shorter Cursor panes and taller desktop windows share one contain-fit. */
+  width: min(15.5rem, calc(100% - 32px));
+  width: min(15.5rem, calc(100% - 32px), calc(100cqh * 3 / 4));
+  height: auto;
+}
+.heroAnchor .plaque { width: 100%; height: 100%; aspect-ratio: auto; }
+.heroAnchor :global(.tempo-card) {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(.85rem, 7cqi, 1.1rem);
+  gap: clamp(.5rem, 5cqi, .8rem);
+}
+.heroAnchor :global(.tempo-card > *) { min-width: 0; }
+.heroAnchor :global(.tempo-card-meta) {
+  gap: clamp(.4rem, 4cqi, .65rem);
+  font-size: clamp(.48rem, 3cqi, .62rem);
+}
+.heroAnchor :global(.tempo-card-arrow) {
+  width: clamp(1rem, 7cqi, 1.35rem);
+  height: clamp(1rem, 7cqi, 1.35rem);
+}
+.heroAnchor :global(.tempo-card-target) {
+  gap: clamp(.4rem, 4cqi, .65rem);
+  margin: .15rem 0;
+}
+.heroAnchor :global(.tempo-card-target strong) { font-size: clamp(3.5rem, 28cqi, 4.5rem); }
+.heroAnchor :global(.tempo-card-target > span) {
+  min-width: 0;
+  max-width: 5.25rem;
+  font-size: clamp(.75rem, 5cqi, .95rem);
+}
+.heroAnchor :global(.tempo-card h2) {
+  max-width: 100%;
+  font-size: clamp(1.05rem, 8cqi, 1.4rem);
+}
+.heroAnchor :global(.tempo-card-period) { font-size: clamp(.65rem, 3.5cqi, .8rem); }
+.heroAnchor :global(.tempo-card-dates) { font-size: clamp(.52rem, 2.7cqi, .62rem); }
 .ceremony[data-ready="false"] .heroFlight { visibility: hidden; }
-.heroFlight { position: relative; }
+.heroFlight { position: absolute; inset: 0; }
 .ceremony[data-phase="lift"][data-ready="true"] .heroFlight { animation: lift .72s cubic-bezier(.22,1,.36,1) both; }
 @keyframes lift { from { transform: translate(var(--origin-x),var(--origin-y)) scale(var(--origin-scale)); } 75% { transform: translateY(-10px) scale(1.025); } to { transform: none; } }
 .sealLight { position: absolute; inset: -12px; border-radius: 20px; box-shadow: 0 0 55px 15px #b6a3ff80; pointer-events: none; animation: seal .42s ease-out both; }
 @keyframes seal { from { opacity: 0; transform: scale(.97); } 35% { opacity: .75; } to { opacity: 0; transform: scale(1.1); } }
 .atmosphere { position: absolute; inset: 0; pointer-events: none; z-index: -1; opacity: 0; background: radial-gradient(ellipse at 25% 48%,#8b5cf630,transparent 55%),radial-gradient(ellipse at 80% 60%,#dda67730,transparent 50%); transition: opacity 1.2s; }
 .ceremony[data-grand="true"][data-phase="celebrate"] .atmosphere { opacity: 1; }
-.ceremonyFooter { min-height: 150px; text-align: center; position: relative; z-index: 3; max-width: 600px; width: 100%; margin: 0 auto; }
+.ceremonyFooter { flex: 0 0 auto; min-height: 11rem; text-align: center; position: relative; z-index: 3; max-width: 600px; width: 100%; margin: 0 auto; }
 .ceremonyFooter h3 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 400; }
 .ceremonyFooter p { font-size: .9rem; color: var(--muted-foreground); margin-top: .6rem; overflow-wrap: anywhere; }
 .ceremonyFooter .actions { justify-content: center; }
@@ -96,8 +159,10 @@
   .settings input:not([type="checkbox"]), .settings select { font-size: 16px; }
   .ceremony { padding: 2.5rem .75rem 1.5rem; }
   .ceremonyHeader { padding: 1rem 1rem 0; }
-  .ceremonyStage { flex-basis: 400px; min-height: 400px; }
-  .heroAnchor { width: min(370px,calc(100% - 20px)); }
+  .heroAnchor {
+    width: min(14.5rem, calc(100% - 20px));
+    width: min(14.5rem, calc(100% - 20px), calc(100cqh * 3 / 4));
+  }
   .burst { left: 12%; }
 }
 @media (prefers-reduced-motion: reduce) {

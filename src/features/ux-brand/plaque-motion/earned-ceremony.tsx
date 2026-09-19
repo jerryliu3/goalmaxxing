@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { Button } from "@/components/ui/button";
 import { FolioBook } from "@/features/insights/folio/folio-book";
@@ -12,20 +12,38 @@ import styles from "./plaque-motion.module.css";
 
 export type FlightOrigin = { left: number; top: number; width: number; height: number };
 
+function flightFrom(origin: FlightOrigin, rect: DOMRect) {
+  return {
+    x: origin.left + origin.width / 2 - rect.left - rect.width / 2,
+    y: origin.top + origin.height / 2 - rect.top - rect.height / 2,
+    // A 0×0 origin or destination would scale the plaque out of existence.
+    scale: rect.width > 0 && origin.width > 0 ? origin.width / rect.width : 1,
+    ready: true,
+  };
+}
+
+/** Lift arrives one shard short. Gather seats that shard. Seal keeps the cracks
+ *  while the light plays; the fused face replaces them at congratulations. */
+function plaquePhaseFor(phase: CeremonyPhase): PlaquePhase {
+  if (phase === "lift") return "almost";
+  if (phase === "gather" || phase === "seal") return "gather";
+  return "fused";
+}
+
 export function EarnedCeremony({ fields, target, reward, still, grand, origin, onClose }: {
   fields: GoalCreationFields; target: number; reward: string; still: boolean; grand: boolean;
   origin: FlightOrigin; onClose: () => void;
 }) {
   const [phase, setPhase] = useState<CeremonyPhase>(still ? "celebrate" : "lift");
   const [flight, setFlight] = useState({ x: 0, y: 0, scale: 1, ready: false });
-  const anchor = useRef<HTMLDivElement>(null);
+  // Radix Portal returns null on its first paint, then mounts into document.body.
+  // A ref object would miss that commit and never retry, leaving the plaque
+  // `visibility: hidden` for the whole ceremony (study and production share this).
+  const [anchor, setAnchor] = useState<HTMLDivElement | null>(null);
   useLayoutEffect(() => {
-    const rect = anchor.current?.getBoundingClientRect();
-    if (!rect) return;
-    setFlight({ x: origin.left + origin.width / 2 - rect.left - rect.width / 2,
-      y: origin.top + origin.height / 2 - rect.top - rect.height / 2,
-      scale: rect.width ? origin.width / rect.width : 1, ready: true });
-  }, [origin]);
+    if (!anchor) return;
+    setFlight(flightFrom(origin, anchor.getBoundingClientRect()));
+  }, [anchor, origin]);
   useEffect(() => {
     if (!flight.ready) return;
     if (still && phase !== "celebrate" && phase !== "kept") {
@@ -38,9 +56,7 @@ export function EarnedCeremony({ fields, target, reward, still, grand, origin, o
     return () => window.clearTimeout(timer);
   }, [phase, still, flight.ready]);
   const inBook = phase === "shelve" || phase === "kept";
-  // Keep the complete material face visible during the lift. The final piece
-  // choreography starts only after the card has arrived in the ceremony.
-  const plaquePhase: PlaquePhase = phase === "gather" ? "gather" : "fused";
+  const plaquePhase: PlaquePhase = plaquePhaseFor(phase);
   return <DialogPrimitive.Portal>
     <DialogPrimitive.Overlay className={styles.ceremonyBackdrop} />
     <DialogPrimitive.Content className={styles.ceremony} aria-describedby="ceremony-description"
@@ -61,7 +77,7 @@ export function EarnedCeremony({ fields, target, reward, still, grand, origin, o
             {Array.from({ length: 12 }, (_, ray) => <i key={ray} style={{ "--angle": `${ray * 30}deg` } as CSSProperties} />)}
           </span>)}
         </div>}
-        <div ref={anchor} className={styles.heroAnchor}>
+        <div ref={setAnchor} className={styles.heroAnchor}>
           <div className={styles.heroFlight} style={{ "--origin-x": `${flight.x}px`, "--origin-y": `${flight.y}px`, "--origin-scale": flight.scale } as CSSProperties}>
             <FragmentPlaque fields={fields} target={target} phase={plaquePhase} still={still} />
             {phase === "seal" && !still && <div className={styles.sealLight} aria-hidden="true" />}

@@ -965,7 +965,42 @@
   .tempo-creation.tempo-creation-review {
     grid-template-areas: "steps" "preview" "action";
   }
+}
+/* Phones, including landscape, keep a playing-card ratio and shrink to the
+   shorter axis instead of stretching full width when height is tight. */
+@media (max-width: 767px), (max-height: 540px) {
+  .tempo-creation {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "steps" "preview" "workspace";
+  }
+  .tempo-creation.tempo-creation-review {
+    grid-template-areas: "steps" "preview" "action";
+  }
+  .tempo-preview,
+  .tempo-creation-review > .tempo-preview {
+    container-type: inline-size;
+    position: relative;
+    top: auto;
+    width: min(100%, calc(48dvh * 3 / 4), 20rem);
+    margin-inline: auto;
+    justify-self: center;
+  }
+  .tempo-preview .tempo-card {
+    aspect-ratio: 3 / 4;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+  }
   .tempo-creation-review .tempo-card {
-    min-height: 390px;
+    min-height: 0;
+  }
+  .tempo-preview .tempo-card-target strong {
+    font-size: clamp(2.75rem, 26cqi, 4.5rem);
+  }
+  .tempo-preview .tempo-card h2 {
+    font-size: clamp(1.15rem, 8cqi, 1.5rem);
+  }
+  .tempo-creation-review .tempo-card-target strong {
+    font-size: clamp(3.2rem, 28cqi, 6rem);
   }
 }
