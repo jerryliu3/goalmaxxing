@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GAZETTEER, gazetteerLightTheme } from "@cadence/shared/brand/gazetteer";
+
 import {
   buildGazetteerMonthDayChromePalette,
   resolveGazetteerMonthDayChromeStyle,

@@ -1,5 +1,6 @@
 import { GAZETTEER, GAZETTEER_HEATMAP_SCALE } from "../brand/gazetteer";
 
+
 export interface MonthDayChromeInput {
   inMonth: boolean;
   isToday: boolean;

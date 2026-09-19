@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { ACHIEVEMENT_CONCEPTS } from "@/features/ux-achievements/model";
-import { GAZETTEER } from "@/lib/brand/gazetteer";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
+
 
 export function AchievementsIndex() {
   return (

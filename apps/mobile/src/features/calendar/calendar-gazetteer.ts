@@ -1,4 +1,4 @@
-import { gazetteerFillForGoal } from "@cadence/shared/brand/gazetteer";
+import { categoryFillForGoal } from "@cadence/shared/brand";
 import {
   getGazetteerWorkPillDraftFillStyle,
   getGazetteerWorkPillFillStyle,
@@ -15,7 +15,7 @@ export function resolveMobileSessionFill(
   const goal = context?.activePlan?.goals.find(
     (entry) => entry.original_goal_id === unit.originalGoalId
   );
-  return gazetteerFillForGoal(goal?.color ?? null, goal?.category ?? null);
+  return categoryFillForGoal(goal?.color ?? null, goal?.category ?? null);
 }
 
 export function resolveMobileMonthPillStyle(fill: string, credited: boolean) {

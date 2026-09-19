@@ -48,6 +48,7 @@ describe("goal category helpers", () => {
       "career",
       "personal",
       "relationships",
+      "finance",
       "other",
     ]);
   });

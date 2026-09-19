@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import { Geist, Geist_Mono, IBM_Plex_Mono, Newsreader, Source_Sans_3 } from "next/font/google";
+import { applicationFontClasses } from "@/lib/brand/fonts.next";
+import { getApplicationThemeCss } from "@/lib/brand/application-theme";
+import { ApplicationThemeFonts } from "@/components/brand/application-theme-fonts";
 import Script from "next/script";
 import { Toaster } from "sonner";
 import { UiStyleProvider } from "@/components/brand/ui-style-provider";
@@ -8,33 +10,6 @@ import { APP_BOOT_PRELOAD_SCRIPT } from "@/components/layout/app-boot-preload";
 import { appIconHref } from "@/lib/brand/app-icon";
 import { getUiStyle, parseUiStyleId, UI_STYLE_COOKIE_NAME } from "@/lib/brand/ui-style";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-});
-
-const sourceSans = Source_Sans_3({
-  variable: "--font-source-sans",
-  subsets: ["latin"],
-});
-
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
-});
 
 const metadataBase = (() => {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
@@ -92,21 +67,15 @@ export default async function RootLayout({
   const style = getUiStyle(
     parseUiStyleId((await cookies()).get(UI_STYLE_COOKIE_NAME)?.value)
   );
-  const fontVariables = [
-    geistSans.variable,
-    geistMono.variable,
-    newsreader.variable,
-    sourceSans.variable,
-    plexMono.variable,
-  ].join(" ");
 
   return (
     <html
       lang="en"
       data-ui-style={style.id}
-      className={`${fontVariables} ${style.htmlClass} h-full antialiased`.trim()}
+      className={`${applicationFontClasses} ${style.htmlClass} h-full antialiased`.trim()}
       suppressHydrationWarning
     >
+      <head><style id="gm-brand-tokens" dangerouslySetInnerHTML={{ __html: getApplicationThemeCss() }} /></head>
       <body
         className="min-h-full bg-background text-foreground flex flex-col"
         suppressHydrationWarning
@@ -116,7 +85,7 @@ export default async function RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: APP_BOOT_PRELOAD_SCRIPT }}
         />
-        <UiStyleProvider initialStyleId={style.id}>{children}</UiStyleProvider>
+        <UiStyleProvider initialStyleId={style.id}><ApplicationThemeFonts />{children}</UiStyleProvider>
         <Toaster position="bottom-right" richColors />
       </body>
     </html>

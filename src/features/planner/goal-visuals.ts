@@ -9,7 +9,8 @@ import {
   Star,
   Target,
 } from "lucide-react";
-import { GAZETTEER, toGazetteerDisplayColor } from "@/lib/brand/gazetteer";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
+import { normalizeCategoryDisplayColor } from "@cadence/shared/brand";
 import { getUiStyle, resolveUiStyleId, type UiStyleId } from "@/lib/brand/ui-style";
 import {
   getCategorySwatchColor,
@@ -71,7 +72,7 @@ function stableHash(input: string) {
 export function toStyleDisplayColor(color: string, styleId?: UiStyleId) {
   const withHash = color.startsWith("#") ? color : `#${color}`;
   if (getUiStyle(resolveUiStyleId(styleId)).remapDisplayColors) {
-    return toGazetteerDisplayColor(withHash);
+    return normalizeCategoryDisplayColor(withHash);
   }
   return withHash;
 }

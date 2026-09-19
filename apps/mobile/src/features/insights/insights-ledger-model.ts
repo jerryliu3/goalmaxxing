@@ -1,4 +1,4 @@
-import { gazetteerFillForGoal } from "@cadence/shared/brand/gazetteer";
+import { categoryFillForGoal } from "@cadence/shared/brand";
 import type {
   ProgressContextFact,
   ProgressContextSummary,
@@ -70,7 +70,7 @@ export function buildInsightsLedgerGoals({
       return {
         id: goal.id,
         title: goal.title,
-        color: gazetteerFillForGoal(goal.color ?? null, goal.category),
+        color: categoryFillForGoal(goal.color ?? null, goal.category),
         rateLabel: insightsLedgerRateLabel({
           completionCount,
           summary: summaryByGoal.get(goal.id),

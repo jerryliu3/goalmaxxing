@@ -56,7 +56,7 @@ describe("ui style catalog", () => {
     ).toBe("black-translucent");
 
     applyDocumentUiStyle(getUiStyle("original"));
-    expect(themeMeta.getAttribute("content")).toBe("#fafafa");
+    expect(themeMeta.getAttribute("content")).toBe("#F8F7FB");
     expect(
       document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
         ?.getAttribute("content")

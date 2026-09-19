@@ -11,3 +11,4 @@ export {
   getGazetteerHeatmapScaleHex,
   toGazetteerDisplayColor,
 } from "@cadence/shared/brand/gazetteer";
+export { CATEGORY_COLORS, categoryColor, categoryFillForGoal, normalizeCategoryDisplayColor } from "@cadence/shared/brand";

@@ -4,6 +4,7 @@ import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
+
 import { api } from "./api";
 
 const NATIVE_PUSH_REGISTRATION_KEY = "cadence.native-push-registration";

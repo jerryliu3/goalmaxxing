@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GAZETTEER, gazetteerLightTheme } from "../brand/gazetteer";
+
 import {
   buildGazetteerMonthDayChromePalette,
   planHiddenItemCountLabel,

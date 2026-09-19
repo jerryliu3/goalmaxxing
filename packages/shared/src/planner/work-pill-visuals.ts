@@ -1,4 +1,5 @@
-import { GAZETTEER, toGazetteerDisplayColor } from "../brand/gazetteer";
+import { GAZETTEER } from "../brand/gazetteer";
+import { normalizeCategoryDisplayColor } from "../brand/categories";
 
 export const WORK_PILL_HUE_AMOUNT = 0.24;
 export const WORK_PILL_DRAFT_HUE_AMOUNT = 0.48;
@@ -38,7 +39,7 @@ export function normalizeGazetteerGoalColor(color: string | null | undefined) {
   if (!/^#[0-9a-f]{6}$/i.test(hex)) {
     return null;
   }
-  return toGazetteerDisplayColor(hex);
+  return normalizeCategoryDisplayColor(hex);
 }
 
 export function getGazetteerWorkPillFillStyle(color: string) {

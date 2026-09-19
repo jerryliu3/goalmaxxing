@@ -1,9 +1,11 @@
 import { appIconHref } from "@/lib/brand/app-icon";
+import { APPLICATION_BRANDS, type ApplicationBrandId } from "@cadence/shared/brand";
 
 /**
  * Visual style catalog. Layout and IA stay shared; each entry is a skin
  * (tokens, type, completion mark, tab chrome). Add a new id + CSS class later.
  */
+/** The user-facing selector remains limited to approved production skins. Study themes use BrandThemeScope. */
 export const UI_STYLE_IDS = ["original", "gazetteer"] as const;
 
 export type UiStyleId = (typeof UI_STYLE_IDS)[number];
@@ -25,32 +27,18 @@ export interface UiStyle {
   completionMark: CompletionMarkKind;
   tabChrome: TabChromeKind;
   remapDisplayColors: boolean;
+  themeId: ApplicationBrandId;
 }
 
-export const UI_STYLES: Record<UiStyleId, UiStyle> = {
-  original: {
-    id: "original",
-    label: "Original",
-    description: "Classic Goalmaxxing chrome: Geist, identity blue, and pill tabs.",
-    htmlClass: "",
-    themeColor: "#0F64BF",
-    backgroundColor: "#fafafa",
-    completionMark: "circle",
-    tabChrome: "pills",
-    remapDisplayColors: false,
-  },
-  gazetteer: {
-    id: "gazetteer",
-    label: "Gazetteer",
-    description: "Paper, walnut ink, stamp rust, Nest completion, and ledger chrome.",
-    htmlClass: "gm-gazetteer",
-    themeColor: "#f3ead8",
-    backgroundColor: "#f3ead8",
-    completionMark: "nest",
-    tabChrome: "underline",
-    remapDisplayColors: true,
-  },
-};
+export const UI_STYLES = Object.fromEntries(UI_STYLE_IDS.map((id) => {
+  const brand = APPLICATION_BRANDS[id];
+  return [id, { id, themeId: id, label: brand.name, description: brand.description,
+    htmlClass: id === "gazetteer" ? "gm-gazetteer" : "",
+    themeColor: brand.iconColor, backgroundColor: brand.page,
+    completionMark: brand.completionMark, tabChrome: brand.tabChrome,
+    remapDisplayColors: id === "gazetteer",
+  }];
+})) as Record<UiStyleId, UiStyle>;
 
 export const UI_STYLE_OPTIONS = UI_STYLE_IDS.map((id) => UI_STYLES[id]);
 

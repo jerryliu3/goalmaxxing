@@ -1,4 +1,5 @@
 import { getGazetteerHeatmapScaleHex } from "@cadence/shared/brand/gazetteer";
+
 import type {
   ProgressContextFact,
   ProgressContextSummary,

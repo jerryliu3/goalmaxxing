@@ -121,7 +121,7 @@
   font-family: monospace;
 }
 .tempo-heading {
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: var(--font-app-display), sans-serif;
   font-size: clamp(1.45rem, 2.6vw, 2rem);
   font-weight: 800;
   letter-spacing: -0.055em;

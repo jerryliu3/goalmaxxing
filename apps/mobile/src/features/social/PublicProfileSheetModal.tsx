@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { PublicProfileHeatmapPoint, PublicProfileXpSummary } from "@cadence/shared/social/public-profile";
 import { getGazetteerHeatmapScaleHex } from "@cadence/shared/brand/gazetteer";
+
 import { useMemo } from "react";
 import {
   Modal,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GAZETTEER_CATEGORY_COLORS } from "@cadence/shared/brand/gazetteer";
+import { CATEGORY_COLORS } from "@cadence/shared/brand";
 import type { PlannerContextPayload, PlannerWorkUnit } from "@cadence/shared/planner/context";
 import {
   resolveMobileMonthPillStyle,
@@ -40,18 +40,18 @@ describe("mobile Plan Gazetteer helpers", () => {
     } as Pick<PlannerContextPayload, "activePlan">;
 
     expect(resolveMobileSessionFill(context as PlannerContextPayload, unit("g1"))).toBe(
-      GAZETTEER_CATEGORY_COLORS.health
+      CATEGORY_COLORS.health
     );
     expect(resolveMobileSessionFill(context as PlannerContextPayload, unit("missing"))).toBe(
-      GAZETTEER_CATEGORY_COLORS.other
+      CATEGORY_COLORS.other
     );
   });
 
   it("clips month pills and uses opaque Gazetteer work-pill fills", () => {
     expect(selectMobileMonthPills(["a", "b", "c"]).overflowCount).toBe(1);
     expect(selectMobileMonthPills(["a", "b", "c"]).visible).toEqual(["a", "b"]);
-    const credited = resolveMobileMonthPillStyle(GAZETTEER_CATEGORY_COLORS.health, true);
-    const uncredited = resolveMobileMonthPillStyle(GAZETTEER_CATEGORY_COLORS.health, false);
+    const credited = resolveMobileMonthPillStyle(CATEGORY_COLORS.health, true);
+    const uncredited = resolveMobileMonthPillStyle(CATEGORY_COLORS.health, false);
     expect(credited.backgroundColor).toBe(credited.borderColor);
     expect(uncredited.backgroundColor).not.toBe(credited.backgroundColor);
   });

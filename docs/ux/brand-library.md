@@ -70,11 +70,19 @@ The library never silently substitutes a theme.
 
 Portals must render inside the scope or receive their own scope to inherit its
 variables. App-specific `--gm-*` status, calendar, and completion styles are not
-remapped by this generic adapter. The current document-level Original/Gazetteer
-selector and its cookie remain owned by `ui-style.ts`; this catalog does not
-add new settings options or change the current default. Existing production
-variants reuse shared token maps, rather than claiming to reproduce every
-historical CSS override or `/ux/brand` scene.
+remapped by this generic adapter. The document-level Original/Gazetteer selector
+and its cookie remain owned by `ui-style.ts`, but its semantic variables, radius,
+and font aliases now resolve through the shared production entries. `layout.tsx`
+applies those variables to the document, and switching the picker updates them
+in place. `globals.css` keeps only app-specific Gazetteer treatments and no
+longer redeclares Gazetteer's semantic palette or font stack. The selector still exposes only the two
+approved production styles and does not change the current default.
+
+The application runtime emits the registry’s semantic variables in a small
+server-rendered stylesheet before the app paints. Original and Gazetteer dark
+companions follow the existing `dark` class. Study themes remain available
+through `BrandThemeScope` for previews and future opt-in settings. The mobile
+theme hook reads the same shared Gazetteer theme and geometry.
 
 ## Category identity: Mineral Candy
 
@@ -105,10 +113,10 @@ text through opacity. Pigment is for decoration, not a substitute text color.
 Some archived study pairs have no full scale; `getColorPair` returns their
 surface as the pigment fallback. Always retain text/icon category labels.
 
-This is the approved design assignment, not a data migration. Existing saved
-category colors, custom categories, and the live five-category preset catalog
-are untouched. Shipping Finance as a selectable persisted preset requires a
-separate product cutover across the category write path and its consumers.
+This is now the approved persisted preset assignment. The forward-only
+`20260918120000_mineral_candy_goal_categories.sql` migration updates the shared
+category rows and adds Finance. Existing goal-level custom colors remain
+user-owned; the migration does not rewrite those values.
 
 ## Extend
 

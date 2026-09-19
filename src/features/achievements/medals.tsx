@@ -1,4 +1,5 @@
-import { GAZETTEER, GAZETTEER_CATEGORY_COLORS } from "@/lib/brand/gazetteer";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
+import { CATEGORY_COLORS } from "@cadence/shared/brand";
 import type { AchievementGoalCategory, AwardTier } from "@/features/achievements/types";
 
 export const TIER_METAL: Record<
@@ -38,7 +39,7 @@ export const TIER_METAL: Record<
 };
 
 export function categoryColor(category: AchievementGoalCategory): string {
-  return GAZETTEER_CATEGORY_COLORS[category];
+  return CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS] ?? CATEGORY_COLORS.other;
 }
 
 export function MedalMark({

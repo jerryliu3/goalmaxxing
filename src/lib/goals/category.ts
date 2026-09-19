@@ -1,3 +1,4 @@
+import { CATEGORY_COLORS, GOAL_CATEGORY_DESIGN, GOAL_CATEGORY_DESIGN_IDS, type GoalCategoryDesignId } from "@cadence/shared/brand";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -9,61 +10,21 @@ export interface GoalCategory {
   sortOrder: number;
 }
 
-export type CategoryPresetId = "health" | "career" | "personal" | "relationships" | "other";
+export type CategoryPresetId = GoalCategoryDesignId;
 export type CategorySelection = CategoryPresetId | typeof CATEGORY_CUSTOM_VALUE;
 
 export const CATEGORY_CUSTOM_VALUE = "custom";
 
 const GENERIC_OTHER_LABELS = new Set(["other"]);
-const CATEGORY_PRESET_IDS: readonly CategoryPresetId[] = [
-  "health",
-  "career",
-  "personal",
-  "relationships",
-  "other",
-];
+const CATEGORY_PRESET_IDS = GOAL_CATEGORY_DESIGN_IDS;
 
 function isCategoryPresetId(value: string): value is CategoryPresetId {
   return (CATEGORY_PRESET_IDS as readonly string[]).includes(value);
 }
 
-export const DEFAULT_GOAL_CATEGORIES: GoalCategory[] = [
-  {
-    key: "health",
-    label: "Health",
-    aliases: [],
-    color: "#10b981",
-    sortOrder: 10,
-  },
-  {
-    key: "career",
-    label: "Career",
-    aliases: [],
-    color: "#8b5cf6",
-    sortOrder: 20,
-  },
-  {
-    key: "personal",
-    label: "Personal",
-    aliases: [],
-    color: "#6366f1",
-    sortOrder: 30,
-  },
-  {
-    key: "relationships",
-    label: "Relationships",
-    aliases: [],
-    color: "#f43f5e",
-    sortOrder: 40,
-  },
-  {
-    key: "other",
-    label: "Other",
-    aliases: [],
-    color: "#64748b",
-    sortOrder: 999,
-  },
-];
+export const DEFAULT_GOAL_CATEGORIES: GoalCategory[] = GOAL_CATEGORY_DESIGN_IDS.map((key) => ({
+  key, label: GOAL_CATEGORY_DESIGN[key].label, aliases: [], color: CATEGORY_COLORS[key], sortOrder: GOAL_CATEGORY_DESIGN[key].sortOrder,
+}));
 
 export const CATEGORY_PRESETS = DEFAULT_GOAL_CATEGORIES.filter(
   (
@@ -241,23 +202,9 @@ export function getGoalCategoryLabel(
 
 export function getCategoryBadgeClass(categoryKey: string): string {
   const normalized = categoryKey.trim().toLowerCase();
-
-  if (normalized === "personal") {
-    return "border-foreground/20 bg-secondary text-foreground";
-  }
-
-  if (normalized === "relationships") {
-    return "border-primary/35 bg-primary/10 text-primary";
-  }
-
-  if (normalized === "health") {
-    return "border-[color:var(--gm-gain)]/35 bg-[color:var(--gm-gain)]/10 text-[color:var(--gm-gain)]";
-  }
-
-  if (normalized === "career") {
-    return "border-primary/35 bg-primary/10 text-primary";
-  }
-
+  if (normalized === "personal") return "border-foreground/20 bg-secondary text-foreground";
+  if (normalized === "relationships" || normalized === "career") return "border-primary/35 bg-primary/10 text-primary";
+  if (normalized === "health" || normalized === "finance") return "border-[color:var(--gm-gain)]/35 bg-[color:var(--gm-gain)]/10 text-[color:var(--gm-gain)]";
   return "border-border bg-muted text-muted-foreground";
 }
 
@@ -266,12 +213,12 @@ export function getCategorySwatchColor(
   categories: GoalCategory[] = DEFAULT_GOAL_CATEGORIES
 ): string {
   if (selection === CATEGORY_CUSTOM_VALUE) {
-    return "#64748b";
+    return CATEGORY_COLORS.other;
   }
 
   const normalizedCatalog = normalizeCategoryCatalog(categories);
   const categoryLookup = buildLookup(normalizedCatalog);
-  return categoryLookup.get(selection)?.color ?? "#64748b";
+  return categoryLookup.get(selection)?.color ?? CATEGORY_COLORS.other;
 }
 
 export async function fetchGoalCategories(
@@ -291,7 +238,7 @@ export async function fetchGoalCategories(
       key: row.key,
       label: row.label,
       aliases: row.aliases ?? [],
-      color: row.color ?? "#64748b",
+      color: row.color ?? CATEGORY_COLORS.other,
       sortOrder: row.sort_order,
     }))
   );

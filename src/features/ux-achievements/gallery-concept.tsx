@@ -12,7 +12,8 @@ import {
   formatAwardDate,
   formatGoalDate,
 } from "@/features/ux-achievements/seed";
-import { GAZETTEER, GAZETTEER_CATEGORY_COLORS } from "@/lib/brand/gazetteer";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
+import { CATEGORY_COLORS } from "@cadence/shared/brand";
 
 const concept = getAchievementConcept("gallery");
 
@@ -187,7 +188,7 @@ export function GalleryConcept() {
                   borderColor: GAZETTEER.rule,
                   background: GAZETTEER.paper,
                   borderTopWidth: 4,
-                  borderTopColor: GAZETTEER_CATEGORY_COLORS[goal.category],
+                  borderTopColor: CATEGORY_COLORS[goal.category],
                 }}
               >
                 <div className="flex items-start gap-3">

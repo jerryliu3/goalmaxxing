@@ -13,7 +13,8 @@ import {
   type SeedGoalAchievement,
   type SeedLevelAward,
 } from "@/features/ux-achievements/seed";
-import { GAZETTEER, GAZETTEER_CATEGORY_COLORS } from "@/lib/brand/gazetteer";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
+import { CATEGORY_COLORS } from "@cadence/shared/brand";
 
 const concept = getAchievementConcept("vault");
 
@@ -132,7 +133,7 @@ export function VaultConcept() {
                           className="grid size-12 place-items-center rounded-full"
                           style={{
                             background: open
-                              ? GAZETTEER_CATEGORY_COLORS[cell.goal.category]
+                              ? CATEGORY_COLORS[cell.goal.category]
                               : "#2a221a",
                             border: `1px solid ${open ? "transparent" : "#3a3128"}`,
                           }}
@@ -227,7 +228,7 @@ function InspectionGoal({ goal }: { goal: SeedGoalAchievement }) {
     <div>
       <p
         className="text-[10px] font-semibold uppercase tracking-[0.16em]"
-        style={{ color: GAZETTEER_CATEGORY_COLORS[goal.category] }}
+        style={{ color: CATEGORY_COLORS[goal.category] }}
       >
         Goal certificate
       </p>
