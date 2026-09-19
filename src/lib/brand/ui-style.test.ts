@@ -17,11 +17,22 @@ describe("ui style catalog", () => {
   it("defaults unknown values to original", () => {
     expect(parseUiStyleId(undefined)).toBe("original");
     expect(parseUiStyleId("col")).toBe("original");
+    expect(parseUiStyleId("fig-porcelain")).toBe("original");
+    expect(parseUiStyleId("pitlane")).toBe("pitlane");
     expect(DEFAULT_UI_STYLE_ID).toBe("original");
   });
 
-  it("lists original then gazetteer so later skins can append", () => {
-    expect(UI_STYLE_OPTIONS.map((style) => style.id)).toEqual(["original", "gazetteer"]);
+  it("lists original, gazetteer, then the shortlisted study skins", () => {
+    expect(UI_STYLE_OPTIONS.map((style) => style.id)).toEqual([
+      "original",
+      "gazetteer",
+      "undertow",
+      "kiln",
+      "court",
+      "opaline",
+      "bloodstone",
+      "pitlane",
+    ]);
   });
 
   it("reads the document dataset when no explicit id is passed", () => {
@@ -57,6 +68,18 @@ describe("ui style catalog", () => {
 
     applyDocumentUiStyle(getUiStyle("original"));
     expect(themeMeta.getAttribute("content")).toBe("#F8F7FB");
+    expect(
+      document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
+        ?.getAttribute("content")
+    ).toBe("default");
+
+    applyDocumentUiStyle(getUiStyle("bloodstone"));
+    expect(
+      document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
+        ?.getAttribute("content")
+    ).toBe("black-translucent");
+
+    applyDocumentUiStyle(getUiStyle("court"));
     expect(
       document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
         ?.getAttribute("content")

@@ -37,7 +37,7 @@ export function UiStylePicker({
           id={id}
           size={size}
           aria-label="Visual style"
-          className={showLabel ? "w-full" : "w-[9.5rem]"}
+          className={showLabel ? "w-full" : "w-[12.5rem]"}
         >
           <SelectValue />
         </SelectTrigger>

@@ -8,7 +8,7 @@ import { Toaster } from "sonner";
 import { UiStyleProvider } from "@/components/brand/ui-style-provider";
 import { APP_BOOT_PRELOAD_SCRIPT } from "@/components/layout/app-boot-preload";
 import { appIconHref } from "@/lib/brand/app-icon";
-import { getUiStyle, parseUiStyleId, UI_STYLE_COOKIE_NAME } from "@/lib/brand/ui-style";
+import { getUiStyle, parseUiStyleId, UI_STYLE_COOKIE_NAME, usesTranslucentStatusBar } from "@/lib/brand/ui-style";
 import "./globals.css";
 
 const metadataBase = (() => {
@@ -36,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase,
     appleWebApp: {
       capable: true,
-      statusBarStyle: style.id === "gazetteer" ? "black-translucent" : "default",
+      statusBarStyle: usesTranslucentStatusBar(style.id) ? "black-translucent" : "default",
       title: "Goalmaxxing",
     },
     icons: {

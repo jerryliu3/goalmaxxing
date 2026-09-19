@@ -70,19 +70,21 @@ The library never silently substitutes a theme.
 
 Portals must render inside the scope or receive their own scope to inherit its
 variables. App-specific `--gm-*` status, calendar, and completion styles are not
-remapped by this generic adapter. The document-level Original/Gazetteer selector
-and its cookie remain owned by `ui-style.ts`, but its semantic variables, radius,
-and font aliases now resolve through the shared production entries. `layout.tsx`
-applies those variables to the document, and switching the picker updates them
-in place. `globals.css` keeps only app-specific Gazetteer treatments and no
-longer redeclares Gazetteer's semantic palette or font stack. The selector still exposes only the two
-approved production styles and does not change the current default.
+remapped by this generic adapter. The document-level visual style selector and its cookie remain owned by
+`ui-style.ts`. Semantic variables, radius, and font aliases resolve through the
+shared catalog. `layout.tsx` applies those variables to the document, and
+switching the picker updates them in place. `globals.css` keeps only
+app-specific Gazetteer treatments and no longer redeclares Gazetteer's
+semantic palette or font stack. The selector now includes Original, Gazetteer,
+and the shortlisted study skins (Undertow, Kiln, Centre Court, Opaline,
+Bloodstone, Pitlane). Original remains the default. Archived pairings and
+exploration skins stay `BrandThemeScope`-only.
 
 The application runtime emits the registry’s semantic variables in a small
 server-rendered stylesheet before the app paints. Original and Gazetteer dark
-companions follow the existing `dark` class. Study themes remain available
-through `BrandThemeScope` for previews and future opt-in settings. The mobile
-theme hook reads the same shared Gazetteer theme and geometry.
+companions follow the existing `dark` class. Authored study worlds keep a
+single appearance and do not invent light/dark companions. The mobile theme
+hook still reads the shared Gazetteer theme and geometry.
 
 ## Category identity: Mineral Candy
 

@@ -1,18 +1,34 @@
 import { appIconHref } from "@/lib/brand/app-icon";
-import { APPLICATION_BRANDS, type ApplicationBrandId } from "@cadence/shared/brand";
+import { APPLICATION_BRANDS, applicationTheme, type ApplicationBrandId } from "@cadence/shared/brand";
 
 /**
  * Visual style catalog. Layout and IA stay shared; each entry is a skin
- * (tokens, type, completion mark, tab chrome). Add a new id + CSS class later.
+ * (tokens, type, completion mark, tab chrome).
  */
-/** The user-facing selector remains limited to approved production skins. Study themes use BrandThemeScope. */
-export const UI_STYLE_IDS = ["original", "gazetteer"] as const;
+export const UI_STYLE_IDS = [
+  "original",
+  "gazetteer",
+  "undertow",
+  "kiln",
+  "court",
+  "opaline",
+  "bloodstone",
+  "pitlane",
+] as const;
 
 export type UiStyleId = (typeof UI_STYLE_IDS)[number];
 
 export const DEFAULT_UI_STYLE_ID: UiStyleId = "original";
 export const UI_STYLE_COOKIE_NAME = "gm_ui_style";
 export const UI_STYLE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
+
+const TRANSLUCENT_STATUS_BAR_STYLE_IDS = new Set<UiStyleId>([
+  "gazetteer",
+  "undertow",
+  "kiln",
+  "bloodstone",
+  "pitlane",
+]);
 
 export type CompletionMarkKind = "circle" | "nest";
 export type TabChromeKind = "pills" | "underline";
@@ -30,12 +46,29 @@ export interface UiStyle {
   themeId: ApplicationBrandId;
 }
 
+function styleDescription(id: UiStyleId): string {
+  const premise = APPLICATION_BRANDS[id].description;
+  if (id === "original" || id === "gazetteer") {
+    return premise;
+  }
+  if (applicationTheme(id).appearance === "dark") {
+    return `${premise}. Authored as a dark world and does not follow system light mode.`;
+  }
+  return `${premise}. Authored as a light world and does not follow system dark mode.`;
+}
+
 export const UI_STYLES = Object.fromEntries(UI_STYLE_IDS.map((id) => {
   const brand = APPLICATION_BRANDS[id];
-  return [id, { id, themeId: id, label: brand.name, description: brand.description,
+  return [id, {
+    id,
+    themeId: id,
+    label: brand.name,
+    description: styleDescription(id),
     htmlClass: id === "gazetteer" ? "gm-gazetteer" : "",
-    themeColor: brand.iconColor, backgroundColor: brand.page,
-    completionMark: brand.completionMark, tabChrome: brand.tabChrome,
+    themeColor: brand.iconColor,
+    backgroundColor: brand.page,
+    completionMark: brand.completionMark,
+    tabChrome: brand.tabChrome,
     remapDisplayColors: id === "gazetteer",
   }];
 })) as Record<UiStyleId, UiStyle>;
@@ -43,7 +76,7 @@ export const UI_STYLES = Object.fromEntries(UI_STYLE_IDS.map((id) => {
 export const UI_STYLE_OPTIONS = UI_STYLE_IDS.map((id) => UI_STYLES[id]);
 
 export function isUiStyleId(value: string | null | undefined): value is UiStyleId {
-  return value === "original" || value === "gazetteer";
+  return typeof value === "string" && (UI_STYLE_IDS as readonly string[]).includes(value);
 }
 
 export function parseUiStyleId(value: string | null | undefined): UiStyleId {
@@ -52,6 +85,10 @@ export function parseUiStyleId(value: string | null | undefined): UiStyleId {
 
 export function getUiStyle(id: UiStyleId = DEFAULT_UI_STYLE_ID): UiStyle {
   return UI_STYLES[id];
+}
+
+export function usesTranslucentStatusBar(id: UiStyleId): boolean {
+  return TRANSLUCENT_STATUS_BAR_STYLE_IDS.has(id);
 }
 
 export function resolveUiStyleId(explicit?: string | null): UiStyleId {
@@ -94,8 +131,9 @@ export function applyDocumentUiStyle(style: UiStyle) {
     statusBarMeta.name = "apple-mobile-web-app-status-bar-style";
     document.head.append(statusBarMeta);
   }
-  statusBarMeta.content =
-    style.id === "gazetteer" ? "black-translucent" : "default";
+  statusBarMeta.content = usesTranslucentStatusBar(style.id)
+    ? "black-translucent"
+    : "default";
   const iconHref = appIconHref(style.id);
   for (const link of document.querySelectorAll<HTMLLinkElement>(
     'link[rel="icon"], link[rel="apple-touch-icon"]'
