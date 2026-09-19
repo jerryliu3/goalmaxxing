@@ -1,6 +1,14 @@
-.embed { display: grid; place-items: center; width: 100%; }
+.embed { display: flex; justify-content: center; width: 100%; }
+.embed :global([data-card-object]) {
+  width: 22.5rem;
+  max-width: 100%;
+}
 /* Trading-card proportions from the material study, not the 330/382 goal face. */
-.frame:global(.tempo-card-frame) { aspect-ratio: 330 / 555; }
+.frame:global(.tempo-card-frame) {
+  display: block;
+  width: 100%;
+  aspect-ratio: 330 / 555;
+}
 .face:global(.tempo-card) {
   display: flex;
   flex-direction: column;
