@@ -81,6 +81,7 @@ describe("buildPublicProfileBundle", () => {
     expect(bundle.overallStats).toBeNull();
     expect(bundle.yearHeatmap).toEqual([]);
     expect(bundle.growSeries).toEqual([]);
+    expect(bundle.currentGoals).toEqual([]);
     expect(bundle.profile.createdAt).toBe("2026-01-01T00:00:00.000Z");
   });
 
@@ -134,6 +135,36 @@ describe("buildPublicProfileBundle", () => {
     ).toBe(1);
     expect(bundle.growSeries).toHaveLength(28);
     expect(bundle.profile.createdAt).toBe("2026-01-01T00:00:00.000Z");
+    expect(bundle.currentGoals.map((goal) => goal.id)).toEqual(["goal-1"]);
+  });
+
+  it("publishes only public current goals on a visible profile", () => {
+    const bundle = buildPublicProfileBundle({
+      viewerUserId: null,
+      subjectProfile: {
+        id: "subject-1",
+        username: "subject",
+        display_name: "Subject User",
+        avatar_url: null,
+        social_activity_visible: true,
+        week_starts_on: 1,
+        created_at: "2026-01-01T00:00:00.000Z",
+        timezone: "America/New_York",
+      },
+      globalXpProfile: { total_xp: 100 },
+      globalAchievements: [],
+      awardCatalogCount: 0,
+      goals: [
+        makeGoal({ id: "public-goal", title: "Public walk" }),
+        makeGoal({ id: "private-goal", title: "Private lift", is_private: true }),
+      ],
+      completions: [],
+      selectedYear: 2026,
+    });
+
+    expect(bundle.profile.isPrivate).toBe(false);
+    expect(bundle.currentGoals.map((goal) => goal.id)).toEqual(["public-goal"]);
+    expect(bundle.currentGoals[0]?.title).toBe("Public walk");
   });
 
   it("treats a null viewer as non-self for private accounts", () => {

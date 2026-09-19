@@ -8,6 +8,7 @@ import { XpProgressCard } from "@/components/xp/xp-progress-card";
 import { ProfileMedalShelf } from "@/features/achievements/profile-medal-shelf";
 import { InsightsOverallStatsCard } from "@/features/insights/insights-overall-stats-card";
 import { ProfilePresenceSection } from "@/features/social/profile-presence";
+import { PublicProfileCurrentGoals } from "@/features/social/public-profile/public-profile-current-goals";
 import { resolvePublicProfileLabel } from "@/features/social/public-profile/resolve-profile-label";
 import { getHeatmapScaleClass } from "@/lib/goals/heatmap";
 
@@ -60,6 +61,7 @@ export function PublicProfileContent({
             selectedYear={selectedYear}
           />
           {afterPresence}
+          <PublicProfileCurrentGoals goals={bundle.currentGoals} />
         </>
       ) : (
         <>

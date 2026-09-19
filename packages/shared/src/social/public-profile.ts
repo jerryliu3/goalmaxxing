@@ -1,3 +1,5 @@
+import type { ProgressContextSummary } from "../goals/progress-context";
+
 export interface PublicProfileCountTrend {
   current: number;
   previous: number;
@@ -54,6 +56,27 @@ export interface PublicProfileGrowPoint {
   rawCredits: number;
 }
 
+export interface PublicProfileCurrentGoal {
+  id: string;
+  ownerId: string;
+  title: string;
+  description: string | null;
+  category: string;
+  color: string | null;
+  frequencyType: "fixed_milestones" | "recurring";
+  recurrenceInterval: "daily" | "weekly" | "monthly" | null;
+  difficulty: "easy" | "medium" | "hard" | null;
+  targetCount: number | null;
+  targetBasis: "period" | "lifetime";
+  milestoneNames: string[] | null;
+  startDate: string;
+  endDate: string | null;
+  rewardText: string | null;
+  defaultLocalTime: string | null;
+  createdAt: string;
+  progress: ProgressContextSummary;
+}
+
 export interface PublicProfileBundle {
   schemaVersion: "1";
   profile: PublicProfileIdentity;
@@ -63,4 +86,5 @@ export interface PublicProfileBundle {
   overallStats: PublicProfileOverallStats | null;
   yearHeatmap: PublicProfileHeatmapPoint[];
   growSeries: PublicProfileGrowPoint[];
+  currentGoals: PublicProfileCurrentGoal[];
 }
