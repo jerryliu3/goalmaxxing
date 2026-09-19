@@ -28,11 +28,11 @@
 .notes p { max-width: 52rem; margin-top: 1rem; }
 
 /* Whole face, clipped material copies, and the empty face share the canonical
-   TempoGoalCard square. */
+   330×382 TempoGoalCard reference face. */
 .plaque {
   position: relative;
   isolation: isolate;
-  aspect-ratio: 1;
+  aspect-ratio: 330 / 382;
   width: min(18rem, 100%);
   min-height: 0;
   margin-inline: auto;
@@ -79,10 +79,10 @@
   top: 50%;
   z-index: 2;
   transform: translate(-50%,-50%);
-  aspect-ratio: 1;
+  aspect-ratio: 330 / 382;
   /* Shorter Cursor panes and taller desktop windows share one contain-fit. */
   width: min(15.5rem, calc(100% - 32px));
-  width: min(15.5rem, calc(100% - 32px), 100cqh);
+  width: min(15.5rem, calc(100% - 32px), calc(100cqh * 330 / 382));
   height: auto;
 }
 .heroAnchor .plaque { width: 100%; height: 100%; aspect-ratio: auto; }
@@ -129,7 +129,7 @@
   .ceremonyHeader { padding: 1rem 1rem 0; }
   .heroAnchor {
     width: min(14.5rem, calc(100% - 20px));
-    width: min(14.5rem, calc(100% - 20px), 100cqh);
+    width: min(14.5rem, calc(100% - 20px), calc(100cqh * 330 / 382));
   }
   .burst { left: 12%; }
 }
