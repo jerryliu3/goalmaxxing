@@ -410,6 +410,12 @@ export function BulkGoalForm({
       onFileChange={onFileChange}
       onParseUploadedFile={parseUploadedFile}
       uploadedFileName={uploadedFile?.name ?? null}
+      mobilePreview={
+        <TempoAiDraftPreview
+          parsing={parsing}
+          importing={inputMode === "csv"}
+        />
+      }
       disabled={Boolean(
         initializing || parsing || saving || linkRecovery || createRecovery,
       )}
@@ -422,10 +428,12 @@ export function BulkGoalForm({
           <TempoStepNavigation step={1} disabled={parsing} />
           <div className="tempo-workspace">{inputCard}</div>
           <div className="tempo-preview">
-            <TempoAiDraftPreview
-              parsing={parsing}
-              importing={inputMode === "csv"}
-            />
+            <div className="tempo-ai-desktop-preview">
+              <TempoAiDraftPreview
+                parsing={parsing}
+                importing={inputMode === "csv"}
+              />
+            </div>
           </div>
         </div>
       ) : (

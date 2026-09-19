@@ -31,6 +31,7 @@ interface BulkGoalInputCardProps {
   onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onParseUploadedFile: () => void;
   uploadedFileName: string | null;
+  mobilePreview?: ReactNode;
   disabled?: boolean;
 }
 
@@ -73,6 +74,7 @@ export function BulkGoalInputCard({
   onFileChange,
   onParseUploadedFile,
   uploadedFileName,
+  mobilePreview,
   disabled = false,
 }: BulkGoalInputCardProps) {
   const id = useId();
@@ -133,6 +135,9 @@ export function BulkGoalInputCard({
             : "A rough idea is enough. We’ll help turn it into a few goals that fit your life."}
         </p>
       </header>
+      {mobilePreview && (
+        <div className="tempo-ai-mobile-preview">{mobilePreview}</div>
+      )}
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={inputMode}
