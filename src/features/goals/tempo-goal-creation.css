@@ -11,7 +11,9 @@
 .tempo-preview {
   grid-area: preview;
   position: relative;
+  width: 80%;
   min-width: 0;
+  justify-self: center;
   perspective: 1100px;
 }
 .tempo-card {
@@ -968,7 +970,7 @@
    * that space first, then let the reference-ratio card grow into any
    * remaining height instead of pushing Create goal below the fold.
    */
-  width: min(100%, max(14rem, calc((100dvh - 20rem) * 330 / 382)));
+  width: min(80%, max(14rem, calc((100dvh - 20rem) * 330 / 382 * .8)));
   justify-self: center;
   outline: none;
 }
