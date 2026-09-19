@@ -963,7 +963,13 @@
 .tempo-creation-review > .tempo-preview {
   position: relative;
   top: auto;
-  width: min(100%, 480px);
+  /*
+   * Review has the step rail above and the plaque/action row below. Keep the
+   * reference card at its native 330px width when possible, then contain it
+   * to the remaining viewport height instead of pushing Create goal below
+   * the fold.
+   */
+  width: min(100%, clamp(14rem, calc((100dvh - 20rem) * 330 / 382), 20.625rem));
   justify-self: center;
   outline: none;
 }
