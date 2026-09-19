@@ -95,45 +95,47 @@ export function ProfileMembershipCard({
         embedded
         controls={false}
       >
-        <article className={`tempo-card ${styles.face}`} aria-label={`${title} membership card`}>
-          <div className={styles.micro}>
-            <span>GOALMAXXING / MEMBER</span>
-            <Sparkles size={17} strokeWidth={1.2} />
-          </div>
-          <div className={styles.identityArt}>
-            <Horizon monogram={monogram} />
-            <span className={styles.serial}>{handle.toUpperCase()}</span>
-          </div>
-          <div className={styles.titleBlock}>
-            <span className={styles.kicker}>{handle}</span>
-            <h2>
-              <SolidLettering>{title}</SolidLettering>
-            </h2>
-          </div>
-          <div className={styles.metrics}>
-            <Metric value={String(overallStats.totalGoalsCompleted)} label="goals completed" />
-            <Metric value={String(overallStats.totalActivities)} label="activities" />
-            <Metric value={String(overallStats.activeStreakDays)} label="day streak" />
-          </div>
-          <div className={styles.signature}>
-            <span>
-              <SolidLettering>{title}</SolidLettering>
-            </span>
-            {memberSince ? (
+        <div className={`tempo-card-frame ${styles.frame}`}>
+          <article className={`tempo-card ${styles.face}`} aria-label={`${title} membership card`}>
+            <div className={styles.micro}>
+              <span>GOALMAXXING / MEMBER</span>
+              <Sparkles size={17} strokeWidth={1.2} />
+            </div>
+            <div className={styles.identityArt}>
+              <Horizon monogram={monogram} />
+              <span className={styles.serial}>{handle.toUpperCase()}</span>
+            </div>
+            <div className={styles.titleBlock}>
+              <span className={styles.kicker}>{handle}</span>
+              <h2>
+                <SolidLettering>{title}</SolidLettering>
+              </h2>
+            </div>
+            <div className={styles.metrics}>
+              <Metric value={String(overallStats.totalGoalsCompleted)} label="goals completed" />
+              <Metric value={String(overallStats.totalActivities)} label="activities" />
+              <Metric value={String(overallStats.activeStreakDays)} label="day streak" />
+            </div>
+            <div className={styles.signature}>
               <span>
-                MEMBER SINCE
-                <br />
-                {memberSince}
+                <SolidLettering>{title}</SolidLettering>
               </span>
-            ) : (
-              <span>MEMBER</span>
-            )}
-          </div>
-          <div className={styles.micro}>
-            <span>PEARL RESERVE</span>
-            {currentLevel != null ? <span>LEVEL {currentLevel}</span> : <span>MEMBER</span>}
-          </div>
-        </article>
+              {memberSince ? (
+                <span>
+                  MEMBER SINCE
+                  <br />
+                  {memberSince}
+                </span>
+              ) : (
+                <span>MEMBER</span>
+              )}
+            </div>
+            <div className={styles.micro}>
+              <span>PEARL RESERVE</span>
+              {currentLevel != null ? <span>LEVEL {currentLevel}</span> : <span>MEMBER</span>}
+            </div>
+          </article>
+        </div>
       </MaterialStage>
     </div>
   );
