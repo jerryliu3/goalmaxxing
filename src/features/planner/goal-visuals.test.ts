@@ -47,7 +47,7 @@ describe("goal visuals", () => {
         color: "0A0B0C",
         category: "Health",
       }).color
-    ).toBe("#10b981");
+    ).toBe("#FFA583");
   });
 
   it("uses opaque pastel fills with quieter ink and hue for completed tiles", () => {
@@ -141,9 +141,9 @@ describe("goal visuals", () => {
   });
 
   it("maps category swatches onto the active theme and keeps custom hexes", () => {
-    expect(getDisplayCategorySwatchColor("health")).toBe("#10b981");
-    expect(getDisplayCategorySwatchColor("health", "gazetteer")).toBe(GAZETTEER.gain);
-    expect(getDisplayCategorySwatchColor("custom", "gazetteer")).toBe(GAZETTEER.muted);
+    expect(getDisplayCategorySwatchColor("health")).toBe("#FFA583");
+    expect(getDisplayCategorySwatchColor("health", "gazetteer")).toBe("#FFA583");
+    expect(getDisplayCategorySwatchColor("custom", "gazetteer")).toBe("#F4D35E");
     expect(
       getGoalVisual(
         {

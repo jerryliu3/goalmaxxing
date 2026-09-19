@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(13);
+select plan(16);
 
 select is(
   private.normalize_goal_category_key('Health'),
@@ -112,8 +112,26 @@ select is(
 );
 
 select is(
+  private.normalize_goal_category_key('Relationships'),
+  'relationships',
+  'legacy Relationships label still resolves after the Interpersonal rename'
+);
+
+select is(
+  private.normalize_goal_category_key('Interpersonal'),
+  'relationships',
+  'Interpersonal display label resolves to the relationships key'
+);
+
+select is(
+  private.normalize_goal_category_key('Finances'),
+  'finance',
+  'Finances display label resolves to the finance key'
+);
+
+select is(
   (select count(*)::integer from public.goal_categories),
-  5,
+  6,
   'goal_categories seed contains expected category keys'
 );
 
@@ -121,7 +139,7 @@ select is(
   (
     select count(*)::integer
     from public.goal_categories
-    where key in ('learning', 'finance', 'community')
+    where key in ('learning', 'community')
   ),
   0,
   'legacy category keys are removed from taxonomy seed'

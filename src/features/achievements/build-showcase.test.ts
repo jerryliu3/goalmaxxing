@@ -57,6 +57,8 @@ describe("toAchievementGoalCategory", () => {
   it("prefers category keys and falls back to labels", () => {
     expect(toAchievementGoalCategory("health", "Fitness")).toBe("health");
     expect(toAchievementGoalCategory(null, "Work goals")).toBe("career");
+    expect(toAchievementGoalCategory(null, "Interpersonal")).toBe("relationships");
+    expect(toAchievementGoalCategory("finance", "Budget")).toBe("finance");
     expect(toAchievementGoalCategory("custom", "Random")).toBe("other");
   });
 });

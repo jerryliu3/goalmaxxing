@@ -1,4 +1,10 @@
-import { CATEGORY_COLORS, GOAL_CATEGORY_DESIGN, GOAL_CATEGORY_DESIGN_IDS, type GoalCategoryDesignId } from "@cadence/shared/brand";
+import {
+  CATEGORY_COLORS,
+  GOAL_CATEGORY_DESIGN,
+  GOAL_CATEGORY_DESIGN_IDS,
+  categoryDesignAliases,
+  type GoalCategoryDesignId,
+} from "@cadence/shared/brand";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -23,7 +29,11 @@ function isCategoryPresetId(value: string): value is CategoryPresetId {
 }
 
 export const DEFAULT_GOAL_CATEGORIES: GoalCategory[] = GOAL_CATEGORY_DESIGN_IDS.map((key) => ({
-  key, label: GOAL_CATEGORY_DESIGN[key].label, aliases: [], color: CATEGORY_COLORS[key], sortOrder: GOAL_CATEGORY_DESIGN[key].sortOrder,
+  key,
+  label: GOAL_CATEGORY_DESIGN[key].label,
+  aliases: [...categoryDesignAliases(key)],
+  color: CATEGORY_COLORS[key],
+  sortOrder: GOAL_CATEGORY_DESIGN[key].sortOrder,
 }));
 
 export const CATEGORY_PRESETS = DEFAULT_GOAL_CATEGORIES.filter(
@@ -154,6 +164,9 @@ export function resolveCategoryKey(
       return category.key;
     }
     if (normalizedInput === category.label.toLowerCase()) {
+      return category.key;
+    }
+    if (category.aliases.some((alias) => normalizedInput === alias.toLowerCase())) {
       return category.key;
     }
   }

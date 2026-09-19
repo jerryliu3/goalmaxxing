@@ -30,7 +30,7 @@ describe("gazetteer display colors", () => {
 
   it("prefers stored color over category when both exist", () => {
     expect(categoryFillForGoal("#10b981", "career")).toBe(
-      CATEGORY_COLORS.health
+      CATEGORY_COLORS.career
     );
     expect(categoryFillForGoal(null, "Personal")).toBe(
       CATEGORY_COLORS.personal

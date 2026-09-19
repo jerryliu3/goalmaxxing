@@ -27,6 +27,8 @@ describe("brand catalog", () => {
   it("keeps category identity independent of theme and reverses the authored pair in dark mode", () => {
     expect(Object.keys(GOAL_CATEGORY_DESIGN)).toHaveLength(6);
     expect(new Set(Object.values(GOAL_CATEGORY_DESIGN).map((c) => c.colorId)).size).toBe(6);
+    expect(GOAL_CATEGORY_DESIGN.relationships.label).toBe("Interpersonal");
+    expect(GOAL_CATEGORY_DESIGN.finance.label).toBe("Finances");
     expect(getCategoryColorPair("finance")).toEqual(getColorPair("malachite"));
     const light = getCategoryColorPair("health");
     expect(getCategoryColorPair("health", "dark")).toEqual({ surface: light.ink, ink: light.surface, pigment: light.pigment });

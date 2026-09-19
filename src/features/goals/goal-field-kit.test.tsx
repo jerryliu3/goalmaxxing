@@ -25,7 +25,7 @@ describe("CategorySelect", () => {
     render(<CategorySelect value="health" onValueChange={onValueChange} />);
 
     await user.click(screen.getByRole("combobox"));
-    await user.click(screen.getByRole("option", { name: "Relationships" }));
+    await user.click(screen.getByRole("option", { name: "Interpersonal" }));
 
     expect(onValueChange).toHaveBeenCalledWith("relationships");
   });
@@ -37,8 +37,9 @@ describe("CategorySelect", () => {
     await user.click(screen.getByRole("combobox"));
     const listbox = screen.getByRole("listbox");
     expect(within(listbox).getByRole("option", { name: "Personal" })).toBeInTheDocument();
-    expect(within(listbox).getByRole("option", { name: "Relationships" })).toBeInTheDocument();
+    expect(within(listbox).getByRole("option", { name: "Interpersonal" })).toBeInTheDocument();
     expect(within(listbox).getByRole("option", { name: "Health" })).toBeInTheDocument();
+    expect(within(listbox).getByRole("option", { name: "Finances" })).toBeInTheDocument();
     expect(within(listbox).getByRole("option", { name: "Custom" })).toBeInTheDocument();
   });
 
@@ -52,7 +53,7 @@ describe("CategorySelect", () => {
     const swatch = health.querySelector("[style]");
     expect(swatch).toHaveAttribute(
       "style",
-      expect.stringContaining("rgb(74, 103, 64)")
+      expect.stringContaining("rgb(255, 165, 131)")
     );
     delete document.documentElement.dataset.uiStyle;
   });

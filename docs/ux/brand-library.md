@@ -94,8 +94,8 @@ colors are available in `GOAL_CATEGORY_DESIGN`:
 | Health | `vermilion` | `#FFA583` | `#632310` |
 | Career | `klein-blue` | `#AABAFB` | `#18245F` |
 | Personal | `ultraviolet` | `#C4A8F5` | `#351655` |
-| Relationships | `black-cherry` | `#DE93B6` | `#3E132A` |
-| Finance | `malachite` | `#83D3A3` | `#103E2E` |
+| Interpersonal | `black-cherry` | `#DE93B6` | `#3E132A` |
+| Finances | `malachite` | `#83D3A3` | `#103E2E` |
 | Other | `saffron` | `#F4D35E` | `#4D3C0B` |
 
 ```tsx
@@ -105,7 +105,7 @@ const finance = getCategoryColorPair("finance");
 const custom = getColorPair("petroleum", "dark");
 const scale = COLOR_LIBRARY.malachite; // mist, surface, pigment, shade, ink
 
-<span style={{ backgroundColor: finance.surface, color: finance.ink }}>Finance</span>
+<span style={{ backgroundColor: finance.surface, color: finance.ink }}>Finances</span>
 ```
 
 Surface and ink are a pair. Dark treatment reverses the pair; it does not dim
@@ -115,8 +115,11 @@ surface as the pigment fallback. Always retain text/icon category labels.
 
 This is now the approved persisted preset assignment. The forward-only
 `20260918120000_mineral_candy_goal_categories.sql` migration updates the shared
-category rows and adds Finance. Existing goal-level custom colors remain
-user-owned; the migration does not rewrite those values.
+category rows, adds Finances, and renames the Relationships display label to
+Interpersonal while keeping the `relationships` key and a Relationships alias.
+Existing goal-level custom colors remain user-owned; the migration does not
+rewrite those values. Denormalized `goals.category` text for `relationships`
+rows is backfilled to Interpersonal.
 
 ## Extend
 

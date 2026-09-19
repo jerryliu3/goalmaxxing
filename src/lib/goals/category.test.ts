@@ -11,6 +11,10 @@ describe("goal category helpers", () => {
   it("resolves explicit labels/keys and keeps unknowns on other", () => {
     expect(resolveCategoryKey("Health", DEFAULT_GOAL_CATEGORIES)).toBe("health");
     expect(resolveCategoryKey("career", DEFAULT_GOAL_CATEGORIES)).toBe("career");
+    expect(resolveCategoryKey("Interpersonal", DEFAULT_GOAL_CATEGORIES)).toBe("relationships");
+    expect(resolveCategoryKey("Relationships", DEFAULT_GOAL_CATEGORIES)).toBe("relationships");
+    expect(resolveCategoryKey("Finances", DEFAULT_GOAL_CATEGORIES)).toBe("finance");
+    expect(resolveCategoryKey("Finance", DEFAULT_GOAL_CATEGORIES)).toBe("finance");
     expect(resolveCategoryKey("fitness", DEFAULT_GOAL_CATEGORIES)).toBe("other");
   });
 
@@ -51,5 +55,12 @@ describe("goal category helpers", () => {
       "finance",
       "other",
     ]);
+    expect(DEFAULT_GOAL_CATEGORIES.find((category) => category.key === "relationships")).toMatchObject({
+      label: "Interpersonal",
+      aliases: ["Relationships", "Relationship"],
+    });
+    expect(DEFAULT_GOAL_CATEGORIES.find((category) => category.key === "finance")).toMatchObject({
+      label: "Finances",
+    });
   });
 });

@@ -6,16 +6,28 @@ export const GOAL_CATEGORY_DESIGN = {
   health: { label: "Health", colorId: "vermilion", sortOrder: 10 },
   career: { label: "Career", colorId: "klein-blue", sortOrder: 20 },
   personal: { label: "Personal", colorId: "ultraviolet", sortOrder: 30 },
-  relationships: { label: "Relationships", colorId: "black-cherry", sortOrder: 40 },
-  finance: { label: "Finance", colorId: "malachite", sortOrder: 50 },
+  relationships: {
+    label: "Interpersonal",
+    colorId: "black-cherry",
+    sortOrder: 40,
+    aliases: ["Relationships", "Relationship"],
+  },
+  finance: { label: "Finances", colorId: "malachite", sortOrder: 50, aliases: ["Finance"] },
   other: { label: "Other", colorId: "saffron", sortOrder: 999 },
-} as const satisfies Record<string, { label: string; colorId: ColorId; sortOrder: number }>;
+} as const satisfies Record<
+  string,
+  { label: string; colorId: ColorId; sortOrder: number; aliases?: readonly string[] }
+>;
 
 export type GoalCategoryDesignId = keyof typeof GOAL_CATEGORY_DESIGN;
 export const GOAL_CATEGORY_DESIGN_IDS = Object.keys(GOAL_CATEGORY_DESIGN) as [
   GoalCategoryDesignId, ...GoalCategoryDesignId[],
 ];
 export const goalCategoryDesignIdSchema = z.enum(GOAL_CATEGORY_DESIGN_IDS);
+
+export function categoryDesignAliases(id: GoalCategoryDesignId): readonly string[] {
+  return GOAL_CATEGORY_DESIGN[id].aliases ?? [];
+}
 
 /** Mineral Candy treatment: rich surface + deep ink, reversed for dark surfaces. */
 export function getCategoryColorPair(category: GoalCategoryDesignId, appearance: "light" | "dark" = "light") {

@@ -427,7 +427,7 @@ describe("resolveGoalCreationColor", () => {
   });
 
   it("falls back to the category swatch for missing or invalid colors", () => {
-    expect(resolveGoalCreationColor(null, "health")).toBe("#10b981");
-    expect(resolveGoalCreationColor("#abc12", "health")).toBe("#10b981");
+    expect(resolveGoalCreationColor(null, "health")).toBe("#FFA583");
+    expect(resolveGoalCreationColor("#abc12", "health")).toBe("#FFA583");
   });
 });
