@@ -18,6 +18,7 @@ import { AltitudeBackdrop } from "@/components/xp/altitude-backdrop";
 import { XpProfileProvider } from "@/components/xp/xp-profile-provider";
 import { XpProgressBar } from "@/components/xp/xp-progress-bar";
 import { XpRewardProvider } from "@/components/xp/xp-reward-provider";
+import { PlaqueCompletionProvider } from "@/features/goals/plaque-completion-provider";
 import { DuoProvider } from "@/features/social/duo/duo-context";
 import { DuoScopeToggle } from "@/features/social/duo/duo-scope-toggle";
 import { PublicProfileSheetProvider } from "@/features/social/public-profile/public-profile-sheet-provider";
@@ -85,6 +86,7 @@ export function AppShell({
 
   return (
     <XpRewardProvider>
+      <PlaqueCompletionProvider>
       <XpProfileProvider enabled={xpEnabled}>
         <JourneyProvider flags={journeyFlags}>
           <AltitudeBackdrop journeyFlags={journeyFlags} />
@@ -183,6 +185,7 @@ export function AppShell({
           </DuoProvider>
         </JourneyProvider>
       </XpProfileProvider>
+      </PlaqueCompletionProvider>
     </XpRewardProvider>
   );
 }

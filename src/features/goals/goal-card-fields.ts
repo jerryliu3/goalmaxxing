@@ -23,4 +23,3 @@ export function goalCardFields(goal: Goal): GoalCreationFields {
     linked_target_goal_id: "none",
   };
 }
-

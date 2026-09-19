@@ -433,6 +433,9 @@
   --shine-strength: 0.73;
   --metal-x: 53.3%;
   --metal-y: 36.2%;
+  /* 4px emboss matches the sculpted depth on the material study. */
+  --text-depth: 4px;
+  --text-walls: block;
   position: relative;
   perspective: 1200px;
 }
@@ -650,6 +653,12 @@
 }
 .tempo-card[data-material="chromatic"] .tempo-effort-bars i[data-active="true"] {
   background: color-mix(in srgb, var(--goal-color) 35%, #dce8e9);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tempo-card-surface {
+    --text-depth: 0px;
+    --text-walls: none;
+  }
 }
 @supports not (backdrop-filter: blur(1px)) {
   .tempo-card[data-material="glass"] {

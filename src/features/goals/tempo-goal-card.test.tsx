@@ -59,6 +59,22 @@ describe("TempoGoalCard materials", () => {
     ).toHaveAttribute("data-material", "chromatic");
   });
 
+  it("embosses material card lettering at the production depth", () => {
+    const { container } = render(
+      <TempoGoalCard fields={{ ...baseFields, difficulty: "hard" }} />,
+    );
+    expect(container.querySelector(".tempo-card-surface")).toHaveAttribute(
+      "data-material",
+      "chromatic",
+    );
+    expect(
+      container.querySelectorAll("[data-lettering-solid]").length,
+    ).toBeGreaterThan(0);
+    expect(
+      container.querySelector('[data-lettering-solid="display"]'),
+    ).not.toBeNull();
+  });
+
   it("falls back to liquid glass when a goal has no difficulty", () => {
     expect(
       renderCard({

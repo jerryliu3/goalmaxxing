@@ -35,7 +35,7 @@ export function goalCardProgress(goal: Goal, progress: ProgressContextSummary) {
   const periodLabel = `${progress.currentPeriodCompletionCount} / ${progress.currentPeriodTarget ?? 1} this ${period}`;
 
   if (isPeriodCadenceGoal(goal)) {
-    const artificial = artificialCadenceAssemblyTarget(goal);
+    const artificial = goal.plaque_target ?? artificialCadenceAssemblyTarget(goal);
     if (artificial !== null) {
       const { credited, required } = getRewardProgress(
         progress.creditedUnitCount,

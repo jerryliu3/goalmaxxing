@@ -12,6 +12,7 @@ import { normalizeMilestoneNamesForSave } from "@/lib/goals/milestones";
 
 export interface GoalFormState extends GoalCreationFields {
   reward_text: string;
+  plaque_target: number | null;
   team_id: string | null;
   task_scheduled_date: string;
   task_scheduled_time: string;
@@ -36,6 +37,7 @@ export interface GoalFormGoalArgs {
   p_default_local_time?: string;
   p_team_id?: string;
   p_is_private: boolean;
+  p_plaque_target?: number;
 }
 
 export type GoalFormRecovery =
@@ -56,6 +58,7 @@ export type GoalFormRecovery =
 export const defaultGoalFormState: GoalFormState = {
   ...createDefaultGoalCreationFields(),
   reward_text: "",
+  plaque_target: null,
   team_id: null,
   task_scheduled_date: toLocalDateString(),
   task_scheduled_time: "",
@@ -181,5 +184,9 @@ export function buildGoalMutationArgs({
     p_default_local_time: state.default_local_time.trim() || undefined,
     p_team_id: state.team_id ?? undefined,
     p_is_private: state.team_id ? false : state.is_private,
+    p_plaque_target:
+      state.frequency_type === "recurring" && state.target_basis === "period"
+        ? state.plaque_target ?? undefined
+        : undefined,
   };
 }

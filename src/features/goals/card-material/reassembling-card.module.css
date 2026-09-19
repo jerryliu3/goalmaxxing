@@ -1,4 +1,8 @@
 .surface { position: relative; transform-style: preserve-3d; }
+.previewWhole { position: relative; transform-style: preserve-3d; opacity: 1; transition: opacity .36s ease; }
+.surface[data-preview-done="true"] .previewWhole { opacity: 0; pointer-events: none; }
+.surface[data-preview="true"] .ghost { opacity: 0; transition: opacity .36s ease; }
+.surface[data-preview="true"][data-preview-done="true"] .ghost { opacity: 1; }
 .fused { position: relative; transform-style: preserve-3d; opacity: 0; pointer-events: none; }
 .fused[data-visible="true"] { opacity: 1; }
 .ghost, .piece, .pieceFace { position: absolute; inset: 0; pointer-events: none; }

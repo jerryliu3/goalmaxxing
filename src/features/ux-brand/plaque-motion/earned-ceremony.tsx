@@ -38,7 +38,9 @@ export function EarnedCeremony({ fields, target, reward, still, grand, origin, o
     return () => window.clearTimeout(timer);
   }, [phase, still, flight.ready]);
   const inBook = phase === "shelve" || phase === "kept";
-  const plaquePhase: PlaquePhase = phase === "lift" ? "almost" : phase === "gather" ? "gather" : "fused";
+  // Keep the complete material face visible during the lift. The final piece
+  // choreography starts only after the card has arrived in the ceremony.
+  const plaquePhase: PlaquePhase = phase === "gather" ? "gather" : "fused";
   return <DialogPrimitive.Portal>
     <DialogPrimitive.Overlay className={styles.ceremonyBackdrop} />
     <DialogPrimitive.Content className={styles.ceremony} aria-describedby="ceremony-description"

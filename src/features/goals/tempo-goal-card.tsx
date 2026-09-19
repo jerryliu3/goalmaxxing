@@ -6,6 +6,7 @@ import { ReassemblingCard } from "./card-material/reassembling-card";
 import { ArrowUpRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/goals/category";
 import { resolveTempoCardMaterial } from "./card-material/tempo-card-material";
+import { renderSolidLettering } from "./card-material/solid-lettering";
 import { TempoCardSurface } from "./card-material/tempo-card-surface";
 import type { GoalCreationFields } from "./goal-creation-model";
 import type { TempoCardVisibility } from "./tempo-creation-progress";
@@ -20,7 +21,7 @@ export function TempoGoalCard({
   surface = "material",
   rotatable = true,
   assembly,
-  renderLettering = (text) => text,
+  renderLettering = renderSolidLettering,
   visibility = {
     category: true,
     rhythm: true,
@@ -39,7 +40,7 @@ export function TempoGoalCard({
   surface?: "material" | "plain";
   /** Prefer leaving this on; hosts with competing swipes still work because card pointer events stop bubbling. */
   rotatable?: boolean;
-  assembly?: { completed: number; target: number };
+  assembly?: { completed: number; target: number; preview?: boolean };
   visibility?: TempoCardVisibility;
   renderLettering?: (
     text: ReactNode,
@@ -191,6 +192,7 @@ export function TempoGoalCard({
           completed={assembly.completed}
           target={assembly.target}
           still={still}
+          preview={assembly.preview}
         >
           {card}
         </ReassemblingCard>

@@ -7,15 +7,22 @@ import { buildRewardPieces } from "./reward-pieces";
 import styles from "./reassembling-card.module.css";
 
 /** One accessible face, clipped visual copies, and a seamless solid on completion. */
-export function ReassemblingCard({ children, completed, target, still }: {
+export function ReassemblingCard({ children, completed, target, still, preview }: {
   children: ReactNode;
   completed: number;
   target: number;
   still: boolean;
+  preview?: boolean;
 }) {
   const { required, credited, earned } = getRewardProgress(completed, target);
   const pieces = useMemo(() => buildRewardPieces(required), [required]);
   const [arrival, setArrival] = useState({ observed: credited, settled: credited });
+  const [previewDone, setPreviewDone] = useState(!preview || still);
+  useEffect(() => {
+    if (!preview || still) return;
+    const timer = window.setTimeout(() => setPreviewDone(true), 720);
+    return () => window.clearTimeout(timer);
+  }, [preview, still]);
   if (arrival.observed !== credited || (still && arrival.settled !== credited)) {
     setArrival({ observed: credited, settled: still ? credited : Math.min(arrival.settled, credited) });
   }
@@ -28,7 +35,8 @@ export function ReassemblingCard({ children, completed, target, still }: {
   }, [credited, still, arrival.settled]);
 
   return (
-    <div className={styles.surface} data-reassembly="" data-fused={fused} data-still={still}>
+    <div className={styles.surface} data-reassembly="" data-fused={fused} data-still={still} data-preview={preview} data-preview-done={previewDone}>
+      {preview && !fused && <div className={styles.previewWhole} aria-hidden="true"><CardSolidBody />{children}</div>}
       <div className={styles.fused} data-visible={fused}>
         {fused && <CardSolidBody />}
         {children}

@@ -50,6 +50,7 @@ export function TempoGoalFields({
   preview,
   error: suppliedError,
   onReviewChange,
+  onPlaqueTargetChange,
   taskSchedule,
   prefilled = false,
 }: GoalCreationFieldControlsProps & {
@@ -58,6 +59,7 @@ export function TempoGoalFields({
   prefilled?: boolean;
   error?: string | null;
   onReviewChange?: (ready: boolean) => void;
+  onPlaqueTargetChange?: (target: number) => void;
   taskSchedule?: { date: string; time: string };
 }) {
   const [step, setStep] = useState(0);
@@ -118,6 +120,9 @@ export function TempoGoalFields({
   const go = (next: number) => {
     setStep(next);
     setFurthestStep((previous) => Math.max(previous, next));
+    if (next === 3 && !isPlannerTask) {
+      onPlaqueTargetChange?.(plaqueTarget);
+    }
     onReviewChange?.(
       next === 3 && intentionValid && rhythmValid && scheduleValid,
     );
@@ -144,7 +149,7 @@ export function TempoGoalFields({
 
   const reviewAssembly =
     step === 3 && !isPlannerTask
-      ? { completed: 0, target: plaqueTarget }
+      ? { completed: 0, target: plaqueTarget, preview: true }
       : undefined;
 
   return (
@@ -398,6 +403,7 @@ export function TempoGoalFields({
                         ? 1
                         : clampPlaqueTarget(next),
                     );
+                    onPlaqueTargetChange?.(event.target.value === "" ? 1 : clampPlaqueTarget(next));
                   }}
                 />
               </label>{" "}

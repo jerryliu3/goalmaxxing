@@ -28,7 +28,7 @@
 .notes p { max-width: 52rem; margin-top: 1rem; }
 
 /* Whole face, clipped material copies, and the existing empty face share bounds. */
-.plaque { position: relative; isolation: isolate; }
+.plaque { position: relative; isolation: isolate; min-height: 330px; }
 .plaque :global(.tempo-card-object) { transform: none; }
 .plaque :global(.tempo-card-surface) { perspective: none; }
 .solid { opacity: 0; pointer-events: none; }
