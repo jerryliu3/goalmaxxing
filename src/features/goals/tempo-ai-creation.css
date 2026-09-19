@@ -397,9 +397,9 @@
     transform: rotate(360deg);
   }
 }
-@media (max-width: 767px) {
+@media (max-width: 767px), (max-height: 540px) {
   .tempo-creation.tempo-ai-entry {
-    grid-template-areas: "steps" "workspace" "preview";
+    grid-template-areas: "steps" "preview" "workspace";
   }
   .tempo-ai-heading h2 {
     font-size: 2rem;
@@ -408,22 +408,46 @@
     min-height: 140px;
   }
   .tempo-ai-preview {
-    padding: 1rem 1rem 0;
+    display: grid;
+    justify-items: center;
+    padding: 1rem 0 0;
+  }
+  .tempo-ai-deck {
+    width: 70%;
+    padding: 0;
+    container-type: inline-size;
   }
   .tempo-ai-paper-front {
-    min-height: 240px;
-    padding: 1.4rem;
-    gap: 1rem;
+    aspect-ratio: 330 / 382;
+    min-height: 0;
+    padding: 8cqi;
+    gap: 6.06cqi;
+  }
+  .tempo-ai-paper-top,
+  .tempo-ai-paper-bottom {
+    gap: 4.85cqi;
+    font-size: 2.67cqi;
+  }
+  .tempo-ai-paper-top svg {
+    width: 7.88cqi;
+    height: 7.88cqi;
   }
   .tempo-ai-paper-mark {
-    height: 45px;
-    font-size: 50px;
+    height: 28.79cqi;
+    font-size: 27.27cqi;
   }
   .tempo-ai-paper-front h3 {
-    font-size: 1.6rem;
+    font-size: 8.18cqi;
+  }
+  .tempo-ai-paper-front > p {
+    max-width: none;
+    font-size: 3.88cqi;
+  }
+  .tempo-ai-paper-bottom {
+    margin-top: 0;
   }
   .tempo-ai-preview-caption {
-    margin-top: 1.2rem;
+    margin-top: 0.9rem;
   }
 }
 @media (prefers-reduced-motion: reduce) {
