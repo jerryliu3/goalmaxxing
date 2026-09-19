@@ -30,7 +30,9 @@ import {
 } from "@/features/settings/settings-section";
 import { NotificationsSection } from "@/features/social/notifications-section";
 import { buildPublicProfileUrl } from "@/lib/social/public-profile-username";
+import { ProfilePresenceSection } from "@/features/social/profile-presence";
 import { ProfileSection } from "@/features/social/profile-section";
+import { useOwnProfilePresence } from "@/features/social/use-own-profile-presence";
 import { useSocialTabData } from "@/features/social/use-social-tab-data";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
@@ -63,6 +65,7 @@ export function SettingsTab() {
     savePreferences,
     signOut,
   } = useSocialTabData();
+  const { bundle: presence } = useOwnProfilePresence(state.userId || null);
   useReportAppSurfaceReady(!(loading && !state.userId));
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();
@@ -183,6 +186,13 @@ export function SettingsTab() {
           onSaveProfile={saveProfile}
           onUploadAvatar={uploadProfileAvatarFile}
         />
+        {presence ? (
+          <ProfilePresenceSection
+            growSeries={presence.growSeries}
+            heatmap={presence.yearHeatmap}
+            selectedYear={new Date().getFullYear()}
+          />
+        ) : null}
         {groups}
       </div>
 

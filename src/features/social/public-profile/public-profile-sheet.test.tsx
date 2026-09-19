@@ -66,6 +66,7 @@ describe("PublicProfileSheet", () => {
       awardCatalogCount: 0,
       overallStats: null,
       yearHeatmap: [],
+      growSeries: [],
     });
 
     render(
@@ -118,6 +119,7 @@ describe("PublicProfileSheet", () => {
         },
       },
       yearHeatmap: [{ date: "2026-01-01", count: 1 }],
+      growSeries: [],
     });
 
     render(
@@ -145,6 +147,7 @@ describe("PublicProfileSheet", () => {
       awardCatalogCount: 0,
       overallStats: null,
       yearHeatmap: [],
+      growSeries: [],
     });
 
     render(

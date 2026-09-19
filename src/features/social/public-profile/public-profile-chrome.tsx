@@ -10,7 +10,7 @@ export function PublicProfileChrome({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-page text-foreground">
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <Link href="/" className="font-display text-xl font-semibold tracking-tight">
             Goalmaxxing
           </Link>
@@ -24,7 +24,7 @@ export function PublicProfileChrome({ children }: { children: React.ReactNode })
           </nav>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">{children}</main>
+      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">{children}</main>
     </div>
   );
 }

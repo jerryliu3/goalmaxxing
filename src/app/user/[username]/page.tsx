@@ -62,7 +62,7 @@ export async function generateMetadata({
     const title = `${label} (${handle}) · Goalmaxxing`;
     const description = bundle.profile.isPrivate
       ? "This Goalmaxxing account is private."
-      : `${label}'s Goalmaxxing profile — XP, medals, and yearly activity.`;
+      : `${label}'s Goalmaxxing profile — score, yearly activity, and public goals.`;
 
     return {
       title,
