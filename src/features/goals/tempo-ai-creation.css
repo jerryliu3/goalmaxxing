@@ -281,77 +281,83 @@
 }
 .tempo-ai-deck {
   position: relative;
-  padding: 0 10px;
+  padding: 0 1%;
+  container-type: inline-size;
 }
 .tempo-ai-paper {
-  border-radius: 0.55rem;
+  border-radius: 2.67cqi;
   border: 1px solid #29282320;
 }
 .tempo-ai-paper-back,
 .tempo-ai-paper-middle {
   position: absolute;
-  inset: 0 12px 0;
+  inset: 0 3.64cqi 0;
   transform-origin: 50% 85%;
 }
 .tempo-ai-paper-back {
-  transform: rotate(-7deg) translateY(3px);
+  transform: rotate(-7deg) translateY(.91cqi);
   background: #deded0;
 }
 .tempo-ai-paper-middle {
-  transform: rotate(4deg) translateY(-3px);
+  transform: rotate(4deg) translateY(-.91cqi);
   background: #eaded0;
 }
 .tempo-ai-paper-front {
   position: relative;
+  aspect-ratio: 330 / 382;
   background: #f1cfb5;
   color: #292823;
-  box-shadow: 0 20px 30px #2928230b;
-  padding: 1.6rem;
+  box-shadow: 0 6.06cqi 9.09cqi #2928230b;
+  min-height: 0;
+  padding: 8cqi;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  min-height: 390px;
+  gap: 6.06cqi;
 }
 .tempo-ai-paper-top,
 .tempo-ai-paper-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.7rem;
-  font-size: 0.55rem;
+  gap: 4.85cqi;
+  font-size: 2.67cqi;
   letter-spacing: 0.1em;
 }
+.tempo-ai-paper-top svg {
+  width: 7.88cqi;
+  height: 7.88cqi;
+}
 .tempo-ai-paper-mark {
-  height: 95px;
+  height: 28.79cqi;
   display: flex;
   align-items: center;
-  font-size: 90px;
+  font-size: 27.27cqi;
   line-height: 1;
   font-weight: 400;
 }
 .tempo-ai-paper-front h3 {
   font-family: inherit;
-  font-size: clamp(1.65rem, 2.7vw, 2.15rem);
+  font-size: 8.18cqi;
   font-weight: 500;
   line-height: 1.1;
   letter-spacing: -0.05em;
   margin: 0;
 }
 .tempo-ai-paper-rule {
-  height: 1px;
+  height: .3cqi;
   background: #29282330;
   margin-top: auto;
 }
 .tempo-ai-paper-front > p {
-  font-size: 0.8rem;
+  font-size: 3.88cqi;
   line-height: 1.6;
-  max-width: 16rem;
+  max-width: none;
   margin: 0;
 }
 .tempo-ai-paper-bottom {
-  margin-top: 0.5rem;
+  margin-top: 0;
   opacity: 0.65;
-  font-size: 0.5rem;
+  font-size: 2.42cqi;
 }
 .tempo-ai-preview-caption {
   text-align: center;
@@ -360,14 +366,17 @@
   color: var(--muted-foreground);
   margin: 1.75rem 0 0;
 }
+.tempo-ai-mobile-preview {
+  display: none;
+}
 .tempo-ai-drafting-dots {
   display: flex;
-  gap: 10px;
+  gap: 3.03cqi;
   align-items: center;
 }
 .tempo-ai-drafting-dots i {
-  width: 13px;
-  height: 13px;
+  width: 3.94cqi;
+  height: 3.94cqi;
   background: #8e452d;
   border-radius: 50%;
   animation: tempo-ai-breathe 1.4s ease-in-out infinite;
@@ -397,9 +406,17 @@
     transform: rotate(360deg);
   }
 }
-@media (max-width: 767px) {
+@media (max-width: 767px), (max-height: 540px) {
   .tempo-creation.tempo-ai-entry {
-    grid-template-areas: "steps" "workspace" "preview";
+    grid-template-areas: "steps" "workspace";
+  }
+  .tempo-ai-entry > .tempo-preview {
+    display: none;
+  }
+  .tempo-ai-mobile-preview {
+    display: block;
+    width: min(66%, calc(48dvh * 330 / 382 * .66), 13.2rem);
+    margin-inline: auto;
   }
   .tempo-ai-heading h2 {
     font-size: 2rem;
@@ -408,22 +425,16 @@
     min-height: 140px;
   }
   .tempo-ai-preview {
+    display: grid;
+    justify-items: center;
     padding: 1rem 1rem 0;
   }
-  .tempo-ai-paper-front {
-    min-height: 240px;
-    padding: 1.4rem;
-    gap: 1rem;
-  }
-  .tempo-ai-paper-mark {
-    height: 45px;
-    font-size: 50px;
-  }
-  .tempo-ai-paper-front h3 {
-    font-size: 1.6rem;
+  .tempo-ai-deck {
+    width: 100%;
+    padding: 0;
   }
   .tempo-ai-preview-caption {
-    margin-top: 1.2rem;
+    margin-top: 0.9rem;
   }
 }
 @media (prefers-reduced-motion: reduce) {

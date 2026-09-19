@@ -35,6 +35,19 @@ describe("BulkGoalInputCard", () => {
     expect(screen.queryByLabelText("Paste CSV content")).not.toBeInTheDocument();
   });
 
+  it("places the mobile preview after the prompt and before the input", () => {
+    render(
+      <BulkGoalInputCard
+        {...baseProps()}
+        mobilePreview={<aside data-testid="mobile-preview">Preview</aside>}
+      />,
+    );
+
+    const preview = screen.getByTestId("mobile-preview");
+    const input = screen.getByLabelText("Describe goals in natural language");
+    expect(preview.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+  });
+
   it("renders CSV paste and file upload sections in csv mode", () => {
     render(<BulkGoalInputCard {...baseProps({ inputMode: "csv" })} />);
 
