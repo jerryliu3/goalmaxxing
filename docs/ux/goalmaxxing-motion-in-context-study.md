@@ -1,6 +1,6 @@
 # Motion in context
 
-The moderator-gated `/ux/motion` route puts five selected concepts into local
+The moderator-gated `/ux/motion` route puts seven selected concepts into local
 sample journeys using the current quest/Tempo cards and yearly folio. It is a
 code UX prototype, not a production launch. Production `AppShell`, completion
 mutations, task writes, milestone rules, and credit calculation are unchanged.
@@ -11,6 +11,12 @@ Hold the Tempo run completion square (or activate it with Enter/Space). The
 sample receipt credits parents that are not listed in the day's plan. Each
 parent floats below the source in order, receives a pulse, and shows its exact
 before/after count and outcome. Afterward, inspect the retained results.
+
+The same completion now plays the original reward study: a deep stamp drops
+onto the source goal from above, larger/slower sparks lift away, and the
+sample XP count eases from 320 to 344 while the top bar fills. This is visual
+sample state only; it does not call the application's XP profile or reward
+mutation.
 
 The sample outcome control covers two achieved parents, progress without
 achievement, no new linked credit, and recording failure. This is playback of
@@ -52,12 +58,12 @@ Routine recurring-session completion must never trigger book binding.
 
 ## Scope decisions
 
-Included: linked parent reveal/cascade, expanded quest weekly clasp, task
-tear-off, persistent milestone flags, and goal-achievement binding. Deferred:
+Included: completion stamp and XP flight, linked parent reveal/cascade,
+expanded quest weekly clasp, task tear-off, persistent milestone flags, and
+goal-achievement binding. Deferred:
 goal footprints, evidence tally, and medal formation because their production
 placement is unsettled. Skipped: day bookmark, cadence trace, tracing paper,
-history transfer, return thread, and record plate. The earlier stamp/XP concept
-remains a separate candidate and is not silently enabled by this study.
+history transfer, return thread, and record plate.
 
 All state lives in the route's client subtree; there are no account/API writes,
 new persistence schemas, feature flags, notification prompts, or route changes
@@ -76,5 +82,6 @@ Source self-review is not a claim of browser-verified layout or timing.
 
 Candidate production order after visual selection: milestone flags and task
 capture first; weekly clasp once its fit alongside the material face is
-approved; cascade and book binding after the real credited/achieved event
-contracts and small-screen interruption behavior have been reviewed.
+approved; stamp/XP after the reward target and timing are agreed; cascade and
+book binding after the real credited/achieved event contracts and small-screen
+interruption behavior have been reviewed.

@@ -9,6 +9,7 @@ import { CascadeFeedback } from "./cascade-feedback";
 import { completionReducer, INITIAL_COMPLETION, PARENT_REVEAL_MS, SAMPLE_SAVE_MS } from "./completion-model";
 import { RUN_FIELDS, runQuest, sampleReceipt, type Scenario } from "./seed";
 import { WeeklyClasp } from "./weekly-clasp";
+import { CompletionStamp, CompletionXpBar, CompletionXpFlight } from "./completion-reward";
 
 export function DailyWork({ scenario, still }: { scenario: Scenario; still: boolean }) {
   const [state, dispatch] = useReducer(completionReducer, INITIAL_COMPLETION);
@@ -33,8 +34,12 @@ export function DailyWork({ scenario, still }: { scenario: Scenario; still: bool
 
   return <section aria-labelledby="motion-daily-heading">
     <div className="mb-4 flex items-baseline justify-between gap-3"><h2 id="motion-daily-heading" className="font-display text-3xl">Friday, September 18</h2><span className="text-xs text-muted-foreground">Day plan</span></div>
-    <div className="motion-study-source">
+    <div className="motion-study-reward-stage">
+      <CompletionXpBar active={Boolean(state.receipt)} still={still} />
+      <CompletionXpFlight active={Boolean(state.receipt)} still={still} />
+      <div className="motion-study-source">
       <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
+        <CompletionStamp active={Boolean(state.receipt)} still={still} />
         <CompletionToggle key={state.phase === "error" ? "failed" : "completion"} completed={completed} pending={busy} disabled={completed || busy} size="lg"
           aria-label="Complete Tempo run" title="Hold to complete Tempo run"
           onClick={() => dispatch({ type: "begin" })} />
@@ -45,6 +50,7 @@ export function DailyWork({ scenario, still }: { scenario: Scenario; still: bool
         </button>
       </div>
       <CascadeFeedback state={state} still={still} onFinish={() => dispatch({ type: "finish" })} />
+      </div>
     </div>
     <p className="my-3 min-h-5 text-sm text-muted-foreground" role="status">
       {state.phase === "saving" ? "Recording sample completion…" : state.phase === "cascade" ? `Linked credit ${state.activeIndex + 1} of ${state.receipt?.linked.length}`
