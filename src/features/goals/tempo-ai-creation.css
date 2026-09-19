@@ -415,6 +415,8 @@
   }
   .tempo-ai-mobile-preview {
     display: block;
+    width: min(66%, calc(48dvh * 330 / 382 * .66), 13.2rem);
+    margin-inline: auto;
   }
   .tempo-ai-heading h2 {
     font-size: 2rem;
@@ -425,10 +427,10 @@
   .tempo-ai-preview {
     display: grid;
     justify-items: center;
-    padding: 1rem 0 0;
+    padding: 1rem 1rem 0;
   }
   .tempo-ai-deck {
-    width: 66%;
+    width: 100%;
     padding: 0;
   }
   .tempo-ai-preview-caption {
