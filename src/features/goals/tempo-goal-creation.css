@@ -1013,8 +1013,8 @@
     grid-template-areas: "steps" "preview" "action";
   }
 }
-/* Phones, including landscape, contain the same reference face against their
-   shorter axis rather than changing its proportion or internal type scale. */
+/* Vertical creation layouts reserve more space for controls by rendering the
+   reference face at 60% of the horizontal-layout preview size. */
 @media (max-width: 767px), (max-height: 540px) {
   .tempo-creation {
     grid-template-columns: minmax(0, 1fr);
@@ -1028,7 +1028,7 @@
     container-type: inline-size;
     position: relative;
     top: auto;
-    width: min(100%, calc(48dvh * 330 / 382), 20rem);
+    width: min(60%, calc(48dvh * 330 / 382 * .6), 12rem);
     margin-inline: auto;
     justify-self: center;
   }
