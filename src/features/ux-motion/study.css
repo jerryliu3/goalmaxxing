@@ -1,5 +1,13 @@
 .motion-study { --motion-study-gain: var(--gm-gain, #4a6740); }
-.motion-study-source { position: relative; z-index: 10; }
+.motion-study-reward-stage { position: relative; }
+.motion-study-xp-bar { position: relative; z-index: 2; padding: 12px 14px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 9px; background: color-mix(in srgb, var(--card) 92%, var(--primary)); box-shadow: 0 3px 0 color-mix(in srgb, var(--primary) 18%, transparent); }
+.motion-study-xp-track { height: 8px; margin-top: 8px; overflow: hidden; border-radius: 999px; background: var(--muted); }
+.motion-study-xp-track > span { display: block; width: 100%; height: 100%; transform-origin: left; border-radius: inherit; background: linear-gradient(90deg, var(--primary), var(--gm-stamp-light, #c88968)); }
+.motion-study-xp-flight { position: absolute; z-index: 8; top: 84px; left: 50%; width: 1px; height: 1px; pointer-events: none; }
+.motion-study-xp-star { position: absolute; display: block; color: var(--gm-stamp-light, #c88968); font-size: 1.7rem; line-height: 1; text-shadow: 0 1px 0 color-mix(in srgb, var(--foreground) 25%, transparent); transform: rotate(var(--star-rotate)); }
+.motion-study-source { position: relative; z-index: 10; perspective: 700px; }
+.motion-study-stamp { position: absolute; z-index: 5; top: 50%; left: 5.5rem; padding: 8px 13px 6px; transform-origin: center; border: 3px solid var(--gm-stamp, var(--primary)); border-radius: 5px; color: var(--gm-stamp, var(--primary)); background: color-mix(in srgb, var(--card) 82%, transparent); font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; letter-spacing: .12em; line-height: 1; pointer-events: none; text-align: center; box-shadow: 0 2px 0 color-mix(in srgb, var(--gm-stamp, var(--primary)) 30%, transparent); }
+.motion-study-stamp span { display: block; margin-top: 5px; font-size: .55rem; letter-spacing: .08em; font-weight: 500; }
 .motion-study-cascade { position: absolute; top: calc(100% + 10px); left: 0; right: 0; z-index: 20; padding: 1rem; background: var(--card); color: var(--card-foreground); border: 1px solid var(--primary); border-radius: 12px; box-shadow: 0 14px 36px color-mix(in srgb, var(--foreground) 16%, transparent); }
 .motion-study-thread { position: absolute; height: 27px; width: 2px; left: 2.3rem; top: -27px; background: color-mix(in srgb, var(--primary) 25%, transparent); pointer-events: none; }
 .motion-study-thread > span { display: block; width: 7px; height: 7px; border-radius: 50%; background: var(--primary); margin-left: -2.5px; animation: motion-study-credit-pulse 650ms ease-in-out both; }
@@ -19,7 +27,7 @@
 .motion-study-task-row { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 14px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 5px; background: var(--card); overflow-wrap: anywhere; }
 @keyframes motion-study-credit-pulse { from { transform: translateY(0); opacity: 0; } 25% { opacity: 1; } to { transform: translateY(27px); opacity: 0; } }
 @keyframes motion-study-tear { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
-.motion-study[data-still="true"] .motion-study-thread,.motion-study[data-still="true"] .motion-study-tear { display: none; }
+.motion-study[data-still="true"] .motion-study-thread,.motion-study[data-still="true"] .motion-study-tear,.motion-study[data-still="true"] .motion-study-xp-flight { display: none; }
 .motion-study-milestones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 20px 0; }
 .motion-study-stop { display: block; width: 100%; min-height: 135px; padding: 10px 5px; border: 1px solid transparent; border-radius: 10px; text-align: center; }
 .motion-study-stop[aria-pressed="true"] { border-color: var(--border); background: var(--muted); }
