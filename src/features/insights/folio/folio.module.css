@@ -171,8 +171,7 @@
 .collections button[aria-current="page"] { color: var(--foreground); border-color: var(--foreground); }
 .currentGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 1rem; padding: 2.5rem .25rem; }
 .currentGoal { min-width: 0; width: 100%; }
-.currentGrid :global(.tempo-card) { min-height: 210px; padding: 1.1rem; gap: .9rem; }
-.currentGrid :global(.tempo-card h2) { font-size: 1.15rem; }
+.currentGrid :global(.tempo-card-frame) { width: 100%; }
 .goalDetails { display: block; margin: .75rem auto 0; padding: .5rem; font-size: .75rem; color: var(--muted-foreground); text-decoration: underline; text-underline-offset: 4px; }
 @media (min-width: 640px) { .currentGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 860px) { .currentGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
