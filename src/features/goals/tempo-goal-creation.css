@@ -490,6 +490,7 @@
 .tempo-card-object .tempo-card::before,
 .tempo-card-object .tempo-card::after {
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 .tempo-card-surface[data-dragging="true"] .tempo-card-object {
   cursor: grabbing;
@@ -521,6 +522,7 @@
   isolation: isolate;
   transform-style: preserve-3d;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   /* The solid body is a sibling in the surface, so card content itself must
      stay clipped to the physical face. */
   overflow: hidden;
