@@ -222,6 +222,10 @@ describe("TempoGoalCard rotation", () => {
 
     expect(capture).not.toHaveBeenCalled();
     expect(surface).not.toHaveAttribute("data-dragging");
+    expect(surface).toHaveAttribute("data-rotatable", "false");
+    expect(surface).toHaveAttribute("data-still", "true");
+    expect(surface.style.getPropertyValue("--rx")).toBe("0deg");
+    expect(surface.style.getPropertyValue("--ry")).toBe("0deg");
   });
 
   it("rotates and flips from the keyboard", () => {

@@ -267,38 +267,39 @@ button.portrait:focus-visible {
   padding: .4rem 0;
 }
 
-@media (min-width: 720px) {
-  .embed :global([data-embedded="true"] [data-card-object]) {
-    width: min(46rem, 100%);
-  }
-  .frame:global(.tempo-card-frame) {
-    aspect-ratio: 760 / 340;
-  }
-  .face:global(.tempo-card) {
-    grid-template-columns: 10.25rem minmax(0, 1fr);
-    grid-template-areas:
-      "top top"
-      "art title"
-      "art metrics";
-    padding: 1.25rem 1.45rem 1.2rem;
-    gap: .18rem 1.35rem;
-  }
-  .horizonWrap {
-    flex: 1 1 auto;
-    min-height: 0;
-  }
-  .horizon {
-    height: 100%;
-    min-height: 7.5rem;
-  }
-  .titleBlock {
-    padding-top: .4rem;
-  }
-  .face:global(.tempo-card) h2 {
-    margin: .12rem 0 0;
-    font-size: 2.55rem;
-  }
-  .titleCompose { font-size: 2.55rem; }
-  .metrics { padding: .45rem 0 .02rem; }
-  .metrics strong { font-size: 3rem; }
+/* Tie the wide face to MaterialStage's layout flag, not a second
+   viewport query. Production CSS order was collapsing this to 22.5rem
+   while the 760/340 grid still applied, which crushed the metrics. */
+.embed :global([data-embedded="true"][data-layout="landscape"] [data-card-object]) {
+  width: min(46rem, 100%);
 }
+.embed :global([data-layout="landscape"]) .frame:global(.tempo-card-frame) {
+  aspect-ratio: 760 / 340;
+}
+.embed :global([data-layout="landscape"]) .face:global(.tempo-card) {
+  grid-template-columns: 10.25rem minmax(0, 1fr);
+  grid-template-areas:
+    "top top"
+    "art title"
+    "art metrics";
+  padding: 1.25rem 1.45rem 1.2rem;
+  gap: .18rem 1.35rem;
+}
+.embed :global([data-layout="landscape"]) .horizonWrap {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.embed :global([data-layout="landscape"]) .horizon {
+  height: 100%;
+  min-height: 7.5rem;
+}
+.embed :global([data-layout="landscape"]) .titleBlock {
+  padding-top: .4rem;
+}
+.embed :global([data-layout="landscape"]) .face:global(.tempo-card) h2 {
+  margin: .12rem 0 0;
+  font-size: 2.55rem;
+}
+.embed :global([data-layout="landscape"]) .titleCompose { font-size: 2.55rem; }
+.embed :global([data-layout="landscape"]) .metrics { padding: .45rem 0 .02rem; }
+.embed :global([data-layout="landscape"]) .metrics strong { font-size: 3rem; }

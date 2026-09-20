@@ -211,3 +211,8 @@
   max-width: 100%;
   margin-inline: auto;
 }
+/* Must beat the portrait 22.5rem rule. Production CSS order lets that
+   width win over the membership card's landscape override. */
+.stage[data-embedded="true"][data-layout="landscape"] .object {
+  width: min(46rem, 100%);
+}

@@ -11,7 +11,8 @@ import { useCardRotation } from "./use-card-rotation";
  * Gives a material goal card its extruded body and pose-driven light. The card
  * itself stays the front face, so the surface adds depth and interaction
  * without owning content. Pointer movement tilts the card; a drag turns it in
- * the hand unless the host owns that gesture.
+ * the hand unless the host owns that gesture. Gallery hosts pass rotatable
+ * false to freeze the pose instead of tracking the pointer.
  */
 export function TempoCardSurface({
   material,
@@ -30,14 +31,15 @@ export function TempoCardSurface({
 }) {
   const hintId = useId();
   const still = Boolean(useReducedMotion());
+  const frozen = still || !rotatable;
   const { stage, inspecting, isDragging, reset, stageHandlers, cardHandlers } =
-    useCardRotation(still, rotatable);
+    useCardRotation(frozen, rotatable);
   const held = rotatable && !still;
 
   // A product card must never be left stranded face-down, so letting go returns
   // it to rest instead of holding the inspected angle the way the study does.
   const releaseToRest = () => {
-    if (!still && !isDragging()) reset();
+    if (!isDragging()) reset();
   };
 
   return (
@@ -45,17 +47,17 @@ export function TempoCardSurface({
       ref={stage}
       className="tempo-card-surface"
       data-material={material}
-      data-still={still}
+      data-still={frozen}
       data-rotatable={held}
       data-inspecting={inspecting}
       style={
         {
-          ...cardOptics(still ? FLAT_POSE : REST_POSE),
+          ...cardOptics(frozen ? FLAT_POSE : REST_POSE),
           "--goal-color": goalColor,
         } as CSSProperties
       }
-      {...stageHandlers}
-      onPointerLeave={releaseToRest}
+      {...(held ? stageHandlers : {})}
+      onPointerLeave={held ? releaseToRest : undefined}
     >
       <div
         className="tempo-card-object"
@@ -64,7 +66,7 @@ export function TempoCardSurface({
         aria-label={held ? `${label} rotation` : undefined}
         aria-describedby={held ? hintId : undefined}
         tabIndex={held ? 0 : undefined}
-        {...cardHandlers}
+        {...(held ? cardHandlers : {})}
       >
         {solid && <CardSolidBody />}
         {children}

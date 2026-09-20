@@ -38,7 +38,7 @@ export function TempoGoalCard({
   taskSchedule?: { date: string; time: string };
   /** `plain` leaves the surface unstyled for material exploration studies. */
   surface?: "material" | "plain";
-  /** Prefer leaving this on; hosts with competing swipes still work because card pointer events stop bubbling. */
+  /** Gallery grids pass false so the card stays still; drag hosts keep the default. */
   rotatable?: boolean;
   assembly?: { completed: number; target: number; preview?: boolean };
   visibility?: TempoCardVisibility;
