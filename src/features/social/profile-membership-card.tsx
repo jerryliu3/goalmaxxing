@@ -166,7 +166,10 @@ export function ProfileMembershipCard({
         embedded
         controls={false}
       >
-        <div className={`tempo-card-frame ${styles.frame}`}>
+        <div
+          className={`tempo-card-frame ${styles.frame}`}
+          data-editing={editor ? "true" : undefined}
+        >
           <article className={`tempo-card ${styles.face}`} aria-label={`${title} membership card`}>
             <div className={styles.micro}>
               <span>GOALMAXXING / MEMBER</span>

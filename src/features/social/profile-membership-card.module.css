@@ -1,18 +1,25 @@
+/* The embed is the containing block. Do not flex-shrink-wrap the stage or
+   percentage widths on the object collapse (same failure as the portrait card). */
 .embed {
-  display: flex;
-  justify-content: center;
+  display: block;
   width: 100%;
+  container-type: inline-size;
 }
-.embed :global([data-card-object]) {
-  width: min(46rem, 100%);
+.embed :global([data-embedded="true"] [data-card-object]) {
+  display: block;
+  width: 22.5rem;
   max-width: 100%;
+  margin-inline: auto;
   user-select: text;
   -webkit-user-select: text;
 }
 .frame:global(.tempo-card-frame) {
   display: block;
   width: 100%;
-  aspect-ratio: auto;
+  aspect-ratio: 330 / 555;
+}
+.frame:global(.tempo-card-frame)[data-editing] {
+  aspect-ratio: 330 / 640;
 }
 .face:global(.tempo-card) {
   display: grid;
@@ -24,20 +31,22 @@
     "metrics"
     "footer";
   box-sizing: border-box;
-  position: relative;
+  position: absolute;
+  inset: 0;
   width: 100%;
+  height: 100%;
   min-height: 0;
-  padding: 1.35rem 1.4rem 1.1rem;
-  gap: 1rem 1.35rem;
+  padding: 1.2rem 1.25rem 1rem;
+  gap: .75rem 1.15rem;
   overflow: hidden;
   text-align: left;
   user-select: text;
   -webkit-user-select: text;
 }
 .face:global(.tempo-card) h2 {
-  font: 2.1rem/.96 var(--font-display);
+  font: 2rem/.96 var(--font-display);
   letter-spacing: -.045em;
-  margin: .15rem 0 .1rem;
+  margin: .1rem 0 0;
   max-width: none;
 }
 .micro {
@@ -54,14 +63,15 @@
   display: flex;
   flex-direction: column;
   justify-self: center;
-  width: min(9.75rem, 58%);
-  min-height: 11.5rem;
+  width: 8.5rem;
+  min-height: 0;
+  height: 11.25rem;
   padding: 0;
   overflow: hidden;
   color: inherit;
   background: color-mix(in srgb, currentColor 6%, transparent);
   border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
-  border-radius: 72px 72px 6px 6px;
+  border-radius: 4.5rem 4.5rem .35rem .35rem;
   outline: 1px solid color-mix(in srgb, currentColor 12%, transparent);
   outline-offset: 4px;
   cursor: default;
@@ -81,19 +91,20 @@ button.photo:focus-visible {
   display: block;
   flex: 1 1 auto;
   width: 100%;
-  min-height: 8.5rem;
+  min-height: 0;
   object-fit: cover;
 }
 .photoFallback {
   display: grid;
   place-items: center;
-  font: italic 2.4rem var(--font-display);
+  font: italic 2.2rem var(--font-display);
   letter-spacing: -.08em;
   opacity: .82;
 }
 .serial {
   display: block;
-  padding: .45rem .4rem .55rem;
+  flex: none;
+  padding: .4rem .35rem .5rem;
   text-align: center;
   font: .42rem var(--font-mono);
   letter-spacing: .16em;
@@ -103,9 +114,10 @@ button.photo:focus-visible {
   grid-area: identity;
   display: flex;
   min-width: 0;
+  min-height: 0;
   flex-direction: column;
   justify-content: center;
-  gap: .55rem;
+  gap: .45rem;
 }
 .kicker {
   font: .52rem/1.6 var(--font-mono);
@@ -115,7 +127,7 @@ button.photo:focus-visible {
 }
 .field {
   display: grid;
-  gap: .28rem;
+  gap: .22rem;
 }
 .field > span {
   font: .48rem/1.4 var(--font-mono);
@@ -127,12 +139,12 @@ button.photo:focus-visible {
   width: 100%;
   min-width: 0;
   margin: 0;
-  padding: .35rem .55rem;
+  padding: .3rem .5rem;
   color: inherit;
   background: color-mix(in srgb, currentColor 7%, transparent);
   border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
   border-radius: 6px;
-  font: .85rem/1.4 var(--font-sans);
+  font: .85rem/1.35 var(--font-sans);
   outline: none;
   user-select: text;
   -webkit-user-select: text;
@@ -145,13 +157,12 @@ button.photo:focus-visible {
   opacity: .72;
 }
 .titleInput {
-  font: 1.55rem/.95 var(--font-display) !important;
+  font: 1.35rem/.95 var(--font-display) !important;
   letter-spacing: -.04em;
-  padding: .4rem .55rem !important;
+  padding: .32rem .5rem !important;
 }
 .save {
   align-self: start;
-  margin-top: .15rem;
   color: inherit !important;
   background: color-mix(in srgb, currentColor 10%, transparent) !important;
   border-color: color-mix(in srgb, currentColor 28%, transparent) !important;
@@ -160,21 +171,21 @@ button.photo:focus-visible {
   grid-area: metrics;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: .75rem;
-  padding: .15rem 0 .1rem;
+  gap: .6rem;
+  padding: .1rem 0;
   border-block: 1px solid color-mix(in srgb, currentColor 22%, transparent);
 }
-.metrics > div { display: flex; flex-direction: column; gap: .3rem; }
-.metrics strong { font: 1.45rem var(--font-display); }
-.metrics > div > span { font-size: .52rem; opacity: .7; }
+.metrics > div { display: flex; flex-direction: column; gap: .25rem; }
+.metrics strong { font: 1.35rem var(--font-display); }
+.metrics > div > span { font-size: .5rem; opacity: .7; }
 .footer {
   grid-area: footer;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: end;
-  gap: .6rem 1rem;
-  font: .48rem/1.6 var(--font-mono);
+  gap: .45rem 1rem;
+  font: .48rem/1.5 var(--font-mono);
   letter-spacing: .08em;
   opacity: .72;
 }
@@ -184,25 +195,35 @@ button.photo:focus-visible {
   justify-content: center;
   padding: .4rem 0;
 }
-@media (min-width: 720px) {
+
+@container (min-width: 42rem) {
+  :global([data-embedded="true"] [data-card-object]) {
+    width: 46rem;
+  }
+  .frame:global(.tempo-card-frame) {
+    aspect-ratio: 760 / 340;
+  }
+  .frame:global(.tempo-card-frame)[data-editing] {
+    aspect-ratio: 760 / 420;
+  }
   .face:global(.tempo-card) {
-    grid-template-columns: 9.75rem minmax(0, 1fr);
+    grid-template-columns: 9.25rem minmax(0, 1fr);
     grid-template-areas:
       "micro micro"
       "photo identity"
       "photo metrics"
       "footer footer";
-    min-height: 17.5rem;
-    padding: 1.45rem 1.6rem 1.2rem;
-    gap: .85rem 1.5rem;
+    padding: 1.25rem 1.45rem 1.05rem;
+    gap: .7rem 1.35rem;
   }
   .photo {
     justify-self: stretch;
     align-self: stretch;
     width: auto;
-    min-height: 0;
+    height: auto;
   }
   .titleInput {
-    font-size: 1.85rem !important;
+    font-size: 1.7rem !important;
   }
+  .metrics strong { font-size: 1.5rem; }
 }
