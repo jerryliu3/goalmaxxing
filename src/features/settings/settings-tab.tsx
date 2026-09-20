@@ -209,6 +209,8 @@ export function SettingsTab() {
             growSeries={presence.growSeries}
             heatmap={presence.yearHeatmap}
             selectedYear={new Date().getFullYear()}
+            overallStats={presence.overallStats}
+            showMoreLink
           />
         ) : null}
         {groups}

@@ -1,10 +1,26 @@
+import type { ReactNode } from "react";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PublicProfileContent } from "@/features/social/public-profile/public-profile-content";
 import type { PublicProfileBundle } from "@cadence/shared/social/public-profile";
 
 vi.mock("@/features/insights/grow-score-trend-chart", () => ({
-  GrowScoreTrendChart: ({ title }: { title: string }) => <h3>{title}</h3>,
+  GrowScoreTrendChart: ({
+    title,
+    children,
+  }: {
+    title: string;
+    children?: ReactNode;
+  }) => (
+    <>
+      <h3>{title}</h3>
+      {children}
+    </>
+  ),
+}));
+
+vi.mock("@/features/insights/insights-overall-stats-card", () => ({
+  InsightsOverallStatsTiles: () => <p>Overall stats tiles</p>,
 }));
 
 vi.mock("@/features/insights/folio/current-goal-grid", () => ({
@@ -72,6 +88,7 @@ describe("PublicProfileContent page", () => {
     expect(screen.getByText("Membership card")).toBeInTheDocument();
     expect(screen.queryByText("@jerry")).toBeNull();
     expect(screen.getByRole("heading", { name: "Goalmaxxing score" })).toBeInTheDocument();
+    expect(screen.getByText("Overall stats")).toBeInTheDocument();
     expect(screen.getByText("2026 activity")).toBeInTheDocument();
     expect(screen.queryByText("XP progress")).toBeNull();
   });

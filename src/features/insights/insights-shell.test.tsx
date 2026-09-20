@@ -89,7 +89,7 @@ vi.mock("@/features/insights/insights-tab", () => ({
       onSectionsChange?.(
         isPartner
           ? ["history", "week", "past-goals"]
-          : ["score", "history", "achievements"]
+          : ["history", "achievements"]
       );
     }, [isPartner, onSectionsChange]);
     return (
@@ -192,7 +192,6 @@ describe("InsightsShell", () => {
         .getAllByRole("button")
         .map((button) => button.textContent)
     ).toEqual([
-      "Goalmaxxing score",
       "Completion history",
       "This week",
       "Past goals",

@@ -33,16 +33,16 @@ export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]>
   ],
   "insights.main": [
     {
-      title: "Goalmaxxing score",
+      title: "Completion history",
       description:
-        "Your effort remembered over time, charted across the last four weeks.",
-      target: "insights.score",
-      fallbackTargets: ["insights.week", "insights.history"],
+        "Open a goal, then tap a past or today cell to log a missed session.",
+      target: "insights.history",
+      fallbackTargets: ["insights.week", "insights.views"],
     },
     {
       title: "Current and Past",
       description:
-        "Current holds your score, this week and completion history. Past keeps achievements and finished goals.",
+        "Current holds this week and completion history. Past keeps achievements and finished goals.",
       target: "insights.views",
     },
     {
