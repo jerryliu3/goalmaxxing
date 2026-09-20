@@ -6,10 +6,18 @@ import { goalCardFields } from "./goal-card-fields";
 import { goalCardProgress } from "./goal-card-progress";
 import { TempoGoalCard } from "./tempo-goal-card";
 
-export function GoalProgressCard({ goal, progress }: { goal: Goal; progress: ProgressContextSummary }) {
+export function GoalProgressCard({
+  goal,
+  progress,
+  rotatable = true,
+}: {
+  goal: Goal;
+  progress: ProgressContextSummary;
+  rotatable?: boolean;
+}) {
   const model = goalCardProgress(goal, progress);
   return <div className="min-w-0" data-goal-progress-card={goal.id}>
-    <TempoGoalCard key={goal.id} fields={goalCardFields(goal)} context="history" achieved={model.achieved} assembly={model.assembly} />
+    <TempoGoalCard key={goal.id} fields={goalCardFields(goal)} context="history" achieved={model.achieved} assembly={model.assembly} rotatable={rotatable} />
     <p className="mt-5 text-center font-mono text-xs text-muted-foreground" role="status" aria-live="polite">
       {model.achieved ? "Goal accomplished" : progress.lifecycle === "upcoming" ? "Starts soon · " + model.label : model.label}
     </p>

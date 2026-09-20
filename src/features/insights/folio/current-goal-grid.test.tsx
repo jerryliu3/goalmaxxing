@@ -6,7 +6,13 @@ import { buildGoal } from "@/lib/goals/goal-test-fixtures";
 import { summary } from "./folio-test-fixtures";
 
 vi.mock("@/features/goals/goal-progress-card", () => ({
-  GoalProgressCard: ({ goal }: { goal: { title: string } }) => <p>{goal.title}</p>,
+  GoalProgressCard: ({
+    goal,
+    rotatable,
+  }: {
+    goal: { title: string };
+    rotatable?: boolean;
+  }) => <p data-rotatable={String(rotatable)}>{goal.title}</p>,
 }));
 
 afterEach(cleanup);
@@ -27,7 +33,7 @@ describe("CurrentGoalGrid", () => {
       />
     );
 
-    expect(screen.getByText("Daily walk")).toBeInTheDocument();
+    expect(screen.getByText("Daily walk")).toHaveAttribute("data-rotatable", "false");
     expect(screen.getByLabelText("Daily walk")).toBeInTheDocument();
     screen.getByRole("button", { name: /goal details/i }).click();
     expect(onDetails).toHaveBeenCalledWith("goal-1");
