@@ -36,6 +36,7 @@ describe("fetchMobilePublicProfile", () => {
         overallStats: null,
         yearHeatmap: [],
         growSeries: [],
+        currentGoals: [],
       },
     });
 

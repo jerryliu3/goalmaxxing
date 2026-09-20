@@ -169,6 +169,11 @@
 .collections { display: flex; gap: 1.5rem; border-bottom: 1px solid var(--border); }
 .collections button { min-height: 44px; padding: .65rem .2rem; color: var(--muted-foreground); border-bottom: 2px solid transparent; }
 .collections button[aria-current="page"] { color: var(--foreground); border-color: var(--foreground); }
-.currentGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 3rem 2rem; padding: 2.5rem .75rem; }
-.currentGoal { min-width: 0; width: min(100%, 360px); justify-self: center; }
+.currentGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 1rem; padding: 2.5rem .25rem; }
+.currentGoal { min-width: 0; width: 100%; }
+.currentGrid :global(.tempo-card-frame) { width: 100%; }
 .goalDetails { display: block; margin: .75rem auto 0; padding: .5rem; font-size: .75rem; color: var(--muted-foreground); text-decoration: underline; text-underline-offset: 4px; }
+@media (min-width: 640px) { .currentGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 860px) { .currentGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .currentGrid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .currentGrid { grid-template-columns: 1fr; } }

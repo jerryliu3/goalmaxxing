@@ -1,5 +1,6 @@
 import { format, parseISO } from "date-fns";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
+import { selectCurrentGoals } from "@/lib/goals/current-goals";
 import type { Goal } from "@/lib/goals/types";
 import { goalCardFields } from "@/features/goals/goal-card-fields";
 import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
@@ -58,11 +59,5 @@ export function buildGoalFolios(
 
 /** Current includes unscheduled and upcoming goals, not just today's checklist. */
 export function buildCurrentGoals(goals: Goal[], summaries: ProgressContextSummary[], userId: string) {
-  const byId = new Map(summaries.map(summary => [summary.goalId, summary]));
-  return goals.flatMap(goal => {
-    const progress = byId.get(goal.id);
-    return goal.owner_id === userId && !goal.is_deleted && progress && !progress.placementTerminal
-      ? [{ goal, progress }] : [];
-  }).sort((a, b) => Number(a.progress.lifecycle === "upcoming") - Number(b.progress.lifecycle === "upcoming")
-    || a.goal.start_date.localeCompare(b.goal.start_date) || a.goal.id.localeCompare(b.goal.id));
+  return selectCurrentGoals(goals, summaries, userId);
 }

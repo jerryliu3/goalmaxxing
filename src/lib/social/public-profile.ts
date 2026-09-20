@@ -1,6 +1,7 @@
 import { eachDayOfInterval, endOfYear, format, parseISO, startOfYear } from "date-fns";
 import type {
   PublicProfileBundle,
+  PublicProfileCurrentGoal,
   PublicProfileGlobalAchievement,
   PublicProfileGrowPoint,
   PublicProfileOverallStats,
@@ -14,6 +15,7 @@ import {
 import { ApiRouteError } from "@/lib/api/route";
 import { getDateInTimezone, resolveUserTimezone } from "@/lib/dates/timezone";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
+import { selectCurrentGoals } from "@/lib/goals/current-goals";
 import type { Completion, Goal } from "@/lib/goals/types";
 import { getGoalProgressSnapshot, type GoalProgressSnapshot } from "@/lib/goals/progress";
 import { compareDateStrings, type WeeklyAnchorContext } from "@/lib/goals/periods";
@@ -167,6 +169,33 @@ function buildProfileIdentity(subjectProfile: ProfileRow, isPrivate: boolean) {
   };
 }
 
+function serializeCurrentGoals(
+  goals: Goal[],
+  summaries: GoalProgressSnapshot[],
+  userId: string
+): PublicProfileCurrentGoal[] {
+  return selectCurrentGoals(goals, summaries, userId, { publicOnly: true }).map(({ goal, progress }) => ({
+    id: goal.id,
+    ownerId: goal.owner_id,
+    title: goal.title,
+    description: goal.description,
+    category: goal.category,
+    color: goal.color,
+    frequencyType: goal.frequency_type,
+    recurrenceInterval: goal.recurrence_interval,
+    difficulty: goal.difficulty ?? null,
+    targetCount: goal.target_count,
+    targetBasis: goal.target_basis,
+    milestoneNames: goal.milestone_names,
+    startDate: goal.start_date,
+    endDate: goal.end_date,
+    rewardText: goal.reward_text ?? null,
+    defaultLocalTime: goal.default_local_time ?? null,
+    createdAt: goal.created_at,
+    progress,
+  }));
+}
+
 function mapGrowSeries({
   completions,
   goals,
@@ -208,6 +237,7 @@ function buildPrivatePublicProfileBundle(subjectProfile: ProfileRow): PublicProf
     overallStats: null,
     yearHeatmap: [],
     growSeries: [],
+    currentGoals: [],
   };
 }
 
@@ -300,6 +330,11 @@ export function buildPublicProfileBundle({
       asOfDate,
       weekStartsOn,
     }),
+    currentGoals: serializeCurrentGoals(
+      completableGoals,
+      [...summariesByGoal.values()],
+      subjectProfile.id
+    ),
   };
 }
 

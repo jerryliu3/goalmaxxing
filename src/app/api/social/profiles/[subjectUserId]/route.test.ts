@@ -47,6 +47,7 @@ describe("GET /api/social/profiles/[subjectUserId]", () => {
       overallStats: null,
       yearHeatmap: [],
       growSeries: [],
+      currentGoals: [],
     });
   });
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { summary } from "./folio-test-fixtures";
 import { buildGoal } from "@/lib/goals/goal-test-fixtures";
 import { buildCurrentGoals, buildGoalFolios } from "./folio-model";
+import { selectCurrentGoals } from "@/lib/goals/current-goals";
 
 
 
@@ -52,5 +53,13 @@ describe("current goal collection", () => {
     const earned = summary(goal.id, { outcome: "achieved", achievementDate: "2026-09-17", lifecycle: "active", placementTerminal: true });
     expect(buildCurrentGoals([goal], [earned], "user-1")).toEqual([]);
     expect(buildGoalFolios([goal], [earned], "user-1")[0].entries[0].status).toBe("Completed");
+  });
+  it("can keep private goals out of a public collection", () => {
+    const goals = [
+      buildGoal({ id: "public" }),
+      buildGoal({ id: "secret", is_private: true }),
+    ];
+    const summaries = goals.map((goal) => summary(goal.id, { lifecycle: "active", placementTerminal: false, outcome: "in_progress" }));
+    expect(selectCurrentGoals(goals, summaries, "user-1", { publicOnly: true }).map((entry) => entry.goal.id)).toEqual(["public"]);
   });
 });
