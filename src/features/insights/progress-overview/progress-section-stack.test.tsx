@@ -8,7 +8,7 @@ import {
 function sections(): ProgressOverviewSectionContent[] {
   return [
     { id: "week", content: <p>Week rhythm</p> },
-    { id: "score", content: <p>Score trend</p> },
+    { id: "history", content: <p>Completion ledger</p> },
     { id: "past-goals", content: <p>Goal library</p> },
   ];
 }
@@ -21,7 +21,7 @@ describe("ProgressSectionStack", () => {
 
     expect(
       screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent)
-    ).toEqual(["Goalmaxxing score", "This week"]);
+    ).toEqual(["Completion history", "This week"]);
     expect(screen.queryByText("Goal library")).toBeNull();
   });
 
@@ -36,7 +36,7 @@ describe("ProgressSectionStack", () => {
       />
     );
 
-    expect(onSectionsChange).toHaveBeenCalledWith(["week", "score", "past-goals"]);
+    expect(onSectionsChange).toHaveBeenCalledWith(["week", "history", "past-goals"]);
   });
 
   it("reports once while the section set is unchanged", () => {
@@ -66,7 +66,7 @@ describe("ProgressSectionStack", () => {
       <ProgressSectionStack sections={sections()} view="current" anchored={false} />
     );
 
-    expect(screen.queryByTestId("progress-section-score")).toBeNull();
-    expect(screen.getByText("Score trend")).toBeInTheDocument();
+    expect(screen.queryByTestId("progress-section-history")).toBeNull();
+    expect(screen.getByText("Completion ledger")).toBeInTheDocument();
   });
 });

@@ -11,7 +11,6 @@ import type { ProgressSectionId } from "@/features/insights/progress-overview/pr
 function sections(): ProgressOverviewSectionContent[] {
   return [
     { id: "history", content: <p>Completion ledger</p> },
-    { id: "score", content: <p>Score trend</p> },
     { id: "week", content: <p>Week rhythm</p> },
     { id: "achievements", content: <p>Medal collection</p> },
     { id: "past-goals", content: <p>Goal library</p> },
@@ -34,14 +33,13 @@ describe("ProgressOverviewLayout", () => {
 
   afterEach(cleanup);
 
-  it("shows current sections in score, history, week order", () => {
+  it("shows current sections in history, week order", () => {
     renderLayout();
 
     const headings = screen
       .getAllByRole("heading", { level: 3 })
       .map((heading) => heading.textContent);
     expect(headings).toEqual([
-      "Goalmaxxing score",
       "Completion history",
       "This week",
     ]);
@@ -51,7 +49,6 @@ describe("ProgressOverviewLayout", () => {
   it("renders each section fully expanded without an inspect control", () => {
     renderLayout();
 
-    expect(screen.getByText("Score trend")).toBeInTheDocument();
     expect(screen.getByText("Week rhythm")).toBeInTheDocument();
     expect(screen.getByText("Completion ledger")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Inspect/ })).toBeNull();
@@ -142,7 +139,6 @@ describe("ProgressOverviewLayout", () => {
         .getAllByRole("button")
         .map((button) => button.textContent)
     ).toEqual([
-      "Goalmaxxing score",
       "Completion history",
       "This week",
       "Past goals",

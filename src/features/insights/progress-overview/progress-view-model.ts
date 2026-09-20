@@ -1,7 +1,6 @@
 export type ProgressView = "current" | "past";
 
 export type ProgressSectionId =
-  | "score"
   | "week"
   | "history"
   | "achievements"
@@ -26,7 +25,6 @@ export const PROGRESS_VIEWS: readonly ProgressViewDefinition[] = [
 ];
 
 export const PROGRESS_SECTIONS: readonly ProgressSectionDefinition[] = [
-  { id: "score", label: "Goalmaxxing score", view: "current" },
   { id: "history", label: "Completion history", view: "current" },
   { id: "week", label: "This week", view: "current" },
   { id: "past-goals", label: "Past goals", view: "past" },

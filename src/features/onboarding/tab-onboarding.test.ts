@@ -48,7 +48,7 @@ describe("tab onboarding storage", () => {
       "Completion history"
     );
     expect(TAB_ONBOARDING_TOURS["insights.main"].map((step) => step.target)).toEqual([
-      "insights.score",
+      "insights.history",
       "insights.views",
       "insights.history",
     ]);

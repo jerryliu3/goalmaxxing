@@ -12,7 +12,7 @@ import {
 const DISPLAY_DAYS = 28;
 const WARMUP_DAYS = 56;
 
-/** Shared trailing four-week score series for the Progress score section. */
+/** Shared trailing four-week score series for profile presence. */
 export function useGrowScoreSeries({
   completions,
   goals,

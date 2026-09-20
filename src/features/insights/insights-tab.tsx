@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { LoadingCard } from "@/components/ui/loading-card";
 import { InsightsTrackerHeader } from "@/features/insights/insights-tracker-header";
 import { ProgressGoalList } from "@/features/insights/progress-goal-list";
-import { InsightsOverallStatsTiles } from "@/features/insights/insights-overall-stats-card";
 import { ProgressMilestoneRunway } from "@/features/insights/progress-milestone-runway";
 import { buildProgressSections } from "@/features/insights/progress-overview/build-progress-sections";
 import { ProgressSectionStack } from "@/features/insights/progress-overview/progress-section-stack";
@@ -25,7 +24,6 @@ import type {
   ProgressView,
 } from "@/features/insights/progress-overview/progress-view-model";
 import { useProgressPastSections } from "@/features/insights/progress-overview/progress-past-sections";
-import { useGrowScoreSeries } from "@/features/insights/use-grow-score-series";
 import { useProgressWeekRhythm } from "@/features/insights/use-progress-week-rhythm";
 import {
   isLedgerHeatmapDayMutable,
@@ -697,7 +695,7 @@ export function InsightsTab({
     }
     return dates;
   }, [completionsByGoal, progressByGoal, selectedLedgerIdSet, visiblePerGoalHeatmaps]);
-  const showOverallStats = Boolean(state.insightsStats?.overall);
+  const insightsReady = Boolean(state.insightsStats);
   const weekRhythm = useProgressWeekRhythm({
     goals: personalGoals,
     completions: personalCompletions,
@@ -710,17 +708,8 @@ export function InsightsTab({
         : null,
     // Planner sessions are viewer-only, so a partner lane would render a
     // completions-only week under the same "This week" legend. Omit it.
-    enabled: showOverallStats && !readOnly,
+    enabled: insightsReady && !readOnly,
   });
-  const weekStartsOn = state.insightsStats?.weekStartsOn ?? 1;
-  const growSeries = useGrowScoreSeries({
-    completions: personalCompletions,
-    goals: personalGoals,
-    asOfDate: todayLocal,
-    weekStartsOn,
-  });
-  // The goal library is per subject, so a partner lane keeps theirs. Medals
-  // are only fetchable for the viewer, so that section stays on their lane.
   const pastSections = useProgressPastSections({
     goals: state.goals,
     summaries: state.progress?.summaries ?? [],
@@ -996,15 +985,17 @@ export function InsightsTab({
       />
     ) : null;
 
-  const overallStatsPanel =
-    showOverallStats && state.insightsStats ? (
-      <div>
-        <h4 className="mb-3 font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          Overall stats
-        </h4>
-        <InsightsOverallStatsTiles overallStats={state.insightsStats.overall} />
+  const progressSections = buildProgressSections({
+    weekRhythm,
+    history: (
+      <div className="space-y-5">
+        {trackerHeaderNode}
+        {ledgerLayoutNode}
+        {milestoneRunwayNode}
       </div>
-    ) : null;
+    ),
+    pastSections,
+  });
 
   const drilldownNode =
     showHeatmap && aggregateDrilldownDate && !heatmapEditable ? (
@@ -1061,20 +1052,6 @@ export function InsightsTab({
         </div>
       </AnchoredPopupCard>
     ) : null;
-
-  const progressSections = buildProgressSections({
-    growSeries,
-    overallStats: overallStatsPanel,
-    weekRhythm,
-    history: (
-      <div className="space-y-5">
-        {trackerHeaderNode}
-        {ledgerLayoutNode}
-        {milestoneRunwayNode}
-      </div>
-    ),
-    pastSections,
-  });
 
   return (
     <>

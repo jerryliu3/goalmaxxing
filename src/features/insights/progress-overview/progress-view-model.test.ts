@@ -14,13 +14,12 @@ describe("progress view model", () => {
     expect(parseProgressView("past")).toBe("past");
   });
 
-  it("orders current sections score, history, week", () => {
+  it("orders current sections history, week", () => {
     expect(progressSectionsForView("current").map((section) => section.id)).toEqual([
-      "score",
       "history",
       "week",
     ]);
-    expect(progressSectionsForView("current")[0].label).toBe("Goalmaxxing score");
+    expect(progressSectionsForView("current")[0].label).toBe("Completion history");
   });
 
   it("keeps past goals and achievements in the past view", () => {
