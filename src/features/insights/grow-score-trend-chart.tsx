@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import {
   CartesianGrid,
   Line,
   LineChart,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
@@ -14,6 +13,8 @@ import { INSIGHTS_CHART_COLORS } from "@/features/insights/insights-chart-theme"
 import { growScoreChartLabel, type GrowScorePoint } from "@/lib/grow-score";
 
 const CHART_COLORS = INSIGHTS_CHART_COLORS;
+const PLOT_WIDTH = 640;
+const PLOT_HEIGHT = 224;
 
 function chartTooltipStyle() {
   return {
@@ -47,28 +48,6 @@ export function GrowScoreTrendChart({
   );
 
   const latest = series.at(-1);
-  const plotRef = useRef<HTMLDivElement | null>(null);
-  const [plotSize, setPlotSize] = useState({ width: 0, height: 0 });
-
-  useEffect(() => {
-    const plot = plotRef.current;
-    if (!plot) {
-      return;
-    }
-
-    const update = () => {
-      setPlotSize({ width: plot.clientWidth, height: plot.clientHeight });
-    };
-    update();
-
-    if (typeof ResizeObserver === "undefined") {
-      return;
-    }
-
-    const observer = new ResizeObserver(update);
-    observer.observe(plot);
-    return () => observer.disconnect();
-  }, []);
 
   if (series.length === 0) {
     return null;
@@ -95,44 +74,45 @@ export function GrowScoreTrendChart({
         ) : null}
       </div>
 
-      <div ref={plotRef} className="mt-4 h-56 w-full min-w-0">
-        {plotSize.width > 0 && plotSize.height > 0 ? (
-          <ResponsiveContainer width={plotSize.width} height={plotSize.height}>
-            <LineChart data={chartData}>
-              <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
-              <XAxis
-                dataKey="date"
-                minTickGap={24}
-                tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
-              />
-              <YAxis
-                domain={["auto", "auto"]}
-                width={40}
-                tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
-              />
-              <Tooltip
-                contentStyle={chartTooltipStyle()}
-                cursor={{ stroke: CHART_COLORS.accent, strokeWidth: 1 }}
-                formatter={(value) => {
-                  const resolved = Array.isArray(value) ? value[0] : value;
-                  return [Number(resolved ?? 0).toFixed(1), "Goalmaxxing score"];
-                }}
-                labelFormatter={(label, payload) => {
-                  const full = payload?.[0]?.payload?.fullDate;
-                  return typeof full === "string" ? full : String(label);
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="score"
-                stroke={CHART_COLORS.primary}
-                strokeWidth={2.5}
-                dot={{ r: 2, fill: CHART_COLORS.accent, strokeWidth: 0 }}
-                activeDot={{ r: 4, fill: CHART_COLORS.highlight, strokeWidth: 0 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        ) : null}
+      <div className="mt-4 h-56 w-full min-w-0 overflow-hidden">
+        <LineChart
+          width={PLOT_WIDTH}
+          height={PLOT_HEIGHT}
+          data={chartData}
+          style={{ width: "100%", height: "100%" }}
+        >
+          <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
+          <XAxis
+            dataKey="date"
+            minTickGap={24}
+            tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
+          />
+          <YAxis
+            domain={["auto", "auto"]}
+            width={40}
+            tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
+          />
+          <Tooltip
+            contentStyle={chartTooltipStyle()}
+            cursor={{ stroke: CHART_COLORS.accent, strokeWidth: 1 }}
+            formatter={(value) => {
+              const resolved = Array.isArray(value) ? value[0] : value;
+              return [Number(resolved ?? 0).toFixed(1), "Goalmaxxing score"];
+            }}
+            labelFormatter={(label, payload) => {
+              const full = payload?.[0]?.payload?.fullDate;
+              return typeof full === "string" ? full : String(label);
+            }}
+          />
+          <Line
+            type="monotone"
+            dataKey="score"
+            stroke={CHART_COLORS.primary}
+            strokeWidth={2.5}
+            dot={{ r: 2, fill: CHART_COLORS.accent, strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: CHART_COLORS.highlight, strokeWidth: 0 }}
+          />
+        </LineChart>
       </div>
 
       {children ? (

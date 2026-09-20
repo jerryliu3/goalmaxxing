@@ -76,7 +76,15 @@ export function useCardRotation(disabled: boolean, solid: boolean) {
   return {
     stage: pose.stage, posed, inspecting, reset, isDragging: () => drag.current !== null,
     togglePose: () => { stopDrag(); setInspecting(false); setPosed(value => !value); },
-    cardHandlers: { onPointerDown, onPointerMove, onKeyDown, onLostPointerCapture: stopDrag },
+    cardHandlers: {
+      onPointerDown,
+      onPointerMove,
+      onPointerUp: (event: PointerEvent<HTMLDivElement>) => {
+        if (drag.current?.id === event.pointerId) stopDrag();
+      },
+      onKeyDown,
+      onLostPointerCapture: stopDrag,
+    },
     stageHandlers: {
       onPointerMove,
       onPointerUp: (event: PointerEvent<HTMLDivElement>) => { if (drag.current?.id === event.pointerId) stopDrag(); },

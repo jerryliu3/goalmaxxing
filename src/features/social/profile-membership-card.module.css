@@ -43,11 +43,12 @@
   gap: 1.05rem 1.2rem;
   overflow: hidden;
   text-align: left;
+  pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
 }
 .face:global(.tempo-card) h2 {
-  font: 2.2rem/.96 var(--font-display);
+  font: 2.85rem/.92 var(--font-display);
   letter-spacing: -.045em;
   margin: .6rem 0 .35rem;
   max-width: none;
@@ -71,16 +72,12 @@
 .titleBlock { grid-area: title; min-width: 0; }
 .metrics { grid-area: metrics; }
 .horizon {
-  display: block;
   width: 100%;
-  height: auto;
-  aspect-ratio: 280 / 190;
+  height: 185px;
   margin: 0;
-  pointer-events: none;
 }
 .horizonWrap {
   position: relative;
-  width: 100%;
 }
 .identityArt {
   position: relative;
@@ -110,6 +107,7 @@
 }
 button.portrait {
   cursor: pointer;
+  pointer-events: auto;
 }
 button.portrait:hover {
   background: color-mix(in srgb, currentColor 14%, transparent);
@@ -126,20 +124,20 @@ button.portrait:focus-visible {
   pointer-events: none;
 }
 .monogram {
-  font: italic 2.4rem var(--font-display);
+  font: italic 2.8rem var(--font-display);
   letter-spacing: -.12em;
   line-height: 1;
 }
 .kicker {
-  font: .52rem/1.6 var(--font-mono);
+  font: .68rem/1.5 var(--font-mono);
   letter-spacing: .055em;
   text-transform: uppercase;
   opacity: .75;
 }
 .titleBlock p,
 .email {
-  font-size: .78rem;
-  line-height: 1.65;
+  font-size: .92rem;
+  line-height: 1.55;
   opacity: .8;
 }
 .quiet {
@@ -157,6 +155,7 @@ button.portrait:focus-visible {
   letter-spacing: inherit;
   text-align: inherit;
   cursor: text;
+  pointer-events: auto;
 }
 .quiet:hover,
 .quiet:focus-visible {
@@ -179,18 +178,21 @@ button.portrait:focus-visible {
   caret-color: currentColor;
   user-select: text;
   -webkit-user-select: text;
+  pointer-events: auto;
 }
 .handleCompose {
   width: auto;
   max-width: 100%;
-  font: .52rem/1.6 var(--font-mono);
+  font: .68rem/1.5 var(--font-mono);
   letter-spacing: .055em;
   text-transform: uppercase;
   opacity: .9;
+  pointer-events: auto;
 }
 .titleCompose {
-  font: 2.2rem/.96 var(--font-display);
+  font: 2.85rem/.92 var(--font-display);
   letter-spacing: -.045em;
+  pointer-events: auto;
 }
 .save {
   appearance: none;
@@ -200,9 +202,10 @@ button.portrait:focus-visible {
   background: none;
   border: 0;
   color: inherit;
-  font: .5rem/1.6 var(--font-mono);
+  font: .62rem/1.6 var(--font-mono);
   letter-spacing: .08em;
   cursor: pointer;
+  pointer-events: auto;
 }
 .save:hover,
 .save:focus-visible {
@@ -219,9 +222,9 @@ button.portrait:focus-visible {
   padding: .85rem 0;
   border-block: 1px solid color-mix(in srgb, currentColor 22%, transparent);
 }
-.metrics > div { display: flex; flex-direction: column; gap: .4rem; }
-.metrics strong { font: 1.6rem var(--font-display); }
-.metrics > div > span { font-size: .52rem; opacity: .7; }
+.metrics > div { display: flex; flex-direction: column; gap: .35rem; }
+.metrics strong { font: 2.45rem/.9 var(--font-display); }
+.metrics > div > span { font-size: .68rem; opacity: .7; }
 .photoPreview {
   display: flex;
   justify-content: center;
@@ -245,13 +248,18 @@ button.portrait:focus-visible {
     gap: .55rem 1.35rem;
   }
   .horizonWrap {
-    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .horizon {
+    height: 100%;
+    min-height: 7.5rem;
   }
   .face:global(.tempo-card) h2 {
     margin: .2rem 0 .15rem;
-    font-size: 2rem;
+    font-size: 2.55rem;
   }
-  .titleCompose { font-size: 2rem; }
-  .metrics { padding: .4rem 0; }
-  .metrics strong { font-size: 1.45rem; }
+  .titleCompose { font-size: 2.55rem; }
+  .metrics { padding: .45rem 0; }
+  .metrics strong { font-size: 2.2rem; }
 }
