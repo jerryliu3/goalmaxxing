@@ -7,7 +7,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { XpProgressCard } from "@/components/xp/xp-progress-card";
 import { ProfileMedalShelf } from "@/features/achievements/profile-medal-shelf";
 import { InsightsOverallStatsCard } from "@/features/insights/insights-overall-stats-card";
-import { PublicProfileActivityHeatmap } from "@/features/social/public-profile/public-profile-activity-heatmap";
+import { ProfilePresenceSection } from "@/features/social/profile-presence";
 import { resolvePublicProfileLabel } from "@/features/social/public-profile/resolve-profile-label";
 import { getHeatmapScaleClass } from "@/lib/goals/heatmap";
 
@@ -17,12 +17,14 @@ export function PublicProfileContent({
   variant,
   xpEnabled = true,
   headerActions,
+  afterPresence,
 }: {
   bundle: PublicProfileBundle;
   selectedYear: number;
   variant: "sheet" | "page";
   xpEnabled?: boolean;
   headerActions?: ReactNode;
+  afterPresence?: ReactNode;
 }) {
   const heatmapRef = useRef<HTMLDivElement | null>(null);
   const title = resolvePublicProfileLabel(bundle.profile);
@@ -50,6 +52,15 @@ export function PublicProfileContent({
 
       {bundle.profile.isPrivate ? (
         <p className="text-sm text-muted-foreground">This account is private</p>
+      ) : variant === "page" ? (
+        <>
+          <ProfilePresenceSection
+            growSeries={bundle.growSeries}
+            heatmap={bundle.yearHeatmap}
+            selectedYear={selectedYear}
+          />
+          {afterPresence}
+        </>
       ) : (
         <>
           {xpEnabled && bundle.xp ? <XpProgressCard profile={bundle.xp} /> : null}
@@ -59,30 +70,22 @@ export function PublicProfileContent({
               awardCatalogCount={bundle.awardCatalogCount}
             />
           ) : null}
-          {variant === "sheet" ? (
-            <InsightsOverallStatsCard
-              heatmapRef={heatmapRef}
-              selectedYearStart={new Date(`${selectedYear}-01-01`)}
-              selectedYearEnd={new Date(`${selectedYear}-12-31`)}
-              values={bundle.yearHeatmap}
-              overallCompletion={0}
-              overallStats={bundle.overallStats}
-              classForValue={(value) => getHeatmapScaleClass(value?.count ?? 0)}
-              titleForValue={(value) =>
-                `${value?.date ?? "N/A"}: ${value?.count ?? 0} completion${
-                  (value?.count ?? 0) === 1 ? "" : "s"
-                }`
-              }
-              onDayClick={() => undefined}
-              showMoreLink={false}
-            />
-          ) : (
-            <PublicProfileActivityHeatmap
-              heatmapRef={heatmapRef}
-              selectedYear={selectedYear}
-              values={bundle.yearHeatmap}
-            />
-          )}
+          <InsightsOverallStatsCard
+            heatmapRef={heatmapRef}
+            selectedYearStart={new Date(`${selectedYear}-01-01`)}
+            selectedYearEnd={new Date(`${selectedYear}-12-31`)}
+            values={bundle.yearHeatmap}
+            overallCompletion={0}
+            overallStats={bundle.overallStats}
+            classForValue={(value) => getHeatmapScaleClass(value?.count ?? 0)}
+            titleForValue={(value) =>
+              `${value?.date ?? "N/A"}: ${value?.count ?? 0} completion${
+                (value?.count ?? 0) === 1 ? "" : "s"
+              }`
+            }
+            onDayClick={() => undefined}
+            showMoreLink={false}
+          />
         </>
       )}
     </div>

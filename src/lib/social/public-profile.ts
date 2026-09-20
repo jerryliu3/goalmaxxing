@@ -2,8 +2,10 @@ import { eachDayOfInterval, endOfYear, format, parseISO, startOfYear } from "dat
 import type {
   PublicProfileBundle,
   PublicProfileGlobalAchievement,
+  PublicProfileGrowPoint,
   PublicProfileOverallStats,
 } from "@cadence/shared/social/public-profile";
+import { buildGrowScoreSeries } from "@/lib/grow-score";
 import {
   buildCompletableGoalIds,
   filterCompletionsForGoalIds,
@@ -161,7 +163,34 @@ function buildProfileIdentity(subjectProfile: ProfileRow, isPrivate: boolean) {
     displayName: subjectProfile.display_name,
     avatarUrl: subjectProfile.avatar_url,
     isPrivate,
+    createdAt: subjectProfile.created_at,
   };
+}
+
+function mapGrowSeries({
+  completions,
+  goals,
+  asOfDate,
+  weekStartsOn,
+}: {
+  completions: Completion[];
+  goals: Goal[];
+  asOfDate: string;
+  weekStartsOn: number;
+}): PublicProfileGrowPoint[] {
+  return buildGrowScoreSeries({
+    completions,
+    goals,
+    asOfDate,
+    displayDays: 28,
+    warmupDays: 56,
+    weekStartsOn,
+  }).map((point) => ({
+    date: point.date,
+    score: point.score,
+    pace: point.pace,
+    rawCredits: point.rawCredits,
+  }));
 }
 
 function isPrivateForViewer(viewerUserId: string | null, subjectProfile: ProfileRow) {
@@ -178,6 +207,7 @@ function buildPrivatePublicProfileBundle(subjectProfile: ProfileRow): PublicProf
     awardCatalogCount: 0,
     overallStats: null,
     yearHeatmap: [],
+    growSeries: [],
   };
 }
 
@@ -263,6 +293,12 @@ export function buildPublicProfileBundle({
     yearHeatmap: buildYearHeatmap({
       completions: completableCompletions,
       year: selectedYear,
+    }),
+    growSeries: mapGrowSeries({
+      completions: completableCompletions,
+      goals: completableGoals,
+      asOfDate,
+      weekStartsOn,
     }),
   };
 }

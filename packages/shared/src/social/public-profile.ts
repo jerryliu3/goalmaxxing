@@ -44,6 +44,14 @@ export interface PublicProfileIdentity {
   displayName: string | null;
   avatarUrl: string | null;
   isPrivate: boolean;
+  createdAt: string | null;
+}
+
+export interface PublicProfileGrowPoint {
+  date: string;
+  score: number;
+  pace: number;
+  rawCredits: number;
 }
 
 export interface PublicProfileBundle {
@@ -54,4 +62,5 @@ export interface PublicProfileBundle {
   awardCatalogCount: number;
   overallStats: PublicProfileOverallStats | null;
   yearHeatmap: PublicProfileHeatmapPoint[];
+  growSeries: PublicProfileGrowPoint[];
 }

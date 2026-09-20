@@ -80,6 +80,8 @@ describe("buildPublicProfileBundle", () => {
     expect(bundle.awardCatalogCount).toBe(0);
     expect(bundle.overallStats).toBeNull();
     expect(bundle.yearHeatmap).toEqual([]);
+    expect(bundle.growSeries).toEqual([]);
+    expect(bundle.profile.createdAt).toBe("2026-01-01T00:00:00.000Z");
   });
 
   it("returns full payload for self viewers even when social visibility is disabled", () => {
@@ -130,6 +132,8 @@ describe("buildPublicProfileBundle", () => {
     expect(
       bundle.yearHeatmap.find((entry) => entry.date === "2026-01-02")?.count
     ).toBe(1);
+    expect(bundle.growSeries).toHaveLength(28);
+    expect(bundle.profile.createdAt).toBe("2026-01-01T00:00:00.000Z");
   });
 
   it("treats a null viewer as non-self for private accounts", () => {

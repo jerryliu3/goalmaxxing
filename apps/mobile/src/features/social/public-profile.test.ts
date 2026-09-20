@@ -35,6 +35,7 @@ describe("fetchMobilePublicProfile", () => {
         awardCatalogCount: 0,
         overallStats: null,
         yearHeatmap: [],
+        growSeries: [],
       },
     });
 

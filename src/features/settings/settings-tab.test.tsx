@@ -11,6 +11,10 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn() }),
 }));
 
+vi.mock("@/features/social/use-own-profile-presence", () => ({
+  useOwnProfilePresence: () => ({ bundle: null, loading: false }),
+}));
+
 vi.mock("@/features/social/use-social-tab-data", () => ({
   useSocialTabData: () => ({
     state: {
