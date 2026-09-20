@@ -64,6 +64,27 @@ function fragmentClip(points: PiecePoint[], count: number): string {
   }).join(", ")})`;
 }
 
+/** One CSS mask for every earned shard so a gallery can paint progress once. */
+export function fragmentMaskImage(clipPaths: readonly string[]): string | null {
+  if (clipPaths.length === 0) {
+    return null;
+  }
+  const polygons = clipPaths.map((clipPath) => {
+    const points = clipPath
+      .replace(/^polygon\(|\)$/g, "")
+      .split(",")
+      .map((pair) => {
+        const [x, y] = pair.trim().split(/\s+/);
+        return `${parseFloat(x)},${parseFloat(y)}`;
+      })
+      .join(" ");
+    return `<polygon points="${points}" fill="white"/>`;
+  }).join("");
+  return `url("data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">${polygons}</svg>`,
+  )}")`;
+}
+
 /** Exact piece count; no random layout changes when the preview advances. */
 export function buildRewardPieces(target: number): RewardPiece[] {
   const { required } = getRewardProgress(0, target);

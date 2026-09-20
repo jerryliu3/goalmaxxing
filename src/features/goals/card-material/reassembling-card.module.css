@@ -51,6 +51,14 @@
 }
 .surface[data-still="true"] .piece[data-arriving="true"] { animation: none; }
 .surface[data-still="true"] .piece { transition: none; }
+.surface[data-flat="true"] { overflow: hidden; transform-style: flat; }
+.flatEarned {
+  position: absolute; inset: 0; pointer-events: none;
+  mask-repeat: no-repeat; mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat; -webkit-mask-size: 100% 100%;
+}
+.flatEarned :global(.tempo-card-frame) { height: 100%; aspect-ratio: auto; }
+.flatEarned :global(.tempo-card) { height: 100% !important; }
 @media (prefers-reduced-motion: reduce) {
   .piece[data-arriving="true"] { animation: none; }
   .surface[data-preview="true"] .piece { transition: none; }

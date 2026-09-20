@@ -21,6 +21,7 @@ export function TempoGoalCard({
   surface = "material",
   rotatable = true,
   assembly,
+  flat = false,
   renderLettering = renderSolidLettering,
   visibility = {
     category: true,
@@ -40,6 +41,8 @@ export function TempoGoalCard({
   surface?: "material" | "plain";
   /** Gallery grids pass false so the card stays still; drag hosts keep the default. */
   rotatable?: boolean;
+  /** Gallery grids paint plaque shards as a 2D mask instead of extruded copies. */
+  flat?: boolean;
   assembly?: { completed: number; target: number; preview?: boolean };
   visibility?: TempoCardVisibility;
   renderLettering?: (
@@ -194,7 +197,8 @@ export function TempoGoalCard({
           key={assembly.target}
           completed={assembly.completed}
           target={assembly.target}
-          still={still}
+          still={still || flat}
+          flat={flat}
           preview={assembly.preview}
         >
           {card}
