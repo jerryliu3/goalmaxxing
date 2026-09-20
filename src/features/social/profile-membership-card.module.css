@@ -21,6 +21,7 @@
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-user-drag: none;
   touch-action: none;
 }
 .embed :global([data-dragging="true"]),
@@ -35,6 +36,8 @@
   display: block;
   width: 100%;
   aspect-ratio: 330 / 555;
+  /* Hits must land on [data-card-object], which owns 3D rotation. */
+  pointer-events: none;
 }
 .face:global(.tempo-card) {
   display: grid;
@@ -245,7 +248,7 @@ button.portrait:focus-visible {
   grid-template-columns: 1.1fr 1fr 1fr;
   align-self: end;
   align-items: end;
-  padding: .28rem 0 .08rem;
+  padding: .52rem 0 .08rem;
   border-block: 1px solid color-mix(in srgb, currentColor 22%, transparent);
 }
 .metrics > div { display: flex; flex-direction: column; justify-content: flex-end; gap: .2rem; }
@@ -289,6 +292,6 @@ button.portrait:focus-visible {
     font-size: 2.55rem;
   }
   .titleCompose { font-size: 2.55rem; }
-  .metrics { padding: .1rem 0 .02rem; }
+  .metrics { padding: .45rem 0 .02rem; }
   .metrics strong { font-size: 3rem; }
 }

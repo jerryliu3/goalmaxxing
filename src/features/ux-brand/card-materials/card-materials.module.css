@@ -155,7 +155,7 @@
 }
 
 /* Treat only the study object as a manipulable image; labels remain accessible. */
-.stage[data-form="solid"] .object { cursor: grab; touch-action: none; }
+.stage[data-form="solid"] .object { cursor: grab; touch-action: none; -webkit-user-drag: none; }
 .stage[data-dragging="true"] .object { cursor: grabbing; }
 .stage[data-still="true"] .object { cursor: default; touch-action: auto; }
 .object:focus-visible { outline: 2px solid var(--study-ink); outline-offset: 12px; border-radius: var(--card-radius,18px); }

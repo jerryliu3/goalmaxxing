@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type DragEvent, type KeyboardEvent, type PointerEvent } from "react";
 import { dragPose, nearestPose, pointerPose, REST_POSE, type CardPose } from "./card-optics";
 import { useCardPose } from "./use-card-pose";
 
@@ -25,6 +25,13 @@ export function useCardRotation(disabled: boolean, solid: boolean) {
     setPosed(false);
     pose.moveTo(nearestPose(pose.getCurrent(), REST_POSE));
   };
+  const resolveObject = (event: PointerEvent<HTMLDivElement>) => {
+    const current = event.currentTarget;
+    if (current.hasAttribute("data-card-object")) {
+      return current;
+    }
+    return current.querySelector<HTMLDivElement>("[data-card-object]");
+  };
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (disabled || !solid || event.button !== 0 || event.isPrimary === false || drag.current) return;
     if (
@@ -33,14 +40,22 @@ export function useCardRotation(disabled: boolean, solid: boolean) {
     ) {
       return;
     }
+    const object = resolveObject(event);
+    if (!object) return;
+    if (event.target instanceof Node && event.target !== object && !object.contains(event.target)) {
+      return;
+    }
     event.preventDefault();
     // Hosts with their own swipe (folio page turn, etc.) must not also claim this.
     event.stopPropagation();
-    event.currentTarget.focus({ preventScroll: true });
+    object.focus({ preventScroll: true });
     pose.moveTo(pose.getCurrent(), true);
-    event.currentTarget.setPointerCapture(event.pointerId);
-    drag.current = { id: event.pointerId, element: event.currentTarget, x: event.clientX, y: event.clientY, start: pose.getCurrent(), moved: false };
+    object.setPointerCapture(event.pointerId);
+    drag.current = { id: event.pointerId, element: object, x: event.clientX, y: event.clientY, start: pose.getCurrent(), moved: false };
     pose.stage.current?.setAttribute("data-dragging", "true");
+  };
+  const onDragStart = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
   };
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     if (disabled) return;
@@ -77,7 +92,9 @@ export function useCardRotation(disabled: boolean, solid: boolean) {
     stage: pose.stage, posed, inspecting, reset, isDragging: () => drag.current !== null,
     togglePose: () => { stopDrag(); setInspecting(false); setPosed(value => !value); },
     cardHandlers: {
+      onPointerDownCapture: onPointerDown,
       onPointerDown,
+      onDragStart,
       onPointerMove,
       onPointerUp: (event: PointerEvent<HTMLDivElement>) => {
         if (drag.current?.id === event.pointerId) stopDrag();
@@ -86,6 +103,8 @@ export function useCardRotation(disabled: boolean, solid: boolean) {
       onLostPointerCapture: stopDrag,
     },
     stageHandlers: {
+      onPointerDownCapture: onPointerDown,
+      onPointerDown,
       onPointerMove,
       onPointerUp: (event: PointerEvent<HTMLDivElement>) => { if (drag.current?.id === event.pointerId) stopDrag(); },
       onPointerLeave: () => { if (!disabled && !drag.current && !inspecting) pose.reset(); },
