@@ -86,7 +86,7 @@ const INSIGHTS_STATS_START = {
   currentMonthActivities: 4,
   currentWeekActivities: 1,
   todayActivities: 0,
-  activeStreakDays: 2,
+  activeStreakWeeks: 2,
 } as const;
 
 const INSIGHTS_STATS_END = {
@@ -95,7 +95,7 @@ const INSIGHTS_STATS_END = {
   currentMonthActivities: 31,
   currentWeekActivities: 8,
   todayActivities: 3,
-  activeStreakDays: 12,
+  activeStreakWeeks: 12,
 } as const;
 
 export function getPinnedChapterProgress(
@@ -219,8 +219,8 @@ export function getInsightsStats(scene: string, local: number) {
     todayActivities: Math.round(
       lerp(INSIGHTS_STATS_START.todayActivities, INSIGHTS_STATS_END.todayActivities, t)
     ),
-    activeStreakDays: Math.round(
-      lerp(INSIGHTS_STATS_START.activeStreakDays, INSIGHTS_STATS_END.activeStreakDays, t)
+    activeStreakWeeks: Math.round(
+      lerp(INSIGHTS_STATS_START.activeStreakWeeks, INSIGHTS_STATS_END.activeStreakWeeks, t)
     ),
   };
 }

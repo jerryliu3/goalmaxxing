@@ -48,6 +48,7 @@ export function ProgressAtlasConcept() {
         weekPercent: single.percent,
         monthPercent: Math.max(18, single.percent - 8),
         streak: single.currentStreak,
+        streakUnit: "d",
         activities: single.percent,
         hint: single.title,
       };
@@ -55,7 +56,8 @@ export function ProgressAtlasConcept() {
     return {
       weekPercent: OVERALL_STATS.weekPercent,
       monthPercent: OVERALL_STATS.monthPercent,
-      streak: OVERALL_STATS.streak,
+      streak: OVERALL_STATS.activeStreakWeeks,
+      streakUnit: "w",
       activities: OVERALL_STATS.activities,
       hint: OVERALL_STATS.weekTrend,
     };
@@ -83,9 +85,11 @@ export function ProgressAtlasConcept() {
               hint: single ? single.countLabel : OVERALL_STATS.monthTrend,
             },
             {
-              label: "Active streak",
-              value: `${stats.streak}d`,
-              hint: `Longest ${single?.longestStreak ?? OVERALL_STATS.longestStreak}d`,
+              label: single ? "Goal streak" : "Active streak",
+              value: `${stats.streak}${stats.streakUnit}`,
+              hint: single
+                ? `Longest ${single.longestStreak}d`
+                : `Longest ${OVERALL_STATS.longestActiveStreakWeeks}w`,
             },
             {
               label: "Activities",

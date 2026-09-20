@@ -57,8 +57,8 @@ export function ProgressRibbonConcept() {
             },
             {
               label: "Active streak",
-              value: `${OVERALL_STATS.streak}d`,
-              hint: `Longest ${OVERALL_STATS.longestStreak}d`,
+              value: `${OVERALL_STATS.activeStreakWeeks}w`,
+              hint: `Longest ${OVERALL_STATS.longestActiveStreakWeeks}w`,
             },
             {
               label: "Activities",

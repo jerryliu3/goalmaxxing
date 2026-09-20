@@ -189,8 +189,10 @@ export function PublicProfileSheetModal({
         },
         {
           label: "Active streak",
-          value: `${stats.activeStreakDays.toLocaleString()} days`,
-          helper: "Consecutive active days",
+          value: `${stats.activeStreakWeeks.toLocaleString()} ${
+            stats.activeStreakWeeks === 1 ? "week" : "weeks"
+          }`,
+          helper: "Consecutive weeks with activity",
         },
         {
           label: "This week",

@@ -30,7 +30,7 @@ export interface PublicProfileOverallStats {
   totalActivities: number;
   totalGoalsCompleted: number;
   todayActivities: number;
-  activeStreakDays: number;
+  activeStreakWeeks: number;
   currentWeekActivities: PublicProfileCountTrend;
   currentMonthActivities: PublicProfileCountTrend;
 }

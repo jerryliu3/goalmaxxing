@@ -46,7 +46,7 @@ export interface InsightsStatsGroup {
   totalActivities: number;
   totalGoalsCompleted: number;
   todayActivities: number;
-  activeStreakDays: number;
+  activeStreakWeeks: number;
   currentWeekActivities: InsightsCountTrend;
   currentMonthActivities: InsightsCountTrend;
   currentWeekCompletion: InsightsRateTrend;

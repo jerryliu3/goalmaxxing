@@ -373,7 +373,7 @@ function InsightsPanel({
         <StatTile label="Today's Activities" value={stats.todayActivities} />
         <StatTile
           label="Active Streak"
-          value={`${stats.activeStreakDays} days`}
+          value={`${stats.activeStreakWeeks} weeks`}
         />
       </div>
     </div>
