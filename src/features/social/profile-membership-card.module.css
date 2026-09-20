@@ -51,7 +51,7 @@
   height: 100%;
   min-height: 0;
   padding: 1.7rem;
-  gap: 1.05rem 1.2rem;
+  gap: .7rem 1.2rem;
   overflow: hidden;
   text-align: left;
   pointer-events: none;
@@ -61,7 +61,7 @@
 .face:global(.tempo-card) h2 {
   font: 2.85rem/.92 var(--font-display);
   letter-spacing: -.045em;
-  margin: .6rem 0 .35rem;
+  margin: .85rem 0 .1rem;
   max-width: none;
 }
 .micro {
@@ -80,7 +80,11 @@
   margin-left: auto;
 }
 .identityArt { grid-area: art; }
-.titleBlock { grid-area: title; min-width: 0; }
+.titleBlock {
+  grid-area: title;
+  min-width: 0;
+  align-self: end;
+}
 .metrics { grid-area: metrics; }
 .horizon {
   width: 100%;
@@ -241,7 +245,7 @@ button.portrait:focus-visible {
   grid-template-columns: 1.1fr 1fr 1fr;
   align-self: end;
   align-items: end;
-  padding: .55rem 0 .08rem;
+  padding: .28rem 0 .08rem;
   border-block: 1px solid color-mix(in srgb, currentColor 22%, transparent);
 }
 .metrics > div { display: flex; flex-direction: column; justify-content: flex-end; gap: .2rem; }
@@ -266,8 +270,8 @@ button.portrait:focus-visible {
       "top top"
       "art title"
       "art metrics";
-    padding: 1.25rem 1.45rem 1.05rem;
-    gap: .55rem 1.35rem;
+    padding: 1.25rem 1.45rem 1.2rem;
+    gap: .18rem 1.35rem;
   }
   .horizonWrap {
     flex: 1 1 auto;
@@ -277,11 +281,14 @@ button.portrait:focus-visible {
     height: 100%;
     min-height: 7.5rem;
   }
+  .titleBlock {
+    padding-top: .4rem;
+  }
   .face:global(.tempo-card) h2 {
-    margin: .2rem 0 .15rem;
+    margin: .12rem 0 0;
     font-size: 2.55rem;
   }
   .titleCompose { font-size: 2.55rem; }
-  .metrics { padding: .2rem 0 .04rem; }
+  .metrics { padding: .1rem 0 .02rem; }
   .metrics strong { font-size: 3rem; }
 }
