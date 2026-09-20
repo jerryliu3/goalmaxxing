@@ -1,4 +1,5 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProfileMembershipCard } from "@/features/social/profile-membership-card";
@@ -45,9 +46,11 @@ describe("ProfileMembershipCard", () => {
     expect(within(card).getByText("day streak")).toBeInTheDocument();
     expect(within(card).getByText("LEVEL 18")).toBeInTheDocument();
     expect(within(card).getByText(/JANUARY 2026/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Change profile photo" })).toBeNull();
+    expect(screen.queryByLabelText("Username")).toBeNull();
   });
 
-  it("hides the card for private profiles and missing stats", () => {
+  it("hides the card for private profiles without an editor", () => {
     const { rerender } = render(
       <ProfileMembershipCard
         profile={{ ...profile, isPrivate: true }}
@@ -60,6 +63,82 @@ describe("ProfileMembershipCard", () => {
     rerender(
       <ProfileMembershipCard profile={profile} overallStats={null} currentLevel={18} />
     );
-    expect(screen.queryByRole("article", { name: "Jerry membership card" })).toBeNull();
+    expect(screen.getByRole("article", { name: "Jerry membership card" })).toBeInTheDocument();
+  });
+
+  it("puts identity fields on the card and edits them in place", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn(async () => undefined);
+    const onUploadAvatar = vi.fn(async () => undefined);
+    const onRemoveAvatar = vi.fn();
+
+    render(
+      <ProfileMembershipCard
+        profile={{ ...profile, isPrivate: true }}
+        overallStats={stats}
+        currentLevel={18}
+        editor={{
+          username: "jerry",
+          displayName: "Jerry",
+          email: "jerry@example.com",
+          avatarUrl: "",
+          saving: false,
+          canSave: true,
+          onUsernameChange: vi.fn(),
+          onDisplayNameChange: vi.fn(),
+          onSave,
+          onUploadAvatar,
+          onRemoveAvatar,
+        }}
+      />
+    );
+
+    expect(screen.getByLabelText("Username")).toHaveValue("jerry");
+    expect(screen.getByLabelText("Display name")).toHaveValue("Jerry");
+    expect(screen.getByLabelText("Email")).toHaveValue("jerry@example.com");
+    expect(screen.getByLabelText("Email")).toHaveAttribute("readonly");
+
+    await user.click(screen.getByRole("button", { name: "Save profile" }));
+    expect(onSave).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens a photo dialog with upload and remove actions", async () => {
+    const user = userEvent.setup();
+    const onUploadAvatar = vi.fn(async () => undefined);
+    const onRemoveAvatar = vi.fn();
+
+    render(
+      <ProfileMembershipCard
+        profile={profile}
+        overallStats={stats}
+        currentLevel={18}
+        editor={{
+          username: "jerry",
+          displayName: "Jerry",
+          email: "jerry@example.com",
+          avatarUrl: "https://example.com/avatar.jpg",
+          saving: false,
+          canSave: false,
+          onUsernameChange: vi.fn(),
+          onDisplayNameChange: vi.fn(),
+          onSave: vi.fn(async () => undefined),
+          onUploadAvatar,
+          onRemoveAvatar,
+        }}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "Change profile photo" }));
+    expect(screen.getByRole("dialog", { name: "Profile photo" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Remove photo" }));
+    expect(onRemoveAvatar).toHaveBeenCalledTimes(1);
+
+    const file = new File(["avatar"], "avatar.png", { type: "image/png" });
+    await user.upload(
+      document.querySelector('input[type="file"]') as HTMLInputElement,
+      file
+    );
+    expect(onUploadAvatar).toHaveBeenCalledTimes(1);
   });
 });

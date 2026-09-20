@@ -206,7 +206,7 @@
   border-radius: 0;
 }
 .stage[data-embedded="true"] .object {
-  width: 22.5rem;
+  width: 100%;
   max-width: 100%;
   flex: none;
 }
