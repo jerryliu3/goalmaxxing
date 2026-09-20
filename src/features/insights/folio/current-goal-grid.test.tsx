@@ -8,11 +8,11 @@ import { summary } from "./folio-test-fixtures";
 vi.mock("@/features/goals/goal-progress-card", () => ({
   GoalProgressCard: ({
     goal,
-    rotatable,
+    gallery,
   }: {
     goal: { title: string };
-    rotatable?: boolean;
-  }) => <p data-rotatable={String(rotatable)}>{goal.title}</p>,
+    gallery?: boolean;
+  }) => <p data-gallery={String(gallery)}>{goal.title}</p>,
 }));
 
 afterEach(cleanup);
@@ -33,7 +33,7 @@ describe("CurrentGoalGrid", () => {
       />
     );
 
-    expect(screen.getByText("Daily walk")).toHaveAttribute("data-rotatable", "false");
+    expect(screen.getByText("Daily walk")).toHaveAttribute("data-gallery", "true");
     expect(screen.getByLabelText("Daily walk")).toBeInTheDocument();
     screen.getByRole("button", { name: /goal details/i }).click();
     expect(onDetails).toHaveBeenCalledWith("goal-1");

@@ -34,6 +34,35 @@ describe("goal library journey", () => {
     fireEvent.click(screen.getByRole("button", { name: "Back to Plan" }));
     expect(mocks.push).toHaveBeenCalledWith("/calendar");
   });
+
+  it("lets a fused current goal stay a draggable 3D card", () => {
+    const goal = buildGoal({ title: "Write six chapters", target_basis: "lifetime", target_count: 6, reward_text: "A weekend away" });
+    mocks.data.mockReturnValue({
+      loading: false,
+      loadError: null,
+      reload: vi.fn(),
+      state: {
+        userId: "user-1",
+        goals: [goal],
+        progress: {
+          summaries: [summary(goal.id, {
+            creditedUnitCount: 6,
+            expectedUnitCount: 6,
+            placementTerminal: false,
+            lifecycle: "active",
+            outcome: "in_progress",
+          })],
+        },
+      },
+    });
+    render(<GoalLibraryPage fromPlan />);
+    expect(screen.getByRole("status")).toHaveTextContent("6 / 6 completions");
+    expect(document.querySelector(".tempo-card-surface")).toHaveAttribute("data-rotatable", "true");
+    expect(document.querySelector("[data-reassembly]")).toHaveAttribute("data-fused", "true");
+    expect(document.querySelector("[data-reassembly]")).not.toHaveAttribute("data-flat");
+    expect(document.querySelector("[data-card-solid]")).not.toBeNull();
+    expect(document.querySelector("[data-ghost]")).toBeNull();
+  });
   it("allows returning to Current when Past has no volumes", () => {
     loadCollection();
     render(<GoalLibraryPage view="past" />);
