@@ -109,7 +109,7 @@ describe("saved card assembly", () => {
     expect(container.querySelector('[data-reassembly]')).toHaveAttribute("data-fused", "true");
   });
 
-  it("paints gallery shards as 2D clips without extruded copies", () => {
+  it("paints gallery shards as one clipped 2D face", () => {
     const { container } = render(
       <ReassemblingCard completed={2} target={3} still flat>
         <article className="tempo-card">A real goal</article>
@@ -117,10 +117,10 @@ describe("saved card assembly", () => {
     );
     expect(container.querySelector("[data-reassembly]")).toHaveAttribute("data-flat", "true");
     expect(container.querySelector("[data-ghost]")).not.toBeNull();
-    const pieces = container.querySelectorAll("[data-reward-piece]");
-    expect(pieces).toHaveLength(2);
-    for (const piece of pieces) {
-      expect(piece.querySelector("[data-card-solid]")).toBeNull();
-    }
+    expect(container.querySelector("[data-flat-shards]")).toHaveAttribute("data-piece-count", "2");
+    expect(container.querySelectorAll("[data-reward-piece]")).toHaveLength(0);
+    expect(container.querySelector("[data-card-solid]")).toBeNull();
+    expect(container.querySelectorAll("clipPath polygon")).toHaveLength(2);
+    expect(container.querySelectorAll(".tempo-card")).toHaveLength(2);
   });
 });

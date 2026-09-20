@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { CardSolidBody } from "./card-solid-body";
 import { getRewardProgress } from "./reassembly-progress";
-import { buildRewardPieces, pieceScatter } from "./reward-pieces";
+import {
+  boundingBoxPoints,
+  buildRewardPieces,
+  insetPolygonPoints,
+  pieceScatter,
+  type RewardPiece,
+} from "./reward-pieces";
 import styles from "./reassembling-card.module.css";
 
 type PreviewPhase = "whole" | "etched" | "released" | "ghost";
@@ -81,18 +87,26 @@ export function ReassemblingCard({ children, completed, target, still, preview, 
           {children}
         </div>
       )}
-      <div className={styles.fused} data-visible={fused}>
-        {fused && !flat && <CardSolidBody />}
-        {children}
-      </div>
+      {(!flat || fused) && (
+        <div className={styles.fused} data-visible={fused}>
+          {fused && !flat && <CardSolidBody />}
+          {children}
+        </div>
+      )}
       {!fused && <>
-        <div className={styles.ghost} data-ghost="" aria-hidden="true">
+        <div className={styles.ghost} data-ghost="" aria-hidden={shownPieces.length > 0 ? true : undefined}>
           {children}
           <svg className={styles.outlines} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {pieces.map(piece => <polygon key={piece.id} points={piece.points.map(point => `${point.x},${point.y}`).join(" ")} />)}
           </svg>
         </div>
-        {shownPieces.map(piece => (
+        {flat ? (
+          shownPieces.length > 0 ? (
+            <FlatShards pieces={shownPieces} total={pieces.length}>
+              {children}
+            </FlatShards>
+          ) : null
+        ) : shownPieces.map(piece => (
           <Piece
             key={piece.id}
             piece={piece}
@@ -103,13 +117,44 @@ export function ReassemblingCard({ children, completed, target, still, preview, 
               settled: Math.max(current.settled, piece.earnedAt),
             }))}
           >
-            {/* Gallery grids skip extrusion so shards stay 2D. Single-card
-                hosts keep the solid body so a tilt still has thickness. */}
-            {!flat && <CardSolidBody />}
+            {/* Single-card hosts keep the solid body so a tilt still has thickness. */}
+            <CardSolidBody />
             {children}
           </Piece>
         ))}
       </>}
+    </div>
+  );
+}
+
+function FlatShards({
+  pieces,
+  total,
+  children,
+}: {
+  pieces: RewardPiece[];
+  total: number;
+  children: ReactNode;
+}) {
+  const clipId = `reward-shards-${useId().replace(/:/g, "")}`;
+  return (
+    <div className={styles.flatFace} data-flat-shards="" data-piece-count={pieces.length}>
+      <svg className={styles.flatClip} aria-hidden="true">
+        <clipPath id={clipId} clipPathUnits="objectBoundingBox">
+          {pieces.map((piece) => (
+            <polygon
+              key={piece.id}
+              points={boundingBoxPoints(insetPolygonPoints(piece.points, total))}
+            />
+          ))}
+        </clipPath>
+      </svg>
+      <div
+        className={styles.flatFaceInner}
+        style={{ clipPath: `url(#${clipId})`, WebkitClipPath: `url(#${clipId})` } as CSSProperties}
+      >
+        {children}
+      </div>
     </div>
   );
 }
