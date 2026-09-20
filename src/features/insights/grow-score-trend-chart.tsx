@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   CartesianGrid,
   Line,
@@ -47,10 +47,27 @@ export function GrowScoreTrendChart({
   );
 
   const latest = series.at(-1);
-  const [chartReady, setChartReady] = useState(false);
+  const plotRef = useRef<HTMLDivElement | null>(null);
+  const [plotSize, setPlotSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    setChartReady(true);
+    const plot = plotRef.current;
+    if (!plot) {
+      return;
+    }
+
+    const update = () => {
+      setPlotSize({ width: plot.clientWidth, height: plot.clientHeight });
+    };
+    update();
+
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const observer = new ResizeObserver(update);
+    observer.observe(plot);
+    return () => observer.disconnect();
   }, []);
 
   if (series.length === 0) {
@@ -78,43 +95,43 @@ export function GrowScoreTrendChart({
         ) : null}
       </div>
 
-      <div className="mt-4 h-56 w-full min-w-0">
-        {chartReady ? (
-          <ResponsiveContainer width="100%" height="100%">
+      <div ref={plotRef} className="mt-4 h-56 w-full min-w-0">
+        {plotSize.width > 0 && plotSize.height > 0 ? (
+          <ResponsiveContainer width={plotSize.width} height={plotSize.height}>
             <LineChart data={chartData}>
-            <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
-            <XAxis
-              dataKey="date"
-              minTickGap={24}
-              tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
-            />
-            <YAxis
-              domain={["auto", "auto"]}
-              width={40}
-              tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
-            />
-            <Tooltip
-              contentStyle={chartTooltipStyle()}
-              cursor={{ stroke: CHART_COLORS.accent, strokeWidth: 1 }}
-              formatter={(value) => {
-                const resolved = Array.isArray(value) ? value[0] : value;
-                return [Number(resolved ?? 0).toFixed(1), "Goalmaxxing score"];
-              }}
-              labelFormatter={(label, payload) => {
-                const full = payload?.[0]?.payload?.fullDate;
-                return typeof full === "string" ? full : String(label);
-              }}
-            />
-            <Line
-              type="monotone"
-              dataKey="score"
-              stroke={CHART_COLORS.primary}
-              strokeWidth={2.5}
-              dot={{ r: 2, fill: CHART_COLORS.accent, strokeWidth: 0 }}
-              activeDot={{ r: 4, fill: CHART_COLORS.highlight, strokeWidth: 0 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+              <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
+              <XAxis
+                dataKey="date"
+                minTickGap={24}
+                tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
+              />
+              <YAxis
+                domain={["auto", "auto"]}
+                width={40}
+                tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
+              />
+              <Tooltip
+                contentStyle={chartTooltipStyle()}
+                cursor={{ stroke: CHART_COLORS.accent, strokeWidth: 1 }}
+                formatter={(value) => {
+                  const resolved = Array.isArray(value) ? value[0] : value;
+                  return [Number(resolved ?? 0).toFixed(1), "Goalmaxxing score"];
+                }}
+                labelFormatter={(label, payload) => {
+                  const full = payload?.[0]?.payload?.fullDate;
+                  return typeof full === "string" ? full : String(label);
+                }}
+              />
+              <Line
+                type="monotone"
+                dataKey="score"
+                stroke={CHART_COLORS.primary}
+                strokeWidth={2.5}
+                dot={{ r: 2, fill: CHART_COLORS.accent, strokeWidth: 0 }}
+                activeDot={{ r: 4, fill: CHART_COLORS.highlight, strokeWidth: 0 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         ) : null}
       </div>
 

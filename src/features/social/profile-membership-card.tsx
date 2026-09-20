@@ -170,7 +170,7 @@ function Portrait({
   const inner = avatarUrl ? (
     // The control names the photo; keep the image decorative.
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={avatarUrl} alt="" className={styles.portraitImage} />
+    <img src={avatarUrl} alt="" draggable={false} className={styles.portraitImage} />
   ) : (
     <span className={styles.monogram}>{initials}</span>
   );

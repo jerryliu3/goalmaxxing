@@ -47,6 +47,7 @@ describe("ProfileMembershipCard", () => {
     expect(within(card).queryByText("PEARL RESERVE")).toBeNull();
     expect(within(card).queryByText("day streak")).toBeNull();
     expect(within(card).getAllByText("Jerry")).toHaveLength(1);
+    expect(within(card).getAllByText("@jerry")).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Change profile photo" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Edit username" })).toBeNull();
     expect(screen.queryByLabelText("username")).toBeNull();
