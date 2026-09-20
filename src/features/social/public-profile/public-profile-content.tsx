@@ -70,6 +70,7 @@ export function PublicProfileContent({
             growSeries={bundle.growSeries}
             heatmap={bundle.yearHeatmap}
             selectedYear={selectedYear}
+            overallStats={bundle.overallStats}
           />
           {afterPresence}
           <PublicProfileCurrentGoals goals={bundle.currentGoals} />
