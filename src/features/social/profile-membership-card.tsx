@@ -44,7 +44,7 @@ export type ProfileMembershipEditor = {
 
 function Horizon() {
   return (
-    <svg className={styles.horizon} viewBox="0 0 280 190" fill="none" aria-hidden="true">
+    <svg className={styles.horizon} viewBox="0 0 280 190" preserveAspectRatio="xMidYMid meet" fill="none" aria-hidden="true">
       <circle cx="140" cy="91" r="88" stroke="currentColor" strokeWidth=".7" />
       <circle cx="140" cy="91" r="76" stroke="currentColor" strokeWidth=".7" strokeDasharray="1.4 6" />
       {Array.from({ length: 7 }, (_, i) => (
@@ -183,6 +183,7 @@ function Portrait({
       <button
         type="button"
         className={styles.portrait}
+        data-portrait=""
         aria-label="Change profile photo"
         onClick={onOpen}
         onPointerDown={(event) => event.stopPropagation()}
@@ -192,7 +193,7 @@ function Portrait({
     );
   }
 
-  return <div className={styles.portrait}>{inner}</div>;
+  return <div className={styles.portrait} data-portrait="">{inner}</div>;
 }
 
 export function ProfileMembershipCard({
@@ -266,7 +267,7 @@ export function ProfileMembershipCard({
               {memberSince ? <span>MEMBER SINCE {memberSince}</span> : null}
             </div>
             <div className={styles.identityArt}>
-              <div className={styles.horizonWrap}>
+              <div className={styles.horizonWrap} data-horizon-frame="">
                 <Horizon />
                 <Portrait
                   avatarUrl={avatarUrl}

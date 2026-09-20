@@ -150,4 +150,24 @@ describe("ProfileMembershipCard", () => {
     );
     expect(onUploadAvatar).toHaveBeenCalledTimes(1);
   });
+
+  it("keeps the photo inside the horizon rings", () => {
+    render(
+      <ProfileMembershipCard
+        profile={{ ...profile, avatarUrl: "https://example.com/alice.jpg" }}
+        overallStats={stats}
+        currentLevel={18}
+      />
+    );
+
+    const frame = document.querySelector("[data-horizon-frame]");
+    const portrait = document.querySelector("[data-portrait]");
+    expect(frame).not.toBeNull();
+    expect(portrait).not.toBeNull();
+    expect(frame).toContainElement(portrait as HTMLElement);
+    expect(portrait?.querySelector("img")).toHaveAttribute(
+      "src",
+      "https://example.com/alice.jpg"
+    );
+  });
 });
