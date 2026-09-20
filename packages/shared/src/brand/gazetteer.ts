@@ -1,5 +1,12 @@
 import type { ThemeTokenName } from "../tokens";
-export { CATEGORY_COLORS, categoryColor, categoryFillForGoal, normalizeCategoryDisplayColor } from "./categories";
+import {
+  CATEGORY_COLORS,
+  categoryColor,
+  categoryFillForGoal,
+  normalizeCategoryDisplayColor,
+} from "./categories";
+
+export { CATEGORY_COLORS, categoryColor, categoryFillForGoal, normalizeCategoryDisplayColor };
 
 /**
  * Production Gazetteer lock (paper, walnut, stamp rust, sage/copper chrome, Nest).
