@@ -51,7 +51,7 @@ export function CurrentGoalGrid({
     <div className={styles.currentGrid}>
       {entries.map(({ goal, progress }) => (
         <section key={goal.id} className={styles.currentGoal} aria-label={goal.title}>
-          <GoalProgressCard goal={goal} progress={progress} rotatable={false} />
+          <GoalProgressCard goal={goal} progress={progress} gallery />
           {onDetails ? (
             <button className={styles.goalDetails} type="button" onClick={() => onDetails(goal.id)}>
               Goal details <span aria-hidden="true">↗</span>
