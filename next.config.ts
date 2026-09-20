@@ -58,4 +58,7 @@ export default withSentryConfig(nextConfig, {
   widenClientFileUpload: Boolean(sentryAuthToken),
   tunnelRoute: sentryDsn ? "/sentry-tunnel" : undefined,
   telemetry: false,
+  // The after-compile hook still warns when authToken is missing, even with
+  // release.create=false. Keep the hook off unless we can actually publish.
+  ...(sentryAuthToken ? {} : { useRunAfterProductionCompileHook: false }),
 });

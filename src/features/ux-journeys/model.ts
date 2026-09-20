@@ -1,8 +1,8 @@
+import { validateGoalCreationFields } from "@/features/goals/goal-creation-model";
 import {
-  createDefaultGoalCreationFields,
-  validateGoalCreationFields,
-} from "@/features/goals/goal-creation-model";
-import type { GoalFormState } from "@/features/today/goal-form-model";
+  defaultGoalFormState,
+  type GoalFormState,
+} from "@/features/today/goal-form-model";
 import { getCategorySwatchColor } from "@/lib/goals/category";
 import type { GoalCreateKind } from "@/lib/goals/form-options";
 
@@ -49,19 +49,15 @@ export interface Draft extends GoalFormState {
   kind: GoalCreateKind;
 }
 export function newDraft(): Draft {
-  const fields = createDefaultGoalCreationFields();
   return {
-    ...fields,
+    ...defaultGoalFormState,
     id: crypto.randomUUID(),
     kind: "recurring",
     category_selection: "health",
     color: getCategorySwatchColor("health"),
     recurrence_interval: "weekly",
     target_count: "3",
-    reward_text: "",
-    team_id: null,
-    task_scheduled_date: fields.start_date,
-    task_scheduled_time: "",
+    task_scheduled_date: defaultGoalFormState.start_date,
   };
 }
 export function draftErrors(draft: Draft): string[] {
