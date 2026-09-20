@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { CardSolidBody } from "./card-solid-body";
 import { getRewardProgress } from "./reassembly-progress";
-import { buildRewardPieces, fragmentMaskImage, pieceScatter } from "./reward-pieces";
+import { buildRewardPieces, pieceScatter } from "./reward-pieces";
 import styles from "./reassembling-card.module.css";
 
 type PreviewPhase = "whole" | "etched" | "released" | "ghost";
@@ -70,9 +70,6 @@ export function ReassemblingCard({ children, completed, target, still, preview, 
     const timer = window.setTimeout(() => setArrival({ observed: credited, settled: credited }), 1200);
     return () => window.clearTimeout(timer);
   }, [credited, quiet, arrival.settled]);
-  const flatMask = flat && !fused
-    ? fragmentMaskImage(shownPieces.map((piece) => piece.clipPath))
-    : null;
 
   return (
     <div className={styles.surface} data-reassembly="" data-fused={fused} data-still={quiet}
@@ -80,7 +77,7 @@ export function ReassemblingCard({ children, completed, target, still, preview, 
       data-preview={preview} data-preview-phase={preview ? previewPhase : undefined}>
       {showPreviewWhole && (
         <div className={styles.previewWhole} data-preview-whole="" aria-hidden="true">
-          <CardSolidBody />
+          {!flat && <CardSolidBody />}
           {children}
         </div>
       )}
@@ -95,16 +92,7 @@ export function ReassemblingCard({ children, completed, target, still, preview, 
             {pieces.map(piece => <polygon key={piece.id} points={piece.points.map(point => `${point.x},${point.y}`).join(" ")} />)}
           </svg>
         </div>
-        {flat && flatMask ? (
-          <div
-            className={styles.flatEarned}
-            data-flat-earned=""
-            aria-hidden="true"
-            style={{ maskImage: flatMask, WebkitMaskImage: flatMask } as CSSProperties}
-          >
-            {children}
-          </div>
-        ) : shownPieces.map(piece => (
+        {shownPieces.map(piece => (
           <Piece
             key={piece.id}
             piece={piece}
@@ -115,9 +103,9 @@ export function ReassemblingCard({ children, completed, target, still, preview, 
               settled: Math.max(current.settled, piece.earnedAt),
             }))}
           >
-            {/* Each fragment keeps the same extruded body as the finished card so a
-                tilt shows thickness on the shards, not only after fusion. */}
-            <CardSolidBody />
+            {/* Gallery grids skip extrusion so shards stay 2D. Single-card
+                hosts keep the solid body so a tilt still has thickness. */}
+            {!flat && <CardSolidBody />}
             {children}
           </Piece>
         ))}
