@@ -60,4 +60,29 @@ describe("public membership card rotation", () => {
     });
     expect(capture).toHaveBeenCalledWith(8);
   });
+
+  // Release is owned by the stage handler, not the object, so the pointer up
+  // has to bubble out of [data-card-object] to end the drag.
+  it("releases the drag when the pointer goes up on the card object", () => {
+    render(
+      <ProfileMembershipCard profile={profile} overallStats={stats} currentLevel={7} />
+    );
+
+    const object = screen.getByRole("group", { name: "Alice Park membership card rotation" });
+    const stage = object.closest<HTMLElement>("[data-material]")!;
+    vi.spyOn(object, "setPointerCapture").mockImplementation(() => {});
+    vi.spyOn(object, "hasPointerCapture").mockReturnValue(false);
+
+    fireEvent.pointerDown(object, {
+      pointerId: 5,
+      button: 0,
+      clientX: 180,
+      clientY: 160,
+      isPrimary: true,
+    });
+    expect(stage).toHaveAttribute("data-dragging", "true");
+
+    fireEvent.pointerUp(object, { pointerId: 5 });
+    expect(stage).not.toHaveAttribute("data-dragging");
+  });
 });

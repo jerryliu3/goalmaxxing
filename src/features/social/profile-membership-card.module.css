@@ -32,20 +32,14 @@
   cursor: default;
   touch-action: auto;
 }
+/* Hits must land on [data-card-object], which owns 3D rotation. A none
+   ancestor drops its whole subtree from hit testing, so editor controls
+   opt back in individually with pointer-events: auto. */
 .frame:global(.tempo-card-frame) {
   display: block;
   width: 100%;
   aspect-ratio: 330 / 555;
   pointer-events: none;
-}
-/* pointer-events is not inherited. Name, metrics, and art must not steal
-   the hit from [data-card-object], or Safari refuses setPointerCapture. */
-.face:global(.tempo-card),
-.face:global(.tempo-card) * {
-  pointer-events: none;
-}
-.face:global(.tempo-card) :is(button, input, textarea, select, a, [contenteditable="true"]) {
-  pointer-events: auto;
 }
 .face:global(.tempo-card) {
   display: grid;
@@ -65,6 +59,7 @@
   gap: .7rem 1.2rem;
   overflow: hidden;
   text-align: left;
+  pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
 }
