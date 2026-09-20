@@ -1,17 +1,52 @@
-.embed { display: flex; justify-content: center; width: 100%; }
-.embed :global([data-card-object]) {
+/* Definite rem width on a block stage — percentage width inside a shrink-wrap
+   collapses the Pearl silhouette. */
+.embed {
+  display: block;
+  position: relative;
+  z-index: 30;
+  width: 100%;
+  container-name: membership;
+  container-type: inline-size;
+}
+.embed :global([data-embedded="true"]) {
+  overflow: visible;
+}
+.embed :global([data-embedded="true"] [data-card-object]) {
+  display: block;
+  position: relative;
+  z-index: 1;
   width: 22.5rem;
   max-width: 100%;
+  margin-inline: auto;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  touch-action: none;
 }
-/* Trading-card proportions from the material study, not the 330/382 goal face. */
+.embed :global([data-dragging="true"]),
+.embed :global([data-inspecting="true"]) {
+  z-index: 80;
+}
+.embed :global([data-still="true"] [data-card-object]) {
+  cursor: default;
+  touch-action: auto;
+}
 .frame:global(.tempo-card-frame) {
   display: block;
   width: 100%;
   aspect-ratio: 330 / 555;
+  /* Hits must land on [data-card-object], which owns 3D rotation. */
+  pointer-events: none;
 }
 .face:global(.tempo-card) {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "top"
+    "art"
+    "title"
+    "metrics";
   box-sizing: border-box;
   position: absolute;
   inset: 0;
@@ -19,28 +54,244 @@
   height: 100%;
   min-height: 0;
   padding: 1.7rem;
-  gap: 1.2rem;
+  gap: .7rem 1.2rem;
   overflow: hidden;
   text-align: left;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .face:global(.tempo-card) h2 {
-  font: 2.2rem/.96 var(--font-display);
+  font: 2.85rem/.92 var(--font-display);
   letter-spacing: -.045em;
-  margin: .6rem 0 .7rem;
+  margin: .85rem 0 .1rem;
+  max-width: none;
 }
-.micro { display: flex; justify-content: space-between; align-items: center; gap: .5rem; font: .5rem/1.6 var(--font-mono); letter-spacing: .055em; }
-.micro:last-child { margin-top: auto; padding-top: .9rem; border-top: 1px solid color-mix(in srgb, currentColor 23%, transparent); }
-.horizon { width: 100%; height: 160px; margin: -.4rem 0; }
-.monogram { font: italic 66px var(--font-display); letter-spacing: -8px; }
-.kicker { font: .52rem/1.6 var(--font-mono); letter-spacing: .055em; text-transform: uppercase; opacity: .75; }
-.titleBlock p { font-size: .78rem; line-height: 1.65; opacity: .8; }
-.identityArt { position: relative; padding: .6rem 0; border: 1px solid color-mix(in srgb, currentColor 20%, transparent); border-radius: 80px 80px 4px 4px; }
-.identityArt .horizon { height: 185px; }
-.serial { display: block; text-align: center; font: .45rem var(--font-mono); letter-spacing: .2em; opacity: .6; }
-.metrics { display: grid; grid-template-columns: 1.1fr 1fr 1fr; padding: 1rem 0; border-block: 1px solid color-mix(in srgb, currentColor 22%, transparent); }
-.metrics > div { display: flex; flex-direction: column; gap: .4rem; }
-.metrics strong { font: 1.6rem var(--font-display); }
-.metrics > div > span { font-size: .52rem; opacity: .7; }
-.signature { display: flex; justify-content: space-between; align-items: center; }
-.signature > span:first-child { font: italic 1.9rem var(--font-display); }
-.signature > span:last-child { font: .48rem/1.7 var(--font-mono); text-align: right; opacity: .6; }
+.micro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .5rem;
+  font: .5rem/1.6 var(--font-mono);
+  letter-spacing: .055em;
+}
+.topbar {
+  grid-area: top;
+  white-space: nowrap;
+}
+.topbar span:last-child {
+  margin-left: auto;
+}
+.identityArt { grid-area: art; }
+.titleBlock {
+  grid-area: title;
+  min-width: 0;
+  align-self: end;
+}
+.metrics { grid-area: metrics; }
+.horizon {
+  width: 100%;
+  height: 185px;
+  margin: 0;
+}
+.horizonWrap {
+  position: relative;
+  flex: 1 1 auto;
+}
+.serial {
+  display: block;
+  padding: .2rem 0 .15rem;
+  text-align: center;
+  font: .48rem var(--font-mono);
+  letter-spacing: .2em;
+  opacity: .6;
+}
+.identityArt {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: .55rem 0;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 80px 80px 4px 4px;
+}
+.portrait {
+  position: absolute;
+  left: 50%;
+  top: calc(91 / 190 * 100%);
+  width: calc(130 / 280 * 100%);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  overflow: hidden;
+  color: inherit;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  cursor: default;
+}
+button.portrait {
+  cursor: pointer;
+  pointer-events: auto;
+}
+button.portrait:hover {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+button.portrait:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.portraitImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+.monogram {
+  font: italic 2.8rem var(--font-display);
+  letter-spacing: -.12em;
+  line-height: 1;
+}
+.kicker {
+  font: .68rem/1.5 var(--font-mono);
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  opacity: .75;
+}
+.titleBlock p,
+.email {
+  font-size: .92rem;
+  line-height: 1.55;
+  opacity: .8;
+}
+.quiet {
+  appearance: none;
+  display: inline;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 0 .08rem;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 34%, transparent);
+  border-radius: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  cursor: text;
+  pointer-events: auto;
+}
+.quiet:hover,
+.quiet:focus-visible {
+  border-bottom-color: currentColor;
+  outline: none;
+}
+.compose {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0 0 .08rem;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  border-radius: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  outline: none;
+  caret-color: currentColor;
+  user-select: text;
+  -webkit-user-select: text;
+  pointer-events: auto;
+}
+.handleCompose {
+  width: auto;
+  max-width: 100%;
+  font: .68rem/1.5 var(--font-mono);
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  opacity: .9;
+  pointer-events: auto;
+}
+.titleCompose {
+  font: 2.85rem/.92 var(--font-display);
+  letter-spacing: -.045em;
+  pointer-events: auto;
+}
+.save {
+  appearance: none;
+  align-self: start;
+  margin: .15rem 0 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: .62rem/1.6 var(--font-mono);
+  letter-spacing: .08em;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.save:hover,
+.save:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+.save:disabled {
+  cursor: default;
+  opacity: .55;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  align-self: end;
+  align-items: end;
+  padding: .52rem 0 .08rem;
+  border-block: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+}
+.metrics > div { display: flex; flex-direction: column; justify-content: flex-end; gap: .2rem; }
+.metrics strong { font: 3.35rem/.8 var(--font-display); letter-spacing: -.04em; }
+.metrics > div > span { font-size: .68rem; opacity: .7; }
+.photoPreview {
+  display: flex;
+  justify-content: center;
+  padding: .4rem 0;
+}
+
+@media (min-width: 720px) {
+  .embed :global([data-embedded="true"] [data-card-object]) {
+    width: min(46rem, 100%);
+  }
+  .frame:global(.tempo-card-frame) {
+    aspect-ratio: 760 / 340;
+  }
+  .face:global(.tempo-card) {
+    grid-template-columns: 10.25rem minmax(0, 1fr);
+    grid-template-areas:
+      "top top"
+      "art title"
+      "art metrics";
+    padding: 1.25rem 1.45rem 1.2rem;
+    gap: .18rem 1.35rem;
+  }
+  .horizonWrap {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .horizon {
+    height: 100%;
+    min-height: 7.5rem;
+  }
+  .titleBlock {
+    padding-top: .4rem;
+  }
+  .face:global(.tempo-card) h2 {
+    margin: .12rem 0 0;
+    font-size: 2.55rem;
+  }
+  .titleCompose { font-size: 2.55rem; }
+  .metrics { padding: .45rem 0 .02rem; }
+  .metrics strong { font-size: 3rem; }
+}

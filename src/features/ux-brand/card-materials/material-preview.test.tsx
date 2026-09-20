@@ -15,6 +15,16 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
+it("starts a drag when the pointer lands on covering card content", () => {
+  render(<MaterialPreview material={MATERIALS.find(item => item.id === "pearl")!} fields={MATERIAL_SAMPLES[0].fields} still={false} history={false} />);
+  const card = screen.getByRole("group", { name: "Pearl Reserve card rotation" });
+  const inner = card.querySelector(".tempo-card");
+  expect(inner).not.toBeNull();
+  const capture = vi.spyOn(card, "setPointerCapture");
+  fireEvent.pointerDown(inner as Element, { pointerId: 4, button: 0, clientX: 120, clientY: 140, isPrimary: true });
+  expect(capture).toHaveBeenCalledWith(4);
+});
+
 it("captures dragging beyond the card, turns past 180°, holds the pose, and resets", () => {
   render(<MaterialPreview material={MATERIALS.find(item => item.id === "foil")!} fields={MATERIAL_SAMPLES[0].fields} still={false} history={false} />);
   const card = screen.getByRole("group", { name: "Foil Print card rotation" });

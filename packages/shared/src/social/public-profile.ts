@@ -47,6 +47,8 @@ export interface PublicProfileIdentity {
   avatarUrl: string | null;
   isPrivate: boolean;
   createdAt: string | null;
+  /** 1-based signup order among profiles. */
+  memberNumber?: number | null;
 }
 
 export interface PublicProfileGrowPoint {

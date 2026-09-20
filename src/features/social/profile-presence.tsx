@@ -34,7 +34,7 @@ export function ProfilePresenceSection({
   const chartSeries = toChartSeries(growSeries);
 
   return (
-    <div className="space-y-4" data-testid="profile-presence">
+    <div className="min-w-0 space-y-4" data-testid="profile-presence">
       {hasGrowScoreSignal(chartSeries) ? (
         <GrowScoreTrendChart title="Goalmaxxing score" series={chartSeries} />
       ) : null}

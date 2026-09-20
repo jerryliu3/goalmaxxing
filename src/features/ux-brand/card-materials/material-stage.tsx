@@ -29,6 +29,7 @@ export function MaterialStage({ material, color, still, label = material.name, l
           aria-label={solid ? `${label} rotation` : undefined}
           aria-describedby={solid ? hintId : undefined}
           tabIndex={solid && !still ? 0 : undefined}
+          draggable={false}
           {...rotation.cardHandlers}
         >
           {material.form === "solid" && <CardSolidBody />}

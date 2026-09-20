@@ -69,9 +69,8 @@ describe("PublicProfileContent page", () => {
       <PublicProfileContent bundle={publicBundle()} selectedYear={2026} variant="page" />
     );
 
-    expect(screen.getByText("Jerry")).toBeInTheDocument();
-    expect(screen.getByText("@jerry")).toBeInTheDocument();
     expect(screen.getByText("Membership card")).toBeInTheDocument();
+    expect(screen.queryByText("@jerry")).toBeNull();
     expect(screen.getByRole("heading", { name: "Goalmaxxing score" })).toBeInTheDocument();
     expect(screen.getByText("2026 activity")).toBeInTheDocument();
     expect(screen.queryByText("XP progress")).toBeNull();
@@ -135,6 +134,8 @@ describe("PublicProfileContent page", () => {
     );
 
     expect(screen.getByText("XP progress")).toBeInTheDocument();
+    expect(screen.getByText("Jerry")).toBeInTheDocument();
+    expect(screen.getByText("@jerry")).toBeInTheDocument();
     expect(screen.queryByText("Membership card")).toBeNull();
     expect(screen.queryByRole("heading", { name: "Goalmaxxing score" })).toBeNull();
   });

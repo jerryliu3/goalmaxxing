@@ -155,7 +155,7 @@
 }
 
 /* Treat only the study object as a manipulable image; labels remain accessible. */
-.stage[data-form="solid"] .object { cursor: grab; touch-action: none; }
+.stage[data-form="solid"] .object { cursor: grab; touch-action: none; -webkit-user-drag: none; }
 .stage[data-dragging="true"] .object { cursor: grabbing; }
 .stage[data-still="true"] .object { cursor: default; touch-action: auto; }
 .object:focus-visible { outline: 2px solid var(--study-ink); outline-offset: 12px; border-radius: var(--card-radius,18px); }
@@ -197,8 +197,8 @@
 .stage[data-layout="landscape"] { min-height: 480px; padding: 3rem clamp(1.5rem,6vw,5rem); }
 .stage[data-layout="landscape"] .object { max-width: 760px; }
 .stage[data-embedded="true"] {
-  display: flex;
-  justify-content: center;
+  display: block;
+  width: 100%;
   min-height: 0;
   padding: .75rem 0 1.25rem;
   border: 0;
@@ -206,7 +206,8 @@
   border-radius: 0;
 }
 .stage[data-embedded="true"] .object {
+  display: block;
   width: 22.5rem;
   max-width: 100%;
-  flex: none;
+  margin-inline: auto;
 }

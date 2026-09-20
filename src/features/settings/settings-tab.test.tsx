@@ -49,12 +49,8 @@ vi.mock("@/features/social/use-social-tab-data", () => ({
   }),
 }));
 
-vi.mock("@/features/social/profile-section", () => ({
-  ProfileSection: () => <div>Profile</div>,
-}));
-
 vi.mock("@/features/social/profile-membership-card", () => ({
-  ProfileMembershipCard: () => null,
+  ProfileMembershipCard: () => <div>Profile card</div>,
 }));
 
 vi.mock("@/features/social/notifications-section", () => ({
@@ -166,6 +162,7 @@ describe("SettingsTab", () => {
   it("groups existing controls into Plan, Connected, and Account", () => {
     render(<SettingsTab />);
 
+    expect(screen.getByText("Profile card")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Plan" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Connected" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Account" })).toBeInTheDocument();

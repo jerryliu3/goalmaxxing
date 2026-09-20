@@ -31,29 +31,34 @@ export function PublicProfileContent({
   const heatmapRef = useRef<HTMLDivElement | null>(null);
   const title = resolvePublicProfileLabel(bundle.profile);
 
+  const identity = (
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <UserAvatar
+          avatarUrl={bundle.profile.avatarUrl}
+          displayName={bundle.profile.displayName}
+          username={bundle.profile.username}
+          size="lg"
+          alt={`${title} avatar`}
+        />
+        <div className="min-w-0">
+          <p className="truncate font-display text-xl font-semibold">{title}</p>
+          {bundle.profile.username ? (
+            <p className="text-sm text-muted-foreground">@{bundle.profile.username}</p>
+          ) : null}
+        </div>
+      </div>
+      {headerActions ? <div className="shrink-0">{headerActions}</div> : null}
+    </div>
+  );
+
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <UserAvatar
-            avatarUrl={bundle.profile.avatarUrl}
-            displayName={bundle.profile.displayName}
-            username={bundle.profile.username}
-            size="lg"
-            alt={`${title} avatar`}
-          />
-          <div className="min-w-0">
-            <p className="truncate font-display text-xl font-semibold">{title}</p>
-            {bundle.profile.username ? (
-              <p className="text-sm text-muted-foreground">@{bundle.profile.username}</p>
-            ) : null}
-          </div>
-        </div>
-        {headerActions ? <div className="shrink-0">{headerActions}</div> : null}
-      </div>
-
       {bundle.profile.isPrivate ? (
-        <p className="text-sm text-muted-foreground">This account is private</p>
+        <>
+          {identity}
+          <p className="text-sm text-muted-foreground">This account is private</p>
+        </>
       ) : variant === "page" ? (
         <>
           <ProfileMembershipCard
@@ -71,6 +76,7 @@ export function PublicProfileContent({
         </>
       ) : (
         <>
+          {identity}
           {xpEnabled && bundle.xp ? <XpProgressCard profile={bundle.xp} /> : null}
           {xpEnabled ? (
             <ProfileMedalShelf

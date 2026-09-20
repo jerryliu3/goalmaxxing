@@ -32,7 +32,6 @@ import { NotificationsSection } from "@/features/social/notifications-section";
 import { buildPublicProfileUrl } from "@/lib/social/public-profile-username";
 import { ProfileMembershipCard } from "@/features/social/profile-membership-card";
 import { ProfilePresenceSection } from "@/features/social/profile-presence";
-import { ProfileSection } from "@/features/social/profile-section";
 import { useOwnProfilePresence } from "@/features/social/use-own-profile-presence";
 import { useSocialTabData } from "@/features/social/use-social-tab-data";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
@@ -173,33 +172,44 @@ export function SettingsTab() {
     <div
       data-testid="settings-pane"
       data-settings-pane={settingsPanelOpen ? "open" : "closed"}
-      className="md:flex md:items-start md:overflow-hidden"
+      className="md:flex md:items-start"
     >
       <div className="min-w-0 flex-1 space-y-5">
-        <ProfileSection
-          userId={state.userId}
-          profile={state.profile}
-          profileDraft={profileDraft}
-          authEmail={authEmail}
-          saving={saving}
-          canSaveProfile={canSaveProfile}
-          setProfileDraft={setProfileDraft}
-          onSaveProfile={saveProfile}
-          onUploadAvatar={uploadProfileAvatarFile}
+        <ProfileMembershipCard
+          profile={{
+            subjectUserId: state.userId,
+            username: profileDraft.username.trim() || null,
+            displayName: profileDraft.display_name.trim() || null,
+            avatarUrl: profileDraft.avatar_url.trim() || null,
+            isPrivate: false,
+            createdAt: presence?.profile.createdAt ?? state.profile?.created_at ?? null,
+            memberNumber: presence?.profile.memberNumber ?? null,
+          }}
+          overallStats={presence?.overallStats ?? null}
+          currentLevel={presence?.xp?.currentLevel ?? null}
+          editor={{
+            username: profileDraft.username,
+            displayName: profileDraft.display_name,
+            email: authEmail,
+            avatarUrl: profileDraft.avatar_url,
+            saving,
+            canSave: canSaveProfile,
+            onUsernameChange: (username) =>
+              setProfileDraft((prev) => ({ ...prev, username })),
+            onDisplayNameChange: (displayName) =>
+              setProfileDraft((prev) => ({ ...prev, display_name: displayName })),
+            onSave: saveProfile,
+            onUploadAvatar: uploadProfileAvatarFile,
+            onRemoveAvatar: () =>
+              setProfileDraft((prev) => ({ ...prev, avatar_url: "" })),
+          }}
         />
         {presence ? (
-          <>
-            <ProfileMembershipCard
-              profile={presence.profile}
-              overallStats={presence.overallStats}
-              currentLevel={presence.xp?.currentLevel ?? null}
-            />
-            <ProfilePresenceSection
-              growSeries={presence.growSeries}
-              heatmap={presence.yearHeatmap}
-              selectedYear={new Date().getFullYear()}
-            />
-          </>
+          <ProfilePresenceSection
+            growSeries={presence.growSeries}
+            heatmap={presence.yearHeatmap}
+            selectedYear={new Date().getFullYear()}
+          />
         ) : null}
         {groups}
       </div>
