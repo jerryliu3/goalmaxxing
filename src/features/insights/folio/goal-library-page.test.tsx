@@ -25,9 +25,9 @@ describe("goal library journey", () => {
     expect(document.querySelector(".tempo-card-surface")).toHaveAttribute("data-rotatable", "false");
     expect(document.querySelector(".tempo-card-surface")).toHaveAttribute("data-still", "true");
     expect(document.querySelector("[data-reassembly]")).toHaveAttribute("data-flat", "true");
-    expect(document.querySelector("[data-reward-piece]")).toBeNull();
-    expect(document.querySelector("[data-flat-earned]")).not.toBeNull();
     expect(document.querySelector("[data-ghost]")).not.toBeNull();
+    expect(document.querySelectorAll("[data-reward-piece]")).toHaveLength(2);
+    expect(document.querySelector("[data-card-solid]")).toBeNull();
     expect(screen.getAllByRole("article")).toHaveLength(1);
     fireEvent.click(screen.getByRole("button", { name: "Past" }));
     expect(mocks.push).toHaveBeenCalledWith("/insights/folios?view=past&from=plan");
