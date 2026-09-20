@@ -59,6 +59,7 @@ export function TempoCardSurface({
     >
       <div
         className="tempo-card-object"
+        data-card-object=""
         role={held ? "group" : undefined}
         aria-label={held ? `${label} rotation` : undefined}
         aria-describedby={held ? hintId : undefined}
