@@ -280,16 +280,26 @@ function buildCategoryBreakdown({
     });
 }
 
-function calculateActiveStreak(asOfDate: string, rawCountByDate: Map<string, number>) {
-  let streak = 0;
-  let cursor = asOfDate;
-  for (;;) {
-    const count = rawCountByDate.get(cursor) ?? 0;
-    if (count <= 0) {
-      break;
+function calculateActiveWeeklyStreak(
+  asOfDate: string,
+  weekStartsOn: number,
+  rawCountByDate: Map<string, number>
+) {
+  const weekOptions = {
+    weekStartsOn: weekStartsOn as 0 | 1 | 2 | 3 | 4 | 5 | 6,
+  };
+  const activeWeekStarts = new Set<string>();
+  for (const [date, count] of rawCountByDate.entries()) {
+    if (count > 0 && compareDateStrings(date, asOfDate) <= 0) {
+      activeWeekStarts.add(toDateString(startOfWeek(parseISO(date), weekOptions)));
     }
+  }
+
+  let streak = 0;
+  let cursor = toDateString(startOfWeek(parseISO(asOfDate), weekOptions));
+  while (activeWeekStarts.has(cursor)) {
     streak += 1;
-    cursor = toDateString(addDays(parseISO(cursor), -1));
+    cursor = toDateString(addDays(parseISO(cursor), -7));
   }
   return streak;
 }
@@ -387,7 +397,11 @@ export function buildInsightsStatsGroup({
     return (summariesByGoal.get(goal.id)?.outcome === "achieved" ? count + 1 : count);
   }, 0);
   const todayActivities = rawCountByDate.get(asOfDate) ?? 0;
-  const activeStreakDays = calculateActiveStreak(asOfDate, rawCountByDate);
+  const activeStreakWeeks = calculateActiveWeeklyStreak(
+    asOfDate,
+    weekStartsOn,
+    rawCountByDate
+  );
 
   const currentWeekActivitiesCount = sumRawCountsInWindow(rawCountByDate, weekStart, asOfDate);
   const previousWeekActivitiesCount = sumRawCountsInWindow(
@@ -419,7 +433,7 @@ export function buildInsightsStatsGroup({
     totalActivities,
     totalGoalsCompleted,
     todayActivities,
-    activeStreakDays,
+    activeStreakWeeks,
     currentWeekActivities: toCountTrend(
       currentWeekActivitiesCount,
       previousWeekActivitiesCount

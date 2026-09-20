@@ -123,7 +123,7 @@ function mapOverallStats(stats: ReturnType<typeof buildInsightsStatsGroup>): Pub
     totalActivities: stats.totalActivities,
     totalGoalsCompleted: stats.totalGoalsCompleted,
     todayActivities: stats.todayActivities,
-    activeStreakDays: stats.activeStreakDays,
+    activeStreakWeeks: stats.activeStreakWeeks,
     currentWeekActivities: stats.currentWeekActivities,
     currentMonthActivities: stats.currentMonthActivities,
   };

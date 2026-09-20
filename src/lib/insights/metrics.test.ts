@@ -68,7 +68,7 @@ function makeSummary(goalId: string, outcome: GoalProgressSnapshot["outcome"]): 
 }
 
 describe("buildInsightsStatsGroup", () => {
-  it("computes activity totals, trends, and active streak", () => {
+  it("computes activity totals, trends, and the active weekly streak", () => {
     const goals = [makeGoal({ id: "g1", owner_id: "u1", title: "Run" })];
     const completions = [
       makeCompletion({ id: "c1", goal_id: "g1", user_id: "u1", completed_on: "2026-01-07" }),
@@ -90,10 +90,49 @@ describe("buildInsightsStatsGroup", () => {
     expect(stats.totalActivities).toBe(5);
     expect(stats.totalGoalsCompleted).toBe(1);
     expect(stats.todayActivities).toBe(2);
-    expect(stats.activeStreakDays).toBe(4);
+    expect(stats.activeStreakWeeks).toBe(1);
     expect(stats.currentWeekActivities.current).toBe(5);
     expect(stats.currentWeekActivities.previous).toBe(0);
     expect(stats.rolling30DaysActivities.current).toBe(5);
+  });
+
+  it("counts consecutive active weeks using the profile week start", () => {
+    const goals = [makeGoal({ id: "g1", owner_id: "u1", title: "Run" })];
+    const completions = [
+      makeCompletion({ id: "c1", goal_id: "g1", user_id: "u1", completed_on: "2026-01-31" }),
+      makeCompletion({ id: "c2", goal_id: "g1", user_id: "u1", completed_on: "2026-02-08" }),
+      makeCompletion({ id: "c3", goal_id: "g1", user_id: "u1", completed_on: "2026-02-15" }),
+      makeCompletion({ id: "c4", goal_id: "g1", user_id: "u1", completed_on: "2026-02-18" }),
+    ];
+
+    const stats = buildInsightsStatsGroup({
+      goals,
+      completions,
+      summariesByGoal: new Map([["g1", makeSummary("g1", "in_progress")]]),
+      asOfDate: "2026-02-18",
+      weekStartsOn: 1,
+      accountCreatedDate: "2026-01-01",
+    });
+
+    expect(stats.activeStreakWeeks).toBe(4);
+  });
+
+  it("returns zero when the current week has no activity", () => {
+    const goals = [makeGoal({ id: "g1", owner_id: "u1", title: "Run" })];
+    const completions = [
+      makeCompletion({ id: "c1", goal_id: "g1", user_id: "u1", completed_on: "2026-02-08" }),
+    ];
+
+    const stats = buildInsightsStatsGroup({
+      goals,
+      completions,
+      summariesByGoal: new Map([["g1", makeSummary("g1", "in_progress")]]),
+      asOfDate: "2026-02-18",
+      weekStartsOn: 1,
+      accountCreatedDate: "2026-01-01",
+    });
+
+    expect(stats.activeStreakWeeks).toBe(0);
   });
 
   it("uses completion-gated denominator for weekly and milestone goals", () => {

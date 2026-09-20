@@ -25,7 +25,7 @@ const stats: PublicProfileOverallStats = {
   totalActivities: 20,
   totalGoalsCompleted: 4,
   todayActivities: 1,
-  activeStreakDays: 3,
+  activeStreakWeeks: 3,
   currentWeekActivities: { current: 7, previous: 5, delta: 2, deltaPercent: 40 },
   currentMonthActivities: { current: 15, previous: 12, delta: 3, deltaPercent: 25 },
 };
@@ -47,7 +47,7 @@ describe("ProfileMembershipCard", () => {
     expect(within(card).getByText("MEMBER SINCE JANUARY 2026")).toBeInTheDocument();
     expect(within(card).getByText("NO. 00146")).toBeInTheDocument();
     expect(within(card).queryByText("PEARL RESERVE")).toBeNull();
-    expect(within(card).queryByText("day streak")).toBeNull();
+    expect(within(card).queryByText("week streak")).toBeNull();
     expect(within(card).getAllByText("Jerry")).toHaveLength(1);
     expect(within(card).getAllByText("@jerry")).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Change profile photo" })).toBeNull();

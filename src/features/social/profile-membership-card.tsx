@@ -316,7 +316,7 @@ export function ProfileMembershipCard({
                 {currentLevel != null ? (
                   <Metric value={String(currentLevel)} label="level" />
                 ) : (
-                  <Metric value={String(overallStats.activeStreakDays)} label="day streak" />
+                  <Metric value={String(overallStats.activeStreakWeeks)} label="week streak" />
                 )}
               </div>
             ) : null}

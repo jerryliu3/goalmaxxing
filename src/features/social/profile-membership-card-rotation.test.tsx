@@ -37,7 +37,7 @@ const stats: PublicProfileOverallStats = {
   totalActivities: 20,
   totalGoalsCompleted: 4,
   todayActivities: 1,
-  activeStreakDays: 3,
+  activeStreakWeeks: 3,
   currentWeekActivities: { current: 7, previous: 5, delta: 2, deltaPercent: 40 },
   currentMonthActivities: { current: 15, previous: 12, delta: 3, deltaPercent: 25 },
 };

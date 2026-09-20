@@ -90,7 +90,7 @@ describe("scroll-driven product beats", () => {
     expect(getInsightsStats("month", 1).totalActivities).toBe(18);
     expect(getInsightsStats("insights", 0).totalActivities).toBe(18);
     expect(getInsightsStats("insights", 1).totalActivities).toBe(142);
-    expect(getInsightsStats("rank", 0).activeStreakDays).toBe(12);
+    expect(getInsightsStats("rank", 0).activeStreakWeeks).toBe(12);
   });
 
   it("checks items off across the checklist scene", () => {

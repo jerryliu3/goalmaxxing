@@ -104,7 +104,7 @@ describe("PublicProfileSheet", () => {
         totalActivities: 20,
         totalGoalsCompleted: 4,
         todayActivities: 1,
-        activeStreakDays: 3,
+        activeStreakWeeks: 3,
         currentWeekActivities: {
           current: 7,
           previous: 5,

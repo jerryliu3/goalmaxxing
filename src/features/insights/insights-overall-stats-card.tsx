@@ -19,7 +19,7 @@ type InsightsOverallStatsSummary = Pick<
   | "totalActivities"
   | "totalGoalsCompleted"
   | "todayActivities"
-  | "activeStreakDays"
+  | "activeStreakWeeks"
   | "currentWeekActivities"
   | "currentMonthActivities"
 >;
@@ -83,8 +83,10 @@ export function InsightsOverallStatsTiles({
         />
         <InsightsStatPlaque
           label="Active Streak"
-          tooltip="Numerator: consecutive days ending today with more than zero completions."
-          value={`${overallStats.activeStreakDays.toLocaleString()} days`}
+          tooltip="Consecutive calendar weeks ending this week with at least one completed activity."
+          value={`${overallStats.activeStreakWeeks.toLocaleString()} ${
+            overallStats.activeStreakWeeks === 1 ? "week" : "weeks"
+          }`}
         />
       </InsightsStatStrip>
       {showMoreLink ? (
