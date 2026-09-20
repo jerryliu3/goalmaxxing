@@ -3,6 +3,7 @@
 .embed {
   display: block;
   width: 100%;
+  container-name: membership;
   container-type: inline-size;
 }
 .embed :global([data-embedded="true"] [data-card-object]) {
@@ -237,9 +238,9 @@ button.portrait:focus-visible {
   padding: .4rem 0;
 }
 
-@container (min-width: 42rem) {
-  :global([data-embedded="true"] [data-card-object]) {
-    width: 46rem;
+@media (min-width: 720px) {
+  .embed :global([data-embedded="true"] [data-card-object]) {
+    width: min(46rem, 100%);
   }
   .frame:global(.tempo-card-frame) {
     aspect-ratio: 760 / 340;
