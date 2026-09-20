@@ -27,6 +27,12 @@ export function useCardRotation(disabled: boolean, solid: boolean) {
   };
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (disabled || !solid || event.button !== 0 || event.isPrimary === false || drag.current) return;
+    if (
+      event.target instanceof Element &&
+      event.target.closest("button, input, textarea, select, a, [contenteditable='true']")
+    ) {
+      return;
+    }
     event.preventDefault();
     // Hosts with their own swipe (folio page turn, etc.) must not also claim this.
     event.stopPropagation();

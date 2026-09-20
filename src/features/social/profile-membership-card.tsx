@@ -1,8 +1,9 @@
 "use client";
 
 import { format, parseISO } from "date-fns";
-import { Sparkles, WandSparkles } from "lucide-react";
-import { useRef, useState } from "react";
+import { Sparkles } from "lucide-react";
+import { useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type {
   PublicProfileIdentity,
   PublicProfileOverallStats,
@@ -21,6 +22,7 @@ import { MaterialStage } from "@/features/ux-brand/card-materials/material-stage
 import { MATERIALS } from "@/features/ux-brand/card-materials/materials";
 import { SolidLettering } from "@/features/ux-brand/card-materials/solid-lettering";
 import { resolvePublicProfileLabel } from "@/features/social/public-profile/resolve-profile-label";
+import { useMediaQuery } from "@/lib/ui/use-media-query";
 import "@/features/goals/tempo-goal-creation.css";
 import styles from "./profile-membership-card.module.css";
 
@@ -41,6 +43,25 @@ export type ProfileMembershipEditor = {
   onRemoveAvatar: () => void;
 };
 
+function Horizon() {
+  return (
+    <svg className={styles.horizon} viewBox="0 0 280 190" fill="none" aria-hidden="true">
+      <circle cx="140" cy="91" r="65" stroke="currentColor" strokeWidth=".6" />
+      <circle cx="140" cy="91" r="53" stroke="currentColor" strokeWidth=".6" strokeDasharray="1 5" />
+      <circle cx="140" cy="91" r="36" fill="currentColor" opacity=".07" />
+      {Array.from({ length: 7 }, (_, i) => (
+        <path
+          key={i}
+          d={`M0 ${139 + i * 7} Q70 ${92 + i * 9} 140 ${136 + i * 6} T280 ${120 + i * 9}`}
+          stroke="currentColor"
+          opacity={0.15 + i * 0.055}
+          strokeWidth=".7"
+        />
+      ))}
+    </svg>
+  );
+}
+
 function Metric({ value, label }: { value: string; label: string }) {
   return (
     <div>
@@ -55,9 +76,9 @@ function Metric({ value, label }: { value: string; label: string }) {
 function initialsFromName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length >= 2) {
-    return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase();
+    return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toLowerCase();
   }
-  return name.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase() || "GM";
+  return name.replace(/[^a-zA-Z]/g, "").slice(0, 2).toLowerCase() || "gm";
 }
 
 function formatMemberSince(createdAt: string | null) {
@@ -68,35 +89,98 @@ function formatMemberSince(createdAt: string | null) {
   return format(parseISO(dateOnly), "MMMM yyyy").toUpperCase();
 }
 
-function IdentityPhoto({
+function InlineField({
+  label,
+  value,
+  rest,
+  inputClassName,
+  transform,
+  onChange,
+  onEditingChange,
+}: {
+  label: string;
+  value: string;
+  rest: ReactNode;
+  inputClassName?: string;
+  transform?: (next: string) => string;
+  onChange?: (next: string) => void;
+  onEditingChange?: (editing: boolean) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [editing, setEditing] = useState(false);
+
+  const setLive = (next: boolean) => {
+    setEditing(next);
+    onEditingChange?.(next);
+  };
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [editing]);
+
+  if (!onChange) {
+    return rest;
+  }
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        className={styles.quiet}
+        aria-label={`Edit ${label}`}
+        onClick={() => setLive(true)}
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        {rest}
+      </button>
+    );
+  }
+
+  return (
+    <input
+      ref={inputRef}
+      aria-label={label}
+      className={`${styles.compose} ${inputClassName ?? ""}`}
+      value={value}
+      onPointerDown={(event) => event.stopPropagation()}
+      onChange={(event) =>
+        onChange(transform ? transform(event.target.value) : event.target.value)
+      }
+      onBlur={() => setLive(false)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === "Escape") {
+          event.currentTarget.blur();
+        }
+      }}
+    />
+  );
+}
+
+function Portrait({
   avatarUrl,
   initials,
-  handle,
   onOpen,
 }: {
   avatarUrl: string | null;
   initials: string;
-  handle: string;
   onOpen?: () => void;
 }) {
-  const inner = (
-    <>
-      {avatarUrl ? (
-        // Photo is named by the button; keep the image decorative.
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={avatarUrl} alt="" className={styles.photoImage} />
-      ) : (
-        <span className={styles.photoFallback}>{initials}</span>
-      )}
-      <span className={styles.serial}>{handle.toUpperCase()}</span>
-    </>
+  const inner = avatarUrl ? (
+    // The control names the photo; keep the image decorative.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={avatarUrl} alt="" className={styles.portraitImage} />
+  ) : (
+    <span className={styles.monogram}>{initials}</span>
   );
 
   if (onOpen) {
     return (
       <button
         type="button"
-        className={styles.photo}
+        className={styles.portrait}
         aria-label="Change profile photo"
         onClick={onOpen}
         onPointerDown={(event) => event.stopPropagation()}
@@ -106,7 +190,7 @@ function IdentityPhoto({
     );
   }
 
-  return <div className={styles.photo}>{inner}</div>;
+  return <div className={styles.portrait}>{inner}</div>;
 }
 
 export function ProfileMembershipCard({
@@ -120,9 +204,12 @@ export function ProfileMembershipCard({
   currentLevel: number | null;
   editor?: ProfileMembershipEditor;
 }) {
+  const reducedMotion = useReducedMotion();
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [fieldEditing, setFieldEditing] = useState(false);
+  const wide = useMediaQuery("(min-width: 720px)");
 
   if (!editor && profile.isPrivate) {
     return null;
@@ -160,81 +247,50 @@ export function ProfileMembershipCard({
       <MaterialStage
         material={PEARL}
         color={PEARL_COLOR}
-        still
-        layout="landscape"
+        still={Boolean(reducedMotion) || fieldEditing || photoOpen}
+        layout={wide ? "landscape" : "portrait"}
         label={`${title} membership card`}
         embedded
         controls={false}
       >
-        <div
-          className={`tempo-card-frame ${styles.frame}`}
-          data-editing={editor ? "true" : undefined}
-        >
+        <div className={`tempo-card-frame ${styles.frame}`}>
           <article className={`tempo-card ${styles.face}`} aria-label={`${title} membership card`}>
-            <div className={styles.micro}>
+            <div className={`${styles.micro} ${styles.topbar}`}>
               <span>GOALMAXXING / MEMBER</span>
               <Sparkles size={17} strokeWidth={1.2} />
             </div>
-            <IdentityPhoto
-              avatarUrl={avatarUrl}
-              initials={monogram}
-              handle={handle}
-              onOpen={editor ? () => setPhotoOpen(true) : undefined}
-            />
-            <div className={styles.identity}>
-              {editor ? (
-                <>
-                  <label className={styles.field}>
-                    <span>Username</span>
-                    <input
-                      id="profile-username"
-                      value={editor.username}
-                      autoComplete="username"
-                      onPointerDown={(event) => event.stopPropagation()}
-                      onChange={(event) =>
-                        editor.onUsernameChange(event.target.value.trim().toLowerCase())
-                      }
-                    />
-                  </label>
-                  <label className={styles.field}>
-                    <span>Display name</span>
-                    <input
-                      id="profile-display-name"
-                      className={styles.titleInput}
-                      value={editor.displayName}
-                      autoComplete="name"
-                      onPointerDown={(event) => event.stopPropagation()}
-                      onChange={(event) => editor.onDisplayNameChange(event.target.value)}
-                    />
-                  </label>
-                  <label className={styles.field}>
-                    <span>Email</span>
-                    <input
-                      id="profile-email"
-                      value={editor.email}
-                      readOnly
-                      aria-readonly
-                    />
-                  </label>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className={styles.save}
-                    onClick={() => void editor.onSave()}
-                    disabled={editor.saving || !editor.canSave}
-                  >
-                    <WandSparkles className="size-4" />
-                    {editor.saving ? "Saving..." : "Save profile"}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <span className={styles.kicker}>{handle}</span>
-                  <h2>
-                    <SolidLettering>{title}</SolidLettering>
-                  </h2>
-                </>
-              )}
+            <div className={styles.identityArt}>
+              <div className={styles.horizonWrap}>
+                <Horizon />
+                <Portrait
+                  avatarUrl={avatarUrl}
+                  initials={monogram}
+                  onOpen={editor ? () => setPhotoOpen(true) : undefined}
+                />
+              </div>
+              <span className={styles.serial}>{handle.toUpperCase()}</span>
+            </div>
+            <div className={styles.titleBlock}>
+              <InlineField
+                label="username"
+                value={username}
+                transform={(next) => next.trim().toLowerCase()}
+                onChange={editor?.onUsernameChange}
+                onEditingChange={setFieldEditing}
+                inputClassName={styles.handleCompose}
+                rest={<span className={styles.kicker}>{handle}</span>}
+              />
+              <h2>
+                <InlineField
+                  label="display name"
+                  value={displayName}
+                  onChange={editor?.onDisplayNameChange}
+                  onEditingChange={setFieldEditing}
+                  inputClassName={styles.titleCompose}
+                  rest={<SolidLettering>{title}</SolidLettering>}
+                />
+              </h2>
+              {editor ? <p className={styles.email}>{editor.email}</p> : null}
             </div>
             {overallStats ? (
               <div className={styles.metrics}>
@@ -243,16 +299,36 @@ export function ProfileMembershipCard({
                 <Metric value={String(overallStats.activeStreakDays)} label="day streak" />
               </div>
             ) : null}
-            <div className={styles.footer}>
-              <span>PEARL RESERVE</span>
-              {currentLevel != null ? <span>LEVEL {currentLevel}</span> : <span>MEMBER</span>}
+            <div className={styles.signature}>
+              <span>
+                <SolidLettering>{title}</SolidLettering>
+              </span>
               {memberSince ? (
                 <span>
                   MEMBER SINCE
                   <br />
                   {memberSince}
                 </span>
-              ) : null}
+              ) : (
+                <span>MEMBER</span>
+              )}
+            </div>
+            <div className={`${styles.micro} ${styles.foot}`}>
+              <span>PEARL RESERVE</span>
+              {editor?.canSave ? (
+                <button
+                  type="button"
+                  className={styles.save}
+                  onClick={() => void editor.onSave()}
+                  disabled={editor.saving}
+                >
+                  {editor.saving ? "SAVING" : "SAVE"}
+                </button>
+              ) : currentLevel != null ? (
+                <span>LEVEL {currentLevel}</span>
+              ) : (
+                <span>MEMBER</span>
+              )}
             </div>
           </article>
         </div>

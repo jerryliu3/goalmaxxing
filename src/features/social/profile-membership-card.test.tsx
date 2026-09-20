@@ -37,7 +37,6 @@ describe("ProfileMembershipCard", () => {
 
     const card = screen.getByRole("article", { name: "Jerry membership card" });
     expect(card.closest(".tempo-card-frame")).not.toBeNull();
-    expect(card.closest("[data-editing]")).toBeNull();
     expect(within(card).getAllByText("Jerry").length).toBeGreaterThan(0);
     expect(within(card).getByText("4")).toBeInTheDocument();
     expect(within(card).getByText("goals completed")).toBeInTheDocument();
@@ -48,7 +47,8 @@ describe("ProfileMembershipCard", () => {
     expect(within(card).getByText("LEVEL 18")).toBeInTheDocument();
     expect(within(card).getByText(/JANUARY 2026/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Change profile photo" })).toBeNull();
-    expect(screen.queryByLabelText("Username")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Edit username" })).toBeNull();
+    expect(screen.queryByLabelText("username")).toBeNull();
   });
 
   it("hides the card for private profiles without an editor", () => {
@@ -94,13 +94,16 @@ describe("ProfileMembershipCard", () => {
       />
     );
 
-    expect(screen.getByRole("article", { name: "Jerry membership card" }).closest("[data-editing]")).not.toBeNull();
-    expect(screen.getByLabelText("Username")).toHaveValue("jerry");
-    expect(screen.getByLabelText("Display name")).toHaveValue("Jerry");
-    expect(screen.getByLabelText("Email")).toHaveValue("jerry@example.com");
-    expect(screen.getByLabelText("Email")).toHaveAttribute("readonly");
+    expect(screen.queryByLabelText("username")).toBeNull();
+    expect(screen.queryByLabelText("display name")).toBeNull();
+    expect(screen.getByText("jerry@example.com")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit username" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Save profile" }));
+    await user.click(screen.getByRole("button", { name: "Edit display name" }));
+    expect(screen.getByLabelText("display name")).toHaveValue("Jerry");
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "SAVE" }));
     expect(onSave).toHaveBeenCalledTimes(1);
   });
 
