@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   CartesianGrid,
   Line,
@@ -47,6 +47,11 @@ export function GrowScoreTrendChart({
   );
 
   const latest = series.at(-1);
+  const [chartReady, setChartReady] = useState(false);
+
+  useEffect(() => {
+    setChartReady(true);
+  }, []);
 
   if (series.length === 0) {
     return null;
@@ -54,7 +59,7 @@ export function GrowScoreTrendChart({
 
   return (
     <section
-      className="rounded-xl border border-border bg-card p-4 shadow-sm"
+      className="min-w-0 rounded-xl border border-border bg-card p-4 shadow-sm"
       data-testid="progress-grow-score-trend"
     >
       <div className="flex flex-wrap items-end justify-between gap-2">
@@ -73,9 +78,10 @@ export function GrowScoreTrendChart({
         ) : null}
       </div>
 
-      <div className="mt-4 h-56">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
+      <div className="mt-4 h-56 w-full min-w-0">
+        {chartReady ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData}>
             <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
             <XAxis
               dataKey="date"
@@ -109,6 +115,7 @@ export function GrowScoreTrendChart({
             />
           </LineChart>
         </ResponsiveContainer>
+        ) : null}
       </div>
 
       {children ? (

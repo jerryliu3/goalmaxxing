@@ -1,7 +1,6 @@
 "use client";
 
 import { format, parseISO } from "date-fns";
-import { Sparkles } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type {
@@ -257,7 +256,7 @@ export function ProfileMembershipCard({
           <article className={`tempo-card ${styles.face}`} aria-label={`${title} membership card`}>
             <div className={`${styles.micro} ${styles.topbar}`}>
               <span>GOALMAXXING / MEMBER</span>
-              <Sparkles size={17} strokeWidth={1.2} />
+              {memberSince ? <span>MEMBER SINCE {memberSince}</span> : null}
             </div>
             <div className={styles.identityArt}>
               <div className={styles.horizonWrap}>
@@ -268,7 +267,6 @@ export function ProfileMembershipCard({
                   onOpen={editor ? () => setPhotoOpen(true) : undefined}
                 />
               </div>
-              <span className={styles.serial}>{handle.toUpperCase()}</span>
             </div>
             <div className={styles.titleBlock}>
               <InlineField
@@ -291,30 +289,6 @@ export function ProfileMembershipCard({
                 />
               </h2>
               {editor ? <p className={styles.email}>{editor.email}</p> : null}
-            </div>
-            {overallStats ? (
-              <div className={styles.metrics}>
-                <Metric value={String(overallStats.totalGoalsCompleted)} label="goals completed" />
-                <Metric value={String(overallStats.totalActivities)} label="activities" />
-                <Metric value={String(overallStats.activeStreakDays)} label="day streak" />
-              </div>
-            ) : null}
-            <div className={styles.signature}>
-              <span>
-                <SolidLettering>{title}</SolidLettering>
-              </span>
-              {memberSince ? (
-                <span>
-                  MEMBER SINCE
-                  <br />
-                  {memberSince}
-                </span>
-              ) : (
-                <span>MEMBER</span>
-              )}
-            </div>
-            <div className={`${styles.micro} ${styles.foot}`}>
-              <span>PEARL RESERVE</span>
               {editor?.canSave ? (
                 <button
                   type="button"
@@ -324,12 +298,19 @@ export function ProfileMembershipCard({
                 >
                   {editor.saving ? "SAVING" : "SAVE"}
                 </button>
-              ) : currentLevel != null ? (
-                <span>LEVEL {currentLevel}</span>
-              ) : (
-                <span>MEMBER</span>
-              )}
+              ) : null}
             </div>
+            {overallStats ? (
+              <div className={styles.metrics}>
+                <Metric value={String(overallStats.totalGoalsCompleted)} label="goals completed" />
+                <Metric value={String(overallStats.totalActivities)} label="activities" />
+                {currentLevel != null ? (
+                  <Metric value={String(currentLevel)} label="level" />
+                ) : (
+                  <Metric value={String(overallStats.activeStreakDays)} label="day streak" />
+                )}
+              </div>
+            ) : null}
           </article>
         </div>
       </MaterialStage>

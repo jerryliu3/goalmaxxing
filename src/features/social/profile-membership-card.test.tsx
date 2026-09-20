@@ -37,15 +37,16 @@ describe("ProfileMembershipCard", () => {
 
     const card = screen.getByRole("article", { name: "Jerry membership card" });
     expect(card.closest(".tempo-card-frame")).not.toBeNull();
-    expect(within(card).getAllByText("Jerry").length).toBeGreaterThan(0);
     expect(within(card).getByText("4")).toBeInTheDocument();
     expect(within(card).getByText("goals completed")).toBeInTheDocument();
     expect(within(card).getByText("20")).toBeInTheDocument();
     expect(within(card).getByText("activities")).toBeInTheDocument();
-    expect(within(card).getByText("3")).toBeInTheDocument();
-    expect(within(card).getByText("day streak")).toBeInTheDocument();
-    expect(within(card).getByText("LEVEL 18")).toBeInTheDocument();
-    expect(within(card).getByText(/JANUARY 2026/)).toBeInTheDocument();
+    expect(within(card).getByText("18")).toBeInTheDocument();
+    expect(within(card).getByText("level")).toBeInTheDocument();
+    expect(within(card).getByText("MEMBER SINCE JANUARY 2026")).toBeInTheDocument();
+    expect(within(card).queryByText("PEARL RESERVE")).toBeNull();
+    expect(within(card).queryByText("day streak")).toBeNull();
+    expect(within(card).getAllByText("Jerry")).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Change profile photo" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Edit username" })).toBeNull();
     expect(screen.queryByLabelText("username")).toBeNull();
