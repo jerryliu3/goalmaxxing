@@ -10,16 +10,16 @@ import styles from "./card-materials.module.css";
 import categoryStyles from "./category-materials.module.css";
 
 /** The same body, finish and interaction for every card format in the study. */
-export function MaterialStage({ material, color, still, label = material.name, layout = "portrait", children }: {
+export function MaterialStage({ material, color, still, label = material.name, layout = "portrait", embedded = false, controls = true, children }: {
   material: CardMaterial; color: string; still: boolean; label?: string;
-  layout?: "portrait" | "landscape"; children: ReactNode;
+  layout?: "portrait" | "landscape"; embedded?: boolean; controls?: boolean; children: ReactNode;
 }) {
   const hintId = useId();
   const spatial = material.form !== "flat";
   const solid = material.form === "solid";
   const rotation = useCardRotation(still || !spatial, solid);
   return <>
-      <div ref={rotation.stage} className={`${styles.stage} ${categoryStyles.stage}`} data-material={material.id} data-layout={layout} data-form={material.form} data-still={still} data-inspecting={rotation.inspecting}
+      <div ref={rotation.stage} className={`${styles.stage} ${categoryStyles.stage}`} data-material={material.id} data-layout={layout} data-form={material.form} data-still={still} data-embedded={embedded || undefined} data-inspecting={rotation.inspecting}
         style={{ ...cardOptics(still || !spatial ? FLAT_POSE : REST_POSE), "--material-color": color, "--goal-color": color } as CSSProperties}
         {...rotation.stageHandlers}
       >
@@ -40,12 +40,12 @@ export function MaterialStage({ material, color, still, label = material.name, l
           {children}
         </div>
       </div>
-      <div className={styles.interaction}>
+      {controls ? <div className={styles.interaction}>
         <span id={hintId}>{solid ? "Hover to tilt. Drag to turn. Arrows rotate; Enter flips; Home resets." : spatial ? "Move your pointer to explore the depth." : "Material and light, with a still silhouette."}</span>
         {spatial && <div className={styles.rotationButtons}>
           <button type="button" disabled={still} aria-pressed={rotation.posed} onClick={rotation.togglePose} aria-label={`Tilt ${label}`}><Rotate3D size={16} aria-hidden="true" />{rotation.posed ? "Rest" : "Tilt"}</button>
           {solid && <button type="button" disabled={still} onClick={rotation.reset} aria-label={`Reset ${label}`}>Reset</button>}
         </div>}
-      </div>
+      </div> : <span id={hintId} className="sr-only">{solid ? "Hover to tilt. Drag to turn." : null}</span>}
   </>;
 }

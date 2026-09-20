@@ -30,6 +30,7 @@ import {
 } from "@/features/settings/settings-section";
 import { NotificationsSection } from "@/features/social/notifications-section";
 import { buildPublicProfileUrl } from "@/lib/social/public-profile-username";
+import { ProfileMembershipCard } from "@/features/social/profile-membership-card";
 import { ProfilePresenceSection } from "@/features/social/profile-presence";
 import { ProfileSection } from "@/features/social/profile-section";
 import { useOwnProfilePresence } from "@/features/social/use-own-profile-presence";
@@ -187,11 +188,18 @@ export function SettingsTab() {
           onUploadAvatar={uploadProfileAvatarFile}
         />
         {presence ? (
-          <ProfilePresenceSection
-            growSeries={presence.growSeries}
-            heatmap={presence.yearHeatmap}
-            selectedYear={new Date().getFullYear()}
-          />
+          <>
+            <ProfileMembershipCard
+              profile={presence.profile}
+              overallStats={presence.overallStats}
+              currentLevel={presence.xp?.currentLevel ?? null}
+            />
+            <ProfilePresenceSection
+              growSeries={presence.growSeries}
+              heatmap={presence.yearHeatmap}
+              selectedYear={new Date().getFullYear()}
+            />
+          </>
         ) : null}
         {groups}
       </div>
