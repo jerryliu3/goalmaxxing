@@ -87,14 +87,12 @@ export function ReassemblingCard({ children, completed, target, still, preview, 
           {children}
         </div>
       )}
-      {(!flat || fused) && (
-        <div className={styles.fused} data-visible={fused}>
-          {fused && !flat && <CardSolidBody />}
-          {children}
-        </div>
-      )}
+      <div className={styles.fused} data-visible={fused}>
+        {fused && !flat && <CardSolidBody />}
+        {children}
+      </div>
       {!fused && <>
-        <div className={styles.ghost} data-ghost="" aria-hidden={shownPieces.length > 0 ? true : undefined}>
+        <div className={styles.ghost} data-ghost="" aria-hidden="true">
           {children}
           <svg className={styles.outlines} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {pieces.map(piece => <polygon key={piece.id} points={piece.points.map(point => `${point.x},${point.y}`).join(" ")} />)}
@@ -138,7 +136,7 @@ function FlatShards({
 }) {
   const clipId = `reward-shards-${useId().replace(/:/g, "")}`;
   return (
-    <div className={styles.flatFace} data-flat-shards="" data-piece-count={pieces.length}>
+    <div className={styles.flatFace} data-flat-shards="" data-piece-count={pieces.length} aria-hidden="true">
       <svg className={styles.flatClip} aria-hidden="true">
         <clipPath id={clipId} clipPathUnits="objectBoundingBox">
           {pieces.map((piece) => (

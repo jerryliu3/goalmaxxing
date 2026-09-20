@@ -121,6 +121,19 @@ describe("saved card assembly", () => {
     expect(container.querySelectorAll("[data-reward-piece]")).toHaveLength(0);
     expect(container.querySelector("[data-card-solid]")).toBeNull();
     expect(container.querySelectorAll("clipPath polygon")).toHaveLength(2);
+    expect(container.querySelector("[data-reassembly]")).toHaveAttribute("data-fused", "false");
+    expect(container.querySelectorAll(".tempo-card")).toHaveLength(3);
+  });
+
+  it("keeps the dashed ghost map for unearthed gallery cards", () => {
+    const { container } = render(
+      <ReassemblingCard completed={0} target={4} still flat>
+        <article className="tempo-card">A real goal</article>
+      </ReassemblingCard>,
+    );
+    expect(container.querySelector("[data-ghost]")).not.toBeNull();
+    expect(container.querySelector("[data-flat-shards]")).toBeNull();
+    expect(container.querySelector("[data-reassembly]")).toHaveAttribute("data-fused", "false");
     expect(container.querySelectorAll(".tempo-card")).toHaveLength(2);
   });
 });
