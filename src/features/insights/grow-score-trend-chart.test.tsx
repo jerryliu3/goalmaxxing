@@ -31,6 +31,7 @@ describe("GrowScoreTrendChart", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Goalmaxxing score" })).toBeInTheDocument();
-    expect(container.querySelector("svg.recharts-surface")).not.toBeNull();
+    expect(container.querySelector("svg[aria-label='Goalmaxxing score over the last 4 weeks']")).not.toBeNull();
+    expect(container.querySelector("path")).not.toBeNull();
   });
 });

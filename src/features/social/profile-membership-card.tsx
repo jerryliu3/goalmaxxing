@@ -45,9 +45,8 @@ export type ProfileMembershipEditor = {
 function Horizon() {
   return (
     <svg className={styles.horizon} viewBox="0 0 280 190" fill="none" aria-hidden="true">
-      <circle cx="140" cy="91" r="65" stroke="currentColor" strokeWidth=".6" />
-      <circle cx="140" cy="91" r="53" stroke="currentColor" strokeWidth=".6" strokeDasharray="1 5" />
-      <circle cx="140" cy="91" r="36" fill="currentColor" opacity=".07" />
+      <circle cx="140" cy="91" r="88" stroke="currentColor" strokeWidth=".7" />
+      <circle cx="140" cy="91" r="76" stroke="currentColor" strokeWidth=".7" strokeDasharray="1.4 6" />
       {Array.from({ length: 7 }, (_, i) => (
         <path
           key={i}
@@ -59,6 +58,10 @@ function Horizon() {
       ))}
     </svg>
   );
+}
+
+function formatMemberNo(memberNumber: number) {
+  return `NO. ${String(memberNumber).padStart(5, "0")}`;
 }
 
 function Metric({ value, label }: { value: string; label: string }) {
@@ -226,6 +229,10 @@ export function ProfileMembershipCard({
   const title = resolvePublicProfileLabel(resolvedProfile);
   const monogram = initialsFromName(title.replace(/^@/, ""));
   const memberSince = formatMemberSince(profile.createdAt);
+  const memberNo =
+    profile.memberNumber != null && profile.memberNumber > 0
+      ? formatMemberNo(profile.memberNumber)
+      : null;
   const handle = username.trim() ? `@${username.trim()}` : "Goalmaxxing member";
 
   const uploadSelectedFile = (file: File | undefined) => {
@@ -267,6 +274,7 @@ export function ProfileMembershipCard({
                   onOpen={editor ? () => setPhotoOpen(true) : undefined}
                 />
               </div>
+              {memberNo ? <span className={styles.serial}>{memberNo}</span> : null}
             </div>
             <div className={styles.titleBlock}>
               <InlineField

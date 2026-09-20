@@ -172,7 +172,7 @@ export function SettingsTab() {
     <div
       data-testid="settings-pane"
       data-settings-pane={settingsPanelOpen ? "open" : "closed"}
-      className="md:flex md:items-start md:overflow-hidden"
+      className="md:flex md:items-start"
     >
       <div className="min-w-0 flex-1 space-y-5">
         <ProfileMembershipCard
@@ -183,6 +183,7 @@ export function SettingsTab() {
             avatarUrl: profileDraft.avatar_url.trim() || null,
             isPrivate: false,
             createdAt: presence?.profile.createdAt ?? state.profile?.created_at ?? null,
+            memberNumber: presence?.profile.memberNumber ?? null,
           }}
           overallStats={presence?.overallStats ?? null}
           currentLevel={presence?.xp?.currentLevel ?? null}

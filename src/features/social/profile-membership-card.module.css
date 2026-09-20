@@ -2,12 +2,19 @@
    collapses the Pearl silhouette. */
 .embed {
   display: block;
+  position: relative;
+  z-index: 30;
   width: 100%;
   container-name: membership;
   container-type: inline-size;
 }
+.embed :global([data-embedded="true"]) {
+  overflow: visible;
+}
 .embed :global([data-embedded="true"] [data-card-object]) {
   display: block;
+  position: relative;
+  z-index: 1;
   width: 22.5rem;
   max-width: 100%;
   margin-inline: auto;
@@ -15,6 +22,10 @@
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
+}
+.embed :global([data-dragging="true"]),
+.embed :global([data-inspecting="true"]) {
+  z-index: 80;
 }
 .embed :global([data-still="true"] [data-card-object]) {
   cursor: default;
@@ -78,6 +89,15 @@
 }
 .horizonWrap {
   position: relative;
+  flex: 1 1 auto;
+}
+.serial {
+  display: block;
+  padding: .2rem 0 .15rem;
+  text-align: center;
+  font: .48rem var(--font-mono);
+  letter-spacing: .2em;
+  opacity: .6;
 }
 .identityArt {
   position: relative;
@@ -219,11 +239,13 @@ button.portrait:focus-visible {
 .metrics {
   display: grid;
   grid-template-columns: 1.1fr 1fr 1fr;
-  padding: .85rem 0;
+  align-self: end;
+  align-items: end;
+  padding: .55rem 0 .08rem;
   border-block: 1px solid color-mix(in srgb, currentColor 22%, transparent);
 }
-.metrics > div { display: flex; flex-direction: column; gap: .35rem; }
-.metrics strong { font: 2.45rem/.9 var(--font-display); }
+.metrics > div { display: flex; flex-direction: column; justify-content: flex-end; gap: .2rem; }
+.metrics strong { font: 3.35rem/.8 var(--font-display); letter-spacing: -.04em; }
 .metrics > div > span { font-size: .68rem; opacity: .7; }
 .photoPreview {
   display: flex;
@@ -260,6 +282,6 @@ button.portrait:focus-visible {
     font-size: 2.55rem;
   }
   .titleCompose { font-size: 2.55rem; }
-  .metrics { padding: .45rem 0; }
-  .metrics strong { font-size: 2.2rem; }
+  .metrics { padding: .2rem 0 .04rem; }
+  .metrics strong { font-size: 3rem; }
 }

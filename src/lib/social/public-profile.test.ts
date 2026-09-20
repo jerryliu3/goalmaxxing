@@ -116,6 +116,7 @@ describe("buildPublicProfileBundle", () => {
       goals: [makeGoal()],
       completions: [makeCompletion()],
       selectedYear: 2026,
+      memberNumber: 146,
     });
 
     expect(bundle.profile.isPrivate).toBe(false);
@@ -136,6 +137,7 @@ describe("buildPublicProfileBundle", () => {
     expect(bundle.growSeries).toHaveLength(28);
     expect(bundle.profile.createdAt).toBe("2026-01-01T00:00:00.000Z");
     expect(bundle.currentGoals.map((goal) => goal.id)).toEqual(["goal-1"]);
+    expect(bundle.profile.memberNumber).toBe(146);
   });
 
   it("publishes only public current goals on a visible profile", () => {

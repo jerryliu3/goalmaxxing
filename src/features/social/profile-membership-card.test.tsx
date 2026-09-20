@@ -18,6 +18,7 @@ const profile: PublicProfileIdentity = {
   avatarUrl: null,
   isPrivate: false,
   createdAt: "2026-01-02T00:00:00.000Z",
+  memberNumber: 146,
 };
 
 const stats: PublicProfileOverallStats = {
@@ -44,6 +45,7 @@ describe("ProfileMembershipCard", () => {
     expect(within(card).getByText("18")).toBeInTheDocument();
     expect(within(card).getByText("level")).toBeInTheDocument();
     expect(within(card).getByText("MEMBER SINCE JANUARY 2026")).toBeInTheDocument();
+    expect(within(card).getByText("NO. 00146")).toBeInTheDocument();
     expect(within(card).queryByText("PEARL RESERVE")).toBeNull();
     expect(within(card).queryByText("day streak")).toBeNull();
     expect(within(card).getAllByText("Jerry")).toHaveLength(1);

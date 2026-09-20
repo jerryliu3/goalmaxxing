@@ -1,28 +1,93 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { INSIGHTS_CHART_COLORS } from "@/features/insights/insights-chart-theme";
 import { growScoreChartLabel, type GrowScorePoint } from "@/lib/grow-score";
 
-const CHART_COLORS = INSIGHTS_CHART_COLORS;
 const PLOT_WIDTH = 640;
 const PLOT_HEIGHT = 224;
+const PLOT_PAD = { left: 8, right: 8, top: 16, bottom: 28 };
 
-function chartTooltipStyle() {
-  return {
-    background: CHART_COLORS.tooltipBg,
-    border: `1px solid ${CHART_COLORS.tooltipBorder}`,
-    borderRadius: "8px",
-    color: CHART_COLORS.tooltipText,
-  };
+function ScoreSparkline({
+  points,
+}: {
+  points: readonly { date: string; label: string; score: number }[];
+}) {
+  const scores = points.map((point) => point.score);
+  const min = Math.min(...scores);
+  const max = Math.max(...scores);
+  const span = max - min || 1;
+  const innerWidth = PLOT_WIDTH - PLOT_PAD.left - PLOT_PAD.right;
+  const innerHeight = PLOT_HEIGHT - PLOT_PAD.top - PLOT_PAD.bottom;
+  const xFor = (index: number) =>
+    PLOT_PAD.left + (index / Math.max(points.length - 1, 1)) * innerWidth;
+  const yFor = (score: number) =>
+    PLOT_PAD.top + (1 - (score - min) / span) * innerHeight;
+  const line = points
+    .map((point, index) => {
+      const command = index === 0 ? "M" : "L";
+      return `${command}${xFor(index).toFixed(1)} ${yFor(point.score).toFixed(1)}`;
+    })
+    .join(" ");
+  const ticks = [0, Math.floor((points.length - 1) / 2), points.length - 1].filter(
+    (index, position, list) => list.indexOf(index) === position,
+  );
+
+  return (
+    <svg
+      viewBox={`0 0 ${PLOT_WIDTH} ${PLOT_HEIGHT}`}
+      className="h-full w-full"
+      role="img"
+      aria-label="Goalmaxxing score over the last 4 weeks"
+    >
+      <line
+        x1={PLOT_PAD.left}
+        x2={PLOT_WIDTH - PLOT_PAD.right}
+        y1={yFor(min)}
+        y2={yFor(min)}
+        stroke="var(--border)"
+        strokeWidth="1"
+      />
+      <path
+        d={line}
+        fill="none"
+        stroke="var(--primary)"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {points.map((point, index) => (
+        <circle
+          key={point.date}
+          cx={xFor(index)}
+          cy={yFor(point.score)}
+          r="2.2"
+          fill="color-mix(in srgb, var(--primary) 55%, var(--gm-gain))"
+        >
+          <title>{`${point.date}: ${point.score.toFixed(1)}`}</title>
+        </circle>
+      ))}
+      {ticks.map((index) => {
+        const point = points[index];
+        if (!point) {
+          return null;
+        }
+        const anchor =
+          index === 0 ? "start" : index === points.length - 1 ? "end" : "middle";
+        return (
+          <text
+            key={`${point.date}-tick`}
+            x={xFor(index)}
+            y={PLOT_HEIGHT - 8}
+            textAnchor={anchor}
+            fill="var(--muted-foreground)"
+            fontSize="12"
+          >
+            {point.label}
+          </text>
+        );
+      })}
+    </svg>
+  );
 }
 
 export function GrowScoreTrendChart({
@@ -39,10 +104,9 @@ export function GrowScoreTrendChart({
   const chartData = useMemo(
     () =>
       series.map((point) => ({
-        date: growScoreChartLabel(point.date),
-        fullDate: point.date,
+        date: point.date,
+        label: growScoreChartLabel(point.date),
         score: Number(point.score.toFixed(2)),
-        pace: Number(point.pace.toFixed(2)),
       })),
     [series],
   );
@@ -74,45 +138,8 @@ export function GrowScoreTrendChart({
         ) : null}
       </div>
 
-      <div className="mt-4 h-56 w-full min-w-0 overflow-hidden">
-        <LineChart
-          width={PLOT_WIDTH}
-          height={PLOT_HEIGHT}
-          data={chartData}
-          style={{ width: "100%", height: "100%" }}
-        >
-          <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
-          <XAxis
-            dataKey="date"
-            minTickGap={24}
-            tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
-          />
-          <YAxis
-            domain={["auto", "auto"]}
-            width={40}
-            tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
-          />
-          <Tooltip
-            contentStyle={chartTooltipStyle()}
-            cursor={{ stroke: CHART_COLORS.accent, strokeWidth: 1 }}
-            formatter={(value) => {
-              const resolved = Array.isArray(value) ? value[0] : value;
-              return [Number(resolved ?? 0).toFixed(1), "Goalmaxxing score"];
-            }}
-            labelFormatter={(label, payload) => {
-              const full = payload?.[0]?.payload?.fullDate;
-              return typeof full === "string" ? full : String(label);
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="score"
-            stroke={CHART_COLORS.primary}
-            strokeWidth={2.5}
-            dot={{ r: 2, fill: CHART_COLORS.accent, strokeWidth: 0 }}
-            activeDot={{ r: 4, fill: CHART_COLORS.highlight, strokeWidth: 0 }}
-          />
-        </LineChart>
+      <div className="mt-4 h-56 w-full min-w-0">
+        <ScoreSparkline points={chartData} />
       </div>
 
       {children ? (

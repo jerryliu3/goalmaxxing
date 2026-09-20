@@ -72,6 +72,7 @@ export interface BuildPublicProfileBundleInput {
   goals: Goal[];
   completions: Completion[];
   selectedYear: number;
+  memberNumber?: number | null;
 }
 
 function toDateOnly(value: string | null | undefined) {
@@ -158,7 +159,11 @@ function buildYearHeatmap({
   );
 }
 
-function buildProfileIdentity(subjectProfile: ProfileRow, isPrivate: boolean) {
+function buildProfileIdentity(
+  subjectProfile: ProfileRow,
+  isPrivate: boolean,
+  memberNumber: number | null = null,
+) {
   return {
     subjectUserId: subjectProfile.id,
     username: subjectProfile.username,
@@ -166,6 +171,7 @@ function buildProfileIdentity(subjectProfile: ProfileRow, isPrivate: boolean) {
     avatarUrl: subjectProfile.avatar_url,
     isPrivate,
     createdAt: subjectProfile.created_at,
+    memberNumber,
   };
 }
 
@@ -227,10 +233,13 @@ function isPrivateForViewer(viewerUserId: string | null, subjectProfile: Profile
   return !isViewerSubject && subjectProfile.social_activity_visible === false;
 }
 
-function buildPrivatePublicProfileBundle(subjectProfile: ProfileRow): PublicProfileBundle {
+function buildPrivatePublicProfileBundle(
+  subjectProfile: ProfileRow,
+  memberNumber: number | null = null,
+): PublicProfileBundle {
   return {
     schemaVersion: "1",
-    profile: buildProfileIdentity(subjectProfile, true),
+    profile: buildProfileIdentity(subjectProfile, true, memberNumber),
     xp: null,
     globalAchievements: [],
     awardCatalogCount: 0,
@@ -250,12 +259,13 @@ export function buildPublicProfileBundle({
   goals,
   completions,
   selectedYear,
+  memberNumber = null,
 }: BuildPublicProfileBundleInput): PublicProfileBundle {
   const isPrivate = isPrivateForViewer(viewerUserId, subjectProfile);
-  const profile = buildProfileIdentity(subjectProfile, isPrivate);
+  const profile = buildProfileIdentity(subjectProfile, isPrivate, memberNumber);
 
   if (isPrivate) {
-    return buildPrivatePublicProfileBundle(subjectProfile);
+    return buildPrivatePublicProfileBundle(subjectProfile, memberNumber);
   }
 
   const totalXp = globalXpProfile?.total_xp ?? 0;
@@ -448,6 +458,23 @@ async function loadAwardCatalogCount(admin: SupabaseClient<Database>) {
 const PROFILE_SELECT =
   "id,username,display_name,avatar_url,social_activity_visible,week_starts_on,created_at,timezone";
 
+async function loadMemberNumber(
+  admin: SupabaseClient<Database>,
+  createdAt: string | null,
+) {
+  if (!createdAt) {
+    return null;
+  }
+  const response = await admin
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .lte("created_at", createdAt);
+  if (response.error) {
+    return null;
+  }
+  return response.count && response.count > 0 ? response.count : null;
+}
+
 async function loadPublicProfileBundleForProfile({
   admin,
   viewerUserId,
@@ -460,11 +487,12 @@ async function loadPublicProfileBundleForProfile({
   selectedYear: number;
 }) {
   if (isPrivateForViewer(viewerUserId, subjectProfile)) {
-    return buildPrivatePublicProfileBundle(subjectProfile);
+    const memberNumber = await loadMemberNumber(admin, subjectProfile.created_at);
+    return buildPrivatePublicProfileBundle(subjectProfile, memberNumber);
   }
 
   const subjectUserId = subjectProfile.id;
-  const [xpResponse, globalAchievementsResponse, goals, completions, awardCatalogCount] =
+  const [xpResponse, globalAchievementsResponse, goals, completions, awardCatalogCount, memberNumber] =
     await Promise.all([
       admin
         .from("xp_profiles")
@@ -482,6 +510,7 @@ async function loadPublicProfileBundleForProfile({
       loadGoalsForSubject({ admin, subjectUserId }),
       loadCompletionsForSubject({ admin, subjectUserId }),
       loadAwardCatalogCount(admin),
+      loadMemberNumber(admin, subjectProfile.created_at),
     ]);
 
   if (xpResponse.error || globalAchievementsResponse.error) {
@@ -501,6 +530,7 @@ async function loadPublicProfileBundleForProfile({
     goals,
     completions,
     selectedYear,
+    memberNumber,
   });
 }
 

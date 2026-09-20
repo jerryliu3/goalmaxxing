@@ -13,7 +13,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 function resolveSelectedYear(searchParams: Record<string, string | string[] | undefined>) {
   const raw = Array.isArray(searchParams.year) ? searchParams.year[0] : searchParams.year;
