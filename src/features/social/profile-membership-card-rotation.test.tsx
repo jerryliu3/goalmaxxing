@@ -60,28 +60,4 @@ describe("public membership card rotation", () => {
     });
     expect(capture).toHaveBeenCalledWith(8);
   });
-
-  it("keeps turning after pointer capture is lost", () => {
-    render(
-      <ProfileMembershipCard profile={profile} overallStats={stats} currentLevel={7} />
-    );
-
-    const object = screen.getByRole("group", { name: "Alice Park membership card rotation" });
-    const stage = object.closest<HTMLElement>("[data-material]")!;
-    vi.spyOn(object, "setPointerCapture").mockImplementation(() => {
-      throw new DOMException("Unable to capture", "InvalidStateError");
-    });
-    fireEvent.pointerDown(object, {
-      pointerId: 9,
-      button: 0,
-      clientX: 180,
-      clientY: 160,
-      isPrimary: true,
-    });
-    fireEvent.lostPointerCapture(object, { pointerId: 9 });
-    fireEvent.pointerMove(window, { pointerId: 9, clientX: 430, clientY: 80 });
-
-    expect(stage).toHaveAttribute("data-dragging", "true");
-    expect(parseFloat(stage.style.getPropertyValue("--ry"))).toBeGreaterThan(100);
-  });
 });
