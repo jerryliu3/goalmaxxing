@@ -97,4 +97,9 @@ describe("earned plaque ceremony", () => {
     fireEvent.click(screen.getByRole("button", { name: "Keep in my book" }));
     expect(screen.getByRole("dialog")).toHaveAttribute("data-phase", "kept");
   });
+
+  it("hides lab-only links on the public share page", () => {
+    render(<PlaqueMotionStudy share />);
+    expect(screen.queryByRole("link", { name: /Card reward studies/ })).not.toBeInTheDocument();
+  });
 });

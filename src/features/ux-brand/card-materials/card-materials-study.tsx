@@ -13,7 +13,7 @@ import styles from "./card-materials.module.css";
 
 type StudyView = "cards" | "application" | "objects";
 
-export function CardMaterialsStudy() {
+export function CardMaterialsStudy({ share = false }: { share?: boolean }) {
   const [lettering, setLettering] = useState("raised");
   const [textDepth, setTextDepth] = useState(6);
   const letteringId = `lettering-${useId().replace(/:/g, "")}`;
@@ -34,12 +34,12 @@ export function CardMaterialsStudy() {
       } as CSSProperties}>
       <LetteringFilters id={letteringId} />
       <div className={styles.container}>
-        <Link className={styles.back} href="/ux/brand"><ArrowLeft size={15} />Visual language gallery</Link>
+        {!share && <Link className={styles.back} href="/ux/brand"><ArrowLeft size={15} />Visual language gallery</Link>}
         <header className={styles.hero}>
           <p className={styles.eyebrow}>MATERIAL STUDY / CARDS & OBJECTS</p>
           <h1>Something you<br /><em>want to hold.</em></h1>
           <p>Twelve material directions, now extended into a system. Explore goal-responsive finishes, application formats cut from the same materials, and sculptural rewards that turn progress into an object.</p>
-          <Link className={styles.back} href="/ux/brand/card-rewards">Explore reward transformations <ArrowUpRight size={15} aria-hidden="true" /></Link>
+          {!share && <Link className={styles.back} href="/ux/brand/card-rewards">Explore reward transformations <ArrowUpRight size={15} aria-hidden="true" /></Link>}
           {view === "cards" && <nav aria-label="Card materials">{MATERIALS.map(item => <a key={item.id} href={`#${item.id}`}>{item.name}<ArrowUpRight size={13} /></a>)}</nav>}
         </header>
         <div className={styles.tabs} role="tablist" aria-label="Material study views">

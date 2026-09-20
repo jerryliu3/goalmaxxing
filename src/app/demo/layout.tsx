@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { DemoClientRuntime } from "@/features/demo/demo-client-runtime";
 
 export const metadata: Metadata = {
   robots: {
@@ -10,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function DemoLayout({ children }: { children: ReactNode }) {
-  return <DemoClientRuntime>{children}</DemoClientRuntime>;
+  return children;
 }

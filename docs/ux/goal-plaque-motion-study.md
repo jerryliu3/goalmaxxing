@@ -1,9 +1,10 @@
 # Plaque motion: intention to keepsake
 
 Prototype: `/ux/brand/plaque-motion`, under the existing moderator-only UX lab
-layout and noindex metadata. Built above PR #963. This is an exploration, not a
-production lock or an earning-system change. No API calls, database writes, XP
-grants, or live completion mutations occur.
+layout and noindex metadata. Unlisted public share URL: `/demo/plaque-motion`
+(noindex, no demo chrome, nothing in nav). Built above PR #963. This is an
+exploration, not a production lock or an earning-system change. No API calls,
+database writes, XP grants, or live completion mutations occur.
 
 ## Direction
 
