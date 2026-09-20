@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
 interface UseMediaQueryOptions {
   defaultValue?: boolean;
@@ -10,34 +10,20 @@ export function useMediaQuery(
   query: string,
   { defaultValue = false }: UseMediaQueryOptions = {}
 ): boolean {
-  const subscribe = useCallback(
-    (onStoreChange: () => void) => {
-      if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-        return () => {};
-      }
+  const [matches, setMatches] = useState(defaultValue);
 
-      const mediaQueryList = window.matchMedia(query);
-      const handleChange = () => onStoreChange();
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(query);
+    const sync = () => {
+      setMatches(mediaQuery.matches);
+    };
 
-      if (typeof mediaQueryList.addEventListener === "function") {
-        mediaQueryList.addEventListener("change", handleChange);
-        return () => mediaQueryList.removeEventListener("change", handleChange);
-      }
+    sync();
+    mediaQuery.addEventListener("change", sync);
+    return () => {
+      mediaQuery.removeEventListener("change", sync);
+    };
+  }, [query]);
 
-      mediaQueryList.addListener(handleChange);
-      return () => mediaQueryList.removeListener(handleChange);
-    },
-    [query]
-  );
-
-  const getSnapshot = useCallback(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      return defaultValue;
-    }
-    return window.matchMedia(query).matches;
-  }, [defaultValue, query]);
-
-  const getServerSnapshot = useCallback(() => defaultValue, [defaultValue]);
-
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  return matches;
 }
