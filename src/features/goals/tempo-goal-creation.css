@@ -509,8 +509,12 @@
 }
 .tempo-card-surface[data-still="true"] .tempo-card-object {
   transform: none;
+  transform-style: flat;
   cursor: default;
   touch-action: auto;
+}
+.tempo-card-surface[data-still="true"] {
+  perspective: none;
 }
 /* Lighting variables are inherited from the surface so the pose drives them. */
 .tempo-card[data-material] {

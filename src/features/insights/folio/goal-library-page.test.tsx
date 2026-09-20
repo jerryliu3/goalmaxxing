@@ -26,7 +26,8 @@ describe("goal library journey", () => {
     expect(document.querySelector(".tempo-card-surface")).toHaveAttribute("data-still", "true");
     expect(document.querySelector("[data-reassembly]")).toHaveAttribute("data-flat", "true");
     expect(document.querySelector("[data-ghost]")).not.toBeNull();
-    expect(document.querySelectorAll("[data-reward-piece]")).toHaveLength(2);
+    expect(document.querySelector("[data-flat-shards]")).toHaveAttribute("data-piece-count", "2");
+    expect(document.querySelectorAll("[data-reward-piece]")).toHaveLength(0);
     expect(document.querySelector("[data-card-solid]")).toBeNull();
     expect(screen.getAllByRole("article")).toHaveLength(1);
     fireEvent.click(screen.getByRole("button", { name: "Past" }));

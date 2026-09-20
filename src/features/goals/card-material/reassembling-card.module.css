@@ -4,7 +4,8 @@
 }
 .previewWhole :global(.tempo-card-frame),
 .ghost :global(.tempo-card-frame),
-.pieceFace :global(.tempo-card-frame) { height: 100%; aspect-ratio: auto; }
+.pieceFace :global(.tempo-card-frame),
+.flatFaceInner :global(.tempo-card-frame) { height: 100%; aspect-ratio: auto; }
 .previewWhole :global(.tempo-card) { height: 100%; }
 .fused { position: relative; transform-style: preserve-3d; opacity: 0; pointer-events: none; }
 .fused[data-visible="true"] { opacity: 1; }
@@ -52,9 +53,10 @@
 .surface[data-still="true"] .piece[data-arriving="true"] { animation: none; }
 .surface[data-still="true"] .piece { transition: none; }
 .surface[data-flat="true"] { overflow: hidden; transform-style: flat; }
-.surface[data-flat="true"] .fused,
-.surface[data-flat="true"] .piece,
-.surface[data-flat="true"] .pieceFace { transform-style: flat; }
+.flatFace { position: absolute; inset: 0; pointer-events: none; }
+.flatClip { position: absolute; width: 0; height: 0; overflow: hidden; }
+.flatFaceInner { position: absolute; inset: 0; }
+.flatFaceInner :global(.tempo-card) { height: 100% !important; }
 @media (prefers-reduced-motion: reduce) {
   .piece[data-arriving="true"] { animation: none; }
   .surface[data-preview="true"] .piece { transition: none; }

@@ -53,14 +53,30 @@ function clipHalf(points: PiecePoint[], origin: PiecePoint, nx: number, ny: numb
   return result;
 }
 
-function fragmentClip(points: PiecePoint[], count: number): string {
+/** Inset toward the centroid so adjacent shards keep a hairline gap. */
+export function insetPolygonPoints(points: PiecePoint[], count: number): PiecePoint[] {
   const middle = center(points);
-  // A hairline between earned fragments. The completed card has no clip at all.
   const inset = count === 1 ? 0 : 0.22;
-  return `polygon(${points.map(point => {
+  return points.map((point) => {
     const length = Math.hypot(middle.x - point.x, middle.y - point.y);
     const scale = length === 0 ? 0 : inset / length;
-    return `${(point.x + (middle.x - point.x) * scale).toFixed(4)}% ${(point.y + (middle.y - point.y) * scale).toFixed(4)}%`;
+    return {
+      x: point.x + (middle.x - point.x) * scale,
+      y: point.y + (middle.y - point.y) * scale,
+    };
+  });
+}
+
+/** objectBoundingBox coordinates for an SVG clipPath (0–1). */
+export function boundingBoxPoints(points: PiecePoint[]): string {
+  return points
+    .map((point) => `${(point.x / 100).toFixed(6)} ${(point.y / 100).toFixed(6)}`)
+    .join(" ");
+}
+
+function fragmentClip(points: PiecePoint[], count: number): string {
+  return `polygon(${insetPolygonPoints(points, count).map((point) => {
+    return `${point.x.toFixed(4)}% ${point.y.toFixed(4)}%`;
   }).join(", ")})`;
 }
 
