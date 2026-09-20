@@ -22,10 +22,9 @@ export function GoalProgressCard({
       fields={goalCardFields(goal)}
       context="history"
       achieved={model.achieved}
-      // Gallery grids freeze the card: fragment copies clone the 3D body
-      // once per earned piece and dominate scroll cost on public profiles.
-      assembly={rotatable ? model.assembly : undefined}
+      assembly={model.assembly}
       rotatable={rotatable}
+      flat={!rotatable}
     />
     <p className="mt-5 text-center font-mono text-xs text-muted-foreground" role="status" aria-live="polite">
       {model.achieved ? "Goal accomplished" : progress.lifecycle === "upcoming" ? "Starts soon · " + model.label : model.label}

@@ -108,4 +108,19 @@ describe("saved card assembly", () => {
     rerender(card(3, false));
     expect(container.querySelector('[data-reassembly]')).toHaveAttribute("data-fused", "true");
   });
+
+  it("paints gallery shards as one 2D mask instead of extruded copies", () => {
+    const { container } = render(
+      <ReassemblingCard completed={2} target={3} still flat>
+        <article className="tempo-card">A real goal</article>
+      </ReassemblingCard>,
+    );
+    expect(container.querySelector("[data-reassembly]")).toHaveAttribute("data-flat", "true");
+    expect(container.querySelectorAll("[data-reward-piece]")).toHaveLength(0);
+    expect(container.querySelector("[data-card-solid]")).toBeNull();
+    expect(container.querySelector("[data-ghost]")).not.toBeNull();
+    const earned = container.querySelector<HTMLElement>("[data-flat-earned]");
+    expect(earned).not.toBeNull();
+    expect(earned!.style.maskImage || earned!.style.webkitMaskImage).toContain("data:image/svg+xml");
+  });
 });

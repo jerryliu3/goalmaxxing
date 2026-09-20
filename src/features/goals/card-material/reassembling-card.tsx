@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { CardSolidBody } from "./card-solid-body";
 import { getRewardProgress } from "./reassembly-progress";
-import { buildRewardPieces, pieceScatter } from "./reward-pieces";
+import { buildRewardPieces, fragmentMaskImage, pieceScatter } from "./reward-pieces";
 import styles from "./reassembling-card.module.css";
 
 type PreviewPhase = "whole" | "etched" | "released" | "ghost";
@@ -12,22 +12,25 @@ type PreviewPhase = "whole" | "etched" | "released" | "ghost";
 const PREVIEW_BEATS = { whole: 320, etched: 480, released: 850 } as const;
 
 /** One accessible face, clipped visual copies, and a seamless solid on completion. */
-export function ReassemblingCard({ children, completed, target, still, preview }: {
+export function ReassemblingCard({ children, completed, target, still, preview, flat }: {
   children: ReactNode;
   completed: number;
   target: number;
   still: boolean;
   preview?: boolean;
+  /** Gallery grids paint shards as one 2D mask instead of extruded copies. */
+  flat?: boolean;
 }) {
   const { required, credited, earned } = getRewardProgress(completed, target);
   const pieces = useMemo(() => buildRewardPieces(required), [required]);
+  const quiet = still || Boolean(flat);
   const [arrival, setArrival] = useState({ observed: credited, settled: credited });
   const [previewPhase, setPreviewPhase] = useState<PreviewPhase>(
-    !preview || still ? "ghost" : "whole",
+    !preview || quiet ? "ghost" : "whole",
   );
   useEffect(() => {
     if (!preview) return;
-    if (still) {
+    if (quiet) {
       setPreviewPhase("ghost");
       return;
     }
@@ -49,11 +52,11 @@ export function ReassemblingCard({ children, completed, target, still, preview }
       window.clearTimeout(releasedAt);
       window.clearTimeout(ghostAt);
     };
-  }, [preview, still]);
-  if (arrival.observed !== credited || (still && arrival.settled !== credited)) {
-    setArrival({ observed: credited, settled: still ? credited : Math.min(arrival.settled, credited) });
+  }, [preview, quiet]);
+  if (arrival.observed !== credited || (quiet && arrival.settled !== credited)) {
+    setArrival({ observed: credited, settled: quiet ? credited : Math.min(arrival.settled, credited) });
   }
-  const fused = earned && (still || arrival.settled >= required);
+  const fused = earned && (quiet || arrival.settled >= required);
   const showPreviewWhole = Boolean(preview && !fused && previewPhase === "whole");
   const showPreviewShards = Boolean(
     preview && !fused && (previewPhase === "etched" || previewPhase === "released"),
@@ -62,14 +65,18 @@ export function ReassemblingCard({ children, completed, target, still, preview }
     ? showPreviewShards ? pieces : []
     : pieces.filter(piece => piece.earnedAt <= credited);
   useEffect(() => {
-    if (still || arrival.settled >= credited) return;
+    if (quiet || arrival.settled >= credited) return;
     // Also finish if animation events are interrupted.
     const timer = window.setTimeout(() => setArrival({ observed: credited, settled: credited }), 1200);
     return () => window.clearTimeout(timer);
-  }, [credited, still, arrival.settled]);
+  }, [credited, quiet, arrival.settled]);
+  const flatMask = flat && !fused
+    ? fragmentMaskImage(shownPieces.map((piece) => piece.clipPath))
+    : null;
 
   return (
-    <div className={styles.surface} data-reassembly="" data-fused={fused} data-still={still}
+    <div className={styles.surface} data-reassembly="" data-fused={fused} data-still={quiet}
+      data-flat={flat || undefined}
       data-preview={preview} data-preview-phase={preview ? previewPhase : undefined}>
       {showPreviewWhole && (
         <div className={styles.previewWhole} data-preview-whole="" aria-hidden="true">
@@ -78,7 +85,7 @@ export function ReassemblingCard({ children, completed, target, still, preview }
         </div>
       )}
       <div className={styles.fused} data-visible={fused}>
-        {fused && <CardSolidBody />}
+        {fused && !flat && <CardSolidBody />}
         {children}
       </div>
       {!fused && <>
@@ -88,11 +95,20 @@ export function ReassemblingCard({ children, completed, target, still, preview }
             {pieces.map(piece => <polygon key={piece.id} points={piece.points.map(point => `${point.x},${point.y}`).join(" ")} />)}
           </svg>
         </div>
-        {shownPieces.map(piece => (
+        {flat && flatMask ? (
+          <div
+            className={styles.flatEarned}
+            data-flat-earned=""
+            aria-hidden="true"
+            style={{ maskImage: flatMask, WebkitMaskImage: flatMask } as CSSProperties}
+          >
+            {children}
+          </div>
+        ) : shownPieces.map(piece => (
           <Piece
             key={piece.id}
             piece={piece}
-            arriving={!preview && !still && piece.earnedAt > arrival.settled}
+            arriving={!preview && !quiet && piece.earnedAt > arrival.settled}
             preview={Boolean(preview)}
             onSettled={() => setArrival(current => ({
               ...current,
