@@ -85,8 +85,14 @@ export async function warmAppTabData({
   };
 
   const warmPlanner = async () => {
+    // Goal/task writes invalidate this cache, then CalendarSurface (or the next
+    // calendar open) force-prepares so new sessions exist. A GET /context refill
+    // here would mark the cache fresh without those items and skip prepare.
+    if (forceRefresh) {
+      return;
+    }
     const cached = readTabDataCache<PlannerContextPayload>(plannerCacheKey);
-    if (cached && !forceRefresh && isTabDataCacheFresh(plannerCacheKey)) {
+    if (cached && isTabDataCacheFresh(plannerCacheKey)) {
       return;
     }
     const contextPayload = await getJson<PlannerContextPayload>("/api/planner/context", {

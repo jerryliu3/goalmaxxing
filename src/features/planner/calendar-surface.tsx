@@ -410,7 +410,7 @@ export function CalendarSurface({
     }
     void loadContext({
       showLoading: false,
-      forcePrepare: !hasDraftSession,
+      forcePrepare: true,
     });
   });
   const {
