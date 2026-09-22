@@ -106,12 +106,15 @@ function readSettingsTabCache() {
 export function useSocialTabData() {
   const supabase = useMemo(() => createClient(), []);
   const router = useAppRouter();
-  const cachedSettings = readSettingsTabCache();
-  const [state, setState] = useState<SocialState>(cachedSettings?.state ?? initialState);
-  const [loading, setLoading] = useState(!cachedSettings);
+  // The tab cache lives in sessionStorage, so it is empty on the server and
+  // populated on the client. Seeding state from it here would make the first
+  // client render disagree with the server HTML and React would throw the whole
+  // settings tree away. loadData applies the same cache on mount instead.
+  const [state, setState] = useState<SocialState>(initialState);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
-  const [authEmail, setAuthEmail] = useState(cachedSettings?.authEmail ?? "");
+  const [authEmail, setAuthEmail] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Profile[]>([]);
   const [selectedShareGoalIds, setSelectedShareGoalIds] = useState<string[]>(
@@ -127,28 +130,20 @@ export function useSocialTabData() {
     }
   );
   const [sharedMonthCursor, setSharedMonthCursor] = useState(new Date());
-  const [profileDraft, setProfileDraft] = useState(
-    cachedSettings?.profileDraft ?? {
-      username: "",
-      display_name: "",
-      avatar_url: "",
-      social_activity_visible: true,
-    }
-  );
-  const [plannerPreferencesLoading, setPlannerPreferencesLoading] = useState(
-    !cachedSettings
-  );
+  const [profileDraft, setProfileDraft] = useState({
+    username: "",
+    display_name: "",
+    avatar_url: "",
+    social_activity_visible: true,
+  });
+  const [plannerPreferencesLoading, setPlannerPreferencesLoading] = useState(true);
   const [plannerPreferencesPersisted, setPlannerPreferencesPersisted] =
-    useState<PlannerPreferencesState>(
-      cachedSettings?.plannerPreferencesPersisted ?? defaultPlannerPreferencesState
-    );
+    useState<PlannerPreferencesState>(defaultPlannerPreferencesState);
   const [plannerPreferencesDraft, setPlannerPreferencesDraft] =
-    useState<PlannerPreferencesDraft>(
-      cachedSettings?.plannerPreferencesDraft ?? {
-        timezone: defaultPlannerPreferencesState.timezone,
-        weekStartsOn: defaultPlannerPreferencesState.weekStartsOn,
-      }
-    );
+    useState<PlannerPreferencesDraft>({
+      timezone: defaultPlannerPreferencesState.timezone,
+      weekStartsOn: defaultPlannerPreferencesState.weekStartsOn,
+    });
 
   const loadData = useCallback(async () => {
     const cached = readSettingsTabCache();
