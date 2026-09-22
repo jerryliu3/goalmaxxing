@@ -597,12 +597,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             onConfirmDraftMove={onConfirmDraftMove}
             onCancelDraftMove={onCancelDraftMove}
             onCalendarViewModeChange={setCalendarViewMode}
-            pinchDisabled={
-              filtersOpen ||
-              settingsOpen ||
-              Boolean(moveDialogDay) ||
-              Boolean(selectedEventEntry)
-            }
+            pinchDisabled
           />
 
           <PlannerCoachPanel coach={coach} />

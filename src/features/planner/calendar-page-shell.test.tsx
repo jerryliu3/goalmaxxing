@@ -2,16 +2,17 @@ import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CalendarSurfaceProps } from "@/features/planner/calendar-surface.types";
 import { CalendarPageShell } from "@/features/planner/calendar-page-shell";
+import { resetRememberedCalendarViewModeForTests } from "@/lib/planner/calendar-view-memory";
 
 const mocks = vi.hoisted(() => ({
   applySearchParams: vi.fn(),
   latestSurfaceProps: null as CalendarSurfaceProps | null,
-  mobile: false,
   overlayArgs: null as null | {
     enabled: boolean;
     partnerId: string | null | undefined;
     month: string | null;
   },
+  pathname: "/calendar",
   search: "",
   duo: {
     scope: "both" as const,
@@ -22,6 +23,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => mocks.pathname,
   useSearchParams: () => new URLSearchParams(mocks.search),
 }));
 
@@ -52,12 +54,9 @@ vi.mock("@/lib/navigation/use-client-search-params-updater", () => ({
   }),
 }));
 
-vi.mock("@/lib/ui/use-media-query", () => ({
-  useMediaQuery: () => mocks.mobile,
-}));
-
 describe("CalendarPageShell", () => {
   beforeEach(() => {
+    resetRememberedCalendarViewModeForTests();
     mocks.applySearchParams.mockReset();
     mocks.applySearchParams.mockImplementation((update, mode) => {
       const params = new URLSearchParams(mocks.search);
@@ -66,7 +65,7 @@ describe("CalendarPageShell", () => {
     });
     mocks.latestSurfaceProps = null;
     mocks.overlayArgs = null;
-    mocks.mobile = false;
+    mocks.pathname = "/calendar";
     mocks.search = "view=month&month=2026-08&day=2026-08-12";
     mocks.duo = {
       scope: "both",
@@ -78,6 +77,7 @@ describe("CalendarPageShell", () => {
 
   afterEach(() => {
     cleanup();
+    resetRememberedCalendarViewModeForTests();
     vi.useRealTimers();
   });
 
@@ -163,6 +163,21 @@ describe("CalendarPageShell", () => {
     expect(call.params.toString()).toBe("view=week&month=2026-08&day=2026-08-12");
   });
 
+  it("keeps week view when the month window changes", () => {
+    mocks.search = "view=week&month=2026-08&day=2026-08-12";
+    render(<CalendarPageShell />);
+
+    act(() => {
+      mocks.latestSurfaceProps!.onMonthChange("2026-10", "push");
+    });
+
+    const call = mocks.applySearchParams.mock.results.at(-1)?.value as {
+      mode: string;
+      params: URLSearchParams;
+    };
+    expect(call.params.toString()).toBe("view=week&month=2026-10&day=2026-10-12");
+  });
+
   it("normalizes legacy checklist routes while preserving unrelated query parameters", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-06T12:00:00.000Z"));
@@ -197,13 +212,37 @@ describe("CalendarPageShell", () => {
     expect(call.params.toString()).toBe("view=day&month=2026-09&day=2026-09-06");
   });
 
-  it("defaults a new mobile visit to week view", () => {
-    mocks.mobile = true;
+  it("defaults a visit without a view to week", () => {
     mocks.search = "";
 
     render(<CalendarPageShell />);
 
     expect(mocks.latestSurfaceProps?.viewMode).toBe("week");
+  });
+
+  it("restores the last calendar view when the Plan tab omits the query", () => {
+    render(<CalendarPageShell />);
+    cleanup();
+    mocks.search = "";
+
+    render(<CalendarPageShell />);
+
+    expect(mocks.latestSurfaceProps?.viewMode).toBe("month");
+  });
+
+  it("keeps the current calendar view when New Goal changes the URL", () => {
+    mocks.search = "view=week&month=2026-08&day=2026-08-12";
+    const { rerender } = render(<CalendarPageShell />);
+    mocks.applySearchParams.mockClear();
+    mocks.pathname = "/goals/new";
+    mocks.search = "returnTo=%2Fcalendar%3Fview%3Dweek%26month%3D2026-08%26day%3D2026-08-12";
+
+    rerender(<CalendarPageShell />);
+
+    expect(mocks.latestSurfaceProps?.viewMode).toBe("week");
+    expect(mocks.latestSurfaceProps?.month).toBe("2026-08");
+    expect(mocks.latestSurfaceProps?.selectedDay).toBe("2026-08-12");
+    expect(mocks.applySearchParams).not.toHaveBeenCalled();
   });
 
   it("does not mutate the route or load a partner overlay while inactive", () => {
