@@ -1376,6 +1376,43 @@ describe("CalendarSurface characterization", () => {
     );
   });
 
+  it("force-prepares planner context after related tab caches are invalidated", async () => {
+    postJsonMock.mockResolvedValue(
+      buildContext([
+        unit({
+          originalGoalId: "goal-a",
+          unitKey: "total:1",
+          scheduledDate: "2026-08-31",
+        }),
+      ])
+    );
+
+    render(
+      <CalendarSurface
+        activeTab="calendar"
+        month="2026-08"
+        selectedDay={null}
+        viewMode="month"
+        onMonthChange={vi.fn()}
+        onViewModeChange={vi.fn()}
+        onSelectedDayChange={vi.fn()}
+        onPlannerMutation={vi.fn()}
+      />
+    );
+    await waitFor(() => expect(postJsonMock).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      invalidatePlannerRelatedTabCaches();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(postJsonMock).toHaveBeenCalledTimes(2));
+    expect(postJsonMock).toHaveBeenLastCalledWith(
+      "/api/planner/prepare",
+      expect.objectContaining({ scopeMonth: "2026-08" })
+    );
+  });
+
   it("renders calendar directly when planner preferences are missing", async () => {
     const context = buildContext([
       unit({

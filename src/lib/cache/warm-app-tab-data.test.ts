@@ -63,4 +63,17 @@ describe("warmAppTabData", () => {
     expect(mocks.fetchChecklistTodayData).toHaveBeenCalled();
     expect(mocks.fetchInsightsData).toHaveBeenCalled();
   });
+
+  it("does not refill planner context from GET after a forced refresh", async () => {
+    await warmAppTabData({
+      userId: "user-1",
+      partnerId: null,
+      forceRefresh: true,
+    });
+
+    expect(mocks.getJson).not.toHaveBeenCalled();
+    expect(mocks.fetchChecklistTodayData).toHaveBeenCalled();
+    expect(mocks.fetchInsightsData).toHaveBeenCalled();
+    expect(mocks.fetchSocialChallenges).toHaveBeenCalled();
+  });
 });
