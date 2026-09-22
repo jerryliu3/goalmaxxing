@@ -1,7 +1,7 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarSurface } from "@/features/planner/calendar-surface";
 import { usePartnerCompletionOverlay } from "@/features/planner/use-partner-completion-overlay";
 import {
@@ -14,18 +14,28 @@ import {
 } from "@/features/today/checklist-shell-routing";
 import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
-import { useMediaQuery } from "@/lib/ui/use-media-query";
+import {
+  DEFAULT_CALENDAR_VIEW_MODE,
+  isPlannerCalendarPathname,
+  readRememberedCalendarViewMode,
+  rememberCalendarViewMode,
+} from "@/lib/planner/calendar-view-memory";
 
 export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();
-  const isMobileViewport = useMediaQuery("(max-width: 767px)");
-  const defaultCalendarViewMode: PlannerCalendarViewMode = isMobileViewport ? "week" : "month";
+  const onCalendarPath = isPlannerCalendarPathname(pathname);
+  const routeIsActive = isActive && onCalendarPath;
+  const [rememberedViewMode, setRememberedViewMode] = useState(
+    readRememberedCalendarViewMode
+  );
+  const defaultCalendarViewMode = rememberedViewMode ?? DEFAULT_CALENDAR_VIEW_MODE;
   const { scope, activePartner, partner, viewer } = useDuoSurface("calendar");
   const overlayEnabled =
     isActive && Boolean(activePartner) && (scope === "partner" || scope === "both");
 
-  const normalized = useMemo(
+  const liveNormalized = useMemo(
     () =>
       normalizeCalendarRoute({
         searchParams,
@@ -33,6 +43,11 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
       }),
     [defaultCalendarViewMode, searchParams]
   );
+  const calendarRouteRef = useRef(liveNormalized);
+  if (onCalendarPath) {
+    calendarRouteRef.current = liveNormalized;
+  }
+  const normalized = onCalendarPath ? liveNormalized : calendarRouteRef.current;
   const partnerOverlay = usePartnerCompletionOverlay({
     enabled: overlayEnabled,
     partnerId: activePartner?.partnerId,
@@ -40,7 +55,15 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
   });
 
   useEffect(() => {
-    if (!isActive || !normalized.changed) {
+    if (!onCalendarPath) {
+      return;
+    }
+    rememberCalendarViewMode(normalized.viewMode);
+    setRememberedViewMode(normalized.viewMode);
+  }, [normalized.viewMode, onCalendarPath]);
+
+  useEffect(() => {
+    if (!routeIsActive || !normalized.changed) {
       return;
     }
     applySearchParams(
@@ -54,16 +77,16 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
       },
       "replace"
     );
-  }, [applySearchParams, isActive, normalized.changed, normalized.nextParams]);
+  }, [applySearchParams, normalized.changed, normalized.nextParams, routeIsActive]);
 
   const updateMonth = useCallback(
     (month: string, mode: "push" | "replace") => {
-      if (!isActive) {
+      if (!routeIsActive) {
         return;
       }
       applySearchParams(
         (params) => {
-          params.set("view", "month");
+          params.set("view", normalized.viewMode);
           params.set("month", month);
           params.set(
             "day",
@@ -77,12 +100,12 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
         mode
       );
     },
-    [applySearchParams, isActive, normalized.day]
+    [applySearchParams, normalized.day, normalized.viewMode, routeIsActive]
   );
 
   const updateViewMode = useCallback(
     (viewMode: PlannerCalendarViewMode, mode: "push" | "replace") => {
-      if (!isActive) {
+      if (!routeIsActive) {
         return;
       }
       applySearchParams(
@@ -106,7 +129,7 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
         mode
       );
     },
-    [applySearchParams, isActive, normalized.day, normalized.month]
+    [applySearchParams, normalized.day, normalized.month, routeIsActive]
   );
 
   const updateSelectedDay = useCallback(
@@ -116,7 +139,7 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
       nextViewMode?: PlannerCalendarViewMode,
       options?: { alignMonth?: boolean }
     ) => {
-      if (!isActive) {
+      if (!routeIsActive) {
         return;
       }
       applySearchParams(
@@ -144,7 +167,7 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
         mode
       );
     },
-    [applySearchParams, isActive, normalized.month, normalized.viewMode]
+    [applySearchParams, normalized.month, normalized.viewMode, routeIsActive]
   );
 
   return (

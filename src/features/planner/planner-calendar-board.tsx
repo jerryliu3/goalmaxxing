@@ -190,7 +190,7 @@ export function PlannerCalendarBoard({
   onConfirmDraftMove,
   onCancelDraftMove,
   onCalendarViewModeChange,
-  pinchDisabled = false,
+  pinchDisabled = true,
 }: PlannerCalendarBoardProps) {
   const boardPinchRef = useRef<HTMLDivElement>(null);
   const [isEntryDragging, setIsEntryDragging] = useState(false);

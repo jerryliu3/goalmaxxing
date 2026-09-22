@@ -126,4 +126,13 @@ describe("normalizeCalendarRoute", () => {
     expect(result.day?.startsWith("2026-08-")).toBe(true);
     expect(result.nextParams.get("day")).toBe(result.day);
   });
+
+  it("uses the provided default when the URL has no view", () => {
+    const result = normalizeCalendarRoute({
+      searchParams: new URLSearchParams(),
+      defaultCalendarViewMode: "week",
+    });
+    expect(result.viewMode).toBe("week");
+    expect(result.nextParams.get("view")).toBe("week");
+  });
 });
