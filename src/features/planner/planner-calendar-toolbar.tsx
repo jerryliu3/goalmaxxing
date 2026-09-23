@@ -77,7 +77,7 @@ function PlanViewModeSwitch({
       <span
         aria-hidden
         data-testid="plan-view-mode-thumb"
-        className="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc((100%-4px)/3)] rounded-[8px] bg-primary shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+        className="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc((100%-4px)/3)] rounded-[8px] bg-selection shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
         style={{ transform: `translateX(${selectedViewIndex * 100}%)` }}
       />
       {PLANNER_VIEW_MODES.map((modeOption) => {
@@ -91,7 +91,7 @@ function PlanViewModeSwitch({
             onClick={() => onViewModeChange(modeOption.value)}
             className={
               selected
-                ? "relative z-10 min-h-8 whitespace-nowrap rounded-[8px] px-3 text-primary-foreground"
+                ? "relative z-10 min-h-8 whitespace-nowrap rounded-[8px] px-3 text-selection-foreground"
                 : "relative z-10 min-h-8 whitespace-nowrap rounded-[8px] px-3 text-muted-foreground"
             }
           >

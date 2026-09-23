@@ -64,7 +64,7 @@ describe("InsightsGoalStatsFilters", () => {
     ).toHaveClass("h-8", "shrink-0", "rounded-full");
     expect(
       screen.getByText("All End Dates").closest("button")
-    ).toHaveClass("bg-primary");
+    ).toHaveClass("bg-secondary");
     expect(
       screen.getByText("Next month").closest("button")
     ).toHaveClass("h-8", "shrink-0", "rounded-full");
@@ -118,23 +118,23 @@ describe("InsightsGoalStatsFilters", () => {
     const chips = within(screen.getByTestId("insights-quick-filters"));
 
     fireEvent.click(chips.getByText("This month"));
-    expect(chips.getByText("This month").closest("button")).toHaveClass("bg-primary");
+    expect(chips.getByText("This month").closest("button")).toHaveClass("bg-secondary");
     expect(chips.getByText("All End Dates").closest("button")).not.toHaveClass(
-      "bg-primary"
+      "bg-secondary"
     );
 
     fireEvent.click(chips.getByText("Next month"));
-    expect(chips.getByText("Next month").closest("button")).toHaveClass("bg-primary");
+    expect(chips.getByText("Next month").closest("button")).toHaveClass("bg-secondary");
     expect(chips.getByText("This month").closest("button")).not.toHaveClass(
-      "bg-primary"
+      "bg-secondary"
     );
 
     fireEvent.click(chips.getByText("Next month"));
     expect(chips.getByText("All End Dates").closest("button")).toHaveClass(
-      "bg-primary"
+      "bg-secondary"
     );
     expect(chips.getByText("Next month").closest("button")).not.toHaveClass(
-      "bg-primary"
+      "bg-secondary"
     );
   });
 });

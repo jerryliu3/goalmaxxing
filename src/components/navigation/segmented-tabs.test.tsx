@@ -69,6 +69,6 @@ describe("SegmentedTabs", () => {
       </UiStyleProvider>
     );
 
-    expect(screen.getByRole("tab", { name: "Current" })).toHaveClass("text-primary");
+    expect(screen.getByRole("tab", { name: "Current" })).toHaveClass("text-foreground");
   });
 });

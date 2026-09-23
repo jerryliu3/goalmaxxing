@@ -31,7 +31,8 @@ export function ChecklistQuickFilterChips({
     >
       <Button
         type="button"
-        variant={recurrenceFilters.length === 0 ? "default" : "outline"}
+        aria-pressed={recurrenceFilters.length === 0}
+        variant={recurrenceFilters.length === 0 ? "secondary" : "outline"}
         size="sm"
         className="h-8 shrink-0 rounded-full px-3 text-xs"
         onClick={onClearRecurrenceFilters}
@@ -41,9 +42,10 @@ export function ChecklistQuickFilterChips({
       {recurrenceQuickFilters.map((option) => (
         <Button
           key={`recurrence-quick-${option.value}`}
+          aria-pressed={recurrenceFilters.includes(option.value)}
           type="button"
           variant={
-            recurrenceFilters.includes(option.value) ? "default" : "outline"
+            recurrenceFilters.includes(option.value) ? "secondary" : "outline"
           }
           size="sm"
           className="h-8 shrink-0 rounded-full px-3 text-xs"
@@ -54,7 +56,8 @@ export function ChecklistQuickFilterChips({
       ))}
       <Button
         type="button"
-        variant={categoryFilters.length === 0 ? "default" : "outline"}
+        aria-pressed={categoryFilters.length === 0}
+        variant={categoryFilters.length === 0 ? "secondary" : "outline"}
         size="sm"
         className="h-8 shrink-0 rounded-full px-3 text-xs"
         onClick={onClearCategoryFilters}
@@ -64,9 +67,10 @@ export function ChecklistQuickFilterChips({
       {quickCategories.map((category) => (
         <Button
           key={`category-quick-${category.key}`}
+          aria-pressed={categoryFilters.includes(category.key)}
           type="button"
           variant={
-            categoryFilters.includes(category.key) ? "default" : "outline"
+            categoryFilters.includes(category.key) ? "secondary" : "outline"
           }
           size="sm"
           className="h-8 shrink-0 rounded-full px-3 text-xs"

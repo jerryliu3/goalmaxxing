@@ -262,7 +262,7 @@ export function CompeteTile({
                     </div>
                     <div className="mt-1.5 h-2 overflow-hidden rounded-sm bg-muted shadow-[inset_0_1px_2px_color-mix(in_srgb,var(--foreground)_16%,transparent)]">
                       <div
-                        className="h-full rounded-sm bg-primary shadow-[inset_0_-2px_0_color-mix(in_srgb,black_18%,transparent)]"
+                        className="h-full rounded-sm bg-secondary shadow-[inset_0_-2px_0_color-mix(in_srgb,black_18%,transparent)]"
                         style={{
                           width: `${Math.min(100, Math.max(0, row.percent))}%`,
                         }}
@@ -392,7 +392,7 @@ function CompeteRequirementFace({
                 data-testid="requirement-mark"
                 className={`grid aspect-square place-items-center rounded-full font-display text-sm font-semibold tabular-nums ${
                   complete
-                    ? "border-2 border-primary bg-primary text-primary-foreground"
+                    ? "border-2 border-selection bg-selection text-selection-foreground"
                     : "border-2 border-dashed border-border text-muted-foreground"
                 }`}
               >
@@ -428,7 +428,7 @@ function CompeteRequirementFace({
       </p>
       <div className="mt-2.5 h-2.5 overflow-hidden rounded-full bg-muted shadow-[inset_0_1px_2px_color-mix(in_srgb,var(--foreground)_16%,transparent)]">
         <div
-          className="h-full rounded-full bg-primary"
+          className="h-full rounded-full bg-secondary"
           style={{ width: `${percent}%` }}
         />
       </div>

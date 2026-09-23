@@ -47,7 +47,7 @@ export function ReactionBar({
       <Button
         type="button"
         size="sm"
-        variant={reacted ? "default" : "outline"}
+        variant={reacted ? "secondary" : "outline"}
         disabled={isPending}
         onClick={() => {
           void toggleReaction("cheer");

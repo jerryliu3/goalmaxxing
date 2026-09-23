@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { BRAND_FONTS, brandFontStack, getBrandTheme, type BrandFontId, type BrandThemeId } from "@cadence/shared/brand";
+import { BRAND_FONTS, applicationChrome, brandFontStack, getBrandTheme, type BrandFontId, type BrandThemeId } from "@cadence/shared/brand";
 import { cssTokenNames, type ThemeTokenName } from "@cadence/shared/tokens";
 
 export type BrandThemeStyle = CSSProperties & Record<`--${string}`, string | number>;
@@ -10,6 +10,7 @@ export function getBrandThemeStyle(id: BrandThemeId, fontFamilies: BrandFontFami
   const theme = getBrandTheme(id);
   const font = (role: "display" | "body" | "mono") => fontFamilies[theme.fonts[role]] ?? brandFontStack(theme.fonts[role]);
   const style: BrandThemeStyle = {
+    ...applicationChrome(id),
     colorScheme: theme.appearance,
     backgroundColor: theme.colors.background,
     backgroundImage: theme.effects.pageBackgroundImage,

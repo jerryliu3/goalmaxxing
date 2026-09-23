@@ -65,7 +65,7 @@ describe("TabNav", () => {
       "nav.settings"
     );
     expect(screen.getByRole("link", { name: /Community/i })).toHaveClass(
-      "text-white"
+      "text-selection-foreground"
     );
     expect(container.querySelectorAll("[data-motion='tab-nav-highlight']")).toHaveLength(1);
   });
@@ -209,7 +209,7 @@ describe("TabNav", () => {
       </UiStyleProvider>
     );
 
-    expect(screen.getByRole("link", { name: /Community/i })).toHaveClass("text-primary");
+    expect(screen.getByRole("link", { name: /Community/i })).toHaveClass("text-foreground");
     expect(screen.getByRole("navigation", { name: "Main navigation" })).toHaveClass(
       "border-b"
     );

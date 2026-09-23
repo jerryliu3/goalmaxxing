@@ -50,7 +50,7 @@ describe("plan calendar day chrome", () => {
     expect(today).toContain("bg-today");
     expect(today).not.toContain("bg-today/");
     expect(todaySelected).toContain("bg-today");
-    expect(todaySelected).toContain("ring-primary");
+    expect(todaySelected).toContain("ring-today-foreground");
     expect(todaySelected).not.toContain("bg-adjacent");
     expect(todayAdjacent).toContain("bg-today");
     expect(todayAdjacent).not.toContain("bg-adjacent");
@@ -66,19 +66,19 @@ describe("plan calendar day chrome", () => {
       isSelected: true,
       isPastInMonth: false,
     });
-    expect(selected).toContain("ring-primary");
+    expect(selected).toContain("ring-selection");
     expect(selected).not.toContain("bg-day-selected");
     expect(selected).not.toContain("bg-adjacent");
     expect(selected).not.toContain("bg-today");
     expect(
       planMonthDayNumberClass({ inMonth: true, isToday: false, isSelected: true })
-    ).toBe("text-primary");
+    ).toBe("text-foreground");
   });
 
   it("outlines a selected week row that is not today", () => {
     expect(
       planAgendaDayRowClass({ inMonth: true, isToday: false, isSelected: true })
-    ).toContain("ring-primary");
+    ).toContain("ring-selection");
     expect(
       planAgendaDayRowClass({ inMonth: true, isToday: false, isSelected: true })
     ).not.toContain("bg-day-selected");
@@ -87,13 +87,13 @@ describe("plan calendar day chrome", () => {
     ).toContain("bg-today");
     expect(
       planAgendaDayRowClass({ inMonth: true, isToday: true, isSelected: true })
-    ).toContain("ring-primary");
+    ).toContain("ring-today-foreground");
     expect(
       planAgendaDayRowClass({ inMonth: false, isToday: false, isSelected: false })
     ).toContain("bg-adjacent");
     expect(
       planAgendaDayNumberClass({ isToday: false, isSelected: true })
-    ).toContain("text-primary");
+    ).toContain("text-foreground");
     expect(
       planAgendaDayNumberClass({ isToday: true, isSelected: true })
     ).toContain("text-today");

@@ -58,9 +58,9 @@ describe("PlannerCalendarToolbar", () => {
       "true"
     );
     expect(within(viewGroup).queryByRole("button", { name: "3 Day" })).toBeNull();
-    expect(screen.getByTestId("plan-view-mode-thumb")).toHaveClass("bg-primary");
+    expect(screen.getByTestId("plan-view-mode-thumb")).toHaveClass("bg-selection");
     expect(within(viewGroup).getByRole("button", { name: "Week View" })).toHaveClass(
-      "text-primary-foreground"
+      "text-selection-foreground"
     );
   });
 

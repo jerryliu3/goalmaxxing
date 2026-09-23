@@ -95,13 +95,13 @@ export function PlannerFiltersDialog({
               }
               className={cn(
                 "relative mt-0.5 h-6 w-10 shrink-0 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-                showTasksInsteadOfGoals ? "bg-primary" : "bg-muted"
+                showTasksInsteadOfGoals ? "bg-selection" : "bg-muted"
               )}
             >
               <span
                 className={cn(
-                  "absolute top-0.5 left-0.5 size-5 rounded-full bg-background shadow-sm transition-transform",
-                  showTasksInsteadOfGoals && "translate-x-4"
+                  "absolute top-0.5 left-0.5 size-5 rounded-full shadow-sm transition-transform",
+                  showTasksInsteadOfGoals ? "translate-x-4 bg-selection-foreground" : "bg-background"
                 )}
               />
             </button>
@@ -114,7 +114,7 @@ export function PlannerFiltersDialog({
                 onChange={(event) =>
                   onShowCompletedGoalsChange?.(event.target.checked)
                 }
-                className="mt-1 size-4 shrink-0 accent-primary"
+                className="mt-1 size-4 shrink-0 accent-secondary"
                 aria-label="Show completed goals"
               />
               <span className="min-w-0 space-y-1">

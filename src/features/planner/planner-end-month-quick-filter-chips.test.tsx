@@ -19,6 +19,9 @@ describe("PlannerEndMonthQuickFilterChips", () => {
     expect(
       [...screen.getAllByRole("button")].map((button) => button.textContent)
     ).toEqual(["All End Dates", "This month", "Next month", "Year end", "No end date"]);
+    const selected = screen.getByRole("button", { name: "All End Dates", pressed: true });
+    expect(selected).toHaveClass("bg-secondary", "text-secondary-foreground");
+    expect(screen.getByRole("button", { name: "This month", pressed: false })).toHaveAttribute("data-variant", "outline");
 
     await user.click(screen.getByRole("button", { name: "No end date" }));
     expect(onEndMonthFiltersChange).toHaveBeenCalledWith(["none"]);

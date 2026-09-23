@@ -10,15 +10,25 @@ export function applicationTheme(id: ApplicationBrandId, appearance: "light" | "
 }
 
 export function applicationChrome(id: BrandThemeId): Record<`--${string}`, string> {
-  if (Object.hasOwn(PRODUCTION_CHROME, id)) return PRODUCTION_CHROME[id as keyof typeof PRODUCTION_CHROME];
   const theme = BRAND_THEMES[id];
   const p = theme.palette;
+  // Primary owns actions; secondary owns persistent state in every brand.
+  const selection = {
+    "--gm-selection": theme.colors.secondary,
+    "--gm-selection-foreground": theme.colors.secondaryForeground,
+    "--gm-today": theme.colors.secondary,
+    "--gm-today-foreground": theme.colors.secondaryForeground,
+    // Work rows contain category chips and their own text roles: use a wash.
+    "--gm-day-selected": "color-mix(in srgb, var(--secondary) 18%, var(--background))",
+    "--gm-day-selected-foreground": "var(--foreground)",
+  };
+  if (Object.hasOwn(PRODUCTION_CHROME, id)) {
+    return { ...PRODUCTION_CHROME[id as keyof typeof PRODUCTION_CHROME], ...selection };
+  }
   return {
     "--gm-page": p.page, "--gm-gain": p.secondary, "--gm-recover": p.secondary,
     "--gm-warning": p.secondary, "--gm-warning-fill": p.surface,
-    "--gm-selection": p.secondary, "--gm-selection-foreground": p.onSecondary,
-    "--gm-today": p.primary, "--gm-today-foreground": p.onPrimary,
-    "--gm-day-selected": p.secondary, "--gm-day-selected-foreground": p.onSecondary,
+    ...selection,
     "--gm-adjacent": p.surface, "--gm-adjacent-foreground": p.surfaceInk,
     "--gm-stamp-light": p.primary,
     "--gm-heatmap-0": p.page,

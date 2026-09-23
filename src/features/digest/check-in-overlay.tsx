@@ -46,7 +46,7 @@ const CHECK_IN_TABS = [
 // a `data-horizontal` variant this project does not define. Both are replaced
 // here with the underlined line used by the goal creation tabs.
 const CHECK_IN_TAB_TRIGGER_CLASS =
-  "relative h-auto flex-1 rounded-none border-0 py-2 text-sm font-medium after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-primary data-[state=active]:after:opacity-100";
+  "relative h-auto flex-1 rounded-none border-0 py-2 text-sm font-medium after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full";
 
 /**
  * The period check-in starts as a small, non-recurring prompt. Opening it

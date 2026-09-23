@@ -23,7 +23,7 @@ describe("ProgressGoalList", () => {
 
     const tempo = screen.getByRole("button", { name: /Tempo run/ });
     expect(tempo).toHaveAttribute("aria-pressed", "true");
-    expect(tempo).toHaveClass("bg-primary/15");
+    expect(tempo).toHaveClass("bg-day-selected");
     expect(tempo).not.toHaveClass("bg-foreground");
     await user.click(screen.getByRole("button", { name: /Lift/ }));
     expect(onToggleGoal).toHaveBeenCalledWith("lift");

@@ -1,4 +1,4 @@
-import { APPLICATION_BRANDS, applicationTheme, applicationChrome, getCategoryColorPair, GOAL_CATEGORY_DESIGN_IDS, type ApplicationBrandId, type BrandFontId } from "@cadence/shared/brand";
+import { APPLICATION_BRANDS, applicationTheme, getCategoryColorPair, GOAL_CATEGORY_DESIGN_IDS, type ApplicationBrandId, type BrandFontId } from "@cadence/shared/brand";
 import { getBrandThemeStyle } from "./theme-library";
 
 // Static next/font declarations are in fonts.next.ts; these aliases are safe in client code.
@@ -15,7 +15,7 @@ export function getApplicationThemeCss() {
   return (Object.keys(APPLICATION_BRANDS) as ApplicationBrandId[]).flatMap((id) =>
     (["light", "dark"] as const).map((appearance) => {
       const theme = applicationTheme(id, appearance);
-      const variables = { ...getBrandThemeStyle(theme.id as Parameters<typeof getBrandThemeStyle>[0], APPLICATION_FONT_FAMILIES), ...applicationChrome(theme.id as Parameters<typeof applicationChrome>[0]) };
+      const variables = getBrandThemeStyle(theme.id as Parameters<typeof getBrandThemeStyle>[0], APPLICATION_FONT_FAMILIES);
       for (const category of GOAL_CATEGORY_DESIGN_IDS) {
         const pair = getCategoryColorPair(category, theme.appearance);
         variables[`--category-${category}-surface`] = pair.surface;

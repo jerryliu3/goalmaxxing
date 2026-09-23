@@ -86,7 +86,7 @@ export function ProgressGoalList({
                 className={cn(
                   "flex min-h-10 w-full items-center rounded-[10px] border px-2 py-2 text-left touch-manipulation md:min-h-9 md:px-2.5 md:py-1.5",
                   selected
-                    ? "border-primary/40 bg-primary/15 text-foreground"
+                    ? "border-selection bg-day-selected text-foreground"
                     : "border-border text-foreground"
                 )}
               >

@@ -61,8 +61,9 @@ export function InsightsGoalStatsFilters({
         {(["month", "year"] as const).map((mode) => (
           <Button
             key={mode}
+            aria-pressed={viewMode === mode}
             type="button"
-            variant={viewMode === mode ? "default" : "outline"}
+            variant={viewMode === mode ? "secondary" : "outline"}
             size="sm"
             className="h-8 shrink-0 rounded-full px-3 text-xs"
             onClick={() => onViewModeChange(mode)}
@@ -73,14 +74,15 @@ export function InsightsGoalStatsFilters({
         {quickEndMonths.map((option) => (
           <Button
             key={option.key}
+            aria-pressed={option.value === null ? endMonths.length === 0 : endMonths.includes(option.value)}
             type="button"
             variant={
               option.value === null
                 ? endMonths.length === 0
-                  ? "default"
+                  ? "secondary"
                   : "outline"
                 : endMonths.includes(option.value)
-                  ? "default"
+                  ? "secondary"
                   : "outline"
             }
             size="sm"
@@ -131,7 +133,7 @@ export function InsightsGoalStatsFilters({
                 checked={showEndedGoals}
                 disabled={endedGoalCount === 0}
                 onChange={(event) => onShowEndedGoalsChange(event.target.checked)}
-                className="size-4 rounded border-input accent-primary"
+                className="size-4 rounded border-input accent-secondary"
               />
               Show past goals
               <span>({endedGoalCount})</span>

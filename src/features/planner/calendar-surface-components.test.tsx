@@ -185,7 +185,7 @@ describe("calendar surface extracted components", () => {
     expect(todayCell).toHaveClass("bg-today");
     expect(todayCell).toHaveClass("text-today-foreground");
     const selectedCell = screen.getByRole("button", { name: /august 7/i });
-    expect(selectedCell.className).toMatch(/ring-primary/);
+    expect(selectedCell.className).toMatch(/ring-selection/);
     expect(selectedCell).not.toHaveClass("bg-day-selected");
     expect(selectedCell).not.toHaveClass("bg-today");
     expect(selectedCell).not.toHaveClass("bg-adjacent");

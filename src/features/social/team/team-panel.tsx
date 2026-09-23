@@ -310,7 +310,7 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
                         index === todayWeekIndex
                           ? "bg-today"
                           : index < todayWeekIndex
-                            ? "bg-primary/30"
+                            ? "bg-secondary/30"
                             : "bg-muted"
                       }`}
                     />

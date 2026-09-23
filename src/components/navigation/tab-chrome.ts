@@ -49,13 +49,13 @@ export function tabChromeClasses(
         "relative isolate flex w-full touch-manipulation items-center justify-center px-2 font-medium uppercase tracking-[0.12em] transition-[color,transform] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none",
         mobile ? "min-h-12 flex-col gap-1 py-1.5 text-[10px]" : "min-h-11 flex-col gap-1 py-2 text-[11px]"
       ),
-      linkActive: "text-primary",
+      linkActive: mobile ? "text-selection-foreground" : "text-foreground",
       linkIdle: "text-muted-foreground hover:text-foreground",
       highlight: cn(
-        "absolute -z-10 bg-transparent shadow-none",
+        "absolute -z-10 shadow-none",
         mobile
-          ? "inset-x-3 top-1 bottom-1 rounded-md border border-primary/40"
-          : "inset-x-2 bottom-0 h-0.5 rounded-none bg-primary"
+          ? "inset-x-3 top-1 bottom-1 rounded-md bg-selection"
+          : "inset-x-2 bottom-0 h-0.5 rounded-none bg-selection"
       ),
     };
   }
@@ -77,8 +77,8 @@ export function tabChromeClasses(
       "relative isolate flex w-full touch-manipulation items-center justify-center rounded-xl px-2 font-medium transition-[color,transform] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none",
       mobile ? "min-h-12 flex-col gap-1 py-1.5 text-[10px]" : "min-h-14 flex-col gap-1 py-2 text-[11px]"
     ),
-    linkActive: "text-white",
+    linkActive: "text-selection-foreground",
     linkIdle: "text-muted-foreground hover:bg-muted hover:text-foreground",
-    highlight: "absolute inset-0 -z-10 rounded-xl bg-primary shadow-sm",
+    highlight: "absolute inset-0 -z-10 rounded-xl bg-selection shadow-sm",
   };
 }

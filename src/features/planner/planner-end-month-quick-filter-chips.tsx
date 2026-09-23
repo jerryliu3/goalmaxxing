@@ -29,14 +29,15 @@ export function PlannerEndMonthQuickFilterChips({
       {quickEndMonths.map((option) => (
         <Button
           key={option.key}
+            aria-pressed={option.value === null ? endMonthFilters.length === 0 : endMonthFilters.includes(option.value)}
           type="button"
           variant={
             option.value === null
               ? endMonthFilters.length === 0
-                ? "default"
+                ? "secondary"
                 : "outline"
               : endMonthFilters.includes(option.value)
-                ? "default"
+                ? "secondary"
                 : "outline"
           }
           size="sm"

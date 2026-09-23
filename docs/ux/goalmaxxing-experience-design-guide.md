@@ -309,10 +309,11 @@ ideas; it should not create unexplained empty regions.
 
 Color should carry consistent meaning:
 
-- blue for primary action, selection, and current focus;
-- emerald for completion and healthy progress;
-- violet for long-range or community-oriented accents;
-- amber/orange for attention, adaptation, or recovery;
+- the theme’s primary pair for main actions and action links;
+- the theme’s secondary pair for current navigation, selected controls, today, and progress;
+- a light secondary wash for selected rows containing mixed text and category chips;
+- dedicated status tokens for success, attention, adaptation, and recovery;
+- category library colors for goal identity, independently of the active theme;
 - neutral tones for structure and inactive state.
 
 Never rely on color alone. A current date also receives `Today` semantics. A
