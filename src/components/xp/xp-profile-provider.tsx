@@ -157,6 +157,7 @@ export function XpProfileProvider({
             celebrate({
               sourceRect: request.sourceRect,
               targetRect: captureViewportRect(target),
+              amount: payload.profile.totalXp - previousProfile.totalXp,
             });
           }
           setRewardSequence((current) => current + 1);
@@ -228,12 +229,13 @@ export function XpProfileProvider({
         };
         profileRef.current = nextProfile;
         setProfile(nextProfile);
-        if (detail.desiredFactState === "present") {
+        if (detail.desiredFactState === "present" && detail.xpDelta > 0) {
           const target = document.querySelector("[data-xp-reward-target='true']");
           if (target && detail.sourceRect) {
             celebrate({
               sourceRect: detail.sourceRect,
               targetRect: captureViewportRect(target),
+              amount: detail.xpDelta,
             });
           }
           setRewardSequence((current) => current + 1);

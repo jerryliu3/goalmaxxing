@@ -27,7 +27,7 @@ function RewardHarness() {
 }
 
 describe("XpRewardProvider", () => {
-  it("keeps reward celebrate non-blocking without rendering particles", () => {
+  it("renders one pointer-transparent flight at the supplied source", () => {
     const { container } = render(
       <XpRewardProvider>
         <RewardHarness />
@@ -36,9 +36,9 @@ describe("XpRewardProvider", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Celebrate" }));
 
-    expect(container.querySelectorAll("[data-reward-burst]")).toHaveLength(0);
+    expect(document.querySelectorAll("[data-reward-burst]")).toHaveLength(1);
     expect(
-      container.querySelector("[data-motion='xp-reward-overlay']")
+      document.querySelector("[data-motion='xp-reward-overlay']")
     ).toHaveClass("pointer-events-none");
   });
 });

@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Progress } from "@/components/ui/progress";
+import { useEffect, useRef, useState } from "react";
+import { animate, motion, useReducedMotion } from "motion/react";
+import { progressionForTotalXp } from "@/lib/xp/progression";
 import { bandForTotalXp } from "@/lib/xp/altitude";
 import { cn } from "@/lib/utils";
 
@@ -32,10 +34,20 @@ function resolveProgressPercent(profile: XpProfileSummary) {
   );
 }
 
-function XpProgressCardContents({ profile }: { profile: XpProfileSummary }) {
-  const band = bandForTotalXp(profile.totalXp);
-  const progressPercent = resolveProgressPercent(profile);
-  const levelLabel = `Lv ${profile.currentLevel} · ${formatNumber(profile.totalXp)} XP`;
+function XpProgressCardContents({ profile, rewardSequence }: { profile: XpProfileSummary; rewardSequence: number }) {
+  const still = useReducedMotion();
+  const [displayXp, setDisplayXp] = useState(profile.totalXp);
+  const current = useRef(profile.totalXp);
+  useEffect(() => {
+    if (still) { current.current = profile.totalXp; setDisplayXp(profile.totalXp); return; }
+    const controls = animate(current.current, profile.totalXp, { duration: 0.95, ease: "easeInOut",
+      onUpdate: value => { current.current = value; setDisplayXp(Math.round(value)); } });
+    return () => controls.stop();
+  }, [profile.totalXp, still]);
+  const display = { totalXp: displayXp, ...progressionForTotalXp(displayXp) };
+  const band = bandForTotalXp(displayXp);
+  const progressPercent = resolveProgressPercent(display);
+  const levelLabel = `Lv ${display.currentLevel} · ${formatNumber(displayXp)} XP`;
 
   return (
     <>
@@ -43,11 +55,12 @@ function XpProgressCardContents({ profile }: { profile: XpProfileSummary }) {
         <span className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{band.name}</span>
         <span className="font-mono text-xs text-muted-foreground">{levelLabel}</span>
       </div>
-      <Progress
-        value={progressPercent}
-        className="h-2 bg-muted"
-        data-xp-reward-target="true"
-      />
+      <motion.div key={rewardSequence} initial={false} animate={!still && rewardSequence > 0 ? { scaleY: [1, 1.65, 1] } : { scaleY: 1 }} transition={{ delay: 0.65, duration: 0.65 }}
+        role="progressbar" aria-label="XP toward next level" aria-valuemin={0} aria-valuemax={100}
+        aria-valuenow={resolveProgressPercent(profile)} aria-valuetext={`Level ${profile.currentLevel}, ${profile.totalXp} XP`}
+        className="relative h-2 overflow-hidden rounded-full bg-muted" data-xp-reward-target="true">
+        <span className="block size-full origin-left rounded-full bg-primary" style={{ transform: `scaleX(${progressPercent / 100})` }} />
+      </motion.div>
     </>
   );
 }
@@ -65,7 +78,7 @@ const baseClassName =
 
 export function XpProgressCard({
   profile,
-  rewardSequence: _rewardSequence = 0,
+  rewardSequence = 0,
   href,
   className,
   ariaLabel,
@@ -79,14 +92,14 @@ export function XpProgressCard({
   if (href) {
     return (
       <Link href={href} className={resolvedClassName} aria-label={ariaLabel}>
-        <XpProgressCardContents profile={profile} />
+        <XpProgressCardContents profile={profile} rewardSequence={rewardSequence} />
       </Link>
     );
   }
 
   return (
     <div className={resolvedClassName} aria-label={ariaLabel}>
-      <XpProgressCardContents profile={profile} />
+      <XpProgressCardContents profile={profile} rewardSequence={rewardSequence} />
     </div>
   );
 }

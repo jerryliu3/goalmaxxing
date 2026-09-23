@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { XpProgressBar } from "@/components/xp/xp-progress-bar";
 import { bandForTotalXp } from "@/lib/xp/altitude";
+import { progressionForTotalXp } from "@/lib/xp/progression";
 
 const useXpProfileMock = vi.hoisted(() => vi.fn());
 
@@ -14,18 +15,14 @@ describe("XpProgressBar", () => {
     useXpProfileMock.mockReturnValue({
       profile: {
         totalXp: 320,
-        currentLevel: 2,
-        currentLevelMinXp: 100,
-        nextLevel: 3,
-        nextLevelMinXp: 500,
-        xpToNextLevel: 180,
+        ...progressionForTotalXp(320),
       },
       rewardSequence: 0,
     });
 
     const { container } = render(<XpProgressBar />);
     expect(screen.getByText(bandForTotalXp(320).name)).toBeInTheDocument();
-    expect(screen.getByText("Lv 2 · 320 XP")).toBeInTheDocument();
+    expect(screen.getByText("Lv 3 · 320 XP")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Open achievements on Progress" })
     ).toHaveAttribute("href", "/insights#progress-achievements");

@@ -81,6 +81,7 @@ export function useCompletionMutation() {
           sourceRect,
           xpDelta: result.xpDelta,
           goalId,
+          feedback: result.feedback,
         });
         return {
           ok: true,

@@ -12,7 +12,11 @@ const mocks = vi.hoisted(() => ({
   applyPlannerGoalDateFact: vi.fn(),
   tryAtomicPlannerMoveCompletion: vi.fn(),
   uncompletePlannerCompletion: vi.fn(),
+  readFeedback: vi.fn(),
+  prepareFeedback: vi.fn(),
 }));
+
+vi.mock("@/lib/goals/completion-feedback-server", () => ({ prepareCompletionFeedback: mocks.prepareFeedback }));
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => {
@@ -135,6 +139,8 @@ describe("completions route", () => {
       restoredTo: null,
       scheduleDigest: "a".repeat(64),
     });
+    mocks.readFeedback.mockResolvedValue({ date: "2026-08-05", goals: [] });
+    mocks.prepareFeedback.mockResolvedValue(mocks.readFeedback);
   });
 
   afterEach(() => {

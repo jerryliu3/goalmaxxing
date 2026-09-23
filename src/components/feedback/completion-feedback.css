@@ -1,0 +1,8 @@
+.completion-stamp-stage { position: fixed; z-index: 80; width: 132px; height: 48px; perspective: 650px; pointer-events: none; }
+.completion-stamp { padding: 8px 12px; border: 3px double var(--primary); border-radius: 5px; background: var(--card); color: var(--primary); font: 700 20px var(--font-mono); letter-spacing: .16em; text-align: center; box-shadow: 0 4px 0 color-mix(in srgb,var(--primary) 30%,transparent); }
+.completion-spark { position: absolute; top: 0; left: 0; color: var(--gm-stamp-light,var(--primary)); font-size: 22px; }
+.completion-parent-feedback { position: fixed; z-index: 80; padding: 14px 16px; max-height: min(70dvh, 360px); overflow-y: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--card); color: var(--card-foreground); box-shadow: 0 10px 32px #0002; }
+.completion-parent-feedback [role=status] { display: grid; gap: 12px; }
+.completion-credit-track { height: 5px; margin-top: 10px; overflow: hidden; border-radius: 5px; background: var(--muted); }
+.completion-credit-track > span { display: block; height: 100%; background: var(--primary); transform-origin: left; }
+@media (prefers-reduced-motion: reduce) { .completion-stamp-stage { display: none; } }
