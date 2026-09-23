@@ -55,6 +55,12 @@
   container-type: inline-size;
   inline-size: 100%;
   aspect-ratio: 330 / 382;
+  /* This sizing container already flattens the front's contents. Cull that
+     whole plane in the object's 3D context, including composited text/filter
+     layers in Safari; hiding only descendants uses their local flat context. */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 .tempo-card h2 {
   font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
