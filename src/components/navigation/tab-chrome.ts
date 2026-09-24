@@ -54,7 +54,7 @@ export function tabChromeClasses(
       highlight: cn(
         "absolute -z-10 shadow-none",
         mobile
-          ? "inset-x-3 top-1 bottom-1 rounded-md bg-selection"
+          ? "inset-x-0.5 top-1 bottom-1 rounded-md bg-selection"
           : "inset-x-2 bottom-0 h-0.5 rounded-none bg-selection"
       ),
     };
