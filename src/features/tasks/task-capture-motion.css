@@ -1,6 +1,7 @@
-.task-capture-composer { position: relative; }
-.task-capture-tear { position: absolute; inset: -3px 0 auto; border-top: 2px dashed var(--primary); pointer-events: none; animation: task-capture-tear 350ms ease-out both; }
-[data-new-task=true] { transform-origin: bottom left; animation: task-capture-settle 650ms 150ms cubic-bezier(.22,.8,.2,1) both; }
-@keyframes task-capture-tear { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); opacity: 0; } }
-@keyframes task-capture-settle { from { transform: translateY(14px) rotate(-1.5deg); opacity: .25; } to { transform: none; opacity: 1; } }
+.task-capture-composer { position: relative; padding: 14px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 9px 9px 4px 4px; background: var(--card); box-shadow: 0 4px 0 var(--muted),0 5px 0 var(--border); }
+.task-capture-tear { position: absolute; inset: auto 0 0; border-top: 2px dashed var(--primary); pointer-events: none; animation: task-capture-tear 280ms linear both; }
+.task-capture-list { perspective: 600px; }
+[data-new-task=true] { position: relative; background: var(--card); transform-origin: top center; animation: task-capture-settle 650ms 280ms cubic-bezier(.22,.8,.2,1) both; }
+@keyframes task-capture-tear { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes task-capture-settle { from { transform: translateY(-78px) rotateX(-12deg) rotateZ(-2deg); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .task-capture-tear { display: none; } [data-new-task=true] { animation: none; } }

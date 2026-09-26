@@ -239,13 +239,13 @@ export function PlannerTasksPanel({
         // The returned row is committed. Keep the composer ready for the next task.
         setCreatedTaskId(created.task_id);
         setTasks(current => {
-          const next = [...current.filter(task => task.task_id !== created.task_id), created];
+          const next = [created, ...current.filter(task => task.task_id !== created.task_id)];
           writePlannerTasksCache(scheduledDateRef.current, next);
           return next;
         });
         titleInputRef.current?.focus();
       }
-      await loadTasks(scheduledDateRef.current, { background: true });
+      if (!created) await loadTasks(scheduledDateRef.current, { background: true });
     } finally {
       addingRef.current = false;
       setAdding(false);
@@ -409,7 +409,7 @@ export function PlannerTasksPanel({
           : "No tasks scheduled for this day yet."}
       </p>
     ) : (
-      <ul className={chrome === "plain" ? "divide-y" : "space-y-2"}>
+      <ul className={`task-capture-list ${chrome === "plain" ? "divide-y" : "space-y-2"}`}>
         {tasks.map((task) => {
           const complete = task.completed_at != null;
           const toggling = togglingTaskId === task.task_id;
@@ -558,9 +558,9 @@ export function PlannerTasksPanel({
   if (chrome === "plain") {
     return (
       <div className="space-y-1">
-        {taskList}
         {addForm}
         {addNewButton}
+        {taskList}
         {deleteDialog}
       </div>
     );
@@ -573,9 +573,9 @@ export function PlannerTasksPanel({
         {description ? <CardDescription>{description}</CardDescription> : null}
       </CardHeader>
       <CardContent className="space-y-1">
-        {taskList}
         {addForm}
         {addNewButton}
+        {taskList}
       </CardContent>
       {deleteDialog}
     </Card>

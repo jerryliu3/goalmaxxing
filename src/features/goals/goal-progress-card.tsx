@@ -12,10 +12,12 @@ export function GoalProgressCard({
   goal,
   progress,
   gallery = false,
+  showMilestones = true,
 }: {
   goal: Goal;
   progress: ProgressContextSummary;
   gallery?: boolean;
+  showMilestones?: boolean;
 }) {
   const model = goalCardProgress(goal, progress);
   const assembly = model.assembly;
@@ -37,7 +39,7 @@ export function GoalProgressCard({
     {goal.reward_text?.trim() && <p className="mt-2 text-center text-sm text-foreground">
       <span className="text-muted-foreground">{model.achieved ? "Earned · " : "Reward · "}</span>{goal.reward_text}
     </p>}
-    {!gallery && goal.frequency_type === "fixed_milestones" && <div className="mt-4">
+    {showMilestones && !gallery && goal.frequency_type === "fixed_milestones" && <div className="mt-4">
       <MilestonePills targetCount={goal.target_count ?? 1} completionDates={progress.milestoneDates} milestoneNames={goal.milestone_names ?? []} maxVisible={3} />
     </div>}
   </div>;

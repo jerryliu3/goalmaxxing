@@ -25,7 +25,6 @@ export interface WorkQuestModel {
   deadlineLabel: string;
   progress: WorkQuestProgress | null;
   completed: boolean;
-  periodCadence?: boolean;
 }
 
 export function formatQuestSittingTime(value: string | null | undefined): string | null {
@@ -192,7 +191,6 @@ export function projectPlannerEntryWorkQuest({
       presentation,
       completed,
     }),
-    periodCadence: goal ? isPeriodCadenceGoal(goal) : false,
     completed,
   };
 }

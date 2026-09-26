@@ -71,14 +71,6 @@
   margin-top: 0.65rem;
 }
 .work-quest-body[data-has-card="true"] { display: grid; gap: 1rem; }
-.quest-clasp { margin-top: 14px; }
-.quest-clasp-band { position: relative; display: flex; justify-content: center; align-items: center; gap: 7px; width: 150px; height: 42px; margin: 14px auto; color: var(--goal-color); }
-.quest-clasp-left,.quest-clasp-right { position: absolute; top: 0; bottom: 0; width: 50%; border: 2px solid currentColor; }
-.quest-clasp-left { left: 0; border-right: 0; border-radius: 24px 0 0 24px; }
-.quest-clasp-right { right: 0; border-left: 0; border-radius: 0 24px 24px 0; }
-.quest-clasp-bead { width: 10px; height: 10px; border-radius: 3px; background: var(--muted); }
-.quest-clasp-bead[data-done=true] { background: currentColor; }
-.quest-clasp-buckle { position: absolute; width: 12px; height: 8px; top: -3px; left: 69px; border-radius: 2px; background: currentColor; }
 @container (min-width: 640px) {
   .work-quest-body[data-has-card="true"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
 }
