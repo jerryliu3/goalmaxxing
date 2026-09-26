@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(7);
+select plan(11);
 
 insert into auth.users (id, email)
 values (
@@ -230,6 +230,106 @@ select is(
   ),
   0,
   'replay equivalence ignores milestone unit-key permutations'
+);
+
+select lives_ok(
+  $tap$
+  do $$
+  declare
+    v_start date := date_trunc('month', current_date)::date;
+    v_end date := (date_trunc('month', current_date) + interval '1 month - 1 day')::date;
+    v_digest text;
+  begin
+    v_digest := public.get_planner_schedule_digest();
+    perform *
+    from public.set_planner_schedule(
+      v_start,
+      v_end,
+      '[]'::jsonb,
+      v_digest
+    );
+  end;
+  $$;
+  $tap$,
+  'removing every in-window milestone still normalizes remaining sessions'
+);
+
+select is(
+  (
+    select unit_key
+    from public.planner_items
+    where goal_id = '91500000-0000-4000-8000-000000000001'
+  ),
+  'milestone:1',
+  'the remaining out-of-window milestone closes the ordinal gap'
+);
+
+reset role;
+set local role service_role;
+
+update public.planner_items
+set unit_key = 'milestone:2'
+where goal_id = '91500000-0000-4000-8000-000000000001';
+
+insert into public.planner_items (
+  owner_id,
+  goal_id,
+  unit_key,
+  scheduled_date,
+  original_scheduled_date,
+  locked
+)
+values (
+  '11111111-1111-4111-8111-111111111111',
+  '91500000-0000-4000-8000-000000000001',
+  'milestone:1',
+  date_trunc('month', current_date)::date + 10,
+  date_trunc('month', current_date)::date + 10,
+  false
+);
+
+reset role;
+set local role authenticated;
+select set_config(
+  'request.jwt.claim.sub',
+  '11111111-1111-4111-8111-111111111111',
+  true
+);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select lives_ok(
+  $tap$
+  do $$
+  declare
+    v_start date := date_trunc('month', current_date)::date;
+    v_end date := (date_trunc('month', current_date) + interval '1 month - 1 day')::date;
+    v_digest text;
+  begin
+    v_digest := public.get_planner_schedule_digest();
+    perform *
+    from public.clear_planner_schedule_windows(
+      jsonb_build_array(
+        jsonb_build_object(
+          'start_date', v_start::text,
+          'end_date', v_end::text
+        )
+      ),
+      v_digest
+    );
+  end;
+  $$;
+  $tap$,
+  'clearing a window normalizes milestones that remain in other windows'
+);
+
+select is(
+  (
+    select unit_key
+    from public.planner_items
+    where goal_id = '91500000-0000-4000-8000-000000000001'
+  ),
+  'milestone:1',
+  'window clearing reuses the canonical milestone normalizer'
 );
 
 select ok(

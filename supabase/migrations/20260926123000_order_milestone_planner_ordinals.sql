@@ -180,6 +180,30 @@ declare
   v_upserted_count integer := 0;
   v_milestone_goal_ids uuid[] := '{}'::uuid[];
 begin
+  if v_owner is null then
+    raise exception using errcode = '28000', message = 'authentication_required';
+  end if;
+
+  -- The payload cannot identify a goal whose last row in this window is being
+  -- removed. Snapshot affected milestone goals before the core writer replaces
+  -- the window, under the same owner lock used by every planner mutation.
+  perform pg_catalog.pg_advisory_xact_lock(
+    private.planner_owner_lock_key(v_owner)
+  );
+
+  select coalesce(
+    pg_catalog.array_agg(distinct item.goal_id),
+    '{}'::uuid[]
+  )
+  into v_milestone_goal_ids
+  from public.planner_items item
+  join public.goals goal on goal.id = item.goal_id
+  where item.owner_id = v_owner
+    and item.scheduled_date >= p_start
+    and item.scheduled_date <= p_end
+    and not goal.is_deleted
+    and goal.frequency_type = 'fixed_milestones'::public.goal_frequency_type;
+
   select result.upserted_count
   into v_upserted_count
   from private.set_planner_schedule_core(
@@ -189,16 +213,21 @@ begin
     p_expected_digest
   ) result;
 
-  select coalesce(
-    pg_catalog.array_agg(distinct item.goal_id),
-    '{}'::uuid[]
-  )
+  select pg_catalog.array_agg(distinct affected.goal_id)
   into v_milestone_goal_ids
-  from pg_catalog.jsonb_to_recordset(p_items) as item(goal_id uuid)
-  join public.goals goal on goal.id = item.goal_id
-  where goal.owner_id = v_owner
-    and not goal.is_deleted
-    and goal.frequency_type = 'fixed_milestones'::public.goal_frequency_type;
+  from (
+    select existing.goal_id
+    from pg_catalog.unnest(v_milestone_goal_ids) existing(goal_id)
+
+    union
+
+    select item.goal_id
+    from pg_catalog.jsonb_to_recordset(p_items) as item(goal_id uuid)
+    join public.goals goal on goal.id = item.goal_id
+    where goal.owner_id = v_owner
+      and not goal.is_deleted
+      and goal.frequency_type = 'fixed_milestones'::public.goal_frequency_type
+  ) affected;
 
   perform private.normalize_milestone_planner_ordinals(
     v_owner,
@@ -215,6 +244,159 @@ $$;
 revoke all on function public.set_planner_schedule(date, date, jsonb, text)
 from public, anon;
 grant execute on function public.set_planner_schedule(date, date, jsonb, text)
+to authenticated;
+
+-- Window-clearing APIs are also planner write boundaries. Reuse the same
+-- normalizer after their existing validation/digest/delete implementation so
+-- removing a window cannot leave gaps in milestones scheduled elsewhere.
+alter function public.clear_planner_schedule_windows(jsonb, text)
+set schema private;
+
+alter function private.clear_planner_schedule_windows(jsonb, text)
+rename to clear_planner_schedule_windows_core;
+
+revoke all on function private.clear_planner_schedule_windows_core(jsonb, text)
+from public, anon, authenticated;
+
+create function public.clear_planner_schedule_windows(
+  p_windows jsonb,
+  p_expected_digest text
+)
+returns table (
+  schedule_digest text,
+  deleted_count integer,
+  window_count integer
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_owner uuid := auth.uid();
+  v_deleted_count integer := 0;
+  v_window_count integer := 0;
+  v_milestone_goal_ids uuid[] := '{}'::uuid[];
+begin
+  if v_owner is null then
+    raise exception using errcode = '28000', message = 'authentication_required';
+  end if;
+
+  perform pg_catalog.pg_advisory_xact_lock(
+    private.planner_owner_lock_key(v_owner)
+  );
+
+  if p_windows is not null and pg_catalog.jsonb_typeof(p_windows) = 'array' then
+    select coalesce(
+      pg_catalog.array_agg(distinct item.goal_id),
+      '{}'::uuid[]
+    )
+    into v_milestone_goal_ids
+    from public.planner_items item
+    join public.goals goal on goal.id = item.goal_id
+    where item.owner_id = v_owner
+      and not goal.is_deleted
+      and goal.frequency_type = 'fixed_milestones'::public.goal_frequency_type
+      and exists (
+        select 1
+        from pg_catalog.jsonb_array_elements(p_windows) window_row(payload)
+        where item.scheduled_date >= (window_row.payload ->> 'start_date')::date
+          and item.scheduled_date <= (window_row.payload ->> 'end_date')::date
+      );
+  end if;
+
+  select result.deleted_count, result.window_count
+  into v_deleted_count, v_window_count
+  from private.clear_planner_schedule_windows_core(
+    p_windows,
+    p_expected_digest
+  ) result;
+
+  perform private.normalize_milestone_planner_ordinals(
+    v_owner,
+    v_milestone_goal_ids
+  );
+
+  return query
+  select
+    public.get_planner_schedule_digest(v_owner),
+    v_deleted_count,
+    v_window_count;
+end;
+$$;
+
+revoke all on function public.clear_planner_schedule_windows(jsonb, text)
+from public, anon;
+grant execute on function public.clear_planner_schedule_windows(jsonb, text)
+to authenticated;
+
+alter function public.clear_planner_schedule_for_goal(uuid, jsonb, text)
+set schema private;
+
+alter function private.clear_planner_schedule_for_goal(uuid, jsonb, text)
+rename to clear_planner_schedule_for_goal_core;
+
+revoke all on function private.clear_planner_schedule_for_goal_core(uuid, jsonb, text)
+from public, anon, authenticated;
+
+create function public.clear_planner_schedule_for_goal(
+  p_goal_id uuid,
+  p_windows jsonb,
+  p_expected_digest text
+)
+returns table (
+  schedule_digest text,
+  deleted_count integer,
+  window_count integer
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_owner uuid := auth.uid();
+  v_deleted_count integer := 0;
+  v_window_count integer := 0;
+  v_milestone_goal_ids uuid[] := '{}'::uuid[];
+begin
+  if v_owner is null then
+    raise exception using errcode = '28000', message = 'authentication_required';
+  end if;
+
+  select case
+    when goal.frequency_type = 'fixed_milestones'::public.goal_frequency_type
+      then array[goal.id]
+    else '{}'::uuid[]
+  end
+  into v_milestone_goal_ids
+  from public.goals goal
+  where goal.id = p_goal_id
+    and goal.owner_id = v_owner
+    and not goal.is_deleted;
+
+  select result.deleted_count, result.window_count
+  into v_deleted_count, v_window_count
+  from private.clear_planner_schedule_for_goal_core(
+    p_goal_id,
+    p_windows,
+    p_expected_digest
+  ) result;
+
+  perform private.normalize_milestone_planner_ordinals(
+    v_owner,
+    coalesce(v_milestone_goal_ids, '{}'::uuid[])
+  );
+
+  return query
+  select
+    public.get_planner_schedule_digest(v_owner),
+    v_deleted_count,
+    v_window_count;
+end;
+$$;
+
+revoke all on function public.clear_planner_schedule_for_goal(uuid, jsonb, text)
+from public, anon;
+grant execute on function public.clear_planner_schedule_for_goal(uuid, jsonb, text)
 to authenticated;
 
 -- Repair the reported account without silently rewriting every existing user's
