@@ -25,7 +25,7 @@ export function linkedFeedbackOrder(sourceId: string, links: Pick<GoalLink, "sou
 
 export function buildCompletionFeedback({ sourceId, date, asOfDate, goals, links, before, after, weekStartsOn }: {
   sourceId: string; date: string; asOfDate: string; goals: Goal[]; links: GoalLink[];
-  before: Completion[]; after: Completion[]; weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  before: Completion[]; after: Completion[]; weekStartsOn: number;
 }): CompletionFeedback {
   const byId = new Map(goals.map(goal => [goal.id, goal]));
   const previousFacts = new Set(before.map(fact => `${fact.goal_id}:${fact.completed_on}`));

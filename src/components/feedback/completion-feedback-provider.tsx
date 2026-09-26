@@ -58,7 +58,8 @@ export function CompletionFeedbackProvider({ children }: { children: ReactNode }
   const sequence = useRef(0);
   useEffect(() => subscribeXpRefresh(detail => {
     if (detail?.desiredFactState === "absent") {
-      setQueue(current => current.filter(item => item.detail.goalId !== detail.goalId));
+      // Reversing a linked source may also revoke ancestors in another entry.
+      setQueue([]);
     } else if (detail?.feedback?.goals.length) {
       const entry = { id: ++sequence.current, detail };
       setQueue(current => [...current, entry]);
