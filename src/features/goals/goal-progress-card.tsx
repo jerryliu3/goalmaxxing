@@ -6,6 +6,7 @@ import { goalCardFields } from "./goal-card-fields";
 import { goalCardProgress } from "./goal-card-progress";
 import { getRewardProgress } from "./card-material/reassembly-progress";
 import { TempoGoalCard } from "./tempo-goal-card";
+import { MilestonePills } from "./milestone-pills";
 
 export function GoalProgressCard({
   goal,
@@ -36,5 +37,8 @@ export function GoalProgressCard({
     {goal.reward_text?.trim() && <p className="mt-2 text-center text-sm text-foreground">
       <span className="text-muted-foreground">{model.achieved ? "Earned · " : "Reward · "}</span>{goal.reward_text}
     </p>}
+    {!gallery && goal.frequency_type === "fixed_milestones" && <div className="mt-4">
+      <MilestonePills targetCount={goal.target_count ?? 1} completionDates={progress.milestoneDates} milestoneNames={goal.milestone_names ?? []} maxVisible={3} />
+    </div>}
   </div>;
 }

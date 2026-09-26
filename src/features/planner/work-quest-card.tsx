@@ -5,6 +5,7 @@ import { CompletionTitle } from "@/components/ui/completion-title";
 import { getGoalVisual } from "@/features/planner/goal-visuals";
 import type { WorkQuestModel } from "@/features/planner/work-quest-model";
 import { cn } from "@/lib/utils";
+import { QuestPeriodClasp } from "./quest-period-clasp";
 import "@/features/planner/work-quest-card.css";
 
 /**
@@ -65,7 +66,7 @@ export function WorkQuestCard({
               <dd className="text-right">{quest.deadlineLabel}</dd>
             </div>
           </dl>
-          {quest.progress && !goalCard ? (
+          {quest.periodCadence && quest.progress && quest.progress.target > 0 ? <QuestPeriodClasp progress={quest.progress} /> : quest.progress && !goalCard ? (
             <div className="mt-3">
               <div className="mb-1 flex items-center justify-between gap-3 text-sm text-muted-foreground">
                 <span>Progress</span>

@@ -24,6 +24,7 @@ import { createClient } from "@/lib/supabase/client";
 import { planCompletionControlModeForDate } from "@/features/planner/completion-entry-dispatch";
 import { planLedgerTitleClass } from "@/features/planner/calendar-day-chrome";
 import { useOutsidePointerDismiss } from "@/lib/ui/use-outside-pointer-dismiss";
+import "./task-capture-motion.css";
 
 interface PlannerTaskRow {
   task_id: string;
@@ -116,6 +117,13 @@ export function PlannerTasksPanel({
   const [loading, setLoading] = useState(() => cachedTasks === undefined);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(() => cachedTasks !== undefined);
   const [adding, setAdding] = useState(false);
+  const addingRef = useRef(false);
+  const [createdTaskId, setCreatedTaskId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!createdTaskId) return;
+    const timer = window.setTimeout(() => setCreatedTaskId(null), 1100);
+    return () => window.clearTimeout(timer);
+  }, [createdTaskId]);
   const [togglingTaskId, setTogglingTaskId] = useState<string | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [confirmingDeleteTask, setConfirmingDeleteTask] = useState<PlannerTaskRow | null>(null);
@@ -207,7 +215,7 @@ export function PlannerTasksPanel({
   });
 
   const addTask = useCallback(async () => {
-    if (!allowCreate) {
+    if (!allowCreate || addingRef.current) {
       return;
     }
     const title = newTaskTitle.trim();
@@ -215,8 +223,9 @@ export function PlannerTasksPanel({
       return;
     }
     setAdding(true);
+    addingRef.current = true;
     try {
-      const { error } = await supabase.rpc("create_planner_task", {
+      const { data, error } = await supabase.rpc("create_planner_task", {
         p_title: title,
         p_scheduled_date: newTaskDate.trim() || undefined,
       });
@@ -224,10 +233,21 @@ export function PlannerTasksPanel({
         toast.error(error.message || "Task could not be created.");
         return;
       }
-      setNewTaskTitle("");
-      setComposerOpen(false);
-      await loadTasks(scheduledDateRef.current);
+      setNewTaskTitle(current => current.trim() === title ? "" : current);
+      const created = data?.[0];
+      if (created && (!scheduledDateRef.current || created.scheduled_date === scheduledDateRef.current)) {
+        // The returned row is committed. Keep the composer ready for the next task.
+        setCreatedTaskId(created.task_id);
+        setTasks(current => {
+          const next = [...current.filter(task => task.task_id !== created.task_id), created];
+          writePlannerTasksCache(scheduledDateRef.current, next);
+          return next;
+        });
+        titleInputRef.current?.focus();
+      }
+      await loadTasks(scheduledDateRef.current, { background: true });
     } finally {
+      addingRef.current = false;
       setAdding(false);
     }
   }, [allowCreate, loadTasks, newTaskDate, newTaskTitle, supabase]);
@@ -323,7 +343,8 @@ export function PlannerTasksPanel({
     "h-8 rounded-none border-0 border-b border-input bg-transparent px-0 shadow-none focus-visible:border-primary focus-visible:ring-0 dark:bg-transparent";
 
   const addForm = allowCreate && composerOpen ? (
-    <div ref={composerRef} className="space-y-2">
+    <div ref={composerRef} className="task-capture-composer space-y-2">
+      {createdTaskId && <span key={createdTaskId} className="task-capture-tear" aria-hidden="true" />}
       <Input
         ref={titleInputRef}
         value={newTaskTitle}
@@ -427,6 +448,7 @@ export function PlannerTasksPanel({
           return (
             <li
               key={task.task_id}
+              data-new-task={task.task_id === createdTaskId || undefined}
               className={
                 chrome === "plain"
                   ? "flex items-center justify-between gap-3 py-3 last:pb-0.5"

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { defaultMilestoneName } from "@/lib/goals/milestones";
+import { MilestoneFlag } from "./milestone-flag";
 
 interface MilestonePillsProps {
   targetCount: number;
@@ -37,16 +38,18 @@ export function MilestonePills({
           return (
             <div
               key={`${index + 1}-step`}
-              className={`min-w-[110px] rounded-full border px-2.5 py-1 text-[11px] leading-tight ${
+              className={`flex min-w-[110px] max-w-full items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] leading-tight ${
                 complete
                   ? "border-primary/40 bg-primary/10 text-foreground"
                   : "border-border bg-muted/30 text-muted-foreground"
               }`}
             >
-              <p className="truncate font-display font-medium">{milestoneName}</p>
+              <MilestoneFlag complete={complete} number={index + 1} />
+              <div className="min-w-0"><p className="truncate font-display font-medium">{milestoneName}</p>
               <p className={complete ? "text-foreground/75" : "text-muted-foreground"}>
                 {complete ? completionDate : "Pending"}
               </p>
+              </div>
             </div>
           );
         })}
