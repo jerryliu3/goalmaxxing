@@ -5,10 +5,7 @@ import type {
 } from "@cadence/shared/planner/context";
 import { isLinkedTargetSuppressedOnDate } from "@/lib/planner/link-suppression";
 import { resolveWorkUnitDisplayDate } from "@/lib/planner/session-display-date";
-import {
-  entryDisplayRank,
-  getEntryGoalFirstTitle,
-} from "@/features/planner/calendar-format";
+import { getEntryGoalFirstTitle } from "@/features/planner/calendar-format";
 import type {
   DraftItemEdit,
   PlannerActiveGoalSnapshot,
@@ -546,11 +543,7 @@ export function orderEntriesForDay({
   ];
   const savedOrderSet = new Set(savedOrder);
   const orderIndex = new Map(order.map((entryKey, index) => [entryKey, index]));
-  const compareWithinGroup = (left: PlannerDayDetailEntry, right: PlannerDayDetailEntry) => {
-    const byRank = entryDisplayRank(left) - entryDisplayRank(right);
-    if (byRank !== 0) {
-      return byRank;
-    }
+  const compareEntries = (left: PlannerDayDetailEntry, right: PlannerDayDetailEntry) => {
     const leftPinned = savedOrderSet.has(left.key);
     const rightPinned = savedOrderSet.has(right.key);
     if (!leftPinned && !rightPinned) {
@@ -579,26 +572,7 @@ export function orderEntriesForDay({
     }
     return getEntryGoalFirstTitle(left).localeCompare(getEntryGoalFirstTitle(right));
   };
-  return [...entries].sort(compareWithinGroup);
-}
-
-export function promoteEntriesForDisplay<T extends { originalGoalId: string }>(
-  entries: T[],
-  promoteGoalId: string | null | undefined
-): T[] {
-  if (!promoteGoalId) {
-    return entries;
-  }
-  const promoted: T[] = [];
-  const rest: T[] = [];
-  for (const entry of entries) {
-    if (entry.originalGoalId === promoteGoalId) {
-      promoted.push(entry);
-    } else {
-      rest.push(entry);
-    }
-  }
-  return [...promoted, ...rest];
+  return [...entries].sort(compareEntries);
 }
 
 export function buildCoachSummaryWorkUnits(

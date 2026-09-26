@@ -5,7 +5,6 @@ import {
   getEntryMilestoneFirstTitleWithTime,
   getEntrySubtitle,
   isEntryCredited,
-  isEntryImmovableForDraft,
 } from "@/features/planner/calendar-format";
 import { planUnscheduledLedgerControlMode } from "@/features/planner/completion-entry-dispatch";
 import { useUnscheduledDraftMove } from "@/features/planner/unscheduled-draft-move";
@@ -271,7 +270,6 @@ export function PlannerFocusedDayPane({
               getEntryDisplayTitle={getEntryMilestoneFirstTitleWithTime}
               getEntrySubtitle={getEntrySubtitle}
               isEntryCredited={isEntryCredited}
-              isEntryImmovableForDraft={isEntryImmovableForDraft}
               onEntryOpen={onEntryOpen}
               onToggleCompletion={(entry, selectedDay, sourceElement) => {
                 if (!canMutateEntryOnDay(entry, selectedDay)) {

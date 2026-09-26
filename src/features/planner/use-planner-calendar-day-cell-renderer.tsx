@@ -6,14 +6,12 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { promoteEntriesForDisplay } from "@/features/planner/calendar-entries";
 import { CalendarMonthDayCell } from "@/features/planner/calendar-month-day-cell";
 import {
   getDayStatus,
   getEntryCompactTitleWithTime,
   getEntryGoalFirstTitleWithTime,
   isEntryCredited,
-  isEntryImmovableForDraft,
 } from "@/features/planner/calendar-format";
 import type {
   DayPreviewState,
@@ -165,11 +163,7 @@ export function usePlannerCalendarDayCellRenderer({
 
   return useCallback(
     (cell: PlannerCalendarCell) => {
-      const entriesForDayRaw = getOrderedEntriesForDay(cell.date);
-      const entriesForDay =
-        viewMode === "month" && calendarFocusedGoalId
-          ? promoteEntriesForDisplay(entriesForDayRaw, calendarFocusedGoalId)
-          : entriesForDayRaw;
+      const entriesForDay = getOrderedEntriesForDay(cell.date);
       const completionFactMarkersForDay = getCompletionFactMarkersForDay(cell.date);
       const status =
         entriesForDay.length > 0
@@ -224,7 +218,7 @@ export function usePlannerCalendarDayCellRenderer({
           isEntryImmovableForDraft={(entry) =>
             plannerReadOnly ||
             !canMutateEntryOnDay(entry, cell.date) ||
-            isEntryImmovableForDraft(entry)
+            entry.draftGhost
           }
           onEntryClick={(day, entry, target) => {
             if (!canMutateEntryOnDay(entry, day)) {

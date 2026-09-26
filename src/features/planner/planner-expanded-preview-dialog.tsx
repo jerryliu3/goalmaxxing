@@ -29,7 +29,6 @@ interface PlannerExpandedPreviewDialogProps {
   getEntryDisplayTitle: (entry: PlannerDayDetailEntry) => string;
   getEntrySubtitle: (entry: PlannerDayDetailEntry) => string | null;
   isEntryCredited: (entry: PlannerDayDetailEntry) => boolean;
-  isEntryImmovableForDraft: (entry: PlannerDayDetailEntry) => boolean;
   onOpenChange: (open: boolean) => void;
   onMoveDay: (day: string) => void;
   onContract: () => void;
@@ -55,7 +54,6 @@ export function PlannerExpandedPreviewDialog({
   getEntryDisplayTitle,
   getEntrySubtitle,
   isEntryCredited,
-  isEntryImmovableForDraft,
   onOpenChange,
   onMoveDay,
   onContract,
@@ -117,7 +115,6 @@ export function PlannerExpandedPreviewDialog({
               getEntryDisplayTitle={getEntryDisplayTitle}
               getEntrySubtitle={getEntrySubtitle}
               isEntryCredited={isEntryCredited}
-              isEntryImmovableForDraft={isEntryImmovableForDraft}
               onEntryOpen={(entryKey) => {
                 onEntryOpen(entryKey, expandedPreviewDay);
               }}

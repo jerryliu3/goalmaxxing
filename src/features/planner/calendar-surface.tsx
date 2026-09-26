@@ -427,7 +427,6 @@ export function CalendarSurface({
     goalFilterOptions,
     endMonthOptions,
     effectiveEndMonthFilters,
-    getEntriesForDay,
     getCompletionFactMarkersForDay,
     getOrderedEntriesForDay,
     canMutateEntryOnDay,
@@ -834,7 +833,7 @@ export function CalendarSurface({
   } = usePlannerCalendarDnd({
     entryByKey,
     entryDayByKey,
-    getEntriesForDay,
+    getEntriesForDay: getOrderedEntriesForDay,
     getEntryGoalFirstTitleWithTime,
     setPreviewEntryOrderByDay,
     queueDraftMoveCommand,

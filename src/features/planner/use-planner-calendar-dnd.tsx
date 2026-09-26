@@ -109,16 +109,9 @@ export function usePlannerCalendarDnd({
   const reorderPreviewEntriesForDay = useCallback(
     (day: string, activeEntryKey: string, overEntryKey: string) => {
       const entriesForDay = getEntriesForDay(day);
-      const incompleteKeys = entriesForDay
-        .filter((entry) => !isEntryCredited(entry))
-        .map((entry) => entry.key);
-      const completedKeys = entriesForDay
-        .filter((entry) => isEntryCredited(entry))
-        .map((entry) => entry.key);
       setPreviewEntryOrderByDay((previous) => {
         const next = reorderPreviewEntryKeys({
-          incompleteKeys,
-          completedKeys,
+          entryKeys: entriesForDay.map(entry => entry.key),
           activeEntryKey,
           overEntryKey,
           existingOrder: previous[day],
@@ -167,6 +160,10 @@ export function usePlannerCalendarDnd({
         return;
       }
       if (isPlannerTaskCalendarEntry(resolution.entry)) {
+        if (isEntryCredited(resolution.entry)) {
+          clearDragState();
+          return;
+        }
         const currentDay = entryDayByKey.get(entryKey);
         clearDragState();
         if (!currentDay || currentDay === resolution.nextDate) {

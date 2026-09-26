@@ -26,7 +26,6 @@ interface PlannerDayPreviewPopoverProps {
   getEntryDisplayTitle: (entry: PlannerDayDetailEntry) => string;
   getEntrySubtitle: (entry: PlannerDayDetailEntry) => string | null;
   isEntryCredited: (entry: PlannerDayDetailEntry) => boolean;
-  isEntryImmovableForDraft: (entry: PlannerDayDetailEntry) => boolean;
   onEntryOpen: (entryKey: string, day: string) => void;
   onToggleCompletion: (
     entry: PlannerDayDetailEntry,
@@ -56,7 +55,6 @@ export function PlannerDayPreviewPopover({
   getEntryDisplayTitle,
   getEntrySubtitle,
   isEntryCredited,
-  isEntryImmovableForDraft,
   onEntryOpen,
   onToggleCompletion,
   onEntryPointerStart,
@@ -128,7 +126,6 @@ export function PlannerDayPreviewPopover({
         getEntryDisplayTitle={getEntryDisplayTitle}
         getEntrySubtitle={getEntrySubtitle}
         isEntryCredited={isEntryCredited}
-        isEntryImmovableForDraft={isEntryImmovableForDraft}
         onEntryOpen={(entryKey) => {
           onEntryOpen(entryKey, dayPreview.day);
         }}

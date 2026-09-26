@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { orderPlannerTasks } from "@cadence/shared/planner/task-order";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { supabase } from "../../lib/supabase";
@@ -14,6 +15,7 @@ interface PlannerTaskRow {
   scheduled_date: string;
   scheduled_time: string | null;
   completed_at: string | null;
+  created_at: string;
 }
 
 export function TasksScreen() {
@@ -38,7 +40,7 @@ export function TasksScreen() {
       if (error) {
         throw error;
       }
-      return (data ?? []) as PlannerTaskRow[];
+      return orderPlannerTasks((data ?? []) as PlannerTaskRow[]);
     },
   });
 

@@ -1,4 +1,5 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { COMPLETION_HOLD_MS } from "@/components/ui/completion-toggle";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlannerDndProvider } from "@/features/planner/calendar-dnd";
@@ -44,6 +45,31 @@ const sampleEntry = {
 describe("PlannerFocusedDayPane", () => {
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
+  });
+
+  it("forwards the held completion button as the stamp and XP origin", () => {
+    vi.useFakeTimers();
+    const onToggleCompletion = vi.fn();
+    renderWithDnd(
+      <PlannerFocusedDayPane
+        day="2026-08-06"
+        entries={[sampleEntry as never]}
+        completionFactMarkers={[]}
+        mutationLoadingKey={null}
+        asOfDate="2026-08-06"
+        canMutatePlanItems
+        canMutateEntryOnDay={() => true}
+        onEntryOpen={vi.fn()}
+        onToggleCompletion={onToggleCompletion}
+        onEntryPointerStart={vi.fn()}
+        onEntryPointerEnd={vi.fn()}
+      />
+    );
+    const button = screen.getByRole("button", { name: "Mark session done" });
+    fireEvent.pointerDown(button);
+    act(() => { vi.advanceTimersByTime(COMPLETION_HOLD_MS); });
+    expect(onToggleCompletion).toHaveBeenCalledWith(sampleEntry, "2026-08-06", button);
   });
 
   it("splits Duo day checklists on large screens while keeping partner chips on small", () => {
