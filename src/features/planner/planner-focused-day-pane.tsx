@@ -273,16 +273,15 @@ export function PlannerFocusedDayPane({
               isEntryCredited={isEntryCredited}
               isEntryImmovableForDraft={isEntryImmovableForDraft}
               onEntryOpen={onEntryOpen}
-              onToggleCompletion={(entry, selectedDay) => {
+              onToggleCompletion={(entry, selectedDay, sourceElement) => {
                 if (!canMutateEntryOnDay(entry, selectedDay)) {
                   return;
                 }
-                onToggleCompletion(entry, selectedDay);
+                onToggleCompletion(entry, selectedDay, sourceElement);
               }}
               onEntryPointerStart={onEntryPointerStart}
               onEntryPointerEnd={onEntryPointerEnd}
               density="expanded"
-              includeSourceElement={false}
               selectedEntryKey={selectedEntryKey}
               shareEntryTransition={shareDayTransition}
               onConfirmDraftMove={onConfirmDraftMove}

@@ -55,7 +55,7 @@ function XpProgressCardContents({ profile, rewardSequence }: { profile: XpProfil
         <span className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{band.name}</span>
         <span className="font-mono text-xs text-muted-foreground">{levelLabel}</span>
       </div>
-      <motion.div key={rewardSequence} initial={false} animate={!still && rewardSequence > 0 ? { scaleY: [1, 1.65, 1] } : { scaleY: 1 }} transition={{ delay: 0.65, duration: 0.65 }}
+      <motion.div key={rewardSequence} initial={false} animate={!still && rewardSequence > 0 ? { scaleY: [1, 1.65, 1] } : { scaleY: 1 }} transition={{ duration: 0.95, times: [0, 0.35, 1] }}
         role="progressbar" aria-label="XP toward next level" aria-valuemin={0} aria-valuemax={100}
         aria-valuenow={resolveProgressPercent(profile)} aria-valuetext={`Level ${profile.currentLevel}, ${profile.totalXp} XP`}
         className="relative h-2 overflow-hidden rounded-full bg-muted" data-xp-reward-target="true">

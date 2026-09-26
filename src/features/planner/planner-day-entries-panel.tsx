@@ -28,7 +28,6 @@ interface PlannerDayEntriesPanelProps {
   onEntryPointerStart: (immovable: boolean) => void;
   onEntryPointerEnd: () => void;
   density?: "compact" | "expanded";
-  includeSourceElement?: boolean;
   selectedEntryKey?: string | null;
   shareEntryTransition?: boolean;
   onConfirmDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
@@ -53,7 +52,6 @@ export function PlannerDayEntriesPanel({
   onEntryPointerStart,
   onEntryPointerEnd,
   density = "compact",
-  includeSourceElement = true,
   selectedEntryKey = null,
   shareEntryTransition = false,
   onConfirmDraftMove,
@@ -82,11 +80,7 @@ export function PlannerDayEntriesPanel({
         })
       }
       onEntryOpen={onEntryOpen}
-      onToggleCompletion={(entry, selectedDay, sourceElement) =>
-        includeSourceElement
-          ? onToggleCompletion(entry, selectedDay, sourceElement)
-          : onToggleCompletion(entry, selectedDay)
-      }
+      onToggleCompletion={onToggleCompletion}
       onEntryPointerStart={onEntryPointerStart}
       onEntryPointerEnd={onEntryPointerEnd}
       density={density}
