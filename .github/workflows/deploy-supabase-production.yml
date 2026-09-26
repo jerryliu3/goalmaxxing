@@ -1,5 +1,8 @@
 name: Deploy Supabase Migrations (Production)
 
+# Default to GitHub-hosted. Set repository variable CI_RUNNER=self-hosted to
+# route this job to the Mac runner, matching the CI and post-merge workflows.
+
 on:
   workflow_run:
     workflows:
@@ -20,7 +23,7 @@ concurrency:
 jobs:
   deploy-migrations:
     name: deploy-migrations
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER == 'self-hosted' && fromJSON('["self-hosted", "macOS", "cadence-ci"]') || 'ubuntu-latest' }}
     timeout-minutes: 15
     environment: production
     if: >-
