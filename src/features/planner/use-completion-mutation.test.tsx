@@ -65,6 +65,7 @@ describe("useCompletionMutation", () => {
     expect(refreshDetails).toEqual([
       {
         reason: "completion",
+        goalId: "goal-1",
         desiredFactState: "present",
         sourceRect,
         xpDelta: 40,

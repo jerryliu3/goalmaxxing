@@ -46,7 +46,6 @@ select is(
 );
 
 reset role;
-set local role service_role;
 
 select is(
   (

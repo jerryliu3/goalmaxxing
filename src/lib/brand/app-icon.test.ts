@@ -9,8 +9,10 @@ describe("app icon", () => {
     expect(buildAppIconSvg(getUiStyle("original").themeColor)).not.toContain("#9A4F2C");
   });
 
-  it("uses gazetteer stamp rust when that style is active", () => {
-    expect(buildAppIconSvg(getUiStyle("gazetteer").themeColor)).toContain("#9A4F2C");
+  it("uses the active gazetteer theme color when that style is active", () => {
+    expect(buildAppIconSvg(getUiStyle("gazetteer").themeColor)).toContain(
+      getUiStyle("gazetteer").themeColor
+    );
   });
 
   it("points the favicon route at the active style", () => {

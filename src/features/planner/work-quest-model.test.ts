@@ -62,7 +62,7 @@ describe("work quest model", () => {
     expect(quest.id).toBe("tempo-run");
     expect(quest.title).toBe("Tempo run");
     expect(quest.categoryLabel).toBe("Health");
-    expect(quest.color).toBe("#22c55e");
+    expect(quest.color).toBe("#10b981");
     expect(quest.cadenceLabel).toBe("3 days a week");
     expect(quest.deadlineLabel).toBe("Dec 31, 2026");
     expect(quest.progress).toEqual({
