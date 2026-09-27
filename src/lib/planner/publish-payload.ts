@@ -247,7 +247,8 @@ export function buildPlannerPublishPersistencePayload({
       unit_key: unit.unitKey,
       original_scheduled_date:
         originalScheduledDateByKey.get(itemKey) ?? unit.scheduledDate,
-      scheduled_date: unit.scheduledDate,
+      scheduled_date:
+        unit.creditState === "completed_elsewhere" ? null : unit.scheduledDate,
       scheduled_time_override: unit.scheduledTimeOverride ?? null,
       effective_scheduled_local_time: unit.effectiveScheduledLocalTime ?? null,
       effective_scheduled_at_local: unit.effectiveScheduledAtLocal ?? null,

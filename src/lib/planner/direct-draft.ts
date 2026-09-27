@@ -88,7 +88,7 @@ function pickCadenceItemForCompletion({
   })[0] ?? null;
 }
 
-function completedUnitKeysForGoal({
+function completedUnitDatesForGoal({
   snapshot,
   goalId,
   persistedItems,
@@ -101,7 +101,7 @@ function completedUnitKeysForGoal({
 }) {
   const goal = snapshot.goals.find((candidate) => candidate.id === goalId);
   if (!goal) {
-    return new Set<string>();
+    return new Map<string, string>();
   }
   const requirement = normalizeGoalRequirement(goal).requirement;
   const completions = getAdmissibleCompletions(
@@ -111,14 +111,17 @@ function completedUnitKeysForGoal({
     ),
     { asOfDate }
   );
-  const completed = new Set<string>();
+  const completed = new Map<string, string>();
   if (requirement.kind === "milestone_sequence") {
     for (
       let ordinal = 1;
       ordinal <= Math.min(requirement.targetCount, completions.length);
       ordinal += 1
     ) {
-      completed.add(`milestone:${ordinal}`);
+      completed.set(
+        `milestone:${ordinal}`,
+        completions[ordinal - 1]!.completed_on
+      );
     }
     return completed;
   }
@@ -139,7 +142,7 @@ function completedUnitKeysForGoal({
       if (!picked) {
         continue;
       }
-      completed.add(picked.unit_key);
+      completed.set(picked.unit_key, completion.completed_on);
       const pickedIndex = remaining.findIndex(
         (item) => item.unit_key === picked.unit_key
       );
@@ -169,7 +172,7 @@ function completedUnitKeysForGoal({
     );
     if (exact) {
       usedCompletionIds.add(exact.id);
-      completed.add(unitKey);
+      completed.set(unitKey, exact.completed_on);
     }
   }
   const remainingCompletions = completions.filter(
@@ -186,7 +189,10 @@ function completedUnitKeysForGoal({
     if (completed.has(unitKey)) {
       continue;
     }
-    completed.add(unitKey);
+    completed.set(
+      unitKey,
+      remainingCompletions[completionIndex]!.completed_on
+    );
     completionIndex += 1;
   }
   return completed;
@@ -224,9 +230,9 @@ export function buildDirectDraftPersistence({
       ];
     })
   );
-  const completedUnitKeys = new Set(
+  const completedUnitDateByKey = new Map(
     Object.values(snapshot.activePlan?.basePlan.completionToUnit ?? {}).map(
-      (unit) => assignmentKey(unit)
+      (unit) => [assignmentKey(unit), unit.completedOn]
     )
   );
   const allPersistedItems =
@@ -246,17 +252,18 @@ export function buildDirectDraftPersistence({
         : [];
     });
   for (const goalId of new Set(commands.map((command) => command.goalId))) {
-    for (const unitKey of completedUnitKeysForGoal({
+    for (const [unitKey, completedOn] of completedUnitDatesForGoal({
       snapshot,
       goalId,
       persistedItems: allPersistedItems,
       asOfDate,
     })) {
-      completedUnitKeys.add(
+      completedUnitDateByKey.set(
         assignmentKey({
           goalId,
           unitKey,
-        })
+        }),
+        completedOn
       );
     }
   }
@@ -321,7 +328,7 @@ export function buildDirectDraftPersistence({
     }
     const itemIsLocked = assignment.locked;
     const itemIsUnscheduled = assignment.scheduledDate === null;
-    const itemIsCredited = completedUnitKeys.has(key);
+    const itemIsCredited = completedUnitDateByKey.has(key);
     const throwIfImmovable = (action: "moved" | "changed") => {
       if (itemIsLocked) {
         throw new PlannerDirectDraftValidationError(
@@ -408,11 +415,17 @@ export function buildDirectDraftPersistence({
       const conflictingAssignment = Array.from(
         canonicalAssignmentByKey.values()
       ).find(
-        (candidate) =>
-          candidate.goalId === command.goalId &&
-          assignmentKey(candidate) !== key &&
-          projectedDateByKey.get(assignmentKey(candidate)) ===
-            command.scheduledDate
+        (candidate) => {
+          const candidateKey = assignmentKey(candidate);
+          return (
+            candidate.goalId === command.goalId &&
+            candidateKey !== key &&
+            (completedUnitDateByKey.get(candidateKey) === undefined ||
+              completedUnitDateByKey.get(candidateKey) ===
+                projectedDateByKey.get(candidateKey)) &&
+            projectedDateByKey.get(candidateKey) === command.scheduledDate
+          );
+        }
       );
       const completionConflict = snapshot.completions.some(
         (completion) =>
@@ -438,6 +451,9 @@ export function buildDirectDraftPersistence({
     const key = assignmentKey(assignment);
     const goal = goalById.get(assignment.goalId)!;
     const scheduledDate = projectedDateByKey.get(key) ?? null;
+    const completedOn = completedUnitDateByKey.get(key);
+    const persistedScheduledDate =
+      completedOn && completedOn !== scheduledDate ? null : scheduledDate;
     const scheduledTimeOverride = projectedTimeByKey.get(key) ?? null;
     const resolvedTime = resolvePlannerEffectiveScheduledTime({
       scheduledDate,
@@ -450,7 +466,7 @@ export function buildDirectDraftPersistence({
       original_scheduled_date:
         activeItemByKey.get(key)?.original_scheduled_date ??
         assignment.scheduledDate,
-      scheduled_date: scheduledDate,
+      scheduled_date: persistedScheduledDate,
       scheduled_time_override: scheduledTimeOverride,
       effective_scheduled_local_time:
         resolvedTime.effectiveScheduledLocalTime,

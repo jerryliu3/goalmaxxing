@@ -157,6 +157,31 @@ describe("buildPlannerPublishPersistencePayload draft edit validation", () => {
       })
     ).toThrowError(PlannerDraftEditValidationError);
   });
+
+  it("does not persist the released date of a unit completed elsewhere", () => {
+    const snapshot = createSnapshot([]);
+    const kernel = {
+      ...createKernel("2026-08-10"),
+      workUnits: [
+        {
+          ...createKernel("2026-08-10").workUnits[0],
+          creditedCompletionDate: "2026-08-09",
+          creditState: "completed_elsewhere" as const,
+          classification: "satisfied_elsewhere" as const,
+        },
+      ],
+    } as PlannerKernelOutput;
+
+    const payload = buildPlannerPublishPersistencePayload({
+      kernel,
+      snapshot,
+    });
+
+    expect(payload.items[0]).toMatchObject({
+      original_scheduled_date: "2026-08-10",
+      scheduled_date: null,
+    });
+  });
 });
 
 describe("positional draft moves are kernel-owned", () => {

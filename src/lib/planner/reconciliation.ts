@@ -135,7 +135,6 @@ export function reconcilePlannerCompletions({
     if (
       !unit ||
       unit.creditedCompletionId !== null ||
-      unit.requirementFingerprint !== previousIdentity.requirementFingerprint ||
       !workUnitCanCreditDate(unit, completion.completed_on)
     ) {
       return false;
@@ -144,19 +143,27 @@ export function reconcilePlannerCompletions({
     return true;
   };
 
-  if (canUseDeadlineScheduleAnchoring) {
-    for (const completion of admissible) {
-      tryStickyCredit(completion);
-    }
+  // Unit keys are the stable identity within a goal. Configuration changes
+  // such as increasing a target or renaming a milestone intentionally change
+  // the requirement fingerprint, but must not reassign completions that still
+  // point at a surviving, date-compatible unit.
+  for (const completion of admissible) {
+    tryStickyCredit(completion);
   }
 
   if (units[0]?.kind === "milestone_sequence") {
+    const remainingFacts = admissible.filter(
+      (completion) => !used.has(completion.id)
+    );
+    const remainingUnits = units.filter(
+      (unit) => unit.creditedCompletionId === null
+    );
     for (
       let index = 0;
-      index < units.length && index < admissible.length;
+      index < remainingUnits.length && index < remainingFacts.length;
       index += 1
     ) {
-      credit(units[index], admissible[index]);
+      credit(remainingUnits[index], remainingFacts[index]);
     }
   } else if (isDeadlineTotal) {
     if (canUseDeadlineScheduleAnchoring) {
