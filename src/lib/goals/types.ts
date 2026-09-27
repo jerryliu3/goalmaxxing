@@ -38,6 +38,7 @@ export interface Completion {
   goal_id: string;
   user_id: string;
   completed_on: string;
+  planner_unit_key?: string | null;
   source: CompletionSource;
   created_at: string;
 }

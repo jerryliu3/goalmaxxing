@@ -112,6 +112,37 @@ export function mapCompletionRpcError(
       "The completion date must be within the goal lifetime."
     );
   }
+  if (error.code === "P0001" && error.message === "stale_schedule") {
+    return dispatchFailure(
+      409,
+      "stale_revision",
+      "Planner state changed. Refresh and try again."
+    );
+  }
+  if (error.code === "55000" && error.message === "planner_item_locked") {
+    return dispatchFailure(
+      409,
+      "planner_item_locked",
+      "Unlock this session before completing it on another date."
+    );
+  }
+  if (
+    error.code === "23505" &&
+    error.message === "planner_destination_conflict"
+  ) {
+    return dispatchFailure(
+      409,
+      "planner_destination_conflict",
+      "That goal already has a planner session on this date."
+    );
+  }
+  if (error.code === "P0002" && error.message === "planner_item_not_found") {
+    return dispatchFailure(
+      409,
+      "planner_item_not_found",
+      "That planner session is no longer available. Refresh and try again."
+    );
+  }
   return null;
 }
 
@@ -196,7 +227,7 @@ export async function applyPlannerItemDateFact({
 
   const itemResponse = await supabase
     .from("planner_items")
-    .select("id, goal_id, scheduled_date")
+    .select("id, goal_id, unit_key, scheduled_date")
     .eq("id", expectation.itemId)
     .maybeSingle();
 
@@ -235,12 +266,19 @@ export async function applyPlannerItemDateFact({
     }
   }
 
-  const mutationError = await applyDirectCompletionFact({
-    supabase,
-    goalId,
-    date: itemDate,
-    desiredFactState,
-  });
+  const mutationResponse =
+    desiredFactState === "present"
+      ? await supabase.rpc("complete_planner_item_on_date_service", {
+          p_goal_id: goalId,
+          p_unit_key: item.unit_key,
+          p_date: itemDate,
+          p_expected_digest: expectation.expectedDigest,
+        })
+      : await supabase.rpc("unmark_goal_complete", {
+          p_goal_id: goalId,
+          p_date: itemDate,
+        });
+  const mutationError = mutationResponse.error;
   if (mutationError) {
     return (
       mapCompletionRpcError(mutationError) ??

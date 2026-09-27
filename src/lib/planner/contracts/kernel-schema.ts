@@ -67,6 +67,7 @@ export const plannerCompletionSchema = z
     goal_id: z.string().min(1).max(100),
     user_id: z.string().min(1).max(100),
     completed_on: dateSchema,
+    planner_unit_key: z.string().max(200).nullable().optional(),
     source: z.enum(["manual", "linked_cascade"]),
     created_at: z.string().datetime({ offset: true }),
   })

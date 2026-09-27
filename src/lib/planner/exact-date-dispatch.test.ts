@@ -125,6 +125,7 @@ describe("exact-date dispatch helpers", () => {
       data: {
         id: "22000000-0000-4000-8000-000000000001",
         goal_id: goalId,
+        unit_key: "total:1",
         scheduled_date: "2026-08-03",
       },
       error: null,
@@ -160,10 +161,16 @@ describe("exact-date dispatch helpers", () => {
         factState: "present",
       },
     });
-    expect(rpc).toHaveBeenLastCalledWith("mark_goal_complete", {
+    expect(rpc).toHaveBeenLastCalledWith(
+      "complete_planner_item_on_date_service",
+      {
       p_goal_id: goalId,
+      p_unit_key: "total:1",
       p_date: "2026-08-03",
-    });
+      p_expected_digest:
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      }
+    );
   });
 
   it("allows planner goal dispatch without linked-suppression prechecks", async () => {

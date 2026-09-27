@@ -64,7 +64,7 @@ export type PlannerItemRow = Database["public"]["Tables"]["planner_items"]["Row"
 export type PlannerGoalUnplaceableRow =
   Database["public"]["Tables"]["planner_goal_unplaceable"]["Row"];
 const PAGE_SIZE = 1_000;
-const PLANNER_GOAL_SELECT = [
+export const PLANNER_GOAL_SELECT = [
   "id",
   "owner_id",
   "title",
@@ -86,11 +86,12 @@ const PLANNER_GOAL_SELECT = [
   "created_at",
   "updated_at",
 ].join(",");
-const PLANNER_COMPLETION_SELECT = [
+export const PLANNER_COMPLETION_SELECT = [
   "id",
   "goal_id",
   "user_id",
   "completed_on",
+  "planner_unit_key",
   "source",
   "created_at",
 ].join(",");

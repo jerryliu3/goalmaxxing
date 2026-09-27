@@ -728,6 +728,7 @@ export type Database = {
           created_at: string
           goal_id: string
           id: string
+          planner_unit_key: string | null
           source: Database["public"]["Enums"]["completion_source"]
           user_id: string
         }
@@ -736,6 +737,7 @@ export type Database = {
           created_at?: string
           goal_id: string
           id?: string
+          planner_unit_key?: string | null
           source?: Database["public"]["Enums"]["completion_source"]
           user_id: string
         }
@@ -744,6 +746,7 @@ export type Database = {
           created_at?: string
           goal_id?: string
           id?: string
+          planner_unit_key?: string | null
           source?: Database["public"]["Enums"]["completion_source"]
           user_id?: string
         }
@@ -3081,6 +3084,19 @@ export type Database = {
           updated_at: string
         }[]
       }
+      complete_planner_item_on_date_service: {
+        Args: {
+          p_date: string
+          p_expected_digest: string
+          p_goal_id: string
+          p_unit_key: string
+        }
+        Returns: {
+          moved_from: string
+          moved_to: string
+          schedule_digest: string
+        }[]
+      }
       mark_goal_complete: {
         Args: { p_date?: string; p_goal_id: string }
         Returns: undefined
@@ -3565,4 +3581,3 @@ export const Constants = {
     },
   },
 } as const
-
