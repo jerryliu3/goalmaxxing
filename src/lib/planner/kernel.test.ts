@@ -1855,7 +1855,7 @@ describe("pure planner kernel", () => {
     ).toBe(true);
   });
 
-  it("surfaces credited-work reassignment from the active credit basis", () => {
+  it("preserves an existing completion allocation when an earlier fact appears", () => {
     const milestoneGoal = goal({
       frequency_type: "fixed_milestones",
       recurrence_interval: null,
@@ -1898,11 +1898,14 @@ describe("pure planner kernel", () => {
       })
     );
 
-    expect(output.driftFacts).toContainEqual({
-      completionId: "later",
-      completedOn: "2026-08-10",
-      driftType: "credited_work_reassigned",
-    });
+    expect(output.completionToUnit.later?.unitKey).toBe("milestone:1");
+    expect(output.completionToUnit.earlier?.unitKey).toBe("milestone:2");
+    expect(output.driftFacts).not.toContainEqual(
+      expect.objectContaining({
+        completionId: "later",
+        driftType: "credited_work_reassigned",
+      })
+    );
   });
 
   it("surfaces removal of a previously credited completion", () => {
