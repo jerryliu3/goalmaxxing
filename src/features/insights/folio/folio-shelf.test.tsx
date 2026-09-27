@@ -49,7 +49,7 @@ describe("folio reader", () => {
     expect(within(reader).getByRole("button", { name: "Previous goal" })).toBeDisabled();
     await dismissReader(user);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(book).toHaveFocus();
+    await waitFor(() => expect(book).toHaveFocus());
   });
 
   it("labels the shared card by how each goal ended", async () => {
