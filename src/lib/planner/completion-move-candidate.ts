@@ -95,8 +95,7 @@ export function selectPlannerCompletionMoveCandidate({
   const availableItems = plannerItems.filter(
     (item) =>
       item.goal_id === goal.id &&
-      (allowLocked || !item.locked) &&
-      item.scheduled_date !== completionDate
+      (item.scheduled_date === completionDate || allowLocked || !item.locked)
   );
 
   let picked: PlannerItemRow | null = null;

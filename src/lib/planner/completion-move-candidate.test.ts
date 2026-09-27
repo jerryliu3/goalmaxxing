@@ -53,7 +53,9 @@ describe("selectPlannerCompletionMoveCandidate", () => {
   it("completes an existing exact-date session in place", () => {
     const candidate = selectPlannerCompletionMoveCandidate({
       goal,
-      plannerItems: [item("milestone:1", "2026-09-26")],
+      plannerItems: [
+        { ...item("milestone:1", "2026-09-26"), locked: true },
+      ],
       completions: [],
       completionDate: "2026-09-26",
       asOfDate: "2026-09-26",
