@@ -349,18 +349,6 @@ export type Database = {
         Args: { p_goal_id: string }
         Returns: undefined
       }
-      set_planner_schedule_core: {
-        Args: {
-          p_end: string
-          p_expected_digest: string
-          p_items: Json
-          p_start: string
-        }
-        Returns: {
-          schedule_digest: string
-          upserted_count: number
-        }[]
-      }
       refresh_challenge_participant: {
         Args: {
           p_challenge_id: string
@@ -382,6 +370,18 @@ export type Database = {
           p_target_count: number
         }
         Returns: Database["public"]["Enums"]["goal_target_basis"]
+      }
+      set_planner_schedule_core: {
+        Args: {
+          p_end: string
+          p_expected_digest: string
+          p_items: Json
+          p_start: string
+        }
+        Returns: {
+          schedule_digest: string
+          upserted_count: number
+        }[]
       }
       sha256_hex_digest: { Args: { p_value: string }; Returns: string }
       subject_member_ids: {
@@ -3564,3 +3564,4 @@ export const Constants = {
     },
   },
 } as const
+

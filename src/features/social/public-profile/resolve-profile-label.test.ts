@@ -10,6 +10,7 @@ describe("resolvePublicProfileLabel", () => {
         username: "alex",
         avatarUrl: null,
         isPrivate: false,
+        createdAt: "2026-01-01T00:00:00.000Z",
       })
     ).toBe("Alex Chen");
 
@@ -20,6 +21,7 @@ describe("resolvePublicProfileLabel", () => {
         username: "alex",
         avatarUrl: null,
         isPrivate: false,
+        createdAt: "2026-01-01T00:00:00.000Z",
       })
     ).toBe("@alex");
   });
