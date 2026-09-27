@@ -33,15 +33,21 @@ async function resolveCadenceAffinityFixture(
     const monthStart = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1);
     const today = formatDate(todayDate);
     const scopeMonth = today.slice(0, 7);
+
     const response = await fetch(`/api/planner/context?scopeMonth=${scopeMonth}`);
     if (!response.ok) {
-      return { available: false, scopeMonth, completionDate: today };
+      return {
+        available: false,
+        scopeMonth,
+        completionDate: today,
+      };
     }
 
     const body = (await response.json()) as {
       preview?: {
         workUnits?: Array<{
           originalGoalId: string;
+          unitKey: string;
           scheduledDate: string | null;
         }>;
       };
@@ -126,7 +132,12 @@ async function setExactDateCompletion(
       const response = await fetch("/api/completions", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ goalId, date, desiredFactState, timezone }),
+        body: JSON.stringify({
+          goalId,
+          date,
+          desiredFactState,
+          timezone,
+        }),
       });
       return {
         ok: response.ok,
@@ -134,9 +145,13 @@ async function setExactDateCompletion(
         body: await response.json(),
       };
     },
-    { goalId: CADENCE_AFFINITY_GOAL_ID, date, desiredFactState }
+    {
+      goalId: CADENCE_AFFINITY_GOAL_ID,
+      date,
+      desiredFactState,
+    }
   );
-  expect(result.ok, JSON.stringify(result.body)).toBe(true);
+  expect(result.ok).toBe(true);
   return result;
 }
 
@@ -146,7 +161,7 @@ test.describe("planner credit move", () => {
     "Credit-move rail runs on chromium only."
   );
 
-  test("off-schedule completion atomically moves the credited session", async ({
+  test("off-schedule completion atomically moves the session and undo restores it", async ({
     page,
   }) => {
     test.setTimeout(120_000);
@@ -191,5 +206,31 @@ test.describe("planner credit move", () => {
         { timeout: 20_000 }
       )
       .toBe(true);
+
+    const undo = await setExactDateCompletion(page, {
+      date: fixture.completionDate,
+      desiredFactState: "absent",
+    });
+    const undoBody = undo.body as {
+      plannerMove?: { movedTo?: string | null };
+    };
+    expect(undoBody.plannerMove?.movedTo).toBe(
+      completionBody.plannerMove?.movedFrom
+    );
+    await expect
+      .poll(async () => {
+        const credits = await fetchGoalUnitCredits(page, fixture.scopeMonth);
+        const restored = completionBody.plannerMove?.unitKey
+          ? credits[completionBody.plannerMove.unitKey]
+          : null;
+        return {
+          creditState: restored?.creditState,
+          scheduledDate: restored?.scheduledDate,
+        };
+      })
+      .toEqual({
+        creditState: "uncredited",
+        scheduledDate: completionBody.plannerMove?.movedFrom,
+      });
   });
 });
