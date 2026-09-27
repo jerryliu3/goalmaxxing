@@ -4,6 +4,7 @@ import type { PlannerItemRow } from "@/lib/planner/context-loader";
 import { selectPlannerCompletionMoveCandidate } from "@/lib/planner/completion-move-candidate";
 
 type ServerSupabaseClient = Awaited<ReturnType<typeof createServerClient>>;
+type PlannerCompletionClient = Pick<ServerSupabaseClient, "from" | "rpc">;
 
 export type AtomicPlannerCompletionResult =
   | {
@@ -28,7 +29,7 @@ export async function uncompletePlannerCompletion({
   date,
   expectedDigest,
 }: {
-  supabase: ServerSupabaseClient;
+  supabase: PlannerCompletionClient;
   goalId: string;
   date: string;
   expectedDigest: string;
