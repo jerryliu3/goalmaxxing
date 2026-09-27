@@ -52,8 +52,7 @@
 .workspace[data-sidebar=true] { grid-template-columns: 220px minmax(0, 1fr); }
 .canvasColumn { min-width: 0; container-type: inline-size; }
 .canvasColumn .calendar { margin: 0; }
-.calendar button[data-selected=true] { outline: 2px solid #305d91; outline-offset: 2px; }
-.calendar button[data-selected=false] { outline: none; }
+.calendar button[data-selected=true] { box-shadow: 0 0 0 2px #305d91; }
 .dateButton { min-width: 26px; min-height: 28px; text-align: left; border-radius: 4px; }
 .dayButton { width: 100%; text-align: left; cursor: zoom-in !important; }
 .dayButton:hover, .dateButton:hover { color: #305d91; text-decoration: underline; }

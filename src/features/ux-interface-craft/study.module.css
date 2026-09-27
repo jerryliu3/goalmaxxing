@@ -47,18 +47,9 @@
 .eyebrow { color: var(--muted); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; }
 .surfaceHeader { padding: 32px 32px 25px; display: flex; align-items: center; justify-content: space-between; gap: 15px; }.surfaceHeader > div > p:last-child { color: var(--muted); font-size: 12px; }
 
-
-
-
-
 .viewSwitch { display: inline-flex; width: fit-content; max-width: 100%; align-items: center; background: var(--soft); padding: 4px; border-radius: 12px; flex-shrink: 0; }
 .viewSwitch button { min-height: 36px; padding: 7px 17px; border-radius: 9px; color: var(--muted); font-size: 12px; transition: background .18s, box-shadow .18s, color .18s; }
 .viewSwitch button[aria-pressed=true] { background: #fff; color: var(--ink); box-shadow: 0 2px 5px #23374c16; }
-
-
-
-
-
 
 .planCanvas { margin: 0 24px 24px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 .weekGrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); min-height: 310px; }.weekDay { min-width: 0; padding: 16px 8px; border-right: 1px solid var(--line); }.weekDay:last-child { border: 0; }.dayLabel { display: grid; gap: 4px; padding: 0 4px 15px; }.dayLabel small { font-size: 9px; color: var(--muted); letter-spacing: .06em; }.dayLabel strong { font-size: 23px; font-weight: 500; }.weekDay[data-focus=true] { background: #f1f6fb; }.weekDay[data-focus=true] .dayLabel strong { color: var(--accent); }
@@ -69,15 +60,10 @@
 
 [data-concept=typeset] .viewSwitch { background: transparent; border-radius: 0; gap: 16px; padding: 0; }[data-concept=typeset] .viewSwitch button { border-radius: 0; padding: 6px 0; border-bottom: 2px solid transparent; }[data-concept=typeset] .viewSwitch button[aria-pressed=true] { background: transparent; box-shadow: none; border-color: var(--accent); color: var(--accent); }
 
-
 [data-concept=typeset] .planCanvas { background: transparent; border: 0; margin-inline: 32px; }[data-concept=typeset] .weekDay[data-focus=true] { background: var(--soft); }
 [data-concept=typeset] .workItem { border-radius: 0; background: transparent; color: var(--ink); border-left: 2px solid #648152; padding: 4px 6px; margin: 8px 0 18px; }[data-concept=typeset] .workItem[data-color=purple] { border-color: #8b759f; }[data-concept=typeset] .workItem[data-color=amber] { border-color: #ac8843; }[data-concept=typeset] .workItem[data-done=true] { color: var(--muted); border-color: var(--line); }
 
-
 [data-concept=signal] .viewSwitch { border-radius: 5px; padding: 3px; }[data-concept=signal] .viewSwitch button { border-radius: 3px; }[data-concept=signal] .viewSwitch button[aria-pressed=true] { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
-
-
-
 
 [data-concept=signal] .planCanvas { background: #1d2727; margin-left: 0; }[data-concept=signal] .weekDay[data-focus=true] { background: #28342a; }[data-concept=signal] .workItem { border-radius: 3px; background: #2e4235; color: #c2d8b9; }[data-concept=signal] .workItem[data-color=purple] { background: #3c3549; color: #d4c2e4; }[data-concept=signal] .workItem[data-color=amber] { background: #443e2a; color: #dfd0a5; }[data-concept=signal] .workItem[data-done=true] { background: #273230; color: #96a59d; }[data-concept=signal] .check { border-radius: 3px; }
 .historyBody { padding: 0 32px 32px; display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 30px; }.monthHeading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }.monthHeading h4 span { color: var(--muted); font-size: 14px; }.arrowGroup { display: flex; gap: 4px; }.arrowGroup button { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: var(--soft); }
@@ -109,12 +95,8 @@
 
 .viewSwitch button { padding-inline: 14px; }
 
-
-
   .planCanvas { margin: 0 12px 20px; }.canvasFooter { padding: 12px; }.canvasFooter > span { display: none; }.miniMonth > div { padding: 4px; min-height: 62px; }.miniMonth > small { padding: 9px 0; }.monthMark { font-size: 8px; padding: 3px 1px; }.dayList { padding: 18px; }.dayList .workItem { padding: 15px; }
 .preview[data-concept=typeset] .planCanvas { margin-inline: 20px; }
-
-
 
 [data-concept=signal] .planCanvas { margin-left: 12px; }
   .historyBody { padding: 0 20px 24px; }.monthHeading { margin-bottom: 15px; }.historyDay, .blankDay { min-height: 47px; padding: 6px; aspect-ratio: .9; font-size: 11px; }.historyDay small { font-size: 8px; }.legendHint { font-size: 8px; }.historyGrid { border-radius: 10px; }.dayInspection { padding: 20px; }[data-concept=signal] .historyDay, [data-concept=signal] .blankDay { aspect-ratio: 1; }[data-concept=signal] .dayInspection { padding: 16px; }.dayTotal { font-size: 38px; }.dayTotal small { margin-bottom: 12px; }
