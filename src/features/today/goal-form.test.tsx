@@ -11,6 +11,14 @@ import { resolveGoalDefinitionValidationFeedback } from "@/lib/goals/definition-
 import { validateGoalDefinition } from "@/lib/goals/definition-validation";
 import type { Goal } from "@/lib/goals/types";
 
+async function chooseRequiredGoalFields(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: "Career" }));
+  await user.click(screen.getByRole("button", { name: /Medium · a good push/ }));
+  await user.click(screen.getByRole("button", { name: /03Rhythm/ }));
+  await user.click(await screen.findByRole("button", { name: /A repeating rhythm/ }));
+  await user.click(screen.getByRole("button", { name: "Daily" }));
+}
+
 const authGetUserMock = vi.hoisted(() => vi.fn());
 const goalsOrderMock = vi.hoisted(() => vi.fn());
 const goalSingleMock = vi.hoisted(() => vi.fn());
@@ -471,8 +479,9 @@ describe("GoalForm persistence recovery", () => {
       render(<GoalForm showBackButton={false} onExit={onExit} />);
       await screen.findByLabelText("Name");
       await user.type(screen.getByLabelText("Name"), "Daily reset");
+      await chooseRequiredGoalFields(user);
       await user.click(screen.getByRole("button", { name: /04Schedule/ }));
-      await user.click(screen.getByText("Advanced settings (optional)"));
+      await user.click(await screen.findByText("Advanced settings (optional)"));
       await user.click(
         screen.getByRole("button", { name: "Select link target" }),
       );
@@ -539,6 +548,7 @@ describe("GoalForm persistence recovery", () => {
       render(<GoalForm showBackButton={false} onExit={onExit} />);
       await screen.findByLabelText("Name");
       await user.type(screen.getByLabelText("Name"), "Stable goal");
+      await chooseRequiredGoalFields(user);
       await user.click(screen.getByRole("button", { name: /05Review/ }));
       await user.click(screen.getByRole("button", { name: "Create goal" }));
 
@@ -594,6 +604,7 @@ describe("GoalForm persistence recovery", () => {
       render(<GoalForm showBackButton={false} onExit={onExit} />);
       await screen.findByLabelText("Name");
       await user.type(screen.getByLabelText("Name"), "Resolved error goal");
+      await chooseRequiredGoalFields(user);
       await user.click(screen.getByRole("button", { name: /05Review/ }));
       await user.click(screen.getByRole("button", { name: "Create goal" }));
 
@@ -688,8 +699,9 @@ describe("GoalForm persistence recovery", () => {
     render(<GoalForm showBackButton={false} onExit={onExit} />);
     await screen.findByLabelText("Name");
     await user.type(screen.getByLabelText("Name"), "Editable link failure");
+      await chooseRequiredGoalFields(user);
     await user.click(screen.getByRole("button", { name: /04Schedule/ }));
-    await user.click(screen.getByText("Advanced settings (optional)"));
+    await user.click(await screen.findByText("Advanced settings (optional)"));
     await user.click(
       screen.getByRole("button", { name: "Select link target" }),
     );
@@ -718,8 +730,9 @@ describe("GoalForm persistence recovery", () => {
     render(<GoalForm showBackButton={false} onExit={onExit} />);
     await screen.findByLabelText("Name");
     await user.type(screen.getByLabelText("Name"), "Retryable link failure");
+      await chooseRequiredGoalFields(user);
     await user.click(screen.getByRole("button", { name: /04Schedule/ }));
-    await user.click(screen.getByText("Advanced settings (optional)"));
+    await user.click(await screen.findByText("Advanced settings (optional)"));
     await user.click(
       screen.getByRole("button", { name: "Select link target" }),
     );
@@ -760,6 +773,7 @@ describe("GoalForm persistence recovery", () => {
     render(<GoalForm onExit={onExit} />);
     await screen.findByLabelText("Name");
     await user.type(screen.getByLabelText("Name"), "Pending goal");
+      await chooseRequiredGoalFields(user);
     await user.click(screen.getByRole("button", { name: /05Review/ }));
     await user.click(screen.getByRole("button", { name: "Create goal" }));
 
@@ -767,7 +781,6 @@ describe("GoalForm persistence recovery", () => {
       expect(
         screen.getByRole("button", { name: /02Intention/ }),
       ).toBeDisabled();
-      expect(screen.getByRole("button", { name: "Back" })).toBeDisabled();
       expect(screen.getByRole("button", { name: "Creating…" })).toBeDisabled();
     });
     expect(onExit).not.toHaveBeenCalled();

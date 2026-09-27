@@ -63,7 +63,7 @@ describe("TempoGoalFields creation flow", () => {
     expect(onPatch).toHaveBeenCalledWith({ difficulty: "hard" });
   });
 
-  it("shows an adjustable plaque target on review above create", () => {
+  it("shows an adjustable plaque target on review above create", async () => {
     renderCreation({
       prefilled: true,
       fields: {
@@ -79,12 +79,10 @@ describe("TempoGoalFields creation flow", () => {
       },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
-    fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
-    fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
+    fireEvent.click(screen.getByRole("button", { name: /05Review/ }));
 
     expect(
-      screen.getByText(
+      await screen.findByText(
         /Your target before earning this achievement plaque will be/i,
       ),
     ).toBeVisible();

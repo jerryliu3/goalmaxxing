@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { COMPLETION_HOLD_MS } from "@/components/ui/completion-toggle";
 import { QuestCollectionConcept } from "@/features/ux-day-work/quest-collection-concept";
@@ -23,17 +23,22 @@ describe("day work collection concepts", () => {
     render(<StickerAlbumConcept />);
 
     expect(screen.getByRole("heading", { name: "A day worth keeping." })).toBeInTheDocument();
-    expect(screen.getByText("3 days a week")).toBeInTheDocument();
+    expect(screen.getByText("3 days a week", { selector: "dd" })).toBeInTheDocument();
     expect(screen.getByText("Until Dec 31")).toBeInTheDocument();
     expect(screen.getByText("1 of 3 this week")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Fold away" }));
     expect(screen.queryByText(/tempo run is 3 days a week/i)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Unfold" })[0]);
+    const tempoSticker = screen
+      .getByRole("heading", { name: "Tempo run" })
+      .closest("article");
+    expect(tempoSticker).not.toBeNull();
+    fireEvent.click(within(tempoSticker!).getByRole("button", { name: "Unfold" }));
 
-    expect(screen.getByText(/tempo run is 3 days a week/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Fold away" })).toBeInTheDocument();
+    expect(within(tempoSticker!).getAllByRole("button", { name: "Tempo run" })).toHaveLength(2);
+    expect(within(tempoSticker!).getByRole("button", { name: "3 days a week" })).toBeInTheDocument();
+    expect(within(tempoSticker!).getByRole("button", { name: "Fold away" })).toBeInTheDocument();
   });
 
   it("shows quest facts before opening and retains the card after completion", () => {

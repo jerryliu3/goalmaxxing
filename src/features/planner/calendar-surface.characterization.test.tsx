@@ -1332,7 +1332,7 @@ describe("CalendarSurface characterization", () => {
       name: "Edit planned session",
     });
     expect(
-      within(editor).getByRole("heading", { name: "07:30 Goal B" })
+      within(editor).getByRole("heading", { name: "Goal B" })
     ).toBeInTheDocument();
     expect(within(editor).queryByText("Next: Milestone 2")).not.toBeInTheDocument();
   });
@@ -2025,8 +2025,6 @@ describe("CalendarSurface characterization", () => {
     fireEvent.change(await screen.findByLabelText("Date"), {
       target: { value: "2026-08-30" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Done" }));
-
     fireEvent.click(screen.getByRole("button", { name: "Save plan" }));
 
     await waitFor(() => {

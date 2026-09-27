@@ -156,7 +156,7 @@ function parseNaturalLanguageGoals(
   );
   fireEvent.change(promptInput, { target: { value: prompt } });
   return user
-    .click(screen.getByRole("button", { name: "Parse natural language" }))
+    .click(screen.getByRole("button", { name: "Shape my goals" }))
     .then(() =>
       waitFor(() => {
         expect(postJsonMock).toHaveBeenCalledWith(
@@ -214,7 +214,7 @@ describe("BulkGoalForm", () => {
 
       const user = userEvent.setup({ delay: null });
       render(<BulkGoalForm showBackButton={false} />);
-      await screen.findByText("Create multiple goals");
+      await screen.findByLabelText("Describe goals in natural language");
 
       await parseNaturalLanguageGoals(
         [
@@ -249,7 +249,7 @@ describe("BulkGoalForm", () => {
       await user.click(screen.getByRole("button", { name: "Previous goal" }));
       await user.click(screen.getByRole("button", { name: /04Schedule/ }));
       await user.click(screen.getByRole("button", { name: /Hard ·/ }));
-      await user.click(screen.getByText("Advanced settings (optional)"));
+      await user.click(await screen.findByText("Advanced settings (optional)"));
       await user.click(
         screen.getByRole("checkbox", {
           name: /make this goal private/i,
@@ -327,7 +327,7 @@ describe("BulkGoalForm", () => {
     rpcMock.mockRejectedValueOnce(new Error("create request timed out"));
     const user = userEvent.setup();
     render(<BulkGoalForm showBackButton={false} />);
-    await screen.findByText("Create multiple goals");
+    await screen.findByLabelText("Describe goals in natural language");
 
     await parseNaturalLanguageGoals(
       [
@@ -379,7 +379,7 @@ describe("BulkGoalForm", () => {
       .mockResolvedValueOnce({ error: null });
     const user = userEvent.setup({ delay: null });
     render(<BulkGoalForm showBackButton={false} />);
-    await screen.findByText("Create multiple goals");
+    await screen.findByLabelText("Describe goals in natural language");
 
     await parseNaturalLanguageGoals(
       [
@@ -396,7 +396,7 @@ describe("BulkGoalForm", () => {
     );
 
     await user.click(screen.getByRole("button", { name: /04Schedule/ }));
-    await user.click(screen.getByText("Advanced settings (optional)"));
+    await user.click(await screen.findByText("Advanced settings (optional)"));
     await user.click(
       screen.getByRole("button", { name: "Select link target" }),
     );
@@ -445,7 +445,7 @@ describe("BulkGoalForm", () => {
   it("blocks creation while selected drafts remain invalid", async () => {
     const user = userEvent.setup({ delay: null });
     render(<BulkGoalForm showBackButton={false} />);
-    await screen.findByText("Create multiple goals");
+    await screen.findByLabelText("Describe goals in natural language");
 
     await parseNaturalLanguageGoals(
       [

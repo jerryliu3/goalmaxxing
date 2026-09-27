@@ -1,10 +1,8 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, fireEvent } from "@testing-library/react";
 import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GoalCreationEntry } from "@/features/goals/goal-creation-entry";
-import { isStarterPacksSeen } from "@/features/goals/starter-packs";
 
-const VIEWER_USER_ID = "user-1";
 let mockSearch = "mode=multi";
 
 vi.mock("next/navigation", () => ({
@@ -38,30 +36,21 @@ describe("GoalCreationEntry starter packs", () => {
     cleanup();
   });
 
-  it("shows starter packs once on the first multi-goal visit and hides the clear action", async () => {
-    render(
-      <StrictMode>
-        <GoalCreationEntry />
-      </StrictMode>
-    );
-
-    expect(
-      await screen.findByText("Starter packs (optional)")
-    ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Health starter pack" })).toBeInTheDocument();
+  it("offers starter packs from the method chooser and routes their selection to the bulk form", () => {
+    mockSearch = "";
+    render(<StrictMode><GoalCreationEntry /></StrictMode>);
+    fireEvent.click(screen.getByText("Start from a pack or import"));
+    const health = screen.getByRole("link", { name: "Health starter pack" });
+    expect(health).toHaveAttribute("href", "?mode=multi&starterPack=health");
     expect(screen.queryByRole("link", { name: "Clear starter pack" })).toBeNull();
-    await waitFor(() => {
-      expect(isStarterPacksSeen(VIEWER_USER_ID)).toBe(true);
-    });
+    fireEvent.click(health);
+    expect(screen.getByText("Bulk form")).toBeVisible();
+    expect(screen.queryByRole("group", { name: "Creation method" })).toBeNull();
+  });
 
-    cleanup();
-    render(
-      <StrictMode>
-        <GoalCreationEntry />
-      </StrictMode>
-    );
-
-    expect(screen.queryByText("Starter packs (optional)")).toBeNull();
-    expect(screen.getByText("Bulk form")).toBeInTheDocument();
+  it("opens a direct multi-goal link without the method chooser", () => {
+    render(<GoalCreationEntry />);
+    expect(screen.getByText("Bulk form")).toBeVisible();
+    expect(screen.queryByRole("group", { name: "Creation method" })).toBeNull();
   });
 });

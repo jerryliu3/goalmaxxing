@@ -228,6 +228,7 @@ export function BulkGoalInputCard({
                   ref={fileRef}
                   id={id + "-file"}
                   type="file"
+                  aria-label="Upload file"
                   accept=".csv,.xlsx,.xls"
                   onChange={onFileChange}
                   hidden

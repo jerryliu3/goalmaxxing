@@ -10,6 +10,7 @@ interface CadenceAffinityFixture {
   scopeMonth: string;
   today: string;
   tomorrow: string;
+  pastSlotDate: string;
   unitKey3: string;
   unitKey4: string;
 }
@@ -49,17 +50,20 @@ async function resolveCadenceAffinityFixture(
     const monthEnd = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0);
     const tomorrow = new Date(todayDate);
     tomorrow.setDate(tomorrow.getDate() + 1);
+    const pastSlotDate = new Date(todayDate);
+    pastSlotDate.setDate(pastSlotDate.getDate() - 7);
     const today = formatDate(todayDate);
     const tomorrowStr = formatDate(tomorrow);
     const periodKey = formatDate(monthStart);
     const scopeMonth = today.slice(0, 7);
 
-    if (tomorrow > monthEnd) {
+    if (tomorrow > monthEnd || pastSlotDate < monthStart) {
       return {
         available: false,
         scopeMonth,
         today,
         tomorrow: tomorrowStr,
+        pastSlotDate: formatDate(pastSlotDate),
         unitKey3: `cadence:${periodKey}:3`,
         unitKey4: `cadence:${periodKey}:4`,
       };
@@ -72,6 +76,7 @@ async function resolveCadenceAffinityFixture(
         scopeMonth,
         today,
         tomorrow: tomorrowStr,
+        pastSlotDate: formatDate(pastSlotDate),
         unitKey3: `cadence:${periodKey}:3`,
         unitKey4: `cadence:${periodKey}:4`,
       };
@@ -95,6 +100,7 @@ async function resolveCadenceAffinityFixture(
       scopeMonth,
       today,
       tomorrow: tomorrowStr,
+      pastSlotDate: formatDate(pastSlotDate),
       unitKey3: `cadence:${periodKey}:3`,
       unitKey4: `cadence:${periodKey}:4`,
     };
@@ -201,6 +207,13 @@ test.describe("planner credit move", () => {
       "Cadence affinity fixture is unavailable for the current calendar day."
     );
 
+    // Credit the previous session first. With that past session open, direct
+    // completion is correct and no move control should be offered. This setup
+    // deliberately exercises the remaining future-session move path.
+    await setExactDateCompletion(page, {
+      date: fixture.pastSlotDate,
+      desiredFactState: "present",
+    });
     await setExactDateCompletion(page, {
       date: fixture.today,
       desiredFactState: "absent",
