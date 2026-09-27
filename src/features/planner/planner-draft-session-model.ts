@@ -63,10 +63,7 @@ export function selectPlannerDraftSessionModel({
   const draftSaveCommands = sortPlannerDraftCommands(
     selectDraftCommands(draftCommandState)
   );
-  const draftWindowWorkUnits = [
-    ...(context?.preview?.workUnits ?? []),
-    ...(effectivePreview?.workUnits ?? []),
-  ];
+  const draftWindowWorkUnits = effectivePreview?.workUnits ?? [];
   const draftWindowUnitByEntryKey =
     buildDraftWindowUnitByEntryKey(draftWindowWorkUnits);
   const hasDraftSession =
