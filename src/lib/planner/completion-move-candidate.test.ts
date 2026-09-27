@@ -84,6 +84,30 @@ describe("selectPlannerCompletionMoveCandidate", () => {
     });
   });
 
+  it("fills the lowest durable allocation gap before a later ordinal", () => {
+    const candidate = selectPlannerCompletionMoveCandidate({
+      goal,
+      plannerItems: [
+        item("milestone:1", "2026-09-10"),
+        item("milestone:2", "2026-09-26"),
+        item("milestone:3", "2026-09-28"),
+      ],
+      completions: [
+        {
+          ...completion,
+          planner_unit_key: "milestone:2",
+        },
+      ],
+      completionDate: "2026-09-26",
+      asOfDate: "2026-09-26",
+    });
+
+    expect(candidate).toMatchObject({
+      unitKey: "milestone:1",
+      sourceDate: "2026-09-10",
+    });
+  });
+
   it("does not skip a locked earliest incomplete ordinal", () => {
     const locked = { ...item("milestone:2", "2026-09-12"), locked: true };
     const candidate = selectPlannerCompletionMoveCandidate({
