@@ -187,6 +187,43 @@ describe("buildDirectDraftPersistence", () => {
     );
   });
 
+  it("honors durable ordinal allocation instead of re-crediting the first milestone", () => {
+    const result = buildDirectDraftPersistence({
+      snapshot: {
+        ...snapshot,
+        completions: [
+          {
+            id: "55555555-5555-4555-8555-555555555555",
+            goal_id: goal.id,
+            user_id: goal.owner_id,
+            completed_on: "2026-08-04",
+            planner_unit_key: "milestone:2",
+            source: "manual",
+            created_at: "2026-08-04T12:00:00Z",
+          },
+        ],
+      },
+      commands: [
+        {
+          id: "66666666-6666-4666-8666-666666666666",
+          sequence: 1,
+          kind: "move_item",
+          goalId: goal.id,
+          unitKey: "milestone:1",
+          sourceDate: "2026-08-10",
+          scheduledDate: "2026-08-20",
+        },
+      ],
+      asOfDate: "2026-08-05",
+    });
+
+    expect(result.find((item) => item.unit_key === "milestone:1")).toMatchObject({
+      scheduled_date: "2026-08-20",
+    });
+    expect(result.find((item) => item.unit_key === "milestone:2")).toMatchObject({
+      scheduled_date: "2026-08-04",
+    });
+  });
 
   // The direct path is selected whenever a draft carries any command and no
   // policy override, so non-move commands have to survive it on their own.

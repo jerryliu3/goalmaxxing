@@ -112,16 +112,42 @@ function completedUnitDatesForGoal({
     { asOfDate }
   );
   const completed = new Map<string, string>();
+  const usedCompletionIds = new Set<string>();
   if (requirement.kind === "milestone_sequence") {
+    for (const completion of completions) {
+      const unitKey = completion.planner_unit_key;
+      const match = unitKey
+        ? /^milestone:([1-9][0-9]*)$/.exec(unitKey)
+        : null;
+      const ordinal = match ? Number(match[1]) : null;
+      if (
+        ordinal &&
+        ordinal <= requirement.targetCount &&
+        !completed.has(unitKey!)
+      ) {
+        completed.set(unitKey!, completion.completed_on);
+        usedCompletionIds.add(completion.id);
+      }
+    }
+    const remainingCompletions = completions.filter(
+      (completion) => !usedCompletionIds.has(completion.id)
+    );
+    let completionIndex = 0;
     for (
       let ordinal = 1;
-      ordinal <= Math.min(requirement.targetCount, completions.length);
+      ordinal <= requirement.targetCount &&
+      completionIndex < remainingCompletions.length;
       ordinal += 1
     ) {
+      const unitKey = `milestone:${ordinal}`;
+      if (completed.has(unitKey)) {
+        continue;
+      }
       completed.set(
-        `milestone:${ordinal}`,
-        completions[ordinal - 1]!.completed_on
+        unitKey,
+        remainingCompletions[completionIndex]!.completed_on
       );
+      completionIndex += 1;
     }
     return completed;
   }
@@ -132,6 +158,16 @@ function completedUnitDatesForGoal({
     const weekStartsOn =
       snapshot.preferences?.default_policy.weekStartsOn;
     for (const completion of completions) {
+      const durableItem = completion.planner_unit_key
+        ? remaining.find(
+            (item) => item.unit_key === completion.planner_unit_key
+          )
+        : null;
+      if (durableItem) {
+        completed.set(durableItem.unit_key, completion.completed_on);
+        remaining.splice(remaining.indexOf(durableItem), 1);
+        continue;
+      }
       const picked = pickCadenceItemForCompletion({
         items: remaining,
         completionDate: completion.completed_on,
@@ -158,9 +194,24 @@ function completedUnitDatesForGoal({
       .filter((item) => item.goal_id === goal.id)
       .map((item) => [item.unit_key, item.scheduled_date])
   );
-  const usedCompletionIds = new Set<string>();
+  for (const completion of completions) {
+    const unitKey = completion.planner_unit_key;
+    const match = unitKey ? /^total:([1-9][0-9]*)$/.exec(unitKey) : null;
+    const ordinal = match ? Number(match[1]) : null;
+    if (
+      ordinal &&
+      ordinal <= requirement.targetCount &&
+      !completed.has(unitKey!)
+    ) {
+      completed.set(unitKey!, completion.completed_on);
+      usedCompletionIds.add(completion.id);
+    }
+  }
   for (let ordinal = 1; ordinal <= requirement.targetCount; ordinal += 1) {
     const unitKey = `total:${ordinal}`;
+    if (completed.has(unitKey)) {
+      continue;
+    }
     const scheduledDate = scheduledDateByUnitKey.get(unitKey);
     if (!scheduledDate) {
       continue;
