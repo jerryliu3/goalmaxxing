@@ -70,4 +70,32 @@ describe("selectPlannerDraftSessionModel", () => {
     expect(model.draftSaveWindow).not.toBeNull();
     expect(model.draftWindowTooWide).toBe(false);
   });
+
+  it("uses the draft preview as the only authoritative unit projection", () => {
+    const staleUnit = buildPlannerWorkUnit({
+      originalGoalId: "goal-1",
+      unitKey: "unit-1",
+      scheduledDate: "2026-08-12",
+    });
+    const movedUnit = buildPlannerWorkUnit({
+      originalGoalId: "goal-1",
+      unitKey: "unit-1",
+      scheduledDate: "2026-08-20",
+    });
+    const model = selectPlannerDraftSessionModel({
+      context: buildPlannerContext({
+        workUnits: [staleUnit],
+        overrides: { preview: buildPlannerPreview([staleUnit]) },
+      }),
+      draftPreview: buildPlannerPreview([movedUnit]),
+      draftPolicy: null,
+      draftCommandState: initialDraftCommandState,
+      currentScopeMonth: "2026-08",
+    });
+
+    expect(model.draftWindowWorkUnits).toEqual([movedUnit]);
+    expect(model.draftWindowUnitByEntryKey.get("goal-1:unit-1")).toEqual(
+      movedUnit
+    );
+  });
 });

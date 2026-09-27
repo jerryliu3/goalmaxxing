@@ -210,7 +210,6 @@ function PlanDayUnplannedRows({
           currentlyCredited: completed,
           selectedDate: day,
           asOfDate,
-          canMoveScheduledSession: false,
         });
         return (
           <div

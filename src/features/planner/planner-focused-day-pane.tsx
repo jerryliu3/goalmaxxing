@@ -134,7 +134,6 @@ export function PlannerFocusedDayPane({
       currentlyCredited: completed,
       selectedDate: day,
       asOfDate,
-      canMoveScheduledSession: false,
     });
     return (
       <div
