@@ -233,14 +233,8 @@ test.describe("cadence schedule-affinity", () => {
     });
     await clearPlannerTabCache(page);
 
-    await gotoAppPath(page, "/calendar?view=day");
-    await page
-      .waitForResponse(
-        (response) =>
-          response.url().includes("/api/planner/context") && response.ok(),
-        { timeout: 30_000 }
-      )
-      .catch(() => undefined);
+    await gotoAppPath(page, `/calendar?view=day&day=${fixture.today}`);
+    await expect(page).toHaveURL(new RegExp(`[?&]day=${fixture.today}(?:&|$)`));
     await expandUnscheduledGoals(page);
     const completeButton = page.getByRole("button", {
       name: `Mark ${CADENCE_AFFINITY_GOAL_TITLE} done`,
