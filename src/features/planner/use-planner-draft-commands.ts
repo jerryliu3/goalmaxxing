@@ -22,6 +22,7 @@ import {
 } from "@/lib/planner/draft-window";
 import type { PlannerDraftCommand } from "@/lib/planner/draft-commands";
 import { isLinkedTargetSuppressedOnDate } from "@/lib/planner/link-suppression";
+import { plannerUnitOccupiesScheduledDate } from "@/lib/planner/occupancy";
 
 interface UsePlannerDraftCommandsArgs {
   context: PlannerContextPayload | null;
@@ -52,7 +53,10 @@ export function usePlannerDraftCommands({
       const entryKey = `${unit.originalGoalId}:${unit.unitKey}`;
       const editedDate = effectiveDraftItemEdits[entryKey]?.scheduledDate;
       const day = editedDate === undefined ? unit.scheduledDate : editedDate;
-      if (!day) {
+      if (
+        !day ||
+        (editedDate === undefined && !plannerUnitOccupiesScheduledDate(unit))
+      ) {
         continue;
       }
       const key = `${unit.originalGoalId}:${day}`;

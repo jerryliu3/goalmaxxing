@@ -294,6 +294,35 @@ describe("projectWorkUnitsToSolver", () => {
     expect(result).toEqual([]);
   });
 
+  it("releases the former date of a unit completed elsewhere", () => {
+    const result = projectWorkUnitsToSolver({
+      workUnits: [
+        createWorkUnit({
+          unitKey: "total:1",
+          ordinal: 1,
+          scheduledDate: "2026-08-05",
+          creditedCompletionDate: "2026-08-04",
+          creditState: "completed_elsewhere",
+          classification: "satisfied_elsewhere",
+        }),
+        createWorkUnit({
+          unitKey: "total:2",
+          ordinal: 2,
+          scheduledDate: null,
+          placementWindow: { start: "2026-08-05", end: "2026-08-06" },
+          draftMoveWindow: { start: "2026-08-05", end: "2026-08-06" },
+        }),
+      ],
+      compiledPolicy,
+      assessments,
+      completionDatesByGoal: new Map([["goal-a", new Set(["2026-08-04"])]]),
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.candidateDates).toContain("2026-08-05");
+    expect(result[0]?.candidateDates).not.toContain("2026-08-04");
+  });
+
   it("leaves a locked pre-window assignment hard-locked when recovering", () => {
     const result = projectWorkUnitsToSolver({
       workUnits: [

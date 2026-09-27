@@ -13,6 +13,7 @@ import {
 import type { SolverUnit } from "@/lib/planner/solver/types";
 import type { PlannerWorkUnit } from "@/lib/planner/work-units";
 import type { DateWindow } from "@/lib/planner/dates";
+import { plannerUnitOccupiesScheduledDate } from "@/lib/planner/occupancy";
 
 export function projectWorkUnitsToSolver({
   workUnits,
@@ -94,7 +95,7 @@ export function projectWorkUnitsToSolver({
     !isFixedPreservedPastPlacement(unit);
   const reservedDatesByGoal = new Map<string, Set<string>>();
   for (const unit of workUnits) {
-    if (isProjectable(unit) || unit.scheduledDate === null) {
+    if (isProjectable(unit) || !plannerUnitOccupiesScheduledDate(unit)) {
       continue;
     }
     const reserved =

@@ -615,6 +615,108 @@ describe("planner completion reconciliation", () => {
     });
   });
 
+  it("preserves completion identity when a target increase changes the fingerprint", () => {
+    const goal = buildGoal({
+      target_count: 3,
+      start_date: "2026-08-01",
+    });
+    const normalizedRequirement = normalizeGoalRequirement(goal);
+    const units = materializeWorkUnits({
+      goal,
+      normalizedRequirement,
+      window: getScopeDateRange("2026-08"),
+      asOfDate: "2026-08-20",
+      ordinalsForScopeMonth: allOrdinals(goal),
+      baseAssignments: [
+        {
+          goalId: goal.id,
+          requirementFingerprint: normalizedRequirement.requirementFingerprint,
+          unitKey: "total:1",
+          scheduledDate: "2026-08-05",
+          locked: false,
+        },
+        {
+          goalId: goal.id,
+          requirementFingerprint: normalizedRequirement.requirementFingerprint,
+          unitKey: "total:2",
+          scheduledDate: "2026-08-10",
+          locked: false,
+        },
+        {
+          goalId: goal.id,
+          requirementFingerprint: normalizedRequirement.requirementFingerprint,
+          unitKey: "total:3",
+          scheduledDate: "2026-08-15",
+          locked: false,
+        },
+      ],
+    });
+    const result = reconcilePlannerCompletions({
+      goal,
+      workUnits: units,
+      completions: [completion("2026-08-07", "sticky")],
+      asOfDate: "2026-08-20",
+      previousCompletionToUnit: {
+        sticky: {
+          goalId: goal.id,
+          requirementFingerprint: "a".repeat(64),
+          unitKey: "total:2",
+          completedOn: "2026-08-07",
+        },
+      },
+    });
+
+    expect(result.completionToUnit.sticky).toMatchObject({
+      requirementFingerprint: normalizedRequirement.requirementFingerprint,
+      unitKey: "total:2",
+    });
+    expect(
+      result.units.find((unit) => unit.unitKey === "total:3")
+    ).toMatchObject({ creditState: "uncredited" });
+  });
+
+  it("fills the earliest incomplete milestone ordinal after sticky allocations", () => {
+    const goal = buildGoal({
+      frequency_type: "fixed_milestones",
+      recurrence_interval: null,
+      target_count: 3,
+      milestone_names: ["First", "Second", "Third"],
+      start_date: "2026-08-01",
+    });
+    const normalizedRequirement = normalizeGoalRequirement(goal);
+    const units = materializeWorkUnits({
+      goal,
+      normalizedRequirement,
+      window: getScopeDateRange("2026-08"),
+      asOfDate: "2026-08-20",
+      ordinalsForScopeMonth: allOrdinals(goal),
+      baseAssignments: [],
+    });
+    const facts = [
+      completion("2026-08-03", "first"),
+      completion("2026-08-04", "second"),
+    ];
+    const result = reconcilePlannerCompletions({
+      goal,
+      workUnits: units,
+      completions: facts,
+      asOfDate: "2026-08-20",
+      previousCompletionToUnit: {
+        first: {
+          goalId: goal.id,
+          requirementFingerprint: "b".repeat(64),
+          unitKey: "milestone:2",
+          completedOn: "2026-08-03",
+        },
+      },
+    });
+
+    expect(result.completionToUnit.first?.unitKey).toBe("milestone:2");
+    expect(result.completionToUnit.second?.unitKey).toBe("milestone:1");
+    expect(result.units.find((unit) => unit.unitKey === "milestone:3"))
+      .toMatchObject({ creditState: "uncredited" });
+  });
+
   it("maps milestones chronologically and never scheduled-first", () => {
     const goal = buildGoal({
       frequency_type: "fixed_milestones",
