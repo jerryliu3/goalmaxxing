@@ -21,6 +21,7 @@ vi.mock("@/features/insights/grow-score-trend-chart", () => ({
 
 vi.mock("@/features/insights/insights-overall-stats-card", () => ({
   InsightsOverallStatsTiles: () => <p>Overall stats tiles</p>,
+  InsightsOverallStatsCard: () => <p>Overall stats card</p>,
 }));
 
 vi.mock("@/features/insights/folio/current-goal-grid", () => ({
