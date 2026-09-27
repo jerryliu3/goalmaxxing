@@ -189,8 +189,8 @@ function Piece({
         "--scatter-turn": `${piece.turn / 8}deg`,
         "--delay": `${piece.id * 10}ms`,
       } as CSSProperties}
-      onAnimationEnd={event => {
-        if (!preview && event.target === event.currentTarget) onSettled();
+      onAnimationEnd={() => {
+        if (!preview) onSettled();
       }}
     >
       <div className={styles.pieceFace} style={{ clipPath: piece.clipPath }}>

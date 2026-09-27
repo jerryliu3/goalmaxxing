@@ -28,7 +28,20 @@ begin
   )
   or (
     standing.subject_kind = 'team'::public.social_subject_kind
-    and not private.team_all_members_socially_visible(standing.subject_id)
+    and (
+      not exists (
+        select 1
+        from public.team_members member
+        where member.team_id = standing.subject_id
+      )
+      or exists (
+        select 1
+        from public.team_members member
+        join public.profiles profile on profile.id = member.user_id
+        where member.team_id = standing.subject_id
+          and coalesce(profile.social_activity_visible, false) = false
+      )
+    )
   );
 
   with ranked as (
