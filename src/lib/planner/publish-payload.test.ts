@@ -158,7 +158,7 @@ describe("buildPlannerPublishPersistencePayload draft edit validation", () => {
     ).toThrowError(PlannerDraftEditValidationError);
   });
 
-  it("does not persist the released date of a unit completed elsewhere", () => {
+  it("persists a completed-elsewhere unit on its factual date", () => {
     const snapshot = createSnapshot([]);
     const kernel = {
       ...createKernel("2026-08-10"),
@@ -179,7 +179,7 @@ describe("buildPlannerPublishPersistencePayload draft edit validation", () => {
 
     expect(payload.items[0]).toMatchObject({
       original_scheduled_date: "2026-08-10",
-      scheduled_date: null,
+      scheduled_date: "2026-08-09",
     });
   });
 });

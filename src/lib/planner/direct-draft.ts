@@ -452,11 +452,10 @@ export function buildDirectDraftPersistence({
     const goal = goalById.get(assignment.goalId)!;
     const scheduledDate = projectedDateByKey.get(key) ?? null;
     const completedOn = completedUnitDateByKey.get(key);
-    const persistedScheduledDate =
-      completedOn && completedOn !== scheduledDate ? null : scheduledDate;
+    const persistedScheduledDate = completedOn ?? scheduledDate;
     const scheduledTimeOverride = projectedTimeByKey.get(key) ?? null;
     const resolvedTime = resolvePlannerEffectiveScheduledTime({
-      scheduledDate,
+      scheduledDate: persistedScheduledDate,
       goalDefaultLocalTime: goal.default_local_time ?? null,
       scheduledTimeOverride,
     });
