@@ -23,7 +23,10 @@ function focusFor(kind: DigestKind) {
 
 function factsForPrompt(facts: DigestFacts) {
   const withoutGoalIds = (items: DigestFacts["recap"]["items"]) =>
-    items.map(({ goalId: _goalId, ...item }) => item);
+    items.map(({ goalId, ...item }) => {
+      void goalId;
+      return item;
+    });
   return {
     ...facts,
     recap: { ...facts.recap, items: withoutGoalIds(facts.recap.items) },

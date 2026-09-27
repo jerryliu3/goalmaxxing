@@ -94,6 +94,7 @@ vi.mock("../../theme", () => ({
       border: "#ccc",
       primary: "#00f",
     },
+    fonts: { display: "serif", sans: "sans-serif" },
   }),
 }));
 vi.mock("../../ui/button", async () => {

@@ -28,10 +28,7 @@ function AnimatedXpValue({ active, still }: { active: boolean; still: boolean })
   const [value, setValue] = React.useState(SAMPLE_XP_BEFORE);
 
   React.useEffect(() => {
-    if (!active || still) {
-      setValue(active ? SAMPLE_XP_AFTER : SAMPLE_XP_BEFORE);
-      return;
-    }
+    if (!active || still) return;
     const started = performance.now();
     let frame = 0;
     const tick = (now: number) => {
@@ -43,7 +40,12 @@ function AnimatedXpValue({ active, still }: { active: boolean; still: boolean })
     return () => cancelAnimationFrame(frame);
   }, [active, still]);
 
-  return <span className="font-mono text-xs tabular-nums">{value} XP</span>;
+  const displayedValue = active && !still
+    ? value
+    : active
+      ? SAMPLE_XP_AFTER
+      : SAMPLE_XP_BEFORE;
+  return <span className="font-mono text-xs tabular-nums">{displayedValue} XP</span>;
 }
 
 export function CompletionXpBar({ active, still }: { active: boolean; still: boolean }) {
