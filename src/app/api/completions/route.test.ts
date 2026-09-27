@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   rpc: vi.fn(),
   applyPlannerItemDateFact: vi.fn(),
   applyPlannerGoalDateFact: vi.fn(),
+  tryAtomicPlannerMoveCompletion: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -48,9 +49,35 @@ vi.mock("@/lib/planner/exact-date-dispatch", async () => {
   };
 });
 
+vi.mock("@/lib/planner/atomic-completion", () => ({
+  tryAtomicPlannerMoveCompletion: mocks.tryAtomicPlannerMoveCompletion,
+}));
+
 import { POST } from "./route";
 
 const goalId = "10000000-0000-4000-8000-000000000011";
+const goalRow = {
+  id: goalId,
+  owner_id: "11111111-1111-4111-8111-111111111111",
+  title: "Goal",
+  description: null,
+  category: "general",
+  color: null,
+  frequency_type: "recurring",
+  recurrence_interval: "weekly",
+  target_count: 12,
+  target_basis: "lifetime",
+  milestone_names: null,
+  start_date: "2026-08-01",
+  end_date: "2026-08-31",
+  default_local_time: null,
+  photo_path: null,
+  team_id: null,
+  is_deleted: false,
+  archived_at: null,
+  created_at: "2026-08-01T00:00:00.000Z",
+  updated_at: "2026-08-01T00:00:00.000Z",
+};
 
 function request(
   date: string,
@@ -81,13 +108,7 @@ describe("completions route", () => {
       error: null,
     });
     mocks.goalMaybeSingle.mockResolvedValue({
-      data: {
-        id: goalId,
-        frequency_type: "recurring",
-        target_count: 12,
-        start_date: "2026-08-01",
-        end_date: "2026-08-31",
-      },
+      data: goalRow,
       error: null,
     });
     mocks.profileMaybeSingle.mockResolvedValue({
@@ -95,6 +116,9 @@ describe("completions route", () => {
       error: null,
     });
     mocks.rpc.mockImplementation(async (fn: string) => {
+      if (fn === "get_planner_schedule_digest") {
+        return { data: "a".repeat(64), error: null };
+      }
       if (fn === "preview_queued_xp_delta") {
         return { data: 20, error: null };
       }
@@ -102,6 +126,7 @@ describe("completions route", () => {
     });
     mocks.applyPlannerItemDateFact.mockReset();
     mocks.applyPlannerGoalDateFact.mockReset();
+    mocks.tryAtomicPlannerMoveCompletion.mockResolvedValue({ moved: false });
   });
 
   afterEach(() => {
@@ -142,7 +167,7 @@ describe("completions route", () => {
     vi.setSystemTime(new Date("2026-09-08T03:50:00.000Z"));
     mocks.goalMaybeSingle.mockResolvedValue({
       data: {
-        id: goalId,
+        ...goalRow,
         start_date: "2026-09-01",
         end_date: "2026-09-30",
       },
@@ -218,9 +243,7 @@ describe("completions route", () => {
   it("supports exact-date completion for non-targeted goals", async () => {
     mocks.goalMaybeSingle.mockResolvedValueOnce({
       data: {
-        id: goalId,
-        start_date: "2026-08-01",
-        end_date: "2026-08-31",
+        ...goalRow,
       },
       error: null,
     });
@@ -272,6 +295,31 @@ describe("completions route", () => {
       p_limit: 50,
     });
     await expect(response.json()).resolves.toMatchObject({ xpDelta: 20 });
+  });
+
+  it("returns one success when completion atomically moves its planner item", async () => {
+    mocks.tryAtomicPlannerMoveCompletion.mockResolvedValueOnce({
+      moved: true,
+      unitKey: "total:2",
+      movedFrom: "2026-08-03",
+      movedTo: "2026-08-05",
+      scheduleDigest: "b".repeat(64),
+    });
+
+    const response = await POST(request("2026-08-05", "present"));
+
+    expect(response.status).toBe(200);
+    expect(mocks.rpc).not.toHaveBeenCalledWith("mark_goal_complete", {
+      p_goal_id: goalId,
+      p_date: "2026-08-05",
+    });
+    await expect(response.json()).resolves.toMatchObject({
+      plannerMove: {
+        unitKey: "total:2",
+        movedFrom: "2026-08-03",
+        movedTo: "2026-08-05",
+      },
+    });
   });
 
   it("routes planner goal expectation payloads through planner goal dispatch", async () => {

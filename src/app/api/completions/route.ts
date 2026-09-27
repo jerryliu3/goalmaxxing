@@ -14,6 +14,9 @@ import {
   withPlannerRoute,
 } from "@/lib/planner/api";
 import { previewQueuedXpDeltaThenDrain } from "@/lib/xp/outbox";
+import { PLANNER_GOAL_SELECT } from "@/lib/planner/context-loader";
+import { plannerGoalSchema } from "@/lib/planner/contracts/kernel-schema";
+import { tryAtomicPlannerMoveCompletion } from "@/lib/planner/atomic-completion";
 
 export const runtime = "nodejs";
 
@@ -49,26 +52,32 @@ export async function handleCompletionPost(request: Request) {
       MAX_REQUEST_BYTES,
       targetedExactDateRequestSchema
     );
-    const [timezone, goalResult] = await Promise.all([
+    const [timezone, goalResult, profileResult] = await Promise.all([
       loadPlannerProfileTimezone({
         supabase: routeContext.supabase,
         userId: routeContext.userId,
       }),
       routeContext.supabase
         .from("goals")
-        .select("id, start_date, end_date")
+        .select(PLANNER_GOAL_SELECT)
         .eq("id", goalId)
         .maybeSingle(),
+      routeContext.supabase
+        .from("profiles")
+        .select("week_starts_on")
+        .eq("id", routeContext.userId)
+        .maybeSingle(),
     ]);
-    const { data: goal, error: goalError } = goalResult;
+    const { data: rawGoal, error: goalError } = goalResult;
 
-    if (goalError || !goal) {
+    if (goalError || !rawGoal) {
       throw new PlannerRouteError(
         404,
         "targeted_goal_not_found",
         "The goal was not found."
       );
     }
+    const goal = plannerGoalSchema.parse(rawGoal);
 
     if (plannerItemExpectation) {
       const result = await applyPlannerItemDateFact({
@@ -81,26 +90,6 @@ export async function handleCompletionPost(request: Request) {
           endDate: goal.end_date,
         },
         expectation: plannerItemExpectation,
-      });
-      if (!result.ok) {
-        throw new PlannerRouteError(result.status, result.code, result.message);
-      }
-      const xpDelta = await previewQueuedXpDeltaThenDrain(routeContext.supabase);
-      return completionSuccessResponse(result.payload, xpDelta, correlationId);
-    }
-
-    if (plannerGoalExpectation) {
-      const result = await applyPlannerGoalDateFact({
-        supabase: routeContext.supabase,
-        goalId,
-        date,
-        desiredFactState,
-        timezone,
-        goalLifetime: {
-          startDate: goal.start_date,
-          endDate: goal.end_date,
-        },
-        expectation: plannerGoalExpectation,
       });
       if (!result.ok) {
         throw new PlannerRouteError(result.status, result.code, result.message);
@@ -128,6 +117,88 @@ export async function handleCompletionPost(request: Request) {
           "The completion date must be within the goal lifetime."
         );
       }
+
+      let expectedDigest = plannerGoalExpectation?.expectedDigest ?? null;
+      if (!expectedDigest) {
+        const digestResponse = await routeContext.supabase.rpc(
+          "get_planner_schedule_digest",
+          {}
+        );
+        if (digestResponse.error || !digestResponse.data) {
+          throw new PlannerRouteError(
+            503,
+            "planner_digest_load_failed",
+            "Planner state could not be loaded."
+          );
+        }
+        expectedDigest = digestResponse.data;
+      }
+
+      try {
+        const atomic = await tryAtomicPlannerMoveCompletion({
+          supabase: routeContext.supabase,
+          userId: routeContext.userId,
+          goal,
+          date,
+          asOfDate: localToday,
+          expectedDigest,
+          weekStartsOn: profileResult.data?.week_starts_on ?? undefined,
+        });
+        if (atomic.moved) {
+          const xpDelta = await previewQueuedXpDeltaThenDrain(
+            routeContext.supabase
+          );
+          return completionSuccessResponse(
+            {
+              goalId,
+              date,
+              factState: desiredFactState,
+              plannerMove: {
+                unitKey: atomic.unitKey,
+                movedFrom: atomic.movedFrom,
+                movedTo: atomic.movedTo,
+              },
+              scheduleDigest: atomic.scheduleDigest,
+            },
+            xpDelta,
+            correlationId
+          );
+        }
+      } catch (error) {
+        const mapped = mapCompletionRpcError(
+          error && typeof error === "object"
+            ? (error as { code?: string | null; message?: string | null })
+            : null
+        );
+        if (mapped) {
+          throw new PlannerRouteError(mapped.status, mapped.code, mapped.message);
+        }
+        throw new PlannerRouteError(
+          409,
+          "planner_completion_move_failed",
+          "The planner session could not be moved and completed."
+        );
+      }
+    }
+
+    if (plannerGoalExpectation) {
+      const result = await applyPlannerGoalDateFact({
+        supabase: routeContext.supabase,
+        goalId,
+        date,
+        desiredFactState,
+        timezone,
+        goalLifetime: {
+          startDate: goal.start_date,
+          endDate: goal.end_date,
+        },
+        expectation: plannerGoalExpectation,
+      });
+      if (!result.ok) {
+        throw new PlannerRouteError(result.status, result.code, result.message);
+      }
+      const xpDelta = await previewQueuedXpDeltaThenDrain(routeContext.supabase);
+      return completionSuccessResponse(result.payload, xpDelta, correlationId);
     }
 
     const { error: mutationError } = await routeContext.supabase.rpc(
