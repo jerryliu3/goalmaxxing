@@ -115,7 +115,7 @@ describe("credit move source options", () => {
       goalRequiresCreditMove({
         goalId: "goal-a",
         workUnits,
-        completionDate: "2026-08-12",
+        completionDate: "2026-08-06",
       })
     ).toBe(true);
     expect(
@@ -125,6 +125,23 @@ describe("credit move source options", () => {
           {
             ...workUnits[0]!,
             scheduledDate: "2026-08-12",
+          },
+        ],
+        completionDate: "2026-08-12",
+      })
+    ).toBe(false);
+    expect(
+      goalRequiresCreditMove({
+        goalId: "goal-a",
+        workUnits: [
+          {
+            ...workUnits[0]!,
+            scheduledDate: "2026-08-05",
+          },
+          {
+            ...workUnits[0]!,
+            unitKey: "cadence:2",
+            scheduledDate: "2026-08-20",
           },
         ],
         completionDate: "2026-08-12",

@@ -22,7 +22,6 @@ import {
   type PlannerPolicy,
 } from "@/lib/planner/policy";
 import {
-  buildGoalPreparationWindows,
   buildPreparationWindows,
 } from "@/lib/planner/preparation-windows";
 import {

@@ -12,7 +12,7 @@ describe("motion study interactions", () => {
   it("captures successive tasks, retaining keyboard focus and allowing completion", async () => {
     const user = userEvent.setup();
     render(<TaskCapture still />);
-    await user.click(screen.getByRole("button", { name: "Add", exact: true }));
+    await user.click(screen.getByRole("button", { name: "Add" }));
     const composer = screen.getByRole("textbox", { name: "A task for today" });
     expect(composer).toHaveFocus();
     expect(composer).toHaveValue("");
@@ -26,11 +26,11 @@ describe("motion study interactions", () => {
   it("keeps a partial milestone goal active and files only its final completion", async () => {
     const user = userEvent.setup();
     render(<MilestoneJourney still />);
-    screen.getByRole("button", { name: "Complete First draft", exact: true }).focus();
+    screen.getByRole("button", { name: "Complete First draft" }).focus();
     await user.keyboard("{Enter}");
     expect(screen.getByText("2 of 3 milestones complete. The goal is still in progress.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Publish, not completed" }));
-    screen.getByRole("button", { name: "Complete Publish", exact: true }).focus();
+    screen.getByRole("button", { name: "Complete Publish" }).focus();
     await user.keyboard("{Enter}");
     expect(screen.getByText("Goal achieved. Your portfolio is now part of your past-goal history.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Open 2026, 2 goals" })).toBeInTheDocument();

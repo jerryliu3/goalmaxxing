@@ -55,6 +55,22 @@ export type Database = {
         }
         Returns: number
       }
+      clear_planner_schedule_for_goal_core: {
+        Args: { p_expected_digest: string; p_goal_id: string; p_windows: Json }
+        Returns: {
+          deleted_count: number
+          schedule_digest: string
+          window_count: number
+        }[]
+      }
+      clear_planner_schedule_windows_core: {
+        Args: { p_expected_digest: string; p_windows: Json }
+        Returns: {
+          deleted_count: number
+          schedule_digest: string
+          window_count: number
+        }[]
+      }
       delete_incomplete_planner_items_for_goal: {
         Args: { p_goal_id: string }
         Returns: undefined
@@ -276,6 +292,10 @@ export type Database = {
         }
         Returns: number
       }
+      normalize_milestone_planner_ordinals: {
+        Args: { p_goal_ids: string[]; p_owner_id: string }
+        Returns: undefined
+      }
       owned_linked_target_ids: {
         Args: { p_source_goal_id: string; p_user_id: string }
         Returns: string[]
@@ -350,6 +370,18 @@ export type Database = {
           p_target_count: number
         }
         Returns: Database["public"]["Enums"]["goal_target_basis"]
+      }
+      set_planner_schedule_core: {
+        Args: {
+          p_end: string
+          p_expected_digest: string
+          p_items: Json
+          p_start: string
+        }
+        Returns: {
+          schedule_digest: string
+          upserted_count: number
+        }[]
       }
       sha256_hex_digest: { Args: { p_value: string }; Returns: string }
       subject_member_ids: {
@@ -2090,13 +2122,13 @@ export type Database = {
           blackout_ranges: Json
           calendar_feed_token_version: number
           created_at: string
+          digest_auto_show: boolean
           display_name: string | null
           id: string
           notification_preferences: Json
           planner_primary_tab: string
           rest_weekdays: number[]
           social_activity_visible: boolean
-          digest_auto_show: boolean
           timezone: string
           timezone_confirmed_at: string | null
           username: string
@@ -3104,6 +3136,7 @@ export type Database = {
       }
       refresh_challenge_progress_service: { Args: never; Returns: number }
       refresh_leaderboard_standings_service: { Args: never; Returns: number }
+      refresh_leaderboard_standings_unfiltered: { Args: never; Returns: number }
       remove_feed_reaction_service: {
         Args: {
           p_feed_event_id: string

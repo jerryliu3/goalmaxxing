@@ -332,6 +332,8 @@ select is(
   'window clearing reuses the canonical milestone normalizer'
 );
 
+set local role service_role;
+
 select ok(
   not has_function_privilege(
     'authenticated',

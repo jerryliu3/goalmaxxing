@@ -243,6 +243,7 @@ select ok(
   'completed challenge participant can leave'
 );
 
+set local role service_role;
 select is(
   (
     select count(*)::integer
@@ -253,6 +254,11 @@ select is(
   0,
   'leaving removes the completed participant row'
 );
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config('request.jwt.claim.sub', 'aa111111-1111-4111-8111-111111111111', true);
 
 select ok(
   public.leave_challenge_service('aa400000-0000-4000-8000-000000000003'),

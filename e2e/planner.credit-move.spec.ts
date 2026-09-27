@@ -10,6 +10,7 @@ interface CadenceAffinityFixture {
   scopeMonth: string;
   today: string;
   tomorrow: string;
+  pastSlotDate: string;
   unitKey3: string;
   unitKey4: string;
 }
@@ -49,17 +50,20 @@ async function resolveCadenceAffinityFixture(
     const monthEnd = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0);
     const tomorrow = new Date(todayDate);
     tomorrow.setDate(tomorrow.getDate() + 1);
+    const pastSlotDate = new Date(todayDate);
+    pastSlotDate.setDate(pastSlotDate.getDate() - 7);
     const today = formatDate(todayDate);
     const tomorrowStr = formatDate(tomorrow);
     const periodKey = formatDate(monthStart);
     const scopeMonth = today.slice(0, 7);
 
-    if (tomorrow > monthEnd) {
+    if (tomorrow > monthEnd || pastSlotDate < monthStart) {
       return {
         available: false,
         scopeMonth,
         today,
         tomorrow: tomorrowStr,
+        pastSlotDate: formatDate(pastSlotDate),
         unitKey3: `cadence:${periodKey}:3`,
         unitKey4: `cadence:${periodKey}:4`,
       };
@@ -72,6 +76,7 @@ async function resolveCadenceAffinityFixture(
         scopeMonth,
         today,
         tomorrow: tomorrowStr,
+        pastSlotDate: formatDate(pastSlotDate),
         unitKey3: `cadence:${periodKey}:3`,
         unitKey4: `cadence:${periodKey}:4`,
       };
@@ -95,6 +100,7 @@ async function resolveCadenceAffinityFixture(
       scopeMonth,
       today,
       tomorrow: tomorrowStr,
+      pastSlotDate: formatDate(pastSlotDate),
       unitKey3: `cadence:${periodKey}:3`,
       unitKey4: `cadence:${periodKey}:4`,
     };
@@ -176,12 +182,11 @@ async function setExactDateCompletion(
 
 async function expandUnscheduledGoals(page: Page) {
   const unscheduledTrigger = page.getByRole("button", { name: /Unscheduled goals/i });
-  if (!(await unscheduledTrigger.isVisible().catch(() => false))) {
-    return;
-  }
+  await expect(unscheduledTrigger).toBeVisible({ timeout: 30_000 });
   if ((await unscheduledTrigger.getAttribute("aria-expanded")) !== "true") {
     await unscheduledTrigger.click();
   }
+  await expect(unscheduledTrigger).toHaveAttribute("aria-expanded", "true");
 }
 
 test.describe("planner credit move", () => {
@@ -202,13 +207,20 @@ test.describe("planner credit move", () => {
       "Cadence affinity fixture is unavailable for the current calendar day."
     );
 
+    // Credit the previous session first. With that past session open, direct
+    // completion is correct and no move control should be offered. This setup
+    // deliberately exercises the remaining future-session move path.
     await setExactDateCompletion(page, {
-      date: fixture.tomorrow,
+      date: fixture.pastSlotDate,
+      desiredFactState: "present",
+    });
+    await setExactDateCompletion(page, {
+      date: fixture.today,
       desiredFactState: "absent",
     });
     await clearPlannerTabCache(page);
 
-    await gotoAppPath(page, `/calendar?view=day&day=${fixture.tomorrow}`);
+    await gotoAppPath(page, `/calendar?view=day&day=${fixture.today}`);
     await dismissTabOnboardingIfPresent(page);
     await expandUnscheduledGoals(page);
 
@@ -244,14 +256,14 @@ test.describe("planner credit move", () => {
     };
     expect(savePayload.draftCommands?.[0]?.kind).toBe("move_item");
     expect(savePayload.draftCommands?.[0]?.goalId).toBe(CADENCE_AFFINITY_GOAL_ID);
-    expect(savePayload.draftCommands?.[0]?.scheduledDate).toBe(fixture.tomorrow);
+    expect(savePayload.draftCommands?.[0]?.scheduledDate).toBe(fixture.today);
 
     await expect
       .poll(
         async () => {
           const credits = await fetchGoalUnitCredits(page, fixture.scopeMonth);
           return Object.values(credits).some(
-            (unit) => unit.scheduledDate === fixture.tomorrow
+            (unit) => unit.scheduledDate === fixture.today
           );
         },
         { timeout: 20_000 }
@@ -287,7 +299,7 @@ test.describe("planner credit move", () => {
         };
         return (
           payload.goalId === CADENCE_AFFINITY_GOAL_ID &&
-          payload.date === fixture.tomorrow &&
+          payload.date === fixture.today &&
           payload.desiredFactState === "present"
         );
       }),
@@ -297,7 +309,7 @@ test.describe("planner credit move", () => {
       date: string;
       desiredFactState: string;
     };
-    expect(completionPayload.date).toBe(fixture.tomorrow);
+    expect(completionPayload.date).toBe(fixture.today);
     expect(completionPayload.desiredFactState).toBe("present");
   });
 });

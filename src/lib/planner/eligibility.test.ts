@@ -152,6 +152,7 @@ describe("goal-level eligibility guards", () => {
           ...cadenceGoal,
           id: "goal-target-rolling-window",
           target_count: 12,
+          target_basis: "lifetime",
           end_date: null,
         },
         asOfDate: "2026-08-15",
@@ -228,6 +229,7 @@ describe("goal-level eligibility guards", () => {
           ...cadenceGoal,
           id: "goal-target-too-large",
           target_count: MAX_GOAL_TARGET_COUNT + 1,
+          target_basis: "lifetime",
           end_date: "2026-12-31",
         },
         asOfDate: "2026-08-15",
@@ -262,4 +264,3 @@ describe("goal-level eligibility guards", () => {
     });
   });
 });
-

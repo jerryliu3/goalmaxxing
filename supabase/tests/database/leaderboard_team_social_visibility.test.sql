@@ -29,6 +29,32 @@ update public.profiles profile
 set social_activity_visible = false
 where profile.id = 'ae444444-4444-4444-8444-444444444444';
 
+insert into public.cohorts (
+  id,
+  slug,
+  title,
+  join_code,
+  is_active,
+  created_by
+)
+values (
+  'ae300000-0000-4000-8000-000000000001',
+  'team-social-visibility-cohort',
+  'Team social visibility cohort',
+  'TEAMVIS1',
+  true,
+  'ae111111-1111-4111-8111-111111111111'
+)
+on conflict (id) do nothing;
+
+insert into public.cohort_members (cohort_id, user_id, role)
+values
+  ('ae300000-0000-4000-8000-000000000001', 'ae111111-1111-4111-8111-111111111111', 'manager'),
+  ('ae300000-0000-4000-8000-000000000001', 'ae222222-2222-4222-8222-222222222222', 'member'),
+  ('ae300000-0000-4000-8000-000000000001', 'ae333333-3333-4333-8333-333333333333', 'member'),
+  ('ae300000-0000-4000-8000-000000000001', 'ae444444-4444-4444-8444-444444444444', 'member')
+on conflict (cohort_id, user_id) do nothing;
+
 insert into public.teams (
   id,
   initiator_id,
@@ -130,11 +156,13 @@ insert into public.leaderboard_seasons (
   title,
   subject_kind,
   metric,
+  metric_track_key,
   starts_at,
   ends_at,
   status,
   rollover,
   scope,
+  cohort_id,
   created_by
 )
 values (
@@ -142,12 +170,14 @@ values (
   'team-social-visibility-leaderboard',
   'Team social visibility leaderboard',
   'team',
-  'total_xp',
+  'category_xp',
+  'health',
   pg_catalog.now() - interval '1 day',
   pg_catalog.now() + interval '1 day',
   'open',
   'none',
-  'global',
+  'cohort',
+  'ae300000-0000-4000-8000-000000000001',
   'ae111111-1111-4111-8111-111111111111'
 )
 on conflict (id) do nothing;

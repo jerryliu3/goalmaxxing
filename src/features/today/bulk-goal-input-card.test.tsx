@@ -77,7 +77,7 @@ describe("BulkGoalInputCard", () => {
     const user = userEvent.setup();
     render(<BulkGoalInputCard {...baseProps({ onInputModeChange })} />);
 
-    await user.click(screen.getByRole("button", { name: "CSV" }));
+    await user.click(screen.getByRole("button", { name: "Already have a list? Import it" }));
     expect(onInputModeChange).toHaveBeenCalledWith("csv");
   });
 
@@ -101,26 +101,28 @@ describe("BulkGoalInputCard", () => {
     const onParseNaturalLanguage = vi.fn();
     const user = userEvent.setup();
     render(
-      <BulkGoalInputCard {...baseProps({ onParseNaturalLanguage })} />
+      <BulkGoalInputCard {...baseProps({ onParseNaturalLanguage, naturalLanguageInput: "Read every day" })} />
     );
 
-    await user.click(screen.getByRole("button", { name: /parse natural language/i }));
+    await user.click(screen.getByRole("button", { name: /Shape my goals|Shaping your goals/i }));
     expect(onParseNaturalLanguage).toHaveBeenCalledTimes(1);
   });
 
   it("disables the parse buttons while parsing", () => {
     render(<BulkGoalInputCard {...baseProps({ parsing: true })} />);
 
-    expect(screen.getByRole("button", { name: /parse natural language/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Shape my goals|Shaping your goals/i })).toBeDisabled();
   });
 
-  it("disables the csv parse buttons while parsing in csv mode", () => {
+  it("disables the csv parse buttons while parsing in csv mode", async () => {
     render(
-      <BulkGoalInputCard {...baseProps({ inputMode: "csv", parsing: true })} />
+      <BulkGoalInputCard {...baseProps({ inputMode: "csv", parsing: true, uploadedFileName: "goals.csv" })} />
     );
 
-    expect(screen.getByRole("button", { name: /parse pasted csv/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /parse uploaded file/i })).toBeDisabled();
+    await userEvent.click(screen.getByText("Or paste a list in CSV format"));
+    const buttons = screen.getAllByRole("button", { name: "Preparing your cards…" });
+    expect(buttons).toHaveLength(2);
+    buttons.forEach(button => expect(button).toBeDisabled());
   });
 
   it("calls onFileChange and onParseUploadedFile for the upload flow", async () => {
@@ -129,7 +131,7 @@ describe("BulkGoalInputCard", () => {
     const user = userEvent.setup();
     render(
       <BulkGoalInputCard
-        {...baseProps({ inputMode: "csv", onFileChange, onParseUploadedFile })}
+        {...baseProps({ inputMode: "csv", onFileChange, onParseUploadedFile, uploadedFileName: "goals.csv" })}
       />
     );
 
@@ -138,7 +140,7 @@ describe("BulkGoalInputCard", () => {
     await user.upload(input, file);
     expect(onFileChange).toHaveBeenCalledTimes(1);
 
-    await user.click(screen.getByRole("button", { name: /parse uploaded file/i }));
+    await user.click(screen.getByRole("button", { name: /Preview file as goals/i }));
     expect(onParseUploadedFile).toHaveBeenCalledTimes(1);
   });
 

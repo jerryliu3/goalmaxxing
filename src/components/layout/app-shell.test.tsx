@@ -46,7 +46,8 @@ vi.mock("@/components/layout/app-boot-splash", () => ({
 vi.mock("@/features/digest/check-in-overlay", () => ({
   CheckInOverlay: () => <div data-testid="check-in-overlay" />,
 }));
-vi.mock("@/lib/cache/tab-data-cache", () => ({
+vi.mock("@/lib/cache/tab-data-cache", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@/lib/cache/tab-data-cache")>(),
   setTabDataCacheScope: (scope: string) => cacheScopeMock.setScope(scope),
 }));
 vi.mock("@/lib/cache/use-idle-app-prefetch", () => ({

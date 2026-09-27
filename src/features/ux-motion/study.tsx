@@ -50,7 +50,7 @@ export function MotionProductStudy() {
             <div><h2 className="mb-1 font-medium text-foreground">Linked parents float into view</h2><p>The source stays in the day plan. Each credited parent appears in turn, including parents that are still unfinished.</p></div>
             <div><h2 className="mb-1 font-medium text-foreground">The clasp belongs in the quest</h2><p>Open the run to see the weekly band beside the existing Tempo card. Meeting a period target never labels the recurring goal achieved.</p></div>
             <div><h2 className="mb-1 font-medium text-foreground">Completion earns a visible reward</h2><p>The source goal gets a deep stamp from above, sparks lift away, and the XP count eases into the bar at the top of the plan.</p></div>
-            <div><h2 className="mb-1 font-medium text-foreground">A fresh task slip</h2><p>Enter a task and press Add. The input remains ready while the new row settles into today's list.</p></div>
+            <div><h2 className="mb-1 font-medium text-foreground">A fresh task slip</h2><p>Enter a task and press Add. The input remains ready while the new row settles into today&apos;s list.</p></div>
           </aside>
         </div>
         </div>

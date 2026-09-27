@@ -19,7 +19,7 @@ set local role service_role;
 
 update public.profiles profile
 set social_activity_visible = false
-where profile.id = 'ac222222-2222-4222-8222-222222222222';
+where profile.id <> 'ac111111-1111-4111-8111-111111111111';
 
 insert into public.goals (
   id,

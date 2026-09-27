@@ -4,6 +4,7 @@ import {
   type CreditMoveCandidateUnit,
 } from "@/lib/planner/completion-credit-move-target";
 import { dateIsInWindow } from "@/lib/planner/dates";
+import { compareDateStrings } from "@/lib/goals/periods";
 
 export interface CreditMoveSourceOption {
   entryKey: string;
@@ -126,9 +127,10 @@ export function goalRequiresCreditMove({
   workUnits: CreditMoveCandidateUnit[];
   completionDate: string;
 }) {
-  return pickCreditMoveTarget({
+  const target = pickCreditMoveTarget({
     goalId,
     workUnits,
     completionDate,
-  }) !== null;
+  });
+  return target !== null && compareDateStrings(target.scheduledDate, completionDate) > 0;
 }

@@ -15,6 +15,28 @@ values
   ('8d222222-2222-4222-8222-222222222222', 'leaderboard_tie_b')
 on conflict (id) do nothing;
 
+insert into public.cohorts (
+  id,
+  slug,
+  title,
+  join_code,
+  created_by
+)
+values (
+  '8d500000-0000-4000-8000-000000000001',
+  'leaderboard-tiebreak-fixture',
+  'Leaderboard tiebreak fixture',
+  'TIEBRK8',
+  '8d111111-1111-4111-8111-111111111111'
+)
+on conflict (id) do nothing;
+
+insert into public.cohort_members (cohort_id, user_id, role)
+values
+  ('8d500000-0000-4000-8000-000000000001', '8d111111-1111-4111-8111-111111111111', 'manager'),
+  ('8d500000-0000-4000-8000-000000000001', '8d222222-2222-4222-8222-222222222222', 'member')
+on conflict (cohort_id, user_id) do nothing;
+
 
 
 insert into public.goals (
@@ -62,6 +84,8 @@ insert into public.leaderboard_seasons (
   title,
   subject_kind,
   metric,
+  scope,
+  cohort_id,
   starts_at,
   ends_at,
   status,
@@ -73,6 +97,8 @@ values (
   'Tie break test',
   'user',
   'total_xp',
+  'cohort',
+  '8d500000-0000-4000-8000-000000000001',
   pg_catalog.now() - interval '5 days',
   pg_catalog.now() + interval '5 days',
   'open',

@@ -11,7 +11,8 @@ vi.mock("@/lib/api/client", () => ({
   getJson: (...args: unknown[]) => mocks.getJson(...args),
 }));
 
-vi.mock("@/lib/cache/tab-data-cache", () => ({
+vi.mock("@/lib/cache/tab-data-cache", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@/lib/cache/tab-data-cache")>(),
   readTabDataCache: () => null,
   writeTabDataCache: () => undefined,
 }));

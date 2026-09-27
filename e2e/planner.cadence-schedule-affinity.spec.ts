@@ -179,11 +179,15 @@ async function openDayPreview(page: Page, day: string) {
   const dayCell = page.locator(`[data-day-cell="true"][data-day="${day}"]`);
   await expect(dayCell).toBeVisible({ timeout: 15_000 });
   await dayCell.click();
-  const dayPreview = page.locator(
-    '[data-no-swipe="true"].fixed:has([aria-label="Expand day details"])'
+  // Desktop calendar selection opens the persistent day pane. The old floating
+  // preview only exists in the narrow layout, so asserting it here was a stale
+  // representation check rather than a schedule-affinity check.
+  const dayPane = page.getByTestId("plan-desktop-day-pane");
+  await expect(dayPane).toBeVisible({ timeout: 10_000 });
+  await expect(dayPane).toContainText(
+    new RegExp(day.slice(-2).replace(/^0/, ""))
   );
-  await expect(dayPreview).toBeVisible({ timeout: 10_000 });
-  return dayPreview;
+  return dayPane;
 }
 
 async function openCalendarMonth(page: Page, scopeMonth: string) {
@@ -195,6 +199,17 @@ async function openCalendarMonth(page: Page, scopeMonth: string) {
   await expect(page.getByText("Loading planner month context...")).toHaveCount(0, {
     timeout: 20_000,
   });
+}
+
+async function expandUnscheduledGoals(page: Page) {
+  const unscheduledTrigger = page.getByRole("button", {
+    name: /Unscheduled goals/i,
+  });
+  await expect(unscheduledTrigger).toBeVisible({ timeout: 30_000 });
+  if ((await unscheduledTrigger.getAttribute("aria-expanded")) !== "true") {
+    await unscheduledTrigger.click();
+  }
+  await expect(unscheduledTrigger).toHaveAttribute("aria-expanded", "true");
 }
 
 test.describe("cadence schedule-affinity", () => {
@@ -216,28 +231,26 @@ test.describe("cadence schedule-affinity", () => {
       "Cadence affinity fixture is unavailable for the current calendar day."
     );
 
+    // This fixture is shared with the credit-move rail. Restore its past
+    // session before exercising direct credit assignment so test order cannot
+    // turn the direct-completion path into a required move.
+    await setExactDateCompletion(page, {
+      date: fixture.pastSlotDate,
+      desiredFactState: "absent",
+    });
     await setExactDateCompletion(page, {
       date: fixture.today,
       desiredFactState: "absent",
     });
     await clearPlannerTabCache(page);
 
-    await gotoAppPath(page, "/calendar?view=day");
-    await page
-      .waitForResponse(
-        (response) =>
-          response.url().includes("/api/planner/context") && response.ok(),
-        { timeout: 30_000 }
-      )
-      .catch(() => undefined);
-    const goalRow = page
-      .locator("[data-planner-entry-key]")
-      .filter({ hasText: CADENCE_AFFINITY_GOAL_TITLE });
-    await expect(goalRow).toBeVisible({ timeout: 30_000 });
-
-    const completeButton = goalRow.getByRole("button", {
-      name: "Mark session done",
+    await gotoAppPath(page, `/calendar?view=day&day=${fixture.today}`);
+    await expect(page).toHaveURL(new RegExp(`[?&]day=${fixture.today}(?:&|$)`));
+    await expandUnscheduledGoals(page);
+    const completeButton = page.getByRole("button", {
+      name: `Mark ${CADENCE_AFFINITY_GOAL_TITLE} done`,
     });
+    await expect(completeButton).toBeVisible({ timeout: 30_000 });
     await expect(completeButton).toBeEnabled({ timeout: 15_000 });
 
     const [completionRequest] = await Promise.all([
@@ -294,9 +307,9 @@ test.describe("cadence schedule-affinity", () => {
     await expect(pastEntry).toBeVisible({ timeout: 15_000 });
 
     const tomorrowPreview = await openDayPreview(page, fixture.tomorrow);
-    const futureGoalRow = tomorrowPreview
-      .getByText(CADENCE_AFFINITY_GOAL_TITLE)
-      .locator("xpath=ancestor::*[contains(@class,'rounded')][1]");
+    const futureGoalRow = tomorrowPreview.getByRole("button", {
+      name: CADENCE_AFFINITY_GOAL_TITLE,
+    });
     await expect(futureGoalRow).toBeVisible({ timeout: 10_000 });
     await expect(
       futureGoalRow.locator("svg.lucide-check-circle2, svg.lucide-check-circle-2")

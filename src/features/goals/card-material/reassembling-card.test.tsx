@@ -120,7 +120,7 @@ describe("saved card assembly", () => {
     expect(container.querySelector("[data-flat-shards]")).toHaveAttribute("data-piece-count", "2");
     expect(container.querySelectorAll("[data-reward-piece]")).toHaveLength(0);
     expect(container.querySelector("[data-card-solid]")).toBeNull();
-    expect(container.querySelectorAll("clipPath polygon")).toHaveLength(2);
+    expect(container.querySelectorAll("[data-flat-clip] polygon")).toHaveLength(2);
     expect(container.querySelector("[data-reassembly]")).toHaveAttribute("data-fused", "false");
     expect(container.querySelectorAll(".tempo-card")).toHaveLength(3);
   });

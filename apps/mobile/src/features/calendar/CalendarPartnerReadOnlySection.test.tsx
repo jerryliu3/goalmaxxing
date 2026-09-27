@@ -27,6 +27,7 @@ vi.mock("../../theme", () => ({
       mutedForeground: "#ccc",
       secondary: "#222",
     },
+    fonts: { display: "serif" },
   }),
 }));
 

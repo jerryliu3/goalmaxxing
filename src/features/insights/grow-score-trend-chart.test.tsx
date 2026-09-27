@@ -45,7 +45,7 @@ describe("GrowScoreTrendChart", () => {
     render(<GrowScoreTrendChart title="Goalmaxxing score" series={series} />);
 
     expect(screen.getByText("Current score")).toBeInTheDocument();
-    expect(screen.getByText("19.4")).toBeInTheDocument();
+    expect(screen.getByText("19.4", { selector: "p" })).toBeInTheDocument();
     await user.hover(screen.getByRole("button", { name: "Goalmaxxing score definition" }));
     expect(await screen.findByRole("tooltip")).toHaveTextContent(GROW_SCORE_CHART_HELP);
   });

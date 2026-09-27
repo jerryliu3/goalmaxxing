@@ -1,4 +1,5 @@
 import { pickCadenceCreditUnit } from "@/lib/planner/cadence-credit-matching";
+import { compareDateStrings } from "@/lib/goals/periods";
 import { dateIsInWindow, type DateWindow } from "@/lib/planner/dates";
 import type { PlannerWorkUnit } from "@/lib/planner/work-units";
 

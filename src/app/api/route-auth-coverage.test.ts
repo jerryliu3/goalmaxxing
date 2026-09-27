@@ -178,6 +178,7 @@ import { POST as teamInviteAcceptPost } from "@/app/api/social/team/invites/[tea
 import { POST as teamInviteDeclinePost } from "@/app/api/social/team/invites/[teamId]/decline/route";
 import { POST as teamNudgePost } from "@/app/api/social/team/nudges/route";
 import { GET as challengesGet } from "@/app/api/social/challenges/route";
+import { GET as challengeStandingsGet } from "@/app/api/social/challenges/[challengeId]/standings/route";
 import { GET as challengeGet } from "@/app/api/social/challenges/[challengeId]/route";
 import {
   DELETE as challengeJoinDelete,
@@ -396,6 +397,7 @@ const auditedRouteCases: AuditedRouteCase[] = [
     { toUserId: RESOURCE_ID }
   ),
   routeCase("GET /api/social/challenges", challengesGet),
+  routeCase("GET /api/social/challenges/[challengeId]/standings", challengeStandingsGet, { challengeId: RESOURCE_ID }),
   routeCase(
     "GET /api/social/challenges/[challengeId]",
     challengeGet,

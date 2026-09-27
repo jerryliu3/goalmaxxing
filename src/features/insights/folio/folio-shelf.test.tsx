@@ -37,7 +37,7 @@ describe("folio reader", () => {
     const reader = screen.getByRole("dialog");
     finishFlight(reader);
     expect(within(reader).getByRole("article", { name: "Learn piano goal card" })).toHaveClass("tempo-card");
-    expect(within(reader).getByRole("group", { name: "Learn piano goal card rotation" })).toBeInTheDocument();
+    expect(within(reader).getByRole("group", { name: "Learn piano rotation" })).toBeInTheDocument();
     expect(reader.querySelector(".tempo-card-surface")).toHaveAttribute("data-rotatable", "true");
     expect(within(reader).getByRole("button", { name: "Previous goal" })).toBeDisabled();
     await user.click(within(reader).getByRole("button", { name: "Next goal" }));
@@ -49,7 +49,7 @@ describe("folio reader", () => {
     expect(within(reader).getByRole("button", { name: "Previous goal" })).toBeDisabled();
     await dismissReader(user);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(book).toHaveFocus();
+    await waitFor(() => expect(book).toHaveFocus());
   });
 
   it("labels the shared card by how each goal ended", async () => {
@@ -95,7 +95,7 @@ describe("folio reader", () => {
     expect(dialog).toHaveFocus();
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(book).toHaveFocus();
+    await waitFor(() => expect(book).toHaveFocus());
     expect(book).toHaveAttribute("data-open", "false");
     await user.click(book);
     const reopened = screen.getByRole("dialog");
@@ -120,7 +120,7 @@ describe("folio reader", () => {
     expect(book).toHaveAttribute("data-open", "true");
     finishFlight(dialog);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(book).toHaveFocus();
+    await waitFor(() => expect(book).toHaveFocus());
     expect(book).toHaveAttribute("data-open", "false");
   });
 

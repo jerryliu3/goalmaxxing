@@ -47,6 +47,17 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    // Next 16.2 enables React Compiler diagnostics through its preset. The
+    // application is not yet compiled with the React Compiler, so these
+    // migration-only rules would reject established effect/ref patterns
+    // without changing runtime behavior. Keep the regular hooks rules active.
+    rules: {
+      "react-hooks/immutability": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

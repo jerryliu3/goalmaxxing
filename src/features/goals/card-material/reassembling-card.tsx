@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { CardSolidBody } from "./card-solid-body";
 import { getRewardProgress } from "./reassembly-progress";
 import {
@@ -59,9 +59,17 @@ export function ReassemblingCard({ children, completed, target, still, preview, 
       window.clearTimeout(ghostAt);
     };
   }, [preview, quiet]);
-  if (arrival.observed !== credited || (quiet && arrival.settled !== credited)) {
-    setArrival({ observed: credited, settled: quiet ? credited : Math.min(arrival.settled, credited) });
-  }
+  useEffect(() => {
+    setArrival(current => {
+      const next = {
+        observed: credited,
+        settled: quiet ? credited : Math.min(current.settled, credited),
+      };
+      return current.observed === next.observed && current.settled === next.settled
+        ? current
+        : next;
+    });
+  }, [credited, quiet]);
   const fused = earned && (quiet || arrival.settled >= required);
   const showPreviewWhole = Boolean(preview && !fused && previewPhase === "whole");
   const showPreviewShards = Boolean(
@@ -138,7 +146,7 @@ function FlatShards({
   return (
     <div className={styles.flatFace} data-flat-shards="" data-piece-count={pieces.length} aria-hidden="true">
       <svg className={styles.flatClip} aria-hidden="true">
-        <clipPath id={clipId} clipPathUnits="objectBoundingBox">
+        <clipPath id={clipId} clipPathUnits="objectBoundingBox" data-flat-clip="">
           {pieces.map((piece) => (
             <polygon
               key={piece.id}
@@ -171,9 +179,18 @@ function Piece({
   onSettled: () => void;
 }) {
   const scatter = pieceScatter(piece);
+  const pieceRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const element = pieceRef.current;
+    if (!element || preview) return;
+    element.addEventListener("animationend", onSettled);
+    return () => element.removeEventListener("animationend", onSettled);
+  }, [onSettled, preview]);
 
   return (
     <div
+      ref={pieceRef}
       className={styles.piece}
       data-reward-piece={piece.id}
       data-earned-at={piece.earnedAt}
@@ -189,9 +206,6 @@ function Piece({
         "--scatter-turn": `${piece.turn / 8}deg`,
         "--delay": `${piece.id * 10}ms`,
       } as CSSProperties}
-      onAnimationEnd={event => {
-        if (!preview && event.target === event.currentTarget) onSettled();
-      }}
     >
       <div className={styles.pieceFace} style={{ clipPath: piece.clipPath }}>
         {children}
