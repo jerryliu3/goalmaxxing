@@ -59,9 +59,17 @@ export function ReassemblingCard({ children, completed, target, still, preview, 
       window.clearTimeout(ghostAt);
     };
   }, [preview, quiet]);
-  if (arrival.observed !== credited || (quiet && arrival.settled !== credited)) {
-    setArrival({ observed: credited, settled: quiet ? credited : Math.min(arrival.settled, credited) });
-  }
+  useEffect(() => {
+    setArrival(current => {
+      const next = {
+        observed: credited,
+        settled: quiet ? credited : Math.min(current.settled, credited),
+      };
+      return current.observed === next.observed && current.settled === next.settled
+        ? current
+        : next;
+    });
+  }, [credited, quiet]);
   const fused = earned && (quiet || arrival.settled >= required);
   const showPreviewWhole = Boolean(preview && !fused && previewPhase === "whole");
   const showPreviewShards = Boolean(

@@ -17,7 +17,7 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 it("starts a drag when the pointer lands on covering card content", () => {
   render(<MaterialPreview material={MATERIALS.find(item => item.id === "pearl")!} fields={MATERIAL_SAMPLES[0].fields} still={false} history={false} />);
-  const card = screen.getByRole("group", { name: "Pearl Reserve card rotation" });
+  const card = screen.getByRole("group", { name: "Pearl Reserve rotation" });
   const inner = card.querySelector(".tempo-card");
   expect(inner).not.toBeNull();
   const capture = vi.spyOn(card, "setPointerCapture");
@@ -27,7 +27,7 @@ it("starts a drag when the pointer lands on covering card content", () => {
 
 it("captures dragging beyond the card, turns past 180°, holds the pose, and resets", () => {
   render(<MaterialPreview material={MATERIALS.find(item => item.id === "foil")!} fields={MATERIAL_SAMPLES[0].fields} still={false} history={false} />);
-  const card = screen.getByRole("group", { name: "Foil Print card rotation" });
+  const card = screen.getByRole("group", { name: "Foil Print rotation" });
   const stage = card.closest<HTMLElement>("[data-material]")!;
   const capture = vi.spyOn(card, "setPointerCapture");
   fireEvent.pointerDown(card, { pointerId: 1, button: 0, clientX: 100, clientY: 100 });
@@ -47,7 +47,7 @@ it("captures dragging beyond the card, turns past 180°, holds the pose, and res
 it("releases an active drag and blocks rotation when still mode is enabled", () => {
   const props = { material: MATERIALS.find(item => item.id === "pearl")!, fields: MATERIAL_SAMPLES[0].fields, history: false };
   const { rerender } = render(<MaterialPreview {...props} still={false} />);
-  const card = screen.getByRole("group", { name: "Pearl Reserve card rotation" });
+  const card = screen.getByRole("group", { name: "Pearl Reserve rotation" });
   const stage = card.closest<HTMLElement>("[data-material]")!;
   vi.spyOn(card, "hasPointerCapture").mockReturnValue(true);
   const release = vi.spyOn(card, "releasePointerCapture");
