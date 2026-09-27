@@ -20,25 +20,35 @@ interface XpRewardFlight {
 }
 
 interface XpRewardContextValue {
-  celebrate: (flight: XpRewardFlight) => void;
+  /** Milliseconds until the last star reaches the bar; zero without motion. */
+  celebrate: (flight: XpRewardFlight) => number;
 }
 
 const XpRewardContext = createContext<XpRewardContextValue>({
-  celebrate: () => undefined,
+  celebrate: () => 0,
 });
+
+const STAR_COUNT = 5;
+const STAR_START_SECONDS = 0.55;
+const STAR_STAGGER_SECONDS = 0.055;
+const STAR_FLIGHT_SECONDS = 0.85;
+export const XP_REWARD_ARRIVAL_MS = Math.round(
+  (STAR_START_SECONDS + (STAR_COUNT - 1) * STAR_STAGGER_SECONDS + STAR_FLIGHT_SECONDS) * 1000
+);
 
 function XpRewardLayer({ children }: { children: ReactNode }) {
   const still = useReducedMotion();
   const [flights, setFlights] = useState<Array<XpRewardFlight & { id: number }>>([]);
   const sequence = useRef(0);
   const celebrate = useCallback((flight: XpRewardFlight) => {
-    if (still) return;
+    if (still) return 0;
     const id = ++sequence.current;
     setFlights(current => [...current.slice(-3), { ...flight, id }]);
+    return XP_REWARD_ARRIVAL_MS;
   }, [still]);
   useEffect(() => {
     if (!flights.length) return;
-    const timeout = window.setTimeout(() => setFlights([]), 1800);
+    const timeout = window.setTimeout(() => setFlights([]), XP_REWARD_ARRIVAL_MS + 100);
     return () => window.clearTimeout(timeout);
   }, [flights]);
 
@@ -56,11 +66,11 @@ function XpRewardLayer({ children }: { children: ReactNode }) {
           const tx = flight.targetRect.left + flight.targetRect.width / 2 - x;
           const ty = flight.targetRect.top + flight.targetRect.height / 2 - y;
           return <div key={flight.id} data-reward-burst className="absolute" style={{ left: x, top: y }}>
-            {[0, 1, 2, 3, 4].map(index => <motion.span key={index} className="absolute text-primary" style={{ fontSize: 19 + index % 2 * 5 }}
+            {Array.from({ length: STAR_COUNT }, (_, index) => <motion.span key={index} className="absolute text-primary" style={{ fontSize: 19 + index % 2 * 5 }}
               initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
               animate={{ x: [0, (index - 2) * 24, tx], y: [0, -35 - index * 8, ty], scale: [0.4, 1.15, 0.2], opacity: [0, 1, 0] }}
-              transition={{ delay: 0.32 + index * 0.055, duration: 0.85, times: [0, 0.3, 1], ease: "easeInOut" }}>✦</motion.span>)}
-            {flight.amount !== undefined && <motion.span className="absolute whitespace-nowrap font-mono text-sm font-semibold text-primary" initial={{ y: 0, opacity: 0 }} animate={{ y: -36, opacity: [0, 1, 0] }} transition={{ duration: 1.2 }}>+{flight.amount} XP</motion.span>}
+              transition={{ delay: STAR_START_SECONDS + index * STAR_STAGGER_SECONDS, duration: STAR_FLIGHT_SECONDS, times: [0, 0.3, 1], ease: "easeInOut" }}>✦</motion.span>)}
+            {flight.amount !== undefined && <motion.span className="absolute whitespace-nowrap font-mono text-sm font-semibold text-primary" initial={{ y: 0, opacity: 0 }} animate={{ y: [0, -28, -36], opacity: [0, 1, 0] }} transition={{ duration: 0.85, times: [0, 0.25, 1] }}>+{flight.amount} XP</motion.span>}
           </div>;
         })}
       </div>, document.body)}
