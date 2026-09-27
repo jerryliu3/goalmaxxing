@@ -164,11 +164,76 @@ describe("exact-date dispatch helpers", () => {
     expect(rpc).toHaveBeenLastCalledWith(
       "complete_planner_item_on_date_service",
       {
-      p_goal_id: goalId,
-      p_unit_key: "total:1",
-      p_date: "2026-08-03",
-      p_expected_digest:
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        p_goal_id: goalId,
+        p_unit_key: "total:1",
+        p_date: "2026-08-03",
+        p_expected_digest:
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      }
+    );
+  });
+
+  it("atomically removes a planner completion so its move can be restored", async () => {
+    const rpc = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: [
+          {
+            unit_key: "total:1",
+            restored_from: "2026-08-05",
+            restored_to: "2026-08-03",
+            schedule_digest:
+              "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          },
+        ],
+        error: null,
+      });
+    const plannerItemQuery = {
+      select: vi.fn(),
+      eq: vi.fn(),
+      maybeSingle: vi.fn(),
+    };
+    plannerItemQuery.select.mockReturnValue(plannerItemQuery);
+    plannerItemQuery.eq.mockReturnValue(plannerItemQuery);
+    plannerItemQuery.maybeSingle.mockResolvedValue({
+      data: {
+        id: "22000000-0000-4000-8000-000000000001",
+        goal_id: goalId,
+        unit_key: "total:1",
+        scheduled_date: "2026-08-05",
+      },
+      error: null,
+    });
+    const supabase = {
+      rpc,
+      from: vi.fn(() => plannerItemQuery),
+    } as unknown as Parameters<typeof applyPlannerItemDateFact>[0]["supabase"];
+
+    const result = await applyPlannerItemDateFact({
+      supabase,
+      goalId,
+      desiredFactState: "absent",
+      timezone: "UTC",
+      goalLifetime: { startDate: "2026-08-01", endDate: "2026-08-31" },
+      expectation: {
+        itemId: "22000000-0000-4000-8000-000000000001",
+        expectedDigest:
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(rpc).toHaveBeenLastCalledWith(
+      "uncomplete_planner_item_on_date_service",
+      {
+        p_goal_id: goalId,
+        p_date: "2026-08-05",
+        p_expected_digest:
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       }
     );
   });

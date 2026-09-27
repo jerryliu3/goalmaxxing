@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   applyPlannerItemDateFact: vi.fn(),
   applyPlannerGoalDateFact: vi.fn(),
   tryAtomicPlannerMoveCompletion: vi.fn(),
+  uncompletePlannerCompletion: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -51,6 +52,7 @@ vi.mock("@/lib/planner/exact-date-dispatch", async () => {
 
 vi.mock("@/lib/planner/atomic-completion", () => ({
   tryAtomicPlannerMoveCompletion: mocks.tryAtomicPlannerMoveCompletion,
+  uncompletePlannerCompletion: mocks.uncompletePlannerCompletion,
 }));
 
 import { POST } from "./route";
@@ -127,6 +129,12 @@ describe("completions route", () => {
     mocks.applyPlannerItemDateFact.mockReset();
     mocks.applyPlannerGoalDateFact.mockReset();
     mocks.tryAtomicPlannerMoveCompletion.mockResolvedValue({ moved: false });
+    mocks.uncompletePlannerCompletion.mockResolvedValue({
+      unitKey: null,
+      restoredFrom: null,
+      restoredTo: null,
+      scheduleDigest: "a".repeat(64),
+    });
   });
 
   afterEach(() => {
@@ -234,10 +242,13 @@ describe("completions route", () => {
     const response = await POST(request("2026-08-31", "absent"));
 
     expect(response.status).toBe(200);
-    expect(mocks.rpc).toHaveBeenCalledWith("unmark_goal_complete", {
-      p_goal_id: goalId,
-      p_date: "2026-08-31",
-    });
+    expect(mocks.uncompletePlannerCompletion).toHaveBeenCalledWith(
+      expect.objectContaining({
+        goalId,
+        date: "2026-08-31",
+        expectedDigest: "a".repeat(64),
+      })
+    );
   });
 
   it("supports exact-date completion for non-targeted goals", async () => {
