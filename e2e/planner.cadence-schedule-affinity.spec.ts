@@ -197,6 +197,18 @@ async function openCalendarMonth(page: Page, scopeMonth: string) {
   });
 }
 
+async function expandUnscheduledGoals(page: Page) {
+  const unscheduledTrigger = page.getByRole("button", {
+    name: /Unscheduled goals/i,
+  });
+  if (!(await unscheduledTrigger.isVisible().catch(() => false))) {
+    return;
+  }
+  if ((await unscheduledTrigger.getAttribute("aria-expanded")) !== "true") {
+    await unscheduledTrigger.click();
+  }
+}
+
 test.describe("cadence schedule-affinity", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
@@ -230,6 +242,7 @@ test.describe("cadence schedule-affinity", () => {
         { timeout: 30_000 }
       )
       .catch(() => undefined);
+    await expandUnscheduledGoals(page);
     const completeButton = page.getByRole("button", {
       name: `Mark ${CADENCE_AFFINITY_GOAL_TITLE} done`,
     });
