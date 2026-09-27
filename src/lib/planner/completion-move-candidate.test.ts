@@ -119,5 +119,15 @@ describe("selectPlannerCompletionMoveCandidate", () => {
     });
 
     expect(candidate).toBeNull();
+    expect(
+      selectPlannerCompletionMoveCandidate({
+        goal,
+        plannerItems: [locked, item("milestone:3", "2026-09-28")],
+        completions: [completion],
+        completionDate: "2026-09-26",
+        asOfDate: "2026-09-26",
+        allowLocked: true,
+      })
+    ).toMatchObject({ unitKey: "milestone:2" });
   });
 });

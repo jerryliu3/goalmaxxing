@@ -58,6 +58,23 @@ export async function tryAtomicPlannerMoveCompletion({
     weekStartsOn,
   });
   if (!candidate) {
+    const lockedCandidate = selectPlannerCompletionMoveCandidate({
+      goal,
+      plannerItems: (itemsResponse.data ?? []) as PlannerItemRow[],
+      completions: (completionsResponse.data ?? []) as Completion[],
+      completionDate: date,
+      asOfDate,
+      weekStartsOn,
+      allowLocked: true,
+    });
+    if (
+      lockedCandidate &&
+      (itemsResponse.data ?? []).some(
+        (item) => item.id === lockedCandidate.itemId && item.locked
+      )
+    ) {
+      throw Object.assign(new Error("planner_item_locked"), { code: "55000" });
+    }
     return { moved: false };
   }
 

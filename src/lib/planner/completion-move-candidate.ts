@@ -80,6 +80,7 @@ export function selectPlannerCompletionMoveCandidate({
   completionDate,
   asOfDate,
   weekStartsOn,
+  allowLocked = false,
 }: {
   goal: Goal;
   plannerItems: PlannerItemRow[];
@@ -87,13 +88,14 @@ export function selectPlannerCompletionMoveCandidate({
   completionDate: string;
   asOfDate: string;
   weekStartsOn?: number;
+  allowLocked?: boolean;
 }): PlannerCompletionMoveCandidate | null {
   const requirement = normalizeGoalRequirement(goal).requirement;
   const admissible = getAdmissibleCompletions(goal, completions, { asOfDate });
   const availableItems = plannerItems.filter(
     (item) =>
       item.goal_id === goal.id &&
-      !item.locked &&
+      (allowLocked || !item.locked) &&
       item.scheduled_date !== completionDate
   );
 
