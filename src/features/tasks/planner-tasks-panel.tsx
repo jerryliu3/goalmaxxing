@@ -24,6 +24,7 @@ import { createClient } from "@/lib/supabase/client";
 import { planCompletionControlModeForDate } from "@/features/planner/completion-entry-dispatch";
 import { planLedgerTitleClass } from "@/features/planner/calendar-day-chrome";
 import { useOutsidePointerDismiss } from "@/lib/ui/use-outside-pointer-dismiss";
+import { captureTaskSlip, TaskCaptureSlip, type TaskCaptureSlipState } from "./task-capture-slip";
 import "./task-capture-motion.css";
 
 interface PlannerTaskRow {
@@ -118,12 +119,9 @@ export function PlannerTasksPanel({
   const [hasLoadedOnce, setHasLoadedOnce] = useState(() => cachedTasks !== undefined);
   const [adding, setAdding] = useState(false);
   const addingRef = useRef(false);
-  const [createdTaskId, setCreatedTaskId] = useState<string | null>(null);
-  useEffect(() => {
-    if (!createdTaskId) return;
-    const timer = window.setTimeout(() => setCreatedTaskId(null), 1100);
-    return () => window.clearTimeout(timer);
-  }, [createdTaskId]);
+  const [capture, setCapture] = useState<TaskCaptureSlipState | null>(null);
+  const captureTargetRef = useRef<HTMLSpanElement>(null);
+  const finishCapture = useCallback(() => setCapture(null), []);
   const [togglingTaskId, setTogglingTaskId] = useState<string | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [confirmingDeleteTask, setConfirmingDeleteTask] = useState<PlannerTaskRow | null>(null);
@@ -233,11 +231,12 @@ export function PlannerTasksPanel({
         toast.error(error.message || "Task could not be created.");
         return;
       }
-      setNewTaskTitle(current => current.trim() === title ? "" : current);
       const created = data?.[0];
       if (created && (!scheduledDateRef.current || created.scheduled_date === scheduledDateRef.current)) {
         // The returned row is committed. Keep the composer ready for the next task.
-        setCreatedTaskId(created.task_id);
+        if (titleInputRef.current) {
+          setCapture(captureTaskSlip(titleInputRef.current, created.task_id, title));
+        }
         setTasks(current => {
           const next = [created, ...current.filter(task => task.task_id !== created.task_id)];
           writePlannerTasksCache(scheduledDateRef.current, next);
@@ -245,6 +244,7 @@ export function PlannerTasksPanel({
         });
         titleInputRef.current?.focus();
       }
+      setNewTaskTitle(current => current.trim() === title ? "" : current);
       if (!created) await loadTasks(scheduledDateRef.current, { background: true });
     } finally {
       addingRef.current = false;
@@ -344,10 +344,10 @@ export function PlannerTasksPanel({
 
   const addForm = allowCreate && composerOpen ? (
     <div ref={composerRef} className="task-capture-composer space-y-2">
-      {createdTaskId && <span key={createdTaskId} className="task-capture-tear" aria-hidden="true" />}
       <Input
         ref={titleInputRef}
         value={newTaskTitle}
+        readOnly={adding}
         onChange={(event) => setNewTaskTitle(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
@@ -409,7 +409,7 @@ export function PlannerTasksPanel({
           : "No tasks scheduled for this day yet."}
       </p>
     ) : (
-      <ul className={`task-capture-list ${chrome === "plain" ? "divide-y" : "space-y-2"}`}>
+      <ul className={chrome === "plain" ? "divide-y" : "space-y-2"}>
         {tasks.map((task) => {
           const complete = task.completed_at != null;
           const toggling = togglingTaskId === task.task_id;
@@ -444,11 +444,11 @@ export function PlannerTasksPanel({
                 label="Completed"
               />
             ) : null;
-          const title = <span className={titleClass}>{task.title}</span>;
+          const title = <span ref={capture?.taskId === task.task_id ? captureTargetRef : undefined} className={titleClass}>{task.title}</span>;
           return (
             <li
               key={task.task_id}
-              data-new-task={task.task_id === createdTaskId || undefined}
+              style={{ visibility: capture?.taskId === task.task_id ? "hidden" : undefined }}
               className={
                 chrome === "plain"
                   ? "flex items-center justify-between gap-3 py-3 last:pb-0.5"
@@ -555,6 +555,10 @@ export function PlannerTasksPanel({
     </Dialog>
   );
 
+  const captureSlip = capture ? (
+    <TaskCaptureSlip key={capture.taskId} capture={capture} targetRef={captureTargetRef} onDone={finishCapture} />
+  ) : null;
+
   if (chrome === "plain") {
     return (
       <div className="space-y-1">
@@ -562,6 +566,7 @@ export function PlannerTasksPanel({
         {addNewButton}
         {taskList}
         {deleteDialog}
+        {captureSlip}
       </div>
     );
   }
@@ -578,6 +583,7 @@ export function PlannerTasksPanel({
         {taskList}
       </CardContent>
       {deleteDialog}
+      {captureSlip}
     </Card>
   );
 }
