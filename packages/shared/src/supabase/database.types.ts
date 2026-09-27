@@ -3136,6 +3136,7 @@ export type Database = {
       }
       refresh_challenge_progress_service: { Args: never; Returns: number }
       refresh_leaderboard_standings_service: { Args: never; Returns: number }
+      refresh_leaderboard_standings_unfiltered: { Args: never; Returns: number }
       remove_feed_reaction_service: {
         Args: {
           p_feed_event_id: string
