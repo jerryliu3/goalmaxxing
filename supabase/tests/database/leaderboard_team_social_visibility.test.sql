@@ -29,6 +29,32 @@ update public.profiles profile
 set social_activity_visible = false
 where profile.id = 'ae444444-4444-4444-8444-444444444444';
 
+insert into public.cohorts (
+  id,
+  slug,
+  title,
+  join_code,
+  is_active,
+  created_by
+)
+values (
+  'ae300000-0000-4000-8000-000000000001',
+  'team-social-visibility-cohort',
+  'Team social visibility cohort',
+  'TEAMVIS1',
+  true,
+  'ae111111-1111-4111-8111-111111111111'
+)
+on conflict (id) do nothing;
+
+insert into public.cohort_members (cohort_id, user_id, role)
+values
+  ('ae300000-0000-4000-8000-000000000001', 'ae111111-1111-4111-8111-111111111111', 'manager'),
+  ('ae300000-0000-4000-8000-000000000001', 'ae222222-2222-4222-8222-222222222222', 'member'),
+  ('ae300000-0000-4000-8000-000000000001', 'ae333333-3333-4333-8333-333333333333', 'member'),
+  ('ae300000-0000-4000-8000-000000000001', 'ae444444-4444-4444-8444-444444444444', 'member')
+on conflict (cohort_id, user_id) do nothing;
+
 insert into public.teams (
   id,
   initiator_id,
@@ -136,6 +162,7 @@ insert into public.leaderboard_seasons (
   status,
   rollover,
   scope,
+  cohort_id,
   created_by
 )
 values (
@@ -144,12 +171,13 @@ values (
   'Team social visibility leaderboard',
   'team',
   'category_xp',
-  'team_visibility_test',
+  'health',
   pg_catalog.now() - interval '1 day',
   pg_catalog.now() + interval '1 day',
   'open',
   'none',
-  'global',
+  'cohort',
+  'ae300000-0000-4000-8000-000000000001',
   'ae111111-1111-4111-8111-111111111111'
 )
 on conflict (id) do nothing;
@@ -171,7 +199,7 @@ values
     'ae111111-1111-4111-8111-111111111111',
     'ae500000-0000-4000-8000-000000000001',
     null,
-    'team_visibility_test',
+    'health',
     'completion_credit',
     'award',
     'team-visibility-visible-a',
@@ -183,7 +211,7 @@ values
     'ae222222-2222-4222-8222-222222222222',
     'ae500000-0000-4000-8000-000000000002',
     null,
-    'team_visibility_test',
+    'health',
     'completion_credit',
     'award',
     'team-visibility-visible-b',
@@ -195,7 +223,7 @@ values
     'ae333333-3333-4333-8333-333333333333',
     'ae500000-0000-4000-8000-000000000003',
     null,
-    'team_visibility_test',
+    'health',
     'completion_credit',
     'award',
     'team-visibility-mixed-a',
@@ -207,7 +235,7 @@ values
     'ae444444-4444-4444-8444-444444444444',
     'ae500000-0000-4000-8000-000000000004',
     null,
-    'team_visibility_test',
+    'health',
     'completion_credit',
     'award',
     'team-visibility-mixed-hidden-b',
