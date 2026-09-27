@@ -29,13 +29,13 @@ describe("session display date", () => {
     ).toBeNull();
   });
 
-  it("keeps credited history on the scheduled or credited date", () => {
+  it("shows credited history on the factual completion date", () => {
     expect(
       resolveCreditedDisplayDate({
         scheduledDate: "2026-08-05",
         creditedCompletionDate: "2026-08-06",
       })
-    ).toBe("2026-08-05");
+    ).toBe("2026-08-06");
     expect(
       resolveWorkUnitDisplayDate({
         creditState: "completed_elsewhere",
@@ -43,6 +43,6 @@ describe("session display date", () => {
         previewScheduledDate: "2026-08-31",
         creditedCompletionDate: "2026-09-01",
       })
-    ).toBe("2026-08-31");
+    ).toBe("2026-09-01");
   });
 });

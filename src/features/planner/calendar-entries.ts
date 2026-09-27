@@ -466,6 +466,14 @@ export function buildCompletionFactMarkersByDate({
     if (unit.creditedCompletionDate === unit.scheduledDate) {
       continue;
     }
+    const displayDay = resolveWorkUnitDisplayDate({
+      creditState: unit.creditState,
+      previewScheduledDate: unit.scheduledDate,
+      creditedCompletionDate: unit.creditedCompletionDate,
+    });
+    if (displayDay === unit.creditedCompletionDate) {
+      continue;
+    }
     const markerDay = unit.creditedCompletionDate;
     if (
       isLinkedTargetSuppressedOnDate({
@@ -611,4 +619,3 @@ export function buildCoachSummaryWorkUnits(
   }
   return units;
 }
-

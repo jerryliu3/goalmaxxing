@@ -1937,6 +1937,47 @@ describe("pure planner kernel", () => {
       driftType: "credited_work_removed",
     });
   });
+
+  it("prefers a durable completion allocation over stale preview allocation state", () => {
+    const milestoneGoal = goal({
+      frequency_type: "fixed_milestones",
+      recurrence_interval: null,
+      target_count: 2,
+      milestone_names: ["First", "Second"],
+    });
+    const fingerprint = computeRequirementFingerprint(milestoneGoal);
+    const fact: Completion = {
+      id: "completion-a",
+      goal_id: milestoneGoal.id,
+      user_id: milestoneGoal.owner_id,
+      completed_on: "2026-08-10",
+      source: "manual",
+      planner_unit_key: "milestone:2",
+      created_at: "2026-08-10T12:00:00Z",
+    };
+    const output = runPlannerKernel(
+      input({
+        asOfDate: "2026-08-20",
+        goals: [milestoneGoal],
+        completions: [fact],
+        basePlan: {
+          planId: "plan-a",
+          version: 1,
+          assignments: [],
+          completionToUnit: {
+            [fact.id]: {
+              goalId: milestoneGoal.id,
+              requirementFingerprint: fingerprint,
+              unitKey: "milestone:1",
+              completedOn: fact.completed_on,
+            },
+          },
+        },
+      })
+    );
+
+    expect(output.completionToUnit[fact.id]?.unitKey).toBe("milestone:2");
+  });
 });
 
 describe("solve intent and draft pins", () => {

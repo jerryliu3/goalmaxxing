@@ -133,7 +133,7 @@ describe("planner calendar entries", () => {
     expect(result.completionFactMarkers).toEqual([marker]);
   });
 
-  it("keeps completion facts visible outside the scheduled date", () => {
+  it("does not duplicate completion facts already displayed on their factual date", () => {
     const markers = buildCompletionFactMarkersByDate({
       workUnits: [
         {
@@ -146,10 +146,7 @@ describe("planner calendar entries", () => {
       goalTitles: { "goal-a": "Goal A" },
     });
 
-    expect(markers.get("2026-09-01")?.[0]).toMatchObject({
-      originalGoalId: "goal-a",
-      scheduledDate: "2026-08-31",
-    });
+    expect(markers.size).toBe(0);
   });
 
   it("skips completion markers when scheduled date is null", () => {

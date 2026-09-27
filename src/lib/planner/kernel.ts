@@ -664,12 +664,31 @@ export function runPlannerKernel(
       ordinalsForScopeMonth: reconcileAcrossAllOrdinals,
       weeklyAnchor: weeklyAnchorContext,
     });
+    const durableCompletionToUnit = Object.fromEntries(
+      completions
+        .filter(
+          (completion) =>
+            completion.goal_id === goal.id && completion.planner_unit_key
+        )
+        .map((completion) => [
+          completion.id,
+          {
+            goalId: goal.id,
+            requirementFingerprint: requirement.requirementFingerprint,
+            unitKey: completion.planner_unit_key!,
+            completedOn: completion.completed_on,
+          },
+        ])
+    );
     const reconciled = reconcilePlannerCompletions({
       goal,
       workUnits: materialized,
       completions,
       asOfDate: rawInput.asOfDate,
-      previousCompletionToUnit,
+      previousCompletionToUnit: {
+        ...previousCompletionToUnit,
+        ...durableCompletionToUnit,
+      },
       // Historical window re-runs should not anchor credits to window-local
       // scheduled dates, which can differ between date-window base plans.
       allowScheduledDateMatching: scopeState !== "historical",

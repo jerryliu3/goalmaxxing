@@ -11,7 +11,7 @@ export function resolveCreditedDisplayDate({
   scheduledDate: string | null | undefined;
   creditedCompletionDate: string | null | undefined;
 }): string | null {
-  return scheduledDate ?? creditedCompletionDate ?? null;
+  return creditedCompletionDate ?? scheduledDate ?? null;
 }
 
 export function resolveWorkUnitDisplayDate({
