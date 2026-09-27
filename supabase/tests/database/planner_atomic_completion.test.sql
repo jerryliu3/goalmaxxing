@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(7);
+select plan(11);
 
 insert into auth.users (id, email)
 values (
@@ -157,6 +157,50 @@ select throws_ok(
   '55000',
   'planner_item_locked',
   'locked sessions are not moved implicitly'
+);
+
+select lives_ok(
+  format(
+    $tap$select * from public.uncomplete_planner_item_on_date_service(
+      'c2000000-0000-4000-8000-000000000001',
+      current_date,
+      %L
+    )$tap$,
+    public.get_planner_schedule_digest()
+  ),
+  'uncompletion and schedule restoration persist in one transaction'
+);
+
+select is(
+  (
+    select scheduled_date
+    from public.planner_items
+    where goal_id = 'c2000000-0000-4000-8000-000000000001'
+      and unit_key = 'total:1'
+  ),
+  current_date - 2,
+  'the planner item returns to its original date'
+);
+
+select is(
+  (
+    select original_scheduled_date
+    from public.planner_items
+    where goal_id = 'c2000000-0000-4000-8000-000000000001'
+      and unit_key = 'total:1'
+  ),
+  null::date,
+  'the completed move metadata is cleared after restoration'
+);
+
+select ok(
+  not exists (
+    select 1
+    from public.completions
+    where goal_id = 'c2000000-0000-4000-8000-000000000001'
+      and completed_on = current_date
+  ),
+  'the completion fact is removed'
 );
 
 select * from finish();

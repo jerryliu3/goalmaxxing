@@ -15,6 +15,47 @@ export type AtomicPlannerCompletionResult =
     }
   | { moved: false };
 
+export interface AtomicPlannerUncompletionResult {
+  unitKey: string | null;
+  restoredFrom: string | null;
+  restoredTo: string | null;
+  scheduleDigest: string;
+}
+
+export async function uncompletePlannerCompletion({
+  supabase,
+  goalId,
+  date,
+  expectedDigest,
+}: {
+  supabase: ServerSupabaseClient;
+  goalId: string;
+  date: string;
+  expectedDigest: string;
+}): Promise<AtomicPlannerUncompletionResult> {
+  const response = await supabase.rpc(
+    "uncomplete_planner_item_on_date_service",
+    {
+      p_goal_id: goalId,
+      p_date: date,
+      p_expected_digest: expectedDigest,
+    }
+  );
+  if (response.error) {
+    throw response.error;
+  }
+  const row = Array.isArray(response.data) ? response.data[0] : response.data;
+  if (!row) {
+    throw new Error("planner_uncompletion_missing_result");
+  }
+  return {
+    unitKey: row.unit_key,
+    restoredFrom: row.restored_from,
+    restoredTo: row.restored_to,
+    scheduleDigest: row.schedule_digest,
+  };
+}
+
 export async function tryAtomicPlannerMoveCompletion({
   supabase,
   userId,

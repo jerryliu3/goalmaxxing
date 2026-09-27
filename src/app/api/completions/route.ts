@@ -16,7 +16,10 @@ import {
 import { previewQueuedXpDeltaThenDrain } from "@/lib/xp/outbox";
 import { PLANNER_GOAL_SELECT } from "@/lib/planner/context-loader";
 import { plannerGoalSchema } from "@/lib/planner/contracts/kernel-schema";
-import { tryAtomicPlannerMoveCompletion } from "@/lib/planner/atomic-completion";
+import {
+  tryAtomicPlannerMoveCompletion,
+  uncompletePlannerCompletion,
+} from "@/lib/planner/atomic-completion";
 
 export const runtime = "nodejs";
 
@@ -201,10 +204,64 @@ export async function handleCompletionPost(request: Request) {
       return completionSuccessResponse(result.payload, xpDelta, correlationId);
     }
 
+    if (desiredFactState === "absent") {
+      const digestResponse = await routeContext.supabase.rpc(
+        "get_planner_schedule_digest",
+        {}
+      );
+      if (digestResponse.error || !digestResponse.data) {
+        throw new PlannerRouteError(
+          503,
+          "planner_digest_load_failed",
+          "Planner state could not be loaded."
+        );
+      }
+      try {
+        const undo = await uncompletePlannerCompletion({
+          supabase: routeContext.supabase,
+          goalId,
+          date,
+          expectedDigest: digestResponse.data,
+        });
+        const xpDelta = await previewQueuedXpDeltaThenDrain(
+          routeContext.supabase
+        );
+        return completionSuccessResponse(
+          {
+            goalId,
+            date,
+            factState: desiredFactState,
+            plannerMove: undo.unitKey
+              ? {
+                  unitKey: undo.unitKey,
+                  movedFrom: undo.restoredFrom,
+                  movedTo: undo.restoredTo,
+                }
+              : null,
+            scheduleDigest: undo.scheduleDigest,
+          },
+          xpDelta,
+          correlationId
+        );
+      } catch (error) {
+        const mapped = mapCompletionRpcError(
+          error && typeof error === "object"
+            ? (error as { code?: string | null; message?: string | null })
+            : null
+        );
+        if (mapped) {
+          throw new PlannerRouteError(mapped.status, mapped.code, mapped.message);
+        }
+        throw new PlannerRouteError(
+          409,
+          "planner_uncompletion_failed",
+          "The completion could not be removed."
+        );
+      }
+    }
+
     const { error: mutationError } = await routeContext.supabase.rpc(
-      desiredFactState === "present"
-        ? "mark_goal_complete"
-        : "unmark_goal_complete",
+      "mark_goal_complete",
       {
         p_goal_id: goalId,
         p_date: date,

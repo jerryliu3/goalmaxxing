@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getDateInTimezone, isValidIanaTimezone } from "@/lib/dates/timezone";
 import type { createClient as createServerClient } from "@/lib/supabase/server";
+import { uncompletePlannerCompletion } from "@/lib/planner/atomic-completion";
 
 const digestSchema = z.string().regex(/^[a-f0-9]{64}$/);
 
@@ -266,19 +267,34 @@ export async function applyPlannerItemDateFact({
     }
   }
 
-  const mutationResponse =
-    desiredFactState === "present"
-      ? await supabase.rpc("complete_planner_item_on_date_service", {
-          p_goal_id: goalId,
-          p_unit_key: item.unit_key,
-          p_date: itemDate,
-          p_expected_digest: expectation.expectedDigest,
-        })
-      : await supabase.rpc("unmark_goal_complete", {
-          p_goal_id: goalId,
-          p_date: itemDate,
-        });
-  const mutationError = mutationResponse.error;
+  let mutationError: { code?: string | null; message?: string | null } | null =
+    null;
+  if (desiredFactState === "present") {
+    const mutationResponse = await supabase.rpc(
+      "complete_planner_item_on_date_service",
+      {
+        p_goal_id: goalId,
+        p_unit_key: item.unit_key,
+        p_date: itemDate,
+        p_expected_digest: expectation.expectedDigest,
+      }
+    );
+    mutationError = mutationResponse.error;
+  } else {
+    try {
+      await uncompletePlannerCompletion({
+        supabase,
+        goalId,
+        date: itemDate,
+        expectedDigest: expectation.expectedDigest,
+      });
+    } catch (error) {
+      mutationError =
+        error && typeof error === "object"
+          ? (error as { code?: string | null; message?: string | null })
+          : { message: "planner_uncompletion_failed" };
+    }
+  }
   if (mutationError) {
     return (
       mapCompletionRpcError(mutationError) ??
@@ -343,12 +359,30 @@ export async function applyPlannerGoalDateFact({
     }
   }
 
-  const mutationError = await applyDirectCompletionFact({
-    supabase,
-    goalId,
-    date,
-    desiredFactState,
-  });
+  let mutationError: { code?: string | null; message?: string | null } | null;
+  if (desiredFactState === "absent") {
+    try {
+      await uncompletePlannerCompletion({
+        supabase,
+        goalId,
+        date,
+        expectedDigest: expectation.expectedDigest,
+      });
+      mutationError = null;
+    } catch (error) {
+      mutationError =
+        error && typeof error === "object"
+          ? (error as { code?: string | null; message?: string | null })
+          : { message: "planner_uncompletion_failed" };
+    }
+  } else {
+    mutationError = await applyDirectCompletionFact({
+      supabase,
+      goalId,
+      date,
+      desiredFactState,
+    });
+  }
   if (mutationError) {
     return (
       mapCompletionRpcError(mutationError) ??
