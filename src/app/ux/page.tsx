@@ -13,11 +13,11 @@ export default function UxHubPage() {
         <ul className="mt-10 space-y-4">
           <li>
             <Link className="text-lg font-semibold underline" href="/ux/interface-craft">
-              Everyday interface — Contour, Typeset, Signal
+              Everyday interface — planner interaction models
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">
-              Compare three fresh directions for planner controls, continuous
-              completion grids, goal details, and progress summaries.
+              Compare four ways to operate the planner. Includes the first-round
+              completion history, goal detail, and progress summary examples.
             </p>
           </li>
           <li>

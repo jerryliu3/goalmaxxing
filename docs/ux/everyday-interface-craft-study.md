@@ -1,57 +1,86 @@
-# Everyday interface: Contour, Typeset, Signal
+# Everyday interface study
 
 Route: `/ux/interface-craft`, linked from `/ux`. The existing UX layout provides
-moderator access control and no-index metadata. This is a fresh visual exploration
-requested independently of previous studies and product design locks.
+moderator access control and no-index metadata. This is an isolated study, not a
+production redesign.
 
-## What to compare
+## Round 02: planner interaction models
 
-Three concepts cover four surfaces (12 combinations):
+Feedback on the first round: Contour, Typeset, and Signal mainly changed styling
+around the same planner controls. That did not supply distinct UX alternatives.
+The planner now compares four interaction models with one consistent visual
+language. It reuses the same calendar, sessions, search/filter semantics, and
+completion state so the differences are workflow rather than color.
+
+| Model | Entry point and behavior | Tradeoff |
+| --- | --- | --- |
+| Direct toolbar | View, category, goal, and search always visible; each change applies immediately | Most discoverable and quickest for repeated adjustments; persistent chrome |
+| Canvas navigation | Click a date to zoom into a day; use the breadcrumb to zoom out; select a session to reveal completion/day actions in a bottom dock; filters are disclosed on demand | Content leads; selection and zoom add steps |
+| Goal navigator | Select an intention in a collapsible sidebar and see its sessions on the calendar; cadence and placed-session count stay beside the goal | Strong goal-to-calendar relationship; uses width and scopes other work away |
+| View composer | Read the current scope as a sentence; open a modal, stage several settings, Apply view or Cancel | Quiet resting state and atomic changes; extra steps for every adjustment |
+
+The direct toolbar is the reference workflow, not the declared winner. Each
+concept has a short task above it to make the difference immediately testable.
+
+- Compare shows four panes in two columns on wide screens and one column on small
+  screens. All applied state is shared. Local navigator visibility, selected work,
+  and unapplied composer changes belong to their example.
+- Narrow constrains each preview to at most 390px. The sidebar becomes a goal list
+  above the calendar, and canvas filters expand in flow to avoid a clipped popover.
+- The calendar supports month → date → day navigation in every model. Canvas
+  navigation specifically replaces the view switch with zoom breadcrumbs and
+  replaces immediate completion with selection plus a contextual action.
+- Planner focus date and selected goal are independent of the history inspector
+  and goal-detail example selection. Goal filtering never changes summary totals.
+- Compose changes contain only view, category, goal scope, and search. Cancel,
+  Escape, or outside dismissal discards the staged changes. Applying a view never
+  overwrites completions. Reopening starts from the current applied view.
+- Clear scope is visible whenever a category, goal, or search limits the canvas.
+  Collapsing the navigator retains scope and leaves its description visible.
+- Reset sample restores shared data and remounts planner examples to clear local
+  interaction state. Preference selections remain intact for the current visit.
+
+## Goal-details placement clarification
+
+The first-round goal examples were intended for **goal card → open goal → goal
+detail content**, showing how title, cadence, deadline, and progress might read
+inside an opened goal. They were not a proposal for another planner destination
+or permanent planner panel. The sample goal picker is a study control only.
+
+The study now states this placement above the examples. Whether those details
+belong inside the existing detail sheet or expanded card is undecided. No new
+placement or additional goal-detail concept is implemented in this revision.
+
+## Retained first-round comparisons
+
+Completion history and progress summaries are unchanged in round 02.
 
 | Surface | Contour | Typeset | Signal |
 | --- | --- | --- | --- |
-| Planner | Recessed view rail, tinted filter capsules, soft work tiles | Underlined view labels, ruled toolbar, open work rows | Side control panel on wide screens, square state controls, compact work tiles |
 | History | Continuous color mosaic, rounded outer silhouette, day inspector | Ruled calendar with explicit completion counts and editorial day detail | Wide meter cells, darker intensity scale, horizontal day readout |
 | Goal metadata and detail | Conversational metadata inside a soft goal object | Label/value rules and large editorial title | Labeled instrument strip and numeric progress |
-| Progress summaries | Completion ring and a short reading of progress | Large statement and physical tally marks | Percentage readout and segmented meter |
+| Progress summaries | Completion ring and a short reading of progress | Large statement and tally marks | Percentage readout and segmented meter |
 
-Contour trades space for approachability. Typeset trades obvious containers for
-quiet hierarchy. Signal trades softness for precision and high contrast. No
-concept is preselected as the product winner.
+History shows August and September with touching cells and read-only inspection.
+Future dates are inspectable and identified as still ahead. Goal details expand
+inline and allow a sample session completion. Summaries have week/month periods
+and an expandable breakdown. Those interactions update the shared sample data.
+The sample clock is September 27, 2026; the sample schedule is September 21–27.
 
-## Interactive review
+## Implementation boundaries and coverage
 
-- Choose a surface and direction, or compare all three. At smaller viewport widths,
-  comparison panes stack. Narrow constrains each example to at most 390px; CSS
-  container queries recompose the actual controls within that width.
-- Every concept shares the same sample state. Switching directions retains search,
-  filters, view, completion edits, inspected date, selected goal, and summary period.
-- Planner supports category/search filtering, Day/Week/Month views, and reversible
-  sample completions. The Day view focuses Wednesday September 23 within the sample
-  week September 21–27. The sample clock is September 27, 2026.
-- History shows August and September. Cells touch with shared hairline divisions;
-  no inter-cell gaps or individually rounded frames. Click a day to inspect it.
-  Future dates remain inspectable and clearly show that they are still ahead.
-- Goal details expand inline. Marking the next sample session complete updates the
-  planner, history, goal progress, and summaries. No network mutations occur.
-- Summary periods change the totals and denominator; the breakdown is expandable.
-- Prefer this records a separate choice for each surface for the current visit.
-  Reset sample restores interaction data while retaining those choices.
+All example state and styling live in `src/features/ux-interface-craft`; the route
+is a server entry with a client shell. Existing Dialog primitives provide focus
+management, Escape, and dismissal for the composer. No production mutations,
+feature flags, database changes, or planner components are involved.
 
-## Implementation boundaries
+Focused functional coverage now tests the actual UX differences: immediate
+filtering, canvas zoom and selection-before-completion, goal scope retained while
+collapsed, composer cancellation and explicit apply, shared state across four
+models, reset of local state, preferences, and history/summary consistency.
+Obsolete tests for three styled planners were replaced. Existing history and
+summary journey coverage remains.
 
-All new styling and sample logic live in `src/features/ux-interface-craft`.
-The route is a server entry with a client interaction shell. No production controls,
-API routes, database state, feature flags, or application navigation are changed.
-The only existing file changed is the UX lab index, to make the study discoverable.
-
-Native buttons expose selected/expanded states, search has a label, progress has
-numeric semantics, and history selection works without hover. Reduced-motion and
-forced-colors treatments are included. This study does not prototype dragging or
-production completion-hold behavior; planner tile clicks are sample-only toggles.
-
-Functional coverage is written for all three planner concepts, shared comparison
-state, history inspection/month boundaries, goal-to-summary updates, reset, and
-per-surface preferences. Pure model coverage checks calendar alignment and total
-consistency. Tests, typecheck, lint, CI, and browser verification were not run,
-per repository instructions. Visual quality remains unverified in a browser.
+Tests, typecheck, lint, CI, and browser verification are not run without explicit
+approval, per repository instructions. Visual quality remains unverified in a
+browser.
