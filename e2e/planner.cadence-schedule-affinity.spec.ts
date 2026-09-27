@@ -230,14 +230,10 @@ test.describe("cadence schedule-affinity", () => {
         { timeout: 30_000 }
       )
       .catch(() => undefined);
-    const goalRow = page
-      .locator("[data-planner-entry-key]")
-      .filter({ hasText: CADENCE_AFFINITY_GOAL_TITLE });
-    await expect(goalRow).toBeVisible({ timeout: 30_000 });
-
-    const completeButton = goalRow.getByRole("button", {
-      name: "Mark session done",
+    const completeButton = page.getByRole("button", {
+      name: `Mark ${CADENCE_AFFINITY_GOAL_TITLE} done`,
     });
+    await expect(completeButton).toBeVisible({ timeout: 30_000 });
     await expect(completeButton).toBeEnabled({ timeout: 15_000 });
 
     const [completionRequest] = await Promise.all([

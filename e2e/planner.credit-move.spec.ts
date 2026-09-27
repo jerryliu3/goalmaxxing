@@ -203,12 +203,12 @@ test.describe("planner credit move", () => {
     );
 
     await setExactDateCompletion(page, {
-      date: fixture.tomorrow,
+      date: fixture.today,
       desiredFactState: "absent",
     });
     await clearPlannerTabCache(page);
 
-    await gotoAppPath(page, `/calendar?view=day&day=${fixture.tomorrow}`);
+    await gotoAppPath(page, `/calendar?view=day&day=${fixture.today}`);
     await dismissTabOnboardingIfPresent(page);
     await expandUnscheduledGoals(page);
 
@@ -244,14 +244,14 @@ test.describe("planner credit move", () => {
     };
     expect(savePayload.draftCommands?.[0]?.kind).toBe("move_item");
     expect(savePayload.draftCommands?.[0]?.goalId).toBe(CADENCE_AFFINITY_GOAL_ID);
-    expect(savePayload.draftCommands?.[0]?.scheduledDate).toBe(fixture.tomorrow);
+    expect(savePayload.draftCommands?.[0]?.scheduledDate).toBe(fixture.today);
 
     await expect
       .poll(
         async () => {
           const credits = await fetchGoalUnitCredits(page, fixture.scopeMonth);
           return Object.values(credits).some(
-            (unit) => unit.scheduledDate === fixture.tomorrow
+            (unit) => unit.scheduledDate === fixture.today
           );
         },
         { timeout: 20_000 }
@@ -287,7 +287,7 @@ test.describe("planner credit move", () => {
         };
         return (
           payload.goalId === CADENCE_AFFINITY_GOAL_ID &&
-          payload.date === fixture.tomorrow &&
+          payload.date === fixture.today &&
           payload.desiredFactState === "present"
         );
       }),
@@ -297,7 +297,7 @@ test.describe("planner credit move", () => {
       date: string;
       desiredFactState: string;
     };
-    expect(completionPayload.date).toBe(fixture.tomorrow);
+    expect(completionPayload.date).toBe(fixture.today);
     expect(completionPayload.desiredFactState).toBe("present");
   });
 });

@@ -28,15 +28,7 @@ begin
   )
   or (
     standing.subject_kind = 'team'::public.social_subject_kind
-    and not exists (
-      select 1
-      from public.teams team
-      join public.profiles member_a on member_a.id = team.user_a_id
-      join public.profiles member_b on member_b.id = team.user_b_id
-      where team.id = standing.subject_id
-        and member_a.social_activity_visible
-        and member_b.social_activity_visible
-    )
+    and not private.team_all_members_socially_visible(standing.subject_id)
   );
 
   with ranked as (
