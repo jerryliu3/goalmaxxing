@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { captureViewportRect } from "@/lib/xp/events";
-import { resolveSelectedDateState } from "@/lib/dates/day";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
 import {
   isProgressContextAuthenticationError,
@@ -16,7 +15,6 @@ import {
   withoutOptimisticCompletionFact,
   type OptimisticCompletionFacts,
 } from "@/lib/planner/optimistic-completion-facts";
-import { useCompletionCreditMove } from "@/features/planner/completion-credit-move";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import { reportDuoTelemetry } from "@/lib/social/duo/telemetry";
 
@@ -52,7 +50,6 @@ export function useChecklistCompletionActions({
   );
   const recentlyCompletedTimerRef = useRef<number | null>(null);
   const runCompletionMutation = useCompletionMutation();
-  const creditMove = useCompletionCreditMove();
 
   const refreshChecklistInBackground = useCallback(
     (scrollY: number) => {
@@ -130,23 +127,6 @@ export function useChecklistCompletionActions({
       const routeDesiredFactState = mutation.desiredFactState;
       const dispatchDate = mutation.date;
 
-      const dateState = resolveSelectedDateState(viewDate, todayLocalDate);
-      if (
-        routeDesiredFactState === "present" &&
-        creditMove &&
-        dateState !== "past"
-      ) {
-        if (creditMove.goalRequiresMove(goal.id, viewDate)) {
-          const openedMoveDialog = await creditMove.requestMoveBeforeComplete(
-            goal,
-            viewDate
-          );
-          if (openedMoveDialog) {
-            return;
-          }
-        }
-      }
-
       setSavingGoalId(goal.id);
       setOptimisticFacts((overlay) =>
         withOptimisticCompletionFact(
@@ -193,7 +173,6 @@ export function useChecklistCompletionActions({
     },
     [
       completionsByGoal,
-      creditMove,
       readOnly,
       refreshChecklistInBackground,
       runCompletionMutation,

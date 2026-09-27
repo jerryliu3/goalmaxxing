@@ -7,7 +7,6 @@ import {
   isEntryCredited,
   isEntryImmovableForDraft,
 } from "@/features/planner/calendar-format";
-import { useCompletionCreditMove } from "@/features/planner/completion-credit-move";
 import { planUnscheduledLedgerControlMode } from "@/features/planner/completion-entry-dispatch";
 import {
   PlanLedgerCompletionControl,
@@ -98,7 +97,6 @@ export function PlannerFocusedDayPane({
   onCancelDraftMove,
 }: PlannerFocusedDayPaneProps) {
   const TitleTag = titleAs;
-  const creditMove = useCompletionCreditMove();
   const [todoCount, setTodoCount] = useState(0);
   const visibleEntries = entries;
     const unscheduledCount = useMemo(() => {
@@ -136,9 +134,7 @@ export function PlannerFocusedDayPane({
       currentlyCredited: completed,
       selectedDate: day,
       asOfDate,
-      canMoveScheduledSession: Boolean(
-        !completed && !archived && creditMove?.goalRequiresMove(goal.id, day)
-      ),
+      canMoveScheduledSession: false,
     });
     return (
       <div

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useChecklistCompletionActions } from "@/features/today/use-checklist-completion-actions";
 import { useChecklistData } from "@/features/today/use-checklist-data";
 import { useChecklistProjection } from "@/features/today/use-checklist-projection";
-import { useCompletionCreditMove } from "@/features/planner/completion-credit-move";
 import { planUnscheduledLedgerControlMode } from "@/features/planner/completion-entry-dispatch";
 import {
   placedGoalIdsForDay,
@@ -196,7 +195,6 @@ function PlanDayUnplannedRows({
   savingGoalId: string | null;
   onToggle: (goal: Goal, sourceElement: HTMLButtonElement) => void;
 }) {
-  const creditMove = useCompletionCreditMove();
   if (goals.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">Nothing unscheduled for this day.</p>
@@ -212,9 +210,7 @@ function PlanDayUnplannedRows({
           currentlyCredited: completed,
           selectedDate: day,
           asOfDate,
-          canMoveScheduledSession: Boolean(
-            !completed && creditMove?.goalRequiresMove(goal.id, day)
-          ),
+          canMoveScheduledSession: false,
         });
         return (
           <div

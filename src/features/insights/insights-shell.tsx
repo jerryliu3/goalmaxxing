@@ -8,7 +8,6 @@ import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
 import { resolveDuoLanes } from "@cadence/shared/social/duo";
 import { ProgressOverviewLayout } from "@/features/insights/progress-overview/progress-overview-layout";
 import type { ProgressSectionId } from "@/features/insights/progress-overview/progress-view-model";
-import { CompletionCreditMoveProvider } from "@/features/planner/completion-credit-move";
 import {
   InsightsTab,
   type InsightsSharedGoalFilters,
@@ -16,7 +15,6 @@ import {
 } from "@/features/insights/insights-tab";
 import { InsightsTrackerHeader } from "@/features/insights/insights-tracker-header";
 import { unionGoalsById } from "@/features/insights/insights-selectors";
-import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 import type { GoalDateSort } from "@/lib/goals/list-view";
 import type { Goal } from "@/lib/goals/types";
 
@@ -46,9 +44,6 @@ export function InsightsShell() {
   }, []);
   const handlePartnerSectionsChange = useCallback((ids: ProgressSectionId[]) => {
     setSectionIdsByLane((current) => ({ ...current, partner: ids }));
-  }, []);
-  const handleCreditMoveSaved = useCallback(() => {
-    invalidatePlannerRelatedTabCaches();
   }, []);
   const sharedFilterGoals = useMemo(
     () => unionGoalsById([viewerGoals, partnerGoals]),
@@ -138,11 +133,7 @@ export function InsightsShell() {
               viewer={viewer}
               partner={partner}
               renderLane={(subject) => (
-                <CompletionCreditMoveProvider
-                  context={null}
-                  onMoved={handleCreditMoveSaved}
-                >
-                  <InsightsTab
+                <InsightsTab
                     subjectUserId={subject.userId}
                     readOnly={subject.readOnly}
                     sharedPeriod={sharedPeriod}
@@ -162,8 +153,7 @@ export function InsightsShell() {
                           : handleViewerGoalsChange
                         : undefined
                     }
-                  />
-                </CompletionCreditMoveProvider>
+                />
               )}
             />
           </div>
