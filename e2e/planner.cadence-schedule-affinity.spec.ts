@@ -201,12 +201,11 @@ async function expandUnscheduledGoals(page: Page) {
   const unscheduledTrigger = page.getByRole("button", {
     name: /Unscheduled goals/i,
   });
-  if (!(await unscheduledTrigger.isVisible().catch(() => false))) {
-    return;
-  }
+  await expect(unscheduledTrigger).toBeVisible({ timeout: 30_000 });
   if ((await unscheduledTrigger.getAttribute("aria-expanded")) !== "true") {
     await unscheduledTrigger.click();
   }
+  await expect(unscheduledTrigger).toHaveAttribute("aria-expanded", "true");
 }
 
 test.describe("cadence schedule-affinity", () => {
