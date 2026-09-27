@@ -242,16 +242,26 @@ export function buildPlannerPublishPersistencePayload({
 
   const items = workUnits.map((unit) => {
     const itemKey = buildDraftEditKey(unit.originalGoalId, unit.unitKey);
+    const scheduledDate =
+      unit.creditState === "completed_elsewhere"
+        ? unit.creditedCompletionDate
+        : unit.scheduledDate;
+    const resolvedTime = resolvePlannerEffectiveScheduledTime({
+      scheduledDate,
+      goalDefaultLocalTime:
+        goalDefaultLocalTimeByGoalId.get(unit.originalGoalId) ?? null,
+      scheduledTimeOverride: unit.scheduledTimeOverride ?? null,
+    });
     return {
       goal_id: unit.originalGoalId,
       unit_key: unit.unitKey,
       original_scheduled_date:
         originalScheduledDateByKey.get(itemKey) ?? unit.scheduledDate,
-      scheduled_date:
-        unit.creditState === "completed_elsewhere" ? null : unit.scheduledDate,
+      scheduled_date: scheduledDate,
       scheduled_time_override: unit.scheduledTimeOverride ?? null,
-      effective_scheduled_local_time: unit.effectiveScheduledLocalTime ?? null,
-      effective_scheduled_at_local: unit.effectiveScheduledAtLocal ?? null,
+      effective_scheduled_local_time:
+        resolvedTime.effectiveScheduledLocalTime,
+      effective_scheduled_at_local: resolvedTime.effectiveScheduledAtLocal,
       locked: unit.locked,
     };
   });
