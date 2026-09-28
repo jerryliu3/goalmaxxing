@@ -1,18 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { clearPlannerTabCache } from "./planner-test-utils";
 
 const CADENCE_AFFINITY_GOAL_ID = "10000000-0000-4000-8000-000000000024";
-const CADENCE_AFFINITY_GOAL_TITLE = "E2E cadence gym 4x";
-const COMPLETION_HOLD_CLICK = { delay: 550 } as const;
 
 interface CadenceAffinityFixture {
   available: boolean;
   scopeMonth: string;
-  today: string;
-  tomorrow: string;
-  pastSlotDate: string;
-  unitKey3: string;
-  unitKey4: string;
+  completionDate: string;
 }
 
 interface UnitCreditSnapshot {
@@ -22,15 +15,6 @@ interface UnitCreditSnapshot {
 
 async function gotoAppPath(page: Page, path: string) {
   await page.goto(path, { waitUntil: "domcontentloaded" });
-}
-
-async function dismissTabOnboardingIfPresent(page: Page) {
-  const onboardingDialog = page.locator('[aria-labelledby^="tab-onboarding-"]');
-  if (!(await onboardingDialog.first().isVisible().catch(() => false))) {
-    return;
-  }
-  await onboardingDialog.getByRole("button", { name: "Dismiss" }).click();
-  await expect(onboardingDialog.first()).toBeHidden();
 }
 
 async function resolveCadenceAffinityFixture(
@@ -47,46 +31,18 @@ async function resolveCadenceAffinityFixture(
     const todayDate = new Date();
     todayDate.setHours(12, 0, 0, 0);
     const monthStart = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1);
-    const monthEnd = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0);
-    const tomorrow = new Date(todayDate);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const pastSlotDate = new Date(todayDate);
-    pastSlotDate.setDate(pastSlotDate.getDate() - 7);
     const today = formatDate(todayDate);
-    const tomorrowStr = formatDate(tomorrow);
-    const periodKey = formatDate(monthStart);
     const scopeMonth = today.slice(0, 7);
-
-    if (tomorrow > monthEnd || pastSlotDate < monthStart) {
-      return {
-        available: false,
-        scopeMonth,
-        today,
-        tomorrow: tomorrowStr,
-        pastSlotDate: formatDate(pastSlotDate),
-        unitKey3: `cadence:${periodKey}:3`,
-        unitKey4: `cadence:${periodKey}:4`,
-      };
-    }
-
     const response = await fetch(`/api/planner/context?scopeMonth=${scopeMonth}`);
     if (!response.ok) {
-      return {
-        available: false,
-        scopeMonth,
-        today,
-        tomorrow: tomorrowStr,
-        pastSlotDate: formatDate(pastSlotDate),
-        unitKey3: `cadence:${periodKey}:3`,
-        unitKey4: `cadence:${periodKey}:4`,
-      };
+      return { available: false, scopeMonth, completionDate: today };
     }
 
     const body = (await response.json()) as {
       preview?: {
         workUnits?: Array<{
           originalGoalId: string;
-          unitKey: string;
+          scheduledDate: string | null;
         }>;
       };
     };
@@ -94,15 +50,26 @@ async function resolveCadenceAffinityFixture(
       body.preview?.workUnits?.filter(
         (unit) => unit.originalGoalId === goalId
       ) ?? [];
+    const scheduledDates = new Set(
+      units.flatMap((unit) =>
+        unit.scheduledDate ? [unit.scheduledDate] : []
+      )
+    );
+    let completionDate = today;
+    const candidate = new Date(todayDate);
+    while (candidate >= monthStart) {
+      const date = formatDate(candidate);
+      if (!scheduledDates.has(date)) {
+        completionDate = date;
+        break;
+      }
+      candidate.setDate(candidate.getDate() - 1);
+    }
 
     return {
-      available: units.length >= 4,
+      available: units.length >= 4 && !scheduledDates.has(completionDate),
       scopeMonth,
-      today,
-      tomorrow: tomorrowStr,
-      pastSlotDate: formatDate(pastSlotDate),
-      unitKey3: `cadence:${periodKey}:3`,
-      unitKey4: `cadence:${periodKey}:4`,
+      completionDate,
     };
   }, CADENCE_AFFINITY_GOAL_ID);
 }
@@ -159,34 +126,18 @@ async function setExactDateCompletion(
       const response = await fetch("/api/completions", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          goalId,
-          date,
-          desiredFactState,
-          timezone,
-        }),
+        body: JSON.stringify({ goalId, date, desiredFactState, timezone }),
       });
       return {
         ok: response.ok,
         status: response.status,
+        body: await response.json(),
       };
     },
-    {
-      goalId: CADENCE_AFFINITY_GOAL_ID,
-      date,
-      desiredFactState,
-    }
+    { goalId: CADENCE_AFFINITY_GOAL_ID, date, desiredFactState }
   );
-  expect(result.ok).toBe(true);
-}
-
-async function expandUnscheduledGoals(page: Page) {
-  const unscheduledTrigger = page.getByRole("button", { name: /Unscheduled goals/i });
-  await expect(unscheduledTrigger).toBeVisible({ timeout: 30_000 });
-  if ((await unscheduledTrigger.getAttribute("aria-expanded")) !== "true") {
-    await unscheduledTrigger.click();
-  }
-  await expect(unscheduledTrigger).toHaveAttribute("aria-expanded", "true");
+  expect(result.ok, JSON.stringify(result.body)).toBe(true);
+  return result;
 }
 
 test.describe("planner credit move", () => {
@@ -195,7 +146,7 @@ test.describe("planner credit move", () => {
     "Credit-move rail runs on chromium only."
   );
 
-  test("off-schedule day completion stages a draft move before marking done", async ({
+  test("off-schedule completion atomically moves the credited session", async ({
     page,
   }) => {
     test.setTimeout(120_000);
@@ -207,109 +158,38 @@ test.describe("planner credit move", () => {
       "Cadence affinity fixture is unavailable for the current calendar day."
     );
 
-    // Credit the previous session first. With that past session open, direct
-    // completion is correct and no move control should be offered. This setup
-    // deliberately exercises the remaining future-session move path.
     await setExactDateCompletion(page, {
-      date: fixture.pastSlotDate,
-      desiredFactState: "present",
-    });
-    await setExactDateCompletion(page, {
-      date: fixture.today,
+      date: fixture.completionDate,
       desiredFactState: "absent",
     });
-    await clearPlannerTabCache(page);
-
-    await gotoAppPath(page, `/calendar?view=day&day=${fixture.today}`);
-    await dismissTabOnboardingIfPresent(page);
-    await expandUnscheduledGoals(page);
-
-    const moveButton = page.getByRole("button", {
-      name: `Move a planned session to complete ${CADENCE_AFFINITY_GOAL_TITLE}`,
+    const completion = await setExactDateCompletion(page, {
+      date: fixture.completionDate,
+      desiredFactState: "present",
     });
-    await expect(moveButton).toBeVisible({ timeout: 15_000 });
-
-    await moveButton.click();
-    const goalRow = page
-      .locator("[data-planner-entry-key]")
-      .filter({ hasText: CADENCE_AFFINITY_GOAL_TITLE });
-    await expect(goalRow).toBeVisible({ timeout: 30_000 });
-    const confirmButton = goalRow.getByRole("button", {
-      name: /Confirm moving .* to this day/,
-    });
-    await expect(confirmButton).toBeVisible({ timeout: 15_000 });
-
-    const saveResponsePromise = page.waitForResponse(
-      (response) =>
-        response.url().includes("/api/planner/save") &&
-        response.request().method() === "POST"
-    );
-    await confirmButton.click();
-    const saveResponse = await saveResponsePromise;
-    expect(saveResponse.ok()).toBe(true);
-    const savePayload = saveResponse.request().postDataJSON() as {
-      draftCommands?: Array<{
-        kind?: string;
-        goalId?: string;
-        scheduledDate?: string;
-      }>;
+    const completionBody = completion.body as {
+      plannerMove?: {
+        unitKey?: string;
+        movedFrom?: string;
+        movedTo?: string;
+      };
     };
-    expect(savePayload.draftCommands?.[0]?.kind).toBe("move_item");
-    expect(savePayload.draftCommands?.[0]?.goalId).toBe(CADENCE_AFFINITY_GOAL_ID);
-    expect(savePayload.draftCommands?.[0]?.scheduledDate).toBe(fixture.today);
+    expect(completionBody.plannerMove?.unitKey).toBeTruthy();
+    expect(completionBody.plannerMove?.movedTo).toBe(fixture.completionDate);
 
     await expect
       .poll(
         async () => {
           const credits = await fetchGoalUnitCredits(page, fixture.scopeMonth);
-          return Object.values(credits).some(
-            (unit) => unit.scheduledDate === fixture.today
+          const moved = completionBody.plannerMove?.unitKey
+            ? credits[completionBody.plannerMove.unitKey]
+            : null;
+          return (
+            moved?.scheduledDate === fixture.completionDate &&
+            moved.creditState !== "uncredited"
           );
         },
         { timeout: 20_000 }
       )
       .toBe(true);
-
-    await page
-      .waitForResponse(
-        (response) =>
-          response.url().includes("/api/planner/context") && response.ok(),
-        { timeout: 30_000 }
-      )
-      .catch(() => undefined);
-    await expect(goalRow).toBeVisible({ timeout: 30_000 });
-
-    const completeButton = goalRow.getByRole("button", {
-      name: "Mark session done",
-    });
-    await expect(completeButton).toBeEnabled({ timeout: 15_000 });
-
-    const [completionRequest] = await Promise.all([
-      page.waitForRequest((request) => {
-        if (
-          !request.url().includes("/api/completions") ||
-          request.method() !== "POST"
-        ) {
-          return false;
-        }
-        const payload = request.postDataJSON() as {
-          goalId?: string;
-          date?: string;
-          desiredFactState?: string;
-        };
-        return (
-          payload.goalId === CADENCE_AFFINITY_GOAL_ID &&
-          payload.date === fixture.today &&
-          payload.desiredFactState === "present"
-        );
-      }),
-      completeButton.click(COMPLETION_HOLD_CLICK),
-    ]);
-    const completionPayload = completionRequest.postDataJSON() as {
-      date: string;
-      desiredFactState: string;
-    };
-    expect(completionPayload.date).toBe(fixture.today);
-    expect(completionPayload.desiredFactState).toBe("present");
   });
 });
