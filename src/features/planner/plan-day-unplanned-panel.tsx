@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useChecklistCompletionActions } from "@/features/today/use-checklist-completion-actions";
 import { useChecklistData } from "@/features/today/use-checklist-data";
 import { useChecklistProjection } from "@/features/today/use-checklist-projection";
+import { useUnscheduledDraftMove } from "@/features/planner/unscheduled-draft-move";
 import { planUnscheduledLedgerControlMode } from "@/features/planner/completion-entry-dispatch";
 import {
   placedGoalIdsForDay,
@@ -195,6 +196,7 @@ function PlanDayUnplannedRows({
   savingGoalId: string | null;
   onToggle: (goal: Goal, sourceElement: HTMLButtonElement) => void;
 }) {
+  const draftMove = useUnscheduledDraftMove();
   if (goals.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">Nothing unscheduled for this day.</p>
@@ -210,6 +212,9 @@ function PlanDayUnplannedRows({
           currentlyCredited: completed,
           selectedDate: day,
           asOfDate,
+          canMoveScheduledSession: Boolean(
+            !completed && draftMove?.canMoveGoalToDate(goal.id, day)
+          ),
         });
         return (
           <div
@@ -222,7 +227,13 @@ function PlanDayUnplannedRows({
               pending={savingGoalId === goal.id}
               mode={completionMode}
               label={goal.title}
-              onToggle={(sourceElement) => onToggle(goal, sourceElement)}
+              onToggle={(sourceElement) => {
+                if (completionMode === "move") {
+                  draftMove?.moveGoalToDate(goal, day);
+                  return;
+                }
+                onToggle(goal, sourceElement);
+              }}
             />
             <Link
               href={`/goals/${goal.id}`}

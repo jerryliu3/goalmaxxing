@@ -154,16 +154,25 @@ export function planUnscheduledLedgerControlMode({
   currentlyCredited,
   selectedDate,
   asOfDate,
+  canMoveScheduledSession = false,
 }: {
   currentlyCredited: boolean;
   selectedDate: string;
   asOfDate: string | null;
-}): "toggle" | "done" | "hidden" {
-  return planCompletionControlModeForDate({
+  canMoveScheduledSession?: boolean;
+}): "toggle" | "done" | "hidden" | "move" {
+  const base = planCompletionControlModeForDate({
     currentlyCredited,
     selectedDate,
     asOfDate,
   });
+  if (currentlyCredited || !canMoveScheduledSession) {
+    return base;
+  }
+  if (asOfDate && resolveSelectedDateState(selectedDate, asOfDate) === "past") {
+    return base;
+  }
+  return "move";
 }
 
 export function getPlannerCompletionTogglePresentation({

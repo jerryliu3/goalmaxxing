@@ -77,6 +77,10 @@ import { PlannerCalendarSurfaceLayout } from "@/features/planner/planner-calenda
 import { persistImmediatePlannerMove } from "@/lib/planner/persist-immediate-move";
 import { canConfirmDraftMove, resolveStagedDraftMove } from "@/features/planner/draft-move-confirm";
 import {
+  UnscheduledDraftMoveProvider,
+  type UnscheduledDraftMove,
+} from "@/features/planner/unscheduled-draft-move";
+import {
   pruneOptimisticCompletionFacts,
   type OptimisticCompletionFacts,
 } from "@/lib/planner/optimistic-completion-facts";
@@ -576,6 +580,35 @@ export function CalendarSurface({
       scopeMonth,
     ]
   );
+  const queueUnscheduledDraftMove = useCallback(
+    ({ goalId, unitKey, sourceDate, scheduledDate }: UnscheduledDraftMove) => {
+      const entry =
+        (entriesByDate.get(sourceDate) ?? []).find(
+          (candidate) =>
+            candidate.originalGoalId === goalId &&
+            candidate.unitKey === unitKey &&
+            !candidate.draftGhost
+        ) ??
+        [...entriesByDate.values()]
+          .flat()
+          .find(
+            (candidate) =>
+              candidate.originalGoalId === goalId &&
+              candidate.unitKey === unitKey &&
+              !candidate.draftGhost
+          );
+      if (!entry?.activeItem) {
+        toast.error("That planned session is not available in this calendar draft.");
+        return false;
+      }
+      return queueDraftMoveCommand({
+        entry,
+        nextDate: scheduledDate,
+        source: "date_input",
+      });
+    },
+    [entriesByDate, queueDraftMoveCommand]
+  );
   const effectiveMoveDialogSourceEntryKey = useEffectiveMoveDialogSourceEntryKey({
     moveDialogSourceEntryKey,
     moveDialogSourceOptions,
@@ -1015,5 +1048,13 @@ export function CalendarSurface({
 
   useReportAppSurfaceReady(Boolean(error) || (context !== null && !loading));
 
-  return <PlannerCalendarSurfaceLayout {...layoutProps} />;
+  return (
+    <UnscheduledDraftMoveProvider
+      workUnits={draftWindowWorkUnits}
+      asOfDate={context?.asOfDate ?? null}
+      onDraftMove={queueUnscheduledDraftMove}
+    >
+      <PlannerCalendarSurfaceLayout {...layoutProps} />
+    </UnscheduledDraftMoveProvider>
+  );
 }

@@ -102,6 +102,43 @@ describe("buildDirectDraftPersistence", () => {
     ]);
   });
 
+  it("uses the persisted session date for stale-write validation", () => {
+    const driftedSnapshot = {
+      ...snapshot,
+      activePlan: {
+        ...snapshot.activePlan,
+        basePlan: {
+          ...snapshot.activePlan!.basePlan,
+          assignments: snapshot.activePlan!.basePlan.assignments.map((assignment) =>
+            assignment.unitKey === "milestone:1"
+              ? { ...assignment, scheduledDate: "2026-08-11" }
+              : assignment
+          ),
+        },
+      },
+    } as unknown as PlannerCanonicalSnapshot;
+
+    const result = buildDirectDraftPersistence({
+      snapshot: driftedSnapshot,
+      commands: [
+        {
+          id: "33333333-3333-4333-8333-333333333339",
+          sequence: 1,
+          kind: "move_item",
+          goalId: goal.id,
+          unitKey: "milestone:1",
+          sourceDate: "2026-08-10",
+          scheduledDate: "2026-08-20",
+        },
+      ],
+      asOfDate: "2026-08-05",
+    });
+
+    expect(result.find((item) => item.unit_key === "milestone:1")).toMatchObject({
+      scheduled_date: "2026-08-20",
+    });
+  });
+
   it("allows manually moving an uncredited past session into a future date", () => {
     const result = buildDirectDraftPersistence({
       snapshot,

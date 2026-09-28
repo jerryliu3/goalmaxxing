@@ -322,7 +322,8 @@ export function buildDirectDraftPersistence({
   const projectedDateByKey = new Map(
     Array.from(canonicalAssignmentByKey.values()).map((assignment) => [
       assignmentKey(assignment),
-      assignment.scheduledDate,
+      activeItemByKey.get(assignmentKey(assignment))?.scheduled_date ??
+        assignment.scheduledDate,
     ])
   );
   const projectedTimeByKey = new Map(
@@ -378,7 +379,7 @@ export function buildDirectDraftPersistence({
       );
     }
     const itemIsLocked = assignment.locked;
-    const itemIsUnscheduled = assignment.scheduledDate === null;
+    const itemIsUnscheduled = activeItem.scheduled_date === null;
     const itemIsCredited = completedUnitDateByKey.has(key);
     const throwIfImmovable = (action: "moved" | "changed") => {
       if (itemIsLocked) {
@@ -418,9 +419,7 @@ export function buildDirectDraftPersistence({
     if (command.kind !== "move_item") {
       continue;
     }
-    if (
-      assignment.scheduledDate !== command.sourceDate
-    ) {
+    if (activeItem.scheduled_date !== command.sourceDate) {
       throw new PlannerDirectDraftValidationError(
         "draft_item_stale",
         "That session moved after this draft was created. Refresh and try again.",
@@ -434,7 +433,7 @@ export function buildDirectDraftPersistence({
           ? getAnchoredPeriod(
               goal.start_date,
               requirement.interval,
-              assignment.scheduledDate ?? command.sourceDate,
+              activeItem.scheduled_date ?? command.sourceDate,
               {
                 weekStartsOn:
                   snapshot.preferences?.default_policy.weekStartsOn,

@@ -138,7 +138,10 @@ export function usePlannerDraftCommands({
       const sourceDate =
         existingMove?.kind === "move_item"
           ? existingMove.sourceDate
-          : baselineUnit.scheduledDate ?? entry.draftDiffFromDate ?? planned.scheduledDate;
+          : entry.activeItem?.scheduled_date ??
+            entry.draftDiffFromDate ??
+            baselineUnit.scheduledDate ??
+            planned.scheduledDate;
       const prospectiveState = draftCommandReducer(draftCommandState, {
         type: "upsert_move",
         goalId: entry.originalGoalId,

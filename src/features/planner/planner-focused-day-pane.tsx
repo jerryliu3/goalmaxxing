@@ -8,6 +8,7 @@ import {
   isEntryImmovableForDraft,
 } from "@/features/planner/calendar-format";
 import { planUnscheduledLedgerControlMode } from "@/features/planner/completion-entry-dispatch";
+import { useUnscheduledDraftMove } from "@/features/planner/unscheduled-draft-move";
 import {
   PlanLedgerCompletionControl,
   type PlanLedgerCompletionMode,
@@ -97,6 +98,7 @@ export function PlannerFocusedDayPane({
   onCancelDraftMove,
 }: PlannerFocusedDayPaneProps) {
   const TitleTag = titleAs;
+  const draftMove = useUnscheduledDraftMove();
   const [todoCount, setTodoCount] = useState(0);
   const visibleEntries = entries;
     const unscheduledCount = useMemo(() => {
@@ -134,6 +136,9 @@ export function PlannerFocusedDayPane({
       currentlyCredited: completed,
       selectedDate: day,
       asOfDate,
+      canMoveScheduledSession: Boolean(
+        !completed && !archived && draftMove?.canMoveGoalToDate(goal.id, day)
+      ),
     });
     return (
       <div
@@ -148,6 +153,10 @@ export function PlannerFocusedDayPane({
           label={goal.title}
           disabled={archived}
           onToggle={(sourceElement) => {
+            if (completionMode === "move") {
+              draftMove?.moveGoalToDate(goal, day);
+              return;
+            }
             void dayChecklist.toggleCompletion(goal, sourceElement);
           }}
         />

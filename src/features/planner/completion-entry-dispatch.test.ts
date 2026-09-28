@@ -148,6 +148,33 @@ describe("planUnscheduledLedgerControlMode", () => {
       })
     ).toBe("hidden");
   });
+
+  it("offers a planning move on current and future dates without changing past completion", () => {
+    expect(
+      planUnscheduledLedgerControlMode({
+        currentlyCredited: false,
+        selectedDate: "2026-09-06",
+        asOfDate: "2026-09-06",
+        canMoveScheduledSession: true,
+      })
+    ).toBe("move");
+    expect(
+      planUnscheduledLedgerControlMode({
+        currentlyCredited: false,
+        selectedDate: "2026-09-10",
+        asOfDate: "2026-09-06",
+        canMoveScheduledSession: true,
+      })
+    ).toBe("move");
+    expect(
+      planUnscheduledLedgerControlMode({
+        currentlyCredited: false,
+        selectedDate: "2026-09-01",
+        asOfDate: "2026-09-06",
+        canMoveScheduledSession: true,
+      })
+    ).toBe("toggle");
+  });
 });
 
 describe("getPlannerCompletionTogglePresentation", () => {
