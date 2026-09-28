@@ -37,6 +37,7 @@ interface UsePlannerPersistenceActionsArgs {
   draftPreview: NonNullable<PlannerContextPayload["preview"]> | null;
   draftPreviewWindow: { start: string; end: string } | null;
   clearDraftSession: () => void;
+  onScheduleDigestChange: (scheduleDigest: string | null) => void;
   handlePlannerMutation: () => void;
   loadContext: (options?: {
     showLoading?: boolean;
@@ -73,6 +74,7 @@ export function usePlannerPersistenceActions({
   draftPreview,
   draftPreviewWindow,
   clearDraftSession,
+  onScheduleDigestChange,
   handlePlannerMutation,
   loadContext,
   cacheDraftPreviewForWindow,
@@ -111,6 +113,7 @@ export function usePlannerPersistenceActions({
     setSaveLoading(true);
     let payload: PlannerErrorPayload & {
       replayed?: boolean;
+      scheduleDigest?: string | null;
     };
     try {
       const refreshPolicy = effectiveDraftPolicy ?? context.preferences?.defaultPolicy ?? null;
@@ -123,6 +126,7 @@ export function usePlannerPersistenceActions({
           payload = await postJson<
             PlannerErrorPayload & {
               replayed?: boolean;
+              scheduleDigest?: string | null;
             }
           >("/api/planner/save", {
             expectedDigest,
@@ -215,6 +219,7 @@ export function usePlannerPersistenceActions({
           payload = await postJson<
             PlannerErrorPayload & {
               replayed?: boolean;
+              scheduleDigest?: string | null;
             }
           >("/api/planner/save", saveRequestBody);
         } catch (error) {
@@ -234,8 +239,11 @@ export function usePlannerPersistenceActions({
           return;
         }
       }
+      onScheduleDigestChange(payload.scheduleDigest ?? null);
+      clearDraftSession();
+      coachActions.resetForPlannerStateReset();
+      handlePlannerMutation();
       try {
-        handlePlannerMutation();
         const refreshed = await withPlannerRefreshTimeout({
           operation: loadContext({
             showLoading: false,
@@ -245,17 +253,17 @@ export function usePlannerPersistenceActions({
             "Plan saved, but calendar refresh timed out. Please refresh the page.",
         });
         if (!refreshed) {
-          toast.error("Plan saved, but calendar refresh failed. Please refresh the page.");
+          toast.warning(
+            "Plan saved. Calendar reload is temporarily unavailable, but the draft is no longer pending."
+          );
           return;
         }
-        clearDraftSession();
-        coachActions.resetForPlannerStateReset();
         toast.success(payload.replayed ? "Save replayed." : "Plan saved.");
       } catch (error) {
-        toast.error(
+        toast.warning(
           error instanceof Error
-            ? error.message
-            : "Plan saved, but calendar refresh failed. Please refresh the page."
+            ? `Plan saved. ${error.message}`
+            : "Plan saved. Calendar reload is temporarily unavailable."
         );
       }
     } finally {
@@ -275,6 +283,7 @@ export function usePlannerPersistenceActions({
     handlePlannerMutation,
     loadContext,
     nonPublishablePreviewMessage,
+    onScheduleDigestChange,
     requestPreviewForWindow,
     cacheDraftPreviewForWindow,
   ]);

@@ -224,12 +224,14 @@ function PlanDayUnplannedRows({
           >
             <PlanLedgerCompletionControl
               completed={completed}
-              pending={savingGoalId === goal.id}
+              pending={
+                savingGoalId === goal.id || draftMove?.movingGoalId === goal.id
+              }
               mode={completionMode}
               label={goal.title}
               onToggle={(sourceElement) => {
                 if (completionMode === "move") {
-                  draftMove?.moveGoalToDate(goal, day);
+                  void draftMove?.moveGoalToDate(goal, day);
                   return;
                 }
                 onToggle(goal, sourceElement);

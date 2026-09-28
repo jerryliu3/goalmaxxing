@@ -1,9 +1,17 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { COMPLETION_HOLD_MS } from "@/components/ui/completion-toggle";
 import { PlanDayUnplannedPanel } from "@/features/planner/plan-day-unplanned-panel";
 import { buildGoal } from "@/lib/goals/goal-test-fixtures";
 import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
+import { UnscheduledDraftMoveProvider } from "@/features/planner/unscheduled-draft-move";
 
 const checklistDataMock = vi.hoisted(() => vi.fn());
 
@@ -83,6 +91,55 @@ describe("PlanDayUnplannedPanel", () => {
     expect(
       screen.queryByRole("button", { name: /mark run done/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("offers cross-month discovery for an unscheduled future-day goal", async () => {
+    const goal = buildGoal({ id: "goal-run", title: "Run" });
+    const onDraftMove = vi.fn().mockResolvedValue(true);
+    const toggleCompletion = vi.fn();
+    render(
+      <UnscheduledDraftMoveProvider
+        workUnits={[]}
+        asOfDate="2026-09-06"
+        onDraftMove={onDraftMove}
+      >
+        <PlanDayUnplannedPanel
+          day="2026-09-10"
+          placedEntries={[]}
+          checklist={
+            {
+              loading: false,
+              todayLocalDate: "2026-09-06",
+              visibleGoalIds: null,
+              data: { goals: [goal] },
+              listModel: {
+                completableGoals: [goal],
+                presentationByGoalId: new Map([
+                  ["goal-run", { exactDateCompleted: false }],
+                ]),
+              },
+              savingGoalId: null,
+              toggleCompletion,
+            } as unknown as PlanDayChecklistModel
+          }
+        />
+      </UnscheduledDraftMoveProvider>
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Move a planned session for Run to this day",
+      })
+    );
+
+    await waitFor(() =>
+      expect(onDraftMove).toHaveBeenCalledWith({
+        goalId: "goal-run",
+        targetDate: "2026-09-10",
+        localMove: null,
+      })
+    );
+    expect(toggleCompletion).not.toHaveBeenCalled();
   });
 
   it("keeps the completion checkbox for unplanned goals on today and past days", () => {

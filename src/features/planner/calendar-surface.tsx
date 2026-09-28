@@ -34,7 +34,7 @@ import {
   buildPlannerContextCacheKey,
   invalidatePlannerRelatedTabCaches,
 } from "@/lib/cache/planner-tab-cache";
-import { readTabDataCache } from "@/lib/cache/tab-data-cache";
+import { readTabDataCache, writeTabDataCache } from "@/lib/cache/tab-data-cache";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import type {
   CalendarSurfaceProps,
@@ -61,7 +61,7 @@ import {
 import { usePlannerPersistenceActions } from "@/features/planner/use-planner-persistence-actions";
 import { usePlannerDraftCommands } from "@/features/planner/use-planner-draft-commands";
 import { usePlannerCalendarDnd } from "@/features/planner/use-planner-calendar-dnd";
-import { getApiErrorMessage } from "@/lib/api/client";
+import { getApiErrorMessage, getJson } from "@/lib/api/client";
 import { toast } from "sonner";
 import { plannerTaskIdFromEntry } from "@/features/planner/calendar-task-entries";
 import { usePlannerContextLoader } from "@/features/planner/use-planner-context-loader";
@@ -77,9 +77,15 @@ import { PlannerCalendarSurfaceLayout } from "@/features/planner/planner-calenda
 import { persistImmediatePlannerMove } from "@/lib/planner/persist-immediate-move";
 import { canConfirmDraftMove, resolveStagedDraftMove } from "@/features/planner/draft-move-confirm";
 import {
+  selectUnscheduledDraftMove,
   UnscheduledDraftMoveProvider,
-  type UnscheduledDraftMove,
+  type UnscheduledDraftMoveRequest,
 } from "@/features/planner/unscheduled-draft-move";
+import {
+  getScopeDateRange,
+  monthFromDate,
+  nextMonth,
+} from "@/lib/planner/dates";
 import {
   pruneOptimisticCompletionFacts,
   type OptimisticCompletionFacts,
@@ -581,12 +587,84 @@ export function CalendarSurface({
     ]
   );
   const queueUnscheduledDraftMove = useCallback(
-    ({ goalId, unitKey, sourceDate, scheduledDate }: UnscheduledDraftMove) => {
+    async ({
+      goalId,
+      targetDate,
+      localMove,
+    }: UnscheduledDraftMoveRequest) => {
+      let move = localMove;
+      let expandedContext: PlannerContextPayload | null = null;
+      if (!move) {
+        if (!context) {
+          toast.error("Planner context is unavailable.");
+          return false;
+        }
+        let discoveryEndMonth = monthFromDate(targetDate);
+        for (let index = 1; index < 12; index += 1) {
+          discoveryEndMonth = nextMonth(discoveryEndMonth);
+        }
+        try {
+          expandedContext = await getJson<PlannerContextPayload>(
+            "/api/planner/context",
+            {
+              query: {
+                scopeMonth: context.scopeMonth,
+                visibleStart: getScopeDateRange(monthFromDate(targetDate)).start,
+                visibleEnd: getScopeDateRange(discoveryEndMonth).end,
+              },
+            }
+          );
+        } catch (error) {
+          toast.error(
+            getApiErrorMessage(error, "Planned sessions could not be loaded.")
+          );
+          return false;
+        }
+        move = selectUnscheduledDraftMove({
+          goalId,
+          targetDate,
+          workUnits: expandedContext.preview?.workUnits ?? [],
+        });
+      }
+      if (!move) {
+        toast.error("This goal has no later planned session available to move here.");
+        return false;
+      }
+      if (expandedContext) {
+        const loadedContext = expandedContext;
+        const activeGoal = loadedContext.activePlan?.goals.find(
+          (goal) => goal.original_goal_id === goalId
+        );
+        const activeItem = activeGoal
+          ? loadedContext.activePlan?.items.find(
+              (item) =>
+                item.plan_goal_id === activeGoal.id &&
+                item.unit_key === move.unitKey
+            )
+          : null;
+        if (!activeItem) {
+          toast.error("That planned session is no longer available.");
+          return false;
+        }
+        setContext(loadedContext);
+        writeTabDataCache(
+          buildPlannerContextCacheKey(loadedContext.scopeMonth),
+          loadedContext
+        );
+        dispatchDraftCommand({
+          type: "upsert_move",
+          goalId: move.goalId,
+          unitKey: move.unitKey,
+          sourceDate: activeItem.scheduled_date ?? move.sourceDate,
+          scheduledDate: move.scheduledDate,
+        });
+        return true;
+      }
       const entry =
-        (entriesByDate.get(sourceDate) ?? []).find(
+        (entriesByDate.get(move.sourceDate) ?? []).find(
           (candidate) =>
             candidate.originalGoalId === goalId &&
-            candidate.unitKey === unitKey &&
+            candidate.unitKey === move.unitKey &&
             !candidate.draftGhost
         ) ??
         [...entriesByDate.values()]
@@ -594,7 +672,7 @@ export function CalendarSurface({
           .find(
             (candidate) =>
               candidate.originalGoalId === goalId &&
-              candidate.unitKey === unitKey &&
+              candidate.unitKey === move.unitKey &&
               !candidate.draftGhost
           );
       if (!entry?.activeItem) {
@@ -603,11 +681,11 @@ export function CalendarSurface({
       }
       return queueDraftMoveCommand({
         entry,
-        nextDate: scheduledDate,
+        nextDate: move.scheduledDate,
         source: "date_input",
       });
     },
-    [entriesByDate, queueDraftMoveCommand]
+    [context, dispatchDraftCommand, entriesByDate, queueDraftMoveCommand]
   );
   const effectiveMoveDialogSourceEntryKey = useEffectiveMoveDialogSourceEntryKey({
     moveDialogSourceEntryKey,
@@ -797,6 +875,26 @@ export function CalendarSurface({
       dayPreviewInteractions,
     });
 
+  const acceptPlannerScheduleDigest = useCallback(
+    (scheduleDigest: string | null) => {
+      if (!scheduleDigest) {
+        return;
+      }
+      setContext((current) =>
+        current
+          ? {
+              ...current,
+              revisions: {
+                ...current.revisions,
+                scheduleDigest,
+              },
+            }
+          : current
+      );
+    },
+    []
+  );
+
   const {
     saveLoading,
     resetLoading,
@@ -820,6 +918,7 @@ export function CalendarSurface({
       draftPreview,
       draftPreviewWindow,
       clearDraftSession,
+      onScheduleDigestChange: acceptPlannerScheduleDigest,
       handlePlannerMutation,
       loadContext,
       cacheDraftPreviewForWindow,

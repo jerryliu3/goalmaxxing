@@ -6,6 +6,7 @@ import { getSolverUnitId } from "@/lib/planner/solver/types";
 import type { PlannerWorkUnit } from "@/lib/planner/work-units";
 import { compareDateStrings } from "@/lib/goals/periods";
 import { dateIsInWindow } from "@/lib/planner/dates";
+import { plannerUnitOccupiesScheduledDate } from "@/lib/planner/occupancy";
 
 export interface SolverValidationResult {
   valid: boolean;
@@ -137,7 +138,7 @@ export function validateMergedWorkUnitAssignments(
       violations.add("duplicate_work_unit_identity");
     }
     identities.add(identity);
-    if (unit.scheduledDate === null) {
+    if (!plannerUnitOccupiesScheduledDate(unit)) {
       continue;
     }
     const usedDates =
