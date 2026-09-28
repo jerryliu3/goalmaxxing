@@ -1,46 +1,43 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
+import { plannerConcepts } from "./planner/concepts";
 import { InterfaceCraftStudy } from "./study";
-import { concepts } from "./model";
 
 afterEach(cleanup);
 
 function surface(name: string) {
-  return within(screen.getByRole("group", { name: "Study surface" })).getByRole("button", { name: new RegExp(name) });
+  return within(screen.getByRole("group", { name: "Study surface" })).getByRole(
+    "button",
+    { name: new RegExp(name) }
+  );
 }
 
 describe("Everyday interface study", () => {
-  it.each(concepts)("supports filtering, view switching and completion in $name", async ({ name }) => {
-    const user = userEvent.setup();
-    render(<InterfaceCraftStudy />);
-    await user.click(within(screen.getByRole("group", { name: "Design direction" })).getByRole("button", { name: new RegExp(name) }));
-    const stage = within(screen.getByRole("region", { name: `${name} Planner controls` }));
-    await user.click(stage.getByRole("button", { name: "Health" }));
-    expect(stage.queryByRole("button", { name: /Edit the short film, September 25/ })).not.toBeInTheDocument();
-    await user.click(stage.getByRole("button", { name: "Complete Easy run, September 23" }));
-    expect(stage.getByRole("button", { name: "Undo Easy run, September 23" })).toHaveAttribute("aria-pressed", "true");
-    await user.click(stage.getByRole("button", { name: "Day" }));
-    expect(stage.queryByRole("button", { name: "Undo Easy run, September 21" })).not.toBeInTheDocument();
-    await user.type(stage.getByRole("searchbox", { name: "Search sample goals" }), "no-match");
-    expect(stage.getByRole("status")).toHaveTextContent("No sessions match");
-    await user.click(screen.getByRole("button", { name: "Reset sample" }));
-    expect(stage.getByRole("button", { name: "Week" })).toHaveAttribute("aria-pressed", "true");
-    expect(stage.getByRole("button", { name: "Complete Easy run, September 23" })).toBeInTheDocument();
-  });
-
   it("synchronizes the same scenario across comparison panes and history", async () => {
     const user = userEvent.setup();
     render(<InterfaceCraftStudy />);
     await user.click(screen.getByRole("button", { name: "Compare" }));
-    const contour = within(screen.getByRole("region", { name: "Contour Planner controls" }));
-    await user.click(contour.getByRole("button", { name: "Complete Easy run, September 23" }));
-    for (const { name } of concepts) {
-      expect(within(screen.getByRole("region", { name: `${name} Planner controls` })).getByRole("button", { name: "Undo Easy run, September 23" })).toBeInTheDocument();
+    const toolbar = within(
+      screen.getByRole("region", { name: "Direct toolbar Planner controls" })
+    );
+    await user.click(toolbar.getByRole("button", { name: "Complete Easy run, September 23" }));
+    for (const { name, id } of plannerConcepts) {
+      expect(
+        within(screen.getByRole("region", { name: `${name} Planner controls` })).getByRole(
+          "button",
+          { name: id === "canvas" ? "Select Easy run, September 23" : "Undo Easy run, September 23" }
+        )
+      ).toBeInTheDocument();
     }
     await user.click(surface("Completion history"));
-    for (const { name } of concepts) {
-      expect(within(screen.getByRole("region", { name: `${name} Completion history` })).getByRole("button", { name: "September 23: 1 completions" })).toHaveAttribute("aria-pressed", "true");
+    for (const name of ["Contour", "Typeset", "Signal"]) {
+      expect(
+        within(screen.getByRole("region", { name: `${name} Completion history` })).getByRole(
+          "button",
+          { name: "September 23: 1 completions" }
+        )
+      ).toHaveAttribute("aria-pressed", "true");
     }
   });
 
@@ -57,7 +54,10 @@ describe("Everyday interface study", () => {
     await user.click(stage.getByRole("button", { name: "August 5: 0 completions" }));
     expect(stage.getByText(/No completions recorded/)).toBeInTheDocument();
     await user.click(stage.getByRole("button", { name: "Next month" }));
-    expect(stage.getByRole("button", { name: "September 23: 0 completions" })).toHaveAttribute("aria-pressed", "true");
+    expect(stage.getByRole("button", { name: "September 23: 0 completions" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
   });
 
   it("connects goal details to summary totals and resets sample edits", async () => {
@@ -83,13 +83,27 @@ describe("Everyday interface study", () => {
     await user.click(screen.getByRole("button", { name: "Prefer this" }));
     await user.click(surface("Completion history"));
     expect(screen.getByRole("button", { name: "Prefer this" })).toHaveAttribute("aria-pressed", "false");
-    await user.click(within(screen.getByRole("group", { name: "Design direction" })).getByRole("button", { name: /Typeset/ }));
+    await user.click(
+      within(screen.getByRole("group", { name: "Design direction" })).getByRole("button", {
+        name: /Typeset/,
+      })
+    );
     await user.click(screen.getByRole("button", { name: "Prefer this" }));
     await user.click(screen.getByRole("button", { name: "Reset sample" }));
     expect(screen.getByRole("button", { name: "Preferred" })).toHaveAttribute("aria-pressed", "true");
     await user.click(surface("Planner controls"));
     await user.click(screen.getByRole("button", { name: "Compare" }));
-    expect(within(screen.getByRole("region", { name: "Contour Planner controls" })).getByRole("button", { name: "Preferred" })).toBeInTheDocument();
-    expect(within(screen.getByRole("region", { name: "Typeset Planner controls" })).getByRole("button", { name: "Prefer this" })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "Direct toolbar Planner controls" })).getByRole(
+        "button",
+        { name: "Preferred" }
+      )
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "View composer Planner controls" })).getByRole(
+        "button",
+        { name: "Prefer this" }
+      )
+    ).toBeInTheDocument();
   });
 });

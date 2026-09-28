@@ -5,9 +5,9 @@ export const concepts = [
 ] as const;
 export type Concept = typeof concepts[number]["id"];
 export const surfaces = [
-  { id: "planner", name: "Planner controls", prompt: "Switch views, filter the work, and complete a session.", question: "Which controls feel most intentional without competing with the work?" },
+  { id: "planner", name: "Planner controls", prompt: "Compare four interaction models using the same calendar and sample work.", question: "Which controls feel most intentional without competing with the work?" },
   { id: "history", name: "Completion history", prompt: "Inspect a day or step back to August. All three grids have touching cells.", question: "Which continuous grid makes your pattern easiest to read?" },
-  { id: "goals", name: "Goal details", prompt: "Choose a goal, inspect its metadata, and open its details.", question: "Which treatment makes a goal feel like a meaningful object?" },
+  { id: "goals", name: "Goal details", prompt: "Placement proposal: goal card → opened goal detail. This is not a new planner panel or destination.", question: "Which treatment makes a goal feel like a meaningful object?" },
   { id: "progress", name: "Progress summaries", prompt: "Switch between this week and this month; inspect the breakdown.", question: "Which summary gives the clearest sense of momentum?" },
 ] as const;
 export type Surface = typeof surfaces[number]["id"];
@@ -29,11 +29,12 @@ export const sessions = [
 ] as const;
 export type StudyState = {
   view: View; category: Category; query: string; completed: string[];
+  plannerGoalId: string | null; focusDay: number;
   month: 8 | 9; selectedDay: number; goalId: string; details: boolean;
   period: "week" | "month"; breakdown: boolean;
 };
 export function initialState(): StudyState {
-  return { view: "Week", category: "All", query: "", completed: ["run-mon", "read-mon", "film-tue"], month: 9, selectedDay: 23, goalId: "run", details: false, period: "week", breakdown: false };
+  return { plannerGoalId: null, focusDay: 23, view: "Week", category: "All", query: "", completed: ["run-mon", "read-mon", "film-tue"], month: 9, selectedDay: 23, goalId: "run", details: false, period: "week", breakdown: false };
 }
 export type DemoProps = { concept: Concept; state: StudyState; update: (patch: Partial<StudyState>) => void };
 export function goalFor(id: string) { return goals.find(goal => goal.id === id) ?? goals[0]; }
@@ -45,7 +46,8 @@ export function visibleSessions(state: StudyState) {
     const goal = goalFor(session.goalId);
     return (state.category === "All" || goal.category === state.category) &&
       `${goal.title} ${goal.short}`.toLowerCase().includes(state.query.trim().toLowerCase()) &&
-      (state.view !== "Day" || session.day === 23);
+      (state.plannerGoalId === null || session.goalId === state.plannerGoalId) &&
+      (state.view !== "Day" || session.day === state.focusDay);
   });
 }
 // Fixed sample chronology: September 27, 2026. Baseline records precede the sample week.

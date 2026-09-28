@@ -15,6 +15,12 @@ describe("interface craft sample model", () => {
     expect(monthDays(8).filter(Boolean)).toHaveLength(31);
     expect(monthDays(9).filter(Boolean)).toHaveLength(30);
   });
+  it("uses the selected date and goal without changing completion history", () => {
+    const state = { ...initialState(), plannerGoalId: "film", view: "Day" as const, focusDay: 25 };
+    expect(visibleSessions(state).map(item => item.id)).toEqual(["film-fri"]);
+    expect(visibleSessions({ ...state, focusDay: 23 })).toEqual([]);
+    expect(dayCount(9, 21, state.completed)).toBe(2);
+  });
   it("composes category, search and focused-day filters", () => {
     expect(visibleSessions({ ...initialState(), category: "Health", query: " EASY ", view: "Day" }).map(item => item.id)).toEqual(["run-wed"]);
   });
