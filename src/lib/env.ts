@@ -101,6 +101,7 @@ const serverEnvSchema = publicEnvSchema.extend({
   SOCIAL_ENABLED: booleanFromEnv(() => process.env.NODE_ENV === "development"),
   INTEGRATIONS_ENABLED: booleanFromEnv(false),
   JOURNEY_ENABLED: booleanFromEnv(false),
+  COACH_ENABLED: booleanFromEnv(false),
   DIGEST_ENABLED: booleanFromEnv(() => process.env.NODE_ENV === "development"),
   DIGEST_DAILY_LIMIT: optionalPositiveInt({ min: 1, max: 1_000_000 }),
   INTEGRATIONS_ROLLOUT_STAGE: z.preprocess((value) => {
@@ -175,6 +176,7 @@ function readServerEnvInput() {
     SOCIAL_ENABLED: process.env.SOCIAL_ENABLED,
     INTEGRATIONS_ENABLED: process.env.INTEGRATIONS_ENABLED,
     JOURNEY_ENABLED: process.env.JOURNEY_ENABLED,
+    COACH_ENABLED: process.env.COACH_ENABLED,
     DIGEST_ENABLED: process.env.DIGEST_ENABLED,
     DIGEST_DAILY_LIMIT: process.env.DIGEST_DAILY_LIMIT,
     INTEGRATIONS_ROLLOUT_STAGE: process.env.INTEGRATIONS_ROLLOUT_STAGE,

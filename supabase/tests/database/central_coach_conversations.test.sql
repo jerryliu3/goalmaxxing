@@ -1,0 +1,11 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions,pg_catalog;
+select plan(5);
+select has_table('public','coach_threads','Durable threads exist');
+select has_index('public','coach_runs','coach_one_running_turn','A thread has one generating run');
+select ok(not has_table_privilege('authenticated','public.coach_messages','INSERT'),'Clients cannot forge assistant history');
+select ok(not has_table_privilege('authenticated','public.coach_actions','UPDATE'),'Clients cannot edit sealed actions');
+select ok(not has_function_privilege('authenticated','public.begin_coach_run(uuid,uuid,uuid,text,jsonb,integer,text,uuid)','EXECUTE'),'Run writes are server only');
+select * from finish();
+rollback;

@@ -1,4 +1,6 @@
 export interface FeatureFlags {
+  /** Global contextual coach. Default off until the database cutover is deployed. */
+  coachEnabled: boolean;
   /**
    * Cross-month drag/move persistence (kernel ordinal allocation).
    * Default: off until the feature is ready for dark launch.

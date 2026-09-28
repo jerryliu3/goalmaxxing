@@ -9,6 +9,7 @@ const defaultFlags = {
   integrationsEnabled: false,
   journeyEnabled: false,
   digestEnabled: false,
+  coachEnabled: false,
 } as const;
 
 describe("feature flags", () => {
@@ -88,6 +89,12 @@ describe("feature flags", () => {
       ...defaultFlags,
       digestEnabled: true,
     });
+  });
+
+  it("reads coach rollout flag from env", () => {
+    vi.stubEnv("COACH_ENABLED", "true");
+    resetEnvCacheForTests();
+    expect(getFeatureFlags()).toEqual({ ...defaultFlags, coachEnabled: true });
   });
 
   it("enables digest by default in local development", () => {
