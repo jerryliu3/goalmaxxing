@@ -83,6 +83,11 @@ function createKernel(scheduledDate: string): PlannerKernelOutput {
   } as unknown as PlannerKernelOutput;
 }
 
+const PUBLISH_WINDOW = {
+  startDate: "2026-08-01",
+  endDate: "2026-08-31",
+};
+
 describe("buildPlannerPublishPersistencePayload draft edit validation", () => {
   it("applies item-level time override draft commands", () => {
     const snapshot = createSnapshot([]);
@@ -91,6 +96,7 @@ describe("buildPlannerPublishPersistencePayload draft edit validation", () => {
     const payload = buildPlannerPublishPersistencePayload({
       kernel,
       snapshot,
+      publishWindow: PUBLISH_WINDOW,
       draftCommands: [
         {
           id: "30000000-0000-4000-8000-000000000014",
@@ -118,6 +124,7 @@ describe("buildPlannerPublishPersistencePayload draft edit validation", () => {
     const payload = buildPlannerPublishPersistencePayload({
       kernel,
       snapshot,
+      publishWindow: PUBLISH_WINDOW,
       draftCommands: [],
     });
 
@@ -144,6 +151,7 @@ describe("buildPlannerPublishPersistencePayload draft edit validation", () => {
       buildPlannerPublishPersistencePayload({
         kernel,
         snapshot,
+        publishWindow: PUBLISH_WINDOW,
         draftCommands: [
           {
             id: "30000000-0000-4000-8000-000000000015",
@@ -175,11 +183,38 @@ describe("buildPlannerPublishPersistencePayload draft edit validation", () => {
     const payload = buildPlannerPublishPersistencePayload({
       kernel,
       snapshot,
+      publishWindow: PUBLISH_WINDOW,
     });
 
     expect(payload.items[0]).toMatchObject({
       original_scheduled_date: "2026-08-10",
       scheduled_date: "2026-08-09",
+    });
+  });
+
+  it("clears the old slot without publishing a factual date outside the window", () => {
+    const snapshot = createSnapshot([]);
+    const kernel = {
+      ...createKernel("2026-08-10"),
+      workUnits: [
+        {
+          ...createKernel("2026-08-10").workUnits[0],
+          creditedCompletionDate: "2026-07-31",
+          creditState: "completed_elsewhere" as const,
+          classification: "satisfied_elsewhere" as const,
+        },
+      ],
+    } as PlannerKernelOutput;
+
+    const payload = buildPlannerPublishPersistencePayload({
+      kernel,
+      snapshot,
+      publishWindow: PUBLISH_WINDOW,
+    });
+
+    expect(payload.items[0]).toMatchObject({
+      original_scheduled_date: "2026-08-10",
+      scheduled_date: null,
     });
   });
 });
@@ -193,6 +228,7 @@ describe("positional draft moves are kernel-owned", () => {
       buildPlannerPublishPersistencePayload({
         kernel,
         snapshot,
+        publishWindow: PUBLISH_WINDOW,
         draftCommands: [
           {
             id: "11111111-1111-4111-8111-111111111111",
@@ -217,6 +253,7 @@ describe("positional draft moves are kernel-owned", () => {
     const payload = buildPlannerPublishPersistencePayload({
       kernel,
       snapshot,
+      publishWindow: PUBLISH_WINDOW,
       draftCommands: [
         {
           id: "11111111-1111-4111-8111-111111111111",

@@ -461,6 +461,10 @@ export async function handlePlannerSave(request: Request) {
       persistence = buildPlannerPublishPersistencePayload({
         kernel,
         snapshot,
+        publishWindow: {
+          startDate: body.startDate,
+          endDate: body.endDate,
+        },
         draftCommands,
       });
     } catch (error) {

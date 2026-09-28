@@ -521,7 +521,7 @@ test("planner save publishes a multi-month date window in one request", async ({
   expect(result.hashStable).toBe(true);
   expect(result.publishable).toBe(true);
 
-  expect(result.firstSave.status).toBe(200);
+  expect(result.firstSave.status, JSON.stringify(result.firstSave.body)).toBe(200);
   expect(result.firstSave.body.publishedWindow).toEqual({
     startDate: result.startDate,
     endDate: result.endDate,
@@ -530,7 +530,7 @@ test("planner save publishes a multi-month date window in one request", async ({
     result.firstSaveMovedDigest
   );
 
-  expect(result.secondSave.status).toBe(200);
+  expect(result.secondSave.status, JSON.stringify(result.secondSave.body)).toBe(200);
   expect(result.secondSave.body.publishedWindow).toEqual({
     startDate: result.startDate,
     endDate: result.endDate,

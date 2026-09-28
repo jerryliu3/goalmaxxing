@@ -216,10 +216,12 @@ function applyValidatedDraftItemEdits({
 export function buildPlannerPublishPersistencePayload({
   kernel,
   snapshot,
+  publishWindow,
   draftCommands = [],
 }: {
   kernel: PlannerKernelOutput;
   snapshot: PlannerCanonicalSnapshot;
+  publishWindow: { startDate: string; endDate: string };
   draftCommands?: PlannerDraftCommand[];
 }): PlannerPublishPersistencePayload {
   const goalDefaultLocalTimeByGoalId = new Map(
@@ -242,9 +244,14 @@ export function buildPlannerPublishPersistencePayload({
 
   const items = workUnits.map((unit) => {
     const itemKey = buildDraftEditKey(unit.originalGoalId, unit.unitKey);
+    const creditedCompletionDate = unit.creditedCompletionDate;
     const scheduledDate =
       unit.creditState === "completed_elsewhere"
-        ? unit.creditedCompletionDate
+        ? creditedCompletionDate !== null &&
+          creditedCompletionDate >= publishWindow.startDate &&
+          creditedCompletionDate <= publishWindow.endDate
+          ? creditedCompletionDate
+          : null
         : unit.scheduledDate;
     const resolvedTime = resolvePlannerEffectiveScheduledTime({
       scheduledDate,
