@@ -2747,6 +2747,19 @@ export type Database = {
           window_count: number
         }[]
       }
+      complete_planner_item_on_date_service: {
+        Args: {
+          p_date: string
+          p_expected_digest: string
+          p_goal_id: string
+          p_unit_key: string
+        }
+        Returns: {
+          moved_from: string
+          moved_to: string
+          schedule_digest: string
+        }[]
+      }
       consume_planner_ai_quota: {
         Args: {
           p_feature: string
@@ -3084,32 +3097,6 @@ export type Database = {
           updated_at: string
         }[]
       }
-      complete_planner_item_on_date_service: {
-        Args: {
-          p_date: string
-          p_expected_digest: string
-          p_goal_id: string
-          p_unit_key: string
-        }
-        Returns: {
-          moved_from: string
-          moved_to: string
-          schedule_digest: string
-        }[]
-      }
-      uncomplete_planner_item_on_date_service: {
-        Args: {
-          p_date: string
-          p_expected_digest: string
-          p_goal_id: string
-        }
-        Returns: {
-          restored_from: string | null
-          restored_to: string | null
-          schedule_digest: string
-          unit_key: string | null
-        }[]
-      }
       mark_goal_complete: {
         Args: { p_date?: string; p_goal_id: string }
         Returns: undefined
@@ -3286,6 +3273,15 @@ export type Database = {
       synthetic_apply_completion_service: {
         Args: { p_completed_on?: string; p_goal_id: string; p_user_id: string }
         Returns: boolean
+      }
+      uncomplete_planner_item_on_date_service: {
+        Args: { p_date: string; p_expected_digest: string; p_goal_id: string }
+        Returns: {
+          restored_from: string
+          restored_to: string
+          schedule_digest: string
+          unit_key: string
+        }[]
       }
       unmark_goal_complete: {
         Args: { p_date?: string; p_goal_id: string }
@@ -3594,3 +3590,4 @@ export const Constants = {
     },
   },
 } as const
+
