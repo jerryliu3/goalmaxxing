@@ -2747,6 +2747,19 @@ export type Database = {
           window_count: number
         }[]
       }
+      complete_planner_item_on_date_service: {
+        Args: {
+          p_date: string
+          p_expected_digest: string
+          p_goal_id: string
+          p_unit_key: string
+        }
+        Returns: {
+          moved_from: string
+          moved_to: string
+          schedule_digest: string
+        }[]
+      }
       consume_planner_ai_quota: {
         Args: {
           p_feature: string
@@ -3082,19 +3095,6 @@ export type Database = {
           task_id: string
           title: string
           updated_at: string
-        }[]
-      }
-      complete_planner_item_on_date_service: {
-        Args: {
-          p_date: string
-          p_expected_digest: string
-          p_goal_id: string
-          p_unit_key: string
-        }
-        Returns: {
-          moved_from: string
-          moved_to: string
-          schedule_digest: string
         }[]
       }
       mark_goal_complete: {
@@ -3581,3 +3581,4 @@ export const Constants = {
     },
   },
 } as const
+
