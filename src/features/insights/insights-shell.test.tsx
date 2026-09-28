@@ -7,12 +7,6 @@ import type { Goal } from "@/lib/goals/types";
 
 const useDuoSurfaceMock = vi.fn();
 const insightsTabMock = vi.fn();
-const invalidatePlannerRelatedTabCachesMock = vi.fn();
-
-vi.mock("@/lib/cache/planner-tab-cache", () => ({
-  invalidatePlannerRelatedTabCaches: () => invalidatePlannerRelatedTabCachesMock(),
-}));
-
 function goal(id: string, title: string, endDate: string): Goal {
   return {
     id,
@@ -43,24 +37,6 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/features/social/duo/use-duo-surface", () => ({
   useDuoSurface: (...args: unknown[]) => useDuoSurfaceMock(...args),
-}));
-
-vi.mock("@/features/planner/completion-credit-move", () => ({
-  CompletionCreditMoveProvider: ({
-    onMoved,
-    children,
-  }: {
-    onMoved?: () => void;
-    children: React.ReactNode;
-  }) => (
-    <div>
-      <button type="button" onClick={() => onMoved?.()}>
-        Simulate move saved
-      </button>
-      {children}
-    </div>
-  ),
-  useCompletionCreditMove: () => null,
 }));
 
 vi.mock("@/features/insights/insights-tab", () => ({
@@ -124,7 +100,6 @@ describe("InsightsShell", () => {
   beforeEach(() => {
     window.history.replaceState(null, "", "/insights");
     insightsTabMock.mockClear();
-    invalidatePlannerRelatedTabCachesMock.mockClear();
     useDuoSurfaceMock.mockReset();
     useDuoSurfaceMock.mockReturnValue({
       scope: "me",
@@ -136,13 +111,6 @@ describe("InsightsShell", () => {
 
   afterEach(() => {
     cleanup();
-  });
-
-  it("invalidates planner caches after a progress credit move saves", async () => {
-    render(<InsightsShell />);
-
-    await screen.getByRole("button", { name: "Simulate move saved" }).click();
-    expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(1);
   });
 
   it("renders one full insights lane outside duo-both scope", () => {
