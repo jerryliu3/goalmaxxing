@@ -50,6 +50,8 @@ import {
 import { plannerPolicySchema } from "@/lib/planner/policy";
 import { shouldUseDirectDraftPersistence } from "@/lib/planner/save-persistence";
 import type { Json } from "@/lib/supabase/database.types";
+import { reportError } from "@/lib/observability/report-error";
+import type { SavedPlannerItem } from "@cadence/shared/planner/context";
 
 export const runtime = "nodejs";
 
@@ -629,10 +631,30 @@ export async function handlePlannerSave(request: Request) {
         "Planner publish did not return persisted plan metadata."
       );
     }
+    // Read persisted identities without invoking the solver. A successful
+    // publish must stay successful even if its follow-up read is unavailable.
+    let savedItems: SavedPlannerItem[] | null = null;
+    try {
+      const items = await loadPlannerItemsForWindow(
+        routeContext.supabase, routeContext.userId, body.startDate, body.endDate
+      );
+      savedItems = items.map((item) => ({
+        id: item.id,
+        goalId: item.goal_id,
+        unitKey: item.unit_key,
+        scheduledDate: item.scheduled_date,
+        originalScheduledDate: item.original_scheduled_date,
+        scheduledTimeOverride: item.scheduled_time,
+        locked: item.locked,
+      }));
+    } catch (error) {
+      reportError(error, { code: "planner_saved_items_reload_failed", correlationId });
+    }
     return NextResponse.json(
       {
         schemaVersion: "1",
         replayed: false,
+        savedItems,
         upsertedCount:
           typeof publishedRow.upserted_count === "number"
             ? publishedRow.upserted_count

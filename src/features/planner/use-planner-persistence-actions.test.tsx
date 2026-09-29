@@ -90,7 +90,7 @@ describe("usePlannerPersistenceActions", () => {
 
     await act(async () => result.current.savePlan());
 
-    expect(onScheduleDigestChange).toHaveBeenCalledWith("b".repeat(64));
+    expect(onScheduleDigestChange).toHaveBeenCalledWith("b".repeat(64), null);
     expect(clearDraftSession).toHaveBeenCalledTimes(1);
     expect(loadContext).toHaveBeenCalledTimes(1);
     expect(calls).toEqual(["digest", "clear", "coach", "invalidate", "reload"]);

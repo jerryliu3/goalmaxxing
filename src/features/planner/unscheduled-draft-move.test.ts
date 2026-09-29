@@ -35,7 +35,20 @@ describe("selectUnscheduledDraftMove", () => {
     });
   });
 
-  it("does not offer completed, locked, or already-earlier sessions", () => {
+  it("moves the earliest incomplete ordinal even when its saved date is in the past", () => {
+    expect(selectUnscheduledDraftMove({
+      goalId: "goal-1",
+      targetDate: "2026-09-12",
+      workUnits: [buildPlannerWorkUnit({
+        kind: "milestone_sequence", unitKey: "milestone:1",
+        scheduledDate: "2026-09-10",
+        creditWindow: { start: "2026-09-01", end: "2026-09-30" },
+        draftMoveWindow: { start: "2026-09-01", end: "2026-09-30" },
+      })],
+    })).toMatchObject({ unitKey: "milestone:1", sourceDate: "2026-09-10", scheduledDate: "2026-09-12" });
+  });
+
+  it("does not offer completed or locked sessions", () => {
     const moveWindow = { start: "2026-09-01", end: "2026-09-30" };
     const creditWindow = moveWindow;
     expect(
@@ -43,12 +56,6 @@ describe("selectUnscheduledDraftMove", () => {
         goalId: "goal-1",
         targetDate: "2026-09-12",
         workUnits: [
-          buildPlannerWorkUnit({
-            kind: "milestone_sequence",
-            scheduledDate: "2026-09-10",
-            creditWindow,
-            draftMoveWindow: moveWindow,
-          }),
           buildPlannerWorkUnit({
             unitKey: "milestone:2",
             kind: "milestone_sequence",

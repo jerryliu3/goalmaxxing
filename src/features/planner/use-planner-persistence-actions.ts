@@ -25,6 +25,7 @@ import type { PlannerResetGoalOption } from "@/features/planner/planner-reset-go
 import { formatPlannerResetGoalSelectionLabel } from "@/features/planner/planner-reset-goal-options";
 import { withPlannerRefreshTimeout } from "@/lib/planner/refresh-timeout";
 import { shouldUseDirectDraftPersistence } from "@/lib/planner/save-persistence";
+import type { SavedPlannerItem } from "@cadence/shared/planner/context";
 
 interface UsePlannerPersistenceActionsArgs {
   context: PlannerContextPayload | null;
@@ -37,7 +38,7 @@ interface UsePlannerPersistenceActionsArgs {
   draftPreview: NonNullable<PlannerContextPayload["preview"]> | null;
   draftPreviewWindow: { start: string; end: string } | null;
   clearDraftSession: () => void;
-  onScheduleDigestChange: (scheduleDigest: string | null) => void;
+  onScheduleDigestChange: (scheduleDigest: string | null, savedItems: SavedPlannerItem[] | null) => void;
   handlePlannerMutation: () => void;
   loadContext: (options?: {
     showLoading?: boolean;
@@ -114,6 +115,7 @@ export function usePlannerPersistenceActions({
     let payload: PlannerErrorPayload & {
       replayed?: boolean;
       scheduleDigest?: string | null;
+      savedItems?: SavedPlannerItem[] | null;
     };
     try {
       const refreshPolicy = effectiveDraftPolicy ?? context.preferences?.defaultPolicy ?? null;
@@ -239,7 +241,7 @@ export function usePlannerPersistenceActions({
           return;
         }
       }
-      onScheduleDigestChange(payload.scheduleDigest ?? null);
+      onScheduleDigestChange(payload.scheduleDigest ?? null, payload.savedItems ?? null);
       clearDraftSession();
       coachActions.resetForPlannerStateReset();
       handlePlannerMutation();

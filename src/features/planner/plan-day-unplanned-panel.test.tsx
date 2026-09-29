@@ -136,6 +136,8 @@ describe("PlanDayUnplannedPanel", () => {
       expect(onDraftMove).toHaveBeenCalledWith({
         goalId: "goal-run",
         targetDate: "2026-09-10",
+        goalStartDate: goal.start_date,
+        goalEndDate: goal.end_date,
         localMove: null,
       })
     );

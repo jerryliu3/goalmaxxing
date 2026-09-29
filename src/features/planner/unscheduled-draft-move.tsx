@@ -29,6 +29,8 @@ interface UnscheduledDraftMoveContextValue {
 export interface UnscheduledDraftMoveRequest {
   goalId: string;
   targetDate: string;
+  goalStartDate: string;
+  goalEndDate: string | null;
   localMove: UnscheduledDraftMove | null;
 }
 
@@ -66,7 +68,7 @@ function selectCadenceUnit(
 
 /**
  * Selects the earliest incomplete persisted session that can be explicitly
- * moved earlier into an unscheduled current/future day. This is a planning
+ * moved into an unscheduled current/future day, including overdue sessions. This is a planning
  * action only; it never creates a completion fact.
  */
 export function selectUnscheduledDraftMove({
@@ -98,7 +100,7 @@ export function selectUnscheduledDraftMove({
         )[0] ?? null;
   const moveWindow = selected?.draftMoveWindow ?? selected?.placementWindow;
   return selected?.scheduledDate &&
-    selected.scheduledDate > targetDate &&
+    selected.scheduledDate !== targetDate &&
     moveWindow &&
     dateIsInWindow(targetDate, moveWindow)
     ? {
@@ -146,6 +148,8 @@ export function UnscheduledDraftMoveProvider({
         const moved = await onDraftMove({
           goalId: goal.id,
           targetDate,
+          goalStartDate: goal.start_date,
+          goalEndDate: goal.end_date,
           localMove: selectMove(goal.id, targetDate),
         });
         if (moved) {

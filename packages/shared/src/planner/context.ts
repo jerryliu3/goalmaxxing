@@ -90,6 +90,16 @@ export interface PlannerActiveGoalSnapshot {
   end_date?: string | null;
 }
 
+export interface SavedPlannerItem {
+  id: string;
+  goalId: string;
+  unitKey: string;
+  scheduledDate: string;
+  originalScheduledDate: string | null;
+  scheduledTimeOverride: string | null;
+  locked: boolean;
+}
+
 export interface PlannerActiveItemSnapshot {
   id: string;
   plan_goal_id: string;

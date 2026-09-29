@@ -59,6 +59,8 @@ import {
   selectCalendarViewWindowProjection,
 } from "@/features/planner/calendar-view-projection";
 import { usePlannerPersistenceActions } from "@/features/planner/use-planner-persistence-actions";
+import { applySavedPlannerCommands } from "@/features/planner/planner-saved-context";
+import type { SavedPlannerItem } from "@cadence/shared/planner/context";
 import { usePlannerDraftCommands } from "@/features/planner/use-planner-draft-commands";
 import { usePlannerCalendarDnd } from "@/features/planner/use-planner-calendar-dnd";
 import { getApiErrorMessage, getJson } from "@/lib/api/client";
@@ -83,9 +85,11 @@ import {
 } from "@/features/planner/unscheduled-draft-move";
 import {
   getScopeDateRange,
+  countDateWindowDays,
   monthFromDate,
   nextMonth,
 } from "@/lib/planner/dates";
+import { MAX_PLANNER_WINDOW_DAYS } from "@/lib/planner/contracts/bounds";
 import {
   pruneOptimisticCompletionFacts,
   type OptimisticCompletionFacts,
@@ -107,12 +111,11 @@ export function CalendarSurface({
   viewerSubject = null,
   partnerSubject = null,
 }: CalendarSurfaceProps) {
-  const [context, setContext] = useState<PlannerContextPayload | null>(() => {
-    if (!month) {
-      return null;
-    }
-    return readTabDataCache<PlannerContextPayload>(buildPlannerContextCacheKey(month));
-  });
+  // Read the browser-only cache after hydration. Reading sessionStorage in the
+  // initial render makes the client tree differ from the server's loading tree
+  // and React can discard a user's first interaction while rebuilding it.
+  const [context, setContext] = useState<PlannerContextPayload | null>(null);
+  const [loading, setLoading] = useState(Boolean(month));
   useLayoutEffect(() => {
     if (!month) {
       return;
@@ -124,16 +127,8 @@ export function CalendarSurface({
       return;
     }
     setContext(cached);
+    setLoading(false);
   }, [month]);
-  const [loading, setLoading] = useState(() => {
-    if (!month) {
-      return false;
-    }
-    return (
-      readTabDataCache<PlannerContextPayload>(buildPlannerContextCacheKey(month)) ===
-      null
-    );
-  });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
@@ -590,11 +585,27 @@ export function CalendarSurface({
     async ({
       goalId,
       targetDate,
+      goalStartDate,
+      goalEndDate,
       localMove,
     }: UnscheduledDraftMoveRequest) => {
       let move = localMove;
+      const localEntry = move
+        ? [...entriesByDate.values()].flat().find(
+            (candidate) =>
+              candidate.originalGoalId === goalId &&
+              candidate.unitKey === move?.unitKey &&
+              !candidate.draftGhost
+          )
+        : null;
       let expandedContext: PlannerContextPayload | null = null;
-      if (!move) {
+      // A visible preview may invent a placement for a session whose persisted
+      // source is outside this window. Discover that source before staging it.
+      const goalSpansOtherMonths = Boolean(goalEndDate && (
+        monthFromDate(goalStartDate) !== context?.scopeMonth ||
+        monthFromDate(goalEndDate) !== context?.scopeMonth
+      ));
+      if (!move || !localEntry?.activeItem || goalSpansOtherMonths) {
         if (!context) {
           toast.error("Planner context is unavailable.");
           return false;
@@ -603,14 +614,26 @@ export function CalendarSurface({
         for (let index = 1; index < 12; index += 1) {
           discoveryEndMonth = nextMonth(discoveryEndMonth);
         }
+        const goalWindow = {
+          start: getScopeDateRange(monthFromDate(goalStartDate < targetDate ? goalStartDate : targetDate)).start,
+          end: getScopeDateRange(goalEndDate && goalEndDate > targetDate ? monthFromDate(goalEndDate) : monthFromDate(targetDate)).end,
+        };
+        // Include earlier months for bounded lifetime goals: their earliest
+        // incomplete session can be overdue rather than upcoming.
+        const discoveryWindow = goalEndDate && countDateWindowDays(goalWindow) <= MAX_PLANNER_WINDOW_DAYS
+          ? goalWindow
+          : {
+              start: getScopeDateRange(monthFromDate(targetDate)).start,
+              end: getScopeDateRange(discoveryEndMonth).end,
+            };
         try {
           expandedContext = await getJson<PlannerContextPayload>(
             "/api/planner/context",
             {
               query: {
                 scopeMonth: context.scopeMonth,
-                visibleStart: getScopeDateRange(monthFromDate(targetDate)).start,
-                visibleEnd: getScopeDateRange(discoveryEndMonth).end,
+                visibleStart: discoveryWindow.start,
+                visibleEnd: discoveryWindow.end,
               },
             }
           );
@@ -627,7 +650,7 @@ export function CalendarSurface({
         });
       }
       if (!move) {
-        toast.error("This goal has no later planned session available to move here.");
+        toast.error("This goal has no incomplete planned session available to move here.");
         return false;
       }
       if (expandedContext) {
@@ -660,27 +683,12 @@ export function CalendarSurface({
         });
         return true;
       }
-      const entry =
-        (entriesByDate.get(move.sourceDate) ?? []).find(
-          (candidate) =>
-            candidate.originalGoalId === goalId &&
-            candidate.unitKey === move.unitKey &&
-            !candidate.draftGhost
-        ) ??
-        [...entriesByDate.values()]
-          .flat()
-          .find(
-            (candidate) =>
-              candidate.originalGoalId === goalId &&
-              candidate.unitKey === move.unitKey &&
-              !candidate.draftGhost
-          );
-      if (!entry?.activeItem) {
+      if (!localEntry?.activeItem) {
         toast.error("That planned session is not available in this calendar draft.");
         return false;
       }
       return queueDraftMoveCommand({
-        entry,
+        entry: localEntry,
         nextDate: move.scheduledDate,
         source: "date_input",
       });
@@ -876,23 +884,17 @@ export function CalendarSurface({
     });
 
   const acceptPlannerScheduleDigest = useCallback(
-    (scheduleDigest: string | null) => {
-      if (!scheduleDigest) {
+    (scheduleDigest: string | null, savedItems: SavedPlannerItem[] | null) => {
+      if (!scheduleDigest || !context || !draftSaveWindow) {
         return;
       }
-      setContext((current) =>
-        current
-          ? {
-              ...current,
-              revisions: {
-                ...current.revisions,
-                scheduleDigest,
-              },
-            }
-          : current
-      );
+      const savedContext = applySavedPlannerCommands(context, draftSaveCommands, scheduleDigest, savedItems, draftSaveWindow);
+      // loadContext reads even a stale cache before fetching. Update both
+      // baselines so a failed fetch cannot restore the old digest or source date.
+      writeTabDataCache(buildPlannerContextCacheKey(savedContext.scopeMonth), savedContext, 0);
+      setContext(savedContext);
     },
-    []
+    [context, draftSaveCommands, draftSaveWindow]
   );
 
   const {
