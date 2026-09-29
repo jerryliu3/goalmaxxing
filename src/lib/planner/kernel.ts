@@ -45,6 +45,7 @@ import {
   buildLinkSuppressionInboundIndex,
   getLinkResumeDate,
   isFullySuppressedForWindow,
+  isSuppressedOnDate,
   resolveLinkSuppression,
   toLinkSuppressionSource,
 } from "@/lib/planner/link-suppression";
@@ -733,6 +734,25 @@ export function runPlannerKernel(
       requirement.requirement.kind === "cadence"
         ? null
         : (ordinalAllocation?.scopedOrdinals ?? new Set<number>());
+    // A preserve preview describes saved sessions, not just the solver's new
+    // workload. Projected source coverage must not erase a saved target after
+    // its resume date. Retain credited rows too: otherwise the calendar falls
+    // back to their old saved placement and displays them as uncredited.
+    if (rawInput.preserveExistingAssignments && scopedOrdinals) {
+      for (const unit of reconciled.units) {
+        if (
+          unit.scheduledDate &&
+          unit.scheduledDate >= window.start &&
+          unit.scheduledDate <= window.end &&
+          (unit.creditedCompletionId !== null || !isSuppressedOnDate(
+            suppressionByGoalId.get(goal.id) ?? { kind: "none" },
+            unit.scheduledDate
+          ))
+        ) {
+          scopedOrdinals.add(unit.ordinal);
+        }
+      }
+    }
     const scopedUnits =
       scopedOrdinals === null
         ? reconciled.units
