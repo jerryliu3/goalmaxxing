@@ -1,5 +1,6 @@
 import { getAdmissibleCompletions } from "@/lib/goals/admissible";
 import type { Completion, Goal } from "@/lib/goals/types";
+import { getAnchoredPeriod } from "@/lib/goals/periods";
 import type { PlannerItemRow } from "@/lib/planner/context-loader";
 import { reconcilePlannerCompletions } from "@/lib/planner/reconciliation";
 import { normalizeGoalRequirement } from "@/lib/planner/requirements";
@@ -33,10 +34,17 @@ export function reconcilePersistedGoalCompletions({
     ...items.map((item) => item.scheduled_date),
     ...facts.map((fact) => fact.completed_on),
   ].sort();
+  const window = { start: dates[0] ?? asOfDate, end: dates.at(-1) ?? asOfDate };
+  if (requirement.kind === "cadence") {
+    // A week can belong to the next month even when the saved session and its
+    // completion both fall in this month. Include the whole owning period.
+    window.start = getAnchoredPeriod(goal.start_date, requirement.interval, window.start, { weekStartsOn }).start;
+    window.end = getAnchoredPeriod(goal.start_date, requirement.interval, window.end, { weekStartsOn }).end;
+  }
   const units = materializeWorkUnits({
     goal,
     normalizedRequirement,
-    window: { start: dates[0] ?? asOfDate, end: dates.at(-1) ?? asOfDate },
+    window,
     asOfDate,
     weeklyAnchor: { weekStartsOn },
     ordinalsForScopeMonth: requirement.kind === "cadence"

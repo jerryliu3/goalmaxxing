@@ -115,4 +115,14 @@ describe("persisted preview / move / save consistency", () => {
     expect(reconciled.completionToUnit.durable?.unitKey).toBe("cadence:2026-09-01:2");
     expect(reconciled.units.find((unit) => unit.unitKey === "cadence:2026-09-01:3")?.creditState).toBe("uncredited");
   });
+
+  it("keeps a cross-month week's credits when every saved date is before month end", () => {
+    const weekly = { ...goal, target_basis: "period" as const, target_count: 2 };
+    const reconciled = reconcilePersistedGoalCompletions({
+      goal: weekly, asOfDate, weekStartsOn: 1,
+      persistedItems: [item("cadence:2026-09-28:1", "2026-09-29", weekly)],
+      completions: [fact("boundary", "2026-09-29", "cadence:2026-09-28:1", weekly)],
+    });
+    expect(reconciled.completionToUnit.boundary?.unitKey).toBe("cadence:2026-09-28:1");
+  });
 });
