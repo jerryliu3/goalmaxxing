@@ -323,7 +323,7 @@ describe("planner save route", () => {
     });
   });
 
-  it("publishes a direct cross-month move without running the solver", async () => {
+  it.each([false, true])("publishes a direct cross-month move without running the solver (metadata unavailable: %s)", async (metadataUnavailable) => {
     const goalId = "22222222-2222-4222-8222-222222222222";
     const goal = {
       id: goalId,
@@ -416,12 +416,24 @@ describe("planner save route", () => {
       ],
     });
 
+    if (metadataUnavailable) {
+      mocks.loadPlannerItemsForWindow.mockRejectedValueOnce(new Error("metadata read unavailable"));
+    } else {
+      mocks.loadPlannerItemsForWindow.mockResolvedValueOnce([{
+        id: "saved-item-id", goal_id: goalId, unit_key: "milestone:1",
+        scheduled_date: "2026-09-20", original_scheduled_date: "2026-08-10",
+        scheduled_time: null, locked: false,
+      }]);
+    }
     const response = await POST(
       new Request("http://localhost/api/planner/save", { method: "POST" })
     );
 
     expect(response.status).toBe(200);
     expect(mocks.runPlannerKernel).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toMatchObject({
+      savedItems: metadataUnavailable ? null : [expect.objectContaining({ id: "saved-item-id", goalId, scheduledDate: "2026-09-20" })],
+    });
     expect(mocks.routeRpc).toHaveBeenCalledWith(
       "set_planner_schedule",
       expect.objectContaining({

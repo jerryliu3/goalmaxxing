@@ -143,7 +143,7 @@ async function dismissTabOnboardingIfPresent(page: Page) {
 }
 
 async function waitForCalendarReady(page: Page) {
-  const loadingLocator = page.getByText("Loading planner month context...");
+  const loadingLocator = page.getByText(/Loading planner (?:month )?context\.\.\./);
   const setupHeading = page.getByRole("heading", { name: "Plan setup" });
   await expect
     .poll(
@@ -151,7 +151,8 @@ async function waitForCalendarReady(page: Page) {
         if (await setupHeading.isVisible().catch(() => false)) {
           return "setup";
         }
-        return (await loadingLocator.count()) === 0 ? "ready" : "loading";
+        const controlsReady = await page.getByRole("button", { name: "Month View", exact: true }).isEnabled().catch(() => false);
+        return (await loadingLocator.count()) === 0 && controlsReady ? "ready" : "loading";
       },
       { timeout: 20_000 }
     )
@@ -908,10 +909,10 @@ test.describe("planner critical rails", () => {
     const saveResponse = await saveResponsePromise;
     const body = (await saveResponse.json()) as { code?: string };
     expect(saveResponse.status()).toBe(409);
-    expect(["stale_revision", "preview_hash_mismatch"]).toContain(body.code ?? "");
+    expect(["stale_schedule", "stale_revision", "preview_hash_mismatch"]).toContain(body.code ?? "");
 
     await expect(
-      page.getByRole("button", { name: /Undo changes/i })
+      page.getByRole("button", { name: "Undo", exact: true })
     ).toBeVisible({ timeout: 10_000 });
   });
 });

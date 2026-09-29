@@ -148,13 +148,16 @@ export function PlannerFocusedDayPane({
       >
         <PlanLedgerCompletionControl
           completed={completed}
-          pending={dayChecklist.savingGoalId === goal.id}
+          pending={
+            dayChecklist.savingGoalId === goal.id ||
+            draftMove?.movingGoalId === goal.id
+          }
           mode={completionMode}
           label={goal.title}
           disabled={archived}
           onToggle={(sourceElement) => {
             if (completionMode === "move") {
-              draftMove?.moveGoalToDate(goal, day);
+              void draftMove?.moveGoalToDate(goal, day);
               return;
             }
             void dayChecklist.toggleCompletion(goal, sourceElement);

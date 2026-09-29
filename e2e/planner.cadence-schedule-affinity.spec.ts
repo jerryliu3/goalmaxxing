@@ -218,7 +218,7 @@ test.describe("cadence schedule-affinity", () => {
     "Cadence affinity rail runs on chromium only."
   );
 
-  test("checklist completion credits the latest open past session on calendar", async ({
+  test("past-day checklist completion credits the latest open past session on calendar", async ({
     page,
   }) => {
     test.setTimeout(120_000);
@@ -230,6 +230,11 @@ test.describe("cadence schedule-affinity", () => {
       !fixture.available,
       "Cadence affinity fixture is unavailable for the current calendar day."
     );
+    // Current/future unscheduled rows now offer a planning move. Exercise the
+    // direct completion control on a past day, where it is still available.
+    const completionDay = new Date(`${fixture.today}T12:00:00Z`);
+    completionDay.setUTCDate(completionDay.getUTCDate() - 1);
+    const completionDate = completionDay.toISOString().slice(0, 10);
 
     // This fixture is shared with the credit-move rail. Restore its past
     // session before exercising direct credit assignment so test order cannot
@@ -242,10 +247,14 @@ test.describe("cadence schedule-affinity", () => {
       date: fixture.today,
       desiredFactState: "absent",
     });
+    await setExactDateCompletion(page, {
+      date: completionDate,
+      desiredFactState: "absent",
+    });
     await clearPlannerTabCache(page);
 
-    await gotoAppPath(page, `/calendar?view=day&day=${fixture.today}`);
-    await expect(page).toHaveURL(new RegExp(`[?&]day=${fixture.today}(?:&|$)`));
+    await gotoAppPath(page, `/calendar?view=day&day=${completionDate}`);
+    await expect(page).toHaveURL(new RegExp(`[?&]day=${completionDate}(?:&|$)`));
     await expandUnscheduledGoals(page);
     const completeButton = page.getByRole("button", {
       name: `Mark ${CADENCE_AFFINITY_GOAL_TITLE} done`,
@@ -268,7 +277,7 @@ test.describe("cadence schedule-affinity", () => {
         };
         return (
           payload.goalId === CADENCE_AFFINITY_GOAL_ID &&
-          payload.date === fixture.today &&
+          payload.date === completionDate &&
           payload.desiredFactState === "present"
         );
       }),
@@ -278,7 +287,7 @@ test.describe("cadence schedule-affinity", () => {
       date: string;
       desiredFactState: string;
     };
-    expect(payload.date).toBe(fixture.today);
+    expect(payload.date).toBe(completionDate);
     expect(payload.desiredFactState).toBe("present");
 
     await expect
@@ -296,6 +305,7 @@ test.describe("cadence schedule-affinity", () => {
     expect(credits[fixture.unitKey3]?.creditState).toBe("uncredited");
 
     await openCalendarMonth(page, fixture.scopeMonth);
+    await page.getByRole("searchbox", { name: "Search goals" }).fill(CADENCE_AFFINITY_GOAL_TITLE);
 
     const pastDayCell = page.locator(
       `[data-day-cell="true"][data-day="${fixture.pastSlotDate}"]`
@@ -304,7 +314,11 @@ test.describe("cadence schedule-affinity", () => {
     const pastEntry = pastDayCell.locator(
       `[data-calendar-day-entry="true"][data-planner-goal-id="${CADENCE_AFFINITY_GOAL_ID}"][data-planner-unit-key="${fixture.unitKey4}"]`
     );
-    await expect(pastEntry).toBeVisible({ timeout: 15_000 });
+    await expect(pastEntry).toBeHidden();
+    const completedEntry = page.locator(
+      `[data-day-cell="true"][data-day="${completionDate}"] [data-calendar-day-entry="true"][data-planner-goal-id="${CADENCE_AFFINITY_GOAL_ID}"][data-planner-unit-key="${fixture.unitKey4}"]`
+    );
+    await expect(completedEntry).toBeVisible({ timeout: 15_000 });
 
     const tomorrowPreview = await openDayPreview(page, fixture.tomorrow);
     const futureGoalRow = tomorrowPreview.getByRole("button", {

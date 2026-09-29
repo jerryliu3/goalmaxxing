@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useState,
   type ReactNode,
 } from "react";
 import { toast } from "sonner";
@@ -20,8 +21,17 @@ export interface UnscheduledDraftMove {
 }
 
 interface UnscheduledDraftMoveContextValue {
+  movingGoalId: string | null;
   canMoveGoalToDate: (goalId: string, targetDate: string) => boolean;
-  moveGoalToDate: (goal: Goal, targetDate: string) => boolean;
+  moveGoalToDate: (goal: Goal, targetDate: string) => Promise<boolean>;
+}
+
+export interface UnscheduledDraftMoveRequest {
+  goalId: string;
+  targetDate: string;
+  goalStartDate: string;
+  goalEndDate: string | null;
+  localMove: UnscheduledDraftMove | null;
 }
 
 const UnscheduledDraftMoveContext =
@@ -58,7 +68,7 @@ function selectCadenceUnit(
 
 /**
  * Selects the earliest incomplete persisted session that can be explicitly
- * moved earlier into an unscheduled current/future day. This is a planning
+ * moved into an unscheduled current/future day, including overdue sessions. This is a planning
  * action only; it never creates a completion fact.
  */
 export function selectUnscheduledDraftMove({
@@ -90,7 +100,7 @@ export function selectUnscheduledDraftMove({
         )[0] ?? null;
   const moveWindow = selected?.draftMoveWindow ?? selected?.placementWindow;
   return selected?.scheduledDate &&
-    selected.scheduledDate > targetDate &&
+    selected.scheduledDate !== targetDate &&
     moveWindow &&
     dateIsInWindow(targetDate, moveWindow)
     ? {
@@ -110,9 +120,10 @@ export function UnscheduledDraftMoveProvider({
 }: {
   workUnits: PlannerWorkUnit[];
   asOfDate: string | null;
-  onDraftMove: (move: UnscheduledDraftMove) => boolean;
+  onDraftMove: (request: UnscheduledDraftMoveRequest) => Promise<boolean>;
   children: ReactNode;
 }) {
+  const [movingGoalId, setMovingGoalId] = useState<string | null>(null);
   const selectMove = useCallback(
     (goalId: string, targetDate: string) => {
       if (!asOfDate || targetDate < asOfDate) {
@@ -123,27 +134,39 @@ export function UnscheduledDraftMoveProvider({
     [asOfDate, workUnits]
   );
   const canMoveGoalToDate = useCallback(
-    (goalId: string, targetDate: string) =>
-      selectMove(goalId, targetDate) !== null,
-    [selectMove]
+    (_goalId: string, targetDate: string) =>
+      Boolean(asOfDate && targetDate >= asOfDate),
+    [asOfDate]
   );
   const moveGoalToDate = useCallback(
-    (goal: Goal, targetDate: string) => {
-      const move = selectMove(goal.id, targetDate);
-      if (!move) {
+    async (goal: Goal, targetDate: string) => {
+      if (!asOfDate || targetDate < asOfDate || movingGoalId) {
         return false;
       }
-      const moved = onDraftMove(move);
-      if (moved) {
-        toast.success("Session moved into the plan draft. Save the plan to confirm it.");
+      setMovingGoalId(goal.id);
+      try {
+        const moved = await onDraftMove({
+          goalId: goal.id,
+          targetDate,
+          goalStartDate: goal.start_date,
+          goalEndDate: goal.end_date,
+          localMove: selectMove(goal.id, targetDate),
+        });
+        if (moved) {
+          toast.success(
+            "Session moved into the plan draft. Save the plan to confirm it."
+          );
+        }
+        return moved;
+      } finally {
+        setMovingGoalId(null);
       }
-      return moved;
     },
-    [onDraftMove, selectMove]
+    [asOfDate, movingGoalId, onDraftMove, selectMove]
   );
   const value = useMemo(
-    () => ({ canMoveGoalToDate, moveGoalToDate }),
-    [canMoveGoalToDate, moveGoalToDate]
+    () => ({ movingGoalId, canMoveGoalToDate, moveGoalToDate }),
+    [canMoveGoalToDate, moveGoalToDate, movingGoalId]
   );
   return (
     <UnscheduledDraftMoveContext.Provider value={value}>

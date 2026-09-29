@@ -82,4 +82,26 @@ describe("validateMergedWorkUnitAssignments", () => {
     expect(result.valid).toBe(false);
     expect(result.invariantViolations).toContain("duplicate_goal_date");
   });
+
+  it("does not count an off-date completed unit as occupying its former slot", () => {
+    const result = validateMergedWorkUnitAssignments([
+      createWorkUnit({
+        unitKey: "total:1",
+        ordinal: 1,
+        scheduledDate: "2026-08-20",
+        classification: "satisfied_elsewhere",
+        creditState: "completed_elsewhere",
+        creditedCompletionId: "completion-1",
+        creditedCompletionDate: "2026-08-10",
+      }),
+      createWorkUnit({
+        unitKey: "total:2",
+        ordinal: 2,
+        scheduledDate: "2026-08-20",
+      }),
+    ]);
+
+    expect(result.valid).toBe(true);
+    expect(result.invariantViolations).toEqual([]);
+  });
 });
