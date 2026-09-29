@@ -1,7 +1,6 @@
 import { getAnchoredPeriod } from "@/lib/goals/periods";
 import { matchesCadenceUnitKey } from "@/lib/goals/target-basis";
-import { getAdmissibleCompletions } from "@/lib/goals/admissible";
-import type { Goal, RecurrenceInterval } from "@/lib/goals/types";
+import { reconcilePersistedGoalCompletions } from "@/lib/planner/persisted-completion-reconciliation";
 import type {
   PlannerCanonicalSnapshot,
   PlannerItemRow,
@@ -34,220 +33,6 @@ function assignmentKey(assignment: { goalId: string; unitKey: string }) {
   return draftCommandEntryKey(assignment);
 }
 
-/**
- * Cadence completions credit one session each, inside that period only.
- * This must stay aligned with `pickCadenceCreditUnit` / kernel reconciliation:
- * latest scheduled date on or before the completion, else earliest future slot.
- * A completion never freezes every other slot in the same week/month.
- */
-function pickCadenceItemForCompletion({
-  items,
-  completionDate,
-  goal,
-  interval,
-  weekStartsOn,
-}: {
-  items: PlannerItemRow[];
-  completionDate: string;
-  goal: Goal;
-  interval: RecurrenceInterval;
-  weekStartsOn: number | undefined;
-}) {
-  const candidates = items.filter((item) => {
-    if (!item.scheduled_date) {
-      return false;
-    }
-    const period = getAnchoredPeriod(
-      goal.start_date,
-      interval,
-      item.scheduled_date,
-      { weekStartsOn }
-    );
-    return (
-      completionDate >= period.start && completionDate <= period.end
-    );
-  });
-  if (candidates.length === 0) {
-    return null;
-  }
-  const pastOrSame = candidates.filter(
-    (item) => (item.scheduled_date ?? "") <= completionDate
-  );
-  const pool = pastOrSame.length > 0 ? pastOrSame : candidates;
-  const preferLatest = pastOrSame.length > 0;
-  return [...pool].sort((left, right) => {
-    const leftDate = left.scheduled_date ?? "";
-    const rightDate = right.scheduled_date ?? "";
-    const byDate = preferLatest
-      ? rightDate.localeCompare(leftDate)
-      : leftDate.localeCompare(rightDate);
-    if (byDate !== 0) {
-      return byDate;
-    }
-    return left.unit_key.localeCompare(right.unit_key);
-  })[0] ?? null;
-}
-
-function completedUnitDatesForGoal({
-  snapshot,
-  goalId,
-  persistedItems,
-  asOfDate,
-}: {
-  snapshot: PlannerCanonicalSnapshot;
-  goalId: string;
-  persistedItems: PlannerItemRow[];
-  asOfDate: string;
-}) {
-  const goal = snapshot.goals.find((candidate) => candidate.id === goalId);
-  if (!goal) {
-    return new Map<string, string>();
-  }
-  const requirement = normalizeGoalRequirement(goal).requirement;
-  const completions = getAdmissibleCompletions(
-    goal,
-    snapshot.completions.filter(
-      (completion) => completion.goal_id === goal.id
-    ),
-    { asOfDate }
-  );
-  const completed = new Map<string, string>();
-  const usedCompletionIds = new Set<string>();
-  if (requirement.kind === "milestone_sequence") {
-    for (const completion of completions) {
-      const unitKey = completion.planner_unit_key;
-      const match = unitKey
-        ? /^milestone:([1-9][0-9]*)$/.exec(unitKey)
-        : null;
-      const ordinal = match ? Number(match[1]) : null;
-      if (
-        ordinal &&
-        ordinal <= requirement.targetCount &&
-        !completed.has(unitKey!)
-      ) {
-        completed.set(unitKey!, completion.completed_on);
-        usedCompletionIds.add(completion.id);
-      }
-    }
-    const remainingCompletions = completions.filter(
-      (completion) => !usedCompletionIds.has(completion.id)
-    );
-    let completionIndex = 0;
-    for (
-      let ordinal = 1;
-      ordinal <= requirement.targetCount &&
-      completionIndex < remainingCompletions.length;
-      ordinal += 1
-    ) {
-      const unitKey = `milestone:${ordinal}`;
-      if (completed.has(unitKey)) {
-        continue;
-      }
-      completed.set(
-        unitKey,
-        remainingCompletions[completionIndex]!.completed_on
-      );
-      completionIndex += 1;
-    }
-    return completed;
-  }
-  if (requirement.kind === "cadence") {
-    const remaining = persistedItems.filter(
-      (candidate) => candidate.goal_id === goal.id && candidate.scheduled_date
-    );
-    const weekStartsOn =
-      snapshot.preferences?.default_policy.weekStartsOn;
-    for (const completion of completions) {
-      const durableItem = completion.planner_unit_key
-        ? remaining.find(
-            (item) => item.unit_key === completion.planner_unit_key
-          )
-        : null;
-      if (durableItem) {
-        completed.set(durableItem.unit_key, completion.completed_on);
-        remaining.splice(remaining.indexOf(durableItem), 1);
-        continue;
-      }
-      const picked = pickCadenceItemForCompletion({
-        items: remaining,
-        completionDate: completion.completed_on,
-        goal,
-        interval: requirement.interval,
-        weekStartsOn,
-      });
-      if (!picked) {
-        continue;
-      }
-      completed.set(picked.unit_key, completion.completed_on);
-      const pickedIndex = remaining.findIndex(
-        (item) => item.unit_key === picked.unit_key
-      );
-      if (pickedIndex >= 0) {
-        remaining.splice(pickedIndex, 1);
-      }
-    }
-    return completed;
-  }
-
-  const scheduledDateByUnitKey = new Map(
-    persistedItems
-      .filter((item) => item.goal_id === goal.id)
-      .map((item) => [item.unit_key, item.scheduled_date])
-  );
-  for (const completion of completions) {
-    const unitKey = completion.planner_unit_key;
-    const match = unitKey ? /^total:([1-9][0-9]*)$/.exec(unitKey) : null;
-    const ordinal = match ? Number(match[1]) : null;
-    if (
-      ordinal &&
-      ordinal <= requirement.targetCount &&
-      !completed.has(unitKey!)
-    ) {
-      completed.set(unitKey!, completion.completed_on);
-      usedCompletionIds.add(completion.id);
-    }
-  }
-  for (let ordinal = 1; ordinal <= requirement.targetCount; ordinal += 1) {
-    const unitKey = `total:${ordinal}`;
-    if (completed.has(unitKey)) {
-      continue;
-    }
-    const scheduledDate = scheduledDateByUnitKey.get(unitKey);
-    if (!scheduledDate) {
-      continue;
-    }
-    const exact = completions.find(
-      (completion) =>
-        !usedCompletionIds.has(completion.id) &&
-        completion.completed_on === scheduledDate
-    );
-    if (exact) {
-      usedCompletionIds.add(exact.id);
-      completed.set(unitKey, exact.completed_on);
-    }
-  }
-  const remainingCompletions = completions.filter(
-    (completion) => !usedCompletionIds.has(completion.id)
-  );
-  let completionIndex = 0;
-  for (
-    let ordinal = 1;
-    ordinal <= requirement.targetCount &&
-    completionIndex < remainingCompletions.length;
-    ordinal += 1
-  ) {
-    const unitKey = `total:${ordinal}`;
-    if (completed.has(unitKey)) {
-      continue;
-    }
-    completed.set(
-      unitKey,
-      remainingCompletions[completionIndex]!.completed_on
-    );
-    completionIndex += 1;
-  }
-  return completed;
-}
 
 export function buildDirectDraftPersistence({
   snapshot,
@@ -303,12 +88,16 @@ export function buildDirectDraftPersistence({
         : [];
     });
   for (const goalId of new Set(commands.map((command) => command.goalId))) {
-    for (const [unitKey, completedOn] of completedUnitDatesForGoal({
-      snapshot,
-      goalId,
+    const goal = goalById.get(goalId);
+    if (!goal) continue;
+    const reconciled = reconcilePersistedGoalCompletions({
+      goal,
+      completions: snapshot.completions,
       persistedItems: allPersistedItems,
       asOfDate,
-    })) {
+      weekStartsOn: snapshot.preferences?.default_policy.weekStartsOn,
+    });
+    for (const { unitKey, completedOn } of Object.values(reconciled.completionToUnit)) {
       completedUnitDateByKey.set(
         assignmentKey({
           goalId,

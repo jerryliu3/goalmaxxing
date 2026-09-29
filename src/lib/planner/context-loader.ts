@@ -30,6 +30,7 @@ import {
   type PlannerPreferencesSnapshot,
 } from "@/lib/planner/preferences-snapshot";
 import type { PlannerCompletionUnitIdentity } from "@/lib/planner/reconciliation";
+import { reconcilePersistedGoalCompletions } from "@/lib/planner/persisted-completion-reconciliation";
 import { normalizeGoalRequirement } from "@/lib/planner/requirements";
 import type { PlannerIssueCode } from "@/lib/planner/solver/types";
 import { evaluateActivePlanStaleness } from "@/lib/planner/staleness";
@@ -611,7 +612,7 @@ export async function loadPlannerCanonicalSnapshot({
       loadOwnerLinks(supabase, ownerId),
       loadRevisionTokens(supabase),
       loadPlannerPreferences(supabase, ownerId),
-      loadPlannerItemsForWindow(supabase, ownerId, startDate, endDate),
+      loadAllPlannerItems(supabase, ownerId),
       loadPlannerGoalUnplaceableRecords(supabase, ownerId),
     ]);
   const completions = await loadOwnerCompletions(
@@ -621,11 +622,25 @@ export async function loadPlannerCanonicalSnapshot({
   );
   const activePlan = await loadActivePlanSnapshot(
     `${startDate}:${endDate}`,
-    plannerItems,
+    plannerItems.filter((item) => item.scheduled_date >= startDate && item.scheduled_date <= endDate),
     goals,
     completions,
     preferences
   );
+  if (activePlan) {
+    const asOfDate = resolveCanonicalAsOfDate({ timezone: preferences?.timezone ?? "UTC" });
+    for (const goal of goals) {
+      if (!completions.some((completion) => completion.goal_id === goal.id)) continue;
+      const reconciled = reconcilePersistedGoalCompletions({
+        goal,
+        completions,
+        persistedItems: plannerItems,
+        asOfDate,
+        weekStartsOn: preferences?.default_policy.weekStartsOn,
+      });
+      Object.assign(activePlan.basePlan.completionToUnit, reconciled.completionToUnit);
+    }
+  }
 
   return {
     goals,

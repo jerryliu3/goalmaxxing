@@ -90,7 +90,7 @@ export function planDraftMove({
     return {
       ok: false,
       message:
-        "This session is unavailable in the current preview. Linked target goals stay hidden until the day after linked source coverage ends, so overlap dates cannot be used.",
+        "This session is missing from the current preview. Refresh the calendar and try again.",
     };
   }
   if (previewUnit.locked) {
