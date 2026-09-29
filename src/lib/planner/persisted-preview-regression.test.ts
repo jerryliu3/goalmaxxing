@@ -18,6 +18,7 @@ const goal: Goal = {
   created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z",
 };
 const asOfDate = "2026-09-29";
+const october = { start: "2026-10-01", end: "2026-10-31" };
 const policy = createDefaultPlannerPolicy("UTC", "2026-01-01T00:00:00Z");
 const item = (unitKey: string, date: string, itemGoal = goal) => ({
   id: `${itemGoal.id}:${unitKey}`, goal_id: itemGoal.id, owner_id: itemGoal.owner_id,
@@ -72,7 +73,7 @@ describe("persisted preview / move / save consistency", () => {
       entry, previewUnit, scopeMonth: "2026-10", nextDate: "2026-10-03",
       destinationSuppressedByLink: false, conflictKeys: undefined, completionFactConflict: undefined,
     })).toEqual({ ok: true, scheduledDate: "2026-10-03" });
-    expect(buildDirectDraftPersistence({ snapshot, persistedItems: items, asOfDate, commands: [{
+    expect(buildDirectDraftPersistence({ snapshot, persistedItems: items, asOfDate, writeWindow: october, commands: [{
       id: "move", sequence: 1, kind: "move_item", goalId: goal.id, unitKey: "total:1",
       sourceDate: "2026-10-01", scheduledDate: "2026-10-03",
     }] })).toEqual(expect.arrayContaining([expect.objectContaining({ unit_key: "total:1", scheduled_date: "2026-10-03" })]));
@@ -86,7 +87,7 @@ describe("persisted preview / move / save consistency", () => {
     const items = [item("total:1", "2026-10-01"), item("total:2", "2026-09-10"), item("total:3", "2026-10-18")];
     const { result, snapshot } = preview(items, [fact("legacy", "2026-09-10")]);
     expect(result.workUnits.find((unit) => unit.unitKey === "total:1")).toMatchObject({ creditState: "uncredited" });
-    expect(buildDirectDraftPersistence({ snapshot, persistedItems: items, asOfDate, commands: [{
+    expect(buildDirectDraftPersistence({ snapshot, persistedItems: items, asOfDate, writeWindow: october, commands: [{
       id: "move", sequence: 1, kind: "move_item", goalId: goal.id, unitKey: "total:1",
       sourceDate: "2026-10-01", scheduledDate: "2026-10-03",
     }] })).toHaveLength(2); // No September row leaks into the write window.
@@ -98,10 +99,57 @@ describe("persisted preview / move / save consistency", () => {
     expect(result.workUnits.find((unit) => unit.unitKey === "total:1")).toMatchObject({ creditState: "completed_elsewhere" });
     expect(projection.entriesByDate.has("2026-10-01")).toBe(false);
     expect(projection.entriesByDate.get("2026-09-26")?.[0]).toMatchObject({ creditState: "completed_elsewhere" });
-    expect(() => buildDirectDraftPersistence({ snapshot, persistedItems: items, asOfDate, commands: [{
+    expect(() => buildDirectDraftPersistence({ snapshot, persistedItems: items, asOfDate, writeWindow: october, commands: [{
       id: "move", sequence: 1, kind: "move_item", goalId: goal.id, unitKey: "total:1",
       sourceDate: "2026-10-01", scheduledDate: "2026-10-03",
     }] })).toThrow("already credited");
+  });
+
+  it("keeps a credited row on its saved date when its completion is outside the write window", () => {
+    const items = [item("total:1", "2026-10-01"), item("total:2", "2026-10-18")];
+    const { snapshot } = preview(items, [fact("credited", "2026-09-26", "total:1")]);
+    const moveTotal2 = (scheduledDate: string) => buildDirectDraftPersistence({
+      snapshot, persistedItems: items, asOfDate, writeWindow: october, commands: [{
+        id: "move", sequence: 1, kind: "move_item", goalId: goal.id, unitKey: "total:2",
+        sourceDate: "2026-10-18", scheduledDate,
+      }],
+    });
+    expect(moveTotal2("2026-10-03").map((row) => [row.unit_key, row.scheduled_date])).toEqual([
+      ["total:1", "2026-10-01"], ["total:2", "2026-10-03"],
+    ]);
+    expect(() => moveTotal2("2026-10-01")).toThrow("already has a session");
+  });
+
+  it("leaves another goal's credited row untouched when saving a move", () => {
+    const other = { ...goal, id: "goal-b", title: "Other hobby" };
+    const rows = [item("total:1", "2026-10-01"), item("total:1", "2026-10-05", other)];
+    const completions = [fact("other-credit", "2026-09-20", "total:1", other)];
+    const goalFor = (goalId: string) => (goalId === other.id ? other : goal);
+    const snapshot = {
+      goals: [goal, other], completions, links: [], preferences: null,
+      activePlan: {
+        goals: [goal, other].map((row) => ({ id: row.id, original_goal_id: row.id })),
+        items: rows.map((row) => ({
+          id: row.id, plan_goal_id: row.goal_id, unit_key: row.unit_key,
+          scheduled_date: row.scheduled_date, original_scheduled_date: row.scheduled_date, locked: false,
+        })),
+        basePlan: {
+          assignments: rows.map((row) => ({
+            goalId: row.goal_id, requirementFingerprint: computeRequirementFingerprint(goalFor(row.goal_id)),
+            unitKey: row.unit_key, scheduledDate: row.scheduled_date, locked: false,
+          })),
+          // Mirrors the context loader, which reconciles every goal for preview.
+          completionToUnit: reconcilePersistedGoalCompletions({ goal: other, completions, persistedItems: rows, asOfDate }).completionToUnit,
+        },
+      },
+    } as unknown as PlannerCanonicalSnapshot;
+    const saved = buildDirectDraftPersistence({ snapshot, persistedItems: rows, asOfDate, writeWindow: october, commands: [{
+      id: "move", sequence: 1, kind: "move_item", goalId: goal.id, unitKey: "total:1",
+      sourceDate: "2026-10-01", scheduledDate: "2026-10-03",
+    }] });
+    expect(saved.map((row) => [row.goal_id, row.scheduled_date])).toEqual([
+      [goal.id, "2026-10-03"], [other.id, "2026-10-05"],
+    ]);
   });
 
   it("reserves durable cadence credits before matching legacy facts", () => {

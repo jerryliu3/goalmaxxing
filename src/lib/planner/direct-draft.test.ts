@@ -48,6 +48,8 @@ const assignments = [
   },
 ] as const;
 
+const writeWindow = { start: "2026-08-01", end: "2026-09-30" };
+
 const snapshot = {
   goals: [goal],
   completions: [],
@@ -92,6 +94,7 @@ describe("buildDirectDraftPersistence", () => {
         },
       ],
       asOfDate: "2026-08-05",
+      writeWindow,
     });
 
     expect(
@@ -132,6 +135,7 @@ describe("buildDirectDraftPersistence", () => {
         },
       ],
       asOfDate: "2026-08-05",
+      writeWindow,
     });
 
     expect(result.find((item) => item.unit_key === "milestone:1")).toMatchObject({
@@ -154,6 +158,7 @@ describe("buildDirectDraftPersistence", () => {
         },
       ],
       asOfDate: "2026-08-20",
+      writeWindow,
     });
 
     expect(
@@ -180,6 +185,7 @@ describe("buildDirectDraftPersistence", () => {
           },
         ],
         asOfDate: "2026-08-05",
+        writeWindow,
       })
     ).toThrowError(
       expect.objectContaining<Partial<PlannerDirectDraftValidationError>>({
@@ -216,6 +222,7 @@ describe("buildDirectDraftPersistence", () => {
           },
         ],
         asOfDate: "2026-08-05",
+        writeWindow,
       })
     ).toThrowError(
       expect.objectContaining<Partial<PlannerDirectDraftValidationError>>({
@@ -252,6 +259,7 @@ describe("buildDirectDraftPersistence", () => {
         },
       ],
       asOfDate: "2026-08-05",
+      writeWindow,
     });
 
     expect(result.find((item) => item.unit_key === "milestone:1")).toMatchObject({
@@ -278,6 +286,7 @@ describe("buildDirectDraftPersistence", () => {
         },
       ],
       asOfDate: "2026-08-05",
+      writeWindow,
     });
 
     expect(result.find((item) => item.unit_key === "milestone:1")).toMatchObject({
@@ -307,6 +316,7 @@ describe("buildDirectDraftPersistence", () => {
         },
       ],
       asOfDate: "2026-08-05",
+      writeWindow,
     });
 
     expect(result.find((item) => item.unit_key === "milestone:1")).toMatchObject({
@@ -337,6 +347,7 @@ describe("buildDirectDraftPersistence", () => {
         },
       ],
       asOfDate: "2026-08-05",
+      writeWindow,
     });
 
     expect(
@@ -446,6 +457,7 @@ describe("buildDirectDraftPersistence", () => {
         },
       ],
       asOfDate: "2026-09-09",
+      writeWindow,
     });
 
     expect(result.find((item) => item.unit_key === thursdayKey)).toMatchObject({
@@ -536,6 +548,7 @@ describe("buildDirectDraftPersistence", () => {
           },
         ],
         asOfDate: "2026-09-09",
+        writeWindow,
       })
     ).toThrowError(
       expect.objectContaining<Partial<PlannerDirectDraftValidationError>>({

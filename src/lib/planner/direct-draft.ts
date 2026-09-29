@@ -5,6 +5,7 @@ import type {
   PlannerCanonicalSnapshot,
   PlannerItemRow,
 } from "@/lib/planner/context-loader";
+import { dateIsInWindow, type DateWindow } from "@/lib/planner/dates";
 import {
   draftCommandEntryKey,
   sortPlannerDraftCommands,
@@ -38,11 +39,13 @@ export function buildDirectDraftPersistence({
   snapshot,
   commands,
   asOfDate,
+  writeWindow,
   persistedItems,
 }: {
   snapshot: PlannerCanonicalSnapshot;
   commands: PlannerDraftCommand[];
   asOfDate: string;
+  writeWindow: DateWindow;
   persistedItems?: PlannerItemRow[];
 }) {
   const goalById = new Map(snapshot.goals.map((goal) => [goal.id, goal]));
@@ -66,11 +69,9 @@ export function buildDirectDraftPersistence({
       ];
     })
   );
-  const completedUnitDateByKey = new Map(
-    Object.values(snapshot.activePlan?.basePlan.completionToUnit ?? {}).map(
-      (unit) => [assignmentKey(unit), unit.completedOn]
-    )
-  );
+  // Only goals this draft touches are reconciled. The snapshot's credits cover
+  // every goal for preview; applying them here would rewrite unrelated rows.
+  const completedUnitDateByKey = new Map<string, string>();
   const allPersistedItems =
     persistedItems ??
     (snapshot.activePlan?.items ?? []).flatMap((item) => {
@@ -121,6 +122,20 @@ export function buildDirectDraftPersistence({
       assignment.scheduledTimeOverride ?? null,
     ])
   );
+  // A credited row lands on its completion date only when this write window
+  // can hold that date; otherwise it keeps its saved placement.
+  const creditedDateByKey = new Map(
+    Array.from(completedUnitDateByKey, ([key, completedOn]) => [
+      key,
+      dateIsInWindow(completedOn, writeWindow)
+        ? completedOn
+        : (projectedDateByKey.get(key) ?? null),
+    ])
+  );
+  const persistedDateFor = (key: string) =>
+    creditedDateByKey.has(key)
+      ? (creditedDateByKey.get(key) ?? null)
+      : (projectedDateByKey.get(key) ?? null);
 
   for (const command of sortPlannerDraftCommands(commands)) {
     const key = assignmentKey(command);
@@ -254,17 +269,10 @@ export function buildDirectDraftPersistence({
       const conflictingAssignment = Array.from(
         canonicalAssignmentByKey.values()
       ).find(
-        (candidate) => {
-          const candidateKey = assignmentKey(candidate);
-          return (
-            candidate.goalId === command.goalId &&
-            candidateKey !== key &&
-            (completedUnitDateByKey.get(candidateKey) === undefined ||
-              completedUnitDateByKey.get(candidateKey) ===
-                projectedDateByKey.get(candidateKey)) &&
-            projectedDateByKey.get(candidateKey) === command.scheduledDate
-          );
-        }
+        (candidate) =>
+          candidate.goalId === command.goalId &&
+          assignmentKey(candidate) !== key &&
+          persistedDateFor(assignmentKey(candidate)) === command.scheduledDate
       );
       const completionConflict = snapshot.completions.some(
         (completion) =>
@@ -289,9 +297,7 @@ export function buildDirectDraftPersistence({
   return Array.from(canonicalAssignmentByKey.values()).map((assignment) => {
     const key = assignmentKey(assignment);
     const goal = goalById.get(assignment.goalId)!;
-    const scheduledDate = projectedDateByKey.get(key) ?? null;
-    const completedOn = completedUnitDateByKey.get(key);
-    const persistedScheduledDate = completedOn ?? scheduledDate;
+    const persistedScheduledDate = persistedDateFor(key);
     const scheduledTimeOverride = projectedTimeByKey.get(key) ?? null;
     const resolvedTime = resolvePlannerEffectiveScheduledTime({
       scheduledDate: persistedScheduledDate,

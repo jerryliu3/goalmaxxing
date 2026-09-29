@@ -314,6 +314,7 @@ export async function handlePlannerSave(request: Request) {
           snapshot,
           commands: draftCommands,
           asOfDate,
+          writeWindow: { start: body.startDate, end: body.endDate },
           persistedItems,
         });
         persistence = {
