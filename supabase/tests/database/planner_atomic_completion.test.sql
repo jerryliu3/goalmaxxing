@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(11);
+select plan(16);
 
 insert into auth.users (id, email)
 values (
@@ -201,6 +201,68 @@ select ok(
       and completed_on = current_date
   ),
   'the completion fact is removed'
+);
+
+set local role service_role;
+insert into public.goals (
+  id, owner_id, title, category, frequency_type, target_count,
+  target_basis, start_date, end_date
+) values (
+  'c2000000-0000-4000-8000-000000000002',
+  'c1000000-0000-4000-8000-000000000001',
+  'Durable milestone allocation', 'test', 'fixed_milestones', 2,
+  'lifetime', current_date - 30, current_date + 30
+);
+insert into public.planner_items (owner_id, goal_id, unit_key, scheduled_date)
+values
+  ('c1000000-0000-4000-8000-000000000001', 'c2000000-0000-4000-8000-000000000002', 'milestone:1', current_date - 2),
+  ('c1000000-0000-4000-8000-000000000001', 'c2000000-0000-4000-8000-000000000002', 'milestone:2', current_date - 1);
+set local role authenticated;
+
+select lives_ok(
+  format($tap$select * from public.complete_planner_item_on_date_service(
+    'c2000000-0000-4000-8000-000000000002', 'milestone:1', current_date, %L
+  )$tap$, public.get_planner_schedule_digest()),
+  'the earliest ordinal can complete after a later ordinal scheduled in the past'
+);
+
+select lives_ok(
+  $tap$
+  select * from public.set_planner_schedule(
+    (date_trunc('month', current_date) - interval '1 month')::date,
+    (date_trunc('month', current_date) + interval '2 months - 1 day')::date,
+    (select jsonb_agg(jsonb_build_object(
+      'goal_id', goal_id, 'unit_key', unit_key, 'scheduled_date', scheduled_date,
+      'original_scheduled_date', original_scheduled_date,
+      'scheduled_time', scheduled_time, 'locked', locked
+    )) from public.planner_items
+    where owner_id = 'c1000000-0000-4000-8000-000000000001'),
+    public.get_planner_schedule_digest()
+  );
+  $tap$,
+  'saving a plan after atomic completion preserves its durable allocation'
+);
+
+select is(
+  (select item.scheduled_date from public.planner_items item
+   join public.completions completion
+     on completion.goal_id = item.goal_id and completion.planner_unit_key = item.unit_key
+   where item.goal_id = 'c2000000-0000-4000-8000-000000000002'),
+  current_date,
+  'the completion still points to its actual session after save'
+);
+
+select lives_ok(
+  format($tap$select * from public.uncomplete_planner_item_on_date_service(
+    'c2000000-0000-4000-8000-000000000002', current_date, %L
+  )$tap$, public.get_planner_schedule_digest()),
+  'undo after a plan save restores the completed milestone'
+);
+select is(
+  (select scheduled_date from public.planner_items
+   where goal_id = 'c2000000-0000-4000-8000-000000000002' and unit_key = 'milestone:2'),
+  current_date - 1,
+  'undo never moves the other milestone'
 );
 
 select * from finish();
