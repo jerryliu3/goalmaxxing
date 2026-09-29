@@ -56,14 +56,10 @@ for (const scenario of ["projected-source", "legacy-credit", "credited-old-place
       const context = await contextResponse.json();
       const unit = context.preview.workUnits.find((candidate: { originalGoalId: string; unitKey: string }) => candidate.originalGoalId === goalId && candidate.unitKey === "total:1");
       expect(unit).toBeTruthy();
-      if (scenario === "credited-old-placement") {
-        expect(unit.creditState).toBe("completed_elsewhere");
-        await expect(page.getByRole("button", { name: title, exact: true })).toHaveCount(0);
-      } else {
-        expect(unit.creditState).toBe("uncredited");
+      const moveToDestination = async (fromDate: string) => {
         await page.getByRole("button", { name: title, exact: true }).click();
         const editor = page.getByRole("region", { name: "Edit planned session" });
-        await editor.getByRole("button", { name: new RegExp(new Date(`${first}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric" })) }).click();
+        await editor.getByRole("button", { name: new RegExp(new Date(`${fromDate}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric" })) }).click();
         await editor.getByLabel("Date", { exact: true }).fill(destination);
         const save = page.getByRole("button", { name: "Save plan", exact: true });
         await expect(save).toBeEnabled();
@@ -71,9 +67,25 @@ for (const scenario of ["projected-source", "legacy-credit", "credited-old-place
         await save.click();
         const response = await saved;
         expect(response.status(), await response.text()).toBe(200);
-        const rows = await db.query("select scheduled_date::text from public.planner_items where goal_id = $1 order by scheduled_date", [goalId]);
-        expect(rows.rows.map((row) => row.scheduled_date)).toContain(destination);
-        expect(rows.rows.map((row) => row.scheduled_date)).toContain(later);
+        const rows = await db.query("select unit_key, scheduled_date::text from public.planner_items where goal_id = $1 order by unit_key", [goalId]);
+        return rows.rows;
+      };
+      if (scenario === "credited-old-placement") {
+        expect(unit.creditState).toBe("completed_elsewhere");
+        await expect(page.getByRole("button", { name: title, exact: true })).toHaveCount(0);
+        // Today's completion date is outside this save's window, so a sibling
+        // move must leave the credited row on its saved date.
+        await page.goto(`/calendar?view=day&month=${month}&day=${later}`);
+        await expect(page.getByRole("button", { name: /Scheduled goals/ })).toBeVisible({ timeout: 30_000 });
+        expect(await moveToDestination(later)).toEqual([
+          { unit_key: "total:1", scheduled_date: first },
+          { unit_key: "total:3", scheduled_date: destination },
+        ]);
+      } else {
+        expect(unit.creditState).toBe("uncredited");
+        const rows = await moveToDestination(first);
+        expect(rows.map((row) => row.scheduled_date)).toContain(destination);
+        expect(rows.map((row) => row.scheduled_date)).toContain(later);
         await page.reload();
         await expect(page.getByRole("button", { name: /Scheduled goals/ })).toBeVisible({ timeout: 30_000 });
         await expect(page.getByRole("button", { name: title, exact: true })).toHaveCount(0);
@@ -82,6 +94,8 @@ for (const scenario of ["projected-source", "legacy-credit", "credited-old-place
       const facts = await db.query("select completed_on::text, planner_unit_key from public.completions where goal_id = $1", [goalId]);
       expect(facts.rows).toEqual(scenario === "projected-source" ? [] : [{ completed_on: today, planner_unit_key: scenario === "legacy-credit" ? null : "total:1" }]);
     } finally {
+      // The prepare stub may still be awaiting its context read at teardown.
+      await page.unrouteAll({ behavior: "ignoreErrors" });
       await db.query("delete from public.goals where id = any($1::uuid[]) and owner_id = $2", [[sourceId, goalId], ownerId]);
       await db.end();
     }
