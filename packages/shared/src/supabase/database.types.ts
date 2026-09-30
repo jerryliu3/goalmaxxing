@@ -333,6 +333,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      prepare_planner_schedule_unnormalized: {
+        Args: {
+          p_expected_digest: string
+          p_items: Json
+          p_unplaceable?: Json
+          p_windows: Json
+        }
+        Returns: {
+          deleted_count: number
+          replayed: boolean
+          schedule_digest: string
+          upserted_count: number
+        }[]
+      }
       raise_if_completion_outside_goal_lifetime: {
         Args: { p_date: string; p_goal_id: string }
         Returns: undefined
