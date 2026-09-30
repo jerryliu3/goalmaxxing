@@ -55,6 +55,10 @@ export type Database = {
         }
         Returns: number
       }
+      claim_milestone_session_for_completion: {
+        Args: { p_date: string; p_goal_id: string; p_owner_id: string }
+        Returns: undefined
+      }
       clear_planner_schedule_for_goal_core: {
         Args: { p_expected_digest: string; p_goal_id: string; p_windows: Json }
         Returns: {
@@ -374,6 +378,10 @@ export type Database = {
       }
       refresh_xp_profile: {
         Args: { p_track_keys?: string[]; p_user_id: string }
+        Returns: undefined
+      }
+      release_milestone_session_for_completion: {
+        Args: { p_date: string; p_goal_id: string; p_owner_id: string }
         Returns: undefined
       }
       resolve_goal_target_basis: {
