@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { animatePlanScene, capturePlanScene } from "@/features/planner/plan-view-morph";
+import { animatePlanScene, capturePlanScene, mountPlanHandoff, PLAN_MORPH_MONTH_DURATION_MS } from "@/features/planner/plan-view-morph";
 
 // jsdom reports every rect as zero-sized, which the capture treats as hidden.
 // Give each element a distinct non-zero box so scenes have real geometry.
@@ -58,6 +58,32 @@ afterEach(() => {
 });
 
 describe("capturePlanScene", () => {
+  it("preserves outgoing scroll offsets and measures only the live destination", () => {
+    const root = mount(`
+      <div data-plan-view="month">
+        <div data-calendar-month-vertical-viewport="true">
+          <button data-day-cell="true" data-day="2026-09-06">
+            <span data-plan-day-number="true">6</span>
+          </button>
+        </div>
+      </div>`);
+    const viewport = root.querySelector<HTMLElement>('[data-calendar-month-vertical-viewport]')!;
+    viewport.scrollTop = 144;
+    viewport.scrollLeft = 90;
+
+    const handoff = mountPlanHandoff(root)!;
+    const copy = handoff.querySelector<HTMLElement>('[data-calendar-month-vertical-viewport]')!;
+    expect(copy.scrollTop).toBe(144);
+    expect(copy.scrollLeft).toBe(90);
+
+    const day = viewport.querySelector<HTMLElement>('[data-day-cell]')!;
+    day.dataset.day = "2026-09-07";
+    day.querySelector('[data-plan-day-number]')!.textContent = "7";
+    const scene = capturePlanScene(root, "month");
+    expect([...scene.days.keys()]).toEqual(["2026-09-07"]);
+    expect(scene.labels.get("date:2026-09-07")?.text).toBe("7");
+  });
+
   it("carries continuous-grid dividers, tile corners, and date typography into the morph", () => {
     const root = mount(`
       <button data-day-cell="true" data-day="2026-09-06"
@@ -119,6 +145,41 @@ describe("capturePlanScene", () => {
 });
 
 describe("animatePlanScene", () => {
+  it.each([["week", "month"], ["month", "week"]] as const)(
+    "keeps opaque frame backgrounds below the moving cells from %s to %s",
+    (fromMode, toMode) => {
+      const frames: FrameRequestCallback[] = [];
+      vi.spyOn(performance, "now").mockReturnValue(0);
+      vi.spyOn(window, "requestAnimationFrame").mockImplementation(callback => {
+        frames.push(callback);
+        return frames.length;
+      });
+      const root = mount(`<div data-plan-view="${fromMode}">
+        <div style="background: white"><ol>${WEEK_ROW("2026-09-14")}</ol></div>
+      </div>`);
+      const content = root.firstElementChild as HTMLElement;
+      const from = capturePlanScene(root, fromMode);
+      const to = capturePlanScene(root, toMode);
+      const onFinish = vi.fn();
+      animatePlanScene(root, content, from, to, onFinish);
+      const layer = root.querySelector<HTMLElement>('[data-plan-morph-layer]')!;
+
+      for (const backdrop of [from.residue, to.residue]) {
+        expect(backdrop.parentElement).toBe(layer.parentElement);
+        expect(backdrop.compareDocumentPosition(layer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      }
+      frames.shift()!(PLAN_MORPH_MONTH_DURATION_MS * 0.95);
+      expect(to.residue.style.opacity).toBe("1");
+      expect(layer.isConnected).toBe(true);
+      expect(content.style.opacity).toBe("0");
+      frames.shift()!(PLAN_MORPH_MONTH_DURATION_MS);
+      expect(root.querySelector('[data-plan-morph-overlay]')).toBeNull();
+      expect(content.style.opacity).toBe("");
+      expect(content.hasAttribute("inert")).toBe(false);
+      expect(onFinish).toHaveBeenCalledOnce();
+    }
+  );
+
   it("positions surrogates before yielding, so none flash at the stage origin", () => {
     const root = mount(`<div data-plan-view="week"><ol>${WEEK_ROW("2026-09-14")}</ol></div>`);
     const content = root.firstElementChild as HTMLElement;
