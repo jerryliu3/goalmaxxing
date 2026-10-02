@@ -1,0 +1,41 @@
+.task-capture-composer {
+  position: relative;
+  padding: 14px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  border-radius: 9px 9px 4px 4px;
+  background: var(--card);
+  box-shadow: 0 4px 0 var(--muted), 0 5px 0 var(--border);
+}
+
+.task-capture-slip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  transform-origin: top left;
+  background: var(--card);
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0 0 3px 3px;
+}
+
+/* The torn edge belongs to the moving paper, not a separate line on the form. */
+.task-capture-slip::before {
+  content: "";
+  position: absolute;
+  inset: -4px 0 auto;
+  height: 5px;
+  background: var(--card);
+  mask: linear-gradient(135deg, transparent 3px, #000 0) 0 0 / 8px 100% repeat-x;
+}
+
+.task-capture-slip-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

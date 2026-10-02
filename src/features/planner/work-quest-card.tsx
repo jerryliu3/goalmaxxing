@@ -1,7 +1,6 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { CompletionTitle } from "@/components/ui/completion-title";
 import { getGoalVisual } from "@/features/planner/goal-visuals";
 import type { WorkQuestModel } from "@/features/planner/work-quest-model";
 import { cn } from "@/lib/utils";
@@ -17,12 +16,14 @@ export function WorkQuestCard({
   trailingNav,
   children,
   goalCard,
+  progressDetails,
 }: {
   quest: WorkQuestModel;
   leadingNav?: ReactNode;
   trailingNav?: ReactNode;
   children?: ReactNode;
   goalCard?: ReactNode;
+  progressDetails?: ReactNode;
 }) {
   const Emblem = getGoalVisual({
     goalId: quest.id,
@@ -43,7 +44,7 @@ export function WorkQuestCard({
         <div className="work-quest-header-row">
           <div className="flex min-w-0 items-center gap-0.5">{leadingNav}</div>
           <h3 className="min-w-0 truncate text-center font-display text-sm font-semibold leading-tight">
-            <CompletionTitle completed={quest.completed}>{quest.title}</CompletionTitle>
+            {quest.title}
           </h3>
           <div className="flex min-w-0 items-center justify-end gap-0.5">
             {trailingNav}
@@ -65,6 +66,7 @@ export function WorkQuestCard({
               <dd className="text-right">{quest.deadlineLabel}</dd>
             </div>
           </dl>
+          {progressDetails}
           {quest.progress && !goalCard ? (
             <div className="mt-3">
               <div className="mb-1 flex items-center justify-between gap-3 text-sm text-muted-foreground">

@@ -7,6 +7,7 @@ import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
 import { cn } from "@/lib/utils";
 import { CompletionTitle } from "@/components/ui/completion-title";
+import { MilestoneFlag } from "@/features/goals/milestone-flag";
 import {
   overlayCurrentlyCredited,
   plannerFactMutationKey,
@@ -371,6 +372,9 @@ export function CalendarMonthDayCell<
                   size="sm"
                   chrome="plain"
                   completedMark="check"
+                  renderMark={/^milestone:\d+$/.test(entry.unitKey)
+                    ? complete => <MilestoneFlag compact complete={complete} number={Number(entry.unitKey.split(":")[1])} />
+                    : undefined}
                   aria-label={
                     currentlyCredited
                       ? "Mark session not done"
@@ -384,7 +388,7 @@ export function CalendarMonthDayCell<
                 />
               </div>
             ) : showStaticDoneMark ? (
-              <Check
+              /^milestone:\d+$/.test(entry.unitKey) ? <MilestoneFlag compact complete number={Number(entry.unitKey.split(":")[1])} /> : <Check
                 role="img"
                 className="block size-3.5 shrink-0 self-center"
                 aria-label="Completed"
@@ -657,4 +661,3 @@ export function CalendarMonthDayCell<
     </PlannerDroppableDay>
   );
 }
-
