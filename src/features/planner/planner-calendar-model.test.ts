@@ -459,6 +459,6 @@ describe("selectPlannerCalendarModel", () => {
       shown.dayAccessors.getOrderedEntriesForDay("2026-08-20").map(
         (entry) => entry.goalTitle
       )
-    ).toEqual(["Open run", "Done run"]);
+    ).toEqual(["Done run", "Open run"]);
   });
 });

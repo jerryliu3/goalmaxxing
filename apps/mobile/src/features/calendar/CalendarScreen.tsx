@@ -302,15 +302,8 @@ export function CalendarScreen() {
     const activeKey = unitEntryKey(unit);
     if (hit.type === "session" && hit.day === sourceDay) {
       const entries = unitsByDate.get(sourceDay) ?? [];
-      const incompleteKeys = entries
-        .filter((entry) => entry.creditState === "uncredited")
-        .map(unitEntryKey);
-      const completedKeys = entries
-        .filter((entry) => entry.creditState !== "uncredited")
-        .map(unitEntryKey);
       const next = reorderPreviewEntryKeys({
-        incompleteKeys,
-        completedKeys,
+        entryKeys: entries.map(unitEntryKey),
         activeEntryKey: activeKey,
         overEntryKey: hit.entryKey,
         existingOrder: orderByDay[sourceDay],

@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(20);
+select plan(21);
 
 insert into auth.users (id, email)
 values (
@@ -248,6 +248,18 @@ select ok(
   'create_planner_task accepts a second timed task for sorting'
 );
 
+-- Explicit creation times make capture order independent of transaction now().
+reset role;
+update public.planner_tasks
+set created_at = case title
+  when 'Timed morning task' then '2026-01-01T08:00:00Z'::timestamptz
+  when 'Untimed afternoon task' then '2026-01-01T09:00:00Z'::timestamptz
+  when 'Later timed task' then '2026-01-01T10:00:00Z'::timestamptz
+end
+where owner_id = '11111111-1111-4111-8111-111111111111'
+  and title in ('Timed morning task', 'Untimed afternoon task', 'Later timed task');
+set local role authenticated;
+
 select results_eq(
   $$
     select title
@@ -260,11 +272,24 @@ select results_eq(
   $$,
   $$
     values
-      ('Timed morning task'::text),
       ('Later timed task'::text),
-      ('Untimed afternoon task'::text)
+      ('Untimed afternoon task'::text),
+      ('Timed morning task'::text)
   $$,
-  'list_planner_tasks sorts by time ascending with nulls last'
+  'list_planner_tasks retains newest-first capture order independently of scheduled time'
+);
+
+do $$ begin
+  perform public.set_planner_task_completion(
+    (select id from public.planner_tasks where owner_id = '11111111-1111-4111-8111-111111111111'
+      and title = 'Later timed task' limit 1), true
+  );
+end $$;
+select results_eq(
+  $$select title from public.list_planner_tasks(current_date)
+    where title in ('Timed morning task', 'Untimed afternoon task', 'Later timed task')$$,
+  $$values ('Later timed task'::text), ('Untimed afternoon task'::text), ('Timed morning task'::text)$$,
+  'completing the newest task does not move it below open tasks'
 );
 
 select is(

@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   buildCompletionFactMarkersByDate,
   buildEntriesByDate,
+  orderEntriesForDay,
   resolveCalendarDayData,
 } from "./calendar-entries";
 import type {
   PlannerActiveGoalSnapshot,
   PlannerActiveItemSnapshot,
+  PlannerDayDetailEntry,
   PlannerWorkUnit,
 } from "./calendar-surface.types";
 
@@ -50,6 +52,33 @@ function persistedItem(scheduledDate: string): PlannerActiveItemSnapshot {
 }
 
 describe("planner calendar entries", () => {
+  it("keeps completed and reopened rows in place, including manual mixed ordering", () => {
+    const entries: PlannerDayDetailEntry[] = ["a", "b", "c"].map(key => ({
+      ...unit("2026-08-07"),
+      key,
+      originalGoalId: key,
+      goalTitle: key,
+      activeGoal: null,
+      activeItem: null,
+      draftDiffKind: null,
+      draftDiffFromDate: null,
+      draftDiffToDate: null,
+      draftGhost: false,
+    }));
+    const order = (rows: PlannerDayDetailEntry[], saved: string[] = []) => orderEntriesForDay({
+      day: "2026-08-07",
+      entries: rows,
+      previewEntryOrderByDay: { "2026-08-07": saved },
+    }).map(entry => entry.key);
+    const completed = entries.map(entry => entry.key === "a"
+      ? { ...entry, creditState: "credited", classification: "completed" }
+      : entry);
+    expect(order(entries)).toEqual(["a", "b", "c"]);
+    expect(order(completed)).toEqual(["a", "b", "c"]);
+    expect(order(completed, ["c", "a", "b"])).toEqual(["c", "a", "b"]);
+    expect(order(entries, ["c", "a", "b"])).toEqual(["c", "a", "b"]);
+  });
+
   it("shows moved-from and moved-to markers for a persisted session", () => {
     const entriesByDate = buildEntriesByDate({
       workUnits: [unit("2026-08-07")],

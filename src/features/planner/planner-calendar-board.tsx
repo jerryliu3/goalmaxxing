@@ -15,7 +15,6 @@ import {
   getEntryGoalFirstTitleWithTime,
   getEntrySubtitle,
   isEntryCredited,
-  isEntryImmovableForDraft,
 } from "@/features/planner/calendar-format";
 import type {
   DayPreviewState,
@@ -463,7 +462,6 @@ export function PlannerCalendarBoard({
               getEntryDisplayTitle={getEntryGoalFirstTitleWithTime}
               getEntrySubtitle={getEntrySubtitle}
               isEntryCredited={isEntryCredited}
-              isEntryImmovableForDraft={isEntryImmovableForDraft}
               onEntryOpen={onPreviewEntryOpen}
               onToggleCompletion={onPreviewToggleCompletion}
               onEntryPointerStart={onEntryPointerStart}

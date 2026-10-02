@@ -24,51 +24,37 @@ export function moveItemInArray<T>(items: T[], fromIndex: number, toIndex: numbe
 }
 
 export function reorderPreviewEntryKeys({
-  incompleteKeys,
-  completedKeys,
+  entryKeys,
   activeEntryKey,
   overEntryKey,
   existingOrder,
 }: {
-  incompleteKeys: string[];
-  completedKeys: string[];
+  entryKeys: string[];
   activeEntryKey: string;
   overEntryKey: string;
   existingOrder?: string[];
 }): string[] | null {
-  const movingCompleted = completedKeys.includes(activeEntryKey);
-  const targetGroupKeys = movingCompleted ? completedKeys : incompleteKeys;
   const dropAtEnd = overEntryKey === PLANNER_LIST_END_ENTRY_KEY;
   if (
-    !targetGroupKeys.includes(activeEntryKey) ||
-    (!dropAtEnd && !targetGroupKeys.includes(overEntryKey))
+    !entryKeys.includes(activeEntryKey) ||
+    (!dropAtEnd && !entryKeys.includes(overEntryKey))
   ) {
     return null;
   }
-  const fallbackOrder = [...incompleteKeys, ...completedKeys];
+  const fallbackOrder = entryKeys;
   const existing = existingOrder ?? fallbackOrder;
   const normalized = [
     ...existing.filter((entryKey) => fallbackOrder.includes(entryKey)),
     ...fallbackOrder.filter((entryKey) => !existing.includes(entryKey)),
   ];
-  const groupOrder = normalized.filter((entryKey) =>
-    targetGroupKeys.includes(entryKey)
-  );
-  const fromIndex = groupOrder.indexOf(activeEntryKey);
+  const fromIndex = normalized.indexOf(activeEntryKey);
   const toIndex = dropAtEnd
-    ? groupOrder.length - 1
-    : groupOrder.indexOf(overEntryKey);
+    ? normalized.length - 1
+    : normalized.indexOf(overEntryKey);
   if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) {
     return null;
   }
-  const nextGroupOrder = moveItemInArray(groupOrder, fromIndex, toIndex);
-  const stableIncomplete = movingCompleted
-    ? normalized.filter((entryKey) => incompleteKeys.includes(entryKey))
-    : nextGroupOrder;
-  const stableCompleted = movingCompleted
-    ? nextGroupOrder
-    : normalized.filter((entryKey) => completedKeys.includes(entryKey));
-  return [...stableIncomplete, ...stableCompleted];
+  return moveItemInArray(normalized, fromIndex, toIndex);
 }
 
 export function unitEntryKey(unit: { originalGoalId: string; unitKey: string }) {

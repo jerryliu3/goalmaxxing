@@ -18,7 +18,6 @@ interface PlannerDayEntriesPanelProps {
   getEntryDisplayTitle: (entry: PlannerDayDetailEntry) => string;
   getEntrySubtitle: (entry: PlannerDayDetailEntry) => string | null;
   isEntryCredited: (entry: PlannerDayDetailEntry) => boolean;
-  isEntryImmovableForDraft: (entry: PlannerDayDetailEntry) => boolean;
   onEntryOpen: (entryKey: string) => void;
   onToggleCompletion: (
     entry: PlannerDayDetailEntry,
@@ -46,7 +45,6 @@ export function PlannerDayEntriesPanel({
   getEntryDisplayTitle,
   getEntrySubtitle,
   isEntryCredited,
-  isEntryImmovableForDraft,
   onEntryOpen,
   onToggleCompletion,
   onEntryPointerStart,
@@ -68,7 +66,7 @@ export function PlannerDayEntriesPanel({
       getEntrySubtitle={getEntrySubtitle}
       isEntryCredited={isEntryCredited}
       isEntryImmovableForDraft={(entry) =>
-        !canMutateEntryOnDay(entry, day) || isEntryImmovableForDraft(entry)
+        !canMutatePlanItems || !canMutateEntryOnDay(entry, day) || entry.draftGhost
       }
       getCompletionToggleState={(entry, selectedDay) =>
         getPlannerCompletionTogglePresentation({

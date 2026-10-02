@@ -2,11 +2,10 @@ import { describe, expect, it } from "vitest";
 import { reorderPreviewEntryKeys, sameEntryKeyOrder } from "./reorder-preview-entries";
 
 describe("reorderPreviewEntryKeys", () => {
-  it("reorders within incomplete and completed groups without crossing them", () => {
+  it("allows manual ordering across completion states", () => {
     expect(
       reorderPreviewEntryKeys({
-        incompleteKeys: ["open-a", "open-b"],
-        completedKeys: ["done-a", "done-b"],
+        entryKeys: ["open-a", "open-b", "done-a", "done-b"],
         activeEntryKey: "open-b",
         overEntryKey: "open-a",
       })
@@ -14,54 +13,49 @@ describe("reorderPreviewEntryKeys", () => {
 
     expect(
       reorderPreviewEntryKeys({
-        incompleteKeys: ["open-a", "open-b"],
-        completedKeys: ["done-a", "done-b"],
+        entryKeys: ["open-a", "open-b", "done-a", "done-b"],
         activeEntryKey: "done-b",
-        overEntryKey: "done-a",
+        overEntryKey: "open-a",
       })
-    ).toEqual(["open-a", "open-b", "done-b", "done-a"]);
+    ).toEqual(["done-b", "open-a", "open-b", "done-a"]);
   });
 
   it("preserves an existing order while adding newly visible entries", () => {
     expect(
       reorderPreviewEntryKeys({
-        incompleteKeys: ["open-a", "open-b", "open-c"],
-        completedKeys: ["done-a"],
+        entryKeys: ["open-a", "open-b", "open-c", "done-a", "new"],
         activeEntryKey: "open-b",
         overEntryKey: "open-a",
-        existingOrder: ["open-c", "open-a", "open-b", "done-a"],
+        existingOrder: ["removed", "open-c", "open-a", "open-b", "done-a"],
       })
-    ).toEqual(["open-c", "open-b", "open-a", "done-a"]);
+    ).toEqual(["open-c", "open-b", "open-a", "done-a", "new"]);
   });
 
-  it("returns null for no-op and cross-group drops", () => {
+  it("returns null for no-op and missing-target drops", () => {
     expect(
       reorderPreviewEntryKeys({
-        incompleteKeys: ["open-a"],
-        completedKeys: ["done-a"],
+        entryKeys: ["open-a", "done-a"],
         activeEntryKey: "open-a",
         overEntryKey: "open-a",
       })
     ).toBeNull();
     expect(
       reorderPreviewEntryKeys({
-        incompleteKeys: ["open-a"],
-        completedKeys: ["done-a"],
+        entryKeys: ["open-a", "done-a"],
         activeEntryKey: "open-a",
-        overEntryKey: "done-a",
+        overEntryKey: "missing",
       })
     ).toBeNull();
   });
 
-  it("moves an item to the end of its group", () => {
+  it("moves an item to the end of the entire list", () => {
     expect(
       reorderPreviewEntryKeys({
-        incompleteKeys: ["open-a", "open-b", "open-c"],
-        completedKeys: ["done-a"],
+        entryKeys: ["open-a", "open-b", "open-c", "done-a"],
         activeEntryKey: "open-a",
         overEntryKey: "__end__",
       })
-    ).toEqual(["open-b", "open-c", "open-a", "done-a"]);
+    ).toEqual(["open-b", "open-c", "done-a", "open-a"]);
   });
 });
 

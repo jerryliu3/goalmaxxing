@@ -7,7 +7,6 @@ import {
   getEntryGoalFirstTitleWithTime,
   getEntrySubtitle,
   isEntryCredited,
-  isEntryImmovableForDraft,
 } from "@/features/planner/calendar-format";
 import type {
   PlannerCompletionFactMarker,
@@ -179,7 +178,6 @@ export function PlannerCalendarOverlays({
             getEntryDisplayTitle={getEntryGoalFirstTitleWithTime}
             getEntrySubtitle={getEntrySubtitle}
             isEntryCredited={isEntryCredited}
-            isEntryImmovableForDraft={isEntryImmovableForDraft}
             onOpenChange={onExpandedPreviewOpenChange}
             onMoveDay={onExpandedPreviewMoveDay}
             onContract={onExpandedPreviewContract}

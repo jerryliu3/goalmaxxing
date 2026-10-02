@@ -236,25 +236,6 @@ export function getEntrySelectedPillClasses({
   return "plan-selected-shimmer border border-primary/35";
 }
 
-export function entryDisplayRank(entry: {
-  draftDiffKind: PlannerDraftVisualKind | null;
-  creditState: string;
-}) {
-  if (entry.draftDiffKind === "moved_from") {
-    return 0;
-  }
-  if (entry.draftDiffKind === "new") {
-    return 1;
-  }
-  if (entry.draftDiffKind === "moved_to") {
-    return 2;
-  }
-  if (entry.creditState !== "uncredited") {
-    return 4;
-  }
-  return 3;
-}
-
 export function completionDisabledReasonCopy(reason: CompletionControlDisabledReason) {
   if (reason === "future_creation") {
     return "You can only mark planner sessions done for today or past dates.";

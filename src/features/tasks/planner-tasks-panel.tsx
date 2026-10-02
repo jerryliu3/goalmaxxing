@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, Trash2 } from "lucide-react";
+import { orderPlannerTasks } from "@cadence/shared/planner/task-order";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -76,7 +77,7 @@ export function PlannerTasksPrefetch({
       if (cancelled || error) {
         return;
       }
-      const tasks = (data ?? []) as PlannerTaskRow[];
+      const tasks = orderPlannerTasks((data ?? []) as PlannerTaskRow[]);
       writePlannerTasksCache(scheduledDate, tasks);
       onCountChange?.(tasks.length);
     })();
@@ -169,8 +170,9 @@ export function PlannerTasksPanel({
         }
         return;
       }
-      setTasks((data ?? []) as PlannerTaskRow[]);
-      writePlannerTasksCache(forDate, (data ?? []) as PlannerTaskRow[]);
+      const next = orderPlannerTasks((data ?? []) as PlannerTaskRow[]);
+      setTasks(next);
+      writePlannerTasksCache(forDate, next);
       setHasLoadedOnce(true);
       if (!options?.background) {
         setLoading(false);
