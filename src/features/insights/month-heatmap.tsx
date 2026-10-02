@@ -5,6 +5,7 @@ import { useCompletionHold } from "@/components/ui/use-completion-hold";
 import { getHeatmapScaleClass } from "@/lib/goals/heatmap";
 import { PeriodStepper } from "@/components/ui/period-stepper";
 import { cn } from "@/lib/utils";
+import styles from "./month-heatmap.module.css";
 
 interface MonthHeatmapProps {
   month: Date;
@@ -20,14 +21,10 @@ interface MonthHeatmapProps {
 }
 
 const weekdayHeaders = ["M", "T", "W", "Th", "F", "S", "Su"];
-const DAY_INNER_RADIUS = "4px";
-const DAY_INNER_ROUNDED_CLASS = "rounded-[4px]";
-const DAY_FRAME_CLASS =
-  "relative flex h-[var(--month-cell-size)] w-[var(--month-cell-size)] items-center justify-center rounded-[8px] border border-border p-[3px] text-[10px] text-muted-foreground";
 
 function heatmapFillClipPath(fillProgress: number) {
   const inset = (1 - fillProgress) * 50;
-  return `inset(${inset}% round ${DAY_INNER_RADIUS})`;
+  return `inset(${inset}%)`;
 }
 
 function MonthHeatmapDay({
@@ -72,15 +69,15 @@ function MonthHeatmapDay({
       {interactiveEditable ? (
         <span
           className={cn(
-            "relative flex h-full w-full overflow-hidden heatmap-scale-0",
-            DAY_INNER_ROUNDED_CLASS
+            "overflow-hidden heatmap-scale-0",
+            styles.fill
           )}
         >
           <span
             aria-hidden
             data-fill-progress={fillProgress}
             data-fill-transition={fillTransition ? "true" : "false"}
-            className={cn("absolute inset-0", DAY_INNER_ROUNDED_CLASS, fillScaleClass)}
+            className={cn("absolute inset-0", fillScaleClass)}
             style={{
               clipPath: heatmapFillClipPath(fillProgress),
               transition: fillTransition
@@ -88,17 +85,17 @@ function MonthHeatmapDay({
                 : "none",
             }}
           />
-          <span className="relative z-[1] font-display">{dayNumber}</span>
+          <span className={cn("relative z-[1] font-display", styles.number)}>{dayNumber}</span>
         </span>
       ) : (
         <span
           className={cn(
-            "flex h-full w-full items-center justify-center font-display",
-            DAY_INNER_ROUNDED_CLASS,
+            styles.fill,
+            "font-display",
             getHeatmapScaleClass(value)
           )}
         >
-          {dayNumber}
+          <span className={styles.number}>{dayNumber}</span>
         </span>
       )}
       {pinned ? (
@@ -119,9 +116,8 @@ function MonthHeatmapDay({
         disabled={disabled}
         data-motion="completion-toggle"
         className={cn(
-          DAY_FRAME_CLASS,
-          "touch-manipulation transition-colors hover:border-primary/50 disabled:cursor-not-allowed disabled:opacity-60 [-webkit-tap-highlight-color:transparent]",
-          holding && "border-primary/60"
+          styles.day,
+          holding && styles.holding
         )}
         {...holdProps}
       >
@@ -136,8 +132,8 @@ function MonthHeatmapDay({
         type="button"
         title={title}
         className={cn(
-          DAY_FRAME_CLASS,
-          "cursor-pointer transition-colors hover:border-primary/50"
+          styles.day,
+          "cursor-pointer"
         )}
         onClick={(event) => onDayClick?.(date, event.currentTarget)}
       >
@@ -147,7 +143,7 @@ function MonthHeatmapDay({
   }
 
   return (
-    <div title={title} className={DAY_FRAME_CLASS}>
+    <div title={title} className={styles.day}>
       {body}
     </div>
   );
@@ -169,6 +165,7 @@ export function MonthHeatmap({
   const monthEnd = endOfMonth(month);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
   const firstWeekdayOffset = getISODay(monthStart) - 1;
+  const trailingDayCount = (7 - ((firstWeekdayOffset + days.length) % 7)) % 7;
   const pinDates = new Set(milestoneDates ?? []);
 
   return (
@@ -188,22 +185,23 @@ export function MonthHeatmap({
       ) : showMonthLabel ? (
         <p className="font-display text-sm font-medium">{format(month, "MMMM yyyy")}</p>
       ) : null}
-      <div className="w-full space-y-1 [--month-cell-size:clamp(2.2rem,4.1vw,3rem)]">
-        <div className="grid w-full grid-cols-[repeat(7,var(--month-cell-size))] justify-between gap-y-1">
+      <div className="w-full">
+        <div className={styles.weekdays}>
           {weekdayHeaders.map((label) => (
             <div
               key={label}
-              className="flex h-4 w-[var(--month-cell-size)] items-end justify-center font-sans text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+              className="font-sans text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
             >
               {label}
             </div>
           ))}
         </div>
-        <div className="grid w-full grid-cols-[repeat(7,var(--month-cell-size))] justify-between gap-y-1">
+        <div className={styles.grid} data-testid="month-heatmap-grid">
           {Array.from({ length: firstWeekdayOffset }).map((_, index) => (
             <div
               key={`offset-${index}`}
-              className="h-[var(--month-cell-size)] w-[var(--month-cell-size)] rounded-md bg-transparent"
+              className={styles.blank}
+              aria-hidden="true"
             />
           ))}
           {days.map((day) => {
@@ -223,6 +221,9 @@ export function MonthHeatmap({
               />
             );
           })}
+          {Array.from({ length: trailingDayCount }).map((_, index) => (
+            <div key={`trailing-${index}`} className={styles.blank} aria-hidden="true" />
+          ))}
         </div>
       </div>
     </div>
