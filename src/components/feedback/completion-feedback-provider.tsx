@@ -6,9 +6,10 @@ import { motion, useReducedMotion } from "motion/react";
 import { subscribeXpRefresh, type XpRefreshRequestDetail } from "@/lib/xp/events";
 import { presentCompletionAchievement } from "@/lib/goals/completion-presentation";
 import { triggerLightPressFeedback } from "@/lib/feedback/haptics";
+import { COMPLETION_STAMP_SECONDS, COMPLETION_STAMP_IMPACT_MS } from "@/lib/feedback/completion-motion";
 import "./completion-feedback.css";
 
-const SPARKS_MS = 950;
+const STAMP_MS = COMPLETION_STAMP_SECONDS * 1000;
 const PARENT_MS = 1700;
 type Queued = { id: number; detail: XpRefreshRequestDetail };
 
@@ -21,14 +22,14 @@ function Feedback({ detail, onDone }: { detail: XpRefreshRequestDetail; onDone: 
   const parent = parents[step];
   useEffect(() => {
     if (still || !source || !detail.sourceRect) return;
-    const impact = window.setTimeout(() => triggerLightPressFeedback(20), 342);
+    const impact = window.setTimeout(() => triggerLightPressFeedback(20), COMPLETION_STAMP_IMPACT_MS);
     return () => window.clearTimeout(impact);
   }, [detail.sourceRect, source, still]);
   useEffect(() => {
     const timer = window.setTimeout(() => {
       if (still || step >= parents.length - 1) onDone();
       else setStep(value => value + 1);
-    }, still ? 4000 : step < 0 ? SPARKS_MS : PARENT_MS);
+    }, still ? 4000 : step < 0 ? STAMP_MS : PARENT_MS);
     return () => window.clearTimeout(timer);
   }, [step, still, parents.length, onDone]);
   const origin = detail.sourceRect;
@@ -37,9 +38,9 @@ function Feedback({ detail, onDone }: { detail: XpRefreshRequestDetail; onDone: 
   const top = Math.max(12, Math.min(window.innerHeight - 235, (origin?.top ?? 90) + (origin?.height ?? 32) + 12));
   return createPortal(<>
     {!still && step < 0 && source && origin && <div className="completion-stamp-stage" aria-hidden="true" style={{ left: Math.max(12, Math.min(window.innerWidth - 144, origin.left - 30)), top: Math.max(16, origin.top - 4) }}>
-      <motion.div className="completion-stamp" initial={{ y: -75, rotateX: -55, rotate: -14, scale: 1.8, opacity: 0 }}
-        animate={{ y: [-75, 0, -5, 0], rotateX: [-55, 0, 0, 0], rotate: -7, scale: [1.8, 0.96, 1.05, 1], opacity: [0, 1, 1, 0] }}
-        transition={{ duration: 0.9, times: [0, 0.38, 0.55, 1] }}>DONE</motion.div>
+      <motion.div className="completion-stamp" initial={{ y: -28, rotate: -10, scale: 1.2, opacity: 0 }}
+        animate={{ y: [-28, 0, -2, 0, 0], rotate: [-10, -7, -7, -7, -7], scale: [1.2, 0.94, 1.02, 1, 1], opacity: [0, 1, 1, 1, 0] }}
+        transition={{ duration: COMPLETION_STAMP_SECONDS, times: [0, COMPLETION_STAMP_IMPACT_MS / (COMPLETION_STAMP_SECONDS * 1000), 0.25, 0.75, 1], ease: "easeOut" }}>DONE</motion.div>
     </div>}
     {(parent || still) && <aside className="completion-parent-feedback" style={{ left, top, width }} aria-label="Completion results">
       <div role="status">

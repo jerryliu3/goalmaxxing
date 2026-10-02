@@ -1,0 +1,2 @@
+export const COMPLETION_STAMP_SECONDS = 0.45;
+export const COMPLETION_STAMP_IMPACT_MS = 60;
