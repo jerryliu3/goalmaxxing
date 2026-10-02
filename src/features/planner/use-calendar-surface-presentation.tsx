@@ -269,5 +269,6 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     renderCalendarDayCell,
     plannerSettingsForm,
     eventDetailCallbacks,
+    onClearSelectedEntry: resetPlannerEntrySelection,
   });
 }

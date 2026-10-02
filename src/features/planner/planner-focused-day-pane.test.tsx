@@ -289,6 +289,60 @@ describe("PlannerFocusedDayPane", () => {
     expect(screen.getByText("Thursday, Aug 6")).toBeInTheDocument();
   });
 
+  it("clears the selected entry when collapsing scheduled goals but not todos", () => {
+    const onClearSelectedEntry = vi.fn();
+
+    renderWithDnd(
+      <PlannerFocusedDayPane
+        day="2026-08-06"
+        entries={[sampleEntry as never]}
+        completionFactMarkers={[]}
+        mutationLoadingKey={null}
+        asOfDate="2026-08-06"
+        canMutatePlanItems
+        canMutateEntryOnDay={() => true}
+        onEntryOpen={() => {}}
+        onToggleCompletion={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+        selectedEntryKey={sampleEntry.key}
+        onClearSelectedEntry={onClearSelectedEntry}
+        dayChecklist={{
+          loading: false,
+          visibleGoalIds: null,
+          listModel: {
+            completableGoals: [],
+            upcoming: [],
+            pastGoals: [],
+            archivedGoals: [],
+            presentationByGoalId: new Map(),
+            filteredTodayGoalIds: new Set(),
+          },
+          data: { goals: [] },
+          filters: {
+            showUpcomingGoals: false,
+            showEndedGoals: false,
+            showArchivedGoals: false,
+            upcomingOpen: false,
+            pastPanelOpen: false,
+            archiveOpen: false,
+            setUpcomingOpen: () => {},
+            setPastPanelOpen: () => {},
+            setArchiveOpen: () => {},
+          },
+          savingGoalId: null,
+          toggleCompletion: async () => {},
+        }}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Todos 0" }));
+    expect(onClearSelectedEntry).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Scheduled goals 1" }));
+    expect(onClearSelectedEntry).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps the checklist on the page scroll at every breakpoint", () => {
     renderWithDnd(
       <PlannerFocusedDayPane

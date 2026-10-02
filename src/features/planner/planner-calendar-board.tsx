@@ -126,6 +126,7 @@ export interface PlannerCalendarBoardProps {
   onCancelDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
   onCalendarViewModeChange: (mode: PlannerCalendarViewMode) => void;
   pinchDisabled?: boolean;
+  onClearSelectedEntry?: () => void;
 }
 
 export function PlannerCalendarBoard({
@@ -190,6 +191,7 @@ export function PlannerCalendarBoard({
   onCancelDraftMove,
   onCalendarViewModeChange,
   pinchDisabled = true,
+  onClearSelectedEntry,
 }: PlannerCalendarBoardProps) {
   const boardPinchRef = useRef<HTMLDivElement>(null);
   const [isEntryDragging, setIsEntryDragging] = useState(false);
@@ -289,6 +291,7 @@ export function PlannerCalendarBoard({
               splitPartnerChecklist={splitPartnerChecklist}
               onConfirmDraftMove={onConfirmDraftMove}
               onCancelDraftMove={onCancelDraftMove}
+              onClearSelectedEntry={onClearSelectedEntry}
               titleAs="h2"
               showDayHeading={false}
               shareDayTransition
@@ -439,6 +442,7 @@ export function PlannerCalendarBoard({
                     splitPartnerChecklist={false}
                     onConfirmDraftMove={onConfirmDraftMove}
                     onCancelDraftMove={onCancelDraftMove}
+                    onClearSelectedEntry={onClearSelectedEntry}
                   />
                 </div>
               }

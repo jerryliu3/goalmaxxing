@@ -46,6 +46,7 @@ import {
   canOpenPlannerEventDetails,
   isPlannerTaskCalendarEntry,
 } from "@/features/planner/calendar-task-entries";
+import { PLANNER_CHECKLIST_PANE_TEST_ID } from "@/features/planner/planner-checklist-scroll";
 import {
   getNonPublishablePreviewMessage,
 } from "@/features/planner/planner-save-availability";
@@ -227,10 +228,17 @@ export function CalendarSurface({
       if (!(target instanceof Element)) {
         return;
       }
-      if (target.closest("[data-plan-entry-editor='true']")) {
+      // Checklist chrome (todos, drag, section toggles) should not dismiss the
+      // open session editor; entry clicks still update selection via click.
+      if (
+        target.closest(`[data-testid="${PLANNER_CHECKLIST_PANE_TEST_ID}"]`)
+      ) {
         return;
       }
-      if (target.closest(`[data-planner-entry-key="${selectedEventEntryKey}"]`)) {
+      if (target.closest("[data-planner-entry-key]")) {
+        return;
+      }
+      if (target.closest("[data-plan-entry-editor='true']")) {
         return;
       }
       resetPlannerEntrySelection();

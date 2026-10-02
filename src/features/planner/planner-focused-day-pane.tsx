@@ -68,6 +68,7 @@ interface PlannerFocusedDayPaneProps {
   splitPartnerChecklist?: boolean;
   onConfirmDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
   onCancelDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
+  onClearSelectedEntry?: () => void;
 }
 
 export function PlannerFocusedDayPane({
@@ -95,6 +96,7 @@ export function PlannerFocusedDayPane({
   splitPartnerChecklist = false,
   onConfirmDraftMove,
   onCancelDraftMove,
+  onClearSelectedEntry,
 }: PlannerFocusedDayPaneProps) {
   const TitleTag = titleAs;
   const draftMove = useUnscheduledDraftMove();
@@ -253,6 +255,15 @@ export function PlannerFocusedDayPane({
               visibleEntries.length +
               (splitPartnerChecklist ? viewerMarkers.length : visibleMarkers.length)
             }
+            onOpenChange={(open) => {
+              if (
+                !open &&
+                selectedEntryKey &&
+                visibleEntries.some((entry) => entry.key === selectedEntryKey)
+              ) {
+                onClearSelectedEntry?.();
+              }
+            }}
           >
             <PlannerDayEntriesPanel
               day={day}
