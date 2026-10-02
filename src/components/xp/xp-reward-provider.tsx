@@ -29,7 +29,8 @@ const XpRewardContext = createContext<XpRewardContextValue>({
 });
 
 const STAR_COUNT = 5;
-const STAR_START_SECONDS = 0.55;
+const XP_AMOUNT_START_SECONDS = 0.95;
+const STAR_START_SECONDS = XP_AMOUNT_START_SECONDS + 0.55;
 const STAR_STAGGER_SECONDS = 0.055;
 const STAR_FLIGHT_SECONDS = 0.85;
 const STAR_ABSORB_SECONDS = 0.12;
@@ -49,7 +50,7 @@ function XpRewardLayer({ children }: { children: ReactNode }) {
   }, [still]);
   useEffect(() => {
     if (!flights.length) return;
-    const timeout = window.setTimeout(() => setFlights([]), XP_REWARD_ARRIVAL_MS + 100);
+    const timeout = window.setTimeout(() => setFlights([]), XP_REWARD_ARRIVAL_MS + 200);
     return () => window.clearTimeout(timeout);
   }, [flights]);
 
@@ -71,7 +72,7 @@ function XpRewardLayer({ children }: { children: ReactNode }) {
               initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
               animate={{ x: [0, tx, tx], y: [0, ty, ty], scale: [1, 1, 0.2], opacity: [1, 1, 0] }}
               transition={{ delay: STAR_START_SECONDS + index * STAR_STAGGER_SECONDS, duration: STAR_FLIGHT_SECONDS + STAR_ABSORB_SECONDS, times: [0, STAR_FLIGHT_SECONDS / (STAR_FLIGHT_SECONDS + STAR_ABSORB_SECONDS), 1], ease: "easeInOut" }}><span className="block -translate-x-1/2 -translate-y-1/2">✦</span></motion.span>)}
-            {flight.amount !== undefined && <motion.span className="absolute whitespace-nowrap font-mono text-sm font-semibold text-primary" initial={{ y: 0, opacity: 0 }} animate={{ y: [0, -28, -36], opacity: [0, 1, 0] }} transition={{ duration: 0.85, times: [0, 0.25, 1] }}>+{flight.amount} XP</motion.span>}
+            {flight.amount !== undefined && <motion.span className="absolute whitespace-nowrap font-mono text-sm font-semibold text-primary" initial={{ y: 0, opacity: 0 }} animate={{ y: [0, -28, -36], opacity: [0, 1, 0] }} transition={{ delay: XP_AMOUNT_START_SECONDS, duration: 0.85, times: [0, 0.25, 1] }}>+{flight.amount} XP</motion.span>}
           </div>;
         })}
       </div>, document.body)}
