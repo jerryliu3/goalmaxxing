@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { motion, useReducedMotion } from "motion/react";
 import { subscribeXpRefresh, type XpRefreshRequestDetail } from "@/lib/xp/events";
 import { presentCompletionAchievement } from "@/lib/goals/completion-presentation";
+import { triggerLightPressFeedback } from "@/lib/feedback/haptics";
 import "./completion-feedback.css";
 
 const SPARKS_MS = 950;
@@ -19,6 +20,11 @@ function Feedback({ detail, onDone }: { detail: XpRefreshRequestDetail; onDone: 
   const source = goals.find(goal => goal.goalId === detail.goalId);
   const parent = parents[step];
   useEffect(() => {
+    if (still || !source || !detail.sourceRect) return;
+    const impact = window.setTimeout(() => triggerLightPressFeedback(20), 342);
+    return () => window.clearTimeout(impact);
+  }, [detail.sourceRect, source, still]);
+  useEffect(() => {
     const timer = window.setTimeout(() => {
       if (still || step >= parents.length - 1) onDone();
       else setStep(value => value + 1);
@@ -31,14 +37,9 @@ function Feedback({ detail, onDone }: { detail: XpRefreshRequestDetail; onDone: 
   const top = Math.max(12, Math.min(window.innerHeight - 235, (origin?.top ?? 90) + (origin?.height ?? 32) + 12));
   return createPortal(<>
     {!still && step < 0 && source && origin && <div className="completion-stamp-stage" aria-hidden="true" style={{ left: Math.max(12, Math.min(window.innerWidth - 144, origin.left - 30)), top: Math.max(16, origin.top - 4) }}>
-      {/* Stamp paused until the impact can be paired with haptics.
       <motion.div className="completion-stamp" initial={{ y: -75, rotateX: -55, rotate: -14, scale: 1.8, opacity: 0 }}
         animate={{ y: [-75, 0, -5, 0], rotateX: [-55, 0, 0, 0], rotate: -7, scale: [1.8, 0.96, 1.05, 1], opacity: [0, 1, 1, 0] }}
         transition={{ duration: 0.9, times: [0, 0.38, 0.55, 1] }}>DONE</motion.div>
-      */}
-      {[-70, -38, 0, 38, 70].map((x, i) => <motion.span key={x} className="completion-spark" initial={{ x: 55, y: 20, opacity: 0, scale: 0.4 }}
-        animate={{ x: 55 + x, y: -24 - (2 - Math.abs(i - 2)) * 16, opacity: [0, 1, 0], scale: [0.4, 1.1, 0.6] }}
-        transition={{ delay: 0.3, duration: 0.65 }}>✦</motion.span>)}
     </div>}
     {(parent || still) && <aside className="completion-parent-feedback" style={{ left, top, width }} aria-label="Completion results">
       <div role="status">
