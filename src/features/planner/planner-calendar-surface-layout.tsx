@@ -127,6 +127,7 @@ export interface PlannerCalendarSurfaceLayoutProps {
     entry: PlannerDayDetailEntry,
     options: { applyGoalFocus: boolean }
   ) => void;
+  onClearSelectedEntry: () => void;
   toggleDateFact: (
     entry: PlannerDayDetailEntry,
     selectedDateOverride?: string,
@@ -274,6 +275,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     setLocalSelectedDay,
     setSelectedEventEntryKey,
     togglePlannerGoalSelection,
+    onClearSelectedEntry,
     toggleDateFact,
     pointerPressActiveRef,
     calendarGridViewportRef,
@@ -597,6 +599,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             onConfirmDraftMove={onConfirmDraftMove}
             onCancelDraftMove={onCancelDraftMove}
             onCalendarViewModeChange={setCalendarViewMode}
+            onClearSelectedEntry={onClearSelectedEntry}
             pinchDisabled
           />
 

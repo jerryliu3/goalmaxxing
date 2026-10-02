@@ -126,6 +126,7 @@ export interface PlannerCalendarBoardProps {
   onCancelDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
   onCalendarViewModeChange: (mode: PlannerCalendarViewMode) => void;
   pinchDisabled?: boolean;
+  onClearSelectedEntry?: () => void;
 }
 
 export function PlannerCalendarBoard({
@@ -190,6 +191,7 @@ export function PlannerCalendarBoard({
   onCancelDraftMove,
   onCalendarViewModeChange,
   pinchDisabled = true,
+  onClearSelectedEntry,
 }: PlannerCalendarBoardProps) {
   const boardPinchRef = useRef<HTMLDivElement>(null);
   const [isEntryDragging, setIsEntryDragging] = useState(false);
@@ -289,6 +291,7 @@ export function PlannerCalendarBoard({
               splitPartnerChecklist={splitPartnerChecklist}
               onConfirmDraftMove={onConfirmDraftMove}
               onCancelDraftMove={onCancelDraftMove}
+              onClearSelectedEntry={onClearSelectedEntry}
               titleAs="h2"
               showDayHeading={false}
               shareDayTransition
@@ -327,7 +330,7 @@ export function PlannerCalendarBoard({
                     <div
                       ref={calendarGridViewportRef}
                       onScroll={onCalendarGridViewportScroll}
-                      className="min-w-0 overflow-x-auto pb-1"
+                      className="min-w-0 overflow-x-auto overscroll-x-auto pb-1"
                       data-calendar-horizontal-viewport="true"
                     >
                       {isMonthScopedCalendarViewMode(viewMode) ? (
@@ -360,7 +363,7 @@ export function PlannerCalendarBoard({
                             ref={multiMonthGridScrollRef}
                             onScroll={onMonthScopedGridScroll}
                             className={`${styles.monthGridViewport} ${
-                              expandedMonthRows ? "" : `${styles.monthGridScrollViewport} max-h-[34rem]`
+                              expandedMonthRows ? "" : `${styles.monthGridScrollViewport} max-h-[45rem]`
                             } [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`}
                             data-calendar-month-vertical-viewport="true"
                           >
@@ -439,6 +442,7 @@ export function PlannerCalendarBoard({
                     splitPartnerChecklist={false}
                     onConfirmDraftMove={onConfirmDraftMove}
                     onCancelDraftMove={onCancelDraftMove}
+                    onClearSelectedEntry={onClearSelectedEntry}
                   />
                 </div>
               }

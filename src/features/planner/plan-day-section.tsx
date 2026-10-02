@@ -13,16 +13,26 @@ export function PlanDaySection({
   title,
   count,
   defaultOpen = true,
+  onOpenChange,
   children,
 }: {
   title: string;
   count?: number;
   defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    onOpenChange?.(next);
+  };
   return (
-    <Collapsible open={open} onOpenChange={setOpen} data-plan-day-section={title}>
+    <Collapsible
+      open={open}
+      onOpenChange={handleOpenChange}
+      data-plan-day-section={title}
+    >
       <CollapsibleTrigger
         className="flex w-full items-center justify-between gap-2 py-2 text-left font-sans text-base font-medium touch-manipulation"
         aria-expanded={open}

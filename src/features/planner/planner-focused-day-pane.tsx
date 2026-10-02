@@ -68,6 +68,7 @@ interface PlannerFocusedDayPaneProps {
   splitPartnerChecklist?: boolean;
   onConfirmDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
   onCancelDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
+  onClearSelectedEntry?: () => void;
 }
 
 export function PlannerFocusedDayPane({
@@ -95,6 +96,7 @@ export function PlannerFocusedDayPane({
   splitPartnerChecklist = false,
   onConfirmDraftMove,
   onCancelDraftMove,
+  onClearSelectedEntry,
 }: PlannerFocusedDayPaneProps) {
   const TitleTag = titleAs;
   const draftMove = useUnscheduledDraftMove();
@@ -176,11 +178,9 @@ export function PlannerFocusedDayPane({
     <div
       className={cn(
         "space-y-3",
-        // The split aside gets its own scroller from `md:` up so the calendar
-        // stays put beside it. On phones that nesting traps the gesture, so the
-        // checklist grows into the page scroll the way day view already does.
-        !shareDayTransition &&
-          "overflow-x-hidden md:max-h-[min(70dvh,calc(100dvh-8rem))] md:overflow-y-auto md:overscroll-y-contain md:[touch-action:pan-y] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+        // Never clip the aside: expanded session editors/portaled progress cards
+        // must grow the checklist height and scroll with the page.
+        !shareDayTransition && "overflow-x-hidden",
         // Carries the week row's selected-day ring into day view so the emphasis is
         // continuous through the morph instead of dropping at the end.
         shareDayTransition &&
@@ -255,6 +255,15 @@ export function PlannerFocusedDayPane({
               visibleEntries.length +
               (splitPartnerChecklist ? viewerMarkers.length : visibleMarkers.length)
             }
+            onOpenChange={(open) => {
+              if (
+                !open &&
+                selectedEntryKey &&
+                visibleEntries.some((entry) => entry.key === selectedEntryKey)
+              ) {
+                onClearSelectedEntry?.();
+              }
+            }}
           >
             <PlannerDayEntriesPanel
               day={day}

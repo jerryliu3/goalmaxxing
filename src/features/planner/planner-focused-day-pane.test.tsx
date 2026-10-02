@@ -289,7 +289,63 @@ describe("PlannerFocusedDayPane", () => {
     expect(screen.getByText("Thursday, Aug 6")).toBeInTheDocument();
   });
 
-  it("keeps the checklist on the page scroll below md and scrolls it in place above", () => {
+  it("clears the selected entry when collapsing scheduled goals but not todos", () => {
+    const onClearSelectedEntry = vi.fn();
+
+    renderWithDnd(
+      <PlannerFocusedDayPane
+        day="2026-08-06"
+        entries={[sampleEntry as never]}
+        completionFactMarkers={[]}
+        mutationLoadingKey={null}
+        asOfDate="2026-08-06"
+        canMutatePlanItems
+        canMutateEntryOnDay={() => true}
+        onEntryOpen={() => {}}
+        onToggleCompletion={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+        selectedEntryKey={sampleEntry.key}
+        onClearSelectedEntry={onClearSelectedEntry}
+        dayChecklist={
+          {
+            ready: true,
+            loading: false,
+            visibleGoalIds: null,
+            listModel: {
+              completableGoals: [],
+              presentationByGoalId: new Map(),
+              upcoming: [],
+              pastGoals: [],
+              archivedGoals: [],
+            },
+            data: { goals: [] },
+            filters: {
+              showUpcomingGoals: false,
+              showEndedGoals: false,
+              showArchivedGoals: false,
+              upcomingOpen: false,
+              pastPanelOpen: false,
+              archiveOpen: false,
+              setUpcomingOpen: () => {},
+              setPastPanelOpen: () => {},
+              setArchiveOpen: () => {},
+            },
+            savingGoalId: null,
+            toggleCompletion: async () => {},
+          } as unknown as PlanDayChecklistModel
+        }
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Todos 0" }));
+    expect(onClearSelectedEntry).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Scheduled goals 1" }));
+    expect(onClearSelectedEntry).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the checklist on the page scroll at every breakpoint", () => {
     renderWithDnd(
       <PlannerFocusedDayPane
         day="2026-08-06"
@@ -308,13 +364,10 @@ describe("PlannerFocusedDayPane", () => {
 
     const pane = screen.getByTestId("plan-day-pane");
     expect(pane).toHaveClass("overflow-x-hidden");
-    // No vertical scroller of its own on phones, so the gesture reaches the page.
     expect(pane).not.toHaveClass("overflow-y-auto");
-    expect(pane).not.toHaveClass("max-h-[min(70dvh,calc(100dvh-8rem))]");
-    expect(pane).toHaveClass("md:overflow-y-auto");
-    expect(pane).toHaveClass("md:max-h-[min(70dvh,calc(100dvh-8rem))]");
-    expect(pane.className).toContain("[scrollbar-width:none]");
-    expect(pane.className).toContain("[&::-webkit-scrollbar]:hidden");
+    expect(pane.className).not.toMatch(/max-h-\[min\(70dvh/);
+    expect(pane.className).not.toContain("md:overflow-y-auto");
+    expect(pane.className).not.toContain("md:max-h-[min(70dvh,calc(100dvh-8rem))]");
   });
 
   it("exposes weekday and day-number morph anchors when sharing the day transition", () => {

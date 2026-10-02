@@ -19,6 +19,7 @@ type CalendarSurfacePresentationArgs = Omit<
   PlannerCalendarSurfaceLayoutProps,
   | "plannerSettingsForm"
   | "eventDetailCallbacks"
+  | "onClearSelectedEntry"
   | "saveButtonLabel"
   | "moveViewWindow"
   | "jumpToToday"
@@ -269,5 +270,6 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     renderCalendarDayCell,
     plannerSettingsForm,
     eventDetailCallbacks,
+    onClearSelectedEntry: resetPlannerEntrySelection,
   });
 }

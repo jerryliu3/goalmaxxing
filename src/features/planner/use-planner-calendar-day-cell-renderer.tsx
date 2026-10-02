@@ -6,7 +6,10 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { CalendarMonthDayCell } from "@/features/planner/calendar-month-day-cell";
+import {
+  CalendarMonthDayCell,
+  COMPACT_MONTH_MAX_VISIBLE_GOALS,
+} from "@/features/planner/calendar-month-day-cell";
 import {
   getDayStatus,
   getEntryCompactTitleWithTime,
@@ -206,7 +209,7 @@ export function usePlannerCalendarDayCellRenderer({
               ? Number.MAX_SAFE_INTEGER
               : expandedMonthRows
                 ? Number.MAX_SAFE_INTEGER
-                : 2
+                : COMPACT_MONTH_MAX_VISIBLE_GOALS
           }
           isAnyEntryDragging={Boolean(draggingEntryKey)}
           getEntryDisplayTitle={
@@ -224,26 +227,19 @@ export function usePlannerCalendarDayCellRenderer({
             if (!canMutateEntryOnDay(entry, day)) {
               return;
             }
-            // Selecting an item takes two clicks: the first focuses its day, the
-            // second selects the item. Dragging is a separate pointer path and
-            // still moves an item straight out of an unfocused day.
+            // One click on a work item selects its day and the item together.
+            // Dragging is a separate pointer path and still moves an item
+            // straight out of an unfocused day.
             if (viewMode === "week" || viewMode === "three_day") {
               if (day !== focusedDay) {
                 selectDayForView(day, resolveWeekAgendaSelectionViewMode());
-                return;
               }
               togglePlannerGoalSelection(entry, { applyGoalFocus: false });
               return;
             }
             if (viewMode === "month") {
               if (day !== focusedDay) {
-                // Month selection dims the rest of the grid around a focused
-                // goal, so a click that only moves the day has to drop that
-                // focus the same way clicking the day's empty space does.
-                // Otherwise an unrelated goal stays lit through the first click.
-                resetPlannerEntrySelection();
                 selectDayForView(day, "month");
-                return;
               }
               togglePlannerGoalSelection(entry, { applyGoalFocus: true });
               return;
@@ -253,7 +249,6 @@ export function usePlannerCalendarDayCellRenderer({
               if (day !== focusedDay) {
                 setLocalSelectedDay(day);
                 onSelectedDayChange(day, "push", "day");
-                return;
               }
               togglePlannerGoalSelection(entry, { applyGoalFocus: false });
               return;

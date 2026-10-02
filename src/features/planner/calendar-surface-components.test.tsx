@@ -361,9 +361,10 @@ describe("calendar surface extracted components", () => {
           sampleEntry,
           { ...sampleEntry, key: "goal-2:cadence:0", originalGoalId: "goal-2", label: "Lift" },
           { ...sampleEntry, key: "goal-3:cadence:0", originalGoalId: "goal-3", label: "Yoga" },
+          { ...sampleEntry, key: "goal-4:cadence:0", originalGoalId: "goal-4", label: "Walk" },
         ]}
         completionFactMarkersForDay={[]}
-        maxVisibleItems={2}
+        maxVisibleItems={3}
         isAnyEntryDragging={false}
         getEntryDisplayTitle={(entry) => entry.label ?? "Untitled"}
         isEntryCredited={(entry) => entry.key === sampleEntry.key}
@@ -404,7 +405,7 @@ describe("calendar surface extracted components", () => {
         ariaLabel="Thursday, August 6, 2026."
         entriesForDay={[sampleEntry]}
         completionFactMarkersForDay={[]}
-        maxVisibleItems={2}
+        maxVisibleItems={3}
         isAnyEntryDragging={false}
         getEntryDisplayTitle={(entry) => entry.label ?? "Untitled"}
         isEntryCredited={() => false}
