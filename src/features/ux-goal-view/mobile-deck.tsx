@@ -17,7 +17,7 @@ export function MobileDeck({ goals, selectedId, onSelect, study, scope, grouping
   useEffect(() => {
     const container = rail.current;
     const card = container?.children[index] as HTMLElement | undefined;
-    if (container && card) container.scrollTo({ left: card.offsetLeft - container.offsetLeft - (container.clientWidth - card.clientWidth) / 2, behavior: still ? "instant" : "smooth" });
+    if (container && card) container.scrollTo({ left: card.offsetLeft - (container.clientWidth - card.clientWidth) / 2, behavior: still ? "instant" : "smooth" });
   }, [index, still, goals]);
   const pendingIndex = useRef(index);
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -32,7 +32,7 @@ export function MobileDeck({ goals, selectedId, onSelect, study, scope, grouping
       let distance = Infinity;
       Array.from(container.children).forEach((child, i) => {
         const node = child as HTMLElement;
-        const difference = Math.abs(node.offsetLeft - container.offsetLeft + node.clientWidth / 2 - center);
+        const difference = Math.abs(node.offsetLeft + node.clientWidth / 2 - center);
         if (difference < distance) { nearest = i; distance = difference; }
       });
       pendingIndex.current = nearest;
