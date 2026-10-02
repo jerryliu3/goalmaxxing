@@ -12,12 +12,14 @@ import {
 import { createPortal } from "react-dom";
 import { motion, useReducedMotion } from "motion/react";
 import type { ViewportRectSnapshot } from "@/lib/xp/events";
-import { COMPLETION_STAMP_SECONDS } from "@/lib/feedback/completion-motion";
+import { COMPLETION_STAMP_IMPACT_MS, subscribeCompletionMotion } from "@/lib/feedback/completion-motion";
+import { captureViewportRect } from "@/lib/xp/events";
 
 interface XpRewardFlight {
   sourceRect: ViewportRectSnapshot;
   targetRect: ViewportRectSnapshot;
   amount?: number;
+  motionStartedAt?: number;
 }
 
 interface XpRewardContextValue {
@@ -30,8 +32,7 @@ const XpRewardContext = createContext<XpRewardContextValue>({
 });
 
 const STAR_COUNT = 5;
-const XP_AMOUNT_START_SECONDS = COMPLETION_STAMP_SECONDS + 0.05;
-const STAR_START_SECONDS = XP_AMOUNT_START_SECONDS + 0.55;
+const STAR_START_SECONDS = COMPLETION_STAMP_IMPACT_MS / 1000;
 const STAR_STAGGER_SECONDS = 0.055;
 const STAR_FLIGHT_SECONDS = 0.85;
 const STAR_ABSORB_SECONDS = 0.12;
@@ -45,10 +46,17 @@ function XpRewardLayer({ children }: { children: ReactNode }) {
   const sequence = useRef(0);
   const celebrate = useCallback((flight: XpRewardFlight) => {
     if (still) return 0;
+    if (flight.motionStartedAt !== undefined) {
+      return Math.max(0, XP_REWARD_ARRIVAL_MS - (performance.now() - flight.motionStartedAt));
+    }
     const id = ++sequence.current;
     setFlights(current => [...current.slice(-3), { ...flight, id }]);
     return XP_REWARD_ARRIVAL_MS;
   }, [still]);
+  useEffect(() => subscribeCompletionMotion(detail => {
+    const target = document.querySelector("[data-xp-reward-target='true']");
+    if (target) celebrate({ sourceRect: detail.sourceRect, targetRect: captureViewportRect(target) });
+  }), [celebrate]);
   useEffect(() => {
     if (!flights.length) return;
     const timeout = window.setTimeout(() => setFlights([]), XP_REWARD_ARRIVAL_MS + 200);
@@ -73,7 +81,6 @@ function XpRewardLayer({ children }: { children: ReactNode }) {
               initial={{ x: (index - 2) * 22, y: -22 - (2 - Math.abs(index - 2)) * 12, scale: 0, opacity: 0 }}
               animate={{ x: [(index - 2) * 22, (index - 2) * 22, tx, tx], y: [-22 - (2 - Math.abs(index - 2)) * 12, -22 - (2 - Math.abs(index - 2)) * 12, ty, ty], scale: [0, 1, 1, 0.2], opacity: [0, 1, 1, 0] }}
               transition={{ delay: STAR_START_SECONDS + index * STAR_STAGGER_SECONDS, duration: STAR_FLIGHT_SECONDS + STAR_ABSORB_SECONDS, times: [0, 0.12, STAR_FLIGHT_SECONDS / (STAR_FLIGHT_SECONDS + STAR_ABSORB_SECONDS), 1], ease: "easeInOut" }}><span className="block -translate-x-1/2 -translate-y-1/2">✦</span></motion.span>)}
-            {flight.amount !== undefined && <motion.span className="absolute whitespace-nowrap font-mono text-sm font-semibold text-primary" initial={{ y: 0, opacity: 0 }} animate={{ y: [0, -28, -36], opacity: [0, 1, 0] }} transition={{ delay: XP_AMOUNT_START_SECONDS, duration: 0.85, times: [0, 0.25, 1] }}>+{flight.amount} XP</motion.span>}
           </div>;
         })}
       </div>, document.body)}

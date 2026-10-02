@@ -102,13 +102,14 @@ export function XpProfileProvider({
 
   // Canonical XP updates immediately in profileRef. Only its presentation waits
   // for the stars, so a server refresh cannot fill the bar ahead of their arrival.
-  const presentReward = useCallback((amount: number, sourceRect?: ViewportRectSnapshot) => {
+  const presentReward = useCallback((amount: number, sourceRect?: ViewportRectSnapshot, motionStartedAt?: number) => {
     cancelRewardArrival();
     const target = document.querySelector("[data-xp-reward-target='true']");
     const delay = target && sourceRect ? celebrate({
       sourceRect,
       targetRect: captureViewportRect(target),
       amount,
+      motionStartedAt,
     }) : 0;
     const arrive = () => {
       rewardArrivalTimer.current = null;
@@ -181,7 +182,7 @@ export function XpProfileProvider({
           payload.profile.totalXp > previousProfile.totalXp &&
           request?.desiredFactState === "present";
         if (xpIncreased) {
-          presentReward(payload.profile.totalXp - previousProfile.totalXp, request.sourceRect);
+          presentReward(payload.profile.totalXp - previousProfile.totalXp, request.sourceRect, request.motionStartedAt);
         } else if (rewardArrivalTimer.current === null) {
           setProfile(payload.profile);
         }
@@ -256,7 +257,7 @@ export function XpProfileProvider({
         };
         profileRef.current = nextProfile;
         if (detail.desiredFactState === "present" && detail.xpDelta > 0) {
-          presentReward(detail.xpDelta, detail.sourceRect);
+          presentReward(detail.xpDelta, detail.sourceRect, detail.motionStartedAt);
         } else if (rewardArrivalTimer.current === null) {
           setProfile(nextProfile);
         }

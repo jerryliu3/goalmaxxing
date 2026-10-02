@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { startCompletionMotion } from "@/lib/feedback/completion-motion";
 import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 import { invalidateSocialFeedCache } from "@/features/social/data";
 import {
@@ -57,6 +58,8 @@ export function useCompletionMutation() {
         };
       }
 
+      const motionStartedAt = desiredFactState === "present" && sourceRect
+        ? startCompletionMotion(sourceRect) : undefined;
       try {
         const result = await executeCompletionDispatch({
           decision,
@@ -82,6 +85,7 @@ export function useCompletionMutation() {
           xpDelta: result.xpDelta,
           goalId,
           feedback: result.feedback,
+          motionStartedAt,
         });
         return {
           ok: true,

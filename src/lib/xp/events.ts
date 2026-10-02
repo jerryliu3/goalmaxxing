@@ -14,6 +14,7 @@ export interface XpRefreshRequestDetail {
   xpDelta?: number;
   goalId?: string;
   feedback?: CompletionFeedback;
+  motionStartedAt?: number;
 }
 
 type XpRefreshListener = (detail?: XpRefreshRequestDetail) => void;
