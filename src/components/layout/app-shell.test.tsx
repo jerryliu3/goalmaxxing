@@ -10,7 +10,17 @@ const cacheScopeMock = vi.hoisted(() => ({
   setScope: vi.fn(),
 }));
 
+const routerMock = vi.hoisted(() => ({
+  back: vi.fn(),
+  forward: vi.fn(),
+  refresh: vi.fn(),
+  prefetch: vi.fn(),
+  push: vi.fn(),
+  replace: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
+  useRouter: () => routerMock,
   usePathname: () => mockPathname,
   useSearchParams: () => new URLSearchParams(mockSearch),
 }));

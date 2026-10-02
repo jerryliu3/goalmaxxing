@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react"
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { Button } from "@/components/ui/button";
 import { FolioBook } from "@/features/insights/folio/folio-book";
+import type { GoalFolio } from "@/features/insights/folio/folio-model";
 import folioStyles from "@/features/insights/folio/folio.module.css";
 import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
 import { FragmentPlaque } from "./fragment-plaque";
@@ -30,10 +31,12 @@ function plaquePhaseFor(phase: CeremonyPhase): PlaquePhase {
   return "fused";
 }
 
-export function EarnedCeremony({ fields, target, reward, still, grand, origin, onClose }: {
+export function EarnedCeremony({ fields, target, reward, still, grand, origin, onClose, folio, onOpenLibrary }: {
   fields: GoalCreationFields; target: number; reward: string; still: boolean; grand: boolean;
   origin: FlightOrigin; onClose: () => void;
+  folio?: GoalFolio; onOpenLibrary?: () => void;
 }) {
+  const book = folio ?? studyFolio(fields);
   const [phase, setPhase] = useState<CeremonyPhase>(still ? "celebrate" : "lift");
   const [flight, setFlight] = useState({ x: 0, y: 0, scale: 1, ready: false });
   // Radix Portal returns null on its first paint, then mounts into document.body.
@@ -67,7 +70,7 @@ export function EarnedCeremony({ fields, target, reward, still, grand, origin, o
         <p className={styles.eyebrow}>A commitment, kept.</p>
         <DialogPrimitive.Title>{phase === "kept" ? "A chapter worth keeping." : "You made it whole."}</DialogPrimitive.Title>
         <DialogPrimitive.Description id="ceremony-description">
-          {phase === "kept" ? "Saved in your 2026 goal book." : `${target} completions. Every one of them yours.`}
+          {phase === "kept" ? `Saved in your ${book.year} goal book.` : `${target} completions. Every one of them yours.`}
         </DialogPrimitive.Description>
       </header>
       <Button className={styles.close} variant="ghost" onClick={onClose}>Close</Button>
@@ -85,7 +88,7 @@ export function EarnedCeremony({ fields, target, reward, still, grand, origin, o
         </div>
         {inBook && <div className={`${styles.bookDock} ${folioStyles.flyingBook}`} style={{ "--folio-cloth": "#4d5266" } as CSSProperties}>
           <div className={styles.bookPages} aria-hidden="true"><span>{fields.title}</span><small>{target} / {target} · Complete</small></div>
-          <FolioBook folio={studyFolio(fields)} />
+          <FolioBook folio={book} />
         </div>}
       </div>
       <footer className={styles.ceremonyFooter}>
@@ -95,8 +98,8 @@ export function EarnedCeremony({ fields, target, reward, still, grand, origin, o
           {phase === "shelve" && <p>Finding its place in your book…</p>}
         </div>
         <div className={styles.actions}>
-          {phase === "celebrate" ? <Button onClick={() => setPhase(still ? "kept" : "shelve")}>Keep in my book</Button>
-            : phase === "kept" ? <Button onClick={onClose}>Back to the study</Button>
+          {phase === "celebrate" ? <Button onClick={() => setPhase(still ? "kept" : "shelve")}>{folio ? "See it in my book" : "Keep in my book"}</Button>
+            : phase === "kept" ? <><Button onClick={onClose}>{folio ? "Continue" : "Back to the study"}</Button>{onOpenLibrary && <Button variant="outline" onClick={onOpenLibrary}>Open goal library</Button>}</>
             : <Button variant="outline" onClick={() => setPhase(inBook ? "kept" : "celebrate")}>Skip animation</Button>}
         </div>
       </footer>

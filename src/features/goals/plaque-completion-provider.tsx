@@ -1,55 +1,76 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useAppRouter } from "@/lib/navigation/use-app-router";
 import { useReducedMotion } from "motion/react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { fetchProgressContext } from "@/lib/goals/progress-context";
-import { artificialCadenceAssemblyTarget } from "./card-material/cadence-assembly-target";
+import { subscribeCompletionAchievement } from "@/lib/goals/completion-presentation";
+import { subscribeXpRefresh } from "@/lib/xp/events";
+import { getDateInTimezone, resolveUserTimezone } from "@/lib/dates/timezone";
+import { reportError } from "@/lib/observability/report-error";
 import { goalCardFields } from "./goal-card-fields";
 import { createClient } from "@/lib/supabase/client";
-import { subscribeXpRefresh, type XpRefreshRequestDetail } from "@/lib/xp/events";
 import { EarnedCeremony, type FlightOrigin } from "@/features/ux-brand/plaque-motion/earned-ceremony";
-import { clampPlaqueTarget } from "./card-material/creation-plaque-target";
+import { buildGoalFolios, type GoalFolio } from "@/features/insights/folio/folio-model";
 import type { Goal } from "@/lib/goals/types";
 
-type Celebration = { goal: Goal; target: number; origin: FlightOrigin };
+type Celebration = { goal: Goal; target: number; origin: FlightOrigin; folio: GoalFolio };
 
-function targetForGoal(goal: Goal, expected: number) {
-  if (goal.frequency_type === "fixed_milestones" || goal.target_basis === "lifetime") {
-    return Math.max(1, expected);
-  }
-  return clampPlaqueTarget(goal.plaque_target ?? artificialCadenceAssemblyTarget(goal) ?? 1);
-}
-
-/** Mount once in AppShell; completion state remains owned by the domain/API. */
+/** Achievement comes from a confirmed transition, after source/parent feedback. */
 export function PlaqueCompletionProvider({ children }: { children: ReactNode }) {
-  const [celebration, setCelebration] = useState<Celebration | null>(null);
+  const [queue, setQueue] = useState<Celebration[]>([]);
   const supabase = useMemo(() => createClient(), []);
+  const router = useAppRouter();
   const reducedMotion = Boolean(useReducedMotion());
-  useEffect(() => subscribeXpRefresh((detail?: XpRefreshRequestDetail) => {
-    const goalId = detail?.goalId;
-    if (!goalId || detail?.desiredFactState !== "present") return;
-    const key = `goalmaxxing:plaque-celebrated:${goalId}`;
-    if (sessionStorage.getItem(key)) return;
-    void (async () => {
-      const [{ data: goal }, progress] = await Promise.all([
-        supabase.from("goals").select("*").eq("id", goalId).maybeSingle(),
-        fetchProgressContext({ asOfDate: new Date().toISOString().slice(0, 10), forceRefresh: true }),
-      ]);
-      const typedGoal = goal as Goal | null;
-      const summary = progress.summaries.find(item => item.goalId === goalId);
-      if (!typedGoal || !summary || summary.outcome !== "achieved") return;
-      sessionStorage.setItem(key, "1");
-      const rect = detail.sourceRect ?? { left: window.innerWidth / 2 - 160, top: window.innerHeight / 2 - 160, width: 320, height: 320 };
-      setCelebration({ goal: typedGoal, target: targetForGoal(typedGoal, summary.expectedUnitCount), origin: { left: rect.left, top: rect.top, width: rect.width, height: rect.height } });
-    })();
-  }), [supabase]);
-  const close = () => setCelebration(null);
+  useEffect(() => {
+    let mounted = true;
+    let pending = Promise.resolve();
+    const seen = new Set<string>();
+    const undone = new Set<string>();
+    const unsubscribeUndo = subscribeXpRefresh(detail => {
+      if (detail?.desiredFactState !== "absent" || !detail.goalId) return;
+      setQueue([]);
+      for (const id of seen) undone.add(id);
+      seen.clear();
+    });
+    const unsubscribe = subscribeCompletionAchievement(detail => {
+      const earned = detail.feedback?.goals.filter(goal => goal.newlyAchieved && !seen.has(goal.goalId)) ?? [];
+      if (!earned.length) return;
+      for (const goal of earned) { seen.add(goal.goalId); undone.delete(goal.goalId); }
+      pending = pending.then(async () => {
+        const { data: auth } = await supabase.auth.getUser();
+        if (!auth.user || !mounted) return;
+        const timezone = resolveUserTimezone();
+        const [result, progress] = await Promise.all([
+          supabase.from("goals").select("*").eq("owner_id", auth.user.id).eq("is_deleted", false).order("id").limit(1001),
+          fetchProgressContext({ asOfDate: getDateInTimezone(new Date(), timezone), timezone, forceRefresh: true }),
+        ]);
+        if (result.error) throw result.error;
+        if (!mounted || result.data.length > 1000) return;
+        const goals = result.data as Goal[];
+        const folios = buildGoalFolios(goals, progress.summaries, auth.user.id);
+        const celebrations = earned.flatMap(item => {
+          const goal = goals.find(goal => goal.id === item.goalId);
+          const summary = progress.summaries.find(summary => summary.goalId === item.goalId);
+          const folio = folios.find(book => book.entries.some(entry => entry.goal.id === item.goalId));
+          if (!goal || !summary || summary.outcome !== "achieved" || !folio || undone.has(item.goalId)) return [];
+          const origin = detail.sourceRect ?? { left: window.innerWidth / 2 - 80, top: window.innerHeight / 2 - 80, width: 160, height: 160 };
+          return [{ goal, target: Math.max(1, summary.expectedUnitCount), origin, folio }];
+        });
+        setQueue(current => [...current, ...celebrations]);
+      }).catch(error => reportError(error, { code: "achievement_presentation_failed" })).then(() => undefined);
+    });
+    return () => { mounted = false; unsubscribe(); unsubscribeUndo(); };
+  }, [supabase]);
+  const celebration = queue[0];
+  const close = () => setQueue(current => current.slice(1));
   return <>
     {children}
     <DialogPrimitive.Root open={Boolean(celebration)} onOpenChange={open => { if (!open) close(); }}>
-      {celebration ? <EarnedCeremony fields={goalCardFields(celebration.goal)} target={celebration.target}
-        reward={celebration.goal.reward_text ?? ""} still={reducedMotion} grand origin={celebration.origin} onClose={close} /> : null}
+      {celebration ? <EarnedCeremony key={celebration.goal.id} fields={goalCardFields(celebration.goal)} target={celebration.target}
+        reward={celebration.goal.reward_text ?? ""} still={reducedMotion} grand origin={celebration.origin} folio={celebration.folio}
+        onClose={close} onOpenLibrary={() => { setQueue([]); router.push("/insights/folios?view=past"); }} /> : null}
     </DialogPrimitive.Root>
   </>;
 }
