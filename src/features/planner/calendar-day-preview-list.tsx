@@ -4,7 +4,6 @@ import { Fragment } from "react";
 import { Check, Link2, X } from "lucide-react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
-import { MilestoneFlag } from "@/features/goals/milestone-flag";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
 import {
   PlannerDraggablePreviewEntry,
@@ -318,7 +317,6 @@ export function CalendarDayPreviewList<
                           }
                         >
                           <span className="inline-flex items-center gap-1">
-                            {/^milestone:\d+$/.test(entry.unitKey) && <MilestoneFlag complete={currentlyCredited} number={Number(entry.unitKey.split(":")[1])} />}
                             <CompletionTitle
                               completed={credited || currentlyCredited}
                             >
