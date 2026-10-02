@@ -56,6 +56,11 @@ interface PlannerCalendarCell {
 export interface PlannerCalendarBoardProps {
   loading: boolean;
   viewMode: PlannerCalendarViewMode;
+  /**
+   * Goal View, shown in place of the calendar inside the same morph frame so
+   * switching to and from it animates like the calendar views do.
+   */
+  goalView?: ReactNode;
   showTasksInsteadOfGoals?: boolean;
   previousWindowAriaLabel: string;
   nextWindowAriaLabel: string;
@@ -132,6 +137,7 @@ export interface PlannerCalendarBoardProps {
 export function PlannerCalendarBoard({
   loading,
   viewMode,
+  goalView = null,
   showTasksInsteadOfGoals = false,
   previousWindowAriaLabel,
   nextWindowAriaLabel,
@@ -200,7 +206,7 @@ export function PlannerCalendarBoard({
     containerRef: boardPinchRef,
     viewMode,
     onViewModeChange: onCalendarViewModeChange,
-    disabled: pinchDisabled || isEntryDragging,
+    disabled: pinchDisabled || isEntryDragging || Boolean(goalView),
   });
 
   const monthRangeKey = `${cells[0]?.date ?? ""}:${cells.at(-1)?.date ?? ""}`;
@@ -230,19 +236,21 @@ export function PlannerCalendarBoard({
       className="border-b border-border pb-4"
       data-onboarding="planner.calendar.board"
     >
-      <PlannerViewWindowHeader
-        loading={loading}
-        viewMode={viewMode}
-        previousWindowAriaLabel={previousWindowAriaLabel}
-        nextWindowAriaLabel={nextWindowAriaLabel}
-        fixedViewHeadingWidthCh={fixedViewHeadingWidthCh}
-        viewHeading={viewHeading}
-        showTodayShortcut={showTodayShortcut}
-        expandedMonthRows={expandedMonthRows}
-        onMoveViewWindow={onMoveViewWindow}
-        onJumpToToday={onJumpToToday}
-        onToggleExpandedMonthRows={onToggleExpandedMonthRows}
-      />
+      {goalView ? null : (
+        <PlannerViewWindowHeader
+          loading={loading}
+          viewMode={viewMode}
+          previousWindowAriaLabel={previousWindowAriaLabel}
+          nextWindowAriaLabel={nextWindowAriaLabel}
+          fixedViewHeadingWidthCh={fixedViewHeadingWidthCh}
+          viewHeading={viewHeading}
+          showTodayShortcut={showTodayShortcut}
+          expandedMonthRows={expandedMonthRows}
+          onMoveViewWindow={onMoveViewWindow}
+          onJumpToToday={onJumpToToday}
+          onToggleExpandedMonthRows={onToggleExpandedMonthRows}
+        />
+      )}
       <PlannerDndProvider
         getEntryLabel={getDragEntryLabel}
         getDayLabel={getDragDayLabel}
@@ -267,8 +275,10 @@ export function PlannerCalendarBoard({
             loading ? "opacity-70" : "opacity-100"
           } min-h-[34rem]`}
         >
-          <PlanViewTransitionFrame viewMode={viewMode}>
-          {viewMode === "day" ? (
+          <PlanViewTransitionFrame viewMode={goalView ? "goals" : viewMode}>
+          {goalView ? (
+            goalView
+          ) : viewMode === "day" ? (
             <PlannerFocusedDayPane
               day={focusedDay}
               entries={focusedDayEntries}

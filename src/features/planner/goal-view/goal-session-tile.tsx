@@ -96,6 +96,8 @@ export function GoalSessionTile({
   );
   const dataAttributes = {
     "data-planner-entry-key": session.key,
+    // The plan view morph pairs tiles with calendar pills by day and entry key.
+    "data-day": session.date,
     "data-today": session.date === today,
     "data-draft": session.draft,
     "data-done": session.done,
@@ -128,7 +130,12 @@ export function GoalSessionTile({
           </span>
           <span className="flex min-w-0 flex-col gap-0.5">
             <span className={overlineClass}>{step}</span>
-            <strong className="truncate text-[13px] font-semibold">{session.label}</strong>
+            <strong
+              data-testid="completion-title"
+              className="truncate text-[13px] font-semibold"
+            >
+              {session.label}
+            </strong>
             {time}
           </span>
         </button>
@@ -156,7 +163,10 @@ export function GoalSessionTile({
             {dateLabel(session.date, "MMM")}
           </small>
         </span>
-        <strong className="min-h-8 text-xs font-semibold leading-snug">
+        <strong
+          data-testid="completion-title"
+          className="min-h-8 text-xs font-semibold leading-snug"
+        >
           {session.label}
         </strong>
         {time}

@@ -40,6 +40,7 @@ interface UsePlannerContextLoaderArgs {
   selectedDay: string | null;
   viewMode: PlannerCalendarViewMode;
   goalViewOpen: boolean;
+  setGoalViewReady: Dispatch<SetStateAction<boolean>>;
   setupTimezone: string;
   setupWeekStartsOn: number;
   onMonthChange: (month: string, mode: "push" | "replace") => void;
@@ -59,6 +60,7 @@ export function usePlannerContextLoader({
   selectedDay,
   viewMode,
   goalViewOpen,
+  setGoalViewReady,
   setupTimezone,
   setupWeekStartsOn,
   onMonthChange,
@@ -116,6 +118,7 @@ export function usePlannerContextLoader({
         : readTabDataCache<PlannerContextPayload>(plannerContextCacheKey);
       if (cachedContextPayload) {
         setContext(cachedContextPayload);
+        setGoalViewReady(false);
         if (cachedContextPayload.preferences?.timezone) {
           const policyForSetup =
             draftPolicyRef.current ?? cachedContextPayload.preferences.defaultPolicy;
@@ -187,6 +190,7 @@ export function usePlannerContextLoader({
       }
 
       setContext(contextPayload);
+      setGoalViewReady(goalViewOpen);
       if (!goalViewOpen) {
         writeTabDataCache(plannerContextCacheKey, contextPayload);
       }
@@ -208,6 +212,7 @@ export function usePlannerContextLoader({
       goalViewOpen,
       selectedDay,
       setContext,
+      setGoalViewReady,
       setError,
       setLoading,
       setSetupRestWeekdays,

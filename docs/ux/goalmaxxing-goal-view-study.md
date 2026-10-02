@@ -216,6 +216,14 @@ Week / Month), not as a separate route. Code lives in
   date expands the planner's session editor (the same goal card and date, time
   and lock controls used under the Day checklist) in a slot under that goal's
   dates.
+- Switching between Goal View and Day / Week / Month uses the same geometry
+  morph as the calendar views: Goal View renders inside the board's
+  `PlanViewTransitionFrame` (mode `goals`) and waits until its wide window has
+  loaded before showing. Session tiles carry `data-day` and the entry key, so a
+  tile flies to and from its calendar pill. Tiles scrolled out of their rail
+  (`data-plan-scroll-clip`) and calendar dates with no Goal View counterpart
+  fade in place instead of sliding off stage. The calendar window header is
+  hidden while Goal View is shown.
 - "Preview goals" is a read-only week overview across goals that hands a chosen
   session to the same editor.
 - Goal Desk and Time Weave remain study-only for now.

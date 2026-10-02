@@ -51,6 +51,31 @@ describe("PlanViewTransitionFrame", () => {
     );
   });
 
+  it.each([["week", "goals"], ["goals", "day"]] as const)(
+    "hands %s off to %s through the same morph frame",
+    (from, to) => {
+      vi.spyOn(window, "requestAnimationFrame").mockImplementation(() => 1);
+      const { container, rerender } = render(
+        <PlanViewTransitionFrame viewMode={from}>
+          <p>Outgoing view</p>
+        </PlanViewTransitionFrame>
+      );
+      rerender(
+        <PlanViewTransitionFrame viewMode={to}>
+          <p>Incoming view</p>
+        </PlanViewTransitionFrame>
+      );
+
+      expect(container.querySelector("[data-plan-view]")).toHaveAttribute(
+        "data-plan-view",
+        to
+      );
+      expect(container.querySelector("[data-plan-view-handoff]")).toHaveTextContent(
+        "Outgoing view"
+      );
+    }
+  );
+
   it.each([["week", "month"], ["month", "week"]] as const)(
     "keeps %s visible until the %s animation has painted its first frame",
     (from, to) => {

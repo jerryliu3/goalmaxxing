@@ -1,7 +1,6 @@
 "use client";
 
 import { Component, createRef, type ReactNode } from "react";
-import type { PlannerCalendarViewMode } from "./calendar-surface.types";
 import {
   animatePlanScene,
   capturePlanScene,
@@ -9,11 +8,12 @@ import {
   mountPlanHandoff,
   revealPlanContent,
   type PlanScene,
+  type PlanSceneMode,
 } from "./plan-view-morph";
 import { prefersReducedMotion } from "./plan-view-transition";
 
 interface Props {
-  viewMode: PlannerCalendarViewMode;
+  viewMode: PlanSceneMode;
   children: ReactNode;
 }
 
