@@ -5,6 +5,7 @@ import { Check, Link2, X } from "lucide-react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
+import styles from "@/features/planner/calendar-surface.module.css";
 import {
   PlannerDraggablePreviewEntry,
   PlannerSortableDayList,
@@ -107,7 +108,7 @@ export function CalendarDayPreviewList<
       className={`overflow-x-hidden ${
         expanded
           ? "divide-y"
-          : "max-h-44 space-y-1 overflow-y-auto overscroll-y-contain text-xs [touch-action:pan-y] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          : "max-h-44 space-y-1.5 overflow-y-auto overscroll-y-contain text-xs [touch-action:pan-y] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       }`}
     >
       {entries.length === 0 && completionFactMarkers.length === 0 ? (
@@ -203,7 +204,7 @@ export function CalendarDayPreviewList<
                           } ${
                             immovable ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing"
                           } ${isDragging ? "pointer-events-none opacity-0" : ""}`
-                        : `flex items-start rounded-[10px] border px-1.5 py-1 transition-colors ${
+                        : `${styles.sessionTile} border ${
                             shareEntryTransition ? PLAN_MORPH_CLASS : ""
                           } ${pillToneClasses} ${
                             entry.draftGhost ? "opacity-75" : ""
@@ -313,7 +314,7 @@ export function CalendarDayPreviewList<
                           className={
                             expanded
                               ? `flex min-h-6 items-center ${planLedgerTitleClass} leading-none`
-                              : "flex h-6 min-w-0 items-center truncate font-display font-medium leading-none"
+                              : "flex min-h-6 min-w-0 items-center truncate font-display font-medium leading-snug"
                           }
                         >
                           <span className="inline-flex items-center gap-1">
@@ -429,7 +430,7 @@ export function CalendarDayPreviewList<
                 className={
                   expanded
                     ? "flex items-center gap-3 py-3 text-foreground"
-                    : "rounded-[10px] border border-primary/35 bg-primary/10 p-1.5 text-foreground"
+                    : cn(styles.sessionTile, "border border-primary/15 bg-primary/5 text-foreground")
                 }
                 aria-label={detail ? `${marker.goalTitle}. ${detail}` : marker.goalTitle}
               >

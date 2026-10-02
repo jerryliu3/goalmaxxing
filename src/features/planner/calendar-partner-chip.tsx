@@ -3,6 +3,7 @@
 import { Check, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { planLedgerTitleClass, planLedgerSubtitleClass } from "@/features/planner/calendar-day-chrome";
+import styles from "@/features/planner/calendar-surface.module.css";
 
 export function CalendarPartnerChip({
   title,
@@ -26,7 +27,7 @@ export function CalendarPartnerChip({
         "flex min-w-0 items-center text-primary",
         expanded
           ? "gap-3 rounded-[10px] bg-muted px-2 py-3"
-          : "gap-1.5 rounded-[10px] border-2 border-primary bg-background px-1.5 py-1 text-[11px]",
+          : cn(styles.sessionTile, "border-2 border-primary bg-background"),
         completed && "text-muted-foreground",
         className
       )}

@@ -9,10 +9,11 @@ import {
   type SetStateAction,
 } from "react";
 import type { PlannerDragTarget } from "@/features/planner/calendar-dnd";
-import { isEntryCredited } from "@/features/planner/calendar-format";
+import { getEntryDraftPillClasses, isEntryCredited } from "@/features/planner/calendar-format";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
-import { getGoalVisual, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
+import { getGoalVisual, getWorkPillDraftFillStyle, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
+import styles from "@/features/planner/calendar-surface.module.css";
 import { resolvePlannerDndResolution } from "@/features/planner/planner-dnd-resolution";
 import {
   reorderPreviewEntryKeys,
@@ -85,12 +86,18 @@ export function usePlannerCalendarDnd({
       });
       const title = getEntryGoalFirstTitleWithTime(entry);
       const credited = isEntryCredited(entry);
+      const fillStyle =
+        entry.draftDiffKind === "moved_to" || entry.draftDiffKind === "new"
+          ? getWorkPillDraftFillStyle(visual.color, entry.draftDiffKind)
+          : entry.draftDiffKind
+            ? undefined
+            : getWorkPillFillStyle(visual.color, credited);
       return (
         <div
-          className="flex max-w-64 items-center gap-2 rounded-lg border px-2 py-1 text-xs"
-          style={getWorkPillFillStyle(visual.color, credited)}
+          className={`${styles.sessionTile} ${styles.dragTile} border ${getEntryDraftPillClasses({ draftDiffKind: entry.draftDiffKind })}`}
+          style={fillStyle}
         >
-          <span className="truncate font-display font-medium">{title}</span>
+          <span className="flex min-h-5 items-center truncate font-display leading-snug">{title}</span>
         </div>
       );
     },

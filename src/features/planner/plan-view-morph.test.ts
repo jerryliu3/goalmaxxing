@@ -58,6 +58,28 @@ afterEach(() => {
 });
 
 describe("capturePlanScene", () => {
+  it("carries continuous-grid dividers, tile corners, and date typography into the morph", () => {
+    const root = mount(`
+      <button data-day-cell="true" data-day="2026-09-06"
+        style="border-width: 0 1px 1px 0; border-style: solid; border-radius: 0">
+        <span data-plan-day-number="true" style="font-size: 23px; font-weight: 500">6</span>
+        <div data-planner-entry-key="run" style="border-radius: 10px">
+          <span data-testid="completion-title" data-completion-treatment="quiet">Run</span>
+        </div>
+      </button>`);
+
+    const scene = capturePlanScene(root, "month");
+    expect(scene.days.get("2026-09-06")).toMatchObject({
+      radius: 0,
+      borderWidths: "0px 1px 1px 0px",
+    });
+    expect(scene.items.get("2026-09-06:run")?.radius).toBe(10);
+    expect(scene.labels.get("date:2026-09-06")).toMatchObject({
+      text: "6",
+      type: { size: 23, weight: "500" },
+    });
+  });
+
   it("captures letter spacing and casing, which the CSS font shorthand omits", () => {
     const root = mount(`<ol>${WEEK_ROW("2026-09-14")}</ol>`);
 
