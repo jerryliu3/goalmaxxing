@@ -307,32 +307,34 @@ describe("PlannerFocusedDayPane", () => {
         onEntryPointerEnd={() => {}}
         selectedEntryKey={sampleEntry.key}
         onClearSelectedEntry={onClearSelectedEntry}
-        dayChecklist={{
-          loading: false,
-          visibleGoalIds: null,
-          listModel: {
-            completableGoals: [],
-            upcoming: [],
-            pastGoals: [],
-            archivedGoals: [],
-            presentationByGoalId: new Map(),
-            filteredTodayGoalIds: new Set(),
-          },
-          data: { goals: [] },
-          filters: {
-            showUpcomingGoals: false,
-            showEndedGoals: false,
-            showArchivedGoals: false,
-            upcomingOpen: false,
-            pastPanelOpen: false,
-            archiveOpen: false,
-            setUpcomingOpen: () => {},
-            setPastPanelOpen: () => {},
-            setArchiveOpen: () => {},
-          },
-          savingGoalId: null,
-          toggleCompletion: async () => {},
-        }}
+        dayChecklist={
+          {
+            ready: true,
+            loading: false,
+            visibleGoalIds: null,
+            listModel: {
+              completableGoals: [],
+              presentationByGoalId: new Map(),
+              upcoming: [],
+              pastGoals: [],
+              archivedGoals: [],
+            },
+            data: { goals: [] },
+            filters: {
+              showUpcomingGoals: false,
+              showEndedGoals: false,
+              showArchivedGoals: false,
+              upcomingOpen: false,
+              pastPanelOpen: false,
+              archiveOpen: false,
+              setUpcomingOpen: () => {},
+              setPastPanelOpen: () => {},
+              setArchiveOpen: () => {},
+            },
+            savingGoalId: null,
+            toggleCompletion: async () => {},
+          } as unknown as PlanDayChecklistModel
+        }
       />
     );
 

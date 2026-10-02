@@ -19,6 +19,7 @@ type CalendarSurfacePresentationArgs = Omit<
   PlannerCalendarSurfaceLayoutProps,
   | "plannerSettingsForm"
   | "eventDetailCallbacks"
+  | "onClearSelectedEntry"
   | "saveButtonLabel"
   | "moveViewWindow"
   | "jumpToToday"
