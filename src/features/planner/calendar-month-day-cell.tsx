@@ -7,6 +7,7 @@ import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
 import { cn } from "@/lib/utils";
 import { CompletionTitle } from "@/components/ui/completion-title";
+import { MilestoneFlag } from "@/features/goals/milestone-flag";
 import {
   overlayCurrentlyCredited,
   plannerFactMutationKey,
@@ -390,6 +391,7 @@ export function CalendarMonthDayCell<
                 aria-label="Completed"
               />
             ) : null}
+            {/^milestone:\d+$/.test(entry.unitKey) && <MilestoneFlag compact complete={isCompleted} number={Number(entry.unitKey.split(":")[1])} />}
             <CompletionTitle
               completed={isCompleted}
               treatment="quiet"
@@ -657,4 +659,3 @@ export function CalendarMonthDayCell<
     </PlannerDroppableDay>
   );
 }
-
