@@ -6,7 +6,7 @@ import { useReducedMotion } from "motion/react";
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
 import { goalCardFields } from "@/features/goals/goal-card-fields";
 import type { Goal } from "@/lib/goals/types";
-import { dateLabel, goalProgress, groupSessions, sessionsForGoal, type SessionGrouping, type SessionScope } from "./model";
+import { dateLabel, goalProgress, groupSessions, isDone, sessionsForGoal, type SessionGrouping, type SessionScope } from "./model";
 import { SAMPLE_THROUGH, SAMPLE_TODAY } from "./sample";
 import { SessionTile } from "./session-tile";
 import type { GoalViewStudySession } from "./use-study";
@@ -32,12 +32,13 @@ export function GoalPanel({ goal, study, scope, grouping, focused = false, hideC
   const visible = all.slice(0, limit);
   const groups = groupSessions(visible, grouping);
   const first = all[0];
-  const last = sessionsForGoal(study.state.sessions, goal.id, "all").at(-1);
+  const next = all.find(s => s.date >= SAMPLE_TODAY && !isDone(s, study.state.facts));
+  const last = sessionsForGoal(study.state.saved, goal.id, "all").at(-1);
   return <section className={`gv-goal-panel ${focused ? "gv-focused-panel" : ""} ${hideCard ? "gv-without-card" : ""}`} aria-label={`${goal.title} scheduled dates`}>
     {!hideCard && <div className="gv-goal-object"><GoalCard goal={goal} /><GoalMetadata goal={goal} study={study} /></div>}
     <div className="gv-goal-dates">
       <div className="gv-track-heading">
-        <div><h2>{hideCard ? goal.title : focused ? "Your scheduled dates" : "Scheduled dates"}</h2><p className="gv-muted">{all.length} {scope === "all" ? "saved" : scope === "history" ? "past" : "upcoming"} sessions{first && scope !== "history" ? ` · next ${dateLabel(first.date, "EEE, MMM d")}` : ""}</p></div>
+        <div><h2>{hideCard ? goal.title : focused ? "Your scheduled dates" : "Scheduled dates"}</h2><p className="gv-muted">{all.length} {scope === "all" ? "scheduled" : scope === "history" ? "past" : "upcoming"} sessions{next ? ` · next ${dateLabel(next.date, "EEE, MMM d")}` : ""}</p></div>
         <div className="gv-track-controls">
           <button className="gv-icon-button" aria-label={`See ${goal.title} in calendar`} title="See this week" onClick={() => study.setCalendarDate(first?.date ?? SAMPLE_TODAY)}><CalendarDays size={17} /></button>
           {!focused && <><button className="gv-icon-button gv-rail-arrow" aria-label={`Earlier ${goal.title} sessions`} onClick={() => rail.current?.scrollBy({ left: -350, behavior: still ? "instant" : "smooth" })}><ArrowLeft size={17} /></button><button className="gv-icon-button gv-rail-arrow" aria-label={`Later ${goal.title} sessions`} onClick={() => rail.current?.scrollBy({ left: 350, behavior: still ? "instant" : "smooth" })}><ArrowRight size={17} /></button></>}
