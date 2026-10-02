@@ -16,8 +16,8 @@ export default function UxHubPage() {
               Goal View — Card Rails and Goal Desk
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">
-              Real goal cards, editable scheduled dates, goal filtering, and
-              swipeable or vertical phone arrangements. Includes long and ongoing goals.
+              Real goal cards, editable dates, goal filtering, and two phone
+              arrangements. Includes Time Weave as a scrollable Week configuration.
             </p>
           </li>
           <li>
