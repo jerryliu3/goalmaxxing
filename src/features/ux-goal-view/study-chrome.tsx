@@ -11,7 +11,7 @@ export function StudyChrome({ children, controls, phone, onPhoneChange, onReset,
     <header className="gv-lab-header">
       <Link href="/ux" className="gv-lab-back"><ArrowLeft size={15} />UX labs</Link>
       <span className="gv-lab-title">Goal view & calendar studies</span>
-      <nav aria-label="Prototype surfaces"><Link href="/ux/goal-view" aria-current={week ? undefined : "page"}>Goal view</Link>{week && <span aria-current="page">Time Weave</span>}</nav>
+      <nav aria-label="Prototype surfaces"><Link href="/ux/goal-view" aria-current={week ? undefined : "page"}>Goal view</Link><Link href="/ux/goal-view/time-weave" aria-current={week ? "page" : undefined}>Time Weave</Link></nav>
       <div className="gv-lab-device" role="group" aria-label="Preview size"><button className="gv-icon-button" aria-label="Desktop preview" aria-pressed={!phone} onClick={() => onPhoneChange(false)}><Monitor size={17} /></button><button className="gv-icon-button" aria-label="Phone preview" aria-pressed={phone} onClick={() => onPhoneChange(true)}><Smartphone size={17} /></button></div>
       <button className="gv-icon-button" aria-label="Reset sample" title="Reset sample" onClick={onReset}><RotateCcw size={16} /></button>
     </header>
