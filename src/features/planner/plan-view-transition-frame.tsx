@@ -6,6 +6,7 @@ import {
   animatePlanScene,
   capturePlanScene,
   hidePlanContent,
+  mountPlanHandoff,
   revealPlanContent,
   type PlanScene,
 } from "./plan-view-morph";
@@ -27,6 +28,7 @@ export class PlanViewTransitionFrame extends Component<Props> {
   private animation: ReturnType<typeof animatePlanScene> | null = null;
   private frame = 0;
   private pendingScene: PlanScene | null = null;
+  private handoff: HTMLElement | null = null;
 
   getSnapshotBeforeUpdate(previous: Props): PlanScene | null {
     const root = this.rootRef.current;
@@ -36,9 +38,12 @@ export class PlanViewTransitionFrame extends Component<Props> {
     // An interrupted morph hands over its in-flight geometry so the next one
     // continues from where the pixels actually are.
     const scene = this.animation?.snapshot() ?? this.pendingScene ?? capturePlanScene(root, previous.viewMode);
+    const handoff = mountPlanHandoff(root);
     this.animation?.cancel();
     this.animation = null;
     cancelAnimationFrame(this.frame);
+    this.handoff?.remove();
+    this.handoff = handoff;
     return scene;
   }
 
@@ -48,6 +53,7 @@ export class PlanViewTransitionFrame extends Component<Props> {
       return;
     }
     hidePlanContent(content);
+    content.toggleAttribute('inert', true);
     this.pendingScene = scene;
     // Month alignment runs synchronously in layout effects before this frame.
     this.frame = requestAnimationFrame(() => this.begin(scene));
@@ -56,6 +62,7 @@ export class PlanViewTransitionFrame extends Component<Props> {
   componentWillUnmount() {
     cancelAnimationFrame(this.frame);
     this.animation?.cancel();
+    this.handoff?.remove();
   }
 
   private begin(scene: PlanScene) {
@@ -64,7 +71,10 @@ export class PlanViewTransitionFrame extends Component<Props> {
     if (!root || !content) {
       if (content) {
         revealPlanContent(content);
+        content.toggleAttribute('inert', false);
       }
+      this.handoff?.remove();
+      this.handoff = null;
       return;
     }
     if (this.props.viewMode === "day") {
@@ -82,6 +92,9 @@ export class PlanViewTransitionFrame extends Component<Props> {
     this.animation = animatePlanScene(root, content, scene, next, () => {
       this.animation = null;
     });
+    // animatePlanScene has already painted its first frame in this same task.
+    this.handoff?.remove();
+    this.handoff = null;
   }
 
   render() {

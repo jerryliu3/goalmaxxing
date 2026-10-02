@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PlanViewTransitionFrame } from "@/features/planner/plan-view-transition-frame";
 
@@ -17,6 +17,7 @@ describe("PlanViewTransitionFrame", () => {
 
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
   });
 
   it("tags the active plan view for shared-element transitions", () => {
@@ -49,6 +50,40 @@ describe("PlanViewTransitionFrame", () => {
       "month"
     );
   });
+
+  it.each([["week", "month"], ["month", "week"]] as const)(
+    "keeps %s visible until the %s animation has painted its first frame",
+    (from, to) => {
+      const frames: FrameRequestCallback[] = [];
+      vi.spyOn(window, "requestAnimationFrame").mockImplementation(callback => {
+        frames.push(callback);
+        return frames.length;
+      });
+      const { container, rerender } = render(
+        <PlanViewTransitionFrame viewMode={from}>
+          <p>Outgoing calendar</p>
+        </PlanViewTransitionFrame>
+      );
+      rerender(
+        <PlanViewTransitionFrame viewMode={to}>
+          <p>Incoming calendar</p>
+        </PlanViewTransitionFrame>
+      );
+
+      const live = container.querySelector<HTMLElement>('[data-plan-view]')!;
+      const handoff = container.querySelector<HTMLElement>('[data-plan-view-handoff]')!;
+      expect(live.style.opacity).toBe("0");
+      expect(handoff).toHaveTextContent("Outgoing calendar");
+      expect(handoff.style.opacity).toBe("1");
+      expect(handoff.style.visibility).toBe("visible");
+      expect(handoff).toHaveAttribute("inert");
+
+      act(() => frames.shift()!(performance.now()));
+
+      expect(container.querySelector('[data-plan-view-handoff]')).toBeNull();
+      expect(container.querySelector<HTMLElement>('[data-plan-morph-overlay]')?.style.visibility).toBe("visible");
+    }
+  );
 
   it("leaves the destination visible once the morph completes", () => {
     // Drive the morph to completion: the frame hides the destination before it can be

@@ -173,6 +173,40 @@ function clonePlanNode(source: HTMLElement) {
     node.querySelectorAll<HTMLElement>('[data-motion="collapsible-content"]').forEach(section => section.style.animation = 'none');
     return node;
 }
+/** Keep the outgoing pixels present while React commits and aligns the next view. */
+export function mountPlanHandoff(root: HTMLElement) {
+    const source = root.querySelector<HTMLElement>('[data-plan-morph-overlay]')
+        ?? root.querySelector<HTMLElement>('[data-plan-view-handoff]')
+        ?? root.querySelector<HTMLElement>('[data-plan-view]');
+    if (!source) return null;
+    const node = clonePlanNode(source);
+    // Read the outgoing paint before adding/writing the copy, so a large month
+    // doesn't force layout once per cloned element at the start of the motion.
+    const paint = [source, ...source.querySelectorAll<HTMLElement>('*')].map(original => {
+        const style = original.getAnimations?.().length ? getComputedStyle(original) : null;
+        return { scrollTop: original.scrollTop, scrollLeft: original.scrollLeft,
+            chrome: style ? { backgroundColor: style.backgroundColor, borderRadius: style.borderRadius, boxShadow: style.boxShadow } : null };
+    });
+    node.removeAttribute('data-plan-morph-overlay');
+    node.removeAttribute('data-plan-view');
+    node.dataset.planViewHandoff = 'true';
+    node.setAttribute('aria-hidden', 'true');
+    node.toggleAttribute('inert', true);
+    Object.assign(node.style, { position: 'absolute', left: '0', top: '0', width: `${root.getBoundingClientRect().width}px`,
+        pointerEvents: 'none', opacity: '1', visibility: 'visible', zIndex: '20' });
+    root.append(node);
+    // cloneNode doesn't carry scroll offsets or the current paint of paused WAAPI
+    // animations. Restore them after mounting, when scroll ranges are available.
+    const copies = [node, ...node.querySelectorAll<HTMLElement>('*')];
+    paint.forEach((original, index) => {
+        const copy = copies[index];
+        copy.style.viewTransitionName = 'none';
+        copy.scrollTop = original.scrollTop;
+        copy.scrollLeft = original.scrollLeft;
+        if (original.chrome) Object.assign(copy.style, original.chrome);
+    });
+    return node;
+}
 function residue(root: HTMLElement, mode: PlannerCalendarViewMode) {
     const source = root.querySelector<HTMLElement>('[data-plan-view]') ?? root;
     const node = clonePlanNode(source);
@@ -188,12 +222,15 @@ function residue(root: HTMLElement, mode: PlannerCalendarViewMode) {
 function shown(el: HTMLElement) { return el.getBoundingClientRect().width > 0 && !el.closest('[aria-hidden="true"]'); }
 export function capturePlanScene(root: HTMLElement, mode: PlannerCalendarViewMode): PlanScene {
     const r = root.getBoundingClientRect();
+    // Handoff copies and animation surrogates are siblings of the live view. They
+    // must never overwrite the destination's measured dates and session geometry.
+    const content = root.querySelector<HTMLElement>('[data-plan-view]') ?? root;
     const days = new Map<string, Mark>(), items = new Map<string, Mark>(), labels = new Map<string, Mark>();
-    const calendar = root.querySelector<HTMLElement>('[data-testid="plan-calendar-split-calendar"]') ?? root;
+    const calendar = content.querySelector<HTMLElement>('[data-testid="plan-calendar-split-calendar"]') ?? content;
     const viewport = calendar.querySelector<HTMLElement>('[data-calendar-month-vertical-viewport]');
     const cr = box(calendar, r), vr = viewport ? box(viewport, r) : cr;
     const clip = { x: cr.x, y: Math.max(cr.y, vr.y), width: cr.width, height: Math.min(cr.y + cr.height, vr.y + vr.height) - Math.max(cr.y, vr.y) };
-    for (const el of root.querySelectorAll<HTMLElement>(DAY)) {
+    for (const el of content.querySelectorAll<HTMLElement>(DAY)) {
         if (!shown(el) || el.matches('[data-day-cell]') && el.closest('[data-calendar-week-row]'))
             continue;
         const day = el.dataset.day!;
@@ -205,7 +242,7 @@ export function capturePlanScene(root: HTMLElement, mode: PlannerCalendarViewMod
         if (weekday)
             labels.set(`weekday:${new Date(`${day}T12:00:00Z`).getUTCDay()}`, labelMark(weekday, r, day, 'cell'));
     }
-    const dayPane = mode === 'day' ? root.querySelector<HTMLElement>('[data-testid="plan-day-pane"]') : null;
+    const dayPane = mode === 'day' ? content.querySelector<HTMLElement>('[data-testid="plan-day-pane"]') : null;
     if (dayPane) {
         const day = dayPane.dataset.planDay!;
         days.set(day, mark(dayPane, r, day, 'pane'));
@@ -218,7 +255,7 @@ export function capturePlanScene(root: HTMLElement, mode: PlannerCalendarViewMod
         if (weekday)
             labels.set(`weekday:${new Date(`${day}T12:00:00Z`).getUTCDay()}`, labelMark(weekday, r, day, 'pane'));
     }
-    root.querySelectorAll<HTMLElement>('[data-calendar-weekday-grid] [data-plan-weekday-index]').forEach(el => {
+    content.querySelectorAll<HTMLElement>('[data-calendar-weekday-grid] [data-plan-weekday-index]').forEach(el => {
         if (shown(el))
             labels.set(`weekday:${el.dataset.planWeekdayIndex}`, labelMark(el, r, el.dataset.planWeekdayDate ?? '', 'header'));
     });
@@ -232,8 +269,8 @@ export function capturePlanScene(root: HTMLElement, mode: PlannerCalendarViewMod
         counts.set(day, index + 1);
         items.set(`${day}:${el.dataset.plannerEntryKey}`, itemMark(el, r, day, index));
     }
-    const aside = root.querySelector<HTMLElement>('[data-testid="plan-desktop-day-pane"]');
-    const header = root.querySelector<HTMLElement>('[data-calendar-weekday-grid]');
+    const aside = content.querySelector<HTMLElement>('[data-testid="plan-desktop-day-pane"]');
+    const header = content.querySelector<HTMLElement>('[data-calendar-weekday-grid]');
     const orderedItems = [...items.entries()].sort((a, b) => a[1].box.y - b[1].box.y);
     const sections: PlanScene['sections'] = dayPane ? Array.from(dayPane.querySelectorAll<HTMLElement>('[data-plan-day-section]')).map(el => {
         const own = box(el, r);
@@ -403,8 +440,8 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
     // Build and measure invisibly; reveal only after every layer is positioned.
     overlay.style.visibility = 'hidden';
     const layer = document.createElement('div');
+    layer.dataset.planMorphLayer = 'true';
     Object.assign(layer.style, { position: 'absolute', left: '0', top: '0', width: '100%', height: `${stage}px` });
-    overlay.append(layer);
     const surfaces = document.createElement('div');
     const glyphs = document.createElement('div');
     for (const el of [surfaces, glyphs])
@@ -416,6 +453,9 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
         node.style.width = `${(index ? to : from).bounds.width}px`;
         overlay.append(node);
     });
+    // The continuous month frame paints opaque paper. Keep it below the moving
+    // dates/tiles, otherwise its fade covers them at either end of the morph.
+    overlay.append(layer);
     const headerLayers = [from.header, to.header].map(header => {
         if (!header) return null;
         Object.assign(header.node.style, { position: 'absolute', left: '0', top: '0', margin: '0', pointerEvents: 'none' });
@@ -550,8 +590,8 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
     const start = performance.now();
     const finish = () => {
         cancelAnimationFrame(frame);
-        overlay.remove();
         revealPlanContent(content);
+        overlay.remove();
         content.toggleAttribute('inert', false);
         root.style.height = '';
         root.style.overflowAnchor = '';

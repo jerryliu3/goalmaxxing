@@ -30,6 +30,7 @@ import {
   type ReactNode,
 } from "react";
 import { plannerCollisionDetection } from "@/features/planner/planner-dnd-collision";
+import { prefersReducedMotion } from "@/features/planner/plan-view-transition";
 import {
   PlannerMouseSensor,
   PlannerTouchSensor,
@@ -69,7 +70,12 @@ function sortableItemStyle(
     transform: transform
       ? `translate3d(${transform.x}px, ${transform.y}px, 0) scaleX(${transform.scaleX}) scaleY(${transform.scaleY})`
       : undefined,
-    transition,
+    // Keep tile feedback transitions when sortable siblings animate their move.
+    transition: prefersReducedMotion()
+      ? "none"
+      : transition
+        ? `${transition}, var(--plan-tile-transition, opacity 180ms ease)`
+        : undefined,
     ...(surface === "checklist" ? { touchAction: "pan-y" } : null),
   };
 }
@@ -244,7 +250,14 @@ export function PlannerDndProvider({
       }}
     >
       {children}
-      <DragOverlay zIndex={4000}>
+      <DragOverlay
+        zIndex={4000}
+        dropAnimation={
+          prefersReducedMotion()
+            ? null
+            : { duration: 220, easing: "cubic-bezier(0.2, 0, 0, 1)" }
+        }
+      >
         {activeEntryKey && renderDragOverlay
           ? renderDragOverlay(activeEntryKey)
           : null}
@@ -399,4 +412,3 @@ export function PlannerDraggablePreviewEntry({
     isOver: isOver && !isDragging,
   });
 }
-

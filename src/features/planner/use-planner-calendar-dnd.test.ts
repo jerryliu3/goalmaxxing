@@ -1,11 +1,35 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, render, renderHook, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { getEntryGoalFirstTitleWithTime } from "@/features/planner/calendar-format";
 import { toPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import { buildPlannerDayEntry } from "@/features/planner/test-fixtures";
 import { usePlannerCalendarDnd } from "@/features/planner/use-planner-calendar-dnd";
+import { getGoalVisual, getWorkPillDraftFillStyle } from "@/features/planner/goal-visuals";
 
 describe("usePlannerCalendarDnd", () => {
+  it("keeps a draft session's fill and shimmer while it is being dragged", () => {
+    const entry = buildPlannerDayEntry({ draftDiffKind: "moved_to" });
+    const { result } = renderHook(() =>
+      usePlannerCalendarDnd({
+        entryByKey: new Map([[entry.key, entry]]),
+        entryDayByKey: new Map([[entry.key, "2026-09-02"]]),
+        getEntriesForDay: () => [entry],
+        getEntryGoalFirstTitleWithTime: () => "Draft run",
+        setPreviewEntryOrderByDay: vi.fn(),
+        queueDraftMoveCommand: vi.fn(() => true),
+        clearHoverPreviewTimer: vi.fn(),
+        pointerPressActiveRef: { current: false },
+      })
+    );
+
+    render(result.current.renderEntryDragOverlay(entry.key));
+    const tile = screen.getByText("Draft run").parentElement;
+    const visual = getGoalVisual({ goalId: entry.originalGoalId, color: null, category: null });
+    const fill = getWorkPillDraftFillStyle(visual.color, "moved_to");
+    expect(tile).toHaveClass("plan-draft-shimmer", "border-2");
+    expect(tile).toHaveStyle({ backgroundColor: fill.backgroundColor });
+  });
+
   it("persists task date changes immediately and leaves goals on the draft path", () => {
     const task = toPlannerTaskCalendarEntry({
       taskId: "11111111-1111-4111-8111-111111111111",

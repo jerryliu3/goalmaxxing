@@ -336,7 +336,7 @@ export function PlannerCalendarBoard({
                           data-calendar-grid-track="true"
                         >
                           <div
-                            className="grid gap-2 text-center text-xs text-muted-foreground"
+                            className={`${styles.weekdayGrid} grid text-center text-muted-foreground`}
                             style={SEVEN_COLUMN_GRID_STYLE}
                             data-calendar-weekday-grid="true"
                           >
@@ -359,15 +359,13 @@ export function PlannerCalendarBoard({
                           <div
                             ref={multiMonthGridScrollRef}
                             onScroll={onMonthScopedGridScroll}
-                            className={
-                              expandedMonthRows
-                                ? "mt-2"
-                                : "mt-2 max-h-[34rem] overflow-y-auto overscroll-y-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                            }
+                            className={`${styles.monthGridViewport} ${
+                              expandedMonthRows ? "" : `${styles.monthGridScrollViewport} max-h-[34rem]`
+                            } [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`}
                             data-calendar-month-vertical-viewport="true"
                           >
                             <div
-                              className="grid gap-2"
+                              className={styles.monthGrid}
                               style={SEVEN_COLUMN_GRID_STYLE}
                             >
                               {monthWeeks.map((week, weekIndex) => {

@@ -12,22 +12,23 @@ import {
 } from "./calendar-day-chrome";
 
 describe("plan calendar day chrome", () => {
-  it("fills adjacent-month tiles with the adjacent token", () => {
+  it("mutes adjacent-month tiles without dimming their session tiles", () => {
     const adjacent = planMonthDaySurfaceClass({
       inMonth: false,
       isToday: false,
       isSelected: false,
       isPastInMonth: false,
     });
-    expect(adjacent).toContain("bg-adjacent");
+    expect(adjacent).toContain("bg-muted/40");
+    expect(adjacent).not.toContain("opacity-");
     expect(adjacent).not.toContain("bg-today");
     expect(adjacent).not.toContain("bg-day-selected");
     expect(planMonthDayNumberClass({ inMonth: false, isToday: false })).toBe(
-      "text-adjacent-foreground"
+      "text-muted-foreground"
     );
   });
 
-  it("fills today with solid today even in an adjacent month or when selected", () => {
+  it("keeps today's wash and date accent even in an adjacent month or when selected", () => {
     const today = planMonthDaySurfaceClass({
       inMonth: true,
       isToday: true,
@@ -47,16 +48,16 @@ describe("plan calendar day chrome", () => {
       isPastInMonth: false,
     });
 
-    expect(today).toContain("bg-today");
-    expect(today).not.toContain("bg-today/");
-    expect(todaySelected).toContain("bg-today");
+    expect(today).toContain("bg-today/10");
+    expect(today).toContain("text-foreground");
+    expect(todaySelected).toContain("bg-today/10");
     expect(todaySelected).toContain("ring-primary");
     expect(todaySelected).not.toContain("bg-adjacent");
-    expect(todayAdjacent).toContain("bg-today");
+    expect(todayAdjacent).toContain("bg-today/10");
     expect(todayAdjacent).not.toContain("bg-adjacent");
     expect(
       planMonthDayNumberClass({ inMonth: false, isToday: true, isSelected: false })
-    ).toBe("text-today-foreground");
+    ).toBe("text-primary");
   });
 
   it("outlines a user-selected day that is not today", () => {
@@ -84,19 +85,19 @@ describe("plan calendar day chrome", () => {
     ).not.toContain("bg-day-selected");
     expect(
       planAgendaDayRowClass({ inMonth: true, isToday: true, isSelected: true })
-    ).toContain("bg-today");
+    ).toContain("bg-today/10");
     expect(
       planAgendaDayRowClass({ inMonth: true, isToday: true, isSelected: true })
     ).toContain("ring-primary");
     expect(
       planAgendaDayRowClass({ inMonth: false, isToday: false, isSelected: false })
-    ).toContain("bg-adjacent");
+    ).toContain("bg-muted/40");
     expect(
       planAgendaDayNumberClass({ isToday: false, isSelected: true })
     ).toContain("text-primary");
     expect(
       planAgendaDayNumberClass({ isToday: true, isSelected: true })
-    ).toContain("text-today");
+    ).toContain("text-primary");
   });
 
   it("reserves overflow remainder as +N more, including zero", () => {

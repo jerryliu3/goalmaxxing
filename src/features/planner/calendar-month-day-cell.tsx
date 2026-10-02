@@ -8,6 +8,7 @@ import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
 import { cn } from "@/lib/utils";
 import { CompletionTitle } from "@/components/ui/completion-title";
 import { MilestoneFlag } from "@/features/goals/milestone-flag";
+import styles from "@/features/planner/calendar-surface.module.css";
 import {
   overlayCurrentlyCredited,
   plannerFactMutationKey,
@@ -323,7 +324,7 @@ export function CalendarMonthDayCell<
             onPointerCancelCapture={() => {
               onEntryPointerEnd();
             }}
-            className={`flex items-center gap-1.5 rounded-[10px] border px-1.5 py-1 text-[11px] ${PLAN_MORPH_CLASS} ${pillToneClasses} ${selectedPillClasses} ${
+            className={`${styles.sessionTile} border ${PLAN_MORPH_CLASS} ${pillToneClasses} ${selectedPillClasses} ${
               entry.draftGhost ? "opacity-70 line-through" : ""
             } ${isGoalFocusDimmed ? "opacity-45" : ""} ${
               immovable
@@ -397,7 +398,7 @@ export function CalendarMonthDayCell<
             <CompletionTitle
               completed={isCompleted}
               treatment="quiet"
-              className="flex h-6 min-w-0 items-center truncate font-display leading-none"
+              className="flex min-h-5 min-w-0 items-center truncate font-display leading-snug"
             >
               {compactTitle}
             </CompletionTitle>
@@ -479,8 +480,8 @@ export function CalendarMonthDayCell<
               <div
                 ref={setNodeRef}
                 className={cn(
-                  "flex min-h-[2.75rem] min-w-0 flex-1 flex-col gap-1.5 rounded-[10px] px-1 py-0.5",
-                  isAnyEntryDragging && isOver && "ring-2 ring-primary/70"
+                  "flex min-h-[2.75rem] min-w-0 flex-1 flex-col gap-1.5 rounded-[10px] px-1 py-0.5 transition-[background-color,box-shadow] motion-reduce:transition-none",
+                  isAnyEntryDragging && isOver && "bg-primary/5 ring-2 ring-inset ring-primary/50"
                 )}
                 data-calendar-week-work="true"
               >
@@ -503,7 +504,7 @@ export function CalendarMonthDayCell<
                       return (
                         <div
                           key={`completion-fact-${marker.key}`}
-                          className="flex items-center gap-1.5 rounded-[10px] border border-primary/15 bg-primary/5 px-1.5 py-1 text-[11px] text-foreground"
+                          className={cn(styles.sessionTile, "border border-primary/15 bg-primary/5 text-foreground")}
                           aria-label={`${marker.goalTitle}. ${statusCopy}`}
                         >
                           <Check className="size-3 shrink-0" aria-hidden="true" />
@@ -580,36 +581,38 @@ export function CalendarMonthDayCell<
           onPointerLeave={onCellPointerLeave}
           className={cn(
             PLAN_MORPH_CLASS,
-            "relative min-h-24 rounded-[10px] border p-2 text-left transition-colors",
+            styles.monthCell,
             planMonthDaySurfaceClass({
               inMonth,
               isToday,
               isSelected,
               isPastInMonth,
             }),
-            isAnyEntryDragging && isOver && "ring-2 ring-primary/70"
+            isAnyEntryDragging && isOver && "ring-2 ring-inset ring-primary/50"
           )}
           aria-label={ariaLabel}
+          aria-current={isToday ? "date" : undefined}
+          aria-pressed={isSelected}
           data-no-swipe="true"
           data-day-cell="true"
           data-day={day}
           data-onboarding={isToday ? "planner.calendar.today" : undefined}
           style={{ viewTransitionName: planDayViewTransitionName(day) }}
         >
-          <div className="pointer-events-none absolute top-2 left-2 flex items-center gap-1.5">
+          <div className={styles.dateHeader}>
             <p
               data-plan-day-number="true"
-              className={`text-xs font-semibold leading-none ${planMonthDayNumberClass({
+              className={`${styles.dayNumber} font-display ${planMonthDayNumberClass({
                 inMonth,
                 isToday,
                 isSelected,
               })}`}
             >
-              {day.slice(8, 10)}
+              {dayNumber}
             </p>
             {monthContextLabel ? (
               <span
-                className="rounded-sm border border-border/70 bg-background/90 px-1 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide text-foreground/80"
+                className="text-[9px] font-medium uppercase leading-none tracking-wider text-muted-foreground"
                 data-month-context-label={monthContextLabel}
               >
                 {monthContextLabel}
@@ -617,7 +620,7 @@ export function CalendarMonthDayCell<
             ) : null}
           </div>
           {hasVisibleContent ? (
-            <div className="mt-4 space-y-1">
+            <div className="space-y-1.5">
               <PlannerSortableDayList
                 day={day}
                 surface="calendar"
@@ -635,7 +638,7 @@ export function CalendarMonthDayCell<
                 return (
                 <div
                   key={`completion-fact-${marker.key}`}
-                  className="flex items-center gap-1.5 rounded-md border border-primary/15 bg-primary/5 px-1.5 py-1 text-[11px] text-foreground"
+                  className={cn(styles.sessionTile, "border border-primary/15 bg-primary/5 text-foreground")}
                   aria-label={`${marker.goalTitle}. ${statusCopy}`}
                 >
                   <Check className="size-3 shrink-0" aria-hidden="true" />
@@ -648,13 +651,12 @@ export function CalendarMonthDayCell<
                   key={`completion-fact-${marker.key}`}
                   title={marker.goalTitle}
                   completed
-                  className="rounded-md"
                 />
               ))}
               {monthOverflowLabel}
             </div>
           ) : (
-            <div className="mt-4">{monthOverflowLabel}</div>
+            <div>{monthOverflowLabel}</div>
           )}
         </button>
       )}

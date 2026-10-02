@@ -10,6 +10,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { COMPLETION_HOLD_MS } from "@/components/ui/completion-toggle";
 import { CalendarSurface } from "./calendar-surface";
+import calendarStyles from "./calendar-surface.module.css";
 import type {
   PlannerContextPayload,
   PlannerWorkUnit,
@@ -780,7 +781,7 @@ describe("CalendarSurface characterization", () => {
     expect(sharedTrack?.parentElement).toBe(horizontalViewport);
     expect(weekdayGrid?.parentElement).toBe(sharedTrack);
     expect(monthVerticalViewport?.parentElement).toBe(sharedTrack);
-    expect(monthVerticalViewport).toHaveClass("overscroll-y-contain");
+    expect(monthVerticalViewport).toHaveClass(calendarStyles.monthGridScrollViewport);
     expect(weekdayGrid).toHaveStyle({
       gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
     });
@@ -1494,12 +1495,14 @@ describe("CalendarSurface characterization", () => {
       '[data-calendar-month-vertical-viewport="true"]'
     );
     expect(monthViewport).toHaveClass("max-h-[34rem]");
+    expect(monthViewport).toHaveClass(calendarStyles.monthGridScrollViewport);
 
     fireEvent.click(expandButton);
     expect(screen.getByTestId("plan-calendar-split")).toHaveClass(
       "md:grid-cols-[minmax(0,var(--plan-split-calendar))_minmax(0,var(--plan-split-pane))]"
     );
     expect(monthViewport).not.toHaveClass("max-h-[34rem]");
+    expect(monthViewport).not.toHaveClass(calendarStyles.monthGridScrollViewport);
     expect(screen.getByTestId("plan-desktop-day-pane")).toBeInTheDocument();
   });
 
@@ -2423,6 +2426,7 @@ describe("CalendarSurface characterization", () => {
 
   it("aligns the current week using scroll-container coordinates", async () => {
     postJsonMock.mockResolvedValue(buildContext([]));
+    const viewportSelector = '[data-calendar-month-vertical-viewport="true"]';
     const rect = (top: number, height = 96, width = 100): DOMRect => ({
       top,
       bottom: top + height,
@@ -2437,11 +2441,11 @@ describe("CalendarSurface characterization", () => {
     const rectSpy = vi
       .spyOn(HTMLElement.prototype, "getBoundingClientRect")
       .mockImplementation(function (this: HTMLElement) {
-        if (this.classList.contains("overflow-y-auto")) {
+        if (this.matches(viewportSelector)) {
           return rect(500, 544, 800);
         }
         if (this.dataset.day === "2026-08-10") {
-          const container = this.closest<HTMLElement>(".overflow-y-auto");
+          const container = this.closest<HTMLElement>(viewportSelector);
           return rect(1200 - (container?.scrollTop ?? 0));
         }
         return rect(0);
@@ -2481,7 +2485,7 @@ describe("CalendarSurface characterization", () => {
       );
 
       const scrollContainer = await waitFor(() => {
-        const element = container.querySelector<HTMLElement>(".overflow-y-auto");
+        const element = container.querySelector<HTMLElement>(viewportSelector);
         expect(element).not.toBeNull();
         return element as HTMLElement;
       });

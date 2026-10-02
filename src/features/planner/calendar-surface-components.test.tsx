@@ -180,17 +180,21 @@ describe("calendar surface extracted components", () => {
       </>
     );
 
-    expect(screen.getByRole("button", { name: /july 30/i })).toHaveClass("bg-adjacent");
+    expect(screen.getByRole("button", { name: /july 30/i })).toHaveClass("bg-muted/40");
     const todayCell = screen.getByRole("button", { name: /august 6/i });
-    expect(todayCell).toHaveClass("bg-today");
-    expect(todayCell).toHaveClass("text-today-foreground");
+    expect(todayCell).toHaveClass("bg-today/10");
+    expect(todayCell).toHaveClass("text-foreground");
+    expect(todayCell).toHaveAttribute("aria-current", "date");
+    expect(todayCell.querySelector('[data-plan-day-number]')).toHaveTextContent("6");
+    expect(todayCell.querySelector('[data-plan-day-number]')).toHaveClass("text-primary");
     const selectedCell = screen.getByRole("button", { name: /august 7/i });
     expect(selectedCell.className).toMatch(/ring-primary/);
+    expect(selectedCell).toHaveAttribute("aria-pressed", "true");
     expect(selectedCell).not.toHaveClass("bg-day-selected");
     expect(selectedCell).not.toHaveClass("bg-today");
     expect(selectedCell).not.toHaveClass("bg-adjacent");
     const adjacentToday = screen.getByRole("button", { name: /september 6/i });
-    expect(adjacentToday).toHaveClass("bg-today");
+    expect(adjacentToday).toHaveClass("bg-today/10");
     expect(adjacentToday).not.toHaveClass("bg-adjacent");
   });
 
@@ -475,7 +479,7 @@ describe("calendar surface extracted components", () => {
       viewTransitionName: "plan-day-2026-08-06",
     });
     expect(document.querySelector('[data-calendar-week-row="true"]')).toHaveClass(
-      "bg-today"
+      "bg-today/10"
     );
     const toggle = screen.getByRole("button", { name: "Mark session not done" });
     expect(
@@ -658,4 +662,3 @@ describe("CalendarPartnerChip", () => {
     expect(screen.getByText("Partner run")).not.toHaveClass("line-through");
   });
 });
-
