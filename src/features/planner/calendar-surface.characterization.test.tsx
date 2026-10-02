@@ -474,7 +474,7 @@ describe("CalendarSurface characterization", () => {
     vi.unstubAllGlobals();
   });
 
-  it("takes a second click to select a week agenda item on an unfocused day", async () => {
+  it("selects a week agenda item on an unfocused day in one click", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
         unit({
@@ -515,8 +515,8 @@ describe("CalendarSurface characterization", () => {
 
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-16", "push", "week");
     expect(
-      screen.queryByRole("region", { name: "Edit planned session" })
-    ).not.toBeInTheDocument();
+      await screen.findByRole("region", { name: "Edit planned session" })
+    ).toBeInTheDocument();
   });
 
   it("selects a week agenda item on the already focused day", async () => {
@@ -562,7 +562,7 @@ describe("CalendarSurface characterization", () => {
     ).toBeInTheDocument();
   });
 
-  it("takes a second click to select a month grid item on an unfocused day", async () => {
+  it("selects a month grid item on an unfocused day in one click", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
         unit({
@@ -602,11 +602,11 @@ describe("CalendarSurface characterization", () => {
 
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-31", "push", "month");
     expect(
-      screen.queryByRole("region", { name: "Edit planned session" })
-    ).not.toBeInTheDocument();
+      await screen.findByRole("region", { name: "Edit planned session" })
+    ).toBeInTheDocument();
   });
 
-  it("drops a stale goal focus when a month click only moves the day", async () => {
+  it("moves month goal focus when selecting an item on another day", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
         unit({
@@ -654,13 +654,14 @@ describe("CalendarSurface characterization", () => {
       expect((await entryOn("2026-08-20")).className).toContain("opacity-45");
     });
 
-    // The first click on another day only moves the day, so it must also clear
-    // the focus rather than leaving Goal A lit from the previous selection.
     fireEvent.click(await entryOn("2026-08-20"));
     await waitFor(async () => {
-      expect((await entryOn("2026-08-15")).className).not.toContain("opacity-45");
+      expect((await entryOn("2026-08-15")).className).toContain("opacity-45");
     });
     expect((await entryOn("2026-08-20")).className).not.toContain("opacity-45");
+    expect(
+      await screen.findByRole("region", { name: "Edit planned session" })
+    ).toBeInTheDocument();
   });
 
   it("keeps the selected day when switching from month to day view", async () => {
@@ -1494,14 +1495,14 @@ describe("CalendarSurface characterization", () => {
     const monthViewport = document.querySelector(
       '[data-calendar-month-vertical-viewport="true"]'
     );
-    expect(monthViewport).toHaveClass("max-h-[34rem]");
+    expect(monthViewport).toHaveClass("max-h-[45rem]");
     expect(monthViewport).toHaveClass(calendarStyles.monthGridScrollViewport);
 
     fireEvent.click(expandButton);
     expect(screen.getByTestId("plan-calendar-split")).toHaveClass(
       "md:grid-cols-[minmax(0,var(--plan-split-calendar))_minmax(0,var(--plan-split-pane))]"
     );
-    expect(monthViewport).not.toHaveClass("max-h-[34rem]");
+    expect(monthViewport).not.toHaveClass("max-h-[45rem]");
     expect(monthViewport).not.toHaveClass(calendarStyles.monthGridScrollViewport);
     expect(screen.getByTestId("plan-desktop-day-pane")).toBeInTheDocument();
   });

@@ -123,7 +123,10 @@ interface CalendarMonthDayCellProps<
   selectedEntryKey?: string | null;
 }
 
-const DEFAULT_MAX_VISIBLE_ITEMS_PER_DAY_CELL = 2;
+/** Compact month grid: goals shown before "+N more" (pairs with `.monthCell` min-height). */
+export const COMPACT_MONTH_MAX_VISIBLE_GOALS = 3;
+
+const DEFAULT_MAX_VISIBLE_ITEMS_PER_DAY_CELL = COMPACT_MONTH_MAX_VISIBLE_GOALS;
 
 function shouldSelectAgendaDayFromTarget(target: EventTarget | null) {
   return !(

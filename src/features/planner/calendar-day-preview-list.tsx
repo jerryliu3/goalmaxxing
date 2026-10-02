@@ -108,7 +108,7 @@ export function CalendarDayPreviewList<
       className={`overflow-x-hidden ${
         expanded
           ? "divide-y"
-          : "max-h-44 space-y-1.5 overflow-y-auto overscroll-y-contain text-xs [touch-action:pan-y] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          : "max-h-44 space-y-1.5 overflow-y-auto overscroll-y-auto text-xs [touch-action:pan-y] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       }`}
     >
       {entries.length === 0 && completionFactMarkers.length === 0 ? (

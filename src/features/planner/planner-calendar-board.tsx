@@ -327,7 +327,7 @@ export function PlannerCalendarBoard({
                     <div
                       ref={calendarGridViewportRef}
                       onScroll={onCalendarGridViewportScroll}
-                      className="min-w-0 overflow-x-auto pb-1"
+                      className="min-w-0 overflow-x-auto overscroll-x-auto pb-1"
                       data-calendar-horizontal-viewport="true"
                     >
                       {isMonthScopedCalendarViewMode(viewMode) ? (
@@ -360,7 +360,7 @@ export function PlannerCalendarBoard({
                             ref={multiMonthGridScrollRef}
                             onScroll={onMonthScopedGridScroll}
                             className={`${styles.monthGridViewport} ${
-                              expandedMonthRows ? "" : `${styles.monthGridScrollViewport} max-h-[34rem]`
+                              expandedMonthRows ? "" : `${styles.monthGridScrollViewport} max-h-[45rem]`
                             } [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`}
                             data-calendar-month-vertical-viewport="true"
                           >

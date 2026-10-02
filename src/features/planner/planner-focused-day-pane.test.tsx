@@ -289,7 +289,7 @@ describe("PlannerFocusedDayPane", () => {
     expect(screen.getByText("Thursday, Aug 6")).toBeInTheDocument();
   });
 
-  it("keeps the checklist on the page scroll below md and scrolls it in place above", () => {
+  it("keeps the checklist on the page scroll at every breakpoint", () => {
     renderWithDnd(
       <PlannerFocusedDayPane
         day="2026-08-06"
@@ -308,13 +308,10 @@ describe("PlannerFocusedDayPane", () => {
 
     const pane = screen.getByTestId("plan-day-pane");
     expect(pane).toHaveClass("overflow-x-hidden");
-    // No vertical scroller of its own on phones, so the gesture reaches the page.
     expect(pane).not.toHaveClass("overflow-y-auto");
-    expect(pane).not.toHaveClass("max-h-[min(70dvh,calc(100dvh-8rem))]");
-    expect(pane).toHaveClass("md:overflow-y-auto");
-    expect(pane).toHaveClass("md:max-h-[min(70dvh,calc(100dvh-8rem))]");
-    expect(pane.className).toContain("[scrollbar-width:none]");
-    expect(pane.className).toContain("[&::-webkit-scrollbar]:hidden");
+    expect(pane.className).not.toMatch(/max-h-\[min\(70dvh/);
+    expect(pane.className).not.toContain("md:overflow-y-auto");
+    expect(pane.className).not.toContain("md:max-h-[min(70dvh,calc(100dvh-8rem))]");
   });
 
   it("exposes weekday and day-number morph anchors when sharing the day transition", () => {
