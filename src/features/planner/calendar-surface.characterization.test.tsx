@@ -1552,6 +1552,9 @@ describe("CalendarSurface characterization", () => {
       { timeout: 2500 }
     );
     expect(expandAction).toBeInTheDocument();
+    // The popup's pointermove listener registers in a passive effect, which can
+    // flush after this lookup resolves; flush it so the events below are heard.
+    await act(async () => {});
 
     const popup = document.querySelector('[data-no-swipe="true"].fixed');
     expect(popup).not.toBeNull();

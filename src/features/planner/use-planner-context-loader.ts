@@ -14,6 +14,7 @@ import {
   buildCalendarVisibleDateWindow,
   selectCalendarViewWindowProjection,
 } from "@/features/planner/calendar-view-projection";
+import { buildGoalViewWindow } from "@/features/planner/goal-view/goal-view-model";
 import { getApiErrorMessage, getJson, postJson } from "@/lib/api/client";
 import {
   buildPlannerContextCacheKey,
@@ -38,6 +39,7 @@ interface UsePlannerContextLoaderArgs {
   month: string | null;
   selectedDay: string | null;
   viewMode: PlannerCalendarViewMode;
+  goalViewOpen: boolean;
   setupTimezone: string;
   setupWeekStartsOn: number;
   onMonthChange: (month: string, mode: "push" | "replace") => void;
@@ -56,6 +58,7 @@ export function usePlannerContextLoader({
   month,
   selectedDay,
   viewMode,
+  goalViewOpen,
   setupTimezone,
   setupWeekStartsOn,
   onMonthChange,
@@ -96,7 +99,11 @@ export function usePlannerContextLoader({
         weekStartsOn: setupWeekStartsOn,
         viewMode,
       });
-      const visibleWindow = buildCalendarVisibleDateWindow(projection.visibleDays);
+      // Goal View browses months of sessions at once, so it asks for its own
+      // wide window and never shares the month-keyed cache with calendar views.
+      const visibleWindow = goalViewOpen
+        ? buildGoalViewWindow(calendarToday)
+        : buildCalendarVisibleDateWindow(projection.visibleDays);
       if (!visibleWindow) {
         return false;
       }
@@ -104,7 +111,9 @@ export function usePlannerContextLoader({
       const visibleEnd = visibleWindow.end;
 
       const plannerContextCacheKey = buildPlannerContextCacheKey(month);
-      const cachedContextPayload = readTabDataCache<PlannerContextPayload>(plannerContextCacheKey);
+      const cachedContextPayload = goalViewOpen
+        ? null
+        : readTabDataCache<PlannerContextPayload>(plannerContextCacheKey);
       if (cachedContextPayload) {
         setContext(cachedContextPayload);
         if (cachedContextPayload.preferences?.timezone) {
@@ -178,7 +187,9 @@ export function usePlannerContextLoader({
       }
 
       setContext(contextPayload);
-      writeTabDataCache(plannerContextCacheKey, contextPayload);
+      if (!goalViewOpen) {
+        writeTabDataCache(plannerContextCacheKey, contextPayload);
+      }
       if (contextPayload.preferences?.timezone) {
         const policyForSetup =
           draftPolicyRef.current ?? contextPayload.preferences.defaultPolicy;
@@ -194,6 +205,7 @@ export function usePlannerContextLoader({
       draftPolicyRef,
       month,
       onMonthChange,
+      goalViewOpen,
       selectedDay,
       setContext,
       setError,

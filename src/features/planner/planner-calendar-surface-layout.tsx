@@ -6,6 +6,7 @@ import {
   resolveMonthRowAnchorDay,
   restoreCalendarDayScreenTop,
 } from "@/features/planner/calendar-scroll-position";
+import type { GoalViewSession } from "@/features/planner/goal-view/goal-view-model";
 import { PlannerCoachPanel } from "@/features/planner/coach/planner-coach-panel";
 import type { usePlannerCoach } from "@/features/planner/coach/use-planner-coach";
 import { PlannerCalendarBoard } from "@/features/planner/planner-calendar-board";
@@ -81,6 +82,10 @@ export interface PlannerCalendarSurfaceLayoutProps {
   hasUnsavedPlannerChanges: boolean;
   draftSaveBlocked: boolean;
   viewMode: PlannerCalendarViewMode;
+  goalViewOpen: boolean;
+  onGoalViewOpenChange: (open: boolean) => void;
+  goalViewSessions: GoalViewSession[];
+  onGoalViewMoveSession: (entry: PlannerDayDetailEntry, date: string) => void;
   showTasksInsteadOfGoals: boolean;
   onShowTasksInsteadOfGoalsChange: (value: boolean) => void;
   searchQuery: string;
