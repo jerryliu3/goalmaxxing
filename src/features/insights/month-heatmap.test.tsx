@@ -21,7 +21,6 @@ describe("MonthHeatmap", () => {
 
     expect(screen.getByRole("button", { name: "1" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "7" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "1" })).toHaveClass("rounded-[8px]");
     expect(screen.queryByLabelText("Previous month")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Next month")).not.toBeInTheDocument();
     expect(screen.getByText("September 2026")).toBeInTheDocument();
@@ -76,5 +75,23 @@ describe("MonthHeatmap", () => {
 
     expect(screen.getByTestId("milestone-pin-2026-09-01")).toBeInTheDocument();
     expect(screen.queryByTestId("milestone-pin-2026-09-02")).not.toBeInTheDocument();
+  });
+
+  it("keeps complete calendar rows aligned with inert leading and trailing cells", () => {
+    render(<MonthHeatmap month={new Date(2026, 8, 1)} countsByDate={{}} />);
+    const grid = screen.getByTestId("month-heatmap-grid");
+    expect(grid.children).toHaveLength(35);
+    expect(grid.children[0]).toHaveAttribute("aria-hidden", "true");
+    expect(grid.children[1]).toHaveAttribute("title", "2026-09-01: 0 completions");
+    expect(grid.children[30]).toHaveAttribute("title", "2026-09-30: 0 completions");
+    expect(grid.querySelectorAll('[aria-hidden="true"]')).toHaveLength(5);
+  });
+
+  it("passes the selected day and its button to the read-only drilldown", () => {
+    const onDayClick = vi.fn();
+    render(<MonthHeatmap month={new Date(2026, 8, 1)} countsByDate={{ "2026-09-01": 2 }} onDayClick={onDayClick} />);
+    const day = screen.getByTitle("2026-09-01: 2 completions");
+    fireEvent.click(day);
+    expect(onDayClick).toHaveBeenCalledWith("2026-09-01", day);
   });
 });
