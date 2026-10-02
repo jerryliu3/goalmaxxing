@@ -2,8 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
+import { useMediaQuery } from "@/lib/ui/use-media-query";
 import type { Goal } from "@/lib/goals/types";
 import { prefersReducedMotion } from "@/features/planner/plan-view-transition";
+import type { GoalTileLayout } from "./goal-dates";
+import { GoalDeck } from "./goal-deck";
 import { GoalRail } from "./goal-rail";
 import { GoalViewControls } from "./goal-view-controls";
 import type { GoalSessionCompletion } from "./goal-session-completion";
@@ -46,6 +49,9 @@ export function GoalView({
   onToggleSession,
 }: GoalViewProps) {
   const [showPast, setShowPast] = useState(false);
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+  // Same breakpoint as the app's other two-pane layouts (Tailwind `md`).
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const [weekPeekDate, setWeekPeekDate] = useState<string | null>(null);
   const range = useMemo(() => buildGoalViewWindow(today), [today]);
   const visibleGoals = useMemo(
@@ -53,6 +59,9 @@ export function GoalView({
     [goals, sessions]
   );
 
+  const selectedId =
+    visibleGoals.find((goal) => goal.id === selectedGoalId)?.id ??
+    visibleGoals[0]?.id;
   const editorGoalId = selectedEntryKey
     ? sessions.find((session) => session.key === selectedEntryKey)?.goalId
     : undefined;
@@ -72,10 +81,11 @@ export function GoalView({
     return () => cancelAnimationFrame(frame);
   }, [selectedEntryKey]);
 
-  const renderTile = (session: GoalViewSession) => (
+  const renderTile = (session: GoalViewSession, layout: GoalTileLayout) => (
     <GoalSessionTile
       key={session.key}
       session={session}
+      layout={layout}
       today={today}
       completion={resolveCompletion(session)}
       selected={session.key === selectedEntryKey}
@@ -94,11 +104,11 @@ export function GoalView({
         onPreview={() => setWeekPeekDate(today)}
       />
 
-      {visibleGoals.length === 0 ? (
+      {visibleGoals.length === 0 || !selectedId ? (
         <p className="py-10 text-center text-sm text-muted-foreground">
           No goals have scheduled sessions in this window.
         </p>
-      ) : (
+      ) : isDesktop ? (
         visibleGoals.map((goal) => (
           <GoalRail
             key={goal.id}
@@ -112,6 +122,19 @@ export function GoalView({
             renderTile={renderTile}
           />
         ))
+      ) : (
+        <GoalDeck
+          goals={visibleGoals}
+          selectedId={selectedId}
+          onSelect={setSelectedGoalId}
+          progressByGoalId={progressByGoalId}
+          sessions={sessions}
+          showPast={showPast}
+          weekStartsOn={weekStartsOn}
+          today={today}
+          editorSlotKey={selectedEntryKey}
+          renderTile={renderTile}
+        />
       )}
 
       <p className="pt-2 text-xs text-muted-foreground">
@@ -127,6 +150,8 @@ export function GoalView({
         onDateChange={setWeekPeekDate}
         onOpenSession={(session) => {
           setWeekPeekDate(null);
+          // The phone deck expands the editor under the chosen goal's dates.
+          setSelectedGoalId(session.goalId);
           onOpenSession(session);
         }}
       />

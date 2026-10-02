@@ -1,14 +1,22 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import type { Goal } from "@/lib/goals/types";
+import { cn } from "@/lib/utils";
 import {
   dateLabel,
   GOAL_VIEW_PAGE_SIZE,
   groupSessions,
   type GoalViewSession,
 } from "./goal-view-model";
+
+/** `card` tiles sit in a horizontal rail; `row` tiles stack in a vertical list. */
+export type GoalTileLayout = "card" | "row";
+export type GoalTileRenderer = (
+  session: GoalViewSession,
+  layout: GoalTileLayout
+) => ReactNode;
 
 export const overlineClass =
   "font-mono text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground";
@@ -76,12 +84,18 @@ export function GoalDatesHeading({
 export function GoalDates({
   dates,
   showPast,
+  layout,
+  editorSlotKey = null,
   renderTile,
 }: {
   dates: GoalDatesModel;
   showPast: boolean;
-  renderTile: (session: GoalViewSession) => ReactNode;
+  layout: GoalTileLayout;
+  /** Row layout expands the planner's session editor right under its row. */
+  editorSlotKey?: string | null;
+  renderTile: GoalTileRenderer;
 }) {
+  const row = layout === "row";
   return (
     <>
       {dates.groups.map((group) => (
@@ -91,8 +105,15 @@ export function GoalDates({
           data-upcoming-start={group.date === dates.upcomingGroupDate ? "" : undefined}
         >
           <h3 className={`pb-2 ${overlineClass}`}>{group.label}</h3>
-          <div className="flex gap-2">
-            {group.entries.map((session) => renderTile(session))}
+          <div className={row ? "flex flex-col gap-1.5" : "flex gap-2"}>
+            {group.entries.map((session) => (
+              <Fragment key={session.key}>
+                {renderTile(session, layout)}
+                {row && session.key === editorSlotKey ? (
+                  <div data-plan-checklist-editor-slot={session.key} />
+                ) : null}
+              </Fragment>
+            ))}
           </div>
         </div>
       ))}
@@ -107,9 +128,12 @@ export function GoalDates({
         <button
           type="button"
           onClick={dates.showMore}
-          className="flex w-36 flex-none flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-xs text-muted-foreground hover:bg-muted/50"
+          className={cn(
+            "flex flex-col items-center gap-1 rounded-xl border border-dashed border-border text-xs text-muted-foreground hover:bg-muted/50",
+            row ? "w-full p-4" : "w-36 flex-none justify-center"
+          )}
         >
-          <ArrowRight size={19} aria-hidden />
+          {row ? null : <ArrowRight size={19} aria-hidden />}
           <strong className="text-foreground">More dates</strong>
           <span>{dates.remaining} still to explore</span>
         </button>

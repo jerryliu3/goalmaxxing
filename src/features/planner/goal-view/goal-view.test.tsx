@@ -1,10 +1,12 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import type { Goal } from "@/lib/goals/types";
 import { GoalView, type GoalViewProps } from "./goal-view";
 import { buildGoalViewSessions, type GoalViewSession } from "./goal-view-model";
 
+const viewport = vi.hoisted(() => ({ desktop: true }));
+vi.mock("@/lib/ui/use-media-query", () => ({ useMediaQuery: () => viewport.desktop }));
 vi.mock("motion/react", () => ({ useReducedMotion: () => false }));
 vi.mock("./goal-view-card", () => ({
   GoalViewCard: ({ goal }: { goal: Goal }) => <div data-testid={`card-${goal.id}`} />,
@@ -83,7 +85,10 @@ function renderView(overrides: Partial<GoalViewProps> = {}) {
 }
 
 describe("GoalView", () => {
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    viewport.desktop = true;
+  });
 
   it("shows one rail per goal with a card and its upcoming dates", () => {
     renderView();
@@ -181,6 +186,78 @@ describe("GoalView", () => {
       expect.objectContaining({ goalId: "gym" })
     );
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  describe("on a phone", () => {
+    beforeEach(() => {
+      viewport.desktop = false;
+      // jsdom does not implement element scrolling; the deck centers cards.
+      Element.prototype.scrollTo = vi.fn();
+    });
+
+    it("swipes between goal cards and lists the selected goal's dates vertically", () => {
+      renderView();
+      expect(screen.getByText("Goal 1 of 2")).toBeInTheDocument();
+      expect(screen.getByTestId("card-run")).toBeInTheDocument();
+      expect(screen.getByTestId("card-gym")).toBeInTheDocument();
+      expect(screen.getByLabelText("Swipe between goal cards")).toBeInTheDocument();
+
+      const run = screen.getByRole("region", { name: "Run a half marathon scheduled dates" });
+      expect(within(run).getAllByRole("article")).toHaveLength(2);
+      expect(
+        screen.queryByRole("region", { name: "Get stronger scheduled dates" })
+      ).toBeNull();
+      // Dates stack in a column instead of a horizontally scrolling track.
+      expect(within(run).queryByLabelText(/dates, scroll to explore/)).toBeNull();
+    });
+
+    it("selects another goal from the arrows and the dots", () => {
+      renderView();
+      fireEvent.click(screen.getByRole("button", { name: "Next goal" }));
+      expect(screen.getByText("Goal 2 of 2")).toBeInTheDocument();
+      const gym = screen.getByRole("region", { name: "Get stronger scheduled dates" });
+      expect(within(gym).getAllByRole("article")).toHaveLength(1);
+      expect(screen.getByRole("button", { name: "Next goal" })).toBeDisabled();
+
+      fireEvent.click(screen.getByRole("button", { name: "Select Run a half marathon" }));
+      expect(screen.getByText("Goal 1 of 2")).toBeInTheDocument();
+    });
+
+    it("expands the planner editor right under the selected row", () => {
+      renderView({ selectedEntryKey: "run:2026-10-09" });
+      const slot = screen
+        .getByRole("region", { name: "Run a half marathon scheduled dates" })
+        .querySelector('[data-plan-checklist-editor-slot="run:2026-10-09"]');
+      expect(slot?.previousElementSibling).toHaveAttribute(
+        "data-planner-entry-key",
+        "run:2026-10-09"
+      );
+    });
+
+    it("jumps the deck to the goal of a session chosen in the preview", () => {
+      renderView();
+      fireEvent.click(screen.getByRole("button", { name: "Preview goals" }));
+      fireEvent.click(
+        within(screen.getByRole("dialog")).getAllByRole("button", {
+          name: /Get stronger/,
+        })[0]
+      );
+      expect(screen.getByText("Goal 2 of 2")).toBeInTheDocument();
+    });
+
+    it("keeps nudging and completing available from the vertical rows", () => {
+      const props = renderView();
+      fireEvent.click(screen.getByRole("button", { name: "Next goal" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "Move gym session one day later" })
+      );
+      expect(props.onMoveSession).toHaveBeenCalledWith(
+        expect.objectContaining({ key: "gym:2026-10-03" }),
+        "2026-10-04"
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Complete gym session" }));
+      expect(props.onToggleSession).toHaveBeenCalledTimes(1);
+    });
   });
 
   it("explains an empty window", () => {

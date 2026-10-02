@@ -194,3 +194,28 @@ Week orientation and placement changes, and preservation of a distant date
 anchor. Expensive material and drag leaves are substituted; the composition,
 navigation and reducer are real. New coverage was written but not run. No performance claim has
 been verified in a browser.
+
+## In the product
+
+Goal View ships as the first option in the Plan view switch (Goal View / Day /
+Week / Month), not as a separate route. Code lives in
+`src/features/planner/goal-view/`.
+
+- Desktop is Card Rails. Phone (below the `md` breakpoint) is swipeable goal
+  cards with the selected goal's dates as a vertical list; the cards and goal
+  selector stay horizontal.
+- Dates are grouped by planner week and show upcoming sessions by default. A
+  "Show past sessions" checkbox adds the past ones. The planner's Filters
+  "Show completed goals" toggle hides completed goals here too.
+- It is a lens on the planner context, not a new data path. Opening it loads a
+  361-day window (60 days back, 300 forward) and skips the month-keyed tab
+  cache. Sessions come from the planner's filtered day entries, so search,
+  filters and unsaved draft moves apply.
+- Writes use the canonical paths: one-day nudges queue planner draft moves
+  (Planning Mode, Save, Undo), and completion uses `toggleDateFact`. Choosing a
+  date expands the planner's session editor (the same goal card and date, time
+  and lock controls used under the Day checklist) in a slot under that goal's
+  dates.
+- "Preview goals" is a read-only week overview across goals that hands a chosen
+  session to the same editor.
+- Goal Desk and Time Weave remain study-only for now.
