@@ -12,6 +12,15 @@ export default function UxHubPage() {
         </h1>
         <ul className="mt-10 space-y-4">
           <li>
+            <Link className="text-lg font-semibold underline" href="/ux/goal-view">
+              Goal View — Card Rails and Goal Desk
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Real goal cards, editable scheduled dates, goal filtering, and
+              swipeable or vertical phone arrangements. Includes long and ongoing goals.
+            </p>
+          </li>
+          <li>
             <Link className="text-lg font-semibold underline" href="/ux/interface-craft">
               Everyday interface — planner interaction models
             </Link>
