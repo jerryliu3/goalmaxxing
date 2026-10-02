@@ -79,7 +79,7 @@ export function planAgendaDayNumberClass({
   isSelected: boolean;
 }): string {
   return cn(
-    "mt-0.5 inline-flex size-8 items-center justify-center rounded-lg text-[23px] font-medium leading-none tracking-tight",
+    "mt-0.5 inline-flex size-8 items-center justify-center rounded-lg text-lg font-medium leading-none tracking-tight",
     isToday && "bg-today/10 text-primary",
     isSelected && !isToday && "text-primary ring-2 ring-inset ring-primary"
   );
