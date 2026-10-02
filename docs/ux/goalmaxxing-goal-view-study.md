@@ -3,6 +3,8 @@
 Route: `/ux/goal-view`. Uses the existing moderator-only UX lab gate.
 Exploratory, not a product lock or a production calendar cutover.
 
+Time Weave: `/ux/goal-view/time-weave`, a separate **Week configuration**.
+
 ## The two directions
 
 **Card Rails** puts the real material goal card beside a horizontal track of
@@ -74,3 +76,52 @@ Functional coverage is written in `model.test.ts` for save/undo, completion
 eligibility, date/order guards, extended schedules and period progress. No
 tests, typecheck, lint, build, browser checks or CI were run, per repository
 workflow. Visual and interaction performance still require approved review.
+
+## Time Weave as a Week configuration
+
+Calendar / Time Weave is an in-place Week layout setting. Both show the same
+local plan and retain draft edits, completions, goal focus and selected day.
+The date headers select a day; its agenda below orders sessions by local time
+across goals and exposes the shared completion and date-edit controls.
+
+The Weave uses one horizontally scrollable date canvas, from September 29,
+2025 to October 1, 2028. Goal labels stay fixed at the left and date labels
+stay above their rows. Scroll with native trackpad/touch momentum, arrow-key
+focus on the region, or the scrollbar; navigate by week, Today or a date jump.
+Goal labels also toggle focus. Roomy / Compact changes day width while keeping
+the leading date and fractional-day offset.
+
+Rows have a quiet thread connecting saved placements, with category-tinted
+session pills. Drag handles use the existing planner sensors, collision
+logic, draggable entries and day targets. A column represents a date, so a
+drag changes the original goal's date regardless of which row it crosses.
+Handles also support Space, Left/Right and Escape. The shared editor remains
+the direct date/time alternative. Locked and completed sessions do not drag.
+Invalid moves retain their original date and announce the local guard error.
+
+### Scrolling and animation choices
+
+- Stable geometry: every civil day has the same width, including empty dates.
+  Scroll is native; there is no scroll-linked spring or mandatory snapping.
+- A viewport window with eight days of overscan mounts date headers, date drop
+  targets and only nearby session pills. Simple CSS lines supply the grid;
+  the three-year range is not three years of DOM cells.
+- Passive scroll listeners schedule at most one range update per animation
+  frame; React state changes only when the day window changes. Density keeps
+  the date anchor. Motion's scroll-aware measurement prevents date moves from
+  treating a scrolled viewport as a layout displacement.
+- Calendar/Weave changes fade in for 140 ms; a moved pill changes position over
+  180 ms. Large material cards are absent from this scrolling board. Reduced
+  motion removes the fade and move animation and makes navigation immediate.
+
+This tests a large finite range rather than pretending it is infinite. An
+eventual production version could extend date windows as the user approaches
+an edge, preserving a date anchor; that would need data fetching and scroll
+performance review. The sample's saved dates still stop in January 2027. Empty
+future space never manufactures scheduled recurrences.
+
+Goal View and the separate Week study each own their local sample state;
+navigation between routes resets the sample, while switches inside each route
+preserve edits. Axis coverage in `weave-axis.test.ts` includes distant dates,
+leap day, render-window bounds and density anchors. No performance claim has
+been verified in a browser.
