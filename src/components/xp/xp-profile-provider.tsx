@@ -19,6 +19,7 @@ import {
   captureViewportRect,
   subscribeXpRefresh,
   type XpRefreshRequestDetail,
+  type ViewportRectSnapshot,
 } from "@/lib/xp/events";
 
 interface XpProfilePayload {
@@ -90,6 +91,36 @@ export function XpProfileProvider({
   const displayedAwardIdsRef = useRef(new Set<string>());
   const acknowledgedAwardIdsRef = useRef(new Set<string>());
   const inFlightAwardIdsRef = useRef(new Set<string>());
+  const rewardArrivalTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cancelRewardArrival = useCallback(() => {
+    if (rewardArrivalTimer.current !== null) {
+      clearTimeout(rewardArrivalTimer.current);
+      rewardArrivalTimer.current = null;
+    }
+  }, []);
+
+  // Canonical XP updates immediately in profileRef. Only its presentation waits
+  // for the stars, so a server refresh cannot fill the bar ahead of their arrival.
+  const presentReward = useCallback((amount: number, sourceRect?: ViewportRectSnapshot, motionStartedAt?: number) => {
+    cancelRewardArrival();
+    const target = document.querySelector("[data-xp-reward-target='true']");
+    const delay = target && sourceRect ? celebrate({
+      sourceRect,
+      targetRect: captureViewportRect(target),
+      amount,
+      motionStartedAt,
+    }) : 0;
+    const arrive = () => {
+      rewardArrivalTimer.current = null;
+      setProfile(profileRef.current);
+      setRewardSequence(current => current + 1);
+    };
+    if (delay > 0) rewardArrivalTimer.current = setTimeout(arrive, delay);
+    else arrive();
+  }, [cancelRewardArrival, celebrate]);
+
+  useEffect(() => cancelRewardArrival, [cancelRewardArrival]);
 
   const acknowledgeAward = useCallback(async (awardId: string) => {
     try {
@@ -142,7 +173,6 @@ export function XpProfileProvider({
         }
 
         profileRef.current = payload.profile;
-        setProfile(payload.profile);
         setTracks(payload.tracks ?? []);
         setNextReward(payload.nextReward ?? null);
         setLoading(false);
@@ -152,14 +182,9 @@ export function XpProfileProvider({
           payload.profile.totalXp > previousProfile.totalXp &&
           request?.desiredFactState === "present";
         if (xpIncreased) {
-          const target = document.querySelector("[data-xp-reward-target='true']");
-          if (target && request.sourceRect) {
-            celebrate({
-              sourceRect: request.sourceRect,
-              targetRect: captureViewportRect(target),
-            });
-          }
-          setRewardSequence((current) => current + 1);
+          presentReward(payload.profile.totalXp - previousProfile.totalXp, request.sourceRect, request.motionStartedAt);
+        } else if (rewardArrivalTimer.current === null) {
+          setProfile(payload.profile);
         }
 
         for (const award of payload.pendingAwards ?? []) {
@@ -189,11 +214,12 @@ export function XpProfileProvider({
         setLoading(false);
       }
     },
-    [acknowledgeAward, celebrate]
+    [acknowledgeAward, presentReward]
   );
 
   useEffect(() => {
     if (!enabled) {
+      cancelRewardArrival();
       queueMicrotask(() => {
         setLoading(false);
         setProfile(null);
@@ -204,7 +230,7 @@ export function XpProfileProvider({
     }
 
     void loadProfile();
-  }, [enabled, loadProfile]);
+  }, [cancelRewardArrival, enabled, loadProfile]);
 
   useReportAppBootGateReady("xp", !enabled || !loading);
 
@@ -213,6 +239,9 @@ export function XpProfileProvider({
       return;
     }
     return subscribeXpRefresh((detail) => {
+      if (detail?.desiredFactState === "absent") {
+        cancelRewardArrival();
+      }
       if (
         detail &&
         profileRef.current &&
@@ -227,21 +256,15 @@ export function XpProfileProvider({
           ...progression,
         };
         profileRef.current = nextProfile;
-        setProfile(nextProfile);
-        if (detail.desiredFactState === "present") {
-          const target = document.querySelector("[data-xp-reward-target='true']");
-          if (target && detail.sourceRect) {
-            celebrate({
-              sourceRect: detail.sourceRect,
-              targetRect: captureViewportRect(target),
-            });
-          }
-          setRewardSequence((current) => current + 1);
+        if (detail.desiredFactState === "present" && detail.xpDelta > 0) {
+          presentReward(detail.xpDelta, detail.sourceRect, detail.motionStartedAt);
+        } else if (rewardArrivalTimer.current === null) {
+          setProfile(nextProfile);
         }
       }
       void loadProfile(detail ?? null);
     });
-  }, [celebrate, enabled, loadProfile]);
+  }, [cancelRewardArrival, presentReward, enabled, loadProfile]);
 
   const value = useMemo<XpProfileContextValue>(
     () => ({

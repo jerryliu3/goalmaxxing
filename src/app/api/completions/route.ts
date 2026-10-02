@@ -20,6 +20,8 @@ import {
   tryAtomicPlannerMoveCompletion,
   uncompletePlannerCompletion,
 } from "@/lib/planner/atomic-completion";
+import { prepareCompletionFeedback } from "@/lib/goals/completion-feedback-server";
+import type { CompletionFeedback } from "@/lib/goals/completion-feedback";
 
 export const runtime = "nodejs";
 
@@ -28,7 +30,8 @@ const MAX_REQUEST_BYTES = 16 * 1024;
 function completionSuccessResponse(
   payload: Record<string, unknown>,
   xpDelta: number,
-  correlationId: string
+  correlationId: string,
+  feedback?: CompletionFeedback,
 ) {
   return NextResponse.json(
     {
@@ -36,6 +39,7 @@ function completionSuccessResponse(
       ...payload,
       xpDelta,
       correlationId,
+      feedback,
     },
     { headers: { "Cache-Control": "no-store" } }
   );
@@ -82,6 +86,10 @@ export async function handleCompletionPost(request: Request) {
     }
     const goal = plannerGoalSchema.parse(rawGoal);
 
+    const readFeedback = desiredFactState === "present"
+      ? await prepareCompletionFeedback(routeContext.supabase, routeContext.userId, goalId, getDateInTimezone(new Date(), timezone))
+      : null;
+
     if (plannerItemExpectation) {
       const result = await applyPlannerItemDateFact({
         supabase: routeContext.supabase,
@@ -98,7 +106,7 @@ export async function handleCompletionPost(request: Request) {
         throw new PlannerRouteError(result.status, result.code, result.message);
       }
       const xpDelta = await previewQueuedXpDeltaThenDrain(routeContext.supabase);
-      return completionSuccessResponse(result.payload, xpDelta, correlationId);
+      return completionSuccessResponse(result.payload, xpDelta, correlationId, await readFeedback?.(result.payload.date));
     }
 
     if (desiredFactState === "present") {
@@ -164,7 +172,8 @@ export async function handleCompletionPost(request: Request) {
               scheduleDigest: atomic.scheduleDigest,
             },
             xpDelta,
-            correlationId
+            correlationId,
+            await readFeedback?.(date),
           );
         }
       } catch (error) {
@@ -201,7 +210,7 @@ export async function handleCompletionPost(request: Request) {
         throw new PlannerRouteError(result.status, result.code, result.message);
       }
       const xpDelta = await previewQueuedXpDeltaThenDrain(routeContext.supabase);
-      return completionSuccessResponse(result.payload, xpDelta, correlationId);
+      return completionSuccessResponse(result.payload, xpDelta, correlationId, await readFeedback?.(result.payload.date));
     }
 
     if (desiredFactState === "absent") {
@@ -288,7 +297,8 @@ export async function handleCompletionPost(request: Request) {
         factState: desiredFactState,
       },
       xpDelta,
-      correlationId
+      correlationId,
+      await readFeedback?.(date),
     );
   });
 }

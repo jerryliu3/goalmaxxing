@@ -69,6 +69,8 @@ describe("useCompletionMutation", () => {
         desiredFactState: "present",
         sourceRect,
         xpDelta: 40,
+        feedback: undefined,
+        motionStartedAt: expect.any(Number),
       },
     ]);
     expect(invalidateSocialFeedCache).toHaveBeenCalledTimes(1);

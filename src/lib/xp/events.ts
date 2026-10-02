@@ -1,3 +1,5 @@
+import type { CompletionFeedback } from "@/lib/goals/completion-feedback";
+
 export interface ViewportRectSnapshot {
   top: number;
   left: number;
@@ -11,6 +13,8 @@ export interface XpRefreshRequestDetail {
   sourceRect?: ViewportRectSnapshot;
   xpDelta?: number;
   goalId?: string;
+  feedback?: CompletionFeedback;
+  motionStartedAt?: number;
 }
 
 type XpRefreshListener = (detail?: XpRefreshRequestDetail) => void;

@@ -56,6 +56,8 @@ vi.mock("@/lib/navigation/use-client-search-params-updater", () => ({
 
 describe("CalendarPageShell", () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-06T12:00:00.000Z"));
     resetRememberedCalendarViewModeForTests();
     mocks.applySearchParams.mockReset();
     mocks.applySearchParams.mockImplementation((update, mode) => {

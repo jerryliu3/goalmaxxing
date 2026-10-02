@@ -1,6 +1,6 @@
 const LIGHT_PRESS_DURATION_MS = 8;
 
-export function triggerLightPressFeedback(): boolean {
+export function triggerLightPressFeedback(durationMs = LIGHT_PRESS_DURATION_MS): boolean {
   if (
     typeof navigator === "undefined" ||
     typeof navigator.vibrate !== "function"
@@ -17,7 +17,7 @@ export function triggerLightPressFeedback(): boolean {
   }
 
   try {
-    return navigator.vibrate(LIGHT_PRESS_DURATION_MS);
+    return navigator.vibrate(durationMs);
   } catch {
     return false;
   }

@@ -1,4 +1,5 @@
 import { isAbortError } from "@/lib/async/abort";
+import { completionFeedbackSchema, type CompletionFeedback } from "@/lib/goals/completion-feedback";
 
 export interface CompletionDispatchInput {
   requirementKind:
@@ -50,6 +51,7 @@ export interface CompletionDispatchExecutionResult {
   ok: boolean;
   message: string | null;
   xpDelta?: number;
+  feedback?: CompletionFeedback;
 }
 
 type ExecutableCompletionRoute = Exclude<CompletionDispatchRoute, "disabled">;
@@ -135,10 +137,12 @@ async function postJsonRoute({
   }
   if (response.ok) {
     const payload = await response.json().catch(() => null);
+    const feedback = completionFeedbackSchema.safeParse(payload?.feedback);
     return {
       ok: true as const,
       message: null,
       xpDelta: parseXpDelta(payload),
+      feedback: feedback.success ? feedback.data : undefined,
     };
   }
   const payload = await response.json().catch(() => null);
