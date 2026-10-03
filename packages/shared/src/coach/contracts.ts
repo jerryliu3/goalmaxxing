@@ -85,3 +85,19 @@ export const coachContextSchema = z.object({
   goalsCount:z.number(), selectedSessions:z.array(coachSessionSchema),
 });
 export type CoachContext = z.infer<typeof coachContextSchema>;
+
+export const coachBootstrapSchema = z.object({
+  homeThreadId: z.uuid(), topics: z.array(coachTopicSchema),
+  threads: z.array(coachThreadSchema), memories: z.array(coachMemorySchema),
+});
+export const coachConversationSchema = z.object({
+  thread: coachThreadSchema, messages: z.array(coachMessageSchema), before: z.number().nullable(),
+  actions: z.array(coachActionSchema), runs: z.array(coachRunSchema),
+});
+export const coachStreamEventSchema = z.discriminatedUnion("event", [
+  z.object({ event: z.literal("accepted"), data: z.object({ run: coachRunSchema }) }),
+  z.object({ event: z.literal("stage"), data: z.object({ stage: z.enum(["context_ready", "generating"]) }) }),
+  z.object({ event: z.literal("settled"), data: z.object({ runId: z.uuid() }) }),
+  z.object({ event: z.literal("error"), data: z.object({ code: z.string(), message: z.string(), correlationId: z.string() }) }),
+]);
+export type CoachConversation = z.infer<typeof coachConversationSchema>;

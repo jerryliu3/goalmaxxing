@@ -49,6 +49,7 @@
     "./supabase/database.types": "./src/supabase/database.types.ts",
     "./brand/gazetteer": "./src/brand/gazetteer.ts",
     "./tokens": "./src/tokens.ts",
+    "./coach/transport": "./src/coach/transport.ts",
     "./coach": "./src/coach/contracts.ts",
     "./coach/database": "./src/coach/database.ts"
   },
