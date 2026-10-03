@@ -63,13 +63,16 @@ describe("PlannerGoalView", () => {
     expect(captured.goals.map((goal) => goal.id)).toEqual(["run", "done"]);
   });
 
-  it("drops the sessions of hidden goals so the preview matches", () => {
-    const doneSession = { ...session, key: "done:1", goalId: "done" };
-    mount({ sessions: [session, doneSession] });
-    expect(captured.sessions).toEqual([session]);
-    cleanup();
-    mount({ sessions: [session, doneSession], showCompletedGoals: true });
-    expect(captured.sessions).toEqual([session, doneSession]);
+  it("keeps a completed goal that still has sessions today or later", () => {
+    const upcoming = { ...session, key: "done:1", goalId: "done" };
+    mount({ sessions: [session, upcoming] });
+    expect(captured.goals.map((goal) => goal.id)).toEqual(["run", "done"]);
+  });
+
+  it("hides a completed goal whose sessions are all in the past", () => {
+    const past = { ...session, key: "done:1", goalId: "done", date: "2026-10-01" };
+    mount({ sessions: [session, past] });
+    expect(captured.goals.map((goal) => goal.id)).toEqual(["run"]);
   });
 
   it("keeps an achieved goal with no period target visible", () => {

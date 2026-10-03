@@ -104,16 +104,35 @@ export function sessionsForGoal(
     .sort(byDateTime);
 }
 
+/** Goals with a session today or later. */
+export function goalIdsWithUpcomingSessions(
+  sessions: readonly GoalViewSession[],
+  today: string
+) {
+  return new Set(
+    sessions.filter((session) => session.date >= today).map((s) => s.goalId)
+  );
+}
+
 /**
  * Goals that have at least one session, in the planner's own goal order so
- * cards never reshuffle while dates are completed or moved.
+ * cards never reshuffle while dates are completed or moved. Goals that ended
+ * before today, or have nothing left to do, only appear with `showPast`.
  */
 export function selectGoalViewGoals(
   goals: readonly Goal[],
-  sessions: readonly GoalViewSession[]
+  sessions: readonly GoalViewSession[],
+  { showPast, today }: { showPast: boolean; today: string }
 ) {
-  const withSessions = new Set(sessions.map((session) => session.goalId));
-  return goals.filter((goal) => withSessions.has(goal.id));
+  if (showPast) {
+    const withSessions = new Set(sessions.map((session) => session.goalId));
+    return goals.filter((goal) => withSessions.has(goal.id));
+  }
+  const upcoming = goalIdsWithUpcomingSessions(sessions, today);
+  return goals.filter(
+    (goal) =>
+      upcoming.has(goal.id) && !(goal.end_date && goal.end_date < today)
+  );
 }
 
 /** Sessions grouped by planner week, in the order given. */

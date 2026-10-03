@@ -134,7 +134,6 @@ function SelectedGoalDates({
       <div className="flex flex-col gap-4">
         <GoalDates
           dates={dates}
-          showPast={showPast}
           layout="row"
           renderTile={renderTile}
         />
