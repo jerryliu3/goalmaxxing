@@ -21,6 +21,15 @@ export default function UxHubPage() {
             </p>
           </li>
           <li>
+            <Link className="text-lg font-semibold underline" href="/prototype/coach">
+              Companion — continuous coach experience
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Expand from your current page into rooms. Explore live sample context,
+              separate conversations, check-ins, understanding, and reviewed changes.
+            </p>
+          </li>
+          <li>
             <Link className="text-lg font-semibold underline" href="/ux/interface-craft">
               Everyday interface — planner interaction models
             </Link>
