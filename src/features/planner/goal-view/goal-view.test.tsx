@@ -137,6 +137,11 @@ describe("GoalView", () => {
     });
     const showPicker = vi.fn();
     const field = button.parentElement!.querySelector<HTMLInputElement>('input[type="date"]')!;
+    // Only the date is a control: the rest of the tile is not a button.
+    expect(
+      within(run).queryByRole("button", { name: /^Edit run session/ })
+    ).toBeNull();
+    expect(button).toHaveTextContent(/^9\s*Oct$/);
     field.showPicker = showPicker;
     fireEvent.click(button);
     expect(showPicker).toHaveBeenCalledTimes(1);
@@ -212,6 +217,14 @@ describe("GoalView", () => {
     const current = within(weeks).getByRole("region", { name: "Week of Sep 28" });
     expect(current).toHaveAttribute("data-current-week");
     expect(within(current).getAllByText("Get stronger").length).toBeGreaterThan(0);
+  });
+
+  it("jumps back to the current week from the preview's Today button", () => {
+    const scrollTo = vi.fn();
+    Element.prototype.scrollTo = scrollTo;
+    renderView({ previewOpen: true });
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Today" }));
+    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ behavior: "smooth" }));
   });
 
   describe("on a phone", () => {

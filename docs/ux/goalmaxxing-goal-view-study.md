@@ -206,9 +206,9 @@ Week / Month), not as a separate route. Code lives in
   selector stay horizontal.
 - Dates are grouped by planner week and show upcoming sessions by default. The
   planner's Filters dialog adds a "Show past sessions" checkbox while Goal View
-  is open, and its "Show completed goals" toggle hides completed goals (period
-  target met or goal achieved) and their sessions here too, including from the
-  preview.
+  is open, and its "Show completed goals" toggle hides goals the checklist
+  treats as completed and their sessions here too, including from the preview.
+  An achieved goal that is still ongoing (no end date) stays visible.
 - It is a lens on the planner context, not a new data path. Opening it loads a
   361-day window (60 days back, 300 forward) and skips the month-keyed tab
   cache. Sessions come from the planner's filtered day entries, so search,

@@ -63,15 +63,18 @@ describe("PlannerGoalView", () => {
     expect(captured.goals.map((goal) => goal.id)).toEqual(["run", "done"]);
   });
 
-  it("hides achieved goals and their sessions, and shows them with the toggle", () => {
-    const achieved = { goalId: "run", outcome: "achieved" } as never;
-    mount({ progressSummaries: [achieved] });
-    expect(captured.goals).toEqual([]);
-    expect(captured.sessions).toEqual([]);
-    cleanup();
-    mount({ progressSummaries: [achieved], showCompletedGoals: true });
-    expect(captured.goals.map((goal) => goal.id)).toEqual(["run", "done"]);
+  it("drops the sessions of hidden goals so the preview matches", () => {
+    const doneSession = { ...session, key: "done:1", goalId: "done" };
+    mount({ sessions: [session, doneSession] });
     expect(captured.sessions).toEqual([session]);
+    cleanup();
+    mount({ sessions: [session, doneSession], showCompletedGoals: true });
+    expect(captured.sessions).toEqual([session, doneSession]);
+  });
+
+  it("keeps an achieved goal with no period target visible", () => {
+    mount({ progressSummaries: [{ goalId: "run", outcome: "achieved" } as never] });
+    expect(captured.goals.map((goal) => goal.id)).toEqual(["run"]);
   });
 
   it("moves and toggles through the planner commands", () => {

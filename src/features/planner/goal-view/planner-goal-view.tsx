@@ -59,18 +59,12 @@ export function PlannerGoalView({
     () => new Map(progressSummaries.map((summary) => [summary.goalId, summary])),
     [progressSummaries]
   );
-  // A goal is completed when its period target is met (the checklist's rule) or
-  // the goal itself is achieved, which the checklist's date-scoped rule can miss.
   const visibleGoals = useMemo(
     () =>
       showCompletedGoals
         ? goals
-        : goals.filter(
-            (goal) =>
-              !completedGoalIds.has(goal.id) &&
-              progressByGoalId.get(goal.id)?.outcome !== "achieved"
-          ),
-    [goals, completedGoalIds, progressByGoalId, showCompletedGoals]
+        : goals.filter((goal) => !completedGoalIds.has(goal.id)),
+    [goals, completedGoalIds, showCompletedGoals]
   );
   // Sessions follow their goal, so hidden goals leave the preview too.
   const visibleSessions = useMemo(() => {

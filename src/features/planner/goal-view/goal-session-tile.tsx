@@ -29,8 +29,9 @@ function statusLabel(session: GoalViewSession, today: string) {
 }
 
 /**
- * The tile's main target. It opens the browser's date picker on a hidden date
- * input anchored to the tile, so choosing a date is one click.
+ * The session's date, the only part of a tile that changes it. Clicking opens
+ * the browser's date picker on a hidden date input anchored to the date, and
+ * hover shading shows that it is a control.
  */
 function SessionDateButton({
   session,
@@ -43,7 +44,7 @@ function SessionDateButton({
   session: GoalViewSession;
   today: string;
   disabled: boolean;
-  className: string;
+  className?: string;
   onMove: (session: GoalViewSession, date: string) => void;
   children: ReactNode;
 }) {
@@ -55,13 +56,17 @@ function SessionDateButton({
     else field.click();
   };
   return (
-    <div className="relative min-w-0">
+    <div className="relative">
       <button
         type="button"
         disabled={disabled}
         aria-label={`Change date of ${session.label}, ${dateLabel(session.date)}`}
+        title={disabled ? undefined : "Change date"}
         onClick={openPicker}
-        className={cn("w-full text-left enabled:hover:bg-muted/50 disabled:cursor-default", className)}
+        className={cn(
+          "rounded-lg px-2 py-1 text-left transition-colors enabled:cursor-pointer enabled:hover:bg-muted disabled:cursor-default",
+          className
+        )}
       >
         {children}
       </button>
@@ -165,19 +170,20 @@ export function GoalSessionTile({
             {statusLabel(session, today)}
           </span>
         </div>
-        <SessionDateButton
-          session={session}
-          today={today}
-          disabled={!movable}
-          onMove={onMove}
-          className="grid min-h-14 grid-cols-[52px_minmax(0,1fr)] items-center gap-2 rounded-lg px-1.5"
-        >
-          <span className="flex flex-col items-center font-display text-2xl leading-none">
-            {dateLabel(session.date, "d")}
-            <small className="mt-1 font-sans text-[11px] text-muted-foreground">
-              {dateLabel(session.date, "MMM")}
-            </small>
-          </span>
+        <div className="grid min-h-14 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
+          <SessionDateButton
+            session={session}
+            today={today}
+            disabled={!movable}
+            onMove={onMove}
+          >
+            <span className="flex w-10 flex-col items-center font-display text-2xl leading-none">
+              {dateLabel(session.date, "d")}
+              <small className="mt-1 font-sans text-[11px] text-muted-foreground">
+                {dateLabel(session.date, "MMM")}
+              </small>
+            </span>
+          </SessionDateButton>
           <span className="flex min-w-0 flex-col gap-0.5">
             <span className={overlineClass}>{step}</span>
             <strong
@@ -188,7 +194,7 @@ export function GoalSessionTile({
             </strong>
             {time}
           </span>
-        </SessionDateButton>
+        </div>
         {nudges}
       </article>
     );
@@ -200,27 +206,28 @@ export function GoalSessionTile({
         <span className={overlineClass}>{step}</span>
         {completionControl}
       </div>
-      <SessionDateButton
-        session={session}
-        today={today}
-        disabled={!movable}
-        onMove={onMove}
-        className="flex min-h-28 flex-col gap-1 px-3 pb-3"
-      >
-        <span className="font-display text-3xl leading-tight">
-          {dateLabel(session.date, "d")}{" "}
-          <small className="font-sans text-xs text-muted-foreground">
-            {dateLabel(session.date, "MMM")}
-          </small>
-        </span>
+      <div className="flex min-h-28 flex-col items-start gap-1 px-1.5 pb-3">
+        <SessionDateButton
+          session={session}
+          today={today}
+          disabled={!movable}
+          onMove={onMove}
+        >
+          <span className="font-display text-3xl leading-tight">
+            {dateLabel(session.date, "d")}{" "}
+            <small className="font-sans text-xs text-muted-foreground">
+              {dateLabel(session.date, "MMM")}
+            </small>
+          </span>
+        </SessionDateButton>
         <strong
           data-testid="completion-title"
-          className="min-h-8 text-xs font-semibold leading-snug"
+          className="min-h-8 px-1.5 text-xs font-semibold leading-snug"
         >
           {session.label}
         </strong>
-        {time}
-      </SessionDateButton>
+        <span className="px-1.5">{time}</span>
+      </div>
       <div className="flex items-center justify-between border-t border-border px-3 py-1 text-[10px] text-muted-foreground">
         <span>{statusLabel(session, today)}</span>
         {nudges}

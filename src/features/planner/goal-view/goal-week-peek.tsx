@@ -1,12 +1,13 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { prefersReducedMotion } from "@/features/planner/plan-view-transition";
 import { cn } from "@/lib/utils";
 import { addDaysToDateString } from "@/lib/goals/periods";
 import {
@@ -98,40 +99,58 @@ function PeekWeeks({
   }, [sessions]);
   const currentWeek = weekStartOf(today, weekStartsOn);
 
-  useLayoutEffect(() => {
+  const scrollToCurrentWeek = useCallback((smooth: boolean) => {
     const container = scroller.current;
     const current = container?.querySelector<HTMLElement>("[data-current-week]");
-    if (container && current) container.scrollTop = current.offsetTop;
+    if (!container || !current) return;
+    if (smooth && !prefersReducedMotion()) {
+      container.scrollTo({ top: current.offsetTop, behavior: "smooth" });
+    } else {
+      container.scrollTop = current.offsetTop;
+    }
   }, []);
 
+  useLayoutEffect(() => scrollToCurrentWeek(false), [scrollToCurrentWeek]);
+
   return (
-    <div
-      ref={scroller}
-      tabIndex={0}
-      aria-label="Goal sessions by week"
-      className="relative max-h-[65dvh] space-y-4 overflow-y-auto overscroll-contain pr-1"
-    >
-      {weeks.map((week) => (
-        <section
-          key={week}
-          aria-label={`Week of ${dateLabel(week, "MMM d")}`}
-          data-current-week={week === currentWeek ? "" : undefined}
-          className="[contain-intrinsic-size:auto_14rem] [content-visibility:auto]"
+    <>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => scrollToCurrentWeek(true)}
+          className="rounded-lg border border-border px-3 py-1 text-xs hover:bg-muted"
         >
-          <h3 className="pb-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
-            {dateLabel(week, "MMM d")} – {dateLabel(addDaysToDateString(week, 6), "MMM d, yyyy")}
-          </h3>
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-7">
-            {Array.from({ length: 7 }, (_, index) => {
-              const day = addDaysToDateString(week, index);
-              return (
-                <PeekDay key={day} day={day} today={today} sessions={byDay.get(day) ?? []} />
-              );
-            })}
-          </div>
-        </section>
-      ))}
-    </div>
+          Today
+        </button>
+      </div>
+      <div
+        ref={scroller}
+        tabIndex={0}
+        aria-label="Goal sessions by week"
+        className="relative max-h-[60dvh] space-y-4 overflow-y-auto overscroll-contain pr-1"
+      >
+        {weeks.map((week) => (
+          <section
+            key={week}
+            aria-label={`Week of ${dateLabel(week, "MMM d")}`}
+            data-current-week={week === currentWeek ? "" : undefined}
+            className="[contain-intrinsic-size:auto_14rem] [content-visibility:auto]"
+          >
+            <h3 className="pb-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
+              {dateLabel(week, "MMM d")} – {dateLabel(addDaysToDateString(week, 6), "MMM d, yyyy")}
+            </h3>
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-7">
+              {Array.from({ length: 7 }, (_, index) => {
+                const day = addDaysToDateString(week, index);
+                return (
+                  <PeekDay key={day} day={day} today={today} sessions={byDay.get(day) ?? []} />
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+    </>
   );
 }
 
