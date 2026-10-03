@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useNativeCoachPage } from "../coach/CoachProvider";
 import { useTheme } from "../../theme";
 import { LoadingScreen, Screen } from "../../ui/screen";
 import { useSession } from "../../lib/session";
@@ -40,6 +41,7 @@ export function InsightsScreen() {
     hasPartner: Boolean(activePartner),
   });
   const [month, setMonth] = useState(format(new Date(), "yyyy-MM"));
+  useNativeCoachPage({ surface: "progress", view: "month", selectedDate: `${month}-01`, scope: scope === "me" ? "self" : "duo" });
   const viewerAvatarQuery = useViewerAvatarUrl();
   const viewerAvatarUrl = viewerAvatarQuery.data ?? null;
   const { openPublicProfile } = usePublicProfileSheet();

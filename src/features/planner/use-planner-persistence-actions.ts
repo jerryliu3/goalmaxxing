@@ -58,10 +58,6 @@ interface UsePlannerPersistenceActionsArgs {
     draftCommands: PlannerDraftCommand[];
     recoverPastPlacements?: boolean;
   }) => Promise<NonNullable<PlannerContextPayload["preview"]> | null>;
-  coachActions: {
-    resetForPlannerStateReset: () => void;
-    onDraftDiscarded: () => void;
-  };
 }
 
 export function usePlannerPersistenceActions({
@@ -80,7 +76,6 @@ export function usePlannerPersistenceActions({
   loadContext,
   cacheDraftPreviewForWindow,
   requestPreviewForWindow,
-  coachActions,
 }: UsePlannerPersistenceActionsArgs) {
   const [saveLoading, setSaveLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
@@ -243,7 +238,6 @@ export function usePlannerPersistenceActions({
       }
       onScheduleDigestChange(payload.scheduleDigest ?? null, payload.savedItems ?? null);
       clearDraftSession();
-      coachActions.resetForPlannerStateReset();
       handlePlannerMutation();
       try {
         const refreshed = await withPlannerRefreshTimeout({
@@ -273,8 +267,7 @@ export function usePlannerPersistenceActions({
     }
   }, [
     clearDraftSession,
-    coachActions,
-    context,
+      context,
     draftPreview,
     draftPreviewWindow?.end,
     draftPreviewWindow?.start,
@@ -324,7 +317,6 @@ export function usePlannerPersistenceActions({
           toast.error("Plan reset, but calendar refresh failed. Please refresh the page.");
           return;
         }
-        coachActions.resetForPlannerStateReset();
         toast.success("Plan reset.");
       } catch (error) {
         toast.error(
@@ -338,8 +330,7 @@ export function usePlannerPersistenceActions({
     }
   }, [
     clearDraftSession,
-    coachActions,
-    context,
+      context,
     handlePlannerMutation,
     loadContext,
   ]);
@@ -388,7 +379,6 @@ export function usePlannerPersistenceActions({
         toast.error("Full reset ran, but calendar refresh failed. Please refresh the page.");
         return;
       }
-      coachActions.resetForPlannerStateReset();
       const appliedScopeCount =
         typeof payload.scopeCount === "number" && payload.scopeCount > 0
           ? payload.scopeCount
@@ -403,8 +393,7 @@ export function usePlannerPersistenceActions({
     }
   }, [
     clearDraftSession,
-    coachActions,
-    context,
+      context,
     handlePlannerMutation,
     loadContext,
     month,
@@ -461,7 +450,6 @@ export function usePlannerPersistenceActions({
           toast.error("Goal reset ran, but calendar refresh failed. Please refresh the page.");
           return;
         }
-        coachActions.resetForPlannerStateReset();
         const appliedScopeCount =
           typeof payload.scopeCount === "number" && payload.scopeCount > 0
             ? payload.scopeCount
@@ -483,8 +471,7 @@ export function usePlannerPersistenceActions({
     },
     [
       clearDraftSession,
-      coachActions,
-      context,
+          context,
       handlePlannerMutation,
       loadContext,
       month,
@@ -529,9 +516,8 @@ export function usePlannerPersistenceActions({
       return;
     }
     clearDraftSession();
-    coachActions.onDraftDiscarded();
     toast.success("Preview changes reverted to the saved baseline.");
-  }, [clearDraftSession, coachActions, hasDraftSession]);
+  }, [clearDraftSession, hasDraftSession]);
 
   return {
     saveLoading,

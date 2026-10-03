@@ -1,4 +1,5 @@
 "use client";
+import { useCoachPageContext } from "@/features/coach/use-coach-page-context";
 
 import {
   format,
@@ -332,6 +333,11 @@ export function InsightsTab({
     () => new Set(selectedLedgerGoalIds),
     [selectedLedgerGoalIds]
   );
+  useCoachPageContext(readOnly ? null : {
+    selectedGoalId: selectedLedgerGoalIds.length === 1 ? selectedLedgerGoalIds[0] : undefined,
+    selectedDate: focusedLedgerDate ?? format(monthCursor, "yyyy-MM-dd"),
+    view: perGoalViewMode,
+  }, 1);
   const ledgerMode = resolveProgressLedgerMode({
     selectedCount: selectedLedgerGoalIds.length,
     visibleCount: visibleGoalIds.length,

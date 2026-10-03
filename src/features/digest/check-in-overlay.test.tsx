@@ -7,7 +7,6 @@ import {
 } from "@/components/intro/journey-intro-overlay";
 import { CheckInOverlay } from "@/features/digest/check-in-overlay";
 import { DIGEST_OPEN_EVENT } from "@/features/digest/digest-api";
-import { COACH_PROMPT_SEED_KEY } from "@/lib/coach/coach-prompt-seed";
 
 const mocks = vi.hoisted(() => ({
   getJson: vi.fn(),
@@ -30,9 +29,9 @@ vi.mock("@/features/planner/use-completion-mutation", () => ({
   useCompletionMutation: () => mocks.runCompletionMutation,
 }));
 
-const digestPayload = {
+const digestPayloadBase = {
   schemaVersion: "1" as const,
-  id:"11111111-1111-4111-8111-111111111111",factsDigest:"facts",historicalFacts:null,generatedAt:null,
+  id:"11111111-1111-4111-8111-111111111111",factsDigest:"facts",generatedAt:null,
   kind: "daily" as const,
   periodKey: "2026-09-09",
   localDate: "2026-09-09",
@@ -88,6 +87,8 @@ const digestPayload = {
   suggestions: null,
 };
 
+const digestPayload = { ...digestPayloadBase, historicalFacts: digestPayloadBase.facts };
+
 function finishOnboarding() {
   window.localStorage.setItem(JOURNEY_ONBOARDING_COMPLETED_KEY, "done");
   window.localStorage.setItem(JOURNEY_INTRO_SEEN_KEY, "2026-01-01");
@@ -98,11 +99,9 @@ describe("CheckInOverlay", () => {
     window.localStorage.clear();
     window.sessionStorage.clear();
     mocks.getJson.mockResolvedValue(digestPayload);
-    mocks.postJson.mockResolvedValue({
-      suggestions: {
-        motivation: "Start with Tempo run.",
-        suggestions: [],
-      },
+    mocks.postJson.mockImplementation(async (path: string) => path === "/api/digest/ack" ? { claimed: true } : {
+      facts: digestPayload.facts, factsDigest: "facts", generatedAt: null,
+      suggestions: { motivation: "Start with Tempo run.", suggestions: [] },
     });
     mocks.runCompletionMutation.mockResolvedValue({ ok: true, message: null });
   });
@@ -122,6 +121,14 @@ describe("CheckInOverlay", () => {
     mocks.getJson.mockRejectedValue(new Error("digest_disabled"));
     render(<CheckInOverlay />);
     await waitFor(() => expect(mocks.getJson).toHaveBeenCalled());
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("does not present an invitation already claimed by another device", async () => {
+    finishOnboarding();
+    mocks.postJson.mockResolvedValue({ claimed: false });
+    render(<CheckInOverlay />);
+    await waitFor(() => expect(mocks.postJson).toHaveBeenCalledWith("/api/digest/ack", { referenceId: digestPayload.id, localDate: digestPayload.localDate }));
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
@@ -153,7 +160,7 @@ describe("CheckInOverlay", () => {
     await waitFor(() =>
       expect(mocks.postJson).toHaveBeenCalledWith("/api/digest/ack", {referenceId:digestPayload.id,localDate:digestPayload.localDate})
     );
-    expect(mocks.postJson).not.toHaveBeenCalledWith("/api/digest/generate", {referenceId:digestPayload.id});
+    expect(mocks.postJson.mock.calls.filter(([path]) => path === "/api/digest/generate")).toHaveLength(0);
 
     await user.click(screen.getByRole("button", { name: "Open" }));
     expect(screen.getByRole("tab", { name: "Recap" })).toHaveAttribute(
@@ -194,6 +201,12 @@ describe("CheckInOverlay", () => {
 
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Open" }));
+    mocks.runCompletionMutation.mockImplementationOnce(async () => {
+      mocks.getJson.mockResolvedValue({ ...digestPayload, factsDigest: "after-completion", facts: {
+        ...digestPayload.facts, recap: { ...digestPayload.facts.recap, completed: 1, items: digestPayload.facts.recap.items.map(item => ({ ...item, state: "completed" })) },
+      } });
+      return { ok: true, message: null };
+    });
     await user.click(screen.getByRole("button", { name: "Mark done" }));
 
     expect(mocks.runCompletionMutation).toHaveBeenCalledWith(
@@ -206,6 +219,7 @@ describe("CheckInOverlay", () => {
     expect(await screen.findByText("1 of 1 done")).toBeInTheDocument();
     expect(screen.getByText("Done")).toBeInTheDocument();
     expect(mocks.push).not.toHaveBeenCalled();
+    expect(mocks.postJson.mock.calls.filter(([path]) => path === "/api/digest/generate")).toHaveLength(1);
   });
 
   it("names the cadence in the prompt", async () => {
@@ -241,19 +255,7 @@ describe("CheckInOverlay", () => {
     expect(mocks.push).toHaveBeenCalledWith("/calendar?surface=checklist");
   });
 
-  it("stashes a coach question and heads for the plan on Ask coach", async () => {
-    finishOnboarding();
-    const user = userEvent.setup();
-    render(<CheckInOverlay />);
-    expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Open" }));
-    await user.click(screen.getByRole("button", { name: "Ask coach" }));
 
-    expect(window.sessionStorage.getItem(COACH_PROMPT_SEED_KEY)).toContain(
-      "daily check-in"
-    );
-    expect(mocks.push).toHaveBeenCalledWith("/calendar?surface=calendar");
-  });
 
   it("says there is nothing to decide when the window is clear", async () => {
     finishOnboarding();
@@ -266,8 +268,9 @@ describe("CheckInOverlay", () => {
         recover: { count: 0, items: [] },
       },
     });
-    mocks.postJson.mockResolvedValue({
-      suggestions: { motivation: "All clear.", suggestions: [] },
+    mocks.postJson.mockImplementation(async (path: string) => path === "/api/digest/ack" ? { claimed: true } : {
+      facts: { ...digestPayload.facts, ahead: { ...digestPayload.facts.ahead, placed: 1, completed: 1 }, recover: { count: 0, items: [] } },
+      factsDigest: "facts", generatedAt: null, suggestions: { motivation: "All clear.", suggestions: [] },
     });
     render(<CheckInOverlay />);
 

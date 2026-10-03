@@ -31,6 +31,7 @@ describe("GET /api/config", () => {
       integrationsEnabled: true,
       journeyEnabled: true,
       digestEnabled: true,
+        coachEnabled: false,
       futureInternalOnly: true,
     });
   });
@@ -50,6 +51,7 @@ describe("GET /api/config", () => {
         integrationsEnabled: true,
         journeyEnabled: true,
         digestEnabled: true,
+        coachEnabled: false,
       },
     });
     expect(payload.correlationId).toBeUndefined();

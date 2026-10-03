@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createClientUuid } from "@cadence/shared/ids";
 import { supabase } from "../../lib/supabase";
 import { useSession } from "../../lib/session";
+import { useNativeCoachPage } from "../coach/CoachProvider";
 import { useTheme } from "../../theme";
 import { PrimaryButton } from "../../ui/button";
 import { Screen } from "../../ui/screen";
@@ -63,6 +64,7 @@ async function uploadGoalPhoto({
 }
 
 export function GoalFormScreen({ goalId }: { goalId?: string }) {
+  useNativeCoachPage({ surface: "goal", selectedGoalId: goalId });
   const theme = useTheme();
   const { userId } = useSession();
   const queryClient = useQueryClient();

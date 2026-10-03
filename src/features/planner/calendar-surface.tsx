@@ -17,7 +17,7 @@ import {
 } from "@/features/planner/calendar-format";
 import { useCompletionMutation } from "@/features/planner/use-completion-mutation";
 import { useCalendarDraftState } from "@/features/planner/use-calendar-draft-moves";
-import { useCalendarSurfaceCoachSession } from "@/features/planner/use-calendar-surface-coach-session";
+import { useCoachPageContext } from "@/features/coach/use-coach-page-context";
 import {
   useCalendarSurfaceDayEntryViews,
   useCalendarSurfaceSelectedEventState,
@@ -832,23 +832,12 @@ export function CalendarSurface({
   });
 
   const runCompletionMutation = useCompletionMutation();
-  const coach = useCalendarSurfaceCoachSession({
-    activeTab,
-    context,
-    entriesByDate,
-    effectivePreview,
-    effectiveDraftPolicy,
-    hasDraftSession,
-    handlePlannerMutation,
-    loadContext,
-    refreshDraftPreview,
-    applyPolicyReplanMoves,
-    queueDraftMoveCommand,
-    clearDraftMoveCommands,
-    setDraftPolicy,
-    setSetupRestWeekdays,
-    draftSaveWindow,
-    nonPublishablePreviewMessage,
+  useCoachPageContext({ surface: activeTab === "calendar" ? "plan" : "checklist", view: goalViewOpen ? "goals" : viewMode,
+    selectedDate: localSelectedDay ?? selectedDay ?? (month ? `${month}-01` : undefined),
+    selectedGoalId: selectedEventEntry?.entryKind === "task" ? undefined : selectedEventEntry?.originalGoalId,
+    selectedItemId: selectedEventEntry?.activeItem?.id,
+    selectedTaskId: selectedEventEntry?.entryKind === "task" ? selectedEventEntry.originalGoalId : undefined,
+    scope: duoScope === "me" ? "self" : "duo", hasDraft: hasDraftSession,
   });
 
   const {
@@ -961,7 +950,6 @@ export function CalendarSurface({
       loadContext,
       cacheDraftPreviewForWindow,
       requestPreviewForWindow,
-      coachActions: coach.actions,
     });
 
   const resetGoalOptions = useMemo(
@@ -1156,7 +1144,6 @@ export function CalendarSurface({
     setExpandedPreviewDay,
     clearHoverPreviewTimer,
     clearHoverPreviewCloseTimer,
-    coach,
     expandedPreviewDay,
     expandedPreviewEntries,
     expandedPreviewCompletionFactMarkers,

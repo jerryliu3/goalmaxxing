@@ -1,4 +1,5 @@
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { CoachProvider } from "../src/features/coach/CoachProvider";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "react-native";
@@ -27,6 +28,7 @@ export default function RootLayout() {
           <AppQueryProvider>
             <SessionProvider>
               <GazetteerFontProvider>
+                <CoachProvider>
                 <NotificationNavigation />
                 <ThemedStatusBar />
                 <HealthPrivacyIntentHandler />
@@ -46,6 +48,7 @@ export default function RootLayout() {
                     options={{ presentation: "formSheet", headerShown: true, title: "Edit goal" }}
                   />
                 </Stack>
+                </CoachProvider>
               </GazetteerFontProvider>
             </SessionProvider>
           </AppQueryProvider>

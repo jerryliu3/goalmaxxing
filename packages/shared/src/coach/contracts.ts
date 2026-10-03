@@ -71,6 +71,8 @@ export type CoachMessage = z.infer<typeof coachMessageSchema>;
 export type CoachMemory = z.infer<typeof coachMemorySchema>;
 export type CoachRun = z.infer<typeof coachRunSchema>;
 export type CoachAction = z.infer<typeof coachActionSchema>;
+export const coachActionCursorSchema = z.object({ createdAt: z.iso.datetime({ offset: true }), id: z.uuid() }).strict();
+export const coachActionHistorySchema = z.object({ actions: z.array(coachActionSchema), next: coachActionCursorSchema.nullable() });
 export type CoachTurnRequest = z.infer<typeof coachTurnRequestSchema>;
 
 export const coachSessionSchema = z.object({
@@ -104,6 +106,3 @@ export const coachStreamEventSchema = z.discriminatedUnion("event", [
   z.object({ event: z.literal("error"), data: z.object({ code: z.string(), message: z.string(), correlationId: z.string() }) }),
 ]);
 export type CoachConversation = z.infer<typeof coachConversationSchema>;
-
-export const coachActionCursorSchema = z.object({ createdAt: z.iso.datetime({ offset: true }), id: z.uuid() }).strict();
-export const coachActionHistorySchema = z.object({ actions: z.array(coachActionSchema), next: coachActionCursorSchema.nullable() });

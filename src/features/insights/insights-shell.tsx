@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { useCoachPageContext } from "@/features/coach/use-coach-page-context";
 import { useCallback, useMemo, useState } from "react";
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
 import { DuoLanes } from "@/features/social/duo/duo-lanes";
@@ -21,6 +22,7 @@ import type { Goal } from "@/lib/goals/types";
 export function InsightsShell() {
   const searchParams = useSearchParams();
   const { scope, activePartner, viewer, partner } = useDuoSurface("insights");
+  useCoachPageContext({ surface: "progress", scope: scope === "me" ? "self" : "duo" });
   const [monthCursor, setMonthCursor] = useState(new Date());
   const [perGoalViewMode, setPerGoalViewMode] = useState<HeatmapViewMode>("month");
   const [goalSearchQuery, setGoalSearchQuery] = useState("");
