@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 import type { Goal } from "@/lib/goals/types";
-import { GoalDates, GoalDatesHeading, useGoalDates } from "./goal-dates";
+import {
+  GoalDates,
+  GoalDatesHeading,
+  useGoalDates,
+  type GoalTileRenderer,
+} from "./goal-dates";
 import { GoalViewCard } from "./goal-view-card";
 import type { GoalViewSession } from "./goal-view-model";
 
@@ -33,7 +38,7 @@ export function GoalRail({
   today: string;
   /** Session whose planner editor expands under this rail, if it is this goal's. */
   editorSlotKey: string | null;
-  renderTile: (session: GoalViewSession) => ReactNode;
+  renderTile: GoalTileRenderer;
 }) {
   const track = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
@@ -86,7 +91,12 @@ export function GoalRail({
           aria-label={`${goal.title} dates, scroll to explore`}
           className="flex gap-5 overflow-x-auto overscroll-x-contain pb-3"
         >
-          <GoalDates dates={dates} showPast={showPast} renderTile={renderTile} />
+          <GoalDates
+            dates={dates}
+            showPast={showPast}
+            layout="card"
+            renderTile={renderTile}
+          />
         </div>
       </div>
       {editorSlotKey ? (
