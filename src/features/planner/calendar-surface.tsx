@@ -29,6 +29,8 @@ import {
   useCalendarSurfaceInteractionRefs,
   useCalendarSurfaceUiEffects,
 } from "@/features/planner/use-calendar-surface-ui-effects";
+import { buildGoalViewSessions } from "@/features/planner/goal-view/goal-view-model";
+import { useGoalViewProjection } from "@/features/planner/goal-view/use-goal-view-projection";
 import { getDateInTimezone, resolveUserTimezone } from "@/lib/dates/timezone";
 import {
   buildPlannerContextCacheKey,
@@ -139,6 +141,8 @@ export function CalendarSurface({
   );
   const [endMonthFilters, setEndMonthFilters] = useState<string[]>([]);
   const [showCompletedGoals, setShowCompletedGoals] = useState(false);
+  // Goal View is a lens on the same planner context, not a calendar view mode.
+  const [goalViewOpen, setGoalViewOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const {
     draftPolicy,
@@ -283,6 +287,7 @@ export function CalendarSurface({
     month,
     selectedDay,
     viewMode,
+    goalViewOpen,
     setupTimezone,
     setupWeekStartsOn,
     onMonthChange,
@@ -350,6 +355,11 @@ export function CalendarSurface({
     selectedDay,
     viewMode,
   ]);
+  const { goalViewDays, projectionDays: modelProjectionDays } = useGoalViewProjection({
+    open: goalViewOpen,
+    today: calendarTodayForTasks,
+    baseProjectionDays: additionalProjectionDays,
+  });
   const { taskEntriesByDate, completeTask, rescheduleTask } = useCalendarPlannerTasks({
     enabled: showTasksInsteadOfGoals && duoScope !== "partner",
     from: calendarTaskQueryWindow?.start ?? null,
@@ -383,10 +393,12 @@ export function CalendarSurface({
     searchQuery,
     partnerCompletionMarkersByDate,
     previewEntryOrderByDay,
-    additionalProjectionDays,
+    additionalProjectionDays: modelProjectionDays,
     calendarTaskEntriesByDate: taskEntriesByDate,
     showTasksInsteadOfGoals,
-    showCompletedGoals: viewMode === "day" ? true : showCompletedGoals,
+    // Goal View is a list lens, so it follows the Filters toggle even over Day.
+    showCompletedGoals:
+      viewMode === "day" && !goalViewOpen ? true : showCompletedGoals,
   });
   const {
     cells,
@@ -440,6 +452,10 @@ export function CalendarSurface({
     canMutateEntryOnDay,
     plannerReadOnly,
   } = dayAccessors;
+  const goalViewSessions = useMemo(
+    () => buildGoalViewSessions(goalViewDays, getOrderedEntriesForDay),
+    [getOrderedEntriesForDay, goalViewDays]
+  );
   useEffect(() => {
     setOptimisticCompletionFacts((overlay) =>
       pruneOptimisticCompletionFacts(overlay, (goalId, date) => {
@@ -1068,6 +1084,10 @@ export function CalendarSurface({
     hasUnsavedPlannerChanges,
     draftSaveBlocked,
     viewMode,
+    goalViewOpen,
+    onGoalViewOpenChange: setGoalViewOpen,
+    goalViewSessions,
+    onGoalViewMoveSession: updateDraftScheduledDate,
     searchQuery,
     savePlan,
     discardDraftChanges,
