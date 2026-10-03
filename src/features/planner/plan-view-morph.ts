@@ -1,5 +1,11 @@
 import type { PlannerCalendarViewMode } from "./calendar-surface.types";
 
+/**
+ * The calendar views plus Goal View, which has no day cells: its dates are
+ * session tiles that share entry keys with the calendar's session pills.
+ */
+export type PlanSceneMode = PlannerCalendarViewMode | 'goals';
+
 interface Box {
     x: number;
     y: number;
@@ -46,7 +52,7 @@ interface Mark {
     opacity?: number;
 }
 export interface PlanScene {
-    mode: PlannerCalendarViewMode;
+    mode: PlanSceneMode;
     bounds: Box;
     clip: Box;
     days: Map<string, Mark>;
@@ -207,7 +213,7 @@ export function mountPlanHandoff(root: HTMLElement) {
     });
     return node;
 }
-function residue(root: HTMLElement, mode: PlannerCalendarViewMode) {
+function residue(root: HTMLElement, mode: PlanSceneMode) {
     const source = root.querySelector<HTMLElement>('[data-plan-view]') ?? root;
     const node = clonePlanNode(source);
     node.style.opacity = '1';
@@ -220,7 +226,18 @@ function residue(root: HTMLElement, mode: PlannerCalendarViewMode) {
     return node;
 }
 function shown(el: HTMLElement) { return el.getBoundingClientRect().width > 0 && !el.closest('[aria-hidden="true"]'); }
-export function capturePlanScene(root: HTMLElement, mode: PlannerCalendarViewMode): PlanScene {
+/**
+ * A Goal View tile only carries into the morph while it is on screen and inside
+ * its scrolling rail; tiles beyond either edge fade with the rest of the view.
+ */
+function tileVisible(el: HTMLElement) {
+    const r = el.getBoundingClientRect();
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const rail = el.closest<HTMLElement>('[data-plan-scroll-clip]')?.getBoundingClientRect();
+    return x >= 0 && x <= window.innerWidth && y >= 0 && y <= window.innerHeight
+        && (!rail || x >= rail.left && x <= rail.right && y >= rail.top && y <= rail.bottom);
+}
+export function capturePlanScene(root: HTMLElement, mode: PlanSceneMode): PlanScene {
     const r = root.getBoundingClientRect();
     // Handoff copies and animation surrogates are siblings of the live view. They
     // must never overwrite the destination's measured dates and session geometry.
@@ -262,7 +279,7 @@ export function capturePlanScene(root: HTMLElement, mode: PlannerCalendarViewMod
     const source = dayPane ?? calendar;
     const counts = new Map<string, number>();
     for (const el of source.querySelectorAll<HTMLElement>('[data-planner-entry-key]')) {
-        if (!shown(el))
+        if (!shown(el) || mode === 'goals' && !tileVisible(el))
             continue;
         const day = el.closest<HTMLElement>('[data-day]')?.dataset.day ?? dayPane?.dataset.planDay ?? '';
         const index = counts.get(day) ?? 0;
@@ -483,6 +500,9 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
         layer.append(node);
         return { ...section, node, scene, side };
     }));
+    // Goal View shares no day cells with the calendar, so anything without a
+    // counterpart fades where it stands instead of sliding off the stage.
+    const stationary = from.mode === 'goals' || to.mode === 'goals';
     const tracks: Track[] = [];
     for (const kind of ['days', 'items', 'labels'] as const) {
         const keys = new Set([...from[kind].keys(), ...to[kind].keys()]);
@@ -520,9 +540,9 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
                 b ??= seed;
             }
             if (!a && b)
-                a = { ...b, box: { ...b.box, y: from.clip.y + from.clip.height + 24 } };
+                a = { ...b, box: stationary ? b.box : { ...b.box, y: from.clip.y + from.clip.height + 24 } };
             if (!b && a)
-                b = { ...a, box: { ...a.box, y: to.clip.y + to.clip.height + 24 } };
+                b = { ...a, box: stationary ? a.box : { ...a.box, y: to.clip.y + to.clip.height + 24 } };
             if (!a || !b)
                 continue;
             const fade: Track['fade'] = !sourcePresent ? 'in' : !targetPresent ? 'out' : null;
@@ -621,7 +641,8 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
                 : tr.fade === 'out' ? 1 - ramp(linear, .35, .85)
                 : 1;
             const alpha = presence * mix(tr.from.opacity ?? 1, tr.to.opacity ?? 1, progress);
-            const viewport = tr.kind === 'items' ? intersection(b, dayBoxes.get(tr.to.day) ?? b) : b;
+            // Tiles leave or enter day cells in Goal View morphs, so the cell cannot clip them.
+            const viewport = tr.kind === 'items' && !stationary ? intersection(b, dayBoxes.get(tr.to.day) ?? b) : b;
             if (tr.el) {
                 paintBox(tr.el, b);
                 tr.el.style.opacity = `${alpha}`;

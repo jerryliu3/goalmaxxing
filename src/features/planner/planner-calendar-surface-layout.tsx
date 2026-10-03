@@ -84,6 +84,8 @@ export interface PlannerCalendarSurfaceLayoutProps {
   draftSaveBlocked: boolean;
   viewMode: PlannerCalendarViewMode;
   goalViewOpen: boolean;
+  /** Goal View is open and its wide planner window has loaded. */
+  goalViewVisible: boolean;
   onGoalViewOpenChange: (open: boolean) => void;
   goalViewSessions: GoalViewSession[];
   onGoalViewMoveSession: (entry: PlannerDayDetailEntry, date: string) => void;
@@ -242,6 +244,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     draftSaveBlocked,
     viewMode,
     goalViewOpen,
+    goalViewVisible,
     onGoalViewOpenChange,
     goalViewSessions,
     onGoalViewMoveSession,
@@ -347,7 +350,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
   } = props;
   // Goal View lists goals like Week/Month, so Day's own checklist filters
   // must not replace the planner's Filters while it is open.
-  const checklistViewMode = goalViewOpen && viewMode === "day" ? "week" : viewMode;
+  const checklistViewMode = goalViewVisible && viewMode === "day" ? "week" : viewMode;
   const dayChecklist = usePlanDayChecklistModel({
     isActive: true,
     viewDate: focusedDay,
@@ -503,31 +506,33 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         </div>
       ) : month ? (
         <>
-          {goalViewOpen ? (
-            <PlannerGoalView
-              goals={dayChecklist.data.goals}
-              completedGoalIds={dayChecklist.listModel.targetAchievedGoalIds}
-              showCompletedGoals={showCompletedGoals}
-              progressSummaries={dayChecklist.data.progress?.summaries ?? []}
-              sessions={goalViewSessions}
-              today={context?.asOfDate ?? focusedDay}
-              weekStartsOn={context?.preferences?.defaultPolicy.weekStartsOn}
-              selectedEntryKey={selectedEventEntry?.key ?? null}
-              canMutatePlanItems={canMutatePlanItems}
-              optimisticCompletionFacts={optimisticCompletionFacts}
-              mutationLoadingKey={mutationLoadingKey}
-              canOpenEntry={canOpenPlannerEventDetails}
-              canMutateEntryOnDay={canMutateEntryOnDay}
-              onOpenEntry={(entry, day) => openEntryDetails(entry, day, false)}
-              onMoveEntry={onGoalViewMoveSession}
-              onToggleEntry={(entry, day, source) => {
-                void toggleDateFact(entry, day, source);
-              }}
-            />
-          ) : (
           <PlannerCalendarBoard
             loading={loading}
             viewMode={viewMode}
+            goalView={
+              goalViewVisible ? (
+                <PlannerGoalView
+                  goals={dayChecklist.data.goals}
+                  completedGoalIds={dayChecklist.listModel.targetAchievedGoalIds}
+                  showCompletedGoals={showCompletedGoals}
+                  progressSummaries={dayChecklist.data.progress?.summaries ?? []}
+                  sessions={goalViewSessions}
+                  today={context?.asOfDate ?? focusedDay}
+                  weekStartsOn={context?.preferences?.defaultPolicy.weekStartsOn}
+                  selectedEntryKey={selectedEventEntry?.key ?? null}
+                  canMutatePlanItems={canMutatePlanItems}
+                  optimisticCompletionFacts={optimisticCompletionFacts}
+                  mutationLoadingKey={mutationLoadingKey}
+                  canOpenEntry={canOpenPlannerEventDetails}
+                  canMutateEntryOnDay={canMutateEntryOnDay}
+                  onOpenEntry={(entry, day) => openEntryDetails(entry, day, false)}
+                  onMoveEntry={onGoalViewMoveSession}
+                  onToggleEntry={(entry, day, source) => {
+                    void toggleDateFact(entry, day, source);
+                  }}
+                />
+              ) : null
+            }
             showTasksInsteadOfGoals={showTasksInsteadOfGoals}
             previousWindowAriaLabel={previousWindowAriaLabel}
             nextWindowAriaLabel={nextWindowAriaLabel}
@@ -634,7 +639,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             onClearSelectedEntry={onClearSelectedEntry}
             pinchDisabled
           />
-          )}
 
           <PlannerCoachPanel coach={coach} />
         </>

@@ -282,6 +282,85 @@ describe("morph surrogates", () => {
 });
 
 
+function rect(left: number, top: number, width = 120, height = 40) {
+  return {
+    x: left, y: top, left, top, width, height,
+    right: left + width, bottom: top + height, toJSON: () => ({}),
+  } as DOMRect;
+}
+
+function place(el: Element, box: DOMRect) {
+  (el as HTMLElement).getBoundingClientRect = () => box;
+}
+
+const GOAL_VIEW = `
+  <div data-plan-view="goals">
+    <div data-plan-scroll-clip="true" aria-label="Get stronger dates">
+      <article data-planner-entry-key="gym:1" data-day="2026-09-14">
+        <strong data-testid="completion-title">Gym</strong>
+      </article>
+      <article data-planner-entry-key="gym:2" data-day="2026-09-16">
+        <strong data-testid="completion-title">Gym</strong>
+      </article>
+    </div>
+  </div>`;
+
+describe("goal view morph scenes", () => {
+  it("carries only tiles that are inside their scrolling rail", () => {
+    const root = mount(GOAL_VIEW);
+    const [onScreen, scrolledAway] = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-planner-entry-key]")
+    );
+    place(root.querySelector("[data-plan-scroll-clip]")!, rect(0, 0, 400, 120));
+    place(root, rect(0, 0, 400, 120));
+    place(onScreen, rect(20, 20));
+    place(scrolledAway, rect(520, 20));
+
+    const scene = capturePlanScene(root, "goals");
+
+    expect([...scene.items.keys()]).toEqual(["2026-09-14:gym:1"]);
+    expect(scene.days.size).toBe(0);
+  });
+
+  it("pairs a tile with the calendar pill that shares its day and entry key", () => {
+    const calendar = mount(`
+      <div data-plan-view="week" data-testid="plan-calendar-split-calendar">
+        <ol>
+          <li data-calendar-week-row="true" data-day="2026-09-14">
+            <button data-day-cell="true" data-day="2026-09-14"></button>
+            <div data-planner-entry-key="gym:1"><span data-testid="completion-title">Gym</span></div>
+          </li>
+        </ol>
+      </div>`);
+    const goals = mount(GOAL_VIEW);
+    place(goals.querySelector("[data-plan-scroll-clip]")!, rect(0, 0, 400, 120));
+    goals.querySelectorAll("[data-planner-entry-key]").forEach((tile) => place(tile, rect(20, 20)));
+
+    const from = capturePlanScene(calendar, "week");
+    const to = capturePlanScene(goals, "goals");
+
+    expect([...from.items.keys()]).toEqual(["2026-09-14:gym:1"]);
+    expect(to.items.has("2026-09-14:gym:1")).toBe(true);
+  });
+
+  it("builds an overlay between a calendar view and Goal View when no dates are shared", () => {
+    const calendar = mount(`
+      <div data-plan-view="week">${WEEK_ROW("2026-09-15")}</div>`);
+    const content = calendar.firstElementChild as HTMLElement;
+    const goals = mount(GOAL_VIEW);
+    const to = capturePlanScene(goals, "goals");
+    const from = capturePlanScene(calendar, "week");
+
+    const run = animatePlanScene(calendar, content, from, to, () => {});
+    const overlay = calendar.querySelector("[data-plan-morph-overlay]");
+
+    expect(overlay).not.toBeNull();
+    expect(overlay!.querySelector('[data-plan-view="week"]')).not.toBeNull();
+    expect(overlay!.querySelector('[data-plan-view="goals"]')).not.toBeNull();
+    run.cancel();
+  });
+});
+
 describe("completed title treatments during view changes", () => {
   function scene(treatment: "quiet" | "strike", mode: "month" | "week" | "day") {
     const root = mount(`<div data-plan-view="${mode}">

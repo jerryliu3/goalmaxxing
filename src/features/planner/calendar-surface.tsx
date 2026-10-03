@@ -143,6 +143,10 @@ export function CalendarSurface({
   const [showCompletedGoals, setShowCompletedGoals] = useState(false);
   // Goal View is a lens on the same planner context, not a calendar view mode.
   const [goalViewOpen, setGoalViewOpen] = useState(false);
+  // True once the loader has fetched Goal View's wide window, so the view (and
+  // its morph) starts from complete data instead of the calendar's narrow one.
+  const [goalViewReady, setGoalViewReady] = useState(false);
+  const goalViewVisible = goalViewOpen && goalViewReady;
   const [searchQuery, setSearchQuery] = useState("");
   const {
     draftPolicy,
@@ -288,6 +292,7 @@ export function CalendarSurface({
     selectedDay,
     viewMode,
     goalViewOpen,
+    setGoalViewReady,
     setupTimezone,
     setupWeekStartsOn,
     onMonthChange,
@@ -1085,6 +1090,7 @@ export function CalendarSurface({
     draftSaveBlocked,
     viewMode,
     goalViewOpen,
+    goalViewVisible,
     onGoalViewOpenChange: setGoalViewOpen,
     goalViewSessions,
     onGoalViewMoveSession: updateDraftScheduledDate,

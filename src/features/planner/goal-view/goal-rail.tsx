@@ -88,6 +88,7 @@ export function GoalRail({
         <div
           ref={track}
           tabIndex={0}
+          data-plan-scroll-clip="true"
           aria-label={`${goal.title} dates, scroll to explore`}
           className="flex gap-5 overflow-x-auto overscroll-x-contain pb-3"
         >
