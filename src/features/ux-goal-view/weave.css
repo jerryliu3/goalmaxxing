@@ -58,6 +58,7 @@
 .tw-inspector-open:hover { background:var(--gv-page); }
 .tw-inspector-open strong { display:block; font-size:14px; font-weight:600; }
 .tw-inspector-open span { display:block; margin-top:4px; font-size:12px; color:var(--gv-muted); }
+.gv-calendar-dialog .tw-week-viewport { height:auto; max-height:60dvh; }
 @container goal-view (max-width:759px) {
   .tw-product .gv-product-header { gap:14px; }
   .tw-product .gv-product-header h1 { max-width:none; font-size:35px; }

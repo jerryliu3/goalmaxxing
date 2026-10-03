@@ -10,7 +10,7 @@ import type { GoalViewStudySession } from "./use-study";
 import { sessionsOnDate, studyCalendarEntry, weaveWeekDates } from "./weave-model";
 
 /** The production Week cell and drag surface, with the study's local plan adapter. */
-export function WeaveWeekAgenda({ study, anchor, goals, selectedDate, onInspectDate }: { study: GoalViewStudySession; anchor: string; goals: Goal[]; selectedDate: string; onInspectDate: (date: string) => void }) {
+export function WeaveWeekAgenda({ study, anchor, goals, selectedDate, onInspectDate, onEditSession = study.setEditingId }: { study: GoalViewStudySession; anchor: string; goals: Goal[]; selectedDate: string; onInspectDate: (date: string) => void; onEditSession?: (id: string) => void }) {
   const [dragging, setDragging] = useState(false);
   const goalIds = goals.map(g => g.id);
   return <PlannerDndProvider
@@ -34,7 +34,7 @@ export function WeaveWeekAgenda({ study, anchor, goals, selectedDate, onInspectD
           getEntryDisplayTitle={entry => `${entry.session.time || "Any time"} · ${entry.goalTitle}${entry.session.milestone ? ` · ${entry.session.name}` : ""}`}
           isEntryCredited={entry => isDone(entry.session, study.state.facts)}
           isEntryImmovableForDraft={entry => entry.session.locked || isDone(entry.session, study.state.facts) || entry.session.date < SAMPLE_TODAY}
-          onEntryClick={(_date, entry) => study.setEditingId(entry.key)}
+          onEntryClick={(_date, entry) => onEditSession(entry.key)}
           onCellClick={() => onInspectDate(date)} onCellDoubleClick={() => onInspectDate(date)}
           onCellMouseEnter={() => {}} onCellMouseLeave={() => {}} onCellPointerDown={() => {}}
           onCellPointerUp={() => {}} onCellPointerCancel={() => {}} onCellPointerLeave={() => {}}

@@ -13,11 +13,11 @@ export default function UxHubPage() {
         <ul className="mt-10 space-y-4">
           <li>
             <Link className="text-lg font-semibold underline" href="/ux/goal-view">
-              Goal View — Card Rails and Goal Desk
+              Goal View — Card Rails, Goal Desk and Time Weave
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">
               Real goal cards, editable dates, goal filtering, and two phone
-              arrangements. Includes Time Weave as a scrollable Week configuration.
+              arrangements. Compare Time Weave in Goal View and the vertical Week agenda.
             </p>
           </li>
           <li>
