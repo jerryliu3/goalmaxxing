@@ -17,7 +17,7 @@ export const coachProposalSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("preference"), title, restWeekdays: z.array(z.number().int().min(0).max(6)).max(7) }).strict(),
 ]);
 export type CoachProposal = z.infer<typeof coachProposalSchema>;
-export const coachAnswerSchema = z.object({ reply: z.string().trim().min(1).max(12000), proposals: z.array(z.unknown()).max(6).default([]) });
+export const coachAnswerSchema = z.object({ reply: z.string().trim().min(1).max(12000), proposals: z.array(z.unknown()).max(6).default([]), summary: z.string().max(4000).default(""), memorySuggestion: z.string().trim().max(1000).transform(value => value || null).nullable().default(null) });
 export const COACH_ACTION_INSTRUCTIONS = `You can propose these finite actions for the user to review. Never claim an action has succeeded: nothing changes until Apply.
 Return proposals as an array of objects. Each object must match one of:
 {"kind":"move_sessions","title":"...","moves":[{"itemId":"owned saved session UUID","date":"YYYY-MM-DD"}]}, maximum 8 moves, using only known saved sessions. Respect goal lifetime and cadence; dates must be today or future. This changes placements only.

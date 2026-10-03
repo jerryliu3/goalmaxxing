@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 
 const bodySchema = z
   .object({
-    regenerate: z.boolean().optional(),
+    referenceId: z.uuid(),
   })
   .strict();
 
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     const digest = await generateCurrentDigest({
       supabase,
       userId,
-      regenerate: body.regenerate === true,
+      referenceId: body.referenceId,
     });
     return apiSuccessResponse({ schemaVersion: "1", ...digest }, correlationId);
   });

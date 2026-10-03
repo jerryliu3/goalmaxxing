@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { ApiRouteError } from "@/lib/api/route";
-import { digestSuggestionsSchema } from "@/lib/digest/contract";
+import { digestFactsSchema, digestSuggestionsSchema } from "@/lib/digest/contract";
 import type { DigestFacts, DigestSuggestions } from "@/lib/digest/contract";
 import { buildDigestFacts } from "@/lib/digest/facts";
 import {
@@ -24,11 +24,13 @@ export interface DigestProfile {
 }
 
 export interface DigestRecord {
+  id: string; factsDigest: string | null; generatedAt: string | null; historicalFacts: DigestFacts | null;
   suggestions: DigestSuggestions | null;
   acknowledgedAt: string | null;
 }
 
 export interface DigestSnapshot {
+  revision: number;
   profile: DigestProfile;
   localDate: string;
   period: DigestPeriod;
@@ -64,7 +66,20 @@ export async function loadDigestProfile(
   };
 }
 
-export async function loadDigestSnapshot({
+export async function loadDigestSnapshot(args: { supabase: DigestClient; userId: string; now?: Date }): Promise<DigestSnapshot> {
+  const revision = async () => {
+    const result = await args.supabase.from("coach_context_versions").select("revision").eq("owner_id",args.userId).maybeSingle();
+    if (result.error) throw new ApiRouteError(503,"digest_context_unavailable","Check-in facts could not be refreshed.",undefined,result.error);
+    return result.data?.revision ?? 0;
+  };
+  for(let attempt=0;attempt<2;attempt++) {
+    const before=await revision(); const snapshot=await assembleDigestSnapshot(args);
+    if (before===await revision()) return { ...snapshot, revision: before };
+  }
+  throw new ApiRouteError(409,"context_refresh_required","Your data changed while reading the check-in. Please refresh.");
+}
+
+async function assembleDigestSnapshot({
   supabase,
   userId,
   now = new Date(),
@@ -72,7 +87,7 @@ export async function loadDigestSnapshot({
   supabase: DigestClient;
   userId: string;
   now?: Date;
-}): Promise<DigestSnapshot> {
+}): Promise<Omit<DigestSnapshot, "revision">> {
   const profile = await loadDigestProfile(supabase, userId);
   const localDate = getDateInTimezone(now, profile.timezone);
   const currentPeriod = resolveDigestPeriod({
@@ -119,24 +134,17 @@ export async function loadDigestSnapshot({
  * planned. Archived goals stay in, because a session placed against one still
  * belongs in the recap; they are filtered out of the live set below.
  */
-async function loadGoals(supabase: DigestClient, userId: string) {
-  const { data, error } = await supabase
-    .from("goals")
-    .select("id,title,start_date,end_date,archived_at")
-    .eq("owner_id", userId)
-    .eq("is_deleted", false)
-    .order("start_date")
-    .limit(MAX_DIGEST_ROWS);
-  if (error) {
-    throw new ApiRouteError(
-      500,
-      "digest_goals_load_failed",
-      "Digest data could not be loaded.",
-      undefined,
-      error
-    );
+async function digestRows<T>(read: (offset: number) => PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[]> {
+  const rows: T[] = [];
+  for (let offset=0;;offset+=MAX_DIGEST_ROWS) {
+    const result = await read(offset);
+    if (result.error) throw new ApiRouteError(500,"digest_data_load_failed","Check-in data could not be loaded.",undefined,result.error);
+    rows.push(...result.data ?? []);
+    if ((result.data?.length ?? 0)<MAX_DIGEST_ROWS) return rows;
   }
-  return data ?? [];
+}
+async function loadGoals(supabase: DigestClient, userId: string) {
+  return digestRows(offset=>supabase.from("goals").select("id,title,start_date,end_date,archived_at").eq("owner_id",userId).eq("is_deleted",false).order("id").range(offset,offset+MAX_DIGEST_ROWS-1));
 }
 
 /** Goals live enough to want work in the window ahead. */
@@ -154,56 +162,12 @@ function goalsLiveInWindow(
     .map((goal) => ({ goalId: goal.id, title: goal.title }));
 }
 
-async function loadPlacedItemRows(
-  supabase: DigestClient,
-  userId: string,
-  period: DigestPeriod
-) {
-  const { data, error } = await supabase
-    .from("planner_items")
-    .select("goal_id,scheduled_date")
-    .eq("owner_id", userId)
-    .gte("scheduled_date", period.recapStart)
-    .lte("scheduled_date", period.aheadEnd)
-    .order("scheduled_date")
-    .limit(MAX_DIGEST_ROWS);
-  if (error) {
-    throw new ApiRouteError(
-      500,
-      "digest_items_load_failed",
-      "Digest data could not be loaded.",
-      undefined,
-      error
-    );
-  }
-  return data ?? [];
+async function loadPlacedItemRows(supabase: DigestClient,userId: string,period: DigestPeriod) {
+  return digestRows(offset=>supabase.from("planner_items").select("goal_id,scheduled_date").eq("owner_id",userId).gte("scheduled_date",period.recapStart).lte("scheduled_date",period.aheadEnd).order("id").range(offset,offset+MAX_DIGEST_ROWS-1));
 }
-
-async function loadCompletions(
-  supabase: DigestClient,
-  userId: string,
-  period: DigestPeriod
-) {
-  const { data, error } = await supabase
-    .from("completions")
-    .select("goal_id,completed_on")
-    .eq("user_id", userId)
-    .gte("completed_on", period.recapStart)
-    .lte("completed_on", period.aheadEnd)
-    .limit(MAX_DIGEST_ROWS);
-  if (error) {
-    throw new ApiRouteError(
-      500,
-      "digest_completions_load_failed",
-      "Digest data could not be loaded.",
-      undefined,
-      error
-    );
-  }
-  return (data ?? []).map((row) => ({
-    goalId: row.goal_id,
-    completedOn: row.completed_on,
-  }));
+async function loadCompletions(supabase: DigestClient,userId: string,period: DigestPeriod) {
+  const rows=await digestRows(offset=>supabase.from("completions").select("goal_id,completed_on").eq("user_id",userId).gte("completed_on",period.recapStart).lte("completed_on",period.aheadEnd).order("id").range(offset,offset+MAX_DIGEST_ROWS-1));
+  return rows.map(row=>({goalId:row.goal_id,completedOn:row.completed_on}));
 }
 
 async function loadDigestRecord(
@@ -211,13 +175,10 @@ async function loadDigestRecord(
   userId: string,
   period: DigestPeriod
 ): Promise<DigestRecord | null> {
-  // The stored `facts` column is the audit trail of what the model was shown.
-  // Reads always recompute facts from the plan, so it is deliberately not
-  // selected here: a row written against an older facts shape must not be able
-  // to fail a parse and take the check-in down with it.
+  // Historical facts are optional; live rows never depend on parsing an old snapshot.
   const { data, error } = await supabase
     .from("user_digests")
-    .select("suggestions,acknowledged_at")
+    .select("id,suggestions,acknowledged_at,facts_digest,generated_at,recap_snapshot")
     .eq("owner_id", userId)
     .eq("kind", period.kind)
     .eq("period_key", period.periodKey)
@@ -235,7 +196,9 @@ async function loadDigestRecord(
     return null;
   }
   const suggestions = digestSuggestionsSchema.safeParse(data.suggestions);
+  const historical = digestFactsSchema.safeParse(data.recap_snapshot);
   return {
+    id:data.id, factsDigest:data.facts_digest, generatedAt:data.generated_at, historicalFacts:historical.success ? historical.data : null,
     suggestions: suggestions.success ? suggestions.data : null,
     acknowledgedAt: data.acknowledged_at,
   };
@@ -268,45 +231,6 @@ async function loadLastAcknowledgedDigestAt(
     );
   }
   return data?.acknowledged_at ?? null;
-}
-
-export async function upsertDigestRow({
-  supabase,
-  userId,
-  kind,
-  periodKey,
-  facts,
-  suggestions,
-  acknowledgedAt,
-}: {
-  supabase: DigestClient;
-  userId: string;
-  kind: DigestKind;
-  periodKey: string;
-  facts: DigestFacts;
-  suggestions?: DigestSuggestions | null;
-  acknowledgedAt?: string | null;
-}) {
-  const { error } = await supabase.from("user_digests").upsert(
-    {
-      owner_id: userId,
-      kind,
-      period_key: periodKey,
-      facts,
-      ...(suggestions !== undefined ? { suggestions } : {}),
-      ...(acknowledgedAt !== undefined ? { acknowledged_at: acknowledgedAt } : {}),
-    },
-    { onConflict: "owner_id,kind,period_key" }
-  );
-  if (error) {
-    throw new ApiRouteError(
-      500,
-      "digest_upsert_failed",
-      "Digest could not be saved.",
-      undefined,
-      error
-    );
-  }
 }
 
 export async function updateDigestAutoShow({

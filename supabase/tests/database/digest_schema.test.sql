@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, private, extensions, pg_catalog;
-select plan(9);
+select plan(11);
 
 insert into auth.users (id, email)
 values
@@ -55,6 +55,20 @@ select throws_ok(
   'unknown quota features are still rejected'
 );
 
+-- Offers are authored by the service; clients may only read their own rows.
+select public.ensure_digest_offer(
+  'a1111111-1111-4111-8111-111111111111', 'daily', '2026-09-06',
+  '{"placed":1}'::jsonb, 'daily-owner'
+);
+select public.ensure_digest_offer(
+  'a2222222-2222-4222-8222-222222222222', 'daily', '2026-09-06',
+  '{}'::jsonb, 'daily-other'
+);
+select public.ensure_digest_offer(
+  'a1111111-1111-4111-8111-111111111111', 'monthly', '2026-09-01',
+  '{"placed":4}'::jsonb, 'monthly-owner'
+);
+
 set local role authenticated;
 select set_config(
   'request.jwt.claim.sub',
@@ -63,12 +77,16 @@ select set_config(
 );
 select set_config('request.jwt.claim.role', 'authenticated', true);
 
-insert into public.user_digests (owner_id, kind, period_key, facts)
-values (
-  'a1111111-1111-4111-8111-111111111111',
-  'daily',
-  '2026-09-06',
-  '{"placed":1}'::jsonb
+select throws_ok(
+  $$
+    insert into public.user_digests (owner_id, kind, period_key, facts)
+    values (
+      'a1111111-1111-4111-8111-111111111111', 'daily', '2026-09-07', '{}'
+    )
+  $$,
+  '42501'::character(5),
+  'permission denied for table user_digests',
+  'clients cannot author their own digest rows'
 );
 
 select is(
@@ -76,16 +94,34 @@ select is(
     select count(*)::int
     from public.user_digests
     where owner_id = 'a1111111-1111-4111-8111-111111111111'
+      and kind = 'daily'
   ),
   1,
-  'owners can insert their own digest rows'
+  'owners can read their service-authored digest rows'
 );
 
-update public.user_digests
-set acknowledged_at = timezone('utc', now())
-where owner_id = 'a1111111-1111-4111-8111-111111111111'
-  and kind = 'daily'
-  and period_key = '2026-09-06';
+select throws_ok(
+  $$
+    update public.user_digests
+    set acknowledged_at = timezone('utc', now())
+    where owner_id = 'a1111111-1111-4111-8111-111111111111'
+  $$,
+  '42501'::character(5),
+  'permission denied for table user_digests',
+  'clients cannot bypass the digest acknowledgement boundary'
+);
+
+reset role;
+set local role service_role;
+select public.acknowledge_digest_offer(
+  'a1111111-1111-4111-8111-111111111111',
+  (select id from public.user_digests
+   where owner_id = 'a1111111-1111-4111-8111-111111111111'
+     and kind = 'daily' and period_key = '2026-09-06'),
+  '2026-09-06'
+);
+reset role;
+set local role authenticated;
 
 select ok(
   (
@@ -95,7 +131,7 @@ select ok(
       and kind = 'daily'
       and period_key = '2026-09-06'
   ),
-  'owners can acknowledge their digest'
+  'owners can read the acknowledgement persisted by the service'
 );
 
 select is(
@@ -118,16 +154,8 @@ select throws_ok(
     )
   $$,
   '42501'::character(5),
-  'new row violates row-level security policy for table "user_digests"',
+  'permission denied for table user_digests',
   'owners cannot insert a digest for another user'
-);
-
-insert into public.user_digests (owner_id, kind, period_key, facts)
-values (
-  'a1111111-1111-4111-8111-111111111111',
-  'monthly',
-  '2026-09-01',
-  '{"placed":4}'::jsonb
 );
 
 select is(

@@ -799,6 +799,36 @@ export type Database = {
           },
         ]
       }
+      coach_forgotten_sources: {
+        Row: {
+          message_id: string
+          owner_id: string
+        }
+        Insert: {
+          message_id: string
+          owner_id: string
+        }
+        Update: {
+          message_id?: string
+          owner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_forgotten_sources_message_id_owner_id_fkey"
+            columns: ["message_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "coach_messages"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "coach_forgotten_sources_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coach_memories: {
         Row: {
           content: string
@@ -1050,6 +1080,8 @@ export type Database = {
           is_default: boolean
           owner_id: string
           summary: string
+          summary_sources: string[]
+          summary_updated_at: string | null
           title: string
           updated_at: string
           version: number
@@ -1062,6 +1094,8 @@ export type Database = {
           is_default?: boolean
           owner_id: string
           summary?: string
+          summary_sources?: string[]
+          summary_updated_at?: string | null
           title: string
           updated_at?: string
           version?: number
@@ -1074,6 +1108,8 @@ export type Database = {
           is_default?: boolean
           owner_id?: string
           summary?: string
+          summary_sources?: string[]
+          summary_updated_at?: string | null
           title?: string
           updated_at?: string
           version?: number
@@ -1207,6 +1243,42 @@ export type Database = {
           {
             foreignKeyName: "completions_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      digest_presentations: {
+        Row: {
+          digest_id: string
+          local_date: string
+          owner_id: string
+          presented_at: string
+        }
+        Insert: {
+          digest_id: string
+          local_date: string
+          owner_id: string
+          presented_at?: string
+        }
+        Update: {
+          digest_id?: string
+          local_date?: string
+          owner_id?: string
+          presented_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digest_presentations_digest_id_fkey"
+            columns: ["digest_id"]
+            isOneToOne: false
+            referencedRelation: "user_digests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digest_presentations_owner_id_fkey"
+            columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -2873,10 +2945,15 @@ export type Database = {
           acknowledged_at: string | null
           created_at: string
           facts: Json
+          facts_digest: string | null
+          generated_at: string | null
+          generation_deadline: string | null
+          generation_token: string | null
           id: string
           kind: string
           owner_id: string
           period_key: string
+          recap_snapshot: Json | null
           suggestions: Json | null
           updated_at: string
         }
@@ -2884,10 +2961,15 @@ export type Database = {
           acknowledged_at?: string | null
           created_at?: string
           facts?: Json
+          facts_digest?: string | null
+          generated_at?: string | null
+          generation_deadline?: string | null
+          generation_token?: string | null
           id?: string
           kind: string
           owner_id: string
           period_key: string
+          recap_snapshot?: Json | null
           suggestions?: Json | null
           updated_at?: string
         }
@@ -2895,10 +2977,15 @@ export type Database = {
           acknowledged_at?: string | null
           created_at?: string
           facts?: Json
+          facts_digest?: string | null
+          generated_at?: string | null
+          generation_deadline?: string | null
+          generation_token?: string | null
           id?: string
           kind?: string
           owner_id?: string
           period_key?: string
+          recap_snapshot?: Json | null
           suggestions?: Json | null
           updated_at?: string
         }
@@ -3113,6 +3200,10 @@ export type Database = {
         Args: { p_team_id: string; p_visibility_acknowledged: boolean }
         Returns: boolean
       }
+      acknowledge_digest_offer: {
+        Args: { p_day: string; p_id: string; p_owner: string }
+        Returns: boolean
+      }
       acknowledge_user_award_service: {
         Args: { p_award_id: string; p_user_id: string }
         Returns: boolean
@@ -3174,6 +3265,15 @@ export type Database = {
       can_view_goal: {
         Args: { p_goal_id: string; p_uid: string }
         Returns: boolean
+      }
+      claim_digest_generation: {
+        Args: {
+          p_digest: string
+          p_id: string
+          p_owner: string
+          p_token: string
+        }
+        Returns: Json
       }
       claim_notification_outbox_service: {
         Args: { p_limit?: number }
@@ -3304,6 +3404,16 @@ export type Database = {
       dissolve_team_service: { Args: never; Returns: boolean }
       drain_xp_recompute_outbox: { Args: { p_limit?: number }; Returns: number }
       ensure_coach_home: { Args: { p_owner: string }; Returns: string }
+      ensure_digest_offer: {
+        Args: {
+          p_digest: string
+          p_facts: Json
+          p_key: string
+          p_kind: string
+          p_owner: string
+        }
+        Returns: Json
+      }
       find_profile_by_username: {
         Args: { p_limit?: number; p_query: string }
         Returns: {
@@ -3323,6 +3433,18 @@ export type Database = {
           p_source: Json
         }
         Returns: Json
+      }
+      finish_digest_generation: {
+        Args: {
+          p_digest: string
+          p_facts: Json
+          p_id: string
+          p_owner: string
+          p_revision: number
+          p_suggestions: Json
+          p_token: string
+        }
+        Returns: boolean
       }
       get_challenge_detail: {
         Args: { p_challenge_id: string }
@@ -3677,6 +3799,16 @@ export type Database = {
         Returns: boolean
       }
       rollover_leaderboard_seasons_service: { Args: never; Returns: number }
+      save_coach_summary: {
+        Args: {
+          p_owner: string
+          p_sources: string[]
+          p_summary: string
+          p_topic: string
+          p_version: number
+        }
+        Returns: boolean
+      }
       save_planner_coach_conversation_service: {
         Args: {
           p_messages: Json

@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
   requireAuthenticatedRequestContext: vi.fn(),
   readCurrentDigest: vi.fn(),
   generateCurrentDigest: vi.fn(),
-  acknowledgeCurrentDigest: vi.fn(),
+  acknowledgeDigest: vi.fn(),
   setDigestAutoShow: vi.fn(),
 }));
 
@@ -33,7 +33,7 @@ vi.mock("@/lib/digest/service", async () => {
     ...actual,
     readCurrentDigest: mocks.readCurrentDigest,
     generateCurrentDigest: mocks.generateCurrentDigest,
-    acknowledgeCurrentDigest: mocks.acknowledgeCurrentDigest,
+    acknowledgeDigest: mocks.acknowledgeDigest,
     setDigestAutoShow: mocks.setDigestAutoShow,
   };
 });
@@ -118,24 +118,24 @@ describe("digest routes", () => {
       reused: false,
     });
     const response = await generatePost(
-      jsonRequest("http://localhost/api/digest/generate", { regenerate: false })
+      jsonRequest("http://localhost/api/digest/generate", { referenceId: USER_ID })
     );
     expect(response.status).toBe(200);
     expect(mocks.generateCurrentDigest).toHaveBeenCalledWith({
       supabase: {},
       userId: USER_ID,
-      regenerate: false,
+      referenceId: USER_ID,
     });
   });
 
   it("acknowledges the current period", async () => {
-    mocks.acknowledgeCurrentDigest.mockResolvedValue({
+    mocks.acknowledgeDigest.mockResolvedValue({
       kind: "daily",
       periodKey: "2026-09-09",
       acknowledged: true,
     });
     const response = await ackPost(
-      jsonRequest("http://localhost/api/digest/ack", {})
+      jsonRequest("http://localhost/api/digest/ack", {referenceId:USER_ID,localDate:"2026-09-09"})
     );
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({

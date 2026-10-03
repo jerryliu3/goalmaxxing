@@ -7,6 +7,7 @@ import type { DigestKind } from "@/lib/digest/period";
 
 export interface DigestPayload {
   schemaVersion: "1";
+  id: string; factsDigest: string; historicalFacts: DigestFacts; generatedAt: string | null;
   kind: DigestKind;
   periodKey: string;
   localDate: string;

@@ -4,7 +4,7 @@ import { shouldAutoShowDigest } from "./service";
 describe("shouldAutoShowDigest", () => {
   it("shows when auto-show is on and the period is unacknowledged", () => {
     expect(
-      shouldAutoShowDigest({ digestAutoShow: true, acknowledgedAt: null })
+      shouldAutoShowDigest({ digestAutoShow: true, acknowledged: false })
     ).toBe(true);
   });
 
@@ -12,11 +12,11 @@ describe("shouldAutoShowDigest", () => {
     expect(
       shouldAutoShowDigest({
         digestAutoShow: true,
-        acknowledgedAt: "2026-09-09T12:00:00.000Z",
+        acknowledged: true,
       })
     ).toBe(false);
     expect(
-      shouldAutoShowDigest({ digestAutoShow: false, acknowledgedAt: null })
+      shouldAutoShowDigest({ digestAutoShow: false, acknowledged: false })
     ).toBe(false);
   });
 });
