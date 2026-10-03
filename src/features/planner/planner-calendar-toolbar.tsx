@@ -39,6 +39,7 @@ interface PlannerCalendarToolbarProps {
   undoDisabled: boolean;
   loading: boolean;
   viewMode: PlannerCalendarViewMode;
+  goalViewOpen: boolean;
   canOpenSettings: boolean;
   linkedTargetDetails: PlannerEligibilityNotices["linkedTargetDetails"];
   searchQuery: string;
@@ -48,6 +49,7 @@ interface PlannerCalendarToolbarProps {
   onSave: () => void;
   onDiscardDraftChanges: () => void;
   onViewModeChange: (viewMode: PlannerCalendarViewMode) => void;
+  onGoalViewOpenChange: (open: boolean) => void;
   onOpenFilters: () => void;
   onOpenSettings: () => void;
   onSearchQueryChange: (query: string) => void;
@@ -55,45 +57,67 @@ interface PlannerCalendarToolbarProps {
 
 function PlanViewModeSwitch({
   viewMode,
+  goalViewOpen,
   loading,
   onViewModeChange,
+  onGoalViewOpenChange,
 }: {
   viewMode: PlannerCalendarViewMode;
+  goalViewOpen: boolean;
   loading: boolean;
   onViewModeChange: (viewMode: PlannerCalendarViewMode) => void;
+  onGoalViewOpenChange: (open: boolean) => void;
 }) {
   const resolvedViewMode = viewMode === "three_day" ? "week" : viewMode;
-  const selectedViewIndex = Math.max(
-    0,
-    PLANNER_VIEW_MODES.findIndex((modeOption) => modeOption.value === resolvedViewMode)
-  );
+  // Goal View is the first segment; the calendar views follow it.
+  const selectedViewIndex = goalViewOpen
+    ? 0
+    : 1 +
+      Math.max(
+        0,
+        PLANNER_VIEW_MODES.findIndex(
+          (modeOption) => modeOption.value === resolvedViewMode
+        )
+      );
+  const optionClass = (selected: boolean) =>
+    selected
+      ? "relative z-10 min-h-8 whitespace-nowrap rounded-[8px] px-3 text-primary-foreground"
+      : "relative z-10 min-h-8 whitespace-nowrap rounded-[8px] px-3 text-muted-foreground";
 
   return (
     <div
       role="group"
       aria-label="Plan view mode"
-      className="relative isolate inline-grid shrink-0 grid-cols-3 rounded-[10px] bg-muted p-0.5 text-xs font-medium"
+      className="relative isolate inline-grid shrink-0 grid-cols-4 rounded-[10px] bg-muted p-0.5 text-xs font-medium"
     >
       <span
         aria-hidden
         data-testid="plan-view-mode-thumb"
-        className="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc((100%-4px)/3)] rounded-[8px] bg-primary shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+        className="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc((100%-4px)/4)] rounded-[8px] bg-primary shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
         style={{ transform: `translateX(${selectedViewIndex * 100}%)` }}
       />
+      <button
+        type="button"
+        aria-pressed={goalViewOpen}
+        disabled={loading}
+        onClick={() => onGoalViewOpenChange(true)}
+        className={optionClass(goalViewOpen)}
+      >
+        Goal View
+      </button>
       {PLANNER_VIEW_MODES.map((modeOption) => {
-        const selected = resolvedViewMode === modeOption.value;
+        const selected = !goalViewOpen && resolvedViewMode === modeOption.value;
         return (
           <button
             key={modeOption.value}
             type="button"
             aria-pressed={selected}
             disabled={loading}
-            onClick={() => onViewModeChange(modeOption.value)}
-            className={
-              selected
-                ? "relative z-10 min-h-8 whitespace-nowrap rounded-[8px] px-3 text-primary-foreground"
-                : "relative z-10 min-h-8 whitespace-nowrap rounded-[8px] px-3 text-muted-foreground"
-            }
+            onClick={() => {
+              onGoalViewOpenChange(false);
+              onViewModeChange(modeOption.value);
+            }}
+            className={optionClass(selected)}
           >
             {modeOption.label}
           </button>
@@ -113,6 +137,7 @@ export function PlannerCalendarToolbar({
   undoDisabled,
   loading,
   viewMode,
+  goalViewOpen,
   canOpenSettings,
   linkedTargetDetails,
   searchQuery,
@@ -122,6 +147,7 @@ export function PlannerCalendarToolbar({
   onSave,
   onDiscardDraftChanges,
   onViewModeChange,
+  onGoalViewOpenChange,
   onOpenFilters,
   onOpenSettings,
   onSearchQueryChange,
@@ -199,8 +225,10 @@ export function PlannerCalendarToolbar({
         <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1">
           <PlanViewModeSwitch
             viewMode={viewMode}
+            goalViewOpen={goalViewOpen}
             loading={loading}
             onViewModeChange={onViewModeChange}
+            onGoalViewOpenChange={onGoalViewOpenChange}
           />
           <PlannerEndMonthQuickFilterChips
             referenceMonth={referenceMonth}
