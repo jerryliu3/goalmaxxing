@@ -3,9 +3,11 @@
 Route: `/ux/goal-view`. Uses the existing moderator-only UX lab gate.
 Exploratory, not a product lock or a production calendar cutover.
 
-Time Weave: `/ux/goal-view/time-weave`, a separate **Week configuration**.
+Time Weave comparison: `/ux/goal-view/time-weave`, with **Week / Goal View**
+placement controls. Time Weave also appears beside Card Rails and Goal Desk at
+`/ux/goal-view`. Both placements remain exploratory.
 
-## The two directions
+## Goal View directions
 
 **Card Rails** puts the real material goal card beside a horizontal track of
 scheduled dates on desktop. Phone arrangement is configurable: swipeable goal
@@ -19,7 +21,7 @@ rows grouped by week or month. Desktop recomposes into goal navigation, the
 material card, and dates; the narrow version uses a horizontal goal navigator
 and places the card above the dates.
 
-Both use the same draft and completion state. Switching directions, phone
+All directions use the same draft and completion state. Switching directions, phone
 arrangement, filters or grouping preserves that state. Phone preview uses
 container sizing, so it also reflects the actual responsive layout.
 
@@ -77,7 +79,38 @@ eligibility, date/order guards, extended schedules and period progress. No
 tests, typecheck, lint, build, browser checks or CI were run, per repository
 workflow. Visual and interaction performance still require approved review.
 
-## Time Weave as a Week configuration
+## Time Weave placement comparison
+
+The Week / Goal View lab switch shares one sample reducer, date-navigation
+state, goal filter and density setting. Move a session in Week, switch to Goal
+View before saving, then return: the same date draft and recorded completions
+remain. This is a comparison tool, not a new production navigation preference.
+
+**Week placement** answers “How do these goals fit into this week?” Date range,
+previous/next week and Today lead. Goal labels can focus one lane, and the
+production vertical agenda is an in-place alternative.
+
+**Goal View placement** answers “How is this goal scheduled over time?” A
+selected goal's real material card, period/lifetime progress, end date or
+ongoing status, next session and last saved scheduled date anchor the timeline.
+Select another goal row without filtering out its neighbors or moving the date
+axis. Desktop puts the goal object beside the board; phone puts a compact card
+and facts above it. Scopes include Upcoming, All dates and Past dates, and
+ongoing dates remain bounded by the saved plan. Next session and Saved through
+are one-click jumps; date navigation advances four weeks instead of requiring
+repeated weekly navigation. Every week boundary remains labeled on the axis.
+
+The full Goal View lab retains its multi-goal filter and search across Card
+Rails, Goal Desk and Time Weave. Week/month grouping belongs to Rails and Desk;
+Weave uses its shared civil-date axis. The “See week” dialog now uses the same
+production vertical agenda as the Week comparison.
+
+Placement remains open. Week gives the clearest weekly balancing workflow;
+Goal View gives better context for long milestone sequences and ongoing
+practices. Compare the same move in both, then browse the 30-step Portfolio and
+the ongoing Japanese practice on phone before choosing a product default.
+
+### Week configuration behavior
 
 Calendar / Time Weave is an in-place Week layout setting. Both show the same
 local plan and retain draft edits, completions, goal focus and selected day.
@@ -113,6 +146,19 @@ Invalid moves retain their original date and announce the local guard error.
 
 ### Scrolling and animation choices
 
+The implemented transition candidate is a calm dissolve. Two further motion
+directions are scoped here, rather than implemented as extra configurations:
+
+| Candidate | Behavior | Tradeoff |
+| --- | --- | --- |
+| Calm dissolve (implemented) | Preserve the week and date anchor; fade between goal rows and vertical day rows in a reserved canvas. | Least visual noise; session identity is carried by labels and state rather than traveling pixels. |
+| Follow one session | Keep the selected session visible in the vertical agenda and move only that session into its goal lane; dissolve surrounding structure. Measure only the visible week. | More continuity, but needs a focused session and scroll/clip coordination with the production morph. |
+| Vertical Weave | Keep dates running downward like Week, and put goals in columns. Scroll dates vertically. | Easiest orientation continuity for Week; horizontal goal browsing is less comfortable on phone. |
+
+Do not morph the entire multi-year canvas or imply dependencies through motion.
+If a traveling-session version is pursued, prototype interrupted transitions,
+offscreen destinations and reduced motion before making it the product default.
+
 - Stable geometry: every civil day has the same width, including empty dates.
   Scroll is native; there is no scroll-linked spring or mandatory snapping.
 - A viewport window with eight days of overscan mounts date headers, date drop
@@ -138,10 +184,13 @@ an edge, preserving a date anchor; that would need data fetching and scroll
 performance review. The sample's saved dates still stop in January 2027. Empty
 future space never manufactures scheduled recurrences.
 
-Goal View and the separate Week study each own their local sample state;
-navigation between routes resets the sample, while switches inside each route
-preserve edits. Axis coverage in `weave-axis.test.ts` includes distant dates,
+Each lab route owns its local sample state; navigation between routes resets
+the sample, while layout and placement switches inside a route preserve edits.
+Axis coverage in `weave-axis.test.ts` includes distant dates,
 leap day, render-window bounds and density anchors. `weave-model.test.ts` covers
 month/year week boundaries, the same draft in both orientations, and filtered
-day ordering. New coverage was written but not run. No performance claim has
+day ordering. `weave-study.test.tsx` covers draft/completion continuity through
+Week orientation and placement changes, and preservation of a distant date
+anchor. Expensive material and drag leaves are substituted; the composition,
+navigation and reducer are real. New coverage was written but not run. No performance claim has
 been verified in a browser.
