@@ -91,15 +91,13 @@ export function GoalDatesHeading({
   );
 }
 
-/** Date groups, the empty state and the paging control for one goal. */
+/** Date groups and the paging control for one goal. */
 export function GoalDates({
   dates,
-  showPast,
   layout,
   renderTile,
 }: {
   dates: GoalDatesModel;
-  showPast: boolean;
   layout: GoalTileLayout;
   renderTile: GoalTileRenderer;
 }) {
@@ -120,13 +118,6 @@ export function GoalDates({
           </div>
         </div>
       ))}
-      {dates.total === 0 ? (
-        <p className="py-6 text-sm text-muted-foreground">
-          {showPast
-            ? "No dates for this goal."
-            : "No upcoming dates for this goal. Turn on Show past sessions in Filters."}
-        </p>
-      ) : null}
       {dates.remaining > 0 ? (
         <button
           type="button"

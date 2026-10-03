@@ -55,9 +55,14 @@ export function GoalView({
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const range = useMemo(() => buildGoalViewWindow(today), [today]);
   const visibleGoals = useMemo(
-    () => selectGoalViewGoals(goals, sessions),
-    [goals, sessions]
+    () => selectGoalViewGoals(goals, sessions, { showPast, today }),
+    [goals, sessions, showPast, today]
   );
+  // The preview follows the goals on screen.
+  const visibleSessions = useMemo(() => {
+    const visibleIds = new Set(visibleGoals.map((goal) => goal.id));
+    return sessions.filter((session) => visibleIds.has(session.goalId));
+  }, [sessions, visibleGoals]);
 
   const selectedId =
     visibleGoals.find((goal) => goal.id === selectedGoalId)?.id ??
@@ -118,7 +123,7 @@ export function GoalView({
         open={previewOpen}
         onOpenChange={onPreviewOpenChange}
         range={range}
-        sessions={sessions}
+        sessions={visibleSessions}
         today={today}
         weekStartsOn={weekStartsOn}
       />

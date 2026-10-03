@@ -101,9 +101,27 @@ describe("goal session selectors", () => {
   it("keeps the planner's goal order and drops goals without sessions", () => {
     const goals = selectGoalViewGoals(
       [goal("gym", "Gym"), goal("idle", "Idle"), goal("run", "Run")],
-      sessions
+      sessions,
+      { showPast: true, today: "2026-10-02" }
     );
     expect(goals.map((g) => g.id)).toEqual(["gym", "run"]);
+  });
+
+  it("hides ended goals and goals with only past sessions unless past sessions are shown", () => {
+    const pastOnly = buildGoalViewSessions(["2026-09-28"], () => [
+      entry("past", "past"),
+    ]);
+    const mixed = [...sessions, ...pastOnly];
+    const ended = { ...goal("ended", "Ended"), end_date: "2026-09-30" } as Goal;
+    const goals = [goal("run", "Run"), goal("past", "Past"), ended];
+    const withEnded = [...mixed, ...buildGoalViewSessions(["2026-09-28"], () => [entry("e", "ended")])];
+    const today = "2026-10-02";
+    expect(
+      selectGoalViewGoals(goals, withEnded, { showPast: false, today }).map((g) => g.id)
+    ).toEqual(["run"]);
+    expect(
+      selectGoalViewGoals(goals, withEnded, { showPast: true, today }).map((g) => g.id)
+    ).toEqual(["run", "past", "ended"]);
   });
 
   it("groups by planner week start", () => {

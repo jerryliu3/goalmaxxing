@@ -91,7 +91,6 @@ export function GoalRail({
         >
           <GoalDates
             dates={dates}
-            showPast={showPast}
             layout="card"
             renderTile={renderTile}
           />

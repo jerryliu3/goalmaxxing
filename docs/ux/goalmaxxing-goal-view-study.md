@@ -204,11 +204,12 @@ Week / Month), not as a separate route. Code lives in
 - Desktop is Card Rails. Phone (below the `md` breakpoint) is swipeable goal
   cards with the selected goal's dates as a vertical list; the cards and goal
   selector stay horizontal.
-- Dates are grouped by planner week and show upcoming sessions by default. The
-  planner's Filters dialog adds a "Show past sessions" checkbox while Goal View
-  is open, and its "Show completed goals" toggle hides goals the checklist
-  treats as completed and their sessions here too, including from the preview.
-  An achieved goal that is still ongoing (no end date) stays visible.
+- Dates are grouped by planner week and show upcoming sessions by default. Goals
+  that ended before today, or have no session today or later, only appear when
+  the Filters dialog's "Show past sessions" checkbox (shown while Goal View is
+  open) is on. "Show completed goals" hides goals the checklist treats as
+  completed once they have no session today or later; a completed goal that is
+  still scheduled stays. Hidden goals leave the preview too.
 - It is a lens on the planner context, not a new data path. Opening it loads a
   361-day window (60 days back, 300 forward) and skips the month-keyed tab
   cache. Sessions come from the planner's filtered day entries, so search,

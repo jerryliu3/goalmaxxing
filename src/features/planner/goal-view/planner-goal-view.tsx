@@ -8,11 +8,14 @@ import type { Goal } from "@/lib/goals/types";
 import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
 import { resolveGoalSessionCompletion } from "./goal-session-completion";
 import { GoalView } from "./goal-view";
-import type { GoalViewSession } from "./goal-view-model";
+import {
+  goalIdsWithUpcomingSessions,
+  type GoalViewSession,
+} from "./goal-view-model";
 
 export interface PlannerGoalViewProps {
   goals: Goal[];
-  /** Goals whose target is met; hidden unless `showCompletedGoals`. */
+  /** Goals whose target is met; hidden unless `showCompletedGoals` or still scheduled. */
   completedGoalIds: ReadonlySet<string>;
   showCompletedGoals: boolean;
   progressSummaries: ProgressContextSummary[];
@@ -59,18 +62,16 @@ export function PlannerGoalView({
     () => new Map(progressSummaries.map((summary) => [summary.goalId, summary])),
     [progressSummaries]
   );
-  const visibleGoals = useMemo(
-    () =>
-      showCompletedGoals
-        ? goals
-        : goals.filter((goal) => !completedGoalIds.has(goal.id)),
-    [goals, completedGoalIds, showCompletedGoals]
-  );
-  // Sessions follow their goal, so hidden goals leave the preview too.
-  const visibleSessions = useMemo(() => {
-    const visibleIds = new Set(visibleGoals.map((goal) => goal.id));
-    return sessions.filter((session) => visibleIds.has(session.goalId));
-  }, [sessions, visibleGoals]);
+  // A completed goal stays while it still has sessions today or later.
+  const visibleGoals = useMemo(() => {
+    if (showCompletedGoals) {
+      return goals;
+    }
+    const upcoming = goalIdsWithUpcomingSessions(sessions, view.today);
+    return goals.filter(
+      (goal) => !completedGoalIds.has(goal.id) || upcoming.has(goal.id)
+    );
+  }, [goals, sessions, view.today, completedGoalIds, showCompletedGoals]);
   const isEditable = (session: GoalViewSession) =>
     canOpenEntry(session.entry) && canMutateEntryOnDay(session.entry, session.date);
 
@@ -78,7 +79,7 @@ export function PlannerGoalView({
     <GoalView
       {...view}
       goals={visibleGoals}
-      sessions={visibleSessions}
+      sessions={sessions}
       weekStartsOn={normalizeWeekStartsOn(weekStartsOn)}
       progressByGoalId={progressByGoalId}
       resolveCompletion={(session) =>
