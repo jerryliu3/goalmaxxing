@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { isDemoPathname } from "@/lib/navigation/demo-path";
-import { BookOpen, CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
+import { BookOpen, CalendarDays, CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,7 @@ interface PlannerCalendarToolbarProps {
   onDiscardDraftChanges: () => void;
   onViewModeChange: (viewMode: PlannerCalendarViewMode) => void;
   onGoalViewOpenChange: (open: boolean) => void;
+  onGoalViewPreview: () => void;
   onOpenFilters: () => void;
   onOpenSettings: () => void;
   onSearchQueryChange: (query: string) => void;
@@ -148,6 +149,7 @@ export function PlannerCalendarToolbar({
   onDiscardDraftChanges,
   onViewModeChange,
   onGoalViewOpenChange,
+  onGoalViewPreview,
   onOpenFilters,
   onOpenSettings,
   onSearchQueryChange,
@@ -253,6 +255,18 @@ export function PlannerCalendarToolbar({
             className="flex shrink-0 items-center gap-2"
             data-onboarding="planner.calendar.controls"
           >
+            {goalViewOpen ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onGoalViewPreview}
+                disabled={loading}
+              >
+                <CalendarDays aria-hidden="true" />
+                Preview
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant="outline"

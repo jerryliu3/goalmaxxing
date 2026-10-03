@@ -30,13 +30,14 @@ function mount(overrides: Partial<PlannerGoalViewProps> = {}) {
     sessions: [session],
     today: "2026-10-02",
     weekStartsOn: undefined,
-    selectedEntryKey: null,
+    showPast: false,
+    previewOpen: false,
+    onPreviewOpenChange: vi.fn(),
     canMutatePlanItems: true,
     optimisticCompletionFacts: {} as never,
     mutationLoadingKey: null,
     canOpenEntry: () => true,
     canMutateEntryOnDay: () => true,
-    onOpenEntry: vi.fn(),
     onMoveEntry: vi.fn(),
     onToggleEntry: vi.fn(),
     ...overrides,
@@ -62,13 +63,22 @@ describe("PlannerGoalView", () => {
     expect(captured.goals.map((goal) => goal.id)).toEqual(["run", "done"]);
   });
 
-  it("opens, moves and toggles through the planner commands", () => {
+  it("hides achieved goals and their sessions, and shows them with the toggle", () => {
+    const achieved = { goalId: "run", outcome: "achieved" } as never;
+    mount({ progressSummaries: [achieved] });
+    expect(captured.goals).toEqual([]);
+    expect(captured.sessions).toEqual([]);
+    cleanup();
+    mount({ progressSummaries: [achieved], showCompletedGoals: true });
+    expect(captured.goals.map((goal) => goal.id)).toEqual(["run", "done"]);
+    expect(captured.sessions).toEqual([session]);
+  });
+
+  it("moves and toggles through the planner commands", () => {
     const props = mount();
     const source = document.createElement("button");
-    captured.onOpenSession(session);
     captured.onMoveSession(session, "2026-10-10");
     captured.onToggleSession(session, source);
-    expect(props.onOpenEntry).toHaveBeenCalledWith(entry, "2026-10-09");
     expect(props.onMoveEntry).toHaveBeenCalledWith(entry, "2026-10-10");
     expect(props.onToggleEntry).toHaveBeenCalledWith(entry, "2026-10-09", source);
   });
@@ -76,9 +86,7 @@ describe("PlannerGoalView", () => {
   it("does nothing for sessions the planner cannot mutate", () => {
     const props = mount({ canMutateEntryOnDay: () => false });
     expect(captured.isEditable(session)).toBe(false);
-    captured.onOpenSession(session);
     captured.onToggleSession(session, document.createElement("button"));
-    expect(props.onOpenEntry).not.toHaveBeenCalled();
     expect(props.onToggleEntry).not.toHaveBeenCalled();
   });
 });

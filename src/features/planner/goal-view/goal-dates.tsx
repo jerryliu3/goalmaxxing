@@ -1,7 +1,8 @@
 "use client";
 
-import { Fragment, useMemo, useState, type ReactNode } from "react";
-import { ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { useMemo, useState, type ReactNode } from "react";
+import { ArrowRight, Pencil } from "lucide-react";
 import type { Goal } from "@/lib/goals/types";
 import { cn } from "@/lib/utils";
 import {
@@ -71,7 +72,17 @@ export function GoalDatesHeading({
 }) {
   return (
     <div>
-      <h2 className="font-display text-xl leading-tight tracking-tight">{goal.title}</h2>
+      <div className="flex items-center gap-1">
+        <h2 className="font-display text-xl leading-tight tracking-tight">{goal.title}</h2>
+        <Link
+          href={`/goals/${goal.id}`}
+          aria-label={`Edit goal ${goal.title}`}
+          title="Edit goal"
+          className="grid size-7 flex-none place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <Pencil size={14} aria-hidden />
+        </Link>
+      </div>
       <p className="mt-1 text-xs text-muted-foreground">
         {dates.total} {showPast ? "scheduled" : "upcoming"} sessions
         {dates.next ? ` · next ${dateLabel(dates.next.date, "EEE, MMM d")}` : ""}
@@ -85,14 +96,11 @@ export function GoalDates({
   dates,
   showPast,
   layout,
-  editorSlotKey = null,
   renderTile,
 }: {
   dates: GoalDatesModel;
   showPast: boolean;
   layout: GoalTileLayout;
-  /** Row layout expands the planner's session editor right under its row. */
-  editorSlotKey?: string | null;
   renderTile: GoalTileRenderer;
 }) {
   const row = layout === "row";
@@ -107,12 +115,7 @@ export function GoalDates({
           <h3 className={`pb-2 ${overlineClass}`}>{group.label}</h3>
           <div className={row ? "flex flex-col gap-1.5" : "flex gap-2"}>
             {group.entries.map((session) => (
-              <Fragment key={session.key}>
-                {renderTile(session, layout)}
-                {row && session.key === editorSlotKey ? (
-                  <div data-plan-checklist-editor-slot={session.key} />
-                ) : null}
-              </Fragment>
+              renderTile(session, layout)
             ))}
           </div>
         </div>
@@ -121,7 +124,7 @@ export function GoalDates({
         <p className="py-6 text-sm text-muted-foreground">
           {showPast
             ? "No dates for this goal."
-            : "No upcoming dates for this goal. Try Show past sessions."}
+            : "No upcoming dates for this goal. Turn on Show past sessions in Filters."}
         </p>
       ) : null}
       {dates.remaining > 0 ? (

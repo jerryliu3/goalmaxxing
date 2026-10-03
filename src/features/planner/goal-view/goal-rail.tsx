@@ -26,7 +26,6 @@ export function GoalRail({
   showPast,
   weekStartsOn,
   today,
-  editorSlotKey,
   renderTile,
 }: {
   goal: Goal;
@@ -36,8 +35,6 @@ export function GoalRail({
   showPast: boolean;
   weekStartsOn: number;
   today: string;
-  /** Session whose planner editor expands under this rail, if it is this goal's. */
-  editorSlotKey: string | null;
   renderTile: GoalTileRenderer;
 }) {
   const track = useRef<HTMLDivElement>(null);
@@ -100,10 +97,6 @@ export function GoalRail({
           />
         </div>
       </div>
-      {editorSlotKey ? (
-        // The planner's session editor portals into this slot.
-        <div className="col-span-2 pt-4" data-plan-checklist-editor-slot={editorSlotKey} />
-      ) : null}
     </section>
   );
 }

@@ -96,6 +96,8 @@ export interface PlannerCalendarOverlaysProps {
   goalFilterOptions?: GoalCategoryFilterOption[];
   showCompletedGoals?: boolean;
   onShowCompletedGoalsChange?: (value: boolean) => void;
+  showPastSessions?: boolean;
+  onShowPastSessionsChange?: (value: boolean) => void;
   dayFilters?: ChecklistFiltersFormProps | null;
   settingsOpen: boolean;
   onSettingsOpenChange: (open: boolean) => void;
@@ -157,6 +159,8 @@ export function PlannerCalendarOverlays({
   goalFilterOptions = [],
   showCompletedGoals = false,
   onShowCompletedGoalsChange,
+  showPastSessions,
+  onShowPastSessionsChange,
   dayFilters = null,
   settingsOpen,
   onSettingsOpenChange,
@@ -242,6 +246,8 @@ export function PlannerCalendarOverlays({
         goalFilterOptions={goalFilterOptions}
         showCompletedGoals={showCompletedGoals}
         onShowCompletedGoalsChange={onShowCompletedGoalsChange}
+        showPastSessions={showPastSessions}
+        onShowPastSessionsChange={onShowPastSessionsChange}
         dayFilters={dayFilters}
       />
 

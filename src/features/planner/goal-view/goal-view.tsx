@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 import type { Goal } from "@/lib/goals/types";
-import { prefersReducedMotion } from "@/features/planner/plan-view-transition";
 import type { GoalTileLayout } from "./goal-dates";
 import { GoalDeck } from "./goal-deck";
 import { GoalRail } from "./goal-rail";
-import { GoalViewControls } from "./goal-view-controls";
 import type { GoalSessionCompletion } from "./goal-session-completion";
 import { GoalSessionTile } from "./goal-session-tile";
 import { GoalWeekPeek } from "./goal-week-peek";
@@ -26,10 +24,13 @@ export interface GoalViewProps {
   sessions: GoalViewSession[];
   today: string;
   weekStartsOn: number;
-  selectedEntryKey: string | null;
+  /** Include sessions before today (a planner filter). */
+  showPast: boolean;
+  /** The cross-goal preview, opened from the planner toolbar. */
+  previewOpen: boolean;
+  onPreviewOpenChange: (open: boolean) => void;
   resolveCompletion: (session: GoalViewSession) => GoalSessionCompletion;
   isEditable: (session: GoalViewSession) => boolean;
-  onOpenSession: (session: GoalViewSession) => void;
   onMoveSession: (session: GoalViewSession, date: string) => void;
   onToggleSession: (session: GoalViewSession, source: HTMLButtonElement) => void;
 }
@@ -41,18 +42,17 @@ export function GoalView({
   sessions,
   today,
   weekStartsOn,
-  selectedEntryKey,
+  showPast,
+  previewOpen,
+  onPreviewOpenChange,
   resolveCompletion,
   isEditable,
-  onOpenSession,
   onMoveSession,
   onToggleSession,
 }: GoalViewProps) {
-  const [showPast, setShowPast] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   // Same breakpoint as the app's other two-pane layouts (Tailwind `md`).
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const [weekPeekDate, setWeekPeekDate] = useState<string | null>(null);
   const range = useMemo(() => buildGoalViewWindow(today), [today]);
   const visibleGoals = useMemo(
     () => selectGoalViewGoals(goals, sessions),
@@ -62,24 +62,6 @@ export function GoalView({
   const selectedId =
     visibleGoals.find((goal) => goal.id === selectedGoalId)?.id ??
     visibleGoals[0]?.id;
-  const editorGoalId = selectedEntryKey
-    ? sessions.find((session) => session.key === selectedEntryKey)?.goalId
-    : undefined;
-
-  // The session editor expands inside a slot below its goal; bring it into view,
-  // which also covers sessions chosen from the preview dialog.
-  useEffect(() => {
-    if (!selectedEntryKey) return;
-    const frame = requestAnimationFrame(() => {
-      document
-        .querySelector('[data-plan-entry-editor="true"]')
-        ?.scrollIntoView({
-          block: "nearest",
-          behavior: prefersReducedMotion() ? "auto" : "smooth",
-        });
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [selectedEntryKey]);
 
   const renderTile = (session: GoalViewSession, layout: GoalTileLayout) => (
     <GoalSessionTile
@@ -88,9 +70,7 @@ export function GoalView({
       layout={layout}
       today={today}
       completion={resolveCompletion(session)}
-      selected={session.key === selectedEntryKey}
       editable={isEditable(session)}
-      onOpen={onOpenSession}
       onMove={onMoveSession}
       onToggle={onToggleSession}
     />
@@ -98,12 +78,6 @@ export function GoalView({
 
   return (
     <div className="space-y-2" data-testid="goal-view">
-      <GoalViewControls
-        showPast={showPast}
-        onShowPastChange={setShowPast}
-        onPreview={() => setWeekPeekDate(today)}
-      />
-
       {visibleGoals.length === 0 || !selectedId ? (
         <p className="py-10 text-center text-sm text-muted-foreground">
           No goals have scheduled sessions in this window.
@@ -118,7 +92,6 @@ export function GoalView({
             showPast={showPast}
             weekStartsOn={weekStartsOn}
             today={today}
-            editorSlotKey={goal.id === editorGoalId ? selectedEntryKey : null}
             renderTile={renderTile}
           />
         ))
@@ -132,7 +105,6 @@ export function GoalView({
           showPast={showPast}
           weekStartsOn={weekStartsOn}
           today={today}
-          editorSlotKey={selectedEntryKey}
           renderTile={renderTile}
         />
       )}
@@ -143,17 +115,12 @@ export function GoalView({
       </p>
 
       <GoalWeekPeek
-        date={weekPeekDate}
+        open={previewOpen}
+        onOpenChange={onPreviewOpenChange}
+        range={range}
         sessions={sessions}
         today={today}
         weekStartsOn={weekStartsOn}
-        onDateChange={setWeekPeekDate}
-        onOpenSession={(session) => {
-          setWeekPeekDate(null);
-          // The phone deck expands the editor under the chosen goal's dates.
-          setSelectedGoalId(session.goalId);
-          onOpenSession(session);
-        }}
       />
     </div>
   );

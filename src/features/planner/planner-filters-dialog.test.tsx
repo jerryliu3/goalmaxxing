@@ -38,6 +38,36 @@ describe("PlannerFiltersDialog", () => {
     expect(onShowTasksInsteadOfGoalsChange).toHaveBeenCalledWith(true);
   });
 
+  it("offers Show past sessions only when Goal View supplies it", () => {
+    const onShowPastSessionsChange = vi.fn();
+    const props = {
+      open: true,
+      onOpenChange: vi.fn(),
+      showTasksInsteadOfGoals: false,
+      onShowTasksInsteadOfGoalsChange: vi.fn(),
+      categoryFilters: [],
+      onCategoryFiltersChange: vi.fn(),
+      categoryOptions: [],
+      endMonthFilters: [],
+      onEndMonthFiltersChange: vi.fn(),
+      endMonthOptions: [],
+    };
+    const { rerender } = render(<PlannerFiltersDialog {...props} />);
+    expect(
+      screen.queryByRole("checkbox", { name: "Show past sessions" })
+    ).not.toBeInTheDocument();
+
+    rerender(
+      <PlannerFiltersDialog
+        {...props}
+        showPastSessions={false}
+        onShowPastSessionsChange={onShowPastSessionsChange}
+      />
+    );
+    fireEvent.click(screen.getByRole("checkbox", { name: "Show past sessions" }));
+    expect(onShowPastSessionsChange).toHaveBeenCalledWith(true);
+  });
+
   it("hides goal filters while tasks replace goals", () => {
     render(
       <PlannerFiltersDialog

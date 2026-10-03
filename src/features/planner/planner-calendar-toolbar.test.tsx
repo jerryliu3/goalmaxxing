@@ -27,6 +27,7 @@ function renderToolbar(
     onViewModeChange: vi.fn(),
     goalViewOpen: false,
     onGoalViewOpenChange: vi.fn(),
+    onGoalViewPreview: vi.fn(),
     onOpenFilters: vi.fn(),
     onOpenSettings: vi.fn(),
     onSearchQueryChange: vi.fn(),
@@ -93,6 +94,18 @@ describe("PlannerCalendarToolbar", () => {
     fireEvent.click(within(viewGroup).getByRole("button", { name: "Month View" }));
     expect(props.onGoalViewOpenChange).toHaveBeenCalledWith(false);
     expect(props.onViewModeChange).toHaveBeenCalledWith("month");
+  });
+
+  it("offers Preview beside Filters only while Goal View is open", () => {
+    renderToolbar();
+    expect(screen.queryByRole("button", { name: "Preview" })).toBeNull();
+    cleanup();
+
+    const props = renderToolbar({ goalViewOpen: true });
+    const preview = screen.getByRole("button", { name: "Preview" });
+    expect(preview.nextElementSibling).toBe(screen.getByRole("button", { name: "Filters" }));
+    fireEvent.click(preview);
+    expect(props.onGoalViewPreview).toHaveBeenCalledTimes(1);
   });
 
   it("opens Goal View from the view switch", () => {

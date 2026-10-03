@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, LockKeyhole } from "lucide-react";
 import { PlanLedgerCompletionControl } from "@/features/planner/plan-ledger-completion-control";
 import { cn } from "@/lib/utils";
@@ -12,11 +13,9 @@ export interface GoalSessionTileProps {
   session: GoalViewSession;
   today: string;
   completion: GoalSessionCompletion;
-  selected: boolean;
   /** False for sessions the planner cannot edit from the current snapshot. */
   editable: boolean;
   layout?: GoalTileLayout;
-  onOpen: (session: GoalViewSession) => void;
   onMove: (session: GoalViewSession, date: string) => void;
   onToggle: (session: GoalViewSession, source: HTMLButtonElement) => void;
 }
@@ -29,14 +28,66 @@ function statusLabel(session: GoalViewSession, today: string) {
   return dateLabel(session.date, "EEE");
 }
 
+/**
+ * The tile's main target. It opens the browser's date picker on a hidden date
+ * input anchored to the tile, so choosing a date is one click.
+ */
+function SessionDateButton({
+  session,
+  today,
+  disabled,
+  className,
+  onMove,
+  children,
+}: {
+  session: GoalViewSession;
+  today: string;
+  disabled: boolean;
+  className: string;
+  onMove: (session: GoalViewSession, date: string) => void;
+  children: ReactNode;
+}) {
+  const input = useRef<HTMLInputElement>(null);
+  const openPicker = () => {
+    const field = input.current;
+    if (!field) return;
+    if (typeof field.showPicker === "function") field.showPicker();
+    else field.click();
+  };
+  return (
+    <div className="relative min-w-0">
+      <button
+        type="button"
+        disabled={disabled}
+        aria-label={`Change date of ${session.label}, ${dateLabel(session.date)}`}
+        onClick={openPicker}
+        className={cn("w-full text-left enabled:hover:bg-muted/50 disabled:cursor-default", className)}
+      >
+        {children}
+      </button>
+      <input
+        ref={input}
+        type="date"
+        tabIndex={-1}
+        aria-hidden
+        value={session.date}
+        min={today}
+        onChange={(event) => {
+          const date = event.target.value;
+          if (date && date !== session.date) onMove(session, date);
+        }}
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-0 opacity-0"
+      />
+    </div>
+  );
+}
+
 export function GoalSessionTile({
   session,
   today,
   completion,
-  selected,
   editable,
   layout = "card",
-  onOpen,
   onMove,
   onToggle,
 }: GoalSessionTileProps) {
@@ -91,8 +142,7 @@ export function GoalSessionTile({
     "overflow-hidden rounded-xl border border-border bg-card transition-colors",
     session.date === today && "border-primary",
     session.draft && "border-dashed bg-muted/40",
-    session.done && "bg-muted/30",
-    selected && "ring-2 ring-primary/40"
+    session.done && "bg-muted/30"
   );
   const dataAttributes = {
     "data-planner-entry-key": session.key,
@@ -115,12 +165,12 @@ export function GoalSessionTile({
             {statusLabel(session, today)}
           </span>
         </div>
-        <button
-          type="button"
-          disabled={!editable}
-          aria-label={`Edit ${session.label}, ${dateLabel(session.date)}`}
-          onClick={() => onOpen(session)}
-          className="grid min-h-14 grid-cols-[52px_minmax(0,1fr)] items-center gap-2 rounded-lg px-1.5 text-left enabled:hover:bg-muted/50 disabled:cursor-default"
+        <SessionDateButton
+          session={session}
+          today={today}
+          disabled={!movable}
+          onMove={onMove}
+          className="grid min-h-14 grid-cols-[52px_minmax(0,1fr)] items-center gap-2 rounded-lg px-1.5"
         >
           <span className="flex flex-col items-center font-display text-2xl leading-none">
             {dateLabel(session.date, "d")}
@@ -138,7 +188,7 @@ export function GoalSessionTile({
             </strong>
             {time}
           </span>
-        </button>
+        </SessionDateButton>
         {nudges}
       </article>
     );
@@ -150,12 +200,12 @@ export function GoalSessionTile({
         <span className={overlineClass}>{step}</span>
         {completionControl}
       </div>
-      <button
-        type="button"
-        disabled={!editable}
-        aria-label={`Edit ${session.label}, ${dateLabel(session.date)}`}
-        onClick={() => onOpen(session)}
-        className="flex min-h-28 flex-col gap-1 px-3 pb-3 text-left enabled:hover:bg-muted/50 disabled:cursor-default"
+      <SessionDateButton
+        session={session}
+        today={today}
+        disabled={!movable}
+        onMove={onMove}
+        className="flex min-h-28 flex-col gap-1 px-3 pb-3"
       >
         <span className="font-display text-3xl leading-tight">
           {dateLabel(session.date, "d")}{" "}
@@ -170,7 +220,7 @@ export function GoalSessionTile({
           {session.label}
         </strong>
         {time}
-      </button>
+      </SessionDateButton>
       <div className="flex items-center justify-between border-t border-border px-3 py-1 text-[10px] text-muted-foreground">
         <span>{statusLabel(session, today)}</span>
         {nudges}
