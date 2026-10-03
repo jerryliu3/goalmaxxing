@@ -243,7 +243,7 @@ describe("PlannerFiltersDialog", () => {
     const toggle = screen.getByRole("checkbox", { name: "Show completed goals" });
     expect(toggle).not.toBeChecked();
     expect(
-      screen.getByText(/completed goals in the checklist, including milestones/i)
+      screen.getByText(/completed goals in the checklist and Goal View, including\s+milestones/i)
     ).toBeInTheDocument();
     fireEvent.click(toggle);
     expect(onShowCompletedGoalsChange).toHaveBeenCalledWith(true);

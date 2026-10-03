@@ -105,7 +105,7 @@ describe("PlannerCalendarToolbar", () => {
   it("puts the goals dropdown beside the search bar and reports selections", () => {
     const props = renderToolbar();
     const search = screen.getByRole("searchbox", { name: "Search goals" });
-    const dropdown = screen.getByRole("button", { name: "All goals" });
+    const dropdown = screen.getByRole("button", { name: "Filter by goal" });
     expect(
       search.compareDocumentPosition(dropdown) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy();
@@ -117,7 +117,7 @@ describe("PlannerCalendarToolbar", () => {
 
   it("hides the goals dropdown when there are no goal options", () => {
     renderToolbar({ goalFilterOptions: [] });
-    expect(screen.queryByRole("button", { name: "All goals" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Filter by goal" })).toBeNull();
   });
 
   it("offers Preview beside Filters only while Goal View is open", () => {
