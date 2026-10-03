@@ -11,6 +11,7 @@ import type { GoalViewStudySession } from "./use-study";
 import { AXIS_DAYS, axisDate, axisIndex } from "./weave-axis";
 import { WeaveDnd } from "./weave-dnd";
 import { useWeaveAxis } from "./use-weave-axis";
+import { SessionCompletion } from "./session-completion";
 
 export function WeaveTimeline({ goals, study, selectedDate, onSelectDate, requestedDate, dayWidth, labelWidth, onVisibleDate, onFocusGoal }: { goals: Goal[]; study: GoalViewStudySession; selectedDate: string; onSelectDate: (date: string) => void; requestedDate: { date: string; revision: number }; dayWidth: number; labelWidth: number; onVisibleDate: (date: string) => void; onFocusGoal: (id: string) => void }) {
   const axis = useWeaveAxis(dayWidth, labelWidth, requestedDate.date, onVisibleDate);
@@ -36,20 +37,15 @@ export function WeaveTimeline({ goals, study, selectedDate, onSelectDate, reques
         <div className="tw-date-drop-layer" style={{ left: labelWidth, width: laneWidth, height: goals.length * 112 }} aria-hidden="true">
           {dates.map(({ index, date }) => <PlannerDroppableDay key={date} day={date}>{({ setNodeRef, isOver }) => <div ref={setNodeRef} className="tw-drop-day" data-over={isOver} data-today={date === SAMPLE_TODAY} data-selected={date === selectedDate} style={{ left: index * dayWidth, width: dayWidth }} />}</PlannerDroppableDay>)}
         </div>
-        {rows.map(({ goal, sessions }) => {
-          const first = sessions[0];
-          const last = sessions.at(-1);
-          return <section className="tw-goal-row" key={goal.id} aria-label={`${goal.title} timeline`}>
+        {rows.map(({ goal, sessions }) => <section className="tw-goal-row" key={goal.id} aria-label={`${goal.title} timeline`}>
             <button className="tw-row-label" onClick={() => onFocusGoal(goal.id)} style={{ "--tw-goal-color": goal.color } as CSSProperties}><span /><strong>{goal.title}</strong><small>{goalProgress(goal, study.state.facts).label}</small></button>
             <div className="tw-row-lane" style={{ width: laneWidth }}>
-              {first && last && <div className="tw-thread" aria-hidden="true" style={{ left: axisIndex(first.date) * dayWidth + dayWidth / 2, width: (axisIndex(last.date) - axisIndex(first.date)) * dayWidth, background: goal.color ?? undefined }} />}
               {sessions.filter(s => { const index = axisIndex(s.date); return index >= axis.range.first && index <= axis.range.last; }).map(s => <WeavePill key={s.id} session={s} study={study} goal={goal} dayWidth={dayWidth} />)}
             </div>
-          </section>;
-        })}
+          </section>)}
       </div>
     </motion.div>
-    <div className="tw-axis-footnote"><span>Swipe or scroll sideways · drag a handle to move a session</span><span>{dates.length} date columns rendered · {AXIS_DAYS.toLocaleString("en-US")} days to explore</span></div>
+    <div className="tw-axis-footnote"><span>Scroll across dates · drag a handle to move a session</span><span>Select a date to see that day together</span></div>
   </WeaveDnd>;
 }
 
@@ -60,7 +56,7 @@ function WeavePill({ session: s, goal, study, dayWidth }: { session: ScheduledSe
   return <PlannerDraggableEntry entryKey={s.id} disabled={disabled}>{({ setNodeRef, setActivatorNodeRef, listeners, attributes, isDragging }) =>
     <motion.div ref={setNodeRef} layout={still || isDragging ? false : "position"} transition={{ duration: .18, ease: [.2, .8, .2, 1] }} className="tw-pill" data-done={done} data-draft={sessionIsDraft(study.state, s)} data-dragging={isDragging} style={{ left: axisIndex(s.date) * dayWidth + 6, width: dayWidth - 12, "--tw-goal-color": goal.color } as CSSProperties}>
       <button className="tw-pill-open" aria-label={`Edit ${s.name}, ${dateLabel(s.date)}`} onClick={() => study.setEditingId(s.id)}><small>{s.time || "Any time"}{s.locked && <LockKeyhole size={9} />}{done && " · logged"}</small><strong>{s.milestone ? `${s.milestone}. ` : ""}{s.name}</strong></button>
-      {!disabled && <button ref={setActivatorNodeRef} className="tw-drag-handle" {...attributes} {...listeners} aria-label={`Move ${s.name}, ${dateLabel(s.date)}`}><GripVertical size={14} /></button>}
+      <div className="tw-pill-actions"><SessionCompletion session={s} study={study} />{!disabled && <button ref={setActivatorNodeRef} className="tw-drag-handle" {...attributes} {...listeners} aria-label={`Move ${s.name}, ${dateLabel(s.date)}`}><GripVertical size={14} /></button>}</div>
     </motion.div>
   }</PlannerDraggableEntry>;
 }

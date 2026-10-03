@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowLeft, ArrowRight, LockKeyhole } from "lucide-react";
-import { NestCompletionMark } from "@/components/ui/nest-completion-mark";
-import { completionIntent, dateLabel, isDone, sessionChangeError, sessionIsDraft, shiftDate } from "./model";
+import { dateLabel, isDone, sessionChangeError, sessionIsDraft, shiftDate } from "./model";
+import { SessionCompletion } from "./session-completion";
 import { SAMPLE_TODAY, type ScheduledSession } from "./sample";
 import type { GoalViewStudySession } from "./use-study";
 
@@ -10,16 +10,11 @@ export function SessionTile({ session: s, study }: { session: ScheduledSession; 
   const { state, dispatch } = study;
   const done = isDone(s, state.facts);
   const draft = sessionIsDraft(state, s);
-  const intent = completionIntent(s, state.facts);
-  const canComplete = intent.allowed && !draft;
-  const completionLabel = draft ? "Save date changes before completing" : canComplete ? `${done ? "Undo completion" : "Complete"} ${s.name}, ${dateLabel(s.date)}` : "Available on the scheduled date";
   return (
     <article className="gv-session" data-done={done} data-today={s.date === SAMPLE_TODAY} data-draft={draft}>
       <div className="gv-session-top">
         <span className="gv-overline">{s.milestone ? `Step ${String(s.milestone).padStart(2, "0")}` : dateLabel(s.date, "EEE")}</span>
-        <button type="button" className="gv-completion" disabled={!canComplete} title={completionLabel} aria-label={completionLabel} aria-pressed={done} onClick={() => dispatch({ type: "complete", id: s.id })}>
-          <NestCompletionMark done={done} fillTransition className="size-5" />
-        </button>
+        <SessionCompletion session={s} study={study} />
       </div>
       <button type="button" className="gv-session-open" aria-label={`Edit ${s.name}, ${dateLabel(s.date)}`} onClick={() => study.setEditingId(s.id)}>
         <span className="gv-session-date">{dateLabel(s.date, "d")} <small>{dateLabel(s.date, "MMM")}</small></span>
