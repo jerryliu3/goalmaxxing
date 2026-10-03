@@ -485,6 +485,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         onSave={savePlan}
         onDiscardDraftChanges={discardDraftChanges}
         onViewModeChange={setCalendarViewMode}
+        goalIdFilters={goalIdFilters}
+        onGoalIdFiltersChange={setGoalIdFilters}
+        goalFilterOptions={showTasksInsteadOfGoals ? [] : goalFilterOptions}
         onOpenFilters={() => setFiltersOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         onSearchQueryChange={setSearchQuery}
@@ -740,9 +743,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         categoryFilters={categoryFilters}
         onCategoryFiltersChange={setCategoryFilters}
         categoryOptions={categoryOptions}
-        goalIdFilters={goalIdFilters}
-        onGoalIdFiltersChange={setGoalIdFilters}
-        goalFilterOptions={goalFilterOptions}
         endMonthFilters={effectiveEndMonthFilters}
         onEndMonthFiltersChange={setEndMonthFilters}
         endMonthOptions={endMonthOptions}

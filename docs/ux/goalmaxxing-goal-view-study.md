@@ -226,6 +226,8 @@ Week / Month), not as a separate route. Code lives in
   (`data-plan-scroll-clip`) and calendar dates with no Goal View counterpart
   fade in place instead of sliding off stage. The calendar window header is
   hidden while Goal View is shown.
+- The goals dropdown ("All goals") moved out of the Filters dialog onto the
+  planner toolbar beside the search bar, so it applies to every planner view.
 - "Preview" (calendar icon, beside Filters in the planner toolbar) opens a
   read-only, scrollable list of every week in the loaded window across goals,
   starting on the current week. Weeks use `content-visibility: auto`, so only

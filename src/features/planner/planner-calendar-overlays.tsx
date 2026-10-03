@@ -91,9 +91,6 @@ export interface PlannerCalendarOverlaysProps {
   endMonthFilters: string[];
   onEndMonthFiltersChange: (value: string[]) => void;
   endMonthOptions: GoalMonthOption[];
-  goalIdFilters?: string[];
-  onGoalIdFiltersChange?: (value: string[]) => void;
-  goalFilterOptions?: GoalCategoryFilterOption[];
   showCompletedGoals?: boolean;
   onShowCompletedGoalsChange?: (value: boolean) => void;
   showPastSessions?: boolean;
@@ -154,9 +151,6 @@ export function PlannerCalendarOverlays({
   endMonthFilters,
   onEndMonthFiltersChange,
   endMonthOptions,
-  goalIdFilters = [],
-  onGoalIdFiltersChange,
-  goalFilterOptions = [],
   showCompletedGoals = false,
   onShowCompletedGoalsChange,
   showPastSessions,
@@ -241,9 +235,6 @@ export function PlannerCalendarOverlays({
         endMonthFilters={endMonthFilters}
         onEndMonthFiltersChange={onEndMonthFiltersChange}
         endMonthOptions={endMonthOptions}
-        goalIdFilters={goalIdFilters}
-        onGoalIdFiltersChange={onGoalIdFiltersChange}
-        goalFilterOptions={goalFilterOptions}
         showCompletedGoals={showCompletedGoals}
         onShowCompletedGoalsChange={onShowCompletedGoalsChange}
         showPastSessions={showPastSessions}

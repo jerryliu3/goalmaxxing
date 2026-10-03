@@ -25,6 +25,12 @@ function renderToolbar(
     onSave: vi.fn(),
     onDiscardDraftChanges: vi.fn(),
     onViewModeChange: vi.fn(),
+    goalIdFilters: [],
+    onGoalIdFiltersChange: vi.fn(),
+    goalFilterOptions: [
+      { value: "run", label: "Run a half marathon" },
+      { value: "gym", label: "Get stronger" },
+    ],
     goalViewOpen: false,
     onGoalViewOpenChange: vi.fn(),
     onGoalViewPreview: vi.fn(),
@@ -94,6 +100,24 @@ describe("PlannerCalendarToolbar", () => {
     fireEvent.click(within(viewGroup).getByRole("button", { name: "Month View" }));
     expect(props.onGoalViewOpenChange).toHaveBeenCalledWith(false);
     expect(props.onViewModeChange).toHaveBeenCalledWith("month");
+  });
+
+  it("puts the goals dropdown beside the search bar and reports selections", () => {
+    const props = renderToolbar();
+    const search = screen.getByRole("searchbox", { name: "Search goals" });
+    const dropdown = screen.getByRole("button", { name: "All goals" });
+    expect(
+      search.compareDocumentPosition(dropdown) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+
+    fireEvent.click(dropdown);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Get stronger" }));
+    expect(props.onGoalIdFiltersChange).toHaveBeenCalledWith(["gym"]);
+  });
+
+  it("hides the goals dropdown when there are no goal options", () => {
+    renderToolbar({ goalFilterOptions: [] });
+    expect(screen.queryByRole("button", { name: "All goals" })).toBeNull();
   });
 
   it("offers Preview beside Filters only while Goal View is open", () => {

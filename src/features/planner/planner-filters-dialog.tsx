@@ -30,9 +30,6 @@ interface PlannerFiltersDialogProps {
   endMonthFilters: string[];
   onEndMonthFiltersChange: (value: string[]) => void;
   endMonthOptions: GoalMonthOption[];
-  goalIdFilters?: string[];
-  onGoalIdFiltersChange?: (value: string[]) => void;
-  goalFilterOptions?: GoalCategoryFilterOption[];
   showCompletedGoals?: boolean;
   onShowCompletedGoalsChange?: (value: boolean) => void;
   /** Goal View only: undefined hides the control. */
@@ -53,9 +50,6 @@ export function PlannerFiltersDialog({
   endMonthFilters,
   onEndMonthFiltersChange,
   endMonthOptions,
-  goalIdFilters = [],
-  onGoalIdFiltersChange,
-  goalFilterOptions = [],
   showCompletedGoals = false,
   onShowCompletedGoalsChange,
   showPastSessions,
@@ -156,13 +150,9 @@ export function PlannerFiltersDialog({
             <GoalFilters
               categoryFilterEnabled
               endMonthFilterEnabled
-              goalFilterEnabled={goalFilterOptions.length > 0}
               categoryFilters={categoryFilters}
               onCategoryFiltersChange={onCategoryFiltersChange}
               categoryOptions={categoryOptions}
-              goalIdFilters={goalIdFilters}
-              onGoalIdFiltersChange={onGoalIdFiltersChange}
-              goalFilterOptions={goalFilterOptions}
               endMonthFilters={endMonthFilters}
               onEndMonthFiltersChange={onEndMonthFiltersChange}
               endMonthOptions={endMonthOptions}
