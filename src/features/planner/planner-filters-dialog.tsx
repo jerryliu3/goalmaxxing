@@ -30,11 +30,11 @@ interface PlannerFiltersDialogProps {
   endMonthFilters: string[];
   onEndMonthFiltersChange: (value: string[]) => void;
   endMonthOptions: GoalMonthOption[];
-  goalIdFilters?: string[];
-  onGoalIdFiltersChange?: (value: string[]) => void;
-  goalFilterOptions?: GoalCategoryFilterOption[];
   showCompletedGoals?: boolean;
   onShowCompletedGoalsChange?: (value: boolean) => void;
+  /** Goal View only: undefined hides the control. */
+  showPastSessions?: boolean;
+  onShowPastSessionsChange?: (value: boolean) => void;
   dayFilters?: ChecklistFiltersFormProps | null;
 }
 
@@ -50,11 +50,10 @@ export function PlannerFiltersDialog({
   endMonthFilters,
   onEndMonthFiltersChange,
   endMonthOptions,
-  goalIdFilters = [],
-  onGoalIdFiltersChange,
-  goalFilterOptions = [],
   showCompletedGoals = false,
   onShowCompletedGoalsChange,
+  showPastSessions,
+  onShowPastSessionsChange,
   dayFilters = null,
 }: PlannerFiltersDialogProps) {
   const usingDayFilters = dayFilters !== null;
@@ -120,9 +119,27 @@ export function PlannerFiltersDialog({
               <span className="min-w-0 space-y-1">
                 <span className="block font-sans text-sm font-medium">Show completed goals</span>
                 <span className="block text-xs text-muted-foreground">
-                  Show completed goals in the checklist, including milestones,
-                  and already-done sessions on future days. Past and today still
+                  Show completed goals in the checklist and Goal View, including
+                  milestones, and already-done sessions on future days. Past and today still
                   show completed work on the calendar.
+                </span>
+              </span>
+            </label>
+          )}
+          {showPastSessions === undefined || usingDayFilters ? null : (
+            <label className="flex min-w-0 items-start gap-2">
+              <input
+                type="checkbox"
+                checked={showPastSessions}
+                onChange={(event) => onShowPastSessionsChange?.(event.target.checked)}
+                className="mt-1 size-4 shrink-0 accent-primary"
+                aria-label="Show past sessions"
+              />
+              <span className="min-w-0 space-y-1">
+                <span className="block font-sans text-sm font-medium">Show past sessions</span>
+                <span className="block text-xs text-muted-foreground">
+                  Goal View lists upcoming sessions by default. Include sessions
+                  from the last 60 days.
                 </span>
               </span>
             </label>
@@ -133,13 +150,9 @@ export function PlannerFiltersDialog({
             <GoalFilters
               categoryFilterEnabled
               endMonthFilterEnabled
-              goalFilterEnabled={goalFilterOptions.length > 0}
               categoryFilters={categoryFilters}
               onCategoryFiltersChange={onCategoryFiltersChange}
               categoryOptions={categoryOptions}
-              goalIdFilters={goalIdFilters}
-              onGoalIdFiltersChange={onGoalIdFiltersChange}
-              goalFilterOptions={goalFilterOptions}
               endMonthFilters={endMonthFilters}
               onEndMonthFiltersChange={onEndMonthFiltersChange}
               endMonthOptions={endMonthOptions}

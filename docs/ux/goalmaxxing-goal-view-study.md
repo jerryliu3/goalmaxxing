@@ -204,18 +204,20 @@ Week / Month), not as a separate route. Code lives in
 - Desktop is Card Rails. Phone (below the `md` breakpoint) is swipeable goal
   cards with the selected goal's dates as a vertical list; the cards and goal
   selector stay horizontal.
-- Dates are grouped by planner week and show upcoming sessions by default. A
-  "Show past sessions" checkbox adds the past ones. The planner's Filters
-  "Show completed goals" toggle hides completed goals here too.
+- Dates are grouped by planner week and show upcoming sessions by default. The
+  planner's Filters dialog adds a "Show past sessions" checkbox while Goal View
+  is open, and its "Show completed goals" toggle hides goals the checklist
+  treats as completed and their sessions here too, including from the preview.
+  An achieved goal that is still ongoing (no end date) stays visible.
 - It is a lens on the planner context, not a new data path. Opening it loads a
   361-day window (60 days back, 300 forward) and skips the month-keyed tab
   cache. Sessions come from the planner's filtered day entries, so search,
   filters and unsaved draft moves apply.
 - Writes use the canonical paths: one-day nudges queue planner draft moves
-  (Planning Mode, Save, Undo), and completion uses `toggleDateFact`. Choosing a
-  date expands the planner's session editor (the same goal card and date, time
-  and lock controls used under the Day checklist) in a slot under that goal's
-  dates.
+  (Planning Mode, Save, Undo), and completion uses `toggleDateFact`. Clicking a
+  session opens the browser date picker directly and queues the same draft
+  move; locked, done or read-only sessions are not movable. A pencil beside each
+  goal title links to the goal editor.
 - Switching between Goal View and Day / Week / Month uses the same geometry
   morph as the calendar views: Goal View renders inside the board's
   `PlanViewTransitionFrame` (mode `goals`) and waits until its wide window has
@@ -224,6 +226,10 @@ Week / Month), not as a separate route. Code lives in
   (`data-plan-scroll-clip`) and calendar dates with no Goal View counterpart
   fade in place instead of sliding off stage. The calendar window header is
   hidden while Goal View is shown.
-- "Preview goals" is a read-only week overview across goals that hands a chosen
-  session to the same editor.
+- The goals dropdown ("All goals") moved out of the Filters dialog onto the
+  planner toolbar beside the search bar, so it applies to every planner view.
+- "Preview" (calendar icon, beside Filters in the planner toolbar) opens a
+  read-only, scrollable list of every week in the loaded window across goals,
+  starting on the current week. Weeks use `content-visibility: auto`, so only
+  those near the viewport lay out and paint.
 - Goal Desk and Time Weave remain study-only for now.

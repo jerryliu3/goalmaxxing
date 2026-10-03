@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { isDemoPathname } from "@/lib/navigation/demo-path";
-import { BookOpen, CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
+import { BookOpen, CalendarDays, CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CheckboxDropdown } from "@/components/ui/checkbox-dropdown";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tooltip } from "@/components/ui/tooltip";
+import type { GoalCategoryFilterOption } from "@/features/goals/goal-filters";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
 import { PlannerEndMonthQuickFilterChips } from "@/features/planner/planner-end-month-quick-filter-chips";
 import type { PlannerEligibilityNotices } from "@/features/planner/planner-eligibility-notices";
@@ -49,7 +52,12 @@ interface PlannerCalendarToolbarProps {
   onSave: () => void;
   onDiscardDraftChanges: () => void;
   onViewModeChange: (viewMode: PlannerCalendarViewMode) => void;
+  goalIdFilters: string[];
+  onGoalIdFiltersChange: (goalIds: string[]) => void;
+  /** Empty hides the dropdown (for example while tasks replace goals). */
+  goalFilterOptions: GoalCategoryFilterOption[];
   onGoalViewOpenChange: (open: boolean) => void;
+  onGoalViewPreview: () => void;
   onOpenFilters: () => void;
   onOpenSettings: () => void;
   onSearchQueryChange: (query: string) => void;
@@ -147,7 +155,11 @@ export function PlannerCalendarToolbar({
   onSave,
   onDiscardDraftChanges,
   onViewModeChange,
+  goalIdFilters,
+  onGoalIdFiltersChange,
+  goalFilterOptions,
   onGoalViewOpenChange,
+  onGoalViewPreview,
   onOpenFilters,
   onOpenSettings,
   onSearchQueryChange,
@@ -249,10 +261,38 @@ export function PlannerCalendarToolbar({
               disabled={loading}
             />
           </div>
+          {goalFilterOptions.length > 0 ? (
+            <div className="w-28 shrink-0 sm:w-32">
+              <Label htmlFor="planner-goal-filter" className="sr-only">
+                Filter by goal
+              </Label>
+              <CheckboxDropdown
+                id="planner-goal-filter"
+                options={goalFilterOptions}
+                selectedValues={goalIdFilters}
+                onSelectedValuesChange={onGoalIdFiltersChange}
+                placeholder="All goals"
+                allLabel="All goals"
+                triggerClassName="h-8 rounded-md bg-background text-xs"
+              />
+            </div>
+          ) : null}
           <div
             className="flex shrink-0 items-center gap-2"
             data-onboarding="planner.calendar.controls"
           >
+            {goalViewOpen ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onGoalViewPreview}
+                disabled={loading}
+              >
+                <CalendarDays aria-hidden="true" />
+                Preview
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant="outline"

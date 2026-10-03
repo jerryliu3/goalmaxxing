@@ -1,8 +1,8 @@
-import { type Day, format, parseISO, startOfWeek } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { isEntryCredited } from "@/features/planner/calendar-format";
 import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
-import { addDaysToDateString } from "@/lib/goals/periods";
+import { addDaysToDateString, startOfWeekDateString } from "@/lib/goals/periods";
 import type { Goal } from "@/lib/goals/types";
 
 /** 60 + 300 + today = 361 days, inside MAX_PLANNER_WINDOW_DAYS (366). */
@@ -29,8 +29,6 @@ export interface GoalViewSession {
   draft: boolean;
   entry: PlannerDayDetailEntry;
 }
-
-const DATE_FORMAT = "yyyy-MM-dd";
 
 export const dateLabel = (date: string, pattern = "EEE, MMM d") =>
   format(parseISO(date), pattern);
@@ -118,13 +116,6 @@ export function selectGoalViewGoals(
   return goals.filter((goal) => withSessions.has(goal.id));
 }
 
-export function weekStartOf(date: string, weekStartsOn: number) {
-  return format(
-    startOfWeek(parseISO(date), { weekStartsOn: weekStartsOn as Day }),
-    DATE_FORMAT
-  );
-}
-
 /** Sessions grouped by planner week, in the order given. */
 export function groupSessions(
   sessions: readonly GoalViewSession[],
@@ -132,7 +123,7 @@ export function groupSessions(
 ) {
   const groups = new Map<string, GoalViewSession[]>();
   for (const session of sessions) {
-    const key = weekStartOf(session.date, weekStartsOn);
+    const key = startOfWeekDateString(session.date, weekStartsOn);
     groups.set(key, [...(groups.get(key) ?? []), session]);
   }
   return Array.from(groups, ([date, entries]) => ({

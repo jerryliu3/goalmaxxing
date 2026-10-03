@@ -30,7 +30,6 @@ export function GoalDeck({
   showPast,
   weekStartsOn,
   today,
-  editorSlotKey,
   renderTile,
 }: {
   goals: Goal[];
@@ -42,8 +41,6 @@ export function GoalDeck({
   showPast: boolean;
   weekStartsOn: number;
   today: string;
-  /** Session whose planner editor expands under its row, if listed here. */
-  editorSlotKey: string | null;
   renderTile: GoalTileRenderer;
 }) {
   const index = Math.max(0, goals.findIndex((goal) => goal.id === selectedId));
@@ -109,7 +106,6 @@ export function GoalDeck({
         showPast={showPast}
         weekStartsOn={weekStartsOn}
         today={today}
-        editorSlotKey={editorSlotKey}
         renderTile={renderTile}
       />
     </div>
@@ -122,7 +118,6 @@ function SelectedGoalDates({
   showPast,
   weekStartsOn,
   today,
-  editorSlotKey,
   renderTile,
 }: {
   goal: Goal;
@@ -130,7 +125,6 @@ function SelectedGoalDates({
   showPast: boolean;
   weekStartsOn: number;
   today: string;
-  editorSlotKey: string | null;
   renderTile: GoalTileRenderer;
 }) {
   const dates = useGoalDates({ sessions, weekStartsOn, today });
@@ -142,7 +136,6 @@ function SelectedGoalDates({
           dates={dates}
           showPast={showPast}
           layout="row"
-          editorSlotKey={editorSlotKey}
           renderTile={renderTile}
         />
       </div>

@@ -19,13 +19,14 @@ export interface PlannerGoalViewProps {
   sessions: GoalViewSession[];
   today: string;
   weekStartsOn: number | null | undefined;
-  selectedEntryKey: string | null;
+  showPast: boolean;
+  previewOpen: boolean;
+  onPreviewOpenChange: (open: boolean) => void;
   canMutatePlanItems: boolean;
   optimisticCompletionFacts: OptimisticCompletionFacts;
   mutationLoadingKey: string | null;
   canOpenEntry: (entry: PlannerDayDetailEntry) => boolean;
   canMutateEntryOnDay: (entry: PlannerDayDetailEntry, day: string) => boolean;
-  onOpenEntry: (entry: PlannerDayDetailEntry, day: string) => void;
   onMoveEntry: (entry: PlannerDayDetailEntry, date: string) => void;
   onToggleEntry: (
     entry: PlannerDayDetailEntry,
@@ -43,13 +44,13 @@ export function PlannerGoalView({
   completedGoalIds,
   showCompletedGoals,
   progressSummaries,
+  sessions,
   weekStartsOn,
   canMutatePlanItems,
   optimisticCompletionFacts,
   mutationLoadingKey,
   canOpenEntry,
   canMutateEntryOnDay,
-  onOpenEntry,
   onMoveEntry,
   onToggleEntry,
   ...view
@@ -65,6 +66,11 @@ export function PlannerGoalView({
         : goals.filter((goal) => !completedGoalIds.has(goal.id)),
     [goals, completedGoalIds, showCompletedGoals]
   );
+  // Sessions follow their goal, so hidden goals leave the preview too.
+  const visibleSessions = useMemo(() => {
+    const visibleIds = new Set(visibleGoals.map((goal) => goal.id));
+    return sessions.filter((session) => visibleIds.has(session.goalId));
+  }, [sessions, visibleGoals]);
   const isEditable = (session: GoalViewSession) =>
     canOpenEntry(session.entry) && canMutateEntryOnDay(session.entry, session.date);
 
@@ -72,6 +78,7 @@ export function PlannerGoalView({
     <GoalView
       {...view}
       goals={visibleGoals}
+      sessions={visibleSessions}
       weekStartsOn={normalizeWeekStartsOn(weekStartsOn)}
       progressByGoalId={progressByGoalId}
       resolveCompletion={(session) =>
@@ -84,9 +91,6 @@ export function PlannerGoalView({
         })
       }
       isEditable={isEditable}
-      onOpenSession={(session) => {
-        if (isEditable(session)) onOpenEntry(session.entry, session.date);
-      }}
       onMoveSession={(session, date) => onMoveEntry(session.entry, date)}
       onToggleSession={(session, source) => {
         if (canMutateEntryOnDay(session.entry, session.date)) {

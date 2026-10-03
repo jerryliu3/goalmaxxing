@@ -72,16 +72,23 @@ function renderView(overrides: Partial<GoalViewProps> = {}) {
     sessions: SESSIONS,
     today: TODAY,
     weekStartsOn: 1,
-    selectedEntryKey: null,
+    showPast: false,
+    previewOpen: false,
+    onPreviewOpenChange: vi.fn(),
     resolveCompletion: () => ({ credited: false, pending: false, disabledReason: null }),
     isEditable: () => true,
-    onOpenSession: vi.fn(),
     onMoveSession: vi.fn(),
     onToggleSession: vi.fn(),
     ...overrides,
   };
-  render(<GoalView {...props} />);
-  return props;
+  const view = render(<GoalView {...props} />);
+  return { ...props, rerenderWith: (patch: Partial<GoalViewProps>) =>
+    view.rerender(<GoalView {...props} {...patch} />) };
+}
+
+function pickDate(tile: HTMLElement, date: string) {
+  const field = tile.querySelector<HTMLInputElement>('input[type="date"]')!;
+  fireEvent.change(field, { target: { value: date } });
 }
 
 describe("GoalView", () => {
@@ -99,36 +106,61 @@ describe("GoalView", () => {
     expect(within(gym).getAllByRole("article")).toHaveLength(1);
   });
 
-  it("adds past sessions only when asked", () => {
-    renderView();
+  it("adds past sessions only when the planner filter asks for them", () => {
+    const view = renderView();
     const gym = screen.getByRole("region", { name: "Get stronger scheduled dates" });
     expect(within(gym).queryByText("Not logged")).toBeNull();
-    fireEvent.click(screen.getByRole("checkbox", { name: "Show past sessions" }));
+    view.rerenderWith({ showPast: true });
     expect(within(gym).getAllByRole("article")).toHaveLength(2);
     expect(within(gym).getByText("Not logged")).toBeInTheDocument();
     expect(within(gym).getByText(/2 scheduled sessions/)).toBeInTheDocument();
   });
 
-  it("expands the planner editor slot under the selected session's goal", () => {
-    renderView({ selectedEntryKey: "gym:2026-10-03" });
-    const gym = screen.getByRole("region", { name: "Get stronger scheduled dates" });
-    expect(
-      gym.querySelector('[data-plan-checklist-editor-slot="gym:2026-10-03"]')
-    ).not.toBeNull();
-    const run = screen.getByRole("region", { name: "Run a half marathon scheduled dates" });
-    expect(run.querySelector("[data-plan-checklist-editor-slot]")).toBeNull();
+  it("links each goal title to its editor", () => {
+    renderView();
+    expect(screen.getByRole("link", { name: "Edit goal Get stronger" })).toHaveAttribute(
+      "href",
+      "/goals/gym"
+    );
+    expect(screen.getByRole("link", { name: "Edit goal Run a half marathon" })).toHaveAttribute(
+      "href",
+      "/goals/run"
+    );
   });
 
-  it("opens a session for editing with its milestone step", () => {
+  it("opens the date picker from a session and moves it to the chosen date", () => {
     const props = renderView();
     const run = screen.getByRole("region", { name: "Run a half marathon scheduled dates" });
     expect(within(run).getByText("Step 02")).toBeInTheDocument();
-    fireEvent.click(
-      within(run).getByRole("button", { name: "Edit run session, Fri, Oct 9" })
+    const button = within(run).getByRole("button", {
+      name: "Change date of run session, Fri, Oct 9",
+    });
+    const showPicker = vi.fn();
+    const field = button.parentElement!.querySelector<HTMLInputElement>('input[type="date"]')!;
+    // Only the date is a control: the rest of the tile is not a button.
+    expect(
+      within(run).queryByRole("button", { name: /^Edit run session/ })
+    ).toBeNull();
+    expect(button).toHaveTextContent(/^9\s*Oct$/);
+    field.showPicker = showPicker;
+    fireEvent.click(button);
+    expect(showPicker).toHaveBeenCalledTimes(1);
+    expect(field.min).toBe(TODAY);
+    pickDate(button.parentElement!, "2026-10-12");
+    expect(props.onMoveSession).toHaveBeenCalledWith(
+      expect.objectContaining({ key: "run:2026-10-09", milestone: 2 }),
+      "2026-10-12"
     );
-    expect(props.onOpenSession).toHaveBeenCalledWith(
-      expect.objectContaining({ key: "run:2026-10-09", milestone: 2 })
-    );
+  });
+
+  it("does not open a picker for locked, done or read-only sessions", () => {
+    renderView({
+      isEditable: (session) => session.key !== "gym:2026-10-03",
+    });
+    const gym = screen.getByRole("region", { name: "Get stronger scheduled dates" });
+    expect(
+      within(gym).getByRole("button", { name: /^Change date of gym session/ })
+    ).toBeDisabled();
   });
 
   it("moves a future session one day earlier or later", () => {
@@ -175,17 +207,24 @@ describe("GoalView", () => {
     expect(props.onToggleSession).toHaveBeenCalledTimes(1);
   });
 
-  it("previews the week across goals and hands a chosen session back for editing", () => {
-    const props = renderView();
-    fireEvent.click(screen.getByRole("button", { name: "Preview goals" }));
+  it("previews every week of the window in one scrollable list", () => {
+    renderView({ previewOpen: true });
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText(/Sep 28 — Oct 4, 2026/)).toBeInTheDocument();
-    // Two gym sessions fall in this week; either hands back as the gym goal.
-    fireEvent.click(within(dialog).getAllByRole("button", { name: /Get stronger/ })[0]);
-    expect(props.onOpenSession).toHaveBeenCalledWith(
-      expect.objectContaining({ goalId: "gym" })
-    );
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(within(dialog).queryByRole("button", { name: /week/i })).toBeNull();
+    const weeks = within(dialog).getByLabelText("Goal sessions by week");
+    // 60 days back through 300 forward spans 52 planner weeks.
+    expect(within(weeks).getAllByRole("region").length).toBeGreaterThanOrEqual(51);
+    const current = within(weeks).getByRole("region", { name: "Week of Sep 28" });
+    expect(current).toHaveAttribute("data-current-week");
+    expect(within(current).getAllByText("Get stronger").length).toBeGreaterThan(0);
+  });
+
+  it("jumps back to the current week from the preview's Today button", () => {
+    const scrollTo = vi.fn();
+    Element.prototype.scrollTo = scrollTo;
+    renderView({ previewOpen: true });
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Today" }));
+    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ behavior: "smooth" }));
   });
 
   describe("on a phone", () => {
@@ -221,28 +260,6 @@ describe("GoalView", () => {
 
       fireEvent.click(screen.getByRole("button", { name: "Select Run a half marathon" }));
       expect(screen.getByText("Goal 1 of 2")).toBeInTheDocument();
-    });
-
-    it("expands the planner editor right under the selected row", () => {
-      renderView({ selectedEntryKey: "run:2026-10-09" });
-      const slot = screen
-        .getByRole("region", { name: "Run a half marathon scheduled dates" })
-        .querySelector('[data-plan-checklist-editor-slot="run:2026-10-09"]');
-      expect(slot?.previousElementSibling).toHaveAttribute(
-        "data-planner-entry-key",
-        "run:2026-10-09"
-      );
-    });
-
-    it("jumps the deck to the goal of a session chosen in the preview", () => {
-      renderView();
-      fireEvent.click(screen.getByRole("button", { name: "Preview goals" }));
-      fireEvent.click(
-        within(screen.getByRole("dialog")).getAllByRole("button", {
-          name: /Get stronger/,
-        })[0]
-      );
-      expect(screen.getByText("Goal 2 of 2")).toBeInTheDocument();
     });
 
     it("keeps nudging and completing available from the vertical rows", () => {

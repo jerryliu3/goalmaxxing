@@ -25,8 +25,15 @@ function renderToolbar(
     onSave: vi.fn(),
     onDiscardDraftChanges: vi.fn(),
     onViewModeChange: vi.fn(),
+    goalIdFilters: [],
+    onGoalIdFiltersChange: vi.fn(),
+    goalFilterOptions: [
+      { value: "run", label: "Run a half marathon" },
+      { value: "gym", label: "Get stronger" },
+    ],
     goalViewOpen: false,
     onGoalViewOpenChange: vi.fn(),
+    onGoalViewPreview: vi.fn(),
     onOpenFilters: vi.fn(),
     onOpenSettings: vi.fn(),
     onSearchQueryChange: vi.fn(),
@@ -93,6 +100,36 @@ describe("PlannerCalendarToolbar", () => {
     fireEvent.click(within(viewGroup).getByRole("button", { name: "Month View" }));
     expect(props.onGoalViewOpenChange).toHaveBeenCalledWith(false);
     expect(props.onViewModeChange).toHaveBeenCalledWith("month");
+  });
+
+  it("puts the goals dropdown beside the search bar and reports selections", () => {
+    const props = renderToolbar();
+    const search = screen.getByRole("searchbox", { name: "Search goals" });
+    const dropdown = screen.getByRole("button", { name: "Filter by goal" });
+    expect(
+      search.compareDocumentPosition(dropdown) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+
+    fireEvent.click(dropdown);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Get stronger" }));
+    expect(props.onGoalIdFiltersChange).toHaveBeenCalledWith(["gym"]);
+  });
+
+  it("hides the goals dropdown when there are no goal options", () => {
+    renderToolbar({ goalFilterOptions: [] });
+    expect(screen.queryByRole("button", { name: "Filter by goal" })).toBeNull();
+  });
+
+  it("offers Preview beside Filters only while Goal View is open", () => {
+    renderToolbar();
+    expect(screen.queryByRole("button", { name: "Preview" })).toBeNull();
+    cleanup();
+
+    const props = renderToolbar({ goalViewOpen: true });
+    const preview = screen.getByRole("button", { name: "Preview" });
+    expect(preview.nextElementSibling).toBe(screen.getByRole("button", { name: "Filters" }));
+    fireEvent.click(preview);
+    expect(props.onGoalViewPreview).toHaveBeenCalledTimes(1);
   });
 
   it("opens Goal View from the view switch", () => {

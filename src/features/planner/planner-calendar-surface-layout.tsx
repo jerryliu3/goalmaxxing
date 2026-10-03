@@ -86,6 +86,10 @@ export interface PlannerCalendarSurfaceLayoutProps {
   goalViewOpen: boolean;
   /** Goal View is open and its wide planner window has loaded. */
   goalViewVisible: boolean;
+  showPastSessions: boolean;
+  setShowPastSessions: (value: boolean) => void;
+  goalViewPreviewOpen: boolean;
+  setGoalViewPreviewOpen: (open: boolean) => void;
   onGoalViewOpenChange: (open: boolean) => void;
   goalViewSessions: GoalViewSession[];
   onGoalViewMoveSession: (entry: PlannerDayDetailEntry, date: string) => void;
@@ -245,6 +249,10 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     viewMode,
     goalViewOpen,
     goalViewVisible,
+    showPastSessions,
+    setShowPastSessions,
+    goalViewPreviewOpen,
+    setGoalViewPreviewOpen,
     onGoalViewOpenChange,
     goalViewSessions,
     onGoalViewMoveSession,
@@ -361,17 +369,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     viewMode: checklistViewMode,
     plannerShowCompletedGoals: showCompletedGoals,
   });
-  const openEntryDetails = (
-    entry: PlannerDayDetailEntry,
-    day: string,
-    applyGoalFocus: boolean
-  ) => {
-    if (!canOpenPlannerEventDetails(entry) || !canMutateEntryOnDay(entry, day)) {
-      return;
-    }
-    setLocalSelectedDay(day);
-    togglePlannerGoalSelection(entry, { applyGoalFocus });
-  };
   const selectedEventGoal = selectedEventEntry
     ? dayChecklist.data.goals.find(
         (goal) => goal.id === selectedEventEntry.originalGoalId
@@ -478,6 +475,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         viewMode={viewMode}
         goalViewOpen={goalViewOpen}
         onGoalViewOpenChange={onGoalViewOpenChange}
+        onGoalViewPreview={() => setGoalViewPreviewOpen(true)}
         canOpenSettings={Boolean(context?.preferences)}
         linkedTargetDetails={eligibilityNotices.linkedTargetDetails}
         searchQuery={searchQuery}
@@ -487,6 +485,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         onSave={savePlan}
         onDiscardDraftChanges={discardDraftChanges}
         onViewModeChange={setCalendarViewMode}
+        goalIdFilters={goalIdFilters}
+        onGoalIdFiltersChange={setGoalIdFilters}
+        goalFilterOptions={showTasksInsteadOfGoals ? [] : goalFilterOptions}
         onOpenFilters={() => setFiltersOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         onSearchQueryChange={setSearchQuery}
@@ -519,13 +520,14 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
                   sessions={goalViewSessions}
                   today={context?.asOfDate ?? focusedDay}
                   weekStartsOn={context?.preferences?.defaultPolicy.weekStartsOn}
-                  selectedEntryKey={selectedEventEntry?.key ?? null}
+                  showPast={showPastSessions}
+                  previewOpen={goalViewPreviewOpen}
+                  onPreviewOpenChange={setGoalViewPreviewOpen}
                   canMutatePlanItems={canMutatePlanItems}
                   optimisticCompletionFacts={optimisticCompletionFacts}
                   mutationLoadingKey={mutationLoadingKey}
                   canOpenEntry={canOpenPlannerEventDetails}
                   canMutateEntryOnDay={canMutateEntryOnDay}
-                  onOpenEntry={(entry, day) => openEntryDetails(entry, day, false)}
                   onMoveEntry={onGoalViewMoveSession}
                   onToggleEntry={(entry, day, source) => {
                     void toggleDateFact(entry, day, source);
@@ -562,9 +564,17 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
               const entry = focusedDayEntries.find(
                 (candidate) => candidate.key === entryKey
               );
-              if (entry) {
-                openEntryDetails(entry, focusedDay, viewMode === "month");
+              if (
+                !entry ||
+                !canOpenPlannerEventDetails(entry) ||
+                !canMutateEntryOnDay(entry, focusedDay)
+              ) {
+                return;
               }
+              setLocalSelectedDay(focusedDay);
+              togglePlannerGoalSelection(entry, {
+                applyGoalFocus: viewMode === "month",
+              });
             }}
             onToggleCompletion={(entry, day, sourceElement) => {
               void toggleDateFact(entry, day, sourceElement ?? undefined);
@@ -598,9 +608,17 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
               const entry = previewDayEntries.find(
                 (candidate) => candidate.key === entryKey
               );
-              if (entry) {
-                openEntryDetails(entry, day, viewMode === "month");
+              if (
+                !entry ||
+                !canOpenPlannerEventDetails(entry) ||
+                !canMutateEntryOnDay(entry, day)
+              ) {
+                return;
               }
+              setLocalSelectedDay(day);
+              togglePlannerGoalSelection(entry, {
+                applyGoalFocus: viewMode === "month",
+              });
             }}
             onPreviewToggleCompletion={(entry, day, sourceElement) => {
               if (!canMutateEntryOnDay(entry, day)) {
@@ -725,14 +743,13 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         categoryFilters={categoryFilters}
         onCategoryFiltersChange={setCategoryFilters}
         categoryOptions={categoryOptions}
-        goalIdFilters={goalIdFilters}
-        onGoalIdFiltersChange={setGoalIdFilters}
-        goalFilterOptions={goalFilterOptions}
         endMonthFilters={effectiveEndMonthFilters}
         onEndMonthFiltersChange={setEndMonthFilters}
         endMonthOptions={endMonthOptions}
         showCompletedGoals={showCompletedGoals}
         onShowCompletedGoalsChange={setShowCompletedGoals}
+        showPastSessions={goalViewVisible ? showPastSessions : undefined}
+        onShowPastSessionsChange={setShowPastSessions}
         dayFilters={
           checklistViewMode === "day" && dayChecklist
             ? dayChecklist.filterFormProps
