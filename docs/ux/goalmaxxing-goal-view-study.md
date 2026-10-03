@@ -81,8 +81,17 @@ workflow. Visual and interaction performance still require approved review.
 
 Calendar / Time Weave is an in-place Week layout setting. Both show the same
 local plan and retain draft edits, completions, goal focus and selected day.
-The date headers select a day; its agenda below orders sessions by local time
-across goals and exposes the shared completion and date-edit controls.
+The Calendar alternative uses the production `CalendarMonthDayCell` in agenda
+mode: seven days stacked vertically, the same goal pills, completion controls,
+and planner drag provider. A local projection adapts the sample plan to this
+surface without adding another production mutation path.
+
+There is no always-visible Today/checklist section. Date headers open a
+**Day in context** inspector, ordered by time within the visible goal filter.
+Session pills expose completion directly through the same study eligibility
+and dispatch as Card Rails. Clicking a pill opens date/time editing; dragging
+uses its separate handle. The Week agenda retains its production hold-to-log
+interaction. The inspector appears only after an explicit date selection.
 
 The Weave uses one horizontally scrollable date canvas, from September 29,
 2025 to October 1, 2028. Goal labels stay fixed at the left and date labels
@@ -91,8 +100,11 @@ focus on the region, or the scrollbar; navigate by week, Today or a date jump.
 Goal labels also toggle focus. Roomy / Compact changes day width while keeping
 the leading date and fractional-day offset.
 
-Rows have a quiet thread connecting saved placements, with category-tinted
-session pills. Drag handles use the existing planner sensors, collision
+Rows use category-tinted session pills with no decorative connecting thread.
+Sharing a date or category does not imply a dependency. A future linked-goal
+affordance should reflect an actual source/target goal link and its completion
+credit semantics; this sample does not invent relationships or draw connectors.
+Drag handles use the existing planner sensors, collision
 logic, draggable entries and day targets. A column represents a date, so a
 drag changes the original goal's date regardless of which row it crosses.
 Handles also support Space, Left/Right and Escape. The shared editor remains
@@ -110,9 +122,15 @@ Invalid moves retain their original date and announce the local guard error.
   frame; React state changes only when the day window changes. Density keeps
   the date anchor. Motion's scroll-aware measurement prevents date moves from
   treating a scrolled viewport as a layout displacement.
-- Calendar/Weave changes fade in for 140 ms; a moved pill changes position over
-  180 ms. Large material cards are absent from this scrolling board. Reduced
-  motion removes the fade and move animation and makes navigation immediate.
+- Week agenda/Weave changes use a brief 120 ms exit and 120 ms entrance, with a
+  reserved canvas height. The week containing the leading scroll date becomes
+  the vertical agenda; switching back starts at that date. Filters, date drafts
+  and completion facts stay in one local state. The orientation itself is not
+  rotated: this is the calm transition candidate, avoiding distant sessions
+  flying diagonally across the interface. Reduced motion switches immediately.
+- A moved pill changes position over 180 ms. Large material cards are absent
+  from the scrolling board. Rendering/virtualization remains unchanged while
+  the user scrolls; no transition drives native scrolling.
 
 This tests a large finite range rather than pretending it is infinite. An
 eventual production version could extend date windows as the user approaches
@@ -123,5 +141,7 @@ future space never manufactures scheduled recurrences.
 Goal View and the separate Week study each own their local sample state;
 navigation between routes resets the sample, while switches inside each route
 preserve edits. Axis coverage in `weave-axis.test.ts` includes distant dates,
-leap day, render-window bounds and density anchors. No performance claim has
+leap day, render-window bounds and density anchors. `weave-model.test.ts` covers
+month/year week boundaries, the same draft in both orientations, and filtered
+day ordering. New coverage was written but not run. No performance claim has
 been verified in a browser.
