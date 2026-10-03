@@ -49,7 +49,7 @@ describe("Time Weave placement comparison", () => {
     expect(screen.getByTestId("placement")).toHaveTextContent("2026-10-03");
     fireEvent.click(screen.getByRole("button", { name: "Log sample practice" }));
     expect(screen.getByTestId("practice-complete")).toHaveTextContent("true");
-    fireEvent.click(placements.getByRole("button", { name: "Week", exact: true }));
+    fireEvent.click(placements.getByRole("button", { name: "Week" }));
     expect(screen.getByTestId("practice-complete")).toHaveTextContent("true");
     fireEvent.click(screen.getByRole("button", { name: "Undo changes" }));
     expect(screen.getByTestId("placement")).toHaveTextContent("2026-10-02");
