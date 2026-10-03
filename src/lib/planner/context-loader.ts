@@ -605,7 +605,7 @@ export async function loadPlannerCanonicalSnapshot({
   ownerId: string;
   startDate: string;
   endDate: string;
-}): Promise<PlannerCanonicalSnapshot> {
+}): Promise<PlannerCanonicalSnapshot & { persistedItems: PlannerItemRow[] }> {
   const [goals, links, revisions, preferences, plannerItems, unplaceableGoals] =
     await Promise.all([
       loadOwnerGoals(supabase, ownerId),
@@ -649,6 +649,7 @@ export async function loadPlannerCanonicalSnapshot({
     revisions,
     preferences,
     activePlan,
+    persistedItems: plannerItems,
     unplaceableGoals,
   };
 }

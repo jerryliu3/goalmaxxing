@@ -737,6 +737,32 @@ export type Database = {
           },
         ]
       }
+      coach_context_versions: {
+        Row: {
+          owner_id: string
+          revision: number
+          updated_at: string
+        }
+        Insert: {
+          owner_id: string
+          revision?: number
+          updated_at?: string
+        }
+        Update: {
+          owner_id?: string
+          revision?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_context_versions_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coach_memories: {
         Row: {
           content: string
