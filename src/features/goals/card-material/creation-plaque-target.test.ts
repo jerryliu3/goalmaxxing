@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createDefaultGoalCreationFields } from "../goal-creation-model";
+import { createDefaultGoalCreationFields } from "@/lib/goals/creation-model";
 import {
   clampPlaqueTarget,
   creationPlaqueTarget,

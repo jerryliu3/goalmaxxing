@@ -1,4 +1,4 @@
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import { buildMilestoneNameDrafts } from "@/lib/goals/milestones";
 import { MATERIALS, MATERIAL_SAMPLES } from "../card-materials/materials";
 

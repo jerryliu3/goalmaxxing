@@ -32,6 +32,7 @@ describe("usePlannerCalendarDnd", () => {
 
   it("persists task date changes immediately and leaves goals on the draft path", () => {
     const task = toPlannerTaskCalendarEntry({
+      updatedAt: "2026-09-02T12:00:00.000Z",
       taskId: "11111111-1111-4111-8111-111111111111",
       title: "Buy groceries",
       scheduledDate: "2026-09-02",
@@ -222,6 +223,7 @@ describe("usePlannerCalendarDnd", () => {
 
   it("does not persist a task drop onto its current day", () => {
     const task = toPlannerTaskCalendarEntry({
+      updatedAt: "2026-09-02T12:00:00.000Z",
       taskId: "11111111-1111-4111-8111-111111111111",
       title: "Buy groceries",
       scheduledDate: "2026-09-02",

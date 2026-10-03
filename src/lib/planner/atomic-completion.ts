@@ -57,7 +57,7 @@ export async function uncompletePlannerCompletion({
   };
 }
 
-export async function tryAtomicPlannerMoveCompletion({
+export async function preparePlannerMoveCompletion({
   supabase,
   userId,
   goal,
@@ -73,7 +73,7 @@ export async function tryAtomicPlannerMoveCompletion({
   asOfDate: string;
   expectedDigest: string;
   weekStartsOn?: number;
-}): Promise<AtomicPlannerCompletionResult> {
+}) {
   const [itemsResponse, completionsResponse] = await Promise.all([
     supabase
       .from("planner_items")
@@ -117,9 +117,16 @@ export async function tryAtomicPlannerMoveCompletion({
     ) {
       throw Object.assign(new Error("planner_item_locked"), { code: "55000" });
     }
-    return { moved: false };
+    return null;
   }
 
+  return candidate;
+}
+
+export async function tryAtomicPlannerMoveCompletion(args: Parameters<typeof preparePlannerMoveCompletion>[0]): Promise<AtomicPlannerCompletionResult> {
+  const { supabase, goal, date, expectedDigest } = args;
+  const candidate = await preparePlannerMoveCompletion(args);
+  if (!candidate) return { moved: false };
   const response = await supabase.rpc(
     "complete_planner_item_on_date_service",
     {

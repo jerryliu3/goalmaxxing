@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "motion/react";
 import { Input } from "@/components/ui/input";
-import { getGoalCreationPeriodTargetMax } from "./goal-creation-model";
+import { getGoalCreationPeriodTargetMax } from "@/lib/goals/creation-model";
 import type { GoalCreateKind } from "@/lib/goals/form-options";
 import type { GoalCreationFieldControlsProps } from "./goal-creation-fields";
 import type { TempoChoicesMade } from "./tempo-creation-progress";

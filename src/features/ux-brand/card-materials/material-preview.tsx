@@ -1,7 +1,7 @@
 "use client";
 
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import type { CardMaterial } from "./materials";
 import { renderSolidLettering } from "./solid-lettering";
 import { MaterialStage } from "./material-stage";

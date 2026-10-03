@@ -1,6 +1,6 @@
 import { GAZETTEER } from "@/lib/brand/gazetteer";
 import type { CategoryPresetId } from "@/lib/goals/category";
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import type {
   GoalDifficulty,
   GoalFrequencyType,

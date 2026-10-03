@@ -10,7 +10,7 @@ import {
   type BulkGoalDraft,
   buildBulkGoalDraftsFromLlmGoals,
   withValidatedBulkGoalDraft,
-} from "@/features/goals/bulk-goal-drafts";
+} from "@/lib/goals/bulk-drafts";
 import type { Goal } from "@/lib/goals/types";
 
 vi.mock("@/features/goals/goal-link-target-select", () => ({

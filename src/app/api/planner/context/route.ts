@@ -518,20 +518,11 @@ export async function PUT(request: Request) {
     const normalizedRestWeekdays = Array.from(
       new Set(defaultPolicy.restWeekdays)
     ).sort((left, right) => left - right);
-    const updateResponse = await routeContext.supabase
-      .from("profiles")
-      .update({
-        timezone: body.timezone,
-        timezone_confirmed_at: timezoneConfirmedAt,
-        week_starts_on: normalizedWeekStartsOn,
-        rest_weekdays: normalizedRestWeekdays,
-        blackout_ranges: defaultPolicy.blackoutRanges,
-      })
-      .eq("id", routeContext.userId)
-      .select(
-        "timezone,timezone_confirmed_at,week_starts_on,rest_weekdays,blackout_ranges"
-      )
-      .maybeSingle();
+    const updateResponse = await routeContext.supabase.rpc("set_planner_preferences", {
+      p_timezone: body.timezone, p_confirmed_at: timezoneConfirmedAt,
+      p_week_start: normalizedWeekStartsOn, p_rest_days: normalizedRestWeekdays,
+      p_blackouts: defaultPolicy.blackoutRanges,
+    });
     if (updateResponse.error) {
       const cause = updateResponse.error.message;
       if (/Expected 3 parts in JWT/i.test(cause)) {

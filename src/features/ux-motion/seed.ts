@@ -1,4 +1,4 @@
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import type { WorkQuestModel } from "@/features/planner/work-quest-model";
 
 /** These are recorded sample outcomes, not a second linked-credit calculator. */

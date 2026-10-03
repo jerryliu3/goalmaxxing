@@ -4,7 +4,7 @@ import { useMemo, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
 import { buildRewardPieces, pieceScatter } from "@/features/goals/card-material/reward-pieces";
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import ghostStyles from "@/features/goals/card-material/reassembling-card.module.css";
 import type { PlaquePhase } from "./study-model";
 import styles from "./plaque-motion.module.css";

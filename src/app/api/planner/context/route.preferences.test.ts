@@ -24,7 +24,7 @@ vi.mock("@/lib/supabase/server", () => ({
       update: () => ({
         eq: () => ({
           select: () => ({
-            maybeSingle: mocks.profileUpdateMaybeSingle,
+            maybeSingle: mocks.rpc,
           }),
         }),
       }),
@@ -90,7 +90,7 @@ describe("planner context preferences route", () => {
       },
       error: null,
     });
-    mocks.profileUpdateMaybeSingle.mockResolvedValue({
+    mocks.rpc.mockResolvedValue({
       data: {
         timezone,
         timezone_confirmed_at: timezoneConfirmedAt,
@@ -166,7 +166,7 @@ describe("planner context preferences route", () => {
         executionRevision: 0,
       },
     });
-    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.rpc).toHaveBeenCalledWith("set_planner_preferences", expect.objectContaining({ p_timezone: timezone, p_week_start: 1 }));
   });
 
   it("updates preferences through the signed-in profile client", async () => {
@@ -178,12 +178,12 @@ describe("planner context preferences route", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mocks.profileUpdateMaybeSingle).toHaveBeenCalled();
+    expect(mocks.rpc).toHaveBeenCalled();
     expect(mocks.adminProfileUpdateMaybeSingle).not.toHaveBeenCalled();
   });
 
   it("maps malformed session JWTs away from preference_update_failed", async () => {
-    mocks.profileUpdateMaybeSingle.mockResolvedValue({
+    mocks.rpc.mockResolvedValue({
       data: null,
       error: { message: "Expected 3 parts in JWT; got 1" },
     });

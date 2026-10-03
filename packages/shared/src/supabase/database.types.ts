@@ -664,6 +664,42 @@ export type Database = {
           },
         ]
       }
+      coach_action_requests: {
+        Row: {
+          action_id: string
+          owner_id: string
+          receipt: Json
+          request_id: string
+        }
+        Insert: {
+          action_id: string
+          owner_id: string
+          receipt: Json
+          request_id: string
+        }
+        Update: {
+          action_id?: string
+          owner_id?: string
+          receipt?: Json
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_action_requests_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "coach_actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_action_requests_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coach_actions: {
         Row: {
           applied_at: string | null
@@ -3088,6 +3124,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      apply_coach_action: {
+        Args: { p_action: string; p_request: string }
+        Returns: Json
+      }
       apply_external_completion_service: {
         Args: {
           p_completed_on: string
@@ -3608,6 +3648,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      replace_coach_action: {
+        Args: {
+          p_new: Json
+          p_original: string
+          p_owner: string
+          p_undo?: boolean
+        }
+        Returns: string
+      }
       replace_goal_source_link: {
         Args: { p_source_goal_id: string; p_target_goal_id?: string }
         Returns: undefined
@@ -3680,6 +3729,17 @@ export type Database = {
           schedule_digest: string
         }[]
       }
+      set_planner_preferences: {
+        Args: {
+          p_blackouts: Json
+          p_confirmed_at: string
+          p_expected_digest?: string
+          p_rest_days: number[]
+          p_timezone: string
+          p_week_start: number
+        }
+        Returns: Json
+      }
       set_planner_schedule: {
         Args: {
           p_end: string
@@ -3693,7 +3753,11 @@ export type Database = {
         }[]
       }
       set_planner_task_completion: {
-        Args: { p_completed?: boolean; p_task_id: string }
+        Args: {
+          p_completed: boolean
+          p_expected_updated_at: string
+          p_task_id: string
+        }
         Returns: {
           completed_at: string
           created_at: string
@@ -3705,7 +3769,11 @@ export type Database = {
         }[]
       }
       set_planner_task_scheduled_date: {
-        Args: { p_scheduled_date: string; p_task_id: string }
+        Args: {
+          p_expected_updated_at: string
+          p_scheduled_date: string
+          p_task_id: string
+        }
         Returns: {
           completed_at: string
           created_at: string

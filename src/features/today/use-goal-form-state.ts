@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   getGoalCreationValidationFeedback,
   resolveGoalCreationColor,
-} from "@/features/goals/goal-creation-model";
+} from "@/lib/goals/creation-model";
 import { buildLoginHref } from "@/lib/auth/login-redirect";
 import { toLocalDateString } from "@/lib/dates/day";
 import {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+export { coachActionPreviewLines, coachActionPreviewSchema } from "./action-preview";
 
 export const coachPageSchema = z.object({
   surface: z.enum(["plan", "checklist", "progress", "community", "you", "goal", "coach"]),
@@ -101,3 +102,6 @@ export const coachStreamEventSchema = z.discriminatedUnion("event", [
   z.object({ event: z.literal("error"), data: z.object({ code: z.string(), message: z.string(), correlationId: z.string() }) }),
 ]);
 export type CoachConversation = z.infer<typeof coachConversationSchema>;
+
+export const coachActionCursorSchema = z.object({ createdAt: z.iso.datetime({ offset: true }), id: z.uuid() }).strict();
+export const coachActionHistorySchema = z.object({ actions: z.array(coachActionSchema), next: coachActionCursorSchema.nullable() });

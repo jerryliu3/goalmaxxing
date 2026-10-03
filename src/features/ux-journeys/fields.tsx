@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import {
   applyGoalCreationFieldChange,
   type GoalCreationFieldChange,
-} from "@/features/goals/goal-creation-model";
+} from "@/lib/goals/creation-model";
 import {
   DEFAULT_GOAL_CATEGORIES,
   getCategorySwatchColor,

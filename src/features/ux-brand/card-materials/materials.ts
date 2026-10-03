@@ -1,4 +1,4 @@
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 
 export const MATERIALS = [
   { id: "glass", form: "solid", name: "Liquid Glass", tag: "01 / Optical · 3D", premise: "A translucent object with a polished rim. Color lives within its thickness; the commitment is printed on its polished face.", detail: "Pointer light, a continuous polished edge, and flat printed target text. A milky reading layer keeps small type grounded.", use: "A single featured goal or the active folio card.", tradeoff: "The most luminous option; blur and transparency need careful contrast and device checks." },

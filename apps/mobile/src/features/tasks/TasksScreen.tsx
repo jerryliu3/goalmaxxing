@@ -16,6 +16,7 @@ interface PlannerTaskRow {
   scheduled_time: string | null;
   completed_at: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 export function TasksScreen() {
@@ -132,6 +133,7 @@ export function TasksScreen() {
                 const { error } = await supabase.rpc("set_planner_task_completion", {
                   p_task_id: task.task_id,
                   p_completed: !complete,
+                  p_expected_updated_at: task.updated_at,
                 });
                 if (error) {
                   setMessage(error.message);

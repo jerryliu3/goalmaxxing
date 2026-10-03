@@ -31,6 +31,7 @@ describe("useCalendarPlannerTasks", () => {
           scheduledDate: "2026-09-02",
           scheduledTime: "09:00",
           completedAt: null,
+        updatedAt: "2026-09-01T00:00:00.000Z",
         },
       ],
     });
@@ -41,6 +42,7 @@ describe("useCalendarPlannerTasks", () => {
         scheduledDate: "2026-09-02",
         scheduledTime: "09:00",
         completedAt: "2026-09-02T12:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
       },
     });
   });
@@ -87,7 +89,7 @@ describe("useCalendarPlannerTasks", () => {
 
     expect(mocks.postJson).toHaveBeenCalledWith(
       "/api/planner/tasks/11111111-1111-4111-8111-111111111111/completion",
-      { completed: true }
+      { completed: true, expectedUpdatedAt: "2026-09-01T00:00:00.000Z" }
     );
     expect(
       result.current.taskEntriesByDate.get("2026-09-02")?.[0]
@@ -107,6 +109,7 @@ describe("useCalendarPlannerTasks", () => {
         scheduledDate: "2026-09-08",
         scheduledTime: "09:00",
         completedAt: null,
+        updatedAt: "2026-09-01T00:00:00.000Z",
       },
     });
     const { result } = renderHook(() =>
@@ -132,7 +135,7 @@ describe("useCalendarPlannerTasks", () => {
 
     expect(mocks.postJson).toHaveBeenCalledWith(
       "/api/planner/tasks/11111111-1111-4111-8111-111111111111/schedule",
-      { scheduledDate: "2026-09-08" }
+      { scheduledDate: "2026-09-08", expectedUpdatedAt: "2026-09-01T00:00:00.000Z" }
     );
     expect(
       result.current.taskEntriesByDate.get("2026-09-08")?.[0]

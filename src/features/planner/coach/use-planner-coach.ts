@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-import type { BulkGoalDraft } from "@/features/goals/bulk-goal-drafts";
+import type { BulkGoalDraft } from "@/lib/goals/bulk-drafts";
 import { buildCoachSummaryWorkUnits } from "@/features/planner/calendar-entries";
 import {
   persistPlannerDefaultPolicy,

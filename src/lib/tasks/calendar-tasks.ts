@@ -26,12 +26,14 @@ export const calendarTasksQuerySchema = z
 export const plannerTaskCompletionRequestSchema = z
   .object({
     completed: z.boolean(),
+    expectedUpdatedAt: z.iso.datetime({ offset: true }),
   })
   .strict();
 
 export const plannerTaskScheduleRequestSchema = z
   .object({
     scheduledDate: z.iso.date(),
+    expectedUpdatedAt: z.iso.datetime({ offset: true }),
   })
   .strict();
 
@@ -39,6 +41,7 @@ export const plannerCalendarTaskRowSchema = z
   .object({
     id: z.uuid().optional(),
     task_id: z.uuid().optional(),
+    updated_at: z.string(),
     title: z.string().trim().min(1).max(200),
     scheduled_date: z.iso.date(),
     scheduled_time: z.string().nullable().optional(),
@@ -54,6 +57,7 @@ export interface PlannerCalendarTask {
   scheduledDate: string;
   scheduledTime: string | null;
   completedAt: string | null;
+  updatedAt: string;
 }
 
 function mapPlannerCalendarTask(
@@ -69,6 +73,7 @@ function mapPlannerCalendarTask(
     scheduledDate: row.scheduled_date,
     scheduledTime: row.scheduled_time ?? null,
     completedAt: row.completed_at ?? null,
+    updatedAt: row.updated_at,
   };
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
-import { createDefaultGoalCreationFields } from "@/features/goals/goal-creation-model";
+import { createDefaultGoalCreationFields } from "@/lib/goals/creation-model";
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";

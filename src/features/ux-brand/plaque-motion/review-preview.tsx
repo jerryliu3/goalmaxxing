@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { clampPlaqueTarget } from "@/features/goals/card-material/creation-plaque-target";
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import { FragmentPlaque } from "./fragment-plaque";
 import { REVIEW_BEATS, type PlaquePhase } from "./study-model";
 import styles from "./plaque-motion.module.css";

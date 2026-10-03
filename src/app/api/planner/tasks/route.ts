@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabase
       .from("planner_tasks")
-      .select("id, title, scheduled_date, scheduled_time, completed_at")
+      .select("id, title, scheduled_date, scheduled_time, completed_at, updated_at")
       .eq("is_deleted", false)
       .gte("scheduled_date", from)
       .lte("scheduled_date", to)

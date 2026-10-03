@@ -2,7 +2,7 @@ import {
   type BulkGoalDraft,
   type PreparedBulkGoalRow,
   prepareBulkGoalRows,
-} from "@/features/goals/bulk-goal-drafts";
+} from "@/lib/goals/bulk-drafts";
 import { getRpcErrorMessage } from "@/lib/supabase/rpc-error";
 
 type RpcResult = PromiseLike<{

@@ -29,11 +29,11 @@ import {
   bulkGoalDraftRequiresEndDate,
   summarizeBulkGoalDraftSchedule,
   withValidatedBulkGoalDraft,
-} from "@/features/goals/bulk-goal-drafts";
+} from "@/lib/goals/bulk-drafts";
 import { GoalCreationFieldControls } from "@/features/goals/goal-creation-fields";
 import {
   type GoalCreationFieldChange,
-} from "@/features/goals/goal-creation-model";
+} from "@/lib/goals/creation-model";
 import type { GoalCreateKind } from "@/lib/goals/form-options";
 import {
   getLinkedGoalDeadlineLabel,

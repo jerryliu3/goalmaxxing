@@ -1,6 +1,6 @@
 import type { Goal } from "@/lib/goals/types";
 import { getCategorySelectionFromValue, getCategorySwatchColor } from "@/lib/goals/category";
-import type { GoalCreationFields } from "./goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 
 export function goalCardFields(goal: Goal): GoalCreationFields {
   const category = getCategorySelectionFromValue(goal.category);

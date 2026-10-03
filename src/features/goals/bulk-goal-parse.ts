@@ -1,5 +1,5 @@
 import { postJson } from "@/lib/api/client";
-import type { LlmGoalDraftPayload } from "@/features/goals/bulk-goal-drafts";
+import type { LlmGoalDraftPayload } from "@/lib/goals/bulk-drafts";
 
 export const BULK_GOAL_PARSE_TIMEOUT_MS = 45_000;
 

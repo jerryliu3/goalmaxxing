@@ -1,5 +1,5 @@
 import type { Goal } from "@/lib/goals/types";
-import type { GoalCreationFields } from "../goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import {
   artificialCadenceAssemblyTarget,
   CADENCE_ASSEMBLY_SOFT_HORIZON_DAYS,

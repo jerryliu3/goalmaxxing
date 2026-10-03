@@ -72,7 +72,7 @@ describe("POST /api/planner/tasks/[taskId]/completion", () => {
       error: null,
     });
 
-    const response = await POST(request({ completed: true }), {
+    const response = await POST(request({ completed: true, expectedUpdatedAt: "2026-09-01T00:00:00.000Z" }), {
       params: Promise.resolve({ taskId: TASK_ID }),
     });
 
@@ -83,7 +83,7 @@ describe("POST /api/planner/tasks/[taskId]/completion", () => {
   });
 
   it("rejects invalid task ids and bodies", async () => {
-    const invalidId = await POST(request({ completed: true }, "not-a-uuid"), {
+    const invalidId = await POST(request({ completed: true, expectedUpdatedAt: "2026-09-01T00:00:00.000Z" }, "not-a-uuid"), {
       params: Promise.resolve({ taskId: "not-a-uuid" }),
     });
     expect(invalidId.status).toBe(400);
@@ -95,7 +95,7 @@ describe("POST /api/planner/tasks/[taskId]/completion", () => {
   });
 
   it("marks a task complete through the existing write boundary", async () => {
-    const response = await POST(request({ completed: true }), {
+    const response = await POST(request({ completed: true, expectedUpdatedAt: "2026-09-01T00:00:00.000Z" }), {
       params: Promise.resolve({ taskId: TASK_ID }),
     });
 
@@ -103,6 +103,7 @@ describe("POST /api/planner/tasks/[taskId]/completion", () => {
     expect(mocks.rpc).toHaveBeenCalledWith("set_planner_task_completion", {
       p_task_id: TASK_ID,
       p_completed: true,
+      p_expected_updated_at: "2026-09-01T00:00:00.000Z",
     });
     await expect(response.json()).resolves.toMatchObject({
       schemaVersion: "1",
@@ -120,7 +121,7 @@ describe("POST /api/planner/tasks/[taskId]/completion", () => {
       error: { code: "P0001", message: "planner_task_not_found" },
     });
 
-    const response = await POST(request({ completed: false }), {
+    const response = await POST(request({ completed: false, expectedUpdatedAt: "2026-09-01T00:00:00.000Z" }), {
       params: Promise.resolve({ taskId: TASK_ID }),
     });
 

@@ -64,7 +64,8 @@ select ok(
         order by created_at desc
         limit 1
       ),
-      true
+      true,
+      (select updated_at from public.planner_tasks where owner_id='11111111-1111-4111-8111-111111111111' and title='Strength mobility block' order by created_at desc limit 1)
     )
     limit 1
   ),
@@ -160,7 +161,8 @@ select ok(
         order by created_at desc
         limit 1
       ),
-      true
+      true,
+      (select updated_at from public.planner_tasks where owner_id='11111111-1111-4111-8111-111111111111' and title='Carry-over task' order by created_at desc limit 1)
     )
     limit 1
   ),
@@ -282,7 +284,9 @@ select results_eq(
 do $$ begin
   perform public.set_planner_task_completion(
     (select id from public.planner_tasks where owner_id = '11111111-1111-4111-8111-111111111111'
-      and title = 'Later timed task' limit 1), true
+      and title = 'Later timed task' limit 1), true,
+    (select updated_at from public.planner_tasks where owner_id = '11111111-1111-4111-8111-111111111111'
+      and title = 'Later timed task' limit 1)
   );
 end $$;
 select results_eq(
@@ -304,7 +308,8 @@ select is(
         order by created_at desc
         limit 1
       ),
-      current_date + 3
+      current_date + 3,
+      (select updated_at from public.planner_tasks where owner_id='11111111-1111-4111-8111-111111111111' and title='Strength mobility block' order by created_at desc limit 1)
     )
     limit 1
   ),
@@ -315,7 +320,8 @@ select is(
 select throws_ok(
   $$select public.set_planner_task_scheduled_date(
     '99999999-9999-4999-8999-999999999999',
-    current_date
+    current_date,
+    now()
   )$$,
   'P0001',
   'planner_task_not_found',

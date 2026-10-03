@@ -293,6 +293,7 @@ describe("selectPlannerCalendarModel", () => {
 
   it("shows date-only tasks instead of goals without applying goal filters", () => {
     const taskEntry = toPlannerTaskCalendarEntry({
+      updatedAt: "2026-09-02T12:00:00.000Z",
       taskId: "11111111-1111-4111-8111-111111111111",
       title: "Buy groceries",
       scheduledDate: "2026-08-06",
@@ -330,6 +331,7 @@ describe("selectPlannerCalendarModel", () => {
 
   it("keeps planned goals when tasks are not replacing them", () => {
     const taskEntry = toPlannerTaskCalendarEntry({
+      updatedAt: "2026-09-02T12:00:00.000Z",
       taskId: "11111111-1111-4111-8111-111111111111",
       title: "Buy groceries",
       scheduledDate: "2026-08-06",

@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createDefaultGoalCreationFields } from "./goal-creation-model";
+import { createDefaultGoalCreationFields } from "@/lib/goals/creation-model";
 import { TempoGoalFields } from "./tempo-goal-fields";
 
 afterEach(cleanup);
