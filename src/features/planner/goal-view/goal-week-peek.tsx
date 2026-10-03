@@ -9,21 +9,17 @@ import {
 } from "@/components/ui/dialog";
 import { prefersReducedMotion } from "@/features/planner/plan-view-transition";
 import { cn } from "@/lib/utils";
-import { addDaysToDateString } from "@/lib/goals/periods";
+import { addDaysToDateString, startOfWeekDateString } from "@/lib/goals/periods";
 import {
   dateLabel,
-  weekStartOf,
   type GoalViewSession,
   type GoalViewWindow,
 } from "./goal-view-model";
 
-const byTime = (a: GoalViewSession, b: GoalViewSession) =>
-  (a.time || "24:00").localeCompare(b.time || "24:00");
-
 function listWeeks(range: GoalViewWindow, weekStartsOn: number) {
   const weeks: string[] = [];
   for (
-    let week = weekStartOf(range.start, weekStartsOn);
+    let week = startOfWeekDateString(range.start, weekStartsOn);
     week <= range.end;
     week = addDaysToDateString(week, 7)
   ) {
@@ -94,10 +90,9 @@ function PeekWeeks({
     for (const session of sessions) {
       grouped.set(session.date, [...(grouped.get(session.date) ?? []), session]);
     }
-    for (const group of grouped.values()) group.sort(byTime);
     return grouped;
   }, [sessions]);
-  const currentWeek = weekStartOf(today, weekStartsOn);
+  const currentWeek = startOfWeekDateString(today, weekStartsOn);
 
   const scrollToCurrentWeek = useCallback((smooth: boolean) => {
     const container = scroller.current;

@@ -369,17 +369,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     viewMode: checklistViewMode,
     plannerShowCompletedGoals: showCompletedGoals,
   });
-  const openEntryDetails = (
-    entry: PlannerDayDetailEntry,
-    day: string,
-    applyGoalFocus: boolean
-  ) => {
-    if (!canOpenPlannerEventDetails(entry) || !canMutateEntryOnDay(entry, day)) {
-      return;
-    }
-    setLocalSelectedDay(day);
-    togglePlannerGoalSelection(entry, { applyGoalFocus });
-  };
   const selectedEventGoal = selectedEventEntry
     ? dayChecklist.data.goals.find(
         (goal) => goal.id === selectedEventEntry.originalGoalId
@@ -572,9 +561,17 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
               const entry = focusedDayEntries.find(
                 (candidate) => candidate.key === entryKey
               );
-              if (entry) {
-                openEntryDetails(entry, focusedDay, viewMode === "month");
+              if (
+                !entry ||
+                !canOpenPlannerEventDetails(entry) ||
+                !canMutateEntryOnDay(entry, focusedDay)
+              ) {
+                return;
               }
+              setLocalSelectedDay(focusedDay);
+              togglePlannerGoalSelection(entry, {
+                applyGoalFocus: viewMode === "month",
+              });
             }}
             onToggleCompletion={(entry, day, sourceElement) => {
               void toggleDateFact(entry, day, sourceElement ?? undefined);
@@ -608,9 +605,17 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
               const entry = previewDayEntries.find(
                 (candidate) => candidate.key === entryKey
               );
-              if (entry) {
-                openEntryDetails(entry, day, viewMode === "month");
+              if (
+                !entry ||
+                !canOpenPlannerEventDetails(entry) ||
+                !canMutateEntryOnDay(entry, day)
+              ) {
+                return;
               }
+              setLocalSelectedDay(day);
+              togglePlannerGoalSelection(entry, {
+                applyGoalFocus: viewMode === "month",
+              });
             }}
             onPreviewToggleCompletion={(entry, day, sourceElement) => {
               if (!canMutateEntryOnDay(entry, day)) {

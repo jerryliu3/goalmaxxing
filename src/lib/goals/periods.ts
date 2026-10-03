@@ -78,7 +78,7 @@ function getUtcWeekday(value: string) {
   return civilDateToUtcDate(parseCivilDate(value)).getUTCDay();
 }
 
-function startOfWeekDateString(value: string, weekStartsOn: number) {
+export function startOfWeekDateString(value: string, weekStartsOn: number) {
   const normalizedWeekStartsOn = normalizeWeekStartsOn(weekStartsOn);
   const weekday = getUtcWeekday(value);
   const offset = (weekday - normalizedWeekStartsOn + 7) % 7;
