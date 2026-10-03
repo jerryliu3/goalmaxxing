@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allChanges, changeIsStale, contextFor, initialState, reducer, replyFor, TODAY, type State } from "./model";
+import { allChanges, changeIsStale, contextFor, initialState, reducer, replyFor, TODAY } from "./model";
 
 function propose(state = initialState()) {
   return reducer(state, { type: "message", threadId: state.threadId, message: replyFor(state, "Make today lighter", "proposal") });

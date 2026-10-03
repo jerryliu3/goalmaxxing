@@ -29,7 +29,8 @@ export function Conversation({ prototype }: { prototype: Prototype }) {
   const topic = state.topics.find(row => row.id === state.topicId)!;
   const facts = contextFor(state);
   const scroll = useRef<HTMLDivElement>(null);
-  useEffect(() => { scroll.current?.scrollTo({ top: scroll.current.scrollHeight, behavior: "auto" }); }, [thread.id, thread.messages.length, pending[thread.id]]);
+  const pendingQuestion = pending[thread.id];
+  useEffect(() => { scroll.current?.scrollTo({ top: scroll.current.scrollHeight, behavior: "auto" }); }, [thread.id, thread.messages.length, pendingQuestion]);
   const starters = facts.selected
     ? [`Help me think about ${facts.selected.title}.`, "Move this session to make room."]
     : topic.id === "week" ? ["How is my week going?", "Make today a little lighter.", "Talk through my check-in."]
