@@ -262,7 +262,7 @@ export function PlannerCalendarToolbar({
             />
           </div>
           {goalFilterOptions.length > 0 ? (
-            <div className="w-36 shrink-0 sm:w-44">
+            <div className="w-28 shrink-0 sm:w-32">
               <Label htmlFor="planner-goal-filter" className="sr-only">
                 Filter by goal
               </Label>
