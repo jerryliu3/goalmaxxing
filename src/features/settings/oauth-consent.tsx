@@ -31,8 +31,8 @@ export function OAuthConsent({ authorizationId }: { authorizationId: string }) {
         const result = await supabase.from("external_app_connections").upsert({
           owner_id: user.id, client_id: details.client.id,
           client_name: (details.client.name || "Connected app").slice(0, 200),
-          connected_at: new Date().toISOString(), revoked_at: null,
-        });
+          revoked_at: null,
+        }, { defaultToNull: false });
         if (result.error) throw result.error;
       }
       const result = approve

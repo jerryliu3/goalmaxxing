@@ -259,6 +259,9 @@ export function assertEnvAtBoot() {
   if (!env.SUPABASE_SECRET_KEY && !env.SUPABASE_SERVICE_ROLE_KEY) {
     missing.push("SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY");
   }
+  if (env.EXTERNAL_TOOLS_ENABLED && !env.NEXT_PUBLIC_APP_URL) {
+    missing.push("NEXT_PUBLIC_APP_URL (external tools enabled)");
+  }
   if (!env.CRON_SECRET) {
     missing.push("CRON_SECRET");
   }

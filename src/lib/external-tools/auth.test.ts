@@ -17,9 +17,9 @@ const request = () => new Request("https://goalmaxxing.app/api/v1/goals", { head
 describe("external account authorization", () => {
   beforeEach(() => {
     mocks.enabled = true; resetRateLimitBucketsForTests();
-    mocks.claims.mockResolvedValue({ data: { claims: { sub: userId, role: "authenticated", iss: "https://project.supabase.co/auth/v1", aud: "authenticated", exp: Date.now() / 1000 + 3600, client_id: clientId } }, error: null });
+    mocks.claims.mockResolvedValue({ data: { claims: { sub: userId, role: "authenticated", iss: "https://project.supabase.co/auth/v1", aud: "authenticated", iat: Date.now() / 1000, exp: Date.now() / 1000 + 3600, client_id: clientId } }, error: null });
     mocks.user.mockResolvedValue({ data: { user: { id: userId } }, error: null });
-    mocks.connection.mockResolvedValue({ data: { revoked_at: null }, error: null });
+    mocks.connection.mockResolvedValue({ data: { revoked_at: null, connected_at: "2026-01-01T00:00:00Z" }, error: null });
   });
   it("rejects cookies without a bearer token", async () => {
     await expect(requireExternalContext(new Request("https://goalmaxxing.app/api/v1/goals", { headers: { cookie: "session=abc" } }))).rejects.toMatchObject({ status: 401 });
@@ -31,13 +31,17 @@ describe("external account authorization", () => {
     mocks.connection.mockResolvedValue({ data: { revoked_at: new Date().toISOString() }, error: null });
     await expect(requireExternalContext(request())).rejects.toMatchObject({ code: "connection_revoked", status: 401 });
   });
+  it("does not revive old access tokens when a client reconnects", async () => {
+    mocks.connection.mockResolvedValue({ data: { revoked_at: null, connected_at: new Date(Date.now() + 60_000).toISOString() }, error: null });
+    await expect(requireExternalContext(request())).rejects.toMatchObject({ code: "connection_revoked" });
+  });
   it("never auto-approves an unregistered client", async () => {
     mocks.connection.mockResolvedValue({ data: null, error: null });
     await expect(requireExternalContext(request())).rejects.toMatchObject({ code: "connection_revoked" });
   });
   it("rejects service credentials, expired tokens, and foreign issuers", async () => {
     for (const patch of [{ role: "service_role" }, { exp: 1 }, { iss: "https://evil.example/auth/v1" }]) {
-      mocks.claims.mockResolvedValueOnce({ data: { claims: { sub: userId, role: "authenticated", iss: "https://project.supabase.co/auth/v1", aud: "authenticated", exp: Date.now() / 1000 + 3600, ...patch } }, error: null });
+      mocks.claims.mockResolvedValueOnce({ data: { claims: { sub: userId, role: "authenticated", iss: "https://project.supabase.co/auth/v1", aud: "authenticated", iat: Date.now() / 1000, exp: Date.now() / 1000 + 3600, ...patch } }, error: null });
       await expect(requireExternalContext(request())).rejects.toMatchObject({ code: "invalid_token" });
     }
   });

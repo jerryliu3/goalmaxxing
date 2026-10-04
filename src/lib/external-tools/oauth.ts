@@ -8,7 +8,12 @@ export const authorizationIdSchema = z.string().min(1).max(500).regex(/^[a-zA-Z0
 export function externalResourceUrl(path: "/api/mcp" | "/api/v1" = "/api/mcp") {
   const appUrl = getPublicEnv().NEXT_PUBLIC_APP_URL;
   if (!appUrl) throw new Error("NEXT_PUBLIC_APP_URL is required for external account tools.");
-  return new URL(path, appUrl).href;
+  const url = new URL(appUrl);
+  const local = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+  if (url.protocol !== "https:" && !(local && url.protocol === "http:")) {
+    throw new Error("External account tools require a public HTTPS app origin or local HTTP development origin.");
+  }
+  return new URL(path, url).href;
 }
 
 export function protectedResourceMetadata(path: "/api/mcp" | "/api/v1") {
