@@ -212,12 +212,13 @@ describe("GoalView", () => {
   it("toggles completion and respects a disabled reason", () => {
     const resolveCompletion = vi
       .fn()
-      .mockReturnValueOnce({ credited: false, pending: false, disabledReason: null })
-      .mockReturnValue({
+      .mockImplementation((session: GoalViewSession) => ({
         credited: false,
         pending: false,
-        disabledReason: "You can only mark planner sessions done for today or past dates.",
-      });
+        disabledReason: session.date > TODAY
+          ? "You can only mark planner sessions done for today or past dates."
+          : null,
+      }));
     const props = renderView({ resolveCompletion });
     const toggles = screen.getAllByRole("button", { name: /^Complete / });
     expect(toggles.some((button) => !(button as HTMLButtonElement).disabled)).toBe(true);

@@ -10,7 +10,7 @@ import { fetchPlannerContext } from "@/lib/planner/fetch-planner-context";
 const mocks = vi.hoisted(() => ({ getJson: vi.fn(), postJson: vi.fn() }));
 vi.mock("@/lib/api/client", () => ({ ...mocks, getApiErrorMessage: () => "Failed" }));
 vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
-vi.mock("@/lib/dates/timezone", () => ({ getDateInTimezone: () => "2026-10-04" }));
+vi.mock("@/lib/dates/timezone", () => ({ getDateInTimezone: () => "2026-10-04", isValidIanaTimezone: () => true }));
 
 const month = "2026-10";
 const window = buildGoalViewWindow("2026-10-04");

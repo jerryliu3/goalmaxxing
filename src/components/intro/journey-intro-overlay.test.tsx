@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { PageOnboardingReadyContext } from "@/features/onboarding/onboarding-readiness";
 import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   JourneyIntroOverlay,
@@ -248,7 +248,7 @@ describe("JourneyIntroOverlay", () => {
     renderIntro();
     expect(screen.queryByRole("dialog", { name: "Plan" })).toBeNull();
 
-    window.dispatchEvent(new Event(JOURNEY_INTRO_OPEN_EVENT));
+    act(() => window.dispatchEvent(new Event(JOURNEY_INTRO_OPEN_EVENT)));
 
     expect(await screen.findByRole("dialog", { name: "Plan" })).toBeInTheDocument();
   });

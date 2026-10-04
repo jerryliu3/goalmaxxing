@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { buildGoal } from "@/lib/goals/goal-test-fixtures";
 import { summary } from "@/features/insights/folio/folio-test-fixtures";
@@ -7,7 +7,7 @@ import { GoalViewCard } from "./goal-view-card";
 vi.mock("motion/react", () => ({ useReducedMotion: () => false }));
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
-it("uses full fragments for visible cards and preserves canonical progress", () => {
+it("uses full fragments for visible cards and preserves canonical progress", async () => {
   const goal = buildGoal({ title: "Run a marathon", target_count: 30, target_basis: "lifetime" });
   const progress = summary(goal.id, { creditedUnitCount: 29, expectedUnitCount: 30, outcome: "in_progress", lifecycle: "active" });
   const { container, rerender } = render(<GoalViewCard goal={goal} progress={progress} fullRender />);
@@ -19,7 +19,7 @@ it("uses full fragments for visible cards and preserves canonical progress", () 
 
   rerender(<GoalViewCard goal={goal} progress={summary(goal.id, { ...progress, creditedUnitCount: 30, outcome: "achieved" })} fullRender />);
   expect(screen.getByRole("status")).toHaveTextContent("Goal accomplished");
-  expect(container.querySelector("[data-reassembly]")).toHaveAttribute("data-fused", "true");
+  await waitFor(() => expect(container.querySelector("[data-reassembly]")).toHaveAttribute("data-fused", "true"), { timeout: 2000 });
   expect(container.querySelectorAll("[data-card-solid]")).toHaveLength(1);
 });
 
