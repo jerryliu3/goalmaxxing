@@ -10,6 +10,7 @@ export function useGoalCarouselScroll(goals: Goal[], selectedId: string, onSelec
   const track = useRef<HTMLDivElement>(null);
   const index = Math.max(0, goals.findIndex(goal => goal.id === selectedId));
   const [position, setPosition] = useState(index);
+  const [moving, setMoving] = useState(false);
   const frame = useRef<number | null>(null);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seekPosition = useRef<number | null>(null);
@@ -55,7 +56,7 @@ export function useGoalCarouselScroll(goals: Goal[], selectedId: string, onSelec
       setPosition(next);
       if (settleTimer.current) clearTimeout(settleTimer.current);
       if (!scrubbing.current && !cardHeld.current) {
-        settleTimer.current = setTimeout(() => select(next), SWIPE_SETTLE_MS);
+        settleTimer.current = setTimeout(() => { setMoving(false); select(next); }, SWIPE_SETTLE_MS);
       }
     });
   };
@@ -65,6 +66,8 @@ export function useGoalCarouselScroll(goals: Goal[], selectedId: string, onSelec
     seekPosition.current = null;
     cardHeld.current = false;
     setPosition(index);
+    setMoving(true);
+    settleTimer.current = setTimeout(() => setMoving(false), SWIPE_SETTLE_MS);
     if (!scrubbing.current) scrollTo(index, reduced ? "auto" : "smooth");
   }, [index, selectedId, goals.length, reduced, scrollTo, cancelPending]);
   useEffect(() => () => { cancelPending(); }, [cancelPending]);
@@ -72,13 +75,16 @@ export function useGoalCarouselScroll(goals: Goal[], selectedId: string, onSelec
   return {
     track,
     position,
-    onScroll: () => { if (!cardHeld.current) scheduleFrame(); },
+    moving,
+    onScroll: () => { if (!cardHeld.current) { setMoving(true); scheduleFrame(); } },
     seek: (value: number) => {
+      setMoving(true);
       seekPosition.current = clamp(value);
       scheduleFrame();
     },
     beginScrub: () => {
       cancelPending();
+      setMoving(true);
       scrubbing.current = true;
       if (track.current) track.current.style.scrollSnapType = "none";
     },
@@ -91,6 +97,7 @@ export function useGoalCarouselScroll(goals: Goal[], selectedId: string, onSelec
       setPosition(next);
       scrollTo(next, reduced ? "auto" : "smooth");
       select(next);
+      scheduleFrame();
     },
     holdCard: () => {
       cancelPending();
