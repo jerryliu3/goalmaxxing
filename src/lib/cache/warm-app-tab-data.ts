@@ -1,6 +1,8 @@
 import { fetchInsightsData, type InsightsData } from "@/features/insights/fetch-insights-data";
 import { getMonthInTimezone } from "@/features/planner/calendar-format";
 import { buildGoalViewWindow } from "@/features/planner/goal-view/goal-view-model";
+import { fetchSettingsTabData } from "@/features/social/settings-tab-data";
+import { fetchPublicProfileBundle } from "@/features/social/public-profile/data";
 import {
   fetchSocialChallenges,
   fetchSocialLeaderboards,
@@ -97,6 +99,8 @@ export async function warmAppTabData({
     includeProgressContext ? warmChecklist() : Promise.resolve(),
     includeProgressContext ? warmInsights() : Promise.resolve(),
     warmPlanner(),
+    fetchSettingsTabData({ forceRefresh }),
+    fetchPublicProfileBundle({ subjectUserId: userId, year: Number(selectedYear), forceRefresh }),
     fetchSocialChallenges({ forceRefresh }),
     fetchSocialLeaderboards({ forceRefresh }),
     fetchSocialTeamState({ forceRefresh }),

@@ -61,8 +61,10 @@ export function useIdleAppPrefetch({
       });
     };
 
-    const cancelRouteIdle = scheduleIdleTask(prefetchRoutesAndModules);
-    const cancelWarmIdle = scheduleIdleTask(warmNonProgressTabs);
+    // Start navigation-critical warmups as soon as the authenticated shell is
+    // mounted; waiting for idle leaves fast tab switches on the cold path.
+    prefetchRoutesAndModules();
+    warmNonProgressTabs();
     let cancelProgressIdle: () => void = () => {};
     const startProgressWarm = () => {
       cancelProgressIdle();
@@ -75,8 +77,6 @@ export function useIdleAppPrefetch({
     );
 
     return () => {
-      cancelRouteIdle();
-      cancelWarmIdle();
       cancelProgressIdle();
       cancelProgressFallback();
       window.removeEventListener(APP_SURFACE_READY_EVENT, startProgressWarm);

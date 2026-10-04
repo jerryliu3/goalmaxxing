@@ -9,6 +9,7 @@ import {
   CHECKLIST_DATA_CACHE_PREFIX,
   INSIGHTS_DATA_CACHE_PREFIX,
   PLANNER_CONTEXT_CACHE_PREFIX,
+  PUBLIC_PROFILE_CACHE_PREFIX,
   invalidatePlannerRelatedTabCaches,
   resetPlannerTabCacheInvalidationForTests,
   subscribePlannerTabCacheInvalidation,
@@ -32,6 +33,8 @@ describe("invalidatePlannerRelatedTabCaches", () => {
       data: true,
     });
     writeTabDataCache("progress-context:test", { progress: true });
+    const profileKey = `${PUBLIC_PROFILE_CACHE_PREFIX}viewer:2026`;
+    writeTabDataCache(profileKey, { stats: true });
 
     invalidatePlannerRelatedTabCaches();
 
@@ -53,6 +56,8 @@ describe("invalidatePlannerRelatedTabCaches", () => {
     ).toEqual({ data: true });
     expect(readTabDataCache("progress-context:test")).toEqual({ progress: true });
     expect(isTabDataCacheFresh("progress-context:test")).toBe(false);
+    expect(readTabDataCache(profileKey)).toEqual({ stats: true });
+    expect(isTabDataCacheFresh(profileKey)).toBe(false);
   });
 
   it("notifies subscribers after cache invalidation", async () => {

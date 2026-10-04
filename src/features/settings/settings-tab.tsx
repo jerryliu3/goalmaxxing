@@ -65,7 +65,7 @@ export function SettingsTab() {
     savePreferences,
     signOut,
   } = useSocialTabData();
-  const { bundle: presence } = useOwnProfilePresence(state.userId || null);
+  const { bundle: presence } = useOwnProfilePresence(state.userId || null, state.profile);
   useReportAppSurfaceReady(!(loading && !state.userId));
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();

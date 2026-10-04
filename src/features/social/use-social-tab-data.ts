@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   getAvatarUrlValidationError,
@@ -9,51 +9,33 @@ import {
 import { getApiErrorMessage, putJson } from "@/lib/api/client";
 import {
   invalidatePlannerRelatedTabCaches,
-  SETTINGS_DATA_CACHE_PREFIX,
+  PUBLIC_PROFILE_CACHE_PREFIX,
 } from "@/lib/cache/planner-tab-cache";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import {
   isTabDataCacheFresh,
-  readTabDataCache,
-  writeTabDataCache,
+  markTabDataCacheStaleByPrefix,
 } from "@/lib/cache/tab-data-cache";
-import { resolveUserTimezone } from "@/lib/dates/timezone";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
 import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
-import type {
-  Completion,
-  Goal,
-  GoalShare,
-  Profile,
-} from "@/lib/goals/types";
+import type { GoalShare, Profile } from "@/lib/goals/types";
 import { createDefaultPlannerPolicy, type PlannerPolicy } from "@/lib/planner/policy";
 import { unsubscribeCurrentBrowser } from "@/lib/push/client";
 import { createClient } from "@/lib/supabase/client";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
 import type { PlannerPreferencesDraft } from "@/features/settings/planner-preferences-settings";
-import {
-  buildProfilePreferencesUpdate,
-  plannerPreferencesFromProfile,
-} from "@/features/social/profile-preferences";
+import { buildProfilePreferencesUpdate } from "@/features/social/profile-preferences";
 import {
   buildAvatarCleanupPathsForProfileChange,
   deleteProfileAvatar,
   getAvatarUploadValidationError,
   uploadProfileAvatar,
 } from "@/lib/profile/avatar-upload";
-
-interface SocialState {
-  userId: string;
-  profile: Profile | null;
-  ownGoals: Goal[];
-  sharedGoals: Goal[];
-  sharedEntries: GoalShare[];
-  outgoingShares: GoalShare[];
-  sharedOwners: Record<string, Profile>;
-  completions: Completion[];
-  profileDirectory: Record<string, Profile>;
-}
-
+import {
+  defaultPlannerPreferencesState, fetchSettingsTabData, initialState,
+  readSettingsTabCache, SETTINGS_TAB_CACHE_KEY,
+  type PlannerPreferencesState, type SettingsTabCachePayload, type SocialState,
+} from "./settings-tab-data";
 export interface ShareMenuPosition {
   left: number;
   width: number;
@@ -61,48 +43,6 @@ export interface ShareMenuPosition {
   top?: number;
   bottom?: number;
 }
-
-interface PlannerPreferencesState extends PlannerPreferencesDraft {
-  restWeekdays: number[];
-}
-
-const initialState: SocialState = {
-  userId: "",
-  profile: null,
-  ownGoals: [],
-  sharedGoals: [],
-  sharedEntries: [],
-  outgoingShares: [],
-  sharedOwners: {},
-  completions: [],
-  profileDirectory: {},
-};
-
-const defaultPlannerPreferencesState: PlannerPreferencesState = {
-  timezone: resolveUserTimezone(),
-  weekStartsOn: 1,
-  restWeekdays: [],
-};
-
-const SETTINGS_TAB_CACHE_KEY = `${SETTINGS_DATA_CACHE_PREFIX}v1`;
-
-interface SettingsTabCachePayload {
-  state: SocialState;
-  authEmail: string;
-  profileDraft: {
-    username: string;
-    display_name: string;
-    avatar_url: string;
-    social_activity_visible: boolean;
-  };
-  plannerPreferencesPersisted: PlannerPreferencesState;
-  plannerPreferencesDraft: PlannerPreferencesDraft;
-}
-
-function readSettingsTabCache() {
-  return readTabDataCache<SettingsTabCachePayload>(SETTINGS_TAB_CACHE_KEY);
-}
-
 export function useSocialTabData() {
   const supabase = useMemo(() => createClient(), []);
   const router = useAppRouter();
@@ -145,176 +85,42 @@ export function useSocialTabData() {
       weekStartsOn: defaultPlannerPreferencesState.weekStartsOn,
     });
 
-  const loadData = useCallback(async () => {
-    const cached = readSettingsTabCache();
-    if (cached && isTabDataCacheFresh(SETTINGS_TAB_CACHE_KEY)) {
-      setState(cached.state);
-      setAuthEmail(cached.authEmail);
-      setProfileDraft(cached.profileDraft);
-      setPlannerPreferencesPersisted(cached.plannerPreferencesPersisted);
-      setPlannerPreferencesDraft(cached.plannerPreferencesDraft);
-      setPlannerPreferencesLoading(false);
-      setLoading(false);
-      return;
-    }
-    if (!cached) {
-      setLoading(true);
-      setPlannerPreferencesLoading(true);
-    }
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      setState(initialState);
-      setAuthEmail("");
-      setPlannerPreferencesPersisted(defaultPlannerPreferencesState);
-      setPlannerPreferencesDraft({
+  const loadRequestIdRef = useRef(0);
+  const loadData = useCallback(async (forceRefresh = false) => {
+    const requestId = ++loadRequestIdRef.current;
+    const apply = (payload: SettingsTabCachePayload | null) => {
+      setState(payload?.state ?? initialState);
+      setAuthEmail(payload?.authEmail ?? "");
+      setProfileDraft(payload?.profileDraft ?? {
+        username: "", display_name: "", avatar_url: "", social_activity_visible: true,
+      });
+      setPlannerPreferencesPersisted(payload?.plannerPreferencesPersisted ?? defaultPlannerPreferencesState);
+      setPlannerPreferencesDraft(payload?.plannerPreferencesDraft ?? {
         timezone: defaultPlannerPreferencesState.timezone,
         weekStartsOn: defaultPlannerPreferencesState.weekStartsOn,
       });
       setPlannerPreferencesLoading(false);
       setLoading(false);
-      return;
-    }
-    setAuthEmail(user.email ?? "");
-
-    const [profileResponse, ownGoalsResponse, sharesResponse] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-      supabase
-        .from("goals")
-        .select("*")
-        .eq("owner_id", user.id)
-        .eq("is_deleted", false)
-        .order("created_at", { ascending: false }),
-      supabase.from("goal_shares").select("*").eq("shared_with", user.id),
-    ]);
-
-    const profile = (profileResponse.data ?? null) as Profile | null;
-    const ownGoals = (ownGoalsResponse.data ?? []) as Goal[];
-    const sharedEntries = (sharesResponse.data ?? []) as GoalShare[];
-
-    setProfileDraft({
-      username: profile?.username ?? "",
-      display_name: profile?.display_name ?? "",
-      avatar_url: profile?.avatar_url ?? "",
-      social_activity_visible: profile?.social_activity_visible ?? true,
-    });
-    const nextPlannerPreferences = plannerPreferencesFromProfile(
-      profile,
-      defaultPlannerPreferencesState
-    );
-    setPlannerPreferencesPersisted(nextPlannerPreferences);
-    setPlannerPreferencesDraft({
-      timezone: nextPlannerPreferences.timezone,
-      weekStartsOn: nextPlannerPreferences.weekStartsOn,
-    });
-    setPlannerPreferencesLoading(false);
-
-    const sharedGoalIds = sharedEntries.map((entry) => entry.goal_id);
-    const ownShareableGoalIds = ownGoals
-      .filter((goal) => goal.team_id == null)
-      .map((goal) => goal.id);
-
-    const [sharedGoalsResponse, outgoingSharesResponse] = await Promise.all([
-      sharedGoalIds.length > 0
-        ? supabase
-            .from("goals")
-            .select("*")
-            .in("id", sharedGoalIds)
-            .eq("is_deleted", false)
-        : Promise.resolve({ data: [], error: null } as const),
-      ownShareableGoalIds.length > 0
-        ? supabase.from("goal_shares").select("*").in("goal_id", ownShareableGoalIds)
-        : Promise.resolve({ data: [], error: null } as const),
-    ]);
-
-    const sharedGoals = (sharedGoalsResponse.data ?? []) as Goal[];
-    const outgoingShares = (outgoingSharesResponse.data ?? []) as GoalShare[];
-    const allGoalIds = sharedGoals.map((goal) => goal.id);
-
-    const completionsResponse =
-      allGoalIds.length > 0
-        ? await supabase.from("completions").select("*").in("goal_id", allGoalIds)
-        : ({ data: [], error: null } as const);
-    const completions = (completionsResponse.data ?? []) as Completion[];
-
-    const profileIds = Array.from(
-      new Set([
-        ...sharedGoals.map((goal) => goal.owner_id),
-        ...outgoingShares.map((entry) => entry.shared_with),
-        user.id,
-      ])
-    );
-
-    const profileDirectoryResponse =
-      profileIds.length > 0
-        ? await supabase.from("profiles").select("*").in("id", profileIds)
-        : ({ data: [], error: null } as const);
-
-    const profileDirectory = (profileDirectoryResponse.data ?? []) as Profile[];
-    const profileById = profileDirectory.reduce<Record<string, Profile>>(
-      (accumulator, item) => {
-        accumulator[item.id] = item;
-        return accumulator;
-      },
-      {}
-    );
-
-    const sharedOwners: Record<string, Profile> = {};
-    sharedGoals.forEach((goal) => {
-      const owner = profileById[goal.owner_id];
-      if (owner) {
-        sharedOwners[goal.id] = owner;
-      }
-    });
-
-    setState({
-      userId: user.id,
-      profile,
-      ownGoals,
-      sharedGoals,
-      sharedEntries,
-      outgoingShares,
-      sharedOwners,
-      completions,
-      profileDirectory: profileById,
-    });
-    writeTabDataCache(SETTINGS_TAB_CACHE_KEY, {
-      state: {
-        userId: user.id,
-        profile,
-        ownGoals,
-        sharedGoals,
-        sharedEntries,
-        outgoingShares,
-        sharedOwners,
-        completions,
-        profileDirectory: profileById,
-      },
-      authEmail: user.email ?? "",
-      profileDraft: {
-        username: profile?.username ?? "",
-        display_name: profile?.display_name ?? "",
-        avatar_url: profile?.avatar_url ?? "",
-        social_activity_visible: profile?.social_activity_visible ?? true,
-      },
-      plannerPreferencesPersisted: nextPlannerPreferences,
-      plannerPreferencesDraft: {
-        timezone: nextPlannerPreferences.timezone,
-        weekStartsOn: nextPlannerPreferences.weekStartsOn,
-      },
-    });
-    setLoading(false);
-  }, [supabase]);
-
-  useEffect(() => {
-    const run = async () => {
-      await loadData();
     };
+    const cached = readSettingsTabCache();
+    if (cached && !forceRefresh) {
+      apply(cached);
+      if (isTabDataCacheFresh(SETTINGS_TAB_CACHE_KEY)) return;
+    }
+    try {
+      const payload = await fetchSettingsTabData({ forceRefresh });
+      if (requestId === loadRequestIdRef.current) apply(payload);
+    } catch (error) {
+      if (requestId === loadRequestIdRef.current) {
+        toast.error(getApiErrorMessage(error, "Profile settings could not be loaded."));
+      }
+    }
+  }, []);
 
-    void run();
+  // Apply browser-only cached content before paint without changing hydration.
+  useLayoutEffect(() => {
+    void loadData();
+    return () => { loadRequestIdRef.current += 1; };
   }, [loadData]);
 
   usePlannerTabCacheInvalidation(() => {
@@ -479,7 +285,8 @@ export function useSocialTabData() {
         }
       }
       toast.success("Profile saved.");
-      await loadData();
+      markTabDataCacheStaleByPrefix(PUBLIC_PROFILE_CACHE_PREFIX);
+      await loadData(true);
       router.refresh();
     }
     setSaving(false);
@@ -548,7 +355,8 @@ export function useSocialTabData() {
       }
 
       toast.success("Preferences updated.");
-      await loadData();
+      markTabDataCacheStaleByPrefix(PUBLIC_PROFILE_CACHE_PREFIX);
+      await loadData(true);
     } catch (error) {
       toast.error(
         getApiErrorMessage(error, "Planner preferences could not be saved.")
@@ -591,7 +399,7 @@ export function useSocialTabData() {
         newGoalIds.length === 1 ? "Shared 1 goal." : `Shared ${newGoalIds.length} goals.`
       );
       setShareMenuOpen(false);
-      await loadData();
+      await loadData(true);
     }
   };
 
@@ -605,7 +413,7 @@ export function useSocialTabData() {
       toast.error(error.message);
     } else {
       toast.success("Removed access.");
-      await loadData();
+      await loadData(true);
     }
   };
 
@@ -619,7 +427,7 @@ export function useSocialTabData() {
       toast.error(error.message);
     } else {
       toast.success("Removed from shared goals.");
-      await loadData();
+      await loadData(true);
     }
   };
 

@@ -75,14 +75,8 @@ describe("useIdleAppPrefetch", () => {
       })
     );
 
-    expect(mocks.idleTasks).toHaveLength(2);
+    expect(mocks.idleTasks).toHaveLength(0);
     expect(mocks.delayedTasks).toHaveLength(1);
-
-    act(() => {
-      for (const task of mocks.idleTasks) {
-        task();
-      }
-    });
 
     expect(mocks.prefetch).toHaveBeenCalledWith("/insights");
     expect(mocks.prefetch).toHaveBeenCalledWith("/social");
@@ -96,7 +90,7 @@ describe("useIdleAppPrefetch", () => {
     act(() => {
       window.dispatchEvent(new Event(APP_SURFACE_READY_EVENT));
     });
-    expect(mocks.idleTasks.length).toBeGreaterThan(2);
+    expect(mocks.idleTasks).toHaveLength(1);
 
     act(() => {
       mocks.idleTasks.at(-1)?.();

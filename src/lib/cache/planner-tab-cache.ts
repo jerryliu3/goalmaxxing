@@ -6,6 +6,7 @@ export const PLANNER_CONTEXT_CACHE_PREFIX = "planner-context:";
 export const CHECKLIST_DATA_CACHE_PREFIX = "checklist-data:";
 export const INSIGHTS_DATA_CACHE_PREFIX = "insights-data:";
 export const SETTINGS_DATA_CACHE_PREFIX = "settings-data:";
+export const PUBLIC_PROFILE_CACHE_PREFIX = "social:public-profile:";
 export const SOCIAL_ACTIVITY_VISIBLE_CACHE_KEY = "social-activity-visible";
 
 const plannerTabCacheInvalidationListeners = new Set<() => void>();
@@ -81,6 +82,7 @@ export function invalidatePlannerRelatedTabCaches() {
   markTabDataCacheStaleByPrefix(INSIGHTS_DATA_CACHE_PREFIX);
   markTabDataCacheStaleByPrefix(INSIGHTS_STATS_CACHE_PREFIX);
   markTabDataCacheStaleByPrefix(SETTINGS_DATA_CACHE_PREFIX);
+  markTabDataCacheStaleByPrefix(PUBLIC_PROFILE_CACHE_PREFIX);
   invalidateProgressContextCache();
   notifyPlannerTabCacheInvalidation();
 }

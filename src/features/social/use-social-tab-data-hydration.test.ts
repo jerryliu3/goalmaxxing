@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SETTINGS_DATA_CACHE_PREFIX } from "@/lib/cache/planner-tab-cache";
-import { invalidateTabDataCache, writeTabDataCache } from "@/lib/cache/tab-data-cache";
+import { resetTabDataCacheForTests, writeTabDataCache } from "@/lib/cache/tab-data-cache";
 import { useSocialTabData } from "@/features/social/use-social-tab-data";
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -47,7 +47,7 @@ const cachedPayload = {
 };
 
 afterEach(() => {
-  invalidateTabDataCache(SETTINGS_TAB_CACHE_KEY);
+  resetTabDataCacheForTests();
   vi.restoreAllMocks();
 });
 
@@ -84,5 +84,13 @@ describe("useSocialTabData cache and hydration", () => {
     expect(result.current.authEmail).toBe("alice@example.com");
     expect(result.current.profileDraft.username).toBe("alice");
     expect(result.current.plannerPreferencesLoading).toBe(false);
+  });
+
+  it("keeps stale settings visible when background refresh fails", async () => {
+    writeTabDataCache(SETTINGS_TAB_CACHE_KEY, cachedPayload, 0);
+    const { result } = renderHook(() => useSocialTabData());
+    expect(result.current.loading).toBe(false);
+    expect(result.current.profileDraft.username).toBe("alice");
+    await waitFor(() => expect(result.current.state.userId).toBe("user-1"));
   });
 });
