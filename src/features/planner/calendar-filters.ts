@@ -98,7 +98,7 @@ export function filterCalendarGoalFilterOptions({
   workUnits: ReadonlyArray<Pick<PlannerDayDetailEntry, "goalTitle" | "label" | "unitKey"> & { originalGoalId: string }>;
   goalTitles: Record<string, string>;
 }) {
-  const unitsByGoalId = new Map<string, typeof workUnits>();
+  const unitsByGoalId = new Map<string, Array<(typeof workUnits)[number]>>();
   for (const unit of workUnits) {
     const goalUnits = unitsByGoalId.get(unit.originalGoalId) ?? [];
     goalUnits.push(unit);
