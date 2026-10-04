@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { UiStyleProvider } from "@/components/brand/ui-style-provider";
+import { MilestoneFlag } from "@/features/goals/milestone-flag";
 import { CompletionToggle, COMPLETION_HOLD_MS } from "@/components/ui/completion-toggle";
 
 const originalVibrate = Object.getOwnPropertyDescriptor(
@@ -82,6 +83,60 @@ describe("CompletionToggle", () => {
     expect(toggle).toHaveAttribute("data-visual-completed", "true");
 
     vi.useRealTimers();
+  });
+
+  it("uses the normal incomplete control and hold animation before earning a milestone flag", () => {
+    vi.useFakeTimers();
+    const onClick = vi.fn();
+    render(
+      <CompletionToggle
+        completed={false}
+        chrome="plain"
+        size="sm"
+        completedMark="check"
+        renderMark={complete => <MilestoneFlag compact complete={complete} number={1} />}
+        aria-label="Mark session done"
+        onClick={onClick}
+      />
+    );
+    const toggle = screen.getByRole("button", { name: "Mark session done" });
+    expect(toggle.querySelector("[data-milestone-flag]")).toBeNull();
+    expect(toggle.querySelector("[data-completion-mark]")).toHaveAttribute("data-completed", "false");
+
+    fireEvent.pointerDown(toggle);
+    expect(toggle.querySelector("[data-completion-mark]")).toHaveAttribute("data-pressed", "true");
+    expect(toggle.querySelector("[data-milestone-flag]")).toBeNull();
+    act(() => {
+      vi.advanceTimersByTime(COMPLETION_HOLD_MS);
+    });
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(toggle.querySelector("[data-milestone-flag]")).toHaveAttribute("data-milestone-flag", "earned");
+  });
+
+  it("shows an earned milestone flag and restores the completion control when undone", () => {
+    vi.useFakeTimers();
+    const onClick = vi.fn();
+    render(
+      <CompletionToggle
+        completed
+        completedMark="check"
+        renderMark={complete => <MilestoneFlag compact complete={complete} number={2} />}
+        aria-label="Mark session not done"
+        onClick={onClick}
+      />
+    );
+    const toggle = screen.getByRole("button", { name: "Mark session not done" });
+    expect(toggle.querySelector("[data-milestone-flag]")).toHaveAttribute("data-milestone-flag", "earned");
+
+    fireEvent.pointerDown(toggle);
+    expect(toggle.querySelector("[data-milestone-flag]")).toBeNull();
+    expect(toggle.querySelector("[data-completion-mark]")).toHaveAttribute("data-pressed", "true");
+    act(() => {
+      vi.advanceTimersByTime(COMPLETION_HOLD_MS);
+    });
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(toggle.querySelector("[data-milestone-flag]")).toBeNull();
+    expect(toggle.querySelector("[data-completion-mark]")).toHaveAttribute("data-completed", "false");
   });
 
   it("keeps the originating button available to a deferred hold callback", () => {
