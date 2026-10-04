@@ -224,6 +224,15 @@ import {
   PATCH as adminSyntheticUserPatch,
 } from "@/app/api/admin/synthetic-users/[id]/route";
 
+import * as coachBootstrapRoute from "@/app/api/coach/bootstrap/route";
+import * as coachMemoriesIdRoute from "@/app/api/coach/memories/[id]/route";
+import * as coachMemoriesRoute from "@/app/api/coach/memories/route";
+import * as coachThreadsIdMessagesRoute from "@/app/api/coach/threads/[id]/messages/route";
+import * as coachThreadsIdRoute from "@/app/api/coach/threads/[id]/route";
+import * as coachTopicsIdRoute from "@/app/api/coach/topics/[id]/route";
+import * as coachTopicsIdThreadsRoute from "@/app/api/coach/topics/[id]/threads/route";
+import * as coachTopicsRoute from "@/app/api/coach/topics/route";
+
 type Handler = (...args: never[]) => Promise<Response>;
 
 type AuditedRouteCase = {
@@ -277,7 +286,27 @@ function routeCase(
   };
 }
 
+const coachRouteModules = {
+  "./coach/bootstrap/route.ts": coachBootstrapRoute,
+  "./coach/memories/[id]/route.ts": coachMemoriesIdRoute,
+  "./coach/memories/route.ts": coachMemoriesRoute,
+  "./coach/threads/[id]/messages/route.ts": coachThreadsIdMessagesRoute,
+  "./coach/threads/[id]/route.ts": coachThreadsIdRoute,
+  "./coach/topics/[id]/route.ts": coachTopicsIdRoute,
+  "./coach/topics/[id]/threads/route.ts": coachTopicsIdThreadsRoute,
+  "./coach/topics/route.ts": coachTopicsRoute,
+};
+const coachRouteCases = Object.entries(coachRouteModules).flatMap(([filePath, module]) =>
+  Object.entries(module)
+    .filter(([method, handler]) => /^(GET|POST|PUT|PATCH|DELETE)$/.test(method) && typeof handler === "function")
+    .map(([method, handler]) => routeCase(
+      `${method} /api/${filePath.slice(2, -"/route.ts".length)}`,
+      handler as Handler, { id: RESOURCE_ID }
+    ))
+);
+
 const auditedRouteCases: AuditedRouteCase[] = [
+  ...coachRouteCases,
   routeCase("POST /api/completions", completionsPost),
   routeCase("POST /api/bulk-goals/parse", bulkGoalsParsePost),
   routeCase("POST /api/training-plan/parse", trainingPlanParsePost),
@@ -534,12 +563,13 @@ function discoverApiHandlerLabels() {
       .split(path.sep)
       .join("/")}`;
     const source = readFileSync(filePath, "utf8");
-    return Array.from(
-      source.matchAll(
-        /export\s+async\s+function\s+(GET|POST|PUT|PATCH|DELETE)\s*\(/g
-      ),
-      (match) => `${match[1]} ${routePath}`
-    );
+    const declarations = Array.from(source.matchAll(
+      /export\s+async\s+function\s+(GET|POST|PUT|PATCH|DELETE)\s*\(/g
+    ), match => match[1]);
+    const aliases = routePath.startsWith("/api/coach/")
+      ? Array.from(source.matchAll(/export\s+const\s+(GET|POST|PUT|PATCH|DELETE)\s*=/g), match => match[1])
+      : [];
+    return [...new Set([...declarations, ...aliases])].map(method => `${method} ${routePath}`);
   });
 }
 

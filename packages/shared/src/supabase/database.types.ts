@@ -664,6 +664,368 @@ export type Database = {
           },
         ]
       }
+      coach_actions: {
+        Row: {
+          applied_at: string | null
+          command: Json
+          created_at: string
+          id: string
+          inverse: Json | null
+          inverse_of: string | null
+          kind: string
+          owner_id: string
+          preview: Json
+          result: Json | null
+          run_id: string
+          status: string
+          thread_id: string
+          title: string
+        }
+        Insert: {
+          applied_at?: string | null
+          command: Json
+          created_at?: string
+          id?: string
+          inverse?: Json | null
+          inverse_of?: string | null
+          kind: string
+          owner_id: string
+          preview: Json
+          result?: Json | null
+          run_id: string
+          status?: string
+          thread_id: string
+          title: string
+        }
+        Update: {
+          applied_at?: string | null
+          command?: Json
+          created_at?: string
+          id?: string
+          inverse?: Json | null
+          inverse_of?: string | null
+          kind?: string
+          owner_id?: string
+          preview?: Json
+          result?: Json | null
+          run_id?: string
+          status?: string
+          thread_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_actions_inverse_of_fkey"
+            columns: ["inverse_of"]
+            isOneToOne: false
+            referencedRelation: "coach_actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_actions_run_id_owner_id_fkey"
+            columns: ["run_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "coach_runs"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "coach_actions_thread_id_owner_id_fkey"
+            columns: ["thread_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "coach_threads"
+            referencedColumns: ["id", "owner_id"]
+          },
+        ]
+      }
+      coach_memories: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          kind: string
+          owner_id: string
+          source_message_id: string | null
+          topic_id: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          kind?: string
+          owner_id: string
+          source_message_id?: string | null
+          topic_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          owner_id?: string
+          source_message_id?: string | null
+          topic_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_memories_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_memories_source_message_id_owner_id_fkey"
+            columns: ["source_message_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "coach_messages"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "coach_memories_topic_id_owner_id_fkey"
+            columns: ["topic_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "coach_topics"
+            referencedColumns: ["id", "owner_id"]
+          },
+        ]
+      }
+      coach_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          owner_id: string
+          role: string
+          run_id: string | null
+          sequence: number
+          source: Json
+          thread_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          owner_id: string
+          role: string
+          run_id?: string | null
+          sequence: number
+          source?: Json
+          thread_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          role?: string
+          run_id?: string | null
+          sequence?: number
+          source?: Json
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_messages_thread_id_owner_id_fkey"
+            columns: ["thread_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "coach_threads"
+            referencedColumns: ["id", "owner_id"]
+          },
+        ]
+      }
+      coach_runs: {
+        Row: {
+          completed_at: string | null
+          context_revision: string | null
+          created_at: string
+          deadline: string
+          error_code: string | null
+          id: string
+          owner_id: string
+          page_context: Json
+          payload_digest: string
+          status: string
+          thread_id: string
+          topic_version: number
+          user_message_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          context_revision?: string | null
+          created_at?: string
+          deadline?: string
+          error_code?: string | null
+          id: string
+          owner_id: string
+          page_context: Json
+          payload_digest: string
+          status?: string
+          thread_id: string
+          topic_version: number
+          user_message_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          context_revision?: string | null
+          created_at?: string
+          deadline?: string
+          error_code?: string | null
+          id?: string
+          owner_id?: string
+          page_context?: Json
+          payload_digest?: string
+          status?: string
+          thread_id?: string
+          topic_version?: number
+          user_message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_runs_thread_id_owner_id_fkey"
+            columns: ["thread_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "coach_threads"
+            referencedColumns: ["id", "owner_id"]
+          },
+        ]
+      }
+      coach_threads: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          id: string
+          legacy_conversation_id: string | null
+          owner_id: string
+          title: string
+          topic_id: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          legacy_conversation_id?: string | null
+          owner_id: string
+          title: string
+          topic_id: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          legacy_conversation_id?: string | null
+          owner_id?: string
+          title?: string
+          topic_id?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_threads_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_threads_topic_id_owner_id_fkey"
+            columns: ["topic_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "coach_topics"
+            referencedColumns: ["id", "owner_id"]
+          },
+        ]
+      }
+      coach_topic_goals: {
+        Row: {
+          goal_id: string
+          owner_id: string
+          topic_id: string
+        }
+        Insert: {
+          goal_id: string
+          owner_id: string
+          topic_id: string
+        }
+        Update: {
+          goal_id?: string
+          owner_id?: string
+          topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_topic_goals_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_topic_goals_topic_id_owner_id_fkey"
+            columns: ["topic_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "coach_topics"
+            referencedColumns: ["id", "owner_id"]
+          },
+        ]
+      }
+      coach_topics: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          id: string
+          intention: string
+          is_default: boolean
+          owner_id: string
+          summary: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          intention?: string
+          is_default?: boolean
+          owner_id: string
+          summary?: string
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          intention?: string
+          is_default?: boolean
+          owner_id?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_topics_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cohort_members: {
         Row: {
           cohort_id: string
@@ -2722,6 +3084,19 @@ export type Database = {
         }
         Returns: number
       }
+      begin_coach_run: {
+        Args: {
+          p_content: string
+          p_digest: string
+          p_expected_version: number
+          p_owner: string
+          p_page: Json
+          p_request: string
+          p_retry?: string
+          p_thread: string
+        }
+        Returns: Json
+      }
       can_administer_goal: {
         Args: { p_goal_id: string; p_uid: string }
         Returns: boolean
@@ -2797,6 +3172,10 @@ export type Database = {
           retry_after_seconds: number
         }[]
       }
+      create_coach_topic: {
+        Args: { p_owner: string; p_title: string }
+        Returns: Json
+      }
       create_goal: {
         Args: {
           p_category?: string
@@ -2858,6 +3237,7 @@ export type Database = {
       }
       dissolve_team_service: { Args: never; Returns: boolean }
       drain_xp_recompute_outbox: { Args: { p_limit?: number }; Returns: number }
+      ensure_coach_home: { Args: { p_owner: string }; Returns: string }
       find_profile_by_username: {
         Args: { p_limit?: number; p_query: string }
         Returns: {
@@ -2867,6 +3247,16 @@ export type Database = {
           id: string
           username: string
         }[]
+      }
+      finish_coach_run: {
+        Args: {
+          p_actions?: Json
+          p_content: string
+          p_owner: string
+          p_run: string
+          p_source: Json
+        }
+        Returns: Json
       }
       get_challenge_detail: {
         Args: { p_challenge_id: string }
@@ -3118,6 +3508,16 @@ export type Database = {
           title: string
           updated_at: string
         }[]
+      }
+      manage_coach_entity: {
+        Args: {
+          p_id: string
+          p_kind: string
+          p_owner: string
+          p_patch?: Json
+          p_version: number
+        }
+        Returns: undefined
       }
       mark_goal_complete: {
         Args: { p_date?: string; p_goal_id: string }

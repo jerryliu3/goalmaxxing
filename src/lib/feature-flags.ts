@@ -23,6 +23,7 @@ export function getFeatureFlags(): FeatureFlags {
     integrationsEnabled: env.INTEGRATIONS_ENABLED,
     journeyEnabled: env.JOURNEY_ENABLED,
     digestEnabled: env.DIGEST_ENABLED,
+    coachEnabled: env.COACH_ENABLED,
   };
 }
 
