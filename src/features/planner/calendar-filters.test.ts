@@ -37,9 +37,9 @@ describe("calendar filters", () => {
       options, goalsByOriginalId: goals, categoryFilters: ["Health"], endMonthFilters: ["2026-08"],
       searchQuery: "tempo", goalTitles: { run: "Run", read: "Read", write: "Write" },
       workUnits: [
-        { originalGoalId: "run", goalTitle: "Run", label: "Easy miles", unitKey: "milestone:1" },
-        { originalGoalId: "read", goalTitle: "Read", label: "Tempo reads", unitKey: "milestone:1" },
-        { originalGoalId: "write", goalTitle: "Write", label: "Tempo run", unitKey: "milestone:1" },
+        { originalGoalId: "run", label: "Easy miles", unitKey: "milestone:1" },
+        { originalGoalId: "read", label: "Tempo reads", unitKey: "milestone:1" },
+        { originalGoalId: "write", label: "Tempo run", unitKey: "milestone:1" },
       ],
     })).toEqual([{ value: "write", label: "Write" }]);
   });
