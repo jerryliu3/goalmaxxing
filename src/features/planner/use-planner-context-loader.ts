@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
+import { useCallback, useEffect, useRef, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
 import { toast } from "sonner";
 import {
   getMonthInTimezone,
@@ -18,9 +18,11 @@ import { buildGoalViewWindow } from "@/features/planner/goal-view/goal-view-mode
 import { getApiErrorMessage, getJson, postJson } from "@/lib/api/client";
 import {
   buildPlannerContextCacheKey,
+  PLANNER_CONTEXT_CACHE_PREFIX,
 } from "@/lib/cache/planner-tab-cache";
 import {
   isTabDataCacheFresh,
+  markTabDataCacheStaleByPrefix,
   readTabDataCache,
   writeTabDataCache,
 } from "@/lib/cache/tab-data-cache";
@@ -75,6 +77,11 @@ export function usePlannerContextLoader({
   calendarPreparedRef,
 }: UsePlannerContextLoaderArgs) {
   const requestIdRef = useRef(0);
+  const prepareRequestRef = useRef<{
+    month: string;
+    request: Promise<PlannerContextPayload>;
+  } | null>(null);
+  useEffect(() => () => { requestIdRef.current += 1; }, []);
   return useCallback(
     async ({
       showLoading = true,
@@ -132,9 +139,9 @@ export function usePlannerContextLoader({
           setSetupRestWeekdays(policyForSetup.restWeekdays);
         }
         shouldShowLoading = false;
-        if (!forcePrepare && isTabDataCacheFresh(plannerContextCacheKey)) {
+        setLoading(false);
+        if (!forcePrepare && prepareRequestRef.current?.month !== month && isTabDataCacheFresh(plannerContextCacheKey)) {
           calendarPreparedRef.current = true;
-          setLoading(false);
           warmGoalView(cachedContextPayload);
           return true;
         }
@@ -146,24 +153,42 @@ export function usePlannerContextLoader({
       let contextPayload: PlannerContextPayload;
       try {
         const shouldPrepare = forcePrepare || !calendarPreparedRef.current;
-        contextPayload = shouldPrepare
-          ? await postJson<PlannerContextPayload>("/api/planner/prepare", {
+        const readContext = () =>
+          goalViewOpen
+            ? fetchPlannerContext({ month, window: visibleWindow })
+            : getJson<PlannerContextPayload>("/api/planner/context", {
+                query: { scopeMonth: month, visibleStart, visibleEnd },
+              });
+        const pendingPrepare = prepareRequestRef.current;
+        if (!forcePrepare && pendingPrepare?.month === month) {
+          // A view switch can show its warmed snapshot immediately, then read
+          // the new range after the existing preparation finishes.
+          await pendingPrepare.request;
+          contextPayload = await readContext();
+        } else if (shouldPrepare) {
+          const pending = {
+            month,
+            request: postJson<PlannerContextPayload>("/api/planner/prepare", {
               scopeMonth: month,
               visibleStart,
               visibleEnd,
-              ...(rebalanceExistingAssignments
-                ? { rebalanceExistingAssignments: true }
-                : {}),
-            })
-          : goalViewOpen
-            ? await fetchPlannerContext({ month, window: visibleWindow })
-            : await getJson<PlannerContextPayload>("/api/planner/context", {
-              query: {
-                scopeMonth: month,
-                visibleStart,
-                visibleEnd,
-              },
-            });
+              ...(rebalanceExistingAssignments ? { rebalanceExistingAssignments: true } : {}),
+            }).then(payload => {
+              // Warm GETs may have finished before prepare created sessions.
+              // Detach those reads even when this view load was superseded.
+              markTabDataCacheStaleByPrefix(PLANNER_CONTEXT_CACHE_PREFIX);
+              return payload;
+            }),
+          };
+          prepareRequestRef.current = pending;
+          try {
+            contextPayload = await pending.request;
+          } finally {
+            if (prepareRequestRef.current === pending) prepareRequestRef.current = null;
+          }
+        } else {
+          contextPayload = await readContext();
+        }
         if (requestId !== requestIdRef.current) return false;
         calendarPreparedRef.current = true;
         if (shouldPrepare || !goalViewOpen) writeTabDataCache(plannerContextCacheKey, contextPayload);

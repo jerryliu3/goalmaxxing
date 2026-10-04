@@ -4,7 +4,7 @@ import type { PlannerContextPayload } from "./calendar-surface.types";
 import { usePlannerContextLoader } from "./use-planner-context-loader";
 import { buildGoalViewWindow } from "./goal-view/goal-view-model";
 import { buildPlannerContextCacheKey } from "@/lib/cache/planner-tab-cache";
-import { markTabDataCacheStaleByPrefix, resetTabDataCacheForTests, writeTabDataCache } from "@/lib/cache/tab-data-cache";
+import { markTabDataCacheStaleByPrefix, readTabDataCache, resetTabDataCacheForTests, writeTabDataCache } from "@/lib/cache/tab-data-cache";
 import { fetchPlannerContext } from "@/lib/planner/fetch-planner-context";
 
 const mocks = vi.hoisted(() => ({ getJson: vi.fn(), postJson: vi.fn() }));
@@ -88,4 +88,40 @@ it("does not let a late Goal View response replace the calendar after switching 
   args.setGoalViewReady.mockClear();
   await act(async () => { resolve(snapshot); await old; });
   expect(args.setGoalViewReady).not.toHaveBeenCalledWith(true);
+});
+
+it("refreshes a Goal View warmup completed before planner preparation", async () => {
+  let finishPrepare!: (payload: PlannerContextPayload) => void;
+  mocks.postJson.mockReturnValueOnce(new Promise(resolve => { finishPrepare = resolve; }));
+  const { result, args } = mount(false);
+  args.calendarPreparedRef.current = false;
+  let preparing!: Promise<boolean>;
+  act(() => { preparing = result.current(); });
+  await fetchPlannerContext({ month, window });
+  const prepared = { ...snapshot, scheduleDigest: "prepared" };
+  mocks.getJson.mockResolvedValue(prepared);
+  await act(async () => { finishPrepare(prepared); await preparing; });
+  await fetchPlannerContext({ month, window });
+  expect(readTabDataCache(buildPlannerContextCacheKey(month, window))).toBe(prepared);
+});
+
+it("shows warmed goals while joining the calendar's preparation and refreshes afterward", async () => {
+  let finishPrepare!: (payload: PlannerContextPayload) => void;
+  mocks.postJson.mockReturnValueOnce(new Promise(resolve => { finishPrepare = resolve; }));
+  const { result, rerender, args } = mount(false);
+  args.calendarPreparedRef.current = false;
+  let calendar!: Promise<boolean>;
+  act(() => { calendar = result.current(); });
+  await fetchPlannerContext({ month, window });
+  rerender({ open: true });
+  let goals!: Promise<boolean>;
+  act(() => { goals = result.current(); });
+  expect(args.setGoalViewReady).toHaveBeenCalledWith(true);
+  expect(args.setLoading).toHaveBeenLastCalledWith(false);
+  expect(mocks.postJson).toHaveBeenCalledTimes(1);
+  const prepared = { ...snapshot, scheduleDigest: "prepared" };
+  mocks.getJson.mockResolvedValue(prepared);
+  await act(async () => { finishPrepare(prepared); await calendar; await goals; });
+  expect(args.setContext).toHaveBeenLastCalledWith(prepared);
+  expect(readTabDataCache(buildPlannerContextCacheKey(month, window))).toBe(prepared);
 });
