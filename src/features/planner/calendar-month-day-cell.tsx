@@ -2,7 +2,7 @@
 
 import { format, parse } from "date-fns";
 import { Check, Link2 } from "lucide-react";
-import { Fragment, type ReactNode } from "react";
+import { Fragment, useRef, type PointerEvent, type ReactNode } from "react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
 import { cn } from "@/lib/utils";
@@ -72,6 +72,7 @@ interface CalendarMonthDayCellProps<
   TCompletionFactMarker extends CalendarCompletionFactMarkerBase,
 > {
   day: string;
+  taskComposer?: ReactNode;
   inMonth: boolean;
   monthContextLabel?: string | null;
   isToday: boolean;
@@ -144,6 +145,7 @@ export function CalendarMonthDayCell<
   TCompletionFactMarker extends CalendarCompletionFactMarkerBase,
 >({
   day,
+  taskComposer,
   inMonth,
   monthContextLabel = null,
   isToday,
@@ -177,6 +179,20 @@ export function CalendarMonthDayCell<
   focusedGoalId = null,
   selectedEntryKey = null,
 }: CalendarMonthDayCellProps<TEntry, TCompletionFactMarker>) {
+  const pressOrigin = useRef<{ x: number; y: number } | null>(null);
+  const startPress = (event: PointerEvent<HTMLElement>) => {
+    if (event.button !== 0 || (event.target instanceof Element &&
+      event.target.closest('[data-calendar-day-entry="true"], [data-task-composer="true"]'))) return;
+    pressOrigin.current = { x: event.clientX, y: event.clientY };
+    onCellPointerDown(event.pointerType, event.currentTarget);
+  };
+  const movePress = (event: PointerEvent<HTMLElement>) => {
+    if (pressOrigin.current && Math.hypot(event.clientX - pressOrigin.current.x, event.clientY - pressOrigin.current.y) > 8) {
+      pressOrigin.current = null;
+      onCellPointerCancel();
+    }
+  };
+  const endPress = () => { pressOrigin.current = null; onCellPointerUp(); };
   const hasVisibleContent =
     entriesForDay.length > 0 || completionFactMarkersForDay.length > 0;
   const maxVisibleItemsPerCell = Number.isFinite(maxVisibleItems)
@@ -432,6 +448,9 @@ export function CalendarMonthDayCell<
         )}
         data-day={day}
         data-calendar-week-row="true"
+        onPointerDown={startPress} onPointerMove={movePress} onPointerUp={endPress}
+        onPointerCancel={onCellPointerCancel} onPointerLeave={onCellPointerLeave}
+        onContextMenu={(event) => { if (pressOrigin.current) event.preventDefault(); }}
         style={{ viewTransitionName: planDayViewTransitionName(day) }}
         onClick={(event) => {
           if (!shouldSelectAgendaDayFromTarget(event.target)) {
@@ -488,6 +507,7 @@ export function CalendarMonthDayCell<
                 )}
                 data-calendar-week-work="true"
               >
+                {taskComposer}
                 {hasVisibleContent ? (
                   <>
                     <PlannerSortableDayList
@@ -556,32 +576,25 @@ export function CalendarMonthDayCell<
   return (
     <PlannerDroppableDay day={day}>
       {({ setNodeRef, isOver }) => (
-        <button
+        <div
           ref={setNodeRef}
-          type="button"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+              event.preventDefault(); onCellClick(event.currentTarget);
+            }
+          }}
           onClick={(event) => onCellClick(event.currentTarget)}
           onDoubleClick={(event) => {
             onCellDoubleClick(event.currentTarget);
           }}
           onMouseEnter={(event) => onCellMouseEnter(event.currentTarget)}
           onMouseLeave={onCellMouseLeave}
-          onPointerDown={(event) => {
-            const target =
-              event.target instanceof Element
-                ? event.target
-                : event.target instanceof Node
-                  ? event.target.parentElement
-                  : null;
-            if (
-              target?.closest('[data-calendar-day-entry="true"]')
-            ) {
-              return;
-            }
-            onCellPointerDown(event.pointerType, event.currentTarget);
-          }}
-          onPointerUp={onCellPointerUp}
+          onPointerDown={startPress} onPointerMove={movePress} onPointerUp={endPress}
           onPointerCancel={onCellPointerCancel}
           onPointerLeave={onCellPointerLeave}
+          onContextMenu={(event) => { if (pressOrigin.current) event.preventDefault(); }}
           className={cn(
             PLAN_MORPH_CLASS,
             styles.monthCell,
@@ -622,6 +635,7 @@ export function CalendarMonthDayCell<
               </span>
             ) : null}
           </div>
+          {taskComposer}
           {hasVisibleContent ? (
             <div className="space-y-1.5">
               <PlannerSortableDayList
@@ -661,7 +675,7 @@ export function CalendarMonthDayCell<
           ) : (
             <div>{monthOverflowLabel}</div>
           )}
-        </button>
+        </div>
       )}
     </PlannerDroppableDay>
   );

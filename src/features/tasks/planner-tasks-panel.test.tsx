@@ -196,7 +196,7 @@ describe("PlannerTasksPanel", () => {
 
     render(
       <PlannerTasksPanel
-        title="Todos"
+        title="One time tasks"
         description={null}
         scheduledDate="2026-09-12"
         allowCreate={false}
@@ -227,7 +227,7 @@ describe("PlannerTasksPanel", () => {
 
     render(
       <PlannerTasksPanel
-        title="Todos"
+        title="One time tasks"
         description={null}
         scheduledDate="2026-09-12"
         asOfDate="2026-09-05"

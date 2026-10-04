@@ -99,6 +99,7 @@ interface UsePlannerCalendarDayCellRendererArgs {
   visibleCells: PlannerCalendarCell[];
   dayPreviewInteractions: Pick<
     PlannerDayPreviewInteractions,
+    | "renderTaskComposer"
     | "clearHoverPreviewTimer"
     | "clearHoverPreviewCloseTimer"
     | "clearLongPressTimer"
@@ -144,6 +145,7 @@ export function usePlannerCalendarDayCellRenderer({
   dayPreviewInteractions,
 }: UsePlannerCalendarDayCellRendererArgs) {
   const {
+    renderTaskComposer,
     clearHoverPreviewTimer,
     clearHoverPreviewCloseTimer,
     clearLongPressTimer,
@@ -193,6 +195,7 @@ export function usePlannerCalendarDayCellRenderer({
         <CalendarMonthDayCell
           key={`${viewMode}-${cell.date}`}
           day={cell.date}
+          taskComposer={renderTaskComposer?.(cell.date)}
           inMonth={cell.inMonth}
           monthContextLabel={monthContextLabel}
           isToday={isToday}
@@ -259,6 +262,11 @@ export function usePlannerCalendarDayCellRenderer({
             openDayPreview({ day, pinned: true, target });
           }}
           onCellClick={(target) => {
+            if (suppressDayCellClickRef.current?.day === cell.date && suppressDayCellClickRef.current.active) {
+              suppressDayCellClickRef.current = null;
+              longPressTriggeredRef.current = false;
+              return;
+            }
             if (draggingEntryKey) {
               return;
             }
@@ -311,12 +319,12 @@ export function usePlannerCalendarDayCellRenderer({
             scheduleHoverPreviewClose(cell.date);
           }}
           onCellPointerDown={(pointerType, target) => {
-            if (viewMode === "day") {
+            if (draggingEntryKey) {
               return;
             }
             pointerPressActiveRef.current = true;
             clearHoverPreviewTimer();
-            if (pointerType === "touch") {
+            if (pointerType === "touch" && viewMode !== "day") {
               const now = Date.now();
               const lastTouchTap = lastTouchTapRef.current;
               if (
@@ -339,27 +347,19 @@ export function usePlannerCalendarDayCellRenderer({
                 return;
               }
               lastTouchTapRef.current = { day: cell.date, at: now };
-              startLongPressPreview(cell.date, target);
             }
+            if (!plannerReadOnly && cell.date >= calendarToday) startLongPressPreview(cell.date, target);
           }}
           onCellPointerUp={() => {
-            if (viewMode === "day") {
-              return;
-            }
             pointerPressActiveRef.current = false;
             clearLongPressTimer();
           }}
           onCellPointerCancel={() => {
-            if (viewMode === "day") {
-              return;
-            }
             pointerPressActiveRef.current = false;
             clearLongPressTimer();
           }}
           onCellPointerLeave={() => {
-            if (viewMode === "day") {
-              return;
-            }
+            pointerPressActiveRef.current = false;
             clearLongPressTimer();
           }}
           onEntryPointerStart={(immovable) => {
@@ -390,6 +390,7 @@ export function usePlannerCalendarDayCellRenderer({
       );
     },
     [
+      renderTaskComposer,
       calendarToday,
       canMutateEntryOnDay,
       clearHoverPreviewCloseTimer,

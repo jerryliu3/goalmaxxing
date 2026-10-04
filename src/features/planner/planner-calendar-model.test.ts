@@ -291,7 +291,7 @@ describe("selectPlannerCalendarModel", () => {
     expect(model.dayAccessors.canMutateEntryOnDay(entry, "2026-10-12")).toBe(false);
   });
 
-  it("shows date-only tasks instead of goals without applying goal filters", () => {
+  it("shows tasks alongside goals without applying goal category filters to tasks", () => {
     const taskEntry = toPlannerTaskCalendarEntry({
       updatedAt: "2026-09-02T12:00:00.000Z",
       taskId: "11111111-1111-4111-8111-111111111111",
@@ -316,7 +316,7 @@ describe("selectPlannerCalendarModel", () => {
         context,
         selectedDay: "2026-08-06",
         categoryFilters: ["Health"],
-        showTasksInsteadOfGoals: true,
+        hideTasks: false,
         calendarTaskEntriesByDate: new Map([["2026-08-06", [taskEntry]]]),
       })
     );
@@ -329,7 +329,7 @@ describe("selectPlannerCalendarModel", () => {
     );
   });
 
-  it("keeps planned goals when tasks are not replacing them", () => {
+  it("shows goals and tasks together by default", () => {
     const taskEntry = toPlannerTaskCalendarEntry({
       updatedAt: "2026-09-02T12:00:00.000Z",
       taskId: "11111111-1111-4111-8111-111111111111",
@@ -358,8 +358,12 @@ describe("selectPlannerCalendarModel", () => {
     );
     const entries = model.dayAccessors.getOrderedEntriesForDay("2026-08-06");
 
-    expect(entries.map((entry) => entry.goalTitle)).toEqual(["Lift"]);
+    expect(entries.map((entry) => entry.goalTitle)).toEqual(["Lift", "Buy groceries"]);
     expect(entries[0]?.entryKind).not.toBe("task");
+    expect(model.dayAccessors.entryByKey.get(taskEntry.key)).toBe(taskEntry);
+    const hiddenModel = selectPlannerCalendarModel(buildArgs({ context, selectedDay: "2026-08-06",
+      hideTasks: true, calendarTaskEntriesByDate: new Map([["2026-08-06", [taskEntry]]]) }));
+    expect(hiddenModel.dayAccessors.getEntriesForDay("2026-08-06").map(entry => entry.goalTitle)).toEqual(["Lift"]);
   });
 
   it("keeps partner markers on the viewer month and week when Duo is Both", () => {

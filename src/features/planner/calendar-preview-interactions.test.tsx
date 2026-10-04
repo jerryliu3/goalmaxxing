@@ -196,7 +196,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     const dayCell = document.querySelector(
       '[data-day-cell="true"][data-day="2026-08-31"]'
     );
-    expect(dayCell).toBeInstanceOf(HTMLButtonElement);
+    expect(dayCell).toBeInstanceOf(HTMLElement);
 
     fireEvent.pointerDown(dayCell as Element, { pointerType: "touch" });
     fireEvent.pointerUp(dayCell as Element, { pointerType: "touch" });
@@ -216,7 +216,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("opens a pinned preview on long press", async () => {
+  it("opens a task composer on long press", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
         unit({
@@ -242,17 +242,15 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     const dayCell = document.querySelector(
       '[data-day-cell="true"][data-day="2026-08-31"]'
     );
-    expect(dayCell).toBeInstanceOf(HTMLButtonElement);
+    expect(dayCell).toBeInstanceOf(HTMLElement);
 
     fireEvent.pointerDown(dayCell as Element, { pointerType: "touch" });
     await act(async () => {
       await vi.advanceTimersByTimeAsync(500);
     });
 
-    expect(
-      screen.getByRole("button", { name: "Expand day details" })
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "X" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Task name" })).toHaveAttribute("placeholder", "Task name");
+    expect(screen.queryByRole("button", { name: "Expand day details" })).not.toBeInTheDocument();
   });
 
   it("selects a month day without opening a click popup", async () => {
@@ -283,7 +281,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     const dayCell = document.querySelector(
       '[data-day-cell="true"][data-day="2026-08-31"]'
     );
-    expect(dayCell).toBeInstanceOf(HTMLButtonElement);
+    expect(dayCell).toBeInstanceOf(HTMLElement);
 
     fireEvent.click(dayCell as Element);
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-31", "push", "month");
@@ -319,7 +317,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     const dayCell = document.querySelector(
       '[data-day-cell="true"][data-day="2026-08-31"]'
     );
-    expect(dayCell).toBeInstanceOf(HTMLButtonElement);
+    expect(dayCell).toBeInstanceOf(HTMLElement);
 
     fireEvent.pointerDown(dayCell as Element, { pointerType: "touch" });
     await act(async () => {

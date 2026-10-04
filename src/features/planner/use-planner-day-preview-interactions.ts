@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  type ReactNode,
   type Dispatch,
   type MutableRefObject,
   type SetStateAction,
@@ -19,6 +20,8 @@ export const DAY_PREVIEW_HOVER_GRACE_MS = 300;
 const DAY_PREVIEW_LONG_PRESS_DELAY_MS = 500;
 
 interface UsePlannerDayPreviewInteractionsArgs {
+  onLongPressDay?: (day: string) => void;
+  renderTaskComposer?: (day: string) => ReactNode;
   dayPreview: DayPreviewState | null;
   setDayPreview: Dispatch<SetStateAction<DayPreviewState | null>>;
   setExpandedPreviewDay: (day: string | null) => void;
@@ -44,6 +47,7 @@ interface UsePlannerDayPreviewInteractionsArgs {
 }
 
 export interface PlannerDayPreviewInteractions {
+  renderTaskComposer?: (day: string) => ReactNode;
   clearHoverPreviewTimer: () => void;
   clearHoverPreviewCloseTimer: () => void;
   clearLongPressTimer: () => void;
@@ -78,6 +82,8 @@ export function isHoverPreviewKeepAliveTarget(
 }
 
 export function usePlannerDayPreviewInteractions({
+  onLongPressDay,
+  renderTaskComposer,
   dayPreview,
   setDayPreview,
   setExpandedPreviewDay,
@@ -275,16 +281,31 @@ export function usePlannerDayPreviewInteractions({
   );
 
   const startLongPressPreview = useCallback(
-    (day: string, target: EventTarget & HTMLElement) => {
+    (day: string, _target: EventTarget & HTMLElement) => {
       clearLongPressTimer();
       longPressTriggeredRef.current = false;
       longPressTimerRef.current = window.setTimeout(() => {
         longPressTriggeredRef.current = true;
-        openDayPreview({ day, pinned: true, target });
+        lastTouchTapRef.current = null;
+        suppressDayCellClickRef.current = { day, active: true };
+        setDayPreview(null);
+        onLongPressDay?.(day);
       }, DAY_PREVIEW_LONG_PRESS_DELAY_MS);
     },
-    [clearLongPressTimer, longPressTimerRef, longPressTriggeredRef, openDayPreview]
+    [clearLongPressTimer, longPressTimerRef, longPressTriggeredRef, lastTouchTapRef, suppressDayCellClickRef, setDayPreview, onLongPressDay]
   );
+
+  useEffect(() => {
+    const cancel = () => { pointerPressActiveRef.current = false; clearLongPressTimer(); };
+    window.addEventListener("pointerup", cancel);
+    window.addEventListener("pointercancel", cancel);
+    return () => {
+      window.removeEventListener("pointerup", cancel);
+      window.removeEventListener("pointercancel", cancel);
+      clearLongPressTimer();
+      clearHoverPreviewTimer();
+    };
+  }, [clearLongPressTimer, clearHoverPreviewTimer, pointerPressActiveRef]);
 
   useEffect(() => {
     if (!dayPreview || dayPreview.pinned) {
@@ -332,6 +353,7 @@ export function usePlannerDayPreviewInteractions({
   });
 
   return {
+    renderTaskComposer,
     clearHoverPreviewTimer,
     clearHoverPreviewCloseTimer,
     clearLongPressTimer,

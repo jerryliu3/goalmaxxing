@@ -95,7 +95,7 @@ describe("PlannerFocusedDayPane", () => {
         onToggleCompletion={() => {}}
         onEntryPointerStart={() => {}}
         onEntryPointerEnd={() => {}}
-        showTasksInsteadOfGoals
+        hideTasks
         partnerLabel="Alex"
         viewerSubject={{
           id: "viewer",
@@ -239,7 +239,7 @@ describe("PlannerFocusedDayPane", () => {
 
     expect(screen.getByRole("button", { name: /Scheduled goals 1/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Unscheduled goals 1/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Todos/ })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: /One time tasks/ })).toHaveAttribute(
       "aria-expanded",
       "false"
     );
@@ -338,7 +338,7 @@ describe("PlannerFocusedDayPane", () => {
       />
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Todos 0" }));
+    fireEvent.click(screen.getByRole("button", { name: "One time tasks 0" }));
     expect(onClearSelectedEntry).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: "Scheduled goals 1" }));

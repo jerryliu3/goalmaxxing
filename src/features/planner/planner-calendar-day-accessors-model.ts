@@ -69,7 +69,7 @@ export interface CalendarDayAccessorsArgs {
   additionalProjectionDays: string[];
   previewEntryOrderByDay: Record<string, string[]>;
   calendarTaskEntriesByDate?: Map<string, PlannerDayDetailEntry[]>;
-  showTasksInsteadOfGoals?: boolean;
+  hideTasks?: boolean;
   showCompletedGoals?: boolean;
 }
 
@@ -121,7 +121,7 @@ export function selectCalendarDayAccessorsModel({
   additionalProjectionDays,
   previewEntryOrderByDay,
   calendarTaskEntriesByDate,
-  showTasksInsteadOfGoals = false,
+  hideTasks = false,
   showCompletedGoals = false,
   memoizedState,
 }: CalendarDayAccessorsArgs & {
@@ -229,12 +229,10 @@ export function selectCalendarDayAccessorsModel({
   const plannerReadOnly = duoScope === "partner";
   const overlayPartnerOnViewer = duoScope === "partner" || duoScope === "both";
   const taskLookup = collectCalendarTaskLookup(
-    showTasksInsteadOfGoals ? calendarTaskEntriesByDate : undefined
+    hideTasks ? undefined : calendarTaskEntriesByDate
   );
-  const entryByKey = showTasksInsteadOfGoals ? taskLookup.entryByKey : goalEntryByKey;
-  const entryDayByKey = showTasksInsteadOfGoals
-    ? taskLookup.entryDayByKey
-    : goalEntryDayByKey;
+  const entryByKey = new Map([...goalEntryByKey, ...taskLookup.entryByKey]);
+  const entryDayByKey = new Map([...goalEntryDayByKey, ...taskLookup.entryDayByKey]);
 
   const canMutateEntryOnDay = (entry: PlannerDayDetailEntry, day: string | null) => {
     if (!day) {
@@ -271,10 +269,10 @@ export function selectCalendarDayAccessorsModel({
     if (!day) {
       return [];
     }
-    if (showTasksInsteadOfGoals) {
-      return filterEntries(calendarTaskEntriesByDate?.get(day) ?? [], day);
-    }
-    return filterEntries(getCalendarDayProjection(day).entries, day);
+    return filterEntries([
+      ...getCalendarDayProjection(day).entries,
+      ...(!hideTasks ? calendarTaskEntriesByDate?.get(day) ?? [] : []),
+    ], day);
   };
 
   const getEntriesForDay = (day: string | null) => {
@@ -306,9 +304,6 @@ export function selectCalendarDayAccessorsModel({
   };
 
   const getCompletionFactMarkersForDay = (day: string | null) => {
-    if (showTasksInsteadOfGoals) {
-      return [];
-    }
     if (
       shouldHideCompletedOnFutureCalendarDay({
         day,
@@ -338,9 +333,10 @@ export function selectCalendarDayAccessorsModel({
     }
     return orderEntriesForDay({
       day,
-      entries: showTasksInsteadOfGoals
-        ? entriesForDay(day)
-        : filterEntries(getCalendarDayProjection(day).orderedEntries, day),
+      entries: filterEntries([
+        ...getCalendarDayProjection(day).orderedEntries,
+        ...(!hideTasks && day ? calendarTaskEntriesByDate?.get(day) ?? [] : []),
+      ], day),
       previewEntryOrderByDay,
     });
   };

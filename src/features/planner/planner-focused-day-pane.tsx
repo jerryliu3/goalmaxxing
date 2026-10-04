@@ -56,7 +56,7 @@ interface PlannerFocusedDayPaneProps {
   ) => void;
   onEntryPointerStart: (immovable: boolean) => void;
   onEntryPointerEnd: () => void;
-  showTasksInsteadOfGoals?: boolean;
+  hideTasks?: boolean;
   titleAs?: "h2" | "p";
   showDayHeading?: boolean;
   shareDayTransition?: boolean;
@@ -84,7 +84,7 @@ export function PlannerFocusedDayPane({
   onToggleCompletion,
   onEntryPointerStart,
   onEntryPointerEnd,
-  showTasksInsteadOfGoals = false,
+  hideTasks = false,
   titleAs = "p",
   showDayHeading = true,
   shareDayTransition = false,
@@ -100,10 +100,10 @@ export function PlannerFocusedDayPane({
 }: PlannerFocusedDayPaneProps) {
   const TitleTag = titleAs;
   const draftMove = useUnscheduledDraftMove();
-  const [todoCount, setTodoCount] = useState(0);
-  const visibleEntries = entries;
+  const [taskCount, setTaskCount] = useState(0);
+  const visibleEntries = entries.filter((entry) => entry.entryKind !== "task");
     const unscheduledCount = useMemo(() => {
-    if (!dayChecklist || showTasksInsteadOfGoals) {
+    if (!dayChecklist) {
       return 0;
     }
     if (dayChecklist.loading && (dayChecklist.data?.goals.length ?? 0) === 0) {
@@ -115,7 +115,7 @@ export function PlannerFocusedDayPane({
       viewDate: day,
       visibleGoalIds: dayChecklist.visibleGoalIds,
     }).length;
-  }, [day, dayChecklist, showTasksInsteadOfGoals, visibleEntries]);
+  }, [day, dayChecklist, hideTasks, visibleEntries]);
   const visibleMarkers = completionFactMarkers;
   const viewerMarkers = useMemo(
     () => visibleMarkers.filter((marker) => marker.owner !== "partner"),
@@ -307,8 +307,7 @@ export function PlannerFocusedDayPane({
                 ))
               : null}
           </PlanDaySection>
-          {showTasksInsteadOfGoals ? null : (
-            <PlanDaySection
+          <PlanDaySection
               key={`${day}-unplanned`}
               title="Unscheduled goals"
               count={unscheduledCount}
@@ -319,28 +318,26 @@ export function PlannerFocusedDayPane({
                 placedEntries={visibleEntries}
                 checklist={dayChecklist}
               />
-            </PlanDaySection>
-          )}
-          {showTasksInsteadOfGoals ? null : (
+          </PlanDaySection>
+          {hideTasks ? null : (
             <>
-              <PlannerTasksPrefetch scheduledDate={day} onCountChange={setTodoCount} />
-              <PlanDaySection key={`${day}-todos`} title="Todos" count={todoCount} defaultOpen={false}>
+              <PlannerTasksPrefetch scheduledDate={day} onCountChange={setTaskCount} />
+              <PlanDaySection key={`${day}-tasks`} title="One time tasks" count={taskCount} defaultOpen={false}>
                 <PlannerTasksPanel
                   key={day}
-                  title="Todos"
+                  title="One time tasks"
                   description={null}
                   scheduledDate={day}
                   asOfDate={asOfDate}
                   allowCreate
                   hideWhenEmpty={false}
                   chrome="plain"
-                  onCountChange={setTodoCount}
+                  onCountChange={setTaskCount}
                 />
               </PlanDaySection>
             </>
           )}
           {dayChecklist &&
-          !showTasksInsteadOfGoals &&
           (dayChecklist.filters.showUpcomingGoals ||
             dayChecklist.filters.showEndedGoals ||
             dayChecklist.filters.showArchivedGoals) ? (

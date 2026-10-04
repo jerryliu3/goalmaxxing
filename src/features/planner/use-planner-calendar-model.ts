@@ -30,7 +30,7 @@ export function usePlannerCalendarModel({
   previewEntryOrderByDay,
   additionalProjectionDays,
   calendarTaskEntriesByDate,
-  showTasksInsteadOfGoals,
+  hideTasks,
   showCompletedGoals,
 }: UsePlannerCalendarModelArgs): PlannerCalendarModel {
   const currentScopeMonth = month ?? context?.scopeMonth ?? null;
@@ -87,7 +87,7 @@ export function usePlannerCalendarModel({
         previewEntryOrderByDay,
         additionalProjectionDays,
         calendarTaskEntriesByDate,
-        showTasksInsteadOfGoals,
+        hideTasks,
         showCompletedGoals,
         memoizedState: {
           draftSession,
@@ -98,7 +98,7 @@ export function usePlannerCalendarModel({
     [
       additionalProjectionDays,
       calendarTaskEntriesByDate,
-      showTasksInsteadOfGoals,
+      hideTasks,
       showCompletedGoals,
       activeGoalIndexes,
       calendarStoreProjection,
