@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { ArrowLeft, ArrowRight, LockKeyhole } from "lucide-react";
+import { DateField } from "@/components/ui/date-field";
 import { PlanLedgerCompletionControl } from "@/features/planner/plan-ledger-completion-control";
 import { cn } from "@/lib/utils";
 import { addDaysToDateString } from "@/lib/goals/periods";
@@ -29,11 +30,10 @@ function statusLabel(session: GoalViewSession, today: string) {
 }
 
 /**
- * The session's date, the only part of a tile that changes it. Clicking opens
- * the browser's date picker on a hidden date input anchored to the date, and
- * hover shading shows that it is a control.
+ * The native input owns the date's hit area on every device. In particular,
+ * iOS needs a real tap/focus on the input rather than a programmatic showPicker.
  */
-function SessionDateButton({
+function SessionDateField({
   session,
   today,
   disabled,
@@ -48,42 +48,32 @@ function SessionDateButton({
   onMove: (session: GoalViewSession, date: string) => void;
   children: ReactNode;
 }) {
-  const input = useRef<HTMLInputElement>(null);
-  const openPicker = () => {
-    const field = input.current;
-    if (!field) return;
-    if (typeof field.showPicker === "function") field.showPicker();
-    else field.click();
-  };
   return (
-    <div className="relative">
-      <button
-        type="button"
-        disabled={disabled}
-        aria-label={`Change date of ${session.label}, ${dateLabel(session.date)}`}
-        title={disabled ? undefined : "Change date"}
-        onClick={openPicker}
-        className={cn(
-          "rounded-lg px-2 py-1 text-left transition-colors enabled:cursor-pointer enabled:hover:bg-muted disabled:cursor-default",
-          className
-        )}
+    <label
+      title={disabled ? undefined : "Change date"}
+      className={cn(
+        "relative inline-flex min-h-11 min-w-11 items-center rounded-lg px-2 py-1 text-left transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+        !disabled && "cursor-pointer hover:bg-muted",
+        className
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(!disabled && "underline decoration-foreground/40 underline-offset-4 [&_*]:underline")}
       >
         {children}
-      </button>
-      <input
-        ref={input}
-        type="date"
-        tabIndex={-1}
-        aria-hidden
+      </span>
+      <DateField
+        aria-label={`Change date of ${session.label}, ${dateLabel(session.date)}`}
+        disabled={disabled}
         value={session.date}
         min={today}
-        onChange={(event) => {
-          const date = event.target.value;
-          if (date && date !== session.date) onMove(session, date);
+        onValueChange={(date) => {
+          if (!disabled && date && date !== session.date && date >= today) onMove(session, date);
         }}
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-0 opacity-0"
+        className="absolute inset-0 h-full w-full min-w-0 cursor-pointer opacity-0 disabled:cursor-default disabled:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
       />
-    </div>
+    </label>
   );
 }
 
@@ -171,7 +161,7 @@ export function GoalSessionTile({
           </span>
         </div>
         <div className="grid min-h-14 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
-          <SessionDateButton
+          <SessionDateField
             session={session}
             today={today}
             disabled={!movable}
@@ -183,7 +173,7 @@ export function GoalSessionTile({
                 {dateLabel(session.date, "MMM")}
               </small>
             </span>
-          </SessionDateButton>
+          </SessionDateField>
           <span className="flex min-w-0 flex-col gap-0.5">
             <span className={overlineClass}>{step}</span>
             <strong
@@ -207,7 +197,7 @@ export function GoalSessionTile({
         {completionControl}
       </div>
       <div className="flex min-h-28 flex-col items-start gap-1 px-1.5 pb-3">
-        <SessionDateButton
+        <SessionDateField
           session={session}
           today={today}
           disabled={!movable}
@@ -219,7 +209,7 @@ export function GoalSessionTile({
               {dateLabel(session.date, "MMM")}
             </small>
           </span>
-        </SessionDateButton>
+        </SessionDateField>
         <strong
           data-testid="completion-title"
           className="min-h-8 px-1.5 text-xs font-semibold leading-snug"

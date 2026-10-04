@@ -128,25 +128,22 @@ describe("GoalView", () => {
     );
   });
 
-  it("opens the date picker from a session and moves it to the chosen date", () => {
+  it("uses a directly interactive native date input and moves a session to the chosen date", () => {
     const props = renderView();
     const run = screen.getByRole("region", { name: "Run a half marathon scheduled dates" });
     expect(within(run).getByText("Step 02")).toBeInTheDocument();
-    const button = within(run).getByRole("button", {
-      name: "Change date of run session, Fri, Oct 9",
-    });
-    const showPicker = vi.fn();
-    const field = button.parentElement!.querySelector<HTMLInputElement>('input[type="date"]')!;
+    const field = within(run).getByLabelText("Change date of run session, Fri, Oct 9") as HTMLInputElement;
     // Only the date is a control: the rest of the tile is not a button.
     expect(
       within(run).queryByRole("button", { name: /^Edit run session/ })
     ).toBeNull();
-    expect(button).toHaveTextContent(/^9\s*Oct$/);
-    field.showPicker = showPicker;
-    fireEvent.click(button);
-    expect(showPicker).toHaveBeenCalledTimes(1);
+    expect(field.parentElement).toHaveTextContent(/^9\s*Oct$/);
+    expect(field).toHaveClass("h-full", "w-full");
+    expect(field).not.toHaveAttribute("aria-hidden");
+    expect(field).not.toHaveAttribute("tabindex", "-1");
+    expect(field.parentElement!.querySelector('[aria-hidden="true"]')).toHaveClass("underline");
     expect(field.min).toBe(TODAY);
-    pickDate(button.parentElement!, "2026-10-12");
+    pickDate(field.parentElement!, "2026-10-12");
     expect(props.onMoveSession).toHaveBeenCalledWith(
       expect.objectContaining({ key: "run:2026-10-09", milestone: 2 }),
       "2026-10-12"
@@ -154,13 +151,25 @@ describe("GoalView", () => {
   });
 
   it("does not open a picker for locked, done or read-only sessions", () => {
-    renderView({
+    const props = renderView({
       isEditable: (session) => session.key !== "gym:2026-10-03",
     });
     const gym = screen.getByRole("region", { name: "Get stronger scheduled dates" });
-    expect(
-      within(gym).getByRole("button", { name: /^Change date of gym session/ })
-    ).toBeDisabled();
+    const field = within(gym).getByLabelText(/^Change date of gym session/);
+    expect(field).toBeDisabled();
+    expect(field).toHaveClass("disabled:opacity-0");
+    expect(field.parentElement!.querySelector('[aria-hidden="true"]')).not.toHaveClass("underline");
+    fireEvent.change(field, { target: { value: "2026-10-12" } });
+    expect(props.onMoveSession).not.toHaveBeenCalled();
+  });
+
+  it("ignores cleared, unchanged and past date input values", () => {
+    const props = renderView();
+    const field = screen.getByLabelText("Change date of run session, Fri, Oct 9");
+    for (const value of ["", "2026-10-09", "2026-10-01"]) {
+      fireEvent.change(field, { target: { value } });
+    }
+    expect(props.onMoveSession).not.toHaveBeenCalled();
   });
 
   it("moves a future session one day earlier or later", () => {
@@ -274,6 +283,18 @@ describe("GoalView", () => {
       );
       fireEvent.click(screen.getByRole("button", { name: "Complete gym session" }));
       expect(props.onToggleSession).toHaveBeenCalledTimes(1);
+    });
+
+    it("edits a date from the same native touch target in the phone rows", () => {
+      const props = renderView();
+      const field = screen.getByLabelText("Change date of run session, Fri, Oct 9") as HTMLInputElement;
+      // Opening never depends on showPicker support or a synthetic input click.
+      field.showPicker = vi.fn(() => { throw new Error("Unsupported mobile picker"); });
+      fireEvent.pointerDown(field, { pointerType: "touch" });
+      fireEvent.click(field);
+      expect(field.showPicker).not.toHaveBeenCalled();
+      fireEvent.change(field, { target: { value: "2026-10-12" } });
+      expect(props.onMoveSession).toHaveBeenCalledWith(expect.objectContaining({ key: "run:2026-10-09" }), "2026-10-12");
     });
   });
 
