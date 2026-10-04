@@ -54,7 +54,7 @@ export function useCardRotation(disabled: boolean, solid: boolean) {
       const dy = event.clientY - active.y;
       if (!active.moved && Math.hypot(dx, dy) < 3) return;
       if (!active.moved) { active.moved = true; setInspecting(true); }
-      pose.moveTo(dragPose(active.start, dx, dy), true);
+      pose.dragTo(dragPose(active.start, dx, dy));
     } else if (!inspecting && event.pointerType === "mouse") {
       const rect = event.currentTarget.getBoundingClientRect();
       pose.moveTo(nearestPose(pose.getCurrent(), pointerPose((event.clientX - rect.left) / rect.width, (event.clientY - rect.top) / rect.height)));
@@ -79,7 +79,8 @@ export function useCardRotation(disabled: boolean, solid: boolean) {
   return {
     stage: pose.stage, posed, inspecting, reset, isDragging: () => drag.current !== null,
     togglePose: () => { stopDrag(); setInspecting(false); setPosed(value => !value); },
-    cardHandlers: { onPointerDown, onDragStart, onPointerMove, onKeyDown, onLostPointerCapture: stopDrag },
+    // Captured moves bubble to the stage; handling them on both nodes doubles work.
+    cardHandlers: { onPointerDown, onDragStart, onKeyDown, onLostPointerCapture: stopDrag },
     stageHandlers: {
       onPointerMove,
       onPointerUp: (event: PointerEvent<HTMLDivElement>) => { if (drag.current?.id === event.pointerId) stopDrag(); },

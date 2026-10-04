@@ -1,9 +1,10 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { MaterialPreview } from "./material-preview";
 import { MATERIALS, MATERIAL_SAMPLES } from "./materials";
 
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["requestAnimationFrame", "cancelAnimationFrame"] });
   // jsdom has no native PointerEvent; preserve the fields used by pointer capture.
   vi.stubGlobal("PointerEvent", class extends MouseEvent {
     pointerId: number; pointerType: string; isPrimary: boolean;
@@ -13,7 +14,7 @@ beforeEach(() => {
     }
   });
 });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 it("starts a drag when the pointer lands on covering card content", () => {
   render(<MaterialPreview material={MATERIALS.find(item => item.id === "pearl")!} fields={MATERIAL_SAMPLES[0].fields} still={false} history={false} />);
@@ -33,6 +34,7 @@ it("captures dragging beyond the card, turns past 180°, holds the pose, and res
   fireEvent.pointerDown(card, { pointerId: 1, button: 0, clientX: 100, clientY: 100 });
   expect(capture).toHaveBeenCalledWith(1);
   fireEvent.pointerMove(stage, { pointerId: 1, clientX: 450, clientY: 380 });
+  act(() => vi.advanceTimersByTime(16));
   expect(parseFloat(stage.style.getPropertyValue("--ry"))).toBeGreaterThan(180);
   expect(parseFloat(stage.style.getPropertyValue("--rx"))).toBeLessThan(-180);
   fireEvent.pointerUp(stage, { pointerId: 1 });

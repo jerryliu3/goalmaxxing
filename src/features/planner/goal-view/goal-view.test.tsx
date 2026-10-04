@@ -9,7 +9,8 @@ const viewport = vi.hoisted(() => ({ desktop: true }));
 vi.mock("@/lib/ui/use-media-query", () => ({ useMediaQuery: () => viewport.desktop }));
 vi.mock("motion/react", () => ({ useReducedMotion: () => false }));
 vi.mock("./goal-view-card", () => ({
-  GoalViewCard: ({ goal }: { goal: Goal }) => <div data-testid={`card-${goal.id}`} />,
+  GoalViewCard: ({ goal, interactive = true }: { goal: Goal; interactive?: boolean }) =>
+    <div data-testid={`card-${goal.id}`} data-rotatable={interactive} />,
 }));
 vi.mock("@/features/planner/plan-ledger-completion-control", () => ({
   PlanLedgerCompletionControl: ({
@@ -269,6 +270,25 @@ describe("GoalView", () => {
 
       fireEvent.click(screen.getByRole("button", { name: "Select Run a half marathon" }));
       expect(screen.getByText("Goal 1 of 2")).toBeInTheDocument();
+    });
+
+    it("lets the selected card turn without stealing swipes and exits on goal navigation", () => {
+      renderView();
+      expect(screen.getByTestId("card-run")).toHaveAttribute("data-rotatable", "false");
+      fireEvent.click(screen.getByRole("button", { name: "Turn card" }));
+      expect(screen.getByTestId("card-run")).toHaveAttribute("data-rotatable", "true");
+      expect(screen.getByTestId("card-gym")).toHaveAttribute("data-rotatable", "false");
+      expect(screen.getByLabelText("Turn the selected goal card")).toHaveClass("overflow-x-hidden");
+
+      fireEvent.click(screen.getByRole("button", { name: "Done turning" }));
+      expect(screen.getByLabelText("Swipe between goal cards")).toHaveClass("overflow-x-auto");
+      expect(screen.getByTestId("card-run")).toHaveAttribute("data-rotatable", "false");
+
+      fireEvent.click(screen.getByRole("button", { name: "Turn card" }));
+      fireEvent.click(screen.getByRole("button", { name: "Next goal" }));
+      expect(screen.getByRole("button", { name: "Turn card" })).toHaveAttribute("aria-pressed", "false");
+      fireEvent.click(screen.getByRole("button", { name: "Previous goal" }));
+      expect(screen.getByTestId("card-run")).toHaveAttribute("data-rotatable", "false");
     });
 
     it("keeps nudging and completing available from the vertical rows", () => {
