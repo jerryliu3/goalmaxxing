@@ -10,7 +10,7 @@ export function buildExternalOpenApi() {
     const schema = z.toJSONSchema(operationSchemas[route.operation], { io: "input", unrepresentable: "any" }) as { properties?: Record<string, unknown>; required?: string[]; [key: string]: unknown };
     delete schema.$schema;
     const pathKeys = [...route.path.matchAll(/\{(\w+)\}/g)].map(match => match[1]);
-    const parameters = pathKeys.map(name => ({ name, in: "path", required: true, schema: { type: "string", format: "uuid" } }));
+    const parameters: Array<{ name: string; in: string; required: boolean; schema: unknown }> = pathKeys.map(name => ({ name, in: "path", required: true, schema: { type: "string", format: "uuid" } }));
     for (const name of pathKeys) { if (schema.properties) delete schema.properties[name]; schema.required = schema.required?.filter(key => key !== name); }
     const operation: Record<string, unknown> = {
       operationId: route.operation,
@@ -21,7 +21,7 @@ export function buildExternalOpenApi() {
       responses: Object.fromEntries([route.operation.startsWith("create_") ? "201" : "200", "400", "401", "403", "404", "409", "413", "422", "429", "503"].map(status => [status, { description: Number(status) < 300 ? "Successful account operation." : "Typed error with code, message and correlationId.", content: { "application/json": { schema: Number(status) < 300 ? { type: "object", properties: { schemaVersion: { const: "1" }, correlationId: { type: "string" } }, additionalProperties: true } : { $ref: "#/components/schemas/Error" } } } }])),
     };
     if (route.method === "GET") {
-      for (const [name, property] of Object.entries(schema.properties ?? {})) parameters.push({ name, in: "query", required: schema.required?.includes(name) ?? false, schema: property as { type: string; format: string } });
+      for (const [name, property] of Object.entries(schema.properties ?? {})) parameters.push({ name, in: "query", required: schema.required?.includes(name) ?? false, schema: property });
     } else operation.requestBody = { required: true, content: { "application/json": { schema } } };
     (paths[route.path] ??= {})[route.method.toLowerCase()] = operation;
   }

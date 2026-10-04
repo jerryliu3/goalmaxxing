@@ -6,7 +6,7 @@ import type {
   PlannerContextPayload,
   PlannerErrorPayload,
 } from "@/features/planner/calendar-surface.types";
-import { buildPlannerSaveRequestBody } from "@/features/planner/planner-save-request";
+import { buildPlannerSaveRequestBody } from "@/lib/planner/save-request";
 import { getNonPublishablePreviewMessage } from "@/features/planner/planner-save-availability";
 import {
   getApiErrorMessage,

@@ -379,7 +379,7 @@ export async function POST(request: Request) {
       }
       throw error;
     }
-    const { asOfDate, effectiveTimezone, preview } = resolvedPreview;
+    const { asOfDate, effectiveTimezone, effectivePolicy, preview } = resolvedPreview;
 
     const responseBody = {
       schemaVersion: "1",
@@ -388,6 +388,7 @@ export async function POST(request: Request) {
       endDate: body.endDate,
       asOfDate,
       timezone: effectiveTimezone,
+      policy: effectivePolicy,
       revisions: snapshot.revisions,
       baseActivePlan: snapshot.activePlan
         ? {

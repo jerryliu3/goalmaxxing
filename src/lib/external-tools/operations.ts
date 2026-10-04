@@ -1,5 +1,9 @@
 import { z } from "zod";
+import { plannerKernelOutputSchema } from "@/lib/planner/contracts/kernel-schema";
+import { plannerPolicySchema } from "@/lib/planner/policy";
+import { buildPlannerSaveRequestBody } from "@/lib/planner/save-request";
 import { ApiRouteError } from "@/lib/api/route";
+import { mapPlannerCalendarTaskRows } from "@/lib/tasks/calendar-tasks";
 import type { Json } from "@/lib/supabase/database.types";
 import type { ExternalContext } from "./auth";
 import { externalResourceUrl } from "./oauth";
@@ -52,7 +56,12 @@ function goalPayload(goal: GoalDefinition): Json {
 async function mutate(context: ExternalContext, requestId: string, operation: string, payload: Json) {
   const { data, error } = await context.supabase.rpc("external_account_mutation", { p_request_id: requestId, p_operation: operation, p_payload: payload });
   if (error) throw databaseError(error);
-  return operation === "create_task" ? { task: responseSchema.parse(data) } : { goal: externalGoalRowSchema.parse(data) };
+  if (operation === "create_task") {
+    const [task] = mapPlannerCalendarTaskRows([data]);
+    if (!task) throw new ApiRouteError(503, "invalid_task_response", "The created task could not be read.");
+    return { task };
+  }
+  return { goal: externalGoalRowSchema.parse(data) };
 }
 
 function delegatedRequest(context: ExternalContext, method: "GET" | "POST", input: unknown) {
@@ -123,7 +132,20 @@ export async function executeOperation<N extends OperationName>(context: Externa
       return canonicalResult(await readProgress(delegatedRequest(context, "GET", { ...args, timezone, asOfDate: getDateInTimezone(new Date(), timezone) })));
     }
     case "get_plan": return canonicalResult(await readPlan(delegatedRequest(context, "GET", parsed.data)));
-    case "preview_plan": return canonicalResult(await previewPlan(delegatedRequest(context, "POST", parsed.data)));
+    case "preview_plan": {
+      const args = operationSchemas.preview_plan.parse(input);
+      const result = await canonicalResult(await previewPlan(delegatedRequest(context, "POST", args)));
+      const preview = plannerKernelOutputSchema.parse(result.preview);
+      const revisions = z.object({ scheduleDigest: z.string().regex(/^[a-f0-9]{64}$/) }).safeParse(result.revisions);
+      const publishRequest = args.solveIntent === "stable" && !args.recoverPastPlacements && preview.solver.publishable && revisions.success
+        ? buildPlannerSaveRequestBody({
+            expectedDigest: revisions.data.scheduleDigest,
+            saveWindow: { start: args.startDate, end: args.endDate },
+            preview, policy: plannerPolicySchema.parse(result.policy), draftCommands: args.draftCommands,
+          })
+        : null;
+      return { ...result, publishRequest };
+    }
     case "publish_plan": return canonicalResult(await publishPlan(delegatedRequest(context, "POST", parsed.data)));
     case "set_completion": {
       const args = operationSchemas.set_completion.parse(input);
