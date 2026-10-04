@@ -236,7 +236,16 @@ export function markTabDataCacheStaleByPrefix(prefix: string) {
 }
 
 export function invalidateTabDataCacheByPrefix(prefix: string) {
-  markTabDataCacheStaleByPrefix(prefix);
+  for (const key of pendingLoads.keys()) {
+    if (key.startsWith(prefix)) pendingLoads.delete(key);
+  }
+  for (const key of tabDataCache.keys()) {
+    if (key.startsWith(prefix)) invalidateTabDataCache(key);
+  }
+  const storagePrefix = buildStorageKey(prefix);
+  for (const storageKey of sessionStorageKeys()) {
+    if (storageKey.startsWith(storagePrefix)) sessionStorageRemove(storageKey);
+  }
 }
 
 export function setTabDataCacheScope(scope: string | null | undefined) {
