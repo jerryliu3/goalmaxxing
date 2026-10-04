@@ -152,7 +152,7 @@ it("clears every cached calendar window before a forced refresh", async () => {
   writeTabDataCache(otherMonthKey, snapshot);
   writeTabDataCache(buildPlannerContextCacheKey(month, window), snapshot);
   const { result } = mount();
-  await act(async () => { await result.current({ forcePrepare: true }); });
+  await act(async () => { await result.current({ forcePrepare: true, clearCachedContext: true }); });
   expect(readTabDataCache(otherMonthKey)).toBeNull();
   expect(mocks.postJson).toHaveBeenCalledWith("/api/planner/prepare", expect.anything());
 });
