@@ -32,6 +32,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      external_account_mutation: {
+        Args: { p_request_id: string; p_operation: string; p_payload: Json }
+        Returns: Json
+      }
+
       active_team_for_user: { Args: { p_user_id: string }; Returns: string }
       assert_goal_owner: {
         Args: { p_goal_id: string; p_uid: string }
