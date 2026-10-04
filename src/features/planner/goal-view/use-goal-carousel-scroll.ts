@@ -67,8 +67,10 @@ export function useGoalCarouselScroll(goals: Goal[], selectedId: string, onSelec
     cardHeld.current = false;
     setPosition(index);
     setMoving(true);
-    settleTimer.current = setTimeout(() => setMoving(false), SWIPE_SETTLE_MS);
-    if (!scrubbing.current) scrollTo(index, reduced ? "auto" : "smooth");
+    if (!scrubbing.current) {
+      settleTimer.current = setTimeout(() => setMoving(false), SWIPE_SETTLE_MS);
+      scrollTo(index, reduced ? "auto" : "smooth");
+    }
   }, [index, selectedId, goals.length, reduced, scrollTo, cancelPending]);
   useEffect(() => () => { cancelPending(); }, [cancelPending]);
 

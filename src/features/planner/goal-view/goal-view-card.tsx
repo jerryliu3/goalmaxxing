@@ -74,6 +74,7 @@ export const GoalViewCard = memo(function GoalViewCard({
         if (event.pointerType !== "mouse" || !hovered.current) setEngaged(false);
       }}
       onPointerCancel={() => { held.current = false; setEngaged(false); }}
+      onLostPointerCapture={() => { held.current = false; if (!hovered.current) setEngaged(false); }}
     >
       <TempoGoalCard
         fields={fields}
