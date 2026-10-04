@@ -3,6 +3,7 @@ import {
   applyCalendarCompletionMarkerFilters,
   buildCalendarCategoryFilterOptions,
   entryMatchesCalendarSearchQuery,
+  filterCalendarGoalFilterOptions,
   goalPassesCalendarFilters,
   normalizeCalendarSearchQuery,
   resolvePlannerShowTargetAchievedGoals,
@@ -23,6 +24,24 @@ describe("calendar filters", () => {
       { value: "Health", label: "Health" },
       { value: "Personal", label: "Personal" },
     ]);
+  });
+
+  it("limits goal filter choices by the other active calendar filters", () => {
+    const goals = new Map([
+      ["run", { category: "Health", end_date: "2026-08-31" }],
+      ["read", { category: "Personal", end_date: "2026-09-30" }],
+      ["write", { category: "Health", end_date: "2026-08-31" }],
+    ]);
+    const options = [{ value: "run", label: "Run" }, { value: "read", label: "Read" }, { value: "write", label: "Write" }];
+    expect(filterCalendarGoalFilterOptions({
+      options, goalsByOriginalId: goals, categoryFilters: ["Health"], endMonthFilters: ["2026-08"],
+      searchQuery: "tempo", goalTitles: { run: "Run", read: "Read", write: "Write" },
+      workUnits: [
+        { originalGoalId: "run", goalTitle: "Run", label: "Easy miles", unitKey: "milestone:1" },
+        { originalGoalId: "read", goalTitle: "Read", label: "Tempo reads", unitKey: "milestone:1" },
+        { originalGoalId: "write", goalTitle: "Write", label: "Tempo run", unitKey: "milestone:1" },
+      ],
+    })).toEqual([{ value: "write", label: "Write" }]);
   });
 
   it("matches by normalized category and ending month", () => {

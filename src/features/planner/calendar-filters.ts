@@ -81,6 +81,38 @@ export function buildCalendarGoalFilterOptions(
     .sort((left, right) => left.label.localeCompare(right.label));
 }
 
+export function filterCalendarGoalFilterOptions({
+  options,
+  goalsByOriginalId,
+  categoryFilters,
+  endMonthFilters,
+  searchQuery,
+  workUnits,
+  goalTitles,
+}: {
+  options: GoalCategoryFilterOption[];
+  goalsByOriginalId: Map<string, CalendarFilterGoalSnapshot>;
+  categoryFilters: string[];
+  endMonthFilters: string[];
+  searchQuery: string;
+  workUnits: ReadonlyArray<Pick<PlannerDayDetailEntry, "goalTitle" | "label" | "unitKey"> & { originalGoalId: string }>;
+  goalTitles: Record<string, string>;
+}) {
+  const unitsByGoalId = new Map<string, typeof workUnits>();
+  for (const unit of workUnits) {
+    const goalUnits = unitsByGoalId.get(unit.originalGoalId) ?? [];
+    goalUnits.push(unit);
+    unitsByGoalId.set(unit.originalGoalId, goalUnits);
+  }
+  return options.filter((option) => {
+    if (!goalPassesCalendarFilters({ goalId: option.value, goalsByOriginalId, categoryFilters, endMonthFilters })) return false;
+    if (!searchQuery.trim()) return true;
+    const title = goalTitles[option.value] ?? option.label;
+    return entryMatchesCalendarSearchQuery({ goalTitle: title, label: null, unitKey: "" }, searchQuery) ||
+      (unitsByGoalId.get(option.value) ?? []).some((unit) => entryMatchesCalendarSearchQuery(unit, searchQuery));
+  });
+}
+
 export function goalPassesCalendarFilters({
   goalId,
   goalsByOriginalId,

@@ -8,6 +8,7 @@ import {
   buildCalendarCategoryFilterOptions,
   buildCalendarGoalFilterOptions,
   entryMatchesCalendarSearchQuery,
+  filterCalendarGoalFilterOptions,
   goalPassesCalendarFilters,
   shouldHideCompletedOnFutureCalendarDay,
 } from "@/features/planner/calendar-filters";
@@ -139,10 +140,16 @@ export function selectCalendarDayAccessorsModel({
   );
 
   const categoryOptions = buildCalendarCategoryFilterOptions(activeGoalsByOriginalGoalId);
-  const goalFilterOptions = buildCalendarGoalFilterOptions(
-    activeGoalsByOriginalGoalId,
-    context?.goalTitles ?? {}
-  );
+  const allGoalFilterOptions = buildCalendarGoalFilterOptions(activeGoalsByOriginalGoalId, context?.goalTitles ?? {});
+  const goalFilterOptions = filterCalendarGoalFilterOptions({
+    options: allGoalFilterOptions,
+    goalsByOriginalId: activeGoalsByOriginalGoalId,
+    categoryFilters,
+    endMonthFilters: effectiveEndMonthFilters,
+    searchQuery,
+    workUnits: context?.activePlan?.workUnits ?? [],
+    goalTitles: context?.goalTitles ?? {},
+  });
   const endMonthOptions = (() => {
     const goalEndDates = Array.from(activeGoalsByOriginalGoalId.values()).map(
       (goal) => goal.end_date
