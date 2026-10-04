@@ -50,9 +50,11 @@ describe("external account authorization", () => {
     mocks.enabled = false;
     await expect(requireExternalContext(request())).rejects.toMatchObject({ status: 404 });
   });
-  it("advertises the correct protected resource in authentication challenges", () => {
-    const response = externalAuthErrorResponse(new ApiRouteError(401, "invalid_token", "Reconnect."), "33333333-3333-4333-8333-333333333333", "/api/v1");
+  it("advertises the correct protected resource and preserves the correlation ID", async () => {
+    const correlationId = "33333333-3333-4333-8333-333333333333";
+    const response = externalAuthErrorResponse(new ApiRouteError(401, "invalid_token", "Reconnect."), correlationId, "/api/v1");
     expect(response.headers.get("www-authenticate")).toContain("/.well-known/oauth-protected-resource/api/v1");
+    expect((await response.json()).correlationId).toBe(correlationId);
     expect(protectedResourceMetadata("/api/mcp").resource).toBe("https://goalmaxxing.app/api/mcp");
   });
   it("keeps connected apps off the model-backed legacy routes", () => {
