@@ -28,7 +28,7 @@ describe("shared deterministic account operations", () => {
   it("returns a ready publish request from the exact stable preview", async () => {
     const policy = createDefaultPlannerPolicy("UTC", "2026-10-04T00:00:00Z");
     const preview = runPlannerKernel({ schemaVersion: "1", eligibilityMode: "overlap_v1", ownerId: owner, startDate: "2026-10-01", endDate: "2026-10-31", asOfDate: "2026-10-04", timezone: "UTC", goals: [], completions: [], links: [], policy, basePlan: null });
-    mocks.preview.mockResolvedValue(Response.json({ preview, policy, revisions: { scheduleDigest: "a".repeat(64) } }));
+    mocks.preview.mockImplementation(() => Response.json({ preview, policy, revisions: { scheduleDigest: "a".repeat(64) } }));
     const result = await executeOperation({ userId: owner, token: "token" } as ExternalContext, "preview_plan", { startDate: "2026-10-01", endDate: "2026-10-31" });
     expect(result.publishRequest).toMatchObject({ expectedDigest: "a".repeat(64), previewHash: preview.generationInputHash, preserveExistingAssignments: preview.preserveExistingAssignments, confirmationHash: null, policy });
     const proposal = await executeOperation({ userId: owner, token: "token" } as ExternalContext, "preview_plan", { startDate: "2026-10-01", endDate: "2026-10-31", solveIntent: "replan" });
@@ -41,7 +41,7 @@ describe("shared deterministic account operations", () => {
     expect(chain.eq).toHaveBeenCalledWith("owner_id", owner); expect(mocks.completion).not.toHaveBeenCalled();
   });
   it("uses the database's durable receipt for creation retries", async () => {
-    const rpc = vi.fn().mockResolvedValue({ data: { task_id: requestId, title: "Read" }, error: null });
+    const rpc = vi.fn().mockResolvedValue({ data: { task_id: requestId, title: "Read", scheduled_date: "2026-10-04", updated_at: "2026-10-04T00:00:00Z" }, error: null });
     const context = { userId: owner, supabase: { rpc } } as unknown as ExternalContext;
     await executeOperation(context, "create_task", { requestId, title: "Read", scheduledDate: "2026-10-04" });
     expect(rpc).toHaveBeenCalledWith("external_account_mutation", { p_request_id: requestId, p_operation: "create_task", p_payload: { title: "Read", scheduled_date: "2026-10-04", scheduled_time: null } });
