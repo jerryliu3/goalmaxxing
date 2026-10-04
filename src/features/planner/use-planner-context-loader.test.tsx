@@ -25,7 +25,7 @@ beforeEach(() => {
 function mount(open = true) {
   const args = {
     activeTab: "calendar", month, selectedDay: "2026-10-04", viewMode: "week" as const,
-    goalViewOpen: open, setGoalViewReady: vi.fn(), setupTimezone: "UTC", setupWeekStartsOn: 1,
+    goalViewOpen: open, setGoalViewWindow: vi.fn(), setupTimezone: "UTC", setupWeekStartsOn: 1,
     onMonthChange: vi.fn(), setContext: vi.fn(), setLoading: vi.fn(), setError: vi.fn(),
     setSetupTimezone: vi.fn(), setSetupWeekStartsOn: vi.fn(), setSetupRestWeekdays: vi.fn(),
     draftPolicyRef: { current: null }, calendarPreparedRef: { current: true },
@@ -39,7 +39,7 @@ it("opens Goal View from its prefetched wide window without a network request", 
   const { result, args } = mount();
   await act(async () => { await result.current(); });
   expect(args.setContext).toHaveBeenCalledWith(snapshot);
-  expect(args.setGoalViewReady).toHaveBeenCalledWith(true);
+  expect(args.setGoalViewWindow).toHaveBeenCalledWith(window);
   expect(mocks.getJson).not.toHaveBeenCalled();
   expect(mocks.postJson).not.toHaveBeenCalled();
 });
@@ -53,7 +53,7 @@ it("warms Goal View after the calendar's cached context is ready", async () => {
   });
 });
 
-it("joins an in-flight Goal View warmup instead of treating the month cache as complete", async () => {
+it("shows the shared calendar snapshot while joining the background extension", async () => {
   writeTabDataCache(buildPlannerContextCacheKey(month), snapshot);
   let resolve!: (payload: PlannerContextPayload) => void;
   mocks.getJson.mockImplementation(() => new Promise(done => { resolve = done; }));
@@ -63,8 +63,11 @@ it("joins an in-flight Goal View warmup instead of treating the month cache as c
   act(() => { foreground = result.current(); });
   await Promise.resolve();
   expect(mocks.getJson).toHaveBeenCalledTimes(1);
+  expect(args.setContext).toHaveBeenCalledWith(snapshot);
+  expect(args.setGoalViewWindow).toHaveBeenCalledWith({ start: "2026-09-28", end: "2026-10-04" });
+  await foreground;
   await act(async () => { resolve(snapshot); await background; await foreground; });
-  expect(args.setGoalViewReady).toHaveBeenCalledWith(true);
+  expect(args.setGoalViewWindow).toHaveBeenLastCalledWith(window);
 });
 
 it("still prepares after planner invalidation, even with a last-good wide snapshot", async () => {
@@ -72,10 +75,11 @@ it("still prepares after planner invalidation, even with a last-good wide snapsh
   markTabDataCacheStaleByPrefix("planner-context:");
   const { result } = mount();
   await act(async () => { await result.current({ forcePrepare: true }); });
-  expect(mocks.postJson).toHaveBeenCalledWith("/api/planner/prepare", expect.objectContaining({ visibleStart: window.start, visibleEnd: window.end }));
+  expect(mocks.postJson).toHaveBeenCalledWith("/api/planner/prepare", expect.objectContaining({ visibleStart: "2026-09-28", visibleEnd: "2026-10-04" }));
 });
 
-it("does not let a late Goal View response replace the calendar after switching back", async () => {
+it("does not let a late background extension replace the calendar after switching back", async () => {
+  writeTabDataCache(buildPlannerContextCacheKey(month), snapshot);
   let resolve!: (payload: PlannerContextPayload) => void;
   mocks.getJson.mockImplementation(() => new Promise(done => { resolve = done; }));
   const { result, rerender, args } = mount();
@@ -85,9 +89,9 @@ it("does not let a late Goal View response replace the calendar after switching 
   writeTabDataCache(buildPlannerContextCacheKey(month), snapshot);
   rerender({ open: false });
   await act(async () => { await result.current(); });
-  args.setGoalViewReady.mockClear();
+  args.setGoalViewWindow.mockClear();
   await act(async () => { resolve(snapshot); await old; });
-  expect(args.setGoalViewReady).not.toHaveBeenCalledWith(true);
+  expect(args.setGoalViewWindow).not.toHaveBeenCalledWith(window);
 });
 
 it("refreshes a Goal View warmup completed before planner preparation", async () => {
@@ -116,12 +120,29 @@ it("shows warmed goals while joining the calendar's preparation and refreshes af
   rerender({ open: true });
   let goals!: Promise<boolean>;
   act(() => { goals = result.current(); });
-  expect(args.setGoalViewReady).toHaveBeenCalledWith(true);
+  expect(args.setGoalViewWindow).toHaveBeenCalledWith(window);
   expect(args.setLoading).toHaveBeenLastCalledWith(false);
   expect(mocks.postJson).toHaveBeenCalledTimes(1);
   const prepared = { ...snapshot, scheduleDigest: "prepared" };
   mocks.getJson.mockResolvedValue(prepared);
   await act(async () => { finishPrepare(prepared); await calendar; await goals; });
+  await fetchPlannerContext({ month, window });
   expect(args.setContext).toHaveBeenLastCalledWith(prepared);
   expect(readTabDataCache(buildPlannerContextCacheKey(month, window))).toBe(prepared);
+});
+
+it("opens a cold Goal View after only the calendar request, without waiting for extra dates", async () => {
+  let finishWide!: (payload: PlannerContextPayload) => void;
+  mocks.getJson.mockImplementation((_url, options) =>
+    options.query.visibleEnd === window.end
+      ? new Promise(resolve => { finishWide = resolve; })
+      : Promise.resolve(snapshot)
+  );
+  const { result, args } = mount();
+  await act(async () => { await result.current(); });
+  expect(args.setContext).toHaveBeenCalledWith(snapshot);
+  expect(args.setGoalViewWindow).toHaveBeenLastCalledWith({ start: "2026-09-28", end: "2026-10-04" });
+  expect(args.setLoading).toHaveBeenLastCalledWith(false);
+  await act(async () => { finishWide(snapshot); await fetchPlannerContext({ month, window }); });
+  expect(args.setGoalViewWindow).toHaveBeenLastCalledWith(window);
 });

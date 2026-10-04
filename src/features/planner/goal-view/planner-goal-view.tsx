@@ -20,6 +20,7 @@ export interface PlannerGoalViewProps {
   showCompletedGoals: boolean;
   progressSummaries: ProgressContextSummary[];
   sessions: GoalViewSession[];
+  window: { start: string; end: string };
   today: string;
   weekStartsOn: number | null | undefined;
   showPast: boolean;

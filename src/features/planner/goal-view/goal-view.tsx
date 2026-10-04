@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 import type { Goal } from "@/lib/goals/types";
@@ -22,6 +22,7 @@ export interface GoalViewProps {
   goals: Goal[];
   progressByGoalId: ReadonlyMap<string, ProgressContextSummary>;
   sessions: GoalViewSession[];
+  window: { start: string; end: string };
   today: string;
   weekStartsOn: number;
   /** Include sessions before today (a planner filter). */
@@ -40,6 +41,7 @@ export function GoalView({
   goals,
   progressByGoalId,
   sessions,
+  window: range,
   today,
   weekStartsOn,
   showPast,
@@ -53,7 +55,8 @@ export function GoalView({
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   // Same breakpoint as the app's other two-pane layouts (Tailwind `md`).
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const range = useMemo(() => buildGoalViewWindow(today), [today]);
+  const fullRange = useMemo(() => buildGoalViewWindow(today), [today]);
+  const loadingMoreDates = range.start !== fullRange.start || range.end !== fullRange.end;
   const visibleGoals = useMemo(
     () => selectGoalViewGoals(goals, sessions, { showPast, today }),
     [goals, sessions, showPast, today]
@@ -67,6 +70,11 @@ export function GoalView({
   const selectedId =
     visibleGoals.find((goal) => goal.id === selectedGoalId)?.id ??
     visibleGoals[0]?.id;
+
+  // Preserve the first visible goal when the background range adds new goals.
+  useEffect(() => {
+    if (selectedGoalId === null && selectedId) setSelectedGoalId(selectedId);
+  }, [selectedGoalId, selectedId]);
 
   const renderTile = (session: GoalViewSession, layout: GoalTileLayout) => (
     <GoalSessionTile
@@ -85,7 +93,9 @@ export function GoalView({
     <div className="space-y-2" data-testid="goal-view">
       {visibleGoals.length === 0 || !selectedId ? (
         <p className="py-10 text-center text-sm text-muted-foreground">
-          No goals have scheduled sessions in this window.
+          {loadingMoreDates
+            ? "No scheduled sessions in the dates loaded so far."
+            : "No goals have scheduled sessions in this window."}
         </p>
       ) : isDesktop ? (
         visibleGoals.map((goal) => (
@@ -117,6 +127,7 @@ export function GoalView({
       <p className="pt-2 text-xs text-muted-foreground">
         Showing sessions from {dateLabel(range.start, "MMM d, yyyy")} through{" "}
         {dateLabel(range.end, "MMM d, yyyy")}.
+        {loadingMoreDates ? " Further dates load in the background." : ""}
       </p>
 
       <GoalWeekPeek

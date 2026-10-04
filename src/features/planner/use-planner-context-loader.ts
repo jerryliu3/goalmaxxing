@@ -13,6 +13,7 @@ import type {
 import {
   buildCalendarVisibleDateWindow,
   selectCalendarViewWindowProjection,
+  type CalendarVisibleDateWindow,
 } from "@/features/planner/calendar-view-projection";
 import { buildGoalViewWindow } from "@/features/planner/goal-view/goal-view-model";
 import { getApiErrorMessage, getJson, postJson } from "@/lib/api/client";
@@ -22,6 +23,7 @@ import {
 } from "@/lib/cache/planner-tab-cache";
 import {
   isTabDataCacheFresh,
+  loadTabDataCache,
   markTabDataCacheStaleByPrefix,
   readTabDataCache,
   writeTabDataCache,
@@ -43,7 +45,7 @@ interface UsePlannerContextLoaderArgs {
   selectedDay: string | null;
   viewMode: PlannerCalendarViewMode;
   goalViewOpen: boolean;
-  setGoalViewReady: Dispatch<SetStateAction<boolean>>;
+  setGoalViewWindow: Dispatch<SetStateAction<CalendarVisibleDateWindow | null>>;
   setupTimezone: string;
   setupWeekStartsOn: number;
   onMonthChange: (month: string, mode: "push" | "replace") => void;
@@ -63,7 +65,7 @@ export function usePlannerContextLoader({
   selectedDay,
   viewMode,
   goalViewOpen,
-  setGoalViewReady,
+  setGoalViewWindow,
   setupTimezone,
   setupWeekStartsOn,
   onMonthChange,
@@ -111,36 +113,45 @@ export function usePlannerContextLoader({
         weekStartsOn: setupWeekStartsOn,
         viewMode,
       });
-      // Goal View keeps its complete window separate from the month snapshot.
-      const visibleWindow = goalViewOpen
-        ? buildGoalViewWindow(calendarToday)
-        : buildCalendarVisibleDateWindow(projection.visibleDays);
+      // Both lenses open from the same calendar window. Extra Goal View dates
+      // are a background extension, never a prerequisite for the first paint.
+      const visibleWindow = buildCalendarVisibleDateWindow(projection.visibleDays);
       if (!visibleWindow) {
         return false;
       }
       const visibleStart = visibleWindow.start;
       const visibleEnd = visibleWindow.end;
 
-      const plannerContextCacheKey = buildPlannerContextCacheKey(month, goalViewOpen ? visibleWindow : undefined);
-      const warmGoalView = (payload: PlannerContextPayload) => {
-        if (!goalViewOpen) {
-          void fetchPlannerContext({ month, window: buildGoalViewWindow(payload.asOfDate) }).catch(() => undefined);
+      const plannerContextCacheKey = buildPlannerContextCacheKey(month);
+      const goalWindow = buildGoalViewWindow(calendarToday);
+      const goalCacheKey = buildPlannerContextCacheKey(month, goalWindow);
+      const applyContext = (payload: PlannerContextPayload, window: CalendarVisibleDateWindow) => {
+        setContext(payload);
+        setGoalViewWindow(goalViewOpen ? window : null);
+        if (payload.preferences?.timezone) {
+          const policy = draftPolicyRef.current ?? payload.preferences.defaultPolicy;
+          setSetupTimezone(payload.preferences.timezone);
+          setSetupWeekStartsOn(normalizeWeekStartsOn(policy.weekStartsOn));
+          setSetupRestWeekdays(policy.restWeekdays);
         }
       };
-      const cachedContextPayload = readTabDataCache<PlannerContextPayload>(plannerContextCacheKey);
+      const warmGoalView = (payload: PlannerContextPayload) => {
+        const window = buildGoalViewWindow(payload.asOfDate);
+        void fetchPlannerContext({ month, window }).then(expanded => {
+          if (goalViewOpen && requestId === requestIdRef.current) applyContext(expanded, window);
+        }).catch(() => undefined);
+      };
+      const wideSnapshot = goalViewOpen ? readTabDataCache<PlannerContextPayload>(goalCacheKey) : null;
+      const useWideSnapshot = Boolean(wideSnapshot && isTabDataCacheFresh(goalCacheKey));
+      const cachedContextPayload = useWideSnapshot
+        ? wideSnapshot
+        : readTabDataCache<PlannerContextPayload>(plannerContextCacheKey) ?? wideSnapshot;
+      const cachedWindowIsWide = Boolean(wideSnapshot && cachedContextPayload === wideSnapshot);
       if (cachedContextPayload) {
-        setContext(cachedContextPayload);
-        setGoalViewReady(goalViewOpen);
-        if (cachedContextPayload.preferences?.timezone) {
-          const policyForSetup =
-            draftPolicyRef.current ?? cachedContextPayload.preferences.defaultPolicy;
-          setSetupTimezone(cachedContextPayload.preferences.timezone);
-          setSetupWeekStartsOn(normalizeWeekStartsOn(policyForSetup.weekStartsOn));
-          setSetupRestWeekdays(policyForSetup.restWeekdays);
-        }
+        applyContext(cachedContextPayload, cachedWindowIsWide ? goalWindow : visibleWindow);
         shouldShowLoading = false;
         setLoading(false);
-        if (!forcePrepare && prepareRequestRef.current?.month !== month && isTabDataCacheFresh(plannerContextCacheKey)) {
+        if (!forcePrepare && prepareRequestRef.current?.month !== month && isTabDataCacheFresh(cachedWindowIsWide ? goalCacheKey : plannerContextCacheKey)) {
           calendarPreparedRef.current = true;
           warmGoalView(cachedContextPayload);
           return true;
@@ -153,12 +164,11 @@ export function usePlannerContextLoader({
       let contextPayload: PlannerContextPayload;
       try {
         const shouldPrepare = forcePrepare || !calendarPreparedRef.current;
-        const readContext = () =>
-          goalViewOpen
-            ? fetchPlannerContext({ month, window: visibleWindow })
-            : getJson<PlannerContextPayload>("/api/planner/context", {
-                query: { scopeMonth: month, visibleStart, visibleEnd },
-              });
+        const readContext = () => loadTabDataCache(plannerContextCacheKey, () =>
+          getJson<PlannerContextPayload>("/api/planner/context", {
+            query: { scopeMonth: month, visibleStart, visibleEnd },
+          })
+        );
         const pendingPrepare = prepareRequestRef.current;
         if (!forcePrepare && pendingPrepare?.month === month) {
           // A view switch can show its warmed snapshot immediately, then read
@@ -191,7 +201,7 @@ export function usePlannerContextLoader({
         }
         if (requestId !== requestIdRef.current) return false;
         calendarPreparedRef.current = true;
-        if (shouldPrepare || !goalViewOpen) writeTabDataCache(plannerContextCacheKey, contextPayload);
+        if (shouldPrepare) writeTabDataCache(plannerContextCacheKey, contextPayload);
       } catch (error) {
         if (requestId !== requestIdRef.current) return false;
         if (shouldShowLoading) {
@@ -223,16 +233,8 @@ export function usePlannerContextLoader({
         return false;
       }
 
-      setContext(contextPayload);
-      setGoalViewReady(goalViewOpen);
+      applyContext(contextPayload, visibleWindow);
       warmGoalView(contextPayload);
-      if (contextPayload.preferences?.timezone) {
-        const policyForSetup =
-          draftPolicyRef.current ?? contextPayload.preferences.defaultPolicy;
-        setSetupTimezone(contextPayload.preferences.timezone);
-        setSetupWeekStartsOn(normalizeWeekStartsOn(policyForSetup.weekStartsOn));
-        setSetupRestWeekdays(policyForSetup.restWeekdays);
-      }
       return true;
     },
     [
@@ -244,7 +246,7 @@ export function usePlannerContextLoader({
       goalViewOpen,
       selectedDay,
       setContext,
-      setGoalViewReady,
+      setGoalViewWindow,
       setError,
       setLoading,
       setSetupRestWeekdays,

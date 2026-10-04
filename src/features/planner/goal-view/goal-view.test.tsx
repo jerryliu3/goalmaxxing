@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import type { Goal } from "@/lib/goals/types";
 import { GoalView, type GoalViewProps } from "./goal-view";
-import { buildGoalViewSessions, type GoalViewSession } from "./goal-view-model";
+import { buildGoalViewSessions, buildGoalViewWindow, type GoalViewSession } from "./goal-view-model";
 
 const viewport = vi.hoisted(() => ({ desktop: true }));
 vi.mock("@/lib/ui/use-media-query", () => ({ useMediaQuery: () => viewport.desktop }));
@@ -72,6 +72,7 @@ function renderView(overrides: Partial<GoalViewProps> = {}) {
     progressByGoalId: new Map(),
     sessions: SESSIONS,
     today: TODAY,
+    window: buildGoalViewWindow(TODAY),
     weekStartsOn: 1,
     showPast: false,
     previewOpen: false,
@@ -91,6 +92,14 @@ function pickDate(tile: HTMLElement, date: string) {
   const field = tile.querySelector<HTMLInputElement>('input[type="date"]')!;
   fireEvent.change(field, { target: { value: date } });
 }
+
+it("shows the loaded calendar range while the wider dates load", () => {
+  const view = renderView({ window: { start: "2026-10-01", end: "2026-10-31" } });
+  expect(screen.getByText(/Showing sessions from Oct 1, 2026 through Oct 31, 2026/)).toBeInTheDocument();
+  expect(screen.getByText(/Further dates load in the background/)).toBeInTheDocument();
+  view.rerenderWith({ window: buildGoalViewWindow(TODAY) });
+  expect(screen.queryByText(/Further dates load in the background/)).not.toBeInTheDocument();
+});
 
 describe("GoalView", () => {
   afterEach(() => {
