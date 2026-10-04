@@ -13,6 +13,7 @@ vi.mock("@/lib/env", () => ({
 
 vi.mock("@/lib/feature-flags", () => ({
   getFeatureFlags: mocks.getFeatureFlags,
+  areExternalToolsEnabled: () => false,
 }));
 
 import { GET } from "./route";
@@ -40,6 +41,7 @@ describe("GET /api/config", () => {
     const response = await GET();
     expect(response.status).toBe(200);
     const payload = await response.json();
+    expect(payload.externalToolsEnabled).toBe(false);
     expect(payload).toMatchObject({
       schemaVersion: "1",
       minSupportedAppVersion: "1.0.0",
