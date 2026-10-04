@@ -1,5 +1,5 @@
 import { format, isValid, parse, parseISO } from "date-fns";
-import { getEntryMilestoneFirstTitle } from "@/features/planner/calendar-format";
+import { getEntryGoalFirstTitle } from "@/features/planner/calendar-format";
 import { getGoalVisual } from "@/features/planner/goal-visuals";
 import type { ChecklistGoalPresentation } from "@/lib/goals/checklist-presentation";
 import { getGoalCategoryLabel } from "@/lib/goals/category";
@@ -176,7 +176,7 @@ export function projectPlannerEntryWorkQuest({
 
   return {
     id: entry.originalGoalId,
-    title: getEntryMilestoneFirstTitle(entry),
+    title: getEntryGoalFirstTitle(entry),
     categoryLabel: goal
       ? getGoalCategoryLabel(goal.category, goal.category_key)
       : category
