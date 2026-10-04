@@ -1,0 +1,15 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions,pg_catalog;
+select plan(4);
+insert into auth.users(id,email) values('11111111-1111-4111-8111-111111111111','coach-fence@example.com') on conflict do nothing;
+insert into public.profiles(id,username,timezone) values('11111111-1111-4111-8111-111111111111','coach_fence','UTC') on conflict(id) do nothing;
+create temporary table home as select public.ensure_coach_home('11111111-1111-4111-8111-111111111111') id;
+select public.begin_coach_run('11111111-1111-4111-8111-111111111111',(select id from home),'22222222-2222-4222-8222-222222222222','What should I do?','{}',0,'turn');
+create temporary table fact_revision as select revision from public.coach_context_versions where owner_id='11111111-1111-4111-8111-111111111111';
+update public.profiles set week_starts_on=2 where id='11111111-1111-4111-8111-111111111111';
+select throws_ok($$select public.finish_coach_run('11111111-1111-4111-8111-111111111111','22222222-2222-4222-8222-222222222222','Old facts',jsonb_build_object('revision',(select revision::text from fact_revision)))$$,'P0001','context_refresh_required','the publication boundary rejects a stale snapshot');
+select is((select count(*)::integer from public.coach_messages where thread_id=(select id from home)),1,'a stale publication appends no answer');
+select is((select count(*)::integer from public.coach_actions where thread_id=(select id from home)),0,'a stale publication creates no executable proposals');
+select lives_ok($$select public.finish_coach_run('11111111-1111-4111-8111-111111111111','22222222-2222-4222-8222-222222222222','Fresh facts',jsonb_build_object('revision',(select revision::text from public.coach_context_versions where owner_id='11111111-1111-4111-8111-111111111111')))$$,'the current snapshot can publish');
+select * from finish();rollback;

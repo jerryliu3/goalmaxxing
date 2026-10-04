@@ -2,13 +2,13 @@ import { z } from "zod";
 
 export const coachPageSchema = z.object({
   surface: z.enum(["plan", "checklist", "progress", "community", "you", "goal", "coach"]),
-  view: z.enum(["day", "three_day", "week", "month"]).optional(),
+  view: z.enum(["day", "three_day", "week", "month", "goals", "year"]).optional(),
   selectedDate: z.iso.date().optional(),
   selectedGoalId: z.uuid().optional(),
   selectedItemId: z.uuid().optional(),
+  selectedTaskId: z.uuid().optional(),
   scope: z.enum(["self", "duo"]).default("self"),
   hasDraft: z.boolean().default(false),
-  sourceSurface: z.enum(["plan", "checklist", "progress", "community", "you", "goal"]).optional(),
 }).strict();
 export type CoachPage = z.infer<typeof coachPageSchema>;
 export const coachTopicSchema = z.object({
@@ -69,3 +69,19 @@ export type CoachMemory = z.infer<typeof coachMemorySchema>;
 export type CoachRun = z.infer<typeof coachRunSchema>;
 export type CoachAction = z.infer<typeof coachActionSchema>;
 export type CoachTurnRequest = z.infer<typeof coachTurnRequestSchema>;
+
+export const coachSessionSchema = z.object({
+  id:z.uuid(), goalId:z.uuid(), title:z.string(), unitKey:z.string(), date:z.iso.date(),
+  completed:z.boolean(), locked:z.boolean(),
+});
+export const coachContextSchema = z.object({
+  schemaVersion:z.literal(1), asOf:z.string(), revision:z.string(), timezone:z.string(), timezoneConfirmed:z.boolean(),
+  today:z.object({date:z.iso.date(),scheduled:z.number(),completed:z.number(),allCompletions:z.number()}),
+  week:z.object({start:z.iso.date(),end:z.iso.date(),weekStartsOn:z.number(),scheduled:z.number(),completed:z.number(),allCompletions:z.number()}),
+  page:coachPageSchema, pagePurpose:z.string(), scopeNote:z.string(),
+  sessions:z.array(coachSessionSchema),
+  tasks:z.array(z.object({id:z.uuid(),title:z.string(),date:z.iso.date(),completed:z.boolean(),updatedAt:z.string()})),
+  goals:z.array(z.object({id:z.uuid(),title:z.string(),startDate:z.iso.date(),endDate:z.iso.date().nullable(),frequency:z.string(),recurrenceInterval:z.string().nullable(),targetBasis:z.string().nullable(),description:z.string().nullable(),target:z.number().nullable()})),
+  goalsCount:z.number(), selectedSessions:z.array(coachSessionSchema),
+});
+export type CoachContext = z.infer<typeof coachContextSchema>;

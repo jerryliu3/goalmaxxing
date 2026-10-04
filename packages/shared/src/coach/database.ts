@@ -2,6 +2,7 @@ import type { CoachTopic, CoachThread, CoachMessage, CoachMemory, CoachRun, Coac
 import type { Json } from "../supabase/database.types";
 type Table<R> = { Row: R; Insert: Partial<R>; Update: Partial<R>; Relationships: [] };
 export type CoachDatabaseTables = {
+  coach_context_versions: Table<{ owner_id:string; revision:number; updated_at:string }>;
   coach_topics: Table<CoachTopic>;
   coach_threads: Table<CoachThread>;
   coach_messages: Table<Omit<CoachMessage, "source"> & { source: Json }>;

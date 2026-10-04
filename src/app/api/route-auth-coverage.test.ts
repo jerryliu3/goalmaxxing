@@ -225,6 +225,7 @@ import {
 } from "@/app/api/admin/synthetic-users/[id]/route";
 
 import * as coachBootstrapRoute from "@/app/api/coach/bootstrap/route";
+import * as coachContextRoute from "@/app/api/coach/context/route";
 import * as coachMemoriesIdRoute from "@/app/api/coach/memories/[id]/route";
 import * as coachMemoriesRoute from "@/app/api/coach/memories/route";
 import * as coachThreadsIdMessagesRoute from "@/app/api/coach/threads/[id]/messages/route";
@@ -288,6 +289,7 @@ function routeCase(
 
 const coachRouteModules = {
   "./coach/bootstrap/route.ts": coachBootstrapRoute,
+  "./coach/context/route.ts": coachContextRoute,
   "./coach/memories/[id]/route.ts": coachMemoriesIdRoute,
   "./coach/memories/route.ts": coachMemoriesRoute,
   "./coach/threads/[id]/messages/route.ts": coachThreadsIdMessagesRoute,
