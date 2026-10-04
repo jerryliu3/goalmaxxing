@@ -17,7 +17,7 @@ import { useOutsidePointerDismiss } from "@/lib/ui/use-outside-pointer-dismiss";
 
 const DAY_PREVIEW_HOVER_DELAY_MS = 1000;
 export const DAY_PREVIEW_HOVER_GRACE_MS = 300;
-const DAY_PREVIEW_LONG_PRESS_DELAY_MS = 500;
+const DAY_LONG_PRESS_DELAY_MS = 500;
 
 interface UsePlannerDayPreviewInteractionsArgs {
   onLongPressDay?: (day: string) => void;
@@ -62,7 +62,7 @@ export interface PlannerDayPreviewInteractions {
   scheduleHoverPreviewClose: (day: string) => void;
   scheduleHoverPreview: (day: string, target: EventTarget & HTMLElement) => void;
   handleDayCellClick: (day: string, target: EventTarget & HTMLElement) => void;
-  startLongPressPreview: (day: string, target: EventTarget & HTMLElement) => void;
+  startDayLongPress: (day: string) => void;
   pointerPressActiveRef: MutableRefObject<boolean>;
   longPressTriggeredRef: MutableRefObject<boolean>;
   lastTouchTapRef: MutableRefObject<{ day: string; at: number } | null>;
@@ -280,8 +280,8 @@ export function usePlannerDayPreviewInteractions({
     ]
   );
 
-  const startLongPressPreview = useCallback(
-    (day: string, _target: EventTarget & HTMLElement) => {
+  const startDayLongPress = useCallback(
+    (day: string) => {
       clearLongPressTimer();
       longPressTriggeredRef.current = false;
       longPressTimerRef.current = window.setTimeout(() => {
@@ -290,7 +290,7 @@ export function usePlannerDayPreviewInteractions({
         suppressDayCellClickRef.current = { day, active: true };
         setDayPreview(null);
         onLongPressDay?.(day);
-      }, DAY_PREVIEW_LONG_PRESS_DELAY_MS);
+      }, DAY_LONG_PRESS_DELAY_MS);
     },
     [clearLongPressTimer, longPressTimerRef, longPressTriggeredRef, lastTouchTapRef, suppressDayCellClickRef, setDayPreview, onLongPressDay]
   );
@@ -364,7 +364,7 @@ export function usePlannerDayPreviewInteractions({
     scheduleHoverPreviewClose,
     scheduleHoverPreview,
     handleDayCellClick,
-    startLongPressPreview,
+    startDayLongPress,
     pointerPressActiveRef,
     longPressTriggeredRef,
     lastTouchTapRef,

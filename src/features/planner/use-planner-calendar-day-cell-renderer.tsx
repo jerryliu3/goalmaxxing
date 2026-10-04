@@ -108,7 +108,7 @@ interface UsePlannerCalendarDayCellRendererArgs {
     | "selectDayForView"
     | "scheduleHoverPreview"
     | "scheduleHoverPreviewClose"
-    | "startLongPressPreview"
+    | "startDayLongPress"
     | "pointerPressActiveRef"
     | "longPressTriggeredRef"
     | "lastTouchTapRef"
@@ -154,7 +154,7 @@ export function usePlannerCalendarDayCellRenderer({
     selectDayForView,
     scheduleHoverPreview,
     scheduleHoverPreviewClose,
-    startLongPressPreview,
+    startDayLongPress,
     pointerPressActiveRef,
     longPressTriggeredRef,
     lastTouchTapRef,
@@ -348,7 +348,7 @@ export function usePlannerCalendarDayCellRenderer({
               }
               lastTouchTapRef.current = { day: cell.date, at: now };
             }
-            if (!plannerReadOnly && cell.date >= calendarToday) startLongPressPreview(cell.date, target);
+            if (!plannerReadOnly && cell.date >= calendarToday) startDayLongPress(cell.date);
           }}
           onCellPointerUp={() => {
             pointerPressActiveRef.current = false;
@@ -419,7 +419,7 @@ export function usePlannerCalendarDayCellRenderer({
       togglePlannerGoalSelection,
       resetPlannerEntrySelection,
       calendarAsOfDate,
-      startLongPressPreview,
+      startDayLongPress,
       suppressDayCellClickRef,
       lastTouchTapRef,
       viewMode,

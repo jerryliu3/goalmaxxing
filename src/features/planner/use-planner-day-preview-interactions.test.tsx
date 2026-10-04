@@ -86,7 +86,7 @@ describe("usePlannerDayPreviewInteractions", () => {
     const onLongPressDay = vi.fn();
     const args = interactionArgs({ onLongPressDay });
     const { result } = renderHook(() => usePlannerDayPreviewInteractions(args));
-    act(() => { result.current.startLongPressPreview("2026-08-16", buildTarget()); vi.advanceTimersByTime(500); });
+    act(() => { result.current.startDayLongPress("2026-08-16"); vi.advanceTimersByTime(500); });
     expect(onLongPressDay).toHaveBeenCalledWith("2026-08-16");
     expect(args.setDayPreview).toHaveBeenCalledWith(null);
     expect(args.suppressDayCellClickRef.current).toEqual({ day: "2026-08-16", active: true });

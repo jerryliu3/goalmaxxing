@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { getApiErrorMessage, getJson } from "@/lib/api/client";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
@@ -32,21 +32,23 @@ export function useCalendarPlannerTasks({
   to: string | null;
 }) {
   const [tasks, setTasks] = useState<PlannerCalendarTask[]>([]);
+  const readVersionRef = useRef(0);
 
   useEffect(() => {
     if (!enabled || !from || !to) {
       return;
     }
 
+    const readVersion = ++readVersionRef.current;
     let cancelled = false;
     void fetchCalendarTasks(from, to)
       .then((nextTasks) => {
-        if (!cancelled) {
+        if (!cancelled && readVersion === readVersionRef.current) {
           setTasks(nextTasks);
         }
       })
       .catch((error: unknown) => {
-        if (cancelled) {
+        if (cancelled || readVersion !== readVersionRef.current) {
           return;
         }
         toast.error(getApiErrorMessage(error, "Could not load calendar tasks."));
@@ -62,14 +64,17 @@ export function useCalendarPlannerTasks({
     if (!enabled || !from || !to) {
       return;
     }
+    const readVersion = ++readVersionRef.current;
     void fetchCalendarTasks(from, to)
-      .then(setTasks)
+      .then(next => { if (readVersion === readVersionRef.current) setTasks(next); })
       .catch(() => {
         // Keep the last successful snapshot on background refresh failures.
       });
   });
 
   const applyTaskUpdate = useCallback((task: PlannerCalendarTask) => {
+    // A committed edit supersedes reads that began before it was applied locally.
+    readVersionRef.current += 1;
     setTasks((current) => {
       const index = current.findIndex((row) => row.taskId === task.taskId);
       if (index < 0) {
