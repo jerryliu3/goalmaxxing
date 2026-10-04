@@ -14,7 +14,6 @@ language plpgsql security definer set search_path = '' as $$
 declare
   v_uid uuid := auth.uid();
   v_task public.planner_tasks%rowtype;
-  v_today date;
 begin
   if v_uid is null then
     raise exception using errcode='42501', message='authentication required';
@@ -27,19 +26,8 @@ begin
   if p_expected_updated_at is null or v_task.updated_at <> p_expected_updated_at then
     raise exception using errcode='P0001', message='task_stale';
   end if;
-  select private.local_today_for_timezone(coalesce(p.timezone, 'UTC'))
-    into v_today from public.profiles p where p.id=v_uid;
   if p_scheduled_date is null then
     raise exception using errcode='22023', message='invalid_scheduled_date';
-  end if;
-  -- Editing the name/time of an overdue or completed task is still allowed.
-  if p_scheduled_date <> v_task.scheduled_date then
-    if v_task.completed_at is not null then
-      raise exception using errcode='22023', message='task_completed';
-    end if;
-    if p_scheduled_date < v_today then
-      raise exception using errcode='22023', message='task_date_in_past';
-    end if;
   end if;
   if p_title is not null and char_length(btrim(p_title)) not between 1 and 200 then
     raise exception using errcode='22023', message='invalid_task_title';
@@ -71,21 +59,27 @@ alter table public.xp_ledger add constraint xp_ledger_goal_scoped_events check
 create index xp_ledger_task_balance_idx on public.xp_ledger(user_id,(metadata->>'task_id'))
   where event_type='task_credit';
 
-create function private.guard_planner_task_capture() returns trigger
+create function private.guard_planner_task_date() returns trigger
 language plpgsql security definer set search_path = '' as $$
 declare v_today date;
 begin
   select private.local_today_for_timezone(coalesce(p.timezone,'UTC')) into v_today
     from public.profiles p where p.id=new.owner_id;
+  if TG_OP='UPDATE' then
+    if new.scheduled_date = old.scheduled_date then return new; end if;
+    if old.completed_at is not null then
+      raise exception using errcode='22023', message='task_completed';
+    end if;
+  end if;
   if new.scheduled_date < v_today then
     raise exception using errcode='22023', message='task_date_in_past';
   end if;
   return new;
 end;
 $$;
-revoke all on function private.guard_planner_task_capture() from public,anon,authenticated;
-create trigger planner_task_capture_date before insert on public.planner_tasks
-  for each row execute function private.guard_planner_task_capture();
+revoke all on function private.guard_planner_task_date() from public,anon,authenticated;
+create trigger planner_task_date before insert or update of scheduled_date on public.planner_tasks
+  for each row execute function private.guard_planner_task_date();
 
 create function private.sync_planner_task_xp() returns trigger
 language plpgsql security definer set search_path = '' as $$
@@ -99,6 +93,8 @@ begin
   if TG_OP='DELETE' then v_task:=old; else v_task:=new; end if;
   select private.local_today_for_timezone(coalesce(p.timezone,'UTC')) into v_today
     from public.profiles p where p.id=v_task.owner_id;
+  -- Account deletion cascades need no ledger writes for a removed profile.
+  if not found then return null; end if;
   if TG_OP <> 'DELETE' and v_task.completed_at is not null and not v_task.is_deleted then
     if v_task.scheduled_date > v_today then
       raise exception using errcode='22023', message='task_completion_in_future';
@@ -110,9 +106,9 @@ begin
   v_delta:=v_desired-v_balance;
   if v_delta <> 0 then
     insert into public.xp_ledger(user_id,track_key,event_type,entry_kind,source_key,xp_delta,earned_on,metadata)
-    values(v_task.owner_id,'general','task_credit',case when v_delta>0 then 'award' else 'reversal' end,
+    values(v_task.owner_id,'global','task_credit',case when v_delta>0 then 'award' else 'reversal' end,
       'task:'||v_task.id::text||':'||gen_random_uuid()::text,v_delta,v_today,jsonb_build_object('task_id',v_task.id,'difficulty','easy'));
-    perform private.refresh_xp_profile(v_task.owner_id,array['general']);
+    perform private.refresh_xp_profile(v_task.owner_id,array['global']);
   end if;
   return null;
 end;
