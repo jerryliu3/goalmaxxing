@@ -87,11 +87,8 @@ export function invalidatePlannerRelatedTabCaches() {
   markTabDataCacheStaleByPrefix(INSIGHTS_DATA_CACHE_PREFIX);
   markTabDataCacheStaleByPrefix(INSIGHTS_STATS_CACHE_PREFIX);
   markTabDataCacheStaleByPrefix(SETTINGS_DATA_CACHE_PREFIX);
-<<<<<<< HEAD
   markTabDataCacheStaleByPrefix(PUBLIC_PROFILE_CACHE_PREFIX);
-=======
   markTabDataCacheStaleByPrefix(ACHIEVEMENTS_DATA_CACHE_PREFIX);
->>>>>>> fcd9b651 (Reuse destination caches and move goal creation into Goals)
   invalidateProgressContextCache();
   notifyPlannerTabCacheInvalidation();
 }
