@@ -85,6 +85,7 @@ export interface PlannerCalendarOverlaysProps {
   showTasksInsteadOfGoals: boolean;
   onShowTasksInsteadOfGoalsChange: (value: boolean) => void;
   tasksToggleDisabled?: boolean;
+  showTasksToggle?: boolean;
   categoryFilters: string[];
   onCategoryFiltersChange: (value: string[]) => void;
   categoryOptions: GoalCategoryFilterOption[];
@@ -93,8 +94,6 @@ export interface PlannerCalendarOverlaysProps {
   endMonthOptions: GoalMonthOption[];
   showCompletedGoals?: boolean;
   onShowCompletedGoalsChange?: (value: boolean) => void;
-  showPastSessions?: boolean;
-  onShowPastSessionsChange?: (value: boolean) => void;
   dayFilters?: ChecklistFiltersFormProps | null;
   settingsOpen: boolean;
   onSettingsOpenChange: (open: boolean) => void;
@@ -145,6 +144,7 @@ export function PlannerCalendarOverlays({
   showTasksInsteadOfGoals,
   onShowTasksInsteadOfGoalsChange,
   tasksToggleDisabled = false,
+  showTasksToggle = true,
   categoryFilters,
   onCategoryFiltersChange,
   categoryOptions,
@@ -153,8 +153,6 @@ export function PlannerCalendarOverlays({
   endMonthOptions,
   showCompletedGoals = false,
   onShowCompletedGoalsChange,
-  showPastSessions,
-  onShowPastSessionsChange,
   dayFilters = null,
   settingsOpen,
   onSettingsOpenChange,
@@ -229,6 +227,7 @@ export function PlannerCalendarOverlays({
         showTasksInsteadOfGoals={showTasksInsteadOfGoals}
         onShowTasksInsteadOfGoalsChange={onShowTasksInsteadOfGoalsChange}
         tasksToggleDisabled={tasksToggleDisabled}
+        showTasksToggle={showTasksToggle}
         categoryFilters={categoryFilters}
         onCategoryFiltersChange={onCategoryFiltersChange}
         categoryOptions={categoryOptions}
@@ -237,8 +236,6 @@ export function PlannerCalendarOverlays({
         endMonthOptions={endMonthOptions}
         showCompletedGoals={showCompletedGoals}
         onShowCompletedGoalsChange={onShowCompletedGoalsChange}
-        showPastSessions={showPastSessions}
-        onShowPastSessionsChange={onShowPastSessionsChange}
         dayFilters={dayFilters}
       />
 

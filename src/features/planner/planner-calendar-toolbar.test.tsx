@@ -33,7 +33,6 @@ function renderToolbar(
     ],
     goalViewOpen: false,
     onGoalViewOpenChange: vi.fn(),
-    onGoalViewPreview: vi.fn(),
     onOpenFilters: vi.fn(),
     onOpenSettings: vi.fn(),
     onSearchQueryChange: vi.fn(),
@@ -62,7 +61,7 @@ describe("PlannerCalendarToolbar", () => {
       within(viewGroup)
         .getAllByRole("button")
         .map((button) => button.textContent)
-    ).toEqual(["Today", "Week", "Month"]);
+    ).toEqual(["Today", "Week", "Month", "Goal View"]);
     expect(within(viewGroup).getByRole("button", { name: "Week" })).toHaveAttribute(
       "aria-pressed",
       "true"
@@ -82,11 +81,16 @@ describe("PlannerCalendarToolbar", () => {
     });
   });
 
-  it("keeps calendar switching out of the Goals destination", () => {
-    renderToolbar({ goalViewOpen: true });
-    expect(screen.queryByRole("group", { name: "Plan view mode" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
+  it("switches to the continuous Goal View and back to Today", () => {
+    const props = renderToolbar({ goalViewOpen: true });
+    const group = screen.getByRole("group", { name: "Plan view mode" });
+    expect(within(group).getByRole("button", { name: "Goal View" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("plan-view-mode-thumb")).toHaveStyle({ transform: "translateX(300%)" });
+    fireEvent.click(within(group).getByRole("button", { name: "Today" }));
+    expect(props.onGoalViewOpenChange).toHaveBeenCalledWith(false);
+    expect(props.onViewModeChange).toHaveBeenCalledWith("day");
   });
+
   it("puts the goals dropdown beside the search bar and reports selections", () => {
     const props = renderToolbar();
     const search = screen.getByRole("searchbox", { name: "Search goals" });
@@ -105,16 +109,12 @@ describe("PlannerCalendarToolbar", () => {
     expect(screen.queryByRole("button", { name: "Filter by goal" })).toBeNull();
   });
 
-  it("offers Preview beside Filters only while Goal View is open", () => {
-    renderToolbar();
+  it("opens Goal View without changing the calendar view mode", () => {
+    const props = renderToolbar();
+    fireEvent.click(screen.getByRole("button", { name: "Goal View" }));
+    expect(props.onGoalViewOpenChange).toHaveBeenCalledWith(true);
+    expect(props.onViewModeChange).not.toHaveBeenCalled();
     expect(screen.queryByRole("button", { name: "Preview" })).toBeNull();
-    cleanup();
-
-    const props = renderToolbar({ goalViewOpen: true });
-    const preview = screen.getByRole("button", { name: "Preview" });
-    expect(preview.nextElementSibling).toBe(screen.getByRole("button", { name: "Filters" }));
-    fireEvent.click(preview);
-    expect(props.onGoalViewPreview).toHaveBeenCalledTimes(1);
   });
 
   it("places plan help beside the Plan title", () => {

@@ -20,7 +20,7 @@ export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]>
     {
       title: "Agenda views",
       description:
-        "Today is your default. Switch to Week or Month to plan ahead.",
+        "Today is your default. Use Week or Month to plan ahead, or Goal View to arrange sessions across a continuous timeline.",
       target: "planner.calendar.controls",
     },
     {

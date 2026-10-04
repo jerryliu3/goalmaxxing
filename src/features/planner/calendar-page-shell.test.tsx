@@ -219,20 +219,18 @@ describe("CalendarPageShell", () => {
     render(<CalendarPageShell />);
     expect(mocks.latestSurfaceProps?.viewMode).toBe("day");
   });
-  it("does not overwrite the goal editor URL while the Goals surface stays mounted", () => {
-    mocks.pathname = "/goals";
-    const { rerender } = render(<CalendarPageShell destination="goals" />);
-    mocks.applySearchParams.mockClear();
-    mocks.pathname = "/goals/new";
-    mocks.search = "returnTo=%2Fgoals";
-    rerender(<CalendarPageShell destination="goals" />);
-    expect(mocks.applySearchParams).not.toHaveBeenCalled();
+  it("makes the scheduling lens explicit without changing the Today default", () => {
+    mocks.search = "lens=goals&view=day&month=2026-08&day=2026-08-12";
+    const { rerender } = render(<CalendarPageShell />);
+    expect(mocks.latestSurfaceProps?.goalTimelineOpen).toBe(true);
+    act(() => mocks.latestSurfaceProps!.onGoalTimelineOpenChange!(false));
+    const call = mocks.applySearchParams.mock.results.at(-1)?.value as { params: URLSearchParams };
+    expect(call.params.has("lens")).toBe(false);
+    mocks.search = "";
+    rerender(<CalendarPageShell />);
+    expect(mocks.latestSurfaceProps).toMatchObject({ goalTimelineOpen: false, viewMode: "day" });
   });
-  it("uses the same completion context on the Goals destination", () => {
-    mocks.pathname = "/goals";
-    render(<CalendarPageShell destination="goals" />);
-    expect(mocks.latestSurfaceProps).toMatchObject({ destination: "goals", activeTab: "calendar", duoScope: "both" });
-  });
+
   it("defaults a visit without a view to Today", () => {
     mocks.search = "";
 

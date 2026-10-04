@@ -140,7 +140,7 @@ export function usePlannerContextLoader({
         }
       };
       const warmGoalView = (payload: PlannerContextPayload) => {
-        const window = buildGoalViewWindow(payload.asOfDate);
+        const window = buildGoalViewWindow(goalViewAnchorDate ?? payload.asOfDate);
         void fetchPlannerContext({ month, window }).then(expanded => {
           if (goalViewOpen && requestId === requestIdRef.current) applyContext(expanded, window);
         }).catch(() => undefined);
