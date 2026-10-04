@@ -48,11 +48,12 @@ describe("PlannerCalendarToolbar", () => {
     cleanup();
   });
 
-  it("links from Plan directly to the current goal collection", () => {
-    renderToolbar();
-    expect(screen.getByRole("link", { name: "Goals" })).toHaveAttribute("href", "/insights/folios?view=current&from=plan");
+  it("keeps Today free of search/filter controls and goal navigation", () => {
+    renderToolbar({ viewMode: "day" });
+    expect(screen.queryByRole("searchbox")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Filters" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Goals" })).toBeNull();
   });
-
   it("offers Goal View, Day, Week, and Month without a 3 Day option", () => {
     renderToolbar();
 
@@ -61,14 +62,14 @@ describe("PlannerCalendarToolbar", () => {
       within(viewGroup)
         .getAllByRole("button")
         .map((button) => button.textContent)
-    ).toEqual(["Goal View", "Day View", "Week View", "Month View"]);
-    expect(within(viewGroup).getByRole("button", { name: "Week View" })).toHaveAttribute(
+    ).toEqual(["Today", "Week", "Month"]);
+    expect(within(viewGroup).getByRole("button", { name: "Week" })).toHaveAttribute(
       "aria-pressed",
       "true"
     );
     expect(within(viewGroup).queryByRole("button", { name: "3 Day" })).toBeNull();
     expect(screen.getByTestId("plan-view-mode-thumb")).toHaveClass("bg-primary");
-    expect(within(viewGroup).getByRole("button", { name: "Week View" })).toHaveClass(
+    expect(within(viewGroup).getByRole("button", { name: "Week" })).toHaveClass(
       "text-primary-foreground"
     );
   });
@@ -77,31 +78,15 @@ describe("PlannerCalendarToolbar", () => {
     renderToolbar({ viewMode: "month" });
 
     expect(screen.getByTestId("plan-view-mode-thumb")).toHaveStyle({
-      transform: "translateX(300%)",
+      transform: "translateX(200%)",
     });
   });
 
-  it("selects Goal View as a lens and leaves it when a calendar view is chosen", () => {
-    const props = renderToolbar({ goalViewOpen: true });
-    const viewGroup = screen.getByRole("group", { name: "Plan view mode" });
-
-    expect(within(viewGroup).getByRole("button", { name: "Goal View" })).toHaveAttribute(
-      "aria-pressed",
-      "true"
-    );
-    expect(within(viewGroup).getByRole("button", { name: "Week View" })).toHaveAttribute(
-      "aria-pressed",
-      "false"
-    );
-    expect(screen.getByTestId("plan-view-mode-thumb")).toHaveStyle({
-      transform: "translateX(0%)",
-    });
-
-    fireEvent.click(within(viewGroup).getByRole("button", { name: "Month View" }));
-    expect(props.onGoalViewOpenChange).toHaveBeenCalledWith(false);
-    expect(props.onViewModeChange).toHaveBeenCalledWith("month");
+  it("keeps calendar switching out of the Goals destination", () => {
+    renderToolbar({ goalViewOpen: true });
+    expect(screen.queryByRole("group", { name: "Plan view mode" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
   });
-
   it("puts the goals dropdown beside the search bar and reports selections", () => {
     const props = renderToolbar();
     const search = screen.getByRole("searchbox", { name: "Search goals" });
@@ -132,17 +117,10 @@ describe("PlannerCalendarToolbar", () => {
     expect(props.onGoalViewPreview).toHaveBeenCalledTimes(1);
   });
 
-  it("opens Goal View from the view switch", () => {
-    const props = renderToolbar();
-    fireEvent.click(screen.getByRole("button", { name: "Goal View" }));
-    expect(props.onGoalViewOpenChange).toHaveBeenCalledWith(true);
-    expect(props.onViewModeChange).not.toHaveBeenCalled();
-  });
-
   it("places plan help beside the Plan title", () => {
     renderToolbar();
 
-    const title = screen.getByRole("heading", { name: "Planner" });
+    const title = screen.getByRole("heading", { name: "Agenda" });
     const helpButton = screen.getByRole("button", { name: "Open planner help" });
     expect(title.parentElement).toContainElement(helpButton);
   });

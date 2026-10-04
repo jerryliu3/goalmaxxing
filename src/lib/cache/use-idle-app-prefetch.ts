@@ -18,7 +18,7 @@ function prefetchAppTabModules() {
   void import("@/features/planner/calendar-page-shell");
   void import("@/features/insights/insights-shell");
   void import("@/features/social/social-surface");
-  void import("@/features/settings/settings-tab");
+  void import("@/features/goals/goals-destination");
 }
 
 export function useIdleAppPrefetch({

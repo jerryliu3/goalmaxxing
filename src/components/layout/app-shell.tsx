@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CoachProvider } from "@/features/coach/coach-provider";
+import { UserRound } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Fragment, type ReactNode, useCallback, useState, ViewTransition } from "react";
 import { JourneyIntroOverlay } from "@/components/intro/journey-intro-overlay";
@@ -144,7 +145,7 @@ export function AppShell({
                       <div className="flex flex-col items-end gap-2">
                         <div className="flex items-center gap-2">
                           <CoachHeader />
-                          <Button
+                          {(pathname === withHrefPrefix("/goals", hrefPrefix) || pathname.startsWith(`${withHrefPrefix("/goals", hrefPrefix)}/`)) ? <Button
                             asChild={!onNewGoalClick}
                             size="sm"
                             className="inline-flex h-8 bg-primary text-primary-foreground hover:bg-primary/80"
@@ -159,9 +160,13 @@ export function AppShell({
                                 New Goal +
                               </Link>
                             )}
+                          </Button> : null}
+                          <Button asChild variant="outline" size="icon-sm" className="rounded-full" data-onboarding="nav.settings">
+                            <Link href={withHrefPrefix("/settings", hrefPrefix)} aria-label="Profile and settings">
+                              {viewerAvatarUrl ? <img src={viewerAvatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" /> : <UserRound aria-hidden="true" />}
+                            </Link>
                           </Button>
                         </div>
-                        <DuoScopeToggle />
                       </div>
                     </div>
                     <div className="mt-4 hidden md:block">

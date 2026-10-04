@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import { usePathname } from "next/navigation";
+import { isDemoPathname } from "@/lib/navigation/demo-path";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingCard } from "@/components/ui/loading-card";
@@ -12,8 +14,9 @@ import { buildCurrentGoals, buildGoalFolios } from "./folio-model";
 import { FolioShelf } from "./folio-shelf";
 import styles from "./folio.module.css";
 
-export function GoalLibraryPage({ view = "current", fromPlan = false }: { view?: "current" | "past"; fromPlan?: boolean }) {
+export function GoalLibraryPage({ view = "current" }: { view?: "current" | "past"; fromPlan?: boolean }) {
   const router = useAppRouter();
+  const prefix = isDemoPathname(usePathname() ?? "") ? "/demo" : "";
   const { state, loading, loadError, reload } = useInsightsData({ selectedYear: String(new Date().getFullYear()) });
   useReportAppSurfaceReady(!loading);
   const folios = useMemo(() => buildGoalFolios(state.goals, state.progress?.summaries ?? [], state.userId), [state.goals, state.progress, state.userId]);
@@ -21,7 +24,7 @@ export function GoalLibraryPage({ view = "current", fromPlan = false }: { view?:
   const goalCount = folios.reduce((total, folio) => total + folio.entries.length, 0);
   return (
     <div className={styles.page}>
-      <button type="button" onClick={() => router.push(fromPlan ? "/calendar" : "/insights#progress-achievements")} className={styles.back}><ArrowLeft size={15} aria-hidden="true" />{fromPlan ? "Back to Plan" : "Back to Progress"}</button>
+      <button type="button" onClick={() => router.push(`${prefix}/goals`)} className={styles.back}><ArrowLeft size={15} aria-hidden="true" />Back to Goals</button>
       <header className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>EVERY GOAL YOU’VE SET</p>
@@ -32,7 +35,7 @@ export function GoalLibraryPage({ view = "current", fromPlan = false }: { view?:
       </header>
       <nav aria-label="Goal library collections" className={styles.collections}>
         {(["current", "past"] as const).map(collection => <button key={collection} type="button" aria-current={view === collection ? "page" : undefined}
-          onClick={() => router.push(`/insights/folios?view=${collection}${fromPlan ? "&from=plan" : ""}`)}>
+          onClick={() => router.push(collection === "past" ? `${prefix}/achievements#progress-section-past-goals` : `${prefix}/goals/library`)}>
           {collection === "current" ? "Current" : "Past"}
         </button>)}
       </nav>
@@ -40,10 +43,10 @@ export function GoalLibraryPage({ view = "current", fromPlan = false }: { view?:
         : loading || !state.progress ? <LoadingCard title="Opening your collection..." description="Gathering your goals." />
         : view === "current" ? current.length ? <CurrentGoalGrid
           entries={current}
-          onDetails={(goalId) => router.push(`/goals/${goalId}`)}
-        /> : <div className={styles.empty}><BookOpen size={36} className="mx-auto" aria-hidden="true" /><h2>Room for your next goal.</h2><p>Your active and upcoming goals will take shape here.</p><Button variant="outline" className="mt-5" onClick={() => router.push("/calendar")}>Back to your plan</Button></div>
+          onDetails={(goalId) => router.push(`${prefix}/goals/${goalId}`)}
+        /> : <div className={styles.empty}><BookOpen size={36} className="mx-auto" aria-hidden="true" /><h2>Room for your next goal.</h2><p>Your active and upcoming goals will take shape here.</p><Button variant="outline" className="mt-5" onClick={() => router.push(`${prefix}/goals`)}>Back to Goals</Button></div>
         : folios.length ? <FolioShelf folios={folios} />
-        : <div className={styles.empty}><BookOpen size={36} strokeWidth={1.2} className="mx-auto" aria-hidden="true" /><h2>No past goals yet.</h2><p>Goals you complete, end, or archive will collect here. Keep showing up for what matters to you.</p><Button variant="outline" className="mt-5" onClick={() => router.push("/calendar")}>Back to your plan</Button></div>}
+        : <div className={styles.empty}><BookOpen size={36} strokeWidth={1.2} className="mx-auto" aria-hidden="true" /><h2>No past goals yet.</h2><p>Goals you complete, end, or archive will collect here. Keep showing up for what matters to you.</p><Button variant="outline" className="mt-5" onClick={() => router.push(`${prefix}/goals`)}>Back to Goals</Button></div>}
     </div>
   );
 }

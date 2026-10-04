@@ -1,6 +1,5 @@
 vi.mock("@/features/coach/use-coach-page-context", () => ({ useCoachPageContext: vi.fn() }));
-import { cleanup, render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useEffect } from "react";
 import { InsightsShell } from "./insights-shell";
@@ -150,38 +149,13 @@ describe("InsightsShell", () => {
     expect(screen.getByRole("heading", { name: "Progress Tracker" })).toBeInTheDocument();
   });
 
-  it("indexes the sections both lanes report and anchors only the first lane", () => {
+  it("shows history and past goals together while preserving lane ownership", () => {
     useDuoSurfaceMock.mockReturnValue(duoBothSurface());
-
     render(<InsightsShell />);
-
-    const index = screen.getByTestId("progress-section-index");
-    expect(
-      within(index)
-        .getAllByRole("button")
-        .map((button) => button.textContent)
-    ).toEqual([
-      "Completion history",
-      "This week",
-      "Past goals",
-      "Achievements",
-    ]);
-
-    const lanes = screen.getAllByTestId("insights-tab-lane");
-    expect(lanes.map((lane) => lane.dataset.anchored)).toEqual(["true", "false"]);
-  });
-
-  it("moves every lane to the past view from the view tabs", async () => {
-    const user = userEvent.setup();
-    useDuoSurfaceMock.mockReturnValue(duoBothSurface());
-
-    render(<InsightsShell />);
-
-    await user.click(screen.getByRole("tab", { name: "Past" }));
-
-    expect(
-      screen.getAllByTestId("insights-tab-lane").map((lane) => lane.dataset.view)
-    ).toEqual(["past", "past"]);
-    expect(screen.queryByTestId("insights-tracker-header")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Achieved" })).toBeInTheDocument();
+    expect(screen.getAllByTestId("insights-tab-lane").map((lane) => lane.dataset.view)).toEqual(["all", "all"]);
+    expect(screen.getAllByTestId("insights-tab-lane").map((lane) => lane.dataset.anchored)).toEqual(["true", "false"]);
+    expect(screen.queryByRole("tab", { name: "Past" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Past goals" })).toHaveAttribute("href", "#progress-section-past-goals");
   });
 });

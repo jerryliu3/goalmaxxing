@@ -674,7 +674,7 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Day View" }));
+    fireEvent.click(screen.getByRole("button", { name: "Today" }));
 
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-20", "push", "day", {
       alignMonth: true,
@@ -713,7 +713,7 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Week View" }));
+    fireEvent.click(screen.getByRole("button", { name: "Week" }));
 
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-20", "push", "week", {
       alignMonth: true,

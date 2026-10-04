@@ -152,7 +152,7 @@ interface InsightsTabProps {
   contentMode?: InsightsTabContentMode;
   onPersonalGoalsChange?: (goals: Goal[]) => void;
   /** Which Progress view to render. The shell owns the frame that picks it. */
-  progressView?: ProgressView;
+  progressView?: ProgressView | "all";
   /**
    * False on secondary duo lanes so section anchors, test ids and onboarding
    * targets stay unique in the document.
@@ -1040,7 +1040,7 @@ export function InsightsTab({
   return (
     <>
       <ProgressSectionStack
-        sections={progressSections}
+        sections={progressView === "all" ? progressSections.filter((section) => section.id !== "week") : progressSections}
         view={progressView}
         anchored={anchorSections}
         onSectionsChange={onSectionsChange}

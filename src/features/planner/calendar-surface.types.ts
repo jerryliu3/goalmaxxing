@@ -65,6 +65,7 @@ export type SelectedDayChangeOptions = {
 };
 
 export interface CalendarSurfaceProps {
+  destination?: "agenda" | "goals";
   activeTab: CalendarTab;
   month: string | null;
   selectedDay: string | null;

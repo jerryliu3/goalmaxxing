@@ -1,36 +1,21 @@
-import { BarChart3, Globe, Route, User } from "lucide-react";
+import { CalendarDays, Target, Trophy, Globe } from "lucide-react";
 import type { ComponentType } from "react";
-import {
-  APP_TABS as SHARED_APP_TABS,
-  buildAppTabs as buildSharedAppTabs,
-  TAB_ORDER as SHARED_TAB_ORDER,
-  type AppTabDefinition,
-} from "@cadence/shared/navigation/tabs";
 
-const WEB_TAB_ICONS: Record<
-  AppTabDefinition["key"],
-  ComponentType<{ className?: string }>
-> = {
-  insights: BarChart3,
-  calendar: Route,
-  social: Globe,
-  settings: User,
-};
-
-export type AppTab = AppTabDefinition & {
+export type AppTab = {
+  key: "calendar" | "goals" | "achievements" | "social";
+  href: string;
+  label: string;
   icon: ComponentType<{ className?: string }>;
 };
 
-function withIcon(tab: AppTabDefinition): AppTab {
-  return { ...tab, icon: WEB_TAB_ICONS[tab.key] };
+export const APP_TABS: AppTab[] = [
+  { key: "calendar", href: "/calendar", label: "Agenda", icon: CalendarDays },
+  { key: "goals", href: "/goals", label: "Goals", icon: Target },
+  { key: "achievements", href: "/achievements", label: "Achieved", icon: Trophy },
+  { key: "social", href: "/social", label: "Community", icon: Globe },
+];
+export const TAB_ORDER = APP_TABS.map((tab) => tab.href);
+export function buildAppTabs(options?: { hrefPrefix?: string }): AppTab[] {
+  const prefix = options?.hrefPrefix?.replace(/\/$/, "") ?? "";
+  return APP_TABS.map((tab) => ({ ...tab, href: `${prefix}${tab.href}` }));
 }
-
-export function buildAppTabs(
-  options?: { hrefPrefix?: string }
-): AppTab[] {
-  return buildSharedAppTabs(options).map(withIcon);
-}
-
-export const APP_TABS: AppTab[] = SHARED_APP_TABS.map(withIcon);
-
-export const TAB_ORDER = SHARED_TAB_ORDER;

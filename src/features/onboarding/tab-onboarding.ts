@@ -18,9 +18,9 @@ export interface TabOnboardingStep {
 export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]> = {
   "planner.calendar": [
     {
-      title: "Plan views",
+      title: "Agenda views",
       description:
-        "Switch Day, Week, and Month here. Day is the checklist for the selected date.",
+        "Today is your default. Switch to Week or Month to plan ahead.",
       target: "planner.calendar.controls",
     },
     {
@@ -40,10 +40,10 @@ export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]>
       fallbackTargets: ["insights.week", "insights.views"],
     },
     {
-      title: "Current and Past",
+      title: "Past goals",
       description:
-        "Current holds this week and completion history. Past keeps achievements and finished goals.",
-      target: "insights.views",
+        "Completed, ended, and archived goals collect here with their original outcomes.",
+      target: "insights.past-goals",
     },
     {
       title: "Log a missed day",
@@ -126,13 +126,13 @@ export interface TabOnboardingReplayLink {
 export const TAB_ONBOARDING_REPLAY_LINKS: TabOnboardingReplayLink[] = [
   {
     key: "planner.calendar",
-    label: "Plan",
+    label: "Agenda",
     href: `/calendar?${TAB_ONBOARDING_QUERY_PARAM}=planner.calendar`,
   },
   {
     key: "insights.main",
-    label: "Progress",
-    href: `/insights?${TAB_ONBOARDING_QUERY_PARAM}=insights.main`,
+    label: "Achieved",
+    href: `/achievements?${TAB_ONBOARDING_QUERY_PARAM}=insights.main`,
   },
   {
     key: "social.main",

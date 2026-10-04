@@ -2,7 +2,6 @@ import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CalendarSurfaceProps } from "@/features/planner/calendar-surface.types";
 import { CalendarPageShell } from "@/features/planner/calendar-page-shell";
-import { resetRememberedCalendarViewModeForTests } from "@/lib/planner/calendar-view-memory";
 
 const mocks = vi.hoisted(() => ({
   applySearchParams: vi.fn(),
@@ -58,7 +57,7 @@ describe("CalendarPageShell", () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-09-06T12:00:00.000Z"));
-    resetRememberedCalendarViewModeForTests();
+    window.sessionStorage.removeItem("planner-calendar-view-mode");
     mocks.applySearchParams.mockReset();
     mocks.applySearchParams.mockImplementation((update, mode) => {
       const params = new URLSearchParams(mocks.search);
@@ -79,7 +78,7 @@ describe("CalendarPageShell", () => {
 
   afterEach(() => {
     cleanup();
-    resetRememberedCalendarViewModeForTests();
+    window.sessionStorage.removeItem("planner-calendar-view-mode");
     vi.useRealTimers();
   });
 
@@ -214,22 +213,33 @@ describe("CalendarPageShell", () => {
     expect(call.params.toString()).toBe("view=day&month=2026-09&day=2026-09-06");
   });
 
-  it("defaults a visit without a view to week", () => {
+  it("ignores old remembered view preferences", () => {
+    window.sessionStorage.setItem("planner-calendar-view-mode", "month");
+    mocks.search = "";
+    render(<CalendarPageShell />);
+    expect(mocks.latestSurfaceProps?.viewMode).toBe("day");
+  });
+  it("uses the same completion context on the Goals destination", () => {
+    mocks.pathname = "/goals";
+    render(<CalendarPageShell destination="goals" />);
+    expect(mocks.latestSurfaceProps).toMatchObject({ destination: "goals", activeTab: "calendar", duoScope: "both" });
+  });
+  it("defaults a visit without a view to Today", () => {
     mocks.search = "";
 
     render(<CalendarPageShell />);
 
-    expect(mocks.latestSurfaceProps?.viewMode).toBe("week");
+    expect(mocks.latestSurfaceProps?.viewMode).toBe("day");
   });
 
-  it("restores the last calendar view when the Plan tab omits the query", () => {
+  it("opens Today when returning to Agenda after Month", () => {
     render(<CalendarPageShell />);
     cleanup();
     mocks.search = "";
 
     render(<CalendarPageShell />);
 
-    expect(mocks.latestSurfaceProps?.viewMode).toBe("month");
+    expect(mocks.latestSurfaceProps?.viewMode).toBe("day");
   });
 
   it("keeps the current calendar view when New Goal changes the URL", () => {
@@ -241,7 +251,7 @@ describe("CalendarPageShell", () => {
 
     rerender(<CalendarPageShell />);
 
-    expect(mocks.latestSurfaceProps?.viewMode).toBe("week");
+    expect(mocks.latestSurfaceProps?.viewMode).toBe("day");
     expect(mocks.latestSurfaceProps?.month).toBe("2026-08");
     expect(mocks.latestSurfaceProps?.selectedDay).toBe("2026-08-12");
     expect(mocks.applySearchParams).not.toHaveBeenCalled();

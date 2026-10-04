@@ -8,13 +8,14 @@ export { DUO_SURFACE_DEFAULTS };
 // Keep these route prefixes synchronized with DUO_SURFACE_DEFAULTS in the
 // shared package whenever a Duo surface is added or renamed.
 export function resolveDuoSurfaceDefault(pathname: string | null): DuoScope {
-  if (pathname?.startsWith("/insights")) {
+  const path = pathname?.replace(/^\/demo(?=\/)/, "");
+  if (path?.startsWith("/insights") || path?.startsWith("/achievements")) {
     return DUO_SURFACE_DEFAULTS.insights;
   }
-  if (pathname?.startsWith("/checklist")) {
+  if (path?.startsWith("/checklist")) {
     return DUO_SURFACE_DEFAULTS.checklist;
   }
-  if (pathname?.startsWith("/calendar")) {
+  if (path?.startsWith("/calendar")) {
     return DUO_SURFACE_DEFAULTS.calendar;
   }
   return DUO_SURFACE_DEFAULTS.checklist;

@@ -7,15 +7,15 @@ describe("navigation tabs", () => {
 
     expect(tabs.map((tab) => tab.key)).toEqual([
       "calendar",
-      "insights",
+      "goals",
+      "achievements",
       "social",
-      "settings",
     ]);
     expect(tabs.map((tab) => tab.label)).toEqual([
-      "Plan",
-      "Progress",
+      "Agenda",
+      "Goals",
+      "Achieved",
       "Community",
-      "Profile",
     ]);
   });
 
@@ -24,9 +24,9 @@ describe("navigation tabs", () => {
       buildAppTabs({ hrefPrefix: "/demo" }).map((tab) => tab.href)
     ).toEqual([
       "/demo/calendar",
-      "/demo/insights",
+      "/demo/goals",
+      "/demo/achievements",
       "/demo/social",
-      "/demo/settings",
     ]);
   });
 });

@@ -30,7 +30,7 @@ export function ProgressSectionStack({
   onSectionsChange,
 }: {
   sections: readonly ProgressOverviewSectionContent[];
-  view: ProgressView;
+  view: ProgressView | "all";
   /** False for secondary duo lanes, which must not duplicate element ids. */
   anchored?: boolean;
   /** Reports the sections this stack can show, for the shared side index. */
@@ -47,7 +47,7 @@ export function ProgressSectionStack({
   const visibleSections = useMemo(
     () =>
       PROGRESS_SECTIONS.flatMap((definition) => {
-        if (definition.view !== view) {
+        if (view !== "all" && definition.view !== view) {
           return [];
         }
         const content = sections.find((section) => section.id === definition.id);
