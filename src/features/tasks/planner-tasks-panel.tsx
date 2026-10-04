@@ -479,7 +479,7 @@ export function PlannerTasksPanel({
               <div className="flex items-center justify-between gap-3">
               {completionMode === "toggle" ? (
                 <button type="button" aria-label={`${complete ? "Undo completion for" : "Complete"} ${task.title}`}
-                  className="shrink-0" onClick={() => void toggleTask(task)} disabled={busy}>
+                  className="-m-2 flex size-9 shrink-0 items-center justify-center" onClick={() => void toggleTask(task)} disabled={busy}>
                   {mark}
                 </button>
               ) : mark}
@@ -491,6 +491,7 @@ export function PlannerTasksPanel({
                     style={{ ...style, opacity: isDragging ? 0 : undefined }}
                     {...attributes} {...(!allowDrag || complete || busy ? {} : listeners)}
                     data-planner-entry-key={`task:${task.task_id}`}
+                    aria-disabled={undefined}
                     aria-expanded={expandedTaskId === task.task_id}
                     onClick={() => {
                       if (!isDragging) setExpandedTaskId(current => current === task.task_id ? null : task.task_id);
