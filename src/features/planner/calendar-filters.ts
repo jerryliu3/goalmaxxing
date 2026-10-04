@@ -95,7 +95,7 @@ export function filterCalendarGoalFilterOptions({
   categoryFilters: string[];
   endMonthFilters: string[];
   searchQuery: string;
-  workUnits: ReadonlyArray<Pick<PlannerDayDetailEntry, "goalTitle" | "label" | "unitKey"> & { originalGoalId: string }>;
+  workUnits: ReadonlyArray<{ originalGoalId: string; label: string | null; unitKey: string }>;
   goalTitles: Record<string, string>;
 }) {
   const unitsByGoalId = new Map<string, Array<(typeof workUnits)[number]>>();
@@ -109,7 +109,7 @@ export function filterCalendarGoalFilterOptions({
     if (!searchQuery.trim()) return true;
     const title = goalTitles[option.value] ?? option.label;
     return entryMatchesCalendarSearchQuery({ goalTitle: title, label: null, unitKey: "" }, searchQuery) ||
-      (unitsByGoalId.get(option.value) ?? []).some((unit) => entryMatchesCalendarSearchQuery(unit, searchQuery));
+      (unitsByGoalId.get(option.value) ?? []).some((unit) => entryMatchesCalendarSearchQuery({ goalTitle: null, label: unit.label, unitKey: unit.unitKey }, searchQuery));
   });
 }
 
