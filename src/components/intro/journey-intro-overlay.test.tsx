@@ -245,7 +245,9 @@ describe("JourneyIntroOverlay", () => {
 
   it("reopens intro when settings triggers the revisit event", async () => {
     window.localStorage.setItem(JOURNEY_ONBOARDING_COMPLETED_KEY, "done");
-    renderIntro();
+    const onOpenChange = vi.fn();
+    renderIntro(onOpenChange);
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
     expect(screen.queryByRole("dialog", { name: "Plan" })).toBeNull();
 
     act(() => window.dispatchEvent(new Event(JOURNEY_INTRO_OPEN_EVENT)));
