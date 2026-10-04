@@ -146,3 +146,13 @@ it("opens a cold Goal View after only the calendar request, without waiting for 
   await act(async () => { finishWide(snapshot); await fetchPlannerContext({ month, window }); });
   expect(args.setGoalViewWindow).toHaveBeenLastCalledWith(window);
 });
+
+it("clears every cached calendar window before a forced refresh", async () => {
+  const otherMonthKey = buildPlannerContextCacheKey("2026-11");
+  writeTabDataCache(otherMonthKey, snapshot);
+  writeTabDataCache(buildPlannerContextCacheKey(month, window), snapshot);
+  const { result } = mount();
+  await act(async () => { await result.current({ forcePrepare: true }); });
+  expect(readTabDataCache(otherMonthKey)).toBeNull();
+  expect(mocks.postJson).toHaveBeenCalledWith("/api/planner/prepare", expect.anything());
+});
