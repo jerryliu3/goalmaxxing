@@ -498,6 +498,16 @@ async function moveFirstMovableEntry(
         document.querySelectorAll<HTMLElement>('[data-day-cell="true"][data-day]')
       )
         .map((cell) => {
+          // Adjacent weeks remain mounted while collapsed. Morph copies can
+          // also carry day attributes, but neither is an interactive drop zone.
+          const rect = cell.getBoundingClientRect();
+          if (
+            cell.closest('[aria-hidden="true"], [inert]') ||
+            rect.width === 0 || rect.height === 0 ||
+            getComputedStyle(cell).visibility !== "visible"
+          ) {
+            return null;
+          }
           const value = cell.getAttribute("data-day");
           if (
             typeof value !== "string" ||
@@ -528,7 +538,7 @@ async function moveFirstMovableEntry(
         const currentSourceEntry = sourceEntries.nth(sourceIndex);
         await expect(currentSourceEntry).toBeVisible();
         const targetCell = page
-          .locator(`[data-day-cell="true"][data-day="${targetDay}"]`)
+          .locator(`[data-day-cell="true"][data-day="${targetDay}"]:visible`)
           .first();
         await expect(targetCell).toBeVisible();
         await currentSourceEntry.scrollIntoViewIfNeeded();
