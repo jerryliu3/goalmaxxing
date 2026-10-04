@@ -51,7 +51,7 @@ describe("external account authorization", () => {
     await expect(requireExternalContext(request())).rejects.toMatchObject({ status: 404 });
   });
   it("advertises the correct protected resource in authentication challenges", () => {
-    const response = externalAuthErrorResponse(new ApiRouteError(401, "invalid_token", "Reconnect."), "request-id", "/api/v1");
+    const response = externalAuthErrorResponse(new ApiRouteError(401, "invalid_token", "Reconnect."), "33333333-3333-4333-8333-333333333333", "/api/v1");
     expect(response.headers.get("www-authenticate")).toContain("/.well-known/oauth-protected-resource/api/v1");
     expect(protectedResourceMetadata("/api/mcp").resource).toBe("https://goalmaxxing.app/api/mcp");
   });

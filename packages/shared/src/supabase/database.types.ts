@@ -9,13 +9,6 @@ export type Json =
 export type Database = {
   private: {
     Tables: {
-      external_app_connections: {
-        Row: { owner_id: string; client_id: string; client_name: string; connected_at: string; revoked_at: string | null }
-        Insert: { owner_id: string; client_id: string; client_name: string; connected_at?: string; revoked_at?: string | null }
-        Update: { client_name?: string; connected_at?: string; revoked_at?: string | null }
-        Relationships: []
-      }
-
       xp_recompute_outbox: {
         Row: {
           goal_id: string
@@ -1291,6 +1284,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      external_app_connections: {
+        Row: {
+          client_id: string
+          client_name: string
+          connected_at: string
+          owner_id: string
+          revoked_at: string | null
+        }
+        Insert: {
+          client_id: string
+          client_name: string
+          connected_at?: string
+          owner_id: string
+          revoked_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          client_name?: string
+          connected_at?: string
+          owner_id?: string
+          revoked_at?: string | null
+        }
+        Relationships: []
       }
       feed_events: {
         Row: {
@@ -4134,4 +4151,3 @@ export const Constants = {
     },
   },
 } as const
-
