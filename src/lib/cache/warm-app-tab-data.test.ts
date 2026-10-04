@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   fetchSocialChallenges: vi.fn(),
   fetchSocialLeaderboards: vi.fn(),
   fetchSocialTeamState: vi.fn(),
+  fetchSettingsTabData: vi.fn(),
+  fetchPublicProfileBundle: vi.fn(),
 }));
 
 vi.mock("@/features/today/fetch-checklist-data", () => ({
@@ -27,6 +29,13 @@ vi.mock("@/features/social/data", () => ({
   fetchSocialTeamState: mocks.fetchSocialTeamState,
 }));
 
+vi.mock("@/features/social/settings-tab-data", () => ({
+  fetchSettingsTabData: mocks.fetchSettingsTabData,
+}));
+vi.mock("@/features/social/public-profile/data", () => ({
+  fetchPublicProfileBundle: mocks.fetchPublicProfileBundle,
+}));
+
 import { warmAppTabData } from "@/lib/cache/warm-app-tab-data";
 import { resetTabDataCacheForTests } from "@/lib/cache/tab-data-cache";
 import { buildGoalViewWindow } from "@/features/planner/goal-view/goal-view-model";
@@ -40,6 +49,8 @@ describe("warmAppTabData", () => {
     mocks.fetchSocialChallenges.mockReset().mockResolvedValue({});
     mocks.fetchSocialLeaderboards.mockReset().mockResolvedValue({});
     mocks.fetchSocialTeamState.mockReset().mockResolvedValue({});
+    mocks.fetchSettingsTabData.mockReset().mockResolvedValue({});
+    mocks.fetchPublicProfileBundle.mockReset().mockResolvedValue({});
   });
 
   it("skips checklist and insights warmup when progress context should stay cold", async () => {
@@ -59,6 +70,10 @@ describe("warmAppTabData", () => {
     expect(mocks.fetchSocialChallenges).toHaveBeenCalled();
     expect(mocks.fetchSocialLeaderboards).toHaveBeenCalled();
     expect(mocks.fetchSocialTeamState).toHaveBeenCalled();
+    expect(mocks.fetchSettingsTabData).toHaveBeenCalledWith({ forceRefresh: false });
+    expect(mocks.fetchPublicProfileBundle).toHaveBeenCalledWith({
+      subjectUserId: "user-1", year: new Date().getFullYear(), forceRefresh: false,
+    });
   });
 
   it("warms checklist and insights by default", async () => {
@@ -82,5 +97,17 @@ describe("warmAppTabData", () => {
     expect(mocks.fetchChecklistTodayData).toHaveBeenCalled();
     expect(mocks.fetchInsightsData).toHaveBeenCalled();
     expect(mocks.fetchSocialChallenges).toHaveBeenCalled();
+    expect(mocks.fetchSettingsTabData).toHaveBeenCalledWith({ forceRefresh: true });
+    expect(mocks.fetchPublicProfileBundle).toHaveBeenCalledWith({
+      subjectUserId: "user-1", year: new Date().getFullYear(), forceRefresh: true,
+    });
+  });
+
+  it("keeps warming other surfaces when Profile cannot load", async () => {
+    mocks.fetchSettingsTabData.mockRejectedValue(new Error("offline"));
+    await warmAppTabData({ userId: "user-1", partnerId: null });
+    expect(mocks.fetchPublicProfileBundle).toHaveBeenCalled();
+    expect(mocks.fetchInsightsData).toHaveBeenCalled();
+    expect(mocks.getJson).toHaveBeenCalledTimes(2);
   });
 });

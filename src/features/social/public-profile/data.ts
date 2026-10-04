@@ -1,13 +1,11 @@
 import type { PublicProfileBundle } from "@cadence/shared/social/public-profile";
 import { getApiErrorMessage, getJson } from "@/lib/api/client";
+import { PUBLIC_PROFILE_CACHE_PREFIX } from "@/lib/cache/planner-tab-cache";
 import {
-  isTabDataCacheFresh,
+  loadTabDataCache,
   readTabDataCache,
-  TAB_DATA_CACHE_TTL_MS,
-  writeTabDataCache,
 } from "@/lib/cache/tab-data-cache";
 
-const PUBLIC_PROFILE_CACHE_PREFIX = "social:public-profile";
 const PUBLIC_PROFILE_REQUEST_TIMEOUT_MS = 15_000;
 
 interface PublicProfileResponse {
@@ -17,7 +15,11 @@ interface PublicProfileResponse {
 }
 
 function buildPublicProfileCacheKey(subjectUserId: string, year?: number) {
-  return `${PUBLIC_PROFILE_CACHE_PREFIX}:${subjectUserId}:${year ?? "current"}`;
+  return `${PUBLIC_PROFILE_CACHE_PREFIX}${subjectUserId.trim()}:${year ?? "current"}`;
+}
+
+export function peekPublicProfileBundle(subjectUserId: string, year?: number) {
+  return readTabDataCache<PublicProfileBundle>(buildPublicProfileCacheKey(subjectUserId, year));
 }
 
 export async function fetchPublicProfileBundle({
@@ -31,23 +33,17 @@ export async function fetchPublicProfileBundle({
 }) {
   const normalizedSubjectUserId = subjectUserId.trim();
   const cacheKey = buildPublicProfileCacheKey(normalizedSubjectUserId, year);
-  if (!forceRefresh) {
-    const cached = readTabDataCache<PublicProfileBundle>(cacheKey);
-    if (cached && isTabDataCacheFresh(cacheKey)) {
-      return cached;
-    }
-  }
-
   try {
-    const payload = await getJson<PublicProfileResponse>(
-      `/api/social/profiles/${encodeURIComponent(normalizedSubjectUserId)}`,
-      {
-        query: year ? { year: String(year) } : undefined,
-        timeoutMs: PUBLIC_PROFILE_REQUEST_TIMEOUT_MS,
-      }
-    );
-    writeTabDataCache(cacheKey, payload.item, TAB_DATA_CACHE_TTL_MS);
-    return payload.item;
+    return await loadTabDataCache(cacheKey, async () => {
+      const payload = await getJson<PublicProfileResponse>(
+        `/api/social/profiles/${encodeURIComponent(normalizedSubjectUserId)}`,
+        {
+          query: year ? { year: String(year) } : undefined,
+          timeoutMs: PUBLIC_PROFILE_REQUEST_TIMEOUT_MS,
+        }
+      );
+      return payload.item;
+    }, { forceRefresh });
   } catch (error) {
     throw new Error(
       getApiErrorMessage(error, "Public profile could not be loaded.")
