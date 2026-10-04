@@ -52,7 +52,7 @@ export function GoalCardCarousel({
             key={goal.id}
             data-selected={index === previewIndex}
             className={cn(
-              "flex-[0_0_100%] snap-center opacity-60 transition-opacity motion-reduce:transition-none",
+              "min-w-0 flex-[0_0_100%] snap-center opacity-60 transition-opacity motion-reduce:transition-none",
               index === previewIndex && "opacity-100"
             )}
           >
