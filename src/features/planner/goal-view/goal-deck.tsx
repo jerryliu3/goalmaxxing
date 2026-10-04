@@ -3,7 +3,6 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 import type { Goal } from "@/lib/goals/types";
-import { cn } from "@/lib/utils";
 import { GoalCardCarousel } from "./goal-card-carousel";
 import {
   GoalDates,
@@ -79,25 +78,6 @@ export function GoalDeck({
         onSelect={onSelect}
         progressByGoalId={progressByGoalId}
       />
-      <div role="group" aria-label="Select goal" className="flex justify-center">
-        {goals.map((goal, dotIndex) => (
-          <button
-            key={goal.id}
-            type="button"
-            aria-label={`Select ${goal.title}`}
-            aria-pressed={dotIndex === index}
-            onClick={() => onSelect(goal.id)}
-            className="grid size-7 place-items-center"
-          >
-            <span
-              className={cn(
-                "h-1.5 rounded-full bg-border",
-                dotIndex === index ? "w-4 bg-primary" : "w-1.5"
-              )}
-            />
-          </button>
-        ))}
-      </div>
       <SelectedGoalDates
         // A new goal starts back on its first page of dates.
         key={selected.id}

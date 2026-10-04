@@ -57,10 +57,7 @@ function SessionDateField({
         className
       )}
     >
-      <span
-        aria-hidden="true"
-        className={cn(!disabled && "underline decoration-foreground/40 underline-offset-4 [&_*]:underline")}
-      >
+      <span aria-hidden="true">
         {children}
       </span>
       <DateField
