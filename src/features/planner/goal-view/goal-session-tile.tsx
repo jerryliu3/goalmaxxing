@@ -96,7 +96,7 @@ export function GoalSessionTile({
         completed={completion.credited}
         pending={completion.pending}
         mode="toggle"
-        label=<MilestoneTitleEditor goalId={session.goalId} unitKey={session.entry.unitKey} label={session.label} disabled={!editable || session.entry.draftGhost} />
+        label={session.label}
         disabled={Boolean(completion.disabledReason)}
         onToggle={(source) => onToggle(session, source)}
       />
