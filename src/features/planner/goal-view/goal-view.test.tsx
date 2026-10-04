@@ -281,23 +281,15 @@ describe("GoalView", () => {
       expect(screen.getByText("Goal 1 of 2")).toBeInTheDocument();
     });
 
-    it("lets the selected card turn without stealing swipes and exits on goal navigation", () => {
+    it("keeps visible cards directly interactive while the container remains swipeable", () => {
       renderView();
-      expect(screen.getByTestId("card-run")).toHaveAttribute("data-rotatable", "false");
-      fireEvent.click(screen.getByRole("button", { name: "Turn card" }));
       expect(screen.getByTestId("card-run")).toHaveAttribute("data-rotatable", "true");
-      expect(screen.getByTestId("card-gym")).toHaveAttribute("data-rotatable", "false");
-      expect(screen.getByLabelText("Turn the selected goal card")).toHaveClass("overflow-x-hidden");
-
-      fireEvent.click(screen.getByRole("button", { name: "Done turning" }));
+      expect(screen.getByTestId("card-gym")).toHaveAttribute("data-rotatable", "true");
       expect(screen.getByLabelText("Swipe between goal cards")).toHaveClass("overflow-x-auto");
-      expect(screen.getByTestId("card-run")).toHaveAttribute("data-rotatable", "false");
-
-      fireEvent.click(screen.getByRole("button", { name: "Turn card" }));
+      expect(screen.queryByRole("button", { name: "Turn card" })).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole("button", { name: "Next goal" }));
-      expect(screen.getByRole("button", { name: "Turn card" })).toHaveAttribute("aria-pressed", "false");
       fireEvent.click(screen.getByRole("button", { name: "Previous goal" }));
-      expect(screen.getByTestId("card-run")).toHaveAttribute("data-rotatable", "false");
+      expect(screen.getByTestId("card-run")).toHaveAttribute("data-rotatable", "true");
     });
 
     it("keeps nudging and completing available from the vertical rows", () => {

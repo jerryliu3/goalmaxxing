@@ -206,8 +206,8 @@ describe("TempoGoalCard rotation", () => {
     expect(surface).toHaveAttribute("data-inspecting", "false");
   });
 
-  it("turns a masked card with touch and releases capture when the host restores swiping", () => {
-    const props = { fields: baseFields, assembly: { completed: 29, target: 30 }, flat: true };
+  it("turns fragmented cards directly with touch and releases capture when deactivated", () => {
+    const props = { fields: baseFields, assembly: { completed: 29, target: 30 } };
     const { rerender } = render(<TempoGoalCard {...props} rotatable />);
     const object = screen.getByRole("group", { name: "Build momentum rotation" });
     const surface = object.closest<HTMLElement>(".tempo-card-surface")!;
@@ -218,7 +218,8 @@ describe("TempoGoalCard rotation", () => {
     fireEvent.pointerMove(object, { pointerId: 2, pointerType: "touch", clientX: 200, clientY: 150 });
     act(() => vi.advanceTimersByTime(16));
     expect(parseFloat(surface.style.getPropertyValue("--ry"))).toBeGreaterThan(0);
-    expect(surface.querySelector("[data-flat-shards]")).toBeInTheDocument();
+    expect(surface.querySelector("[data-flat-shards]")).not.toBeInTheDocument();
+    expect(surface.querySelector("[data-reward-piece]")).toBeInTheDocument();
 
     // Queue another drag update; disabling rotation must cancel it as well.
     fireEvent.pointerMove(object, { pointerId: 2, pointerType: "touch", clientX: 300, clientY: 150 });
@@ -273,11 +274,11 @@ describe("TempoGoalCard rotation", () => {
 describe("material card reassembly", () => {
   afterEach(cleanup);
 
-  it.each([3, 30, 300])("keeps masked cards rotatable with one body regardless of target %i", (target) => {
+  it.each([3, 30, 300])("keeps static masks lightweight without filling fragment gaps for target %i", (target) => {
     const { container } = render(<TempoGoalCard fields={baseFields} assembly={{ completed: target - 1, target }} flat rotatable />);
-    expect(screen.getByRole("group", { name: "Build momentum rotation" })).toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "Build momentum rotation" })).not.toBeInTheDocument();
     expect(screen.getAllByRole("article")).toHaveLength(1);
-    expect(container.querySelectorAll("[data-card-solid]")).toHaveLength(1);
+    expect(container.querySelectorAll("[data-card-solid]")).toHaveLength(0);
     expect(container.querySelectorAll(".tempo-card")).toHaveLength(3);
     expect(container.querySelector("[data-flat-shards]")).toBeInTheDocument();
     expect(container.querySelector("[data-reward-piece]")).not.toBeInTheDocument();
