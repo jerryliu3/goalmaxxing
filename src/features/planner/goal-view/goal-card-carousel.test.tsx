@@ -14,6 +14,18 @@ const originalScrollTo = Object.getOwnPropertyDescriptor(Element.prototype, "scr
 
 beforeEach(() => {
   vi.useFakeTimers();
+  // jsdom otherwise drops the button and pointer fields our gesture routing uses.
+  vi.stubGlobal("PointerEvent", class extends MouseEvent {
+    pointerId: number;
+    pointerType: string;
+    isPrimary: boolean;
+    constructor(type: string, init: PointerEventInit = {}) {
+      super(type, init);
+      this.pointerId = init.pointerId ?? 1;
+      this.pointerType = init.pointerType ?? "touch";
+      this.isPrimary = init.isPrimary ?? true;
+    }
+  });
   // jsdom has no layout or native element scrolling.
   Object.defineProperty(Element.prototype, "scrollTo", { configurable: true, writable: true, value: vi.fn() });
 });
@@ -21,6 +33,7 @@ afterEach(() => {
   cleanup();
   vi.useRealTimers();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   if (originalScrollTo) Object.defineProperty(Element.prototype, "scrollTo", originalScrollTo);
   else Reflect.deleteProperty(Element.prototype, "scrollTo");
   motion.reduced = false;
