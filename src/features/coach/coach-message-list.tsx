@@ -34,7 +34,7 @@ export function CoachMessageList() {
   }}>
     {!conversation ? <p className={s.help}>Loading your conversation…</p> : <>
       {conversation.before !== null && <Button variant="ghost" size="sm" onClick={() => void coach.loadConversation(conversation.thread.id, conversation.before!).catch(error => coach.setError(error.message))}>Earlier messages</Button>}
-      {!conversation.messages.length && <div className={s.welcome}><CoachMark /><p className={s.eyebrow}>{coach.activeTopic?.title ?? "My week"}</p><h2>A little perspective.<br />A little room.</h2><p>{selected ? `You’re looking at ${selected.title}. We can think about it together.` : "Ask about today, work through a decision, or make space for what matters this week."}</p><div className={s.starters}>{starters.map(text => <button key={text} disabled={Boolean(coach.draft.trim())} onClick={() => { coach.setDraft(text); document.getElementById("coach-message")?.focus(); }}>{text}<span>↗</span></button>)}</div></div>}
+      {!conversation.messages.length && <div className={s.welcome}><CoachMark /><div className={s.starters}>{starters.map(text => <button key={text} disabled={Boolean(coach.draft.trim())} onClick={() => { coach.setDraft(text); document.getElementById("coach-message")?.focus(); }}>{text}<span>↗</span></button>)}</div></div>}
       <div role="log" aria-label="Coach conversation" aria-live={visible ? "polite" : "off"} aria-relevant="additions text">{conversation.messages.map(message => <article key={message.id} className={s.message} data-role={message.role}>
         {message.role === "assistant" && <div className={s.messageByline}><CoachMark small /><span>Coach</span></div>}
         <p>{message.content}</p>

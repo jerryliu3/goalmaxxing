@@ -65,7 +65,7 @@ export function CoachSurface() {
   if (!coach) return null;
   const topic = coach.activeTopic;
   return <motion.section id="coach-surface" ref={panel} layout transition={{ layout: { duration: reduced ? 0 : .3 } }} hidden={mode === "closed"} data-mode={mode} className={s.surface} tabIndex={-1} aria-label="Coach companion">
-    <header className={s.surfaceHeader}><div className={s.identity}><CoachMark small /><span><strong>Companion</strong><small>{topic?.title ?? "Here with you."}</small></span></div><div className={s.buttons}>
+    <header className={s.surfaceHeader}><div className={s.identity}><CoachMark small /><strong>Coach</strong></div><div className={s.buttons}>
       <Button size="icon-sm" variant="ghost" aria-label={mode === "expanded" ? "Return to companion" : "Expand into rooms"} onClick={() => mode === "expanded" ? coach.returnToApp() : coach.expand()}>{mode === "expanded" ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</Button>
       <Button size="icon-sm" variant="ghost" aria-label="Minimize coach" onClick={coach.close}><Minus size={17} /></Button>
     </div></header>
@@ -83,6 +83,5 @@ export function CoachSurface() {
       </div>
       {mode === "expanded" && view === "conversation" && <aside className={s.understandingPane}><CoachUnderstanding key={topic?.id} compact /></aside>}
     </div>
-    <footer className={s.surfaceFooter}>One coach, wherever you’re working.<span>⌘ / Ctrl J</span></footer>
   </motion.section>;
 }

@@ -26,10 +26,10 @@ export function CoachConversation() {
       {!archived && !busy && latestRun && ["failed", "cancelled"].includes(latestRun.status) && <Button variant="ghost" size="sm" onClick={() => void send(true)}>Retry saved message</Button>}
       <form className={s.composer} onSubmit={event => { event.preventDefault(); if (!busy) void send(); }}>
         <label className="sr-only" htmlFor="coach-message">Message your coach</label>
-        <textarea id="coach-message" disabled={!coach.conversation || archived} value={coach.draft} maxLength={12000} rows={2} onChange={event => coach.setDraft(event.target.value)} placeholder="Ask, reflect, or make a little room…" onKeyDown={event => {
+        <textarea id="coach-message" disabled={!coach.conversation || archived} value={coach.draft} maxLength={12000} rows={2} onChange={event => coach.setDraft(event.target.value)} placeholder="Ask your coach…" onKeyDown={event => {
           if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); if (!busy) void send(); }
         }} />
-        <div className={s.composerFooter}><small>Changes are yours to review.</small><Button type="submit" size="icon-sm" aria-label="Send message" disabled={archived || busy || !coach.conversation || !coach.draft.trim()}><ArrowUp size={17} /></Button></div>
+        <div className={s.composerFooter}><Button type="submit" size="icon-sm" aria-label="Send message" disabled={archived || busy || !coach.conversation || !coach.draft.trim()}><ArrowUp size={17} /></Button></div>
       </form>
     </div>
   </div>;

@@ -8,6 +8,7 @@ import { JourneyIntroOverlay } from "@/components/intro/journey-intro-overlay";
 import { CoachHeader } from "@/features/coach/coach-header";
 import { CoachSurface } from "@/features/coach/coach-surface";
 import { CoachPageFrame } from "@/features/coach/coach-page-frame";
+import coachStyles from "@/features/coach/coach.module.css";
 import { CheckInOverlay } from "@/features/digest/check-in-overlay";
 import { JourneyProvider } from "@/components/journey/journey-provider.web";
 import type { JourneyFeatureFlags } from "@/components/journey/types";
@@ -122,7 +123,7 @@ export function AppShell({
               <AppBootSplash onReady={onBootReady} />
               <div>
                 <div className="relative z-10 flex min-h-screen w-full justify-center bg-page px-4 py-4 sm:px-6 sm:py-6">
-                  <div className="flex w-full max-w-6xl flex-col gap-4 md:gap-6">
+                  <div className={`${coachStyles.appLayout} flex w-full flex-col gap-4 md:gap-6`}>
                   <header
                     data-testid="app-shell-header"
                     data-coach-anchor

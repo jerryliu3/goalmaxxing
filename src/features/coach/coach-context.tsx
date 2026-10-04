@@ -14,7 +14,7 @@ export function CoachContext() {
       <p>{facts?.pagePurpose ?? "Your coach is reading the current page and your own app data."}</p>
       {selected && <p>Looking at <strong>{selected.title}</strong></p>}
       <p>{coach.freshness === "fresh" ? "Up to date" : coach.freshness === "refreshing" ? "Refreshing current facts…" : "Couldn’t refresh. The facts below may be outdated."}{facts ? ` · ${facts.timezone}` : ""}</p>
-      {facts && <><p>Today: {facts.today.date}. Week: {facts.week.start} — {facts.week.end}.</p><p>{totals!.overdueTasks ? `${totals!.overdueTasks} open earlier tasks. ` : ""}{facts.scopeNote}</p><p>Counts include scheduled goal work and one-off tasks. Saved preferences are separate from current facts.</p></>}
+      {facts && <><p>Today: {facts.today.date}. Week: {facts.week.start} — {facts.week.end}.</p><p>{totals!.overdueTasks ? `${totals!.overdueTasks} open earlier tasks. ` : ""}{facts.scopeNote}</p></>}
       {coach.page.hasDraft && <p>Unsaved planner work is preserved. Save or discard it before applying coach changes.</p>}
       <Button variant="ghost" size="sm" onClick={coach.refresh}>Refresh context</Button>
     </div>
