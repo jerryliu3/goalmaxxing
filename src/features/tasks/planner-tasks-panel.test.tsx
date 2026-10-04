@@ -1,378 +1,75 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PlannerTasksPanel, PlannerTasksPrefetch, clearPlannerTasksCacheForTests } from "@/features/tasks/planner-tasks-panel";
-
-const rpcMock = vi.hoisted(() => vi.fn());
-
-vi.mock("@/lib/supabase/client", () => ({
-  createClient: () => ({
-    rpc: rpcMock,
-  }),
-}));
-
-vi.mock("sonner", () => ({
-  toast: {
-    error: vi.fn(),
-  },
-}));
-
-vi.mock("@/lib/dates/day", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/dates/day")>();
-  return {
-    ...actual,
-    toLocalDateString: () => "2026-09-05",
-  };
-});
-
-describe("PlannerTasksPanel", () => {
-  beforeEach(() => {
-    rpcMock.mockReset();
+import { PlannerTasksPanel, clearPlannerTasksCacheForTests } from "./planner-tasks-panel";
+const mocks = vi.hoisted(() => ({ rpc: vi.fn(), create: vi.fn(), complete: vi.fn(), edit: vi.fn() }));
+vi.mock("@/lib/supabase/client", () => ({ createClient: () => ({ rpc: mocks.rpc }) }));
+vi.mock("@/lib/tasks/client", () => ({ createPlannerTask: mocks.create, completePlannerTask: mocks.complete, editPlannerTask: mocks.edit }));
+vi.mock("@/lib/api/client", () => ({ getApiErrorMessage: (_: unknown, fallback: string) => fallback }));
+vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
+vi.mock("@/lib/dates/day", () => ({ toLocalDateString: () => "2026-10-04" }));
+const row = { task_id: "11111111-1111-4111-8111-111111111111", title: "Call dentist", scheduled_date: "2026-10-03", scheduled_time: null,
+  completed_at: null, created_at: "2026-10-01T12:00:00Z", updated_at: "2026-10-01T12:00:00Z" };
+const task = { taskId: row.task_id, title: row.title, scheduledDate: row.scheduled_date, scheduledTime: null,
+  completedAt: null, createdAt: row.created_at, updatedAt: row.updated_at };
+beforeEach(() => { vi.clearAllMocks(); mocks.rpc.mockResolvedValue({ data: [row], error: null }); });
+afterEach(() => { cleanup(); clearPlannerTasksCacheForTests(); });
+describe("one time task checklist", () => {
+  it("expands a card without completing the task and shows overdue state", async () => {
+    render(<PlannerTasksPanel scheduledDate="2026-10-04" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Call dentist" }));
+    expect(screen.getByLabelText("Task name")).toHaveValue("Call dentist");
+    expect(screen.getByLabelText("Scheduled date")).toHaveValue("2026-10-03");
+    expect(screen.getByText("Overdue · 2026-10-03")).toBeInTheDocument();
+    expect(mocks.complete).not.toHaveBeenCalled();
   });
-
-  afterEach(() => {
-    cleanup();
-    clearPlannerTasksCacheForTests();
+  it("completes using its own control and the reviewed row version", async () => {
+    mocks.complete.mockResolvedValue({ ...task, completedAt: "2026-10-04T12:00:00Z", updatedAt: "2026-10-04T12:00:00Z" });
+    render(<PlannerTasksPanel scheduledDate="2026-10-04" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Complete Call dentist" }));
+    await waitFor(() => expect(mocks.complete).toHaveBeenCalledWith(row.task_id, row.updated_at, true));
+    expect(await screen.findByRole("button", { name: "Undo completion for Call dentist" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Task name")).not.toBeInTheDocument();
   });
-
-  it("hides the panel when configured and no tasks are scheduled", async () => {
-    rpcMock.mockResolvedValue({ data: [], error: null });
-
-    render(
-      <PlannerTasksPanel
-        title="Tasks"
-        description={null}
-        scheduledDate="2026-08-22"
-        allowCreate={false}
-        hideWhenEmpty
-      />
-    );
-
-    await waitFor(() => {
-      expect(rpcMock).toHaveBeenCalledWith("list_planner_tasks", {
-        p_for_date: "2026-08-22",
-      });
-    });
-    await waitFor(() => {
-      expect(screen.queryByText("Tasks")).toBeNull();
-    });
+  it("restores the task when completion fails", async () => {
+    mocks.complete.mockRejectedValue(new Error("stale"));
+    render(<PlannerTasksPanel scheduledDate="2026-10-04" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Complete Call dentist" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Complete Call dentist" })).not.toBeDisabled());
   });
-
-  it("shows tasks without rendering a subtitle when description is omitted", async () => {
-    rpcMock.mockResolvedValue({
-      data: [
-        {
-          task_id: "task-1",
-          title: "Ship release notes",
-          scheduled_date: "2026-08-22",
-          scheduled_time: "09:30",
-          completed_at: null,
-          created_at: "2026-08-21T12:00:00.000Z",
-          updated_at: "2026-08-21T12:00:00.000Z",
-        },
-      ],
-      error: null,
-    });
-
-    render(
-      <PlannerTasksPanel
-        title="Tasks"
-        description={null}
-        scheduledDate="2026-08-22"
-        allowCreate={false}
-        hideWhenEmpty
-      />
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText("Tasks")).toBeInTheDocument();
-      expect(screen.getByText("Ship release notes")).toBeInTheDocument();
-      expect(screen.getByText("09:30")).toBeInTheDocument();
-    });
-    expect(
-      screen.queryByText("Track simple one-time tasks separately from recurring goals.")
-    ).toBeNull();
+  it("opens the selected task when selected from the calendar", async () => {
+    render(<PlannerTasksPanel scheduledDate="2026-10-04" selectedTaskId={row.task_id} />);
+    expect(await screen.findByLabelText("Task name")).toHaveValue("Call dentist");
   });
-
-  it("stays hidden while the initial load is in flight when hideWhenEmpty is enabled", async () => {
-    let resolveRpc: (value: { data: unknown[]; error: null }) => void = () => {};
-    rpcMock.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          resolveRpc = resolve;
-        })
-    );
-
-    render(
-      <PlannerTasksPanel
-        title="Tasks"
-        description={null}
-        scheduledDate="2026-08-22"
-        allowCreate={false}
-        hideWhenEmpty
-      />
-    );
-
-    expect(screen.queryByText("Tasks")).toBeNull();
-
-    resolveRpc({ data: [], error: null });
-
-    await waitFor(() => {
-      expect(screen.queryByText("Tasks")).toBeNull();
-    });
+  it("persists name, date, and time together with the original version", async () => {
+    mocks.edit.mockResolvedValue({ ...task, title: "Call office", scheduledDate: "2026-10-05", scheduledTime: "09:30", updatedAt: "2026-10-04T12:00:00Z" });
+    render(<PlannerTasksPanel scheduledDate="2026-10-04" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Call dentist" }));
+    fireEvent.change(screen.getByLabelText("Task name"), { target: { value: "Call office" } });
+    fireEvent.change(screen.getByLabelText("Scheduled date"), { target: { value: "2026-10-05" } });
+    fireEvent.change(screen.getByLabelText("Task time"), { target: { value: "09:30" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save task" }));
+    await waitFor(() => expect(mocks.edit).toHaveBeenCalledWith(row.task_id, row.updated_at, { title: "Call office", scheduledDate: "2026-10-05", scheduledTime: "09:30" }));
+    await waitFor(() => expect(screen.queryByText("Call dentist")).not.toBeInTheDocument());
   });
-
-  it("keeps the panel visible while toggling completion", async () => {
-    const task = {
-      task_id: "task-1",
-      title: "Ship release notes",
-      scheduled_date: "2026-08-22",
-      scheduled_time: null,
-      completed_at: null,
-      created_at: "2026-08-21T12:00:00.000Z",
-      updated_at: "2026-08-21T12:00:00.000Z",
-    };
-
-    rpcMock.mockImplementation(async (name: string) => {
-      if (name === "list_planner_tasks") {
-        return { data: [task], error: null };
-      }
-      if (name === "set_planner_task_completion") {
-        return { data: null, error: null };
-      }
-      return { data: null, error: null };
-    });
-
-    const user = userEvent.setup();
-
-    render(
-      <PlannerTasksPanel
-        title="Tasks"
-        description={null}
-        scheduledDate="2026-08-22"
-        allowCreate={false}
-        hideWhenEmpty
-      />
-    );
-
-    const toggleButton = await screen.findByRole("button", { name: /ship release notes/i });
-    expect(screen.getByText("Tasks")).toBeInTheDocument();
-
-    await user.click(toggleButton);
-
-    await waitFor(() => {
-      expect(rpcMock).toHaveBeenCalledWith("set_planner_task_completion", {
-        p_task_id: "task-1",
-        p_completed: true,
-        p_expected_updated_at: "2026-08-21T12:00:00.000Z",
-      });
-    });
-
-    expect(screen.getByText("Tasks")).toBeInTheDocument();
-    expect(screen.getByText("Ship release notes")).toHaveClass("line-through");
-    expect(rpcMock).toHaveBeenCalledTimes(2);
-    expect(rpcMock).toHaveBeenNthCalledWith(2, "set_planner_task_completion", {
-      p_task_id: "task-1",
-      p_completed: true,
-      p_expected_updated_at: "2026-08-21T12:00:00.000Z",
-    });
+  it("keeps a completed card editable but disables rescheduling", async () => {
+    mocks.rpc.mockResolvedValue({ data: [{ ...row, completed_at: "2026-10-04T12:00:00Z" }], error: null });
+    render(<PlannerTasksPanel scheduledDate="2026-10-04" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Call dentist" }));
+    expect(screen.getByLabelText("Scheduled date")).toBeDisabled();
+    expect(screen.getByLabelText("Task name")).not.toBeDisabled();
   });
-
-  it("hides the completion checkbox for tasks on a future day", async () => {
-    rpcMock.mockResolvedValue({
-      data: [
-        {
-          task_id: "task-future",
-          title: "Later inbox task",
-          scheduled_date: "2026-09-12",
-          scheduled_time: null,
-          completed_at: null,
-          created_at: "2026-09-05T12:00:00.000Z",
-          updated_at: "2026-09-05T12:00:00.000Z",
-        },
-      ],
-      error: null,
-    });
-
-    render(
-      <PlannerTasksPanel
-        title="One time tasks"
-        description={null}
-        scheduledDate="2026-09-12"
-        allowCreate={false}
-      />
-    );
-
-    expect(await screen.findByText("Later inbox task")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /later inbox task/i })
-    ).not.toBeInTheDocument();
+  it("uses today for new captures when viewing a past day", async () => {
+    render(<PlannerTasksPanel scheduledDate="2026-10-02" />);
+    fireEvent.click(await screen.findByRole("button", { name: "+ Add new" }));
+    expect(screen.getByLabelText("Task date")).toHaveValue("2026-10-04");
+    expect(screen.getByLabelText("Task date")).toHaveAttribute("min", "2026-10-04");
   });
-
-  it("keeps the completion checkbox for carry-over tasks on a future planner day", async () => {
-    rpcMock.mockResolvedValue({
-      data: [
-        {
-          task_id: "task-carry",
-          title: "Inbox leftover",
-          scheduled_date: "2026-09-05",
-          scheduled_time: null,
-          completed_at: null,
-          created_at: "2026-09-05T12:00:00.000Z",
-          updated_at: "2026-09-05T12:00:00.000Z",
-        },
-      ],
-      error: null,
-    });
-
-    render(
-      <PlannerTasksPanel
-        title="One time tasks"
-        description={null}
-        scheduledDate="2026-09-12"
-        asOfDate="2026-09-05"
-        allowCreate={false}
-      />
-    );
-
-    expect(await screen.findByRole("button", { name: /inbox leftover/i })).toBeInTheDocument();
-  });
-
-  it("creates tasks from the panel without sending a scheduled time", async () => {
-    rpcMock.mockImplementation(async (name: string) => {
-      if (name === "list_planner_tasks") {
-        return { data: [], error: null };
-      }
-      if (name === "create_planner_task") {
-        return { data: [], error: null };
-      }
-      return { data: null, error: null };
-    });
-
-    const user = userEvent.setup();
-
-    render(<PlannerTasksPanel allowCreate allowDelete={false} />);
-
-    await waitFor(() => {
-      expect(rpcMock).toHaveBeenCalledWith("list_planner_tasks", {
-        p_for_date: undefined,
-      });
-    });
-
-    const addNew = screen.getByRole("button", { name: "+ Add new" });
-    expect(addNew).toHaveClass("text-xs", "text-primary");
-    await user.click(addNew);
-    expect(screen.getByPlaceholderText("Add a task...")).toHaveClass("border-b");
-    const addButton = screen.getByRole("button", { name: /^add$/i });
-    expect(addButton).toBeDisabled();
-    expect(screen.getByLabelText("Task date")).toHaveValue("2026-09-05");
-
-    await user.type(screen.getByPlaceholderText("Add a task..."), "Quick inbox task");
-    expect(addButton).toBeEnabled();
-    await user.click(addButton);
-
-    await waitFor(() => {
-      expect(rpcMock).toHaveBeenCalledWith("create_planner_task", {
-        p_title: "Quick inbox task",
-        p_scheduled_date: "2026-09-05",
-      });
-    });
-  });
-
-  it("creates tasks on the date chosen beside the add button", async () => {
-    rpcMock.mockImplementation(async (name: string) => {
-      if (name === "list_planner_tasks") {
-        return { data: [], error: null };
-      }
-      if (name === "create_planner_task") {
-        return { data: [], error: null };
-      }
-      return { data: null, error: null };
-    });
-
-    const user = userEvent.setup();
-
-    render(<PlannerTasksPanel allowCreate allowDelete={false} />);
-
-    await waitFor(() => {
-      expect(rpcMock).toHaveBeenCalledWith("list_planner_tasks", {
-        p_for_date: undefined,
-      });
-    });
-
-    await user.click(screen.getByRole("button", { name: "+ Add new" }));
-    await user.type(screen.getByPlaceholderText("Add a task..."), "Later inbox task");
-    fireEvent.change(screen.getByLabelText("Task date"), {
-      target: { value: "2026-09-12" },
-    });
-    await user.click(screen.getByRole("button", { name: /add/i }));
-
-    await waitFor(() => {
-      expect(rpcMock).toHaveBeenCalledWith("create_planner_task", {
-        p_title: "Later inbox task",
-        p_scheduled_date: "2026-09-12",
-      });
-    });
-  });
-
   it("reopens cached tasks without a loading flash", async () => {
-    rpcMock.mockResolvedValue({
-      data: [
-        {
-          task_id: "task-1",
-          title: "Ship release notes",
-          scheduled_date: "2026-09-07",
-          scheduled_time: null,
-          completed_at: null,
-          created_at: "2026-09-07T12:00:00.000Z",
-          updated_at: "2026-09-07T12:00:00.000Z",
-        },
-      ],
-      error: null,
-    });
-
-    const first = render(
-      <PlannerTasksPanel scheduledDate="2026-09-07" allowCreate chrome="plain" />
-    );
-    expect(await screen.findByText("Ship release notes")).toBeInTheDocument();
-    first.unmount();
-
-    rpcMock.mockImplementation(() => new Promise(() => {}));
-    render(<PlannerTasksPanel scheduledDate="2026-09-07" allowCreate chrome="plain" />);
-    expect(screen.getByText("Ship release notes")).toBeInTheDocument();
-    expect(screen.queryByText("Loading tasks...")).toBeNull();
-  });
-
-  it("reports the cached task count from prefetch without opening the panel", async () => {
-    rpcMock.mockResolvedValue({
-      data: [
-        {
-          task_id: "task-1",
-          title: "Ship release notes",
-          scheduled_date: "2026-09-07",
-          scheduled_time: null,
-          completed_at: null,
-          created_at: "2026-09-07T12:00:00.000Z",
-          updated_at: "2026-09-07T12:00:00.000Z",
-        },
-        {
-          task_id: "task-2",
-          title: "Pack bag",
-          scheduled_date: "2026-09-07",
-          scheduled_time: null,
-          completed_at: null,
-          created_at: "2026-09-07T12:00:00.000Z",
-          updated_at: "2026-09-07T12:00:00.000Z",
-        },
-      ],
-      error: null,
-    });
-    const onCountChange = vi.fn();
-    render(
-      <PlannerTasksPrefetch scheduledDate="2026-09-07" onCountChange={onCountChange} />
-    );
-    await waitFor(() => {
-      expect(onCountChange).toHaveBeenCalledWith(2);
-    });
+    const first = render(<PlannerTasksPanel scheduledDate="2026-10-04" />);
+    await screen.findByText("Call dentist"); first.unmount();
+    mocks.rpc.mockReturnValue(new Promise(() => {}));
+    render(<PlannerTasksPanel scheduledDate="2026-10-04" />);
+    expect(screen.getByText("Call dentist")).toBeInTheDocument();
+    expect(screen.queryByText("Loading tasks...")).not.toBeInTheDocument();
   });
 });

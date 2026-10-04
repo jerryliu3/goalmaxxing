@@ -716,7 +716,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         onMoveDialogSourceChange={setMoveDialogSourceEntryKey}
         onMoveDialogCancel={closeMoveDialog}
         onMoveDialogSubmit={submitMoveDialog}
-        selectedEventEntry={selectedEventEntry}
+        selectedEventEntry={selectedEventEntry?.entryKind === "task" ? null : selectedEventEntry}
         selectedEventLinkedTargets={selectedEventLinkedTargets}
         selectedEventGoal={selectedEventGoal}
         selectedEventPresentation={selectedEventPresentation}

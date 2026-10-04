@@ -49,6 +49,7 @@ export const plannerCalendarTaskRowSchema = z
     id: z.uuid().optional(),
     task_id: z.uuid().optional(),
     updated_at: z.string(),
+    created_at: z.string().optional(),
     title: z.string().trim().min(1).max(200),
     scheduled_date: z.iso.date(),
     scheduled_time: z.string().nullable().optional(),
@@ -65,6 +66,7 @@ export interface PlannerCalendarTask {
   scheduledTime: string | null;
   completedAt: string | null;
   updatedAt: string;
+  createdAt?: string;
 }
 
 function mapPlannerCalendarTask(
@@ -81,6 +83,7 @@ function mapPlannerCalendarTask(
     scheduledTime: row.scheduled_time ?? null,
     completedAt: row.completed_at ?? null,
     updatedAt: row.updated_at,
+    ...(row.created_at ? { createdAt: row.created_at } : {}),
   };
 }
 

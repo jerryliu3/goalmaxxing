@@ -218,7 +218,7 @@ function residue(root: HTMLElement, mode: PlanSceneMode) {
     const node = clonePlanNode(source);
     node.style.opacity = '1';
     node.style.visibility = 'visible';
-    // Leave section headings, todos, empty states and other non-carried content.
+    // Leave section headings, tasks, empty states and other non-carried content.
     // They fade independently, without fading the moving items themselves.
     node.querySelectorAll<HTMLElement>('[data-planner-entry-key], [data-plan-day-number], [data-plan-weekday], [data-calendar-weekday-grid], [data-testid="plan-desktop-day-pane"], [data-plan-day-section]').forEach(el => el.style.visibility = 'hidden');
     if (mode !== 'day') node.querySelectorAll<HTMLElement>(DAY).forEach(el => el.style.visibility = 'hidden');

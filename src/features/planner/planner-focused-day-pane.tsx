@@ -101,8 +101,9 @@ export function PlannerFocusedDayPane({
   const TitleTag = titleAs;
   const draftMove = useUnscheduledDraftMove();
   const [taskCount, setTaskCount] = useState(0);
-  const visibleEntries = entries.filter((entry) => entry.entryKind !== "task");
-    const unscheduledCount = useMemo(() => {
+  const selectedTaskId = selectedEntryKey?.startsWith("task:") ? selectedEntryKey.slice(5) : null;
+  const visibleEntries = useMemo(() => entries.filter((entry) => entry.entryKind !== "task"), [entries]);
+  const unscheduledCount = useMemo(() => {
     if (!dayChecklist) {
       return 0;
     }
@@ -115,7 +116,7 @@ export function PlannerFocusedDayPane({
       viewDate: day,
       visibleGoalIds: dayChecklist.visibleGoalIds,
     }).length;
-  }, [day, dayChecklist, hideTasks, visibleEntries]);
+  }, [day, dayChecklist, visibleEntries]);
   const visibleMarkers = completionFactMarkers;
   const viewerMarkers = useMemo(
     () => visibleMarkers.filter((marker) => marker.owner !== "partner"),
@@ -322,14 +323,17 @@ export function PlannerFocusedDayPane({
           {hideTasks ? null : (
             <>
               <PlannerTasksPrefetch scheduledDate={day} onCountChange={setTaskCount} />
-              <PlanDaySection key={`${day}-tasks`} title="One time tasks" count={taskCount} defaultOpen={false}>
+              <PlanDaySection key={`${day}-tasks`} title="One time tasks" count={taskCount} defaultOpen={false} revealKey={selectedTaskId}>
                 <PlannerTasksPanel
                   key={day}
+                  selectedTaskId={selectedTaskId}
                   title="One time tasks"
                   description={null}
                   scheduledDate={day}
                   asOfDate={asOfDate}
                   allowCreate
+                  allowDrag
+                  allowDelete
                   hideWhenEmpty={false}
                   chrome="plain"
                   onCountChange={setTaskCount}

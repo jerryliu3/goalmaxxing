@@ -184,7 +184,7 @@ export function CalendarSurface({
         applyGoalFocus: boolean;
       }
     ) => {
-      if (!canOpenPlannerEventDetails(entry)) {
+      if (!canOpenPlannerEventDetails(entry) && !isPlannerTaskCalendarEntry(entry)) {
         return;
       }
       const isActive =
@@ -244,7 +244,7 @@ export function CalendarSurface({
       if (!(target instanceof Element)) {
         return;
       }
-      // Checklist chrome (todos, drag, section toggles) should not dismiss the
+      // Checklist chrome (tasks, drag, section toggles) should not dismiss the
       // open session editor; entry clicks still update selection via click.
       if (
         target.closest(`[data-testid="${PLANNER_CHECKLIST_PANE_TEST_ID}"]`)
@@ -1060,7 +1060,7 @@ export function CalendarSurface({
     dayPreviewInteractions,
     setupRestWeekdays,
     setSetupRestWeekdays,
-    hideTasks,
+    hideTasks: hideTasks || plannerReadOnly,
     onHideTasksChange: setHideTasks,
     setupLoading,
     recoverLoading,
