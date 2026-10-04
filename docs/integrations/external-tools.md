@@ -7,6 +7,11 @@ Goalmaxxing exposes one set of deterministic account operations through:
 - **OpenAPI 3.1:** `https://YOUR_APP_ORIGIN/api/v1/openapi.json`
 - **Public guide:** `https://YOUR_APP_ORIGIN/developers`
 
+`YOUR_APP_ORIGIN` is a documentation placeholder for the deployed Goalmaxxing
+site origin, such as `https://goals.example.com`; it is not an environment
+variable. Configure the actual environment variable `NEXT_PUBLIC_APP_URL` with
+that same origin.
+
 The assistant supplies reasoning, coaching, parsing, and its other connected
 services. These operations never call Goalmaxxing's LLM, consume its AI quota,
 or generate AI briefings. Goalmaxxing still incurs normal hosting/database costs.
@@ -40,10 +45,12 @@ There is no background agent or subscription-to-API billing conversion here.
 
 ## Connect an assistant
 
-For a remote MCP-capable host, add the HTTPS `/api/mcp` URL and choose OAuth.
-Sign in to Goalmaxxing and approve the account connection. The host stores tokens
-and refreshes them; do not paste passwords, refresh tokens, or service-role keys
-into conversations. Disconnect from Goalmaxxing Settings → Integrations.
+For a remote MCP-capable host, add `https://YOUR_APP_ORIGIN/api/mcp` as its
+remote MCP server and choose OAuth when prompted. Sign in to Goalmaxxing and
+approve the account connection; then enable the Goalmaxxing tools in that host's
+agent or conversation. The host stores tokens and refreshes them; do not paste
+passwords, refresh tokens, or service-role keys into conversations. Disconnect
+from Goalmaxxing Settings → Integrations.
 
 - ChatGPT: add the server through developer-mode custom plugin/app setup, where
   your account and workspace allow it. Public directory distribution requires a

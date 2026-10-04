@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { ApiRouteError, createCorrelationId, handleApiRouteError } from "@/lib/api/route";
 import { reportError } from "@/lib/observability/report-error";
 import { requireExternalContext, externalAuthErrorResponse, type ExternalContext } from "./auth";
@@ -21,7 +22,7 @@ export function createAccountMcpServer(context: ExternalContext) {
       inputSchema: operationSchemas[name],
       annotations: { readOnlyHint: metadata.readOnly, destructiveHint: metadata.destructive ?? false, idempotentHint: true, openWorldHint: false },
       _meta: { securitySchemes: [{ type: "oauth2", scopes: ["openid"] }] },
-    }, async input => {
+    }, async (input: z.infer<(typeof operationSchemas)[OperationName]>) => {
       const correlationId = createCorrelationId();
       try {
         const data = await executeOperation(context, name, input);
