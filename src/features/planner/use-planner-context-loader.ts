@@ -153,7 +153,9 @@ export function usePlannerContextLoader({
         setLoading(false);
         if (!forcePrepare && prepareRequestRef.current?.month !== month && isTabDataCacheFresh(cachedWindowIsWide ? goalCacheKey : plannerContextCacheKey)) {
           calendarPreparedRef.current = true;
-          warmGoalView(cachedContextPayload);
+          // A complete cached Goal View already has its projection; applying
+          // the same expanded payload again would rebuild every projected day.
+          if (!cachedWindowIsWide) warmGoalView(cachedContextPayload);
           return true;
         }
       }
