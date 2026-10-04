@@ -2360,6 +2360,16 @@ values
     now() - interval '70 minutes'
   );
 
+-- The drag rail needs a saved session, not just an unscheduled fixture goal.
+-- Monthly cadence leaves several nearby future drop targets in the current month.
+update public.goals set recurrence_interval='monthly',target_count=1,target_basis='period',
+  start_date=date_trunc('month',current_date)::date
+where id='10000000-0000-4000-8000-000000000022';
+insert into public.planner_items(owner_id,goal_id,unit_key,scheduled_date,locked)
+values ('11111111-1111-4111-8111-111111111111','10000000-0000-4000-8000-000000000022',
+  format('cadence:%s:1',to_char(date_trunc('month',current_date),'YYYY-MM-DD')),current_date,false)
+on conflict(goal_id,unit_key) do update set scheduled_date=excluded.scheduled_date,locked=false;
+
 -- Cadence schedule-affinity E2E fixture: monthly gym 4x with out-of-order planner slots.
 do $$
 declare

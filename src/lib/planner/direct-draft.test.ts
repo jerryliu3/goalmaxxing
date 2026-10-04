@@ -169,6 +169,22 @@ describe("buildDirectDraftPersistence", () => {
     ]);
   });
 
+  it("validates swaps against the final batch in either command order", () => {
+    const moves = assignments.map((assignment, index) => ({
+      id: `33333333-3333-4333-8333-33333333333${index}`,
+      sequence: index + 1,
+      kind: "move_item" as const,
+      goalId: goal.id,
+      unitKey: assignment.unitKey,
+      sourceDate: assignment.scheduledDate,
+      scheduledDate: assignments[1 - index]!.scheduledDate,
+    }));
+    for (const commands of [moves, moves.map((move) => ({ ...move, sequence: 3 - move.sequence }))]) {
+      const result = buildDirectDraftPersistence({ snapshot, commands, asOfDate: "2026-08-05", writeWindow: { start: "2026-08-01", end: "2026-09-30" } });
+      expect(result.map((item) => item.scheduled_date)).toEqual(["2026-09-10", "2026-08-10"]);
+    }
+  });
+
   it("rejects a duplicate date without moving either item", () => {
     expect(() =>
       buildDirectDraftPersistence({

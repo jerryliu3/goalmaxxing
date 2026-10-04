@@ -137,6 +137,7 @@ export function buildDirectDraftPersistence({
       ? (creditedDateByKey.get(key) ?? null)
       : (projectedDateByKey.get(key) ?? null);
 
+  const movedAssignments = new Map<string, { goalId: string; unitKey: string }>();
   for (const command of sortPlannerDraftCommands(commands)) {
     const key = assignmentKey(command);
     const assignment = canonicalAssignmentByKey.get(key);
@@ -266,32 +267,29 @@ export function buildDirectDraftPersistence({
           }
         );
       }
-      const conflictingAssignment = Array.from(
-        canonicalAssignmentByKey.values()
-      ).find(
-        (candidate) =>
-          candidate.goalId === command.goalId &&
-          assignmentKey(candidate) !== key &&
-          persistedDateFor(assignmentKey(candidate)) === command.scheduledDate
-      );
-      const completionConflict = snapshot.completions.some(
-        (completion) =>
-          completion.goal_id === command.goalId &&
-          completion.completed_on === command.scheduledDate
-      );
-      if (conflictingAssignment || completionConflict) {
-        throw new PlannerDirectDraftValidationError(
-          "draft_destination_conflict",
-          "That goal already has a session or completion on the selected date.",
-          {
-            goalId: command.goalId,
-            unitKey: command.unitKey,
-            scheduledDate: command.scheduledDate,
-          }
-        );
-      }
     }
+    movedAssignments.set(key, command);
     projectedDateByKey.set(key, command.scheduledDate);
+  }
+
+  // Validate the final batch, so swaps and chains do not depend on command order.
+  for (const [key, command] of movedAssignments) {
+    const destination = projectedDateByKey.get(key);
+    if (!destination) continue;
+    const conflictingAssignment = Array.from(canonicalAssignmentByKey.values()).some(
+      (candidate) => candidate.goalId === command.goalId && assignmentKey(candidate) !== key &&
+        persistedDateFor(assignmentKey(candidate)) === destination
+    );
+    const completionConflict = snapshot.completions.some(
+      (completion) => completion.goal_id === command.goalId && completion.completed_on === destination
+    );
+    if (conflictingAssignment || completionConflict) {
+      throw new PlannerDirectDraftValidationError(
+        "draft_destination_conflict",
+        "That goal already has a session or completion on the selected date.",
+        { goalId: command.goalId, unitKey: command.unitKey, scheduledDate: destination }
+      );
+    }
   }
 
   return Array.from(canonicalAssignmentByKey.values()).map((assignment) => {

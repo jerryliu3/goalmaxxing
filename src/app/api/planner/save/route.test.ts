@@ -56,6 +56,7 @@ vi.mock("@/lib/planner/kernel", async () => {
 });
 
 import { POST } from "./route";
+import { preparePlannerSchedule } from "@/lib/planner/save-service";
 
 describe("planner save route", () => {
   beforeEach(() => {
@@ -117,6 +118,18 @@ describe("planner save route", () => {
       },
       activePlan: null,
     });
+  });
+
+  it("shared preparation rejects invalid plans without performing a write", async () => {
+    mocks.runPlannerKernel.mockImplementationOnce(() => {
+      throw new PlannerError("validation_failed", 400, "Invalid plan");
+    });
+    const context = await mocks.requirePlannerRouteContext();
+    const body = await mocks.parseBoundedJsonBody();
+    await expect(preparePlannerSchedule(context, body)).rejects.toMatchObject({
+      code: "validation_failed", status: 400,
+    });
+    expect(mocks.routeRpc).not.toHaveBeenCalled();
   });
 
   it("maps planner kernel validation errors to typed 400 responses", async () => {
