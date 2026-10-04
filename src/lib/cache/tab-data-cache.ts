@@ -12,6 +12,7 @@ interface PersistedTabDataCacheRecord<TValue> extends TabDataCacheRecord<TValue>
 }
 
 const tabDataCache = new Map<string, TabDataCacheRecord<unknown>>();
+const pendingLoads = new Map<string, Promise<unknown>>();
 let tabDataCacheScope = DEFAULT_TAB_DATA_CACHE_SCOPE;
 
 function isBrowser() {
@@ -157,6 +158,7 @@ export function writeTabDataCache<TValue>(
   value: TValue,
   ttlMs = TAB_DATA_CACHE_TTL_MS
 ) {
+  pendingLoads.delete(cacheKey);
   const record: TabDataCacheRecord<TValue> = {
     freshUntil: Date.now() + ttlMs,
     value,
@@ -165,7 +167,33 @@ export function writeTabDataCache<TValue>(
   writePersistentRecord(cacheKey, record);
 }
 
+/** Share a background warmup with foreground readers of the same scoped data. */
+export function loadTabDataCache<TValue>(
+  cacheKey: string,
+  load: () => Promise<TValue>,
+  { forceRefresh = false, ttlMs = TAB_DATA_CACHE_TTL_MS } = {}
+): Promise<TValue> {
+  const cached = readTabDataCache<TValue>(cacheKey);
+  if (!forceRefresh && cached && isTabDataCacheFresh(cacheKey)) {
+    return Promise.resolve(cached);
+  }
+  const pending = pendingLoads.get(cacheKey);
+  if (!forceRefresh && pending) return pending as Promise<TValue>;
+
+  const request: Promise<TValue> = Promise.resolve().then(load).then(value => {
+    // Invalidation/user switching detaches old requests, so they cannot refill
+    // the cache with a pre-mutation snapshot or another user's data.
+    if (pendingLoads.get(cacheKey) === request) writeTabDataCache(cacheKey, value, ttlMs);
+    return value;
+  }).finally(() => {
+    if (pendingLoads.get(cacheKey) === request) pendingLoads.delete(cacheKey);
+  });
+  pendingLoads.set(cacheKey, request);
+  return request;
+}
+
 export function invalidateTabDataCache(cacheKey: string) {
+  pendingLoads.delete(cacheKey);
   tabDataCache.delete(cacheKey);
   removePersistentRecord(cacheKey);
 }
@@ -181,6 +209,9 @@ function markRecordStale(cacheKey: string) {
 }
 
 export function markTabDataCacheStaleByPrefix(prefix: string) {
+  for (const key of pendingLoads.keys()) {
+    if (key.startsWith(prefix)) pendingLoads.delete(key);
+  }
   const matchingKeys = new Set<string>();
   for (const key of tabDataCache.keys()) {
     if (key.startsWith(prefix)) {
@@ -218,11 +249,13 @@ export function setTabDataCacheScope(scope: string | null | undefined) {
   }
   tabDataCacheScope = nextScope;
   tabDataCache.clear();
+  pendingLoads.clear();
   purgePersistentStorageForOtherScopes(nextScope);
 }
 
 export function resetTabDataCacheForTests() {
   tabDataCache.clear();
+  pendingLoads.clear();
   tabDataCacheScope = DEFAULT_TAB_DATA_CACHE_SCOPE;
   for (const storageKey of sessionStorageKeys()) {
     if (storageKey.startsWith(`${TAB_DATA_CACHE_STORAGE_PREFIX}:`)) {

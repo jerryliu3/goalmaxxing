@@ -28,12 +28,15 @@ vi.mock("@/features/social/data", () => ({
 }));
 
 import { warmAppTabData } from "@/lib/cache/warm-app-tab-data";
+import { resetTabDataCacheForTests } from "@/lib/cache/tab-data-cache";
+import { buildGoalViewWindow } from "@/features/planner/goal-view/goal-view-model";
 
 describe("warmAppTabData", () => {
   beforeEach(() => {
+    resetTabDataCacheForTests();
     mocks.fetchChecklistTodayData.mockReset().mockResolvedValue({ userId: "user-1" });
     mocks.fetchInsightsData.mockReset().mockResolvedValue({ userId: "user-1" });
-    mocks.getJson.mockReset().mockResolvedValue({ month: "2026-09" });
+    mocks.getJson.mockReset().mockResolvedValue({ scopeMonth: "2026-10", asOfDate: "2026-10-04" });
     mocks.fetchSocialChallenges.mockReset().mockResolvedValue({});
     mocks.fetchSocialLeaderboards.mockReset().mockResolvedValue({});
     mocks.fetchSocialTeamState.mockReset().mockResolvedValue({});
@@ -49,6 +52,10 @@ describe("warmAppTabData", () => {
     expect(mocks.fetchChecklistTodayData).not.toHaveBeenCalled();
     expect(mocks.fetchInsightsData).not.toHaveBeenCalled();
     expect(mocks.getJson).toHaveBeenCalled();
+    const window = buildGoalViewWindow("2026-10-04");
+    expect(mocks.getJson).toHaveBeenCalledWith("/api/planner/context", {
+      query: expect.objectContaining({ visibleStart: window.start, visibleEnd: window.end }),
+    });
     expect(mocks.fetchSocialChallenges).toHaveBeenCalled();
     expect(mocks.fetchSocialLeaderboards).toHaveBeenCalled();
     expect(mocks.fetchSocialTeamState).toHaveBeenCalled();

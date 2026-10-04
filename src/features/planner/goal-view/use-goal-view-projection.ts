@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { buildGoalViewWindow, listWindowDays } from "./goal-view-model";
+import { listWindowDays } from "./goal-view-model";
 
 /**
  * The days Goal View reads while open, and the planner projection days widened
@@ -7,16 +7,16 @@ import { buildGoalViewWindow, listWindowDays } from "./goal-view-model";
  */
 export function useGoalViewProjection({
   open,
-  today,
+  window,
   baseProjectionDays,
 }: {
   open: boolean;
-  today: string;
+  window: { start: string; end: string } | null;
   baseProjectionDays: string[];
 }) {
   const goalViewDays = useMemo(
-    () => (open ? listWindowDays(buildGoalViewWindow(today)) : []),
-    [open, today]
+    () => (open && window ? listWindowDays(window) : []),
+    [open, window]
   );
   const projectionDays = useMemo(
     () =>

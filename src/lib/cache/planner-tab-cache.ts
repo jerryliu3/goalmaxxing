@@ -46,8 +46,8 @@ export function buildInsightsDataCacheKey({
   return `${INSIGHTS_DATA_CACHE_PREFIX}${subjectUserId}:${selectedYear}:${asOfDate}:${partnerScope}`;
 }
 
-export function buildPlannerContextCacheKey(month: string) {
-  return `${PLANNER_CONTEXT_CACHE_PREFIX}${month}`;
+export function buildPlannerContextCacheKey(month: string, window?: { start: string; end: string }) {
+  return `${PLANNER_CONTEXT_CACHE_PREFIX}${month}${window ? `:${window.start}:${window.end}` : ""}`;
 }
 
 export function subscribePlannerTabCacheInvalidation(listener: () => void) {

@@ -84,7 +84,7 @@ export interface PlannerCalendarSurfaceLayoutProps {
   draftSaveBlocked: boolean;
   viewMode: PlannerCalendarViewMode;
   goalViewOpen: boolean;
-  /** Goal View is open and its wide planner window has loaded. */
+  /** Goal View is open and its initial calendar snapshot is available. */
   goalViewVisible: boolean;
   showPastSessions: boolean;
   setShowPastSessions: (value: boolean) => void;
@@ -92,6 +92,7 @@ export interface PlannerCalendarSurfaceLayoutProps {
   setGoalViewPreviewOpen: (open: boolean) => void;
   onGoalViewOpenChange: (open: boolean) => void;
   goalViewSessions: GoalViewSession[];
+  goalViewWindow: { start: string; end: string } | null;
   onGoalViewMoveSession: (entry: PlannerDayDetailEntry, date: string) => void;
   showTasksInsteadOfGoals: boolean;
   onShowTasksInsteadOfGoalsChange: (value: boolean) => void;
@@ -255,6 +256,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     setGoalViewPreviewOpen,
     onGoalViewOpenChange,
     goalViewSessions,
+    goalViewWindow,
     onGoalViewMoveSession,
     showTasksInsteadOfGoals,
     onShowTasksInsteadOfGoalsChange,
@@ -511,13 +513,14 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             loading={loading}
             viewMode={viewMode}
             goalView={
-              goalViewVisible ? (
+              goalViewVisible && goalViewWindow ? (
                 <PlannerGoalView
                   goals={dayChecklist.data.goals}
                   completedGoalIds={dayChecklist.listModel.targetAchievedGoalIds}
                   showCompletedGoals={showCompletedGoals}
                   progressSummaries={dayChecklist.data.progress?.summaries ?? []}
                   sessions={goalViewSessions}
+                  window={goalViewWindow}
                   today={context?.asOfDate ?? focusedDay}
                   weekStartsOn={context?.preferences?.defaultPolicy.weekStartsOn}
                   showPast={showPastSessions}

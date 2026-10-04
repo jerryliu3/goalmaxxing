@@ -28,6 +28,7 @@ function mount(overrides: Partial<PlannerGoalViewProps> = {}) {
     showCompletedGoals: false,
     progressSummaries: [{ goalId: "run" } as never],
     sessions: [session],
+    window: { start: "2026-10-01", end: "2026-10-31" },
     today: "2026-10-02",
     weekStartsOn: undefined,
     showPast: false,

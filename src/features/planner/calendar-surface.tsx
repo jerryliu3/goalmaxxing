@@ -29,7 +29,7 @@ import {
   useCalendarSurfaceInteractionRefs,
   useCalendarSurfaceUiEffects,
 } from "@/features/planner/use-calendar-surface-ui-effects";
-import { buildGoalViewSessions } from "@/features/planner/goal-view/goal-view-model";
+import { buildGoalViewSessions, buildGoalViewWindow } from "@/features/planner/goal-view/goal-view-model";
 import { useGoalViewProjection } from "@/features/planner/goal-view/use-goal-view-projection";
 import { getDateInTimezone, resolveUserTimezone } from "@/lib/dates/timezone";
 import {
@@ -143,12 +143,11 @@ export function CalendarSurface({
   const [showCompletedGoals, setShowCompletedGoals] = useState(false);
   // Goal View is a lens on the same planner context, not a calendar view mode.
   const [goalViewOpen, setGoalViewOpen] = useState(false);
-  // True once the loader has fetched Goal View's wide window, so the view (and
-  // its morph) starts from complete data instead of the calendar's narrow one.
-  const [goalViewReady, setGoalViewReady] = useState(false);
+  // Starts with the calendar window and expands after its background read.
+  const [goalViewWindow, setGoalViewWindow] = useState<{ start: string; end: string } | null>(null);
   const [showPastSessions, setShowPastSessions] = useState(false);
   const [goalViewPreviewOpen, setGoalViewPreviewOpen] = useState(false);
-  const goalViewVisible = goalViewOpen && goalViewReady;
+  const goalViewVisible = goalViewOpen && goalViewWindow !== null;
   const [searchQuery, setSearchQuery] = useState("");
   const {
     draftPolicy,
@@ -294,7 +293,7 @@ export function CalendarSurface({
     selectedDay,
     viewMode,
     goalViewOpen,
-    setGoalViewReady,
+    setGoalViewWindow,
     setupTimezone,
     setupWeekStartsOn,
     onMonthChange,
@@ -364,7 +363,7 @@ export function CalendarSurface({
   ]);
   const { goalViewDays, projectionDays: modelProjectionDays } = useGoalViewProjection({
     open: goalViewOpen,
-    today: calendarTodayForTasks,
+    window: goalViewWindow,
     baseProjectionDays: additionalProjectionDays,
   });
   const { taskEntriesByDate, completeTask, rescheduleTask } = useCalendarPlannerTasks({
@@ -922,9 +921,16 @@ export function CalendarSurface({
       // loadContext reads even a stale cache before fetching. Update both
       // baselines so a failed fetch cannot restore the old digest or source date.
       writeTabDataCache(buildPlannerContextCacheKey(savedContext.scopeMonth), savedContext, 0);
+      if (goalViewOpen) {
+        writeTabDataCache(
+          buildPlannerContextCacheKey(savedContext.scopeMonth, buildGoalViewWindow(savedContext.asOfDate)),
+          savedContext,
+          0
+        );
+      }
       setContext(savedContext);
     },
-    [context, draftSaveCommands, draftSaveWindow]
+    [context, draftSaveCommands, draftSaveWindow, goalViewOpen]
   );
 
   const {
@@ -1099,6 +1105,7 @@ export function CalendarSurface({
     goalViewPreviewOpen,
     setGoalViewPreviewOpen,
     goalViewSessions,
+    goalViewWindow,
     onGoalViewMoveSession: updateDraftScheduledDate,
     searchQuery,
     savePlan,
