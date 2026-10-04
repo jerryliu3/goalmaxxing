@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { withRoute } from "@/lib/api/route";
 import { getServerEnv } from "@/lib/env";
-import { getFeatureFlags } from "@/lib/feature-flags";
+import { areExternalToolsEnabled, getFeatureFlags } from "@/lib/feature-flags";
 
 export const runtime = "nodejs";
 
@@ -24,6 +24,7 @@ export async function GET() {
     return NextResponse.json(
       {
         schemaVersion: "1",
+        externalToolsEnabled: areExternalToolsEnabled(),
         flags: publicMobileFlags(),
         minSupportedAppVersion: env.MOBILE_MIN_SUPPORTED_APP_VERSION ?? null,
         integrationsRolloutStage: env.INTEGRATIONS_ROLLOUT_STAGE,

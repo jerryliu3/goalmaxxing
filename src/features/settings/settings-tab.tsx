@@ -19,6 +19,7 @@ import { LoadingCard } from "@/components/ui/loading-card";
 import { DigestSettings } from "@/features/digest/digest-settings";
 import { OnboardingGuidesSettings } from "@/features/onboarding/onboarding-guides-settings";
 import { AppearanceSettings } from "@/features/settings/appearance-settings";
+import { ExternalAppConnections } from "@/features/settings/external-app-connections";
 import { IntegrationsSettings } from "@/features/settings/integrations-settings";
 import { PlannerPreferencesSettings, type PlannerPreferencesDraft } from "@/features/settings/planner-preferences-settings";
 import { ReportIssueSettings } from "@/features/settings/report-issue-settings";
@@ -389,7 +390,7 @@ function SettingsSectionEditor({
   }
 
   if (settingsSection === "integrations") {
-    return <IntegrationsSettings goals={ownGoals} />;
+    return <div className="space-y-6"><ExternalAppConnections /><IntegrationsSettings goals={ownGoals} /></div>;
   }
 
   return <ReportIssueSettings />;
