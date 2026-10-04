@@ -543,6 +543,7 @@ const auditedRouteCases: AuditedRouteCase[] = [
 ];
 
 const unauthenticatedHandlers = new Set([
+  "GET /api/v1/openapi.json",
   "GET /api/config",
   "GET /api/push/dispatch",
   "POST /api/push/dispatch",

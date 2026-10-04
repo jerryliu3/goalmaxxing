@@ -1,7 +1,7 @@
 import type { PlannerDraftCommand } from "@/lib/planner/draft-commands";
 import type { PlannerPolicy } from "@/lib/planner/policy";
 import { buildPlannerConfirmationHash } from "@/lib/planner/publish-payload";
-import type { PlannerContextPayload } from "./calendar-surface.types";
+import type { PlannerContextPayload } from "@cadence/shared/planner/context";
 
 type PlannerSavePreview = NonNullable<PlannerContextPayload["preview"]>;
 

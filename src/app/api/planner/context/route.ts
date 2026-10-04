@@ -1,3 +1,4 @@
+import { contextQuerySchema, previewRequestSchema } from "@/lib/planner/contracts/requests";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
@@ -48,71 +49,6 @@ import {
 } from "@/lib/planner/linked-source-coverage";
 
 export const runtime = "nodejs";
-
-const contextQuerySchema = z.object({
-  scopeMonth: z
-    .string()
-    .regex(/^\d{4}-\d{2}$/)
-    .refine((month) => {
-      const monthNumber = Number(month.slice(5, 7));
-      return monthNumber >= 1 && monthNumber <= 12;
-    }, "Invalid scope month."),
-  asOfDate: z.iso.date().optional(),
-  timezone: z
-    .string()
-    .trim()
-    .min(1)
-    .max(100)
-    .refine(isValidIanaTimezone)
-    .optional(),
-  visibleStart: z.iso.date().optional(),
-  visibleEnd: z.iso.date().optional(),
-});
-
-const previewRequestSchema = z
-  .object({
-    startDate: z.iso.date(),
-    endDate: z.iso.date(),
-    asOfDate: z.iso.date().optional(),
-    timezone: z
-      .string()
-      .trim()
-      .min(1)
-      .max(100)
-      .refine(isValidIanaTimezone)
-      .optional(),
-    policy: z.unknown().optional(),
-    source: z.enum(["manual", "ai", "update"]).default("manual"),
-    /**
-     * `replan` is a proposal-generation mode: the caller diffs the result against
-     * the current preview, turns the differences into `move_item` draft commands,
-     * then re-requests a `stable` preview pinned to those commands. A `replan`
-     * preview must never be stored as the draft or sent to save; the save route
-     * always solves `stable`, so its hash would not match.
-     */
-    solveIntent: z.enum(["stable", "replan"]).default("stable"),
-    /**
-     * Recovery is the same proposal shape as `replan`, for a different question:
-     * where would uncredited sessions whose saved date has already passed go if
-     * the solver were free to re-place them? The caller diffs it against a plain
-     * preview over the same window and pins the differences. Never stored as the
-     * draft, never sent to save.
-     */
-    recoverPastPlacements: z.boolean().default(false),
-    draftCommands: z.array(plannerDraftCommandSchema).max(4000).default([]),
-  })
-  .superRefine((value, ctx) => {
-    try {
-      assertDateWindow({ start: value.startDate, end: value.endDate });
-    } catch (error) {
-      ctx.addIssue({
-        code: "custom",
-        message:
-          error instanceof Error ? error.message : "Invalid planner window.",
-        path: ["endDate"],
-      });
-    }
-  });
 
 const upsertPreferencesSchema = z.object({
   timezone: z
@@ -443,7 +379,7 @@ export async function POST(request: Request) {
       }
       throw error;
     }
-    const { asOfDate, effectiveTimezone, preview } = resolvedPreview;
+    const { asOfDate, effectiveTimezone, effectivePolicy, preview } = resolvedPreview;
 
     const responseBody = {
       schemaVersion: "1",
@@ -452,6 +388,7 @@ export async function POST(request: Request) {
       endDate: body.endDate,
       asOfDate,
       timezone: effectiveTimezone,
+      policy: effectivePolicy,
       revisions: snapshot.revisions,
       baseActivePlan: snapshot.activePlan
         ? {

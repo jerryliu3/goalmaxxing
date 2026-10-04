@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   private: {
     Tables: {
+      external_mutation_receipts: {
+        Row: {
+          created_at: string
+          operation: string
+          owner_id: string
+          payload: Json
+          request_id: string
+          result: Json
+        }
+        Insert: {
+          created_at?: string
+          operation: string
+          owner_id: string
+          payload: Json
+          request_id: string
+          result: Json
+        }
+        Update: {
+          created_at?: string
+          operation?: string
+          owner_id?: string
+          payload?: Json
+          request_id?: string
+          result?: Json
+        }
+        Relationships: []
+      }
       xp_recompute_outbox: {
         Row: {
           goal_id: string
@@ -3344,6 +3371,10 @@ export type Database = {
           p_kind: string
           p_owner: string
         }
+        Returns: Json
+      }
+      external_account_mutation: {
+        Args: { p_operation: string; p_payload: Json; p_request_id: string }
         Returns: Json
       }
       find_profile_by_username: {

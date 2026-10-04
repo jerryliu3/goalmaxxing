@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildPlannerSaveRequestBody } from "@/features/planner/planner-save-request";
+import { buildPlannerSaveRequestBody } from "@/lib/planner/save-request";
 import { buildPlannerConfirmationHash } from "@/lib/planner/publish-payload";
 import { createDefaultPlannerPolicy } from "@/lib/planner/policy";
-import type { PlannerContextPayload } from "@/features/planner/calendar-surface.types";
+import type { PlannerContextPayload } from "@cadence/shared/planner/context";
 
 type Preview = NonNullable<PlannerContextPayload["preview"]>;
 
