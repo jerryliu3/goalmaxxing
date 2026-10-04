@@ -14,6 +14,7 @@ function publicMobileFlags() {
     integrationsEnabled: flags.integrationsEnabled,
     journeyEnabled: flags.journeyEnabled,
     digestEnabled: flags.digestEnabled,
+    coachEnabled: flags.coachEnabled,
   };
 }
 

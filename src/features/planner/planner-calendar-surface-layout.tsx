@@ -8,8 +8,6 @@ import {
 } from "@/features/planner/calendar-scroll-position";
 import type { GoalViewSession } from "@/features/planner/goal-view/goal-view-model";
 import { PlannerGoalView } from "@/features/planner/goal-view/planner-goal-view";
-import { PlannerCoachPanel } from "@/features/planner/coach/planner-coach-panel";
-import type { usePlannerCoach } from "@/features/planner/coach/use-planner-coach";
 import { PlannerCalendarBoard } from "@/features/planner/planner-calendar-board";
 import { PlannerCalendarOverlays } from "@/features/planner/planner-calendar-overlays";
 import { PlannerCalendarToolbar } from "@/features/planner/planner-calendar-toolbar";
@@ -165,7 +163,6 @@ export interface PlannerCalendarSurfaceLayoutProps {
   clearHoverPreviewTimer: () => void;
   clearHoverPreviewCloseTimer: () => void;
   pointerInsideDayPreviewRef: MutableRefObject<boolean>;
-  coach: ReturnType<typeof usePlannerCoach>;
   expandedPreviewDay: string | null;
   onConfirmDraftMove: (entry: PlannerDayDetailEntry, day: string) => void;
   onCancelDraftMove: (entry: PlannerDayDetailEntry, day: string) => void;
@@ -319,7 +316,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     clearHoverPreviewTimer,
     clearHoverPreviewCloseTimer,
     pointerInsideDayPreviewRef,
-    coach,
     expandedPreviewDay,
     onConfirmDraftMove,
     onCancelDraftMove,
@@ -661,7 +657,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             pinchDisabled
           />
 
-          <PlannerCoachPanel coach={coach} />
         </>
       ) : null}
 

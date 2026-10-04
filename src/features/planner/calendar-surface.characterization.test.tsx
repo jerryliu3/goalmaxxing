@@ -1,3 +1,4 @@
+vi.mock("@/features/coach/use-coach-page-context", () => ({ useCoachPageContext: vi.fn() }));
 import {
   act,
   cleanup,
@@ -35,16 +36,6 @@ const toastErrorMock = vi.fn();
 const completionMutationMock = vi.hoisted(() =>
   vi.fn(async () => ({ ok: true, message: null }))
 );
-const coachHookMock = vi.hoisted(() => ({
-  latestArgs: null as null | {
-    applyDraftPolicy: (policy: ReturnType<typeof buildPlannerPolicy>) => void;
-    onGoalsCreated: () => Promise<void>;
-  },
-  actions: {
-    resetForPlannerStateReset: vi.fn(),
-    onDraftDiscarded: vi.fn(),
-  },
-}));
 
 vi.mock("sonner", () => ({
   toast: {
@@ -61,21 +52,7 @@ vi.mock("@/lib/api/client", () => ({
   putJson: (...args: unknown[]) => putJsonMock(...args),
 }));
 
-vi.mock("@/features/planner/coach/use-planner-coach", () => ({
-  usePlannerCoach: (args: unknown) => {
-    coachHookMock.latestArgs = args as {
-      applyDraftPolicy: (policy: ReturnType<typeof buildPlannerPolicy>) => void;
-      onGoalsCreated: () => Promise<void>;
-    };
-    return {
-      actions: coachHookMock.actions,
-    };
-  },
-}));
 
-vi.mock("@/features/planner/coach/planner-coach-panel", () => ({
-  PlannerCoachPanel: () => null,
-}));
 
 vi.mock("@/features/planner/use-completion-mutation", () => ({
   useCompletionMutation: () => completionMutationMock,
@@ -224,9 +201,6 @@ describe("CalendarSurface characterization", () => {
     toastErrorMock.mockReset();
     completionMutationMock.mockReset();
     completionMutationMock.mockResolvedValue({ ok: true, message: null });
-    coachHookMock.latestArgs = null;
-    coachHookMock.actions.onDraftDiscarded.mockReset();
-    coachHookMock.actions.resetForPlannerStateReset.mockReset();
   });
 
   afterEach(() => {
@@ -1339,44 +1313,6 @@ describe("CalendarSurface characterization", () => {
     expect(within(editor).queryByText("Next: Milestone 2")).not.toBeInTheDocument();
   });
 
-  it("force-prepares planner context after coach goals are created", async () => {
-    postJsonMock.mockResolvedValue(
-      buildContext([
-        unit({
-          originalGoalId: "goal-a",
-          unitKey: "total:1",
-          scheduledDate: "2026-08-31",
-        }),
-      ])
-    );
-    const onPlannerMutation = vi.fn();
-
-    render(
-      <CalendarSurface
-        activeTab="calendar"
-        month="2026-08"
-        selectedDay={null}
-        viewMode="month"
-        onMonthChange={vi.fn()}
-        onViewModeChange={vi.fn()}
-        onSelectedDayChange={vi.fn()}
-        onPlannerMutation={onPlannerMutation}
-      />
-    );
-    await waitFor(() => expect(postJsonMock).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(coachHookMock.latestArgs).not.toBeNull());
-
-    await act(async () => {
-      await coachHookMock.latestArgs?.onGoalsCreated();
-    });
-
-    expect(onPlannerMutation).toHaveBeenCalledTimes(1);
-    expect(postJsonMock).toHaveBeenCalledTimes(2);
-    expect(postJsonMock).toHaveBeenLastCalledWith(
-      "/api/planner/prepare",
-      expect.objectContaining({ scopeMonth: "2026-08" })
-    );
-  });
 
   it("force-prepares planner context after related tab caches are invalidated", async () => {
     postJsonMock.mockResolvedValue(
@@ -1974,127 +1910,7 @@ describe("CalendarSurface characterization", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("uses preview-backed save payload for mixed policy and move drafts", async () => {
-    const context = buildContext([
-      unit({
-        originalGoalId: "goal-a",
-        unitKey: "total:1",
-        scheduledDate: "2026-08-31",
-        placementWindow: { start: "2026-08-01", end: "2026-09-30" },
-        draftMoveWindow: { start: "2026-08-01", end: "2026-09-30" },
-        creditWindow: { start: "2026-08-01", end: "2026-09-30" },
-      }),
-    ]);
-    const previewForSave = buildPlannerPreview(context.preview?.workUnits ?? [], {
-      generationInputHash: "d".repeat(64),
-      preserveExistingAssignments: true,
-    });
-    postJsonMock.mockImplementation(async (url: string) => {
-      if (url === "/api/planner/prepare") {
-        return context;
-      }
-      if (url === "/api/planner/context") {
-        return { preview: previewForSave };
-      }
-      if (url === "/api/planner/save") {
-        return { replayed: false };
-      }
-      throw new Error(`Unexpected route ${url}`);
-    });
 
-    render(
-      <CalendarSurface
-        activeTab="calendar"
-        month="2026-08"
-        selectedDay="2026-08-31"
-        viewMode="day"
-        onMonthChange={vi.fn()}
-        onViewModeChange={vi.fn()}
-        onSelectedDayChange={vi.fn()}
-        onPlannerMutation={vi.fn()}
-      />
-    );
-
-    await waitFor(() => {
-      expect(postJsonMock).toHaveBeenCalledWith(
-        "/api/planner/prepare",
-        expect.any(Object)
-      );
-    });
-    await act(async () => {
-      coachHookMock.latestArgs?.applyDraftPolicy(
-        buildPlannerPolicy({ restWeekdays: [2] })
-      );
-    });
-
-    fireEvent.click(await screen.findByText("Next: Baseline"));
-    fireEvent.click(await screen.findByRole("button", { name: "Mon, Aug 31" }));
-    fireEvent.change(await screen.findByLabelText("Date"), {
-      target: { value: "2026-08-30" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Save plan" }));
-
-    await waitFor(() => {
-      expect(postJsonMock).toHaveBeenCalledWith(
-        "/api/planner/save",
-        expect.any(Object)
-      );
-    });
-    const saveCall = postJsonMock.mock.calls.find(
-      ([url]) => url === "/api/planner/save"
-    );
-    expect(saveCall?.[1]).toMatchObject({
-      previewHash: "d".repeat(64),
-      preserveExistingAssignments: true,
-      policy: expect.objectContaining({ restWeekdays: [2] }),
-    });
-    expect(
-      postJsonMock.mock.calls.some(([url]) => url === "/api/planner/context")
-    ).toBe(true);
-  });
-
-  it("updates rest day checkboxes when coach applies a draft policy", async () => {
-    const context = buildContext([
-      unit({
-        originalGoalId: "goal-a",
-        unitKey: "total:1",
-        scheduledDate: "2026-08-31",
-      }),
-    ]);
-    postJsonMock.mockResolvedValue(context);
-
-    render(
-      <CalendarSurface
-        activeTab="calendar"
-        month="2026-08"
-        selectedDay={null}
-        viewMode="month"
-        onMonthChange={vi.fn()}
-        onViewModeChange={vi.fn()}
-        onSelectedDayChange={vi.fn()}
-        onPlannerMutation={vi.fn()}
-      />
-    );
-
-    await waitFor(() => {
-      expect(postJsonMock).toHaveBeenCalledWith(
-        "/api/planner/prepare",
-        expect.any(Object)
-      );
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-    const tuesdayCheckbox = await screen.findByLabelText("Tue");
-    expect(tuesdayCheckbox).not.toBeChecked();
-
-    await act(async () => {
-      coachHookMock.latestArgs?.applyDraftPolicy(
-        buildPlannerPolicy({ restWeekdays: [2] })
-      );
-    });
-
-    expect(await screen.findByLabelText("Tue")).toBeChecked();
-  });
 
   it("forces prepare refresh after toggling a lock", async () => {
     const context = buildContext([

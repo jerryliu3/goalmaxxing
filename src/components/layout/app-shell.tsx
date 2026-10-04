@@ -1,9 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { CoachProvider } from "@/features/coach/coach-provider";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Fragment, type ReactNode, useCallback, useState, ViewTransition } from "react";
 import { JourneyIntroOverlay } from "@/components/intro/journey-intro-overlay";
+import { CoachHeader } from "@/features/coach/coach-header";
+import { CoachSurface } from "@/features/coach/coach-surface";
+import { CoachPageFrame } from "@/features/coach/coach-page-frame";
+import coachStyles from "@/features/coach/coach.module.css";
 import { CheckInOverlay } from "@/features/digest/check-in-overlay";
 import { JourneyProvider } from "@/components/journey/journey-provider.web";
 import type { JourneyFeatureFlags } from "@/components/journey/types";
@@ -46,6 +51,7 @@ interface AppShellProps {
   hrefPrefix?: string;
   showJourneyIntro?: boolean;
   digestEnabled?: boolean;
+  coachEnabled?: boolean;
   onNewGoalClick?: () => void;
   xpEnabled?: boolean;
 }
@@ -63,6 +69,7 @@ export function AppShell({
   hrefPrefix,
   showJourneyIntro = true,
   digestEnabled = false,
+  coachEnabled = false,
   onNewGoalClick,
   xpEnabled = true,
 }: AppShellProps) {
@@ -86,7 +93,7 @@ export function AppShell({
   const newGoalHref = `${withHrefPrefix("/goals/new", hrefPrefix)}?returnTo=${encodeURIComponent(returnTo)}`;
   const mainContent = (
     <main className="relative z-10 pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-0">
-      {children}
+      <CoachPageFrame>{children}</CoachPageFrame>
     </main>
   );
   const ViewTransitionWrapper =
@@ -94,6 +101,7 @@ export function AppShell({
 
   return (
     <PageOnboardingReadyContext.Provider value={bootReady && (!showJourneyIntro || navigationIntroReady)}>
+    <CoachProvider userId={userId} enabled={coachEnabled && !hrefPrefix} digestEnabled={digestEnabled}>
     <XpRewardProvider>
       <CompletionFeedbackProvider>
       <PlaqueCompletionProvider>
@@ -101,7 +109,7 @@ export function AppShell({
         <JourneyProvider flags={journeyFlags}>
           <AltitudeBackdrop journeyFlags={journeyFlags} />
           {showJourneyIntro ? <JourneyIntroOverlay userId={userId} enabled={bootReady} onOpenChange={onIntroOpenChange} /> : null}
-          {digestEnabled ? <CheckInOverlay hrefPrefix={hrefPrefix} /> : null}
+          {digestEnabled && (!coachEnabled || hrefPrefix) ? <CheckInOverlay hrefPrefix={hrefPrefix} /> : null}
           <DuoProvider
             key={`${duoAvailability}:${duoState.activePartner?.partnerId ?? "none"}`}
             viewerUserId={userId}
@@ -115,10 +123,11 @@ export function AppShell({
               <AppBootSplash onReady={onBootReady} />
               <div>
                 <div className="relative z-10 flex min-h-screen w-full justify-center bg-page px-4 py-4 sm:px-6 sm:py-6">
-                  <div className="flex w-full max-w-6xl flex-col gap-4 md:gap-6">
+                  <div className={`${coachStyles.appLayout} flex w-full flex-col gap-4 md:gap-6`}>
                   <header
                     data-testid="app-shell-header"
-                    className="sticky top-0 z-40 -mx-4 -mt-4 border-b border-border bg-page/90 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.7rem)] backdrop-blur supports-[backdrop-filter]:bg-page/80 md:static md:m-0 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none"
+                    data-coach-anchor
+                    className="sticky top-0 z-40 -mx-4 -mt-4 border-b border-border bg-page/90 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.7rem)] backdrop-blur supports-[backdrop-filter]:bg-page/80 md:m-0 md:border-0 md:rounded-xl md:bg-page/95 md:p-3"
                     style={{ viewTransitionName: "app-shell-header" }}
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -134,6 +143,7 @@ export function AppShell({
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <div className="flex items-center gap-2">
+                          <CoachHeader />
                           <Button
                             asChild={!onNewGoalClick}
                             size="sm"
@@ -189,6 +199,7 @@ export function AppShell({
                     hrefPrefix={hrefPrefix}
                   />
                 </div>
+                <CoachSurface />
                 {goalSheet}
               </div>
             </PublicProfileSheetProvider>
@@ -198,6 +209,7 @@ export function AppShell({
       </PlaqueCompletionProvider>
       </CompletionFeedbackProvider>
     </XpRewardProvider>
+    </CoachProvider>
     </PageOnboardingReadyContext.Provider>
   );
 }

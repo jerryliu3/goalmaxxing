@@ -29,6 +29,7 @@ vi.mock("react-native", async () => {
       ReactModule.createElement("View", props),
   };
 });
+vi.mock("../coach/CoachProvider", () => ({ useNativeCoachPage: vi.fn() }));
 vi.mock("expo-router", () => ({ router: { back: mocks.back } }));
 vi.mock("expo-image-manipulator", () => ({
   SaveFormat: { JPEG: "jpeg" },

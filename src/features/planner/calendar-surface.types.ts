@@ -1,6 +1,4 @@
-import type { CoachPolicyPatch } from "@/lib/planner/coach";
 import type { PlannerDraftVisualKind } from "@/lib/planner/diff";
-import type { PlannerPolicy } from "@/lib/planner/policy";
 import type {
   PlannerCalendarViewMode,
   PlannerShellTab,
@@ -89,92 +87,6 @@ export interface CalendarSurfaceProps {
   partnerLabel?: string | null;
   viewerSubject?: DuoLaneSubject | null;
   partnerSubject?: DuoLaneSubject | null;
-}
-
-export type CoachMessageRole = "user" | "assistant";
-
-export type CoachProposalApplyStatus =
-  | "not_applied"
-  | "auto_applied"
-  | "manually_applied"
-  | "undone";
-
-export interface CoachPolicyMessageProposal {
-  schemaVersion: "1";
-  applyStatus: CoachProposalApplyStatus;
-  patchSignature: string;
-  baselineSnapshotToken: string;
-  baselinePolicy: PlannerPolicy | null;
-  policyPatches: CoachPolicyPatch[];
-  /**
-   * Draft `move_item` pins this proposal created. Undo removes exactly these,
-   * so reverting a coach change also reverts the schedule it caused.
-   */
-  appliedMoveEntryKeys?: string[];
-  unresolvedQuestions: string[];
-}
-
-export interface CoachGoalDraftMessageProposal {
-  schemaVersion: "1";
-  kind: "goal_draft";
-  proposalId: string;
-  parserPrompt: string;
-  creationStatus: "not_created" | "created";
-  applyStatus?: never;
-  patchSignature?: never;
-  baselineSnapshotToken?: never;
-  baselinePolicy?: never;
-  policyPatches?: never;
-  appliedMoveEntryKeys?: never;
-  unresolvedQuestions?: never;
-}
-
-export type CoachMessageProposal =
-  | CoachPolicyMessageProposal
-  | CoachGoalDraftMessageProposal;
-
-export interface CoachMessage {
-  role: CoachMessageRole;
-  content: string;
-  createdAt: number;
-  proposal?: CoachMessageProposal | null;
-}
-
-export interface CoachConversationSummary {
-  id: string;
-  scopeMonth: string;
-  timezone: string;
-  title: string;
-  previewText: string;
-  messageCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CoachConversationListPayload {
-  schemaVersion: "1";
-  conversations: CoachConversationSummary[];
-  correlationId?: string;
-}
-
-export interface CoachConversationDetailPayload {
-  schemaVersion: "1";
-  conversation: CoachConversationSummary;
-  messages: CoachMessage[];
-  correlationId?: string;
-}
-
-export interface CoachResponsePayload {
-  schemaVersion: "1";
-  phase: "discovery" | "review" | "ready" | "explain";
-  reply: string;
-  proposal?: {
-    policyPatches?: CoachPolicyPatch[];
-    unresolvedQuestions?: string[];
-    goalDraftPrompt?: string | null;
-  };
-  warnings?: string[];
-  recommendations?: Array<{ text: string }>;
 }
 
 export type CompletionControlDisabledReason =

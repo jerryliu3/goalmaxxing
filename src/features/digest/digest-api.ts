@@ -1,23 +1,5 @@
-import type {
-  DigestFacts,
-  DigestSuggestionAction,
-  DigestSuggestions,
-} from "@/lib/digest/contract";
-import type { DigestKind } from "@/lib/digest/period";
-
-export interface DigestPayload {
-  schemaVersion: "1";
-  id: string; factsDigest: string; historicalFacts: DigestFacts; generatedAt: string | null;
-  kind: DigestKind;
-  periodKey: string;
-  localDate: string;
-  digestAutoShow: boolean;
-  acknowledged: boolean;
-  shouldAutoShow: boolean;
-  facts: DigestFacts;
-  suggestions: DigestSuggestions | null;
-  correlationId?: string;
-}
+import type { DigestSuggestionAction } from "@/lib/digest/contract";
+export type { DigestPayload } from "@cadence/shared/coach/check-in";
 
 export const DIGEST_OPEN_EVENT = "cadence.digest.open";
 

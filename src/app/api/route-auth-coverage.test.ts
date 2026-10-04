@@ -162,12 +162,7 @@ import { POST as plannerLockPost } from "@/app/api/planner/items/lock/route";
 import { GET as plannerTasksGet } from "@/app/api/planner/tasks/route";
 import { POST as plannerTaskCompletionPost } from "@/app/api/planner/tasks/[taskId]/completion/route";
 import { POST as plannerTaskSchedulePost } from "@/app/api/planner/tasks/[taskId]/schedule/route";
-import { POST as plannerCoachPost } from "@/app/api/planner/coach/route";
-import {
-  GET as plannerConversationsGet,
-  POST as plannerConversationsPost,
-} from "@/app/api/planner/coach/conversations/route";
-import { GET as plannerConversationGet } from "@/app/api/planner/coach/conversations/[conversationId]/route";
+
 
 import {
   DELETE as teamDelete,
@@ -224,8 +219,8 @@ import {
   PATCH as adminSyntheticUserPatch,
 } from "@/app/api/admin/synthetic-users/[id]/route";
 
-import * as coachActionsRoute from "@/app/api/coach/actions/route";
 import * as coachActionsIdApplyRoute from "@/app/api/coach/actions/[id]/apply/route";
+import * as coachActionsRoute from "@/app/api/coach/actions/route";
 import * as coachActionsIdRefreshRoute from "@/app/api/coach/actions/[id]/refresh/route";
 import * as coachActionsIdRejectRoute from "@/app/api/coach/actions/[id]/reject/route";
 import * as coachActionsIdUndoRoute from "@/app/api/coach/actions/[id]/undo/route";
@@ -297,8 +292,8 @@ function routeCase(
 }
 
 const coachRouteModules = {
-  "./coach/actions/route.ts": coachActionsRoute,
   "./coach/actions/[id]/apply/route.ts": coachActionsIdApplyRoute,
+  "./coach/actions/route.ts": coachActionsRoute,
   "./coach/actions/[id]/refresh/route.ts": coachActionsIdRefreshRoute,
   "./coach/actions/[id]/reject/route.ts": coachActionsIdRejectRoute,
   "./coach/actions/[id]/undo/route.ts": coachActionsIdUndoRoute,
@@ -415,14 +410,6 @@ const auditedRouteCases: AuditedRouteCase[] = [
     plannerTaskSchedulePost,
     { taskId: RESOURCE_ID },
     { scheduledDate: "2026-09-08" }
-  ),
-  routeCase("POST /api/planner/coach", plannerCoachPost),
-  routeCase("GET /api/planner/coach/conversations", plannerConversationsGet),
-  routeCase("POST /api/planner/coach/conversations", plannerConversationsPost),
-  routeCase(
-    "GET /api/planner/coach/conversations/[conversationId]",
-    plannerConversationGet,
-    { conversationId: RESOURCE_ID }
   ),
 
   routeCase("GET /api/social/team", teamGet),

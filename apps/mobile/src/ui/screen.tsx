@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useJourneyPresentationPreference } from "../features/journey/useJourneyPresentation.native";
 import { useTheme } from "../theme";
+import { CoachHeader, NativeCoachCheckInInvitation } from "../features/coach/CoachHeader";
 
 export function Screen({
   title,
@@ -40,6 +41,7 @@ export function Screen({
           {kicker}
         </Text>
       ) : null}
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
       <Text
         accessibilityRole="header"
         style={[
@@ -51,7 +53,8 @@ export function Screen({
         ]}
       >
         {title}
-      </Text>
+      </Text><CoachHeader /></View>
+      <NativeCoachCheckInInvitation />
       {children}
     </View>
   );

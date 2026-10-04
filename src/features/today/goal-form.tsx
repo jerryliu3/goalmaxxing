@@ -1,4 +1,5 @@
 "use client";
+import { useCoachPageContext } from "@/features/coach/use-coach-page-context";
 
 import { Archive, Trash2, Undo2 } from "lucide-react";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
@@ -90,6 +91,7 @@ export function GoalForm({
     validationWarning,
     supabase,
   } = useGoalFormState(goalId);
+  useCoachPageContext({ surface: "goal", selectedGoalId: isPlannerTask ? undefined : goalId, selectedTaskId: isPlannerTask ? goalId : undefined }, 10);
 
   const {
     saving,

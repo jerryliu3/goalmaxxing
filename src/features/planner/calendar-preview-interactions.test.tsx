@@ -1,3 +1,4 @@
+vi.mock("@/features/coach/use-coach-page-context", () => ({ useCoachPageContext: vi.fn() }));
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CalendarSurface } from "./calendar-surface";
@@ -35,18 +36,7 @@ vi.mock("@/lib/api/client", () => ({
   putJson: (...args: unknown[]) => putJsonMock(...args),
 }));
 
-vi.mock("@/features/planner/coach/use-planner-coach", () => ({
-  usePlannerCoach: () => ({
-    actions: {
-      resetForPlannerStateReset: vi.fn(),
-      onDraftDiscarded: vi.fn(),
-    },
-  }),
-}));
 
-vi.mock("@/features/planner/coach/planner-coach-panel", () => ({
-  PlannerCoachPanel: () => null,
-}));
 
 vi.mock("@/features/planner/use-completion-mutation", () => ({
   useCompletionMutation: () => vi.fn(async () => ({ ok: true })),

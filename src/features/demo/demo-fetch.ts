@@ -139,6 +139,7 @@ export async function handleDemoFetch(
         integrationsEnabled: false,
         journeyEnabled: false,
         digestEnabled: false,
+    coachEnabled: false,
       },
       minSupportedAppVersion: null,
       integrationsRolloutStage: "off",
@@ -240,13 +241,7 @@ export async function handleDemoFetch(
       preview: buildDemoPlannerContext(monthKey(snapshot.asOfDate)).preview,
     });
   }
-  if (pathname === "/api/planner/coach/conversations" && method === "GET") {
-    return jsonResponse({
-      schemaVersion: "1",
-      conversations: [],
-      correlationId: DEMO_CORRELATION_ID,
-    });
-  }
+
   if (pathname === "/api/xp/rewards/acknowledge" && method === "POST") {
     return jsonResponse({
       schemaVersion: "1",

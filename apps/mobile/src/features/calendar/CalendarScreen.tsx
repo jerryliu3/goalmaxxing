@@ -35,7 +35,7 @@ import { PrimaryButton } from "../../ui/button";
 import { LoadingScreen, Screen } from "../../ui/screen";
 import { ChecklistScreen } from "../checklist/ChecklistScreen";
 import { CalendarPartnerReadOnlySection } from "./CalendarPartnerReadOnlySection";
-import { CoachPanel } from "./CoachPanel";
+import { useNativeCoachPage } from "../coach/CoachProvider";
 import { useDuo, useDuoSurfaceScope } from "../duo/DuoProvider";
 import { DuoScopeSegmentedControl } from "../duo/DuoScopeSegmentedControl";
 import { useReportMobileDuoScopeViewed } from "../duo/telemetry";
@@ -144,6 +144,7 @@ export function CalendarScreen() {
   const [busy, setBusy] = useState(false);
   const [orderByDay, setOrderByDay] = useState<Record<string, string[]>>({});
   const [draft, setDraft] = useState(createEmptyMobilePlannerDraft);
+  useNativeCoachPage({surface: "plan", view: viewMode, selectedDate:selectedDay, scope:scope==="me"?"self":"duo",hasDraft:draft.dirty});
   const dayTargets = useRef<Map<string, DayDropTarget>>(new Map());
   const sessionTargets = useRef<Map<string, SessionDropTarget>>(new Map());
   const removeSessionTarget = useCallback((entryKey: string) => {
@@ -710,14 +711,7 @@ export function CalendarScreen() {
         </View>
       ) : null}
       {message ? <Text style={{ color: theme.colors.foreground }}>{message}</Text> : null}
-      {readOnlyState.allowMutations && planner.data ? (
-        <CoachPanel
-          context={planner.data}
-          currentMonth={scopeMonth}
-          draft={draft}
-          onDraftChange={setDraft}
-        />
-      ) : null}
+
       {readOnlyState.allowMutations ? (
         <Text style={{ color: theme.colors.mutedForeground }}>
           Long-press a session to drag it onto another day, or tap it to use the

@@ -43,7 +43,6 @@ describe("usePlannerPersistenceActions", () => {
       calls.push("reload");
       return false;
     });
-    const resetForPlannerStateReset = vi.fn(() => calls.push("coach"));
     const context = buildPlannerContext({
       overrides: {
         revisions: {
@@ -81,10 +80,6 @@ describe("usePlannerPersistenceActions", () => {
         loadContext,
         cacheDraftPreviewForWindow: vi.fn(),
         requestPreviewForWindow: vi.fn(),
-        coachActions: {
-          resetForPlannerStateReset,
-          onDraftDiscarded: vi.fn(),
-        },
       })
     );
 
@@ -93,7 +88,7 @@ describe("usePlannerPersistenceActions", () => {
     expect(onScheduleDigestChange).toHaveBeenCalledWith("b".repeat(64), null);
     expect(clearDraftSession).toHaveBeenCalledTimes(1);
     expect(loadContext).toHaveBeenCalledTimes(1);
-    expect(calls).toEqual(["digest", "clear", "coach", "invalidate", "reload"]);
+    expect(calls).toEqual(["digest", "clear", "invalidate", "reload"]);
     expect(toastWarningMock).toHaveBeenCalledWith(
       "Plan saved. Calendar reload is temporarily unavailable, but the draft is no longer pending."
     );

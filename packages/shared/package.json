@@ -22,8 +22,6 @@
     "./ids": "./src/ids.ts",
     "./planner/calendar-state": "./src/planner/calendar-state.ts",
     "./planner/canonical": "./src/planner/canonical.ts",
-    "./planner/coach-context": "./src/planner/coach-context.ts",
-    "./planner/coach-proposal": "./src/planner/coach-proposal.ts",
     "./planner/confirmation": "./src/planner/confirmation.ts",
     "./planner/context": "./src/planner/context.ts",
     "./planner/draft-window": "./src/planner/draft-window.ts",
@@ -50,11 +48,19 @@
     "./brand/gazetteer": "./src/brand/gazetteer.ts",
     "./tokens": "./src/tokens.ts",
     "./coach/transport": "./src/coach/transport.ts",
+    "./coach/use-action-history": "./src/coach/use-action-history.ts",
+    "./coach/context-summary": "./src/coach/context-summary.ts",
     "./coach": "./src/coach/contracts.ts",
-    "./coach/database": "./src/coach/database.ts"
+    "./coach/check-in": "./src/coach/check-in.ts",
+    "./coach/use-conversations": "./src/coach/use-conversations.ts",
+    "./coach/conversation-state": "./src/coach/conversation-state.ts",
+    "./coach/use-check-in": "./src/coach/use-check-in.ts"
   },
   "dependencies": {
     "date-fns": "^4.4.0",
     "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "react": "^19.1.0"
   }
 }

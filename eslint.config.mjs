@@ -35,7 +35,7 @@ const eslintConfig = defineConfig([
       "no-restricted-imports": [
         "error",
         {
-          paths: ["react", "react-dom"],
+          paths: ["react-dom"],
           patterns: [
             "next/*",
             "@radix-ui/*",

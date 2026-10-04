@@ -108,21 +108,6 @@ describe("demo fetch router", () => {
     ).toBe("achieved");
   });
 
-  it("returns an empty coach conversation list instead of failing", async () => {
-    initDemoStore(buildDemoSnapshot("2026-08-22"));
-    const originalFetch = vi.fn();
-    const response = await handleDemoFetch(
-      "/api/planner/coach/conversations?scopeMonth=2026-08&limit=20",
-      { method: "GET" },
-      originalFetch as unknown as typeof fetch
-    );
-    const payload = (await response.json()) as { conversations: unknown[] };
-
-    expect(originalFetch).not.toHaveBeenCalled();
-    expect(response.ok).toBe(true);
-    expect(payload.conversations).toEqual([]);
-  });
-
   it("gives uncredited demo sessions a movable window", async () => {
     initDemoStore(buildDemoSnapshot("2026-08-22"));
     const originalFetch = vi.fn();

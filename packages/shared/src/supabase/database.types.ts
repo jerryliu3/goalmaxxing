@@ -2400,98 +2400,6 @@ export type Database = {
           },
         ]
       }
-      planner_coach_conversation_messages: {
-        Row: {
-          content: string
-          conversation_id: string
-          created_at: string
-          id: number
-          ordinal: number
-          owner_id: string
-          proposal_meta: Json | null
-          role: string
-        }
-        Insert: {
-          content: string
-          conversation_id: string
-          created_at?: string
-          id?: never
-          ordinal: number
-          owner_id: string
-          proposal_meta?: Json | null
-          role: string
-        }
-        Update: {
-          content?: string
-          conversation_id?: string
-          created_at?: string
-          id?: never
-          ordinal?: number
-          owner_id?: string
-          proposal_meta?: Json | null
-          role?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "planner_coach_conversation_messages_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "planner_coach_conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "planner_coach_conversation_messages_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      planner_coach_conversations: {
-        Row: {
-          created_at: string
-          id: string
-          message_count: number
-          owner_id: string
-          preview_text: string
-          scope_month: string
-          timezone: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          message_count: number
-          owner_id: string
-          preview_text: string
-          scope_month: string
-          timezone: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          message_count?: number
-          owner_id?: string
-          preview_text?: string
-          scope_month?: string
-          timezone?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "planner_coach_conversations_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       planner_goal_unplaceable: {
         Row: {
           computed_at: string
@@ -3808,25 +3716,6 @@ export type Database = {
           p_version: number
         }
         Returns: boolean
-      }
-      save_planner_coach_conversation_service: {
-        Args: {
-          p_messages: Json
-          p_preview_text: string
-          p_scope_month: string
-          p_timezone: string
-          p_title: string
-        }
-        Returns: {
-          created_at: string
-          id: string
-          message_count: number
-          preview_text: string
-          scope_month: string
-          timezone: string
-          title: string
-          updated_at: string
-        }[]
       }
       send_nudge_service: {
         Args: {
