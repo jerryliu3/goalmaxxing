@@ -93,7 +93,12 @@ begin
     elsif p_operation = 'set_goal_archived' then
       perform public.set_goal_archived(p_goal_id => v_goal_id, p_archived => (p_payload->>'archived')::boolean);
     else
+      if p_payload->>'target_goal_id' is not null and not exists (
+        select 1 from public.goals where id = (p_payload->>'target_goal_id')::uuid and owner_id = v_uid and not is_deleted
+      ) then raise exception using errcode = 'P0002', message = 'goal_not_found'; end if;
       perform public.replace_goal_source_link(p_source_goal_id => v_goal_id, p_target_goal_id => (p_payload->>'target_goal_id')::uuid);
+      -- A link edit participates in the source goal's optimistic version.
+      update public.goals set updated_at = now() where id = v_goal_id;
     end if;
     select to_jsonb(g) into v_result from public.goals g where g.id = v_goal_id;
   else

@@ -10,6 +10,8 @@ vi.mock("@/app/api/planner/tasks/[taskId]/completion/route", () => ({ POST: vi.f
 vi.mock("@/lib/env", () => ({ getPublicEnv: () => ({ NEXT_PUBLIC_APP_URL: "https://goalmaxxing.app" }) }));
 import { executeOperation } from "./operations";
 import type { ExternalContext } from "./auth";
+import { runPlannerKernel } from "@/lib/planner/kernel";
+import { createDefaultPlannerPolicy } from "@/lib/planner/policy";
 import { operationSchemas } from "./schemas";
 const owner = "11111111-1111-4111-8111-111111111111";
 const requestId = "22222222-2222-4222-8222-222222222222";
@@ -22,6 +24,15 @@ describe("shared deterministic account operations", () => {
     const request = mocks.publish.mock.calls[0][0] as Request;
     expect(request.headers.get("authorization")).toBe("Bearer user-token");
     expect(new URL(request.url).pathname).toMatch(/^\/api\/v1\//);
+  });
+  it("returns a ready publish request from the exact stable preview", async () => {
+    const policy = createDefaultPlannerPolicy("UTC", "2026-10-04T00:00:00Z");
+    const preview = runPlannerKernel({ schemaVersion: "1", eligibilityMode: "strict_v1", ownerId: owner, startDate: "2026-10-01", endDate: "2026-10-31", asOfDate: "2026-10-04", timezone: "UTC", goals: [], completions: [], links: [], policy, basePlan: null });
+    mocks.preview.mockResolvedValue(Response.json({ preview, policy, revisions: { scheduleDigest: "a".repeat(64) } }));
+    const result = await executeOperation({ userId: owner, token: "token" } as ExternalContext, "preview_plan", { startDate: "2026-10-01", endDate: "2026-10-31" });
+    expect(result.publishRequest).toMatchObject({ expectedDigest: "a".repeat(64), previewHash: preview.generationInputHash, preserveExistingAssignments: preview.preserveExistingAssignments, confirmationHash: null, policy });
+    const proposal = await executeOperation({ userId: owner, token: "token" } as ExternalContext, "preview_plan", { startDate: "2026-10-01", endDate: "2026-10-31", solveIntent: "replan" });
+    expect(proposal.publishRequest).toBeNull();
   });
   it("prevents completion writes to a goal outside the connected account", async () => {
     const chain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }) };

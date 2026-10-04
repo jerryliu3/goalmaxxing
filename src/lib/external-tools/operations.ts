@@ -122,7 +122,6 @@ export async function executeOperation<N extends OperationName>(context: Externa
     }
     case "set_goal_link": {
       const args = operationSchemas.set_goal_link.parse(input);
-      if (args.targetGoalId) await ownedGoal(context, args.targetGoalId);
       return mutate(context, args.requestId, name, { goal_id: args.goalId, expected_updated_at: args.expectedUpdatedAt, target_goal_id: args.targetGoalId });
     }
     case "get_progress": {
