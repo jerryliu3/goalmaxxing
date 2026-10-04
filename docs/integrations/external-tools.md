@@ -95,7 +95,8 @@ it immediately blocks the two external API transports, even for an unexpired
 access token. Settings also revokes the Supabase OAuth grant and refresh sessions.
 JWTs used directly against Supabase retain the provider's normal expiry behavior;
 API disconnection is not a promise to instantly invalidate a stateless JWT on
-all Supabase surfaces. First-party authenticated bearer sessions can call the
+all Supabase surfaces. Reconnecting records a new activation time, so older
+access JWTs cannot regain external API access. First-party authenticated bearer sessions can call the
 HTTP API for development; cookies alone and service-role credentials cannot.
 
 ## HTTP contract
@@ -221,11 +222,13 @@ durable replay. Task schedule/completion PUTs take `{ scheduledDate }` or
    sourceDate and scheduledDate. Time edits use `set_item_time_override` or
    `clear_item_time_override`. Schemas and eligibility rules are shared with
    the existing planner.
-3. Show the computed diff and any required confirmations to the user.
-4. POST `/planner/publish` with the exact approved window, `expectedDigest`,
-   `previewHash`, nullable `confirmationHash`, policy and draftCommands from
-   the stable preview workflow. Use the same confirmation-hash algorithm as
-   the web planner; never fabricate a confirmation.
+3. Stable, publishable previews include a ready-to-submit `publishRequest`,
+   built with the same helper as the web planner. Other previews return null.
+   Show the computed diff and any required confirmations to the user.
+4. After approval, POST the exact returned `publishRequest` to `/planner/publish`.
+   It carries the approved window, expectedDigest, previewHash, confirmationHash,
+   policy, eligibility and preservation settings, and draftCommands. The server
+   computes the existing confirmation hash; do not fabricate or alter it.
 5. On a stale digest/hash or an unplaceable edit, refresh context, preview again,
    and ask for renewed approval. A proposal generated with `replan` must be
    converted to pinned draft commands and re-previewed as stable before saving.

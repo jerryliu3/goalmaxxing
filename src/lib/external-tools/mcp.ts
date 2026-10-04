@@ -12,7 +12,7 @@ import { executeOperation } from "./operations";
 export function createAccountMcpServer(context: ExternalContext) {
   // A fresh server for each HTTP request prevents account context crossing users.
   const server = new McpServer({ name: "goalmaxxing", version: "1.0.0" }, {
-    instructions: "Goalmaxxing is the account and planning system. Use your host model for reasoning, parsing and coaching: no exposed tool calls Goalmaxxing AI. Get account timezone/today first. Read before editing, paginate complete lists, preserve unchanged goal definition fields, and ask the user to approve consequential changes. Preview a stable plan and show its changes before publishing exactly that preview. Never invent revision or confirmation hashes; refresh and seek renewed approval after stale-state errors. Keep requestId unchanged for a retry and use a fresh UUID for a different logical mutation.",
+    instructions: "Goalmaxxing is the account and planning system. Use your host model for reasoning, parsing and coaching: no exposed tool calls Goalmaxxing AI. Get account timezone/today first. Read before editing, paginate complete lists, preserve unchanged goal definition fields, and ask the user to approve consequential changes. Preview a stable plan and show its changes before publishing its exact returned publishRequest. Never invent revision or confirmation hashes; refresh and seek renewed approval after stale-state errors. Keep requestId unchanged for a retry and use a fresh UUID for a different logical mutation.",
   });
   for (const name of Object.keys(operationSchemas) as OperationName[]) {
     const metadata = operationMetadata[name];
@@ -49,6 +49,9 @@ export async function handleAccountMcp(request: Request) {
   const correlationId = createCorrelationId();
   try {
     const context = await requireExternalContext(request);
+    if (request.method !== "POST") {
+      return NextResponse.json({ jsonrpc: "2.0", id: null, error: { code: -32000, message: "This stateless MCP endpoint supports POST only." } }, { status: 405, headers: { Allow: "POST", "Cache-Control": "no-store", "X-Correlation-Id": correlationId } });
+    }
     const server = createAccountMcpServer(context);
     const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true, maxRequestBodySize: 256 * 1024 });
     try {

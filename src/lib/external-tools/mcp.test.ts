@@ -52,6 +52,13 @@ describe("Goalmaxxing MCP protocol", () => {
     const result = await client.callTool({ name: "create_task", arguments: { title: "Read" } });
     expect(result.isError).toBe(true); expect(mocks.execute).not.toHaveBeenCalled();
   });
+  it("declines unsolicited streams and session deletion in stateless mode", async () => {
+    mocks.auth.mockResolvedValue({ userId: "owner" });
+    for (const method of ["GET", "DELETE"]) {
+      const response = await handleAccountMcp(new Request("https://goalmaxxing.app/api/mcp", { method, headers: { accept: "text/event-stream" } }));
+      expect(response.status).toBe(405); expect(response.headers.get("allow")).toBe("POST");
+    }
+  });
   it("challenges unauthenticated transport requests before constructing account tools", async () => {
     mocks.auth.mockRejectedValueOnce(new ApiRouteError(401, "authentication_required", "Connect account."));
     const response = await handleAccountMcp(new Request("https://goalmaxxing.app/api/mcp", { method: "POST", body: "{}" }));
