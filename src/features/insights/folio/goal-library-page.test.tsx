@@ -4,6 +4,7 @@ import { buildGoal } from "@/lib/goals/goal-test-fixtures";
 import { summary } from "./folio-test-fixtures";
 import { GoalLibraryPage } from "./goal-library-page";
 
+vi.mock("next/navigation", () => ({ usePathname: () => "/goals/library", useSearchParams: () => new URLSearchParams() }));
 const mocks = vi.hoisted(() => ({ push: vi.fn(), data: vi.fn() }));
 vi.mock("@/lib/navigation/use-app-router", () => ({ useAppRouter: () => ({ push: mocks.push }) }));
 vi.mock("@/features/insights/use-insights-data", () => ({ useInsightsData: () => mocks.data() }));
@@ -19,7 +20,7 @@ function loadCollection() {
 describe("goal library journey", () => {
   it("opens Current from Goals with live progress and reward text", () => {
     loadCollection();
-    render(<GoalLibraryPage fromPlan />);
+    render(<GoalLibraryPage />);
     expect(screen.getByRole("status")).toHaveTextContent("2 / 6 completions");
     expect(screen.getByText("A weekend away", { exact: false })).toBeInTheDocument();
     expect(document.querySelector(".tempo-card-surface")).toHaveAttribute("data-rotatable", "false");
@@ -56,7 +57,7 @@ describe("goal library journey", () => {
         },
       },
     });
-    render(<GoalLibraryPage fromPlan />);
+    render(<GoalLibraryPage />);
     expect(screen.getByRole("status")).toHaveTextContent("6 / 6 completions");
     expect(document.querySelector(".tempo-card-surface")).toHaveAttribute("data-rotatable", "true");
     expect(document.querySelector("[data-reassembly]")).toHaveAttribute("data-fused", "true");

@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ACHIEVEMENTS_DATA_CACHE_PREFIX } from "@/lib/cache/planner-tab-cache";
+import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
+import { isTabDataCacheFresh, readTabDataCache, writeTabDataCache, markTabDataCacheStaleByPrefix } from "@/lib/cache/tab-data-cache";
+import { subscribeXpRefresh } from "@/lib/xp/events";
 import type { AchievementsShowcasePayload } from "@/features/achievements/types";
 
 export function useAchievementsShowcase({ enabled = true }: { enabled?: boolean } = {}) {
@@ -8,8 +12,16 @@ export function useAchievementsShowcase({ enabled = true }: { enabled?: boolean 
   const [error, setError] = useState<string | null>(null);
   const [payload, setPayload] = useState<AchievementsShowcasePayload | null>(null);
 
-  const loadAchievements = useCallback(async () => {
-    setLoading(true);
+  const cacheKey = `${ACHIEVEMENTS_DATA_CACHE_PREFIX}showcase`;
+  const loadAchievements = useCallback(async (forceRefresh = false) => {
+    const cached = readTabDataCache<AchievementsShowcasePayload>(cacheKey);
+    if (cached) {
+      setPayload(cached);
+      setLoading(false);
+      if (!forceRefresh && isTabDataCacheFresh(cacheKey)) return;
+    } else {
+      setLoading(true);
+    }
     setError(null);
     try {
       const response = await fetch("/api/xp/achievements", {
@@ -22,6 +34,7 @@ export function useAchievementsShowcase({ enabled = true }: { enabled?: boolean 
       const body = (await response.json()) as AchievementsShowcasePayload & {
         correlationId: string;
       };
+      writeTabDataCache(cacheKey, body);
       setPayload(body);
     } catch (loadError) {
       setError(
@@ -32,7 +45,7 @@ export function useAchievementsShowcase({ enabled = true }: { enabled?: boolean 
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [cacheKey]);
 
   useEffect(() => {
     if (!enabled) {
@@ -46,5 +59,13 @@ export function useAchievementsShowcase({ enabled = true }: { enabled?: boolean 
     };
   }, [enabled, loadAchievements]);
 
-  return { loading, error, payload, reload: loadAchievements };
+  usePlannerTabCacheInvalidation(() => {
+    if (enabled) void loadAchievements(true);
+  });
+  useEffect(() => subscribeXpRefresh(() => {
+    markTabDataCacheStaleByPrefix(ACHIEVEMENTS_DATA_CACHE_PREFIX);
+    if (enabled) void loadAchievements(true);
+  }), [enabled, loadAchievements]);
+
+  return { loading, error, payload, reload: () => loadAchievements(true) };
 }

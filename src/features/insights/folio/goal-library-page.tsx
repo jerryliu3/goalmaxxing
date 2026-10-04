@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { isDemoPathname } from "@/lib/navigation/demo-path";
 import { ArrowLeft, BookOpen } from "lucide-react";
+import { NewGoalButton } from "@/features/goals/new-goal-button";
 import { Button } from "@/components/ui/button";
 import { LoadingCard } from "@/components/ui/loading-card";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
@@ -11,10 +12,9 @@ import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
 import { useInsightsData } from "@/features/insights/use-insights-data";
 import { CurrentGoalGrid } from "./current-goal-grid";
 import { buildCurrentGoals, buildGoalFolios } from "./folio-model";
-import { FolioShelf } from "./folio-shelf";
 import styles from "./folio.module.css";
 
-export function GoalLibraryPage({ view = "current" }: { view?: "current" | "past"; fromPlan?: boolean }) {
+export function GoalLibraryPage() {
   const router = useAppRouter();
   const prefix = isDemoPathname(usePathname() ?? "") ? "/demo" : "";
   const { state, loading, loadError, reload } = useInsightsData({ selectedYear: String(new Date().getFullYear()) });
@@ -31,22 +31,21 @@ export function GoalLibraryPage({ view = "current" }: { view?: "current" | "past
           <h1 className={styles.pageTitle}>The goal library</h1>
           <p className={styles.intro}>Taking shape. Worth keeping.</p>
         </div>
-        {!loading && !loadError && <p className={styles.collectionCount}>{current.length} current · {goalCount} past</p>}
+        <div className="flex flex-col items-end gap-3"><NewGoalButton />{!loading && !loadError && <p className={styles.collectionCount}>{current.length} current · {goalCount} past</p>}</div>
       </header>
       <nav aria-label="Goal library collections" className={styles.collections}>
-        {(["current", "past"] as const).map(collection => <button key={collection} type="button" aria-current={view === collection ? "page" : undefined}
+        {(["current", "past"] as const).map(collection => <button key={collection} type="button" aria-current={collection === "current" ? "page" : undefined}
           onClick={() => router.push(collection === "past" ? `${prefix}/achievements#progress-section-past-goals` : `${prefix}/goals/library`)}>
           {collection === "current" ? "Current" : "Past"}
         </button>)}
       </nav>
       {loadError ? <div className={styles.empty} role="alert"><h2>Your collection couldn’t be loaded.</h2><p>{loadError}</p><Button variant="outline" className="mt-5" onClick={reload}>Try again</Button></div>
         : loading || !state.progress ? <LoadingCard title="Opening your collection..." description="Gathering your goals." />
-        : view === "current" ? current.length ? <CurrentGoalGrid
+        : current.length ? <CurrentGoalGrid
           entries={current}
           onDetails={(goalId) => router.push(`${prefix}/goals/${goalId}`)}
-        /> : <div className={styles.empty}><BookOpen size={36} className="mx-auto" aria-hidden="true" /><h2>Room for your next goal.</h2><p>Your active and upcoming goals will take shape here.</p><Button variant="outline" className="mt-5" onClick={() => router.push(`${prefix}/goals`)}>Back to Goals</Button></div>
-        : folios.length ? <FolioShelf folios={folios} />
-        : <div className={styles.empty}><BookOpen size={36} strokeWidth={1.2} className="mx-auto" aria-hidden="true" /><h2>No past goals yet.</h2><p>Goals you complete, end, or archive will collect here. Keep showing up for what matters to you.</p><Button variant="outline" className="mt-5" onClick={() => router.push(`${prefix}/goals`)}>Back to Goals</Button></div>}
+        /> : <div className={styles.empty}><BookOpen size={36} className="mx-auto" aria-hidden="true" /><h2>Room for your next goal.</h2><p>Your active and upcoming goals will take shape here.</p><Button variant="outline" className="mt-5" onClick={() => router.push(`${prefix}/goals`)}>Back to Goals</Button></div>}
+
     </div>
   );
 }
