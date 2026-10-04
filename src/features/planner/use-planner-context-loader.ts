@@ -27,6 +27,7 @@ import {
   loadTabDataCache,
   markTabDataCacheStaleByPrefix,
   readTabDataCache,
+  retainTabDataCacheKeyByPrefix,
   writeTabDataCache,
 } from "@/lib/cache/tab-data-cache";
 import { getDateInTimezone } from "@/lib/dates/timezone";
@@ -116,9 +117,11 @@ export function usePlannerContextLoader({
         weekStartsOn: setupWeekStartsOn,
         viewMode,
       });
-      // Both lenses open from the same calendar window. Extra Goal View dates
-      // are a background extension, never a prerequisite for the first paint.
-      const visibleWindow = buildCalendarVisibleDateWindow(projection.visibleDays);
+      // Timeline reads exactly its rolling window; calendar views retain their own range.
+      const calendarWindow = buildCalendarVisibleDateWindow(projection.visibleDays);
+      const visibleWindow = goalViewOpen
+        ? buildGoalViewWindow(goalViewAnchorDate ?? calendarToday)
+        : calendarWindow;
       if (!visibleWindow) {
         return false;
       }
@@ -127,8 +130,9 @@ export function usePlannerContextLoader({
 
       if (clearCachedContext) invalidateTabDataCacheByPrefix(PLANNER_CONTEXT_CACHE_PREFIX);
       const plannerContextCacheKey = buildPlannerContextCacheKey(month);
-      const goalWindow = buildGoalViewWindow(calendarToday);
+      const goalWindow = goalViewOpen ? visibleWindow : buildGoalViewWindow(calendarToday);
       const goalCacheKey = buildPlannerContextCacheKey(month, goalWindow);
+      if (goalViewOpen) retainTabDataCacheKeyByPrefix("planner-context:goals:", goalCacheKey);
       const applyContext = (payload: PlannerContextPayload, window: CalendarVisibleDateWindow) => {
         setContext(payload);
         setGoalViewWindow(goalViewOpen ? window : null);
@@ -152,7 +156,7 @@ export function usePlannerContextLoader({
         : readTabDataCache<PlannerContextPayload>(plannerContextCacheKey) ?? wideSnapshot;
       const cachedWindowIsWide = Boolean(wideSnapshot && cachedContextPayload === wideSnapshot);
       if (cachedContextPayload) {
-        applyContext(cachedContextPayload, cachedWindowIsWide ? goalWindow : visibleWindow);
+        applyContext(cachedContextPayload, cachedWindowIsWide ? goalWindow : (goalViewOpen ? calendarWindow ?? visibleWindow : visibleWindow));
         shouldShowLoading = false;
         setLoading(false);
         if (!forcePrepare && prepareRequestRef.current?.month !== month && isTabDataCacheFresh(cachedWindowIsWide ? goalCacheKey : plannerContextCacheKey)) {

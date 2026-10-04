@@ -14,9 +14,9 @@ export function XpProgressBar() {
     <XpProgressCard
       profile={profile}
       rewardSequence={rewardSequence}
-      href="/insights#progress-achievements"
-      ariaLabel="Open achievements on Progress"
-      className="max-w-[7.5rem] min-w-0 sm:max-w-none"
+      href="/achievements#progress-section-achievements"
+      ariaLabel="Open achievements"
+      className="w-full max-w-xs min-w-0"
     />
   );
 }

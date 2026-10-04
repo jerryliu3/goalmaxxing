@@ -47,10 +47,11 @@ describe("PlannerCalendarToolbar", () => {
     cleanup();
   });
 
-  it("keeps Today free of search/filter controls and goal navigation", () => {
+  it("keeps search and the goal dropdown available in Day", () => {
     renderToolbar({ viewMode: "day" });
-    expect(screen.queryByRole("searchbox")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Filters" })).toBeNull();
+    expect(screen.getByRole("searchbox", { name: "Search goals" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "All goals" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Goals" })).toBeNull();
   });
   it("offers Goal View, Day, Week, and Month without a 3 Day option", () => {
@@ -61,7 +62,7 @@ describe("PlannerCalendarToolbar", () => {
       within(viewGroup)
         .getAllByRole("button")
         .map((button) => button.textContent)
-    ).toEqual(["Today", "Week", "Month", "Goal View"]);
+    ).toEqual(["Day", "Week", "Month", "Goal View"]);
     expect(within(viewGroup).getByRole("button", { name: "Week" })).toHaveAttribute(
       "aria-pressed",
       "true"
@@ -86,7 +87,7 @@ describe("PlannerCalendarToolbar", () => {
     const group = screen.getByRole("group", { name: "Plan view mode" });
     expect(within(group).getByRole("button", { name: "Goal View" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByTestId("plan-view-mode-thumb")).toHaveStyle({ transform: "translateX(300%)" });
-    fireEvent.click(within(group).getByRole("button", { name: "Today" }));
+    fireEvent.click(within(group).getByRole("button", { name: "Day" }));
     expect(props.onGoalViewOpenChange).toHaveBeenCalledWith(false);
     expect(props.onViewModeChange).toHaveBeenCalledWith("day");
   });
@@ -120,7 +121,7 @@ describe("PlannerCalendarToolbar", () => {
   it("places plan help beside the Plan title", () => {
     renderToolbar();
 
-    const title = screen.getByRole("heading", { name: "Agenda" });
+    const title = screen.getByRole("heading", { name: "Planner" });
     const helpButton = screen.getByRole("button", { name: "Open planner help" });
     expect(title.parentElement).toContainElement(helpButton);
   });

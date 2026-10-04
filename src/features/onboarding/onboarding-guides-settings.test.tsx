@@ -15,7 +15,7 @@ describe("OnboardingGuidesSettings", () => {
     expect(screen.getByRole("button", { name: "Replay" })).toBeInTheDocument();
 
     expect(screen.getByText("Page")).toBeInTheDocument();
-    expect(screen.getByText("Agenda")).toBeInTheDocument();
+    expect(screen.getByText("Planner")).toBeInTheDocument();
     expect(screen.getByText("Achieved")).toBeInTheDocument();
     expect(screen.getByText("Community")).toBeInTheDocument();
     expect(screen.queryByText("Tasks")).toBeNull();

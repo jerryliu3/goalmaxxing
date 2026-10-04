@@ -24,7 +24,7 @@ const PLANNER_VIEW_MODES: ReadonlyArray<{
   value: PlannerCalendarViewMode;
   label: string;
 }> = [
-  { value: "day", label: "Today" },
+  { value: "day", label: "Day" },
   { value: "week", label: "Week" },
   { value: "month", label: "Month" },
 ];
@@ -158,7 +158,7 @@ export function PlannerCalendarToolbar({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <h2 className="font-display text-lg font-semibold tracking-tight">Agenda</h2>
+              <h2 className="font-display text-lg font-semibold tracking-tight">Planner</h2>
               <Tooltip content="Planner help" side="top" align="center">
                 <Button
                   type="button"
@@ -226,7 +226,7 @@ export function PlannerCalendarToolbar({
             onEndMonthFiltersChange={onEndMonthFiltersChange}
           /> : null}
         </div>
-        {viewMode !== "day" || goalViewOpen ? <div className="flex w-full items-center gap-2">
+        <div className="flex w-full items-center gap-2">
           <div className="min-w-0 flex-1">
             <Input
               id="planner-calendar-search"
@@ -284,7 +284,7 @@ export function PlannerCalendarToolbar({
               </Button>
             ) : null}
           </div>
-        </div> : null}
+        </div>
       </div>
       <Dialog
         open={helpOpen}

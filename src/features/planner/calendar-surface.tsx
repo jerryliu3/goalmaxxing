@@ -155,13 +155,6 @@ export function CalendarSurface({
     if (goalTimelineOpen) setGoalViewAnchorDate(null);
   }, [goalTimelineOpen]);
   const [searchQuery, setSearchQuery] = useState("");
-  useEffect(() => {
-    if (routeViewMode !== "day" || goalViewOpen) return;
-    setCategoryFilters([]);
-    setGoalIdFilters([]);
-    setEndMonthFilters([]);
-    setSearchQuery("");
-  }, [goalViewOpen, routeViewMode]);
   const {
     draftPolicy,
     setDraftPolicy,
@@ -1121,7 +1114,7 @@ export function CalendarSurface({
     onGoalTimelineVisibleDateChange: (date) => {
       const window = buildGoalViewWindow(goalViewAnchorDate ?? calendarToday);
       // Keep a generous buffer on both sides; scroll events do not request every date.
-      if (date < addDaysToDateString(window.start, 21) || date > addDaysToDateString(window.end, -35)) {
+      if (date < addDaysToDateString(window.start, 7) || date > addDaysToDateString(window.end, -21)) {
         setGoalViewAnchorDate(date);
         onMonthChange(date.slice(0, 7), "replace");
       }

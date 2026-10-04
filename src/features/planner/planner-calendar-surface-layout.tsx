@@ -518,7 +518,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
                   goals={dayChecklist.data.goals}
                   completedGoalIds={dayChecklist.listModel.targetAchievedGoalIds}
                   showCompletedGoals={showCompletedGoals}
-                  progressSummaries={dayChecklist.data.progress?.summaries ?? []}
                   sessions={goalViewSessions}
                   today={context?.asOfDate ?? focusedDay}
                   weekStartsOn={context?.preferences?.defaultPolicy.weekStartsOn}
@@ -527,7 +526,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
                   mutationLoadingKey={mutationLoadingKey}
                   canOpenEntry={canOpenPlannerEventDetails}
                   canMutateEntryOnDay={canMutateEntryOnDay}
-                  onMoveEntry={onGoalViewMoveSession}
                   onToggleEntry={(entry, day, source) => {
                     void toggleDateFact(entry, day, source);
                   }}

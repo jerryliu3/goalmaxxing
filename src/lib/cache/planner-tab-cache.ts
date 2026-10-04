@@ -49,7 +49,7 @@ export function buildInsightsDataCacheKey({
 }
 
 export function buildPlannerContextCacheKey(month: string, window?: { start: string; end: string }) {
-  return `${PLANNER_CONTEXT_CACHE_PREFIX}${month}${window ? `:${window.start}:${window.end}` : ""}`;
+  return window ? buildGoalViewContextCacheKey(month, window.start, window.end) : `${PLANNER_CONTEXT_CACHE_PREFIX}${month}`;
 }
 
 export function buildGoalViewContextCacheKey(month: string, start: string, end: string) {

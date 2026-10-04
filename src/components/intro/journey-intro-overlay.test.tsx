@@ -166,9 +166,9 @@ describe("JourneyIntroOverlay", () => {
     expect(routerMock.prefetch).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Finish loading" }));
     expect(await screen.findByRole("dialog", { name: "Agenda" })).toBeInTheDocument();
-    expect(screen.queryByRole("dialog", { name: "Agenda views" })).toBeNull();
+    expect(screen.queryByRole("dialog", { name: "Planner views" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Skip intro" }));
-    expect(await screen.findByRole("dialog", { name: "Agenda views" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Planner views" })).toBeInTheDocument();
     expect(screen.queryByRole("dialog", { name: "Agenda" })).toBeNull();
   });
 

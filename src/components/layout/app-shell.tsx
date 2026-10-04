@@ -129,23 +129,24 @@ export function AppShell({
                     className="sticky top-0 z-40 -mx-4 -mt-4 border-b border-border bg-page/90 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.7rem)] backdrop-blur supports-[backdrop-filter]:bg-page/80 md:m-0 md:border-0 md:rounded-xl md:bg-page/95 md:p-3"
                     style={{ viewTransitionName: "app-shell-header" }}
                   >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
                         <p className="font-display shrink-0 text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
                           Goalmaxxing
                         </p>
                         {xpEnabled ? (
-                          <div className="min-w-0 flex-1">
+                          <div className="min-w-0 max-w-xs flex-1">
                             <XpProgressBar />
                           </div>
                         ) : null}
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <div className="flex items-center gap-2">
+                          <DuoScopeToggle />
                           <CoachHeader />
-                          <Button asChild variant="outline" size="icon-sm" className="rounded-full" data-onboarding="nav.settings">
+                          <Button asChild variant="outline" size="icon" className="size-10 rounded-full p-0" data-onboarding="nav.settings">
                             <Link href={withHrefPrefix("/settings", hrefPrefix)} aria-label="Profile and settings">
-                              {viewerAvatarUrl && !hrefPrefix ? <img src={viewerAvatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" /> : <UserRound aria-hidden="true" />}
+                              {viewerAvatarUrl && !hrefPrefix ? <img src={viewerAvatarUrl} alt="" className="size-9 rounded-full object-cover" /> : <UserRound aria-hidden="true" />}
                             </Link>
                           </Button>
                         </div>
