@@ -2,6 +2,8 @@ import type { CoachTopic, CoachThread, CoachMessage, CoachMemory, CoachRun, Coac
 import type { Json } from "../supabase/database.types";
 type Table<R> = { Row: R; Insert: Partial<R>; Update: Partial<R>; Relationships: [] };
 export type CoachDatabaseTables = {
+  digest_presentations: Table<{ owner_id: string; local_date: string; digest_id: string; presented_at: string }>;
+  coach_forgotten_sources: Table<{ owner_id: string; message_id: string }>;
   coach_action_requests: Table<{ owner_id: string; request_id: string; action_id: string; receipt: Json }>;
   coach_context_versions: Table<{ owner_id:string; revision:number; updated_at:string }>;
   coach_topics: Table<CoachTopic>;
@@ -15,6 +17,11 @@ export type CoachDatabaseTables = {
 export type CoachDatabaseFunctions = {
   create_coach_topic: { Args: { p_owner: string; p_title: string }; Returns: Json };
   manage_coach_entity: { Args: { p_owner: string; p_kind: string; p_id: string; p_version: number; p_patch?: Json | null }; Returns: undefined };
+  ensure_digest_offer: { Args: { p_owner: string; p_kind: string; p_key: string; p_facts: Json; p_digest: string }; Returns: Json };
+  acknowledge_digest_offer: { Args: { p_owner: string; p_id: string; p_day: string }; Returns: boolean };
+  claim_digest_generation: { Args: { p_owner: string; p_id: string; p_digest: string; p_token: string }; Returns: Json };
+  finish_digest_generation: { Args: { p_owner: string; p_id: string; p_token: string; p_facts: Json; p_digest: string; p_suggestions: Json; p_revision: number }; Returns: boolean };
+  save_coach_summary: { Args: { p_owner: string; p_topic: string; p_version: number; p_summary: string; p_sources: string[] }; Returns: boolean };
   set_planner_preferences: { Args: { p_timezone: string; p_confirmed_at: string; p_week_start: number; p_rest_days: number[]; p_blackouts: Json; p_expected_digest?: string }; Returns: Json };
   apply_coach_action: { Args: { p_action: string; p_request: string }; Returns: Json };
   replace_coach_action: { Args: { p_owner: string; p_original: string; p_new: Json; p_undo?: boolean }; Returns: string };

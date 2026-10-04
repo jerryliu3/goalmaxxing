@@ -1,0 +1,17 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions,pg_catalog;
+select plan(6);
+insert into auth.users(id,email) values('11111111-1111-4111-8111-111111111111','coach-check-in@example.com') on conflict do nothing;
+insert into public.profiles(id,username,timezone) values('11111111-1111-4111-8111-111111111111','coach_check_in','UTC') on conflict(id) do nothing;
+create temporary table offered as select (public.ensure_digest_offer('11111111-1111-4111-8111-111111111111','daily',current_date,'{"recap":"first"}','v1')->>'id')::uuid id;
+select ok(public.acknowledge_digest_offer('11111111-1111-4111-8111-111111111111',(select id from offered),current_date),'first device claims the exact offer');
+select ok(not public.acknowledge_digest_offer('11111111-1111-4111-8111-111111111111',(select id from offered),current_date),'second device does not offer the same day');
+select is(public.claim_digest_generation('11111111-1111-4111-8111-111111111111',(select id from offered),'v1','22222222-2222-4222-8222-222222222222')->>'claimed','true','first generation is claimed');
+select throws_ok($$select public.claim_digest_generation('11111111-1111-4111-8111-111111111111',(select id from offered),'v1','33333333-3333-4333-8333-333333333333')$$,'P0001','digest_generating','concurrent generation cannot call the provider again');
+select ok(public.finish_digest_generation('11111111-1111-4111-8111-111111111111',(select id from offered),'22222222-2222-4222-8222-222222222222','{"recap":"first"}','v1','{"motivation":"Ready","suggestions":[]}',(select revision from public.coach_context_versions where owner_id='11111111-1111-4111-8111-111111111111')),'generation and fact version commit together');
+select public.claim_digest_generation('11111111-1111-4111-8111-111111111111',(select id from offered),'v2','33333333-3333-4333-8333-333333333333');
+create temporary table fact_revision as select revision from public.coach_context_versions where owner_id='11111111-1111-4111-8111-111111111111';
+update public.profiles set week_starts_on=2 where id='11111111-1111-4111-8111-111111111111';
+select throws_ok($$select public.finish_digest_generation('11111111-1111-4111-8111-111111111111',(select id from offered),'33333333-3333-4333-8333-333333333333','{}','v2','{}',(select revision from fact_revision))$$,'P0001','digest_context_changed','a changed live fact revision prevents stale briefing publication');
+select * from finish();rollback;

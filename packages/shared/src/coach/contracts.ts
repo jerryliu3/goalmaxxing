@@ -15,6 +15,7 @@ export type CoachPage = z.infer<typeof coachPageSchema>;
 export const coachTopicSchema = z.object({
   id: z.uuid(), owner_id: z.uuid(), title: z.string().min(1).max(120),
   intention: z.string().max(1000), summary: z.string().max(4000),
+  summary_sources: z.array(z.uuid()).default([]), summary_updated_at: z.string().nullable().default(null),
   version: z.number().int().nonnegative(), is_default: z.boolean(),
   archived_at: z.string().nullable(), created_at: z.string(), updated_at: z.string(),
 });
@@ -62,6 +63,7 @@ export const coachEntityPatchSchema = z.object({
 export const coachMemoryInputSchema = z.object({
   topicId: z.uuid().nullable(), content: z.string().trim().min(1).max(1000),
   kind: z.enum(["preference", "observation"]).default("preference"),
+  sourceMessageId: z.uuid().optional(),
 }).strict();
 export type CoachTopic = z.infer<typeof coachTopicSchema>;
 export type CoachThread = z.infer<typeof coachThreadSchema>;

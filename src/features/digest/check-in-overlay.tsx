@@ -12,14 +12,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  buildCheckInRows,
   buildCheckInCoachQuestion,
   checkInHeading,
   primaryCheckInAction,
 } from "@/features/digest/check-in-actions";
-import { CheckInRowList } from "@/features/digest/check-in-action-list";
+import { CheckInBody } from "@/features/digest/check-in-body";
 import { applyRecapCompletion } from "@/features/digest/check-in-recap";
-import { CheckInRecapPanel } from "@/features/digest/check-in-recap-panel";
 import { canAutoShowDigestAfterOnboarding } from "@/features/digest/digest-eligibility";
 import {
   DIGEST_OPEN_EVENT,
@@ -29,25 +27,6 @@ import {
 import { getJson, postJson } from "@/lib/api/client";
 import { stashCoachPromptSeed } from "@/lib/coach/coach-prompt-seed";
 import { toLocalDateString } from "@/lib/dates/day";
-import type { DigestFactItem } from "@/lib/digest/contract";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-
-const CHECK_IN_TABS = [
-  { value: "recap", label: "Recap" },
-  { value: "next", label: "Next" },
-] as const;
-
-// The shared tab list styles a pill by default and positions its underline with
-// a `data-horizontal` variant this project does not define. Both are replaced
-// here with the underlined line used by the goal creation tabs.
-const CHECK_IN_TAB_TRIGGER_CLASS =
-  "relative h-auto flex-1 rounded-none border-0 py-2 text-sm font-medium after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-primary data-[state=active]:after:opacity-100";
-
 /**
  * The period check-in starts as a small, non-recurring prompt. Opening it
  * splits what happened from what to do next, without mutating the plan.
@@ -123,7 +102,7 @@ export function CheckInOverlay({
         ? { ...current, acknowledged: true, shouldAutoShow: false }
         : current
     );
-    void postJson("/api/digest/ack", {}).catch(() => undefined);
+    void postJson("/api/digest/ack", {referenceId:payload.id,localDate:payload.localDate}).catch(() => undefined);
   }, [open, payload]);
 
   // At most one generate per open. `close` re-arms the guard, so the cleanup
@@ -143,7 +122,7 @@ export function CheckInOverlay({
     let cancelled = false;
     void postJson<{ facts?: DigestPayload["facts"]; suggestions: DigestPayload["suggestions"] }>(
       "/api/digest/generate",
-      {}
+      {referenceId:payload.id}
     )
       .then((generated) => {
         if (!cancelled) {
@@ -235,52 +214,7 @@ export function CheckInOverlay({
             <DialogHeader>
               <DialogTitle>{checkInHeading(kind)}</DialogTitle>
             </DialogHeader>
-            <Tabs defaultValue="recap" className="flex flex-col gap-3">
-              <TabsList
-                variant="line"
-                className="w-full gap-0 rounded-none border-b border-border/70 p-0"
-              >
-                {CHECK_IN_TABS.map((tab) => (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    className={CHECK_IN_TAB_TRIGGER_CLASS}
-                  >
-                    {tab.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              <TabsContent value="recap">
-                <CheckInRecapPanel
-                  recap={facts.recap}
-                  localDate={payload.localDate}
-                  onCompleted={(item: DigestFactItem) =>
-                    setPayload((current) =>
-                      current
-                        ? {
-                            ...current,
-                            facts: applyRecapCompletion(current.facts, item),
-                          }
-                        : current
-                    )
-                  }
-                />
-              </TabsContent>
-              <TabsContent value="next" className="space-y-3">
-                <p className="text-sm">
-                  {suggestions?.motivation ??
-                    (briefingSettled
-                      ? "Start with what’s already on the calendar."
-                      : "Reading your plan…")}
-                </p>
-                <CheckInRowList
-                  rows={buildCheckInRows({ kind, facts, suggestions })}
-                  hrefPrefix={hrefPrefix}
-                  onNavigate={leave}
-                  emptyMessage="Nothing needs a decision right now."
-                />
-              </TabsContent>
-            </Tabs>
+            <CheckInBody payload={payload} briefingSettled={briefingSettled} hrefPrefix={hrefPrefix} onNavigate={leave} onCompleted={item => setPayload(current=>current ? {...current,facts:applyRecapCompletion(current.facts,item)} : current)} />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={close}>
                 Close

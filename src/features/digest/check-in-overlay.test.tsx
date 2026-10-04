@@ -32,6 +32,7 @@ vi.mock("@/features/planner/use-completion-mutation", () => ({
 
 const digestPayload = {
   schemaVersion: "1" as const,
+  id:"11111111-1111-4111-8111-111111111111",factsDigest:"facts",historicalFacts:null,generatedAt:null,
   kind: "daily" as const,
   periodKey: "2026-09-09",
   localDate: "2026-09-09",
@@ -150,9 +151,9 @@ describe("CheckInOverlay", () => {
     expect(screen.getByText("Your daily check-in is ready")).toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Recap" })).toBeNull();
     await waitFor(() =>
-      expect(mocks.postJson).toHaveBeenCalledWith("/api/digest/ack", {})
+      expect(mocks.postJson).toHaveBeenCalledWith("/api/digest/ack", {referenceId:digestPayload.id,localDate:digestPayload.localDate})
     );
-    expect(mocks.postJson).not.toHaveBeenCalledWith("/api/digest/generate", {});
+    expect(mocks.postJson).not.toHaveBeenCalledWith("/api/digest/generate", {referenceId:digestPayload.id});
 
     await user.click(screen.getByRole("button", { name: "Open" }));
     expect(screen.getByRole("tab", { name: "Recap" })).toHaveAttribute(
@@ -223,7 +224,7 @@ describe("CheckInOverlay", () => {
     render(<CheckInOverlay />);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     await waitFor(() =>
-      expect(mocks.postJson).toHaveBeenCalledWith("/api/digest/ack", {})
+      expect(mocks.postJson).toHaveBeenCalledWith("/api/digest/ack", {referenceId:digestPayload.id,localDate:digestPayload.localDate})
     );
     await user.click(screen.getByRole("button", { name: "Skip" }));
     expect(mocks.postJson).toHaveBeenCalledTimes(1);

@@ -233,10 +233,12 @@ import * as coachBootstrapRoute from "@/app/api/coach/bootstrap/route";
 import * as coachContextRoute from "@/app/api/coach/context/route";
 import * as coachMemoriesIdRoute from "@/app/api/coach/memories/[id]/route";
 import * as coachMemoriesRoute from "@/app/api/coach/memories/route";
+import * as coachMessagesRoute from "@/app/api/coach/messages/route";
 import * as coachRunsIdRoute from "@/app/api/coach/runs/[id]/route";
 import * as coachThreadsIdMessagesRoute from "@/app/api/coach/threads/[id]/messages/route";
 import * as coachThreadsIdRoute from "@/app/api/coach/threads/[id]/route";
 import * as coachThreadsIdTurnsRoute from "@/app/api/coach/threads/[id]/turns/route";
+import * as coachTopicsIdGoalsRoute from "@/app/api/coach/topics/[id]/goals/route";
 import * as coachTopicsIdRoute from "@/app/api/coach/topics/[id]/route";
 import * as coachTopicsIdThreadsRoute from "@/app/api/coach/topics/[id]/threads/route";
 import * as coachTopicsRoute from "@/app/api/coach/topics/route";
@@ -304,10 +306,12 @@ const coachRouteModules = {
   "./coach/context/route.ts": coachContextRoute,
   "./coach/memories/[id]/route.ts": coachMemoriesIdRoute,
   "./coach/memories/route.ts": coachMemoriesRoute,
+  "./coach/messages/route.ts": coachMessagesRoute,
   "./coach/runs/[id]/route.ts": coachRunsIdRoute,
   "./coach/threads/[id]/messages/route.ts": coachThreadsIdMessagesRoute,
   "./coach/threads/[id]/route.ts": coachThreadsIdRoute,
   "./coach/threads/[id]/turns/route.ts": coachThreadsIdTurnsRoute,
+  "./coach/topics/[id]/goals/route.ts": coachTopicsIdGoalsRoute,
   "./coach/topics/[id]/route.ts": coachTopicsIdRoute,
   "./coach/topics/[id]/threads/route.ts": coachTopicsIdThreadsRoute,
   "./coach/topics/route.ts": coachTopicsRoute,

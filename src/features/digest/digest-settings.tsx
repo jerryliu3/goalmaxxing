@@ -109,7 +109,7 @@ export function DigestSettings() {
               disabled={!available || loading || regenerating}
               onClick={() => {
                 setRegenerating(true);
-                void postJson("/api/digest/generate", { regenerate: true })
+                void getJson<DigestPayload>("/api/digest").then(digest=>postJson("/api/digest/generate", { referenceId:digest.id }))
                   .then(() => {
                     requestDigestOpen();
                   })
