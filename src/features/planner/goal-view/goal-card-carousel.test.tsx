@@ -6,7 +6,8 @@ import { GoalCardCarousel } from "./goal-card-carousel";
 const motion = vi.hoisted(() => ({ reduced: false }));
 vi.mock("motion/react", () => ({ useReducedMotion: () => motion.reduced }));
 vi.mock("./goal-view-card", () => ({
-  GoalViewCard: () => <div data-rotatable={!motion.reduced}><div data-card-object="" /></div>,
+  GoalViewCard: ({ fullRender, moving }: { fullRender: boolean; moving: boolean }) =>
+    <div data-full-render={fullRender} data-moving={moving} data-rotatable={!motion.reduced}><div data-card-object="" /></div>,
 }));
 
 const goals = [buildGoal({ id: "run" }), buildGoal({ id: "gym" })];
@@ -61,6 +62,21 @@ function renderCarousel() {
   });
   return { onSelect, track, unmount: view.unmount, rerender: (selectedId: string) => view.rerender(<GoalCardCarousel {...props} selectedId={selectedId} />) };
 }
+
+it("keeps all cards flat throughout a scrub and enables only the landed goal after settling", () => {
+  const { track, rerender } = renderCarousel();
+  const slider = screen.getByRole("slider", { name: "Browse goals" });
+  fireEvent.pointerDown(slider);
+  fireEvent.change(slider, { target: { value: "1" } });
+  act(() => vi.advanceTimersByTime(500));
+  expect(track.querySelectorAll('[data-full-render="true"]')).toHaveLength(0);
+  fireEvent.pointerUp(slider);
+  rerender("gym");
+  fireEvent.scroll(track);
+  expect(track.querySelectorAll('[data-full-render="true"]')).toHaveLength(0);
+  act(() => vi.advanceTimersByTime(200));
+  expect(track.querySelectorAll('[data-full-render="true"]')).toHaveLength(1);
+});
 
 it("selects the centered goal once a swipe settles", () => {
   const { track, onSelect } = renderCarousel();

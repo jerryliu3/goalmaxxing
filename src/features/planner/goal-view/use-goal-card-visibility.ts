@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 
 const CARD_PRELOAD_MARGIN = 200;
 
-/** Keep full fragments ready just ahead of scrolling, and release them behind it. */
+/** Visibility only bounds interaction eligibility; entering view does not build 3D. */
 export function useGoalCardVisibility() {
   const ref = useRef<HTMLDivElement>(null);
   const [nearViewport, setNearViewport] = useState(false);

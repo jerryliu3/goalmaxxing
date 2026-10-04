@@ -59,6 +59,8 @@ export function GoalCardCarousel({
             <GoalViewCard
               goal={goal}
               progress={progressByGoalId.get(goal.id)}
+              fullRender={goal.id === selectedId && !scroll.moving}
+              moving={scroll.moving}
             />
           </div>
         ))}
