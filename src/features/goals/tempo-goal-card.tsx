@@ -41,7 +41,7 @@ export function TempoGoalCard({
   surface?: "material" | "plain";
   /** Gallery grids pass false so the card stays still; drag hosts keep the default. */
   rotatable?: boolean;
-  /** Paint plaque shards as one clipped face; whole-card rotation remains available. */
+  /** Paint static gallery shards as one clipped face. Full shards own rotation. */
   flat?: boolean;
   assembly?: { completed: number; target: number; preview?: boolean };
   visibility?: TempoCardVisibility;
@@ -184,14 +184,13 @@ export function TempoGoalCard({
     return card;
   }
 
-  // A rotatable masked face needs one rim/back, rather than one per shard.
   return (
     <TempoCardSurface
       material={material}
       goalColor={goalColor}
       label={fields.title.trim() || "Goal card"}
-      rotatable={rotatable}
-      solid={!assembly || (flat && rotatable)}
+      rotatable={rotatable && !(assembly && flat)}
+      solid={!assembly}
     >
       {assembly ? (
         <ReassemblingCard

@@ -5,7 +5,9 @@ import { GoalCardCarousel } from "./goal-card-carousel";
 
 const motion = vi.hoisted(() => ({ reduced: false }));
 vi.mock("motion/react", () => ({ useReducedMotion: () => motion.reduced }));
-vi.mock("./goal-view-card", () => ({ GoalViewCard: () => <div /> }));
+vi.mock("./goal-view-card", () => ({
+  GoalViewCard: () => <div data-rotatable={!motion.reduced}><div data-card-object="" /></div>,
+}));
 
 const goals = [buildGoal({ id: "run" }), buildGoal({ id: "gym" })];
 const originalScrollTo = Object.getOwnPropertyDescriptor(Element.prototype, "scrollTo");
@@ -51,15 +53,16 @@ it("selects the centered goal once a swipe settles", () => {
   expect(onSelect).toHaveBeenCalledWith("gym");
 });
 
-it("cancels pending swipe selection and ignores scrolling while turning", () => {
+it("cancels swipe selection when a direct card gesture begins and resumes after release", () => {
   const { track, onSelect } = renderCarousel();
   fireEvent.scroll(track);
-  fireEvent.click(screen.getByRole("button", { name: "Turn card" }));
+  const card = track.querySelector("[data-card-object]")!;
+  fireEvent.pointerDown(card, { button: 0 });
   fireEvent.scroll(track);
   act(() => vi.advanceTimersByTime(140));
   expect(onSelect).not.toHaveBeenCalled();
 
-  fireEvent.click(screen.getByRole("button", { name: "Done turning" }));
+  fireEvent.pointerUp(card);
   fireEvent.scroll(track);
   act(() => vi.advanceTimersByTime(140));
   expect(onSelect).toHaveBeenCalledTimes(1);
