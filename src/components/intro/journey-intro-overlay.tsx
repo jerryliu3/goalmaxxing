@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -96,6 +96,7 @@ function getServerSnapshot() {
 }
 
 export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: JourneyIntroOverlayProps) {
+  const requestedOpen = useRef(false);
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
@@ -116,10 +117,12 @@ export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: Jo
   const targetCandidates = useMemo(() => [step.target], [step.target]);
 
   useEffect(() => {
+    requestedOpen.current = false;
     if (!enabled) {
       return;
     }
     const timeoutId = window.setTimeout(() => {
+      if (requestedOpen.current) return;
       const forcedIntroUserId = window.localStorage.getItem(
         JOURNEY_INTRO_FORCE_USER_ID_KEY
       );
@@ -142,6 +145,7 @@ export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: Jo
 
   useEffect(() => {
     const handleOpenRequest = () => {
+      requestedOpen.current = true;
       setStepIndex(0);
       setOpen(true);
       onOpenChange?.(true);
