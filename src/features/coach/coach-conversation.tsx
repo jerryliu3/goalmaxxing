@@ -15,7 +15,7 @@ export function CoachConversation() {
   const archived = Boolean(coach.activeThread?.archived_at || coach.activeTopic?.archived_at);
   const send = (retry = false) => coach.send(coach.page, retry ? latestRun : undefined);
   return <div className={s.conversation}>
-    <div className={s.conversationHeading}><button className={s.roomSelector} onClick={() => coach.showView("rooms")}><span>{coach.activeTopic?.title ?? "My week"}<small>{coach.activeThread?.title ?? "Your conversation"}</small></span><ChevronDown size={14} /></button><div className={s.buttons}>
+    <div className={s.conversationHeading}><button className={s.roomSelector} onClick={() => coach.showView("rooms")}><span>{coach.activeTopic?.title ?? "My week"}{coach.activeThread?.title && coach.activeThread.title !== coach.activeTopic?.title && <small>{coach.activeThread.title}</small>}</span><ChevronDown size={14} /></button><div className={s.buttons}>
       <Button size="icon-sm" variant="ghost" aria-label="New conversation in this room" disabled={!coach.activeTopic || archived} onClick={() => void coach.create("thread", "New conversation", coach.activeTopic!.id).then(thread => coach.selectThread(thread.id)).catch(error => coach.setError(error.message))}><Plus size={16} /></Button>
       {coach.activeThread && <CoachEntityMenu kind="thread" entity={coach.activeThread} />}
     </div></div>

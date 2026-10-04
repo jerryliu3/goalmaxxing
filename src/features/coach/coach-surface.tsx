@@ -15,7 +15,7 @@ import type { CoachView } from "./presentation";
 import s from "./coach.module.css";
 
 const views: { id: CoachView; label: string }[] = [
-  { id: "conversation", label: "Conversation" }, { id: "rooms", label: "Rooms" },
+  { id: "conversation", label: "Chat" }, { id: "rooms", label: "Rooms" },
   { id: "check-in", label: "Check-in" }, { id: "understanding", label: "Understanding" }, { id: "changes", label: "Changes" },
 ];
 export function CoachSurface() {
@@ -81,7 +81,6 @@ export function CoachSurface() {
         <div className={s.view} hidden={view !== "check-in"}>{view === "check-in" && <CoachCheckInContent />}</div>
         <div className={s.view} hidden={view !== "changes"}>{view === "changes" && <CoachChanges />}</div>
       </div>
-      {mode === "expanded" && view === "conversation" && <aside className={s.understandingPane}><CoachUnderstanding key={topic?.id} compact /></aside>}
     </div>
   </motion.section>;
 }

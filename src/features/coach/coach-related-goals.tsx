@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getJson, requestJson } from "@/lib/api/client";
+import s from "./coach.module.css";
 import { useCoach } from "./coach-provider";
 
 export function CoachRelatedGoals({ topicId }: { topicId: string }) {
@@ -24,9 +25,9 @@ export function CoachRelatedGoals({ topicId }: { topicId: string }) {
     finally { setBusy(false); }
   };
   return <div>
-    <p className="mb-1 text-xs text-muted-foreground">Related goals</p>
-    <div className="flex flex-wrap gap-2">{coach.facts?.goals.map(goal => <label key={goal.id} className="flex items-center gap-1 text-xs">
+    <h3>Related goals</h3><div className={s.linkedGoals}>{goalIds === null ? <p className={s.help}>Loading linked goals…</p> : goalIds.length === 0 ? <p className={s.help}>No goals linked to this room.</p> : coach.facts?.goals.filter(goal => goalIds.includes(goal.id)).map(goal => <p key={goal.id}>{goal.title}</p>)}</div><details className={s.editDisclosure}><summary>Edit linked goals</summary>
+    <div className={s.goalOptions}>{coach.facts?.goals.map(goal => <label key={goal.id} className="flex items-center gap-1 text-xs">
       <input type="checkbox" disabled={busy || goalIds === null} checked={goalIds?.includes(goal.id) ?? false} onChange={event => void update(goal.id, event.target.checked)} />{goal.title}
-    </label>)}</div>
+    </label>)}</div></details>
   </div>;
 }
