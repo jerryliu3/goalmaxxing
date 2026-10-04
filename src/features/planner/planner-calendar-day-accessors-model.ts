@@ -147,7 +147,7 @@ export function selectCalendarDayAccessorsModel({
     categoryFilters,
     endMonthFilters: effectiveEndMonthFilters,
     searchQuery,
-    workUnits: context?.activePlan?.workUnits ?? [],
+    workUnits: effectivePreview?.workUnits ?? [],
     goalTitles: context?.goalTitles ?? {},
   });
   const endMonthOptions = (() => {
