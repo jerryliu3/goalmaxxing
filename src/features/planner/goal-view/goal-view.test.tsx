@@ -151,7 +151,7 @@ describe("GoalView", () => {
     expect(field).toHaveClass("h-full", "w-full");
     expect(field).not.toHaveAttribute("aria-hidden");
     expect(field).not.toHaveAttribute("tabindex", "-1");
-    expect(field.parentElement!.querySelector('[aria-hidden="true"]')).toHaveClass("underline");
+    expect(field.parentElement!.querySelector('[aria-hidden="true"]')).not.toHaveClass("underline");
     expect(field.min).toBe(TODAY);
     pickDate(field.parentElement!, "2026-10-12");
     expect(props.onMoveSession).toHaveBeenCalledWith(
@@ -277,7 +277,9 @@ describe("GoalView", () => {
       expect(within(gym).getAllByRole("article")).toHaveLength(1);
       expect(screen.getByRole("button", { name: "Next goal" })).toBeDisabled();
 
-      fireEvent.click(screen.getByRole("button", { name: "Select Run a half marathon" }));
+      const scrollbar = screen.getByRole("slider", { name: "Browse goals" });
+      fireEvent.change(scrollbar, { target: { value: "0" } });
+      fireEvent.keyDown(scrollbar, { key: "Home" });
       expect(screen.getByText("Goal 1 of 2")).toBeInTheDocument();
     });
 
