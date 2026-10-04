@@ -27,7 +27,7 @@ describe("shared deterministic account operations", () => {
   });
   it("returns a ready publish request from the exact stable preview", async () => {
     const policy = createDefaultPlannerPolicy("UTC", "2026-10-04T00:00:00Z");
-    const preview = runPlannerKernel({ schemaVersion: "1", eligibilityMode: "strict_v1", ownerId: owner, startDate: "2026-10-01", endDate: "2026-10-31", asOfDate: "2026-10-04", timezone: "UTC", goals: [], completions: [], links: [], policy, basePlan: null });
+    const preview = runPlannerKernel({ schemaVersion: "1", eligibilityMode: "overlap_v1", ownerId: owner, startDate: "2026-10-01", endDate: "2026-10-31", asOfDate: "2026-10-04", timezone: "UTC", goals: [], completions: [], links: [], policy, basePlan: null });
     mocks.preview.mockResolvedValue(Response.json({ preview, policy, revisions: { scheduleDigest: "a".repeat(64) } }));
     const result = await executeOperation({ userId: owner, token: "token" } as ExternalContext, "preview_plan", { startDate: "2026-10-01", endDate: "2026-10-31" });
     expect(result.publishRequest).toMatchObject({ expectedDigest: "a".repeat(64), previewHash: preview.generationInputHash, preserveExistingAssignments: preview.preserveExistingAssignments, confirmationHash: null, policy });
