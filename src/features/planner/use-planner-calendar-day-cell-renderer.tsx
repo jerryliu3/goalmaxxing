@@ -359,7 +359,6 @@ export function usePlannerCalendarDayCellRenderer({
             clearLongPressTimer();
           }}
           onCellPointerLeave={() => {
-            pointerPressActiveRef.current = false;
             clearLongPressTimer();
           }}
           onEntryPointerStart={(immovable) => {

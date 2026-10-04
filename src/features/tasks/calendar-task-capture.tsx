@@ -53,7 +53,7 @@ export function useCalendarTaskCapture({ today, readOnly, revealTasks }: {
     revealTasks();
     setCaptureDay(day);
   }, [readOnly, revealTasks, today]);
-  const render = useCallback((day: string) => captureDay === day
-    ? <CalendarTaskComposer key={day} day={day} onClose={close} /> : null, [captureDay, close]);
+  const render = useCallback((day: string) => !readOnly && captureDay === day
+    ? <CalendarTaskComposer key={day} day={day} onClose={close} /> : null, [captureDay, close, readOnly]);
   return { open, render };
 }
