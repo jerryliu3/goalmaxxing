@@ -1,0 +1,22 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,private,extensions,pg_catalog;
+select plan(9);
+set local role service_role;
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',true);
+create temporary table captured_task as select * from public.create_planner_task('One time task',
+  private.local_today_for_timezone((select timezone from public.profiles where id=auth.uid())));
+select lives_ok($q$select public.set_planner_task_scheduled_date(task_id,scheduled_date,updated_at,'Renamed','09:30',true) from captured_task$q$,'task name and time can be edited');
+select is((select scheduled_time from public.planner_tasks where id=(select task_id from captured_task)),'09:30','time persisted');
+select throws_ok($q$select public.set_planner_task_scheduled_date(task_id,scheduled_date,updated_at) from captured_task$q$,'P0001','task_stale','old versions rejected');
+select throws_ok($q$select public.set_planner_task_scheduled_date(id,scheduled_date-1,updated_at) from public.planner_tasks where id=(select task_id from captured_task)$q$,'22023','task_date_in_past','past reschedule rejected');
+select public.set_planner_task_completion(id,true,updated_at) from public.planner_tasks where id=(select task_id from captured_task);
+select is((select sum(xp_delta)::integer from public.xp_ledger where metadata->>'task_id'=(select task_id::text from captured_task)),private.xp_points_for_completion_source('manual','easy'),'easy goal XP credited');
+select public.set_planner_task_completion(id,true,updated_at) from public.planner_tasks where id=(select task_id from captured_task);
+select is((select count(*)::integer from public.xp_ledger where metadata->>'task_id'=(select task_id::text from captured_task)),1,'repeated completion does not duplicate XP');
+select throws_ok($q$select public.set_planner_task_scheduled_date(id,scheduled_date+1,updated_at) from public.planner_tasks where id=(select task_id from captured_task)$q$,'22023','task_completed','completed tasks cannot move');
+select public.set_planner_task_completion(id,false,updated_at) from public.planner_tasks where id=(select task_id from captured_task);
+select is((select sum(xp_delta)::integer from public.xp_ledger where metadata->>'task_id'=(select task_id::text from captured_task)),0,'undo reverses XP');
+select is((select count(*)::integer from public.xp_ledger where metadata->>'task_id'=(select task_id::text from captured_task) and event_type='goal_achievement'),0,'tasks award no achievement credit');
+select * from finish();
+rollback;

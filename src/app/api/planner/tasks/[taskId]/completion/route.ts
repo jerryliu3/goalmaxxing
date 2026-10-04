@@ -62,6 +62,9 @@ export async function POST(
     });
 
     if (error) {
+      if (normalizePostgresErrorMessage(error) === "task_completion_in_future") {
+        throw new ApiRouteError(400, "task_completion_in_future", "Future tasks cannot be completed yet.");
+      }
       if (error.message === "task_stale") throw new ApiRouteError(409, "task_stale", "This task changed. Refresh before editing it.");
       if (isPlannerTaskNotFound(error)) {
         throw new ApiRouteError(
