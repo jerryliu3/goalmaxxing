@@ -1,3 +1,6 @@
+import { useCallback, useState } from "react";
+import { PageOnboardingReadyContext } from "@/features/onboarding/onboarding-readiness";
+import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overlay";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -96,7 +99,7 @@ function mockVisibleOnboardingTargets() {
   );
 }
 
-function renderIntro() {
+function renderIntro(onOpenChange?: (open: boolean) => void) {
   return render(
     <>
       <button type="button" data-onboarding="nav.calendar">
@@ -114,7 +117,7 @@ function renderIntro() {
       <button type="button" data-onboarding="nav.new-goal">
         New Goal +
       </button>
-      <JourneyIntroOverlay userId={TEST_USER_ID} />
+      <JourneyIntroOverlay userId={TEST_USER_ID} onOpenChange={onOpenChange} />
     </>
   );
 }
@@ -137,6 +140,58 @@ describe("JourneyIntroOverlay", () => {
     cleanup();
     vi.restoreAllMocks();
     vi.clearAllMocks();
+  });
+
+  it("waits for boot, then shows the navigation intro before the page guide", async () => {
+    function Guides() {
+      const [bootReady, setBootReady] = useState(false);
+      const [introReady, setIntroReady] = useState(false);
+      const onOpenChange = useCallback((open: boolean) => setIntroReady(!open), []);
+      return (
+        <PageOnboardingReadyContext.Provider value={bootReady && introReady}>
+          <button onClick={() => setBootReady(true)}>Finish loading</button>
+          <div data-onboarding="nav.calendar">Navigation</div>
+          <div data-onboarding="planner.calendar.controls">Page controls</div>
+          <JourneyIntroOverlay
+            userId={TEST_USER_ID}
+            enabled={bootReady}
+            onOpenChange={onOpenChange}
+          />
+          <TabOnboardingOverlay onboardingKey="planner.calendar" forceOpen />
+        </PageOnboardingReadyContext.Provider>
+      );
+    }
+    render(<Guides />);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(routerMock.prefetch).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Finish loading" }));
+    expect(await screen.findByRole("dialog", { name: "Plan" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Plan views" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Skip intro" }));
+    expect(await screen.findByRole("dialog", { name: "Plan views" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Plan" })).toBeNull();
+  });
+
+  it("does not consume a forced intro until boot is finished", async () => {
+    const onOpenChange = vi.fn();
+    window.localStorage.setItem(JOURNEY_INTRO_FORCE_USER_ID_KEY, TEST_USER_ID);
+    const { rerender } = render(
+      <JourneyIntroOverlay userId={TEST_USER_ID} enabled={false} onOpenChange={onOpenChange} />
+    );
+    expect(window.localStorage.getItem(JOURNEY_INTRO_FORCE_USER_ID_KEY)).toBe(TEST_USER_ID);
+    expect(onOpenChange).not.toHaveBeenCalled();
+    rerender(<JourneyIntroOverlay userId={TEST_USER_ID} enabled onOpenChange={onOpenChange} />);
+    expect(await screen.findByRole("dialog", { name: "Plan" })).toBeInTheDocument();
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(window.localStorage.getItem(JOURNEY_INTRO_FORCE_USER_ID_KEY)).toBeNull();
+  });
+
+  it("releases page guides for users who already completed the intro", async () => {
+    const onOpenChange = vi.fn();
+    window.localStorage.setItem(JOURNEY_ONBOARDING_COMPLETED_KEY, "done");
+    render(<JourneyIntroOverlay userId={TEST_USER_ID} onOpenChange={onOpenChange} />);
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("prefetches calendar when intro opens", async () => {
@@ -201,7 +256,8 @@ describe("JourneyIntroOverlay", () => {
   it(
     "walks through nav highlights and saves preferences on the last step",
     async () => {
-    renderIntro();
+    const onOpenChange = vi.fn();
+    renderIntro(onOpenChange);
     expect(await screen.findByRole("dialog", { name: "Plan" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
@@ -232,6 +288,7 @@ describe("JourneyIntroOverlay", () => {
     await waitFor(() => {
       expect(putJsonMock).toHaveBeenCalled();
       expect(profileUpdateEqMock).toHaveBeenCalled();
+      expect(onOpenChange).toHaveBeenLastCalledWith(false);
       expect(screen.queryByRole("dialog", { name: "Your preferences" })).toBeNull();
     });
     expect(window.localStorage.getItem(JOURNEY_ONBOARDING_COMPLETED_KEY)).toBe("done");

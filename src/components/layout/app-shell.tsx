@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Fragment, type ReactNode, ViewTransition } from "react";
+import { Fragment, type ReactNode, useCallback, useState, ViewTransition } from "react";
 import { JourneyIntroOverlay } from "@/components/intro/journey-intro-overlay";
 import { CheckInOverlay } from "@/features/digest/check-in-overlay";
 import { JourneyProvider } from "@/components/journey/journey-provider.web";
@@ -12,6 +12,7 @@ import {
   isAppBootGatedPath,
   useReportAppSurfaceReady,
 } from "@/components/layout/app-boot-ready";
+import { PageOnboardingReadyContext } from "@/features/onboarding/onboarding-readiness";
 import { TabNav } from "@/components/navigation/tab-nav";
 import { Button } from "@/components/ui/button";
 import { AltitudeBackdrop } from "@/components/xp/altitude-backdrop";
@@ -65,6 +66,12 @@ export function AppShell({
   onNewGoalClick,
   xpEnabled = true,
 }: AppShellProps) {
+  const [bootReady, setBootReady] = useState(false);
+  const [navigationIntroReady, setNavigationIntroReady] = useState(!showJourneyIntro);
+  const onBootReady = useCallback(() => setBootReady(true), []);
+  const onIntroOpenChange = useCallback((open: boolean) => {
+    setNavigationIntroReady(!open);
+  }, []);
   setTabDataCacheScope(userId);
   useIdleAppPrefetch({
     userId,
@@ -86,13 +93,14 @@ export function AppShell({
     typeof ViewTransition === "function" ? ViewTransition : Fragment;
 
   return (
+    <PageOnboardingReadyContext.Provider value={bootReady && (!showJourneyIntro || navigationIntroReady)}>
     <XpRewardProvider>
       <CompletionFeedbackProvider>
       <PlaqueCompletionProvider>
       <XpProfileProvider enabled={xpEnabled}>
         <JourneyProvider flags={journeyFlags}>
           <AltitudeBackdrop journeyFlags={journeyFlags} />
-          {showJourneyIntro ? <JourneyIntroOverlay userId={userId} /> : null}
+          {showJourneyIntro ? <JourneyIntroOverlay userId={userId} enabled={bootReady} onOpenChange={onIntroOpenChange} /> : null}
           {digestEnabled ? <CheckInOverlay hrefPrefix={hrefPrefix} /> : null}
           <DuoProvider
             key={`${duoAvailability}:${duoState.activePartner?.partnerId ?? "none"}`}
@@ -104,7 +112,7 @@ export function AppShell({
             initialScopePreference={initialDuoScopePreference}
           >
             <PublicProfileSheetProvider viewerUserId={userId} xpEnabled={xpEnabled}>
-              <AppBootSplash />
+              <AppBootSplash onReady={onBootReady} />
               <div>
                 <div className="relative z-10 flex min-h-screen w-full justify-center bg-page px-4 py-4 sm:px-6 sm:py-6">
                   <div className="flex w-full max-w-6xl flex-col gap-4 md:gap-6">
@@ -190,5 +198,6 @@ export function AppShell({
       </PlaqueCompletionProvider>
       </CompletionFeedbackProvider>
     </XpRewardProvider>
+    </PageOnboardingReadyContext.Provider>
   );
 }

@@ -79,6 +79,8 @@ const JOURNEY_INTRO_STEPS = [
 
 interface JourneyIntroOverlayProps {
   userId: string;
+  enabled?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 function subscribeNoop() {
@@ -93,7 +95,7 @@ function getServerSnapshot() {
   return false;
 }
 
-export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
+export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: JourneyIntroOverlayProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
@@ -103,7 +105,7 @@ export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
   const step = JOURNEY_INTRO_STEPS[stepIndex];
   const isLastStep = stepIndex >= JOURNEY_INTRO_STEPS.length - 1;
   const isPreferencesStep = step.kind === "preferences";
-  const preferences = useJourneyIntroPreferences(userId, open && isPreferencesStep);
+  const preferences = useJourneyIntroPreferences(userId, enabled && open && isPreferencesStep);
   const cardPosition =
     isPreferencesStep || !hasMeasured
       ? null
@@ -114,6 +116,9 @@ export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
   const targetCandidates = useMemo(() => [step.target], [step.target]);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
     const timeoutId = window.setTimeout(() => {
       const forcedIntroUserId = window.localStorage.getItem(
         JOURNEY_INTRO_FORCE_USER_ID_KEY
@@ -121,41 +126,43 @@ export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
       if (forcedIntroUserId === userId) {
         window.localStorage.removeItem(JOURNEY_INTRO_FORCE_USER_ID_KEY);
         setOpen(true);
+        onOpenChange?.(true);
         return;
       }
       const completed = window.localStorage.getItem(JOURNEY_ONBOARDING_COMPLETED_KEY);
       const lastSeen = window.localStorage.getItem(JOURNEY_INTRO_SEEN_KEY);
-      if (completed !== "done" && lastSeen === null) {
-        setOpen(true);
-      }
+      const shouldOpen = completed !== "done" && lastSeen === null;
+      setOpen(shouldOpen);
+      onOpenChange?.(shouldOpen);
     }, 0);
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [userId]);
+  }, [userId, enabled, onOpenChange]);
 
   useEffect(() => {
     const handleOpenRequest = () => {
       setStepIndex(0);
       setOpen(true);
+      onOpenChange?.(true);
     };
     window.addEventListener(JOURNEY_INTRO_OPEN_EVENT, handleOpenRequest);
     return () => {
       window.removeEventListener(JOURNEY_INTRO_OPEN_EVENT, handleOpenRequest);
     };
-  }, []);
+  }, [onOpenChange]);
 
   useEffect(() => {
-    if (!open) {
+    if (!enabled || !open) {
       return;
     }
     void router.prefetch("/calendar");
     void router.prefetch("/calendar?view=day");
     void import("@/features/planner/calendar-page-shell");
-  }, [open, router]);
+  }, [enabled, open, router]);
 
   useEffect(() => {
-    if (!open || isPreferencesStep) {
+    if (!enabled || !open || isPreferencesStep) {
       return;
     }
     let cancelled = false;
@@ -199,7 +206,7 @@ export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
       window.removeEventListener("resize", readTarget);
       window.removeEventListener("scroll", readTarget, true);
     };
-  }, [open, isPreferencesStep, targetCandidates]);
+  }, [enabled, open, isPreferencesStep, targetCandidates]);
 
   const isBrowser = useSyncExternalStore(
     subscribeNoop,
@@ -211,6 +218,7 @@ export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
     window.localStorage.setItem(JOURNEY_ONBOARDING_COMPLETED_KEY, "done");
     window.localStorage.setItem(JOURNEY_INTRO_SEEN_KEY, toLocalDateString());
     setOpen(false);
+    onOpenChange?.(false);
     setStepIndex(0);
   };
 
@@ -231,7 +239,7 @@ export function JourneyIntroOverlay({ userId }: JourneyIntroOverlayProps) {
     closeAndPersist();
   };
 
-  if (!open || !isBrowser) {
+  if (!enabled || !open || !isBrowser) {
     return null;
   }
 

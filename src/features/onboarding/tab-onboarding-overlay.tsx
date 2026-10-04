@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import { usePageOnboardingReady } from "@/features/onboarding/onboarding-readiness";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -29,6 +30,7 @@ export function TabOnboardingOverlay({
   forceOpen = false,
   steps: stepsOverride,
 }: TabOnboardingOverlayProps) {
+  const ready = usePageOnboardingReady();
   const sessionToken = useMemo(
     () => `${forceOpen ? "force" : "default"}:${onboardingKey}`,
     [forceOpen, onboardingKey]
@@ -44,7 +46,7 @@ export function TabOnboardingOverlay({
     (forceOpen || !completed);
   const steps = stepsOverride ?? TAB_ONBOARDING_TOURS[onboardingKey];
 
-  if (!open || steps.length === 0) {
+  if (!ready || !open || steps.length === 0) {
     return null;
   }
 
