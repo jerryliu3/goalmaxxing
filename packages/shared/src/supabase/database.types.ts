@@ -1285,6 +1285,30 @@ export type Database = {
           },
         ]
       }
+      external_app_connections: {
+        Row: {
+          client_id: string
+          client_name: string
+          connected_at: string
+          owner_id: string
+          revoked_at: string | null
+        }
+        Insert: {
+          client_id: string
+          client_name: string
+          connected_at?: string
+          owner_id: string
+          revoked_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          client_name?: string
+          connected_at?: string
+          owner_id?: string
+          revoked_at?: string | null
+        }
+        Relationships: []
+      }
       feed_events: {
         Row: {
           actor_id: string

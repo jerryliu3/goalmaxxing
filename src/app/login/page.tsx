@@ -1,3 +1,4 @@
+import { resolveSafePostLoginPath } from "@/lib/auth/login-redirect";
 import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { JourneyBackdrop } from "@/components/journey/journey-backdrop.web";
@@ -6,14 +7,14 @@ import { LoginForm } from "@/features/auth/login-form";
 import { getFeatureFlags } from "@/lib/feature-flags";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/calendar");
+    redirect(resolveSafePostLoginPath((await searchParams).next));
   }
 
   const flags = getFeatureFlags();

@@ -6,6 +6,8 @@ import {
   parseBoundedJsonBody,
 } from "@/lib/api/http-route";
 import { reportError } from "@/lib/observability/report-error";
+import { hasOAuthClientClaim, isExternalAccountRoute } from "@/lib/external-tools/oauth";
+import { readBearerToken } from "@/lib/supabase/auth-header";
 import { createRouteClient } from "@/lib/supabase/route";
 
 const DEFAULT_MAX_BODY_BYTES = 64 * 1024;
@@ -174,6 +176,11 @@ export async function requireAuthenticatedRequestContext(
       "authentication_required",
       unauthorizedMessage
     );
+  }
+
+  const token = readBearerToken(request);
+  if (token && hasOAuthClientClaim(token) && !isExternalAccountRoute(request.url)) {
+    throw new ApiRouteError(403, "external_route_required", "Connected apps must use /api/v1 or /api/mcp. Goalmaxxing AI routes are unavailable to connected apps.");
   }
 
   return {

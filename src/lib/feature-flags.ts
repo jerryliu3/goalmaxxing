@@ -32,3 +32,8 @@ export function isFeatureEnabled<K extends BooleanFeatureFlagKey>(
 ): boolean {
   return getFeatureFlags()[flag];
 }
+
+/** Account API and MCP rollout; independent of device health integrations. */
+export function areExternalToolsEnabled(): boolean {
+  return getServerEnv().EXTERNAL_TOOLS_ENABLED;
+}

@@ -100,6 +100,7 @@ const serverEnvSchema = publicEnvSchema.extend({
   XP_ENABLED: booleanFromEnv(() => process.env.NODE_ENV === "development"),
   SOCIAL_ENABLED: booleanFromEnv(() => process.env.NODE_ENV === "development"),
   INTEGRATIONS_ENABLED: booleanFromEnv(false),
+  EXTERNAL_TOOLS_ENABLED: booleanFromEnv(false),
   JOURNEY_ENABLED: booleanFromEnv(false),
   COACH_ENABLED: booleanFromEnv(false),
   DIGEST_ENABLED: booleanFromEnv(() => process.env.NODE_ENV === "development"),
@@ -175,6 +176,7 @@ function readServerEnvInput() {
     XP_ENABLED: process.env.XP_ENABLED,
     SOCIAL_ENABLED: process.env.SOCIAL_ENABLED,
     INTEGRATIONS_ENABLED: process.env.INTEGRATIONS_ENABLED,
+    EXTERNAL_TOOLS_ENABLED: process.env.EXTERNAL_TOOLS_ENABLED,
     JOURNEY_ENABLED: process.env.JOURNEY_ENABLED,
     COACH_ENABLED: process.env.COACH_ENABLED,
     DIGEST_ENABLED: process.env.DIGEST_ENABLED,
@@ -256,6 +258,9 @@ export function assertEnvAtBoot() {
   }
   if (!env.SUPABASE_SECRET_KEY && !env.SUPABASE_SERVICE_ROLE_KEY) {
     missing.push("SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY");
+  }
+  if (env.EXTERNAL_TOOLS_ENABLED && !env.NEXT_PUBLIC_APP_URL) {
+    missing.push("NEXT_PUBLIC_APP_URL (external tools enabled)");
   }
   if (!env.CRON_SECRET) {
     missing.push("CRON_SECRET");
