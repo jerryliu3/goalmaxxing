@@ -18,7 +18,7 @@ import {
 } from "@/lib/cache/tab-data-cache";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
 import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
-import type { Profile } from "@/lib/goals/types";
+import type { GoalShare, Profile } from "@/lib/goals/types";
 import { createDefaultPlannerPolicy, type PlannerPolicy } from "@/lib/planner/policy";
 import { unsubscribeCurrentBrowser } from "@/lib/push/client";
 import { createClient } from "@/lib/supabase/client";
