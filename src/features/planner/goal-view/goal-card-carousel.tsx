@@ -66,6 +66,7 @@ export function GoalCardCarousel({
       <GoalDotScrollbar
         goals={goals}
         position={scroll.position}
+        selectedId={selectedId}
         onSeek={scroll.seek}
         onStart={scroll.beginScrub}
         onEnd={scroll.endScrub}

@@ -279,7 +279,7 @@ describe("GoalView", () => {
 
       const scrollbar = screen.getByRole("slider", { name: "Browse goals" });
       fireEvent.change(scrollbar, { target: { value: "0" } });
-      fireEvent.keyUp(scrollbar, { key: "Home" });
+      fireEvent.keyDown(scrollbar, { key: "Home" });
       expect(screen.getByText("Goal 1 of 2")).toBeInTheDocument();
     });
 

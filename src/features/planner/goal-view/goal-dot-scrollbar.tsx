@@ -4,9 +4,10 @@ import type { Goal } from "@/lib/goals/types";
 import { cn } from "@/lib/utils";
 
 /** A native range control gives the dotted track touch, mouse and keyboard input. */
-export function GoalDotScrollbar({ goals, position, onSeek, onStart, onEnd }: {
+export function GoalDotScrollbar({ goals, position, selectedId, onSeek, onStart, onEnd }: {
   goals: Goal[];
   position: number;
+  selectedId: string;
   onSeek: (position: number) => void;
   onStart: () => void;
   onEnd: () => void;
@@ -40,8 +41,18 @@ export function GoalDotScrollbar({ goals, position, onSeek, onStart, onEnd }: {
         onPointerDown={onStart}
         onPointerUp={onEnd}
         onPointerCancel={onEnd}
-        onKeyUp={event => {
-          if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(event.key)) onEnd();
+        onKeyDown={event => {
+          const selected = Math.max(0, goals.findIndex(goal => goal.id === selectedId));
+          const steps: Record<string, number> = {
+            ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1,
+            PageDown: -5, PageUp: 5,
+          };
+          const next = event.key === "Home" ? 0 : event.key === "End" ? goals.length - 1
+            : steps[event.key] !== undefined ? selected + steps[event.key] : null;
+          if (next === null) return;
+          event.preventDefault();
+          onSeek(Math.max(0, Math.min(goals.length - 1, next)));
+          onEnd();
         }}
         className="absolute inset-0 m-0 h-full w-full touch-none cursor-ew-resize opacity-0 disabled:cursor-default"
       />

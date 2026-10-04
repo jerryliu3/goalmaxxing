@@ -137,7 +137,7 @@ it("commits keyboard selection and respects reduced motion", () => {
   track.scrollLeft = 0;
   const slider = screen.getByRole("slider", { name: "Browse goals" });
   fireEvent.change(slider, { target: { value: "1" } });
-  fireEvent.keyUp(slider, { key: "End" });
+  fireEvent.keyDown(slider, { key: "End" });
   expect(onSelect).toHaveBeenCalledWith("gym");
   expect(Element.prototype.scrollTo).toHaveBeenLastCalledWith({ left: 300, behavior: "auto" });
 });
