@@ -9,7 +9,7 @@ import {
   type SetStateAction,
 } from "react";
 import type { PlannerDragTarget } from "@/features/planner/calendar-dnd";
-import { getEntryDraftPillClasses, isEntryCredited } from "@/features/planner/calendar-format";
+import { getEntryCompactTitleWithTime, getEntryDraftPillClasses, isEntryCredited } from "@/features/planner/calendar-format";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import { getGoalVisual, getWorkPillDraftFillStyle, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
@@ -60,7 +60,7 @@ export function usePlannerCalendarDnd({
   const getDragEntryLabel = useCallback(
     (entryKey: string) => {
       const entry = entryByKey.get(entryKey);
-      return entry ? getEntryGoalFirstTitleWithTime(entry) : "planner session";
+      return entry ? getEntryCompactTitleWithTime(entry) : "planner session";
     },
     [entryByKey, getEntryGoalFirstTitleWithTime]
   );
@@ -84,7 +84,7 @@ export function usePlannerCalendarDnd({
         color: entry.activeGoal?.color ?? null,
         category: entry.activeGoal?.category ?? null,
       });
-      const title = getEntryGoalFirstTitleWithTime(entry);
+      const title = getEntryCompactTitleWithTime(entry);
       const credited = isEntryCredited(entry);
       const fillStyle =
         entry.draftDiffKind === "moved_to" || entry.draftDiffKind === "new"

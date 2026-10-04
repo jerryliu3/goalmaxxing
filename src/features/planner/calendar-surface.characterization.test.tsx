@@ -1301,7 +1301,7 @@ describe("CalendarSurface characterization", () => {
     expect(
       within(previewPopover).queryByText("07:30 Milestone 2")
     ).not.toBeInTheDocument();
-    expect(within(previewPopover).queryByText("Next: Milestone 2")).not.toBeInTheDocument();
+    expect(within(previewPopover).queryByText("Milestone: Milestone 2")).not.toBeInTheDocument();
 
     fireEvent.click(within(previewPopover).getByText("07:30 Goal B"));
     const editor = await screen.findByRole("region", {
@@ -1310,7 +1310,7 @@ describe("CalendarSurface characterization", () => {
     expect(
       within(editor).getByRole("heading", { name: "Goal B" })
     ).toBeInTheDocument();
-    expect(within(editor).queryByText("Next: Milestone 2")).not.toBeInTheDocument();
+    expect(within(editor).queryByText("Milestone: Milestone 2")).not.toBeInTheDocument();
   });
 
 
@@ -1951,7 +1951,7 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(await screen.findByText("Next: Baseline"));
+    fireEvent.click(await screen.findByText("Milestone: Baseline"));
     expect(await screen.findByRole("link", { name: "Edit goal" })).toHaveAttribute(
       "href",
       "/goals/goal-a"
@@ -2030,7 +2030,7 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(await screen.findByText("Next: Middle"));
+    fireEvent.click(await screen.findByText("Milestone: Middle"));
     expect(await screen.findByRole("button", { name: "Mon, Aug 31" })).toBeInTheDocument();
     expect(onSelectedDayChange).not.toHaveBeenCalled();
     expect(onMonthChange).not.toHaveBeenCalled();

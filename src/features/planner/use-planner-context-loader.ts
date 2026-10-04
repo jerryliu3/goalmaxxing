@@ -22,6 +22,7 @@ import {
   PLANNER_CONTEXT_CACHE_PREFIX,
 } from "@/lib/cache/planner-tab-cache";
 import {
+  invalidateTabDataCacheByPrefix,
   isTabDataCacheFresh,
   loadTabDataCache,
   markTabDataCacheStaleByPrefix,
@@ -122,6 +123,7 @@ export function usePlannerContextLoader({
       const visibleStart = visibleWindow.start;
       const visibleEnd = visibleWindow.end;
 
+      if (forcePrepare) invalidateTabDataCacheByPrefix(PLANNER_CONTEXT_CACHE_PREFIX);
       const plannerContextCacheKey = buildPlannerContextCacheKey(month);
       const goalWindow = buildGoalViewWindow(calendarToday);
       const goalCacheKey = buildPlannerContextCacheKey(month, goalWindow);

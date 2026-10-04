@@ -60,7 +60,7 @@ describe("calendar entry subtitles", () => {
         label: "Publish beta",
         unitKey: "milestone:2",
       })
-    ).toBe("Next: Publish beta");
+    ).toBe("Milestone: Publish beta");
   });
 
   it("hides canonical default milestone subtitles", () => {
@@ -80,7 +80,7 @@ describe("calendar entry subtitles", () => {
         label: "Milestone 3",
         unitKey: "milestone:2",
       })
-    ).toBe("Next: Milestone 3");
+    ).toBe("Milestone: Milestone 3");
   });
 
   it("omits subtitles when no goal title is available", () => {

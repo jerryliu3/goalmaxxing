@@ -150,7 +150,7 @@ export function getEntrySubtitle(
   if (!meaningfulLabel || !entry.goalTitle || meaningfulLabel === entry.goalTitle) {
     return null;
   }
-  return `Next: ${meaningfulLabel}`;
+  return `${isMilestoneUnitKey(entry.unitKey) ? "Milestone" : "Session"}: ${meaningfulLabel}`;
 }
 
 export function getDayStatus(

@@ -8,7 +8,7 @@ import { getGoalVisual, getWorkPillDraftFillStyle } from "@/features/planner/goa
 
 describe("usePlannerCalendarDnd", () => {
   it("keeps a draft session's fill and shimmer while it is being dragged", () => {
-    const entry = buildPlannerDayEntry({ draftDiffKind: "moved_to" });
+    const entry = buildPlannerDayEntry({ draftDiffKind: "moved_to", label: "Draft run", unitKey: "milestone:1", goalTitle: "Running" });
     const { result } = renderHook(() =>
       usePlannerCalendarDnd({
         entryByKey: new Map([[entry.key, entry]]),
@@ -22,6 +22,7 @@ describe("usePlannerCalendarDnd", () => {
       })
     );
 
+    expect(result.current.getDragEntryLabel(entry.key)).toBe("Draft run");
     render(result.current.renderEntryDragOverlay(entry.key));
     const tile = screen.getByText("Draft run").parentElement;
     const visual = getGoalVisual({ goalId: entry.originalGoalId, color: null, category: null });
