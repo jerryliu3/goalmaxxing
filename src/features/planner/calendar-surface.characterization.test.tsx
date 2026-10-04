@@ -1951,7 +1951,7 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(await screen.findByText("Next: Baseline"));
+    fireEvent.click(await screen.findByText("Milestone: Baseline"));
     expect(await screen.findByRole("link", { name: "Edit goal" })).toHaveAttribute(
       "href",
       "/goals/goal-a"
@@ -2030,7 +2030,7 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(await screen.findByText("Next: Middle"));
+    fireEvent.click(await screen.findByText("Milestone: Middle"));
     expect(await screen.findByRole("button", { name: "Mon, Aug 31" })).toBeInTheDocument();
     expect(onSelectedDayChange).not.toHaveBeenCalled();
     expect(onMonthChange).not.toHaveBeenCalled();

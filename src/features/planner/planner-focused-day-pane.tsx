@@ -2,7 +2,7 @@ import { format, parse } from "date-fns";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  getEntryMilestoneFirstTitleWithTime,
+  getEntryGoalFirstTitleWithTime,
   getEntrySubtitle,
   isEntryCredited,
 } from "@/features/planner/calendar-format";
@@ -276,7 +276,7 @@ export function PlannerFocusedDayPane({
               asOfDate={asOfDate}
               canMutatePlanItems={canMutatePlanItems}
               canMutateEntryOnDay={canMutateEntryOnDay}
-              getEntryDisplayTitle={getEntryMilestoneFirstTitleWithTime}
+              getEntryDisplayTitle={getEntryGoalFirstTitleWithTime}
               getEntrySubtitle={getEntrySubtitle}
               isEntryCredited={isEntryCredited}
               onEntryOpen={onEntryOpen}
