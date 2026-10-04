@@ -4,7 +4,6 @@ import { MilestoneTitleEditor } from "./milestone-title-editor";
 
 const mocks = vi.hoisted(() => ({ rpc: vi.fn(), single: vi.fn(), invalidate: vi.fn(), error: vi.fn() }));
 vi.mock("@/lib/supabase/client", () => ({ createClient: () => ({
-  auth: { getUser: async () => ({ data: { user: { id: "owner" } } }) },
   from: () => ({ select: () => ({ eq: () => ({ single: mocks.single }) }) }),
   rpc: mocks.rpc,
 }) }));
@@ -13,7 +12,7 @@ vi.mock("sonner", () => ({ toast: { error: mocks.error } }));
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.single.mockResolvedValue({ data: { owner_id: "owner", frequency_type: "fixed_milestones", target_count: 2, milestone_names: ["Fresh first name", "Second"] }, error: null });
+  mocks.single.mockResolvedValue({ data: { frequency_type: "fixed_milestones", target_count: 2, milestone_names: ["Fresh first name", "Second"] }, error: null });
   mocks.rpc.mockResolvedValue({ error: null });
 });
 describe("milestone title editor", () => {

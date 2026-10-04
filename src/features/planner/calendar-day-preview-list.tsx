@@ -345,7 +345,7 @@ export function CalendarDayPreviewList<
                               expanded ? planLedgerSubtitleClass : "truncate text-muted-foreground"
                             }`}
                           >
-                            {/^milestone:\d+$/.test(entry.unitKey) ? <>Milestone: <MilestoneTitleEditor goalId={entry.originalGoalId} unitKey={entry.unitKey} label={entry.label ?? "Milestone"} disabled={entry.draftGhost || completionMode !== "toggle"} /></> : subtitle}
+                            {/^milestone:\d+$/.test(entry.unitKey) ? <>Milestone: <MilestoneTitleEditor goalId={entry.originalGoalId} unitKey={entry.unitKey} label={entry.label ?? "Milestone"} disabled={entry.draftGhost} /></> : subtitle}
                           </p>
                         ) : null}
                       </div>
