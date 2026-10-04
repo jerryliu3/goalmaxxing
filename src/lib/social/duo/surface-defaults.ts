@@ -15,7 +15,7 @@ export function resolveDuoSurfaceDefault(pathname: string | null): DuoScope {
   if (path?.startsWith("/checklist")) {
     return DUO_SURFACE_DEFAULTS.checklist;
   }
-  if (path?.startsWith("/calendar")) {
+  if (path?.startsWith("/calendar") || path === "/goals") {
     return DUO_SURFACE_DEFAULTS.calendar;
   }
   return DUO_SURFACE_DEFAULTS.checklist;

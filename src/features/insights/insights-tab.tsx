@@ -206,7 +206,7 @@ export function InsightsTab({
   const [internalGoalSearchQuery, setInternalGoalSearchQuery] = useState("");
   const [internalGoalEndMonths, setInternalGoalEndMonths] = useState<string[]>([]);
   const [internalGoalSort, setInternalGoalSort] = useState<GoalDateSort>("earliest_end");
-  const [internalShowHistoricalGoals, setInternalShowHistoricalGoals] = useState(false);
+  const [internalShowHistoricalGoals, setInternalShowHistoricalGoals] = useState(progressView === "all");
   const goalSearchQuery = sharedGoalFilters?.goalSearchQuery ?? internalGoalSearchQuery;
   const setGoalSearchQuery = sharedGoalFilters?.setGoalSearchQuery ?? setInternalGoalSearchQuery;
   const goalEndMonths = sharedGoalFilters?.goalEndMonths ?? internalGoalEndMonths;
@@ -692,7 +692,7 @@ export function InsightsTab({
         : null,
     // Planner sessions are viewer-only, so a partner lane would render a
     // completions-only week under the same "This week" legend. Omit it.
-    enabled: insightsReady && !readOnly,
+    enabled: insightsReady && !readOnly && progressView !== "all",
   });
   const pastSections = useProgressPastSections({
     goals: state.goals,

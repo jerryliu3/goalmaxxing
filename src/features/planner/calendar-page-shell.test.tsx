@@ -219,6 +219,15 @@ describe("CalendarPageShell", () => {
     render(<CalendarPageShell />);
     expect(mocks.latestSurfaceProps?.viewMode).toBe("day");
   });
+  it("does not overwrite the goal editor URL while the Goals surface stays mounted", () => {
+    mocks.pathname = "/goals";
+    const { rerender } = render(<CalendarPageShell destination="goals" />);
+    mocks.applySearchParams.mockClear();
+    mocks.pathname = "/goals/new";
+    mocks.search = "returnTo=%2Fgoals";
+    rerender(<CalendarPageShell destination="goals" />);
+    expect(mocks.applySearchParams).not.toHaveBeenCalled();
+  });
   it("uses the same completion context on the Goals destination", () => {
     mocks.pathname = "/goals";
     render(<CalendarPageShell destination="goals" />);

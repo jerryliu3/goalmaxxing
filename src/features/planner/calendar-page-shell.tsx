@@ -23,7 +23,9 @@ export function CalendarPageShell({ isActive = true, destination = "agenda" }: {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();
-  const onCalendarPath = destination === "goals" || isPlannerCalendarPathname(pathname);
+  const onCalendarPath = destination === "goals"
+    ? pathname === "/goals" || pathname === "/demo/goals"
+    : isPlannerCalendarPathname(pathname);
   const routeIsActive = isActive && onCalendarPath;
   const defaultCalendarViewMode = DEFAULT_CALENDAR_VIEW_MODE;
   const { scope, activePartner, partner, viewer } = useDuoSurface("calendar");
@@ -159,6 +161,7 @@ export function CalendarPageShell({ isActive = true, destination = "agenda" }: {
 
   return (
     <CalendarSurface
+      key={destination}
       destination={destination}
       activeTab="calendar"
       month={normalized.month}

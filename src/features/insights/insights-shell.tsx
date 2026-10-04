@@ -19,8 +19,31 @@ import { unionGoalsById } from "@/features/insights/insights-selectors";
 import type { GoalDateSort } from "@/lib/goals/list-view";
 import type { Goal } from "@/lib/goals/types";
 
-function AchievedFrame({ children, availableSectionIds }: { availableSectionIds: readonly ProgressSectionId[]; children: (view: "all") => ReactNode }) {
-  return <div className="space-y-5"><div><h1 className="font-display text-3xl font-semibold">Achieved</h1><p className="text-sm text-muted-foreground">Look back on your effort, accomplishments, and past goals.</p></div><nav aria-label="Achieved sections" className="flex flex-wrap gap-4 text-sm">{PROGRESS_SECTIONS.filter((section) => section.id !== "week" && availableSectionIds.includes(section.id)).map((section) => <a key={section.id} href={`#${progressSectionElementId(section.id)}`} className="underline underline-offset-4">{section.label}</a>)}</nav>{children("all")}</div>;
+function AchievedFrame({ children, availableSectionIds }: {
+  availableSectionIds: readonly ProgressSectionId[];
+  children: (view: "all") => ReactNode;
+}) {
+  const sections = PROGRESS_SECTIONS.filter(
+    (section) => section.id !== "week" && availableSectionIds.includes(section.id)
+  );
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="font-display text-3xl font-semibold">Achieved</h1>
+        <p className="text-sm text-muted-foreground">
+          Look back on your effort, accomplishments, and past goals.
+        </p>
+      </div>
+      <nav aria-label="Achieved sections" className="flex flex-wrap gap-4 text-sm">
+        {sections.map((section) => (
+          <a key={section.id} href={`#${progressSectionElementId(section.id)}`} className="underline underline-offset-4">
+            {section.label}
+          </a>
+        ))}
+      </nav>
+      {children("all")}
+    </div>
+  );
 }
 
 export function InsightsShell() {
@@ -113,7 +136,7 @@ export function InsightsShell() {
         {(view) => (
           <div className="space-y-4">
             {/* Shared ledger controls drive the Completion history section in
-                both lanes, so they sit above the lanes on the current view. */}
+                both lanes, so they sit above the lanes. */}
             {sharePeriodControls ? (
               <InsightsTrackerHeader
                 goals={sharedFilterGoals}
