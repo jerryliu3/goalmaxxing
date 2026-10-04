@@ -35,6 +35,7 @@ interface CompletionToggleProps
   size?: keyof typeof sizeClasses;
   chrome?: "button" | "plain";
   completedMark?: "style" | "check";
+  /** Custom earned mark; incomplete and holding states use the normal control. */
   renderMark?: (completed: boolean) => React.ReactNode;
   onClick?: CompletionHoldCommitHandler;
 }
@@ -113,7 +114,7 @@ export function CompletionToggle({
       }}
       title={title ?? "Hold to change completion"}
     >
-      {renderMark ? renderMark(visualCompleted) : completedMark === "check" && visualCompleted && !holding ? (
+      {renderMark && visualCompleted && !holding ? renderMark(visualCompleted) : completedMark === "check" && visualCompleted && !holding ? (
         <Check className={classes.icon} aria-hidden="true" />
       ) : <StyleCompletionMark
         done={visualCompleted}
