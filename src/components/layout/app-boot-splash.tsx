@@ -69,7 +69,7 @@ function BootClimbAnimation() {
   );
 }
 
-export function AppBootSplash() {
+export function AppBootSplash({ onReady }: { onReady?: () => void }) {
   const [visible, setVisible] = useState(true);
 
   useLayoutEffect(() => {
@@ -110,6 +110,12 @@ export function AppBootSplash() {
       window.removeEventListener(APP_SURFACE_READY_EVENT, onSurfaceReady);
     };
   }, []);
+
+  useEffect(() => {
+    if (!visible) {
+      onReady?.();
+    }
+  }, [visible, onReady]);
 
   if (!visible) {
     return null;

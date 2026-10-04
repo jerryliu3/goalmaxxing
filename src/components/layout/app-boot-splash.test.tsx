@@ -27,14 +27,18 @@ describe("AppBootSplash", () => {
 
   it("stays hidden after the boot session is already ready", () => {
     window.sessionStorage.setItem(APP_BOOT_READY_STORAGE_KEY, "1");
-    render(<AppBootSplash />);
+    const onReady = vi.fn();
+    render(<AppBootSplash onReady={onReady} />);
+    expect(onReady).toHaveBeenCalledOnce();
     expect(screen.queryByTestId("app-boot-splash")).not.toBeInTheDocument();
     expect(getJsonMock).not.toHaveBeenCalled();
   });
 
   it("stays hidden when Playwright persisted the skip flag in localStorage", () => {
     window.localStorage.setItem(APP_BOOT_READY_STORAGE_KEY, "1");
-    render(<AppBootSplash />);
+    const onReady = vi.fn();
+    render(<AppBootSplash onReady={onReady} />);
+    expect(onReady).toHaveBeenCalledOnce();
     expect(screen.queryByTestId("app-boot-splash")).not.toBeInTheDocument();
     expect(getJsonMock).not.toHaveBeenCalled();
   });
@@ -47,7 +51,9 @@ describe("AppBootSplash", () => {
           resolveContext = resolve;
         })
     );
-    render(<AppBootSplash />);
+    const onReady = vi.fn();
+    render(<AppBootSplash onReady={onReady} />);
+    expect(onReady).not.toHaveBeenCalled();
     expect(screen.getByTestId("app-boot-splash")).toBeInTheDocument();
     expect(screen.getByTestId("app-boot-climb")).toBeInTheDocument();
     expect(screen.getByText("Goalmaxxing")).toBeInTheDocument();
@@ -68,6 +74,7 @@ describe("AppBootSplash", () => {
     await waitFor(() => {
       expect(screen.queryByTestId("app-boot-splash")).not.toBeInTheDocument();
     });
+    expect(onReady).toHaveBeenCalledOnce();
     expect(window.sessionStorage.getItem(APP_BOOT_READY_STORAGE_KEY)).toBe(
       String(performance.timeOrigin)
     );
