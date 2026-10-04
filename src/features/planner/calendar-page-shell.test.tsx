@@ -112,6 +112,20 @@ describe("CalendarPageShell", () => {
     });
   });
 
+  it("clears the timeline lens in the final calendar navigation update", () => {
+    mocks.search = "lens=goals&view=month&month=2026-08&day=2026-08-12";
+    render(<CalendarPageShell />);
+    const surface = mocks.latestSurfaceProps!;
+    act(() => {
+      surface.onGoalTimelineOpenChange?.(false);
+      surface.onSelectedDayChange("2026-09-06", "push", "day", { alignMonth: true });
+    });
+    const call = mocks.applySearchParams.mock.results.at(-1)?.value as { params: URLSearchParams };
+    expect(call.params.has("lens")).toBe(false);
+    expect(call.params.get("view")).toBe("day");
+    expect(call.params.get("day")).toBe("2026-09-06");
+  });
+
   it("keeps the viewed month for a month-cell selection unless explicitly aligned", () => {
     render(<CalendarPageShell />);
     const surface = mocks.latestSurfaceProps!;
