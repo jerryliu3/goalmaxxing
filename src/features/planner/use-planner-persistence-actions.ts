@@ -44,6 +44,7 @@ interface UsePlannerPersistenceActionsArgs {
     showLoading?: boolean;
     toastOnError?: boolean;
     forcePrepare?: boolean;
+    clearCachedContext?: boolean;
     rebalanceExistingAssignments?: boolean;
   }) => Promise<boolean>;
   cacheDraftPreviewForWindow: (args: {
@@ -494,6 +495,7 @@ export function usePlannerPersistenceActions({
           showLoading: false,
           toastOnError: false,
           forcePrepare: true,
+          clearCachedContext: true,
           rebalanceExistingAssignments: true,
         }),
         timeoutMessage:

@@ -37,6 +37,7 @@ export interface LoadPlannerContextOptions {
   showLoading?: boolean;
   toastOnError?: boolean;
   forcePrepare?: boolean;
+  clearCachedContext?: boolean;
   rebalanceExistingAssignments?: boolean;
 }
 
@@ -90,6 +91,7 @@ export function usePlannerContextLoader({
       showLoading = true,
       toastOnError = false,
       forcePrepare = false,
+      clearCachedContext = false,
       rebalanceExistingAssignments = false,
     }: LoadPlannerContextOptions = {}) => {
       if (activeTab !== "calendar") {
@@ -123,7 +125,7 @@ export function usePlannerContextLoader({
       const visibleStart = visibleWindow.start;
       const visibleEnd = visibleWindow.end;
 
-      if (forcePrepare) invalidateTabDataCacheByPrefix(PLANNER_CONTEXT_CACHE_PREFIX);
+      if (clearCachedContext) invalidateTabDataCacheByPrefix(PLANNER_CONTEXT_CACHE_PREFIX);
       const plannerContextCacheKey = buildPlannerContextCacheKey(month);
       const goalWindow = buildGoalViewWindow(calendarToday);
       const goalCacheKey = buildPlannerContextCacheKey(month, goalWindow);
