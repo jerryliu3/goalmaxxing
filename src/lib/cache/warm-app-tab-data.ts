@@ -1,18 +1,17 @@
 import { fetchInsightsData, type InsightsData } from "@/features/insights/fetch-insights-data";
 import { getMonthInTimezone } from "@/features/planner/calendar-format";
-import type { PlannerContextPayload } from "@/features/planner/calendar-surface.types";
+import { buildGoalViewWindow } from "@/features/planner/goal-view/goal-view-model";
 import {
   fetchSocialChallenges,
   fetchSocialLeaderboards,
   fetchSocialTeamState,
 } from "@/features/social/data";
 import { fetchChecklistTodayData, type TodayData } from "@/features/today/fetch-checklist-data";
-import { getJson } from "@/lib/api/client";
+import { fetchPlannerContext } from "@/lib/planner/fetch-planner-context";
 import {
   buildChecklistDataCacheKey,
   buildInsightsDataCacheKey,
   buildPartnerCacheScope,
-  buildPlannerContextCacheKey,
 } from "@/lib/cache/planner-tab-cache";
 import {
   isTabDataCacheFresh,
@@ -53,7 +52,6 @@ export async function warmAppTabData({
     partnerScope,
   });
   const month = getMonthInTimezone(resolveUserTimezone());
-  const plannerCacheKey = buildPlannerContextCacheKey(month);
 
   const warmChecklist = async () => {
     const cached = readTabDataCache<TodayData>(checklistCacheKey);
@@ -91,14 +89,8 @@ export async function warmAppTabData({
     if (forceRefresh) {
       return;
     }
-    const cached = readTabDataCache<PlannerContextPayload>(plannerCacheKey);
-    if (cached && isTabDataCacheFresh(plannerCacheKey)) {
-      return;
-    }
-    const contextPayload = await getJson<PlannerContextPayload>("/api/planner/context", {
-      query: { scopeMonth: month },
-    });
-    writeTabDataCache(plannerCacheKey, contextPayload);
+    const context = await fetchPlannerContext({ month });
+    await fetchPlannerContext({ month, window: buildGoalViewWindow(context.asOfDate) });
   };
 
   await Promise.allSettled([

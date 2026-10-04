@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
+import { useCallback, useRef, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
 import { toast } from "sonner";
 import {
   getMonthInTimezone,
@@ -26,6 +26,7 @@ import {
 } from "@/lib/cache/tab-data-cache";
 import { getDateInTimezone } from "@/lib/dates/timezone";
 import type { PlannerPolicy } from "@/lib/planner/policy";
+import { fetchPlannerContext } from "@/lib/planner/fetch-planner-context";
 
 export interface LoadPlannerContextOptions {
   showLoading?: boolean;
@@ -73,6 +74,7 @@ export function usePlannerContextLoader({
   draftPolicyRef,
   calendarPreparedRef,
 }: UsePlannerContextLoaderArgs) {
+  const requestIdRef = useRef(0);
   return useCallback(
     async ({
       showLoading = true,
@@ -83,6 +85,7 @@ export function usePlannerContextLoader({
       if (activeTab !== "calendar") {
         return false;
       }
+      const requestId = ++requestIdRef.current;
 
       let shouldShowLoading = showLoading;
       if (shouldShowLoading) {
@@ -101,8 +104,7 @@ export function usePlannerContextLoader({
         weekStartsOn: setupWeekStartsOn,
         viewMode,
       });
-      // Goal View browses months of sessions at once, so it asks for its own
-      // wide window and never shares the month-keyed cache with calendar views.
+      // Goal View keeps its complete window separate from the month snapshot.
       const visibleWindow = goalViewOpen
         ? buildGoalViewWindow(calendarToday)
         : buildCalendarVisibleDateWindow(projection.visibleDays);
@@ -112,13 +114,16 @@ export function usePlannerContextLoader({
       const visibleStart = visibleWindow.start;
       const visibleEnd = visibleWindow.end;
 
-      const plannerContextCacheKey = buildPlannerContextCacheKey(month);
-      const cachedContextPayload = goalViewOpen
-        ? null
-        : readTabDataCache<PlannerContextPayload>(plannerContextCacheKey);
+      const plannerContextCacheKey = buildPlannerContextCacheKey(month, goalViewOpen ? visibleWindow : undefined);
+      const warmGoalView = (payload: PlannerContextPayload) => {
+        if (!goalViewOpen) {
+          void fetchPlannerContext({ month, window: buildGoalViewWindow(payload.asOfDate) }).catch(() => undefined);
+        }
+      };
+      const cachedContextPayload = readTabDataCache<PlannerContextPayload>(plannerContextCacheKey);
       if (cachedContextPayload) {
         setContext(cachedContextPayload);
-        setGoalViewReady(false);
+        setGoalViewReady(goalViewOpen);
         if (cachedContextPayload.preferences?.timezone) {
           const policyForSetup =
             draftPolicyRef.current ?? cachedContextPayload.preferences.defaultPolicy;
@@ -130,6 +135,7 @@ export function usePlannerContextLoader({
         if (!forcePrepare && isTabDataCacheFresh(plannerContextCacheKey)) {
           calendarPreparedRef.current = true;
           setLoading(false);
+          warmGoalView(cachedContextPayload);
           return true;
         }
       }
@@ -149,15 +155,20 @@ export function usePlannerContextLoader({
                 ? { rebalanceExistingAssignments: true }
                 : {}),
             })
-          : await getJson<PlannerContextPayload>("/api/planner/context", {
+          : goalViewOpen
+            ? await fetchPlannerContext({ month, window: visibleWindow })
+            : await getJson<PlannerContextPayload>("/api/planner/context", {
               query: {
                 scopeMonth: month,
                 visibleStart,
                 visibleEnd,
               },
             });
+        if (requestId !== requestIdRef.current) return false;
         calendarPreparedRef.current = true;
+        if (shouldPrepare || !goalViewOpen) writeTabDataCache(plannerContextCacheKey, contextPayload);
       } catch (error) {
+        if (requestId !== requestIdRef.current) return false;
         if (shouldShowLoading) {
           setLoading(false);
         }
@@ -174,9 +185,7 @@ export function usePlannerContextLoader({
         }
         return false;
       }
-      if (shouldShowLoading) {
-        setLoading(false);
-      }
+      setLoading(false);
       if (!contextPayload) {
         const message = "Planner calendar context could not be loaded.";
         if (shouldShowLoading) {
@@ -191,9 +200,7 @@ export function usePlannerContextLoader({
 
       setContext(contextPayload);
       setGoalViewReady(goalViewOpen);
-      if (!goalViewOpen) {
-        writeTabDataCache(plannerContextCacheKey, contextPayload);
-      }
+      warmGoalView(contextPayload);
       if (contextPayload.preferences?.timezone) {
         const policyForSetup =
           draftPolicyRef.current ?? contextPayload.preferences.defaultPolicy;

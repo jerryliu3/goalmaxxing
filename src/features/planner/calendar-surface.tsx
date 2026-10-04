@@ -29,7 +29,7 @@ import {
   useCalendarSurfaceInteractionRefs,
   useCalendarSurfaceUiEffects,
 } from "@/features/planner/use-calendar-surface-ui-effects";
-import { buildGoalViewSessions } from "@/features/planner/goal-view/goal-view-model";
+import { buildGoalViewSessions, buildGoalViewWindow } from "@/features/planner/goal-view/goal-view-model";
 import { useGoalViewProjection } from "@/features/planner/goal-view/use-goal-view-projection";
 import { getDateInTimezone, resolveUserTimezone } from "@/lib/dates/timezone";
 import {
@@ -922,9 +922,16 @@ export function CalendarSurface({
       // loadContext reads even a stale cache before fetching. Update both
       // baselines so a failed fetch cannot restore the old digest or source date.
       writeTabDataCache(buildPlannerContextCacheKey(savedContext.scopeMonth), savedContext, 0);
+      if (goalViewOpen) {
+        writeTabDataCache(
+          buildPlannerContextCacheKey(savedContext.scopeMonth, buildGoalViewWindow(savedContext.asOfDate)),
+          savedContext,
+          0
+        );
+      }
       setContext(savedContext);
     },
-    [context, draftSaveCommands, draftSaveWindow]
+    [context, draftSaveCommands, draftSaveWindow, goalViewOpen]
   );
 
   const {

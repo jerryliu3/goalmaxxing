@@ -10,14 +10,7 @@ import {
   removeAppBootPreloadOverlay,
 } from "@/components/layout/app-boot-ready";
 import { getMonthInTimezone } from "@/features/planner/calendar-format";
-import type { PlannerContextPayload } from "@/features/planner/calendar-surface.types";
-import { getJson } from "@/lib/api/client";
-import { buildPlannerContextCacheKey } from "@/lib/cache/planner-tab-cache";
-import {
-  isTabDataCacheFresh,
-  readTabDataCache,
-  writeTabDataCache,
-} from "@/lib/cache/tab-data-cache";
+import { fetchPlannerContext } from "@/lib/planner/fetch-planner-context";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
 
 export { APP_BOOT_READY_STORAGE_KEY } from "@/components/layout/app-boot-ready";
@@ -27,15 +20,7 @@ const CLIMB_LOOP_MS = Math.round(14000 / 1.7);
 
 async function warmPlannerContext() {
   const month = getMonthInTimezone(resolveUserTimezone());
-  const cacheKey = buildPlannerContextCacheKey(month);
-  const cached = readTabDataCache<PlannerContextPayload>(cacheKey);
-  if (cached && isTabDataCacheFresh(cacheKey)) {
-    return;
-  }
-  const contextPayload = await getJson<PlannerContextPayload>("/api/planner/context", {
-    query: { scopeMonth: month },
-  });
-  writeTabDataCache(cacheKey, contextPayload);
+  await fetchPlannerContext({ month });
 }
 
 function BootClimbAnimation() {
