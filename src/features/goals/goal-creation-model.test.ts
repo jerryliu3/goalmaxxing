@@ -8,7 +8,7 @@ import {
   updateGoalCreationFields,
   validateGoalCreationFields,
   type GoalCreationFields,
-} from "@/features/goals/goal-creation-model";
+} from "@/lib/goals/creation-model";
 
 function baseFields(overrides: Partial<GoalCreationFields> = {}): GoalCreationFields {
   return {

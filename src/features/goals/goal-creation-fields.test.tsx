@@ -5,7 +5,7 @@ import {
   createDefaultGoalCreationFields,
   type GoalCreationFieldChange,
   type GoalCreationFields,
-} from "@/features/goals/goal-creation-model";
+} from "@/lib/goals/creation-model";
 import {
   GoalCreationFieldControls,
   type GoalCreationLinkTargetProps,
@@ -72,7 +72,7 @@ function renderControls(
 ) {
   const onFieldChange =
     options.onFieldChange ??
-    vi.fn<(change: import("@/features/goals/goal-creation-model").GoalCreationFieldChange) => void>();
+    vi.fn<(change: import("@/lib/goals/creation-model").GoalCreationFieldChange) => void>();
   const onPatch =
     options.onPatch ?? vi.fn<(patch: Partial<GoalCreationFields>) => void>();
   const onCreateKindChange = vi.fn();

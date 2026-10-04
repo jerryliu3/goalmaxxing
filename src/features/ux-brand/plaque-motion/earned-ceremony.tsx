@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FolioBook } from "@/features/insights/folio/folio-book";
 import type { GoalFolio } from "@/features/insights/folio/folio-model";
 import folioStyles from "@/features/insights/folio/folio.module.css";
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import { FragmentPlaque } from "./fragment-plaque";
 import { CEREMONY_BEATS, studyFolio, type CeremonyPhase, type PlaquePhase } from "./study-model";
 import styles from "./plaque-motion.module.css";

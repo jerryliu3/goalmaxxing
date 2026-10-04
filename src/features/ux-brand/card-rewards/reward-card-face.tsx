@@ -1,5 +1,5 @@
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import { CardSolidBody } from "@/features/goals/card-material/card-solid-body";
 
 export function RewardCardFace({ fields, earned, solid = true }: {

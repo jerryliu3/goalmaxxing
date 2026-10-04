@@ -58,6 +58,7 @@ describe("POST /api/planner/tasks/[taskId]/schedule", () => {
           scheduled_date: "2026-09-08",
           scheduled_time: "08:00",
           completed_at: null,
+          updated_at: "2026-09-01T00:00:00.000Z",
         },
       ],
       error: null,
@@ -70,7 +71,7 @@ describe("POST /api/planner/tasks/[taskId]/schedule", () => {
       error: null,
     });
 
-    const response = await POST(request({ scheduledDate: "2026-09-08" }), {
+    const response = await POST(request({ scheduledDate: "2026-09-08", expectedUpdatedAt: "2026-09-01T00:00:00.000Z" }), {
       params: Promise.resolve({ taskId: TASK_ID }),
     });
 
@@ -82,7 +83,7 @@ describe("POST /api/planner/tasks/[taskId]/schedule", () => {
 
   it("rejects invalid task ids and bodies", async () => {
     const invalidId = await POST(
-      request({ scheduledDate: "2026-09-08" }, "not-a-uuid"),
+      request({ scheduledDate: "2026-09-08", expectedUpdatedAt: "2026-09-01T00:00:00.000Z" }, "not-a-uuid"),
       {
         params: Promise.resolve({ taskId: "not-a-uuid" }),
       }
@@ -96,7 +97,7 @@ describe("POST /api/planner/tasks/[taskId]/schedule", () => {
   });
 
   it("reschedules a task through the existing write boundary", async () => {
-    const response = await POST(request({ scheduledDate: "2026-09-08" }), {
+    const response = await POST(request({ scheduledDate: "2026-09-08", expectedUpdatedAt: "2026-09-01T00:00:00.000Z" }), {
       params: Promise.resolve({ taskId: TASK_ID }),
     });
 
@@ -104,6 +105,7 @@ describe("POST /api/planner/tasks/[taskId]/schedule", () => {
     expect(mocks.rpc).toHaveBeenCalledWith("set_planner_task_scheduled_date", {
       p_task_id: TASK_ID,
       p_scheduled_date: "2026-09-08",
+      p_expected_updated_at: "2026-09-01T00:00:00.000Z",
     });
     await expect(response.json()).resolves.toMatchObject({
       schemaVersion: "1",
@@ -111,6 +113,7 @@ describe("POST /api/planner/tasks/[taskId]/schedule", () => {
         taskId: TASK_ID,
         title: "File taxes",
         scheduledDate: "2026-09-08",
+        updatedAt: "2026-09-01T00:00:00.000Z",
       },
     });
   });
@@ -121,7 +124,7 @@ describe("POST /api/planner/tasks/[taskId]/schedule", () => {
       error: { code: "P0001", message: "planner_task_not_found" },
     });
 
-    const response = await POST(request({ scheduledDate: "2026-09-08" }), {
+    const response = await POST(request({ scheduledDate: "2026-09-08", expectedUpdatedAt: "2026-09-01T00:00:00.000Z" }), {
       params: Promise.resolve({ taskId: TASK_ID }),
     });
 

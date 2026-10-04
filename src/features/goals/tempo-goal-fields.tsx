@@ -26,7 +26,7 @@ import {
 import { TempoGoalCard } from "./tempo-goal-card";
 import { TempoGoalChoices as Choices } from "./tempo-goal-choices";
 import { TempoGoalRhythm } from "./tempo-goal-rhythm";
-import { getGoalCreationPeriodLimitError } from "./goal-creation-model";
+import { getGoalCreationPeriodLimitError } from "@/lib/goals/creation-model";
 
 import { TempoStepNavigation } from "./tempo-step-navigation";
 import type {

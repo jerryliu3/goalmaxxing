@@ -32,7 +32,7 @@ import {
   parseGoalCreationTargetCount,
   type GoalCreationFieldChange,
   type GoalCreationFields,
-} from "@/features/goals/goal-creation-model";
+} from "@/lib/goals/creation-model";
 import {
   GOAL_CREATE_KIND_HELP,
   type GoalCreateKind,

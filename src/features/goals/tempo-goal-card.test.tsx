@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 
 const baseFields: GoalCreationFields = {
   title: "Build momentum",

@@ -3,7 +3,7 @@ import type { ProgressContextSummary } from "@cadence/shared/goals/progress-cont
 import { selectCurrentGoals } from "@/lib/goals/current-goals";
 import type { Goal } from "@/lib/goals/types";
 import { goalCardFields } from "@/features/goals/goal-card-fields";
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 
 export interface FolioEntry {
   goal: Goal;

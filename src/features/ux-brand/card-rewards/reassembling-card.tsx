@@ -1,6 +1,6 @@
 "use client";
 
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import { ReassemblingCard as CardAssembly } from "@/features/goals/card-material/reassembling-card";
 import { RewardCardFace } from "./reward-card-face";
 import { getRewardProgress } from "./reward-model";

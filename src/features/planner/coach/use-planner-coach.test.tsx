@@ -7,7 +7,7 @@ import { isCoachPolicyProposal } from "@/features/planner/coach/coach-message-st
 import {
   buildBulkGoalDraftsFromLlmGoals,
   prepareBulkGoalRows,
-} from "@/features/goals/bulk-goal-drafts";
+} from "@/lib/goals/bulk-drafts";
 import type {
   CoachMessage,
   PlannerContextPayload,

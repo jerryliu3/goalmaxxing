@@ -279,9 +279,10 @@ export function PlannerTasksPanel({
         return next;
       });
       try {
-        const { error } = await supabase.rpc("set_planner_task_completion", {
+        const { data, error } = await supabase.rpc("set_planner_task_completion", {
           p_task_id: task.task_id,
           p_completed: nextCompleted,
+          p_expected_updated_at: task.updated_at,
         });
         if (error) {
           setTasks((current) => {
@@ -290,6 +291,8 @@ export function PlannerTasksPanel({
             return next;
           });
           toast.error(error.message || "Task completion could not be updated.");
+        } else if (data?.[0]) {
+          setTasks(current => { const next = current.map(row => row.task_id === task.task_id ? data[0] : row); writePlannerTasksCache(scheduledDateRef.current, next); return next; });
         }
       } finally {
         setTogglingTaskId(null);

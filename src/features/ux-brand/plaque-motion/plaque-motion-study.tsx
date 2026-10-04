@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { Button } from "@/components/ui/button";
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import { ReviewPreview } from "./review-preview";
 import { FragmentPlaque } from "./fragment-plaque";
 import { EarnedCeremony, type FlightOrigin } from "./earned-ceremony";

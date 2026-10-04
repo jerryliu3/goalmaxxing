@@ -201,6 +201,7 @@ describe("calendar feed entry titles", () => {
 describe("calendar task immovability", () => {
   it("lets incomplete tasks move while completed tasks stay put", () => {
     const openTask = toPlannerTaskCalendarEntry({
+      updatedAt: "2026-09-02T12:00:00.000Z",
       taskId: "11111111-1111-4111-8111-111111111111",
       title: "Buy groceries",
       scheduledDate: "2026-09-02",
@@ -208,6 +209,7 @@ describe("calendar task immovability", () => {
       completedAt: null,
     });
     const doneTask = toPlannerTaskCalendarEntry({
+      updatedAt: "2026-09-02T12:00:00.000Z",
       taskId: "22222222-2222-4222-8222-222222222222",
       title: "Done already",
       scheduledDate: "2026-09-02",

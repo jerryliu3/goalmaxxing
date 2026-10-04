@@ -8,7 +8,7 @@ import { getCategoryLabel } from "@/lib/goals/category";
 import { resolveTempoCardMaterial } from "./card-material/tempo-card-material";
 import { renderSolidLettering } from "./card-material/solid-lettering";
 import { TempoCardSurface } from "./card-material/tempo-card-surface";
-import type { GoalCreationFields } from "./goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import type { TempoCardVisibility } from "./tempo-creation-progress";
 import "./tempo-goal-creation.css";
 

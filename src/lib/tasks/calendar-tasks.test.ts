@@ -43,8 +43,8 @@ describe("calendar task query schema", () => {
 
 describe("planner task completion request schema", () => {
   it("requires a boolean completed flag", () => {
-    expect(plannerTaskCompletionRequestSchema.parse({ completed: true })).toEqual({
-      completed: true,
+    expect(plannerTaskCompletionRequestSchema.parse({ completed: true, expectedUpdatedAt: "2026-09-01T00:00:00.000Z" })).toEqual({
+      completed: true, expectedUpdatedAt: "2026-09-01T00:00:00.000Z",
     });
     expect(plannerTaskCompletionRequestSchema.safeParse({}).success).toBe(false);
     expect(
@@ -57,8 +57,8 @@ describe("planner task completion request schema", () => {
 describe("planner task schedule request schema", () => {
   it("requires an iso scheduled date", () => {
     expect(
-      plannerTaskScheduleRequestSchema.parse({ scheduledDate: "2026-09-08" })
-    ).toEqual({ scheduledDate: "2026-09-08" });
+      plannerTaskScheduleRequestSchema.parse({ scheduledDate: "2026-09-08", expectedUpdatedAt: "2026-09-01T00:00:00.000Z" })
+    ).toEqual({ scheduledDate: "2026-09-08", expectedUpdatedAt: "2026-09-01T00:00:00.000Z" });
     expect(plannerTaskScheduleRequestSchema.safeParse({}).success).toBe(false);
     expect(
       plannerTaskScheduleRequestSchema.safeParse({
@@ -79,6 +79,7 @@ describe("mapPlannerCalendarTaskRows", () => {
           scheduled_date: "2026-09-02",
           scheduled_time: "09:30",
           completed_at: null,
+          updated_at: "2026-09-01T00:00:00.000Z",
         },
         {
           task_id: "22222222-2222-4222-8222-222222222222",
@@ -86,6 +87,7 @@ describe("mapPlannerCalendarTaskRows", () => {
           scheduled_date: "2026-09-03",
           scheduled_time: null,
           completed_at: "2026-09-03T18:00:00.000Z",
+          updated_at: "2026-09-01T00:00:00.000Z",
         },
         { title: "missing-id" },
       ])
@@ -96,6 +98,7 @@ describe("mapPlannerCalendarTaskRows", () => {
         scheduledDate: "2026-09-02",
         scheduledTime: "09:30",
         completedAt: null,
+        updatedAt: "2026-09-01T00:00:00.000Z",
       },
       {
         taskId: "22222222-2222-4222-8222-222222222222",
@@ -103,6 +106,7 @@ describe("mapPlannerCalendarTaskRows", () => {
         scheduledDate: "2026-09-03",
         scheduledTime: null,
         completedAt: "2026-09-03T18:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
       },
     ]);
   });

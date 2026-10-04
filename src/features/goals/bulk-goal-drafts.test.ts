@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { createDefaultGoalCreationFields } from "@/features/goals/goal-creation-model";
+import { createDefaultGoalCreationFields } from "@/lib/goals/creation-model";
 import { buildStarterPackRows } from "@/features/goals/starter-packs";
 import {
   buildBulkGoalDraftFromRow,
@@ -8,7 +8,7 @@ import {
   summarizeBulkGoalDraftSchedule,
   withValidatedBulkGoalDraft,
   type BulkGoalDraft,
-} from "@/features/goals/bulk-goal-drafts";
+} from "@/lib/goals/bulk-drafts";
 
 function bulkDraft(overrides: Partial<BulkGoalDraft> = {}): BulkGoalDraft {
   return withValidatedBulkGoalDraft({

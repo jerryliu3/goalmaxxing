@@ -87,26 +87,26 @@ export function useCalendarPlannerTasks({
   const completeTask = useCallback(async (taskId: string, completed: boolean) => {
     const payload = await postJson<CalendarPlannerTaskCompletionResponse>(
       `/api/planner/tasks/${taskId}/completion`,
-      { completed }
+      { completed, expectedUpdatedAt: tasks.find(task => task.taskId === taskId)?.updatedAt }
     );
     if (!payload.task) {
       throw new Error("Could not update the task.");
     }
     applyTaskUpdate(payload.task);
     return payload.task;
-  }, [applyTaskUpdate]);
+  }, [applyTaskUpdate, tasks]);
 
   const rescheduleTask = useCallback(async (taskId: string, scheduledDate: string) => {
     const payload = await postJson<CalendarPlannerTaskCompletionResponse>(
       `/api/planner/tasks/${taskId}/schedule`,
-      { scheduledDate }
+      { scheduledDate, expectedUpdatedAt: tasks.find(task => task.taskId === taskId)?.updatedAt }
     );
     if (!payload.task) {
       throw new Error("Could not reschedule the task.");
     }
     applyTaskUpdate(payload.task);
     return payload.task;
-  }, [applyTaskUpdate]);
+  }, [applyTaskUpdate, tasks]);
 
   const taskEntriesByDate = useMemo(() => {
     if (!enabled || !from || !to) {

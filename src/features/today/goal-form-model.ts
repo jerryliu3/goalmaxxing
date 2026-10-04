@@ -5,7 +5,7 @@ import {
   resolveGoalCreationTargetCountForSave,
   type GoalCreationFieldChange,
   type GoalCreationFields,
-} from "@/features/goals/goal-creation-model";
+} from "@/lib/goals/creation-model";
 import type { GoalCreateKind } from "@/lib/goals/form-options";
 import { getCategoryValueForWrite } from "@/lib/goals/category";
 import { normalizeMilestoneNamesForSave } from "@/lib/goals/milestones";

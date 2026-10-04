@@ -4,7 +4,7 @@ import {
   buildBulkGoalDraftsFromLlmGoals,
   type PreparedBulkGoalRow,
   withValidatedBulkGoalDraft,
-} from "@/features/goals/bulk-goal-drafts";
+} from "@/lib/goals/bulk-drafts";
 import {
   persistBulkGoalDrafts,
   retryBulkGoalCreation,

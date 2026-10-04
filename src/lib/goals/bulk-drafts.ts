@@ -8,7 +8,7 @@ import {
   resolveGoalCreationTargetCountForSave,
   type GoalCreationFields,
   validateGoalCreationFields,
-} from "@/features/goals/goal-creation-model";
+} from "@/lib/goals/creation-model";
 import {
   type CategorySelection,
   getCategoryKeyForSelection,

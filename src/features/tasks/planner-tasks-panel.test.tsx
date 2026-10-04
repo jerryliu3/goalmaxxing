@@ -164,6 +164,7 @@ describe("PlannerTasksPanel", () => {
       expect(rpcMock).toHaveBeenCalledWith("set_planner_task_completion", {
         p_task_id: "task-1",
         p_completed: true,
+        p_expected_updated_at: "2026-08-21T12:00:00.000Z",
       });
     });
 
@@ -173,6 +174,7 @@ describe("PlannerTasksPanel", () => {
     expect(rpcMock).toHaveBeenNthCalledWith(2, "set_planner_task_completion", {
       p_task_id: "task-1",
       p_completed: true,
+      p_expected_updated_at: "2026-08-21T12:00:00.000Z",
     });
   });
 

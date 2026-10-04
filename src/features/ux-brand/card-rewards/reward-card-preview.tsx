@@ -2,7 +2,7 @@
 
 import { useState, type CSSProperties } from "react";
 import { Rotate3D } from "lucide-react";
-import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import { cardOptics, FLAT_POSE, REST_POSE, pointerPose } from "@/features/goals/card-material/card-optics";
 import type { CardMaterial } from "../card-materials/materials";
 import { useCardPose } from "@/features/goals/card-material/use-card-pose";

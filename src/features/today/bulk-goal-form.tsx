@@ -18,7 +18,7 @@ import {
   type BulkGoalDraft,
   buildBulkGoalDraftFromRow,
   buildBulkGoalDraftsFromLlmGoals,
-} from "@/features/goals/bulk-goal-drafts";
+} from "@/lib/goals/bulk-drafts";
 import { parseLlmGoalDraftsFromPrompt } from "@/features/goals/bulk-goal-parse";
 import { TempoStepNavigation } from "@/features/goals/tempo-step-navigation";
 import { TempoGoalStack } from "@/features/goals/tempo-goal-stack";
@@ -29,7 +29,7 @@ import {
   retryBulkGoalCreation,
   retryBulkGoalLinks,
 } from "@/features/goals/bulk-goal-persistence";
-import type { PreparedBulkGoalRow } from "@/features/goals/bulk-goal-drafts";
+import type { PreparedBulkGoalRow } from "@/lib/goals/bulk-drafts";
 import {
   buildStarterPackRows,
   resolveStarterPackKey,

@@ -7,9 +7,9 @@ import type { BulkGoalDraftReviewProps } from "./bulk-goal-draft-review";
 import {
   applyBulkGoalCreationChange,
   withValidatedBulkGoalDraft,
-} from "./bulk-goal-drafts";
-import type { GoalCreationFieldChange } from "./goal-creation-model";
-import { getGoalCreationPeriodLimitError } from "./goal-creation-model";
+} from "@/lib/goals/bulk-drafts";
+import type { GoalCreationFieldChange } from "@/lib/goals/creation-model";
+import { getGoalCreationPeriodLimitError } from "@/lib/goals/creation-model";
 import { TempoGoalCard } from "./tempo-goal-card";
 import { TempoGoalFields } from "./tempo-goal-fields";
 import type { TempoCardVisibility } from "./tempo-creation-progress";

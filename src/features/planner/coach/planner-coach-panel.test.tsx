@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PlannerCoachPanel } from "@/features/planner/coach/planner-coach-panel";
 import type { PlannerCoachModel } from "@/features/planner/coach/coach-types";
-import { buildBulkGoalDraftsFromLlmGoals } from "@/features/goals/bulk-goal-drafts";
+import { buildBulkGoalDraftsFromLlmGoals } from "@/lib/goals/bulk-drafts";
 import type { Goal } from "@/lib/goals/types";
 
 const authGetUserMock = vi.hoisted(() => vi.fn());

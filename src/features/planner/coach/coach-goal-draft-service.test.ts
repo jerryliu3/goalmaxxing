@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { buildBulkGoalDraftsFromLlmGoals } from "@/features/goals/bulk-goal-drafts";
+import { buildBulkGoalDraftsFromLlmGoals } from "@/lib/goals/bulk-drafts";
 import {
   createCoachGoalDrafts,
   parseCoachGoalDrafts,

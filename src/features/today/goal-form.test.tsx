@@ -5,7 +5,7 @@ import { GoalCreationFieldControls } from "@/features/goals/goal-creation-fields
 import {
   createDefaultGoalCreationFields,
   getGoalCreationValidationFeedback,
-} from "@/features/goals/goal-creation-model";
+} from "@/lib/goals/creation-model";
 import { GoalForm } from "@/features/today/goal-form";
 import { resolveGoalDefinitionValidationFeedback } from "@/lib/goals/definition-validation";
 import { validateGoalDefinition } from "@/lib/goals/definition-validation";

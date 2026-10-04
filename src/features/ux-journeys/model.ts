@@ -1,4 +1,4 @@
-import { validateGoalCreationFields } from "@/features/goals/goal-creation-model";
+import { validateGoalCreationFields } from "@/lib/goals/creation-model";
 import {
   defaultGoalFormState,
   type GoalFormState,

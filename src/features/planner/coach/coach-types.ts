@@ -2,7 +2,7 @@ import type { SetStateAction } from "react";
 import type {
   BulkGoalDraft,
   PreparedBulkGoalRow,
-} from "@/features/goals/bulk-goal-drafts";
+} from "@/lib/goals/bulk-drafts";
 import type { BulkGoalLinkRow } from "@/features/goals/bulk-goal-persistence";
 import type {
   CalendarTab,

@@ -224,6 +224,11 @@ import {
   PATCH as adminSyntheticUserPatch,
 } from "@/app/api/admin/synthetic-users/[id]/route";
 
+import * as coachActionsRoute from "@/app/api/coach/actions/route";
+import * as coachActionsIdApplyRoute from "@/app/api/coach/actions/[id]/apply/route";
+import * as coachActionsIdRefreshRoute from "@/app/api/coach/actions/[id]/refresh/route";
+import * as coachActionsIdRejectRoute from "@/app/api/coach/actions/[id]/reject/route";
+import * as coachActionsIdUndoRoute from "@/app/api/coach/actions/[id]/undo/route";
 import * as coachBootstrapRoute from "@/app/api/coach/bootstrap/route";
 import * as coachContextRoute from "@/app/api/coach/context/route";
 import * as coachMemoriesIdRoute from "@/app/api/coach/memories/[id]/route";
@@ -290,6 +295,11 @@ function routeCase(
 }
 
 const coachRouteModules = {
+  "./coach/actions/route.ts": coachActionsRoute,
+  "./coach/actions/[id]/apply/route.ts": coachActionsIdApplyRoute,
+  "./coach/actions/[id]/refresh/route.ts": coachActionsIdRefreshRoute,
+  "./coach/actions/[id]/reject/route.ts": coachActionsIdRejectRoute,
+  "./coach/actions/[id]/undo/route.ts": coachActionsIdUndoRoute,
   "./coach/bootstrap/route.ts": coachBootstrapRoute,
   "./coach/context/route.ts": coachContextRoute,
   "./coach/memories/[id]/route.ts": coachMemoriesIdRoute,

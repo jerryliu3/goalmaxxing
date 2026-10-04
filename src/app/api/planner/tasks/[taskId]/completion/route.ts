@@ -58,9 +58,11 @@ export async function POST(
     const { data, error } = await supabase.rpc("set_planner_task_completion", {
       p_task_id: params.data.taskId,
       p_completed: body.completed,
+      p_expected_updated_at: body.expectedUpdatedAt,
     });
 
     if (error) {
+      if (error.message === "task_stale") throw new ApiRouteError(409, "task_stale", "This task changed. Refresh before editing it.");
       if (isPlannerTaskNotFound(error)) {
         throw new ApiRouteError(
           404,
