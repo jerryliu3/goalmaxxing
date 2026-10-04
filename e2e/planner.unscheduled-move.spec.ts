@@ -127,7 +127,9 @@ for (const scenario of ["cross-month", "reload-failure", "overdue", "past-month"
         const completed = page.waitForResponse((response) =>
           response.url().endsWith("/api/completions") && response.request().method() === "POST"
         );
-        await page.getByRole("button", { name: `Mark session done ${title}`, exact: true })
+        // Milestone rows now include their secondary milestone label in the
+        // parent button's accessible name. Match the stable goal-title prefix.
+        await page.getByRole("button", { name: new RegExp(`^Mark session done ${title}`) })
           .getByRole("button", { name: "Mark session done", exact: true })
           .click({ delay: 550 });
         const completionResponse = await completed;
