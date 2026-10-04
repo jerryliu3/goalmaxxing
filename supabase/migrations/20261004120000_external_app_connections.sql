@@ -25,3 +25,18 @@ create policy external_connections_update on public.external_app_connections
 revoke all on public.external_app_connections from anon, authenticated;
 grant select, insert, update on public.external_app_connections to authenticated;
 grant all on public.external_app_connections to service_role;
+
+-- Use the database clock on every approval, including ON CONFLICT updates.
+-- This makes reconnection a new activation even when PostgREST only updates
+-- the columns present in the consent upsert.
+create function private.stamp_external_connection_approval()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  if new.revoked_at is null then new.connected_at := pg_catalog.clock_timestamp(); end if;
+  return new;
+end;
+$$;
+revoke all on function private.stamp_external_connection_approval() from public, anon, authenticated;
+create trigger stamp_external_connection_approval
+  before insert or update on public.external_app_connections
+  for each row execute function private.stamp_external_connection_approval();
