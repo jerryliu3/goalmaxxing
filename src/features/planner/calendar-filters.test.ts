@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   applyCalendarCompletionMarkerFilters,
   buildCalendarCategoryFilterOptions,
+  buildCalendarGoalFilterOptions,
   entryMatchesCalendarSearchQuery,
-  filterCalendarGoalFilterOptions,
   goalPassesCalendarFilters,
   normalizeCalendarSearchQuery,
   resolvePlannerShowTargetAchievedGoals,
@@ -32,10 +32,8 @@ describe("calendar filters", () => {
       ["read", { category: "Personal", end_date: "2026-09-30" }],
       ["write", { category: "Health", end_date: "2026-08-31" }],
     ]);
-    const options = [{ value: "run", label: "Run" }, { value: "read", label: "Read" }, { value: "write", label: "Write" }];
-    expect(filterCalendarGoalFilterOptions({
-      options, goalsByOriginalId: goals, categoryFilters: ["Health"], endMonthFilters: ["2026-08"],
-      searchQuery: "tempo", goalTitles: { run: "Run", read: "Read", write: "Write" },
+    expect(buildCalendarGoalFilterOptions(goals, { run: "Run", read: "Read", write: "Write" }, {
+      categoryFilters: ["Health"], endMonthFilters: ["2026-08"], searchQuery: "tempo",
       workUnits: [
         { originalGoalId: "run", label: "Easy miles", unitKey: "milestone:1" },
         { originalGoalId: "read", label: "Tempo reads", unitKey: "milestone:1" },

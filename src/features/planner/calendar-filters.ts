@@ -71,46 +71,33 @@ export function buildCalendarCategoryFilterOptions(
 
 export function buildCalendarGoalFilterOptions(
   goalsByOriginalId: Map<string, CalendarFilterGoalSnapshot & { title?: string }>,
-  goalTitles: Record<string, string>
+  goalTitles: Record<string, string>,
+  filters: {
+    categoryFilters?: string[];
+    endMonthFilters?: string[];
+    searchQuery?: string;
+    workUnits?: ReadonlyArray<{ originalGoalId: string; label: string | null; unitKey: string }>;
+  } = {}
 ): GoalCategoryFilterOption[] {
-  return Array.from(goalsByOriginalId.keys())
-    .map((goalId) => ({
-      value: goalId,
-      label: goalTitles[goalId] ?? goalsByOriginalId.get(goalId)?.title ?? goalId,
-    }))
-    .sort((left, right) => left.label.localeCompare(right.label));
-}
-
-export function filterCalendarGoalFilterOptions({
-  options,
-  goalsByOriginalId,
-  categoryFilters,
-  endMonthFilters,
-  searchQuery,
-  workUnits,
-  goalTitles,
-}: {
-  options: GoalCategoryFilterOption[];
-  goalsByOriginalId: Map<string, CalendarFilterGoalSnapshot>;
-  categoryFilters: string[];
-  endMonthFilters: string[];
-  searchQuery: string;
-  workUnits: ReadonlyArray<{ originalGoalId: string; label: string | null; unitKey: string }>;
-  goalTitles: Record<string, string>;
-}) {
+  const { categoryFilters = [], endMonthFilters = [], searchQuery = "", workUnits = [] } = filters;
   const unitsByGoalId = new Map<string, Array<(typeof workUnits)[number]>>();
-  for (const unit of workUnits) {
-    const goalUnits = unitsByGoalId.get(unit.originalGoalId) ?? [];
-    goalUnits.push(unit);
-    unitsByGoalId.set(unit.originalGoalId, goalUnits);
+  if (searchQuery.trim()) {
+    for (const unit of workUnits) {
+      const units = unitsByGoalId.get(unit.originalGoalId) ?? [];
+      units.push(unit);
+      unitsByGoalId.set(unit.originalGoalId, units);
+    }
   }
-  return options.filter((option) => {
-    if (!goalPassesCalendarFilters({ goalId: option.value, goalsByOriginalId, categoryFilters, endMonthFilters })) return false;
-    if (!searchQuery.trim()) return true;
-    const title = goalTitles[option.value] ?? option.label;
-    return entryMatchesCalendarSearchQuery({ goalTitle: title, label: null, unitKey: "" }, searchQuery) ||
-      (unitsByGoalId.get(option.value) ?? []).some((unit) => entryMatchesCalendarSearchQuery({ goalTitle: null, label: unit.label, unitKey: unit.unitKey }, searchQuery));
-  });
+  return Array.from(goalsByOriginalId.keys())
+    .filter((goalId) => {
+      if (!goalPassesCalendarFilters({ goalId, goalsByOriginalId, categoryFilters, endMonthFilters })) return false;
+      if (!searchQuery.trim()) return true;
+      const title = goalTitles[goalId] ?? goalsByOriginalId.get(goalId)?.title ?? goalId;
+      return entryMatchesCalendarSearchQuery({ goalTitle: title, label: null, unitKey: "" }, searchQuery) ||
+        (unitsByGoalId.get(goalId) ?? []).some((unit) => entryMatchesCalendarSearchQuery({ goalTitle: null, label: unit.label, unitKey: unit.unitKey }, searchQuery));
+    })
+    .map((goalId) => ({ value: goalId, label: goalTitles[goalId] ?? goalsByOriginalId.get(goalId)?.title ?? goalId }))
+    .sort((left, right) => left.label.localeCompare(right.label));
 }
 
 export function goalPassesCalendarFilters({
