@@ -51,7 +51,7 @@ export async function requireExternalContext(request: Request) {
 }
 export type ExternalContext = Awaited<ReturnType<typeof requireExternalContext>>;
 
-export function externalAuthErrorResponse(error: ApiRouteError, correlationId = createCorrelationId(), path: "/api/mcp" | "/api/v1" = "/api/mcp") {
+export function externalAuthErrorResponse(error: ApiRouteError, correlationId: string = createCorrelationId(), path: "/api/mcp" | "/api/v1" = "/api/mcp") {
   const response = handleApiRouteError(error, correlationId);
   if (error.status === 401) {
     const metadata = new URL(`/.well-known/oauth-protected-resource${path}`, externalResourceUrl()).href;
