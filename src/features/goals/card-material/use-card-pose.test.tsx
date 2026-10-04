@@ -34,3 +34,37 @@ it("settles geometry and shine together, and cancels motion when still mode is e
   unmount();
   expect(pending.size).toBe(0);
 });
+
+it("paints only the latest drag pose once per frame and cancels queued work on unmount", () => {
+  let id = 0;
+  const pending = new Map<number, FrameRequestCallback>();
+  vi.spyOn(window, "requestAnimationFrame").mockImplementation(callback => { pending.set(++id, callback); return id; });
+  vi.spyOn(window, "cancelAnimationFrame").mockImplementation(key => { pending.delete(key); });
+  const { result, unmount } = renderHook(() => useCardPose(false, false));
+  const stage = document.createElement("div");
+  result.current.stage.current = stage;
+  act(() => result.current.moveTo({ x: 0, y: 0 }, true));
+  const paint = vi.spyOn(stage.style, "setProperty");
+
+  act(() => {
+    for (let step = 1; step <= 100; step++) result.current.dragTo({ x: -step, y: step * 2 });
+  });
+  expect(pending.size).toBe(1);
+  expect(paint).not.toHaveBeenCalled();
+  act(() => {
+    const callbacks = [...pending.values()];
+    pending.clear();
+    callbacks.forEach(callback => callback(performance.now() + 16));
+  });
+  const last = { x: -100, y: 200 };
+  expect(result.current.getCurrent()).toEqual(last);
+  expect(paint).toHaveBeenCalledTimes(Object.keys(cardOptics(last)).length);
+  expect(stage.style.getPropertyValue("--ry")).toBe("200deg");
+  expect(stage.style.getPropertyValue("--shine-position")).toBe(cardOptics(last)["--shine-position"]);
+  expect(pending.size).toBe(0);
+
+  act(() => result.current.dragTo({ x: 0, y: 0 }));
+  expect(pending.size).toBe(1);
+  unmount();
+  expect(pending.size).toBe(0);
+});

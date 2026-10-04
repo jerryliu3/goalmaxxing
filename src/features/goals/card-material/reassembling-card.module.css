@@ -52,7 +52,11 @@
 }
 .surface[data-still="true"] .piece[data-arriving="true"] { animation: none; }
 .surface[data-still="true"] .piece { transition: none; }
-.surface[data-flat="true"] { overflow: hidden; transform-style: flat; }
+.surface[data-flat="true"] {
+  overflow: hidden; transform-style: flat;
+  /* Cull the flattened front as one plane when a host turns the whole card. */
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+}
 .flatFace { position: absolute; inset: 0; pointer-events: none; }
 .flatClip { position: absolute; width: 0; height: 0; overflow: hidden; }
 .flatFaceInner { position: absolute; inset: 0; }

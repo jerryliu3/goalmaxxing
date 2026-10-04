@@ -1,6 +1,7 @@
 "use client";
 
 import { Infinity as InfinityIcon } from "lucide-react";
+import { memo, useMemo } from "react";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 import { goalCardFields } from "@/features/goals/goal-card-fields";
 import { goalCardProgress } from "@/features/goals/goal-card-progress";
@@ -9,17 +10,18 @@ import type { Goal } from "@/lib/goals/types";
 import { dateLabel } from "./goal-view-model";
 
 /** The production material goal card with its progress line and end date. */
-export function GoalViewCard({
+export const GoalViewCard = memo(function GoalViewCard({
   goal,
   progress,
   interactive = true,
 }: {
   goal: Goal;
   progress: ProgressContextSummary | undefined;
-  /** Rotation is off inside swipeable carousels so it cannot steal the swipe. */
+  /** Swipe hosts enable rotation only while the user is turning this card. */
   interactive?: boolean;
 }) {
-  const model = progress ? goalCardProgress(goal, progress) : null;
+  const fields = useMemo(() => goalCardFields(goal), [goal]);
+  const model = useMemo(() => progress ? goalCardProgress(goal, progress) : null, [goal, progress]);
   const statusLabel = !model
     ? null
     : model.achieved
@@ -29,11 +31,13 @@ export function GoalViewCard({
         : model.label;
   return (
     <div className="mx-auto w-full max-w-[244px]" data-goal-view-card={goal.id}>
+      {/* Reuse the gallery's single clipped face; the whole card can still turn. */}
       <TempoGoalCard
-        fields={goalCardFields(goal)}
+        fields={fields}
         context="history"
         achieved={model?.achieved ?? false}
         assembly={model?.assembly}
+        flat={Boolean(model?.assembly)}
         rotatable={interactive}
       />
       <div className="mt-3 space-y-1 text-center text-xs text-muted-foreground">
@@ -55,4 +59,4 @@ export function GoalViewCard({
       </div>
     </div>
   );
-}
+});

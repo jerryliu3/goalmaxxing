@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
 import type { GoalCreationFields } from "@/features/goals/goal-creation-model";
@@ -130,6 +130,7 @@ describe("TempoGoalCard materials", () => {
 
 describe("TempoGoalCard rotation", () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["requestAnimationFrame", "cancelAnimationFrame"] });
     // jsdom has no native PointerEvent; keep the fields pointer capture reads.
     vi.stubGlobal(
       "PointerEvent",
@@ -149,6 +150,7 @@ describe("TempoGoalCard rotation", () => {
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
@@ -173,7 +175,9 @@ describe("TempoGoalCard rotation", () => {
     expect(capture).toHaveBeenCalledWith(1);
     expect(surface).toHaveAttribute("data-dragging", "true");
 
-    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 450, clientY: 380 });
+    // Captured events target the object and bubble to the single stage handler.
+    fireEvent.pointerMove(object, { pointerId: 1, clientX: 450, clientY: 380 });
+    act(() => vi.advanceTimersByTime(16));
     expect(parseFloat(surface.style.getPropertyValue("--ry"))).toBeGreaterThan(180);
     expect(parseFloat(surface.style.getPropertyValue("--rx"))).toBeLessThan(-180);
 
@@ -200,6 +204,30 @@ describe("TempoGoalCard rotation", () => {
     fireEvent.pointerLeave(surface);
 
     expect(surface).toHaveAttribute("data-inspecting", "false");
+  });
+
+  it("turns a masked card with touch and releases capture when the host restores swiping", () => {
+    const props = { fields: baseFields, assembly: { completed: 29, target: 30 }, flat: true };
+    const { rerender } = render(<TempoGoalCard {...props} rotatable />);
+    const object = screen.getByRole("group", { name: "Build momentum rotation" });
+    const surface = object.closest<HTMLElement>(".tempo-card-surface")!;
+    vi.spyOn(object, "hasPointerCapture").mockReturnValue(true);
+    const release = vi.spyOn(object, "releasePointerCapture");
+
+    fireEvent.pointerDown(object, { pointerId: 2, pointerType: "touch", button: 0, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(object, { pointerId: 2, pointerType: "touch", clientX: 200, clientY: 150 });
+    act(() => vi.advanceTimersByTime(16));
+    expect(parseFloat(surface.style.getPropertyValue("--ry"))).toBeGreaterThan(0);
+    expect(surface.querySelector("[data-flat-shards]")).toBeInTheDocument();
+
+    // Queue another drag update; disabling rotation must cancel it as well.
+    fireEvent.pointerMove(object, { pointerId: 2, pointerType: "touch", clientX: 300, clientY: 150 });
+    rerender(<TempoGoalCard {...props} rotatable={false} />);
+    act(() => vi.advanceTimersByTime(16));
+    expect(release).toHaveBeenCalledWith(2);
+    expect(surface).not.toHaveAttribute("data-dragging");
+    expect(surface).toHaveAttribute("data-still", "true");
+    expect(surface.style.getPropertyValue("--ry")).toBe("0deg");
   });
 
   it("leaves the drag gesture to a host that owns swiping", () => {
@@ -244,6 +272,22 @@ describe("TempoGoalCard rotation", () => {
 
 describe("material card reassembly", () => {
   afterEach(cleanup);
+
+  it.each([3, 30, 300])("keeps masked cards rotatable with one body regardless of target %i", (target) => {
+    const { container } = render(<TempoGoalCard fields={baseFields} assembly={{ completed: target - 1, target }} flat rotatable />);
+    expect(screen.getByRole("group", { name: "Build momentum rotation" })).toBeInTheDocument();
+    expect(screen.getAllByRole("article")).toHaveLength(1);
+    expect(container.querySelectorAll("[data-card-solid]")).toHaveLength(1);
+    expect(container.querySelectorAll(".tempo-card")).toHaveLength(3);
+    expect(container.querySelector("[data-flat-shards]")).toBeInTheDocument();
+    expect(container.querySelector("[data-reward-piece]")).not.toBeInTheDocument();
+  });
+
+  it("leaves noninteractive gallery masks without an extruded body", () => {
+    const { container } = render(<TempoGoalCard fields={baseFields} assembly={{ completed: 2, target: 3 }} flat rotatable={false} />);
+    expect(container.querySelector("[data-card-solid]")).not.toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: /rotation$/ })).not.toBeInTheDocument();
+  });
 
   it("shares one material surface and hides duplicate faces from accessibility", () => {
     const { container } = render(<TempoGoalCard fields={{ ...baseFields, difficulty: "hard" }} assembly={{ completed: 2, target: 3 }} rotatable={false} />);
