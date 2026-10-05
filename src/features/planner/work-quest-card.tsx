@@ -16,14 +16,12 @@ export function WorkQuestCard({
   trailingNav,
   children,
   goalCard,
-  progressDetails,
 }: {
   quest: WorkQuestModel;
   leadingNav?: ReactNode;
   trailingNav?: ReactNode;
   children?: ReactNode;
   goalCard?: ReactNode;
-  progressDetails?: ReactNode;
 }) {
   const Emblem = getGoalVisual({
     goalId: quest.id,
@@ -66,7 +64,6 @@ export function WorkQuestCard({
               <dd className="text-right">{quest.deadlineLabel}</dd>
             </div>
           </dl>
-          {progressDetails}
           {quest.progress && !goalCard ? (
             <div className="mt-3">
               <div className="mb-1 flex items-center justify-between gap-3 text-sm text-muted-foreground">

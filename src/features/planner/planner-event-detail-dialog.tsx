@@ -3,7 +3,6 @@
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 
 import { GoalProgressCard } from "@/features/goals/goal-progress-card";
-import { MilestonePills } from "@/features/goals/milestone-pills";
 import { Button } from "@/components/ui/button";
 import { useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -200,8 +199,7 @@ export function PlannerEventDetailDialog({
       }}
     >
       <WorkQuestCard
-        goalCard={selectedEventGoal && selectedEventProgress ? <GoalProgressCard goal={selectedEventGoal} progress={selectedEventProgress} showMilestones={false} /> : undefined}
-        progressDetails={selectedEventGoal?.frequency_type === "fixed_milestones" && selectedEventProgress ? <div className="mt-4"><MilestonePills targetCount={selectedEventGoal.target_count ?? 1} completionDates={selectedEventProgress.milestoneDates} milestoneNames={selectedEventGoal.milestone_names ?? []} maxVisible={3} /></div> : undefined}
+        goalCard={selectedEventGoal && selectedEventProgress ? <GoalProgressCard goal={selectedEventGoal} progress={selectedEventProgress} /> : undefined}
         quest={projectPlannerEntryWorkQuest({
           entry: selectedEventEntry,
           goal: selectedEventGoal,
