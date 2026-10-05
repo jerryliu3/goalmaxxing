@@ -13,8 +13,8 @@ describe("goal creation action", () => {
     render(<GoalCreationActionContext.Provider value={open}><NewGoalButton presentation="card" /></GoalCreationActionContext.Provider>);
     fireEvent.click(screen.getByRole("button", { name: "New Goal" }));
     expect(open).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("article")).toHaveClass("tempo-card");
-    expect(screen.getByText("0 completions")).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "New Goal card" })).toBeInTheDocument();
+    expect(screen.getByText("Click to create")).toBeInTheDocument();
   });
   it("uses the existing demo creation callback when supplied", () => {
     const open = vi.fn();
