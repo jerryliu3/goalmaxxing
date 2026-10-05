@@ -50,7 +50,7 @@ describe("PlannerCalendarToolbar", () => {
   it("keeps search and the goal dropdown available in Day", () => {
     renderToolbar({ viewMode: "day" });
     expect(screen.getByRole("searchbox", { name: "Search goals" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "All goals" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filter by goal" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Goals" })).toBeNull();
   });
