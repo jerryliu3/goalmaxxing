@@ -9,7 +9,7 @@ function sections(): ProgressOverviewSectionContent[] {
   return [
     { id: "week", content: <p>Week rhythm</p> },
     { id: "history", content: <p>Completion ledger</p> },
-    { id: "past-goals", content: <p>Goal library</p> },
+    { id: "past-goals", content: <p>Shelf of finished goals</p> },
   ];
 }
 
@@ -28,14 +28,14 @@ describe("ProgressSectionStack", () => {
       <ProgressSectionStack
         sections={[
           { id: "history", content: <p>Completion ledger</p>, framed: true },
-          { id: "past-goals", content: <p>Goal library</p> },
+          { id: "past-goals", content: <p>Shelf of finished goals</p> },
         ]}
         view="all"
       />
     );
 
     expect(screen.getByText("Completion ledger").parentElement).toHaveClass("bg-card", "rounded-2xl");
-    expect(screen.getByText("Goal library").parentElement).not.toHaveClass("bg-card");
+    expect(screen.getByText("Shelf of finished goals").parentElement).not.toHaveClass("bg-card");
   });
 
   it("renders only the active view in canonical order", () => {

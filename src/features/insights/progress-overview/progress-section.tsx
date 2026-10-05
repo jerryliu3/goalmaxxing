@@ -41,7 +41,7 @@ export function ProgressSection({
           {title}
         </h3>
       )}
-      <div className={cn(!hideTitle && "mt-4", framed && cn("p-4 md:p-5", panelClass))}>{children}</div>
+      <div className={cn(!hideTitle && "mt-4", framed && ["p-4 md:p-5", panelClass])}>{children}</div>
     </section>
   );
 }
