@@ -35,12 +35,12 @@ describe("TabOnboardingOverlay", () => {
       </>
     );
 
-    expect(await screen.findByRole("dialog", { name: "Agenda views" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Planner views" })).toBeInTheDocument();
     expect(screen.getByTestId("onboarding-highlight")).toBeInTheDocument();
-    expect(screen.getByRole("dialog", { name: "Agenda views" }).parentElement).toHaveClass(
+    expect(screen.getByRole("dialog", { name: "Planner views" }).parentElement).toHaveClass(
       "z-[80]"
     );
-    expect(screen.queryByRole("dialog", { name: "Agenda views" })).not.toHaveClass(
+    expect(screen.queryByRole("dialog", { name: "Planner views" })).not.toHaveClass(
       "backdrop-blur-sm"
     );
 
@@ -65,12 +65,12 @@ describe("TabOnboardingOverlay", () => {
     const { rerender } = render(
       <TabOnboardingOverlay onboardingKey="planner.calendar" />
     );
-    expect(screen.queryByRole("dialog", { name: "Agenda views" })).toBeNull();
+    expect(screen.queryByRole("dialog", { name: "Planner views" })).toBeNull();
 
     rerender(
       <TabOnboardingOverlay onboardingKey="planner.calendar" forceOpen />
     );
-    expect(await screen.findByRole("dialog", { name: "Agenda views" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Planner views" })).toBeInTheDocument();
   });
 
   it("walks through community sections starting on Leaderboards", async () => {

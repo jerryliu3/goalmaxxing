@@ -1,7 +1,6 @@
 import { fetchInsightsData } from "@/features/insights/fetch-insights-data";
 import { fetchAchievementsShowcase } from "@/features/achievements/fetch-achievements-showcase";
 import { getMonthInTimezone } from "@/features/planner/calendar-format";
-import { buildGoalViewWindow } from "@/features/planner/goal-view/goal-view-model";
 import { fetchSettingsTabData } from "@/features/social/settings-tab-data";
 import { fetchPublicProfileBundle } from "@/features/social/public-profile/data";
 import {
@@ -88,8 +87,9 @@ export async function warmAppTabData({
     if (forceRefresh) {
       return;
     }
-    const context = await fetchPlannerContext({ month });
-    await fetchPlannerContext({ month, window: buildGoalViewWindow(context.asOfDate) });
+    // Calendar's loader warms its adjacent Goal View window. Shell warmups
+    // must not evict a different rolling window that the user is browsing.
+    await fetchPlannerContext({ month });
   };
 
   await Promise.allSettled([

@@ -42,7 +42,6 @@ vi.mock("@/features/social/public-profile/data", () => ({
 
 import { warmAppTabData } from "@/lib/cache/warm-app-tab-data";
 import { resetTabDataCacheForTests } from "@/lib/cache/tab-data-cache";
-import { buildGoalViewWindow } from "@/features/planner/goal-view/goal-view-model";
 
 describe("warmAppTabData", () => {
   beforeEach(() => {
@@ -69,9 +68,9 @@ describe("warmAppTabData", () => {
     expect(mocks.fetchInsightsData).not.toHaveBeenCalled();
     expect(mocks.fetchAchievementsShowcase).not.toHaveBeenCalled();
     expect(mocks.getJson).toHaveBeenCalled();
-    const window = buildGoalViewWindow("2026-10-04");
+    expect(mocks.getJson).toHaveBeenCalledTimes(1);
     expect(mocks.getJson).toHaveBeenCalledWith("/api/planner/context", {
-      query: expect.objectContaining({ visibleStart: window.start, visibleEnd: window.end }),
+      query: { scopeMonth: expect.any(String) },
     });
     expect(mocks.fetchSocialChallenges).toHaveBeenCalled();
     expect(mocks.fetchSocialLeaderboards).toHaveBeenCalled();
@@ -115,6 +114,6 @@ describe("warmAppTabData", () => {
     await warmAppTabData({ userId: "user-1", partnerId: null });
     expect(mocks.fetchPublicProfileBundle).toHaveBeenCalled();
     expect(mocks.fetchInsightsData).toHaveBeenCalled();
-    expect(mocks.getJson).toHaveBeenCalledTimes(2);
+    expect(mocks.getJson).toHaveBeenCalledTimes(1);
   });
 });

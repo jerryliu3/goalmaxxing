@@ -103,9 +103,7 @@ export function usePlannerContextLoader({
       const requestId = ++requestIdRef.current;
 
       let shouldShowLoading = showLoading;
-      if (shouldShowLoading) {
-        setError(null);
-      }
+      setError(null);
       if (!month) {
         const resolvedMonth = getMonthInTimezone(setupTimezone);
         onMonthChange(resolvedMonth, "replace");
@@ -147,9 +145,7 @@ export function usePlannerContextLoader({
       };
       const warmGoalView = (payload: PlannerContextPayload) => {
         const window = buildGoalViewWindow(goalViewAnchorDate ?? payload.asOfDate);
-        void fetchPlannerContext({ month, window }).then(expanded => {
-          if (goalViewOpen && requestId === requestIdRef.current) applyContext(expanded, window);
-        }).catch(() => undefined);
+        void fetchPlannerContext({ month, window }).catch(() => undefined);
       };
       const wideSnapshot = goalViewOpen ? readTabDataCache<PlannerContextPayload>(goalCacheKey) : null;
       const useWideSnapshot = Boolean(wideSnapshot && isTabDataCacheFresh(goalCacheKey));
@@ -165,12 +161,12 @@ export function usePlannerContextLoader({
           calendarPreparedRef.current = true;
           // A complete cached Goal View already has its projection; applying
           // the same expanded payload again would rebuild every projected day.
-          if (!cachedWindowIsWide) warmGoalView(cachedContextPayload);
-          return true;
+          if (!goalViewOpen) warmGoalView(cachedContextPayload);
+          if (!goalViewOpen || cachedWindowIsWide) return true;
         }
       }
 
-      if (shouldShowLoading) {
+      if (shouldShowLoading || goalViewOpen) {
         setLoading(true);
       }
       let contextPayload: PlannerContextPayload;
@@ -217,17 +213,13 @@ export function usePlannerContextLoader({
         if (shouldPrepare) writeTabDataCache(goalViewOpen ? goalCacheKey : plannerContextCacheKey, contextPayload);
       } catch (error) {
         if (requestId !== requestIdRef.current) return false;
-        if (shouldShowLoading) {
-          setLoading(false);
-        }
+        setLoading(false);
         const message = getApiErrorMessage(
           error,
           "Planner calendar context could not be loaded."
         );
-        if (shouldShowLoading) {
-          setContext(null);
-          setError(message);
-        }
+        if (!cachedContextPayload && shouldShowLoading) setContext(null);
+        setError(message);
         if (toastOnError) {
           toast.error(message);
         }

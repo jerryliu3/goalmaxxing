@@ -398,7 +398,7 @@ describe("CalendarSurface characterization", () => {
     expect(
       screen.getByRole("group", { name: "Plan view mode" })
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Agenda" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Planner" })).toBeInTheDocument();
   });
 
   it("keeps week view when a desktop agenda row is selected", async () => {
@@ -1219,7 +1219,7 @@ describe("CalendarSurface characterization", () => {
     expect(dayPanel).toHaveStyle({ viewTransitionName: "plan-day-2026-08-31" });
   });
 
-  it("keeps search and filters out of the simple day view", async () => {
+  it("keeps search and day filters available on day view", async () => {
     postJsonMock.mockResolvedValue(buildContext([]));
 
     render(
@@ -1235,8 +1235,9 @@ describe("CalendarSurface characterization", () => {
       />
     );
 
-    expect(screen.queryByRole("searchbox", { name: "Search goals" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Filters" })).toBeNull();
+    expect(await screen.findByRole("searchbox", { name: "Search goals" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Filters" }));
+    expect(await screen.findByRole("heading", { name: "Day filters" })).toBeInTheDocument();
   });
 
   it("suppresses default milestone label duplication in month preview and event dialog", async () => {
