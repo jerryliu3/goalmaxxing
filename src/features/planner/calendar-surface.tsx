@@ -458,6 +458,14 @@ export function CalendarSurface({
     canMutateEntryOnDay,
     plannerReadOnly,
   } = dayAccessors;
+  useEffect(() => {
+    if (loading || !context || showTasksInsteadOfGoals) return;
+    const visibleGoalIds = new Set(goalFilterOptions.map((option) => option.value));
+    setGoalIdFilters((selected) => {
+      const visibleSelection = selected.filter((goalId) => visibleGoalIds.has(goalId));
+      return visibleSelection.length === selected.length ? selected : visibleSelection;
+    });
+  }, [context, goalFilterOptions, loading, showTasksInsteadOfGoals]);
   const goalViewSessions = useMemo(
     () => buildGoalViewSessions(goalViewDays, getOrderedEntriesForDay),
     [getOrderedEntriesForDay, goalViewDays]

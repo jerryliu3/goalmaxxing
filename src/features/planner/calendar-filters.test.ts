@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyCalendarCompletionMarkerFilters,
   buildCalendarCategoryFilterOptions,
+  buildCalendarGoalFilterOptions,
   entryMatchesCalendarSearchQuery,
   goalPassesCalendarFilters,
   normalizeCalendarSearchQuery,
@@ -23,6 +24,22 @@ describe("calendar filters", () => {
       { value: "Health", label: "Health" },
       { value: "Personal", label: "Personal" },
     ]);
+  });
+
+  it("limits goal filter choices by the other active calendar filters", () => {
+    const goals = new Map([
+      ["run", { category: "Health", end_date: "2026-08-31" }],
+      ["read", { category: "Personal", end_date: "2026-09-30" }],
+      ["write", { category: "Health", end_date: "2026-08-31" }],
+    ]);
+    expect(buildCalendarGoalFilterOptions(goals, { run: "Run", read: "Read", write: "Write" }, {
+      categoryFilters: ["Health"], endMonthFilters: ["2026-08"], searchQuery: "tempo",
+      workUnits: [
+        { originalGoalId: "run", label: "Easy miles", unitKey: "milestone:1" },
+        { originalGoalId: "read", label: "Tempo reads", unitKey: "milestone:1" },
+        { originalGoalId: "write", label: "Tempo run", unitKey: "milestone:1" },
+      ],
+    })).toEqual([{ value: "write", label: "Write" }]);
   });
 
   it("matches by normalized category and ending month", () => {

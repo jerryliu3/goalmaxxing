@@ -141,7 +141,13 @@ export function selectCalendarDayAccessorsModel({
   const categoryOptions = buildCalendarCategoryFilterOptions(activeGoalsByOriginalGoalId);
   const goalFilterOptions = buildCalendarGoalFilterOptions(
     activeGoalsByOriginalGoalId,
-    context?.goalTitles ?? {}
+    context?.goalTitles ?? {},
+    {
+      categoryFilters,
+      endMonthFilters: effectiveEndMonthFilters,
+      searchQuery,
+      workUnits: effectivePreview?.workUnits ?? [],
+    }
   );
   const endMonthOptions = (() => {
     const goalEndDates = Array.from(activeGoalsByOriginalGoalId.values()).map(
