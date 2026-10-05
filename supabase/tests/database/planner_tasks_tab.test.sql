@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(21);
+select plan(22);
 
 insert into auth.users (id, email)
 values (
@@ -296,6 +296,8 @@ select results_eq(
   'completing the newest task does not move it below open tasks'
 );
 
+select * from public.create_planner_task('Movable task', current_date);
+
 select is(
   (
     select scheduled_date
@@ -304,17 +306,30 @@ select is(
         select id
         from public.planner_tasks
         where owner_id = '11111111-1111-4111-8111-111111111111'
-          and title = 'Strength mobility block'
+          and title = 'Movable task'
         order by created_at desc
         limit 1
       ),
       current_date + 3,
-      (select updated_at from public.planner_tasks where owner_id='11111111-1111-4111-8111-111111111111' and title='Strength mobility block' order by created_at desc limit 1)
+      (select updated_at from public.planner_tasks where owner_id='11111111-1111-4111-8111-111111111111' and title='Movable task' order by created_at desc limit 1)
     )
     limit 1
   ),
   current_date + 3,
-  'set_planner_task_scheduled_date moves a task to a new date'
+  'set_planner_task_scheduled_date moves an open task to a new date'
+);
+
+select throws_ok(
+  $$select * from public.set_planner_task_scheduled_date(
+    (select id from public.planner_tasks where owner_id = '11111111-1111-4111-8111-111111111111'
+      and title = 'Strength mobility block' limit 1),
+    current_date + 3,
+    (select updated_at from public.planner_tasks where owner_id = '11111111-1111-4111-8111-111111111111'
+      and title = 'Strength mobility block' limit 1)
+  )$$,
+  '22023',
+  'task_completed',
+  'set_planner_task_scheduled_date rejects completed tasks'
 );
 
 select throws_ok(
