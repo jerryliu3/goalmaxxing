@@ -60,27 +60,27 @@ export function TaskDetailsEditor({ task, today, onSaved, onCancel }: {
           taskSchedule={{ date: formatQuestSittingDate(date) ?? date, time: formatQuestSittingTime(time) ?? "" }}
           visibility={{ category: true, rhythm: false, interval: false, count: false, schedule: true, difficulty: true }} />}
       >
-    <form className="space-y-3"
-      onSubmit={(event) => { event.preventDefault(); void save(); }}>
-      <label className="block space-y-1 text-xs">Task name
-        <Input aria-label="Task name" value={title} maxLength={200} disabled={saving}
-          onChange={(event) => setTitle(event.target.value)} />
-      </label>
-      <div className="flex flex-wrap gap-3">
-        <label className="space-y-1 text-xs">Scheduled date
-          <DateField aria-label="Scheduled date" value={date} min={date === task.scheduledDate && date < today ? date : today}
-            disabled={saving || Boolean(task.completedAt)} onValueChange={setDate} />
-        </label>
-        <label className="space-y-1 text-xs">Time (optional)
-          <Input aria-label="Task time" type="time" value={time} disabled={saving}
-            className="h-8 w-32" onChange={(event) => setTime(event.target.value)} />
-        </label>
-      </div>
-      <div className="flex gap-2">
-        <Button size="sm" type="submit" disabled={saving || !title.trim() || !date}>{saving ? "Saving..." : "Save task"}</Button>
-        <Button size="sm" variant="ghost" type="button" disabled={saving} onClick={onCancel}>Cancel</Button>
-      </div>
-    </form>
+        <form className="space-y-3"
+          onSubmit={(event) => { event.preventDefault(); void save(); }}>
+          <label className="block space-y-1 text-xs">Task name
+            <Input aria-label="Task name" value={title} maxLength={200} disabled={saving}
+              onChange={(event) => setTitle(event.target.value)} />
+          </label>
+          <div className="flex flex-wrap gap-3">
+            <label className="space-y-1 text-xs">Scheduled date
+              <DateField aria-label="Scheduled date" value={date} min={date === task.scheduledDate && date < today ? date : today}
+                disabled={saving || Boolean(task.completedAt)} onValueChange={setDate} />
+            </label>
+            <label className="space-y-1 text-xs">Time (optional)
+              <Input aria-label="Task time" type="time" value={time} disabled={saving}
+                className="h-8 w-32" onChange={(event) => setTime(event.target.value)} />
+            </label>
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" type="submit" disabled={saving || !title.trim() || !date}>{saving ? "Saving..." : "Save task"}</Button>
+            <Button size="sm" variant="ghost" type="button" disabled={saving} onClick={onCancel}>Cancel</Button>
+          </div>
+        </form>
       </WorkQuestCard>
     </section>
   );
