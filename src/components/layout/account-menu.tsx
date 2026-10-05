@@ -24,6 +24,8 @@ function Face({ person, showPhoto, size }: { person: Person; showPhoto: boolean;
   return (
     <span className={cn(box, "relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-[11px] font-medium text-muted-foreground ring-2 ring-background")}>
       {showPhoto && person.avatarUrl ? (
+        // Remote avatar URLs from Supabase storage; next/image would need per-host config.
+        // eslint-disable-next-line @next/next/no-img-element
         <img src={person.avatarUrl} alt="" className="size-full object-cover" />
       ) : showPhoto && initials ? (
         initials
@@ -56,7 +58,7 @@ function Faces({ people, showPhoto, size = "md" }: { people: Person[]; showPhoto
 export function AccountMenu({ settingsHref, showPhotos }: { settingsHref: string; showPhotos: boolean }) {
   const pathname = usePathname();
   const { viewerLabel, viewerAvatarUrl } = useDuo();
-  const { scope, hasActivePartner, activePartner, setScopePreference } = useDuoScope(
+  const { scope, activePartner, setScopePreference } = useDuoScope(
     resolveDuoSurfaceDefault(pathname)
   );
   const viewer: Person = { name: viewerLabel, avatarUrl: viewerAvatarUrl };
@@ -76,10 +78,10 @@ export function AccountMenu({ settingsHref, showPhotos }: { settingsHref: string
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
         data-onboarding="nav.settings"
-        aria-label={hasActivePartner ? `Account menu, ${selectedLabel} view` : "Account menu"}
+        aria-label={partner ? `Account menu, ${selectedLabel} view` : "Account menu"}
         className="flex h-9 shrink-0 items-center gap-1 rounded-full border border-border bg-background pr-2 pl-0.5 transition-colors outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=open]:bg-muted"
       >
-        <Faces people={hasActivePartner ? facesFor(scope) : [viewer]} showPhoto={showPhotos} />
+        <Faces people={facesFor(scope)} showPhoto={showPhotos} />
         <ChevronDown aria-hidden="true" className="size-3.5 text-muted-foreground" />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
@@ -88,7 +90,7 @@ export function AccountMenu({ settingsHref, showPhotos }: { settingsHref: string
           sideOffset={8}
           className="z-50 min-w-52 rounded-2xl border border-border bg-popover p-1.5 text-popover-foreground shadow-[0_12px_40px_rgb(0_0_0/0.12)]"
         >
-          {hasActivePartner && partner ? (
+          {partner ? (
             <>
               <DropdownMenu.Label className="px-2.5 pt-1.5 pb-1 font-mono text-[10px] tracking-[0.12em] text-muted-foreground uppercase">
                 Viewing
@@ -117,7 +119,7 @@ export function AccountMenu({ settingsHref, showPhotos }: { settingsHref: string
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
-      {hasActivePartner ? (
+      {partner ? (
         <span className="sr-only" aria-live="polite">{selectedLabel} view selected</span>
       ) : null}
     </DropdownMenu.Root>

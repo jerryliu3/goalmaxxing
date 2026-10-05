@@ -14,7 +14,7 @@ interface XpProfileSummary {
   nextLevelMinXp: number | null;
 }
 
-function formatNumber(value: number) {
+export function formatNumber(value: number) {
   return new Intl.NumberFormat("en-US").format(value);
 }
 

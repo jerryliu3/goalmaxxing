@@ -15,7 +15,6 @@ const partner: DuoActivePartner = {
 
 const duo = vi.hoisted(() => ({
   scope: "me" as DuoScope,
-  hasActivePartner: true,
   activePartner: null as DuoActivePartner | null,
   setScopePreference: vi.fn(),
 }));
@@ -36,7 +35,6 @@ function openMenu() {
 describe("AccountMenu", () => {
   beforeEach(() => {
     duo.scope = "me";
-    duo.hasActivePartner = true;
     duo.activePartner = partner;
     duo.setScopePreference.mockReset();
   });
@@ -71,7 +69,6 @@ describe("AccountMenu", () => {
   });
 
   it("is a plain profile menu without a partner", () => {
-    duo.hasActivePartner = false;
     duo.activePartner = null;
     render(<AccountMenu settingsHref="/demo/settings" showPhotos={false} />);
     const trigger = openMenu();

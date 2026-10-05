@@ -1,10 +1,8 @@
 "use client";
 
 import { Popover } from "radix-ui";
-import { XpMeter } from "@/components/xp/xp-progress-card";
+import { formatNumber, XpMeter } from "@/components/xp/xp-progress-card";
 import { useXpProfile } from "@/components/xp/xp-profile-provider";
-
-const formatXp = (value: number) => new Intl.NumberFormat("en-US").format(value);
 
 /**
  * Header XP: a 36px pill with the level and a thick bar. Exact numbers stay out of the
@@ -17,7 +15,7 @@ export function XpProgressBar() {
     return null;
   }
 
-  const toNextLevel = profile.nextLevelMinXp === null ? null : Math.max(0, profile.nextLevelMinXp - profile.totalXp);
+  const { nextLevel, nextLevelMinXp } = profile;
 
   return (
     <Popover.Root>
@@ -33,11 +31,11 @@ export function XpProgressBar() {
           sideOffset={8}
           className="z-50 rounded-xl border border-border bg-popover px-3 py-2 font-mono text-xs text-popover-foreground shadow-[0_8px_24px_rgb(0_0_0/0.1)]"
         >
-          <p>{formatXp(profile.totalXp)} XP</p>
+          <p>{formatNumber(profile.totalXp)} XP</p>
           <p className="mt-0.5 text-muted-foreground">
-            {toNextLevel === null
+            {nextLevel === null || nextLevelMinXp === null
               ? "Top level reached"
-              : `${formatXp(toNextLevel)} XP to Level ${profile.nextLevel ?? profile.currentLevel + 1}`}
+              : `${formatNumber(Math.max(0, nextLevelMinXp - profile.totalXp))} XP to Level ${nextLevel}`}
           </p>
         </Popover.Content>
       </Popover.Portal>
