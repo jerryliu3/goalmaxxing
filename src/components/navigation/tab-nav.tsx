@@ -43,7 +43,7 @@ export function TabNav({
     optimisticNav && optimisticNav.from === pathname
       ? optimisticNav.to
       : pathname;
-  const gridClass = tabGridClass(tabs.length);
+  const gridClass = tabGridClass(tabs.length, { fitLabels: mobile });
   const currentIndex = tabs.findIndex((tab) =>
     isAppTabActive(activePath, tab.href)
   );

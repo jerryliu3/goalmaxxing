@@ -18,8 +18,21 @@ export interface TabChromeClasses {
   highlight: string;
 }
 
-export function tabGridClass(count: number): string {
-  return GRID_BY_COUNT[count] ?? "grid-cols-4";
+/**
+ * The phone bar's tabs share its width equally while there is room, but a
+ * tab is never narrower than its icon and label, so its selected frame (the
+ * whole tab) always contains them at any screen width.
+ */
+const FITTED_GRID_BY_COUNT: Record<number, string> = {
+  2: "grid-cols-[repeat(2,minmax(min-content,1fr))]",
+  3: "grid-cols-[repeat(3,minmax(min-content,1fr))]",
+  4: "grid-cols-[repeat(4,minmax(min-content,1fr))]",
+  5: "grid-cols-[repeat(5,minmax(min-content,1fr))]",
+  6: "grid-cols-[repeat(6,minmax(min-content,1fr))]",
+};
+
+export function tabGridClass(count: number, { fitLabels = false } = {}): string {
+  return (fitLabels ? FITTED_GRID_BY_COUNT : GRID_BY_COUNT)[count] ?? "grid-cols-4";
 }
 
 /**
@@ -47,14 +60,20 @@ export function tabChromeClasses(
       ),
       link: cn(
         "relative isolate flex w-full touch-manipulation items-center justify-center px-2 font-medium uppercase tracking-[0.12em] transition-[color,transform] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none",
-        mobile ? "min-h-12 flex-col gap-1 py-1.5 text-[10px]" : "min-h-11 flex-col gap-1 py-2 text-[11px]"
+        // Narrow phone tabs keep their width for the label, with tighter
+        // tracking so four equal tabs fit "Achievements" on a 375px phone.
+        mobile
+          ? "min-h-12 flex-col gap-1 px-1 py-1.5 text-[10px] tracking-[0.06em]"
+          : "min-h-11 flex-col gap-1 py-2 text-[11px]"
       ),
       linkActive: "text-primary",
       linkIdle: "text-muted-foreground hover:text-foreground",
       highlight: cn(
         "absolute -z-10 bg-transparent shadow-none",
         mobile
-          ? "inset-x-3 top-1 bottom-1 rounded-md border border-primary/40"
+          ? // The whole tab, so every tab's frame is the same size and
+            // always wider than its label.
+            "inset-0 rounded-md border border-primary/40"
           : "inset-x-2 bottom-0 h-0.5 rounded-none bg-primary"
       ),
     };
