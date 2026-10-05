@@ -92,20 +92,18 @@ export function MilestoneTitleEditor({
             disabled={saving}
             className="min-w-0 w-full rounded border bg-background px-1 py-1 text-foreground"
             onChange={(event) => setDraft(event.target.value)}
+            onBlur={() => void save()}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault();
-                void save();
+                event.currentTarget.blur();
               }
-              if (event.key === "Escape" && !saving) setDraft(null);
+              if (event.key === "Escape" && !saving) {
+                event.preventDefault();
+                setDraft(null);
+              }
             }}
           />
-          <button type="button" disabled={saving || !draft.trim()} onClick={() => void save()}>
-            Save
-          </button>
-          <button type="button" disabled={saving} onClick={() => setDraft(null)}>
-            Cancel
-          </button>
         </span>
       )}
     </span>
