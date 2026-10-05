@@ -91,10 +91,10 @@ function pickDate(tile: HTMLElement, date: string) {
   fireEvent.change(field, { target: { value: date } });
 }
 
-it("shows the loaded calendar range while the wider dates load", () => {
+it("shows the range of the loaded session snapshot", () => {
   const view = renderView({ window: { start: "2026-10-01", end: "2026-10-31" } });
   expect(screen.getByText(/Showing sessions from Oct 1, 2026 through Oct 31, 2026/)).toBeInTheDocument();
-  expect(screen.getByText(/Further dates load in the background/)).toBeInTheDocument();
+  expect(screen.queryByText(/Further dates load in the background/)).toBeNull();
   view.rerenderWith({ window: buildGoalViewWindow(TODAY) });
   expect(screen.queryByText(/Further dates load in the background/)).not.toBeInTheDocument();
 });

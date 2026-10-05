@@ -1,4 +1,15 @@
+"use client";
+
 import { GoalLibraryPage } from "@/features/insights/folio/goal-library-page";
+import { DuoLanes } from "@/features/social/duo/duo-lanes";
+import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
+import { resolveDuoLanes } from "@cadence/shared/social/duo";
+
 export function GoalsDestination() {
-  return <GoalLibraryPage showBack={false} />;
+  const { scope, viewer, partner } = useDuoSurface("calendar");
+  const lanes = resolveDuoLanes({ scope, viewer, partner });
+  return <DuoLanes scope={scope} viewer={viewer} partner={partner} renderLane={subject => (
+    <GoalLibraryPage showBack={false} subjectUserId={subject.userId}
+      readOnly={subject.readOnly} anchorSections={subject.id === lanes[0]?.id} />
+  )} />;
 }

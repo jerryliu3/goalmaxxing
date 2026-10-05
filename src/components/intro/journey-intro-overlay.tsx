@@ -63,9 +63,9 @@ const JOURNEY_INTRO_STEPS = [
     kind: "copy" as const,
   },
   {
-    title: "Achieved",
+    title: "Achievements",
     description:
-      "Celebrate achievements, review completion history, and look back on past goals.",
+      "Celebrate achievements and look back through your goal library. The progress tracker lives on Goals.",
     target: "nav.achievements",
     kind: "copy" as const,
   },

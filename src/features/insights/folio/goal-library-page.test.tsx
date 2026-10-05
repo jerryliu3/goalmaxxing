@@ -18,6 +18,13 @@ function loadCollection() {
 }
 
 describe("goal library journey", () => {
+  it("keeps a partner collection and its tracker read-only", () => {
+    loadCollection();
+    render(<GoalLibraryPage subjectUserId="partner-1" readOnly anchorSections={false} />);
+    expect(screen.queryByRole("link", { name: "New Goal" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Goal details/ })).toBeNull();
+    expect(mocks.tracker).toHaveBeenCalledWith(expect.objectContaining({ readOnly: true, anchorSections: false }));
+  });
   it("opens Current from Goals with live progress and reward text", () => {
     loadCollection();
     render(<GoalLibraryPage />);

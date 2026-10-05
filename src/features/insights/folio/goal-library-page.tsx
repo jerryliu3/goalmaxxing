@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { isDemoPathname } from "@/lib/navigation/demo-path";
 import { ArrowLeft } from "lucide-react";
@@ -15,10 +15,16 @@ import { CurrentGoalGrid } from "./current-goal-grid";
 import { buildCurrentGoals, buildGoalFolios } from "./folio-model";
 import styles from "./folio.module.css";
 
-export function GoalLibraryPage({ showBack = true }: { showBack?: boolean }) {
+export function GoalLibraryPage({ showBack = true, subjectUserId, readOnly = false, anchorSections = true }: {
+  showBack?: boolean;
+  subjectUserId?: string;
+  readOnly?: boolean;
+  anchorSections?: boolean;
+}) {
+  const headingId = useId();
   const router = useAppRouter();
   const prefix = isDemoPathname(usePathname() ?? "") ? "/demo" : "";
-  const { state, loading, loadError, reload } = useInsightsData({ selectedYear: String(new Date().getFullYear()) });
+  const { state, loading, loadError, reload } = useInsightsData({ subjectUserId, selectedYear: String(new Date().getFullYear()), failClosed: readOnly });
   useReportAppSurfaceReady(!loading);
   const folios = useMemo(() => buildGoalFolios(state.goals, state.progress?.summaries ?? [], state.userId), [state.goals, state.progress, state.userId]);
   const current = useMemo(() => buildCurrentGoals(state.goals, state.progress?.summaries ?? [], state.userId), [state.goals, state.progress, state.userId]);
@@ -28,14 +34,14 @@ export function GoalLibraryPage({ showBack = true }: { showBack?: boolean }) {
       {loadError ? <div className={styles.empty} role="alert"><h2>Your collection couldn’t be loaded.</h2><p>{loadError}</p><Button variant="outline" className="mt-5" onClick={reload}>Try again</Button></div>
         : loading || !state.progress ? <LoadingCard title="Opening your collection..." description="Gathering your goals." />
         : <div className="space-y-8">
-          <section aria-labelledby="current-goals-heading">
-            <header className="mb-4"><h1 id="current-goals-heading" className="font-display text-2xl font-semibold">Current Goals</h1><p className="text-sm text-muted-foreground">Taking shape. Worth keeping.</p></header>
-            <CurrentGoalGrid entries={current} leadingCard={<NewGoalButton presentation="card" />} onDetails={goalId => router.push(`${prefix}/goals/${goalId}`)} />
+          <section aria-labelledby={`${headingId}-current`}>
+            <header className="mb-4"><h1 id={`${headingId}-current`} className="font-display text-2xl font-semibold">Current Goals</h1><p className="text-sm text-muted-foreground">Taking shape. Worth keeping.</p></header>
+            <CurrentGoalGrid entries={current} leadingCard={readOnly ? undefined : <NewGoalButton presentation="card" />} onDetails={readOnly ? undefined : goalId => router.push(`${prefix}/goals/${goalId}`)} />
           </section>
-          <InsightsTab subjectUserId={state.userId} progressView="all" sectionIds={["history"]} />
-          <section aria-labelledby="past-goals-heading">
-            <header className="mb-4"><h2 id="past-goals-heading" className="font-display text-2xl font-semibold">Past Goals</h2><p className="text-sm text-muted-foreground">Every goal that’s passed.</p></header>
-            {folios.length ? <CurrentGoalGrid entries={folios.flatMap(folio => folio.entries)} onDetails={goalId => router.push(`${prefix}/goals/${goalId}`)} /> : <p className="text-sm text-muted-foreground">Completed, ended, and archived goals collect here.</p>}
+          <InsightsTab subjectUserId={state.userId} readOnly={readOnly} anchorSections={anchorSections} progressView="all" sectionIds={["history"]} />
+          <section aria-labelledby={`${headingId}-past`}>
+            <header className="mb-4"><h2 id={`${headingId}-past`} className="font-display text-2xl font-semibold">Past Goals</h2><p className="text-sm text-muted-foreground">Every goal that’s passed.</p></header>
+            {folios.length ? <CurrentGoalGrid entries={folios.flatMap(folio => folio.entries)} onDetails={readOnly ? undefined : goalId => router.push(`${prefix}/goals/${goalId}`)} /> : <p className="text-sm text-muted-foreground">Completed, ended, and archived goals collect here.</p>}
           </section>
         </div>}
 
