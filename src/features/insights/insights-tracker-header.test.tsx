@@ -33,7 +33,7 @@ describe("InsightsTrackerHeader", () => {
     expect(
       titleRow?.querySelector(".justify-self-center")
     ).toContainElement(
-      screen.getByRole("button", { name: "Open Progress filters" })
+      screen.getByRole("button", { name: "Open progress filters" })
     );
     expect(screen.getByLabelText("Choose month and year")).toBeInTheDocument();
   });

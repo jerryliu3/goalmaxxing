@@ -137,8 +137,8 @@ export function PlannerCalendarToolbar({
               <Tooltip content="Planner help" side="top" align="center">
                 <Button
                   type="button"
-                  variant="outline"
-                  size="icon-sm"
+                  variant="ghost"
+                  size="icon-round"
                   aria-label="Open planner help"
                   title="Planner help"
                   onClick={() => setHelpOpen(true)}
@@ -152,7 +152,7 @@ export function PlannerCalendarToolbar({
                   variant="secondary"
                   className="h-7 border-primary/40 px-3 text-sm font-semibold"
                 >
-                  Planning Mode
+                  Planning mode
                 </Badge>
               ) : null}
             </div>
@@ -236,8 +236,7 @@ export function PlannerCalendarToolbar({
             <Button
               type="button"
               variant="ghost"
-              size="icon-sm"
-              className="size-9 rounded-full hover:bg-muted"
+              size="icon-round"
               aria-label="Filters"
               title="Filters"
               onClick={onOpenFilters}
@@ -249,8 +248,7 @@ export function PlannerCalendarToolbar({
               <Button
                 type="button"
                 variant="ghost"
-                size="icon-sm"
-                className="size-9 rounded-full hover:bg-muted"
+                size="icon-round"
                 aria-label="Settings"
                 title="Settings"
                 onClick={onOpenSettings}

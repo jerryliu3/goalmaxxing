@@ -100,10 +100,10 @@ export function InsightsTrackerHeader({
             <Button
               type="button"
               variant="ghost"
-              size="icon-sm"
-              className="size-9 shrink-0 rounded-full hover:bg-muted"
-              aria-label="Open Progress filters"
-              title="Open Progress filters"
+              size="icon-round"
+              className="shrink-0"
+              aria-label="Open progress filters"
+              title="Open progress filters"
               onClick={() => setFiltersOpen(true)}
             >
               <SlidersHorizontal />

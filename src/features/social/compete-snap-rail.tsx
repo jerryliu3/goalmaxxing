@@ -75,7 +75,7 @@ export function CompeteSnapRail({
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
+            size="icon-round"
             aria-label={`Scroll ${label} left`}
             onClick={() => scroll(-1)}
           >
@@ -84,7 +84,7 @@ export function CompeteSnapRail({
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
+            size="icon-round"
             aria-label={`Scroll ${label} right`}
             onClick={() => scroll(1)}
           >
