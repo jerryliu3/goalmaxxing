@@ -23,6 +23,21 @@ describe("ProgressSectionStack", () => {
     expect(screen.queryByText("Week rhythm")).toBeNull();
   });
 
+  it("raises only framed sections onto a panel", () => {
+    render(
+      <ProgressSectionStack
+        sections={[
+          { id: "history", content: <p>Completion ledger</p>, framed: true },
+          { id: "past-goals", content: <p>Goal library</p> },
+        ]}
+        view="all"
+      />
+    );
+
+    expect(screen.getByText("Completion ledger").parentElement).toHaveClass("bg-card", "rounded-2xl");
+    expect(screen.getByText("Goal library").parentElement).not.toHaveClass("bg-card");
+  });
+
   it("renders only the active view in canonical order", () => {
     render(<ProgressSectionStack sections={sections()} view="current" />);
 

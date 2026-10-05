@@ -36,6 +36,7 @@ import { ProfilePresenceSection } from "@/features/social/profile-presence";
 import { useOwnProfilePresence } from "@/features/social/use-own-profile-presence";
 import { useSocialTabData } from "@/features/social/use-social-tab-data";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
+import { panelClass } from "@/components/ui/panel";
 import { cn } from "@/lib/utils";
 import type { Goal } from "@/lib/goals/types";
 
@@ -155,7 +156,7 @@ export function SettingsTab() {
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             {group.label}
           </h2>
-          <div className="divide-y border-y">
+          <div className={cn("divide-y px-4", panelClass)}>
             {group.items.map((item) => (
               <button
                 key={item.key}

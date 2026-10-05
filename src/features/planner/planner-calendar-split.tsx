@@ -10,6 +10,7 @@ import {
   type PointerEvent,
   type ReactNode,
 } from "react";
+import { panelClass } from "@/components/ui/panel";
 import { cn } from "@/lib/utils";
 import {
   clampPlanCalendarSplit,
@@ -130,7 +131,7 @@ export function PlannerCalendarSplit({
           <span className="h-10 w-1 rounded-full bg-border" aria-hidden />
         </div>
       </div>
-      <aside className="min-w-0 md:mt-0" data-testid="plan-desktop-day-pane">
+      <aside className={cn("min-w-0 self-start p-4 md:mt-0 md:p-5", panelClass)} data-testid="plan-desktop-day-pane">
         {pane}
       </aside>
     </div>

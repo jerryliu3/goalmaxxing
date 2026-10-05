@@ -15,6 +15,8 @@ export interface ProgressOverviewSectionContent {
   title?: string;
   /** Set when the content renders the section heading itself. */
   hideTitle?: boolean;
+  /** Raises the section content onto a panel. */
+  framed?: boolean;
   content: ReactNode;
 }
 
@@ -65,6 +67,7 @@ export function ProgressSectionStack({
           elementId={anchored ? progressSectionElementId(definition.id) : undefined}
           title={content.title ?? definition.label}
           hideTitle={content.hideTitle}
+          framed={content.framed}
         >
           {content.content}
         </ProgressSection>

@@ -37,6 +37,7 @@ import type { PlanDayChecklistModel } from "@/features/planner/use-plan-day-chec
 import type { Goal } from "@/lib/goals/types";
 import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
 import { CompletionTitle } from "@/components/ui/completion-title";
+import { panelClass } from "@/components/ui/panel";
 import { cn } from "@/lib/utils";
 
 interface PlannerFocusedDayPaneProps {
@@ -182,10 +183,10 @@ export function PlannerFocusedDayPane({
         // Never clip the aside: expanded session editors/portaled progress cards
         // must grow the checklist height and scroll with the page.
         !shareDayTransition && "overflow-x-hidden",
-        // Carries the week row's selected-day ring into day view so the emphasis is
-        // continuous through the morph instead of dropping at the end.
+        // Day view is the same checklist as the Week/Month side pane, so it sits on the
+        // same panel; the week row's selected-day ring morphs into it.
         shareDayTransition &&
-          cn(PLAN_MORPH_CLASS, "min-h-[34rem] rounded-[10px] p-3 ring-2 ring-inset ring-primary")
+          cn(PLAN_MORPH_CLASS, "min-h-[34rem] p-4 md:p-5", panelClass)
       )}
       data-testid="plan-day-pane"
       data-plan-day={day}
