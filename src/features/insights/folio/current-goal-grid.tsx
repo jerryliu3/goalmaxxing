@@ -45,17 +45,19 @@ export function CurrentGoalGrid({
   leadingCard,
   entries,
   onDetails,
+  moving = false,
 }: {
   leadingCard?: ReactNode;
   entries: Array<{ goal: Goal; progress: ProgressContextSummary }>;
   onDetails?: (goalId: string) => void;
+  moving?: boolean;
 }) {
   return (
     <div className={styles.currentGrid}>
       {leadingCard}
       {entries.map(({ goal, progress }) => (
         <section key={goal.id} className={styles.currentGoal} aria-label={goal.title}>
-          <GoalProgressCard goal={goal} progress={progress} gallery />
+          <GoalProgressCard goal={goal} progress={progress} gallery moving={moving} />
           {onDetails ? (
             <button className={styles.goalDetails} type="button" onClick={() => onDetails(goal.id)}>
               Goal details <span aria-hidden="true">↗</span>

@@ -85,6 +85,7 @@ describe("goal library journey", () => {
     });
     render(<GoalLibraryPage />);
     expect(screen.getByRole("status")).toHaveTextContent("6 / 6 completions");
+    fireEvent.focus(document.querySelector("[data-goal-progress-card]")!);
     expect(document.querySelector(".tempo-card-surface")).toHaveAttribute("data-rotatable", "true");
     expect(document.querySelector("[data-reassembly]")).toHaveAttribute("data-fused", "true");
     expect(document.querySelector("[data-reassembly]")).not.toHaveAttribute("data-flat");
