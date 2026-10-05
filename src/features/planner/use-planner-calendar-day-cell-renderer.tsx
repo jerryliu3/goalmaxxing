@@ -324,6 +324,7 @@ export function usePlannerCalendarDayCellRenderer({
             }
             pointerPressActiveRef.current = true;
             clearHoverPreviewTimer();
+            setDayPreview(null);
             if (pointerType === "touch" && viewMode !== "day") {
               const now = Date.now();
               const lastTouchTap = lastTouchTapRef.current;

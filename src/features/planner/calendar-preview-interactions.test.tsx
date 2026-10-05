@@ -320,7 +320,14 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     );
     expect(dayCell).toBeInstanceOf(HTMLElement);
 
+    if (viewMode === "month") {
+      fireEvent.mouseEnter(dayCell as Element);
+      await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+      expect(screen.getByRole("button", { name: "Expand day details" })).toBeInTheDocument();
+    }
+
     fireEvent.pointerDown(dayCell as Element, { pointerType: "mouse" });
+    expect(screen.queryByRole("button", { name: "Expand day details" })).not.toBeInTheDocument();
     await act(async () => {
       await vi.advanceTimersByTimeAsync(500);
     });
