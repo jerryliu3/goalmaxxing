@@ -1,74 +1,22 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { AchievementsShowcasePayload } from "@/features/achievements/types";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import AchievementsPage from "@/app/(app)/achievements/page";
 
-const hookState = vi.hoisted(() => ({
-  loading: false,
-  error: null as string | null,
-  payload: null as AchievementsShowcasePayload | null,
-  reload: vi.fn(),
-}));
-
-vi.mock("@/features/achievements/use-achievements-showcase", () => ({
-  useAchievementsShowcase: () => hookState,
-}));
+vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams() }));
+vi.mock("@/features/coach/use-coach-page-context", () => ({ useCoachPageContext: vi.fn() }));
+vi.mock("@/features/onboarding/tab-onboarding-overlay", () => ({ TabOnboardingOverlay: () => null }));
+vi.mock("@/features/social/duo/use-duo-surface", () => ({ useDuoSurface: () => ({
+  scope: "me", activePartner: null, viewer: { id: "viewer", userId: "user-1", label: "Me", readOnly: false }, partner: null,
+}) }));
+vi.mock("@/features/social/duo/duo-lanes", () => ({ DuoLanes: ({ renderLane }: { renderLane: (subject: { id: string; userId: string; readOnly: boolean }) => React.ReactNode }) => <>{renderLane({ id: "viewer", userId: "user-1", readOnly: false })}</> }));
+vi.mock("@/features/insights/insights-tab", () => ({ InsightsTab: () => <div data-testid="achievement-progress" /> }));
+afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
 describe("AchievementsPage", () => {
-  beforeEach(() => {
-    hookState.loading = false;
-    hookState.error = "Achievements could not be loaded.";
-    hookState.payload = null;
-    hookState.reload = vi.fn();
-  });
-
-  afterEach(() => {
-    cleanup();
-    vi.clearAllMocks();
-  });
-
-  it("offers retry when loading fails", async () => {
-    const user = userEvent.setup();
+  it("routes to the achievements destination with its progress sections", () => {
     render(<AchievementsPage />);
-
-    expect(screen.getByText("Achievements could not be loaded.")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Try again" }));
-    expect(hookState.reload).toHaveBeenCalledTimes(1);
-  });
-
-  it("renders the showcase when payload is available", async () => {
-    hookState.error = null;
-    hookState.payload = {
-      schemaVersion: "2",
-      collection: {
-        level: 2,
-        totalXp: 400,
-        unlockedAwards: 1,
-        totalAwards: 2,
-        achievedGoals: 0,
-        featuredAwardId: "reward-2",
-      },
-      personalRecords: [],
-      levelAwards: [
-        {
-          id: "reward-2",
-          awardId: "award-2",
-          level: 2,
-          title: "Level 2 unlocked",
-          description: "You reached Level 2.",
-          unlockedAt: "2026-03-01T00:00:00.000Z",
-          revokedAt: null,
-          tier: "bronze",
-        },
-      ],
-      achievedGoals: [],
-      truncated: { goals: false, completions: false },
-    };
-
-    render(<AchievementsPage />);
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Level 2 unlocked" })).toBeInTheDocument();
-    });
+    expect(screen.getByRole("heading", { name: "Achieved" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Achieved sections" })).toBeInTheDocument();
+    expect(screen.getByTestId("achievement-progress")).toBeInTheDocument();
   });
 });

@@ -251,7 +251,7 @@ describe("CalendarPageShell", () => {
     expect(mocks.latestSurfaceProps?.viewMode).toBe("day");
   });
 
-  it("keeps the current calendar view when New Goal changes the URL", () => {
+  it("restores the explicit calendar view when New Goal returns to Agenda", () => {
     mocks.search = "view=week&month=2026-08&day=2026-08-12";
     const { rerender } = render(<CalendarPageShell />);
     mocks.applySearchParams.mockClear();
@@ -260,7 +260,7 @@ describe("CalendarPageShell", () => {
 
     rerender(<CalendarPageShell />);
 
-    expect(mocks.latestSurfaceProps?.viewMode).toBe("day");
+    expect(mocks.latestSurfaceProps?.viewMode).toBe("week");
     expect(mocks.latestSurfaceProps?.month).toBe("2026-08");
     expect(mocks.latestSurfaceProps?.selectedDay).toBe("2026-08-12");
     expect(mocks.applySearchParams).not.toHaveBeenCalled();

@@ -82,6 +82,7 @@ export function PlannerViewWindowHeader({
             size="sm"
             disabled={loading}
             onClick={onJumpToToday}
+            data-testid="planner-today-shortcut"
           >
             Today
           </Button>
