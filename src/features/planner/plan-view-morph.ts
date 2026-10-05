@@ -1,4 +1,5 @@
 import type { PlannerCalendarViewMode } from "./calendar-surface.types";
+import { smootherstep as ease } from "./plan-view-transition";
 
 /**
  * The calendar views plus Goal View, which has no day cells: its dates are
@@ -71,8 +72,6 @@ const DAY_MS = 86400000;
 /** The zoom concept runs at 720ms; month transitions move every tile at once and read better slower. */
 export const PLAN_MORPH_DURATION_MS = 720;
 export const PLAN_MORPH_MONTH_DURATION_MS = 820;
-/** Smootherstep: zero velocity *and* zero acceleration at both ends, so nothing snaps into motion. */
-const ease = (t: number) => t * t * t * (t * (6 * t - 15) + 10);
 /** Progress through a sub-window of the morph, for staggered fades. */
 const ramp = (t: number, a: number, b: number) => Math.max(0, Math.min(1, (t - a) / (b - a)));
 /**
@@ -220,7 +219,8 @@ function residue(root: HTMLElement, mode: PlanSceneMode) {
     node.style.visibility = 'visible';
     // Leave section headings, tasks, empty states and other non-carried content.
     // They fade independently, without fading the moving items themselves.
-    node.querySelectorAll<HTMLElement>('[data-planner-entry-key], [data-plan-day-number], [data-plan-weekday], [data-calendar-weekday-grid], [data-testid="plan-desktop-day-pane"], [data-plan-day-section]').forEach(el => el.style.visibility = 'hidden');
+    // Goal Lanes' calendar header and day rules sit at the live scroll offset, which a clone loses.
+    node.querySelectorAll<HTMLElement>('[data-planner-entry-key], [data-plan-day-number], [data-plan-weekday], [data-calendar-weekday-grid], [data-testid="plan-desktop-day-pane"], [data-plan-day-section], [data-lane-header], [data-lane-grid]').forEach(el => el.style.visibility = 'hidden');
     if (mode !== 'day') node.querySelectorAll<HTMLElement>(DAY).forEach(el => el.style.visibility = 'hidden');
     node.querySelectorAll<HTMLElement>('[data-plan-day]').forEach(clearChrome);
     return node;
