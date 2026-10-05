@@ -8,13 +8,13 @@ describe("PlannerFiltersDialog", () => {
     cleanup();
   });
   it("defaults the tasks toggle off and reports changes immediately", () => {
-    const onShowTasksInsteadOfGoalsChange = vi.fn();
+    const onHideTasksChange = vi.fn();
     render(
       <PlannerFiltersDialog
         open
         onOpenChange={vi.fn()}
-        showTasksInsteadOfGoals={false}
-        onShowTasksInsteadOfGoalsChange={onShowTasksInsteadOfGoalsChange}
+        hideTasks={false}
+        onHideTasksChange={onHideTasksChange}
         categoryFilters={[]}
         onCategoryFiltersChange={vi.fn()}
         categoryOptions={[]}
@@ -24,10 +24,10 @@ describe("PlannerFiltersDialog", () => {
       />
     );
 
-    const toggle = screen.getByRole("switch", {
-      name: /show tasks instead of goals/i,
+    const toggle = screen.getByRole("checkbox", {
+      name: /hide tasks/i,
     });
-    expect(toggle).toHaveAttribute("aria-checked", "false");
+    expect(toggle).not.toBeChecked();
     expect(
       screen.getByRole("heading", { name: "Planner filters" })
     ).toBeInTheDocument();
@@ -35,30 +35,30 @@ describe("PlannerFiltersDialog", () => {
     expect(screen.queryByText("Recurrence")).not.toBeInTheDocument();
 
     fireEvent.click(toggle);
-    expect(onShowTasksInsteadOfGoalsChange).toHaveBeenCalledWith(true);
+    expect(onHideTasksChange).toHaveBeenCalledWith(true);
   });
 
-  it("keeps Goal View focused on goals without the task replacement switch", () => {
+  it("keeps Goal View focused on goals", () => {
     render(
       <PlannerFiltersDialog open onOpenChange={vi.fn()}
-        showTasksInsteadOfGoals={false} showTasksToggle={false}
-        onShowTasksInsteadOfGoalsChange={vi.fn()}
+        hideTasks={false} showTasksToggle={false}
+        onHideTasksChange={vi.fn()}
         categoryFilters={[]} onCategoryFiltersChange={vi.fn()} categoryOptions={[]}
         endMonthFilters={[]} onEndMonthFiltersChange={vi.fn()} endMonthOptions={[]}
       />
     );
-    expect(screen.queryByRole("switch", { name: /show tasks instead of goals/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: "Hide tasks" })).not.toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "Show completed goals" })).toBeInTheDocument();
     expect(screen.getByText("Category")).toBeInTheDocument();
   });
 
-  it("hides goal filters while tasks replace goals", () => {
+  it("keeps goal filters when tasks are hidden", () => {
     render(
       <PlannerFiltersDialog
         open
         onOpenChange={vi.fn()}
-        showTasksInsteadOfGoals
-        onShowTasksInsteadOfGoalsChange={vi.fn()}
+        hideTasks
+        onHideTasksChange={vi.fn()}
         categoryFilters={[]}
         onCategoryFiltersChange={vi.fn()}
         categoryOptions={[]}
@@ -69,9 +69,9 @@ describe("PlannerFiltersDialog", () => {
     );
 
     expect(
-      screen.getByRole("switch", { name: /show tasks instead of goals/i })
-    ).toHaveAttribute("aria-checked", "true");
-    expect(screen.queryByText("Category")).not.toBeInTheDocument();
+      screen.getByRole("checkbox", { name: /hide tasks/i })
+    ).toBeChecked();
+    expect(screen.getByText("Category")).toBeInTheDocument();
   });
 
   it("disables the tasks toggle in read-only partner view", () => {
@@ -79,8 +79,8 @@ describe("PlannerFiltersDialog", () => {
       <PlannerFiltersDialog
         open
         onOpenChange={vi.fn()}
-        showTasksInsteadOfGoals={false}
-        onShowTasksInsteadOfGoalsChange={vi.fn()}
+        hideTasks={false}
+        onHideTasksChange={vi.fn()}
         tasksToggleDisabled
         categoryFilters={[]}
         onCategoryFiltersChange={vi.fn()}
@@ -92,7 +92,7 @@ describe("PlannerFiltersDialog", () => {
     );
 
     expect(
-      screen.getByRole("switch", { name: /show tasks instead of goals/i })
+      screen.getByRole("checkbox", { name: /hide tasks/i })
     ).toBeDisabled();
   });
 
@@ -101,8 +101,8 @@ describe("PlannerFiltersDialog", () => {
       <PlannerFiltersDialog
         open
         onOpenChange={vi.fn()}
-        showTasksInsteadOfGoals={false}
-        onShowTasksInsteadOfGoalsChange={vi.fn()}
+        hideTasks={false}
+        onHideTasksChange={vi.fn()}
         categoryFilters={[]}
         onCategoryFiltersChange={vi.fn()}
         categoryOptions={[]}
@@ -179,8 +179,8 @@ describe("PlannerFiltersDialog", () => {
       <PlannerFiltersDialog
         open
         onOpenChange={vi.fn()}
-        showTasksInsteadOfGoals={false}
-        onShowTasksInsteadOfGoalsChange={vi.fn()}
+        hideTasks={false}
+        onHideTasksChange={vi.fn()}
         categoryFilters={["Health"]}
         onCategoryFiltersChange={onCategoryFiltersChange}
         categoryOptions={[
@@ -211,8 +211,8 @@ describe("PlannerFiltersDialog", () => {
       <PlannerFiltersDialog
         open
         onOpenChange={vi.fn()}
-        showTasksInsteadOfGoals={false}
-        onShowTasksInsteadOfGoalsChange={vi.fn()}
+        hideTasks={false}
+        onHideTasksChange={vi.fn()}
         categoryFilters={[]}
         onCategoryFiltersChange={vi.fn()}
         categoryOptions={[]}

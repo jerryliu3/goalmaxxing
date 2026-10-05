@@ -81,6 +81,17 @@ describe("usePlannerDayPreviewInteractions", () => {
     vi.useRealTimers();
   });
 
+  it("uses the long press callback and suppresses release navigation", () => {
+    vi.useFakeTimers();
+    const onLongPressDay = vi.fn();
+    const args = interactionArgs({ onLongPressDay });
+    const { result } = renderHook(() => usePlannerDayPreviewInteractions(args));
+    act(() => { result.current.startDayLongPress("2026-08-16"); vi.advanceTimersByTime(500); });
+    expect(onLongPressDay).toHaveBeenCalledWith("2026-08-16");
+    expect(args.setDayPreview).toHaveBeenCalledWith(null);
+    expect(args.suppressDayCellClickRef.current).toEqual({ day: "2026-08-16", active: true });
+  });
+
   it("suppresses the next day-cell click after a touch long-press path", () => {
     const suppressDayCellClickRef = {
       current: { day: "2026-08-16", active: true },

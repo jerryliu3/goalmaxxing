@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { getApiErrorMessage, getJson, postJson } from "@/lib/api/client";
+import { getApiErrorMessage, getJson } from "@/lib/api/client";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
+import { completePlannerTask, editPlannerTask } from "@/lib/tasks/client";
 import type { PlannerCalendarTask } from "@/lib/tasks/calendar-tasks";
 import { buildCalendarTaskEntriesByDate } from "@/features/planner/calendar-task-entries";
 
@@ -12,10 +13,6 @@ const EMPTY_TASK_ENTRIES_BY_DATE = new Map<string, PlannerDayDetailEntry[]>();
 
 interface CalendarPlannerTasksResponse {
   tasks?: PlannerCalendarTask[];
-}
-
-interface CalendarPlannerTaskCompletionResponse {
-  task?: PlannerCalendarTask;
 }
 
 async function fetchCalendarTasks(from: string, to: string) {
@@ -35,21 +32,23 @@ export function useCalendarPlannerTasks({
   to: string | null;
 }) {
   const [tasks, setTasks] = useState<PlannerCalendarTask[]>([]);
+  const readVersionRef = useRef(0);
 
   useEffect(() => {
     if (!enabled || !from || !to) {
       return;
     }
 
+    const readVersion = ++readVersionRef.current;
     let cancelled = false;
     void fetchCalendarTasks(from, to)
       .then((nextTasks) => {
-        if (!cancelled) {
+        if (!cancelled && readVersion === readVersionRef.current) {
           setTasks(nextTasks);
         }
       })
       .catch((error: unknown) => {
-        if (cancelled) {
+        if (cancelled || readVersion !== readVersionRef.current) {
           return;
         }
         toast.error(getApiErrorMessage(error, "Could not load calendar tasks."));
@@ -65,14 +64,17 @@ export function useCalendarPlannerTasks({
     if (!enabled || !from || !to) {
       return;
     }
+    const readVersion = ++readVersionRef.current;
     void fetchCalendarTasks(from, to)
-      .then(setTasks)
+      .then(next => { if (readVersion === readVersionRef.current) setTasks(next); })
       .catch(() => {
         // Keep the last successful snapshot on background refresh failures.
       });
   });
 
   const applyTaskUpdate = useCallback((task: PlannerCalendarTask) => {
+    // A committed edit supersedes reads that began before it was applied locally.
+    readVersionRef.current += 1;
     setTasks((current) => {
       const index = current.findIndex((row) => row.taskId === task.taskId);
       if (index < 0) {
@@ -85,27 +87,19 @@ export function useCalendarPlannerTasks({
   }, []);
 
   const completeTask = useCallback(async (taskId: string, completed: boolean) => {
-    const payload = await postJson<CalendarPlannerTaskCompletionResponse>(
-      `/api/planner/tasks/${taskId}/completion`,
-      { completed, expectedUpdatedAt: tasks.find(task => task.taskId === taskId)?.updatedAt }
-    );
-    if (!payload.task) {
-      throw new Error("Could not update the task.");
-    }
-    applyTaskUpdate(payload.task);
-    return payload.task;
+    const task = tasks.find(task => task.taskId === taskId);
+    if (!task) throw new Error("The task was not found.");
+    const updated = await completePlannerTask(taskId, task.updatedAt, completed);
+    applyTaskUpdate(updated);
+    return updated;
   }, [applyTaskUpdate, tasks]);
 
   const rescheduleTask = useCallback(async (taskId: string, scheduledDate: string) => {
-    const payload = await postJson<CalendarPlannerTaskCompletionResponse>(
-      `/api/planner/tasks/${taskId}/schedule`,
-      { scheduledDate, expectedUpdatedAt: tasks.find(task => task.taskId === taskId)?.updatedAt }
-    );
-    if (!payload.task) {
-      throw new Error("Could not reschedule the task.");
-    }
-    applyTaskUpdate(payload.task);
-    return payload.task;
+    const task = tasks.find(task => task.taskId === taskId);
+    if (!task) throw new Error("The task was not found.");
+    const updated = await editPlannerTask(taskId, task.updatedAt, { scheduledDate });
+    applyTaskUpdate(updated);
+    return updated;
   }, [applyTaskUpdate, tasks]);
 
   const taskEntriesByDate = useMemo(() => {

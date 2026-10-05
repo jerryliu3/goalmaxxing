@@ -16,13 +16,12 @@ import {
   type ChecklistFiltersFormProps,
 } from "@/features/today/checklist-filters-dialog";
 import type { GoalMonthOption } from "@/lib/goals/list-view";
-import { cn } from "@/lib/utils";
 
 interface PlannerFiltersDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  showTasksInsteadOfGoals: boolean;
-  onShowTasksInsteadOfGoalsChange: (next: boolean) => void;
+  hideTasks: boolean;
+  onHideTasksChange: (next: boolean) => void;
   tasksToggleDisabled?: boolean;
   showTasksToggle?: boolean;
   categoryFilters: string[];
@@ -33,15 +32,14 @@ interface PlannerFiltersDialogProps {
   endMonthOptions: GoalMonthOption[];
   showCompletedGoals?: boolean;
   onShowCompletedGoalsChange?: (value: boolean) => void;
-  /** Goal View only: undefined hides the control. */
   dayFilters?: ChecklistFiltersFormProps | null;
 }
 
 export function PlannerFiltersDialog({
   open,
   onOpenChange,
-  showTasksInsteadOfGoals,
-  onShowTasksInsteadOfGoalsChange,
+  hideTasks,
+  onHideTasksChange,
   tasksToggleDisabled = false,
   showTasksToggle = true,
   categoryFilters,
@@ -70,41 +68,20 @@ export function PlannerFiltersDialog({
             {usingDayFilters
               ? "Filter this day's scheduled work, unscheduled goals, and tasks."
               : showTasksToggle
-                ? "Choose whether the planner shows scheduled goals or date-only tasks."
+                ? "Filter scheduled goals and one time tasks."
                 : "Choose which goals appear across the timeline."}
           </DialogDescription>
         </DialogHeader>
         <div className="max-h-[min(32rem,calc(85vh-8rem))] space-y-4 overflow-y-auto overflow-x-visible">
-          {showTasksToggle ? <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
-              <p className="font-sans text-sm font-medium">Show tasks instead of goals</p>
-              <p className="text-xs text-muted-foreground">
-                Hide scheduled goals and show tasks on their scheduled date. Drag a
-                task to change that date immediately.
-              </p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={showTasksInsteadOfGoals}
-              aria-label="Show tasks instead of goals"
-              disabled={tasksToggleDisabled}
-              onClick={() =>
-                onShowTasksInsteadOfGoalsChange(!showTasksInsteadOfGoals)
-              }
-              className={cn(
-                "relative mt-0.5 h-6 w-10 shrink-0 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-                showTasksInsteadOfGoals ? "bg-primary" : "bg-muted"
-              )}
-            >
-              <span
-                className={cn(
-                  "absolute top-0.5 left-0.5 size-5 rounded-full bg-background shadow-sm transition-transform",
-                  showTasksInsteadOfGoals && "translate-x-4"
-                )}
-              />
-            </button>
-          </div> : null}
+          {showTasksToggle ? <label className="flex items-start gap-2">
+            <input type="checkbox" checked={hideTasks} disabled={tasksToggleDisabled}
+              onChange={(event) => onHideTasksChange(event.target.checked)}
+              aria-label="Hide tasks" className="mt-1 size-4 shrink-0 accent-primary" />
+            <span className="space-y-1">
+              <span className="block font-sans text-sm font-medium">Hide tasks</span>
+              <span className="block text-xs text-muted-foreground">Hide one time tasks. Goal visibility stays the same.</span>
+            </span>
+          </label> : null}
           {usingDayFilters ? null : (
             <label className="flex min-w-0 items-start gap-2">
               <input
@@ -126,7 +103,7 @@ export function PlannerFiltersDialog({
               </span>
             </label>
           )}
-          {showTasksInsteadOfGoals ? null : usingDayFilters && dayFilters ? (
+          {usingDayFilters && dayFilters ? (
             <ChecklistFiltersForm {...dayFilters} />
           ) : (
             <GoalFilters

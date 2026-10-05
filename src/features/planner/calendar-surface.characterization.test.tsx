@@ -289,10 +289,10 @@ describe("CalendarSurface characterization", () => {
 
     expect(
       document.querySelector('[data-day-cell="true"][data-day="2026-07-01"]')
-    ).toBeInstanceOf(HTMLButtonElement);
+    ).toBeInstanceOf(HTMLElement);
     expect(
       document.querySelector('[data-day-cell="true"][data-day="2026-09-30"]')
-    ).toBeInstanceOf(HTMLButtonElement);
+    ).toBeInstanceOf(HTMLElement);
     expect(
       document.querySelector('[data-month-context-label="Jul"]')
     ).toBeInstanceOf(HTMLElement);
@@ -1110,7 +1110,7 @@ describe("CalendarSurface characterization", () => {
       const laterDay = document.querySelector(
         '[data-day-cell="true"][data-day="2026-08-31"]'
       );
-      expect(laterDay).toBeInstanceOf(HTMLButtonElement);
+      expect(laterDay).toBeInstanceOf(HTMLElement);
       fireEvent.click(laterDay as Element);
 
       expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-31", "push", "month");
@@ -1275,7 +1275,7 @@ describe("CalendarSurface characterization", () => {
 
     const dayCell = await waitFor(() => {
       const match = document.querySelector('[data-day-cell="true"][data-day="2026-08-31"]');
-      if (!(match instanceof HTMLButtonElement)) {
+      if (!(match instanceof HTMLElement)) {
         throw new Error("Expected calendar day cell for 2026-08-31.");
       }
       return match;
@@ -1470,7 +1470,7 @@ describe("CalendarSurface characterization", () => {
 
     const dayCell = await waitFor(() => {
       const match = document.querySelector('[data-day-cell="true"][data-day="2026-08-31"]');
-      if (!(match instanceof HTMLButtonElement)) {
+      if (!(match instanceof HTMLElement)) {
         throw new Error("Expected calendar day cell for 2026-08-31.");
       }
       return match;
@@ -1534,7 +1534,7 @@ describe("CalendarSurface characterization", () => {
 
     const dayCell = await waitFor(() => {
       const match = document.querySelector('[data-day-cell="true"][data-day="2026-08-31"]');
-      if (!(match instanceof HTMLButtonElement)) {
+      if (!(match instanceof HTMLElement)) {
         throw new Error("Expected calendar day cell for 2026-08-31.");
       }
       return match;
@@ -1602,7 +1602,7 @@ describe("CalendarSurface characterization", () => {
       const match = document.querySelector(
         '[data-day-cell="true"][data-day="2026-08-31"]'
       );
-      if (!(match instanceof HTMLButtonElement)) {
+      if (!(match instanceof HTMLElement)) {
         throw new Error("Expected calendar day cell for 2026-08-31.");
       }
       return match;
@@ -2099,7 +2099,7 @@ describe("CalendarSurface characterization", () => {
     const dayCell = document.querySelector(
       '[data-day-cell="true"][data-day="2026-08-31"]'
     );
-    expect(dayCell).toBeInstanceOf(HTMLButtonElement);
+    expect(dayCell).toBeInstanceOf(HTMLElement);
     fireEvent.mouseEnter(dayCell as Element);
     fireEvent.click(
       await screen.findByRole("button", { name: "Move" }, { timeout: 2500 })

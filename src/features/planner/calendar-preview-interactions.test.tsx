@@ -1,5 +1,5 @@
 vi.mock("@/features/coach/use-coach-page-context", () => ({ useCoachPageContext: vi.fn() }));
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CalendarSurface } from "./calendar-surface";
 import type {
@@ -163,6 +163,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.runOnlyPendingTimers();
     vi.useRealTimers();
   });
@@ -196,7 +197,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     const dayCell = document.querySelector(
       '[data-day-cell="true"][data-day="2026-08-31"]'
     );
-    expect(dayCell).toBeInstanceOf(HTMLButtonElement);
+    expect(dayCell).toBeInstanceOf(HTMLElement);
 
     fireEvent.pointerDown(dayCell as Element, { pointerType: "touch" });
     fireEvent.pointerUp(dayCell as Element, { pointerType: "touch" });
@@ -216,7 +217,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("opens a pinned preview on long press", async () => {
+  it("opens a task composer on mobile long press", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
         unit({
@@ -242,17 +243,15 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     const dayCell = document.querySelector(
       '[data-day-cell="true"][data-day="2026-08-31"]'
     );
-    expect(dayCell).toBeInstanceOf(HTMLButtonElement);
+    expect(dayCell).toBeInstanceOf(HTMLElement);
 
     fireEvent.pointerDown(dayCell as Element, { pointerType: "touch" });
     await act(async () => {
       await vi.advanceTimersByTimeAsync(500);
     });
 
-    expect(
-      screen.getByRole("button", { name: "Expand day details" })
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "X" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Task name" })).toHaveAttribute("placeholder", "Task name");
+    expect(screen.queryByRole("button", { name: "Expand day details" })).not.toBeInTheDocument();
   });
 
   it("selects a month day without opening a click popup", async () => {
@@ -283,7 +282,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     const dayCell = document.querySelector(
       '[data-day-cell="true"][data-day="2026-08-31"]'
     );
-    expect(dayCell).toBeInstanceOf(HTMLButtonElement);
+    expect(dayCell).toBeInstanceOf(HTMLElement);
 
     fireEvent.click(dayCell as Element);
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-31", "push", "month");
@@ -292,7 +291,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("dismisses pinned preview on outside pointer down", async () => {
+  it.each(["week", "month"] as const)("opens the task composer on desktop long press in %s", async (viewMode) => {
     postJsonMock.mockResolvedValue(
       buildContext([
         unit({
@@ -305,8 +304,8 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
       <CalendarSurface
         activeTab="calendar"
         month="2026-08"
-        selectedDay={null}
-        viewMode="month"
+        selectedDay="2026-08-31"
+        viewMode={viewMode}
         onMonthChange={vi.fn()}
         onViewModeChange={vi.fn()}
         onSelectedDayChange={vi.fn()}
@@ -319,22 +318,22 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     const dayCell = document.querySelector(
       '[data-day-cell="true"][data-day="2026-08-31"]'
     );
-    expect(dayCell).toBeInstanceOf(HTMLButtonElement);
+    expect(dayCell).toBeInstanceOf(HTMLElement);
 
-    fireEvent.pointerDown(dayCell as Element, { pointerType: "touch" });
+    if (viewMode === "month") {
+      fireEvent.mouseEnter(dayCell as Element);
+      await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+      expect(screen.getByRole("button", { name: "Expand day details" })).toBeInTheDocument();
+    }
+
+    fireEvent.pointerDown(dayCell as Element, { pointerType: "mouse" });
+    expect(screen.queryByRole("button", { name: "Expand day details" })).not.toBeInTheDocument();
     await act(async () => {
       await vi.advanceTimersByTimeAsync(500);
     });
+    expect(screen.getByRole("textbox", { name: "Task name" })).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Expand day details" })
-    ).toBeInTheDocument();
-
-    fireEvent.pointerDown(document.body);
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(0);
-    });
-
-    const after = document.querySelector('[data-no-swipe="true"].fixed');
-    expect(after).toBeFalsy();
+      screen.queryByRole("button", { name: "Expand day details" })
+    ).not.toBeInTheDocument();
   });
 });

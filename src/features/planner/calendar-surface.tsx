@@ -74,6 +74,7 @@ import { plannerTaskIdFromEntry } from "@/features/planner/calendar-task-entries
 import { usePlannerContextLoader } from "@/features/planner/use-planner-context-loader";
 import { usePlannerSetup } from "@/features/planner/use-planner-setup";
 import { usePlannerPreviewSession } from "@/features/planner/use-planner-preview-session";
+import { useCalendarTaskCapture } from "@/features/tasks/calendar-task-capture";
 import { usePlannerDayPreviewInteractions } from "@/features/planner/use-planner-day-preview-interactions";
 import { useCalendarScrollBehavior } from "@/features/planner/use-calendar-scroll-behavior";
 import {
@@ -272,11 +273,8 @@ export function CalendarSurface({
   const [setupTimezone, setSetupTimezone] = useState(resolveUserTimezone());
   const [setupWeekStartsOn, setSetupWeekStartsOn] = useState(1);
   const [setupRestWeekdays, setSetupRestWeekdays] = useState<number[]>([]);
-  // Session-scoped like warning dismissal; default off until the user opts in.
-  const [showTasksInsteadOfGoals, setShowTasksInsteadOfGoals] = useState(false);
-  useEffect(() => {
-    if (goalViewOpen) setShowTasksInsteadOfGoals(false);
-  }, [goalViewOpen]);
+  // Tasks are visible by default; this filter only hides tasks.
+  const [hideTasks, setHideTasks] = useState(false);
   const {
     hoverPreviewTimerRef,
     hoverPreviewCloseTimerRef,
@@ -377,7 +375,7 @@ export function CalendarSurface({
     baseProjectionDays: additionalProjectionDays,
   });
   const { taskEntriesByDate, completeTask, rescheduleTask } = useCalendarPlannerTasks({
-    enabled: showTasksInsteadOfGoals && duoScope !== "partner",
+    enabled: !hideTasks && duoScope !== "partner",
     from: calendarTaskQueryWindow?.start ?? null,
     to: calendarTaskQueryWindow?.end ?? null,
   });
@@ -411,7 +409,7 @@ export function CalendarSurface({
     previewEntryOrderByDay,
     additionalProjectionDays: modelProjectionDays,
     calendarTaskEntriesByDate: taskEntriesByDate,
-    showTasksInsteadOfGoals,
+    hideTasks,
     // Goal View is a list lens, so it follows the Filters toggle even over Day.
     showCompletedGoals:
       viewMode === "day" && !goalViewOpen ? true : showCompletedGoals,
@@ -469,13 +467,13 @@ export function CalendarSurface({
     plannerReadOnly,
   } = dayAccessors;
   useEffect(() => {
-    if (loading || !context || showTasksInsteadOfGoals) return;
+    if (loading || !context) return;
     const visibleGoalIds = new Set(goalFilterOptions.map((option) => option.value));
     setGoalIdFilters((selected) => {
       const visibleSelection = selected.filter((goalId) => visibleGoalIds.has(goalId));
       return visibleSelection.length === selected.length ? selected : visibleSelection;
     });
-  }, [context, goalFilterOptions, loading, showTasksInsteadOfGoals]);
+  }, [context, goalFilterOptions, loading]);
   const goalViewSessions = useMemo(
     () => buildGoalViewSessions(goalViewDays, getOrderedEntriesForDay),
     [getOrderedEntriesForDay, goalViewDays]
@@ -780,7 +778,13 @@ export function CalendarSurface({
     setWarningsDismissed,
   });
 
+  const revealTasks = useCallback(() => setHideTasks(false), []);
+  const taskCapture = useCalendarTaskCapture({
+    today: calendarToday, readOnly: plannerReadOnly, revealTasks,
+  });
   const dayPreviewInteractions = usePlannerDayPreviewInteractions({
+    onLongPressDay: taskCapture.open,
+    renderTaskComposer: taskCapture.render,
     dayPreview,
     setDayPreview,
     setExpandedPreviewDay,
@@ -1056,8 +1060,8 @@ export function CalendarSurface({
     dayPreviewInteractions,
     setupRestWeekdays,
     setSetupRestWeekdays,
-    showTasksInsteadOfGoals,
-    onShowTasksInsteadOfGoalsChange: setShowTasksInsteadOfGoals,
+    hideTasks,
+    onHideTasksChange: setHideTasks,
     setupLoading,
     recoverLoading,
     canRecoverPastSessions,

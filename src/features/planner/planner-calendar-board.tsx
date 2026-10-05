@@ -61,7 +61,7 @@ export interface PlannerCalendarBoardProps {
    * switching to and from it animates like the calendar views do.
    */
   goalView?: ReactNode;
-  showTasksInsteadOfGoals?: boolean;
+  hideTasks?: boolean;
   previousWindowAriaLabel: string;
   nextWindowAriaLabel: string;
   fixedViewHeadingWidthCh: number;
@@ -138,7 +138,7 @@ export function PlannerCalendarBoard({
   loading,
   viewMode,
   goalView = null,
-  showTasksInsteadOfGoals = false,
+  hideTasks = false,
   previousWindowAriaLabel,
   nextWindowAriaLabel,
   fixedViewHeadingWidthCh,
@@ -292,7 +292,7 @@ export function PlannerCalendarBoard({
               onToggleCompletion={onToggleCompletion}
               onEntryPointerStart={onEntryPointerStart}
               onEntryPointerEnd={onEntryPointerEnd}
-              showTasksInsteadOfGoals={showTasksInsteadOfGoals}
+              hideTasks={hideTasks}
               selectedEntryKey={selectedEntryKey}
               dayChecklist={dayChecklist}
               partnerLabel={partnerLabel}
@@ -445,7 +445,7 @@ export function PlannerCalendarBoard({
                     onToggleCompletion={onToggleCompletion}
                     onEntryPointerStart={onEntryPointerStart}
                     onEntryPointerEnd={onEntryPointerEnd}
-                    showTasksInsteadOfGoals={showTasksInsteadOfGoals}
+                    hideTasks={hideTasks}
                     selectedEntryKey={selectedEntryKey}
                     dayChecklist={dayChecklist}
                     partnerLabel={partnerLabel}

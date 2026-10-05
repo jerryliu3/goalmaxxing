@@ -57,7 +57,7 @@ export interface PlannerCalendarModelArgs {
   previewEntryOrderByDay: Record<string, string[]>;
   additionalProjectionDays: string[];
   calendarTaskEntriesByDate?: Map<string, PlannerDayDetailEntry[]>;
-  showTasksInsteadOfGoals?: boolean;
+  hideTasks?: boolean;
   showCompletedGoals?: boolean;
   memoizedState: PlannerCalendarMemoizedState;
 }
@@ -97,7 +97,7 @@ export function selectPlannerCalendarModel({
   previewEntryOrderByDay,
   additionalProjectionDays,
   calendarTaskEntriesByDate,
-  showTasksInsteadOfGoals = false,
+  hideTasks = false,
   showCompletedGoals = false,
   memoizedState,
 }: PlannerCalendarModelArgs): PlannerCalendarModel {
@@ -136,7 +136,7 @@ export function selectPlannerCalendarModel({
     additionalProjectionDays: [viewProjection.focusedDay, ...additionalProjectionDays],
     previewEntryOrderByDay,
     calendarTaskEntriesByDate,
-    showTasksInsteadOfGoals,
+    hideTasks,
     showCompletedGoals,
     memoizedState,
   });

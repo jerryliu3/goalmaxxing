@@ -89,8 +89,8 @@ export interface PlannerCalendarSurfaceLayoutProps {
   goalViewSessions: GoalViewSession[];
   goalViewWindow: { start: string; end: string } | null;
   onGoalViewMoveSession: (entry: PlannerDayDetailEntry, date: string) => void;
-  showTasksInsteadOfGoals: boolean;
-  onShowTasksInsteadOfGoalsChange: (value: boolean) => void;
+  hideTasks: boolean;
+  onHideTasksChange: (value: boolean) => void;
   searchQuery: string;
   savePlan: () => void;
   discardDraftChanges: () => void;
@@ -250,8 +250,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     goalViewSessions,
     goalViewWindow,
     onGoalViewMoveSession,
-    showTasksInsteadOfGoals,
-    onShowTasksInsteadOfGoalsChange,
+    hideTasks,
+    onHideTasksChange,
     searchQuery,
     savePlan,
     discardDraftChanges,
@@ -479,7 +479,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         onViewModeChange={setCalendarViewMode}
         goalIdFilters={goalIdFilters}
         onGoalIdFiltersChange={setGoalIdFilters}
-        goalFilterOptions={showTasksInsteadOfGoals ? [] : goalFilterOptions}
+        goalFilterOptions={goalFilterOptions}
         onOpenFilters={() => setFiltersOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         onSearchQueryChange={setSearchQuery}
@@ -532,7 +532,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
                 />
               ) : <LoadingCard title="Opening Goal View..." description="Gathering your saved sessions." />) : null
             }
-            showTasksInsteadOfGoals={showTasksInsteadOfGoals}
+            hideTasks={hideTasks}
             previousWindowAriaLabel={previousWindowAriaLabel}
             nextWindowAriaLabel={nextWindowAriaLabel}
             fixedViewHeadingWidthCh={fixedViewHeadingWidthCh}
@@ -733,8 +733,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         eventDetailCallbacks={eventDetailCallbacks}
         filtersOpen={filtersOpen}
         onFiltersOpenChange={setFiltersOpen}
-        showTasksInsteadOfGoals={showTasksInsteadOfGoals}
-        onShowTasksInsteadOfGoalsChange={onShowTasksInsteadOfGoalsChange}
+        hideTasks={hideTasks}
+        onHideTasksChange={onHideTasksChange}
         tasksToggleDisabled={plannerReadOnly}
         showTasksToggle={!goalViewOpen}
         categoryFilters={categoryFilters}

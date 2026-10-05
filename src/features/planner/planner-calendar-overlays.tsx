@@ -82,8 +82,8 @@ export interface PlannerCalendarOverlaysProps {
   eventDetailCallbacks: PlannerEventDetailDialogCallbacks;
   filtersOpen: boolean;
   onFiltersOpenChange: (open: boolean) => void;
-  showTasksInsteadOfGoals: boolean;
-  onShowTasksInsteadOfGoalsChange: (value: boolean) => void;
+  hideTasks: boolean;
+  onHideTasksChange: (value: boolean) => void;
   tasksToggleDisabled?: boolean;
   showTasksToggle?: boolean;
   categoryFilters: string[];
@@ -141,8 +141,8 @@ export function PlannerCalendarOverlays({
   eventDetailCallbacks,
   filtersOpen,
   onFiltersOpenChange,
-  showTasksInsteadOfGoals,
-  onShowTasksInsteadOfGoalsChange,
+  hideTasks,
+  onHideTasksChange,
   tasksToggleDisabled = false,
   showTasksToggle = true,
   categoryFilters,
@@ -224,8 +224,8 @@ export function PlannerCalendarOverlays({
       <PlannerFiltersDialog
         open={filtersOpen}
         onOpenChange={onFiltersOpenChange}
-        showTasksInsteadOfGoals={showTasksInsteadOfGoals}
-        onShowTasksInsteadOfGoalsChange={onShowTasksInsteadOfGoalsChange}
+        hideTasks={hideTasks}
+        onHideTasksChange={onHideTasksChange}
         tasksToggleDisabled={tasksToggleDisabled}
         showTasksToggle={showTasksToggle}
         categoryFilters={categoryFilters}
