@@ -7,7 +7,7 @@ import {
   restoreCalendarDayScreenTop,
 } from "@/features/planner/calendar-scroll-position";
 import type { GoalViewSession } from "@/features/planner/goal-view/goal-view-model";
-import { PlannerGoalPresentation } from "@/features/planner/goal-view/planner-goal-presentation";
+import { PlannerGoalView } from "@/features/planner/goal-view/planner-goal-view";
 import { PlannerCalendarBoard } from "@/features/planner/planner-calendar-board";
 import { PlannerCalendarOverlays } from "@/features/planner/planner-calendar-overlays";
 import { PlannerCalendarToolbar } from "@/features/planner/planner-calendar-toolbar";
@@ -505,14 +505,21 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
           <PlannerCalendarBoard
             loading={loading}
             viewMode={viewMode}
+            // Until Goal View's window has loaded, the calendar stays (dimmed by
+            // the board's loading state), so the switch morphs the calendar's
+            // pills into Goal View's cards rather than into a loading card.
             goalView={
-              goalViewOpen ? (goalViewVisible ? (
-                <PlannerGoalPresentation
+              goalViewVisible ? (
+                <PlannerGoalView
                   loading={loading}
                   onVisibleDate={onGoalTimelineVisibleDateChange}
                   onInspectDate={(date) => setExpandedPreviewDay(date)}
+                  onOpenEntry={(entry, day) => {
+                    // The checklist's session popup, with the goal card.
+                    setLocalSelectedDay(day);
+                    setSelectedEventEntryKey(entry.key);
+                  }}
                   window={goalViewWindow!}
-                  showPast={false}
                   progressSummaries={dayChecklist.data.progress?.summaries ?? []}
                   onMoveEntry={onGoalViewMoveSession}
                   goals={dayChecklist.data.goals}
@@ -530,7 +537,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
                     void toggleDateFact(entry, day, source);
                   }}
                 />
-              ) : <LoadingCard title="Opening Goal View..." description="Gathering your saved sessions." />) : null
+              ) : null
             }
             hideTasks={hideTasks}
             previousWindowAriaLabel={previousWindowAriaLabel}
@@ -728,6 +735,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         canNavigateToNextOpenInstance={canNavigateToNextOpenInstance}
         canNavigateToLastOpenInstance={canNavigateToLastOpenInstance}
         eventDetailCallbacks={eventDetailCallbacks}
+        eventDetailPresentation={goalViewOpen ? "popup" : "inline"}
         filtersOpen={filtersOpen}
         onFiltersOpenChange={setFiltersOpen}
         hideTasks={hideTasks}

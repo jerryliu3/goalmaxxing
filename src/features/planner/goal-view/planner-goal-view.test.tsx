@@ -31,7 +31,10 @@ function mount(overrides: Partial<PlannerGoalViewProps> = {}) {
     window: { start: "2026-10-01", end: "2026-10-31" },
     today: "2026-10-02",
     weekStartsOn: undefined,
-    showPast: false,
+    loading: false,
+    onVisibleDate: vi.fn(),
+    onInspectDate: vi.fn(),
+    onOpenEntry: vi.fn(),
     canMutatePlanItems: true,
     optimisticCompletionFacts: {} as never,
     mutationLoadingKey: null,
@@ -77,6 +80,22 @@ describe("PlannerGoalView", () => {
   it("keeps an achieved goal with no period target visible", () => {
     mount({ progressSummaries: [{ goalId: "run", outcome: "achieved" } as never] });
     expect(captured.goals.map((goal) => goal.id)).toEqual(["run"]);
+  });
+
+  it("opens the planner's session details for sessions it can open", () => {
+    const props = mount();
+    captured.onOpenSession(session);
+    expect(props.onOpenEntry).toHaveBeenCalledWith(entry, "2026-10-09");
+    const closed = mount({ canOpenEntry: () => false });
+    captured.onOpenSession(session);
+    expect(closed.onOpenEntry).not.toHaveBeenCalled();
+  });
+
+  it("passes the loading state and the date callbacks through", () => {
+    const props = mount({ loading: true });
+    expect(captured.loading).toBe(true);
+    expect(captured.onVisibleDate).toBe(props.onVisibleDate);
+    expect(captured.onInspectDate).toBe(props.onInspectDate);
   });
 
   it("moves and toggles through the planner commands", () => {

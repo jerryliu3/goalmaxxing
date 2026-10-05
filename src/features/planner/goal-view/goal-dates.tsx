@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
-import { ArrowRight, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import type { Goal } from "@/lib/goals/types";
-import { cn } from "@/lib/utils";
 import {
   dateLabel,
   GOAL_VIEW_PAGE_SIZE,
@@ -12,7 +11,7 @@ import {
   type GoalViewSession,
 } from "./goal-view-model";
 
-/** `card` tiles sit in a horizontal rail; `row` tiles stack in a vertical list. */
+/** `card` tiles fill a goal lane's slot; `row` tiles stack in the phone deck's list. */
 export type GoalTileLayout = "card" | "row";
 export type GoalTileRenderer = (
   session: GoalViewSession,
@@ -51,10 +50,6 @@ export function useGoalDates({
     total: sessions.length,
     remaining: sessions.length - visible.length,
     next: sessions.find((session) => session.date >= today && !session.done),
-    /** The first week that still has upcoming dates, where past dates end. */
-    upcomingGroupDate: groups.find((group) =>
-      group.entries.some((session) => session.date >= today)
-    )?.date,
     showMore: () => setLimit((current) => current + GOAL_VIEW_PAGE_SIZE),
   };
 }
@@ -63,11 +58,9 @@ export type GoalDatesModel = ReturnType<typeof useGoalDates>;
 
 export function GoalDatesHeading({
   goal,
-  showPast,
   dates,
 }: {
   goal: Goal;
-  showPast: boolean;
   dates: GoalDatesModel;
 }) {
   return (
@@ -84,37 +77,28 @@ export function GoalDatesHeading({
         </Link>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
-        {dates.total} {showPast ? "scheduled" : "upcoming"} sessions
+        {dates.total} upcoming sessions
         {dates.next ? ` · next ${dateLabel(dates.next.date, "EEE, MMM d")}` : ""}
       </p>
     </div>
   );
 }
 
-/** Date groups and the paging control for one goal. */
+/** One goal's dates as rows grouped by week, and the paging control. */
 export function GoalDates({
   dates,
-  layout,
   renderTile,
 }: {
   dates: GoalDatesModel;
-  layout: GoalTileLayout;
   renderTile: GoalTileRenderer;
 }) {
-  const row = layout === "row";
   return (
     <>
       {dates.groups.map((group) => (
-        <div
-          key={group.date}
-          className="flex-none"
-          data-upcoming-start={group.date === dates.upcomingGroupDate ? "" : undefined}
-        >
+        <div key={group.date}>
           <h3 className={`pb-2 ${overlineClass}`}>{group.label}</h3>
-          <div className={row ? "flex flex-col gap-1.5" : "flex gap-2"}>
-            {group.entries.map((session) => (
-              renderTile(session, layout)
-            ))}
+          <div className="flex flex-col gap-1.5">
+            {group.entries.map((session) => renderTile(session, "row"))}
           </div>
         </div>
       ))}
@@ -122,12 +106,8 @@ export function GoalDates({
         <button
           type="button"
           onClick={dates.showMore}
-          className={cn(
-            "flex flex-col items-center gap-1 rounded-xl border border-dashed border-border text-xs text-muted-foreground hover:bg-muted/50",
-            row ? "w-full p-4" : "w-36 flex-none justify-center"
-          )}
+          className="flex w-full flex-col items-center gap-1 rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground hover:bg-muted/50"
         >
-          {row ? null : <ArrowRight size={19} aria-hidden />}
           <strong className="text-foreground">More dates</strong>
           <span>{dates.remaining} still to explore</span>
         </button>

@@ -9,7 +9,7 @@ import {
   listWindowDays,
   selectGoalViewGoals,
   sessionOrdinals,
-  sessionsForGoal,
+  upcomingSessionsForGoal,
   type GoalViewSession,
 } from "./goal-view-model";
 
@@ -91,26 +91,25 @@ describe("goal session selectors", () => {
     (day) => [entry(`run-${day}`, "run"), entry(`gym-${day}`, "gym")]
   );
 
-  it("hides past sessions unless asked, sorted by date", () => {
-    const upcoming = sessionsForGoal(sessions, "run", false, "2026-10-02");
+  it("keeps one goal's sessions from today on, sorted by date", () => {
+    const upcoming = upcomingSessionsForGoal(sessions, "run", "2026-10-02");
     expect(upcoming.map((session) => session.date)).toEqual([
       "2026-10-02",
       "2026-10-09",
       "2026-11-03",
     ]);
-    expect(sessionsForGoal(sessions, "run", true, "2026-10-02")).toHaveLength(4);
   });
 
   it("keeps the planner's goal order and drops goals without sessions", () => {
     const goals = selectGoalViewGoals(
       [goal("gym", "Gym"), goal("idle", "Idle"), goal("run", "Run")],
       sessions,
-      { showPast: true, today: "2026-10-02" }
+      { includePast: true, today: "2026-10-02" }
     );
     expect(goals.map((g) => g.id)).toEqual(["gym", "run"]);
   });
 
-  it("hides ended goals and goals with only past sessions unless past sessions are shown", () => {
+  it("hides ended goals and goals with only past sessions unless the past is included", () => {
     const pastOnly = buildGoalViewSessions(["2026-09-28"], () => [
       entry("past", "past"),
     ]);
@@ -120,15 +119,15 @@ describe("goal session selectors", () => {
     const withEnded = [...mixed, ...buildGoalViewSessions(["2026-09-28"], () => [entry("e", "ended")])];
     const today = "2026-10-02";
     expect(
-      selectGoalViewGoals(goals, withEnded, { showPast: false, today }).map((g) => g.id)
+      selectGoalViewGoals(goals, withEnded, { includePast: false, today }).map((g) => g.id)
     ).toEqual(["run"]);
     expect(
-      selectGoalViewGoals(goals, withEnded, { showPast: true, today }).map((g) => g.id)
+      selectGoalViewGoals(goals, withEnded, { includePast: true, today }).map((g) => g.id)
     ).toEqual(["run", "past", "ended"]);
   });
 
   it("groups by planner week start", () => {
-    const all = sessionsForGoal(sessions, "run", true, "2026-10-02");
+    const all = sessions.filter((session) => session.goalId === "run");
     const monday = groupSessions(all, 1);
     expect(monday.map((group) => group.date)).toEqual([
       "2026-09-28",

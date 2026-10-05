@@ -8,6 +8,7 @@ import { buildGoalViewSessions, buildGoalViewWindow, type GoalViewSession } from
 const viewport = vi.hoisted(() => ({ desktop: true }));
 vi.mock("@/lib/ui/use-media-query", () => ({ useMediaQuery: () => viewport.desktop }));
 vi.mock("motion/react", () => ({ useReducedMotion: () => false }));
+vi.mock("next/navigation", () => ({ usePathname: () => "/calendar" }));
 vi.mock("./goal-view-card", () => ({
   GoalViewCard: ({ goal, interactive = true }: { goal: Goal; interactive?: boolean }) =>
     <div data-testid={`card-${goal.id}`} data-rotatable={interactive} />,
@@ -74,7 +75,10 @@ function renderView(overrides: Partial<GoalViewProps> = {}) {
     today: TODAY,
     window: buildGoalViewWindow(TODAY),
     weekStartsOn: 1,
-    showPast: false,
+    loading: false,
+    onVisibleDate: vi.fn(),
+    onInspectDate: vi.fn(),
+    onOpenSession: vi.fn(),
     resolveCompletion: () => ({ credited: false, pending: false, disabledReason: null }),
     isEditable: () => true,
     onMoveSession: vi.fn(),
@@ -105,7 +109,7 @@ describe("GoalView", () => {
     viewport.desktop = true;
   });
 
-  it("shows one rail per goal with a card and its upcoming dates", () => {
+  it("shows one lane per goal with its card and upcoming dates", () => {
     renderView();
     const run = screen.getByRole("region", { name: "Run a half marathon scheduled dates" });
     expect(within(run).getByTestId("card-run")).toBeInTheDocument();
@@ -114,18 +118,7 @@ describe("GoalView", () => {
     expect(within(gym).getAllByRole("article")).toHaveLength(1);
   });
 
-  it("adds past sessions only when the planner filter asks for them", () => {
-    const view = renderView();
-    const gym = screen.getByRole("region", { name: "Get stronger scheduled dates" });
-    expect(within(gym).getAllByRole("article")).toHaveLength(1);
-    view.rerenderWith({ showPast: true });
-    const articles = within(gym).getAllByRole("article");
-    expect(articles).toHaveLength(2);
-    expect(articles[0]).toHaveAttribute("data-day", "2026-09-30");
-    expect(within(gym).getByText(/2 scheduled sessions/)).toBeInTheDocument();
-  });
-
-  it("links each goal title to its editor", () => {
+  it("links each goal card to its editor", () => {
     renderView();
     expect(screen.getByRole("link", { name: "Edit goal Get stronger" })).toHaveAttribute(
       "href",
@@ -226,6 +219,189 @@ describe("GoalView", () => {
     expect(props.onToggleSession).toHaveBeenCalledTimes(1);
   });
 
+  describe("with Calendar on", () => {
+    const lanes = () => screen.getByRole("region", { name: "Goal lanes, scroll across dates" });
+    const tileLeft = (key: string) =>
+      lanes().querySelector<HTMLElement>(`[data-lane-tile="${key}"]`)?.style.left;
+    // The axis opens a year before the week of Sep 28, so Oct 2 is column 369.
+    const TODAY_COLUMN = 365 + 4;
+
+    beforeEach(() => {
+      // jsdom does not implement element scrolling.
+      Element.prototype.scrollTo = vi.fn();
+    });
+
+    it("moves the same session cards onto their dates and back", () => {
+      renderView();
+      const card = lanes().querySelector(`[data-lane-tile="run:${TODAY}"] article`);
+      expect(tileLeft(`run:${TODAY}`)).toBe("6px");
+      expect(tileLeft("gym:2026-10-03")).toBe("6px");
+      expect(lanes().querySelector("[data-lane-header]")).toBeNull();
+
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      // The leading session stays at the left edge; the rest sit on their dates.
+      expect(lanes().scrollLeft).toBe(TODAY_COLUMN * 144);
+      expect(tileLeft(`run:${TODAY}`)).toBe(`${TODAY_COLUMN * 144 + 6}px`);
+      expect(tileLeft("gym:2026-10-03")).toBe(`${(TODAY_COLUMN + 1) * 144 + 6}px`);
+      // Calendar shows past sessions too.
+      expect(tileLeft("gym:2026-09-30")).toBe(`${(TODAY_COLUMN - 2) * 144 + 6}px`);
+      expect(lanes().querySelector(`[data-lane-tile="run:${TODAY}"] article`)).toBe(card);
+      expect(lanes().querySelector("[data-lane-header]")).not.toBeNull();
+
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      expect(tileLeft(`run:${TODAY}`)).toBe("6px");
+      expect(lanes().scrollLeft).toBe(0);
+      expect(lanes().querySelector("[data-lane-header]")).toBeNull();
+    });
+
+    it("opens a session's details from its card, and the day preview from a date", () => {
+      const props = renderView();
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      fireEvent.click(screen.getByRole("button", { name: "Inspect Wednesday, September 30, 2026" }));
+      expect(props.onInspectDate).toHaveBeenLastCalledWith("2026-09-30");
+      const title = within(lanes()).getAllByTestId("completion-title")[0];
+      fireEvent.click(title);
+      expect(props.onOpenSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          key: title.closest("article")!.getAttribute("data-planner-entry-key"),
+        })
+      );
+      fireEvent.click(screen.getAllByRole("button", { name: /^Complete / })[0]);
+      expect(props.onOpenSession).toHaveBeenCalledTimes(1);
+      expect(props.onInspectDate).toHaveBeenCalledTimes(1);
+    });
+
+    it("reports the date in view so the planner can load around it", () => {
+      const props = renderView();
+      expect(props.onVisibleDate).toHaveBeenLastCalledWith(TODAY);
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      expect(props.onVisibleDate).toHaveBeenLastCalledWith(TODAY);
+      // Never the axis start the switching render briefly had in view.
+      expect(props.onVisibleDate).not.toHaveBeenCalledWith("2025-09-28");
+      lanes().scrollLeft = (TODAY_COLUMN + 30) * 144;
+      fireEvent.scroll(lanes());
+      fireEvent.click(screen.getByRole("button", { name: "Later dates" }));
+      expect(props.onVisibleDate).toHaveBeenCalled();
+    });
+
+    it("pages its arrows to the first date not fully in view, never skipping one", () => {
+      renderView();
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      const scroller = lanes();
+      // A 184px label column and room for exactly five 144px days, scrolled
+      // 30px into today's column: Oct 2 and Oct 7 are cut off at the edges.
+      Object.defineProperty(scroller, "clientWidth", { configurable: true, value: 184 + 5 * 144 });
+      scroller.scrollLeft = TODAY_COLUMN * 144 + 30;
+      fireEvent.scroll(scroller);
+      const scrollTo = vi.mocked(Element.prototype.scrollTo);
+      scrollTo.mockClear();
+      fireEvent.click(screen.getByRole("button", { name: "Later dates" }));
+      // Oct 7 (cut off on the right) leads the next view.
+      expect(scrollTo).toHaveBeenLastCalledWith(expect.objectContaining({ left: (TODAY_COLUMN + 5) * 144 }));
+      fireEvent.click(screen.getByRole("button", { name: "Earlier dates" }));
+      // Oct 2 (cut off on the left) ends the previous view.
+      expect(scrollTo).toHaveBeenLastCalledWith(expect.objectContaining({ left: (TODAY_COLUMN - 4) * 144 }));
+    });
+
+    it("restarts Cards from the calendar's leading date, and from today on Today", () => {
+      renderView();
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      // Leave the calendar at Friday Oct 9, so Cards restarts from there.
+      lanes().scrollLeft = (TODAY_COLUMN + 7) * 144;
+      fireEvent.scroll(lanes());
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      // Oct 9 leads, with today's run session one column to its left.
+      expect(tileLeft("run:2026-10-09")).toBe("150px");
+      expect(tileLeft(`run:${TODAY}`)).toBe("6px");
+      expect(lanes().scrollLeft).toBe(144);
+      expect(screen.getByLabelText("Jump to a date, showing October 2026")).toHaveValue("2026-10-09");
+
+      fireEvent.click(screen.getByRole("button", { name: "Today" }));
+      expect(tileLeft("run:2026-10-09")).toBe("150px");
+      expect(lanes().scrollLeft).toBe(0);
+      expect(screen.getByLabelText("Jump to a date, showing October 2026")).toHaveValue(TODAY);
+    });
+
+    it("keeps its controls when the loaded window has no sessions", () => {
+      const view = renderView();
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      view.rerenderWith({ sessions: [] });
+      expect(screen.getByText("No scheduled sessions around these dates.")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Today" })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      expect(screen.getByText("No goals have scheduled sessions in this window.")).toBeInTheDocument();
+      expect(screen.getByRole("switch", { name: "Calendar" })).toBeInTheDocument();
+    });
+
+    it("adds goals whose loaded sessions are all past, for browsing back", () => {
+      renderView({
+        sessions: SESSIONS.filter((s) => s.goalId === "run" || s.date < TODAY),
+      });
+      const gymLane = () => screen.queryByRole("region", { name: "Get stronger scheduled dates" });
+      // Without Calendar, gym has nothing to come, so it has no lane.
+      expect(gymLane()).toBeNull();
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      expect(gymLane()).toBeInTheDocument();
+      expect(screen.getByRole("switch", { name: "Calendar" })).toHaveAttribute("aria-checked", "true");
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      expect(gymLane()).toBeNull();
+    });
+
+    it("shows each card's ordinal instead of a date under the date header", () => {
+      const weekly = {
+        ...GOALS[1],
+        frequency_type: "recurring",
+        target_basis: "period",
+        recurrence_interval: "weekly",
+        target_count: 2,
+        start_date: "2026-09-01",
+      } as Goal;
+      renderView({ goals: [GOALS[0], weekly] });
+      const gym = () => screen.getByRole("region", { name: "Get stronger scheduled dates" });
+      // Without Calendar there is no header, so the date shows.
+      expect(within(gym()).getByText("Sat, Oct 3")).not.toHaveClass("opacity-0");
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      expect(within(gym()).getByText("Sat, Oct 3")).toHaveClass("opacity-0");
+      // Oct 3 is the second gym session of the week that began Sep 28.
+      expect(within(gym()).getByText("2 of 2 per week")).not.toHaveClass("opacity-0");
+      expect(within(gym()).getAllByTestId("completion-title")[0]).toHaveTextContent("gym session");
+    });
+
+    it("draws lanes only for Calendar; without it the cards float in a line", () => {
+      renderView();
+      const run = () => screen.getByRole("region", { name: "Run a half marathon scheduled dates" });
+      expect(lanes()).toHaveClass("border-transparent", "bg-transparent");
+      expect(run()).toHaveClass("border-transparent");
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      expect(lanes()).toHaveClass("border-border", "bg-card");
+      expect(run()).toHaveClass("border-border");
+    });
+
+    it("names the month in view once, with a slim weekday and day header", () => {
+      renderView();
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      expect(screen.queryByText("Goals × time")).toBeNull();
+      expect(screen.queryByText(/Week of/)).toBeNull();
+      const friday = screen.getByRole("button", { name: "Inspect Friday, October 2, 2026" });
+      expect(friday).toHaveTextContent(/^Fri2$/);
+      expect(screen.getByRole("button", { name: "Inspect Thursday, October 1, 2026" })).toHaveTextContent(
+        /^Thu · Oct1$/
+      );
+      expect(screen.getByText("October 2026")).toBeInTheDocument();
+    });
+
+    it("focuses one lane from its label", () => {
+      renderView();
+      const label = screen.getByRole("button", { name: /Get stronger/ });
+      fireEvent.click(label);
+      expect(label).toHaveAttribute("aria-pressed", "true");
+      const run = screen.getByRole("region", { name: "Run a half marathon scheduled dates" });
+      expect(run.querySelector(".opacity-45")).not.toBeNull();
+      fireEvent.click(label);
+      expect(run.querySelector(".opacity-45")).toBeNull();
+    });
+  });
+
   describe("on a phone", () => {
     beforeEach(() => {
       viewport.desktop = false;
@@ -286,6 +462,19 @@ describe("GoalView", () => {
       );
       fireEvent.click(screen.getByRole("button", { name: "Complete gym session" }));
       expect(props.onToggleSession).toHaveBeenCalledTimes(1);
+    });
+
+    it("shows Calendar as lanes without the goal card thumbnails", () => {
+      renderView();
+      expect(screen.getByTestId("goal-deck")).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      expect(screen.queryByTestId("goal-deck")).toBeNull();
+      const lanes = screen.getByRole("region", { name: "Goal lanes, scroll across dates" });
+      // Phone columns are 120px; Calendar opens on this week.
+      expect(lanes.scrollLeft).toBe(365 * 120);
+      expect(screen.queryByRole("link", { name: /^Edit goal/ })).toBeNull();
+      fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
+      expect(screen.getByTestId("goal-deck")).toBeInTheDocument();
     });
 
     it("edits a date from the same native touch target in the phone rows", () => {

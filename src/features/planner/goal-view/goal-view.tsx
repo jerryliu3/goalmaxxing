@@ -6,14 +6,15 @@ import { useMediaQuery } from "@/lib/ui/use-media-query";
 import type { Goal } from "@/lib/goals/types";
 import type { GoalTileLayout } from "./goal-dates";
 import { GoalDeck } from "./goal-deck";
-import { GoalRail } from "./goal-rail";
+import { GoalLanes } from "./goal-lanes";
+import { DESKTOP_LANES, PHONE_LANES } from "./goal-lanes-model";
+import { GoalCalendarSwitch } from "./goal-lanes-toolbar";
 import type { GoalSessionCompletion } from "./goal-session-completion";
 import { GoalSessionTile } from "./goal-session-tile";
 import {
   dateLabel,
   selectGoalViewGoals,
   sessionOrdinals,
-  sessionsForGoal,
   type GoalViewSession,
 } from "./goal-view-model";
 
@@ -24,15 +25,25 @@ export interface GoalViewProps {
   window: { start: string; end: string };
   today: string;
   weekStartsOn: number;
-  /** Include sessions before today (a planner filter). */
-  showPast: boolean;
+  /** The planner is loading another window of sessions. */
+  loading: boolean;
+  /** The date in view, so the planner can load sessions around it. */
+  onVisibleDate: (date: string) => void;
+  /** Opens the planner's day preview (Calendar's date header). */
+  onInspectDate: (date: string) => void;
+  /** Opens a session's details with its goal card. */
+  onOpenSession: (session: GoalViewSession) => void;
   resolveCompletion: (session: GoalViewSession) => GoalSessionCompletion;
   isEditable: (session: GoalViewSession) => boolean;
   onMoveSession: (session: GoalViewSession, date: string) => void;
   onToggleSession: (session: GoalViewSession, source: HTMLButtonElement) => void;
 }
 
-/** Goals as objects, each with a browsable track of its scheduled dates. */
+/**
+ * Goals as lanes of their scheduled sessions, each goal's next sessions back
+ * to back. Turning Calendar on spreads the same lanes over dates. A phone
+ * shows the lanes without Calendar as the swipeable goal deck.
+ */
 export function GoalView({
   goals,
   progressByGoalId,
@@ -40,19 +51,30 @@ export function GoalView({
   window: range,
   today,
   weekStartsOn,
-  showPast,
+  loading,
+  onVisibleDate,
+  onInspectDate,
+  onOpenSession,
   resolveCompletion,
   isEditable,
   onMoveSession,
   onToggleSession,
 }: GoalViewProps) {
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+  const [calendar, setCalendar] = useState(false);
   // Same breakpoint as the app's other two-pane layouts (Tailwind `md`).
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const visibleGoals = useMemo(
-    () => selectGoalViewGoals(goals, sessions, { showPast, today }),
-    [goals, sessions, showPast, today]
+    () => selectGoalViewGoals(goals, sessions, { includePast: false, today }),
+    [goals, sessions, today]
   );
+  // Calendar also keeps goals whose loaded sessions are all past, so its rows
+  // stay while browsing back; they slide in and out as Calendar toggles.
+  const calendarGoals = useMemo(
+    () => selectGoalViewGoals(goals, sessions, { includePast: true, today }),
+    [goals, sessions, today]
+  );
+  const lanes = isDesktop || calendar;
 
   const ordinals = useMemo(
     () => sessionOrdinals(goals, sessions, weekStartsOn),
@@ -68,61 +90,62 @@ export function GoalView({
     if (selectedGoalId === null && selectedId) setSelectedGoalId(selectedId);
   }, [selectedGoalId, selectedId]);
 
-  const renderTile = (session: GoalViewSession, layout: GoalTileLayout) => {
-    const tile = (
-      <GoalSessionTile
-        key={session.key}
-        session={session}
-        layout={layout}
-        ordinal={ordinals.get(session.key)}
-        today={today}
-        completion={resolveCompletion(session)}
-        editable={isEditable(session)}
-        onMove={onMoveSession}
-        onToggle={onToggleSession}
-      />
-    );
-    // Cards fill the box they are given; rows size themselves.
-    return layout === "card" ? (
-      <div key={session.key} className="h-[76px] w-[132px] flex-none">
-        {tile}
-      </div>
-    ) : (
-      tile
-    );
-  };
+  const renderTile = (session: GoalViewSession, tileLayout: GoalTileLayout = "card") => (
+    <GoalSessionTile
+      key={session.key}
+      session={session}
+      layout={tileLayout}
+      ordinal={ordinals.get(session.key)}
+      dateInHeader={calendar && tileLayout === "card"}
+      today={today}
+      completion={resolveCompletion(session)}
+      editable={isEditable(session)}
+      onMove={onMoveSession}
+      onToggle={onToggleSession}
+      onOpen={onOpenSession}
+    />
+  );
+  const calendarSwitch = <GoalCalendarSwitch checked={calendar} onChange={setCalendar} />;
 
   return (
     <div className="space-y-2" data-testid="goal-view">
-      {visibleGoals.length === 0 || !selectedId ? (
-        <p className="py-10 text-center text-sm text-muted-foreground">
-          No goals have scheduled sessions in this window.
-        </p>
-      ) : isDesktop ? (
-        visibleGoals.map((goal) => (
-          <GoalRail
-            key={goal.id}
-            goal={goal}
-            progress={progressByGoalId.get(goal.id)}
-            sessions={sessionsForGoal(sessions, goal.id, showPast, today)}
-            showPast={showPast}
+      {lanes && (calendar || calendarGoals.length > 0) ? (
+        <GoalLanes
+          cardGoals={visibleGoals}
+          calendarGoals={calendarGoals}
+          progressByGoalId={progressByGoalId}
+          sessions={sessions}
+          calendar={calendar}
+          calendarSwitch={calendarSwitch}
+          geometry={isDesktop ? DESKTOP_LANES : PHONE_LANES}
+          today={today}
+          weekStartsOn={weekStartsOn}
+          loading={loading}
+          onVisibleDate={onVisibleDate}
+          onInspectDate={onInspectDate}
+          renderTile={renderTile}
+        />
+      ) : !lanes && selectedId ? (
+        <>
+          <div className="flex justify-end">{calendarSwitch}</div>
+          <GoalDeck
+            goals={visibleGoals}
+            selectedId={selectedId}
+            onSelect={setSelectedGoalId}
+            progressByGoalId={progressByGoalId}
+            sessions={sessions}
             weekStartsOn={weekStartsOn}
             today={today}
             renderTile={renderTile}
           />
-        ))
+        </>
       ) : (
-        <GoalDeck
-          goals={visibleGoals}
-          selectedId={selectedId}
-          onSelect={setSelectedGoalId}
-          progressByGoalId={progressByGoalId}
-          sessions={sessions}
-          showPast={showPast}
-          weekStartsOn={weekStartsOn}
-          today={today}
-          renderTile={renderTile}
-        />
+        <>
+          <div className="flex justify-end">{calendarSwitch}</div>
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            No goals have scheduled sessions in this window.
+          </p>
+        </>
       )}
 
       <p className="pt-2 text-xs text-muted-foreground">

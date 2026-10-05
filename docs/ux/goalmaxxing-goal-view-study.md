@@ -197,40 +197,78 @@ been verified in a browser.
 
 ## In the product
 
-Goal View ships as the first option in the Plan view switch (Goal View / Day /
-Week / Month), not as a separate route. Code lives in
+Goal View ships as an option in the Agenda view switch (Day / Week / Month /
+Goal View), not as a separate route. Code lives in
 `src/features/planner/goal-view/`.
 
-- Desktop is Card Rails. Phone (below the `md` breakpoint) is swipeable goal
-  cards with the selected goal's dates as a vertical list; the cards and goal
-  selector stay horizontal.
-- Dates are grouped by planner week and show upcoming sessions by default. Goals
-  that ended before today, or have no session today or later, only appear when
-  the Filters dialog's "Show past sessions" checkbox (shown while Goal View is
-  open) is on. "Show completed goals" hides goals the checklist treats as
-  completed once they have no session today or later; a completed goal that is
-  still scheduled stays. Hidden goals leave the preview too.
-- It is a lens on the planner context, not a new data path. Opening it loads a
-  361-day window (60 days back, 300 forward) and skips the month-keyed tab
-  cache. Sessions come from the planner's filtered day entries, so search,
-  filters and unsaved draft moves apply.
-- Writes use the canonical paths: one-day nudges queue planner draft moves
-  (Planning Mode, Save, Undo), and completion uses `toggleDateFact`. Clicking a
-  session opens the browser date picker directly and queues the same draft
-  move; locked, done or read-only sessions are not movable. A pencil beside each
-  goal title links to the goal editor.
+- Goal View is **goal lanes**. Each goal is a row with its label pinned at
+  the left: title, "Through …" or "Ongoing", and on desktop the material goal
+  card as a thumbnail that opens the goal. Without Calendar the session cards
+  float in a line beside it, with no frame or row lines; turning Calendar on
+  fades in the lane grid (frame, row lines, label frame with the goal colour
+  on its edge).
+  Selecting a label focuses that lane and dims the rest. By default each
+  lane packs the goal's upcoming sessions back to back from a shared start
+  date, so every lane begins in the same column.
+- A **Calendar** switch (an option, not a separate view) spreads the same
+  lanes over dates, using the Time Weave's look: a framed viewport, a slim
+  sticky date header (weekday and day, the month on the 1st, a firmer rule
+  where each week starts, today highlighted) and day rules behind the lanes.
+  It also shows past loaded sessions, and the lanes of goals whose loaded
+  sessions are all past, which have no lane while Calendar is off. Each
+  lane's shape comes from its goal's loaded sessions, never the option, so a
+  lane is the same height either way.
+- Every session card keeps its title. Under Calendar's date header its date
+  line cross-fades to the session's ordinal toward the goal's target ("2 of 3
+  per week", "Week 6" for one session a week, "12 of 30", "2 of 5" for
+  milestones), since the header already
+  names the date; with Calendar off the date shows. Phone rows show the
+  ordinal beside the time.
+- The toolbar's month ("October 2026") is the one place Goal View names where
+  you are; it opens the date picker. Arrows page to the first date (or card)
+  not fully in view, so a step never skips one, and Today returns. Switching keeps the leftmost
+  session in view in place (`leadingAnchor` / `scrollForAnchor` in
+  `goal-lanes-model.ts`), and turning Calendar off restarts the lanes from the
+  date that led it (never before today).
+- Calendar's axis is continuous (`timeline-axis.ts`): it starts a year either
+  side of the current week and grows by a year near either end, preserving
+  the date in view. Only columns near the viewport mount. The date in view is
+  reported to the planner (`onVisibleDate`), which re-anchors its rolling
+  90-day window near the window's edges.
+- Selecting a session card (outside its own controls, or Enter on the
+  focused card) opens the planner's session details dialog with the goal
+  card, the same popup the checklist opens. Selecting a date in Calendar's
+  header opens the day preview. Calendar's session cards keep their controls
+  (completion, the native date field, inline milestone renaming and hover
+  nudges), all on the canonical paths below.
+- Phone (below the `md` breakpoint) shows the swipeable goal deck, with the
+  selected goal's dates as vertical rows, while Calendar is off. With it on,
+  it shows the same lanes at phone sizes (120px days, 116px labels, no card
+  thumbnail).
+- Session cards use the Time Weave's quiet card: paper and a hairline border,
+  with the completion check in the top-left corner as in checklist rows; the
+  goal colour lives only on the lane label. Drafts are dashed, logged sessions
+  muted and today faintly ringed. Status words (Logged / Today / Not logged) are cut,
+  and nudges appear on hover or focus.
+- Without Calendar, only goals with sessions still to come get a lane; goals
+  that ended before today or have nothing left only appear with Calendar on,
+  which shows past dates. (The Filters dialog's former "Show past sessions"
+  checkbox was Goal View only and is gone.) "Show completed goals" hides
+  goals the checklist treats as completed once they have no session today or
+  later.
+- It is a lens on the planner context, not a new data path. Sessions come from
+  the planner's filtered day entries, so search, filters and unsaved draft
+  moves apply.
+- Writes use the canonical paths: one-day nudges and the date field queue
+  planner draft moves (Planning Mode, Save, Undo), and completion uses
+  `toggleDateFact`. Locked, done or read-only sessions are not movable.
 - Switching between Goal View and Day / Week / Month uses the same geometry
   morph as the calendar views: Goal View renders inside the board's
-  `PlanViewTransitionFrame` (mode `goals`) and waits until its wide window has
-  loaded before showing. Session tiles carry `data-day` and the entry key, so a
-  tile flies to and from its calendar pill. Tiles scrolled out of their rail
-  (`data-plan-scroll-clip`) and calendar dates with no Goal View counterpart
-  fade in place instead of sliding off stage. The calendar window header is
-  hidden while Goal View is shown.
-- The goals dropdown ("All goals") moved out of the Filters dialog onto the
-  planner toolbar beside the search bar, so it applies to every planner view.
-- "Preview" (calendar icon, beside Filters in the planner toolbar) opens a
-  read-only, scrollable list of every week in the loaded window across goals,
-  starting on the current week. Weeks use `content-visibility: auto`, so only
-  those near the viewport lay out and paint.
-- Goal Desk and Time Weave remain study-only for now.
+  `PlanViewTransitionFrame` (mode `goals`). Until Goal View's window has
+  loaded, the calendar stays on screen (dimmed by the board's loading state)
+  instead of a loading card, so the switch morphs in both directions. Session
+  cards carry `data-day` and the entry key, so a card flies to and from its
+  calendar pill. Cards scrolled
+  out of the lanes (`data-plan-scroll-clip`) and calendar dates with no Goal
+  View counterpart fade in place.
+- Goal Desk remains study-only.
