@@ -49,10 +49,7 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
       <div className="space-y-8">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="ach-showcase-eyebrow text-[10px] font-semibold uppercase tracking-[0.2em]">
-              Achievements
-            </p>
-            <h1 className="ach-showcase-heading mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
+            <h1 className="ach-showcase-heading font-display text-4xl font-semibold tracking-tight sm:text-5xl">
               Bests on the wall. Medals on the shelf.
             </h1>
             <p className="ach-showcase-body mt-3 max-w-xl text-sm leading-relaxed">

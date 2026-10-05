@@ -142,7 +142,8 @@ export function ShowcaseMedalShelf({
       <p className="ach-showcase-kicker text-[10px] font-semibold uppercase tracking-[0.16em]">
         Medal shelf · XP levels
       </p>
-      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* Auto-fit so every earned and locked medal shares one row instead of orphaning the last. */}
+      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(9rem,1fr))]">
         {[...unlocked, ...locked].map((award) => (
           <ShelfMedal
             key={award.id}

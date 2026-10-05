@@ -31,12 +31,14 @@ describe("SocialFreshnessIndicator", () => {
     render(<SocialFreshnessIndicator refreshToken={0} />);
 
     await waitFor(() => {
-      expect(screen.getByTestId("social-freshness-indicator")).toHaveTextContent(
-        /Sync every minute \(\d+s\)/
-      );
+      expect(screen.getByTestId("social-freshness-indicator")).toHaveTextContent("Live");
     });
     expect(screen.getByTestId("social-freshness-indicator")).not.toHaveTextContent(
       "standings + challenges"
+    );
+    expect(screen.getByTestId("social-freshness-indicator")).toHaveAttribute(
+      "title",
+      expect.stringMatching(/Refreshes every minute · next in \d+s/)
     );
     expect(screen.getByTestId("social-freshness-status-dot")).toHaveClass(
       "bg-primary"

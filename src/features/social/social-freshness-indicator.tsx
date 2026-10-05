@@ -165,17 +165,19 @@ export function SocialFreshnessIndicator({
     );
   }
 
+  // A calm "Live" label; the per-second countdown lives in the tooltip.
   return (
     <p
       className="flex items-center gap-2 text-xs text-muted-foreground"
       data-testid="social-freshness-indicator"
+      title={`Refreshes every minute · next in ${secondsUntilNextRefresh ?? 0}s`}
     >
       <span
         aria-hidden
         className={indicatorClassName}
         data-testid="social-freshness-status-dot"
       />
-      {`Sync every minute (${secondsUntilNextRefresh ?? 0}s)`}
+      Live
       {errorMessage ? " · refresh signal unavailable" : ""}
     </p>
   );

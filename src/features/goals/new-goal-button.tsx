@@ -3,6 +3,7 @@
 import { createContext, useContext } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TempoGoalCard } from "./tempo-goal-card";
 import { createDefaultGoalCreationFields } from "@/lib/goals/creation-model";
@@ -19,17 +20,22 @@ export function NewGoalButton({ presentation = "button" }: { presentation?: "but
   const search = searchParams.toString();
   const returnTo = search ? `${pathname}?${search}` : pathname;
   if (presentation === "card") {
-    const card = <div className={styles.ghost}>
-      <TempoGoalCard fields={{ ...createDefaultGoalCreationFields(), title: "New Goal" }}
-        surface="plain" rotatable={false}
-        visibility={{ category: false, rhythm: false, count: false, schedule: false, difficulty: false }}
-        renderLettering={(text, size) => size === "display" ? <span aria-hidden="true">+</span> : text} />
-    </div>;
+    // Phones get a compact row so the ghost card doesn't fill the first screen.
+    const card = <>
+      <div className={`${styles.ghost} hidden sm:block`}>
+        <TempoGoalCard fields={{ ...createDefaultGoalCreationFields(), title: "New Goal" }}
+          surface="plain" rotatable={false}
+          visibility={{ category: false, rhythm: false, count: false, schedule: false, difficulty: false }}
+          renderLettering={(text, size) => size === "display" ? <span aria-hidden="true">+</span> : text} />
+      </div>
+      <span data-testid="new-goal-compact" className="flex h-12 items-center justify-center gap-2 rounded-xl border border-dashed border-border text-sm font-medium text-muted-foreground sm:hidden">
+        <Plus aria-hidden="true" className="size-4" />New goal
+      </span>
+    </>;
     const className = "block w-full min-w-0 rounded-xl text-left focus-visible:outline-2 focus-visible:outline-primary";
     return <section className="min-w-0">
       {onCreate ? <button type="button" aria-label="New Goal" className={className} onClick={onCreate} data-onboarding="nav.new-goal">{card}</button>
         : <Link aria-label="New Goal" className={className} href={`${prefix}/goals/new?returnTo=${encodeURIComponent(returnTo)}`} data-onboarding="nav.new-goal">{card}</Link>}
-      <p className="mt-5 text-center font-mono text-xs text-muted-foreground">Click to create</p>
     </section>;
   }
   return <Button asChild={!onCreate} size="sm" onClick={onCreate} data-onboarding="nav.new-goal">

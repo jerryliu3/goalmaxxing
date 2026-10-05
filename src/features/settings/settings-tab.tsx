@@ -175,7 +175,10 @@ export function SettingsTab() {
       data-settings-pane={settingsPanelOpen ? "open" : "closed"}
       className="md:flex md:items-start"
     >
-      <div className="min-w-0 flex-1 space-y-5">
+      <div className="@container min-w-0 flex-1 space-y-5">
+        {/* Settings sit beside the profile card when there's room and right under it
+            on phones, so "Profile settings" doesn't open onto a wall of stats. */}
+        <div className="space-y-5 @4xl:grid @4xl:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)] @4xl:items-start @4xl:gap-10 @4xl:space-y-0">
         <ProfileMembershipCard
           profile={{
             subjectUserId: state.userId,
@@ -205,6 +208,8 @@ export function SettingsTab() {
               setProfileDraft((prev) => ({ ...prev, avatar_url: "" })),
           }}
         />
+        {groups}
+        </div>
         {presence ? (
           <ProfilePresenceSection
             growSeries={presence.growSeries}
@@ -214,7 +219,6 @@ export function SettingsTab() {
             showMoreLink
           />
         ) : null}
-        {groups}
       </div>
 
       {isDesktopTwoPane ? (
