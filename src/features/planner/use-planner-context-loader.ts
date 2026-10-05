@@ -48,6 +48,7 @@ interface UsePlannerContextLoaderArgs {
   selectedDay: string | null;
   viewMode: PlannerCalendarViewMode;
   goalViewOpen: boolean;
+  goalViewAnchorDate?: string | null;
   setGoalViewWindow: Dispatch<SetStateAction<CalendarVisibleDateWindow | null>>;
   setupTimezone: string;
   setupWeekStartsOn: number;
@@ -68,6 +69,7 @@ export function usePlannerContextLoader({
   selectedDay,
   viewMode,
   goalViewOpen,
+  goalViewAnchorDate,
   setGoalViewWindow,
   setupTimezone,
   setupWeekStartsOn,
@@ -174,7 +176,8 @@ export function usePlannerContextLoader({
       let contextPayload: PlannerContextPayload;
       try {
         const shouldPrepare = forcePrepare || !calendarPreparedRef.current;
-        const readContext = () => loadTabDataCache(plannerContextCacheKey, () =>
+        const contextCacheKey = goalViewOpen ? goalCacheKey : plannerContextCacheKey;
+        const readContext = () => loadTabDataCache(contextCacheKey, () =>
           getJson<PlannerContextPayload>("/api/planner/context", {
             query: { scopeMonth: month, visibleStart, visibleEnd },
           })
@@ -211,7 +214,7 @@ export function usePlannerContextLoader({
         }
         if (requestId !== requestIdRef.current) return false;
         calendarPreparedRef.current = true;
-        if (shouldPrepare) writeTabDataCache(plannerContextCacheKey, contextPayload);
+        if (shouldPrepare) writeTabDataCache(goalViewOpen ? goalCacheKey : plannerContextCacheKey, contextPayload);
       } catch (error) {
         if (requestId !== requestIdRef.current) return false;
         if (shouldShowLoading) {
@@ -244,7 +247,7 @@ export function usePlannerContextLoader({
       }
 
       applyContext(contextPayload, visibleWindow);
-      warmGoalView(contextPayload);
+      if (!goalViewOpen) warmGoalView(contextPayload);
       return true;
     },
     [
@@ -254,6 +257,7 @@ export function usePlannerContextLoader({
       month,
       onMonthChange,
       goalViewOpen,
+      goalViewAnchorDate,
       selectedDay,
       setContext,
       setGoalViewWindow,
