@@ -1,7 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,12 +7,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { GoalListControls } from "@/features/goals/goal-list-controls";
+import { PlannerEndMonthQuickFilterChips } from "@/features/planner/planner-end-month-quick-filter-chips";
 import type { HeatmapViewMode } from "@/features/insights/insights-tab";
-import { toggleExclusiveSelection } from "@/lib/filters/toggle-exclusive-selection";
-import { buildQuickEndDateChipOptions } from "@/lib/filters/quick-end-date-chips";
 import type { GoalDateSort } from "@/lib/goals/list-view";
 import type { Goal } from "@/lib/goals/types";
+
+const PERIOD_OPTIONS = [
+  { value: "month", label: "Month" },
+  { value: "year", label: "Year" },
+] as const satisfies ReadonlyArray<{ value: HeatmapViewMode; label: string }>;
 
 interface InsightsGoalStatsFiltersProps {
   goals: Goal[];
@@ -47,55 +50,25 @@ export function InsightsGoalStatsFilters({
   open,
   onOpenChange,
 }: InsightsGoalStatsFiltersProps) {
-  const quickEndMonths = useMemo(
-    () => buildQuickEndDateChipOptions(referenceMonth),
-    [referenceMonth]
-  );
-
   return (
     <>
       <div
         data-testid="insights-quick-filters"
         className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1"
       >
-        {(["month", "year"] as const).map((mode) => (
-          <Button
-            key={mode}
-            type="button"
-            variant={viewMode === mode ? "default" : "outline"}
-            size="sm"
-            className="h-8 shrink-0 rounded-full px-3 text-xs"
-            onClick={() => onViewModeChange(mode)}
-          >
-            {mode === "month" ? "Month View" : "Year View"}
-          </Button>
-        ))}
-        {quickEndMonths.map((option) => (
-          <Button
-            key={option.key}
-            type="button"
-            variant={
-              option.value === null
-                ? endMonths.length === 0
-                  ? "default"
-                  : "outline"
-                : endMonths.includes(option.value)
-                  ? "default"
-                  : "outline"
-            }
-            size="sm"
-            className="h-8 shrink-0 rounded-full px-3 text-xs"
-            onClick={() => {
-              if (option.value === null) {
-                onEndMonthsChange([]);
-                return;
-              }
-              onEndMonthsChange(toggleExclusiveSelection(endMonths, option.value));
-            }}
-          >
-            {option.label}
-          </Button>
-        ))}
+        <SegmentedControl
+          label="Progress period"
+          options={PERIOD_OPTIONS}
+          value={viewMode}
+          onChange={onViewModeChange}
+        />
+        <span aria-hidden className="mx-1 h-6 w-px shrink-0 bg-border" />
+        <PlannerEndMonthQuickFilterChips
+          referenceMonth={referenceMonth}
+          endMonthFilters={endMonths}
+          onEndMonthFiltersChange={onEndMonthsChange}
+          testId="insights-end-date-chips"
+        />
       </div>
 
       <Dialog open={open} onOpenChange={onOpenChange}>

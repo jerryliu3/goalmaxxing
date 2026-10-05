@@ -1,10 +1,10 @@
 "use client";
 
 import { format, startOfMonth, startOfYear } from "date-fns";
-import { CalendarRange, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchField } from "@/components/ui/search-field";
 import { InsightsGoalStatsFilters } from "@/features/insights/insights-goal-stats-filters";
 import { InsightsPeriodStepper } from "@/features/insights/insights-period-controls";
 import type { HeatmapViewMode } from "@/features/insights/insights-tab";
@@ -90,12 +90,7 @@ export function InsightsTrackerHeader({
           data-title-date-row="true"
           className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2"
         >
-          <div className="flex min-w-0 items-center gap-2">
-            <CalendarRange className="size-4 shrink-0 text-primary" />
-            <h2 className="font-display text-lg font-semibold tracking-tight">
-              Progress Tracker
-            </h2>
-          </div>
+          <span aria-hidden />
           <div className="flex items-center gap-2 justify-self-center">
             <InsightsPeriodStepper
               monthCursor={monthCursor}
@@ -104,9 +99,9 @@ export function InsightsTrackerHeader({
             />
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="icon-sm"
-              className="shrink-0"
+              className="size-9 shrink-0 rounded-full hover:bg-muted"
               aria-label="Open Progress filters"
               title="Open Progress filters"
               onClick={() => setFiltersOpen(true)}
@@ -132,11 +127,11 @@ export function InsightsTrackerHeader({
           open={filtersOpen}
           onOpenChange={setFiltersOpen}
         />
-        <Input
+        <SearchField
           value={goalSearchQuery}
           onChange={(event) => onGoalSearchQueryChange(event.target.value)}
-          placeholder="Search goals..."
-          className="h-8"
+          placeholder="Search goals"
+          aria-label="Search goals"
         />
       </div>
     </section>

@@ -38,9 +38,9 @@ describe("goal library journey", () => {
     expect(document.querySelectorAll("[data-reward-piece]")).toHaveLength(0);
     expect(document.querySelector("[data-card-solid]")).toBeNull();
     expect(screen.getAllByRole("article")).toHaveLength(2);
-    const current = screen.getByRole("heading", { name: "Current Goals" });
+    const current = screen.getByRole("heading", { name: "Current goals" });
     const tracker = screen.getByTestId("progress-tracker");
-    const past = screen.getByRole("heading", { name: "Past Goals" });
+    const past = screen.getByRole("heading", { name: "Past goals" });
     expect(current.compareDocumentPosition(tracker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(tracker.compareDocumentPosition(past) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(mocks.tracker).toHaveBeenCalledWith(expect.objectContaining({ subjectUserId: "user-1", sectionIds: ["history"] }));

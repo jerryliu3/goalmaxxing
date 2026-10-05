@@ -37,12 +37,12 @@ export function GoalLibraryPage({ showBack = true, subjectUserId, readOnly = fal
         : loading || !state.progress ? <LoadingCard title="Opening your collection..." description="Gathering your goals." />
         : <div className="space-y-8">
           <section aria-labelledby={`${headingId}-current`}>
-            <header className="mb-4"><h1 id={`${headingId}-current`} className="font-display text-2xl font-semibold">Current Goals</h1><p className="text-sm text-muted-foreground">Taking shape. Worth keeping.</p></header>
+            <header className="mb-4"><h1 id={`${headingId}-current`} className="font-display text-2xl font-semibold">Current goals</h1><p className="text-sm text-muted-foreground">Taking shape. Worth keeping.</p></header>
             <CurrentGoalGrid entries={current} moving={moving} leadingCard={readOnly ? undefined : <NewGoalButton presentation="card" />} onDetails={readOnly ? undefined : goalId => router.push(`${prefix}/goals/${goalId}`)} />
           </section>
           <InsightsTab subjectUserId={state.userId} readOnly={readOnly} anchorSections={anchorSections} progressView="all" sectionIds={["history"]} />
           <section aria-labelledby={`${headingId}-past`}>
-            <header className="mb-4"><h2 id={`${headingId}-past`} className="font-display text-2xl font-semibold">Past Goals</h2><p className="text-sm text-muted-foreground">Every goal that’s passed.</p></header>
+            <header className="mb-4"><h2 id={`${headingId}-past`} className="font-display text-2xl font-semibold">Past goals</h2><p className="text-sm text-muted-foreground">Every goal that’s passed.</p></header>
             {folios.length ? <CurrentGoalGrid entries={folios.flatMap(folio => folio.entries)} moving={moving} onDetails={readOnly ? undefined : goalId => router.push(`${prefix}/goals/${goalId}`)} /> : <p className="text-sm text-muted-foreground">Completed, ended, and archived goals collect here.</p>}
           </section>
         </div>}

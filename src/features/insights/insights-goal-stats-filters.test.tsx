@@ -51,23 +51,20 @@ describe("InsightsGoalStatsFilters", () => {
         (button) => button.textContent
       )
     ).toEqual([
-      "Month View",
-      "Year View",
+      "Month",
+      "Year",
       "All end dates",
       "This month",
       "Next month",
       "Year end",
       "No end date",
     ]);
-    expect(
-      screen.getByText("All end dates").closest("button")
-    ).toHaveClass("h-8", "shrink-0", "rounded-full");
-    expect(
-      screen.getByText("All end dates").closest("button")
-    ).toHaveClass("bg-primary");
-    expect(
-      screen.getByText("Next month").closest("button")
-    ).toHaveClass("h-8", "shrink-0", "rounded-full");
+    // Same chips and period switch as the planner: ink selection, no brand fill.
+    expect(screen.getByRole("group", { name: "Progress period" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Month" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("All end dates").closest("button")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("All end dates").closest("button")).not.toHaveClass("bg-primary");
+    expect(screen.getByText("Next month").closest("button")).toHaveClass("h-9", "shrink-0", "rounded-full");
     expect(screen.queryByText("Filters")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByText("Next month"));
@@ -76,7 +73,7 @@ describe("InsightsGoalStatsFilters", () => {
     fireEvent.click(screen.getByText("All end dates"));
     expect(onEndMonthsChange).toHaveBeenCalledWith([]);
 
-    fireEvent.click(screen.getByText("Year View"));
+    fireEvent.click(screen.getByRole("button", { name: "Year" }));
     expect(onViewModeChange).toHaveBeenCalledWith("year");
 
     expect(
@@ -117,24 +114,18 @@ describe("InsightsGoalStatsFilters", () => {
 
     const chips = within(screen.getByTestId("insights-quick-filters"));
 
+    const pressed = (label: string) => chips.getByText(label).closest("button")?.getAttribute("aria-pressed");
+
     fireEvent.click(chips.getByText("This month"));
-    expect(chips.getByText("This month").closest("button")).toHaveClass("bg-primary");
-    expect(chips.getByText("All end dates").closest("button")).not.toHaveClass(
-      "bg-primary"
-    );
+    expect(pressed("This month")).toBe("true");
+    expect(pressed("All end dates")).toBe("false");
 
     fireEvent.click(chips.getByText("Next month"));
-    expect(chips.getByText("Next month").closest("button")).toHaveClass("bg-primary");
-    expect(chips.getByText("This month").closest("button")).not.toHaveClass(
-      "bg-primary"
-    );
+    expect(pressed("Next month")).toBe("true");
+    expect(pressed("This month")).toBe("false");
 
     fireEvent.click(chips.getByText("Next month"));
-    expect(chips.getByText("All end dates").closest("button")).toHaveClass(
-      "bg-primary"
-    );
-    expect(chips.getByText("Next month").closest("button")).not.toHaveClass(
-      "bg-primary"
-    );
+    expect(pressed("All end dates")).toBe("true");
+    expect(pressed("Next month")).toBe("false");
   });
 });
