@@ -20,9 +20,16 @@ describe("milestone title editor", () => {
     render(<MilestoneTitleEditor goalId="goal" unitKey="milestone:2" label="Second" />);
     fireEvent.click(screen.getByRole("button", { name: "Rename milestone Second" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Milestone name" }), { target: { value: "  Publish  " } });
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    fireEvent.keyDown(screen.getByRole("textbox", { name: "Milestone name" }), { key: "Enter" });
     await waitFor(() => expect(mocks.rpc).toHaveBeenCalledWith("set_goal_milestone_names", { p_goal_id: "goal", p_milestone_names: ["Fresh first name", "Publish"] }));
     await waitFor(() => expect(mocks.invalidate).toHaveBeenCalledOnce());
+  });
+  it("saves when the field loses focus", async () => {
+    render(<MilestoneTitleEditor goalId="goal" unitKey="milestone:2" label="Second" />);
+    fireEvent.click(screen.getByRole("button"));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Publish" } });
+    fireEvent.blur(screen.getByRole("textbox"));
+    await waitFor(() => expect(mocks.rpc).toHaveBeenCalledOnce());
   });
   it("cancels without a write and leaves recurring sessions read-only", () => {
     const { rerender } = render(<MilestoneTitleEditor goalId="goal" unitKey="milestone:1" label="First" />);
@@ -37,7 +44,7 @@ describe("milestone title editor", () => {
     render(<MilestoneTitleEditor goalId="goal" unitKey="milestone:2" label="Second" />);
     fireEvent.click(screen.getByRole("button"));
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "Publish" } });
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    fireEvent.blur(screen.getByRole("textbox"));
     await waitFor(() => expect(mocks.error).toHaveBeenCalledWith("Save failed"));
     expect(screen.getByRole("textbox")).toHaveValue("Publish");
     expect(mocks.invalidate).not.toHaveBeenCalled();
