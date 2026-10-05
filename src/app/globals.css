@@ -138,8 +138,15 @@
   --font-display: var(--font-app-display);
 }
 
-* {
-  border-color: var(--border);
+/*
+ * The default border colour. It lives in the base layer so Tailwind's
+ * border-colour utilities (border-primary, border-transparent, ...) can
+ * override it; unlayered, it outranked every one of them.
+ */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 }
 
 html {
