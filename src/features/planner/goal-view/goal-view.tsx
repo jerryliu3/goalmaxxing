@@ -12,6 +12,7 @@ import { GoalSessionTile } from "./goal-session-tile";
 import {
   dateLabel,
   selectGoalViewGoals,
+  sessionOrdinals,
   sessionsForGoal,
   type GoalViewSession,
 } from "./goal-view-model";
@@ -53,6 +54,11 @@ export function GoalView({
     [goals, sessions, showPast, today]
   );
 
+  const ordinals = useMemo(
+    () => sessionOrdinals(goals, sessions, weekStartsOn),
+    [goals, sessions, weekStartsOn]
+  );
+
   const selectedId =
     visibleGoals.find((goal) => goal.id === selectedGoalId)?.id ??
     visibleGoals[0]?.id;
@@ -62,18 +68,29 @@ export function GoalView({
     if (selectedGoalId === null && selectedId) setSelectedGoalId(selectedId);
   }, [selectedGoalId, selectedId]);
 
-  const renderTile = (session: GoalViewSession, layout: GoalTileLayout) => (
-    <GoalSessionTile
-      key={session.key}
-      session={session}
-      layout={layout}
-      today={today}
-      completion={resolveCompletion(session)}
-      editable={isEditable(session)}
-      onMove={onMoveSession}
-      onToggle={onToggleSession}
-    />
-  );
+  const renderTile = (session: GoalViewSession, layout: GoalTileLayout) => {
+    const tile = (
+      <GoalSessionTile
+        key={session.key}
+        session={session}
+        layout={layout}
+        ordinal={ordinals.get(session.key)}
+        today={today}
+        completion={resolveCompletion(session)}
+        editable={isEditable(session)}
+        onMove={onMoveSession}
+        onToggle={onToggleSession}
+      />
+    );
+    // Cards fill the box they are given; rows size themselves.
+    return layout === "card" ? (
+      <div key={session.key} className="h-[76px] w-[132px] flex-none">
+        {tile}
+      </div>
+    ) : (
+      tile
+    );
+  };
 
   return (
     <div className="space-y-2" data-testid="goal-view">
@@ -112,7 +129,6 @@ export function GoalView({
         Showing sessions from {dateLabel(range.start, "MMM d, yyyy")} through{" "}
         {dateLabel(range.end, "MMM d, yyyy")}.
       </p>
-
     </div>
   );
 }

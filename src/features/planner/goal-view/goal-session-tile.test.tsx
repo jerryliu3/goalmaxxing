@@ -1,0 +1,86 @@
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
+import { GoalSessionTile } from "./goal-session-tile";
+import type { GoalViewSession } from "./goal-view-model";
+
+const session: GoalViewSession = {
+  key: "run:2026-10-09",
+  goalId: "run",
+  date: "2026-10-09",
+  time: "07:30",
+  label: "Run a half marathon",
+  milestone: null,
+  locked: false,
+  done: false,
+  draft: false,
+  entry: { unitKey: "cadence:2026-10-05:2", activeGoal: null, draftGhost: false } as unknown as PlannerDayDetailEntry,
+};
+
+function renderTile(
+  dateInHeader: boolean,
+  ordinal: string | null = "2 of 3 per week",
+  onOpen?: (session: GoalViewSession) => void
+) {
+  render(
+    <GoalSessionTile
+      session={session}
+      today="2026-10-02"
+      completion={{ credited: false, pending: false, disabledReason: null }}
+      editable
+      ordinal={ordinal}
+      dateInHeader={dateInHeader}
+      onMove={vi.fn()}
+      onToggle={vi.fn()}
+      onOpen={onOpen}
+    />
+  );
+}
+
+describe("GoalSessionTile", () => {
+  afterEach(cleanup);
+
+  it("never truncates its date or ordinal, and keeps nudges out of the layout", () => {
+    renderTile(false);
+    for (const text of ["Fri, Oct 9", "2 of 3 per week"]) {
+      expect(screen.getByText(text).className).not.toMatch(/truncate|line-clamp|text-ellipsis/);
+    }
+    const nudge = screen.getByRole("button", { name: "Move Run a half marathon one day later" });
+    expect(nudge.parentElement).toHaveClass("absolute");
+  });
+
+  it("keeps its title and shows the date where no header names it", () => {
+    renderTile(false);
+    expect(screen.getByTestId("completion-title")).toHaveTextContent("Run a half marathon");
+    expect(screen.getByText("Fri, Oct 9")).not.toHaveClass("opacity-0");
+    expect(screen.getByText("2 of 3 per week")).toHaveClass("opacity-0");
+    expect(screen.getByText("07:30")).toBeInTheDocument();
+  });
+
+  it("cross-fades the date to the ordinal under a date header", () => {
+    renderTile(true);
+    expect(screen.getByTestId("completion-title")).toHaveTextContent("Run a half marathon");
+    expect(screen.getByText("Fri, Oct 9")).toHaveClass("opacity-0");
+    expect(screen.getByText("2 of 3 per week")).not.toHaveClass("opacity-0");
+    // The line is still the date control.
+    expect(screen.getByLabelText("Change date of Run a half marathon, Fri, Oct 9")).toBeEnabled();
+  });
+
+  it("keeps the date under a header when there is nothing to count", () => {
+    renderTile(true, null);
+    expect(screen.getByText("Fri, Oct 9")).not.toHaveClass("opacity-0");
+  });
+
+  it("opens its details from the card but not from its controls", () => {
+    const onOpen = vi.fn();
+    renderTile(false, null, onOpen);
+    const card = screen.getByRole("article", { name: "Run a half marathon, Fri, Oct 9. Open details" });
+    fireEvent.click(screen.getByTestId("completion-title"));
+    expect(onOpen).toHaveBeenCalledWith(session);
+    fireEvent.click(screen.getByRole("button", { name: "Move Run a half marathon one day later" }));
+    fireEvent.click(screen.getByLabelText("Change date of Run a half marathon, Fri, Oct 9"));
+    expect(onOpen).toHaveBeenCalledTimes(1);
+    fireEvent.keyDown(card, { key: "Enter" });
+    expect(onOpen).toHaveBeenCalledTimes(2);
+  });
+});

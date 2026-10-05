@@ -64,3 +64,14 @@ it("keeps desktop cards flat until engagement and releases geometry when scrolli
   rerender(<GoalViewCard goal={goal} progress={progress} />);
   expect(container.querySelector("[data-reward-piece]")).not.toBeInTheDocument();
 });
+
+it("keeps a compact card a flat thumbnail with its caption as a tooltip", () => {
+  const goal = buildGoal({ target_count: 30, target_basis: "lifetime", end_date: null });
+  const progress = summary(goal.id, { creditedUnitCount: 29, expectedUnitCount: 30, outcome: "in_progress", lifecycle: "active" });
+  const { container } = render(<GoalViewCard goal={goal} progress={progress} fullRender compact />);
+  const host = container.querySelector("[data-goal-view-card]")!;
+  fireEvent.focus(host);
+  expect(container.querySelector("[data-reward-piece]")).not.toBeInTheDocument();
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  expect(host).toHaveAttribute("title", "29 / 30 completions · Ongoing · no end date");
+});

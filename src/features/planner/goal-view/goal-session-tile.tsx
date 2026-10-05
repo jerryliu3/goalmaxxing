@@ -1,13 +1,14 @@
 "use client";
 
-import { MilestoneTitleEditor } from "@/features/goals/milestone-title-editor";
-import type { ReactNode } from "react";
+import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { ArrowLeft, ArrowRight, LockKeyhole } from "lucide-react";
+import { CompletionTitle } from "@/components/ui/completion-title";
 import { DateField } from "@/components/ui/date-field";
+import { MilestoneTitleEditor } from "@/features/goals/milestone-title-editor";
 import { PlanLedgerCompletionControl } from "@/features/planner/plan-ledger-completion-control";
 import { cn } from "@/lib/utils";
 import { addDaysToDateString } from "@/lib/goals/periods";
-import { overlineClass, type GoalTileLayout } from "./goal-dates";
+import type { GoalTileLayout } from "./goal-dates";
 import { dateLabel, type GoalViewSession } from "./goal-view-model";
 import type { GoalSessionCompletion } from "./goal-session-completion";
 
@@ -18,17 +19,18 @@ export interface GoalSessionTileProps {
   /** False for sessions the planner cannot edit from the current snapshot. */
   editable: boolean;
   layout?: GoalTileLayout;
+  /** Which session this is toward the goal's target, e.g. "2 of 3 per week". */
+  ordinal?: string | null;
+  /** A date header already names the date, so the card shows its ordinal instead. */
+  dateInHeader?: boolean;
   onMove: (session: GoalViewSession, date: string) => void;
   onToggle: (session: GoalViewSession, source: HTMLButtonElement) => void;
+  /** Opens the session's details (with its goal card); the card's own controls keep their clicks. */
+  onOpen?: (session: GoalViewSession) => void;
 }
 
-function statusLabel(session: GoalViewSession, today: string) {
-  if (session.draft) return "Date changed";
-  if (session.done) return "Logged";
-  if (session.date === today) return "Today";
-  if (session.date < today) return "Not logged";
-  return dateLabel(session.date, "EEE");
-}
+/** Controls inside a card handle their own clicks; the rest of the card opens it. */
+const CARD_CONTROLS = "button, a, input, label, textarea, [contenteditable='true']";
 
 /**
  * The native input owns the date's hit area on every device. In particular,
@@ -81,17 +83,17 @@ export function GoalSessionTile({
   completion,
   editable,
   layout = "card",
+  ordinal = null,
+  dateInHeader = false,
   onMove,
   onToggle,
+  onOpen,
 }: GoalSessionTileProps) {
   const row = layout === "row";
   const movable = editable && !session.done && !session.locked;
-  const step = session.milestone
-    ? `Step ${String(session.milestone).padStart(2, "0")}`
-    : dateLabel(session.date, "EEE");
 
   const completionControl = (
-    <span title={completion.disabledReason ?? undefined}>
+    <span title={completion.disabledReason ?? undefined} className="flex-none">
       <PlanLedgerCompletionControl
         completed={completion.credited}
         pending={completion.pending}
@@ -103,7 +105,16 @@ export function GoalSessionTile({
     </span>
   );
   const nudges = (
-    <div className="flex">
+    <div
+      className={cn(
+        "flex flex-none",
+        // Cards float their nudges over the corner on hover or keyboard focus,
+        // so they never take room from the text; rows on a phone have no
+        // hover, so theirs stay in place.
+        !row &&
+          "absolute right-1 bottom-1 rounded-md bg-card/95 opacity-0 shadow-sm transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 motion-reduce:transition-none"
+      )}
+    >
       {([-1, 1] as const).map((direction) => {
         const nextDate = addDaysToDateString(session.date, direction);
         return (
@@ -115,29 +126,63 @@ export function GoalSessionTile({
             aria-label={`Move ${session.label} ${direction === -1 ? "one day earlier" : "one day later"}`}
             onClick={() => onMove(session, nextDate)}
             className={cn(
-              "grid place-items-center rounded-md hover:bg-muted disabled:opacity-30 disabled:hover:bg-transparent",
-              row ? "size-10" : "size-7"
+              "grid place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent",
+              row ? "size-10" : "size-6"
             )}
           >
-            {direction === -1 ? <ArrowLeft size={13} /> : <ArrowRight size={13} />}
+            {direction === -1 ? <ArrowLeft size={12} /> : <ArrowRight size={12} />}
           </button>
         );
       })}
     </div>
   );
-  const time = (
-    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-      {session.time || "Any time"}
-      {session.locked ? <LockKeyhole size={12} aria-label="Locked date" /> : null}
-    </span>
+  const lock = session.locked ? (
+    <LockKeyhole size={11} aria-label="Locked date" className="flex-none text-muted-foreground" />
+  ) : null;
+  const title = (
+    <CompletionTitle
+      completed={session.done}
+      treatment="quiet"
+      className={cn(
+        "min-w-0 font-medium",
+        row ? "truncate text-[14px] leading-tight" : "line-clamp-2 text-[12.5px] leading-[15px]"
+      )}
+    >
+      {session.milestone ? `${session.milestone}. ` : null}
+      <MilestoneTitleEditor
+        goalId={session.goalId}
+        unitKey={session.entry.unitKey}
+        label={session.label}
+        disabled={!editable || session.entry.draftGhost}
+      />
+    </CompletionTitle>
   );
+  // The Time Weave's quiet card: paper, a hairline border, a small shadow.
   const frame = cn(
-    "overflow-hidden rounded-xl border border-border bg-card transition-colors",
-    session.date === today && "border-primary",
-    session.draft && "border-dashed bg-muted/40",
-    session.done && "bg-muted/30"
+    "group relative overflow-hidden rounded-lg border border-border bg-card pl-2 shadow-[0_1px_2px_rgb(0_0_0/0.05)]",
+    onOpen && "cursor-pointer transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
+    session.done && "bg-muted",
+    session.draft && "border-dashed border-primary",
+    session.date === today && !session.draft && "ring-1 ring-primary/60"
   );
+  const opener = onOpen
+    ? {
+        tabIndex: 0,
+        "aria-label": `${session.label}, ${dateLabel(session.date)}. Open details`,
+        onClick: (event: MouseEvent<HTMLElement>) => {
+          if (event.target instanceof Element && event.target.closest(CARD_CONTROLS)) return;
+          onOpen(session);
+        },
+        onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
+          if (event.target !== event.currentTarget) return;
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          onOpen(session);
+        },
+      }
+    : {};
   const dataAttributes = {
+    ...opener,
     "data-planner-entry-key": session.key,
     // The plan view morph pairs tiles with calendar pills by day and entry key.
     "data-day": session.date,
@@ -150,14 +195,9 @@ export function GoalSessionTile({
     return (
       <article
         {...dataAttributes}
-        className={cn(frame, "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 p-1.5")}
+        className={cn(frame, "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 py-1.5 pr-1.5")}
       >
-        <div className="flex w-10 flex-col items-center gap-0.5">
-          {completionControl}
-          <span className="text-[8px] text-muted-foreground">
-            {statusLabel(session, today)}
-          </span>
-        </div>
+        <div className="grid w-10 place-items-center">{completionControl}</div>
         <div className="grid min-h-14 min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
           <SessionDateField
             session={session}
@@ -173,14 +213,11 @@ export function GoalSessionTile({
             </span>
           </SessionDateField>
           <span className="flex min-w-0 flex-col gap-0.5">
-            <span className={overlineClass}>{step}</span>
-            <strong
-              data-testid="completion-title"
-              className="truncate text-[13px] font-semibold"
-            >
-              <MilestoneTitleEditor goalId={session.goalId} unitKey={session.entry.unitKey} label={session.label} disabled={!editable || session.entry.draftGhost} />
-            </strong>
-            {time}
+            {title}
+            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              {[session.time || "Any time", ordinal].filter(Boolean).join(" · ")}
+              {lock}
+            </span>
           </span>
         </div>
         {nudges}
@@ -188,38 +225,46 @@ export function GoalSessionTile({
     );
   }
 
+  // The date and the ordinal share one line and cross-fade: under a date
+  // header the date would only repeat it. A session with nothing to count
+  // keeps its date rather than going blank. Both wrap rather than ever cut off.
+  const showOrdinal = dateInHeader && Boolean(ordinal);
+  const fade = "col-start-1 row-start-1 [overflow-wrap:anywhere] transition-opacity duration-300 motion-reduce:transition-none";
+  // The check leads the date, as it leads checklist rows and calendar pills,
+  // and the title gets the card's full width below them.
   return (
-    <article {...dataAttributes} className={cn(frame, "flex w-36 flex-none flex-col")}>
-      <div className="flex items-center justify-between pl-3 pr-1.5 pt-1.5">
-        <span className={overlineClass}>{step}</span>
-        {completionControl}
-      </div>
-      <div className="flex min-h-28 flex-col items-start gap-1 px-1.5 pb-3">
+    <article
+      {...dataAttributes}
+      className={cn(
+        frame,
+        "grid h-full w-full grid-cols-[auto_minmax(0,1fr)] content-start gap-x-0.5 gap-y-1 py-1.5 pr-1.5"
+      )}
+    >
+      <span className="-mt-0.5 -ml-1">{completionControl}</span>
+      <div className="flex min-w-0 items-center gap-1">
         <SessionDateField
           session={session}
           today={today}
           disabled={!movable}
           onMove={onMove}
+          className="min-h-5 min-w-0 rounded-md px-1 py-0"
         >
-          <span className="font-display text-3xl leading-tight">
-            {dateLabel(session.date, "d")}{" "}
-            <small className="font-sans text-xs text-muted-foreground">
-              {dateLabel(session.date, "MMM")}
-            </small>
+          <span className="grid min-w-0 text-[10.5px] font-medium leading-4 text-muted-foreground">
+            <span className={cn(fade, showOrdinal && "opacity-0")}>
+              {dateLabel(session.date, "EEE, MMM d")}
+            </span>
+            <span className={cn(fade, !showOrdinal && "opacity-0")}>{ordinal ?? ""}</span>
           </span>
         </SessionDateField>
-        <strong
-          data-testid="completion-title"
-          className="min-h-8 px-1.5 text-xs font-semibold leading-snug"
-        >
-          <MilestoneTitleEditor goalId={session.goalId} unitKey={session.entry.unitKey} label={session.label} disabled={!editable || session.entry.draftGhost} />
-        </strong>
-        <span className="px-1.5">{time}</span>
+        {lock}
       </div>
-      <div className="flex items-center justify-between border-t border-border px-3 py-1 text-[10px] text-muted-foreground">
-        <span>{statusLabel(session, today)}</span>
-        {nudges}
-      </div>
+      <div className="col-span-2 min-w-0">{title}</div>
+      {session.time ? (
+        <span className="col-span-2 text-[10.5px] leading-4 text-muted-foreground">
+          {session.time}
+        </span>
+      ) : null}
+      {nudges}
     </article>
   );
 }

@@ -117,10 +117,11 @@ describe("GoalView", () => {
   it("adds past sessions only when the planner filter asks for them", () => {
     const view = renderView();
     const gym = screen.getByRole("region", { name: "Get stronger scheduled dates" });
-    expect(within(gym).queryByText("Not logged")).toBeNull();
+    expect(within(gym).getAllByRole("article")).toHaveLength(1);
     view.rerenderWith({ showPast: true });
-    expect(within(gym).getAllByRole("article")).toHaveLength(2);
-    expect(within(gym).getByText("Not logged")).toBeInTheDocument();
+    const articles = within(gym).getAllByRole("article");
+    expect(articles).toHaveLength(2);
+    expect(articles[0]).toHaveAttribute("data-day", "2026-09-30");
     expect(within(gym).getByText(/2 scheduled sessions/)).toBeInTheDocument();
   });
 
@@ -139,13 +140,13 @@ describe("GoalView", () => {
   it("uses a directly interactive native date input and moves a session to the chosen date", () => {
     const props = renderView();
     const run = screen.getByRole("region", { name: "Run a half marathon scheduled dates" });
-    expect(within(run).getByText("Step 02")).toBeInTheDocument();
+    expect(within(run).getAllByTestId("completion-title")[1]).toHaveTextContent("2. run session");
     const field = within(run).getByLabelText("Change date of run session, Fri, Oct 9") as HTMLInputElement;
     // Only the date is a control: the rest of the tile is not a button.
     expect(
       within(run).queryByRole("button", { name: /^Edit run session/ })
     ).toBeNull();
-    expect(field.parentElement).toHaveTextContent(/^9\s*Oct$/);
+    expect(field.parentElement).toHaveTextContent("Fri, Oct 9");
     expect(field).toHaveClass("h-full", "w-full");
     expect(field).not.toHaveAttribute("aria-hidden");
     expect(field).not.toHaveAttribute("tabindex", "-1");
