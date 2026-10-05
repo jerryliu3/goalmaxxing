@@ -22,6 +22,10 @@ function createQuery() {
       mocks.queryState.filters.push({ op: "eq", column, value });
       return query;
     },
+    or(value: string) {
+      mocks.queryState.filters.push({ op: "or", value });
+      return query;
+    },
     gte(column: string, value: unknown) {
       mocks.queryState.filters.push({ op: "gte", column, value });
       return query;
@@ -145,7 +149,7 @@ describe("GET /api/planner/tasks", () => {
     expect(mocks.queryState.table).toBe("planner_tasks");
     expect(mocks.queryState.filters).toEqual([
       { op: "eq", column: "is_deleted", value: false },
-      { op: "gte", column: "scheduled_date", value: "2026-09-01" },
+      { op: "or", value: "scheduled_date.gte.2026-09-01,completed_at.is.null" },
       { op: "lte", column: "scheduled_date", value: "2026-09-30" },
     ]);
     await expect(response.json()).resolves.toMatchObject({

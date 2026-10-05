@@ -101,13 +101,15 @@ export function TempoGoalCard({
         style={{ "--goal-color": goalColor } as CSSProperties}
         aria-label={
           context === "history"
-            ? `${fields.title} goal card`
+            ? `${fields.title} ${isTask ? "task" : "goal"} card`
             : "Goal card preview"
         }
       >
         <div className="tempo-card-meta">
           <span>
-            {context === "history"
+            {isTask && context === "history"
+              ? achieved ? "Task completed" : "One time task"
+              : context === "history"
               ? achieved
                 ? "A goal you accomplished"
                 : "A goal you showed up for"
@@ -121,7 +123,7 @@ export function TempoGoalCard({
             aria-hidden="true"
           />
         </div>
-        <div className="tempo-card-target">
+        {hasCount || !isTask ? <div className="tempo-card-target">
           <strong>
             {renderLettering(
               hasCount ? String(isTask ? 1 : count).padStart(2, "0") : "—",
@@ -129,7 +131,7 @@ export function TempoGoalCard({
             )}
           </strong>
           {hasCount && <span>{renderLettering(unit, "supporting")}</span>}
-        </div>
+        </div> : null}
         <h2>
           {renderLettering(
             fields.title.trim() || "Something worth starting.",

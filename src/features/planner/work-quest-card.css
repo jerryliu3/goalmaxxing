@@ -64,7 +64,7 @@
   justify-self: center;
   padding: 0.4rem;
 }
-.work-quest-material [data-goal-progress-card] > .tempo-card-surface {
+.work-quest-material .tempo-card-surface {
   zoom: var(--work-quest-card-scale);
 }
 .work-quest-material [data-goal-progress-card] > p {

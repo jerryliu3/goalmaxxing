@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   calendarTasksQuerySchema,
   mapPlannerCalendarTaskRows,
+  plannerTaskCreateRequestSchema,
   plannerTaskCompletionRequestSchema,
   plannerTaskScheduleRequestSchema,
 } from "@/lib/tasks/calendar-tasks";
@@ -114,5 +115,14 @@ describe("mapPlannerCalendarTaskRows", () => {
   it("ignores non-array payloads", () => {
     expect(mapPlannerCalendarTaskRows(null)).toEqual([]);
     expect(mapPlannerCalendarTaskRows({ task_id: "x" })).toEqual([]);
+  });
+});
+
+describe("one time task creation contract", () => {
+  it("accepts a trimmed task name and scheduled day without goal fields", () => {
+    expect(plannerTaskCreateRequestSchema.parse({ title: " Dentist ", scheduledDate: "2026-10-04" })).toEqual({ title: "Dentist", scheduledDate: "2026-10-04" });
+    expect(plannerTaskCreateRequestSchema.safeParse({ title: " ", scheduledDate: "2026-10-04" }).success).toBe(false);
+    expect(plannerTaskCreateRequestSchema.safeParse({ title: "Dentist", scheduledDate: "bad-date" }).success).toBe(false);
+    expect(plannerTaskCreateRequestSchema.safeParse({ title: "Dentist", scheduledDate: "2026-10-04", difficulty: "hard" }).success).toBe(false);
   });
 });

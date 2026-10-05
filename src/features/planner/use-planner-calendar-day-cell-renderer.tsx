@@ -224,7 +224,8 @@ export function usePlannerCalendarDayCellRenderer({
           isEntryImmovableForDraft={(entry) =>
             plannerReadOnly ||
             !canMutateEntryOnDay(entry, cell.date) ||
-            entry.draftGhost
+            entry.draftGhost ||
+            (entry.entryKind === "task" && isEntryCredited(entry))
           }
           onEntryClick={(day, entry, target) => {
             if (!canMutateEntryOnDay(entry, day)) {

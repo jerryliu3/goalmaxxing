@@ -16,12 +16,14 @@ export function WorkQuestCard({
   trailingNav,
   children,
   goalCard,
+  facts,
 }: {
   quest: WorkQuestModel;
   leadingNav?: ReactNode;
   trailingNav?: ReactNode;
   children?: ReactNode;
   goalCard?: ReactNode;
+  facts?: ReactNode;
 }) {
   const Emblem = getGoalVisual({
     goalId: quest.id,
@@ -52,7 +54,7 @@ export function WorkQuestCard({
       <div className="work-quest-body" data-has-card={Boolean(goalCard)}>
         {goalCard && <div className="work-quest-material">{goalCard}</div>}
         <div className="min-w-0">
-          <dl className="grid gap-2 text-sm leading-snug">
+          {facts === undefined ? <dl className="grid gap-2 text-sm leading-snug">
             {quest.cadenceLabel ? (
               <div className="flex justify-between gap-4">
                 <dt className="text-muted-foreground">Cadence</dt>
@@ -63,7 +65,7 @@ export function WorkQuestCard({
               <dt className="text-muted-foreground">Deadline</dt>
               <dd className="text-right">{quest.deadlineLabel}</dd>
             </div>
-          </dl>
+          </dl> : facts}
           {quest.progress && !goalCard ? (
             <div className="mt-3">
               <div className="mb-1 flex items-center justify-between gap-3 text-sm text-muted-foreground">
@@ -101,12 +103,14 @@ export function WorkQuestCard({
 /** A keyword inside the quest sentence that opens an editor for that one fact. */
 export function QuestFact({
   active,
+  label,
   pressed,
   disabled = false,
   onSelect,
   children,
 }: {
   active?: boolean;
+  label?: string;
   pressed?: boolean;
   disabled?: boolean;
   onSelect: () => void;
@@ -121,6 +125,7 @@ export function QuestFact({
         active ? "decoration-solid text-primary" : "text-foreground",
         disabled && "cursor-not-allowed text-muted-foreground no-underline"
       )}
+      aria-label={label}
       aria-expanded={active}
       aria-pressed={pressed}
       disabled={disabled}

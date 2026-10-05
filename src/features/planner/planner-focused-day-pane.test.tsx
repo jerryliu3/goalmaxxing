@@ -289,7 +289,7 @@ describe("PlannerFocusedDayPane", () => {
     expect(screen.getByText("Thursday, Aug 6")).toBeInTheDocument();
   });
 
-  it("clears the selected entry when collapsing scheduled goals but not todos", () => {
+  it("clears the selected entry when collapsing scheduled goals but not tasks", () => {
     const onClearSelectedEntry = vi.fn();
 
     renderWithDnd(

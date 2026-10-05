@@ -1,6 +1,12 @@
 "use client";
 
-import { Loader2, Trash2 } from "lucide-react";
+import { PlannerDraggableEntry } from "@/features/planner/calendar-dnd";
+import { ChevronDown, Loader2, Trash2 } from "lucide-react";
+import { completePlannerTask, createPlannerTask } from "@/lib/tasks/client";
+import type { PlannerCalendarTask } from "@/lib/tasks/calendar-tasks";
+import { TaskDetailsEditor } from "./task-details-editor";
+import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
+import { requestXpRefresh } from "@/lib/xp/events";
 import { orderPlannerTasks } from "@cadence/shared/planner/task-order";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -18,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { getApiErrorMessage } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import { toLocalDateString } from "@/lib/dates/day";
@@ -89,6 +96,8 @@ export function PlannerTasksPrefetch({
 }
 
 interface PlannerTasksPanelProps {
+  selectedTaskId?: string | null;
+  allowDrag?: boolean;
   title?: string;
   description?: string | null;
   scheduledDate?: string | null;
@@ -102,7 +111,9 @@ interface PlannerTasksPanelProps {
 }
 
 export function PlannerTasksPanel({
-  title = "Tasks",
+  selectedTaskId = null,
+  allowDrag = false,
+  title = "One time tasks",
   description = "Track simple one-time tasks separately from recurring goals.",
   scheduledDate = null,
   asOfDate = null,
@@ -115,6 +126,8 @@ export function PlannerTasksPanel({
 }: PlannerTasksPanelProps) {
   const supabase = useMemo(() => createClient(), []);
   const cachedTasks = readPlannerTasksCache(scheduledDate);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(selectedTaskId);
+  useEffect(() => { setExpandedTaskId(selectedTaskId); }, [selectedTaskId]);
   const [tasks, setTasks] = useState<PlannerTaskRow[]>(() => cachedTasks ?? []);
   const [loading, setLoading] = useState(() => cachedTasks === undefined);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(() => cachedTasks !== undefined);
@@ -131,7 +144,7 @@ export function PlannerTasksPanel({
   const titleInputRef = useRef<HTMLInputElement>(null);
   const composerRef = useRef<HTMLDivElement>(null);
   const [newTaskDate, setNewTaskDate] = useState(
-    () => scheduledDate ?? toLocalDateString()
+    () => scheduledDate && scheduledDate >= (asOfDate ?? toLocalDateString()) ? scheduledDate : (asOfDate ?? toLocalDateString())
   );
   const completionAsOfDate = asOfDate ?? toLocalDateString();
   const canAddTask = newTaskTitle.trim().length > 0;
@@ -225,16 +238,13 @@ export function PlannerTasksPanel({
     setAdding(true);
     addingRef.current = true;
     try {
-      const { data, error } = await supabase.rpc("create_planner_task", {
-        p_title: title,
-        p_scheduled_date: newTaskDate.trim() || undefined,
-      });
-      if (error) {
-        toast.error(error.message || "Task could not be created.");
-        return;
-      }
-      const created = data?.[0];
-      if (created && (!scheduledDateRef.current || created.scheduled_date === scheduledDateRef.current)) {
+      const result = await createPlannerTask(title, newTaskDate);
+      const created: PlannerTaskRow = {
+        task_id: result.taskId, title: result.title, scheduled_date: result.scheduledDate,
+        scheduled_time: result.scheduledTime, completed_at: result.completedAt,
+        created_at: result.createdAt ?? new Date().toISOString(), updated_at: result.updatedAt,
+      };
+      if (!scheduledDateRef.current || created.scheduled_date <= scheduledDateRef.current) {
         // The returned row is committed. Keep the composer ready for the next task.
         if (titleInputRef.current) {
           setCapture(captureTaskSlip(titleInputRef.current, created.task_id, title));
@@ -247,12 +257,13 @@ export function PlannerTasksPanel({
         titleInputRef.current?.focus();
       }
       setNewTaskTitle(current => current.trim() === title ? "" : current);
-      if (!created) await loadTasks(scheduledDateRef.current, { background: true });
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Task could not be created."));
     } finally {
       addingRef.current = false;
       setAdding(false);
     }
-  }, [allowCreate, loadTasks, newTaskDate, newTaskTitle, supabase]);
+  }, [allowCreate, newTaskDate, newTaskTitle]);
 
   const toggleTask = useCallback(
     async (task: PlannerTaskRow) => {
@@ -279,26 +290,26 @@ export function PlannerTasksPanel({
         return next;
       });
       try {
-        const { data, error } = await supabase.rpc("set_planner_task_completion", {
-          p_task_id: task.task_id,
-          p_completed: nextCompleted,
-          p_expected_updated_at: task.updated_at,
+        const updated = await completePlannerTask(task.task_id, task.updated_at, nextCompleted);
+        setTasks(current => {
+          const next = current.map(row => row.task_id === task.task_id ? {
+            ...row, completed_at: updated.completedAt, updated_at: updated.updatedAt,
+          } : row);
+          writePlannerTasksCache(scheduledDateRef.current, next);
+          return next;
         });
-        if (error) {
-          setTasks((current) => {
-            const next = current.map((row) => (row.task_id === task.task_id ? task : row));
-            writePlannerTasksCache(scheduledDateRef.current, next);
-            return next;
-          });
-          toast.error(error.message || "Task completion could not be updated.");
-        } else if (data?.[0]) {
-          setTasks(current => { const next = current.map(row => row.task_id === task.task_id ? data[0] : row); writePlannerTasksCache(scheduledDateRef.current, next); return next; });
-        }
+      } catch (error) {
+        setTasks(current => {
+          const next = current.map(row => row.task_id === task.task_id ? task : row);
+          writePlannerTasksCache(scheduledDateRef.current, next);
+          return next;
+        });
+        toast.error(getApiErrorMessage(error, "Task completion could not be updated."));
       } finally {
         setTogglingTaskId(null);
       }
     },
-    [completionAsOfDate, supabase]
+    [completionAsOfDate]
   );
 
   const deleteTask = useCallback(
@@ -318,6 +329,10 @@ export function PlannerTasksPanel({
         const { error } = await supabase.rpc("delete_planner_task", {
           p_task_id: task.task_id,
         });
+        if (!error) {
+          invalidatePlannerRelatedTabCaches();
+          requestXpRefresh();
+        }
         if (error) {
           setTasks(previousTasks);
           writePlannerTasksCache(scheduledDateRef.current, previousTasks);
@@ -373,6 +388,7 @@ export function PlannerTasksPanel({
       <div className="flex items-center gap-2">
         <DateField
           value={newTaskDate}
+          min={completionAsOfDate}
           onValueChange={setNewTaskDate}
           aria-label="Task date"
           className={cn(composerFieldClassName, "min-w-0 flex-1")}
@@ -456,26 +472,35 @@ export function PlannerTasksPanel({
               style={{ visibility: capture?.taskId === task.task_id ? "hidden" : undefined }}
               className={
                 chrome === "plain"
-                  ? "flex items-center justify-between gap-3 py-3 last:pb-0.5"
-                  : "flex items-center justify-between gap-3 rounded-md border px-3 py-2 last:mb-0"
+                  ? "space-y-2 py-3 last:pb-0.5"
+                  : "space-y-2 rounded-md border px-3 py-2 last:mb-0"
               }
             >
+              <div className="flex items-center justify-between gap-3">
               {completionMode === "toggle" ? (
-                <button
-                  type="button"
-                  className="flex min-w-0 flex-1 items-center gap-2 text-left"
-                  onClick={() => void toggleTask(task)}
-                  disabled={busy}
-                >
+                <button type="button" aria-label={`${complete ? "Undo completion for" : "Complete"} ${task.title}`}
+                  className="-m-2 flex size-9 shrink-0 items-center justify-center" onClick={() => void toggleTask(task)} disabled={busy}>
                   {mark}
-                  {title}
                 </button>
-              ) : (
-                <div className="flex min-w-0 flex-1 items-center gap-2 text-left">
-                  {mark}
-                  {title}
-                </div>
-              )}
+              ) : mark}
+              <PlannerDraggableEntry entryKey={`task:${task.task_id}`} day={task.scheduled_date}
+                surface="checklist" disabled={!allowDrag || complete || busy}>
+                {({ setNodeRef, setActivatorNodeRef, attributes, listeners, style, isDragging }) => (
+                  <button ref={(node) => { setNodeRef(node); setActivatorNodeRef(node); }} type="button"
+                    className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                    style={{ ...style, opacity: isDragging ? 0 : undefined }}
+                    {...attributes} {...(!allowDrag || complete || busy ? {} : listeners)}
+                    data-planner-entry-key={`task:${task.task_id}`}
+                    aria-disabled={undefined}
+                    aria-expanded={expandedTaskId === task.task_id}
+                    onClick={() => {
+                      if (!isDragging) setExpandedTaskId(current => current === task.task_id ? null : task.task_id);
+                    }}>
+                    {title}
+                    <ChevronDown className={cn("size-3 shrink-0 text-muted-foreground", expandedTaskId === task.task_id && "rotate-180")} />
+                  </button>
+                )}
+              </PlannerDraggableEntry>
               {task.scheduled_time ? (
                 <Badge variant="outline">{task.scheduled_time}</Badge>
               ) : null}
@@ -498,6 +523,22 @@ export function PlannerTasksPanel({
                     <Trash2 className="text-destructive" />
                   )}
                 </Button>
+              ) : null}
+              </div>
+              {expandedTaskId === task.task_id ? (
+                <TaskDetailsEditor key={`${task.task_id}:${task.updated_at}`} today={completionAsOfDate}
+                  task={{ taskId: task.task_id, title: task.title, scheduledDate: task.scheduled_date,
+                    scheduledTime: task.scheduled_time, completedAt: task.completed_at, updatedAt: task.updated_at }}
+                  onSaved={(updated: PlannerCalendarTask) => {
+                    setTasks(current => {
+                      const next = current.map(row => row.task_id === updated.taskId ? {
+                        ...row, title: updated.title, scheduled_date: updated.scheduledDate,
+                        scheduled_time: updated.scheduledTime, updated_at: updated.updatedAt,
+                      } : row).filter(row => !scheduledDateRef.current || row.scheduled_date <= scheduledDateRef.current);
+                      writePlannerTasksCache(scheduledDateRef.current, next);
+                      return next;
+                    });
+                  }} />
               ) : null}
             </li>
           );

@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,16 +13,19 @@ export function PlanDaySection({
   title,
   count,
   defaultOpen = true,
+  revealKey,
   onOpenChange,
   children,
 }: {
   title: string;
   count?: number;
   defaultOpen?: boolean;
+  revealKey?: string | null;
   onOpenChange?: (open: boolean) => void;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  useEffect(() => { if (revealKey) setOpen(true); }, [revealKey]);
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
     onOpenChange?.(next);

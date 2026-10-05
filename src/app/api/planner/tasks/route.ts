@@ -41,9 +41,9 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabase
       .from("planner_tasks")
-      .select("id, title, scheduled_date, scheduled_time, completed_at, updated_at")
+      .select("id, title, scheduled_date, scheduled_time, completed_at, updated_at, created_at")
       .eq("is_deleted", false)
-      .gte("scheduled_date", from)
+      .or(`scheduled_date.gte.${from},completed_at.is.null`)
       .lte("scheduled_date", to)
       .order("scheduled_date", { ascending: true })
       .order("scheduled_time", { ascending: true, nullsFirst: false })
