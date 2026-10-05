@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   fetchChecklistTodayData: vi.fn(),
   fetchInsightsData: vi.fn(),
+  fetchAchievementsShowcase: vi.fn(),
   getJson: vi.fn(),
   fetchSocialChallenges: vi.fn(),
   fetchSocialLeaderboards: vi.fn(),
@@ -17,6 +18,9 @@ vi.mock("@/features/today/fetch-checklist-data", () => ({
 
 vi.mock("@/features/insights/fetch-insights-data", () => ({
   fetchInsightsData: mocks.fetchInsightsData,
+}));
+vi.mock("@/features/achievements/fetch-achievements-showcase", () => ({
+  fetchAchievementsShowcase: mocks.fetchAchievementsShowcase,
 }));
 
 vi.mock("@/lib/api/client", () => ({
@@ -45,6 +49,7 @@ describe("warmAppTabData", () => {
     resetTabDataCacheForTests();
     mocks.fetchChecklistTodayData.mockReset().mockResolvedValue({ userId: "user-1" });
     mocks.fetchInsightsData.mockReset().mockResolvedValue({ userId: "user-1" });
+    mocks.fetchAchievementsShowcase.mockReset().mockResolvedValue({});
     mocks.getJson.mockReset().mockResolvedValue({ scopeMonth: "2026-10", asOfDate: "2026-10-04" });
     mocks.fetchSocialChallenges.mockReset().mockResolvedValue({});
     mocks.fetchSocialLeaderboards.mockReset().mockResolvedValue({});
@@ -62,6 +67,7 @@ describe("warmAppTabData", () => {
 
     expect(mocks.fetchChecklistTodayData).not.toHaveBeenCalled();
     expect(mocks.fetchInsightsData).not.toHaveBeenCalled();
+    expect(mocks.fetchAchievementsShowcase).not.toHaveBeenCalled();
     expect(mocks.getJson).toHaveBeenCalled();
     const window = buildGoalViewWindow("2026-10-04");
     expect(mocks.getJson).toHaveBeenCalledWith("/api/planner/context", {
@@ -84,6 +90,7 @@ describe("warmAppTabData", () => {
 
     expect(mocks.fetchChecklistTodayData).toHaveBeenCalled();
     expect(mocks.fetchInsightsData).toHaveBeenCalled();
+    expect(mocks.fetchAchievementsShowcase).toHaveBeenCalledWith({ forceRefresh: false });
   });
 
   it("does not refill planner context from GET after a forced refresh", async () => {

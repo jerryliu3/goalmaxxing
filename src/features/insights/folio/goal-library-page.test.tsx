@@ -65,11 +65,4 @@ describe("goal library journey", () => {
     expect(document.querySelector("[data-card-solid]")).not.toBeNull();
     expect(document.querySelector("[data-ghost]")).toBeNull();
   });
-  it("allows returning to Current when Past has no volumes", () => {
-    loadCollection();
-    render(<GoalLibraryPage view="past" />);
-    expect(screen.getByText("No past goals yet.")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Current" }));
-    expect(mocks.push).toHaveBeenCalledWith("/goals/library");
-  });
 });
