@@ -358,8 +358,9 @@ describe("selectPlannerCalendarModel", () => {
     );
     const entries = model.dayAccessors.getOrderedEntriesForDay("2026-08-06");
 
-    expect(entries.map((entry) => entry.goalTitle)).toEqual(["Lift", "Buy groceries"]);
-    expect(entries[0]?.entryKind).not.toBe("task");
+    expect(entries.map((entry) => entry.goalTitle)).toEqual(["Buy groceries", "Lift"]);
+    expect(entries[0]?.entryKind).toBe("task");
+    expect(entries[1]?.entryKind).not.toBe("task");
     expect(model.dayAccessors.entryByKey.get(taskEntry.key)).toBe(taskEntry);
     const hiddenModel = selectPlannerCalendarModel(buildArgs({ context, selectedDay: "2026-08-06",
       hideTasks: true, calendarTaskEntriesByDate: new Map([["2026-08-06", [taskEntry]]]) }));
