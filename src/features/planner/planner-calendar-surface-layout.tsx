@@ -563,7 +563,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
               );
               if (
                 !entry ||
-                !canOpenPlannerEventDetails(entry) ||
                 !canMutateEntryOnDay(entry, focusedDay)
               ) {
                 return;
@@ -607,7 +606,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
               );
               if (
                 !entry ||
-                !canOpenPlannerEventDetails(entry) ||
                 !canMutateEntryOnDay(entry, day)
               ) {
                 return;
@@ -681,7 +679,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
           );
           if (
             !entry ||
-            !canOpenPlannerEventDetails(entry) ||
             !canMutateEntryOnDay(entry, day)
           ) {
             return;

@@ -47,7 +47,6 @@ import type {
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import {
-  canOpenPlannerEventDetails,
   isPlannerTaskCalendarEntry,
 } from "@/features/planner/calendar-task-entries";
 import { PLANNER_CHECKLIST_PANE_TEST_ID } from "@/features/planner/planner-checklist-scroll";
@@ -184,9 +183,6 @@ export function CalendarSurface({
         applyGoalFocus: boolean;
       }
     ) => {
-      if (!canOpenPlannerEventDetails(entry) && !isPlannerTaskCalendarEntry(entry)) {
-        return;
-      }
       const isActive =
         selectedEventEntryKey === entry.key &&
         (!options.applyGoalFocus ||
