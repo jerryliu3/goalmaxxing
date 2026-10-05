@@ -29,10 +29,8 @@ describe("InsightsTrackerHeader", () => {
     const titleRow = screen.getByTestId("insights-tracker-header").querySelector(
       '[data-title-date-row="true"]'
     );
-    expect(titleRow).toHaveClass("grid", "grid-cols-[1fr_auto_1fr]");
-    expect(
-      titleRow?.querySelector(".justify-self-center")
-    ).toContainElement(
+    expect(titleRow).toHaveClass("flex", "justify-center");
+    expect(titleRow).toContainElement(
       screen.getByRole("button", { name: "Open progress filters" })
     );
     expect(screen.getByLabelText("Choose month and year")).toBeInTheDocument();

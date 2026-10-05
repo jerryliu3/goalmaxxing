@@ -73,7 +73,7 @@ describe("ProgressGoalList", () => {
     );
 
     const only = screen.getAllByRole("button", { name: "Only" })[0];
-    expect(only).toHaveClass("text-primary");
+    expect(only).toHaveClass("text-foreground");
     expect(only).not.toHaveClass("shadow-sm");
     expect(only).not.toHaveClass("bg-background/90");
     await user.click(only);

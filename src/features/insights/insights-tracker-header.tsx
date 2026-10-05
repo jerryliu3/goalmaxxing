@@ -85,31 +85,23 @@ export function InsightsTrackerHeader({
       data-onboarding="insights.goal-stats"
       data-testid="insights-tracker-header"
     >
-      <div className="pb-3">
-        <div
-          data-title-date-row="true"
-          className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2"
+      <div data-title-date-row="true" className="flex items-center justify-center gap-2 pb-3">
+        <InsightsPeriodStepper
+          monthCursor={monthCursor}
+          onMonthCursorChange={onMonthCursorChange}
+          perGoalViewMode={perGoalViewMode}
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-round"
+          className="shrink-0"
+          aria-label="Open progress filters"
+          title="Open progress filters"
+          onClick={() => setFiltersOpen(true)}
         >
-          <span aria-hidden />
-          <div className="flex items-center gap-2 justify-self-center">
-            <InsightsPeriodStepper
-              monthCursor={monthCursor}
-              onMonthCursorChange={onMonthCursorChange}
-              perGoalViewMode={perGoalViewMode}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-round"
-              className="shrink-0"
-              aria-label="Open progress filters"
-              title="Open progress filters"
-              onClick={() => setFiltersOpen(true)}
-            >
-              <SlidersHorizontal />
-            </Button>
-          </div>
-        </div>
+          <SlidersHorizontal />
+        </Button>
       </div>
       <div className="space-y-3">
         <InsightsGoalStatsFilters

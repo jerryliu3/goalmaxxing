@@ -5,7 +5,6 @@ import {
   ShowcaseMedalShelf,
   ShowcasePedestal,
   ShowcasePersonalRecords,
-  ShowcasePlaqueRail,
 } from "@/features/achievements/showcase-presentation";
 import { AchievementChrome, ConceptNote } from "@/features/ux-achievements/chrome";
 import { getAchievementConcept } from "@/features/ux-achievements/model";
@@ -25,13 +24,6 @@ export function ShowcaseConcept() {
   const claimed = COLLECTION.unlockedAwards + COLLECTION.achievedGoals;
   const total = COLLECTION.totalAwards + GOAL_ACHIEVEMENTS.length;
   const fill = Math.round((claimed / total) * 100);
-  const goals = GOAL_ACHIEVEMENTS.map((goal) => ({
-    id: goal.id,
-    title: goal.title,
-    achievedOn: goal.achievedOn,
-    rewardText: goal.rewardText,
-    category: goal.category,
-  }));
 
   return (
     <AchievementChrome
@@ -107,8 +99,6 @@ export function ShowcaseConcept() {
             featuredId={featuredId}
             onSelect={setFeaturedId}
           />
-          <div className="ach-showcase-shelf mx-auto mt-6 h-2.5 max-w-4xl rounded-sm opacity-85" />
-          <ShowcasePlaqueRail goals={goals} />
         </section>
       </div>
       <ConceptNote concept={concept} />

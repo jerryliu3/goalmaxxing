@@ -8,7 +8,6 @@ import {
 } from "@/features/achievements/medals";
 import { formatAwardDate } from "@/features/achievements/format";
 import type {
-  AchievementGoalCategory,
   AwardTier,
   PersonalRecord,
 } from "@/features/achievements/types";

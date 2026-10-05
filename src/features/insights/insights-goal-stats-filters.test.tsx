@@ -37,11 +37,11 @@ describe("InsightsGoalStatsFilters", () => {
   afterEach(() => {
     cleanup();
   });
-  it("keeps quick period controls visible and moves full controls into a sheet", () => {
+  it("keeps quick period controls visible outside the sheet", () => {
     const onEndMonthsChange = vi.fn();
     const onViewModeChange = vi.fn();
 
-    renderFilters({ onEndMonthsChange, onViewModeChange });
+    renderFilters({ onEndMonthsChange, onViewModeChange, open: false });
 
     expect(
       screen.getByTestId("insights-quick-filters")
@@ -75,6 +75,10 @@ describe("InsightsGoalStatsFilters", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Year" }));
     expect(onViewModeChange).toHaveBeenCalledWith("year");
+  });
+
+  it("moves full controls into a sheet", () => {
+    renderFilters();
 
     expect(
       screen.getByRole("heading", { name: "Progress filters" })

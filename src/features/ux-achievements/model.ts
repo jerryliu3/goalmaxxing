@@ -28,7 +28,7 @@ export const ACHIEVEMENT_CONCEPTS: readonly AchievementConcept[] = [
     navigation:
       "Read personal records and the claimed bar, then pin an earned medal on the pedestal. Locked mounts stay dark — no spoilers for what’s next.",
     whatItKeeps:
-      "Level awards, achieved goals, unlock dates, reward text, locked mounts, personal bests, claimed progress.",
+      "Level awards, unlock dates, locked mounts, personal bests, claimed progress.",
     whatItAdds:
       "One proud composition that keeps trophies, Records, Vault craft, and honest locked mystery.",
     risk: "Dark glass plus a records band can feel tall on small phones if the pedestal is greedy.",

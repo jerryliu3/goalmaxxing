@@ -34,7 +34,8 @@ describe("achievements destination study", () => {
     expect(screen.getByRole("heading", { name: "Level 8 unlocked" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /lv 4/i }));
     expect(screen.getAllByRole("heading", { name: "Level 4 unlocked" }).length).toBeGreaterThan(0);
-    expect(screen.getByText(/plaque rail/i)).toBeInTheDocument();
+    // Mirrors production: finished goals no longer get a plaque rail.
+    expect(screen.queryByText(/plaque rail/i)).not.toBeInTheDocument();
 
     await user.click(screen.getAllByRole("button", { name: /^locked award$/i })[0]!);
     expect(screen.getByRole("heading", { name: "Still ahead" })).toBeInTheDocument();
