@@ -3848,8 +3848,8 @@ export type Database = {
         Args: {
           p_expected_updated_at: string
           p_scheduled_date: string
-          p_task_id: string
           p_scheduled_time?: string
+          p_task_id: string
           p_title?: string
           p_update_time?: boolean
         }
@@ -4185,3 +4185,4 @@ export const Constants = {
     },
   },
 } as const
+
