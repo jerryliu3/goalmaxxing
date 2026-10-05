@@ -354,7 +354,11 @@ describe("CalendarSurface characterization", () => {
       await waitFor(() => {
         expect(screen.getAllByText("07:30 Tempo run 4x800").length).toBeGreaterThan(0);
       });
-      expect(screen.queryByText("07:30 Goal B")).not.toBeInTheDocument();
+      if (viewMode === "month") {
+        expect(screen.queryByText("07:30 Goal B")).not.toBeInTheDocument();
+      } else {
+        expect(screen.getByText("07:30 Goal B")).toBeInTheDocument();
+      }
     }
   );
 

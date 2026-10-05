@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildWeekdayLabels,
   getEntryCompactTitle,
+  getEntryGoalFirstTitleWithTime,
   getEntryDraftDiffSummary,
   getEntryDraftPillClasses,
   getEntryMilestoneFirstTitle,
@@ -43,6 +44,16 @@ describe("calendar format week start helpers", () => {
 });
 
 describe("calendar entry subtitles", () => {
+  it("shows the goal title above a named first milestone", () => {
+    const entry = {
+      goalTitle: "Grow social media account to 1000 followers",
+      label: "100",
+      unitKey: "milestone:1",
+      effectiveScheduledLocalTime: null,
+    };
+    expect(getEntryGoalFirstTitleWithTime(entry)).toBe(entry.goalTitle);
+    expect(getEntrySubtitle(entry)).toBe("Milestone: 100");
+  });
   it("omits subtitles for recurring completion units", () => {
     expect(
       getEntrySubtitle({
