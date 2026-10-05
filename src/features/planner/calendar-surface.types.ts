@@ -65,7 +65,8 @@ export type SelectedDayChangeOptions = {
 };
 
 export interface CalendarSurfaceProps {
-  destination?: "agenda" | "goals";
+  goalTimelineOpen?: boolean;
+  onGoalTimelineOpenChange?: (open: boolean) => void;
   activeTab: CalendarTab;
   month: string | null;
   selectedDay: string | null;

@@ -192,6 +192,19 @@ export function loadTabDataCache<TValue>(
   return request;
 }
 
+/** Keep one active date-window snapshot; remove old memory, storage and pending fills. */
+export function retainTabDataCacheKeyByPrefix(prefix: string, keepKey: string) {
+  const keys = new Set([...tabDataCache.keys(), ...pendingLoads.keys()]);
+  const storagePrefix = buildStorageKey(prefix);
+  const scopePrefix = `${TAB_DATA_CACHE_STORAGE_PREFIX}:${tabDataCacheScope}:`;
+  for (const storageKey of sessionStorageKeys()) {
+    if (storageKey.startsWith(storagePrefix)) keys.add(storageKey.slice(scopePrefix.length));
+  }
+  for (const key of keys) {
+    if (key.startsWith(prefix) && key !== keepKey) invalidateTabDataCache(key);
+  }
+}
+
 export function invalidateTabDataCache(cacheKey: string) {
   pendingLoads.delete(cacheKey);
   tabDataCache.delete(cacheKey);

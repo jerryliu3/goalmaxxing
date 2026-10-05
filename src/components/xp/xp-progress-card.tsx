@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { animate, motion, useReducedMotion } from "motion/react";
 import { progressionForTotalXp } from "@/lib/xp/progression";
-import { bandForTotalXp } from "@/lib/xp/altitude";
 import { cn } from "@/lib/utils";
 
 interface XpProfileSummary {
@@ -45,14 +44,12 @@ function XpProgressCardContents({ profile, rewardSequence }: { profile: XpProfil
     return () => controls.stop();
   }, [profile.totalXp, still]);
   const display = { totalXp: displayXp, ...progressionForTotalXp(displayXp) };
-  const band = bandForTotalXp(displayXp);
   const progressPercent = resolveProgressPercent(display);
   const levelLabel = `Lv ${display.currentLevel} · ${formatNumber(displayXp)} XP`;
 
   return (
     <>
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{band.name}</span>
+      <div className="flex items-center gap-2">
         <span className="font-mono text-xs text-muted-foreground">{levelLabel}</span>
       </div>
       <motion.div key={rewardSequence} initial={false} animate={!still && rewardSequence > 0 ? { scaleY: [1, 1.65, 1] } : { scaleY: 1 }} transition={{ duration: 0.95, times: [0, 0.35, 1] }}

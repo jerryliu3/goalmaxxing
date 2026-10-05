@@ -19,13 +19,11 @@ import {
   isPlannerCalendarPathname,
 } from "@/lib/planner/calendar-view-memory";
 
-export function CalendarPageShell({ isActive = true, destination = "agenda" }: { isActive?: boolean; destination?: "agenda" | "goals" }) {
+export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();
-  const onCalendarPath = destination === "goals"
-    ? pathname === "/goals" || pathname === "/demo/goals"
-    : isPlannerCalendarPathname(pathname);
+  const onCalendarPath = isPlannerCalendarPathname(pathname);
   const routeIsActive = isActive && onCalendarPath;
   const defaultCalendarViewMode = DEFAULT_CALENDAR_VIEW_MODE;
   const { scope, activePartner, partner, viewer } = useDuoSurface("calendar");
@@ -99,6 +97,7 @@ export function CalendarPageShell({ isActive = true, destination = "agenda" }: {
       }
       applySearchParams(
         (params) => {
+          params.delete("lens");
           params.set("view", viewMode);
           const today = getTodayDateParam();
           const day =
@@ -133,6 +132,7 @@ export function CalendarPageShell({ isActive = true, destination = "agenda" }: {
       }
       applySearchParams(
         (params) => {
+          if (nextViewMode) params.delete("lens");
           if (day && isValidDate(day)) {
             const resolvedViewMode = nextViewMode ?? normalized.viewMode;
             params.set("view", resolvedViewMode);
@@ -161,8 +161,14 @@ export function CalendarPageShell({ isActive = true, destination = "agenda" }: {
 
   return (
     <CalendarSurface
-      key={destination}
-      destination={destination}
+      goalTimelineOpen={searchParams.get("lens") === "goals"}
+      onGoalTimelineOpenChange={(open) => {
+        if (!routeIsActive) return;
+        applySearchParams((params) => {
+          if (open) params.set("lens", "goals");
+          else params.delete("lens");
+        }, "push");
+      }}
       activeTab="calendar"
       month={normalized.month}
       selectedDay={normalized.day}

@@ -1,5 +1,7 @@
 "use client";
 
+import { addDaysToDateString } from "@/lib/goals/periods";
+
 import {
   useCallback,
   useEffect,
@@ -100,7 +102,8 @@ import {
 
 
 export function CalendarSurface({
-  destination = "agenda",
+  goalTimelineOpen = false,
+  onGoalTimelineOpenChange,
   activeTab,
   month,
   selectedDay,
@@ -121,7 +124,7 @@ export function CalendarSurface({
   const [context, setContext] = useState<PlannerContextPayload | null>(null);
   const [loading, setLoading] = useState(Boolean(month));
   useLayoutEffect(() => {
-    if (!month || destination === "goals") {
+    if (!month || goalTimelineOpen) {
       return;
     }
     const cached = readTabDataCache<PlannerContextPayload>(
@@ -132,7 +135,7 @@ export function CalendarSurface({
     }
     setContext(cached);
     setLoading(false);
-  }, [destination, month]);
+  }, [goalTimelineOpen, month]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
@@ -143,19 +146,15 @@ export function CalendarSurface({
   const [endMonthFilters, setEndMonthFilters] = useState<string[]>([]);
   const [showCompletedGoals, setShowCompletedGoals] = useState(false);
   // Goal View is a lens on the same planner context, not a calendar view mode.
-  const [goalViewOpen, setGoalViewOpen] = useState(destination === "goals");
+  const [goalViewOpen, setGoalViewOpen] = useState(goalTimelineOpen);
   const [goalViewWindow, setGoalViewWindow] = useState<{ start: string; end: string } | null>(null);
-  const [showPastSessions, setShowPastSessions] = useState(false);
-  const [goalViewPreviewOpen, setGoalViewPreviewOpen] = useState(false);
   const goalViewVisible = goalViewOpen && goalViewWindow !== null;
-  const [searchQuery, setSearchQuery] = useState("");
+  const [goalViewAnchorDate, setGoalViewAnchorDate] = useState<string | null>(null);
   useEffect(() => {
-    if (routeViewMode !== "day" || destination === "goals") return;
-    setCategoryFilters([]);
-    setGoalIdFilters([]);
-    setEndMonthFilters([]);
-    setSearchQuery("");
-  }, [destination, routeViewMode]);
+    setGoalViewOpen(goalTimelineOpen);
+    if (goalTimelineOpen) setGoalViewAnchorDate(null);
+  }, [goalTimelineOpen]);
+  const [searchQuery, setSearchQuery] = useState("");
   const {
     draftPolicy,
     setDraftPolicy,
@@ -275,6 +274,9 @@ export function CalendarSurface({
   const [setupRestWeekdays, setSetupRestWeekdays] = useState<number[]>([]);
   // Session-scoped like warning dismissal; default off until the user opts in.
   const [showTasksInsteadOfGoals, setShowTasksInsteadOfGoals] = useState(false);
+  useEffect(() => {
+    if (goalViewOpen) setShowTasksInsteadOfGoals(false);
+  }, [goalViewOpen]);
   const {
     hoverPreviewTimerRef,
     hoverPreviewCloseTimerRef,
@@ -301,6 +303,7 @@ export function CalendarSurface({
     viewMode,
     goalViewOpen,
     setGoalViewWindow,
+    goalViewAnchorDate,
     setupTimezone,
     setupWeekStartsOn,
     onMonthChange,
@@ -1102,11 +1105,20 @@ export function CalendarSurface({
     viewMode,
     goalViewOpen,
     goalViewVisible,
-    onGoalViewOpenChange: setGoalViewOpen,
-    showPastSessions,
-    setShowPastSessions,
-    goalViewPreviewOpen,
-    setGoalViewPreviewOpen,
+    onGoalViewOpenChange: (open) => {
+      setGoalViewOpen(open);
+      if (open) setGoalViewAnchorDate(null);
+      onGoalTimelineOpenChange?.(open);
+    },
+    onGoalTimelineRetry: () => { void loadContext(); },
+    onGoalTimelineVisibleDateChange: (date) => {
+      const window = buildGoalViewWindow(goalViewAnchorDate ?? calendarToday);
+      // Keep a generous buffer on both sides; scroll events do not request every date.
+      if (date < addDaysToDateString(window.start, 7) || date > addDaysToDateString(window.end, -21)) {
+        setGoalViewAnchorDate(date);
+        onMonthChange(date.slice(0, 7), "replace");
+      }
+    },
     goalViewSessions,
     goalViewWindow,
     onGoalViewMoveSession: updateDraftScheduledDate,

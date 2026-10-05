@@ -14,7 +14,7 @@ import { CurrentGoalGrid } from "./current-goal-grid";
 import { buildCurrentGoals, buildGoalFolios } from "./folio-model";
 import styles from "./folio.module.css";
 
-export function GoalLibraryPage() {
+export function GoalLibraryPage({ title = "The goal library", showBack = true }: { title?: string; showBack?: boolean }) {
   const router = useAppRouter();
   const prefix = isDemoPathname(usePathname() ?? "") ? "/demo" : "";
   const { state, loading, loadError, reload } = useInsightsData({ selectedYear: String(new Date().getFullYear()) });
@@ -24,11 +24,11 @@ export function GoalLibraryPage() {
   const goalCount = folios.reduce((total, folio) => total + folio.entries.length, 0);
   return (
     <div className={styles.page}>
-      <button type="button" onClick={() => router.push(`${prefix}/goals`)} className={styles.back}><ArrowLeft size={15} aria-hidden="true" />Back to Goals</button>
+      {showBack ? <button type="button" onClick={() => router.push(`${prefix}/goals`)} className={styles.back}><ArrowLeft size={15} aria-hidden="true" />Back to Goals</button> : null}
       <header className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>EVERY GOAL YOU’VE SET</p>
-          <h1 className={styles.pageTitle}>The goal library</h1>
+          <h1 className={styles.pageTitle}>{title}</h1>
           <p className={styles.intro}>Taking shape. Worth keeping.</p>
         </div>
         <div className="flex flex-col items-end gap-3"><NewGoalButton />{!loading && !loadError && <p className={styles.collectionCount}>{current.length} current · {goalCount} past</p>}</div>

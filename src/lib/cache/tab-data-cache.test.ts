@@ -4,6 +4,7 @@ import {
   loadTabDataCache,
   markTabDataCacheStaleByPrefix,
   readTabDataCache,
+  retainTabDataCacheKeyByPrefix,
   resetTabDataCacheForTests,
   setTabDataCacheScope,
   writeTabDataCache,
@@ -103,5 +104,31 @@ describe("tab-data-cache stale-while-revalidate", () => {
       value: "A",
     });
     expect(isTabDataCacheFresh("progress-context:test")).toBe(false);
+  });
+});
+
+
+describe("rolling Goal View cache retention", () => {
+  afterEach(resetTabDataCacheForTests);
+  it("removes old windows from memory and session storage without dropping other tabs", () => {
+    const prefix = "planner-context:goals:";
+    writeTabDataCache(prefix + "old", { days: "old" });
+    writeTabDataCache(prefix + "current", { days: "current" });
+    writeTabDataCache("planner-context:2026-10", { calendar: true });
+    retainTabDataCacheKeyByPrefix(prefix, prefix + "current");
+    expect(readTabDataCache(prefix + "old")).toBeNull();
+    expect(readTabDataCache(prefix + "current")).toEqual({ days: "current" });
+    expect(readTabDataCache("planner-context:2026-10")).toEqual({ calendar: true });
+    expect(Object.keys(window.sessionStorage).some(key => key.endsWith(prefix + "old"))).toBe(false);
+  });
+  it("detaches evicted in-flight pages so late responses cannot refill old windows", async () => {
+    const prefix = "planner-context:goals:";
+    let resolve!: (value: string) => void;
+    const request = loadTabDataCache(prefix + "old", () => new Promise<string>(done => { resolve = done; }));
+    await Promise.resolve();
+    retainTabDataCacheKeyByPrefix(prefix, prefix + "current");
+    resolve("old page");
+    await request;
+    expect(readTabDataCache(prefix + "old")).toBeNull();
   });
 });

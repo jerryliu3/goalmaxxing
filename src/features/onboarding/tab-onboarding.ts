@@ -18,9 +18,9 @@ export interface TabOnboardingStep {
 export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]> = {
   "planner.calendar": [
     {
-      title: "Agenda views",
+      title: "Planner views",
       description:
-        "Today is your default. Switch to Week or Month to plan ahead.",
+        "Day opens at today by default. Use Week or Month to plan ahead, or Goal View to arrange sessions across a continuous timeline.",
       target: "planner.calendar.controls",
     },
     {
@@ -126,7 +126,7 @@ export interface TabOnboardingReplayLink {
 export const TAB_ONBOARDING_REPLAY_LINKS: TabOnboardingReplayLink[] = [
   {
     key: "planner.calendar",
-    label: "Agenda",
+    label: "Planner",
     href: `/calendar?${TAB_ONBOARDING_QUERY_PARAM}=planner.calendar`,
   },
   {

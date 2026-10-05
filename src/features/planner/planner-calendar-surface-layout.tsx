@@ -7,7 +7,7 @@ import {
   restoreCalendarDayScreenTop,
 } from "@/features/planner/calendar-scroll-position";
 import type { GoalViewSession } from "@/features/planner/goal-view/goal-view-model";
-import { PlannerGoalView } from "@/features/planner/goal-view/planner-goal-view";
+import { PlannerTimeWeave } from "@/features/planner/time-weave/planner-time-weave";
 import { PlannerCalendarBoard } from "@/features/planner/planner-calendar-board";
 import { PlannerCalendarOverlays } from "@/features/planner/planner-calendar-overlays";
 import { PlannerCalendarToolbar } from "@/features/planner/planner-calendar-toolbar";
@@ -82,12 +82,9 @@ export interface PlannerCalendarSurfaceLayoutProps {
   draftSaveBlocked: boolean;
   viewMode: PlannerCalendarViewMode;
   goalViewOpen: boolean;
-  /** Goal View is open and its initial calendar snapshot is available. */
+  onGoalTimelineVisibleDateChange: (date: string) => void;
+  onGoalTimelineRetry: () => void;
   goalViewVisible: boolean;
-  showPastSessions: boolean;
-  setShowPastSessions: (value: boolean) => void;
-  goalViewPreviewOpen: boolean;
-  setGoalViewPreviewOpen: (open: boolean) => void;
   onGoalViewOpenChange: (open: boolean) => void;
   goalViewSessions: GoalViewSession[];
   goalViewWindow: { start: string; end: string } | null;
@@ -247,10 +244,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     viewMode,
     goalViewOpen,
     goalViewVisible,
-    showPastSessions,
-    setShowPastSessions,
-    goalViewPreviewOpen,
-    setGoalViewPreviewOpen,
+    onGoalTimelineVisibleDateChange,
+    onGoalTimelineRetry,
     onGoalViewOpenChange,
     goalViewSessions,
     goalViewWindow,
@@ -473,7 +468,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         viewMode={viewMode}
         goalViewOpen={goalViewOpen}
         onGoalViewOpenChange={onGoalViewOpenChange}
-        onGoalViewPreview={() => setGoalViewPreviewOpen(true)}
         canOpenSettings={Boolean(context?.preferences)}
         linkedTargetDetails={eligibilityNotices.linkedTargetDetails}
         searchQuery={searchQuery}
@@ -499,40 +493,44 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
           title="Loading planner context..."
           description="Preparing your schedule and completion state."
         />
-      ) : error ? (
+      ) : error && !context ? (
         <div className="rounded-xl border bg-card p-6 text-sm text-destructive">
           {error}
         </div>
       ) : month ? (
         <>
+          {error && goalViewOpen ? <div role="alert" className="flex items-center gap-3 text-sm text-destructive">
+            <p>{error}</p><button type="button" className="underline" onClick={onGoalTimelineRetry}>Retry loading dates</button>
+          </div> : null}
           <PlannerCalendarBoard
             loading={loading}
             viewMode={viewMode}
             goalView={
-              goalViewVisible && goalViewWindow ? (
-                <PlannerGoalView
+              goalViewOpen ? (goalViewVisible ? (
+                <PlannerTimeWeave
+                  loading={loading}
+                  onVisibleDate={onGoalTimelineVisibleDateChange}
+                  onInspectDate={(date) => setExpandedPreviewDay(date)}
+                  onOpenEntry={(entry, date) => {
+                    setLocalSelectedDay(date);
+                    togglePlannerGoalSelection(entry, { applyGoalFocus: false });
+                  }}
                   goals={dayChecklist.data.goals}
                   completedGoalIds={dayChecklist.listModel.targetAchievedGoalIds}
                   showCompletedGoals={showCompletedGoals}
-                  progressSummaries={dayChecklist.data.progress?.summaries ?? []}
                   sessions={goalViewSessions}
-                  window={goalViewWindow}
                   today={context?.asOfDate ?? focusedDay}
                   weekStartsOn={context?.preferences?.defaultPolicy.weekStartsOn}
-                  showPast={showPastSessions}
-                  previewOpen={goalViewPreviewOpen}
-                  onPreviewOpenChange={setGoalViewPreviewOpen}
                   canMutatePlanItems={canMutatePlanItems}
                   optimisticCompletionFacts={optimisticCompletionFacts}
                   mutationLoadingKey={mutationLoadingKey}
                   canOpenEntry={canOpenPlannerEventDetails}
                   canMutateEntryOnDay={canMutateEntryOnDay}
-                  onMoveEntry={onGoalViewMoveSession}
                   onToggleEntry={(entry, day, source) => {
                     void toggleDateFact(entry, day, source);
                   }}
                 />
-              ) : null
+              ) : <LoadingCard title="Opening Goal View..." description="Gathering your saved sessions." />) : null
             }
             showTasksInsteadOfGoals={showTasksInsteadOfGoals}
             previousWindowAriaLabel={previousWindowAriaLabel}
@@ -738,6 +736,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         showTasksInsteadOfGoals={showTasksInsteadOfGoals}
         onShowTasksInsteadOfGoalsChange={onShowTasksInsteadOfGoalsChange}
         tasksToggleDisabled={plannerReadOnly}
+        showTasksToggle={!goalViewOpen}
         categoryFilters={categoryFilters}
         onCategoryFiltersChange={setCategoryFilters}
         categoryOptions={categoryOptions}
@@ -746,10 +745,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         endMonthOptions={endMonthOptions}
         showCompletedGoals={showCompletedGoals}
         onShowCompletedGoalsChange={setShowCompletedGoals}
-        showPastSessions={goalViewVisible ? showPastSessions : undefined}
-        onShowPastSessionsChange={setShowPastSessions}
         dayFilters={
-          checklistViewMode === "day" && dayChecklist
+          !goalViewOpen && checklistViewMode === "day" && dayChecklist
             ? dayChecklist.filterFormProps
             : null
         }

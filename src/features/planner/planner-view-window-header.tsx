@@ -74,7 +74,7 @@ export function PlannerViewWindowHeader({
           </div>
         </div>
       </div>
-      <div className="flex min-h-8 items-center justify-center">
+      {showTodayShortcut || loading ? <div className="flex min-h-8 items-center justify-center">
         {showTodayShortcut ? (
           <Button
             type="button"
@@ -92,7 +92,7 @@ export function PlannerViewWindowHeader({
             Updating...
           </span>
         ) : null}
-      </div>
+      </div> : null}
     </div>
   );
 }

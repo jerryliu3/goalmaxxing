@@ -24,6 +24,7 @@ interface PlannerFiltersDialogProps {
   showTasksInsteadOfGoals: boolean;
   onShowTasksInsteadOfGoalsChange: (next: boolean) => void;
   tasksToggleDisabled?: boolean;
+  showTasksToggle?: boolean;
   categoryFilters: string[];
   onCategoryFiltersChange: (value: string[]) => void;
   categoryOptions: GoalCategoryFilterOption[];
@@ -33,8 +34,6 @@ interface PlannerFiltersDialogProps {
   showCompletedGoals?: boolean;
   onShowCompletedGoalsChange?: (value: boolean) => void;
   /** Goal View only: undefined hides the control. */
-  showPastSessions?: boolean;
-  onShowPastSessionsChange?: (value: boolean) => void;
   dayFilters?: ChecklistFiltersFormProps | null;
 }
 
@@ -44,6 +43,7 @@ export function PlannerFiltersDialog({
   showTasksInsteadOfGoals,
   onShowTasksInsteadOfGoalsChange,
   tasksToggleDisabled = false,
+  showTasksToggle = true,
   categoryFilters,
   onCategoryFiltersChange,
   categoryOptions,
@@ -52,8 +52,6 @@ export function PlannerFiltersDialog({
   endMonthOptions,
   showCompletedGoals = false,
   onShowCompletedGoalsChange,
-  showPastSessions,
-  onShowPastSessionsChange,
   dayFilters = null,
 }: PlannerFiltersDialogProps) {
   const usingDayFilters = dayFilters !== null;
@@ -71,11 +69,13 @@ export function PlannerFiltersDialog({
           <DialogDescription>
             {usingDayFilters
               ? "Filter this day's scheduled work, unscheduled goals, and tasks."
-              : "Choose whether the planner shows scheduled goals or date-only tasks."}
+              : showTasksToggle
+                ? "Choose whether the planner shows scheduled goals or date-only tasks."
+                : "Choose which goals appear across the timeline."}
           </DialogDescription>
         </DialogHeader>
         <div className="max-h-[min(32rem,calc(85vh-8rem))] space-y-4 overflow-y-auto overflow-x-visible">
-          <div className="flex items-start justify-between gap-3">
+          {showTasksToggle ? <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
               <p className="font-sans text-sm font-medium">Show tasks instead of goals</p>
               <p className="text-xs text-muted-foreground">
@@ -104,7 +104,7 @@ export function PlannerFiltersDialog({
                 )}
               />
             </button>
-          </div>
+          </div> : null}
           {usingDayFilters ? null : (
             <label className="flex min-w-0 items-start gap-2">
               <input
@@ -122,24 +122,6 @@ export function PlannerFiltersDialog({
                   Show completed goals in the checklist and Goal View, including
                   milestones, and already-done sessions on future days. Past and today still
                   show completed work on the calendar.
-                </span>
-              </span>
-            </label>
-          )}
-          {showPastSessions === undefined || usingDayFilters ? null : (
-            <label className="flex min-w-0 items-start gap-2">
-              <input
-                type="checkbox"
-                checked={showPastSessions}
-                onChange={(event) => onShowPastSessionsChange?.(event.target.checked)}
-                className="mt-1 size-4 shrink-0 accent-primary"
-                aria-label="Show past sessions"
-              />
-              <span className="min-w-0 space-y-1">
-                <span className="block font-sans text-sm font-medium">Show past sessions</span>
-                <span className="block text-xs text-muted-foreground">
-                  Goal View lists upcoming sessions by default. Include sessions
-                  from the last 60 days.
                 </span>
               </span>
             </label>

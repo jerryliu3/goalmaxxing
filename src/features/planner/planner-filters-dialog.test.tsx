@@ -38,34 +38,18 @@ describe("PlannerFiltersDialog", () => {
     expect(onShowTasksInsteadOfGoalsChange).toHaveBeenCalledWith(true);
   });
 
-  it("offers Show past sessions only when Goal View supplies it", () => {
-    const onShowPastSessionsChange = vi.fn();
-    const props = {
-      open: true,
-      onOpenChange: vi.fn(),
-      showTasksInsteadOfGoals: false,
-      onShowTasksInsteadOfGoalsChange: vi.fn(),
-      categoryFilters: [],
-      onCategoryFiltersChange: vi.fn(),
-      categoryOptions: [],
-      endMonthFilters: [],
-      onEndMonthFiltersChange: vi.fn(),
-      endMonthOptions: [],
-    };
-    const { rerender } = render(<PlannerFiltersDialog {...props} />);
-    expect(
-      screen.queryByRole("checkbox", { name: "Show past sessions" })
-    ).not.toBeInTheDocument();
-
-    rerender(
-      <PlannerFiltersDialog
-        {...props}
-        showPastSessions={false}
-        onShowPastSessionsChange={onShowPastSessionsChange}
+  it("keeps Goal View focused on goals without the task replacement switch", () => {
+    render(
+      <PlannerFiltersDialog open onOpenChange={vi.fn()}
+        showTasksInsteadOfGoals={false} showTasksToggle={false}
+        onShowTasksInsteadOfGoalsChange={vi.fn()}
+        categoryFilters={[]} onCategoryFiltersChange={vi.fn()} categoryOptions={[]}
+        endMonthFilters={[]} onEndMonthFiltersChange={vi.fn()} endMonthOptions={[]}
       />
     );
-    fireEvent.click(screen.getByRole("checkbox", { name: "Show past sessions" }));
-    expect(onShowPastSessionsChange).toHaveBeenCalledWith(true);
+    expect(screen.queryByRole("switch", { name: /show tasks instead of goals/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Show completed goals" })).toBeInTheDocument();
+    expect(screen.getByText("Category")).toBeInTheDocument();
   });
 
   it("hides goal filters while tasks replace goals", () => {

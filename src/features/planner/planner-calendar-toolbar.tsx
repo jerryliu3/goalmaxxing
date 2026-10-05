@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
+import { CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ const PLANNER_VIEW_MODES: ReadonlyArray<{
   value: PlannerCalendarViewMode;
   label: string;
 }> = [
-  { value: "day", label: "Today" },
+  { value: "day", label: "Day" },
   { value: "week", label: "Week" },
   { value: "month", label: "Month" },
 ];
@@ -54,7 +54,6 @@ interface PlannerCalendarToolbarProps {
   /** Empty hides the dropdown (for example while tasks replace goals). */
   goalFilterOptions: GoalCategoryFilterOption[];
   onGoalViewOpenChange: (open: boolean) => void;
-  onGoalViewPreview: () => void;
   onOpenFilters: () => void;
   onOpenSettings: () => void;
   onSearchQueryChange: (query: string) => void;
@@ -74,7 +73,7 @@ function PlanViewModeSwitch({
   onGoalViewOpenChange: (open: boolean) => void;
 }) {
   const resolvedViewMode = viewMode === "three_day" ? "week" : viewMode;
-  const selectedViewIndex = Math.max(0, PLANNER_VIEW_MODES.findIndex((option) => option.value === resolvedViewMode));
+  const selectedViewIndex = goalViewOpen ? 3 : Math.max(0, PLANNER_VIEW_MODES.findIndex((option) => option.value === resolvedViewMode));
   const optionClass = (selected: boolean) =>
     selected
       ? "relative z-10 min-h-8 whitespace-nowrap rounded-[8px] px-3 text-primary-foreground"
@@ -84,12 +83,12 @@ function PlanViewModeSwitch({
     <div
       role="group"
       aria-label="Plan view mode"
-      className="relative isolate inline-grid shrink-0 grid-cols-3 rounded-[10px] bg-muted p-0.5 text-xs font-medium"
+      className="relative isolate inline-grid shrink-0 grid-cols-4 rounded-[10px] bg-muted p-0.5 text-xs font-medium"
     >
       <span
         aria-hidden
         data-testid="plan-view-mode-thumb"
-        className="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc((100%-4px)/3)] rounded-[8px] bg-primary shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+        className="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc((100%-4px)/4)] rounded-[8px] bg-primary shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
         style={{ transform: `translateX(${selectedViewIndex * 100}%)` }}
       />
       {PLANNER_VIEW_MODES.map((modeOption) => {
@@ -110,6 +109,10 @@ function PlanViewModeSwitch({
           </button>
         );
       })}
+      <button type="button" aria-pressed={goalViewOpen} disabled={loading}
+        onClick={() => onGoalViewOpenChange(true)} className={optionClass(goalViewOpen)}>
+        Goal View
+      </button>
     </div>
   );
 }
@@ -138,7 +141,6 @@ export function PlannerCalendarToolbar({
   onGoalIdFiltersChange,
   goalFilterOptions,
   onGoalViewOpenChange,
-  onGoalViewPreview,
   onOpenFilters,
   onOpenSettings,
   onSearchQueryChange,
@@ -156,7 +158,7 @@ export function PlannerCalendarToolbar({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <h2 className="font-display text-lg font-semibold tracking-tight">{goalViewOpen ? "Current goals" : "Agenda"}</h2>
+              <h2 className="font-display text-lg font-semibold tracking-tight">Planner</h2>
               <Tooltip content="Planner help" side="top" align="center">
                 <Button
                   type="button"
@@ -211,20 +213,20 @@ export function PlannerCalendarToolbar({
           </div>
         </div>
         <div data-onboarding="planner.calendar.controls" className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1">
-          {!goalViewOpen ? <PlanViewModeSwitch
+          <PlanViewModeSwitch
             viewMode={viewMode}
             goalViewOpen={goalViewOpen}
             loading={loading}
             onViewModeChange={onViewModeChange}
             onGoalViewOpenChange={onGoalViewOpenChange}
-          /> : null}
+          />
           {viewMode !== "day" || goalViewOpen ? <PlannerEndMonthQuickFilterChips
             referenceMonth={referenceMonth}
             endMonthFilters={endMonthFilters}
             onEndMonthFiltersChange={onEndMonthFiltersChange}
           /> : null}
         </div>
-        {viewMode !== "day" || goalViewOpen ? <div className="flex w-full items-center gap-2">
+        <div className="flex w-full items-center gap-2">
           <div className="min-w-0 flex-1">
             <Input
               id="planner-calendar-search"
@@ -257,18 +259,6 @@ export function PlannerCalendarToolbar({
             className="flex shrink-0 items-center gap-2"
             data-onboarding="planner.calendar.controls"
           >
-            {goalViewOpen ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onGoalViewPreview}
-                disabled={loading}
-              >
-                <CalendarDays aria-hidden="true" />
-                Preview
-              </Button>
-            ) : null}
             <Button
               type="button"
               variant="outline"
@@ -294,7 +284,7 @@ export function PlannerCalendarToolbar({
               </Button>
             ) : null}
           </div>
-        </div> : null}
+        </div>
       </div>
       <Dialog
         open={helpOpen}

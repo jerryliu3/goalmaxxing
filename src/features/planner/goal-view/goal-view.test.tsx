@@ -232,8 +232,8 @@ describe("GoalView", () => {
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).queryByRole("button", { name: /week/i })).toBeNull();
     const weeks = within(dialog).getByLabelText("Goal sessions by week");
-    // 60 days back through 300 forward spans 52 planner weeks.
-    expect(within(weeks).getAllByRole("region").length).toBeGreaterThanOrEqual(51);
+    // The bounded 90-day window spans 14 planner weeks.
+    expect(within(weeks).getAllByRole("region")).toHaveLength(14);
     const current = within(weeks).getByRole("region", { name: "Week of Sep 28" });
     expect(current).toHaveAttribute("data-current-week");
     expect(within(current).getAllByText("Get stronger").length).toBeGreaterThan(0);

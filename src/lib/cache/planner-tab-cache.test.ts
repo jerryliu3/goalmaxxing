@@ -63,7 +63,7 @@ describe("invalidatePlannerRelatedTabCaches", () => {
     expect(isTabDataCacheFresh(profileKey)).toBe(false);
   });
 
-  it("invalidates wide goal windows and achievements alongside Agenda", () => {
+  it("invalidates wide goal windows and achievements alongside Planner", () => {
     const goalsKey = buildGoalViewContextCacheKey("2026-08", "2026-07-01", "2026-10-31");
     expect(goalsKey).not.toBe(buildPlannerContextCacheKey("2026-08"));
     writeTabDataCache(goalsKey, { goals: true });

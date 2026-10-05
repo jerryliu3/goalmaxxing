@@ -5,9 +5,9 @@ import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.
 import { addDaysToDateString, startOfWeekDateString } from "@/lib/goals/periods";
 import type { Goal } from "@/lib/goals/types";
 
-/** 60 + 300 + today = 361 days, inside MAX_PLANNER_WINDOW_DAYS (366). */
-export const GOAL_VIEW_DAYS_BACK = 60;
-export const GOAL_VIEW_DAYS_FORWARD = 300;
+/** One rolling 90-day window: 21 prior days, today, and 68 following days. */
+export const GOAL_VIEW_DAYS_BACK = 21;
+export const GOAL_VIEW_DAYS_FORWARD = 68;
 export const GOAL_VIEW_PAGE_SIZE = 12;
 
 

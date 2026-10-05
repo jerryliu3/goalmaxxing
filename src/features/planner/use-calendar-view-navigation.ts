@@ -190,7 +190,8 @@ export function useCalendarViewNavigation({
 
   const setCalendarViewMode = useCallback(
     (nextViewMode: PlannerCalendarViewMode) => {
-      if (nextViewMode === viewMode) {
+      const nextDay = nextViewMode === "day" ? calendarToday : focusedDay;
+      if (nextViewMode === viewMode && nextDay === focusedDay) {
         return;
       }
       setDayPreview(null);
@@ -205,10 +206,11 @@ export function useCalendarViewNavigation({
       monthScrollAlignmentKeyRef.current = null;
       calendarHorizontalAlignmentKeyRef.current = null;
       onRenderedViewModeChange(nextViewMode);
-      onSelectedDayChange(focusedDay, "push", nextViewMode, { alignMonth: true });
+      onSelectedDayChange(nextDay, "push", nextViewMode, { alignMonth: true });
     },
     [
       calendarHorizontalAlignmentKeyRef,
+      calendarToday,
       focusedDay,
       monthScrollAlignmentKeyRef,
       onSelectedDayChange,

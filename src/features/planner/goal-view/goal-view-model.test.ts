@@ -36,10 +36,10 @@ function entry(
 const goal = (id: string, title: string) => ({ id, title }) as Goal;
 
 describe("Goal View window", () => {
-  it("covers 361 days, inside the planner window limit", () => {
+  it("covers exactly 90 days around the leading date", () => {
     const window = buildGoalViewWindow("2026-10-02");
-    expect(window).toEqual({ start: "2026-08-03", end: "2027-07-29" });
-    expect(listWindowDays(window)).toHaveLength(361);
+    expect(window).toEqual({ start: "2026-09-11", end: "2026-12-09" });
+    expect(listWindowDays(window)).toHaveLength(90);
   });
 });
 
