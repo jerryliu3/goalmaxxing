@@ -1,0 +1,16 @@
+.ghost :global(.tempo-card[data-tempo-goal-card]) {
+  border: 2px dashed var(--border);
+  background: transparent;
+  color: var(--muted-foreground);
+  box-shadow: none;
+}
+/* Keep the real card's layout spacing while omitting goal metadata. */
+.ghost :global(.tempo-card-meta),
+.ghost :global(.tempo-card-period-row) {
+  visibility: hidden;
+}
+button:hover .ghost :global(.tempo-card),
+a:hover .ghost :global(.tempo-card) {
+  border-color: var(--primary);
+  color: var(--foreground);
+}

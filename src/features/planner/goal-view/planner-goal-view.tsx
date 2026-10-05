@@ -24,8 +24,6 @@ export interface PlannerGoalViewProps {
   today: string;
   weekStartsOn: number | null | undefined;
   showPast: boolean;
-  previewOpen: boolean;
-  onPreviewOpenChange: (open: boolean) => void;
   canMutatePlanItems: boolean;
   optimisticCompletionFacts: OptimisticCompletionFacts;
   mutationLoadingKey: string | null;

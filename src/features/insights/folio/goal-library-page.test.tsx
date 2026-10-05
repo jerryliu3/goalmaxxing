@@ -5,11 +5,11 @@ import { summary } from "./folio-test-fixtures";
 import { GoalLibraryPage } from "./goal-library-page";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/goals/library", useSearchParams: () => new URLSearchParams() }));
-const mocks = vi.hoisted(() => ({ push: vi.fn(), data: vi.fn() }));
+const mocks = vi.hoisted(() => ({ push: vi.fn(), data: vi.fn(), tracker: vi.fn() }));
 vi.mock("@/lib/navigation/use-app-router", () => ({ useAppRouter: () => ({ push: mocks.push }) }));
 vi.mock("@/features/insights/use-insights-data", () => ({ useInsightsData: () => mocks.data() }));
 vi.mock("@/components/layout/app-boot-ready", () => ({ useReportAppSurfaceReady: vi.fn() }));
-vi.mock("./folio-shelf", () => ({ FolioShelf: () => <p>Past volumes</p> }));
+vi.mock("@/features/insights/insights-tab", () => ({ InsightsTab: (props: unknown) => { mocks.tracker(props); return <section data-testid="progress-tracker">Progress tracker</section>; } }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
 function loadCollection() {
@@ -18,6 +18,13 @@ function loadCollection() {
 }
 
 describe("goal library journey", () => {
+  it("keeps a partner collection and its tracker read-only", () => {
+    loadCollection();
+    render(<GoalLibraryPage subjectUserId="partner-1" readOnly anchorSections={false} />);
+    expect(screen.queryByRole("link", { name: "New Goal" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Goal details/ })).toBeNull();
+    expect(mocks.tracker).toHaveBeenCalledWith(expect.objectContaining({ readOnly: true, anchorSections: false }));
+  });
   it("opens Current from Goals with live progress and reward text", () => {
     loadCollection();
     render(<GoalLibraryPage />);
@@ -30,11 +37,30 @@ describe("goal library journey", () => {
     expect(document.querySelector("[data-flat-shards]")).toHaveAttribute("data-piece-count", "2");
     expect(document.querySelectorAll("[data-reward-piece]")).toHaveLength(0);
     expect(document.querySelector("[data-card-solid]")).toBeNull();
-    expect(screen.getAllByRole("article")).toHaveLength(1);
-    fireEvent.click(screen.getByRole("button", { name: "Past" }));
-    expect(mocks.push).toHaveBeenCalledWith("/achievements#progress-section-past-goals");
+    expect(screen.getAllByRole("article")).toHaveLength(2);
+    const current = screen.getByRole("heading", { name: "Current Goals" });
+    const tracker = screen.getByTestId("progress-tracker");
+    const past = screen.getByRole("heading", { name: "Past Goals" });
+    expect(current.compareDocumentPosition(tracker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(tracker.compareDocumentPosition(past) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(mocks.tracker).toHaveBeenCalledWith(expect.objectContaining({ subjectUserId: "user-1", sectionIds: ["history"] }));
+    expect(screen.getByRole("link", { name: "New Goal" })).toHaveAttribute("href", expect.stringContaining("/goals/new?returnTo="));
+    expect(screen.queryByRole("navigation", { name: "Goal library collections" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Back to Goals" }));
     expect(mocks.push).toHaveBeenLastCalledWith("/goals");
+  });
+
+  it("keeps creation available with no current goals and displays the past collection below the tracker", () => {
+    const ended = buildGoal({ owner_id: "user-1", end_date: "2026-09-30" });
+    mocks.data.mockReturnValue({ loading: false, loadError: null, reload: vi.fn(), state: {
+      userId: "user-1", goals: [ended], progress: { summaries: [summary(ended.id)] },
+    } });
+    render(<GoalLibraryPage showBack={false} />);
+    expect(screen.getByRole("link", { name: "New Goal" })).toBeInTheDocument();
+    const pastCard = screen.getByRole("article", { name: `${ended.title} goal card` });
+    expect(screen.getByTestId("progress-tracker").compareDocumentPosition(pastCard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Goal details/ }));
+    expect(mocks.push).toHaveBeenCalledWith(`/goals/${ended.id}`);
   });
 
   it("lets a fused current goal stay a draggable 3D card", () => {

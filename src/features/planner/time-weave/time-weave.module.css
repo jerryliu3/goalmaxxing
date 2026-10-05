@@ -14,7 +14,6 @@
 .day:hover { background:var(--muted); }
 .dropLayer { position:absolute; top:96px; pointer-events:none; }
 .dropDay { position:absolute; inset-block:0; border-right:1px solid var(--border); }
-.dropDay[data-over=true] { background:color-mix(in srgb, var(--primary) 12%, transparent); }
 .dropDay[data-today=true] { border-left:1px solid var(--primary); }
 .row { position:relative; display:flex; border-bottom:1px solid var(--border); }
 .label { position:sticky; left:0; z-index:20; flex:none; display:flex; flex-direction:column; justify-content:center; gap:6px; padding:12px; background:var(--card); border-right:1px solid var(--border); border-left:3px solid var(--primary); text-align:left; cursor:pointer; }
@@ -26,7 +25,6 @@
 .session { position:absolute; height:68px; overflow:hidden; display:flex; flex-direction:column; border:1px solid var(--border); border-radius:8px; background:var(--card); box-shadow:0 1px 2px rgb(0 0 0 / .04); }
 .session[data-draft=true] { border-style:dashed; border-color:var(--primary); }
 .session[data-done=true] { background:var(--muted); }
-.session[data-dragging=true] { opacity:.25; }
 .open { min-height:0; flex:1; padding:7px; text-align:left; cursor:pointer; }
 .open strong { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:12px; line-height:1.25; margin-top:4px; }
 .session button:focus-visible, .label:focus-visible, .day:focus-visible { outline:2px solid var(--ring); outline-offset:-2px; }
@@ -34,5 +32,3 @@
 
 .sessionTop { display:flex; align-items:center; gap:5px; padding:3px 6px 0; min-height:28px; }
 .sessionTop small { font-size:10px; color:var(--muted-foreground); }
-.session[data-movable=true] { cursor:grab; touch-action:pan-y; }
-.session[data-movable=true] .open { cursor:grab; }

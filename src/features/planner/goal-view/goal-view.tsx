@@ -9,9 +9,7 @@ import { GoalDeck } from "./goal-deck";
 import { GoalRail } from "./goal-rail";
 import type { GoalSessionCompletion } from "./goal-session-completion";
 import { GoalSessionTile } from "./goal-session-tile";
-import { GoalWeekPeek } from "./goal-week-peek";
 import {
-  buildGoalViewWindow,
   dateLabel,
   selectGoalViewGoals,
   sessionsForGoal,
@@ -27,9 +25,6 @@ export interface GoalViewProps {
   weekStartsOn: number;
   /** Include sessions before today (a planner filter). */
   showPast: boolean;
-  /** The cross-goal preview, opened from the planner toolbar. */
-  previewOpen: boolean;
-  onPreviewOpenChange: (open: boolean) => void;
   resolveCompletion: (session: GoalViewSession) => GoalSessionCompletion;
   isEditable: (session: GoalViewSession) => boolean;
   onMoveSession: (session: GoalViewSession, date: string) => void;
@@ -45,8 +40,6 @@ export function GoalView({
   today,
   weekStartsOn,
   showPast,
-  previewOpen,
-  onPreviewOpenChange,
   resolveCompletion,
   isEditable,
   onMoveSession,
@@ -55,17 +48,10 @@ export function GoalView({
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   // Same breakpoint as the app's other two-pane layouts (Tailwind `md`).
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const fullRange = useMemo(() => buildGoalViewWindow(today), [today]);
-  const loadingMoreDates = range.start !== fullRange.start || range.end !== fullRange.end;
   const visibleGoals = useMemo(
     () => selectGoalViewGoals(goals, sessions, { showPast, today }),
     [goals, sessions, showPast, today]
   );
-  // The preview follows the goals on screen.
-  const visibleSessions = useMemo(() => {
-    const visibleIds = new Set(visibleGoals.map((goal) => goal.id));
-    return sessions.filter((session) => visibleIds.has(session.goalId));
-  }, [sessions, visibleGoals]);
 
   const selectedId =
     visibleGoals.find((goal) => goal.id === selectedGoalId)?.id ??
@@ -93,9 +79,7 @@ export function GoalView({
     <div className="space-y-2" data-testid="goal-view">
       {visibleGoals.length === 0 || !selectedId ? (
         <p className="py-10 text-center text-sm text-muted-foreground">
-          {loadingMoreDates
-            ? "No scheduled sessions in the dates loaded so far."
-            : "No goals have scheduled sessions in this window."}
+          No goals have scheduled sessions in this window.
         </p>
       ) : isDesktop ? (
         visibleGoals.map((goal) => (
@@ -127,17 +111,8 @@ export function GoalView({
       <p className="pt-2 text-xs text-muted-foreground">
         Showing sessions from {dateLabel(range.start, "MMM d, yyyy")} through{" "}
         {dateLabel(range.end, "MMM d, yyyy")}.
-        {loadingMoreDates ? " Further dates load in the background." : ""}
       </p>
 
-      <GoalWeekPeek
-        open={previewOpen}
-        onOpenChange={onPreviewOpenChange}
-        range={range}
-        sessions={visibleSessions}
-        today={today}
-        weekStartsOn={weekStartsOn}
-      />
     </div>
   );
 }

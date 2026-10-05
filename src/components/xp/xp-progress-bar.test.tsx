@@ -20,11 +20,10 @@ describe("XpProgressBar", () => {
     });
 
     const { container } = render(<XpProgressBar />);
-    expect(screen.queryByText("Trailhead")).toBeNull();
     expect(screen.getByText("Lv 3 · 320 XP")).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Open achievements" })
-    ).toHaveAttribute("href", "/achievements#progress-section-achievements");
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuetext", "Level 3, 320 XP");
     expect(container.querySelector("[data-xp-reward-target='true']")).not.toBeNull();
   });
 });

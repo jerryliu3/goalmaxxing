@@ -8,6 +8,14 @@ describe("goal creation action", () => {
     render(<NewGoalButton />);
     expect(screen.getByRole("link", { name: "New Goal +" })).toHaveAttribute("href", "/goals/new?returnTo=%2Fgoals%3Fmonth%3D2026-10");
   });
+  it("opens the same creation action from a ghost card", () => {
+    const open = vi.fn();
+    render(<GoalCreationActionContext.Provider value={open}><NewGoalButton presentation="card" /></GoalCreationActionContext.Provider>);
+    fireEvent.click(screen.getByRole("button", { name: "New Goal" }));
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("article", { name: "Goal card preview" })).toBeInTheDocument();
+    expect(screen.getByText("Click to create")).toBeInTheDocument();
+  });
   it("uses the existing demo creation callback when supplied", () => {
     const open = vi.fn();
     render(<GoalCreationActionContext.Provider value={open}><NewGoalButton /></GoalCreationActionContext.Provider>);

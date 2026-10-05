@@ -15,8 +15,8 @@ afterEach(() => { cleanup(); vi.clearAllMocks(); });
 describe("AchievementsPage", () => {
   it("routes to the achievements destination with its progress sections", () => {
     render(<AchievementsPage />);
-    expect(screen.getByRole("heading", { name: "Achieved" })).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "Achieved sections" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Achieved" })).toBeNull();
+    expect(screen.queryByRole("navigation", { name: "Achieved sections" })).toBeNull();
     expect(screen.getByTestId("achievement-progress")).toBeInTheDocument();
   });
 });

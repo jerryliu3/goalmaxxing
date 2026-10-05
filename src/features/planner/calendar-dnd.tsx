@@ -12,7 +12,6 @@ import {
   type DragOverEvent,
   type DragEndEvent,
   type DragCancelEvent,
-  type KeyboardCoordinateGetter,
   type DraggableAttributes,
   type DraggableSyntheticListeners,
 } from "@dnd-kit/core";
@@ -91,7 +90,6 @@ const TOUCH_PRESS_TO_DRAG_DELAY_MS = 400;
 const TOUCH_PRESS_TO_DRAG_TOLERANCE_PX = 8;
 
 interface PlannerDndProviderProps {
-  keyboardCoordinates?: KeyboardCoordinateGetter;
   children: ReactNode;
   getEntryLabel: (entryKey: string) => string;
   getDayLabel: (day: string) => string;
@@ -106,7 +104,6 @@ interface PlannerDndProviderProps {
 }
 
 export function PlannerDndProvider({
-  keyboardCoordinates,
   children,
   getEntryLabel,
   getDayLabel,
@@ -132,7 +129,7 @@ export function PlannerDndProvider({
       },
     }),
     useSensor(KeyboardSensor, {
-      coordinateGetter: keyboardCoordinates ?? sortableKeyboardCoordinates,
+      coordinateGetter: sortableKeyboardCoordinates,
     })
   );
 

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { PublicProfileCurrentGoal } from "@cadence/shared/social/public-profile";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 import { GoalProgressCard } from "@/features/goals/goal-progress-card";
@@ -41,14 +42,17 @@ export function hydratePublicCurrentGoal(dto: PublicProfileCurrentGoal): {
 }
 
 export function CurrentGoalGrid({
+  leadingCard,
   entries,
   onDetails,
 }: {
+  leadingCard?: ReactNode;
   entries: Array<{ goal: Goal; progress: ProgressContextSummary }>;
   onDetails?: (goalId: string) => void;
 }) {
   return (
     <div className={styles.currentGrid}>
+      {leadingCard}
       {entries.map(({ goal, progress }) => (
         <section key={goal.id} className={styles.currentGoal} aria-label={goal.title}>
           <GoalProgressCard goal={goal} progress={progress} gallery />
