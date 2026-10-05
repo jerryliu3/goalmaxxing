@@ -8,8 +8,6 @@ import { FolioReader } from "./folio-reader";
 import type { GoalFolio } from "./folio-model";
 import styles from "./folio.module.css";
 
-const CLOTH_COLORS = ["#344f45", "#785a3a", "#4d5266", "#704d50"];
-
 function dialogBox() {
   const mobile = window.innerWidth <= 640;
   return {
@@ -78,13 +76,12 @@ export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
   return (
     <>
       <div className={styles.shelf}>
-        {folios.map((folio, index) => (
+        {folios.map(folio => (
           <button
             key={folio.year}
             type="button"
             className={styles.volume}
             data-open={openYear === folio.year}
-            style={{ "--folio-cloth": CLOTH_COLORS[index % CLOTH_COLORS.length] } as CSSProperties}
             aria-label={`Open ${folio.year}, ${folio.entries.length} ${folio.entries.length === 1 ? "goal" : "goals"}`}
             aria-haspopup="dialog"
             onClick={event => {
@@ -107,7 +104,6 @@ export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
           data-entering={entering}
           data-leaving={leaving}
           style={{
-            "--folio-cloth": CLOTH_COLORS[folios.findIndex(folio => folio.year === openYear) % CLOTH_COLORS.length],
             "--reveal-sx": String(origin.revealSx),
             "--reveal-sy": String(origin.revealSy),
           } as CSSProperties}

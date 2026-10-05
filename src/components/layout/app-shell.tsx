@@ -121,7 +121,7 @@ export function AppShell({
             <PublicProfileSheetProvider viewerUserId={userId} xpEnabled={xpEnabled}>
               <AppBootSplash onReady={onBootReady} />
               <div>
-                <div className="relative z-10 flex min-h-screen w-full justify-center bg-page px-4 py-4 sm:px-6 sm:py-6">
+                <div className="relative z-10 flex min-h-screen w-full justify-center bg-page px-4 py-4 sm:px-6 sm:py-6 lg:px-10">
                   <div className={`${coachStyles.appLayout} flex w-full flex-col gap-4 md:gap-6`}>
                   <header
                     data-testid="app-shell-header"

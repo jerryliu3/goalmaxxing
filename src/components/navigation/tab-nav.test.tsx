@@ -61,8 +61,9 @@ describe("TabNav", () => {
       "nav.social"
     );
     expect(screen.queryByRole("link", { name: /^Profile$/i })).toBeNull();
+    // Desktop marks the destination with ink, not a brand-colored fill.
     expect(screen.getByRole("link", { name: /Community/i })).toHaveClass(
-      "text-white"
+      "text-foreground"
     );
     expect(container.querySelectorAll("[data-motion='tab-nav-highlight']")).toHaveLength(1);
   });

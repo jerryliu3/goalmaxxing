@@ -7,7 +7,7 @@ describe("buildQuickEndDateChipOptions", () => {
     expect(
       buildQuickEndDateChipOptions("2026-08").map((option) => option.label)
     ).toEqual([
-      "All End Dates",
+      "All end dates",
       "This month",
       "Next month",
       "Year end",

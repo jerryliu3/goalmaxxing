@@ -65,7 +65,7 @@ export function tabChromeClasses(
       "w-full",
       mobile
         ? "fixed inset-x-0 bottom-0 z-50 flex justify-center px-2 pb-[max(env(safe-area-inset-bottom),0.4rem)]"
-        : "mx-auto rounded-2xl border bg-card/90 p-1"
+        : "mx-auto border-b border-border"
     ),
     list: cn(
       "grid w-full gap-1",
@@ -75,10 +75,15 @@ export function tabChromeClasses(
     ),
     link: cn(
       "relative isolate flex w-full touch-manipulation items-center justify-center rounded-xl px-2 font-medium transition-[color,transform] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none",
-      mobile ? "min-h-12 flex-col gap-1 py-1.5 text-[10px]" : "min-h-14 flex-col gap-1 py-2 text-[11px]"
+      mobile ? "min-h-12 flex-col gap-1 py-1.5 text-[10px]" : "min-h-14 flex-col gap-1 py-2 text-xs"
     ),
-    linkActive: "text-white",
-    linkIdle: "text-muted-foreground hover:bg-muted hover:text-foreground",
-    highlight: "absolute inset-0 -z-10 rounded-xl bg-primary shadow-sm",
+    linkActive: mobile ? "text-white" : "text-foreground",
+    linkIdle: mobile
+      ? "text-muted-foreground hover:bg-muted hover:text-foreground"
+      : "text-muted-foreground hover:text-foreground",
+    // Desktop marks the destination with an ink rule, not a brand-colored fill.
+    highlight: mobile
+      ? "absolute inset-0 -z-10 rounded-xl bg-primary shadow-sm"
+      : "absolute inset-x-[30%] bottom-0 -z-10 h-0.5 rounded-full bg-foreground",
   };
 }

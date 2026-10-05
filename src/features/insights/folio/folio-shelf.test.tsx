@@ -80,7 +80,9 @@ describe("folio reader", () => {
     const flight = dialog.querySelector<HTMLElement>("[data-folio-flight]")!;
     expect(flight.style.getPropertyValue("--flight-x")).toBe(`${220 - window.innerWidth / 2}px`);
     expect(flight.style.getPropertyValue("--flight-y")).toBe(`${360 - window.innerHeight / 2}px`);
-    expect(dialog.style.getPropertyValue("--folio-cloth")).toBe(book.style.getPropertyValue("--folio-cloth"));
+    const flightBooks = dialog.querySelectorAll<HTMLElement>("[data-folio-flight-layer] [data-folio-book]");
+    expect(flightBooks.length).toBeGreaterThan(0);
+    flightBooks.forEach(flightBook => expect(flightBook.style.getPropertyValue("--folio-cloth")).toBe(cover.style.getPropertyValue("--folio-cloth")));
     expect(Number(dialog.style.getPropertyValue("--reveal-sx"))).toBeGreaterThan(0);
     expect(Number(dialog.style.getPropertyValue("--reveal-sy"))).toBeGreaterThan(0);
     const pages = dialog.querySelector("[data-folio-flight-layer='pages']");

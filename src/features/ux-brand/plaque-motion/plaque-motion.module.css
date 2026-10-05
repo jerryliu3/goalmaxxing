@@ -81,8 +81,8 @@
   transform: translate(-50%,-50%);
   aspect-ratio: 330 / 382;
   /* Shorter Cursor panes and taller desktop windows share one contain-fit. */
-  width: min(15.5rem, calc(100% - 32px));
-  width: min(15.5rem, calc(100% - 32px), calc(100cqh * 330 / 382));
+  width: min(23rem, calc(100% - 32px));
+  width: min(23rem, calc(100% - 32px), calc(100cqh * 330 / 382));
   height: auto;
 }
 .heroAnchor .plaque { width: 100%; height: 100%; aspect-ratio: auto; }
@@ -105,7 +105,7 @@
 .burst i { position: absolute; width: 4px; height: 15px; border-radius: 3px; background: #b89668; opacity: 0; animation: spark 1.3s cubic-bezier(.15,.65,.25,1) both; animation-delay: calc(var(--burst) * .18s); }
 .burst:nth-child(2) i { background: #9c84df; }
 @keyframes spark { 0% { opacity: 0; transform: rotate(var(--angle)) translateY(0) scaleY(.2); } 15% { opacity: 1; } 65% { opacity: .8; } 100% { opacity: 0; transform: rotate(var(--angle)) translateY(-125px) scaleY(.35); } }
-.bookDock { position: absolute; width: 210px; height: 280px; left: 50%; top: 50%; transform: translate(-50%,-50%); perspective: 1200px; z-index: 1; }
+.bookDock { position: absolute; width: min(21rem, calc(100% - 32px), calc(100cqh * .75)); aspect-ratio: 3 / 4; left: 50%; top: 50%; transform: translate(-50%,-50%); perspective: 2000px; z-index: 1; }
 .bookDock :global([data-folio-book]) { width: 100%; height: 100%; }
 .bookDock > span > span:last-child { transform-origin: left center; }
 .bookPages { position: absolute; inset: 6px 2px 6px 8px; padding: 1.25rem; background: #f5f0e5; color: #443e36; display: flex; flex-direction: column; justify-content: space-between; font-family: var(--font-display); font-size: 1.2rem; border-radius: 4px; }
@@ -114,9 +114,13 @@
 .ceremony[data-phase="shelve"] .bookDock > span > span:last-child { animation: book-close 1.5s ease-in-out both; }
 .ceremony[data-phase="shelve"] .heroFlight { animation: keep 1.5s cubic-bezier(.4,0,.2,1) both; }
 .ceremony[data-phase="kept"] .heroAnchor { visibility: hidden; }
+/* Once shut, the book settles into the same three-quarter pose it has on the shelf. */
+.ceremony .bookDock :global([data-folio-book]) { transition: transform .9s cubic-bezier(.2,.8,.2,1); }
+.ceremony[data-phase="kept"] .bookDock :global([data-folio-book]) { transform: rotateY(-17deg) rotateX(5deg) rotateZ(-2deg); }
+.ceremony[data-phase="kept"] .bookPages { visibility: hidden; }
 @keyframes book-appear { from { opacity: 0; transform: translate(-50%,-35%) scale(.9); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
 @keyframes book-close { 0% { transform: translateZ(13px) rotateY(0); } 25%,65% { transform: translateZ(13px) rotateY(-145deg); } 100% { transform: translateZ(13px) rotateY(0); } }
-@keyframes keep { 0% { transform: translateY(0) scale(1); opacity: 1; } 50% { transform: translateY(5px) scale(.31) rotate(-4deg); opacity: 1; } 64% { transform: translateY(8px) scale(.29); opacity: 0; } 100% { transform: translateY(8px) scale(.29); opacity: 0; } }
+@keyframes keep { 0% { transform: translateY(0) scale(1); opacity: 1; } 50% { transform: translateY(5px) scale(.56) rotate(-3deg); opacity: 1; } 64% { transform: translateY(8px) scale(.54); opacity: 0; } 100% { transform: translateY(8px) scale(.54); opacity: 0; } }
 .ceremony[data-still="true"] *, .ceremony[data-still="true"] *::after { animation: none !important; transition: none !important; }
 @media (max-width: 700px) {
   .header { margin-top: 2rem; }
@@ -128,9 +132,10 @@
   .ceremony { padding: 2.5rem .75rem 1.5rem; }
   .ceremonyHeader { padding: 1rem 1rem 0; }
   .heroAnchor {
-    width: min(14.5rem, calc(100% - 20px));
-    width: min(14.5rem, calc(100% - 20px), calc(100cqh * 330 / 382));
+    width: min(19rem, calc(100% - 20px));
+    width: min(19rem, calc(100% - 20px), calc(100cqh * 330 / 382));
   }
+  .bookDock { width: min(17.5rem, calc(100% - 48px), calc(100cqh * .75)); }
   .burst { left: 12%; }
 }
 @media (prefers-reduced-motion: reduce) {

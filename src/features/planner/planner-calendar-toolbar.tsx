@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
+import { CircleHelp, Search, Settings, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,19 +76,19 @@ function PlanViewModeSwitch({
   const selectedViewIndex = goalViewOpen ? 3 : Math.max(0, PLANNER_VIEW_MODES.findIndex((option) => option.value === resolvedViewMode));
   const optionClass = (selected: boolean) =>
     selected
-      ? "relative z-10 min-h-8 whitespace-nowrap rounded-[8px] px-3 text-primary-foreground"
-      : "relative z-10 min-h-8 whitespace-nowrap rounded-[8px] px-3 text-muted-foreground";
+      ? "relative z-10 h-8 whitespace-nowrap rounded-full px-3 font-medium text-foreground transition-colors sm:px-4"
+      : "relative z-10 h-8 whitespace-nowrap rounded-full px-3 text-muted-foreground transition-colors hover:text-foreground sm:px-4";
 
   return (
     <div
       role="group"
       aria-label="Plan view mode"
-      className="relative isolate inline-grid shrink-0 grid-cols-4 rounded-[10px] bg-muted p-0.5 text-xs font-medium"
+      className="relative isolate inline-grid shrink-0 grid-cols-4 rounded-full bg-muted p-0.5 text-xs sm:text-[13px]"
     >
       <span
         aria-hidden
         data-testid="plan-view-mode-thumb"
-        className="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc((100%-4px)/4)] rounded-[8px] bg-primary shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+        className="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc((100%-4px)/4)] rounded-full bg-background shadow-[0_1px_2px_rgb(0_0_0/0.08),0_0_0_0.5px_rgb(0_0_0/0.06)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
         style={{ transform: `translateX(${selectedViewIndex * 100}%)` }}
       />
       {PLANNER_VIEW_MODES.map((modeOption) => {
@@ -220,27 +220,31 @@ export function PlannerCalendarToolbar({
             onViewModeChange={onViewModeChange}
             onGoalViewOpenChange={onGoalViewOpenChange}
           />
-          {viewMode !== "day" || goalViewOpen ? <PlannerEndMonthQuickFilterChips
-            referenceMonth={referenceMonth}
-            endMonthFilters={endMonthFilters}
-            onEndMonthFiltersChange={onEndMonthFiltersChange}
-          /> : null}
+          {viewMode !== "day" || goalViewOpen ? <>
+            <span aria-hidden className="mx-1 h-6 w-px shrink-0 bg-border" />
+            <PlannerEndMonthQuickFilterChips
+              referenceMonth={referenceMonth}
+              endMonthFilters={endMonthFilters}
+              onEndMonthFiltersChange={onEndMonthFiltersChange}
+            />
+          </> : null}
         </div>
         <div className="flex w-full items-center gap-2">
-          <div className="min-w-0 flex-1">
+          <div className="relative min-w-0 flex-1">
+            <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="planner-calendar-search"
               type="search"
               value={searchQuery}
               onChange={(event) => onSearchQueryChange(event.target.value)}
               placeholder="Filter by goal or milestone name"
-              className="h-8 w-full text-xs"
+              className="h-9 w-full rounded-full border-transparent bg-muted pl-10 text-[13px] md:text-[13px] hover:bg-muted/70 focus-visible:border-border focus-visible:bg-background"
               aria-label="Search goals"
               disabled={loading}
             />
           </div>
           {goalFilterOptions.length > 0 ? (
-            <div className="w-28 shrink-0 sm:w-32">
+            <div className="w-28 shrink-0 sm:w-36">
               <Label htmlFor="planner-goal-filter" className="sr-only">
                 Filter by goal
               </Label>
@@ -251,7 +255,7 @@ export function PlannerCalendarToolbar({
                 onSelectedValuesChange={onGoalIdFiltersChange}
                 placeholder="All goals"
                 allLabel="All goals"
-                triggerClassName="h-8 rounded-md bg-background text-xs"
+                triggerClassName="h-9 rounded-full border-border bg-background px-3.5 text-[13px] hover:border-foreground/40 hover:bg-background"
               />
             </div>
           ) : null}
@@ -261,8 +265,9 @@ export function PlannerCalendarToolbar({
           >
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="icon-sm"
+              className="size-9 rounded-full hover:bg-muted"
               aria-label="Filters"
               title="Filters"
               onClick={onOpenFilters}
@@ -273,8 +278,9 @@ export function PlannerCalendarToolbar({
             {canOpenSettings ? (
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="icon-sm"
+                className="size-9 rounded-full hover:bg-muted"
                 aria-label="Settings"
                 title="Settings"
                 onClick={onOpenSettings}
