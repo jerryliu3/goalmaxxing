@@ -31,7 +31,7 @@ export function DuoScopeToggle() {
 
   return (
     <div className="flex items-center gap-1.5 text-xs">
-      <span className="text-muted-foreground">Mode:</span>
+      <span className="hidden text-muted-foreground sm:inline">Mode:</span>
       <label htmlFor="duo-scope-toggle" className="sr-only">
         Duo scope
       </label>

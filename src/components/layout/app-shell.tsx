@@ -131,9 +131,6 @@ export function AppShell({
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-                        <p className="font-display shrink-0 text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
-                          Goalmaxxing
-                        </p>
                         {xpEnabled ? (
                           <div className="min-w-0 max-w-xs flex-1">
                             <XpProgressBar />

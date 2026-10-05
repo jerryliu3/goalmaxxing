@@ -153,7 +153,7 @@ describe("AppShell", () => {
     expect(screen.getByText("Child content")).toBeInTheDocument();
   });
 
-  it("renders Goalmaxxing without a destination kicker", () => {
+  it("leads the header with XP, without an app title or destination kicker", () => {
     mockPathname = "/insights";
     render(
       <AppShell userId="user-1" {...emptyDuoProps}>
@@ -162,8 +162,7 @@ describe("AppShell", () => {
     );
 
     expect(screen.queryByText("Progress")).not.toBeInTheDocument();
-    expect(screen.getByText("Goalmaxxing")).toBeInTheDocument();
-    expect(screen.getByText("Goalmaxxing")).toHaveClass("text-xl");
+    expect(screen.queryByText("Goalmaxxing")).not.toBeInTheDocument();
     expect(screen.getByText("XP Progress")).toBeInTheDocument();
   });
 
