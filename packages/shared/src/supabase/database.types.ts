@@ -3848,7 +3848,10 @@ export type Database = {
         Args: {
           p_expected_updated_at: string
           p_scheduled_date: string
+          p_scheduled_time?: string
           p_task_id: string
+          p_title?: string
+          p_update_time?: boolean
         }
         Returns: {
           completed_at: string

@@ -1,6 +1,7 @@
 import {
   ApiRouteError,
   apiSuccessResponse,
+  parseJsonBody,
   requireAuthenticatedRequestContext,
   withRoute,
 } from "@/lib/api/route";
@@ -9,6 +10,7 @@ import {
   CALENDAR_TASKS_SCHEMA_VERSION,
   calendarTasksQuerySchema,
   mapPlannerCalendarTaskRows,
+  plannerTaskCreateRequestSchema,
 } from "@/lib/tasks/calendar-tasks";
 
 export const runtime = "nodejs";
@@ -65,5 +67,24 @@ export async function GET(request: Request) {
       },
       correlationId
     );
+  });
+}
+
+export async function POST(request: Request) {
+  return withRoute(async ({ correlationId }) => {
+    const { supabase } = await requireAuthenticatedRequestContext(request, {
+      unauthorizedMessage: "Sign in to create tasks.",
+    });
+    const body = await parseJsonBody({ request, schema: plannerTaskCreateRequestSchema, maxBytes: 8 * 1024 });
+    const { data, error } = await supabase.rpc("create_planner_task", {
+      p_title: body.title, p_scheduled_date: body.scheduledDate,
+    });
+    if (error) {
+      if (error.message === "task_date_in_past") throw new ApiRouteError(400, "task_date_in_past", "Tasks cannot be created on a past day.");
+      throw new ApiRouteError(500, "task_create_failed", "Could not create the task.", undefined, error);
+    }
+    const [task] = mapPlannerCalendarTaskRows(data);
+    if (!task) throw new ApiRouteError(500, "task_create_failed", "Could not create the task.");
+    return apiSuccessResponse({ schemaVersion: CALENDAR_TASKS_SCHEMA_VERSION, task }, correlationId);
   });
 }

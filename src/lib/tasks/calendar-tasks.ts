@@ -34,8 +34,15 @@ export const plannerTaskScheduleRequestSchema = z
   .object({
     scheduledDate: z.iso.date(),
     expectedUpdatedAt: z.iso.datetime({ offset: true }),
+    title: z.string().trim().min(1).max(200).optional(),
+    scheduledTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).nullable().optional(),
   })
   .strict();
+
+export const plannerTaskCreateRequestSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  scheduledDate: z.iso.date(),
+}).strict();
 
 export const plannerCalendarTaskRowSchema = z
   .object({

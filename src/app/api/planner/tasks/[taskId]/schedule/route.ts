@@ -59,9 +59,19 @@ export async function POST(
       p_task_id: params.data.taskId,
       p_scheduled_date: body.scheduledDate,
       p_expected_updated_at: body.expectedUpdatedAt,
+      ...(body.title !== undefined ? { p_title: body.title } : {}),
+      ...(body.scheduledTime !== undefined ? { p_scheduled_time: body.scheduledTime ?? undefined, p_update_time: true } : {}),
     });
 
     if (error) {
+      const messages: Record<string, string> = {
+        task_date_in_past: "Tasks cannot be moved to a past day.",
+        task_completed: "Undo completion before moving this task.",
+        invalid_task_title: "Enter a task name of 1–200 characters.",
+        invalid_scheduled_time: "Enter a valid time.",
+      };
+      const code = normalizePostgresErrorMessage(error);
+      if (messages[code]) throw new ApiRouteError(400, code, messages[code]);
       if (error.message === "task_stale") throw new ApiRouteError(409, "task_stale", "This task changed. Refresh before editing it.");
       if (isPlannerTaskNotFound(error)) {
         throw new ApiRouteError(
