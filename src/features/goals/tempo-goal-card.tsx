@@ -190,7 +190,7 @@ export function TempoGoalCard({
       goalColor={goalColor}
       label={fields.title.trim() || "Goal card"}
       rotatable={rotatable && !(assembly && flat)}
-      solid={!assembly}
+      solid={!assembly && !flat}
     >
       {assembly ? (
         <ReassemblingCard

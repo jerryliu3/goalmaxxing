@@ -1,16 +1,14 @@
 "use client";
 
 import { Infinity as InfinityIcon } from "lucide-react";
-import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { flushSync } from "react-dom";
-import { useReducedMotion } from "motion/react";
+import { memo, useMemo, type ReactNode } from "react";
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 import { goalCardFields } from "@/features/goals/goal-card-fields";
 import { goalCardProgress } from "@/features/goals/goal-card-progress";
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
 import type { Goal } from "@/lib/goals/types";
 import { dateLabel } from "./goal-view-model";
-import { useGoalCardVisibility } from "./use-goal-card-visibility";
+import { useGoalCardInteraction } from "@/features/goals/use-goal-card-interaction";
 
 const renderFlatLettering = (text: ReactNode) => text;
 
@@ -26,18 +24,7 @@ export const GoalViewCard = memo(function GoalViewCard({
   fullRender?: boolean;
   moving?: boolean;
 }) {
-  const { ref, nearViewport } = useGoalCardVisibility();
-  const reducedMotion = useReducedMotion();
-  const [engaged, setEngaged] = useState(false);
-  const held = useRef(false);
-  const hovered = useRef(false);
-  useEffect(() => {
-    if (!nearViewport || moving) {
-      held.current = false;
-      setEngaged(false);
-    }
-  }, [nearViewport, moving]);
-  const interactive = nearViewport && !moving && (fullRender || engaged) && !reducedMotion;
+  const { ref, interactive, interactionProps } = useGoalCardInteraction({ fullRender, moving });
   const fields = useMemo(() => goalCardFields(goal), [goal]);
   const model = useMemo(() => progress ? goalCardProgress(goal, progress) : null, [goal, progress]);
   const statusLabel = !model
@@ -49,32 +36,7 @@ export const GoalViewCard = memo(function GoalViewCard({
         : model.label;
   return (
     <div ref={ref} className="mx-auto w-full max-w-[244px]" data-goal-view-card={goal.id}
-      tabIndex={interactive ? undefined : 0}
-      onFocus={event => {
-        if (moving) return;
-        if (event.target === event.currentTarget) {
-          flushSync(() => setEngaged(true));
-          event.currentTarget.querySelector<HTMLElement>('[data-card-object][tabindex="0"]')?.focus({ preventScroll: true });
-        } else setEngaged(true);
-      }}
-      onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setEngaged(false); }}
-      onPointerEnter={event => {
-        hovered.current = event.pointerType !== "touch";
-        if (hovered.current && !moving) setEngaged(true);
-      }}
-      onPointerLeave={() => { hovered.current = false; if (!held.current) setEngaged(false); }}
-      onPointerDownCapture={event => {
-        if (moving || event.button !== 0 || event.isPrimary === false ||
-          !(event.target instanceof Element) || !event.target.closest("[data-card-object]")) return;
-        held.current = true;
-        if (!interactive) flushSync(() => setEngaged(true));
-      }}
-      onPointerUp={event => {
-        held.current = false;
-        if (event.pointerType !== "mouse" || !hovered.current) setEngaged(false);
-      }}
-      onPointerCancel={() => { held.current = false; setEngaged(false); }}
-      onLostPointerCapture={() => { held.current = false; if (!hovered.current) setEngaged(false); }}
+      {...interactionProps}
     >
       <TempoGoalCard
         fields={fields}

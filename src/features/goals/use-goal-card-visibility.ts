@@ -2,10 +2,8 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 
-const CARD_PRELOAD_MARGIN = 200;
-
 /** Visibility only bounds interaction eligibility; entering view does not build 3D. */
-export function useGoalCardVisibility() {
+export function useGoalCardVisibility(margin = 200) {
   const ref = useRef<HTMLDivElement>(null);
   const [nearViewport, setNearViewport] = useState(false);
 
@@ -22,15 +20,15 @@ export function useGoalCardVisibility() {
     const bounds = card.getBoundingClientRect();
     setNearViewport(
       bounds.width > 0 && bounds.height > 0 &&
-      bounds.bottom > -CARD_PRELOAD_MARGIN && bounds.top < window.innerHeight + CARD_PRELOAD_MARGIN &&
+      bounds.bottom > -margin && bounds.top < window.innerHeight + margin &&
       bounds.right > 0 && bounds.left < window.innerWidth
     );
     const observer = new IntersectionObserver(([entry]) => {
       setNearViewport(entry.isIntersecting);
-    }, { rootMargin: `${CARD_PRELOAD_MARGIN}px 0px` });
+    }, { rootMargin: `${margin}px 0px` });
     observer.observe(card);
     return () => observer.disconnect();
-  }, []);
+  }, [margin]);
 
   return { ref, nearViewport };
 }
