@@ -1,5 +1,6 @@
 "use client";
 
+import { MilestoneTitleEditor } from "@/features/goals/milestone-title-editor";
 import { Fragment } from "react";
 import { Check, Link2, X } from "lucide-react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
@@ -338,13 +339,13 @@ export function CalendarDayPreviewList<
                             {draftDiffSummary}
                           </p>
                         ) : null}
-                        {subtitle ? (
+                        {subtitle || /^milestone:\d+$/.test(entry.unitKey) ? (
                           <p
                             className={`${
                               expanded ? planLedgerSubtitleClass : "truncate text-muted-foreground"
                             }`}
                           >
-                            {subtitle}
+                            {/^milestone:\d+$/.test(entry.unitKey) ? <>Milestone: <MilestoneTitleEditor goalId={entry.originalGoalId} unitKey={entry.unitKey} label={entry.label ?? "Milestone"} disabled={entry.draftGhost} /></> : subtitle}
                           </p>
                         ) : null}
                       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { MilestoneTitleEditor } from "@/features/goals/milestone-title-editor";
 import type { ReactNode } from "react";
 import { ArrowLeft, ArrowRight, LockKeyhole } from "lucide-react";
 import { DateField } from "@/components/ui/date-field";
@@ -177,7 +178,7 @@ export function GoalSessionTile({
               data-testid="completion-title"
               className="truncate text-[13px] font-semibold"
             >
-              {session.label}
+              <MilestoneTitleEditor goalId={session.goalId} unitKey={session.entry.unitKey} label={session.label} disabled={!editable || session.entry.draftGhost} />
             </strong>
             {time}
           </span>
@@ -211,7 +212,7 @@ export function GoalSessionTile({
           data-testid="completion-title"
           className="min-h-8 px-1.5 text-xs font-semibold leading-snug"
         >
-          {session.label}
+          <MilestoneTitleEditor goalId={session.goalId} unitKey={session.entry.unitKey} label={session.label} disabled={!editable || session.entry.draftGhost} />
         </strong>
         <span className="px-1.5">{time}</span>
       </div>
