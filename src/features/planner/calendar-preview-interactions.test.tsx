@@ -291,7 +291,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("opens the task composer on desktop long press without pinning a preview", async () => {
+  it.each(["week", "month"] as const)("opens the task composer on desktop long press in %s", async (viewMode) => {
     postJsonMock.mockResolvedValue(
       buildContext([
         unit({
@@ -304,8 +304,8 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
       <CalendarSurface
         activeTab="calendar"
         month="2026-08"
-        selectedDay={null}
-        viewMode="month"
+        selectedDay="2026-08-31"
+        viewMode={viewMode}
         onMonthChange={vi.fn()}
         onViewModeChange={vi.fn()}
         onSelectedDayChange={vi.fn()}
