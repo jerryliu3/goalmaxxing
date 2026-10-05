@@ -32,8 +32,6 @@ function mount(overrides: Partial<PlannerGoalViewProps> = {}) {
     today: "2026-10-02",
     weekStartsOn: undefined,
     showPast: false,
-    previewOpen: false,
-    onPreviewOpenChange: vi.fn(),
     canMutatePlanItems: true,
     optimisticCompletionFacts: {} as never,
     mutationLoadingKey: null,

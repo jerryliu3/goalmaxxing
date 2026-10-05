@@ -12,9 +12,9 @@ describe("navigation tabs", () => {
       "social",
     ]);
     expect(tabs.map((tab) => tab.label)).toEqual([
-      "Planner",
+      "Agenda",
       "Goals",
-      "Achieved",
+      "Achievements",
       "Community",
     ]);
   });

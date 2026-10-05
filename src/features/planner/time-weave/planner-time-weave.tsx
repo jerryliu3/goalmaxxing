@@ -6,13 +6,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { DateField } from "@/components/ui/date-field";
-import { PlannerDroppableDay } from "@/features/planner/calendar-dnd";
 import type { Goal } from "@/lib/goals/types";
-import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import type { GoalViewSession } from "@/features/planner/goal-view/goal-view-model";
-import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
 import { dateLabel, selectGoalViewGoals } from "@/features/planner/goal-view/goal-view-model";
-import { resolveGoalSessionCompletion } from "@/features/planner/goal-view/goal-session-completion";
 import { addDaysToDateString, startOfWeekDateString } from "@/lib/goals/periods";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
@@ -30,20 +26,12 @@ export interface PlannerTimeWeaveProps {
   loading: boolean;
   showCompletedGoals: boolean;
   completedGoalIds: ReadonlySet<string>;
-  canMutatePlanItems: boolean;
-  optimisticCompletionFacts: OptimisticCompletionFacts;
-  mutationLoadingKey: string | null;
-  canOpenEntry: (entry: PlannerDayDetailEntry) => boolean;
-  canMutateEntryOnDay: (entry: PlannerDayDetailEntry, date: string) => boolean;
-  onToggleEntry: (entry: PlannerDayDetailEntry, date: string, source: HTMLButtonElement) => void;
   onVisibleDate: (date: string) => void;
   onInspectDate: (date: string) => void;
-  onOpenEntry: (entry: PlannerDayDetailEntry, date: string) => void;
 }
 
 export function PlannerTimeWeave({ goals, sessions, today, weekStartsOn, loading, showCompletedGoals,
-  completedGoalIds, canMutatePlanItems, optimisticCompletionFacts, mutationLoadingKey,
-  canOpenEntry, canMutateEntryOnDay, onToggleEntry, onVisibleDate, onInspectDate, onOpenEntry,
+  completedGoalIds, onVisibleDate, onInspectDate,
 }: PlannerTimeWeaveProps) {
   const desktop = useMediaQuery("(min-width: 768px)");
   const dayWidth = desktop ? 144 : 120;
@@ -79,7 +67,7 @@ export function PlannerTimeWeave({ goals, sessions, today, weekStartsOn, loading
   return (
     <div className="space-y-3" data-testid="agenda-time-weave">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div><p className="text-sm font-medium">Goals across time</p><p className="text-xs text-muted-foreground">Scroll across dates. Arrange sessions, then save your plan.</p></div>
+        <div><p className="text-sm font-medium">Goals across time</p><p className="text-xs text-muted-foreground">Scroll across dates to see how your goals fit together.</p></div>
         <div className="flex items-center gap-1">
           <Button size="icon-sm" variant="outline" aria-label="Earlier dates" onClick={() => axis.scrollToDate(addDaysToDateString(leadingDate, -28))}><ArrowLeft /></Button>
           <Button size="sm" variant="outline" onClick={() => axis.scrollToDate(weekStart)}>This week</Button>
@@ -105,9 +93,7 @@ export function PlannerTimeWeave({ goals, sessions, today, weekStartsOn, loading
           </div>
           <div className={styles.dropLayer} style={{ left: labelWidth, width: laneWidth, height: contentHeight }} aria-hidden>
             {dates.map(({ index, date }) => (
-              <PlannerDroppableDay key={date} day={date}>{({ setNodeRef, isOver }) => (
-                <div ref={setNodeRef} className={styles.dropDay} data-over={isOver} data-today={date === today} style={{ left: index * dayWidth, width: dayWidth }} />
-              )}</PlannerDroppableDay>
+              <div key={date} className={styles.dropDay} data-today={date === today} style={{ left: index * dayWidth, width: dayWidth }} />
             ))}
           </div>
           {rows.map(({ goal, entries, height }) => (
@@ -121,12 +107,9 @@ export function PlannerTimeWeave({ goals, sessions, today, weekStartsOn, loading
                   const index = timelineIndex(session.date, axis.span.start);
                   return index >= axis.range.first && index <= axis.range.last;
                 }).map(({ session, slot }) => (
-                  <TimelineSession key={session.key} session={session} loading={loading} openable={canOpenEntry(session.entry)}
+                  <TimelineSession key={session.key} session={session} loading={loading}
                     left={timelineIndex(session.date, axis.span.start) * dayWidth + 6} top={slot * 74 + 6} width={dayWidth - 12}
-                    completion={resolveGoalSessionCompletion({ session, asOfDate: today, canMutatePlanItems, optimisticCompletionFacts, mutationLoadingKey })}
-                    editable={canOpenEntry(session.entry) && canMutateEntryOnDay(session.entry, session.date)}
-                    onOpen={() => onOpenEntry(session.entry, session.date)}
-                    onToggle={(source) => { if (canMutateEntryOnDay(session.entry, session.date)) onToggleEntry(session.entry, session.date, source); }} />
+                    onOpen={() => onInspectDate(session.date)} />
                 ))}
               </div>
             </section>
@@ -135,7 +118,7 @@ export function PlannerTimeWeave({ goals, sessions, today, weekStartsOn, loading
       </div>
       <div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
         <span>{loading ? "Loading saved sessions…" : "Empty dates have no saved sessions. Browsing does not extend your plan."}</span>
-        <span>Select a date to inspect the day · drag a session to move it.</span>
+        <span>Select a date or session to inspect the day.</span>
       </div>
       {!loading && rows.length === 0 ? <p className="text-sm text-muted-foreground">No scheduled goals in this window. <Link href={`${prefix}/goals`} className="underline">Open Goals</Link> to review your goals.</p> : null}
     </div>

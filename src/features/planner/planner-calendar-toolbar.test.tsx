@@ -121,7 +121,7 @@ describe("PlannerCalendarToolbar", () => {
   it("places plan help beside the Plan title", () => {
     renderToolbar();
 
-    const title = screen.getByRole("heading", { name: "Planner" });
+    const title = screen.getByRole("heading", { name: "Agenda" });
     const helpButton = screen.getByRole("button", { name: "Open planner help" });
     expect(title.parentElement).toContainElement(helpButton);
   });

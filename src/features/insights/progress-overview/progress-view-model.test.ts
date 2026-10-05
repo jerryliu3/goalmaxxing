@@ -19,13 +19,13 @@ describe("progress view model", () => {
       "history",
       "week",
     ]);
-    expect(progressSectionsForView("current")[0].label).toBe("Completion history");
+    expect(progressSectionsForView("current")[0].label).toBe("Progress tracker");
   });
 
   it("keeps past goals and achievements in the past view", () => {
     expect(progressSectionsForView("past").map((section) => section.id)).toEqual([
-      "past-goals",
       "achievements",
+      "past-goals",
     ]);
     expect(progressViewForSection("past-goals")).toBe("past");
   });

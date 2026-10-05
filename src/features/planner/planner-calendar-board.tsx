@@ -8,7 +8,6 @@ import {
   type MutableRefObject,
   type ReactNode,
 } from "react";
-import { timelineKeyboardCoordinates } from "@/features/planner/time-weave/timeline-keyboard";
 import { PlannerDndProvider } from "@/features/planner/calendar-dnd";
 import { usePlanPinchViewChange } from "@/features/planner/use-plan-pinch-view-change";
 import type { PlannerDragTarget } from "@/features/planner/planner-drag-target";
@@ -253,7 +252,6 @@ export function PlannerCalendarBoard({
         />
       )}
       <PlannerDndProvider
-        keyboardCoordinates={goalView ? timelineKeyboardCoordinates : undefined}
         getEntryLabel={getDragEntryLabel}
         getDayLabel={getDragDayLabel}
         renderDragOverlay={renderEntryDragOverlay}

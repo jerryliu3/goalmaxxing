@@ -7,7 +7,7 @@ import {
   restoreCalendarDayScreenTop,
 } from "@/features/planner/calendar-scroll-position";
 import type { GoalViewSession } from "@/features/planner/goal-view/goal-view-model";
-import { PlannerTimeWeave } from "@/features/planner/time-weave/planner-time-weave";
+import { PlannerGoalPresentation } from "@/features/planner/goal-view/planner-goal-presentation";
 import { PlannerCalendarBoard } from "@/features/planner/planner-calendar-board";
 import { PlannerCalendarOverlays } from "@/features/planner/planner-calendar-overlays";
 import { PlannerCalendarToolbar } from "@/features/planner/planner-calendar-toolbar";
@@ -507,14 +507,14 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             viewMode={viewMode}
             goalView={
               goalViewOpen ? (goalViewVisible ? (
-                <PlannerTimeWeave
+                <PlannerGoalPresentation
                   loading={loading}
                   onVisibleDate={onGoalTimelineVisibleDateChange}
                   onInspectDate={(date) => setExpandedPreviewDay(date)}
-                  onOpenEntry={(entry, date) => {
-                    setLocalSelectedDay(date);
-                    togglePlannerGoalSelection(entry, { applyGoalFocus: false });
-                  }}
+                  window={goalViewWindow!}
+                  showPast={false}
+                  progressSummaries={dayChecklist.data.progress?.summaries ?? []}
+                  onMoveEntry={onGoalViewMoveSession}
                   goals={dayChecklist.data.goals}
                   completedGoalIds={dayChecklist.listModel.targetAchievedGoalIds}
                   showCompletedGoals={showCompletedGoals}

@@ -18,9 +18,9 @@ export interface TabOnboardingStep {
 export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]> = {
   "planner.calendar": [
     {
-      title: "Planner views",
+      title: "Agenda views",
       description:
-        "Day opens at today by default. Use Week or Month to plan ahead, or Goal View to arrange sessions across a continuous timeline.",
+        "Day opens at today by default. Use Week or Month to plan ahead, or Goal View to browse sessions by goal and see them together in a calendar.",
       target: "planner.calendar.controls",
     },
     {
@@ -33,24 +33,15 @@ export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]>
   ],
   "insights.main": [
     {
-      title: "Completion history",
-      description:
-        "Open a goal, then tap a past or today cell to log a missed session.",
-      target: "insights.history",
-      fallbackTargets: ["insights.week", "insights.views"],
+      title: "Achievements",
+      description: "Look back on the awards you have earned through your progress.",
+      target: "insights.achievements",
+      fallbackTargets: ["insights.past-goals"],
     },
     {
-      title: "Past goals",
-      description:
-        "Completed, ended, and archived goals collect here with their original outcomes.",
+      title: "Goal library",
+      description: "Completed, ended, and archived goals collect here with their original outcomes.",
       target: "insights.past-goals",
-    },
-    {
-      title: "Log a missed day",
-      description:
-        "Open Completion history, select one goal, then tap a past or today cell.",
-      target: "insights.history",
-      fallbackTargets: ["insights.overall", "insights.goal-stats"],
     },
   ],
   "social.main": [
@@ -126,12 +117,12 @@ export interface TabOnboardingReplayLink {
 export const TAB_ONBOARDING_REPLAY_LINKS: TabOnboardingReplayLink[] = [
   {
     key: "planner.calendar",
-    label: "Planner",
+    label: "Agenda",
     href: `/calendar?${TAB_ONBOARDING_QUERY_PARAM}=planner.calendar`,
   },
   {
     key: "insights.main",
-    label: "Achieved",
+    label: "Achievements",
     href: `/achievements?${TAB_ONBOARDING_QUERY_PARAM}=insights.main`,
   },
   {

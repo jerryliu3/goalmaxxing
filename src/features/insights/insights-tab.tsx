@@ -135,6 +135,7 @@ interface AggregateDrilldownCompletionMarker {
 }
 
 interface InsightsTabProps {
+  sectionIds?: readonly ProgressSectionId[];
   subjectUserId?: string;
   readOnly?: boolean;
   /**
@@ -174,6 +175,7 @@ export interface InsightsSharedGoalFilters {
 }
 
 export function InsightsTab({
+  sectionIds,
   subjectUserId,
   readOnly = false,
   sharedPeriod,
@@ -698,7 +700,7 @@ export function InsightsTab({
     goals: state.goals,
     summaries: state.progress?.summaries ?? [],
     userId: subjectUserId ?? state.userId,
-    includeAchievements: !readOnly,
+    includeAchievements: !readOnly && (!sectionIds || sectionIds.includes("achievements")),
   });
   const ledgerCaption = progressLedgerCaption(
     ledgerMode,
@@ -1040,7 +1042,7 @@ export function InsightsTab({
   return (
     <>
       <ProgressSectionStack
-        sections={progressView === "all" ? progressSections.filter((section) => section.id !== "week") : progressSections}
+        sections={sectionIds ? progressSections.filter(section => sectionIds.includes(section.id)) : progressView === "all" ? progressSections.filter((section) => section.id !== "week") : progressSections}
         view={progressView}
         anchored={anchorSections}
         onSectionsChange={onSectionsChange}

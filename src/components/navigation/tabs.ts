@@ -9,9 +9,9 @@ export type AppTab = {
 };
 
 export const APP_TABS: AppTab[] = [
-  { key: "calendar", href: "/calendar", label: "Planner", icon: CalendarDays },
+  { key: "calendar", href: "/calendar", label: "Agenda", icon: CalendarDays },
   { key: "goals", href: "/goals", label: "Goals", icon: Target },
-  { key: "achievements", href: "/achievements", label: "Achieved", icon: Trophy },
+  { key: "achievements", href: "/achievements", label: "Achievements", icon: Trophy },
   { key: "social", href: "/social", label: "Community", icon: Globe },
 ];
 export const TAB_ORDER = APP_TABS.map((tab) => tab.href);

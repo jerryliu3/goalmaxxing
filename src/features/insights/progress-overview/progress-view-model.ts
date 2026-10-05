@@ -25,10 +25,10 @@ export const PROGRESS_VIEWS: readonly ProgressViewDefinition[] = [
 ];
 
 export const PROGRESS_SECTIONS: readonly ProgressSectionDefinition[] = [
-  { id: "history", label: "Completion history", view: "current" },
+  { id: "history", label: "Progress tracker", view: "current" },
   { id: "week", label: "This week", view: "current" },
-  { id: "past-goals", label: "Past goals", view: "past" },
   { id: "achievements", label: "Achievements", view: "past" },
+  { id: "past-goals", label: "Goal library", view: "past" },
 ];
 
 const LEGACY_ACHIEVEMENTS_HASH = "progress-achievements";

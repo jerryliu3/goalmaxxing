@@ -75,8 +75,6 @@ function renderView(overrides: Partial<GoalViewProps> = {}) {
     window: buildGoalViewWindow(TODAY),
     weekStartsOn: 1,
     showPast: false,
-    previewOpen: false,
-    onPreviewOpenChange: vi.fn(),
     resolveCompletion: () => ({ credited: false, pending: false, disabledReason: null }),
     isEditable: () => true,
     onMoveSession: vi.fn(),
@@ -225,26 +223,6 @@ describe("GoalView", () => {
     expect(toggles.some((button) => (button as HTMLButtonElement).disabled)).toBe(true);
     fireEvent.click(toggles.find((button) => !(button as HTMLButtonElement).disabled)!);
     expect(props.onToggleSession).toHaveBeenCalledTimes(1);
-  });
-
-  it("previews every week of the window in one scrollable list", () => {
-    renderView({ previewOpen: true });
-    const dialog = screen.getByRole("dialog");
-    expect(within(dialog).queryByRole("button", { name: /week/i })).toBeNull();
-    const weeks = within(dialog).getByLabelText("Goal sessions by week");
-    // The bounded 90-day window spans 14 planner weeks.
-    expect(within(weeks).getAllByRole("region")).toHaveLength(14);
-    const current = within(weeks).getByRole("region", { name: "Week of Sep 28" });
-    expect(current).toHaveAttribute("data-current-week");
-    expect(within(current).getAllByText("Get stronger").length).toBeGreaterThan(0);
-  });
-
-  it("jumps back to the current week from the preview's Today button", () => {
-    const scrollTo = vi.fn();
-    Element.prototype.scrollTo = scrollTo;
-    renderView({ previewOpen: true });
-    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Today" }));
-    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ behavior: "smooth" }));
   });
 
   describe("on a phone", () => {
