@@ -525,7 +525,6 @@ export function PlannerTasksPanel({
                 </Button>
               ) : null}
               </div>
-              {!complete && task.scheduled_date < completionAsOfDate ? <p className="text-xs text-muted-foreground">Overdue · {task.scheduled_date}</p> : null}
               {expandedTaskId === task.task_id ? (
                 <TaskDetailsEditor key={`${task.task_id}:${task.updated_at}`} today={completionAsOfDate}
                   task={{ taskId: task.task_id, title: task.title, scheduledDate: task.scheduled_date,

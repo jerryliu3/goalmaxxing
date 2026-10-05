@@ -17,12 +17,14 @@ const task = { taskId: row.task_id, title: row.title, scheduledDate: row.schedul
 beforeEach(() => { vi.clearAllMocks(); mocks.rpc.mockResolvedValue({ data: [row], error: null }); });
 afterEach(() => { cleanup(); clearPlannerTasksCacheForTests(); });
 describe("one time task checklist", () => {
-  it("expands a card without completing the task and shows overdue state", async () => {
+  it("expands the shared goal card without completing the task or showing overdue copy", async () => {
     render(<PlannerTasksPanel scheduledDate="2026-10-04" />);
     fireEvent.click(await screen.findByRole("button", { name: "Call dentist" }));
     expect(screen.getByLabelText("Task name")).toHaveValue("Call dentist");
     expect(screen.getByLabelText("Scheduled date")).toHaveValue("2026-10-03");
-    expect(screen.getByText("Overdue · 2026-10-03")).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "Call dentist task card" })).toBeInTheDocument();
+    expect(screen.queryByText(/Overdue/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/One occurrence/)).not.toBeInTheDocument();
     expect(mocks.complete).not.toHaveBeenCalled();
   });
   it("completes using its own control and the reviewed row version", async () => {
