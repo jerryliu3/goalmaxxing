@@ -40,19 +40,19 @@ describe("TabNav", () => {
     mockPathname = "/social";
     const { container } = render(<TabNav />);
 
-    expect(screen.getByRole("link", { name: /Achieved/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /^Planner$/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Achievements/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Agenda$/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Community/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^Goals$/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Community/i })).toHaveAttribute(
       "aria-current",
       "page"
     );
-    expect(screen.getByRole("link", { name: /Achieved/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Achievements/i })).toHaveAttribute(
       "data-onboarding",
       "nav.achievements"
     );
-    expect(screen.getByRole("link", { name: /^Planner$/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /^Agenda$/i })).toHaveAttribute(
       "data-onboarding",
       "nav.calendar"
     );
@@ -70,7 +70,7 @@ describe("TabNav", () => {
   it("routes the planner tab to calendar path", () => {
     render(<TabNav />);
 
-    expect(screen.getByRole("link", { name: /^Planner$/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /^Agenda$/i })).toHaveAttribute(
       "href",
       "/calendar"
     );
@@ -100,10 +100,10 @@ describe("TabNav", () => {
       "data-transition-types",
       "nav-forward"
     );
-    expect(screen.getByRole("link", { name: "Planner" })).not.toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Agenda" })).not.toHaveAttribute(
       "data-transition-types"
     );
-    expect(screen.getByRole("link", { name: "Achieved" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Achievements" })).toHaveAttribute(
       "data-transition-types",
       "nav-forward"
     );
@@ -113,13 +113,13 @@ describe("TabNav", () => {
     mockPathname = "/achievements";
     render(<TabNav mobile />);
 
-    fireEvent.click(screen.getByRole("link", { name: "Planner" }));
+    fireEvent.click(screen.getByRole("link", { name: "Agenda" }));
 
-    expect(screen.getByRole("link", { name: "Planner" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Agenda" })).toHaveAttribute(
       "aria-current",
       "page"
     );
-    expect(screen.getByRole("link", { name: "Achieved" })).not.toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Achievements" })).not.toHaveAttribute(
       "aria-current"
     );
   });
@@ -128,11 +128,11 @@ describe("TabNav", () => {
     mockPathname = "/achievements";
     const { rerender } = render(<TabNav mobile />);
 
-    fireEvent.click(screen.getByRole("link", { name: "Planner" }));
+    fireEvent.click(screen.getByRole("link", { name: "Agenda" }));
     mockPathname = "/calendar";
     rerender(<TabNav mobile />);
 
-    expect(screen.getByRole("link", { name: "Planner" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Agenda" })).toHaveAttribute(
       "aria-current",
       "page"
     );
@@ -144,7 +144,7 @@ describe("TabNav", () => {
       "aria-current",
       "page"
     );
-    expect(screen.getByRole("link", { name: "Planner" })).not.toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Agenda" })).not.toHaveAttribute(
       "aria-current"
     );
   });
@@ -168,7 +168,7 @@ describe("TabNav", () => {
 
     mockPathname = "/calendar";
     rerender(<TabNav />);
-    expect(screen.getByRole("link", { name: "Planner" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Agenda" })).toHaveAttribute(
       "aria-current",
       "page"
     );
@@ -181,19 +181,19 @@ describe("TabNav", () => {
     mockPathname = "/demo/calendar";
     render(<TabNav hrefPrefix="/demo" />);
 
-    expect(screen.getByRole("link", { name: /^Planner$/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /^Agenda$/i })).toHaveAttribute(
       "href",
       "/demo/calendar"
     );
-    expect(screen.getByRole("link", { name: /^Planner$/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /^Agenda$/i })).toHaveAttribute(
       "aria-current",
       "page"
     );
-    expect(screen.getByRole("link", { name: /Achieved/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Achievements/i })).toHaveAttribute(
       "href",
       "/demo/achievements"
     );
-    expect(screen.getByRole("link", { name: /Achieved/i })).not.toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Achievements/i })).not.toHaveAttribute(
       "aria-current"
     );
   });

@@ -398,7 +398,7 @@ describe("CalendarSurface characterization", () => {
     expect(
       screen.getByRole("group", { name: "Plan view mode" })
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Planner" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Agenda" })).toBeInTheDocument();
   });
 
   it("keeps week view when a desktop agenda row is selected", async () => {

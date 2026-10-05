@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DateField } from "@/components/ui/date-field";
 import type { Goal } from "@/lib/goals/types";
 import type { GoalViewSession } from "@/features/planner/goal-view/goal-view-model";
-import { dateLabel, selectGoalViewGoals } from "@/features/planner/goal-view/goal-view-model";
+import { dateLabel, goalIdsWithUpcomingSessions, selectGoalViewGoals } from "@/features/planner/goal-view/goal-view-model";
 import { addDaysToDateString, startOfWeekDateString } from "@/lib/goals/periods";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
@@ -49,11 +49,18 @@ export function PlannerTimeWeave({ goals, sessions, today, weekStartsOn, loading
     return { index, date: addDaysToDateString(axis.span.start, index) };
   }), [axis.range.first, axis.range.last, axis.span.start]);
   const rows = useMemo(() => {
+    const sessionsByGoal = new Map<string, GoalViewSession[]>();
+    for (const session of sessions) {
+      const entries = sessionsByGoal.get(session.goalId);
+      if (entries) entries.push(session);
+      else sessionsByGoal.set(session.goalId, [session]);
+    }
+    const upcomingGoalIds = goalIdsWithUpcomingSessions(sessions, today);
     const visibleGoals = selectGoalViewGoals(goals, sessions, { showPast: true, today })
-      .filter((goal) => showCompletedGoals || !completedGoalIds.has(goal.id) || sessions.some((session) => session.goalId === goal.id && session.date >= today));
+      .filter((goal) => showCompletedGoals || !completedGoalIds.has(goal.id) || upcomingGoalIds.has(goal.id));
     return visibleGoals.map((goal) => {
       const counts = new Map<string, number>();
-      const entries = sessions.filter((session) => session.goalId === goal.id).map((session) => {
+      const entries = (sessionsByGoal.get(goal.id) ?? []).map((session) => {
         const slot = counts.get(session.date) ?? 0;
         counts.set(session.date, slot + 1);
         return { session, slot };
