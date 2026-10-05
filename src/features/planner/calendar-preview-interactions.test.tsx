@@ -1,5 +1,5 @@
 vi.mock("@/features/coach/use-coach-page-context", () => ({ useCoachPageContext: vi.fn() }));
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CalendarSurface } from "./calendar-surface";
 import type {
@@ -163,6 +163,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.runOnlyPendingTimers();
     vi.useRealTimers();
   });
@@ -249,7 +250,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
       await vi.advanceTimersByTimeAsync(500);
     });
 
-    expect(await screen.findByRole("textbox", { name: "Task name" })).toHaveAttribute("placeholder", "Task name");
+    expect(screen.getByRole("textbox", { name: "Task name" })).toHaveAttribute("placeholder", "Task name");
     expect(screen.queryByRole("button", { name: "Expand day details" })).not.toBeInTheDocument();
   });
 
@@ -290,7 +291,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("opens the task composer on long press without pinning a preview", async () => {
+  it("opens the task composer on desktop long press without pinning a preview", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
         unit({
@@ -319,7 +320,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     );
     expect(dayCell).toBeInstanceOf(HTMLElement);
 
-    fireEvent.pointerDown(dayCell as Element, { pointerType: "touch" });
+    fireEvent.pointerDown(dayCell as Element, { pointerType: "mouse" });
     await act(async () => {
       await vi.advanceTimersByTimeAsync(500);
     });

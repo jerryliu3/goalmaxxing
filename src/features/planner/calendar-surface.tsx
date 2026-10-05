@@ -778,8 +778,9 @@ export function CalendarSurface({
     setWarningsDismissed,
   });
 
+  const revealTasks = useCallback(() => setHideTasks(false), []);
   const taskCapture = useCalendarTaskCapture({
-    today: calendarToday, readOnly: plannerReadOnly, revealTasks: () => setHideTasks(false),
+    today: calendarToday, readOnly: plannerReadOnly, revealTasks,
   });
   const dayPreviewInteractions = usePlannerDayPreviewInteractions({
     onLongPressDay: taskCapture.open,
