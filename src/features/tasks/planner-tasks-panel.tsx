@@ -529,7 +529,6 @@ export function PlannerTasksPanel({
                 <TaskDetailsEditor key={`${task.task_id}:${task.updated_at}`} today={completionAsOfDate}
                   task={{ taskId: task.task_id, title: task.title, scheduledDate: task.scheduled_date,
                     scheduledTime: task.scheduled_time, completedAt: task.completed_at, updatedAt: task.updated_at }}
-                  onCancel={() => setExpandedTaskId(null)}
                   onSaved={(updated: PlannerCalendarTask) => {
                     setTasks(current => {
                       const next = current.map(row => row.task_id === updated.taskId ? {
@@ -539,7 +538,6 @@ export function PlannerTasksPanel({
                       writePlannerTasksCache(scheduledDateRef.current, next);
                       return next;
                     });
-                    setExpandedTaskId(null);
                   }} />
               ) : null}
             </li>

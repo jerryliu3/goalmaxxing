@@ -12,6 +12,7 @@ import "@/features/planner/work-quest-card.css";
  */
 export function WorkQuestCard({
   quest,
+  title,
   leadingNav,
   trailingNav,
   children,
@@ -19,6 +20,7 @@ export function WorkQuestCard({
   facts,
 }: {
   quest: WorkQuestModel;
+  title?: ReactNode;
   leadingNav?: ReactNode;
   trailingNav?: ReactNode;
   children?: ReactNode;
@@ -44,7 +46,7 @@ export function WorkQuestCard({
         <div className="work-quest-header-row">
           <div className="flex min-w-0 items-center gap-0.5">{leadingNav}</div>
           <h3 className="min-w-0 truncate text-center font-display text-sm font-semibold leading-tight">
-            {quest.title}
+            {title ?? quest.title}
           </h3>
           <div className="flex min-w-0 items-center justify-end gap-0.5">
             {trailingNav}
@@ -103,12 +105,14 @@ export function WorkQuestCard({
 /** A keyword inside the quest sentence that opens an editor for that one fact. */
 export function QuestFact({
   active,
+  label,
   pressed,
   disabled = false,
   onSelect,
   children,
 }: {
   active?: boolean;
+  label?: string;
   pressed?: boolean;
   disabled?: boolean;
   onSelect: () => void;
@@ -123,6 +127,7 @@ export function QuestFact({
         active ? "decoration-solid text-primary" : "text-foreground",
         disabled && "cursor-not-allowed text-muted-foreground no-underline"
       )}
+      aria-label={label}
       aria-expanded={active}
       aria-pressed={pressed}
       disabled={disabled}

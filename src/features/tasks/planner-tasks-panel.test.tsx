@@ -20,8 +20,8 @@ describe("one time task checklist", () => {
   it("expands the shared goal card without completing the task or showing overdue copy", async () => {
     render(<PlannerTasksPanel scheduledDate="2026-10-04" />);
     fireEvent.click(await screen.findByRole("button", { name: "Call dentist" }));
-    expect(screen.getByLabelText("Task name")).toHaveValue("Call dentist");
-    expect(screen.getByLabelText("Scheduled date")).toHaveValue("2026-10-03");
+    expect(screen.getByRole("button", { name: "Edit task name" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit scheduled date" })).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "Call dentist task card" })).toBeInTheDocument();
     expect(screen.queryByText(/Overdue/)).not.toBeInTheDocument();
     expect(screen.queryByText(/One occurrence/)).not.toBeInTheDocument();
@@ -43,25 +43,28 @@ describe("one time task checklist", () => {
   });
   it("opens the selected task when selected from the calendar", async () => {
     render(<PlannerTasksPanel scheduledDate="2026-10-04" selectedTaskId={row.task_id} />);
-    expect(await screen.findByLabelText("Task name")).toHaveValue("Call dentist");
+    expect(await screen.findByRole("button", { name: "Edit task name" })).toBeInTheDocument();
   });
-  it("persists name, date, and time together with the original version", async () => {
-    mocks.edit.mockResolvedValue({ ...task, title: "Call office", scheduledDate: "2026-10-05", scheduledTime: "09:30", updatedAt: "2026-10-04T12:00:00Z" });
+  it("persists a header rename and keeps the card open with the new version", async () => {
+    mocks.edit.mockResolvedValue({ ...task, title: "Call office", updatedAt: "2026-10-04T12:00:00Z" });
     render(<PlannerTasksPanel scheduledDate="2026-10-04" />);
     fireEvent.click(await screen.findByRole("button", { name: "Call dentist" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit task name" }));
     fireEvent.change(screen.getByLabelText("Task name"), { target: { value: "Call office" } });
-    fireEvent.change(screen.getByLabelText("Scheduled date"), { target: { value: "2026-10-05" } });
+    fireEvent.keyDown(screen.getByLabelText("Task name"), { key: "Enter" });
+    await waitFor(() => expect(mocks.edit).toHaveBeenCalledWith(row.task_id, row.updated_at, { title: "Call office", scheduledDate: row.scheduled_date }));
+    expect(await screen.findByRole("article", { name: "Call office task card" })).toBeInTheDocument();
+    mocks.edit.mockResolvedValue({ ...task, title: "Call office", scheduledTime: "09:30", updatedAt: "2026-10-04T12:01:00Z" });
+    fireEvent.click(screen.getByRole("button", { name: "Edit task time" }));
     fireEvent.change(screen.getByLabelText("Task time"), { target: { value: "09:30" } });
-    fireEvent.click(screen.getByRole("button", { name: "Save task" }));
-    await waitFor(() => expect(mocks.edit).toHaveBeenCalledWith(row.task_id, row.updated_at, { title: "Call office", scheduledDate: "2026-10-05", scheduledTime: "09:30" }));
-    await waitFor(() => expect(screen.queryByText("Call dentist")).not.toBeInTheDocument());
+    await waitFor(() => expect(mocks.edit).toHaveBeenLastCalledWith(row.task_id, "2026-10-04T12:00:00Z", { scheduledDate: row.scheduled_date, scheduledTime: "09:30" }));
   });
   it("keeps a completed card editable but disables rescheduling", async () => {
     mocks.rpc.mockResolvedValue({ data: [{ ...row, completed_at: "2026-10-04T12:00:00Z" }], error: null });
     render(<PlannerTasksPanel scheduledDate="2026-10-04" />);
     fireEvent.click(await screen.findByRole("button", { name: "Call dentist" }));
-    expect(screen.getByLabelText("Scheduled date")).toBeDisabled();
-    expect(screen.getByLabelText("Task name")).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: "Edit scheduled date" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Edit task name" })).not.toBeDisabled();
   });
   it("uses today for new captures when viewing a past day", async () => {
     render(<PlannerTasksPanel scheduledDate="2026-10-02" />);
