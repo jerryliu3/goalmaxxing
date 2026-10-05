@@ -6,7 +6,10 @@ vi.mock("@/lib/supabase/client", () => ({ createClient: () => ({ rpc: mocks.rpc 
 vi.mock("@/lib/tasks/client", () => ({ createPlannerTask: mocks.create, completePlannerTask: mocks.complete, editPlannerTask: mocks.edit }));
 vi.mock("@/lib/api/client", () => ({ getApiErrorMessage: (_: unknown, fallback: string) => fallback }));
 vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
-vi.mock("@/lib/dates/day", () => ({ toLocalDateString: () => "2026-10-04" }));
+vi.mock("@/lib/dates/day", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/dates/day")>();
+  return { ...actual, toLocalDateString: () => "2026-10-04" };
+});
 const row = { task_id: "11111111-1111-4111-8111-111111111111", title: "Call dentist", scheduled_date: "2026-10-03", scheduled_time: null,
   completed_at: null, created_at: "2026-10-01T12:00:00Z", updated_at: "2026-10-01T12:00:00Z" };
 const task = { taskId: row.task_id, title: row.title, scheduledDate: row.scheduled_date, scheduledTime: null,
