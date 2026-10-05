@@ -199,25 +199,27 @@ body {
  * `.gm-gazetteer` overlays paper/rust on html when that style is selected.
  */
 .gm-gazetteer {
-  --background: #f8f1e3;
+  /* Warm near-white canvas with white cards; the paper tone (#f3ead8) is the muted
+     fill for tracks, inputs, and panels, so regions separate instead of blending. */
+  --background: #fffdf8;
   --foreground: #241c14;
-  --card: #f8f1e3;
+  --card: #ffffff;
   --card-foreground: #241c14;
-  --popover: #f8f1e3;
+  --popover: #ffffff;
   --popover-foreground: #241c14;
   --primary: #9a4f2c;
   --primary-foreground: #f8f1e3;
   --secondary: #e4e4e7;
   --secondary-foreground: #3f3f46;
-  --muted: #efe4d0;
+  --muted: #f3ead8;
   --muted-foreground: #7a6a56;
   --accent: #e8d9c0;
   --accent-foreground: #241c14;
-  --border: #d4c4a4;
+  --border: #e4d7bf;
   --input: #d4c4a4;
   --ring: #9a4f2c;
   --radius: 0.75rem;
-  --gm-page: #f3ead8;
+  --gm-page: #fbf7ef;
   --gm-gain: #4a6740;
   --gm-recover: #eab308;
   --gm-warning: #eab308;
