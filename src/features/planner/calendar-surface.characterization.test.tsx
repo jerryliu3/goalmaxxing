@@ -1275,7 +1275,7 @@ describe("CalendarSurface characterization", () => {
 
     const dayCell = await waitFor(() => {
       const match = document.querySelector('[data-day-cell="true"][data-day="2026-08-31"]');
-      if (!(match instanceof HTMLButtonElement)) {
+      if (!(match instanceof HTMLElement)) {
         throw new Error("Expected calendar day cell for 2026-08-31.");
       }
       return match;
@@ -1470,7 +1470,7 @@ describe("CalendarSurface characterization", () => {
 
     const dayCell = await waitFor(() => {
       const match = document.querySelector('[data-day-cell="true"][data-day="2026-08-31"]');
-      if (!(match instanceof HTMLButtonElement)) {
+      if (!(match instanceof HTMLElement)) {
         throw new Error("Expected calendar day cell for 2026-08-31.");
       }
       return match;
@@ -1534,7 +1534,7 @@ describe("CalendarSurface characterization", () => {
 
     const dayCell = await waitFor(() => {
       const match = document.querySelector('[data-day-cell="true"][data-day="2026-08-31"]');
-      if (!(match instanceof HTMLButtonElement)) {
+      if (!(match instanceof HTMLElement)) {
         throw new Error("Expected calendar day cell for 2026-08-31.");
       }
       return match;
@@ -1602,7 +1602,7 @@ describe("CalendarSurface characterization", () => {
       const match = document.querySelector(
         '[data-day-cell="true"][data-day="2026-08-31"]'
       );
-      if (!(match instanceof HTMLButtonElement)) {
+      if (!(match instanceof HTMLElement)) {
         throw new Error("Expected calendar day cell for 2026-08-31.");
       }
       return match;

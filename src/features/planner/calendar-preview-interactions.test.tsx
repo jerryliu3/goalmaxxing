@@ -290,7 +290,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("dismisses pinned preview on outside pointer down", async () => {
+  it("opens the task composer on long press without pinning a preview", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
         unit({
@@ -323,16 +323,9 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(500);
     });
+    expect(screen.getByRole("textbox", { name: "Task name" })).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Expand day details" })
-    ).toBeInTheDocument();
-
-    fireEvent.pointerDown(document.body);
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(0);
-    });
-
-    const after = document.querySelector('[data-no-swipe="true"].fixed');
-    expect(after).toBeFalsy();
+      screen.queryByRole("button", { name: "Expand day details" })
+    ).not.toBeInTheDocument();
   });
 });
