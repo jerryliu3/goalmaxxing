@@ -1,8 +1,8 @@
 .headerEntry { position: relative; }
-.headerButton { display: flex; align-items: center; gap: .45rem; padding: .35rem .65rem; border: 1px solid var(--border); border-radius: 999px; font-size: .8rem; background: var(--background); cursor: pointer; }
+.headerButton { display: flex; align-items: center; gap: .45rem; height: 2.25rem; padding: 0 .75rem; border: 1px solid var(--border); border-radius: 999px; font-size: .8rem; background: var(--background); cursor: pointer; }
 .headerButton[aria-expanded=true], .headerButton:hover { background: var(--muted); }
 /* Phones keep the header row for XP; the mark alone opens the coach. */
-@media (max-width: 639px) { .headerButton { padding: .35rem; } .headerButton > span:not([aria-hidden]) { display: none; } }
+@media (max-width: 639px) { .headerButton { width: 2.25rem; justify-content: center; padding: 0; } .headerButton > span:not([aria-hidden]) { display: none; } }
 .mark { position: relative; display: inline-block; width: 64px; height: 56px; flex-shrink: 0; color: var(--primary); }
 .mark svg { width: 100%; height: 100%; overflow: visible; opacity: .7; }
 .markSmall { width: 24px; height: 24px; }

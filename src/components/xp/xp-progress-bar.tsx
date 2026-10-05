@@ -14,7 +14,7 @@ export function XpProgressBar() {
     <XpProgressCard
       profile={profile}
       rewardSequence={rewardSequence}
-      className="w-full max-w-xs min-w-0"
+      className="h-9 w-full max-w-xs min-w-0 flex-row items-center gap-3 rounded-full border-border bg-background px-3.5 py-0 sm:min-w-[15rem] sm:px-3.5 sm:py-0 [&>[role=progressbar]]:flex-1"
     />
   );
 }
