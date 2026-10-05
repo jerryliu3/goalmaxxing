@@ -1,7 +1,9 @@
-import { cleanup, render, waitFor } from "@testing-library/react";
+import { act, cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { emptyInsights, type InsightsData } from "@/features/insights/fetch-insights-data";
 import { useInsightsData } from "@/features/insights/use-insights-data";
+import { resetTabDataCacheForTests } from "@/lib/cache/tab-data-cache";
+import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 
 const fetchInsightsDataMock = vi.fn();
 
@@ -46,6 +48,7 @@ function Probe() {
 
 describe("useInsightsData", () => {
   beforeEach(() => {
+    resetTabDataCacheForTests();
     renderedLoading.length = 0;
     fetchInsightsDataMock.mockReset();
     fetchInsightsDataMock.mockResolvedValue(loadedInsights());
@@ -58,6 +61,29 @@ describe("useInsightsData", () => {
 
     await waitFor(() => expect(renderedLoading.at(-1)).toBe(false));
     expect(fetchInsightsDataMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shares a cold read between the Goals collection and its tracker", async () => {
+    let resolve!: (data: InsightsData) => void;
+    fetchInsightsDataMock.mockReturnValueOnce(new Promise(done => { resolve = done; }));
+    render(<><Probe /><Probe /></>);
+    await waitFor(() => expect(fetchInsightsDataMock).toHaveBeenCalledTimes(1));
+    resolve(loadedInsights());
+    await waitFor(() => expect(renderedLoading.slice(-2)).toEqual([false, false]));
+    expect(fetchInsightsDataMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shares the refreshed read after a goal mutation invalidates both consumers", async () => {
+    render(<><Probe /><Probe /></>);
+    await waitFor(() => expect(renderedLoading.slice(-2)).toEqual([false, false]));
+    expect(fetchInsightsDataMock).toHaveBeenCalledTimes(1);
+    let resolve!: (data: InsightsData) => void;
+    fetchInsightsDataMock.mockReturnValueOnce(new Promise(done => { resolve = done; }));
+    act(() => invalidatePlannerRelatedTabCaches());
+    await waitFor(() => expect(fetchInsightsDataMock).toHaveBeenCalledTimes(2));
+    resolve(loadedInsights());
+    await waitFor(() => expect(renderedLoading.slice(-2)).toEqual([false, false]));
+    expect(fetchInsightsDataMock).toHaveBeenCalledTimes(2);
   });
 
   it("never reads the cache while rendering, so hydration matches the server", async () => {
