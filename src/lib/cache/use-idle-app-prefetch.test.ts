@@ -44,8 +44,8 @@ vi.mock("@/features/insights/insights-shell", () => ({
 vi.mock("@/features/social/social-surface", () => ({
   SocialSurface: () => null,
 }));
-vi.mock("@/features/settings/settings-tab", () => ({
-  SettingsTab: () => null,
+vi.mock("@/features/goals/goals-destination", () => ({
+  GoalsDestination: () => null,
 }));
 
 vi.mock("@/lib/cache/planner-tab-cache", () => ({
@@ -67,7 +67,7 @@ describe("useIdleAppPrefetch", () => {
     mocks.delayedTasks = [];
   });
 
-  it("prefetches tab routes immediately and warms Achievements after Agenda is ready", () => {
+  it("prefetches tab routes immediately and warms Achievements after Agenda is ready", async () => {
     renderHook(() =>
       useIdleAppPrefetch({
         userId: "user-1",
@@ -92,8 +92,15 @@ describe("useIdleAppPrefetch", () => {
     });
     expect(mocks.idleTasks).toHaveLength(1);
 
-    act(() => {
+    await act(async () => {
       mocks.idleTasks.at(-1)?.();
+      // Settle the module warmups before this test environment is disposed.
+      await Promise.all([
+        import("@/features/planner/calendar-page-shell"),
+        import("@/features/insights/insights-shell"),
+        import("@/features/social/social-surface"),
+        import("@/features/goals/goals-destination"),
+      ]);
     });
     expect(mocks.warmAppTabData).toHaveBeenCalledWith({
       userId: "user-1",
