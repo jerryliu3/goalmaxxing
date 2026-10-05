@@ -154,17 +154,17 @@ describe("TabOnboardingOverlay", () => {
     });
   });
 
-  it("walks through completion history and past goals", async () => {
+  it("walks through achievements and the goal library", async () => {
     render(
       <>
-        <div data-onboarding="insights.history">Completion history</div>
-        <div data-onboarding="insights.past-goals">Past goals</div>
+        <div data-onboarding="insights.achievements">Achievements</div>
+        <div data-onboarding="insights.past-goals">Goal library</div>
         <TabOnboardingOverlay onboardingKey="insights.main" />
       </>
     );
 
-    expect(await screen.findByRole("dialog", { name: "Completion history" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Achievements" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Past goals" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Goal library" })).toBeInTheDocument();
   });
 });
