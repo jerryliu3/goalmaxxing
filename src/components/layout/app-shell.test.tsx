@@ -84,21 +84,11 @@ describe("AppShell", () => {
     mockSearch = "";
   });
 
-  it("renders the `New Goal +` header link", () => {
-    render(
-      <AppShell userId="user-1" {...emptyDuoProps}>
-        <div>Child content</div>
-      </AppShell>
-    );
-
-    const newGoalLink = screen.getAllByRole("link", { name: /new goal \+/i })[0];
-    expect(newGoalLink).toHaveAttribute("href", "/goals/new?returnTo=%2F");
-    expect(newGoalLink).toHaveAttribute("data-onboarding", "nav.new-goal");
-    expect(newGoalLink).toHaveClass("h-8");
-    expect(newGoalLink).toHaveClass("bg-primary");
-    expect(screen.getByText("Goalmaxxing").parentElement).toContainElement(
-      screen.getByText("XP Progress")
-    );
+  it("keeps creation off the Agenda header", () => {
+    mockPathname = "/calendar";
+    render(<AppShell userId="user-1" {...emptyDuoProps}><div>Child content</div></AppShell>);
+    expect(screen.getByRole("link", { name: "Profile and settings" })).toHaveAttribute("href", "/settings");
+    expect(screen.queryByRole("link", { name: /new goal/i })).toBeNull();
   });
 
   it("hides the XP bar when XP is disabled", () => {
@@ -111,35 +101,11 @@ describe("AppShell", () => {
     expect(screen.queryByText("XP Progress")).not.toBeInTheDocument();
   });
 
-  it("includes the current route in the new goal returnTo query", () => {
-    mockPathname = "/social";
-    mockSearch = "tab=challenges&sort=recent";
-
-    render(
-      <AppShell userId="user-1" {...emptyDuoProps}>
-        <div>Child content</div>
-      </AppShell>
-    );
-
-    const newGoalLink = screen.getAllByRole("link", { name: /new goal \+/i })[0];
-    expect(newGoalLink).toHaveAttribute(
-      "href",
-      "/goals/new?returnTo=%2Fsocial%3Ftab%3Dchallenges%26sort%3Drecent"
-    );
-  });
-
-  it("prefixes the new goal href when a demo base path is provided", () => {
-    mockPathname = "/demo/calendar";
-    render(
-      <AppShell userId="user-1" hrefPrefix="/demo" {...emptyDuoProps}>
-        <div>Child content</div>
-      </AppShell>
-    );
-
-    expect(screen.getAllByRole("link", { name: /new goal \+/i })[0]).toHaveAttribute(
-      "href",
-      "/demo/goals/new?returnTo=%2Fdemo%2Fcalendar"
-    );
+  it("keeps demo profile chrome independent of external avatar requests", () => {
+    render(<AppShell userId="demo-user" hrefPrefix="/demo" viewerAvatarUrl="https://randomuser.me/api/portraits/men/32.jpg" {...emptyDuoProps}>Demo</AppShell>);
+    const profile = screen.getByRole("link", { name: "Profile and settings" });
+    expect(profile).toHaveAttribute("href", "/demo/settings");
+    expect(profile.querySelector("img")).toBeNull();
   });
 
   it("hides the journey intro when asked", () => {

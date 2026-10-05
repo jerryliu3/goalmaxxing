@@ -14,6 +14,10 @@ describe("duo surface defaults", () => {
     expect(DUO_SURFACE_DEFAULTS.calendar).toBe("me");
     expect(resolveDuoSurfaceDefault("/calendar")).toBe("me");
     expect(resolveDuoSurfaceDefault("/insights")).toBe("both");
+    expect(resolveDuoSurfaceDefault("/achievements")).toBe("both");
+    expect(resolveDuoSurfaceDefault("/demo/achievements")).toBe("both");
+    expect(resolveDuoSurfaceDefault("/goals")).toBe("me");
+    expect(resolveDuoSurfaceDefault("/demo/goals")).toBe("me");
   });
 
   it("resolves effective scope from partner availability and preference", () => {

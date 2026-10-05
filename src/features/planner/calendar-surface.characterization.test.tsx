@@ -398,7 +398,7 @@ describe("CalendarSurface characterization", () => {
     expect(
       screen.getByRole("group", { name: "Plan view mode" })
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Planner" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Agenda" })).toBeInTheDocument();
   });
 
   it("keeps week view when a desktop agenda row is selected", async () => {
@@ -445,7 +445,7 @@ describe("CalendarSurface characterization", () => {
     fireEvent.click(nextDayRow as HTMLElement);
 
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-16", "push", "week");
-    fireEvent.click(await screen.findByRole("button", { name: "Today" }));
+    fireEvent.click(await screen.findByTestId("planner-today-shortcut"));
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-15", "replace", "week", {
       alignMonth: true,
     });
@@ -642,7 +642,7 @@ describe("CalendarSurface characterization", () => {
     ).toBeInTheDocument();
   });
 
-  it("keeps the selected day when switching from month to day view", async () => {
+  it("jumps to today when the Today shortcut is available in month view", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
         unit({
@@ -674,9 +674,9 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Day View" }));
+    fireEvent.click(screen.getByTestId("planner-today-shortcut"));
 
-    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-20", "push", "day", {
+    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-15", "replace", "month", {
       alignMonth: true,
     });
   });
@@ -713,7 +713,7 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Week View" }));
+    fireEvent.click(screen.getByRole("button", { name: "Week" }));
 
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-20", "push", "week", {
       alignMonth: true,
@@ -793,7 +793,7 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    fireEvent.click(await screen.findByRole("button", { name: "Today" }));
+    fireEvent.click(await screen.findByTestId("planner-today-shortcut"));
     expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-15", "replace", "month", {
       alignMonth: true,
     });
@@ -883,7 +883,7 @@ describe("CalendarSurface characterization", () => {
         fireEvent.scroll(horizontalViewport);
       }
 
-      const todayButton = await screen.findByRole("button", { name: "Today" });
+      const todayButton = await screen.findByTestId("planner-today-shortcut");
       fireEvent.click(todayButton);
 
       await waitFor(() => {
@@ -964,7 +964,7 @@ describe("CalendarSurface characterization", () => {
         />
       );
 
-      const todayButton = await screen.findByRole("button", { name: "Today" });
+      const todayButton = await screen.findByTestId("planner-today-shortcut");
       await waitFor(() => {
         expect(postJsonMock).toHaveBeenCalledWith(
           "/api/planner/prepare",
@@ -1219,7 +1219,7 @@ describe("CalendarSurface characterization", () => {
     expect(dayPanel).toHaveStyle({ viewTransitionName: "plan-day-2026-08-31" });
   });
 
-  it("exposes checklist filters on day view", async () => {
+  it("keeps search and filters out of the simple day view", async () => {
     postJsonMock.mockResolvedValue(buildContext([]));
 
     render(
@@ -1235,18 +1235,8 @@ describe("CalendarSurface characterization", () => {
       />
     );
 
-    expect(await screen.findByTestId("planner-end-month-quick-filters")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "All End Dates" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "This month" })).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Filters" }));
-    expect(await screen.findByRole("heading", { name: "Day filters" })).toBeInTheDocument();
-    expect(screen.getByText("Recurrence")).toBeInTheDocument();
-    expect(screen.getByText("Show past goals")).toBeInTheDocument();
-    expect(screen.getByText("Show upcoming goals")).toBeInTheDocument();
-    expect(screen.getByText("Show archived goals")).toBeInTheDocument();
-    expect(screen.getByText("Show completed goals")).toBeInTheDocument();
-    expect(screen.getByText("Show suppressed linked goals")).toBeInTheDocument();
+    expect(screen.queryByRole("searchbox", { name: "Search goals" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Filters" })).toBeNull();
   });
 
   it("suppresses default milestone label duplication in month preview and event dialog", async () => {

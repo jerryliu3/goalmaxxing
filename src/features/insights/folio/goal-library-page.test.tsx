@@ -17,7 +17,7 @@ function loadCollection() {
 }
 
 describe("goal library journey", () => {
-  it("opens Current from Plan with live progress and reward text", () => {
+  it("opens Current from Goals with live progress and reward text", () => {
     loadCollection();
     render(<GoalLibraryPage fromPlan />);
     expect(screen.getByRole("status")).toHaveTextContent("2 / 6 completions");
@@ -31,9 +31,9 @@ describe("goal library journey", () => {
     expect(document.querySelector("[data-card-solid]")).toBeNull();
     expect(screen.getAllByRole("article")).toHaveLength(1);
     fireEvent.click(screen.getByRole("button", { name: "Past" }));
-    expect(mocks.push).toHaveBeenCalledWith("/insights/folios?view=past&from=plan");
-    fireEvent.click(screen.getByRole("button", { name: "Back to Plan" }));
-    expect(mocks.push).toHaveBeenCalledWith("/calendar");
+    expect(mocks.push).toHaveBeenCalledWith("/achievements#progress-section-past-goals");
+    fireEvent.click(screen.getByRole("button", { name: "Back to Goals" }));
+    expect(mocks.push).toHaveBeenLastCalledWith("/goals");
   });
 
   it("lets a fused current goal stay a draggable 3D card", () => {
@@ -69,6 +69,6 @@ describe("goal library journey", () => {
     render(<GoalLibraryPage view="past" />);
     expect(screen.getByText("No past goals yet.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Current" }));
-    expect(mocks.push).toHaveBeenCalledWith("/insights/folios?view=current");
+    expect(mocks.push).toHaveBeenCalledWith("/goals/library");
   });
 });

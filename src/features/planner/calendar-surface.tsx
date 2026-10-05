@@ -100,6 +100,7 @@ import {
 
 
 export function CalendarSurface({
+  destination = "agenda",
   activeTab,
   month,
   selectedDay,
@@ -142,8 +143,7 @@ export function CalendarSurface({
   const [endMonthFilters, setEndMonthFilters] = useState<string[]>([]);
   const [showCompletedGoals, setShowCompletedGoals] = useState(false);
   // Goal View is a lens on the same planner context, not a calendar view mode.
-  const [goalViewOpen, setGoalViewOpen] = useState(false);
-  // Starts with the calendar window and expands after its background read.
+  const [goalViewOpen, setGoalViewOpen] = useState(destination === "goals");
   const [goalViewWindow, setGoalViewWindow] = useState<{ start: string; end: string } | null>(null);
   const [showPastSessions, setShowPastSessions] = useState(false);
   const [goalViewPreviewOpen, setGoalViewPreviewOpen] = useState(false);

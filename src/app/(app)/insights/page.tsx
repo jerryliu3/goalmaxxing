@@ -1,5 +1,2 @@
-import { InsightsShell } from "@/features/insights/insights-shell";
-
-export default function InsightsPage() {
-  return <InsightsShell />;
-}
+import { redirect } from "next/navigation";
+export default function ProgressPage() { redirect("/achievements"); }

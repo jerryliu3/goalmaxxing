@@ -35,17 +35,17 @@ export function requestJourneyIntroOpen() {
 
 const JOURNEY_INTRO_STEPS = [
   {
-    title: "Plan",
+    title: "Agenda",
     description:
-      "Week, month, and day live here. Day is your plan for the selected date.",
+      "Start with Today. Switch to Week or Month when you want to plan ahead.",
     target: "nav.calendar",
     kind: "copy" as const,
   },
   {
-    title: "Progress",
+    title: "Goals",
     description:
-      "See completions on a goal ledger. Select a goal to log or review days.",
-    target: "nav.insights",
+      "See your current goals, create a new goal, or open your goal library.",
+    target: "nav.goals",
     kind: "copy" as const,
   },
   {
@@ -63,10 +63,10 @@ const JOURNEY_INTRO_STEPS = [
     kind: "copy" as const,
   },
   {
-    title: "New Goal +",
+    title: "Achieved",
     description:
-      "Create a cadence, a milestone, or a small one-time task from here.",
-    target: "nav.new-goal",
+      "Celebrate achievements, review completion history, and look back on past goals.",
+    target: "nav.achievements",
     kind: "copy" as const,
   },
   {

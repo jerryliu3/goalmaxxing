@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { CalendarSurface } from "@/features/planner/calendar-surface";
 import { usePartnerCompletionOverlay } from "@/features/planner/use-partner-completion-overlay";
 import {
@@ -17,20 +17,17 @@ import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search
 import {
   DEFAULT_CALENDAR_VIEW_MODE,
   isPlannerCalendarPathname,
-  readRememberedCalendarViewMode,
-  rememberCalendarViewMode,
 } from "@/lib/planner/calendar-view-memory";
 
-export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
+export function CalendarPageShell({ isActive = true, destination = "agenda" }: { isActive?: boolean; destination?: "agenda" | "goals" }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();
-  const onCalendarPath = isPlannerCalendarPathname(pathname);
+  const onCalendarPath = destination === "goals"
+    ? pathname === "/goals" || pathname === "/demo/goals"
+    : isPlannerCalendarPathname(pathname);
   const routeIsActive = isActive && onCalendarPath;
-  const [rememberedViewMode, setRememberedViewMode] = useState(
-    readRememberedCalendarViewMode
-  );
-  const defaultCalendarViewMode = rememberedViewMode ?? DEFAULT_CALENDAR_VIEW_MODE;
+  const defaultCalendarViewMode = DEFAULT_CALENDAR_VIEW_MODE;
   const { scope, activePartner, partner, viewer } = useDuoSurface("calendar");
   const overlayEnabled =
     isActive && Boolean(activePartner) && (scope === "partner" || scope === "both");
@@ -53,14 +50,6 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
     partnerId: activePartner?.partnerId,
     month: normalized.month,
   });
-
-  useEffect(() => {
-    if (!onCalendarPath) {
-      return;
-    }
-    rememberCalendarViewMode(normalized.viewMode);
-    setRememberedViewMode(normalized.viewMode);
-  }, [normalized.viewMode, onCalendarPath]);
 
   useEffect(() => {
     if (!routeIsActive || !normalized.changed) {
@@ -172,6 +161,8 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
 
   return (
     <CalendarSurface
+      key={destination}
+      destination={destination}
       activeTab="calendar"
       month={normalized.month}
       selectedDay={normalized.day}

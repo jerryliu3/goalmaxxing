@@ -8,8 +8,8 @@ test("loads the seeded authenticated planner shell", async ({ page }, testInfo) 
   await expect(
     mainNav
   ).toBeVisible();
-  await expect(mainNav.getByRole("link", { name: "Plan" })).toBeVisible();
-  const insightsLink = mainNav.getByRole("link", { name: "Progress" });
+  await expect(mainNav.getByRole("link", { name: /^(Agenda|Planner)$/ })).toBeVisible();
+  const insightsLink = mainNav.getByRole("link", { name: /^Achiev/ });
   const socialLink = mainNav.getByRole("link", { name: "Community" });
   const insightsCount = await insightsLink.count();
   const socialCount = await socialLink.count();
@@ -21,7 +21,8 @@ test("loads the seeded authenticated planner shell", async ({ page }, testInfo) 
   } else {
     await expect(socialLink.first()).toBeVisible();
   }
-  await expect(mainNav.getByRole("link", { name: /Settings|You|Profile/ })).toBeVisible();
+  await expect(mainNav.getByRole("link", { name: "Goals", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Profile and settings" })).toBeVisible();
   await expect(page.getByText("Loading your goals...")).toHaveCount(0);
 
   if (testInfo.project.name === "mobile-webkit") {
@@ -29,20 +30,20 @@ test("loads the seeded authenticated planner shell", async ({ page }, testInfo) 
   }
 });
 
-test("explicit Calendar surface does not eagerly load checklist context", async ({
+test("explicit Week view loads planner context", async ({
   page,
 }) => {
-  let progressContextRequests = 0;
-  await page.route("**/api/progress/context**", async (route) => {
-    progressContextRequests += 1;
+  let plannerContextRequests = 0;
+  await page.route("**/api/planner/context**", async (route) => {
+    plannerContextRequests += 1;
     await route.continue();
   });
 
-  await page.goto("/calendar?surface=calendar");
+  await page.goto("/calendar?view=week");
   await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Plan" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /^(Agenda|Planner)$/ })).toBeVisible();
   await expect(page).toHaveURL(/\/calendar/);
-  expect(progressContextRequests).toBe(0);
+  await expect.poll(() => plannerContextRequests).toBeGreaterThan(0);
 });
 
 test("legacy day links redirect into calendar route", async ({
@@ -69,8 +70,9 @@ test("public root route renders landing page", async ({
 test("goal creation entry stays on the app shell", async ({ page }) => {
   await page.goto("/calendar");
   await expect(page.getByTestId("app-boot-splash")).toBeHidden({ timeout: 10_000 });
-  await page.getByRole("link", { name: /new goal \+/i }).first().click();
-  await expect(page).toHaveURL(/\/calendar/);
+  await page.getByRole("link", { name: "Goals", exact: true }).click();
+  await page.locator('[data-onboarding="nav.new-goal"]').click();
+  await expect(page).toHaveURL(/\/goals/);
   await expect(page.getByTestId("goal-route-sheet")).toBeVisible({ timeout: 15_000 });
   await expect(
     page.getByRole("heading", { name: "Create goal" }).first()

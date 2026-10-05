@@ -1,7 +1,2 @@
-"use client";
-
-import { InsightsShell } from "@/features/insights/insights-shell";
-
-export default function DemoInsightsPage() {
-  return <InsightsShell />;
-}
+import { redirect } from "next/navigation";
+export default function ProgressPage() { redirect("/demo/achievements"); }

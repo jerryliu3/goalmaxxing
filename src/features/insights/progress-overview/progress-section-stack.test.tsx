@@ -16,6 +16,13 @@ function sections(): ProgressOverviewSectionContent[] {
 describe("ProgressSectionStack", () => {
   afterEach(cleanup);
 
+  it("can combine completion history and past goals", () => {
+    render(<ProgressSectionStack sections={sections().filter((section) => section.id !== "week")} view="all" />);
+    expect(screen.getByText("Completion ledger")).toBeInTheDocument();
+    expect(screen.getByText("Goal library")).toBeInTheDocument();
+    expect(screen.queryByText("Week rhythm")).toBeNull();
+  });
+
   it("renders only the active view in canonical order", () => {
     render(<ProgressSectionStack sections={sections()} view="current" />);
 
