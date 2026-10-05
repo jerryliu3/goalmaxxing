@@ -1,4 +1,5 @@
-import { fetchInsightsData, type InsightsData } from "@/features/insights/fetch-insights-data";
+import { fetchInsightsData } from "@/features/insights/fetch-insights-data";
+import { fetchAchievementsShowcase } from "@/features/achievements/fetch-achievements-showcase";
 import { getMonthInTimezone } from "@/features/planner/calendar-format";
 import { buildGoalViewWindow } from "@/features/planner/goal-view/goal-view-model";
 import { fetchSettingsTabData } from "@/features/social/settings-tab-data";
@@ -17,6 +18,7 @@ import {
 } from "@/lib/cache/planner-tab-cache";
 import {
   isTabDataCacheFresh,
+  loadTabDataCache,
   readTabDataCache,
   writeTabDataCache,
 } from "@/lib/cache/tab-data-cache";
@@ -71,17 +73,12 @@ export async function warmAppTabData({
   };
 
   const warmInsights = async () => {
-    const cached = readTabDataCache<InsightsData>(insightsCacheKey);
-    if (cached && !forceRefresh && isTabDataCacheFresh(insightsCacheKey)) {
-      return;
-    }
-    const data = await fetchInsightsData({
+    await loadTabDataCache(insightsCacheKey, () => fetchInsightsData({
       userId,
       selectedYear,
       partnerId,
       forceRefresh,
-    });
-    writeTabDataCache(insightsCacheKey, data);
+    }), { forceRefresh: forceRefresh && isTabDataCacheFresh(insightsCacheKey) });
   };
 
   const warmPlanner = async () => {
@@ -98,6 +95,7 @@ export async function warmAppTabData({
   await Promise.allSettled([
     includeProgressContext ? warmChecklist() : Promise.resolve(),
     includeProgressContext ? warmInsights() : Promise.resolve(),
+    includeProgressContext ? fetchAchievementsShowcase({ forceRefresh }) : Promise.resolve(),
     warmPlanner(),
     fetchSettingsTabData({ forceRefresh }),
     fetchPublicProfileBundle({ subjectUserId: userId, year: Number(selectedYear), forceRefresh }),

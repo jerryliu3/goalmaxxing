@@ -11,8 +11,8 @@ import {
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import {
   isTabDataCacheFresh,
+  loadTabDataCache,
   readTabDataCache,
-  writeTabDataCache,
 } from "@/lib/cache/tab-data-cache";
 import { reportError } from "@/lib/observability/report-error";
 import { toLocalDateString } from "@/lib/dates/day";
@@ -43,9 +43,6 @@ function resolveInsightsCacheKey({
   selectedYear: string;
   partnerId: string | null;
 }) {
-  if (!viewerUserId) {
-    return null;
-  }
   const targetSubjectUserId = subjectUserId ?? viewerUserId;
   return buildInsightsDataCacheKey({
     subjectUserId: targetSubjectUserId,
@@ -142,15 +139,13 @@ export function useInsightsData({
           selectedYear,
           partnerId,
         });
-        const cachedState = insightsDataCacheKey
-          ? readTabDataCache<InsightsData>(insightsDataCacheKey)
-          : null;
+        const cachedState = readTabDataCache<InsightsData>(insightsDataCacheKey);
         if (cachedState) {
           setState(cachedState);
           stateRef.current = cachedState;
           clearLaneError();
           setLoadError(null);
-          if (!forceRefresh && insightsDataCacheKey && isTabDataCacheFresh(insightsDataCacheKey)) {
+          if (!forceRefresh && isTabDataCacheFresh(insightsDataCacheKey)) {
             setLoading(false);
             return;
           }
@@ -163,15 +158,16 @@ export function useInsightsData({
           setLoading(true);
         }
         try {
+          // A mounted tracker joins the collection/shell warmup. Its timeout
+          // only stops this consumer, not the shared request or cache fill.
           const nextState = await withAbortSignal(
-            fetchInsightsData({
+            loadTabDataCache(insightsDataCacheKey, () => fetchInsightsData({
               userId,
               subjectUserId,
               selectedYear,
               partnerId,
               forceRefresh,
-              signal: controller.signal,
-            }),
+            }), { forceRefresh: forceRefresh && isTabDataCacheFresh(insightsDataCacheKey) }),
             controller.signal
           );
           if (requestId !== loadRequestIdRef.current) {
@@ -179,9 +175,6 @@ export function useInsightsData({
           }
           setState(nextState);
           stateRef.current = nextState;
-          if (insightsDataCacheKey) {
-            writeTabDataCache(insightsDataCacheKey, nextState);
-          }
           clearLaneError();
           setLoadError(null);
         } finally {

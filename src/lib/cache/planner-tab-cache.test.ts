@@ -7,6 +7,9 @@ import {
 } from "@/lib/cache/tab-data-cache";
 import {
   CHECKLIST_DATA_CACHE_PREFIX,
+  ACHIEVEMENTS_DATA_CACHE_PREFIX,
+  buildGoalViewContextCacheKey,
+  buildPlannerContextCacheKey,
   INSIGHTS_DATA_CACHE_PREFIX,
   PLANNER_CONTEXT_CACHE_PREFIX,
   PUBLIC_PROFILE_CACHE_PREFIX,
@@ -58,6 +61,17 @@ describe("invalidatePlannerRelatedTabCaches", () => {
     expect(isTabDataCacheFresh("progress-context:test")).toBe(false);
     expect(readTabDataCache(profileKey)).toEqual({ stats: true });
     expect(isTabDataCacheFresh(profileKey)).toBe(false);
+  });
+
+  it("invalidates wide goal windows and achievements alongside Agenda", () => {
+    const goalsKey = buildGoalViewContextCacheKey("2026-08", "2026-07-01", "2026-10-31");
+    expect(goalsKey).not.toBe(buildPlannerContextCacheKey("2026-08"));
+    writeTabDataCache(goalsKey, { goals: true });
+    writeTabDataCache(`${ACHIEVEMENTS_DATA_CACHE_PREFIX}showcase`, { medals: true });
+    invalidatePlannerRelatedTabCaches();
+    expect(isTabDataCacheFresh(goalsKey)).toBe(false);
+    expect(isTabDataCacheFresh(`${ACHIEVEMENTS_DATA_CACHE_PREFIX}showcase`)).toBe(false);
+    expect(readTabDataCache(goalsKey)).toEqual({ goals: true });
   });
 
   it("notifies subscribers after cache invalidation", async () => {

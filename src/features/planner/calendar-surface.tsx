@@ -121,7 +121,7 @@ export function CalendarSurface({
   const [context, setContext] = useState<PlannerContextPayload | null>(null);
   const [loading, setLoading] = useState(Boolean(month));
   useLayoutEffect(() => {
-    if (!month) {
+    if (!month || destination === "goals") {
       return;
     }
     const cached = readTabDataCache<PlannerContextPayload>(
@@ -132,7 +132,7 @@ export function CalendarSurface({
     }
     setContext(cached);
     setLoading(false);
-  }, [month]);
+  }, [destination, month]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
@@ -149,6 +149,13 @@ export function CalendarSurface({
   const [goalViewPreviewOpen, setGoalViewPreviewOpen] = useState(false);
   const goalViewVisible = goalViewOpen && goalViewWindow !== null;
   const [searchQuery, setSearchQuery] = useState("");
+  useEffect(() => {
+    if (routeViewMode !== "day" || destination === "goals") return;
+    setCategoryFilters([]);
+    setGoalIdFilters([]);
+    setEndMonthFilters([]);
+    setSearchQuery("");
+  }, [destination, routeViewMode]);
   const {
     draftPolicy,
     setDraftPolicy,

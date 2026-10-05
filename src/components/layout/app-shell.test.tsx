@@ -84,13 +84,12 @@ describe("AppShell", () => {
     mockSearch = "";
   });
 
-  it("keeps creation off the Agenda header", () => {
+  it("keeps profile in the header and creation off Agenda", () => {
     mockPathname = "/calendar";
     render(<AppShell userId="user-1" {...emptyDuoProps}><div>Child content</div></AppShell>);
     expect(screen.getByRole("link", { name: "Profile and settings" })).toHaveAttribute("href", "/settings");
     expect(screen.queryByRole("link", { name: /new goal/i })).toBeNull();
   });
-
   it("hides the XP bar when XP is disabled", () => {
     render(
       <AppShell userId="user-1" xpEnabled={false} {...emptyDuoProps}>

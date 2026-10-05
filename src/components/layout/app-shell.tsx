@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { CoachProvider } from "@/features/coach/coach-provider";
 import { UserRound } from "lucide-react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Fragment, type ReactNode, useCallback, useState, ViewTransition } from "react";
 import { JourneyIntroOverlay } from "@/components/intro/journey-intro-overlay";
 import { CoachHeader } from "@/features/coach/coach-header";
@@ -20,6 +20,7 @@ import {
 } from "@/components/layout/app-boot-ready";
 import { PageOnboardingReadyContext } from "@/features/onboarding/onboarding-readiness";
 import { TabNav } from "@/components/navigation/tab-nav";
+import { GoalCreationActionContext } from "@/features/goals/new-goal-button";
 import { Button } from "@/components/ui/button";
 import { AltitudeBackdrop } from "@/components/xp/altitude-backdrop";
 import { XpProfileProvider } from "@/components/xp/xp-profile-provider";
@@ -88,10 +89,6 @@ export function AppShell({
   });
   const pathname = usePathname();
   useReportAppSurfaceReady(!isAppBootGatedPath(pathname));
-  const searchParams = useSearchParams();
-  const search = searchParams.toString();
-  const returnTo = search.length > 0 ? `${pathname}?${search}` : pathname;
-  const newGoalHref = `${withHrefPrefix("/goals/new", hrefPrefix)}?returnTo=${encodeURIComponent(returnTo)}`;
   const mainContent = (
     <main className="relative z-10 pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-0">
       <CoachPageFrame>{children}</CoachPageFrame>
@@ -101,6 +98,7 @@ export function AppShell({
     typeof ViewTransition === "function" ? ViewTransition : Fragment;
 
   return (
+    <GoalCreationActionContext.Provider value={onNewGoalClick}>
     <PageOnboardingReadyContext.Provider value={bootReady && (!showJourneyIntro || navigationIntroReady)}>
     <CoachProvider userId={userId} enabled={coachEnabled && !hrefPrefix} digestEnabled={digestEnabled}>
     <XpRewardProvider>
@@ -145,22 +143,6 @@ export function AppShell({
                       <div className="flex flex-col items-end gap-2">
                         <div className="flex items-center gap-2">
                           <CoachHeader />
-                          {(pathname === withHrefPrefix("/goals", hrefPrefix) || pathname.startsWith(`${withHrefPrefix("/goals", hrefPrefix)}/`)) ? <Button
-                            asChild={!onNewGoalClick}
-                            size="sm"
-                            className="inline-flex h-8 bg-primary text-primary-foreground hover:bg-primary/80"
-                            title="New Goal +"
-                            data-onboarding="nav.new-goal"
-                            onClick={onNewGoalClick}
-                          >
-                            {onNewGoalClick ? (
-                              "New Goal +"
-                            ) : (
-                              <Link href={newGoalHref}>
-                                New Goal +
-                              </Link>
-                            )}
-                          </Button> : null}
                           <Button asChild variant="outline" size="icon-sm" className="rounded-full" data-onboarding="nav.settings">
                             <Link href={withHrefPrefix("/settings", hrefPrefix)} aria-label="Profile and settings">
                               {viewerAvatarUrl && !hrefPrefix ? <img src={viewerAvatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" /> : <UserRound aria-hidden="true" />}
@@ -216,5 +198,6 @@ export function AppShell({
     </XpRewardProvider>
     </CoachProvider>
     </PageOnboardingReadyContext.Provider>
+    </GoalCreationActionContext.Provider>
   );
 }

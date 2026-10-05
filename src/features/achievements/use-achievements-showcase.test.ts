@@ -1,9 +1,11 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAchievementsShowcase } from "@/features/achievements/use-achievements-showcase";
+import { resetTabDataCacheForTests } from "@/lib/cache/tab-data-cache";
 
 describe("useAchievementsShowcase", () => {
   beforeEach(() => {
+    resetTabDataCacheForTests();
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => ({

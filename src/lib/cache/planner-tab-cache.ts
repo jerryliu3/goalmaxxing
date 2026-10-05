@@ -5,6 +5,7 @@ import { INSIGHTS_STATS_CACHE_PREFIX } from "@/lib/insights/stats";
 export const PLANNER_CONTEXT_CACHE_PREFIX = "planner-context:";
 export const CHECKLIST_DATA_CACHE_PREFIX = "checklist-data:";
 export const INSIGHTS_DATA_CACHE_PREFIX = "insights-data:";
+export const ACHIEVEMENTS_DATA_CACHE_PREFIX = "achievements-data:";
 export const SETTINGS_DATA_CACHE_PREFIX = "settings-data:";
 export const PUBLIC_PROFILE_CACHE_PREFIX = "social:public-profile:";
 export const SOCIAL_ACTIVITY_VISIBLE_CACHE_KEY = "social-activity-visible";
@@ -51,6 +52,10 @@ export function buildPlannerContextCacheKey(month: string, window?: { start: str
   return `${PLANNER_CONTEXT_CACHE_PREFIX}${month}${window ? `:${window.start}:${window.end}` : ""}`;
 }
 
+export function buildGoalViewContextCacheKey(month: string, start: string, end: string) {
+  return `${PLANNER_CONTEXT_CACHE_PREFIX}goals:${month}:${start}:${end}`;
+}
+
 export function subscribePlannerTabCacheInvalidation(listener: () => void) {
   plannerTabCacheInvalidationListeners.add(listener);
   return () => {
@@ -83,6 +88,7 @@ export function invalidatePlannerRelatedTabCaches() {
   markTabDataCacheStaleByPrefix(INSIGHTS_STATS_CACHE_PREFIX);
   markTabDataCacheStaleByPrefix(SETTINGS_DATA_CACHE_PREFIX);
   markTabDataCacheStaleByPrefix(PUBLIC_PROFILE_CACHE_PREFIX);
+  markTabDataCacheStaleByPrefix(ACHIEVEMENTS_DATA_CACHE_PREFIX);
   invalidateProgressContextCache();
   notifyPlannerTabCacheInvalidation();
 }
