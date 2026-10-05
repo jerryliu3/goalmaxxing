@@ -33,7 +33,11 @@ function resolveProgressPercent(profile: XpProfileSummary) {
   );
 }
 
-function XpProgressCardContents({ profile, rewardSequence }: { profile: XpProfileSummary; rewardSequence: number }) {
+/**
+ * Animated level label and bar. `compact` (the header pill) shows only the level and a
+ * thicker bar; exact XP lives in the header's popover.
+ */
+export function XpMeter({ profile, rewardSequence, compact = false }: { profile: XpProfileSummary; rewardSequence: number; compact?: boolean }) {
   const still = useReducedMotion();
   const [displayXp, setDisplayXp] = useState(profile.totalXp);
   const current = useRef(profile.totalXp);
@@ -45,19 +49,19 @@ function XpProgressCardContents({ profile, rewardSequence }: { profile: XpProfil
   }, [profile.totalXp, still]);
   const display = { totalXp: displayXp, ...progressionForTotalXp(displayXp) };
   const progressPercent = resolveProgressPercent(display);
-  const levelLabel = `Lv ${display.currentLevel} · ${formatNumber(displayXp)} XP`;
+  const levelLabel = compact ? `Lv ${display.currentLevel}` : `Lv ${display.currentLevel} · ${formatNumber(displayXp)} XP`;
 
   return (
     <>
-      <div className="flex items-center gap-2">
+      <span className="flex shrink-0 items-center gap-2">
         <span className="font-mono text-xs text-muted-foreground">{levelLabel}</span>
-      </div>
-      <motion.div key={rewardSequence} initial={false} animate={!still && rewardSequence > 0 ? { scaleY: [1, 1.65, 1] } : { scaleY: 1 }} transition={{ duration: 0.95, times: [0, 0.35, 1] }}
+      </span>
+      <motion.span key={rewardSequence} initial={false} animate={!still && rewardSequence > 0 ? { scaleY: [1, 1.65, 1] } : { scaleY: 1 }} transition={{ duration: 0.95, times: [0, 0.35, 1] }}
         role="progressbar" aria-label="XP toward next level" aria-valuemin={0} aria-valuemax={100}
         aria-valuenow={resolveProgressPercent(profile)} aria-valuetext={`Level ${profile.currentLevel}, ${profile.totalXp} XP`}
-        className="relative h-2 overflow-hidden rounded-full bg-muted" data-xp-reward-target="true">
+        className={cn("relative block overflow-hidden rounded-full bg-muted", compact ? "h-2.5" : "h-2")} data-xp-reward-target="true">
         <span className="block size-full origin-left rounded-full bg-primary" style={{ transform: `scaleX(${progressPercent / 100})` }} />
-      </motion.div>
+      </motion.span>
     </>
   );
 }
@@ -89,14 +93,14 @@ export function XpProgressCard({
   if (href) {
     return (
       <Link href={href} className={resolvedClassName} aria-label={ariaLabel}>
-        <XpProgressCardContents profile={profile} rewardSequence={rewardSequence} />
+        <XpMeter profile={profile} rewardSequence={rewardSequence} />
       </Link>
     );
   }
 
   return (
     <div className={resolvedClassName} aria-label={ariaLabel}>
-      <XpProgressCardContents profile={profile} rewardSequence={rewardSequence} />
+      <XpMeter profile={profile} rewardSequence={rewardSequence} />
     </div>
   );
 }

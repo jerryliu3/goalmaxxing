@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { XpProgressBar } from "@/components/xp/xp-progress-bar";
 import { progressionForTotalXp } from "@/lib/xp/progression";
@@ -10,20 +10,24 @@ vi.mock("@/components/xp/xp-profile-provider", () => ({
 }));
 
 describe("XpProgressBar", () => {
-  it("renders a level progress summary and target", () => {
+  it("shows only the level in the header and reveals exact XP on tap", () => {
+    const progression = progressionForTotalXp(320);
     useXpProfileMock.mockReturnValue({
-      profile: {
-        totalXp: 320,
-        ...progressionForTotalXp(320),
-      },
+      profile: { totalXp: 320, ...progression },
       rewardSequence: 0,
     });
 
     const { container } = render(<XpProgressBar />);
-    expect(screen.getByText("Lv 3 · 320 XP")).toBeInTheDocument();
-    expect(screen.queryByRole("link")).toBeNull();
-    expect(screen.queryByRole("button")).toBeNull();
+    const trigger = screen.getByRole("button", { name: "Level 3 progress" });
+    expect(trigger).toHaveTextContent("Lv 3");
+    expect(trigger).not.toHaveTextContent("320 XP");
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuetext", "Level 3, 320 XP");
-    expect(container.querySelector("[data-xp-reward-target='true']")).not.toBeNull();
+    expect(container.querySelector("[data-xp-reward-target='true']")).toHaveClass("h-2.5");
+
+    fireEvent.click(trigger);
+    expect(screen.getByText("320 XP")).toBeInTheDocument();
+    expect(
+      screen.getByText(`${progression.nextLevelMinXp! - 320} XP to Level ${progression.nextLevel}`)
+    ).toBeInTheDocument();
   });
 });
