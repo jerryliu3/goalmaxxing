@@ -3846,12 +3846,12 @@ export type Database = {
       }
       set_planner_task_scheduled_date: {
         Args: {
-          p_title?: string
-          p_scheduled_time?: string
-          p_update_time?: boolean
           p_expected_updated_at: string
           p_scheduled_date: string
           p_task_id: string
+          p_scheduled_time?: string
+          p_title?: string
+          p_update_time?: boolean
         }
         Returns: {
           completed_at: string
@@ -4185,4 +4185,3 @@ export const Constants = {
     },
   },
 } as const
-

@@ -159,7 +159,10 @@ import { POST as plannerResetPost } from "@/app/api/planner/reset/route";
 import { POST as plannerResetAllPost } from "@/app/api/planner/reset-all/route";
 import { POST as plannerResetGoalPost } from "@/app/api/planner/reset-goal/route";
 import { POST as plannerLockPost } from "@/app/api/planner/items/lock/route";
-import { GET as plannerTasksGet } from "@/app/api/planner/tasks/route";
+import {
+  GET as plannerTasksGet,
+  POST as plannerTasksPost,
+} from "@/app/api/planner/tasks/route";
 import { POST as plannerTaskCompletionPost } from "@/app/api/planner/tasks/[taskId]/completion/route";
 import { POST as plannerTaskSchedulePost } from "@/app/api/planner/tasks/[taskId]/schedule/route";
 
@@ -399,6 +402,10 @@ const auditedRouteCases: AuditedRouteCase[] = [
       return plannerTasksGet(new Request(url, request));
     },
   },
+  routeCase("POST /api/planner/tasks", plannerTasksPost, undefined, {
+    title: "Review planner tasks",
+    scheduledDate: "2026-09-08",
+  }),
   routeCase(
     "POST /api/planner/tasks/[taskId]/completion",
     plannerTaskCompletionPost,
