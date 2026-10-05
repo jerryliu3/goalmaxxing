@@ -163,7 +163,7 @@ export function AppShell({
                           </Button> : null}
                           <Button asChild variant="outline" size="icon-sm" className="rounded-full" data-onboarding="nav.settings">
                             <Link href={withHrefPrefix("/settings", hrefPrefix)} aria-label="Profile and settings">
-                              {viewerAvatarUrl ? <img src={viewerAvatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" /> : <UserRound aria-hidden="true" />}
+                              {viewerAvatarUrl && !hrefPrefix ? <img src={viewerAvatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" /> : <UserRound aria-hidden="true" />}
                             </Link>
                           </Button>
                         </div>

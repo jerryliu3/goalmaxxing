@@ -101,6 +101,13 @@ describe("AppShell", () => {
     expect(screen.queryByText("XP Progress")).not.toBeInTheDocument();
   });
 
+  it("keeps demo profile chrome independent of external avatar requests", () => {
+    render(<AppShell userId="demo-user" hrefPrefix="/demo" viewerAvatarUrl="https://randomuser.me/api/portraits/men/32.jpg" {...emptyDuoProps}>Demo</AppShell>);
+    const profile = screen.getByRole("link", { name: "Profile and settings" });
+    expect(profile).toHaveAttribute("href", "/demo/settings");
+    expect(profile.querySelector("img")).toBeNull();
+  });
+
   it("hides the journey intro when asked", () => {
     render(
       <AppShell userId="user-1" showJourneyIntro={false} {...emptyDuoProps}>

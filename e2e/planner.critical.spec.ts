@@ -151,7 +151,7 @@ async function waitForCalendarReady(page: Page) {
         if (await setupHeading.isVisible().catch(() => false)) {
           return "setup";
         }
-        const controlsReady = await page.getByRole("button", { name: "Month View", exact: true }).isEnabled().catch(() => false);
+        const controlsReady = await page.getByRole("group", { name: "Plan view mode" }).getByRole("button", { name: "Month", exact: true }).isEnabled().catch(() => false);
         return (await loadingLocator.count()) === 0 && controlsReady ? "ready" : "loading";
       },
       { timeout: 20_000 }
@@ -161,7 +161,7 @@ async function waitForCalendarReady(page: Page) {
 }
 
 async function ensureCalendarMonthView(page: Page) {
-  const monthViewButton = page.getByRole("button", { name: "Month View", exact: true });
+  const monthViewButton = page.getByRole("group", { name: "Plan view mode" }).getByRole("button", { name: "Month", exact: true });
   if (await monthViewButton.isVisible().catch(() => false)) {
     const pressed = await monthViewButton.getAttribute("aria-pressed");
     if (pressed !== "true") {
