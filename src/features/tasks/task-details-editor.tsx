@@ -76,19 +76,6 @@ export function TaskDetailsEditor({ task, today, onSaved }: {
         quest={{ id: task.taskId, title: task.title, categoryLabel: "Personal",
           color: fields.color, cadenceLabel: null, deadlineLabel: task.scheduledDate, progress: null,
           completed: Boolean(task.completedAt) }}
-        title={editing === "title" ? (
-          <Input autoFocus aria-label="Task name" value={titleDraft} maxLength={200} disabled={saving}
-            className="h-8 text-center" onChange={(event) => setTitleDraft(event.target.value)}
-            onBlur={dismiss}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") { event.preventDefault(); void save("title", titleDraft); }
-            }} />
-        ) : (
-          <QuestFact label="Edit task name" disabled={saving}
-            onSelect={() => { setTitleDraft(task.title); setEditing("title"); }}>
-            {task.title}
-          </QuestFact>
-        )}
         facts={null}
         goalCard={<TempoGoalCard fields={fields} context="history" isTask achieved={Boolean(task.completedAt)}
           taskSchedule={{ date: dateLabel, time: formatQuestSittingTime(task.scheduledTime) ?? "" }}
@@ -96,7 +83,19 @@ export function TaskDetailsEditor({ task, today, onSaved }: {
       >
         <div className="space-y-2 text-sm">
           <p className="leading-relaxed">
-            Task scheduled for{" "}
+            {editing === "title" ? (
+              <Input autoFocus aria-label="Task name" value={titleDraft} maxLength={200} disabled={saving}
+                className="inline-flex h-8 w-full max-w-64" onChange={(event) => setTitleDraft(event.target.value)}
+                onBlur={dismiss}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") { event.preventDefault(); void save("title", titleDraft); }
+                }} />
+            ) : (
+              <QuestFact label="Edit task name" disabled={saving}
+                onSelect={() => { setTitleDraft(task.title); setEditing("title"); }}>
+                {task.title}
+              </QuestFact>
+            )} scheduled for{" "}
             <QuestFact label="Edit scheduled date" active={editing === "date"} disabled={saving || Boolean(task.completedAt)}
               onSelect={() => setEditing(editing === "date" ? null : "date")}>{dateLabel}</QuestFact>
             {" "}at{" "}

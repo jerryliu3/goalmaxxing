@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { getApiErrorMessage } from "@/lib/api/client";
@@ -10,6 +10,16 @@ function CalendarTaskComposer({ day, onClose }: { day: string; onClose: () => vo
   const [title, setTitle] = useState("");
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
+  const composerRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    const cancelOutsideCell = (event: PointerEvent) => {
+      const cell = composerRef.current?.closest('[data-calendar-week-row="true"], [data-day-cell="true"]');
+      if (!savingRef.current && event.target instanceof Node &&
+        !(cell ?? composerRef.current)?.contains(event.target)) onClose();
+    };
+    document.addEventListener("pointerdown", cancelOutsideCell, true);
+    return () => document.removeEventListener("pointerdown", cancelOutsideCell, true);
+  }, [onClose]);
   const save = async () => {
     if (savingRef.current || !title.trim()) return;
     savingRef.current = true;
@@ -25,14 +35,14 @@ function CalendarTaskComposer({ day, onClose }: { day: string; onClose: () => vo
     }
   };
   return (
-    <form className="rounded-md border border-primary/40 bg-background p-1"
+    <form ref={composerRef} className="plan-draft-shimmer rounded-md border border-primary/40 bg-primary/15 p-1"
       data-task-composer="true"
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
       onSubmit={(event) => { event.preventDefault(); void save(); }}>
       <Input autoFocus placeholder="Task name" aria-label="Task name" value={title}
-        maxLength={200} readOnly={saving} className="h-7 min-w-0 border-0 px-1 text-sm shadow-none"
+        maxLength={200} readOnly={saving} className="h-6 min-w-0 border-0 px-1 text-[10px] md:text-[10px] shadow-none placeholder:text-foreground/60"
         onChange={(event) => setTitle(event.target.value)}
         onKeyDown={(event) => {
           event.stopPropagation();

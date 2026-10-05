@@ -29,7 +29,7 @@ describe("task inline facts", () => {
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     expect(mocks.edit).toHaveBeenCalledWith(task.taskId, task.updatedAt, { scheduledDate: task.scheduledDate, scheduledTime: null });
   });
-  it("renames from the card header on Enter", async () => {
+  it("renames from the schedule sentence on Enter", async () => {
     mocks.edit.mockResolvedValue({ ...task, title: "Renamed" });
     const onSaved = openEditor();
     fireEvent.click(screen.getByRole("button", { name: "Edit task name" }));

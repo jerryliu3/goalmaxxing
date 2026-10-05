@@ -45,7 +45,7 @@ describe("one time task checklist", () => {
     render(<PlannerTasksPanel scheduledDate="2026-10-04" selectedTaskId={row.task_id} />);
     expect(await screen.findByRole("button", { name: "Edit task name" })).toBeInTheDocument();
   });
-  it("persists a header rename and keeps the card open with the new version", async () => {
+  it("persists an inline rename and keeps the card open with the new version", async () => {
     mocks.edit.mockResolvedValue({ ...task, title: "Call office", updatedAt: "2026-10-04T12:00:00Z" });
     render(<PlannerTasksPanel scheduledDate="2026-10-04" />);
     fireEvent.click(await screen.findByRole("button", { name: "Call dentist" }));

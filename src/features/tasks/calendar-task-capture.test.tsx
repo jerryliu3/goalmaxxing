@@ -33,6 +33,16 @@ describe("calendar task capture", () => {
     act(() => result.current.open("2026-10-05"));
     expect(result.current.render("2026-10-05")).toBeNull();
   });
+  it("cancels outside the cell but keeps the draft when clicking inside it", () => {
+    const { result } = renderHook(() => useCalendarTaskCapture({ today: "2026-10-04", readOnly: false, revealTasks: vi.fn() }));
+    act(() => result.current.open("2026-10-05"));
+    render(<div data-day-cell="true">{result.current.render("2026-10-05")}<button>Inside cell</button></div>);
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Inside cell" }));
+    expect(result.current.render("2026-10-05")).not.toBeNull();
+    fireEvent.pointerDown(document.body);
+    expect(result.current.render("2026-10-05")).toBeNull();
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
   it("keeps the text on a failed save and Escape cancels without writing", async () => {
     mocks.create.mockRejectedValue(new Error("offline"));
     const { result } = renderHook(() => useCalendarTaskCapture({ today: "2026-10-04", readOnly: false, revealTasks: vi.fn() }));

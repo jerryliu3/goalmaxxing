@@ -12,7 +12,6 @@ import "@/features/planner/work-quest-card.css";
  */
 export function WorkQuestCard({
   quest,
-  title,
   leadingNav,
   trailingNav,
   children,
@@ -20,7 +19,6 @@ export function WorkQuestCard({
   facts,
 }: {
   quest: WorkQuestModel;
-  title?: ReactNode;
   leadingNav?: ReactNode;
   trailingNav?: ReactNode;
   children?: ReactNode;
@@ -46,7 +44,7 @@ export function WorkQuestCard({
         <div className="work-quest-header-row">
           <div className="flex min-w-0 items-center gap-0.5">{leadingNav}</div>
           <h3 className="min-w-0 truncate text-center font-display text-sm font-semibold leading-tight">
-            {title ?? quest.title}
+            {quest.title}
           </h3>
           <div className="flex min-w-0 items-center justify-end gap-0.5">
             {trailingNav}
