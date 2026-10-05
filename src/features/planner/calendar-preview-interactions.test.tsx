@@ -249,7 +249,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
       await vi.advanceTimersByTimeAsync(500);
     });
 
-    expect(screen.getByRole("textbox", { name: "Task name" })).toHaveAttribute("placeholder", "Task name");
+    expect(await screen.findByRole("textbox", { name: "Task name" })).toHaveAttribute("placeholder", "Task name");
     expect(screen.queryByRole("button", { name: "Expand day details" })).not.toBeInTheDocument();
   });
 
