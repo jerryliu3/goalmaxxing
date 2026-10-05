@@ -14,8 +14,6 @@ export function XpProgressBar() {
     <XpProgressCard
       profile={profile}
       rewardSequence={rewardSequence}
-      href="/achievements#progress-section-achievements"
-      ariaLabel="Open achievements"
       className="w-full max-w-xs min-w-0"
     />
   );

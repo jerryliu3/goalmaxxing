@@ -10,7 +10,6 @@ vi.mock("@/lib/navigation/use-app-router", () => ({ useAppRouter: () => ({ push:
 vi.mock("@/features/insights/use-insights-data", () => ({ useInsightsData: () => mocks.data() }));
 vi.mock("@/components/layout/app-boot-ready", () => ({ useReportAppSurfaceReady: vi.fn() }));
 vi.mock("@/features/insights/insights-tab", () => ({ InsightsTab: (props: unknown) => { mocks.tracker(props); return <section data-testid="progress-tracker">Progress tracker</section>; } }));
-vi.mock("./folio-shelf", () => ({ FolioShelf: () => <p>Past volumes</p> }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
 function loadCollection() {
@@ -31,14 +30,14 @@ describe("goal library journey", () => {
     expect(document.querySelector("[data-flat-shards]")).toHaveAttribute("data-piece-count", "2");
     expect(document.querySelectorAll("[data-reward-piece]")).toHaveLength(0);
     expect(document.querySelector("[data-card-solid]")).toBeNull();
-    expect(screen.getAllByRole("article")).toHaveLength(1);
+    expect(screen.getAllByRole("article")).toHaveLength(2);
     const current = screen.getByRole("heading", { name: "Current Goals" });
     const tracker = screen.getByTestId("progress-tracker");
     const past = screen.getByRole("heading", { name: "Past Goals" });
     expect(current.compareDocumentPosition(tracker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(tracker.compareDocumentPosition(past) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(mocks.tracker).toHaveBeenCalledWith(expect.objectContaining({ subjectUserId: "user-1", sectionIds: ["history"] }));
-    expect(screen.getByRole("link", { name: "New goal" })).toHaveAttribute("href", expect.stringContaining("/goals/new?returnTo="));
+    expect(screen.getByRole("link", { name: "New Goal" })).toHaveAttribute("href", expect.stringContaining("/goals/new?returnTo="));
     expect(screen.queryByRole("navigation", { name: "Goal library collections" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Back to Goals" }));
     expect(mocks.push).toHaveBeenLastCalledWith("/goals");
@@ -50,9 +49,11 @@ describe("goal library journey", () => {
       userId: "user-1", goals: [ended], progress: { summaries: [summary(ended.id)] },
     } });
     render(<GoalLibraryPage showBack={false} />);
-    expect(screen.getByRole("link", { name: "New goal" })).toBeInTheDocument();
-    expect(screen.getByText("Past volumes")).toBeInTheDocument();
-    expect(screen.getByTestId("progress-tracker").compareDocumentPosition(screen.getByText("Past volumes")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole("link", { name: "New Goal" })).toBeInTheDocument();
+    const pastCard = screen.getByRole("article", { name: `${ended.title} goal card` });
+    expect(screen.getByTestId("progress-tracker").compareDocumentPosition(pastCard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Goal details/ }));
+    expect(mocks.push).toHaveBeenCalledWith(`/goals/${ended.id}`);
   });
 
   it("lets a fused current goal stay a draggable 3D card", () => {

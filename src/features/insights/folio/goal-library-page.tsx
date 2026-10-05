@@ -11,7 +11,6 @@ import { useAppRouter } from "@/lib/navigation/use-app-router";
 import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
 import { useInsightsData } from "@/features/insights/use-insights-data";
 import { InsightsTab } from "@/features/insights/insights-tab";
-import { FolioShelf } from "./folio-shelf";
 import { CurrentGoalGrid } from "./current-goal-grid";
 import { buildCurrentGoals, buildGoalFolios } from "./folio-model";
 import styles from "./folio.module.css";
@@ -36,7 +35,7 @@ export function GoalLibraryPage({ showBack = true }: { showBack?: boolean }) {
           <InsightsTab subjectUserId={state.userId} progressView="all" sectionIds={["history"]} />
           <section aria-labelledby="past-goals-heading">
             <header className="mb-4"><h2 id="past-goals-heading" className="font-display text-2xl font-semibold">Past Goals</h2><p className="text-sm text-muted-foreground">Every goal that’s passed.</p></header>
-            {folios.length ? <FolioShelf folios={folios} /> : <p className="text-sm text-muted-foreground">Completed, ended, and archived goals collect here.</p>}
+            {folios.length ? <CurrentGoalGrid entries={folios.flatMap(folio => folio.entries)} onDetails={goalId => router.push(`${prefix}/goals/${goalId}`)} /> : <p className="text-sm text-muted-foreground">Completed, ended, and archived goals collect here.</p>}
           </section>
         </div>}
 
