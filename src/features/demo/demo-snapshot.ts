@@ -25,7 +25,12 @@ import {
   DEMO_TEAM_ID,
   DEMO_TIMEZONE,
 } from "@/features/demo/demo-ids";
+import { getAnchoredPeriod } from "@/lib/goals/periods";
+import { cadenceUnitKey } from "@/lib/goals/target-basis";
 import { sha256Hex } from "@/lib/planner/canonical";
+
+/** The demo profile's week start (Monday), for cadence periods. */
+const DEMO_WEEK_STARTS_ON = 1;
 
 export interface DemoPlannerItem {
   id: string;
@@ -165,18 +170,29 @@ function makeCompletion(goalId: string, userId: string, date: string): Completio
   };
 }
 
+/**
+ * Production-shaped unit keys, so the demo planner reads like a real one:
+ * the nth milestone or total session, or a cadence period's slot (the demo
+ * schedules one session per period).
+ */
 function makeItem(
   goal: Goal,
   scheduledDate: string,
   kind: DemoPlannerItem["requirement_kind"],
-  label: string | null
+  label: string | null,
+  ordinal = 1
 ): DemoPlannerItem {
   const unitKey =
     kind === "milestone_sequence"
-      ? `milestone:${scheduledDate}`
+      ? `milestone:${ordinal}`
       : kind === "deadline_total"
-        ? `deadline:${scheduledDate}`
-        : `cadence:${scheduledDate}`;
+        ? `total:${ordinal}`
+        : cadenceUnitKey(
+            getAnchoredPeriod(goal.start_date, goal.recurrence_interval ?? "weekly", scheduledDate, {
+              weekStartsOn: DEMO_WEEK_STARTS_ON,
+            }).periodKey,
+            ordinal
+          );
   return {
     id: itemId(goal.id, unitKey),
     goal_id: goal.id,
@@ -406,7 +422,7 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       goal.milestone_names?.forEach((name, index) => {
         const date = milestoneDates[index];
         if (date) {
-          plannerItems.push(makeItem(goal, date, "milestone_sequence", name));
+          plannerItems.push(makeItem(goal, date, "milestone_sequence", name, index + 1));
         }
       });
       continue;
@@ -418,9 +434,9 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
         dates = includeAsOfDate(dates, asOfDate);
         goal.target_count = dates.length;
       }
-      for (const date of dates) {
-        plannerItems.push(makeItem(goal, date, "deadline_total", null));
-      }
+      dates.forEach((date, index) => {
+        plannerItems.push(makeItem(goal, date, "deadline_total", null, index + 1));
+      });
       continue;
     }
     if (goal.recurrence_interval === "weekly") {
