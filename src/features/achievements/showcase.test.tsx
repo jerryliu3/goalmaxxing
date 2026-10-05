@@ -111,8 +111,7 @@ describe("AchievementsShowcase", () => {
     expect(screen.getByText("3/5 · 60%")).toBeInTheDocument();
     expect(screen.getByLabelText("Trophy showcase")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Level 8 unlocked" })).toBeInTheDocument();
-    expect(screen.getByText(/plaque rail/i)).toBeInTheDocument();
-    expect(screen.getByText("Thesis defense")).toBeInTheDocument();
+    expect(screen.queryByText(/plaque rail/i)).toBeNull();
 
     await user.click(screen.getByRole("button", { name: /lv 2/i }));
     expect(screen.getAllByRole("heading", { name: "Level 2 unlocked" }).length).toBeGreaterThan(0);

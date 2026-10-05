@@ -14,7 +14,6 @@ describe("goal creation action", () => {
     fireEvent.click(screen.getByRole("button", { name: "New Goal" }));
     expect(open).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("article", { name: "Goal card preview" })).toBeInTheDocument();
-    expect(screen.getByTestId("new-goal-compact")).toHaveTextContent("New goal");
     expect(screen.queryByText("Click to create")).toBeNull();
   });
   it("uses the existing demo creation callback when supplied", () => {

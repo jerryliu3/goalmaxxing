@@ -36,7 +36,6 @@ import { ProfilePresenceSection } from "@/features/social/profile-presence";
 import { useOwnProfilePresence } from "@/features/social/use-own-profile-presence";
 import { useSocialTabData } from "@/features/social/use-social-tab-data";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
-import { useMediaQuery } from "@/lib/ui/use-media-query";
 import { cn } from "@/lib/utils";
 import type { Goal } from "@/lib/goals/types";
 
@@ -70,7 +69,6 @@ export function SettingsTab() {
   useReportAppSurfaceReady(!(loading && !state.userId));
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();
-  const isDesktopTwoPane = useMediaQuery("(min-width: 768px)");
   const requestedSection = resolveSettingsSection(searchParams.get("tab"));
   const [cachedSection, setCachedSection] = useState<SettingsSection>("preferences");
   const settingsSection = requestedSection ?? cachedSection;
@@ -173,12 +171,8 @@ export function SettingsTab() {
     <div
       data-testid="settings-pane"
       data-settings-pane={settingsPanelOpen ? "open" : "closed"}
-      className="md:flex md:items-start"
     >
-      <div className="@container min-w-0 flex-1 space-y-5">
-        {/* Settings sit beside the profile card when there's room and right under it
-            on phones, so "Profile settings" doesn't open onto a wall of stats. */}
-        <div className="space-y-5 @4xl:grid @4xl:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)] @4xl:items-start @4xl:gap-10 @4xl:space-y-0">
+      <div className="min-w-0 space-y-5">
         <ProfileMembershipCard
           profile={{
             subjectUserId: state.userId,
@@ -208,8 +202,6 @@ export function SettingsTab() {
               setProfileDraft((prev) => ({ ...prev, avatar_url: "" })),
           }}
         />
-        {groups}
-        </div>
         {presence ? (
           <ProfilePresenceSection
             growSeries={presence.growSeries}
@@ -219,31 +211,23 @@ export function SettingsTab() {
             showMoreLink
           />
         ) : null}
+        {groups}
       </div>
 
-      {isDesktopTwoPane ? (
-        <div
-          className={cn(
-            "min-w-0 overflow-hidden md:transition-[width] md:duration-[var(--motion-duration-hold)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
-            settingsPanelOpen
-              ? "md:w-[min(100%,28rem)]"
-              : "md:pointer-events-none md:w-0"
-          )}
-          data-testid="settings-desktop-editor"
-          data-settings-slide={settingsPanelOpen ? "in" : "out"}
-          aria-hidden={!settingsPanelOpen}
-          inert={!settingsPanelOpen ? true : undefined}
-        >
-          <div className="space-y-3 md:w-[min(100%,28rem)] md:pl-10">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="font-display text-xl font-semibold tracking-tight">
-                  {settingsCopy.label}
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {settingsCopy.description}
-                </p>
-              </div>
+      {/* Every width opens a setting in the side panel, wherever the list was scrolled. */}
+      <SidePanel
+        open={settingsPanelOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeSettingsPanel();
+          }
+        }}
+        title={settingsCopy.label}
+        description={settingsCopy.description}
+        testId="settings-side-panel"
+        header={
+          <div className="border-b px-4 pb-3">
+            <div className="flex items-center gap-2 pt-4">
               <Button
                 type="button"
                 variant="ghost"
@@ -253,46 +237,18 @@ export function SettingsTab() {
                 <ArrowLeft className="size-4" />
                 Back
               </Button>
-            </div>
-            {editor}
-          </div>
-        </div>
-      ) : (
-        <SidePanel
-          open={settingsPanelOpen}
-          onOpenChange={(open) => {
-            if (!open) {
-              closeSettingsPanel();
-            }
-          }}
-          title={settingsCopy.label}
-          description={settingsCopy.description}
-          testId="settings-side-panel"
-          header={
-            <div className="border-b px-4 pb-3">
-              <div className="flex items-center gap-2 pt-4">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={closeSettingsPanel}
-                >
-                  <ArrowLeft className="size-4" />
-                  Back
-                </Button>
-                <p className="font-display text-lg font-semibold tracking-tight">
-                  {settingsCopy.label}
-                </p>
-              </div>
-              <p className="pt-1 text-sm text-muted-foreground">
-                {settingsCopy.description}
+              <p className="font-display text-lg font-semibold tracking-tight">
+                {settingsCopy.label}
               </p>
             </div>
-          }
-        >
-          {editor}
-        </SidePanel>
-      )}
+            <p className="pt-1 text-sm text-muted-foreground">
+              {settingsCopy.description}
+            </p>
+          </div>
+        }
+      >
+        {editor}
+      </SidePanel>
     </div>
   );
 }

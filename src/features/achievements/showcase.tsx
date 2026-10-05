@@ -6,7 +6,6 @@ import {
   ShowcaseMedalShelf,
   ShowcasePedestal,
   ShowcasePersonalRecords,
-  ShowcasePlaqueRail,
 } from "@/features/achievements/showcase-presentation";
 import type { AchievementsShowcasePayload } from "@/features/achievements/types";
 
@@ -28,13 +27,6 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
   );
 
   const { claimed, total, fill } = claimedProgress(payload.collection);
-  const goals = payload.achievedGoals.map((goal) => ({
-    id: goal.goalId,
-    title: goal.title,
-    achievedOn: goal.achievedOn,
-    rewardText: goal.rewardText,
-    category: goal.category,
-  }));
 
   if (!featured) {
     return (
@@ -118,8 +110,6 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
             featuredId={featuredId}
             onSelect={setSelectedFeaturedId}
           />
-          <div className="ach-showcase-shelf mx-auto mt-6 h-2.5 max-w-4xl rounded-sm opacity-85" />
-          <ShowcasePlaqueRail goals={goals} />
         </section>
       </div>
     </div>
