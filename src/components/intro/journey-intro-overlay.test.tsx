@@ -166,15 +166,9 @@ describe("JourneyIntroOverlay", () => {
     expect(routerMock.prefetch).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Finish loading" }));
     expect(await screen.findByRole("dialog", { name: "Agenda" })).toBeInTheDocument();
-<<<<<<< HEAD
-    expect(screen.queryByRole("dialog", { name: "Planner views" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Skip intro" }));
-    expect(await screen.findByRole("dialog", { name: "Planner views" })).toBeInTheDocument();
-=======
     expect(screen.queryByRole("dialog", { name: "Agenda views" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Skip intro" }));
     expect(await screen.findByRole("dialog", { name: "Agenda views" })).toBeInTheDocument();
->>>>>>> 5de0d72c (Refine goal destinations and pair goal cards with calendar overview)
     expect(screen.queryByRole("dialog", { name: "Agenda" })).toBeNull();
   });
 
