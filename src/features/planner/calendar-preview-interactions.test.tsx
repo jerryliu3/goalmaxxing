@@ -216,7 +216,7 @@ describe("CalendarSurface preview interactions (fake timers)", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("opens a task composer on long press", async () => {
+  it("opens a task composer on mobile long press", async () => {
     postJsonMock.mockResolvedValue(
       buildContext([
         unit({
