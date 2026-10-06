@@ -45,6 +45,7 @@ function textDeclarations(theme: ThemeDefinition) {
 const TEXT_ROLE_EXTRAS: Partial<Record<TextRole, string[]>> = {
   eyebrow: ["letter-spacing: var(--type-eyebrow-tracking)", "text-transform: uppercase"],
   stat: ["font-variant-numeric: tabular-nums"],
+  figure: ["font-variant-numeric: tabular-nums"],
 };
 
 function textUtilities() {

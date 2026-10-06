@@ -20,7 +20,7 @@ describe("text roles on live surfaces", () => {
     expect(screen.getByText("Sessions")).toHaveClass("type-eyebrow");
   });
 
-  it("sets section titles as headings and keeps counts on mono", () => {
+  it("sets section titles as headings and counts as figures", () => {
     render(
       <PlanDaySection title="Scheduled goals" count={3}>
         <p>Row</p>
@@ -28,7 +28,7 @@ describe("text roles on live surfaces", () => {
     );
 
     expect(screen.getByRole("button", { name: /Scheduled goals/ })).toHaveClass("type-heading");
-    expect(screen.getByText("3")).toHaveClass("font-mono");
+    expect(screen.getByText("3")).toHaveClass("type-figure");
   });
 
   it("lets the theme choose card heading weight", () => {

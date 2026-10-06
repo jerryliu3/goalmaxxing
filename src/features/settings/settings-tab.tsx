@@ -305,7 +305,7 @@ function SettingsSectionEditor({
           {profileDraft.username.trim() ? (
             <p className="text-xs text-muted-foreground">
               Public profile:{" "}
-              <span className="font-mono text-foreground">
+              <span className="type-figure text-foreground">
                 {buildPublicProfileUrl(profileDraft.username.trim())}
               </span>
             </p>

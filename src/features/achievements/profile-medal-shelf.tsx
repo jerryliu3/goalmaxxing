@@ -29,7 +29,7 @@ export function ProfileMedalShelf({
           Level medals
         </p>
         {total > 0 ? (
-          <p className="ach-showcase-body font-mono text-xs">
+          <p className="ach-showcase-body type-figure text-xs">
             {unlockedCount}/{total} · {fill}%
           </p>
         ) : null}
@@ -60,7 +60,7 @@ export function ProfileMedalShelf({
                   size={64}
                   markId={`profile-medal-${achievement.id}`}
                 />
-                <span className="ach-showcase-stat-muted mt-2 font-mono text-[11px]">
+                <span className="ach-showcase-stat-muted mt-2 type-figure text-[11px]">
                   Lv {level}
                 </span>
                 {achievement.title ? (

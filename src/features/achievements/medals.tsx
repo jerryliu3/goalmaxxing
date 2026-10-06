@@ -105,7 +105,7 @@ export function MedalMark({
         x="44"
         y="43"
         textAnchor="middle"
-        fontFamily="var(--font-app-mono), ui-monospace, monospace"
+        fontFamily="var(--type-figure-font)"
         fontSize="18"
         fontWeight="600"
         fill={ink}

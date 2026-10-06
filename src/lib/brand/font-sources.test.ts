@@ -29,7 +29,7 @@ const FONT_SHORTHAND_DECLARATION = /(?<![-\w])font:\s*([^;}]+)/g;
 const INLINE_FONT_FAMILY = /fontFamily[=:]\s*["'`]([^"'`]*)/g;
 const ARBITRARY_FONT_CLASS = /font-\[(family-name:|["'A-Z])/;
 // A text role owns face and weight; extra font utilities beside it fight it.
-const ROLE_CLASS_STRING = /["'`]([^"'`]*\btype-(?:wordmark|hero|title|heading|item|eyebrow|stat)\b[^"'`]*)["'`]/g;
+const ROLE_CLASS_STRING = /["'`]([^"'`]*\btype-(?:wordmark|hero|title|heading|item|eyebrow|stat|figure)\b[^"'`]*)["'`]/g;
 const FONT_UTILITY = /(?:^|\s)font-(?:thin|light|normal|medium|semibold|bold|sans|display|mono)(?=\s|$)/;
 
 function productionFiles(dir: string): string[] {

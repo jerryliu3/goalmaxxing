@@ -86,6 +86,8 @@ export const TEXT_ROLES = [
   "eyebrow",
   /** Figures that are the point of a tile: streaks, scores, totals. */
   "stat",
+  /** Small figures and meta lines: counts, "0 / 1 this week", dates on cards. */
+  "figure",
 ] as const;
 
 export type TextRole = (typeof TEXT_ROLES)[number];

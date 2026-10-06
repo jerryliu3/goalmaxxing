@@ -11,7 +11,7 @@
 .card-overline { margin: 0; font-family: var(--type-eyebrow-font); font-size: 9.5px; font-weight: var(--type-eyebrow-weight); letter-spacing: var(--type-eyebrow-tracking); text-transform: uppercase; color: var(--muted-foreground); }
 .card-dot { display: inline-block; width: 10px; height: 10px; flex-shrink: 0; border-radius: 50%; box-shadow: inset 0 0 0 1px #0002; }
 /* An empty fact's placeholder text; its zone or spot draws the only outline. */
-.card-ghost { padding: 1px 2px; border-radius: 999px; color: rgb(140 140 140); font: 500 9.5px var(--font-app-mono), monospace; letter-spacing: .04em; white-space: nowrap; }
+.card-ghost { padding: 1px 2px; border-radius: 999px; color: rgb(140 140 140); font: 500 9.5px var(--type-figure-font); letter-spacing: .04em; white-space: nowrap; }
 
 .card-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--background); font-size: 13px; white-space: nowrap; cursor: pointer; }
 .card-button:hover:not(:disabled) { background: var(--muted); }

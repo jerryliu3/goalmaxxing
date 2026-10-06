@@ -29,10 +29,11 @@ web and native read from it, and nothing else names a concrete value.
   | `type-item` | Names of goals, tasks, milestones, people | planner rows, cards |
   | `type-eyebrow` | Small uppercase labels | "PERSONAL RECORDS" |
   | `type-stat` | Figures that are the point of a tile | streaks, scores |
+  | `type-figure` | Small figures and meta lines | counts, "0 / 1 this week" |
 
   In CSS use `var(--type-<role>-font)` / `var(--type-<role>-weight)`. Plain
   `font-sans` / `font-display` / `font-mono` remain for body copy, calendar
-  numerals, and small quantities. Never a weight utility beside a role, a hex
+  numerals, and real code. Never a weight utility beside a role, a hex
   value, a family name, or one theme's font variable (`--font-newsreader`);
   a source test fails on those.
 - Per-theme component variants (`completionMark`, `tabChrome`) come from

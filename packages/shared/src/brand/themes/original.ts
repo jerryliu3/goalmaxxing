@@ -15,6 +15,7 @@ export const ORIGINAL_THEME = {
     item: { slot: "display", weight: 500 },
     eyebrow: { slot: "sans", weight: 600, trackingEm: 0.12 },
     stat: { slot: "display", weight: 600 },
+    figure: { slot: "mono", weight: 400 },
   },
   radiusRem: 0.875,
   colors: {

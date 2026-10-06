@@ -40,7 +40,7 @@ export function ShowcasePersonalRecords({
         <p className="ach-showcase-kicker type-eyebrow text-[10px]">
           Personal records
         </p>
-        <p className="ach-showcase-kicker font-mono text-[11px]">Yours alone · no league shame</p>
+        <p className="ach-showcase-kicker type-figure text-[11px]">Yours alone · no league shame</p>
       </div>
       <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {records.map((record) => (
@@ -103,7 +103,7 @@ export function ShowcasePedestal({
             ? "Earn the next altitude before this mount opens. The medal stays hidden until then."
             : award.description}
         </p>
-        <p className="ach-showcase-kicker mt-3 font-mono text-xs">
+        <p className="ach-showcase-kicker mt-3 type-figure text-xs">
           {locked ? "Locked" : formatAwardDate(award.unlockedAt)}
         </p>
       </div>
@@ -187,7 +187,7 @@ function ShelfMedal({
               size={72}
               markId={`showcase-shelf-${award.id}`}
             />
-            <span className="ach-showcase-stat-muted mt-2 font-mono text-[11px]">
+            <span className="ach-showcase-stat-muted mt-2 type-figure text-[11px]">
               Lv {award.level}
             </span>
             <span className="ach-showcase-kicker type-eyebrow mt-0.5 text-[10px]">

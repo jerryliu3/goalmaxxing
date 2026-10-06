@@ -19,7 +19,7 @@ describe("PlanDaySection", () => {
       "true"
     );
     expect(screen.getByRole("button", { name: /Planned goals/ })).toHaveClass("type-heading");
-    expect(screen.getByText("2")).toHaveClass("font-mono");
+    expect(screen.getByText("2")).toHaveClass("type-figure");
     expect(screen.getByText("Row")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Planned goals/ }));

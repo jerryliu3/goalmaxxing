@@ -50,7 +50,7 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
             </p>
           </div>
           <div className="min-w-[13rem]">
-            <div className="ach-showcase-body flex items-baseline justify-between gap-3 font-mono text-xs">
+            <div className="ach-showcase-body flex items-baseline justify-between gap-3 type-figure text-xs">
               <span>Claimed</span>
               <span className="ach-showcase-stat-value text-base">
                 {claimed}/{total} · {fill}%

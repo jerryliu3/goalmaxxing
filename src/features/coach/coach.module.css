@@ -59,7 +59,7 @@
 .responseStatus { font-size: .68rem; color: var(--muted-foreground); }
 .responseStatus { max-width: 700px; margin: 0 auto 6px; }
 .contentView { flex: 1; overflow-y: auto; padding: 28px; overscroll-behavior: contain; }
-.eyebrow { font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .08em; font-size: .6rem; color: var(--muted-foreground); }
+.eyebrow { font-family: var(--type-figure-font); text-transform: uppercase; letter-spacing: .08em; font-size: .6rem; color: var(--muted-foreground); }
 .intro { font-size: .8rem; line-height: 1.7; color: var(--muted-foreground); max-width: 560px; margin-bottom: 24px; }
 .help { color: var(--muted-foreground); font-size: .75rem; line-height: 1.6; margin: 8px 0; }
 .roomGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 16px; }

@@ -118,7 +118,7 @@
   font-weight: 750;
 }
 .tempo-steps button span {
-  font-family: var(--font-app-mono);
+  font-family: var(--type-figure-font);
 }
 .tempo-heading {
   font-family: var(--type-hero-font);

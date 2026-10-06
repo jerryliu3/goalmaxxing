@@ -95,6 +95,8 @@ describe("theme stylesheet", () => {
     }
     expect(css).toContain("--type-title-weight: 500;");
     expect(css).toContain("--type-stat-font: var(--font-app-display);");
+    // Gazetteer sets small figures in its sans, so the theme reads as two faces.
+    expect(css).toContain("--type-figure-font: var(--font-app-sans);");
   });
 
   it("exposes Tailwind utilities for surface and app roles", () => {
