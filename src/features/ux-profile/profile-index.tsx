@@ -122,16 +122,26 @@ export function ProfileIndex() {
       <Band eyebrow="Concepts" title="Where you edit what others see">
         <ul className="grid gap-4 md:grid-cols-2">
           {PROFILE_CONCEPTS.map((concept) => (
-            <li key={concept.slug}>
+            <li key={concept.slug} className={concept.leading ? "md:col-span-2" : undefined}>
               <Link
                 href={`/ux/profile/${concept.slug}`}
                 aria-label={`Open ${concept.name}`}
                 className="flex h-full flex-col rounded-[14px] border p-5 transition hover:border-[#9a4f2c]/60"
                 style={{ borderColor: GAZETTEER.rule, background: GAZETTEER.paper }}
               >
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em]" style={{ color: GAZETTEER.muted }}>
-                  {concept.letter}
-                </p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em]" style={{ color: GAZETTEER.muted }}>
+                    {concept.letter}
+                  </p>
+                  {concept.leading ? (
+                    <span
+                      className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]"
+                      style={{ background: GAZETTEER.stamp, color: GAZETTEER.paper }}
+                    >
+                      Leading
+                    </span>
+                  ) : null}
+                </div>
                 <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight">{concept.name}</h3>
                 <p className="mt-3 flex-1 text-sm leading-relaxed" style={{ color: GAZETTEER.mutedDeep }}>
                   {concept.thesis}
@@ -148,9 +158,10 @@ export function ProfileIndex() {
           ))}
         </ul>
         <p className="mt-6 max-w-3xl text-sm leading-relaxed" style={{ color: GAZETTEER.mutedDeep }}>
-          <span className="font-semibold text-[#241c14]">Leaning:</span> A as the avatar destination,
-          with C’s pins on Growth objects writing the same three-item list. Both edit one record; D’s
-          per-section audiences wait for a friend graph.
+          <span className="font-semibold text-[#241c14]">Leading:</span> E. Settings opens with your whole
+          public profile, exactly as visitors see it, and “Edit profile” at the top of the box edits it in place.
+          A–D stay as references; C’s pins on Growth objects can still write the same three-item list,
+          and D’s per-section audiences wait for a friend graph.
         </p>
       </Band>
     </main>

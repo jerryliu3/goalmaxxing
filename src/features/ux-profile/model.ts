@@ -1,7 +1,11 @@
+import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 import type {
   PublicProfileIdentity,
   PublicProfileOverallStats,
 } from "@cadence/shared/social/public-profile";
+import { selectCurrentGoals } from "@/lib/goals/current-goals";
+import type { Goal } from "@/lib/goals/types";
+import { buildPublicProfilePath } from "@/lib/social/public-profile-username";
 import type {
   AchievementGoalCategory,
   AwardTier,
@@ -11,6 +15,7 @@ import type {
 /* ------------------------------------------------------------------ concepts */
 
 export type ProfileConceptSlug =
+  | "settings-preview"
   | "owner-page"
   | "settings-card"
   | "pin-from-growth"
@@ -24,9 +29,23 @@ export interface ProfileConcept {
   avatar: string;
   curation: string;
   risk: string;
+  /** The current leading direction; listed first and badged on the index. */
+  leading?: boolean;
 }
 
 export const PROFILE_CONCEPTS: readonly ProfileConcept[] = [
+  {
+    slug: "settings-preview",
+    letter: "E",
+    name: "Your profile, in Settings",
+    leading: true,
+    thesis:
+      "The top of Settings is your whole public profile, exactly as visitors see it: the membership card, your link, About, Showcase and current goals. “Edit profile” turns that same box into the editor.",
+    avatar: "Avatar → Settings. Its first box is your public profile; settings rows follow.",
+    curation:
+      "Edit profile, in place: the card gets editable name, handle and photo; inline bio; tappable pin slots; a goal chooser. Done publishes, Cancel discards.",
+    risk: "Settings opens with a long profile before any setting; people who came to change notifications scroll past it every time.",
+  },
   {
     slug: "owner-page",
     letter: "A",
@@ -163,35 +182,31 @@ export function canSee(audience: Audience, viewer: Viewer): boolean {
 
 /* ------------------------------------------------------------------ goals */
 
-export interface ProfileGoal {
-  id: string;
-  title: string;
-  category: AchievementGoalCategory;
-  cadence: string;
-  progress: number;
-  isPrivate: boolean;
+export interface ProfileGoalEntry {
+  goal: Goal;
+  progress: ProgressContextSummary;
 }
 
-export type ProfileGoalState = "shown" | "hidden" | "private";
+/** Current goals the way the Goals page selects them; visitors never get private ones. */
+export function currentGoals(profile: ProfileSnapshot, viewer: Viewer): ProfileGoalEntry[] {
+  return selectCurrentGoals(
+    [...profile.goals],
+    [...profile.progress],
+    profile.identity.subjectUserId,
+    { publicOnly: viewer !== "owner" }
+  );
+}
 
 /**
- * Owners see every current goal with its state so hidden ones are explained;
- * everyone else sees only featured, non-private goals.
+ * What any profile renders: featured current goals, never private ones. The
+ * owner gets the same list (no "only you" extras); the featured-goals chooser
+ * is where every current goal, private included, is listed.
  */
 export function profileGoals(
-  goals: readonly ProfileGoal[],
-  featuredIds: readonly string[],
-  viewer: Viewer
-): { goal: ProfileGoal; state: ProfileGoalState }[] {
-  const rows = goals.map((goal) => ({
-    goal,
-    state: (goal.isPrivate
-      ? "private"
-      : featuredIds.includes(goal.id)
-        ? "shown"
-        : "hidden") as ProfileGoalState,
-  }));
-  return viewer === "owner" ? rows : rows.filter((row) => row.state === "shown");
+  profile: ProfileSnapshot,
+  featuredIds: readonly string[]
+): ProfileGoalEntry[] {
+  return currentGoals(profile, "public").filter((entry) => featuredIds.includes(entry.goal.id));
 }
 
 /* ------------------------------------------------------------------ profile */
@@ -202,7 +217,17 @@ export interface ProfileSnapshot {
   stats: PublicProfileOverallStats;
   level: number;
   catalog: readonly ShowcaseItem[];
-  goals: readonly ProfileGoal[];
+  /** Raw goals and progress summaries, as the Goals page loads them. */
+  goals: readonly Goal[];
+  progress: readonly ProgressContextSummary[];
+}
+
+/** Production's canonical host (`buildPublicProfileUrl`'s default). */
+export const PROFILE_URL_HOST = "goalmaxxing.xyz";
+
+/** Display URL, e.g. `goalmaxxing.xyz/user/mayaruns`; the path is production's `buildPublicProfilePath`. */
+export function publicProfileUrl(username: string): string {
+  return `${PROFILE_URL_HOST}${buildPublicProfilePath(username)}`;
 }
 
 /* ------------------------------------------------------------------ draft */

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ArrowRight, Eye, Settings } from "lucide-react";
 import { BottomSheet, SidePanel } from "@/components/ui/bottom-sheet";
 import { AppBarMock, ProfileStudyChrome, SettingsRows } from "@/features/ux-profile/chrome";
-import { getProfileConcept, type ProfileSection } from "@/features/ux-profile/model";
+import { currentGoals, getProfileConcept, type ProfileSection } from "@/features/ux-profile/model";
 import { EditButton, FeaturedGoalPicker, ShowcasePicker } from "@/features/ux-profile/pickers";
 import { PublicProfileView } from "@/features/ux-profile/public-profile-view";
 import { PROFILE } from "@/features/ux-profile/seed";
@@ -34,10 +34,7 @@ export function OwnerPageConcept() {
 
       <div className="mx-auto mt-8 max-w-2xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight">Your profile</h1>
-            <p className="font-mono text-xs text-muted-foreground">goalmaxxing.app/u/{PROFILE.identity.username}</p>
-          </div>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">Your profile</h1>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -68,8 +65,8 @@ export function OwnerPageConcept() {
             className="mt-5 flex items-center justify-between gap-3 rounded-[12px] bg-foreground px-4 py-3 text-sm text-background"
           >
             <span>
-              <span className="font-semibold">This is what others see.</span> Private goals and edit
-              controls are hidden.
+              <span className="font-semibold">This is what others see.</span> Edit controls and empty
+              slots are hidden.
             </span>
             <button type="button" className="shrink-0 font-semibold underline" onClick={() => setPreview(false)}>
               Exit preview
@@ -122,7 +119,7 @@ export function OwnerPageConcept() {
         description="Private goals never appear on your profile."
       >
         <FeaturedGoalPicker
-          goals={PROFILE.goals}
+          entries={currentGoals(PROFILE, "owner")}
           featuredIds={draft.featuredGoalIds}
           onToggle={actions.toggleFeaturedGoal}
         />

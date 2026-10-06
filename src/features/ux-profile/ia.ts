@@ -37,7 +37,10 @@ export const NEW_MAP: readonly TabPlan[] = [
   {
     name: "Avatar",
     kind: "button",
-    holds: ["Your public profile (curated view of Growth)", "Settings"],
+    holds: [
+      "Settings, topped by your full public profile (a curated view of Growth)",
+      "Edit profile: that same box becomes the editor, in place",
+    ],
   },
 ] as const;
 

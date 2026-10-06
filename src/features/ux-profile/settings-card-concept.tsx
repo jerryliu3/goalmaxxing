@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Eye, PencilLine } from "lucide-react";
 import { BottomSheet, SidePanel } from "@/components/ui/bottom-sheet";
 import { AppBarMock, ProfileStudyChrome, SettingsRows } from "@/features/ux-profile/chrome";
-import { BIO_LIMIT, getProfileConcept } from "@/features/ux-profile/model";
+import { BIO_LIMIT, currentGoals, getProfileConcept } from "@/features/ux-profile/model";
 import { FeaturedGoalPicker, ShowcasePicker } from "@/features/ux-profile/pickers";
 import { PublicProfileView } from "@/features/ux-profile/public-profile-view";
 import { PROFILE } from "@/features/ux-profile/seed";
@@ -92,7 +92,7 @@ export function SettingsCardConcept() {
               Featured goals
             </h4>
             <FeaturedGoalPicker
-              goals={PROFILE.goals}
+              entries={currentGoals(PROFILE, "owner")}
               featuredIds={draft.featuredGoalIds}
               onToggle={actions.toggleFeaturedGoal}
             />

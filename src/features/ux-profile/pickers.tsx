@@ -5,7 +5,7 @@ import {
   PIN_LIMIT,
   showcaseItemName,
   SHOWCASE_KIND_LABEL,
-  type ProfileGoal,
+  type ProfileGoalEntry,
   type ShowcaseItem,
   type ShowcaseKind,
 } from "@/features/ux-profile/model";
@@ -97,39 +97,40 @@ export function ShowcasePicker({
   );
 }
 
+/** Current goals only (pass `currentGoals(profile, "owner")`); private ones stay locked. */
 export function FeaturedGoalPicker({
-  goals,
+  entries,
   featuredIds,
   onToggle,
 }: {
-  goals: readonly ProfileGoal[];
+  entries: readonly ProfileGoalEntry[];
   featuredIds: readonly string[];
   onToggle: (id: string) => void;
 }) {
   return (
     <ul className="space-y-1.5" aria-label="Featured goals">
-      {goals.map((goal) => {
+      {entries.map(({ goal }) => {
         const featured = featuredIds.includes(goal.id);
         return (
           <li key={goal.id}>
             <button
               type="button"
               role="checkbox"
-              aria-checked={goal.isPrivate ? false : featured}
-              disabled={goal.isPrivate}
+              aria-checked={goal.is_private ? false : featured}
+              disabled={goal.is_private}
               onClick={() => onToggle(goal.id)}
               className="flex w-full items-center gap-3 rounded-lg border border-border/70 bg-card px-3 py-2.5 text-left disabled:opacity-60"
             >
               <span
                 aria-hidden
                 className={`grid size-5 place-items-center rounded border ${
-                  featured && !goal.isPrivate ? "border-primary bg-primary text-primary-foreground" : "border-border"
+                  featured && !goal.is_private ? "border-primary bg-primary text-primary-foreground" : "border-border"
                 }`}
               >
-                {goal.isPrivate ? <Lock className="size-3" /> : featured ? <Check className="size-3.5" /> : null}
+                {goal.is_private ? <Lock className="size-3" /> : featured ? <Check className="size-3.5" /> : null}
               </span>
               <span className="min-w-0 flex-1 truncate text-sm">{goal.title}</span>
-              {goal.isPrivate ? (
+              {goal.is_private ? (
                 <span className="text-[11px] text-muted-foreground">Private goal</span>
               ) : null}
             </button>

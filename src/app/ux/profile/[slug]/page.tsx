@@ -5,8 +5,10 @@ import { PROFILE_CONCEPTS, type ProfileConceptSlug } from "@/features/ux-profile
 import { OwnerPageConcept } from "@/features/ux-profile/owner-page-concept";
 import { PinFromGrowthConcept } from "@/features/ux-profile/pin-from-growth-concept";
 import { SettingsCardConcept } from "@/features/ux-profile/settings-card-concept";
+import { SettingsPreviewConcept } from "@/features/ux-profile/settings-preview-concept";
 
 const CONCEPT_PAGES = {
+  "settings-preview": SettingsPreviewConcept,
   "owner-page": OwnerPageConcept,
   "settings-card": SettingsCardConcept,
   "pin-from-growth": PinFromGrowthConcept,

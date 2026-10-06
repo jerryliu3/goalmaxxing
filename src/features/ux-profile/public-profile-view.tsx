@@ -1,30 +1,42 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { EyeOff, Lock, PencilLine } from "lucide-react";
+import { PencilLine } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
-import { ProfileMembershipCard } from "@/features/social/profile-membership-card";
+import { GoalProgressCard } from "@/features/goals/goal-progress-card";
+import {
+  ProfileMembershipCard,
+  type ProfileMembershipEditor,
+} from "@/features/social/profile-membership-card";
 import { resolvePublicProfileLabel } from "@/features/social/public-profile/resolve-profile-label";
-import { GAZETTEER_CATEGORY_COLORS } from "@cadence/shared/brand/gazetteer";
 import {
   BIO_LIMIT,
   canSee,
   PIN_LIMIT,
   profileGoals,
   resolvePins,
+  showcaseItemName,
   type ProfileDraft,
-  type ProfileGoal,
-  type ProfileGoalState,
+  type ProfileGoalEntry,
   type ProfileSection,
   type ProfileSnapshot,
+  type ShowcaseItem,
   type Viewer,
 } from "@/features/ux-profile/model";
+import { ProfileLink } from "@/features/ux-profile/profile-link";
 import { EmptyPinSlot, ShowcaseTile } from "@/features/ux-profile/showcase-tiles";
 
 export interface OwnerAffordances {
   onBioChange?: (bio: string) => void;
+  /** Makes every pin slot (filled or empty) a button that opens the picker. */
+  onEditPins?: () => void;
   /** Extra controls in each section header (edit buttons, audience switches). */
   sectionAction?: (section: ProfileSection) => ReactNode;
+  /**
+   * Turns the membership card into production's editor (underlined name,
+   * handle and photo fields). Without it the card is the clean read-only face.
+   */
+  cardEditor?: ProfileMembershipEditor;
 }
 
 /**
@@ -38,25 +50,27 @@ export function PublicProfileView({
   viewer,
   variant = "full",
   owner,
+  copyLink = false,
 }: {
   profile: ProfileSnapshot;
   draft: ProfileDraft;
   viewer: Viewer;
   variant?: "full" | "compact";
   owner?: OwnerAffordances;
+  /** Copy link for hosts that show the visitor render on the owner's own surface. */
+  copyLink?: boolean;
 }) {
   const isOwner = viewer === "owner";
   const affordances = isOwner ? owner : undefined;
   const pinned = resolvePins(draft.pins, profile.catalog);
-  const goals = profileGoals(profile.goals, draft.featuredGoalIds, viewer);
+  const goals = profileGoals(profile, draft.featuredGoalIds);
   const shows = (section: ProfileSection) => canSee(draft.audience[section], viewer);
   const showBio = shows("bio") && (isOwner || draft.bio.trim().length > 0);
   const showShowcase = shows("showcase") && (isOwner || pinned.length > 0);
-  const showGoals = shows("goals") && goals.length > 0;
+  const showGoals = shows("goals") && (isOwner || goals.length > 0);
 
   if (variant === "compact") {
     const label = resolvePublicProfileLabel(profile.identity);
-    const workingOn = goals.filter((row) => row.state === "shown").map((row) => row.goal.title);
     return (
       <div className="space-y-3" aria-label={`${label} public profile`} role="region">
         <div className="flex items-center gap-3">
@@ -88,10 +102,13 @@ export function PublicProfileView({
             })}
           </ul>
         ) : null}
-        {showGoals && workingOn.length > 0 ? (
-          <p className="text-xs text-muted-foreground">
-            Working on <span className="text-foreground">{workingOn.join(" · ")}</span>
-          </p>
+        {showGoals && goals.length > 0 ? (
+          <div className="pt-1">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Working on
+            </p>
+            <GoalCards entries={goals} size="mini" />
+          </div>
         ) : null}
       </div>
     );
@@ -103,7 +120,16 @@ export function PublicProfileView({
         profile={profile.identity}
         overallStats={profile.stats}
         currentLevel={profile.level}
+        editor={affordances?.cardEditor}
       />
+
+      {profile.identity.username ? (
+        <ProfileLink
+          username={profile.identity.username}
+          copyable={isOwner || copyLink}
+          className="-mt-4"
+        />
+      ) : null}
 
       {showBio ? (
         <Section title="About" action={affordances?.sectionAction?.("bio")}>
@@ -123,7 +149,9 @@ export function PublicProfileView({
               if (!item && !isOwner) return null;
               return (
                 <li key={item?.id ?? `empty-${index}`}>
-                  {item ? (
+                  {affordances?.onEditPins ? (
+                    <PinSlotButton item={item} onClick={affordances.onEditPins} />
+                  ) : item ? (
                     <ShowcaseTile item={item} />
                   ) : (
                     <EmptyPinSlot hint="Pin a medal, record, or finished goal" />
@@ -136,12 +164,16 @@ export function PublicProfileView({
       ) : null}
 
       {showGoals ? (
-        <Section title="Current goals" action={affordances?.sectionAction?.("goals")}>
-          <ul className="divide-y divide-border/70 rounded-[14px] border border-border/80 bg-card">
-            {goals.map(({ goal, state }) => (
-              <GoalRow key={goal.id} goal={goal} state={state} />
-            ))}
-          </ul>
+        <Section
+          title="Current goals"
+          meta={isOwner ? `${goals.length} featured` : undefined}
+          action={affordances?.sectionAction?.("goals")}
+        >
+          {goals.length > 0 ? (
+            <GoalCards entries={goals} size="full" />
+          ) : (
+            <EmptyPinSlot hint="Feature a current goal so visitors see what you’re working on" />
+          )}
         </Section>
       ) : null}
     </div>
@@ -217,39 +249,50 @@ function Bio({ bio, onChange }: { bio: string; onChange?: (bio: string) => void 
   );
 }
 
-const GOAL_STATE_BADGE: Record<Exclude<ProfileGoalState, "shown">, { label: string; icon: typeof Lock }> = {
-  hidden: { label: "Not featured", icon: EyeOff },
-  private: { label: "Private · only you", icon: Lock },
-};
-
-function GoalRow({ goal, state }: { goal: ProfileGoal; state: ProfileGoalState }) {
-  const badge = state === "shown" ? null : GOAL_STATE_BADGE[state];
-  const BadgeIcon = badge?.icon;
+/**
+ * The Goals page's card renderer (`GoalProgressCard`, as `CurrentGoalGrid`
+ * uses it). The grid is container-sized rather than `CurrentGoalGrid`'s
+ * viewport breakpoints, so cards stay legible inside a card or dialog.
+ */
+function GoalCards({ entries, size }: { entries: readonly ProfileGoalEntry[]; size: "full" | "mini" }) {
   return (
-    <li className={`flex items-center gap-3 px-4 py-3 ${badge ? "opacity-60" : ""}`}>
-      <span
-        aria-hidden
-        className="size-2.5 shrink-0 rounded-full"
-        style={{ background: GAZETTEER_CATEGORY_COLORS[goal.category] }}
-      />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold">{goal.title}</p>
-        <p className="font-mono text-[11px] text-muted-foreground">{goal.cadence}</p>
-      </div>
-      {badge ? (
-        <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-          {BadgeIcon ? <BadgeIcon aria-hidden className="size-3" /> : null}
-          {badge.label}
-        </span>
-      ) : (
+    <div className="@container">
+      <ul
+        aria-label="Goal cards"
+        className={
+          size === "full"
+            ? "grid grid-cols-2 gap-x-4 gap-y-6 @xl:grid-cols-3"
+            : "grid grid-cols-3 gap-x-3 gap-y-4"
+        }
+      >
+        {entries.map(({ goal, progress }) => (
+          <li key={goal.id} aria-label={goal.title} className="min-w-0">
+            <GoalProgressCard goal={goal} progress={progress} gallery />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function PinSlotButton({ item, onClick }: { item: ShowcaseItem | undefined; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={item ? `Change pin: ${showcaseItemName(item)}` : "Add a pin"}
+      className="relative block h-full w-full rounded-[14px] text-left outline-none ring-primary transition hover:ring-2 focus-visible:ring-2"
+    >
+      {item ? <ShowcaseTile item={item} /> : <EmptyPinSlot hint="Add a pin" />}
+      {item ? (
         <span
-          role="img"
-          aria-label={`${Math.round(goal.progress * 100)}% this period`}
-          className="h-1.5 w-16 overflow-hidden rounded-full bg-muted"
+          aria-hidden
+          className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-[10px] font-semibold"
         >
-          <span className="block h-full rounded-full bg-primary" style={{ width: `${goal.progress * 100}%` }} />
+          <PencilLine className="size-3" />
+          Change
         </span>
-      )}
-    </li>
+      ) : null}
+    </button>
   );
 }
