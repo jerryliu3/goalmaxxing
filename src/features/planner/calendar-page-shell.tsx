@@ -39,8 +39,12 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
     [defaultCalendarViewMode, searchParams]
   );
   const calendarRouteRef = useRef(liveNormalized);
+  // Goal View is a lens on the route; remember it with the rest so a sheet opened over
+  // the planner (its URL is /goals/:id) doesn't drop the planner back to its base view.
+  const goalLensRef = useRef(searchParams.get("lens") === "goals");
   if (onCalendarPath) {
     calendarRouteRef.current = liveNormalized;
+    goalLensRef.current = searchParams.get("lens") === "goals";
   }
   const normalized = onCalendarPath ? liveNormalized : calendarRouteRef.current;
   const partnerOverlay = usePartnerCompletionOverlay({
@@ -161,7 +165,7 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
 
   return (
     <CalendarSurface
-      goalTimelineOpen={searchParams.get("lens") === "goals"}
+      goalTimelineOpen={goalLensRef.current}
       onGoalTimelineOpenChange={(open) => {
         if (!routeIsActive) return;
         applySearchParams((params) => {
