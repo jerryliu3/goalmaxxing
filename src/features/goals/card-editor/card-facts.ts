@@ -8,7 +8,7 @@ import type { GoalFormState } from "@/features/today/goal-form-model";
 import { creationPlaqueTarget } from "../card-material/creation-plaque-target";
 
 /** Facts the card face prints, in reading order. */
-export type FaceFact = "visibility" | "cadence" | "name" | "category" | "stretch" | "start" | "deadline" | "time";
+export type FaceFact = "visibility" | "cadence" | "name" | "category" | "difficulty" | "start" | "deadline" | "time";
 /** Facts that live on the card's back. */
 export type BackFact = "description" | "reward" | "plaque" | "milestones" | "link" | "color";
 export type CardFact = FaceFact | BackFact;
@@ -18,7 +18,7 @@ export const CARD_FACT_LABELS: Record<CardFact, string> = {
   cadence: "Target",
   name: "Name",
   category: "Category",
-  stretch: "Stretch",
+  difficulty: "Difficulty",
   start: "Started",
   deadline: "Deadline",
   time: "Time of day",
@@ -30,7 +30,7 @@ export const CARD_FACT_LABELS: Record<CardFact, string> = {
   color: "Card colour",
 };
 
-export const STRETCH_OPTIONS: ReadonlyArray<{ value: GoalDifficulty; label: string; short: string }> = [
+export const DIFFICULTY_OPTIONS: ReadonlyArray<{ value: GoalDifficulty; label: string; short: string }> = [
   { value: "easy", label: "Easy · a little lift", short: "a little lift" },
   { value: "medium", label: "Medium · a good push", short: "a good push" },
   { value: "hard", label: "Hard · a big stretch", short: "a big stretch" },
@@ -101,8 +101,8 @@ export function summarizeFaceFact(fact: FaceFact, fields: GoalCreationFields): s
       return fields.title.trim() || "Untitled goal";
     case "category":
       return getCategoryLabel(fields.category_selection, fields.custom_category);
-    case "stretch":
-      return STRETCH_OPTIONS.find((option) => option.value === fields.difficulty)?.short ?? "";
+    case "difficulty":
+      return DIFFICULTY_OPTIONS.find((option) => option.value === fields.difficulty)?.short ?? "";
     case "start":
       return formatCardDate(fields.start_date);
     case "deadline":
@@ -136,7 +136,7 @@ const FACT_KEYS: Record<CardFact, (keyof GoalFormState)[]> = {
   cadence: ["target_count"],
   name: ["title"],
   category: ["category_selection", "custom_category"],
-  stretch: ["difficulty"],
+  difficulty: ["difficulty"],
   start: [],
   deadline: ["end_date"],
   time: ["default_local_time"],

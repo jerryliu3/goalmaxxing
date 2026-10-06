@@ -9,10 +9,10 @@ import { CardScene } from "./card-scene";
 import { InlineFact, useEscapeLayer } from "./inline-fact";
 import { boxWithin, useCardRegions } from "./use-card-regions";
 
-// Facts printed at the card's left edge call out left; full-width and right-edge facts call
-// out right, so no leader line crosses the face.
-const LEFT: FaceFact[] = ["visibility", "category", "start", "time"];
-const RIGHT: FaceFact[] = ["cadence", "name", "stretch", "deadline"];
+// Facts printed at the card's left edge call out left (the target sits beside its number);
+// the title, effort and right-edge facts call out right, so no leader line crosses the face.
+const LEFT: FaceFact[] = ["visibility", "cadence", "category", "start", "time"];
+const RIGHT: FaceFact[] = ["name", "difficulty", "deadline"];
 const GAP = 8;
 
 interface Line {
@@ -71,6 +71,8 @@ export function AnnotatedCard({
     const lines: Line[] = [];
     let height = 0;
     for (const [side, facts] of [["left", LEFT], ["right", RIGHT]] as const) {
+      // Callouts are placed inside their column; lines are drawn in board coordinates.
+      const columnTop = side === "left" ? left.y : right.y;
       let cursor = 0;
       const ordered = facts
         .map((fact) => current.find((region) => region.fact === fact && callouts.current.has(fact)))
@@ -79,15 +81,16 @@ export function AnnotatedCard({
       for (const region of ordered) {
         const node = callouts.current.get(region.fact)!;
         const anchor = node.querySelector<HTMLElement>("[data-anchor]");
-        const anchorY = anchor ? anchor.offsetTop + anchor.offsetHeight / 2 : 30;
+        // offsetTop is measured inside the callout's border, so add it back.
+        const anchorY = node.clientTop + (anchor ? anchor.offsetTop + anchor.offsetHeight / 2 : 30);
         const target = stage.y + region.y + region.height / 2;
-        const top = Math.max(target - anchorY, cursor);
+        const top = Math.max(target - columnTop - anchorY, cursor);
         tops[region.fact] = top;
         cursor = top + node.offsetHeight + GAP;
         lines.push({
           fact: region.fact,
           x1: side === "left" ? left.x + left.width : right.x,
-          y1: top + anchorY,
+          y1: columnTop + top + anchorY,
           x2: stage.x + (side === "left" ? region.x - 4 : region.x + region.width + 4),
           y2: target,
         });

@@ -5,7 +5,7 @@ import { type CSSProperties, type ReactNode, useCallback, useEffect, useLayoutEf
 import { categoryChangePatch } from "@/lib/goals/card-colour";
 import { DEFAULT_GOAL_CATEGORIES, getCategoryLabel, type CategorySelection } from "@/lib/goals/category";
 import type { CardEditorSession } from "./card-editor-session";
-import { cadenceBounds, cadenceCountEditable, type FaceFact, isMilestoneGoal, STRETCH_OPTIONS } from "./card-facts";
+import { cadenceBounds, cadenceCountEditable, type FaceFact, isMilestoneGoal, DIFFICULTY_OPTIONS } from "./card-facts";
 import { CardScene } from "./card-scene";
 import { useEscapeLayer } from "./inline-fact";
 import { type FaceRegion, useCardRegions } from "./use-card-regions";
@@ -73,8 +73,8 @@ export function DirectCard({ session, card, back, flipped }: { session: CardEdit
 
   const count = Number(fields.target_count) || 1;
   const { min, max } = cadenceBounds(fields, session.completed);
-  const [name, cadence, category, stretch, visibility] = (["name", "cadence", "category", "stretch", "visibility"] as const).map(region);
-  const level = STRETCH_OPTIONS.findIndex((option) => option.value === fields.difficulty);
+  const [name, cadence, category, effort, visibility] = (["name", "cadence", "category", "difficulty", "visibility"] as const).map(region);
+  const level = DIFFICULTY_OPTIONS.findIndex((option) => option.value === fields.difficulty);
 
   const overlay = (
     <div className="card-overlay" data-direct="true" data-renaming={renaming}>
@@ -95,7 +95,9 @@ export function DirectCard({ session, card, back, flipped }: { session: CardEdit
       ))}
 
       {cadence && (
-        <span className="card-stepper-pill" data-changed={changed("cadence")} style={{ left: clampX(cadence.x + cadence.width + 10, 34), top: cadence.y + cadence.height / 2 }}>
+        // The +/− pill sits on the card's left edge, beside the number it changes; the right
+        // edge already carries the effort controls.
+        <span className="card-stepper-pill" data-changed={changed("cadence")} style={{ left: Math.max(cadence.x - 48, -14), top: cadence.y + cadence.height / 2 }}>
           {cadenceCountEditable(fields) ? (
             <>
               <button type="button" aria-label="More" disabled={count >= max} onClick={() => patch({ target_count: String(count + 1) })}><Plus size={14} /></button>
@@ -145,19 +147,19 @@ export function DirectCard({ session, card, back, flipped }: { session: CardEdit
         </>
       )}
 
-      {stretch && (() => {
+      {effort && (() => {
         const step = (delta: number) => {
-          const next = STRETCH_OPTIONS[level + delta];
+          const next = DIFFICULTY_OPTIONS[level + delta];
           patch({ difficulty: next.value });
-          show("stretch", next.label);
+          show("difficulty", next.label);
         };
         // − and + flank the effort bars, kept inside the card's edge.
-        const right = Math.min(stretch.x + stretch.width + 3, width - 26);
+        const right = Math.min(effort.x + effort.width + 3, width - 26);
         return (
-          <span className="card-stretch" data-changed={changed("stretch")} role="group" aria-label={`Stretch: ${STRETCH_OPTIONS[level]?.label ?? ""}`}>
-            <button type="button" aria-label="Easier" disabled={level <= 0} style={{ left: stretch.x - 27, top: stretch.y + stretch.height / 2 }} onClick={() => step(-1)}><Minus size={13} /></button>
-            <span className="card-stretch-frame" style={regionStyle(stretch)} aria-hidden="true" />
-            <button type="button" aria-label="Harder" disabled={level >= STRETCH_OPTIONS.length - 1} style={{ left: right, top: stretch.y + stretch.height / 2 }} onClick={() => step(1)}><Plus size={13} /></button>
+          <span className="card-effort" data-changed={changed("difficulty")} role="group" aria-label={`Difficulty: ${DIFFICULTY_OPTIONS[level]?.label ?? ""}`}>
+            <button type="button" aria-label="Easier" disabled={level <= 0} style={{ left: effort.x - 27, top: effort.y + effort.height / 2 }} onClick={() => step(-1)}><Minus size={13} /></button>
+            <span className="card-effort-frame" style={regionStyle(effort)} aria-hidden="true" />
+            <button type="button" aria-label="Harder" disabled={level >= DIFFICULTY_OPTIONS.length - 1} style={{ left: right, top: effort.y + effort.height / 2 }} onClick={() => step(1)}><Plus size={13} /></button>
           </span>
         );
       })()}

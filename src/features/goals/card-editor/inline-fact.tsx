@@ -132,10 +132,10 @@ export function InlineFact({ fact, session, onDone }: { fact: CardFact; session:
           }}
         />
       );
-    case "stretch":
+    case "difficulty":
       return (
         <Segments<GoalDifficulty>
-          label="Stretch"
+          label="Difficulty"
           value={fields.difficulty}
           options={[{ value: "easy", label: "Easy" }, { value: "medium", label: "Medium" }, { value: "hard", label: "Hard" }]}
           onPick={(difficulty) => {
