@@ -6,9 +6,18 @@ import {
   type TouchEvent,
   useCallback,
   useRef,
+  useState,
 } from "react";
 import { BottomSheet, BottomSheetHandle } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { UnsavedChangesContext } from "@/features/goals/unsaved-changes";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 
 interface GoalRouteSheetProps {
@@ -28,6 +37,16 @@ export function GoalRouteSheet({
   closeButtonLabel = "Close goal editor",
 }: GoalRouteSheetProps) {
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+  // Forms inside report unsaved changes; closing then asks before discarding them.
+  const [dirty, setDirty] = useState(false);
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+  const requestClose = useCallback(() => {
+    if (dirty) {
+      setConfirmingDiscard(true);
+      return;
+    }
+    onClose();
+  }, [dirty, onClose]);
   const isMobileViewport = useMediaQuery(MOBILE_SHEET_BREAKPOINT_QUERY);
 
   const onHeaderTouchStart = useCallback(
@@ -71,9 +90,9 @@ export function GoalRouteSheet({
         return;
       }
 
-      onClose();
+      requestClose();
     },
-    [isMobileViewport, onClose]
+    [isMobileViewport, requestClose]
   );
 
   return (
@@ -81,7 +100,7 @@ export function GoalRouteSheet({
       open
       onOpenChange={(open) => {
         if (!open) {
-          onClose();
+          requestClose();
         }
       }}
       title={title}
@@ -100,7 +119,7 @@ export function GoalRouteSheet({
               variant="ghost"
               size="icon-sm"
               className="inline-flex"
-              onClick={onClose}
+              onClick={requestClose}
               aria-label={closeButtonLabel}
               data-no-swipe="true"
             >
@@ -110,7 +129,22 @@ export function GoalRouteSheet({
         </div>
       }
     >
-      {children}
+      <UnsavedChangesContext.Provider value={setDirty}>{children}</UnsavedChangesContext.Provider>
+      <Dialog open={confirmingDiscard} onOpenChange={setConfirmingDiscard}>
+        {/* Above the sheet (z-70), which stays open behind it. */}
+        <DialogContent className="z-[80] sm:max-w-sm" overlayClassName="z-[80]" showCloseButton={false}>
+          <DialogTitle>Discard your changes?</DialogTitle>
+          <DialogDescription>You’ll lose what you’ve entered so far.</DialogDescription>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setConfirmingDiscard(false)}>
+              Keep editing
+            </Button>
+            <Button type="button" variant="destructive" onClick={onClose}>
+              Discard
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </BottomSheet>
   );
 }

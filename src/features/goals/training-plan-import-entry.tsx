@@ -12,6 +12,7 @@ import { getApiErrorMessage, postJson } from "@/lib/api/client";
 import { invalidatePlannerRelatedTabCaches } from "@/lib/cache/planner-tab-cache";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
+import { useReportUnsavedChanges } from "@/features/goals/unsaved-changes";
 
 interface TrainingPlanSessionDraft {
   scheduled_date: string;
@@ -53,6 +54,7 @@ export function TrainingPlanImportEntry({ onExit }: TrainingPlanImportEntryProps
   const [goals, setGoals] = useState<TrainingPlanGoalDraft[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [lastParsedPlanText, setLastParsedPlanText] = useState<string | null>(null);
+  useReportUnsavedChanges(planText.trim() !== "" || goals.length > 0);
 
   const sessionCount = useMemo(
     () => goals.reduce((total, goal) => total + goal.sessions.length, 0),
