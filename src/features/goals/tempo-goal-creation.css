@@ -16,10 +16,6 @@
   justify-self: center;
   perspective: 1100px;
 }
-/* The back's rows need more room than the small face preview gives, on every layout. */
-.tempo-preview[data-back="true"] {
-  width: min(100%, 22rem);
-}
 /* The preview's flip scene fills the preview; the back is the card's own size. */
 .tempo-preview > .card-scene {
   width: 100%;

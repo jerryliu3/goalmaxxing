@@ -262,11 +262,8 @@ export function TempoGoalFields({
           color={goalColor}
           flipped={showBack}
           front={cardFace}
-          back={
-            step === REWARD ? (
-              <CardBack session={backSession} hidden={backHidden} heading="Advanced settings" />
-            ) : undefined
-          }
+          // Mounted on every step so it turns in with the card rather than appearing flat.
+          back={<CardBack session={backSession} hidden={backHidden} heading="Advanced settings" unsetLabel="Optional" />}
         />
       )}
     </motion.div>

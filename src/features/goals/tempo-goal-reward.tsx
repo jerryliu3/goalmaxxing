@@ -33,7 +33,11 @@ export function TempoGoalReward({
     <>
       {reward !== undefined ? (
         <>
-          <label htmlFor={`${id}-reward`}>Your reward</label>
+          <label htmlFor={`${id}-reward`}>
+            <span>
+              Your reward <span className="tempo-hint">(Optional)</span>
+            </span>
+          </label>
           <Input
             id={`${id}-reward`}
             className="tempo-title-input"
@@ -43,9 +47,6 @@ export function TempoGoalReward({
             onChange={(event) => onReward(event.target.value)}
           />
           <Choices label="Reward ideas" value={null} options={REWARD_IDEAS} onChange={onReward} />
-          <p className="tempo-hint">
-            Optional. It stays sealed on the back of your card until you finish.
-          </p>
         </>
       ) : null}
       <div className="tempo-advanced-note">

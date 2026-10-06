@@ -29,11 +29,11 @@
 
 /* Card and card-sized back sharing one flip */
 .card-scene { display: grid; justify-items: center; width: min(100%, 360px); perspective: 1600px; }
-.card-side { grid-area: 1 / 1; width: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; transition: transform .7s cubic-bezier(.3,.7,.2,1), visibility 0s .35s; }
+.card-side { grid-area: 1 / 1; width: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; transition: transform .7s cubic-bezier(.65,0,.35,1), visibility 0s .35s; }
 .card-reverse { transform: rotateY(180deg); }
 .card-scene[data-back="true"] .card-front { transform: rotateY(-180deg); }
 .card-scene[data-back="true"] .card-reverse { transform: rotateY(0deg); }
-/* Hide the side facing away at the midpoint of the turn: a card with 3D edges (the creation
+/* Hide the side facing away at the midpoint of the turn (the symmetric ease puts 90° at .35s): a card with 3D edges (the creation
    preview) would otherwise show them through the other side. */
 .card-scene[data-back="true"] .card-front, .card-scene[data-back="false"] .card-reverse { visibility: hidden; }
 .card-stage { position: relative; width: 100%; }

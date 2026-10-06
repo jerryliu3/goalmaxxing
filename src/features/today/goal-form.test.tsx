@@ -409,7 +409,7 @@ describe("GoalForm persistence recovery", () => {
       await user.click(screen.getByRole("button", { name: /04Schedule/ }));
       await linkToMainGoal(user);
       // The reward step's own field sets the reward, saved with the goal.
-      await user.type(screen.getByRole("textbox", { name: "Your reward" }), "New shoes");
+      await user.type(screen.getByRole("textbox", { name: /^Your reward/ }), "New shoes");
       await user.click(screen.getByRole("button", { name: /06Review/ }));
       await user.click(screen.getByRole("button", { name: "Create goal" }));
 

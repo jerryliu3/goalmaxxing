@@ -134,8 +134,12 @@ describe("TempoGoalFields creation flow", () => {
     expect(screen.getByRole("button", { name: /Also counts toward/ })).toBeVisible();
     // The plaque target is set on review and milestone names in the rhythm step.
     expect(screen.queryByRole("button", { name: /Earn achievement after/ })).toBeNull();
+    // Unset advanced settings read "Optional" instead of their defaults.
+    for (const label of [/Why it matters/, /Card colour/, /Also counts toward/]) {
+      expect(screen.getByRole("button", { name: label })).toHaveTextContent("Optional");
+    }
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Your reward" }), { target: { value: "New running shoes" } });
+    fireEvent.change(screen.getByRole("textbox", { name: /^Your reward/ }), { target: { value: "New running shoes" } });
     expect(onPatch).toHaveBeenCalledWith({ reward_text: "New running shoes" });
     fireEvent.click(screen.getByRole("button", { name: "A weekend away" }));
     expect(onPatch).toHaveBeenCalledWith({ reward_text: "A weekend away" });
@@ -155,7 +159,7 @@ describe("TempoGoalFields creation flow", () => {
     fireEvent.click(screen.getByRole("button", { name: /05Reward/ }));
 
     expect(await screen.findByRole("heading", { name: "A few more settings." })).toBeVisible();
-    expect(screen.queryByRole("textbox", { name: "Your reward" })).toBeNull();
+    expect(screen.queryByRole("textbox", { name: /^Your reward/ })).toBeNull();
     expect(screen.getByRole("button", { name: /Why it matters/ })).toBeVisible();
     expect(screen.queryByRole("button", { name: /Your reward/ })).toBeNull();
   });

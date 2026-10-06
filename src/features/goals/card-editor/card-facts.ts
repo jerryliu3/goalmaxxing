@@ -1,5 +1,5 @@
 import { format, isValid, parseISO } from "date-fns";
-import { cardColourName } from "@/lib/goals/card-colour";
+import { cardColourName, colourFollowsCategory } from "@/lib/goals/card-colour";
 import { getCategoryLabel } from "@/lib/goals/category";
 import { applyGoalCreationFieldChange, type GoalCreationFields } from "@/lib/goals/creation-model";
 import { formatGoalDateLabel } from "@/lib/goals/linked-goal-labels";
@@ -112,6 +112,23 @@ export function summarizeFaceFact(fact: FaceFact, fields: GoalCreationFields): s
       return fields.end_date ? formatGoalDateLabel(fields.end_date) : "No deadline";
     case "time":
       return fields.default_local_time ? formatCardTime(fields.default_local_time) : "Any time";
+  }
+}
+
+/** Whether the person has set this back fact, or it still shows its default. */
+export function backFactIsSet(fact: BackFact, fields: CardEditorFields, linkTitle: string | null): boolean {
+  switch (fact) {
+    case "description":
+      return fields.description.trim() !== "";
+    case "reward":
+      return fields.reward_text.trim() !== "";
+    case "link":
+      return linkTitle !== null;
+    case "color":
+      return !colourFollowsCategory(fields.color, fields.category_selection);
+    case "plaque":
+    case "milestones":
+      return true;
   }
 }
 
