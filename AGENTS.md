@@ -175,9 +175,9 @@ surfaces. The default is to simplify and reuse what already exists.
   `docs/ux/goalmaxxing-application-brand-guide.md` and `/ux/brand`.
   Gazetteer + Soft paper + Nest is the preserved leading lock; Col is the
   runner-up. New atmosphere rounds are exploratory and do not replace that
-  lock. Original chrome stays Geist. Gazetteer type roles
-  (Newsreader / Source Sans 3 / IBM Plex Mono) apply on live
-  `font-display`, `font-sans`, and `font-mono` surfaces.
+  lock. Original chrome stays Geist; Gazetteer reads as Newsreader plus
+  Source Sans 3. Live text takes its face and weight from the registry's
+  `type-*` text roles.
 - Every theme value (colors, typefaces, type roles, radius, per-theme
   component variants) is defined once in `packages/shared/src/brand`
   (see its README) and generated into `src/app/themes.css` with

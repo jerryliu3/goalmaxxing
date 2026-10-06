@@ -3,7 +3,7 @@
 import { useId, type ReactNode } from "react";
 import { MedalMark } from "@/features/achievements/medals";
 import type { PersonalRecordAccent } from "@/features/achievements/types";
-import { GAZETTEER, GAZETTEER_CATEGORY_COLORS } from "@/lib/brand/gazetteer";
+import { GAZETTEER, GAZETTEER_CATEGORY_COLORS } from "@cadence/shared/brand/gazetteer";
 import type { ShowcaseItem } from "@/features/ux-profile/model";
 
 const RECORD_ACCENT: Record<PersonalRecordAccent, string> = {

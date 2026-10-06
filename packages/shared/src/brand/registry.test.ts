@@ -77,7 +77,8 @@ describe("theme stylesheet", () => {
   it("puts the default theme on :root and scopes the rest by data attribute", () => {
     expect(css).toContain(':root,\n[data-ui-style="original"] {');
     expect(css).toContain('\n[data-ui-style="gazetteer"] {');
-    expect(css).toContain('.dark[data-ui-style="gazetteer"] {');
+    // The web app has no dark mode; dark palettes are for native only.
+    expect(css).not.toContain(".dark");
   });
 
   it("resolves each theme's type slots to its own faces", () => {

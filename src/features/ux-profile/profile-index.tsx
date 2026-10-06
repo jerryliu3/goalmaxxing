@@ -8,7 +8,7 @@ import {
   SCORE_NAMES,
 } from "@/features/ux-profile/ia";
 import { PROFILE_CONCEPTS } from "@/features/ux-profile/model";
-import { GAZETTEER } from "@/lib/brand/gazetteer";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
 
 export function ProfileIndex() {
   return (

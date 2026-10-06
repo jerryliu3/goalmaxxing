@@ -5,7 +5,7 @@ import { EyeOff, Lock, PencilLine } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
 import { ProfileMembershipCard } from "@/features/social/profile-membership-card";
 import { resolvePublicProfileLabel } from "@/features/social/public-profile/resolve-profile-label";
-import { GAZETTEER_CATEGORY_COLORS } from "@/lib/brand/gazetteer";
+import { GAZETTEER_CATEGORY_COLORS } from "@cadence/shared/brand/gazetteer";
 import {
   BIO_LIMIT,
   canSee,

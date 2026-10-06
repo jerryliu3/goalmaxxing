@@ -1,12 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  applyDocumentUiStyle,
-  DEFAULT_UI_STYLE_ID,
-  getUiStyle,
-  parseUiStyleId,
-  resolveUiStyleId,
-  UI_STYLE_OPTIONS,
-} from "@/lib/brand/ui-style";
+import { DEFAULT_THEME_ID, getTheme, THEMES } from "@cadence/shared/brand";
+import { applyDocumentUiStyle, parseUiStyleId, resolveUiStyleId } from "@/lib/brand/ui-style";
 
 describe("ui style catalog", () => {
   afterEach(() => {
@@ -16,24 +10,24 @@ describe("ui style catalog", () => {
   it("defaults unknown values to original", () => {
     expect(parseUiStyleId(undefined)).toBe("original");
     expect(parseUiStyleId("col")).toBe("original");
-    expect(DEFAULT_UI_STYLE_ID).toBe("original");
+    expect(DEFAULT_THEME_ID).toBe("original");
   });
 
   it("lists original then gazetteer so later skins can append", () => {
-    expect(UI_STYLE_OPTIONS.map((style) => style.id)).toEqual(["original", "gazetteer"]);
+    expect(THEMES.map((style) => style.id)).toEqual(["original", "gazetteer"]);
   });
 
   it("reads the document dataset when no explicit id is passed", () => {
     document.documentElement.dataset.uiStyle = "gazetteer";
     expect(resolveUiStyleId()).toBe("gazetteer");
-    expect(getUiStyle(resolveUiStyleId()).completionMark).toBe("nest");
+    expect(getTheme(resolveUiStyleId()).completionMark).toBe("nest");
   });
 
   it("selects the theme through the html data attribute", () => {
-    applyDocumentUiStyle(getUiStyle("gazetteer"));
+    applyDocumentUiStyle(getTheme("gazetteer"));
     expect(document.documentElement.dataset.uiStyle).toBe("gazetteer");
 
-    applyDocumentUiStyle(getUiStyle("original"));
+    applyDocumentUiStyle(getTheme("original"));
     expect(document.documentElement.dataset.uiStyle).toBe("original");
   });
 
@@ -45,14 +39,14 @@ describe("ui style catalog", () => {
       document.head.append(themeMeta);
     }
 
-    applyDocumentUiStyle(getUiStyle("gazetteer"));
+    applyDocumentUiStyle(getTheme("gazetteer"));
     expect(themeMeta.getAttribute("content")).toBe("#fbf7ef");
     expect(
       document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
         ?.getAttribute("content")
     ).toBe("black-translucent");
 
-    applyDocumentUiStyle(getUiStyle("original"));
+    applyDocumentUiStyle(getTheme("original"));
     expect(themeMeta.getAttribute("content")).toBe("#fafafa");
     expect(
       document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
@@ -66,10 +60,10 @@ describe("ui style catalog", () => {
     icon.href = "/cadence-icon.svg";
     document.head.append(icon);
 
-    applyDocumentUiStyle(getUiStyle("original"));
+    applyDocumentUiStyle(getTheme("original"));
     expect(icon.getAttribute("href")).toBe("/brand-icon?style=original");
 
-    applyDocumentUiStyle(getUiStyle("gazetteer"));
+    applyDocumentUiStyle(getTheme("gazetteer"));
     expect(icon.getAttribute("href")).toBe("/brand-icon?style=gazetteer");
 
     icon.remove();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GAZETTEER } from "@/lib/brand/gazetteer";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
 import {
   getDisplayCategorySwatchColor,
   getGoalVisual,

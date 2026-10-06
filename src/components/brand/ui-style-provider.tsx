@@ -8,44 +8,37 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  applyDocumentUiStyle,
-  DEFAULT_UI_STYLE_ID,
-  getUiStyle,
-  parseUiStyleId,
-  writeUiStyleCookie,
-  type UiStyle,
-  type UiStyleId,
-} from "@/lib/brand/ui-style";
+import { DEFAULT_THEME_ID, getTheme, type Theme, type ThemeId } from "@cadence/shared/brand";
+import { applyDocumentUiStyle, parseUiStyleId, writeUiStyleCookie } from "@/lib/brand/ui-style";
 
 interface UiStyleContextValue {
-  styleId: UiStyleId;
-  style: UiStyle;
+  styleId: ThemeId;
+  style: Theme;
   setStyleId: (next: string) => void;
 }
 
 const UiStyleContext = createContext<UiStyleContextValue | null>(null);
 
 export function UiStyleProvider({
-  initialStyleId = DEFAULT_UI_STYLE_ID,
+  initialStyleId = DEFAULT_THEME_ID,
   children,
 }: {
-  initialStyleId?: UiStyleId;
+  initialStyleId?: ThemeId;
   children: ReactNode;
 }) {
-  const [styleId, setStyleIdState] = useState<UiStyleId>(initialStyleId);
+  const [styleId, setStyleIdState] = useState<ThemeId>(initialStyleId);
 
   const setStyleId = useCallback((next: string) => {
     const parsed = parseUiStyleId(next);
     setStyleIdState(parsed);
     writeUiStyleCookie(parsed);
-    applyDocumentUiStyle(getUiStyle(parsed));
+    applyDocumentUiStyle(getTheme(parsed));
   }, []);
 
   const value = useMemo<UiStyleContextValue>(
     () => ({
       styleId,
-      style: getUiStyle(styleId),
+      style: getTheme(styleId),
       setStyleId,
     }),
     [setStyleId, styleId]
@@ -60,12 +53,12 @@ export function useUiStyle(): UiStyleContextValue {
     return context;
   }
   return {
-    styleId: DEFAULT_UI_STYLE_ID,
-    style: getUiStyle(DEFAULT_UI_STYLE_ID),
+    styleId: DEFAULT_THEME_ID,
+    style: getTheme(DEFAULT_THEME_ID),
     setStyleId: (next) => {
       const parsed = parseUiStyleId(next);
       writeUiStyleCookie(parsed);
-      applyDocumentUiStyle(getUiStyle(parsed));
+      applyDocumentUiStyle(getTheme(parsed));
     },
   };
 }

@@ -1,32 +1,12 @@
 export { renderThemeCss } from "./css";
-export { FONTS, fontStack, type FontDefinition, type FontId } from "./fonts";
-export {
-  APP_COLOR_ROLES,
-  colorRoleUtility,
-  colorRoleVariable,
-  SCALE_COLOR_ROLES,
-  SURFACE_COLOR_ROLES,
-  TEXT_ROLES,
-  type AppColorRole,
-  type ColorRole,
-  type CompletionMarkKind,
-  type FontSlot,
-  type ScaleColorRole,
-  type SurfaceColorRole,
-  type TabChromeKind,
-  type TextRole,
-  type TextRoleStyle,
-  type ThemeColors,
-  type ThemeDefinition,
-  type ThemeText,
-} from "./roles";
+export { FONTS, type FontId } from "./fonts";
+export { TEXT_ROLES, type TabChromeKind } from "./roles";
 export {
   DEFAULT_THEME_ID,
   GAZETTEER_THEME,
   getTheme,
   isThemeId,
-  ORIGINAL_THEME,
-  THEME_IDS,
   THEMES,
+  type Theme,
   type ThemeId,
 } from "./themes";

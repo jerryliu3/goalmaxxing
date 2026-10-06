@@ -1,12 +1,9 @@
 import type { MetadataRoute } from "next";
-import { cookies } from "next/headers";
 import { appIconHref } from "@/lib/brand/app-icon";
-import { getUiStyle, parseUiStyleId, UI_STYLE_COOKIE_NAME } from "@/lib/brand/ui-style";
+import { requestTheme } from "@/lib/brand/request-theme";
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
-  const style = getUiStyle(
-    parseUiStyleId((await cookies()).get(UI_STYLE_COOKIE_NAME)?.value)
-  );
+  const style = await requestTheme();
   return {
     id: "/",
     name: "Goalmaxxing",

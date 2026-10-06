@@ -1,5 +1,5 @@
 import { addDays, format, parseISO } from "date-fns";
-import { GAZETTEER } from "@/lib/brand/gazetteer";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
 import type { CompletionDateFact, Goal } from "@/lib/goals/types";
 
 export const SAMPLE_TODAY = "2026-10-02";

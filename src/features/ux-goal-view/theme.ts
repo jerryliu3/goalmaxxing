@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { GAZETTEER } from "@/lib/brand/gazetteer";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
 
 export const studyTheme = {
   "--gv-page": GAZETTEER.page, "--gv-paper": GAZETTEER.paper,
