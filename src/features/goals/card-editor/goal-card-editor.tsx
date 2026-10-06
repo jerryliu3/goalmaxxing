@@ -8,13 +8,15 @@ import type { GoalFormState } from "@/features/today/goal-form-model";
 import { useGoalFormState } from "@/features/today/use-goal-form-state";
 import { useGoalFormSubmit } from "@/features/today/use-goal-form-submit";
 import { useReportUnsavedChanges } from "../unsaved-changes";
+import { toLocalDateString } from "@/lib/dates/day";
+import { formatGoalDateLabel } from "@/lib/goals/linked-goal-labels";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
 import { GoalFormLinkTargetsErrorAlert, GoalFormRecoveryAlert } from "../goal-form-alerts";
 import { TempoGoalCard } from "../tempo-goal-card";
 import { AnnotatedCard } from "./annotated-card";
 import { CardBack } from "./card-back";
 import type { CardEditorSession } from "./card-editor-session";
-import { changedCardFacts } from "./card-facts";
+import { changedCardFacts, endDatePassed } from "./card-facts";
 import { DirectCard } from "./direct-card";
 import { useElementWidth } from "./use-card-regions";
 
@@ -60,12 +62,17 @@ export function GoalCardEditor({ goalId, onExit, onDismiss }: { goalId: string; 
   }
 
   const busy = submit.saving || submit.recovery !== null;
+  // A goal past its end date is a record: only a new end date reopens the rest of it.
+  const pastEnd = Boolean(
+    baseline && endDatePassed(baseline.state.end_date, toLocalDateString()) && state.end_date === baseline.state.end_date,
+  );
   const patch = useCallback(
     (next: Partial<GoalFormState>) => {
       if (busy) return;
+      if (pastEnd && Object.keys(next).some((key) => key !== "end_date")) return;
       setState((previous) => ({ ...previous, ...next }));
     },
-    [busy, setState],
+    [busy, pastEnd, setState],
   );
   const changed = useMemo(
     () => (baseline ? changedCardFacts(baseline.state, state, baseline.link !== selectedLinkTarget) : new Set<never>()),
@@ -86,6 +93,7 @@ export function GoalCardEditor({ goalId, onExit, onDismiss }: { goalId: string; 
     patch,
     completed: form.completedCount,
     changed,
+    pastEnd,
     canChangeVisibility: state.team_id === null,
     link:
       state.team_id === null
@@ -96,7 +104,7 @@ export function GoalCardEditor({ goalId, onExit, onDismiss }: { goalId: string; 
             options: form.filteredLinkTargets,
             search: form.linkTargetSearch,
             onSearch: form.setLinkTargetSearch,
-            onChange: (target) => !busy && setSelectedLinkTarget(target),
+            onChange: (target) => !busy && !pastEnd && setSelectedLinkTarget(target),
           }
         : null,
   };
@@ -142,6 +150,11 @@ export function GoalCardEditor({ goalId, onExit, onDismiss }: { goalId: string; 
           hasRecovery={submit.recovery !== null}
           onRetry={() => form.setLinkLoadAttempt((attempt) => attempt + 1)}
         />
+      ) : null}
+      {pastEnd ? (
+        <p className="card-editor-notice">
+          Ended {formatGoalDateLabel(state.end_date)}. Change the deadline to edit the rest of this goal.
+        </p>
       ) : null}
       {archived ? <p className="card-editor-notice">Archived. It’s out of your plan; restore it from the back of the card.</p> : null}
 

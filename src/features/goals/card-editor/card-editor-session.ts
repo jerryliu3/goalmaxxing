@@ -18,6 +18,10 @@ export interface CardEditorSession {
     onSearch: (query: string) => void;
     onChange: (goalId: string) => void;
   } | null;
+  /**
+   * The goal's end date has passed and is unchanged: only the deadline edits until it moves.
+   */
+  pastEnd: boolean;
   /** Team goals are visible to the team, so privacy is not theirs to change. */
   canChangeVisibility: boolean;
 }

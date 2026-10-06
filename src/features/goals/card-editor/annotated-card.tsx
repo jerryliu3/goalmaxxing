@@ -144,7 +144,10 @@ export function AnnotatedCard({
   const highlighted = open ?? hover;
   const label = (fact: FaceFact) => labels?.[fact] ?? CARD_FACT_LABELS[fact];
   const changed = (fact: FaceFact) => Boolean(session?.changed.has(fact));
-  const lockedFact = (fact: FaceFact) => fact === "start" || (fact === "visibility" && session ? !session.canChangeVisibility : false);
+  const lockedFact = (fact: FaceFact) =>
+    fact === "start" ||
+    (session?.pastEnd && fact !== "deadline") ||
+    (fact === "visibility" && session ? !session.canChangeVisibility : false);
 
   const callout = (fact: FaceFact) => {
     const value = summarizeFaceFact(fact, fields);

@@ -22,7 +22,7 @@ describe("goal library journey", () => {
     loadCollection();
     render(<GoalLibraryPage subjectUserId="partner-1" readOnly anchorSections={false} />);
     expect(screen.queryByRole("link", { name: "New Goal" })).toBeNull();
-    expect(screen.queryByRole("button", { name: /Goal details/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /See details/ })).toBeNull();
     expect(mocks.tracker).toHaveBeenCalledWith(expect.objectContaining({ readOnly: true, anchorSections: false }));
   });
   it("opens Current from Goals with live progress and reward text", () => {
@@ -59,7 +59,7 @@ describe("goal library journey", () => {
     expect(screen.getByRole("link", { name: "New Goal" })).toBeInTheDocument();
     const pastCard = screen.getByRole("article", { name: `${ended.title} goal card` });
     expect(screen.getByTestId("progress-tracker").compareDocumentPosition(pastCard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /Goal details/ }));
+    fireEvent.click(screen.getByRole("button", { name: /See details/ }));
     expect(mocks.push).toHaveBeenCalledWith(`/goals/${ended.id}`);
   });
 

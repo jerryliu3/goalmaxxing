@@ -5,6 +5,7 @@ import {
   cadenceCountEditable,
   cadenceSummary,
   changedCardFacts,
+  endDatePassed,
   hasPlaqueTarget,
   summarizeBackFact,
   summarizeFaceFact,
@@ -56,5 +57,13 @@ describe("card facts", () => {
     const draft = { ...weekly, title: "Get stronger still", end_date: "", reward_text: "New shoes" };
     expect([...changedCardFacts(weekly, draft, true)].sort()).toEqual(["deadline", "link", "name", "reward"]);
     expect(summarizeBackFact("link", weekly, null)).toBe("Just this goal");
+  });
+});
+
+describe("endDatePassed", () => {
+  it("is true only for a saved end date before today", () => {
+    expect(endDatePassed("2026-10-05", "2026-10-06")).toBe(true);
+    expect(endDatePassed("2026-10-06", "2026-10-06")).toBe(false);
+    expect(endDatePassed("", "2026-10-06")).toBe(false);
   });
 });

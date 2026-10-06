@@ -16,8 +16,8 @@ export const LANE_CHROME =
   "transition-[border-color,background-color] duration-300 motion-reduce:transition-none";
 
 /**
- * The goal label: title and end date, selectable to focus that lane, with
- * the goal card as a thumbnail that opens the goal on desktop. In Calendar's
+ * The goal label: the goal card thumbnail (desktop), title and end date, all
+ * one link that opens the goal to edit. In Calendar's
  * lane it takes the Time Weave's frame and the goal colour on its edge.
  */
 export function GoalLaneLabel({
@@ -25,16 +25,12 @@ export function GoalLaneLabel({
   progress,
   geometry,
   lane,
-  focused = false,
-  onFocusToggle,
 }: {
   goal: Goal;
   progress: ProgressContextSummary | undefined;
   geometry: LaneGeometry;
   /** Calendar's lane: framed, with the goal colour on its edge. */
   lane: boolean;
-  focused?: boolean;
-  onFocusToggle?: () => void;
 }) {
   const prefix = isDemoPathname(usePathname()) ? "/demo" : "";
   const color = getGoalVisual({
@@ -47,33 +43,29 @@ export function GoalLaneLabel({
       className={cn(
         "sticky left-0 z-20 flex flex-none items-center gap-2.5 border-r border-l-[3px] px-2.5",
         LANE_CHROME,
-        lane ? "border-border bg-card" : "border-transparent bg-background",
-        focused && "bg-muted"
+        lane ? "border-border bg-card" : "border-transparent bg-background"
       )}
       style={{ width: geometry.label, borderLeftColor: lane ? color : undefined }}
     >
-      {geometry.labelCard ? (
-        <Link
-          href={`${prefix}/goals/${goal.id}`}
-          aria-label={`Edit goal ${goal.title}`}
-          className="block w-12 flex-none rounded-md outline-offset-2"
-        >
-          <GoalViewCard goal={goal} progress={progress} compact />
-        </Link>
-      ) : null}
-      <button
-        type="button"
-        aria-pressed={focused}
-        onClick={onFocusToggle}
-        className="flex min-w-0 flex-1 flex-col gap-0.5 py-1 text-left focus-visible:outline-2 focus-visible:outline-ring"
+      <Link
+        href={`${prefix}/goals/${goal.id}`}
+        aria-label={`Edit goal ${goal.title}`}
+        className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md py-1 text-left outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring"
       >
-        <strong className="line-clamp-2 font-display text-[15px] font-normal leading-tight [overflow-wrap:anywhere]">
-          {goal.title}
-        </strong>
-        <small className="text-[10px] text-muted-foreground">
-          {goal.end_date ? `Through ${dateLabel(goal.end_date, "MMM d, yyyy")}` : "Ongoing"}
-        </small>
-      </button>
+        {geometry.labelCard ? (
+          <span className="block w-12 flex-none">
+            <GoalViewCard goal={goal} progress={progress} compact />
+          </span>
+        ) : null}
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <strong className="line-clamp-2 font-display text-[15px] font-normal leading-tight [overflow-wrap:anywhere]">
+            {goal.title}
+          </strong>
+          <small className="text-[10px] text-muted-foreground">
+            {goal.end_date ? `Through ${dateLabel(goal.end_date, "MMM d, yyyy")}` : "Ongoing"}
+          </small>
+        </span>
+      </Link>
     </div>
   );
 }
