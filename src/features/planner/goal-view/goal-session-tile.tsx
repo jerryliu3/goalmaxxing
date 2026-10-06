@@ -232,7 +232,14 @@ export function GoalSessionTile({
   // lead cross-fades to the count ("2 of 3") and its period stays below. A
   // session with nothing to count keeps its date rather than going blank.
   const showOrdinal = dateInHeader && Boolean(ordinal);
-  const fade = "col-start-1 row-start-1 whitespace-nowrap transition-opacity duration-300 motion-reduce:transition-none";
+  // Toggling Calendar glides the cards for 720ms (the plan view morph), so the
+  // swap lands on the glide's midpoint: the old text clears just before it and
+  // the new one arrives just after, never overlapping.
+  const fade = (hidden: boolean) =>
+    cn(
+      "col-start-1 row-start-1 whitespace-nowrap transition-opacity duration-200 motion-reduce:transition-none",
+      hidden ? "opacity-0 delay-[160ms] ease-in" : "delay-[360ms] ease-out"
+    );
   return (
     <article
       {...dataAttributes}
@@ -258,18 +265,16 @@ export function GoalSessionTile({
               session.done && "text-muted-foreground"
             )}
           >
-            <span className={cn(fade, showOrdinal && "opacity-0")}>
-              {dateLabel(session.date, "EEE, MMM d")}
-            </span>
-            <span className={cn(fade, !showOrdinal && "opacity-0")}>{ordinal?.count ?? ""}</span>
+            <span className={fade(showOrdinal)}>{dateLabel(session.date, "EEE, MMM d")}</span>
+            <span className={fade(!showOrdinal)}>{ordinal?.count ?? ""}</span>
           </span>
         </SessionDateField>
         {lock}
       </div>
       {ordinal ? (
         <span className="col-span-3 grid min-w-0 text-[10.5px] leading-4 text-muted-foreground">
-          <span className={cn(fade, showOrdinal && "opacity-0")}>{ordinalText(ordinal)}</span>
-          <span className={cn(fade, !showOrdinal && "opacity-0")}>{ordinal.period ?? ""}</span>
+          <span className={fade(showOrdinal)}>{ordinalText(ordinal)}</span>
+          <span className={fade(!showOrdinal)}>{ordinal.period ?? ""}</span>
         </span>
       ) : null}
       {nudges}
