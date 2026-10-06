@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import type { CardEditorFields } from "./card-editor/card-editor-session";
 import { TempoGoalChoices as Choices } from "./tempo-goal-choices";
 
@@ -32,7 +33,7 @@ export function TempoGoalSchedule({
   showVisibility,
 }: {
   id: string;
-  fields: CardEditorFields;
+  fields: GoalCreationFields;
   onPatch: (patch: Partial<CardEditorFields>) => void;
   showVisibility: boolean;
 }) {
