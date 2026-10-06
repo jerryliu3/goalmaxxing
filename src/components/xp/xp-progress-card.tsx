@@ -34,10 +34,10 @@ function resolveProgressPercent(profile: XpProfileSummary) {
 }
 
 /**
- * Animated level label and bar. `compact` (the header pill) shows only the level and a
- * thicker bar; exact XP lives in the header's popover.
+ * Animated level label and bar. `wordmark` (the header) shows only a level chip and a bar
+ * that runs under the wordmark across both grid columns; exact XP lives in its popover.
  */
-export function XpMeter({ profile, rewardSequence, compact = false }: { profile: XpProfileSummary; rewardSequence: number; compact?: boolean }) {
+export function XpMeter({ profile, rewardSequence, wordmark = false }: { profile: XpProfileSummary; rewardSequence: number; wordmark?: boolean }) {
   const still = useReducedMotion();
   const [displayXp, setDisplayXp] = useState(profile.totalXp);
   const current = useRef(profile.totalXp);
@@ -49,17 +49,17 @@ export function XpMeter({ profile, rewardSequence, compact = false }: { profile:
   }, [profile.totalXp, still]);
   const display = { totalXp: displayXp, ...progressionForTotalXp(displayXp) };
   const progressPercent = resolveProgressPercent(display);
-  const levelLabel = compact ? `Lv ${display.currentLevel}` : `Lv ${display.currentLevel} · ${formatNumber(displayXp)} XP`;
+  const levelLabel = wordmark ? `Lv ${display.currentLevel}` : `Lv ${display.currentLevel} · ${formatNumber(displayXp)} XP`;
 
   return (
     <>
       <span className="flex shrink-0 items-center gap-2">
-        <span className="font-mono text-xs text-muted-foreground">{levelLabel}</span>
+        <span className={wordmark ? "rounded-full bg-primary/12 px-2 py-0.5 font-mono text-xs font-semibold text-primary" : "font-mono text-xs text-muted-foreground"}>{levelLabel}</span>
       </span>
       <motion.span key={rewardSequence} initial={false} animate={!still && rewardSequence > 0 ? { scaleY: [1, 1.65, 1] } : { scaleY: 1 }} transition={{ duration: 0.95, times: [0, 0.35, 1] }}
         role="progressbar" aria-label="XP toward next level" aria-valuemin={0} aria-valuemax={100}
         aria-valuenow={resolveProgressPercent(profile)} aria-valuetext={`Level ${profile.currentLevel}, ${profile.totalXp} XP`}
-        className={cn("relative block overflow-hidden rounded-full bg-muted", compact ? "h-2.5 flex-1" : "h-2")} data-xp-reward-target="true">
+        className={cn("relative block overflow-hidden rounded-full bg-muted", wordmark ? "col-span-2 h-1.5" : "h-2")} data-xp-reward-target="true">
         <span className="block size-full origin-left rounded-full bg-primary" style={{ transform: `scaleX(${progressPercent / 100})` }} />
       </motion.span>
     </>

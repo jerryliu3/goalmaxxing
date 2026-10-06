@@ -35,8 +35,9 @@ vi.mock("@/components/xp/xp-level-badge", () => ({
   XpLevelBadge: () => <span>XP Badge</span>,
 }));
 
-vi.mock("@/components/xp/xp-progress-bar", () => ({
-  XpProgressBar: () => <span>XP Progress</span>,
+vi.mock("@/components/xp/xp-wordmark", () => ({
+  Wordmark: () => <p>Goalmaxxing</p>,
+  XpWordmark: () => <span>XP Progress</span>,
 }));
 
 vi.mock("@/components/xp/altitude-backdrop", () => ({
@@ -106,6 +107,7 @@ describe("AppShell", () => {
     );
 
     expect(screen.queryByText("XP Progress")).not.toBeInTheDocument();
+    expect(screen.getByText("Goalmaxxing")).toBeInTheDocument();
   });
 
   it("keeps demo profile chrome independent of external avatar requests", () => {

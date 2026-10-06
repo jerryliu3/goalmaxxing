@@ -22,7 +22,7 @@ import { TabNav } from "@/components/navigation/tab-nav";
 import { GoalCreationActionContext } from "@/features/goals/new-goal-button";
 import { AltitudeBackdrop } from "@/components/xp/altitude-backdrop";
 import { XpProfileProvider } from "@/components/xp/xp-profile-provider";
-import { XpProgressBar } from "@/components/xp/xp-progress-bar";
+import { Wordmark, XpWordmark } from "@/components/xp/xp-wordmark";
 import { XpRewardProvider } from "@/components/xp/xp-reward-provider";
 import { PlaqueCompletionProvider } from "@/features/goals/plaque-completion-provider";
 import { CompletionFeedbackProvider } from "@/components/feedback/completion-feedback-provider";
@@ -131,7 +131,7 @@ export function AppShell({
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3 lg:contents">
                       <div className="min-w-0 flex-1 lg:justify-self-start">
-                        {xpEnabled ? <XpProgressBar /> : null}
+                        {xpEnabled ? <XpWordmark /> : <Wordmark />}
                       </div>
                       <div className="hidden md:order-last md:flex md:basis-full md:justify-center lg:order-none lg:basis-auto">
                         <TabNav hrefPrefix={hrefPrefix} />
