@@ -12,6 +12,16 @@ export default function UxHubPage() {
         </h1>
         <ul className="mt-10 space-y-4">
           <li>
+            <Link className="text-lg font-semibold underline" href="/ux/recovery">
+              Recovery — Ledger, On the calendar, One at a time
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Review slipped sessions before anything moves: a suggested day for
+              each, accept, edit or let it go, and choose between moving just the
+              missed session or rebalancing the goal.
+            </p>
+          </li>
+          <li>
             <Link className="text-lg font-semibold underline" href="/ux/profile">
               Profile and Growth — one public profile, four ways to own it
             </Link>
