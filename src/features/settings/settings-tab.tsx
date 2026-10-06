@@ -106,23 +106,50 @@ export function SettingsTab() {
     );
   }
 
-  const editor = (
-    <SettingsSectionEditor
-      settingsSection={settingsSection}
-      ownGoals={state.ownGoals}
-      profileDraft={profileDraft}
-      setProfileDraft={setProfileDraft}
-      plannerPreferencesDraft={plannerPreferencesDraft}
-      setPlannerPreferencesDraft={setPlannerPreferencesDraft}
-      plannerPreferencesLoading={plannerPreferencesLoading}
-      saving={saving}
-      canSavePreferences={canSavePreferences}
-      savePreferences={savePreferences}
-    />
-  );
-
-  const groups = (
-    <div className="space-y-5">
+  return (
+    <div
+      data-testid="settings-pane"
+      data-settings-pane={settingsPanelOpen ? "open" : "closed"}
+      className="min-w-0 space-y-5"
+    >
+      <ProfileMembershipCard
+        profile={{
+          subjectUserId: state.userId,
+          username: profileDraft.username.trim() || null,
+          displayName: profileDraft.display_name.trim() || null,
+          avatarUrl: profileDraft.avatar_url.trim() || null,
+          isPrivate: false,
+          createdAt: presence?.profile.createdAt ?? state.profile?.created_at ?? null,
+          memberNumber: presence?.profile.memberNumber ?? null,
+        }}
+        overallStats={presence?.overallStats ?? null}
+        currentLevel={presence?.xp?.currentLevel ?? null}
+        editor={{
+          username: profileDraft.username,
+          displayName: profileDraft.display_name,
+          email: authEmail,
+          avatarUrl: profileDraft.avatar_url,
+          saving,
+          canSave: canSaveProfile,
+          onUsernameChange: (username) =>
+            setProfileDraft((prev) => ({ ...prev, username })),
+          onDisplayNameChange: (displayName) =>
+            setProfileDraft((prev) => ({ ...prev, display_name: displayName })),
+          onSave: saveProfile,
+          onUploadAvatar: uploadProfileAvatarFile,
+          onRemoveAvatar: () =>
+            setProfileDraft((prev) => ({ ...prev, avatar_url: "" })),
+        }}
+      />
+      {presence ? (
+        <ProfilePresenceSection
+          growSeries={presence.growSeries}
+          heatmap={presence.yearHeatmap}
+          selectedYear={new Date().getFullYear()}
+          overallStats={presence.overallStats}
+          showMoreLink
+        />
+      ) : null}
       {SETTINGS_GROUPS.map((group) => (
         <section key={group.key} className="space-y-1">
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
@@ -164,55 +191,6 @@ export function SettingsTab() {
           </div>
         </section>
       ))}
-    </div>
-  );
-
-  return (
-    <div
-      data-testid="settings-pane"
-      data-settings-pane={settingsPanelOpen ? "open" : "closed"}
-    >
-      <div className="min-w-0 space-y-5">
-        <ProfileMembershipCard
-          profile={{
-            subjectUserId: state.userId,
-            username: profileDraft.username.trim() || null,
-            displayName: profileDraft.display_name.trim() || null,
-            avatarUrl: profileDraft.avatar_url.trim() || null,
-            isPrivate: false,
-            createdAt: presence?.profile.createdAt ?? state.profile?.created_at ?? null,
-            memberNumber: presence?.profile.memberNumber ?? null,
-          }}
-          overallStats={presence?.overallStats ?? null}
-          currentLevel={presence?.xp?.currentLevel ?? null}
-          editor={{
-            username: profileDraft.username,
-            displayName: profileDraft.display_name,
-            email: authEmail,
-            avatarUrl: profileDraft.avatar_url,
-            saving,
-            canSave: canSaveProfile,
-            onUsernameChange: (username) =>
-              setProfileDraft((prev) => ({ ...prev, username })),
-            onDisplayNameChange: (displayName) =>
-              setProfileDraft((prev) => ({ ...prev, display_name: displayName })),
-            onSave: saveProfile,
-            onUploadAvatar: uploadProfileAvatarFile,
-            onRemoveAvatar: () =>
-              setProfileDraft((prev) => ({ ...prev, avatar_url: "" })),
-          }}
-        />
-        {presence ? (
-          <ProfilePresenceSection
-            growSeries={presence.growSeries}
-            heatmap={presence.yearHeatmap}
-            selectedYear={new Date().getFullYear()}
-            overallStats={presence.overallStats}
-            showMoreLink
-          />
-        ) : null}
-        {groups}
-      </div>
 
       {/* Every width opens a setting in the side panel, wherever the list was scrolled. */}
       <SidePanel
@@ -247,7 +225,18 @@ export function SettingsTab() {
           </div>
         }
       >
-        {editor}
+        <SettingsSectionEditor
+          settingsSection={settingsSection}
+          ownGoals={state.ownGoals}
+          profileDraft={profileDraft}
+          setProfileDraft={setProfileDraft}
+          plannerPreferencesDraft={plannerPreferencesDraft}
+          setPlannerPreferencesDraft={setPlannerPreferencesDraft}
+          plannerPreferencesLoading={plannerPreferencesLoading}
+          saving={saving}
+          canSavePreferences={canSavePreferences}
+          savePreferences={savePreferences}
+        />
       </SidePanel>
     </div>
   );

@@ -1,6 +1,5 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 
 export interface SegmentedControlOption<T extends string> {
@@ -35,7 +34,7 @@ export function SegmentedControl<T extends string>({
       role="group"
       aria-label={label}
       className={cn("relative isolate inline-grid shrink-0 rounded-full bg-muted p-0.5 text-xs sm:text-[13px]", className)}
-      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` } as CSSProperties}
+      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
       <span
         aria-hidden
