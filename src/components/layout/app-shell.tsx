@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
 import { CoachProvider } from "@/features/coach/coach-provider";
-import { UserRound } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Fragment, type ReactNode, useCallback, useState, ViewTransition } from "react";
 import { JourneyIntroOverlay } from "@/components/intro/journey-intro-overlay";
@@ -13,6 +11,7 @@ import coachStyles from "@/features/coach/coach.module.css";
 import { CheckInOverlay } from "@/features/digest/check-in-overlay";
 import { JourneyProvider } from "@/components/journey/journey-provider.web";
 import type { JourneyFeatureFlags } from "@/components/journey/types";
+import { AccountMenu } from "@/components/layout/account-menu";
 import { AppBootSplash } from "@/components/layout/app-boot-splash";
 import {
   isAppBootGatedPath,
@@ -21,7 +20,6 @@ import {
 import { PageOnboardingReadyContext } from "@/features/onboarding/onboarding-readiness";
 import { TabNav } from "@/components/navigation/tab-nav";
 import { GoalCreationActionContext } from "@/features/goals/new-goal-button";
-import { Button } from "@/components/ui/button";
 import { AltitudeBackdrop } from "@/components/xp/altitude-backdrop";
 import { XpProfileProvider } from "@/components/xp/xp-profile-provider";
 import { XpProgressBar } from "@/components/xp/xp-progress-bar";
@@ -29,7 +27,6 @@ import { XpRewardProvider } from "@/components/xp/xp-reward-provider";
 import { PlaqueCompletionProvider } from "@/features/goals/plaque-completion-provider";
 import { CompletionFeedbackProvider } from "@/components/feedback/completion-feedback-provider";
 import { DuoProvider } from "@/features/social/duo/duo-context";
-import { DuoScopeToggle } from "@/features/social/duo/duo-scope-toggle";
 import { PublicProfileSheetProvider } from "@/features/social/public-profile/public-profile-sheet-provider";
 import { setTabDataCacheScope } from "@/lib/cache/tab-data-cache";
 import { useIdleAppPrefetch } from "@/lib/cache/use-idle-app-prefetch";
@@ -121,41 +118,28 @@ export function AppShell({
             <PublicProfileSheetProvider viewerUserId={userId} xpEnabled={xpEnabled}>
               <AppBootSplash onReady={onBootReady} />
               <div>
-                <div className="relative z-10 flex min-h-screen w-full justify-center bg-page px-4 py-4 sm:px-6 sm:py-6">
+                <div className="relative z-10 flex min-h-screen w-full justify-center bg-page px-4 py-4 sm:px-6 sm:py-6 lg:px-12">
                   <div className={`${coachStyles.appLayout} flex w-full flex-col gap-4 md:gap-6`}>
+                  {/* Three zones at one 36px control height: status, destinations, then
+                      coach and the account menu (which also holds Solo / Duo). One row from
+                      lg; tabs wrap below on tablets. */}
                   <header
                     data-testid="app-shell-header"
                     data-coach-anchor
-                    className="sticky top-0 z-40 -mx-4 -mt-4 border-b border-border bg-page/90 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.7rem)] backdrop-blur supports-[backdrop-filter]:bg-page/80 md:m-0 md:border-0 md:rounded-xl md:bg-page/95 md:p-3"
+                    className="sticky top-0 z-40 -mx-4 -mt-4 border-b border-border bg-page/90 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.7rem)] backdrop-blur supports-[backdrop-filter]:bg-page/80 md:m-0 md:bg-page/95 md:px-0 md:pb-0 md:pt-3 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center lg:gap-6 lg:pt-0"
                     style={{ viewTransitionName: "app-shell-header" }}
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-                        <p className="font-display shrink-0 text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
-                          Goalmaxxing
-                        </p>
-                        {xpEnabled ? (
-                          <div className="min-w-0 max-w-xs flex-1">
-                            <XpProgressBar />
-                          </div>
-                        ) : null}
+                    <div className="flex flex-wrap items-center justify-between gap-3 lg:contents">
+                      <div className="min-w-0 flex-1 lg:justify-self-start">
+                        {xpEnabled ? <XpProgressBar /> : null}
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <div className="flex items-center gap-2">
-                          <DuoScopeToggle />
-                          <CoachHeader />
-                          <Button asChild variant="outline" size="icon" className="size-10 rounded-full p-0" data-onboarding="nav.settings">
-                            <Link href={withHrefPrefix("/settings", hrefPrefix)} aria-label="Profile and settings">
-                              {viewerAvatarUrl && !hrefPrefix ? <img src={viewerAvatarUrl} alt="" className="size-9 rounded-full object-cover" /> : <UserRound aria-hidden="true" />}
-                            </Link>
-                          </Button>
-                        </div>
+                      <div className="hidden md:order-last md:flex md:basis-full md:justify-center lg:order-none lg:basis-auto">
+                        <TabNav hrefPrefix={hrefPrefix} />
                       </div>
-                    </div>
-                    <div className="mt-4 hidden md:block">
-                      <TabNav
-                        hrefPrefix={hrefPrefix}
-                      />
+                      <div className="flex shrink-0 items-center gap-2 lg:justify-self-end">
+                        <CoachHeader />
+                        <AccountMenu settingsHref={withHrefPrefix("/settings", hrefPrefix)} showPhotos={!hrefPrefix} />
+                      </div>
                     </div>
                   </header>
 

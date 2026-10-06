@@ -1,6 +1,8 @@
 .headerEntry { position: relative; }
-.headerButton { display: flex; align-items: center; gap: .45rem; padding: .35rem .65rem; border: 1px solid var(--border); border-radius: 999px; font-size: .8rem; background: var(--background); cursor: pointer; }
+.headerButton { display: flex; align-items: center; gap: .45rem; height: 2.25rem; padding: 0 .75rem; border: 1px solid var(--border); border-radius: 999px; font-size: .8rem; background: var(--background); cursor: pointer; }
 .headerButton[aria-expanded=true], .headerButton:hover { background: var(--muted); }
+/* Phones keep the header row for XP; the mark alone opens the coach. */
+@media (max-width: 639px) { .headerButton { width: 2.25rem; justify-content: center; padding: 0; } .headerLabel { display: none; } }
 .mark { position: relative; display: inline-block; width: 64px; height: 56px; flex-shrink: 0; color: var(--primary); }
 .mark svg { width: 100%; height: 100%; overflow: visible; opacity: .7; }
 .markSmall { width: 24px; height: 24px; }
@@ -8,7 +10,8 @@
 .invitation { position: absolute; top: calc(100% + 10px); right: 0; width: 230px; border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: var(--card); box-shadow: 0 8px 24px #0001; font-size: .8rem; z-index: 2; }
 .invitation div { display: flex; gap: 16px; margin-top: 8px; }
 .invitation button { cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-.appLayout, .surface { --coach-app-width: 72rem; --coach-pane-width: 25.625rem; --coach-gap: 1.5rem; --coach-layout-width: calc(var(--coach-app-width) + var(--coach-pane-width) + var(--coach-gap)); }
+/* The app grows to --coach-app-width; docking keeps at least --coach-min-app-width beside the pane. */
+.appLayout, .surface { --coach-app-width: 80rem; --coach-min-app-width: 72rem; --coach-pane-width: 25.625rem; --coach-gap: 1.5rem; --coach-layout-width: calc(var(--coach-app-width) + var(--coach-pane-width) + var(--coach-gap)); }
 .appLayout { max-width: var(--coach-app-width); }
 .surface { position: fixed; z-index: 45; top: var(--coach-top, 84px); bottom: 18px; right: 18px; width: var(--coach-pane-width); max-width: calc(100vw - 24px); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border); border-radius: 20px; background: var(--background); color: var(--foreground); box-shadow: 0 14px 60px #0002; }
 .surface[data-mode=expanded] { left: 18px; width: auto; max-width: none; }
@@ -98,10 +101,11 @@
 .historyItem { margin: 20px 0; }
 .checkInButtons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
 .pageFrame { min-width: 0; }
-/* Dock only when the full app, companion, gap, and both shell gutters fit. */
-@media (min-width: 102.125rem) {
+/* Dock only when the minimum app width, companion, gap, and both 3rem shell gutters fit
+   (72 + 25.625 + 1.5 + 6 = 105.125rem). Wider screens give the extra room to the app. */
+@media (min-width: 105.125rem) {
   .appLayout:has(.pageFrame[data-mode=companion]) { max-width: var(--coach-layout-width); padding-right: calc(var(--coach-pane-width) + var(--coach-gap)); }
-  .surface[data-mode=companion] { right: max(1.5rem, calc((100% - var(--coach-layout-width)) / 2)); }
+  .surface[data-mode=companion] { right: max(3rem, calc((100% - var(--coach-layout-width)) / 2)); }
 }
 @media (max-width: 767px) {
   .surface { right: 8px; bottom: calc(4.5rem + env(safe-area-inset-bottom)); top: max(var(--coach-top, 84px), 22dvh); width: calc(100vw - 16px); max-width: none; border-radius: 16px; }

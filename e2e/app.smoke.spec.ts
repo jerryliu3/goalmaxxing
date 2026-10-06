@@ -22,7 +22,7 @@ test("loads the seeded authenticated planner shell", async ({ page }, testInfo) 
     await expect(socialLink.first()).toBeVisible();
   }
   await expect(mainNav.getByRole("link", { name: "Goals", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Profile and settings" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Account menu/ })).toBeVisible();
   await expect(page.getByText("Loading your goals...")).toHaveCount(0);
 
   if (testInfo.project.name === "mobile-webkit") {

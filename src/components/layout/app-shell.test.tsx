@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppShell } from "@/components/layout/app-shell";
@@ -76,6 +76,13 @@ const emptyDuoProps = {
   },
 } as const;
 
+function openAccountMenu() {
+  const trigger = screen.getByRole("button", { name: /Account menu/ });
+  trigger.focus();
+  fireEvent.keyDown(trigger, { key: "Enter" });
+  return trigger;
+}
+
 describe("AppShell", () => {
   afterEach(() => {
     cleanup();
@@ -84,10 +91,11 @@ describe("AppShell", () => {
     mockSearch = "";
   });
 
-  it("keeps profile in the header and creation off Agenda", () => {
+  it("keeps profile in the header account menu and creation off Agenda", () => {
     mockPathname = "/calendar";
     render(<AppShell userId="user-1" {...emptyDuoProps}><div>Child content</div></AppShell>);
-    expect(screen.getByRole("link", { name: "Profile and settings" })).toHaveAttribute("href", "/settings");
+    openAccountMenu();
+    expect(screen.getByRole("menuitem", { name: "Profile settings" })).toHaveAttribute("href", "/settings");
     expect(screen.queryByRole("link", { name: /new goal/i })).toBeNull();
   });
   it("hides the XP bar when XP is disabled", () => {
@@ -102,9 +110,9 @@ describe("AppShell", () => {
 
   it("keeps demo profile chrome independent of external avatar requests", () => {
     render(<AppShell userId="demo-user" hrefPrefix="/demo" viewerAvatarUrl="https://randomuser.me/api/portraits/men/32.jpg" {...emptyDuoProps}>Demo</AppShell>);
-    const profile = screen.getByRole("link", { name: "Profile and settings" });
-    expect(profile).toHaveAttribute("href", "/demo/settings");
-    expect(profile.querySelector("img")).toBeNull();
+    const trigger = openAccountMenu();
+    expect(trigger.querySelector("img")).toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Profile settings" })).toHaveAttribute("href", "/demo/settings");
   });
 
   it("hides the journey intro when asked", () => {
@@ -153,7 +161,7 @@ describe("AppShell", () => {
     expect(screen.getByText("Child content")).toBeInTheDocument();
   });
 
-  it("renders Goalmaxxing without a destination kicker", () => {
+  it("leads the header with XP, without an app title or destination kicker", () => {
     mockPathname = "/insights";
     render(
       <AppShell userId="user-1" {...emptyDuoProps}>
@@ -162,8 +170,7 @@ describe("AppShell", () => {
     );
 
     expect(screen.queryByText("Progress")).not.toBeInTheDocument();
-    expect(screen.getByText("Goalmaxxing")).toBeInTheDocument();
-    expect(screen.getByText("Goalmaxxing")).toHaveClass("text-xl");
+    expect(screen.queryByText("Goalmaxxing")).not.toBeInTheDocument();
     expect(screen.getByText("XP Progress")).toBeInTheDocument();
   });
 

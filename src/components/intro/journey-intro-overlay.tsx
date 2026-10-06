@@ -58,7 +58,7 @@ const JOURNEY_INTRO_STEPS = [
   {
     title: "Profile",
     description:
-      "Open Profile for identity and settings. Timezone, week start, and visibility live here.",
+      "Your avatar opens profile and settings. With a partner, it also switches between Solo, Partner, and Duo views.",
     target: "nav.settings",
     kind: "copy" as const,
   },

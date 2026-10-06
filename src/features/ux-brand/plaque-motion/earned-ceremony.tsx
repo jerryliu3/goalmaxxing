@@ -86,7 +86,7 @@ export function EarnedCeremony({ fields, target, reward, still, grand, origin, o
             {phase === "seal" && !still && <div className={styles.sealLight} aria-hidden="true" />}
           </div>
         </div>
-        {inBook && <div className={`${styles.bookDock} ${folioStyles.flyingBook}`} style={{ "--folio-cloth": "#4d5266" } as CSSProperties}>
+        {inBook && <div className={`${styles.bookDock} ${folioStyles.flyingBook}`}>
           <div className={styles.bookPages} aria-hidden="true"><span>{fields.title}</span><small>{target} / {target} · Complete</small></div>
           <FolioBook folio={book} />
         </div>}

@@ -4,7 +4,7 @@ import { NO_END_DATE_FILTER } from "@/lib/goals/list-view";
 export function buildQuickEndDateChipOptions(referenceMonth: string) {
   const referenceDate = parseISO(`${referenceMonth}-01`);
   return [
-    { key: "all-end-dates", label: "All End Dates", value: null as string | null },
+    { key: "all-end-dates", label: "All end dates", value: null as string | null },
     { key: "this-month", label: "This month", value: referenceMonth },
     {
       key: "next-month",

@@ -1,11 +1,18 @@
+import type { CSSProperties } from "react";
 import { ArrowUpRight, BookOpen } from "lucide-react";
 import type { GoalFolio } from "./folio-model";
 import styles from "./folio.module.css";
 
-/** The shelf and opening animation share the same cover, color, and proportions. */
+// Keyed by year so a book keeps its cloth on the shelf, in the reader, and in
+// the completion ceremony, and does not change color as newer years arrive.
+// Index = year % 4, ordered so 2026 stays green and 2025 stays brown.
+const CLOTH_BY_YEAR = ["#704d50", "#785a3a", "#344f45", "#4d5266"];
+
+/** The shelf, reader, and ceremony share the same cover, color, and proportions. */
 export function FolioBook({ folio }: { folio: GoalFolio }) {
+  const cloth = CLOTH_BY_YEAR[Number(folio.year) % CLOTH_BY_YEAR.length];
   return (
-    <span className={styles.book} data-folio-book="">
+    <span className={styles.book} data-folio-book="" style={{ "--folio-cloth": cloth } as CSSProperties}>
       <span className={styles.pageEdges} aria-hidden="true" />
       <span className={styles.spine} aria-hidden="true">GOALMAXXING · {folio.year}</span>
       <span className={styles.cover}>
