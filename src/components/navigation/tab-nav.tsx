@@ -8,6 +8,7 @@ import {
   isAppTabActive,
 } from "@cadence/shared/navigation/tabs";
 import { useUiStyle } from "@/components/brand/ui-style-provider";
+import { isGoalSheetPath } from "@/features/goals/goal-editor-navigation";
 import {
   tabChromeClasses,
   tabGridClass,
@@ -39,10 +40,18 @@ export function TabNav({
   if (optimisticNav && pathname !== optimisticNav.from) {
     setOptimisticNav(null);
   }
+  // The goal sheet opens over the page you were on, so that page keeps its tab. A fresh
+  // load straight onto a goal route has no page underneath and shows Goals.
+  const [pagePath, setPagePath] = useState(pathname);
+  const onGoalSheet = isGoalSheetPath(pathname);
+  if (!onGoalSheet && pagePath !== pathname) {
+    setPagePath(pathname);
+  }
+  const shownPath = onGoalSheet && !isGoalSheetPath(pagePath) ? pagePath : pathname;
   const activePath =
     optimisticNav && optimisticNav.from === pathname
       ? optimisticNav.to
-      : pathname;
+      : shownPath;
   const gridClass = tabGridClass(tabs.length, { fitLabels: mobile });
   const currentIndex = tabs.findIndex((tab) =>
     isAppTabActive(activePath, tab.href)
@@ -62,7 +71,7 @@ export function TabNav({
                 href={tab.href}
                 prefetch={true}
                 onClick={() => {
-                  if (!isAppTabActive(pathname, tab.href)) {
+                  if (!isAppTabActive(shownPath, tab.href)) {
                     setOptimisticNav({ from: pathname, to: tab.href });
                   }
                 }}
