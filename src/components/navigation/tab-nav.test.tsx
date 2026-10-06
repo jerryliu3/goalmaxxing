@@ -83,6 +83,11 @@ describe("TabNav", () => {
     expect(tabList).toHaveClass("grid-cols-4");
   });
 
+  it("sizes phone tabs so none is narrower than its label", () => {
+    const { container } = render(<TabNav mobile />);
+    expect(container.querySelector("ul")).toHaveClass("grid-cols-[repeat(4,minmax(min-content,1fr))]");
+  });
+
   it("keeps the mobile nav bar 50% transparent so content shows through", () => {
     const { container } = render(<TabNav mobile />);
     const tabList = container.querySelector("ul");
