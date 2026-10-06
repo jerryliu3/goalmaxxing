@@ -1,10 +1,7 @@
 import type { CSSProperties } from "react";
 import type { AwardTier } from "@/features/achievements/types";
-import {
-  GAZETTEER,
-  GAZETTEER_FALLBACK_COLORS,
-  gazetteerDarkTheme,
-} from "@cadence/shared/brand/gazetteer";
+import { GAZETTEER_THEME } from "@cadence/shared/brand";
+import { GAZETTEER, GAZETTEER_FALLBACK_COLORS } from "@cadence/shared/brand/gazetteer";
 import { minTotalXpForLevel } from "@/lib/xp/progression";
 
 export type MedalDirectionSlug = "postmark" | "seal" | "enamel" | "coin";
@@ -258,7 +255,7 @@ export function tierInk(tier: AwardTier) {
 }
 
 export function themeVars(mode: MedalsTheme): CSSProperties {
-  const dark = gazetteerDarkTheme;
+  const dark = GAZETTEER_THEME.darkColors;
   const base =
     mode === "light"
       ? {
