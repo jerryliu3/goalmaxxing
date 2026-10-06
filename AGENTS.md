@@ -196,9 +196,11 @@ surfaces. The default is to simplify and reuse what already exists.
   Day work inspect and checklist-replacement concepts live in
   `docs/ux/goalmaxxing-day-work-study.md` and `/ux/day-work`. They are
   exploratory, not a product lock.
-  Medal redesign directions (Postmark, Seal, Enamel, Coin) and future medal
-  families live in `docs/ux/goalmaxxing-medals-study.md` and `/ux/medals`.
-  They are exploratory, not a product lock.
+  Premium medals built from the goal card materials live in
+  `docs/ux/goalmaxxing-medals-study.md` and `/ux/medals`. **Prism** (crystal
+  faces in a fine metal bezel; goal-finish medals take their card's own
+  material) is the chosen direction; Machined and the flat Tile/Token/Mark
+  systems stay as references.
   Card-first goal creation concepts (Blank card, Stamp by stamp, Say it) and
   reward placement live in `docs/ux/goalmaxxing-goal-creation-study.md` and
   `/ux/goal-creation`. They compose the production card editor and are

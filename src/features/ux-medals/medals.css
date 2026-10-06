@@ -62,13 +62,8 @@
   color: var(--md-muted);
 }
 
-/* Ink sits in the paper, not on it. */
-.md-root[data-theme="light"] .md-ink {
-  mix-blend-mode: multiply;
-}
-
 /* ---------------------------------------------------------------- */
-/* Surfaces: each direction gets the ground its object belongs on.   */
+/* Surfaces and controls                                              */
 /* ---------------------------------------------------------------- */
 
 .md-surface {
@@ -77,44 +72,6 @@
   border-radius: 14px;
   background: var(--md-paper);
 }
-
-/* Passport page: faint ruled lines and a margin rule. */
-.md-surface[data-direction="postmark"] {
-  background:
-    linear-gradient(90deg, transparent 22px, color-mix(in srgb, var(--md-stamp) 22%, transparent) 22px 23px, transparent 23px),
-    repeating-linear-gradient(0deg, transparent 0 27px, color-mix(in srgb, var(--md-rule) 42%, transparent) 27px 28px),
-    var(--md-paper);
-}
-
-/* Heavy cotton stock: a soft deckle shadow at the edges. */
-.md-surface[data-direction="seal"] {
-  background: var(--md-paper);
-  box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--md-page) 55%, transparent),
-    inset 0 1px 18px color-mix(in srgb, var(--md-lo) 22%, transparent);
-}
-
-/* Felt pin board. */
-.md-surface[data-direction="enamel"] {
-  background:
-    radial-gradient(color-mix(in srgb, var(--md-ink) 9%, transparent) 0.7px, transparent 1px) 0 0 / 5px 5px,
-    radial-gradient(color-mix(in srgb, var(--md-ink) 6%, transparent) 0.7px, transparent 1px) 2.5px 2.5px / 5px 5px,
-    color-mix(in srgb, var(--md-stamp) 9%, var(--md-paper));
-}
-
-/* Collector's tray. */
-.md-surface[data-direction="coin"] {
-  background: linear-gradient(180deg, var(--md-paper), color-mix(in srgb, var(--md-muted) 9%, var(--md-paper)));
-}
-
-.md-surface[data-direction="coin"] .md-well {
-  border-radius: 999px;
-  box-shadow: inset 0 2px 6px color-mix(in srgb, var(--md-lo) 55%, transparent);
-  background: color-mix(in srgb, var(--md-muted) 10%, var(--md-paper));
-}
-
-/* ---------------------------------------------------------------- */
-/* Controls                                                           */
-/* ---------------------------------------------------------------- */
 
 .md-slot {
   display: grid;
@@ -161,6 +118,10 @@
   cursor: pointer;
 }
 
+.md-button[aria-pressed="true"] {
+  border-color: var(--md-ink);
+}
+
 .md-button[data-variant="primary"] {
   border-color: transparent;
   background: var(--md-ink);
@@ -187,166 +148,89 @@
 /* Unlock moments. Classes only exist while a replay is mounted.      */
 /* ---------------------------------------------------------------- */
 
-.md-hero-stage {
-  position: relative;
+/* M5 — the tile is set down on the page, then its inset rule draws. */
+.md-unlock[data-direction="tile"] .md-hero-art {
+  animation: md-set 560ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-/* M1 — the stamp strikes the page. */
-.md-unlock[data-direction="postmark"] .md-hero-art {
-  animation: md-strike 640ms cubic-bezier(0.2, 0.75, 0.2, 1) both;
-}
-
-.md-unlock[data-direction="postmark"] .md-hero-stage::after {
-  content: "";
-  position: absolute;
-  inset: 50% auto auto 50%;
-  width: 70%;
-  aspect-ratio: 1;
-  translate: -50% -50%;
-  border-radius: 999px;
-  border: 2px solid var(--md-stamp);
-  pointer-events: none;
-  animation: md-impact 700ms 260ms ease-out both;
-}
-
-@keyframes md-strike {
-  0% {
-    transform: scale(1.6) rotate(-14deg);
+@keyframes md-set {
+  from {
+    transform: translateY(-10px) scale(1.03);
     opacity: 0;
   }
-  45% {
-    transform: scale(0.94) rotate(1deg);
-    opacity: 1;
-  }
-  62% {
-    transform: scale(1.03) rotate(0deg);
-  }
-  100% {
-    transform: scale(1) rotate(0deg);
+  to {
+    transform: none;
     opacity: 1;
   }
 }
 
-@keyframes md-impact {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  30% {
-    opacity: 0.45;
-  }
-  100% {
-    transform: scale(1.4);
-    opacity: 0;
-  }
+/* Shared by M5 and M6: a stroke with pathLength="1" draws itself once. */
+.md-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: md-draw 900ms 380ms cubic-bezier(0.6, 0, 0.3, 1) forwards;
 }
 
-/* M2 — ink rolls across the blind seal, then the foil catches light. */
-.md-unlock[data-direction="seal"] .md-hero-art {
-  animation: md-press 360ms ease-out both;
-}
-
-.md-roll {
-  transform-box: fill-box;
-  transform-origin: left center;
-  animation: md-roll 900ms 320ms cubic-bezier(0.55, 0, 0.25, 1) both;
-}
-
-.md-glint {
-  animation: md-glint 900ms 1250ms ease-in-out both;
-}
-
-@keyframes md-press {
-  0% {
-    transform: scale(1);
-  }
-  40% {
-    transform: scale(0.965);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes md-roll {
-  from {
-    transform: scaleX(0);
-  }
+@keyframes md-draw {
   to {
-    transform: scaleX(1);
+    stroke-dashoffset: 0;
   }
 }
 
-@keyframes md-glint {
-  0% {
-    transform: translateX(0);
-    opacity: 0;
-  }
-  20% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(170px);
-    opacity: 0;
-  }
+/* M6 — the token settles, its ring (or week segments) draws, the numeral rises. */
+.md-unlock[data-direction="token"] .md-hero-art {
+  animation: md-settle 420ms ease-out both;
 }
 
-/* M3 — enamel floods each cell, then the glaze shines. */
-.md-unlock[data-direction="enamel"] .md-hero-art {
-  animation: md-pin 520ms cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+.md-seg {
+  animation: md-seg 260ms ease-out both;
 }
 
-.md-cell {
-  animation: md-enamel 420ms ease-out both;
+.md-rise {
+  animation: md-rise 420ms 900ms ease-out both;
 }
 
-.md-gloss {
-  animation: md-gloss 600ms 1300ms ease-out both;
-}
-
-@keyframes md-pin {
+@keyframes md-settle {
   from {
-    transform: translateY(-14px) scale(1.05);
-  }
-  to {
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes md-enamel {
-  from {
-    fill-opacity: 0;
-  }
-  to {
-    fill-opacity: 1;
-  }
-}
-
-@keyframes md-gloss {
-  from {
-    opacity: 0;
-  }
-  to {
+    transform: scale(0.94);
     opacity: 0.4;
   }
+  to {
+    transform: none;
+    opacity: 1;
+  }
 }
 
-/* M4 — the coin spins in edge-on and lands face up. */
-.md-unlock[data-direction="coin"] .md-hero-art {
-  animation: md-spin 1150ms cubic-bezier(0.15, 0.6, 0.25, 1) both;
-}
-
-@keyframes md-spin {
-  0% {
-    transform: perspective(700px) translateY(-28px) rotateY(-540deg) scale(0.72);
+@keyframes md-seg {
+  from {
     opacity: 0;
   }
-  18% {
-    opacity: 1;
+}
+
+@keyframes md-rise {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
   }
-  100% {
-    transform: perspective(700px) translateY(0) rotateY(0deg) scale(1);
+  to {
     opacity: 1;
+    transform: none;
+  }
+}
+
+/* M7 — ink fills the outlined mark from the baseline up. */
+.md-fill {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: md-fill 820ms 160ms cubic-bezier(0.5, 0, 0.2, 1) both;
+}
+
+@keyframes md-fill {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
   }
 }
 

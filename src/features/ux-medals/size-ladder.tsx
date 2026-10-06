@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { FAMILY_EXAMPLE } from "@/features/ux-medals/awards";
 import { DIRECTION_MARKS } from "@/features/ux-medals/marks";
 import {
   MEDAL_FAMILIES,
@@ -27,7 +27,7 @@ function Figure({ caption, children, slug }: { caption: string; children: ReactN
 }
 
 export function SizeLadder({ slug }: { slug: MedalDirectionSlug }) {
-  const { Level } = DIRECTION_MARKS[slug];
+  const { Level, Family } = DIRECTION_MARKS[slug];
   const newest = MEDAL_RUNGS[NEWEST_EARNED_INDEX]!;
   const capstone = MEDAL_RUNGS[MEDAL_RUNGS.length - 1]!;
   const mark = (index: number, size: number) => {
@@ -87,37 +87,17 @@ export function SizeLadder({ slug }: { slug: MedalDirectionSlug }) {
           </div>
         </Figure>
       </div>
-    </section>
-  );
-}
-
-export function DirectionFamilies({ slug }: { slug: MedalDirectionSlug }) {
-  const { Family } = DIRECTION_MARKS[slug];
-  return (
-    <section className="mt-10" aria-label="Future families">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="text-xl font-semibold tracking-tight">Extends to</h2>
-        <Link href="/ux/medals#families" className="md-muted text-xs font-semibold underline-offset-4 hover:underline">
-          Criteria for every family
-        </Link>
+      <div className="mt-4">
+        <Figure caption="Every family · 72px, 44px, 20px" slug={slug}>
+          {MEDAL_FAMILIES.map((family) => (
+            <span key={family.key} className="flex items-end gap-2">
+              <Family family={family} award={FAMILY_EXAMPLE[family.key]} size={72} />
+              <Family family={family} award={FAMILY_EXAMPLE[family.key]} size={44} />
+              <Family family={family} award={FAMILY_EXAMPLE[family.key]} size={20} />
+            </span>
+          ))}
+        </Figure>
       </div>
-      <p className="md-muted mt-1 max-w-2xl text-sm">
-        Scoping only. One example mark per future family, drawn in this direction&rsquo;s language.
-      </p>
-      <ul className="md-surface mt-4 grid grid-cols-2 gap-4 p-5 sm:grid-cols-3 lg:grid-cols-5" data-direction={slug}>
-        {MEDAL_FAMILIES.map((family) => (
-          <li key={family.key} className="flex flex-col items-center gap-2 text-center">
-            <Family family={family} size={96} />
-            <p className="text-sm font-semibold">{family.name}</p>
-            <p className="md-muted flex items-center gap-1.5 text-xs">
-              <span className="inline-flex">
-                <Family family={family} size={20} />
-              </span>
-              {family.legend}
-            </p>
-          </li>
-        ))}
-      </ul>
     </section>
   );
 }

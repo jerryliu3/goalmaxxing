@@ -26,44 +26,7 @@ export function polar(r: number, deg: number, cx = C, cy = C): [number, number] 
   return [round(cx + r * Math.cos(rad)), round(cy + r * Math.sin(rad))];
 }
 
-/**
- * Half-circle baselines for <textPath>. Top text runs over the arc with glyphs
- * rising outward; bottom text runs under it with glyphs rising toward the
- * centre, so both read upright. Place top baselines on the inner edge of a band
- * and bottom baselines on its outer edge.
- */
-export function topArc(r: number, cx = C, cy = C) {
-  return `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
-}
-
-export function bottomArc(r: number, cx = C, cy = C) {
-  return `M ${cx - r} ${cy} A ${r} ${r} 0 0 0 ${cx + r} ${cy}`;
-}
-
-/** Scalloped rosette edge: `count` outward bumps around radius `r`. */
-export function scallopPath(r: number, count: number, bulge = 1, cx = C, cy = C) {
-  const chord = 2 * r * Math.sin(Math.PI / count);
-  const bump = round((chord / 2) * bulge);
-  let d = "";
-  for (let i = 0; i <= count; i += 1) {
-    const [x, y] = polar(r, (360 / count) * i, cx, cy);
-    d += i === 0 ? `M ${x} ${y}` : ` A ${bump} ${bump} 0 0 1 ${x} ${y}`;
-  }
-  return `${d} Z`;
-}
-
-/** Alternating-radius star / serrated edge. */
-export function starPath(outer: number, inner: number, points: number, rotate = 0, cx = C, cy = C) {
-  const step = 180 / points;
-  const parts: string[] = [];
-  for (let i = 0; i < points * 2; i += 1) {
-    const [x, y] = polar(i % 2 === 0 ? outer : inner, rotate + step * i, cx, cy);
-    parts.push(`${i === 0 ? "M" : "L"} ${x} ${y}`);
-  }
-  return `${parts.join(" ")} Z`;
-}
-
-/** Radial ticks between two radii (reeded coin edges, dial marks). */
+/** Radial ticks between two radii (reeded rims). */
 export function ticksPath(r1: number, r2: number, count: number, cx = C, cy = C) {
   let d = "";
   for (let i = 0; i < count; i += 1) {
@@ -75,50 +38,59 @@ export function ticksPath(r1: number, r2: number, count: number, cx = C, cy = C)
   return d.trim();
 }
 
-/** A horizontal sine-ish wave built from quadratic segments (postal cancels). */
-export function wavePath(x0: number, x1: number, y: number, amp: number, wavelength: number) {
-  const half = wavelength / 2;
-  let d = `M ${x0} ${y}`;
-  let x = x0;
-  let up = true;
-  while (x < x1) {
-    const next = Math.min(x + half, x1);
-    d += ` Q ${round((x + next) / 2)} ${round(up ? y - amp : y + amp)} ${round(next)} ${y}`;
-    x = next;
-    up = !up;
+/** Rounded rectangle as a path, so it can share stroke/draw animation with other shapes. */
+export function roundedRectPath(x: number, y: number, w: number, h: number, r: number) {
+  return `M ${x + r} ${y} H ${x + w - r} A ${r} ${r} 0 0 1 ${x + w} ${y + r} V ${y + h - r} A ${r} ${r} 0 0 1 ${x + w - r} ${y + h} H ${x + r} A ${r} ${r} 0 0 1 ${x} ${y + h - r} V ${y + r} A ${r} ${r} 0 0 1 ${x + r} ${y} Z`;
+}
+
+/** Regular polygon; rotate 0 puts a vertex at twelve o'clock. */
+export function polygonPath(r: number, sides: number, rotate = 0, cx = C, cy = C) {
+  const points = Array.from({ length: sides }, (_, i) => polar(r, rotate + (360 / sides) * i, cx, cy));
+  return `${points.map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x} ${y}`).join(" ")} Z`;
+}
+
+/** Circle with `count` semicircular punches bitten into its edge, first at twelve o'clock. */
+export function notchedCirclePath(r: number, count: number, notch: number, rotate = 0, cx = C, cy = C) {
+  const half = (Math.asin(notch / r) * 180) / Math.PI;
+  const at = (i: number) => rotate + (360 / count) * i;
+  const [sx, sy] = polar(r, at(0) + half, cx, cy);
+  let d = `M ${sx} ${sy}`;
+  for (let i = 1; i <= count; i += 1) {
+    const [ax, ay] = polar(r, at(i) - half, cx, cy);
+    const [bx, by] = polar(r, at(i) + half, cx, cy);
+    d += ` A ${r} ${r} 0 0 1 ${ax} ${ay} A ${notch} ${notch} 0 0 0 ${bx} ${by}`;
   }
-  return d;
+  return `${d} Z`;
 }
 
-const guillocheCache = new Map<string, string>();
+/** Arc segments around a ring, e.g. one per week of a streak. Returns one path per segment. */
+export function segmentPaths(r: number, count: number, gapDeg: number, cx = C, cy = C) {
+  const span = 360 / count;
+  return Array.from({ length: count }, (_, i) => {
+    const start = span * i + gapDeg / 2;
+    const end = span * (i + 1) - gapDeg / 2;
+    const [x1, y1] = polar(r, start, cx, cy);
+    const [x2, y2] = polar(r, end, cx, cy);
+    return `M ${x1} ${y1} A ${r} ${r} 0 ${end - start > 180 ? 1 : 0} 1 ${x2} ${y2}`;
+  });
+}
 
-/**
- * Epitrochoid rosette for guilloché fields. Deterministic and cached, so every
- * instance of the same seal shares one path string.
- */
-export function guillochePath(R: number, r: number, d: number, samples = 540, cx = C, cy = C) {
-  const key = `${R}:${r}:${d}:${samples}:${cx}:${cy}`;
-  const cached = guillocheCache.get(key);
-  if (cached) return cached;
-  const turns = r / gcd(Math.round(R * 10), Math.round(r * 10)) * 10;
-  const total = Math.PI * 2 * turns;
-  const points: string[] = [];
-  for (let i = 0; i <= samples; i += 1) {
-    const t = (total * i) / samples;
-    const x = (R + r) * Math.cos(t) - d * Math.cos(((R + r) / r) * t);
-    const y = (R + r) * Math.sin(t) - d * Math.sin(((R + r) / r) * t);
-    points.push(`${i === 0 ? "M" : "L"} ${round(cx + x)} ${round(cy + y)}`);
+/** Greedy word wrap for SVG text, with an ellipsis when it runs out of lines. */
+export function wrapLines(text: string, maxChars: number, maxLines = 2) {
+  const lines: string[] = [];
+  let line = "";
+  for (const word of text.split(/\s+/)) {
+    const next = line ? `${line} ${word}` : word;
+    if (next.length <= maxChars || !line) {
+      line = next;
+      continue;
+    }
+    lines.push(line);
+    line = word;
   }
-  const path = `${points.join(" ")} Z`;
-  guillocheCache.set(key, path);
-  return path;
-}
-
-function gcd(a: number, b: number): number {
-  return b === 0 ? a : gcd(b, a % b);
-}
-
-/** Four-point sparkle used for stars across directions. */
-export function sparklePath(cx: number, cy: number, r: number, waist = 0.28) {
-  return starPath(r, r * waist, 4, 0, cx, cy);
+  if (line) lines.push(line);
+  if (lines.length <= maxLines) return lines;
+  const kept = lines.slice(0, maxLines);
+  kept[maxLines - 1] = `${kept[maxLines - 1]!.replace(/[.,;:]?$/, "")}…`;
+  return kept;
 }

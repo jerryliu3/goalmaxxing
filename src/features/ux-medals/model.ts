@@ -4,10 +4,15 @@ import { GAZETTEER_THEME } from "@cadence/shared/brand";
 import { GAZETTEER, GAZETTEER_FALLBACK_COLORS } from "@cadence/shared/brand/gazetteer";
 import { minTotalXpForLevel } from "@/lib/xp/progression";
 
-export type MedalDirectionSlug = "postmark" | "seal" | "enamel" | "coin";
+export type MedalDirectionSlug = "machined" | "prism" | "tile" | "token" | "mark";
+
+/** Every direction names the form it uses per award family — the mix-per-family idea. */
+export type FormKey = "level" | MedalFamilyKey;
 
 export interface MedalDirection {
   slug: MedalDirectionSlug;
+  /** 3 = premium materials (the lead); 2 = flat systems kept as references. */
+  round: 2 | 3;
   number: string;
   name: string;
   object: string;
@@ -17,72 +22,135 @@ export interface MedalDirection {
   unlock: string;
   small: string;
   risk: string;
+  forms: Record<FormKey, string>;
 }
 
 export const MEDAL_DIRECTIONS: readonly MedalDirection[] = [
   {
-    slug: "postmark",
-    number: "M1",
-    name: "Postmark",
-    object: "Inked cancellation stamps on a passport page",
+    slug: "machined",
+    round: 3,
+    number: "M8",
+    name: "Machined",
+    object: "Medals cut from the card’s own metal",
     thesis:
-      "Levels are places you have been. Each one is stamped into your passport in rank ink, slightly crooked, never quite registered twice.",
-    naming: "Ports of call — Trailhead, Waystation, Crossing, High Pass, Far Shore.",
-    locked: "A light pencil guide where the stamp will land: the ring, the name, a pair of registration ticks.",
-    unlock: "The stamp strikes: overshoot, settle, ink spreads into the paper.",
-    small: "Ring plus numeral. The cancel waves and ring text drop out below shelf size.",
-    risk: "Ink texture and rotation can read as messy if every stamp is crooked the same way.",
+      "The Round 2 mix made physical: turned and brushed metal with a polished, reeded rim, an enamel band under a clear coat, and numerals engraved to bright metal. Levels climb a material ladder; goal finishes are struck in their card’s material.",
+    naming: "Token’s card vocabulary — Footing, Stride, Pace, Rhythm, Tempo — with the material named beside it.",
+    locked: "An unstruck blank: matte pewter, an empty enamel groove, the numeral as an outline. Progress still shows.",
+    unlock: "The medal is struck into place, a light sweep crosses the metal, then a catch-light runs once around the rim.",
+    small: "44px keeps the metal gradient, the rim, and the enamel colour; 20px is a polished rim, a face, and a bold numeral.",
+    risk: "Heaviest to render: layered gradients, masks, and a relief filter per hero numeral. Needs device checks before a long shelf ships.",
+    forms: {
+      level: "Turned disc, enamel band",
+      goal: "Card tile in the card’s material",
+      streak: "Turned disc, enamel week segments",
+      challenge: "Notched disc",
+      leaderboard: "Shield",
+      team: "Hexagon",
+    },
   },
   {
-    slug: "seal",
-    number: "M2",
-    name: "Letterpress seal",
-    object: "A scalloped society seal, blind-embossed until earned",
+    slug: "prism",
+    round: 3,
+    number: "M9",
+    name: "Prism",
+    object: "Crystal faces in a fine metal bezel",
     thesis:
-      "The page is already Gazetteer paper. Locked seals are pressed into it without ink; earning one inks the bite and lays foil on the rim.",
-    naming: "Society ranks — Wayfarer, Pathfinder, Surveyor, Cartographer, Fellow.",
-    locked: "Blind emboss: the full seal is visible as relief in the paper, uninked.",
-    unlock: "Ink rolls across the bite, then a single glint crosses the foil.",
-    small: "Scalloped edge, foil ring, numeral. Survives 20px because the silhouette carries it.",
-    risk: "Emboss relies on fine highlight/shadow lines that vanish on low-contrast dark screens.",
+      "The same forms as Machined, built like jewellery: a thin polished bezel holds a faceted crystal or chromatic-foil face, and the numerals are raised foil. The ladder runs from smoked quartz to a dichroic prism.",
+    naming: "Token’s card vocabulary — Footing, Stride, Pace, Rhythm, Tempo — with the stone named beside it.",
+    locked: "An unstruck blank in the bezel: matte, no facets, no foil; the numeral outlined.",
+    unlock: "The stone is set, light sweeps across the facets, and the bezel catches once.",
+    small: "44px keeps the bezel and the stone’s colour; facets and foil drop out below 56px.",
+    risk: "Dark stones (sapphire, quartz, prism) read heavy on dark paper and need the bezel to separate them from the page.",
+    forms: {
+      level: "Faceted disc",
+      goal: "Card tile in the card’s material",
+      streak: "Disc, a channel of set stones",
+      challenge: "Notched disc",
+      leaderboard: "Shield",
+      team: "Hexagon",
+    },
   },
   {
-    slug: "enamel",
-    number: "M3",
-    name: "Enamel pin",
-    object: "Cloisonné trail pins on a felt board",
+    slug: "tile",
+    round: 2,
+    number: "M5",
+    name: "Tile",
+    object: "Every medal is a miniature of the goal card",
     thesis:
-      "Each level is a souvenir pin from the trail — flat enamel cells in brand colours, held by metal lines, plated by tier.",
-    naming: "Trail emblems — Campfire, Compass, Ridgeline, Lighthouse, North Star.",
-    locked: "The stamped metal blank before enamel: every cell is drawn, none are filled.",
-    unlock: "Enamel floods the cells one by one, then the glaze catches the light.",
-    small: "Main enamel field, plating ring, one emblem cell.",
-    risk: "Illustration-heavy: every new level needs a drawn scene, which slows new families.",
+      "Cut each medal from the same stock as the goal card: rounded corners, a category-tinted face, a big light numeral, mono small caps. The family is the proportion of the tile.",
+    naming: "Plain progress words — Starter, Regular, Steady, Seasoned, Keystone.",
+    locked: "The die line: the tile is drawn as a hairline outline with an outlined numeral, exactly where it will sit.",
+    unlock: "The tile is set down on the page, then its inset rule draws in.",
+    small: "Solid accent tile with a paper numeral. Proportion alone tells a goal tile from a streak strip.",
+    risk: "So close to the card that a shelf of tiles can read as a shelf of cards; proportions must stay strict.",
+    forms: {
+      level: "Square tile + effort bars",
+      goal: "Card-proportion tile",
+      streak: "Wide strip",
+      challenge: "Ticket tile, perforated stub",
+      leaderboard: "Podium tile",
+      team: "Stacked tile pair",
+    },
   },
   {
-    slug: "coin",
-    number: "M4",
-    name: "Engraved coin",
-    object: "Line-engraved medallions minted in distance denominations",
+    slug: "token",
+    round: 2,
+    number: "M6",
+    name: "Token",
+    object: "Flat card-stock tokens with one hairline ring",
     thesis:
-      "A coin you mint by moving. Flat line engraving — reeded edge, beaded border, laurel — and a denomination instead of a bare number.",
-    naming: "Distance denominations — Furlong, Mile, League, Degree, Meridian.",
-    locked: "A graphite rubbing of the die: the relief is there in pencil, the coin is not struck yet.",
-    unlock: "The coin spins in edge-on and lands face up.",
-    small: "Reeded ring plus an Arabic numeral; Roman numerals and legend stay at hero size.",
-    risk: "Coins skew toward currency and rewards-as-money if the copy leans on ‘earning’.",
+      "The seal, modernised: no scallops, no foil, no arc text. A disc of card material, one inset hairline, an embossed numeral. Families differ only by their edge.",
+    naming: "Card vocabulary — Footing, Stride, Pace, Rhythm, Tempo.",
+    locked: "Debossed: the token is pressed into the page with no ink, ring and numeral visible as relief.",
+    unlock: "The hairline ring draws once around the edge, then the numeral rises.",
+    small: "Disc + numeral. Edge (notches, segments, facets) is the only family cue, so it survives 20px.",
+    risk: "Circles are the most generic badge shape; the card's tint and type have to do all the brand work.",
+    forms: {
+      level: "Plain disc",
+      goal: "Disc + category band",
+      streak: "Segmented progress ring",
+      challenge: "Punched-notch disc",
+      leaderboard: "Octagon",
+      team: "Double ring",
+    },
+  },
+  {
+    slug: "mark",
+    round: 2,
+    number: "M7",
+    name: "Mark",
+    object: "Typographic marks: numeral, rule, label, simple shape",
+    thesis:
+      "Medals as a small identity system, not objects. Solid ink shapes with a paper numeral, a short rule, and a mono label — logo-like, and legible at 16px.",
+    naming: "Print-shop stages — Outline, Draft, Plan, Proof, Edition.",
+    locked: "Outline only: the shape and numeral as a single ink line, nothing filled.",
+    unlock: "Ink fills the shape from the baseline up, like a mark being printed.",
+    small: "Solid shape + numeral. Circle, card, pill, diamond, shield, hexagon — six shapes, no detail to lose.",
+    risk: "Most abstract: without the card's material it leans on the colour of goal finishes for warmth.",
+    forms: {
+      level: "Circle",
+      goal: "Card outline (category ink)",
+      streak: "Pill",
+      challenge: "Diamond",
+      leaderboard: "Chevron shield",
+      team: "Hexagon",
+    },
   },
 ] as const;
+
+export const ROUND_THREE = MEDAL_DIRECTIONS.filter((direction) => direction.round === 3);
+export const ROUND_TWO = MEDAL_DIRECTIONS.filter((direction) => direction.round === 2);
 
 export function getMedalDirection(slug: MedalDirectionSlug): MedalDirection {
   return MEDAL_DIRECTIONS.find((direction) => direction.slug === slug)!;
 }
 
 export const RANK_NAMES: Record<MedalDirectionSlug, readonly string[]> = {
-  postmark: ["Trailhead", "Waystation", "Crossing", "High Pass", "Far Shore"],
-  seal: ["Wayfarer", "Pathfinder", "Surveyor", "Cartographer", "Fellow"],
-  enamel: ["Campfire", "Compass", "Ridgeline", "Lighthouse", "North Star"],
-  coin: ["Furlong", "Mile", "League", "Degree", "Meridian"],
+  machined: ["Footing", "Stride", "Pace", "Rhythm", "Tempo"],
+  prism: ["Footing", "Stride", "Pace", "Rhythm", "Tempo"],
+  tile: ["Starter", "Regular", "Steady", "Seasoned", "Keystone"],
+  token: ["Footing", "Stride", "Pace", "Rhythm", "Tempo"],
+  mark: ["Outline", "Draft", "Plan", "Proof", "Edition"],
 };
 
 export interface MedalRung {
@@ -150,27 +218,8 @@ export function rankName(slug: MedalDirectionSlug, index: number) {
   return RANK_NAMES[slug][index] ?? `Level ${MEDAL_RUNGS[index]?.level ?? "?"}`;
 }
 
-export function romanNumeral(value: number) {
-  const table: [number, string][] = [
-    [10, "X"],
-    [9, "IX"],
-    [5, "V"],
-    [4, "IV"],
-    [1, "I"],
-  ];
-  let rest = value;
-  let out = "";
-  for (const [amount, glyph] of table) {
-    while (rest >= amount) {
-      out += glyph;
-      rest -= amount;
-    }
-  }
-  return out;
-}
-
 /* ------------------------------------------------------------------ */
-/* Future families — scoping only, no data model.                       */
+/* Award families — scoping only, no data model.                        */
 /* ------------------------------------------------------------------ */
 
 export type MedalFamilyKey = "challenge" | "leaderboard" | "streak" | "goal" | "team";
@@ -186,6 +235,22 @@ export interface MedalFamily {
 }
 
 export const MEDAL_FAMILIES: readonly MedalFamily[] = [
+  {
+    key: "goal",
+    name: "Goal finishes",
+    earnsWhen: "A goal marked achieved. The mark carries its title, date, and reward text.",
+    tiers: "None — one per goal",
+    guardrail: "Yours alone; colour follows the goal’s category, not a tier.",
+    legend: "Defend the thesis",
+  },
+  {
+    key: "streak",
+    name: "Streaks",
+    earnsWhen: "Hit your weekly plan N weeks running: 4, 12, 26, 52.",
+    tiers: "4 · 12 · 26 · 52 weeks",
+    guardrail: "Weeks, not days. Recover weeks keep the run; a break never revokes a mark.",
+    legend: "12 weeks",
+  },
   {
     key: "challenge",
     name: "Challenges",
@@ -203,22 +268,6 @@ export const MEDAL_FAMILIES: readonly MedalFamily[] = [
     legend: "Top 3",
   },
   {
-    key: "streak",
-    name: "Streaks",
-    earnsWhen: "Hit your weekly plan N weeks running: 4, 12, 26, 52.",
-    tiers: "4 · 12 · 26 · 52 weeks",
-    guardrail: "Weeks, not days. Recover weeks keep the run; a break never revokes a mark.",
-    legend: "12 weeks",
-  },
-  {
-    key: "goal",
-    name: "Goal finishes",
-    earnsWhen: "A goal marked achieved. The mark carries its title, date, and reward text.",
-    tiers: "None — one per goal",
-    guardrail: "Yours alone; colour follows the goal’s category, not a tier.",
-    legend: "Thesis defense",
-  },
-  {
     key: "team",
     name: "Team",
     earnsWhen: "A club goal finished together, for members who logged at least one session toward it.",
@@ -234,29 +283,25 @@ export const MEDAL_FAMILIES: readonly MedalFamily[] = [
 
 export type MedalsTheme = "light" | "dark";
 
-/** Bronze is the brand's fallback ochre; gold is the one study-only foil. */
-export const BRONZE = GAZETTEER_FALLBACK_COLORS[5];
-export const FOIL = { deep: "#94702a", mid: "#c49a45", light: "#e6cd8c" } as const;
+/** Physical objects (tiles, tokens) keep a light-paper tier ink in both themes, like the card. */
+const TIER_HEX: Record<AwardTier, string> = {
+  bronze: GAZETTEER_FALLBACK_COLORS[5],
+  copper: GAZETTEER.stamp,
+  sage: `color-mix(in srgb, ${GAZETTEER.sage} 85%, ${GAZETTEER.ink})`,
+  gold: "#94702a",
+  ink: GAZETTEER.ink,
+};
+
+export function tierHex(tier: AwardTier) {
+  return TIER_HEX[tier];
+}
 
 const mix = (color: string, pct: number, base: string) =>
   `color-mix(in srgb, ${color} ${pct}%, ${base})`;
 
-const TIER_INK: Record<AwardTier, Record<MedalsTheme, string>> = {
-  bronze: { light: BRONZE, dark: mix(BRONZE, 55, GAZETTEER.page) },
-  copper: { light: GAZETTEER.stamp, dark: GAZETTEER.stampLight },
-  sage: { light: mix(GAZETTEER.sage, 85, GAZETTEER.ink), dark: mix(GAZETTEER.sage, 62, GAZETTEER.page) },
-  gold: { light: FOIL.deep, dark: FOIL.light },
-  ink: { light: GAZETTEER.ink, dark: GAZETTEER.page },
-};
-
-/** `var(--md-tier-…)`: rank ink that stays legible on the active page colour. */
-export function tierInk(tier: AwardTier) {
-  return `var(--md-tier-${tier})`;
-}
-
 export function themeVars(mode: MedalsTheme): CSSProperties {
   const dark = GAZETTEER_THEME.darkColors;
-  const base =
+  const vars =
     mode === "light"
       ? {
           "--md-page": GAZETTEER.page,
@@ -282,20 +327,5 @@ export function themeVars(mode: MedalsTheme): CSSProperties {
           "--md-lo": mix("#000", 60, dark.card),
           "--md-pencil": mix(dark.mutedForeground, 70, dark.card),
         };
-  const tiers = Object.fromEntries(
-    (Object.keys(TIER_INK) as AwardTier[]).map((tier) => [
-      `--md-tier-${tier}`,
-      TIER_INK[tier][mode],
-    ])
-  );
-  return { ...base, ...tiers } as CSSProperties;
-}
-
-/** Compact UTC date for stamp faces: "01 SEP 26". */
-export function stampDate(value: string | null) {
-  if (!value) return "— — —";
-  const date = new Date(value);
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  const month = date.toLocaleString("en-US", { month: "short", timeZone: "UTC" }).toUpperCase();
-  return `${day} ${month} ${String(date.getUTCFullYear()).slice(2)}`;
+  return vars as CSSProperties;
 }
