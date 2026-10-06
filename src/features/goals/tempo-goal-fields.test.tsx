@@ -103,7 +103,7 @@ describe("TempoGoalFields creation flow", () => {
       },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /05Review/ }));
+    fireEvent.click(screen.getByRole("button", { name: /06Review/ }));
 
     expect(
       await screen.findByText(
@@ -119,55 +119,64 @@ describe("TempoGoalFields creation flow", () => {
     expect(input).toHaveValue(9);
   });
 
-  it("turns the preview card over to edit why, reward, colour and link on the schedule step", async () => {
+  it("turns the card over on the reward step, with the reward up front and advanced settings on the back", async () => {
     const { onPatch } = renderCreation({ prefilled: true, reward: "", fields: weekly });
     fireEvent.click(screen.getByRole("button", { name: /04Schedule/ }));
-    const more = await screen.findByRole("button", { name: /More on the back/ });
     expect(previewScene()).toHaveAttribute("data-back", "false");
-    expect(more).toHaveTextContent("Why it matters, a reward, colour & link");
 
-    fireEvent.click(more);
+    fireEvent.click(screen.getByRole("button", { name: /05Reward/ }));
+    expect(await screen.findByRole("heading", { name: /What’s waiting at the finish line/ })).toBeVisible();
     expect(previewScene()).toHaveAttribute("data-back", "true");
-    expect(more).toHaveAccessibleName(/Back to the card/);
-    expect(more).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Advanced settings")).toBeVisible();
+    expect(screen.getByText(/Advanced settings are on the back of the card/)).toBeVisible();
     expect(screen.getByRole("button", { name: /Why it matters/ })).toBeVisible();
     expect(screen.getByRole("button", { name: /Card colour/ })).toBeVisible();
     expect(screen.getByRole("button", { name: /Also counts toward/ })).toBeVisible();
     // The plaque target is set on review and milestone names in the rhythm step.
     expect(screen.queryByRole("button", { name: /Earn achievement after/ })).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: /Your reward/ }));
-    fireEvent.change(screen.getByLabelText("Your reward"), { target: { value: "New running shoes" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Your reward" }), { target: { value: "New running shoes" } });
     expect(onPatch).toHaveBeenCalledWith({ reward_text: "New running shoes" });
-
-    fireEvent.click(more);
-    expect(previewScene()).toHaveAttribute("data-back", "false");
-    expect(more).toHaveAccessibleName(/More on the back/);
-    expect(more).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(screen.getByRole("button", { name: "A weekend away" }));
+    expect(onPatch).toHaveBeenCalledWith({ reward_text: "A weekend away" });
   });
 
-  it("turns the card back to its face when leaving the schedule step", async () => {
+  it("turns the card back to its face when leaving the reward step", async () => {
     renderCreation({ prefilled: true, reward: "", fields: weekly });
-    fireEvent.click(screen.getByRole("button", { name: /04Schedule/ }));
-    fireEvent.click(await screen.findByRole("button", { name: /More on the back/ }));
+    fireEvent.click(screen.getByRole("button", { name: /05Reward/ }));
     expect(previewScene()).toHaveAttribute("data-back", "true");
 
-    fireEvent.click(screen.getByRole("button", { name: /03Rhythm/ }));
-    expect(previewScene()).toHaveAttribute("data-back", "false");
     fireEvent.click(screen.getByRole("button", { name: /04Schedule/ }));
-    expect(await screen.findByRole("button", { name: /More on the back/ })).toHaveAttribute("aria-expanded", "false");
     expect(previewScene()).toHaveAttribute("data-back", "false");
   });
 
-  it("leaves the reward off the back when the caller can't save one", async () => {
+  it("keeps only the advanced settings when the caller can't save a reward", async () => {
     renderCreation({ prefilled: true, fields: weekly });
-    fireEvent.click(screen.getByRole("button", { name: /04Schedule/ }));
-    const more = await screen.findByRole("button", { name: /More on the back/ });
-    expect(more).toHaveTextContent("Why it matters, colour & link");
-    fireEvent.click(more);
+    fireEvent.click(screen.getByRole("button", { name: /05Reward/ }));
 
+    expect(await screen.findByRole("heading", { name: "A few more settings." })).toBeVisible();
+    expect(screen.queryByRole("textbox", { name: "Your reward" })).toBeNull();
     expect(screen.getByRole("button", { name: /Why it matters/ })).toBeVisible();
     expect(screen.queryByRole("button", { name: /Your reward/ })).toBeNull();
+  });
+
+  it("sets an optional finish date and time of day on the schedule step", async () => {
+    const { onPatch } = renderCreation({ prefilled: true, fields: weekly });
+    fireEvent.click(screen.getByRole("button", { name: /04Schedule/ }));
+
+    const finish = await screen.findByRole("group", { name: "Finish by" });
+    expect(within(finish).getByRole("button", { name: "Keep it open" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByLabelText("Finish date")).toBeNull();
+    fireEvent.click(within(finish).getByRole("button", { name: "Pick a date" }));
+    fireEvent.change(screen.getByLabelText("Finish date"), { target: { value: "2026-03-01" } });
+    expect(onPatch).toHaveBeenCalledWith({ end_date: "2026-03-01" });
+    fireEvent.click(within(finish).getByRole("button", { name: "Keep it open" }));
+    expect(onPatch).toHaveBeenCalledWith({ end_date: "" });
+
+    const time = screen.getByRole("group", { name: "Time of day" });
+    fireEvent.click(within(time).getByRole("button", { name: "Set a time" }));
+    fireEvent.change(screen.getByLabelText("Usual time"), { target: { value: "07:30" } });
+    expect(onPatch).toHaveBeenCalledWith({ default_local_time: "07:30" });
   });
 
   it("chooses who can see the goal on the schedule step", async () => {

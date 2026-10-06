@@ -171,28 +171,6 @@
   background: var(--background);
   font-weight: 400;
 }
-.tempo-fields details {
-  border-top: 1px solid var(--border);
-  padding-top: 1rem;
-}
-.tempo-fields details > summary {
-  font-size: 0.8rem;
-  cursor: pointer;
-  min-height: 30px;
-}
-.tempo-fields details > summary span {
-  font-size: 0.7rem;
-  opacity: 0.6;
-  margin-left: 0.5rem;
-}
-.tempo-fields details[open] > summary {
-  margin-bottom: 1rem;
-}
-.tempo-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: 1rem;
-}
 .tempo-choices {
   display: flex;
   gap: 0.5rem;
@@ -220,8 +198,7 @@
   box-shadow: 0 3px 0
     color-mix(in srgb, var(--goal-color, #b99060) 35%, transparent);
 }
-.tempo-creation button:focus-visible,
-.tempo-fields summary:focus-visible {
+.tempo-creation button:focus-visible {
   outline: 2px solid var(--foreground);
   outline-offset: 4px;
 }
@@ -272,38 +249,72 @@
 .tempo-beats + .tempo-hint {
   margin-top: 1rem;
 }
-/* Turns the preview card over to its back (why, reward, colour, link). */
-.tempo-more {
+/* Schedule step: one row per fact, label on the left, its control on the right. */
+.tempo-schedule {
+  display: grid;
+  border-top: 1px solid var(--border);
+}
+.tempo-schedule-row {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.5rem 1rem;
+  padding: 0.9rem 0;
+}
+.tempo-schedule-row + .tempo-schedule-row {
+  border-top: 1px solid var(--border);
+}
+.tempo-schedule-label {
+  margin: 0;
+  padding-top: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.tempo-schedule-control {
+  display: grid;
+  gap: 0.6rem;
+}
+.tempo-schedule-row .tempo-choices,
+.tempo-schedule-row input {
+  margin: 0;
+}
+.tempo-schedule-row input[type="date"],
+.tempo-schedule-row input[type="time"] {
+  max-width: 13rem;
+}
+.tempo-schedule-control .tempo-hint {
+  margin: 0;
+}
+@media (max-width: 520px) {
+  .tempo-schedule-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tempo-schedule-label {
+    padding-top: 0;
+  }
+}
+/* Reward step: points at the advanced settings on the turned-over card. */
+.tempo-advanced-note {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
-  width: 100%;
-  margin-top: 0.25rem;
+  margin-top: 1.5rem;
   padding: 0.8rem 1rem;
   border: 1px dashed color-mix(in srgb, var(--goal-color) 45%, var(--border));
   border-radius: 0.9rem;
   background: color-mix(in srgb, var(--goal-color) 6%, var(--background));
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background 0.18s,
-    border-color 0.18s;
 }
-.tempo-more:hover:not(:disabled),
-.tempo-more[aria-expanded="true"] {
-  border-style: solid;
-  border-color: var(--goal-color);
-}
-.tempo-more svg {
+.tempo-advanced-note svg {
   flex-shrink: 0;
+  margin-top: 0.15rem;
   color: color-mix(in srgb, var(--goal-color) 70%, var(--foreground));
 }
-.tempo-more strong {
+.tempo-advanced-note p {
+  margin: 0;
+}
+.tempo-advanced-note strong {
   display: block;
   font-size: 0.85rem;
-}
-.tempo-more .tempo-hint {
-  display: block;
 }
 .tempo-footer {
   display: flex;

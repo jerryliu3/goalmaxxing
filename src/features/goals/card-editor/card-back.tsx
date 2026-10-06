@@ -29,7 +29,18 @@ const ICONS: Record<BackFact, ComponentType<{ size?: number; className?: string 
  * Without `lifecycle` (a goal not created yet) there is nothing to archive or delete.
  * `hidden` leaves out rows another surface already owns (creation sets those in its steps).
  */
-export function CardBack({ session, lifecycle, hidden = [] }: { session: CardEditorSession; lifecycle?: CardLifecycle; hidden?: BackFact[] }) {
+export function CardBack({
+  session,
+  lifecycle,
+  hidden = [],
+  heading = "More about this goal",
+}: {
+  session: CardEditorSession;
+  lifecycle?: CardLifecycle;
+  hidden?: BackFact[];
+  /** The back's overline; creation names it "Advanced settings". */
+  heading?: string;
+}) {
   const [open, setOpen] = useState<BackFact | null>(null);
   const { fields } = session;
   const groups: { title: string; facts: BackFact[] }[] = [
@@ -43,7 +54,7 @@ export function CardBack({ session, lifecycle, hidden = [] }: { session: CardEdi
   return (
     <div className="card-back">
       <header className="card-back-head">
-        <span className="card-overline">More about this goal</span>
+        <span className="card-overline">{heading}</span>
       </header>
       <div className="card-back-body">
         {shown.map((group) => (
