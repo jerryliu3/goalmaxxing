@@ -1,6 +1,6 @@
 .tempo-ai-composer,
 .tempo-ai-preview {
-  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-family: var(--font-app-sans);
 }
 .tempo-ai-heading {
   margin-bottom: 1.65rem;
@@ -252,7 +252,7 @@
   border: 1px solid var(--border);
   border-radius: 0.7rem;
   background: var(--background);
-  font-family: monospace;
+  font-family: var(--font-app-mono);
   font-size: 0.75rem;
   margin: 1rem 0;
   resize: vertical;
@@ -452,7 +452,7 @@
   margin-top: 1rem;
 }
 .tempo-ai-revise > summary {
-  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-family: var(--font-app-sans);
   font-size: 0.75rem !important;
   color: var(--muted-foreground);
 }

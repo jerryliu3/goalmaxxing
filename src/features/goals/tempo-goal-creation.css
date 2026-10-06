@@ -22,7 +22,7 @@
   overflow: hidden;
   border-radius: 0.5rem;
   padding: 1.75rem;
-  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-family: var(--font-app-sans);
   background: color-mix(in srgb, var(--goal-color) 24%, #fff7de);
   color: #20251e;
   box-shadow: 0 14px 35px #17201512;
@@ -63,10 +63,10 @@
   -webkit-backface-visibility: hidden;
 }
 .tempo-card h2 {
-  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-family: var(--font-app-display);
   font-size: 27px;
   font-weight: 500;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.03em;
   line-height: 1.12;
   overflow-wrap: anywhere;
   position: relative;
@@ -79,7 +79,7 @@
   gap: 1rem;
   font-size: 0.65rem;
   text-transform: uppercase;
-  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-family: var(--font-app-sans);
   font-weight: 500;
   letter-spacing: 0.09em;
 }
@@ -118,10 +118,10 @@
   font-weight: 750;
 }
 .tempo-steps button span {
-  font-family: monospace;
+  font-family: var(--font-app-mono);
 }
 .tempo-heading {
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: var(--font-app-display);
   font-size: clamp(1.45rem, 2.6vw, 2rem);
   font-weight: 800;
   letter-spacing: -0.055em;
@@ -900,11 +900,11 @@
   margin: 3.39cqi 0;
 }
 .tempo-card-target strong {
-  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-family: var(--font-app-display);
   font-size: 95px;
   font-weight: 400;
   line-height: 1;
-  letter-spacing: -0.08em;
+  letter-spacing: -0.05em;
   font-variant-numeric: tabular-nums;
 }
 .tempo-card[data-tempo-goal-card] .tempo-card-target strong {
