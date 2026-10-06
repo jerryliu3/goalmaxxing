@@ -194,6 +194,10 @@ surfaces. The default is to simplify and reuse what already exists.
   Medal redesign directions (Postmark, Seal, Enamel, Coin) and future medal
   families live in `docs/ux/goalmaxxing-medals-study.md` and `/ux/medals`.
   They are exploratory, not a product lock.
+  Card-first goal creation concepts (Blank card, Stamp by stamp, Say it) and
+  reward placement live in `docs/ux/goalmaxxing-goal-creation-study.md` and
+  `/ux/goal-creation`. They compose the production card editor and are
+  exploratory, not a product lock.
 - Period check-in is an `AppShell` overlay, not a tab or Progress
   destination. Cadence resolves widest-first — monthly on the first of the
   month, weekly on the profile week-start day, daily otherwise — so exactly

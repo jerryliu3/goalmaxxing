@@ -24,8 +24,11 @@ const ICONS: Record<BackFact, ComponentType<{ size?: number; className?: string 
   color: Palette,
 };
 
-/** The card's back: the goal's quieter settings as grouped rows that edit in place. */
-export function CardBack({ session, lifecycle }: { session: CardEditorSession; lifecycle: CardLifecycle }) {
+/**
+ * The card's back: the goal's quieter settings as grouped rows that edit in place.
+ * Without `lifecycle` (a goal not created yet) there is nothing to archive or delete.
+ */
+export function CardBack({ session, lifecycle }: { session: CardEditorSession; lifecycle?: CardLifecycle }) {
   const [open, setOpen] = useState<BackFact | null>(null);
   const { fields } = session;
   const groups: { title: string; facts: BackFact[] }[] = [
@@ -55,9 +58,11 @@ export function CardBack({ session, lifecycle }: { session: CardEditorSession; l
           </section>
         ))}
       </div>
-      <footer className="card-back-foot">
-        <LifecycleActions lifecycle={lifecycle} title={fields.title} />
-      </footer>
+      {lifecycle ? (
+        <footer className="card-back-foot">
+          <LifecycleActions lifecycle={lifecycle} title={fields.title} />
+        </footer>
+      ) : null}
     </div>
   );
 }
