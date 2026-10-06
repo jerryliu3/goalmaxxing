@@ -56,6 +56,13 @@ describe("AccountMenu", () => {
       .toEqual(["https://example.com/bob.png"]);
   });
 
+  it("is the face itself: a 40px photo with no chevron beside it", () => {
+    render(<AccountMenu settingsHref="/settings" showPhotos />);
+    const trigger = screen.getByRole("button", { name: "Account menu, Solo view" });
+    expect(trigger.querySelector("img")?.parentElement).toHaveClass("size-10");
+    expect(trigger.querySelector("svg")).toBeNull();
+  });
+
   it("switches the view from the menu and keeps profile one item away", () => {
     render(<AccountMenu settingsHref="/settings" showPhotos />);
     openMenu();
