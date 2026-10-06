@@ -72,11 +72,13 @@ doesn't print yet get a ghost "+ deadline" slot; the start date shows a lock.
 
 - **Direct (phone)** — tap anything on the card. Outlines show on hover (or
   faintly, always, on touch). Type over the title in the card's own type;
-  a +/− pill inside the card's edge; a dot palette pops above the category
-  with a caret and closes on outside tap or Escape; tap the effort bars (the
-  material changes); native pickers on the date and time; tap the privacy
-  line. Effort has − and + either side of its bars. Effort and privacy
-  changes confirm in a small bubble.
+  a +/− pill inside the card's edge; − and + either side of the effort bars
+  (the material changes); native pickers on the date and time. Category
+  opens a dot palette above it with a caption naming the hovered (or
+  current) colour; a tap recolours the card live and the palette stays open
+  until an outside tap or Escape. The privacy line opens a "Visible to
+  friends / Private" choice under it. Effort and privacy changes confirm in
+  a small bubble.
 - **Annotated (desktop)** — callouts sit level with the fact they describe:
   facts printed at the card's left edge call out left, full-width and
   right-edge facts call out right, so no leader line crosses the face.

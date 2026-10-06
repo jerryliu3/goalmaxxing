@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock, Minus, Plus } from "lucide-react";
+import { Eye, Lock, Minus, Plus } from "lucide-react";
 import { type CSSProperties, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { DEFAULT_GOAL_CATEGORIES, getCategorySwatchColor, type CategorySelection } from "@/lib/goals/category";
 import type { GoalDifficulty } from "@/lib/goals/types";
@@ -16,6 +16,7 @@ const STRETCHES: { level: GoalDifficulty; label: string }[] = [
   { level: "hard", label: "Hard · a big stretch" },
 ];
 const PALETTE_WIDTH = 5 * 32 + 12;
+const VISIBILITY_WIDTH = 252;
 
 /** A short confirmation that floats above the fact that just changed. */
 function useBubble() {
@@ -32,18 +33,23 @@ function useBubble() {
 export function DirectCard({ session, backStyle, touch }: { session: EditSession; backStyle: BackStyle; touch: boolean }) {
   const { fields, patch } = session;
   const [renaming, setRenaming] = useState(false);
-  const [palette, setPalette] = useState(false);
+  const [popup, setPopup] = useState<"category" | "visibility" | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [back, setBack] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
   const { regions, width } = useCardRegions(stageRef, JSON.stringify(fields) + renaming);
   const { bubble, show } = useBubble();
   const titleFont = useTitleFont(stageRef, regions);
   const region = (fact: FaceFact) => regions.find((item) => item.fact === fact);
-  const paletteRef = useRef<HTMLSpanElement>(null);
+  const popupRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    if (!palette) return;
+    if (!popup) return;
     const close = (event: PointerEvent | KeyboardEvent) => {
-      if (event instanceof KeyboardEvent ? event.key === "Escape" : !paletteRef.current?.contains(event.target as Node)) setPalette(false);
+      const outside = event instanceof KeyboardEvent ? event.key === "Escape" : !popupRef.current?.contains(event.target as Node) && !(event.target as Element).closest(`[data-popup-anchor="${popup}"]`);
+      if (outside) {
+        setPopup(null);
+        setPreview(null);
+      }
     };
     window.addEventListener("pointerdown", close);
     window.addEventListener("keydown", close);
@@ -51,7 +57,11 @@ export function DirectCard({ session, backStyle, touch }: { session: EditSession
       window.removeEventListener("pointerdown", close);
       window.removeEventListener("keydown", close);
     };
-  }, [palette]);
+  }, [popup]);
+  const toggle = (which: "category" | "visibility") => {
+    setPreview(null);
+    setPopup((current) => (current === which ? null : which));
+  };
 
   const count = Number(fields.target_count) || 1;
   const { min, max } = cadenceBounds(fields, session.completed);
@@ -98,31 +108,33 @@ export function DirectCard({ session, backStyle, touch }: { session: EditSession
 
       {category && (
         <>
-          <button type="button" className="ie-zone" data-changed={isChanged("category", session)} style={regionStyle(category)} aria-label="Change category" aria-expanded={palette} onClick={() => setPalette(!palette)} />
-          {palette && (
-            <span
-              ref={paletteRef}
-              className="ie-palette"
-              style={{ left: clampX(category.x - 6, PALETTE_WIDTH), top: category.y - 50, "--caret": `${category.x + 14 - clampX(category.x - 6, PALETTE_WIDTH)}px` } as CSSProperties}
-              role="group"
-              aria-label="Category"
-            >
-              {DEFAULT_GOAL_CATEGORIES.map((option) => (
-                <button
-                  key={option.key}
-                  type="button"
-                  title={option.label}
-                  aria-label={option.label}
-                  aria-pressed={fields.category_selection === option.key}
-                  style={{ background: option.color }}
-                  onClick={() => {
-                    patch({ category_selection: option.key as CategorySelection, color: getCategorySwatchColor(option.key as CategorySelection) });
-                    setPalette(false);
-                  }}
-                />
-              ))}
-            </span>
-          )}
+          <button type="button" className="ie-zone" data-popup-anchor="category" data-changed={isChanged("category", session)} style={regionStyle(category)} aria-label="Change category" aria-expanded={popup === "category"} onClick={() => toggle("category")} />
+          {popup === "category" && (() => {
+            const left = clampX(category.x - 6, PALETTE_WIDTH);
+            const current = DEFAULT_GOAL_CATEGORIES.find((option) => option.key === fields.category_selection);
+            return (
+              // Tapping a dot recolours the card live and keeps the palette open; the caption names it.
+              <span ref={popupRef} className="ie-card-popup ie-palette" data-placement="above" style={{ left, top: category.y - 78, "--caret": `${category.x + 14 - left}px` } as CSSProperties} role="group" aria-label="Category">
+                <span className="ie-palette-dots">
+                  {DEFAULT_GOAL_CATEGORIES.map((option) => (
+                    <button
+                      key={option.key}
+                      type="button"
+                      aria-label={option.label}
+                      aria-pressed={fields.category_selection === option.key}
+                      style={{ background: option.color }}
+                      onPointerEnter={() => setPreview(option.label)}
+                      onPointerLeave={() => setPreview(null)}
+                      onFocus={() => setPreview(option.label)}
+                      onBlur={() => setPreview(null)}
+                      onClick={() => patch({ category_selection: option.key as CategorySelection, color: getCategorySwatchColor(option.key as CategorySelection) })}
+                    />
+                  ))}
+                </span>
+                <span className="ie-popup-caption" aria-live="polite">{preview ?? current?.label}</span>
+              </span>
+            );
+          })()}
         </>
       )}
 
@@ -148,17 +160,29 @@ export function DirectCard({ session, backStyle, touch }: { session: EditSession
       <PickerZone region={region("time")} type="time" label="Time of day" value={fields.default_local_time} changed={isChanged("time", session)} onChange={(value) => patch({ default_local_time: value })} />
 
       {visibility && (
-        <button
-          type="button"
-          className="ie-zone"
-          data-changed={isChanged("visibility", session)}
-          style={regionStyle(visibility)}
-          aria-label={fields.is_private ? "Make visible to friends" : "Make private"}
-          onClick={() => {
-            patch({ is_private: !fields.is_private });
-            show("visibility", fields.is_private ? "Visible to friends" : "Now private");
-          }}
-        />
+        <>
+          <button type="button" className="ie-zone" data-popup-anchor="visibility" data-changed={isChanged("visibility", session)} style={regionStyle(visibility)} aria-label={`Visibility: ${fields.is_private ? "private" : "visible to friends"}`} aria-expanded={popup === "visibility"} onClick={() => toggle("visibility")} />
+          {popup === "visibility" && (() => {
+            const left = clampX(visibility.x - 6, VISIBILITY_WIDTH);
+            const pick = (isPrivate: boolean) => {
+              if (isPrivate !== fields.is_private) {
+                patch({ is_private: isPrivate });
+                show("visibility", isPrivate ? "Now private" : "Visible to friends");
+              }
+              setPopup(null);
+            };
+            return (
+              <span ref={popupRef} className="ie-card-popup ie-visibility" data-placement="below" style={{ left, top: visibility.y + visibility.height + 12, "--caret": `${visibility.x + 18 - left}px` } as CSSProperties} role="group" aria-label="Who can see this goal">
+                <button type="button" aria-pressed={!fields.is_private} onClick={() => pick(false)}>
+                  <Eye size={14} /> Visible to friends
+                </button>
+                <button type="button" aria-pressed={fields.is_private} onClick={() => pick(true)}>
+                  <Lock size={14} /> Private
+                </button>
+              </span>
+            );
+          })()}
+        </>
       )}
 
       {bubble && region(bubble.fact) && (
@@ -172,7 +196,7 @@ export function DirectCard({ session, backStyle, touch }: { session: EditSession
   return (
     <div className="ie-cardface" data-design="direct" style={goalColorStyle(session)}>
       <CardStage session={session} stageRef={stageRef} overlay={overlay} back={back} backStyle={backStyle} onFlipBack={() => setBack(false)} />
-      <FaceControls session={session} back={back} onFlip={() => { setPalette(false); setBack(!back); }} hint="Tap anything on the card to change it." />
+      <FaceControls session={session} back={back} onFlip={() => { setPopup(null); setBack(!back); }} hint="Tap anything on the card to change it." />
     </div>
   );
 }
