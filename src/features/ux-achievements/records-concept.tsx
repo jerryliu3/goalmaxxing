@@ -12,7 +12,7 @@ import {
   formatAwardDate,
   formatGoalDate,
 } from "@/features/ux-achievements/seed";
-import { GAZETTEER } from "@/lib/brand/gazetteer";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
 
 const concept = getAchievementConcept("records");
 

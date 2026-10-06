@@ -224,8 +224,9 @@
   margin: 0.6rem 0 1rem;
 }
 .tempo-count strong {
+  font-family: var(--type-stat-font);
   font-size: 2.8rem;
-  font-weight: 800;
+  font-weight: var(--type-stat-weight);
   letter-spacing: -0.06em;
   margin-right: 0.3rem;
 }
@@ -899,8 +900,10 @@
   gap: 6.06cqi;
   margin: 3.39cqi 0;
 }
+/* A display numeral, like calendar day numbers: the face follows the theme,
+   the weight stays light at this size. */
 .tempo-card-target strong {
-  font-family: var(--type-stat-font);
+  font-family: var(--font-app-display);
   font-size: 95px;
   font-weight: 400;
   line-height: 1;

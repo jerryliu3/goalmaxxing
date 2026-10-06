@@ -1,8 +1,9 @@
 # Theme registry
 
 This directory is the single source of truth for how Goalmaxxing looks. Every
-color, typeface, radius, and per-theme component variant is defined here;
-web and native read from it, and nothing else names a concrete value.
+theme color, typeface, text role, radius, and per-theme component variant is
+defined here, and web and native read from it. A source test keeps concrete
+typefaces out of components; colors stay on roles by convention.
 
 | File | Owns |
 | --- | --- |
@@ -34,15 +35,16 @@ web and native read from it, and nothing else names a concrete value.
   In CSS use `var(--type-<role>-font)` / `var(--type-<role>-weight)`. Plain
   `font-sans` / `font-display` / `font-mono` remain for body copy, calendar
   numerals, and real code. Never a weight utility beside a role, a hex
-  value, a family name, or one theme's font variable (`--font-newsreader`);
-  a source test fails on those.
+  value, a family name, or one theme's font variable (`--font-newsreader`).
 - Per-theme component variants (`completionMark`, `tabChrome`) come from
   `useUiStyle().style`.
 - Native: `GAZETTEER_THEME.colors` / `.darkColors` (the roles native reads are
   plain hex).
 
 A theme applies to the document through `data-ui-style="<id>"` on `<html>`,
-or to any subtree with the same attribute.
+or to any subtree with the same attribute. The web app has no dark mode:
+`darkColors` are read by native only, and Tailwind's `dark:` variant follows a
+`.dark` class that nothing sets.
 
 ## Changing or adding a theme
 

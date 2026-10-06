@@ -130,33 +130,6 @@
   );
 }
 
-.dark .ach-showcase-root:not(.ach-showcase-root--study) {
-  --ach-root-bg:
-    radial-gradient(
-      ellipse 70% 45% at 50% 0%,
-      color-mix(in srgb, var(--primary) 22%, transparent),
-      transparent 52%
-    ),
-    radial-gradient(
-      ellipse 50% 35% at 90% 20%,
-      color-mix(in srgb, var(--gm-heatmap-4, var(--primary)) 12%, transparent),
-      transparent 45%
-    ),
-    linear-gradient(
-      180deg,
-      var(--background) 0%,
-      color-mix(in srgb, var(--muted) 40%, var(--background)) 42%,
-      color-mix(in srgb, var(--background) 92%, black) 100%
-    );
-  --ach-glass-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--foreground) 8%, transparent),
-    inset 0 -24px 48px color-mix(in srgb, black 28%, transparent);
-}
-
-.dark[data-ui-style="gazetteer"] .ach-showcase-root:not(.ach-showcase-root--study) {
-  --ach-shelf-bg: linear-gradient(180deg, #6a5338 0%, #4a3a28 45%, #32281c 100%);
-}
-
 .ach-showcase-root--study {
   color: #f3ead8;
   --ach-eyebrow: #c88968;

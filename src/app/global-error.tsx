@@ -3,6 +3,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 import { FONT_VARIABLE_CLASSES } from "@/lib/brand/fonts";
+import "./globals.css";
 
 export default function GlobalError({
   error,

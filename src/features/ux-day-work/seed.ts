@@ -1,4 +1,4 @@
-import { GAZETTEER } from "@/lib/brand/gazetteer";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
 import type { CategoryPresetId } from "@/lib/goals/category";
 import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import type {

@@ -1,4 +1,4 @@
-import { GAZETTEER } from "@/lib/brand/gazetteer";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
 import { dateRange, weekdayOf, type IsoDate, type Weekday } from "@/features/ux-recovery/dates";
 import type { RecoveryGoal, RecoverySeed, RecoverySession } from "@/features/ux-recovery/model";
 

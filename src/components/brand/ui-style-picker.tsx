@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UI_STYLE_OPTIONS } from "@/lib/brand/ui-style";
+import { THEMES } from "@cadence/shared/brand";
 import { cn } from "@/lib/utils";
 
 export function UiStylePicker({
@@ -42,7 +42,7 @@ export function UiStylePicker({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {UI_STYLE_OPTIONS.map((style) => (
+          {THEMES.map((style) => (
             <SelectItem key={style.id} value={style.id}>
               {style.label}
             </SelectItem>

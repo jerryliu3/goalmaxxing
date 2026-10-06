@@ -12,7 +12,7 @@ import {
   formatAwardDate,
   formatGoalDate,
 } from "@/features/ux-achievements/seed";
-import { GAZETTEER, GAZETTEER_CATEGORY_COLORS } from "@/lib/brand/gazetteer";
+import { GAZETTEER, GAZETTEER_CATEGORY_COLORS } from "@cadence/shared/brand/gazetteer";
 
 const concept = getAchievementConcept("gallery");
 

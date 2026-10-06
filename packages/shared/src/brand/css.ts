@@ -75,36 +75,29 @@ function tailwindTheme() {
   );
 }
 
-function themeBlocks(theme: ThemeDefinition, isDefault: boolean) {
+function themeBlock(theme: ThemeDefinition, isDefault: boolean) {
   const scope = `[data-ui-style="${theme.id}"]`;
-  const blocks = [
-    block(isDefault ? [":root", scope] : [scope], [
-      `--radius: ${theme.radiusRem}rem`,
-      ...colorDeclarations(theme.colors),
-      `--font-app-sans: ${fontStack(theme.fonts.sans)}`,
-      `--font-app-display: ${fontStack(theme.fonts.display)}`,
-      `--font-app-mono: ${fontStack(theme.fonts.mono)}`,
-      ...textDeclarations(theme),
-      `--gm-landing-atmosphere: ${theme.effects.landingAtmosphere}`,
-    ]),
-  ];
-  if (theme.darkColors) {
-    blocks.push(
-      block(isDefault ? [".dark", `.dark${scope}`] : [`.dark${scope}`], colorDeclarations(theme.darkColors))
-    );
-  }
-  return blocks;
+  return block(isDefault ? [":root", scope] : [scope], [
+    `--radius: ${theme.radiusRem}rem`,
+    ...colorDeclarations(theme.colors),
+    `--font-app-sans: ${fontStack(theme.fonts.sans)}`,
+    `--font-app-display: ${fontStack(theme.fonts.display)}`,
+    `--font-app-mono: ${fontStack(theme.fonts.mono)}`,
+    ...textDeclarations(theme),
+    `--gm-landing-atmosphere: ${theme.effects.landingAtmosphere}`,
+  ]);
 }
 
 /**
  * The web stylesheet for every theme. A theme applies to `<html>` or any
  * subtree through `data-ui-style="<id>"`; the first theme is also `:root`.
+ * The web app has no dark mode, so `darkColors` are native-only.
  */
 export function renderThemeCss(themes: readonly ThemeDefinition[] = THEMES): string {
   return `${[
     HEADER,
     tailwindTheme(),
     ...textUtilities(),
-    ...themes.flatMap((theme, index) => themeBlocks(theme, index === 0)),
+    ...themes.map((theme, index) => themeBlock(theme, index === 0)),
   ].join("\n\n")}\n`;
 }

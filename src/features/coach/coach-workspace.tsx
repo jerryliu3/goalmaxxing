@@ -26,5 +26,5 @@ export function CoachWorkspace() {
     } else dispatch({ type: "view", view: "rooms" });
   }, [dispatch, bootstrap, params.threadId, params.topicId, setThreadId, setError]);
   if (!coach) return <p className="py-12 text-muted-foreground">The coach is not enabled yet.</p>;
-  return <section className="py-12"><p className="type-figure text-xs text-muted-foreground">Your companion</p><h1 className="type-hero my-4 text-3xl">Room to think.</h1><Button variant="outline" onClick={() => { coach.expand(); coach.showView("rooms"); }}>Open your rooms</Button></section>;
+  return <section className="py-12"><p className="type-eyebrow text-xs text-muted-foreground">Your companion</p><h1 className="type-hero my-4 text-3xl">Room to think.</h1><Button variant="outline" onClick={() => { coach.expand(); coach.showView("rooms"); }}>Open your rooms</Button></section>;
 }

@@ -9,8 +9,9 @@ import {
   Star,
   Target,
 } from "lucide-react";
-import { GAZETTEER, toGazetteerDisplayColor } from "@/lib/brand/gazetteer";
-import { getUiStyle, resolveUiStyleId, type UiStyleId } from "@/lib/brand/ui-style";
+import { GAZETTEER, toGazetteerDisplayColor } from "@cadence/shared/brand/gazetteer";
+import { getTheme, type ThemeId } from "@cadence/shared/brand";
+import { resolveUiStyleId } from "@/lib/brand/ui-style";
 import {
   getCategorySwatchColor,
   resolveCategoryKey,
@@ -68,9 +69,9 @@ function stableHash(input: string) {
   return Math.abs(hash >>> 0);
 }
 
-export function toStyleDisplayColor(color: string, styleId?: UiStyleId) {
+export function toStyleDisplayColor(color: string, styleId?: ThemeId) {
   const withHash = color.startsWith("#") ? color : `#${color}`;
-  if (getUiStyle(resolveUiStyleId(styleId)).remapDisplayColors) {
+  if (getTheme(resolveUiStyleId(styleId)).remapDisplayColors) {
     return toGazetteerDisplayColor(withHash);
   }
   return withHash;
@@ -78,12 +79,12 @@ export function toStyleDisplayColor(color: string, styleId?: UiStyleId) {
 
 export function getDisplayCategorySwatchColor(
   selection: CategorySelection,
-  styleId?: UiStyleId
+  styleId?: ThemeId
 ) {
   return toStyleDisplayColor(getCategorySwatchColor(selection), styleId);
 }
 
-export function normalizeGoalColor(color: string | null, styleId?: UiStyleId) {
+export function normalizeGoalColor(color: string | null, styleId?: ThemeId) {
   if (!color) {
     return null;
   }
@@ -137,8 +138,8 @@ export function mixOpaqueHex(hex: string, paper: string, amount: number): string
   )}${toHexChannel(blue * amount + paperBlue * rest)}`;
 }
 
-function workPillPaper(styleId?: UiStyleId) {
-  return getUiStyle(resolveUiStyleId(styleId)).remapDisplayColors
+function workPillPaper(styleId?: ThemeId) {
+  return getTheme(resolveUiStyleId(styleId)).remapDisplayColors
     ? GAZETTEER.paper
     : ORIGINAL_WORK_PILL_PAPER;
 }
@@ -148,7 +149,7 @@ function srgbChannel(value: number) {
   return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
 }
 
-export function contrastingInkForColor(color: string, styleId?: UiStyleId) {
+export function contrastingInkForColor(color: string, styleId?: ThemeId) {
   const hex = toStyleDisplayColor(
     normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0],
     styleId
@@ -163,7 +164,7 @@ export function contrastingInkForColor(color: string, styleId?: UiStyleId) {
   return luminance > 0.55 ? "#1c1917" : "#ffffff";
 }
 
-export function getWorkPillFillStyle(color: string, credited = false, styleId?: UiStyleId) {
+export function getWorkPillFillStyle(color: string, credited = false, styleId?: ThemeId) {
   const hex = toStyleDisplayColor(
     normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0],
     styleId
@@ -179,7 +180,7 @@ export function getWorkPillFillStyle(color: string, credited = false, styleId?: 
 export function getWorkPillDraftFillStyle(
   color: string,
   kind: "moved_to" | "new",
-  styleId?: UiStyleId
+  styleId?: ThemeId
 ) {
   const hex = toStyleDisplayColor(
     normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0],
@@ -196,7 +197,7 @@ export function getWorkPillDraftFillStyle(
   };
 }
 
-export function getGoalVisual(input: GoalVisualInput, styleId?: UiStyleId): GoalVisual {
+export function getGoalVisual(input: GoalVisualInput, styleId?: ThemeId): GoalVisual {
   const hash = stableHash(input.goalId);
   const categoryColor = resolveCategorySwatchColor(input.category);
   return {

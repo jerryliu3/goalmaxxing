@@ -4,7 +4,7 @@ import {
   GAZETTEER,
   GAZETTEER_FALLBACK_COLORS,
   gazetteerDarkTheme,
-} from "@/lib/brand/gazetteer";
+} from "@cadence/shared/brand/gazetteer";
 import { minTotalXpForLevel } from "@/lib/xp/progression";
 
 export type MedalDirectionSlug = "postmark" | "seal" | "enamel" | "coin";

@@ -1,4 +1,4 @@
-import { GAZETTEER, GAZETTEER_CATEGORY_COLORS } from "@/lib/brand/gazetteer";
+import { GAZETTEER, GAZETTEER_CATEGORY_COLORS } from "@cadence/shared/brand/gazetteer";
 import type { AchievementGoalCategory } from "@/features/achievements/types";
 
 export {

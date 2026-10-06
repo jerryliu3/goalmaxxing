@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { FONTS, TEXT_ROLES } from "@cadence/shared/brand";
 
 /**
  * Production text must take its typeface from the active theme. Only the theme
@@ -22,15 +23,23 @@ const EXEMPT_PREFIXES = [
 ];
 const EXEMPT_PATTERN = /^src\/features\/ux-[^/]+\//;
 
-const CONCRETE_FONT_VARIABLE =
-  /var\(--font-(geist-sans|geist-mono|newsreader|source-sans|plex-mono)\)/;
+// Any registry face by its own variable (e.g. var(--font-newsreader)).
+const CONCRETE_FONT_VARIABLE = new RegExp(
+  `var\\((${Object.values(FONTS)
+    .map((font) => font.cssVariable)
+    .join("|")})\\)`
+);
 const FONT_FAMILY_DECLARATION = /font-family:\s*([^;}]+)/g;
 const FONT_SHORTHAND_DECLARATION = /(?<![-\w])font:\s*([^;}]+)/g;
 const INLINE_FONT_FAMILY = /fontFamily[=:]\s*["'`]([^"'`]*)/g;
 const ARBITRARY_FONT_CLASS = /font-\[(family-name:|["'A-Z])/;
 // A text role owns face and weight; extra font utilities beside it fight it.
-const ROLE_CLASS_STRING = /["'`]([^"'`]*\btype-(?:wordmark|hero|title|heading|item|eyebrow|stat|figure)\b[^"'`]*)["'`]/g;
-const FONT_UTILITY = /(?:^|\s)font-(?:thin|light|normal|medium|semibold|bold|sans|display|mono)(?=\s|$)/;
+const ROLE_CLASS_STRING = new RegExp(
+  `["'\`]([^"'\`]*\\btype-(?:${TEXT_ROLES.join("|")})\\b[^"'\`]*)["'\`]`,
+  "g"
+);
+const FONT_UTILITY =
+  /(?:^|\s)font-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black|sans|display|mono)(?=\s|$)/;
 
 function productionFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

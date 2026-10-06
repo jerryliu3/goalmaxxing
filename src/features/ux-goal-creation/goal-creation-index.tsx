@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { GAZETTEER } from "@/lib/brand/gazetteer";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
 import { type CreationFlowSummary, GOAL_CREATION_CONCEPTS, TODAY_FLOW, WHAT_CHANGES } from "./model";
 
 const COLUMNS: { key: keyof Omit<CreationFlowSummary, "name">; label: string }[] = [

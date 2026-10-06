@@ -1,7 +1,7 @@
 /**
- * Every typeface a theme may use. Platforms load these by id: web through
- * `next/font` (src/lib/brand/fonts.ts, whose `variable` must equal `cssVariable`),
- * native through expo-google-fonts.
+ * Every typeface a web theme may use. Web loads them through `next/font`
+ * (src/lib/brand/fonts.ts, whose `variable` must equal `cssVariable`). Native
+ * loads its Gazetteer faces separately (apps/mobile/src/ui/gazetteer-fonts.tsx).
  */
 export const FONTS = {
   geist: {

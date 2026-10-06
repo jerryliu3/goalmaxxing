@@ -10,7 +10,7 @@ import {
   type LevelMarkProps,
 } from "@/features/ux-medals/mark-kit";
 import { BRONZE, FOIL, type MedalFamilyKey } from "@/features/ux-medals/model";
-import { GAZETTEER, GAZETTEER_HEATMAP_SCALE } from "@/lib/brand/gazetteer";
+import { GAZETTEER, GAZETTEER_HEATMAP_SCALE } from "@cadence/shared/brand/gazetteer";
 import { detailForSize, polar, sparklePath, ticksPath, useSvgId } from "@/features/ux-medals/svg-geometry";
 
 /** Physical enamel colours: they do not change with the screen theme. */

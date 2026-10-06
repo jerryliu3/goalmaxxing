@@ -1,4 +1,4 @@
-import { GAZETTEER } from "@/lib/brand/gazetteer";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
 import type { AwardTier } from "@/features/achievements/types";
 
 export const TIER_METAL: Record<
