@@ -47,7 +47,7 @@ export function NotificationPushSection({
   return (
     <section className="space-y-4">
       <div>
-        <h3 className="flex items-center gap-2 text-base font-medium">
+        <h3 className="flex items-center gap-2 type-heading text-base">
           <Bell className="size-5" />
           Push notifications
         </h3>

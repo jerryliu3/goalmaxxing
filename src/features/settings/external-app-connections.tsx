@@ -39,7 +39,7 @@ export function ExternalAppConnections() {
     finally { setBusy(null); }
   };
   return <section className="space-y-4 rounded-xl border p-5">
-    <div><h3 className="font-semibold">Connected AI apps</h3><p className="text-sm text-muted-foreground">Connect from your assistant using your Goalmaxxing MCP URL. Your assistant provides the AI; Goalmaxxing saves your goals and plans.</p></div>
+    <div><h3 className="type-heading">Connected AI apps</h3><p className="text-sm text-muted-foreground">Connect from your assistant using your Goalmaxxing MCP URL. Your assistant provides the AI; Goalmaxxing saves your goals and plans.</p></div>
     <code className="block break-all text-xs">/api/mcp</code>
     {connections.length ? connections.map(item => <div key={item.client_id} className="flex items-center justify-between gap-3"><span>{item.client_name}</span><Button variant="outline" disabled={busy !== null} onClick={() => void disconnect(item.client_id)}>{busy === item.client_id ? "Disconnecting…" : "Disconnect"}</Button></div>) : <p className="text-sm text-muted-foreground">No connected apps.</p>}
     {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}

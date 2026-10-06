@@ -315,7 +315,7 @@ export function CalendarDayPreviewList<
                           className={
                             expanded
                               ? `flex min-h-6 items-center ${planLedgerTitleClass} leading-none`
-                              : "flex min-h-6 min-w-0 items-center truncate font-display font-medium leading-snug"
+                              : "flex min-h-6 min-w-0 items-center truncate type-item leading-snug"
                           }
                         >
                           <span className="inline-flex items-center gap-1">
@@ -443,7 +443,7 @@ export function CalendarDayPreviewList<
                           className={
                             expanded
                               ? planLedgerTitleClass
-                              : "truncate font-medium"
+                              : "truncate type-item"
                           }
                         >
                           <CompletionTitle completed>{marker.goalTitle}</CompletionTitle>

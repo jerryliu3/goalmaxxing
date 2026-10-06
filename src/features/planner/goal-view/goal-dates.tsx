@@ -19,7 +19,7 @@ export type GoalTileRenderer = (
 ) => ReactNode;
 
 export const overlineClass =
-  "font-mono text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground";
+  "type-eyebrow text-[9px] text-muted-foreground";
 
 /**
  * Pages and groups one goal's dates. Past sessions (only present when shown)
@@ -66,7 +66,7 @@ export function GoalDatesHeading({
   return (
     <div>
       <div className="flex items-center gap-1">
-        <h2 className="font-display text-xl leading-tight tracking-tight">{goal.title}</h2>
+        <h2 className="type-title text-xl leading-tight tracking-tight">{goal.title}</h2>
         <Link
           href={`/goals/${goal.id}`}
           aria-label={`Edit goal ${goal.title}`}

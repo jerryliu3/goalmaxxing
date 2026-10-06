@@ -64,7 +64,7 @@ export function CompeteSnapRail({
     <div>
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="font-display text-lg font-semibold tracking-tight">
+          <h2 className="type-title text-lg tracking-tight">
             {label}
           </h2>
           {hint ? (
@@ -188,7 +188,7 @@ export function CompeteTile({
               tile.kicker ? "mt-2" : ""
             }`}
           >
-            <h3 className="font-display text-xl font-semibold tracking-tight">
+            <h3 className="type-heading text-xl tracking-tight">
               {tile.title}
             </h3>
             {tile.titleBadge ? (
@@ -200,7 +200,7 @@ export function CompeteTile({
             ) : null}
           </div>
           {tile.metric && !showExpandedLeaderboard && !showRequirement ? (
-            <p className="mt-1 font-mono text-lg tracking-tight">{tile.metric}</p>
+            <p className="mt-1 type-stat text-lg tracking-tight">{tile.metric}</p>
           ) : null}
           {!showExpandedLeaderboard ? (
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
@@ -246,7 +246,7 @@ export function CompeteTile({
                         {density === "ranks" ? (
                           <span
                             aria-hidden
-                            className="inline-flex size-7 shrink-0 items-center justify-center rounded-[6px] border-2 border-primary font-display text-sm font-semibold text-primary [transform:rotate(-8deg)]"
+                            className="inline-flex size-7 shrink-0 items-center justify-center rounded-[6px] border-2 border-primary type-stat text-sm text-primary [transform:rotate(-8deg)]"
                           >
                             {row.rank}
                           </span>
@@ -358,7 +358,7 @@ export function sortJoinedFirst<T extends { joined: boolean }>(items: readonly T
 const MAX_NUMBERED_MARKS = 10;
 
 const EYEBROW_CLASS =
-  "text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground";
+  "type-eyebrow text-[10px] text-muted-foreground";
 
 function CompeteRequirementFace({
   requirement,
@@ -390,7 +390,7 @@ function CompeteRequirementFace({
               <span
                 key={`mark-${index}`}
                 data-testid="requirement-mark"
-                className={`grid aspect-square place-items-center rounded-full font-display text-sm font-semibold tabular-nums ${
+                className={`grid aspect-square place-items-center rounded-full type-stat text-sm ${
                   complete
                     ? "border-2 border-primary bg-primary text-primary-foreground"
                     : "border-2 border-dashed border-border text-muted-foreground"
@@ -419,7 +419,7 @@ function CompeteRequirementFace({
   return (
     <div className="mt-4">
       <p className={EYEBROW_CLASS}>{eyebrow}</p>
-      <p className="mt-1.5 font-display text-3xl font-semibold tracking-tight tabular-nums">
+      <p className="mt-1.5 type-stat text-3xl tracking-tight">
         {done.toLocaleString()}
         <span className="text-lg font-medium text-muted-foreground">
           {" / "}

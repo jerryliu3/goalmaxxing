@@ -8,10 +8,10 @@
 .card-editor-warning { background: color-mix(in srgb, #eab308 18%, var(--background)); }
 .card-editor-controls { display: grid; gap: 10px; justify-items: center; width: min(100%, 440px); }
 .card-editor-hint { margin: 0; font-size: 12.5px; color: var(--muted-foreground); }
-.card-overline { margin: 0; font: 500 9.5px var(--font-app-mono), monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-foreground); }
+.card-overline { margin: 0; font-family: var(--type-eyebrow-font); font-size: 9.5px; font-weight: var(--type-eyebrow-weight); letter-spacing: var(--type-eyebrow-tracking); text-transform: uppercase; color: var(--muted-foreground); }
 .card-dot { display: inline-block; width: 10px; height: 10px; flex-shrink: 0; border-radius: 50%; box-shadow: inset 0 0 0 1px #0002; }
 /* An empty fact's placeholder text; its zone or spot draws the only outline. */
-.card-ghost { padding: 1px 2px; border-radius: 999px; color: rgb(140 140 140); font: 500 9.5px var(--font-app-mono), monospace; letter-spacing: .04em; white-space: nowrap; }
+.card-ghost { padding: 1px 2px; border-radius: 999px; color: rgb(140 140 140); font: 500 9.5px var(--type-figure-font); letter-spacing: .04em; white-space: nowrap; }
 
 .card-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--background); font-size: 13px; white-space: nowrap; cursor: pointer; }
 .card-button:hover:not(:disabled) { background: var(--muted); }
@@ -87,14 +87,14 @@
 .card-callout[data-open="true"] { border-color: color-mix(in srgb, var(--goal-color) 45%, var(--border)); background: var(--background); box-shadow: 0 6px 20px #0000000f; }
 .card-callout-body { display: grid; gap: 1px; width: 100%; padding: 7px 12px; border-radius: 12px; text-align: inherit; }
 button.card-callout-body { cursor: pointer; }
-.card-callout-value { display: inline-flex; align-items: center; gap: 7px; min-width: 0; min-height: 26px; font-family: var(--font-app-display), serif; font-size: 17px; line-height: 1.3; }
+.card-callout-value { display: inline-flex; align-items: center; gap: 7px; min-width: 0; min-height: 26px; font-family: var(--type-item-font); font-weight: var(--type-item-weight); font-size: 17px; line-height: 1.3; }
 .card-callouts[data-side="left"] :is(.card-callout-value, .card-callout-control) { justify-content: flex-end; }
 .card-callout-value svg { flex-shrink: 0; color: var(--muted-foreground); opacity: .5; transition: opacity .15s; }
 .card-callout[data-hover="true"] .card-callout-value svg { opacity: 1; }
 .card-callout[data-changed="true"] .card-overline::after { content: " •"; color: var(--goal-color); }
-.card-callout-name { font-family: var(--font-app-display), serif; font-size: 16px; line-height: 1.3; color: var(--foreground); }
+.card-callout-name { font-family: var(--type-item-font); font-weight: var(--type-item-weight); font-size: 16px; line-height: 1.3; color: var(--foreground); }
 .card-callout-control { display: flex; min-height: 26px; align-items: center; }
-.card-callout-control .card-inline-text { font-family: var(--font-app-display), serif; font-size: 17px; }
+.card-callout-control .card-inline-text { font-family: var(--type-item-font); font-weight: var(--type-item-weight); font-size: 17px; }
 .card-callouts[data-side="left"] .card-callout-control .card-inline-text { text-align: right; }
 .card-leaders { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; overflow: visible; pointer-events: none; transition: opacity .3s; }
 .card-leaders path { fill: none; stroke: color-mix(in srgb, var(--foreground) 18%, transparent); stroke-width: 1; transition: stroke .15s, stroke-width .15s; }
@@ -127,7 +127,7 @@ button.card-spot { cursor: pointer; }
 .card-stepper button { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: color-mix(in srgb, var(--goal-color) 12%, var(--background)); cursor: pointer; }
 .card-stepper button:hover:not(:disabled) { background: color-mix(in srgb, var(--goal-color) 24%, var(--background)); }
 .card-stepper button:disabled { opacity: .3; cursor: default; }
-.card-stepper strong { min-width: 2ch; text-align: center; font-family: var(--font-app-display), serif; font-size: 18px; }
+.card-stepper strong { min-width: 2ch; text-align: center; font-family: var(--type-stat-font); font-weight: var(--type-stat-weight); font-variant-numeric: tabular-nums; font-size: 18px; }
 .card-stepper span { margin-left: 4px; font-size: 13px; color: var(--muted-foreground); }
 .card-segments { display: inline-flex; flex-wrap: wrap; gap: 4px; }
 .card-callouts[data-side="left"] .card-segments { justify-content: flex-end; }
@@ -159,7 +159,7 @@ button.card-spot { cursor: pointer; }
 .card-back-head .card-overline { color: rgb(32 37 30 / .6); }
 .card-back-body { position: relative; min-height: 0; overflow: auto; padding: 0 18px 8px; scrollbar-width: thin; }
 .card-back-group { margin-top: 10px; }
-.card-back-group h4 { margin: 0 0 2px; font: 500 9.5px var(--font-app-mono), monospace; letter-spacing: .1em; text-transform: uppercase; color: rgb(32 37 30 / .5); }
+.card-back-group h4 { margin: 0 0 2px; font-family: var(--type-eyebrow-font); font-size: 9.5px; font-weight: var(--type-eyebrow-weight); letter-spacing: var(--type-eyebrow-tracking); text-transform: uppercase; color: rgb(32 37 30 / .5); }
 .card-back-row + .card-back-row { border-top: 1px solid rgb(32 37 30 / .07); }
 .card-back-row-head { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 0 2px; text-align: left; cursor: pointer; }
 .card-back-row[data-open="true"] .card-back-row-head { grid-template-columns: auto auto minmax(0, 1fr); cursor: default; }

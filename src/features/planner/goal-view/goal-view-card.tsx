@@ -73,7 +73,7 @@ export const GoalViewCard = memo(function GoalViewCard({
       {compact ? null : (
         <div className="mt-3 space-y-1 text-center text-xs text-muted-foreground">
           {statusLabel ? (
-            <p className="font-mono" role="status">
+            <p className="type-figure" role="status">
               {statusLabel}
             </p>
           ) : null}

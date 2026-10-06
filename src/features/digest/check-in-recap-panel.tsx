@@ -64,7 +64,7 @@ export function CheckInRecapPanel({
   return (
     <div className="space-y-3">
       <div>
-        <p className="text-lg font-semibold">
+        <p className="type-heading text-lg">
           {recap.placed === 0
             ? "Nothing was placed"
             : `${recap.completed} of ${recap.placed} done`}
@@ -83,7 +83,7 @@ export function CheckInRecapPanel({
               key={itemKey(item)}
               className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
             >
-              <span className="truncate text-sm">{item.title}</span>
+              <span className="truncate type-item text-sm">{item.title}</span>
               {item.state === "completed" ? (
                 <span className="shrink-0 text-xs text-muted-foreground">
                   Done

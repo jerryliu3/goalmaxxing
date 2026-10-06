@@ -43,7 +43,7 @@ export function WorkQuestCard({
         <Emblem aria-hidden className="mx-auto size-5 stroke-[1.6]" />
         <div className="work-quest-header-row">
           <div className="flex min-w-0 items-center gap-0.5">{leadingNav}</div>
-          <h3 className="min-w-0 truncate text-center font-display text-sm font-semibold leading-tight">
+          <h3 className="min-w-0 truncate text-center type-item text-sm leading-tight">
             {quest.title}
           </h3>
           <div className="flex min-w-0 items-center justify-end gap-0.5">

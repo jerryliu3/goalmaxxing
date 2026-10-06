@@ -6,6 +6,17 @@ export const ORIGINAL_THEME = {
   label: "Original",
   description: "Classic Goalmaxxing chrome: Geist, identity blue, and pill tabs.",
   fonts: { sans: "geist", display: "geist", mono: "geist-mono" },
+  // One family throughout; hierarchy comes from weight.
+  text: {
+    wordmark: { slot: "display", weight: 600 },
+    hero: { slot: "display", weight: 600 },
+    title: { slot: "display", weight: 600 },
+    heading: { slot: "display", weight: 500 },
+    item: { slot: "display", weight: 500 },
+    eyebrow: { slot: "sans", weight: 600, trackingEm: 0.12 },
+    stat: { slot: "display", weight: 600 },
+    figure: { slot: "mono", weight: 400 },
+  },
   radiusRem: 0.875,
   colors: {
     background: "oklch(0.985 0.003 286)",

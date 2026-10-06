@@ -110,6 +110,6 @@ export function planSelectedWorkRowClass(selected: boolean) {
 }
 
 export const planLedgerTitleClass =
-  "font-display text-sm font-medium tracking-tight";
+  "type-item text-sm tracking-tight";
 
 export const planLedgerSubtitleClass = "font-sans text-sm text-muted-foreground";

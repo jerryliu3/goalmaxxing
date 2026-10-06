@@ -11,6 +11,18 @@ export const GAZETTEER_THEME = {
   label: "Gazetteer",
   description: "Paper, walnut ink, stamp rust, Nest completion, and ledger chrome.",
   fonts: { sans: "source-sans-3", display: "newsreader", mono: "ibm-plex-mono" },
+  // Newsreader names everything; regular weight below the page title, as in
+  // the study kit. Source Sans 3 carries labels and small figures alike.
+  text: {
+    wordmark: { slot: "display", weight: 600 },
+    hero: { slot: "display", weight: 600 },
+    title: { slot: "display", weight: 500 },
+    heading: { slot: "display", weight: 400 },
+    item: { slot: "display", weight: 400 },
+    eyebrow: { slot: "sans", weight: 600, trackingEm: 0.12 },
+    stat: { slot: "display", weight: 400 },
+    figure: { slot: "sans", weight: 400 },
+  },
   radiusRem: 0.75,
   // Warm near-white canvas with white cards; the paper tone (#f3ead8) is the
   // muted fill for tracks, inputs, and panels, so regions separate.

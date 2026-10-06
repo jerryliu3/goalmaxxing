@@ -105,7 +105,7 @@ function StatsSection({ title, stats }: StatsSectionProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <BarChart3 className="size-4 text-primary" />
-        <h2 className="font-display text-base font-semibold">{title}</h2>
+        <h2 className="type-heading text-base">{title}</h2>
       </div>
 
       <Card className="overflow-hidden border-border/70 shadow-[inset_0_1px_0_color-mix(in_srgb,white_35%,transparent),0_14px_28px_-18px_color-mix(in_srgb,var(--foreground)_22%,transparent)]">
@@ -378,7 +378,7 @@ export function InsightsMoreStatsPage() {
           <ArrowLeft className="size-4" aria-hidden="true" />
           Back to profile
         </Link>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">More stats</h1>
+        <h1 className="type-title text-2xl tracking-tight">More stats</h1>
       </header>
 
       <StatsSection title="Your goals" stats={stats.overall} />

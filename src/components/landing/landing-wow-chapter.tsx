@@ -53,7 +53,7 @@ function ChapterStage({
       <LandingWowMountain progress={progress} />
       <div className="absolute inset-0 z-10">
         <div className="mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6">
-          <p className="text-[11px] font-semibold tracking-[0.22em] text-gain uppercase">
+          <p className="type-eyebrow text-[11px] text-gain">
             The journey
           </p>
           <motion.p

@@ -18,8 +18,8 @@ describe("PlanDaySection", () => {
       "aria-expanded",
       "true"
     );
-    expect(screen.getByRole("button", { name: /Planned goals/ })).toHaveClass("font-sans");
-    expect(screen.getByText("2")).toHaveClass("font-mono");
+    expect(screen.getByRole("button", { name: /Planned goals/ })).toHaveClass("type-heading");
+    expect(screen.getByText("2")).toHaveClass("type-figure");
     expect(screen.getByText("Row")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Planned goals/ }));
@@ -42,7 +42,7 @@ describe("PlanDaySection", () => {
     );
   });
 
-  it("keeps section titles on the body font, larger than ledger item titles", () => {
+  it("sets section titles in the heading role, larger than ledger item titles", () => {
     render(
       <PlanDaySection title="Scheduled goals" count={3}>
         <p>Row</p>
@@ -50,7 +50,7 @@ describe("PlanDaySection", () => {
     );
 
     expect(screen.getByRole("button", { name: /Scheduled goals 3/ })).toHaveClass(
-      "font-sans",
+      "type-heading",
       "text-base"
     );
   });

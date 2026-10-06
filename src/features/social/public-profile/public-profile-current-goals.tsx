@@ -17,7 +17,7 @@ export function PublicProfileCurrentGoals({
 
   return (
     <section className="space-y-3" aria-labelledby="public-current-goals-heading">
-      <h2 id="public-current-goals-heading" className="font-display text-lg font-semibold tracking-tight">
+      <h2 id="public-current-goals-heading" className="type-title text-lg tracking-tight">
         Current goals
       </h2>
       <CurrentGoalGrid entries={goals.map(hydratePublicCurrentGoal)} />

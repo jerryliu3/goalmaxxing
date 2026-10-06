@@ -74,7 +74,7 @@
   justify-content: space-between;
   align-items: center;
   gap: .5rem;
-  font: .5rem/1.6 var(--font-mono);
+  font: .5rem/1.6 var(--type-figure-font);
   letter-spacing: .055em;
 }
 .topbar {
@@ -114,7 +114,7 @@
   display: block;
   padding: .2rem 0 .15rem;
   text-align: center;
-  font: .48rem var(--font-mono);
+  font: .48rem var(--type-figure-font);
   letter-spacing: .2em;
   opacity: .6;
 }
@@ -178,7 +178,7 @@ button.portrait:focus-visible {
   line-height: 1;
 }
 .kicker {
-  font: .68rem/1.5 var(--font-mono);
+  font: .68rem/1.5 var(--type-figure-font);
   letter-spacing: .055em;
   text-transform: uppercase;
   opacity: .75;
@@ -232,7 +232,7 @@ button.portrait:focus-visible {
 .handleCompose {
   width: auto;
   max-width: 100%;
-  font: .68rem/1.5 var(--font-mono);
+  font: .68rem/1.5 var(--type-figure-font);
   letter-spacing: .055em;
   text-transform: uppercase;
   opacity: .9;
@@ -251,7 +251,7 @@ button.portrait:focus-visible {
   background: none;
   border: 0;
   color: inherit;
-  font: .62rem/1.6 var(--font-mono);
+  font: .62rem/1.6 var(--type-figure-font);
   letter-spacing: .08em;
   cursor: pointer;
   pointer-events: auto;

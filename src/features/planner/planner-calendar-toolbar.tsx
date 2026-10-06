@@ -133,7 +133,7 @@ export function PlannerCalendarToolbar({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <h2 className="font-display text-lg font-semibold tracking-tight">Agenda</h2>
+              <h2 className="type-title text-lg tracking-tight">Agenda</h2>
               <Tooltip content="Planner help" side="top" align="center">
                 <Button
                   type="button"

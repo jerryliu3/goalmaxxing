@@ -25,11 +25,11 @@ export function ProfileMedalShelf({
       className="ach-showcase-root rounded-[16px] border bg-card px-4 py-4"
     >
       <div className="flex items-baseline justify-between gap-3">
-        <p className="ach-showcase-kicker text-[10px] font-semibold uppercase tracking-[0.16em]">
+        <p className="ach-showcase-kicker type-eyebrow text-[10px]">
           Level medals
         </p>
         {total > 0 ? (
-          <p className="ach-showcase-body font-mono text-xs">
+          <p className="ach-showcase-body type-figure text-xs">
             {unlockedCount}/{total} · {fill}%
           </p>
         ) : null}
@@ -60,11 +60,11 @@ export function ProfileMedalShelf({
                   size={64}
                   markId={`profile-medal-${achievement.id}`}
                 />
-                <span className="ach-showcase-stat-muted mt-2 font-mono text-[11px]">
+                <span className="ach-showcase-stat-muted mt-2 type-figure text-[11px]">
                   Lv {level}
                 </span>
                 {achievement.title ? (
-                  <span className="ach-showcase-kicker mt-1 text-center text-[10px] uppercase tracking-[0.1em]">
+                  <span className="ach-showcase-kicker type-eyebrow mt-1 text-center text-[10px]">
                     {achievement.title}
                   </span>
                 ) : null}

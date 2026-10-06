@@ -20,7 +20,7 @@ export function LandingPage() {
       />
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <Link href="/" className="font-display text-xl font-semibold tracking-tight">
+          <Link href="/" className="type-wordmark text-xl tracking-tight">
             Goalmaxxing
           </Link>
           <nav className="flex items-center gap-2">
@@ -35,7 +35,7 @@ export function LandingPage() {
       <main>
         <section className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:items-center md:py-10">
           <div className="max-w-xl space-y-6">
-            <h1 className="font-display text-[2rem] font-semibold leading-[1.1] tracking-tight sm:text-[2.75rem]">
+            <h1 className="type-hero text-[2rem] leading-[1.1] tracking-tight sm:text-[2.75rem]">
               Achieve your goals using one focused system
             </h1>
             <p className="text-base text-muted-foreground sm:text-lg">
@@ -75,7 +75,7 @@ export function LandingPage() {
         <LandingFeatureNarrative />
 
         <section className="mx-auto w-full max-w-6xl px-4 py-16 text-center sm:px-6">
-          <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h2 className="type-hero text-2xl tracking-tight sm:text-3xl">
             Build momentum across weeks, not just days.
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">

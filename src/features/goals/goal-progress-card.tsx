@@ -35,7 +35,7 @@ export const GoalProgressCard = memo(function GoalProgressCard({
       flat={!interactive}
       renderLettering={gallery ? renderFlatLettering : undefined}
     />
-    <p className="mt-5 text-center font-mono text-xs text-muted-foreground" role="status" aria-live="polite">
+    <p className="mt-5 text-center type-figure text-xs text-muted-foreground" role="status" aria-live="polite">
       {model.achieved ? "Goal accomplished" : progress.lifecycle === "upcoming" ? "Starts soon · " + model.label : model.label}
     </p>
     {goal.reward_text?.trim() && <p className="mt-2 text-center text-sm text-foreground">

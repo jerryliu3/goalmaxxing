@@ -66,6 +66,41 @@ export type ThemeColors = Readonly<Record<ColorRole, string>>;
 
 export type FontSlot = "sans" | "display" | "mono";
 
+/**
+ * Text roles: what a piece of text *is*, not how it looks. Each theme picks
+ * the face and weight per role; call sites set only size, leading, color.
+ * Web exposes them as `type-<role>` utilities.
+ */
+export const TEXT_ROLES = [
+  /** The Goalmaxxing wordmark. */
+  "wordmark",
+  /** Statement headlines (landing, achievements showcase, auth). */
+  "hero",
+  /** Page and sheet titles: "Agenda", "Current goals", dialog titles. */
+  "title",
+  /** Section and card headings: "Scheduled goals", leaderboard cards. */
+  "heading",
+  /** Names of goals, tasks, milestones, and people in lists and cards. */
+  "item",
+  /** Small uppercase labels above content. */
+  "eyebrow",
+  /** Figures that are the point of a tile: streaks, scores, totals. */
+  "stat",
+  /** Small figures and meta lines: counts, "0 / 1 this week", dates on cards. */
+  "figure",
+] as const;
+
+export type TextRole = (typeof TEXT_ROLES)[number];
+
+export interface TextRoleStyle {
+  readonly slot: FontSlot;
+  readonly weight: number;
+}
+
+export type ThemeText = Readonly<Record<Exclude<TextRole, "eyebrow">, TextRoleStyle>> & {
+  readonly eyebrow: TextRoleStyle & { readonly trackingEm: number };
+};
+
 export type CompletionMarkKind = "circle" | "nest";
 export type TabChromeKind = "pills" | "underline";
 
@@ -75,6 +110,7 @@ export interface ThemeDefinition {
   readonly description: string;
   /** Faces for body copy, display type, and figures. */
   readonly fonts: Readonly<Record<FontSlot, FontId>>;
+  readonly text: ThemeText;
   readonly radiusRem: number;
   /** The theme's own appearance. */
   readonly colors: ThemeColors;

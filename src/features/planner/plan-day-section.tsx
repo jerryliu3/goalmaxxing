@@ -37,14 +37,14 @@ export function PlanDaySection({
       data-plan-day-section={title}
     >
       <CollapsibleTrigger
-        className="flex w-full items-center justify-between gap-2 py-2 text-left font-sans text-base font-medium touch-manipulation"
+        className="flex w-full items-center justify-between gap-2 py-2 text-left type-heading text-base touch-manipulation"
         aria-expanded={open}
         aria-label={typeof count === "number" ? `${title} ${count}` : title}
       >
         <span className="flex min-w-0 items-center gap-2">
           {title}
           {typeof count === "number" ? (
-            <span className="font-mono text-muted-foreground">{count}</span>
+            <span className="type-figure text-muted-foreground">{count}</span>
           ) : null}
         </span>
         <ChevronDown

@@ -6,7 +6,7 @@ import { useXpProfile } from "@/components/xp/xp-profile-provider";
 
 type XpWordmarkProfile = Parameters<typeof XpMeter>[0]["profile"];
 
-const wordmarkClassName = "font-display text-xl font-semibold leading-none tracking-tight whitespace-nowrap sm:text-2xl";
+const wordmarkClassName = "type-wordmark text-xl leading-none tracking-tight whitespace-nowrap sm:text-2xl";
 
 export function Wordmark() {
   return <p className={wordmarkClassName}>Goalmaxxing</p>;
@@ -38,7 +38,7 @@ export function XpWordmarkMeter({ profile, rewardSequence }: { profile: XpWordma
         <Popover.Content
           align="start"
           sideOffset={8}
-          className="z-50 rounded-xl border border-border bg-popover px-3 py-2 font-mono text-xs text-popover-foreground shadow-[0_8px_24px_rgb(0_0_0/0.1)]"
+          className="z-50 rounded-xl border border-border bg-popover px-3 py-2 type-figure text-xs text-popover-foreground shadow-[0_8px_24px_rgb(0_0_0/0.1)]"
         >
           <p>{formatNumber(profile.totalXp)} XP</p>
           <p className="mt-0.5 text-muted-foreground">
