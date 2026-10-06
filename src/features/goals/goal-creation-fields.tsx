@@ -37,7 +37,8 @@ import {
   GOAL_CREATE_KIND_HELP,
   type GoalCreateKind,
 } from "@/lib/goals/form-options";
-import { getCategorySwatchColor, type CategorySelection } from "@/lib/goals/category";
+import { type CategorySelection } from "@/lib/goals/category";
+import { categoryChangePatch } from "@/lib/goals/card-colour";
 import { getLinkedTargetSchedulingNotice } from "@/lib/goals/linked-goal-labels";
 import { getPerPeriodTargetLabel } from "@/lib/goals/recurrence-labels";
 import { getGoalPeriodTargetMax } from "@/lib/goals/target-basis";
@@ -178,10 +179,7 @@ export function GoalCreationFieldControls({
               triggerClassName="h-8"
               disabled={disabled}
               onValueChange={(value: CategorySelection) =>
-                onPatch({
-                  category_selection: value,
-                  color: getCategorySwatchColor(value),
-                })
+                onPatch(categoryChangePatch(fields, value))
               }
             />
           </div>

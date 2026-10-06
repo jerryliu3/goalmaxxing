@@ -13,9 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   DEFAULT_GOAL_CATEGORIES,
-  getCategorySwatchColor,
   type CategorySelection,
 } from "@/lib/goals/category";
+import { categoryChangePatch } from "@/lib/goals/card-colour";
 import type { GoalCreationFieldControlsProps } from "./goal-creation-fields";
 import { GoalLinkTargetSelect } from "./goal-link-target-select";
 import { GoalDefaultTimeField } from "./goal-schedule-fields";
@@ -237,10 +237,7 @@ export function TempoGoalFields({
                         ]}
                         onChange={(value) => {
                           choose({ category: true });
-                          onPatch({
-                            category_selection: value,
-                            color: getCategorySwatchColor(value),
-                          });
+                          onPatch(categoryChangePatch(fields, value));
                         }}
                       />
                       {chosen.category && (
