@@ -65,4 +65,16 @@ describe("PlannerCalendarSplit", () => {
     expect(calendarColumn).toHaveClass("items-stretch");
     expect(separator).not.toHaveClass("h-full");
   });
+
+  it("raises the checklist onto a panel while the calendar stays on the page", () => {
+    render(
+      <PlannerCalendarSplit
+        calendar={<div>Calendar</div>}
+        pane={<div>Checklist</div>}
+      />
+    );
+
+    expect(screen.getByTestId("plan-desktop-day-pane")).toHaveClass("bg-card", "rounded-2xl", "border");
+    expect(screen.getByTestId("plan-calendar-split-calendar").firstElementChild).not.toHaveClass("bg-card");
+  });
 });

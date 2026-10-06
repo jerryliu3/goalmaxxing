@@ -49,7 +49,7 @@ describe("ui style catalog", () => {
     }
 
     applyDocumentUiStyle(getUiStyle("gazetteer"));
-    expect(themeMeta.getAttribute("content")).toBe("#f3ead8");
+    expect(themeMeta.getAttribute("content")).toBe("#fbf7ef");
     expect(
       document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
         ?.getAttribute("content")

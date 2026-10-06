@@ -23,7 +23,8 @@ export function buildProgressSections({
   pastSections: readonly ProgressOverviewSectionContent[];
 }): ProgressOverviewSectionContent[] {
   const sections: ProgressOverviewSectionContent[] = [
-    { id: "history", content: history },
+    // The tracker is a working region, so it sits on a panel like the day checklist.
+    { id: "history", content: history, framed: true },
   ];
 
   if (weekRhythm.rows.length > 0 || weekRhythm.loading || weekRhythm.error) {

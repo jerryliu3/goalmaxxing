@@ -171,6 +171,8 @@ describe("SettingsTab", () => {
     expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
     expect(screen.queryByText("Primary planner tab")).not.toBeInTheDocument();
+    // Each group sits on a raised panel, like the other cards on the page.
+    expect(screen.getByRole("button", { name: "Preferences" }).parentElement).toHaveClass("bg-card", "rounded-2xl");
   });
 
   it("opens settings in the side panel on desktop too, wherever the list sits", async () => {
