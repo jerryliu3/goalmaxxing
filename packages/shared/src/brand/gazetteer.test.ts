@@ -5,7 +5,6 @@ import {
   GAZETTEER_HEATMAP_SCALE,
   gazetteerCategoryColor,
   gazetteerFillForGoal,
-  gazetteerLightTheme,
   getGazetteerHeatmapScaleHex,
   toGazetteerDisplayColor,
 } from "./gazetteer";
@@ -55,12 +54,7 @@ describe("gazetteer display colors", () => {
     expect(GAZETTEER.recover).not.toBe(GAZETTEER.stamp);
   });
 
-  it("keeps the light theme on paper, walnut, and stamp rust", () => {
-    expect(gazetteerLightTheme.background).toBe(GAZETTEER.page);
-    expect(gazetteerLightTheme.card).toBe(GAZETTEER.paper);
-    expect(gazetteerLightTheme.foreground).toBe(GAZETTEER.ink);
-    expect(gazetteerLightTheme.primary).toBe(GAZETTEER.stamp);
-    expect(gazetteerLightTheme.gain).toBe(GAZETTEER.gain);
+  it("keeps the heatmap scale on stamp rust", () => {
     expect(GAZETTEER_HEATMAP_SCALE[3]).toBe(GAZETTEER.stamp);
     expect(getGazetteerHeatmapScaleHex(3)).toBe(GAZETTEER.stamp);
   });

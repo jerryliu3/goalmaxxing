@@ -1,40 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import { Geist, Geist_Mono, IBM_Plex_Mono, Newsreader, Source_Sans_3 } from "next/font/google";
 import Script from "next/script";
 import { Toaster } from "sonner";
 import { UiStyleProvider } from "@/components/brand/ui-style-provider";
 import { APP_BOOT_PRELOAD_SCRIPT } from "@/components/layout/app-boot-preload";
 import { appIconHref } from "@/lib/brand/app-icon";
+import { FONT_VARIABLE_CLASSES } from "@/lib/brand/fonts";
 import { getUiStyle, parseUiStyleId, UI_STYLE_COOKIE_NAME } from "@/lib/brand/ui-style";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-});
-
-const sourceSans = Source_Sans_3({
-  variable: "--font-source-sans",
-  subsets: ["latin"],
-});
-
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
 
 const metadataBase = (() => {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
@@ -61,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase,
     appleWebApp: {
       capable: true,
-      statusBarStyle: style.id === "gazetteer" ? "black-translucent" : "default",
+      statusBarStyle: style.statusBarStyle,
       title: "Goalmaxxing",
     },
     icons: {
@@ -92,19 +65,12 @@ export default async function RootLayout({
   const style = getUiStyle(
     parseUiStyleId((await cookies()).get(UI_STYLE_COOKIE_NAME)?.value)
   );
-  const fontVariables = [
-    geistSans.variable,
-    geistMono.variable,
-    newsreader.variable,
-    sourceSans.variable,
-    plexMono.variable,
-  ].join(" ");
 
   return (
     <html
       lang="en"
       data-ui-style={style.id}
-      className={`${fontVariables} ${style.htmlClass} h-full antialiased`.trim()}
+      className={`${FONT_VARIABLE_CLASSES} h-full antialiased`}
       suppressHydrationWarning
     >
       <body

@@ -5,9 +5,7 @@ export {
   GAZETTEER_HEATMAP_SCALE,
   GAZETTEER_RADIUS_PX,
   gazetteerCategoryColor,
-  gazetteerDarkTheme,
   gazetteerFillForGoal,
-  gazetteerLightTheme,
   getGazetteerHeatmapScaleHex,
   toGazetteerDisplayColor,
 } from "@cadence/shared/brand/gazetteer";

@@ -12,7 +12,8 @@ import { describe, expect, it } from "vitest";
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const srcRoot = join(repoRoot, "src");
 
-const THEME_DEFINITION_FILES = new Set(["src/app/globals.css"]);
+// Generated from packages/shared/src/brand, the one place families are named.
+const THEME_DEFINITION_FILES = new Set(["src/app/themes.css"]);
 // Design studies and prototypes intentionally render fixed, named type.
 const EXEMPT_PREFIXES = [
   "src/app/ux/",

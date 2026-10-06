@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { GAZETTEER, gazetteerLightTheme } from "@cadence/shared/brand/gazetteer";
+import { GAZETTEER_THEME } from "@cadence/shared/brand";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
 import {
   buildGazetteerMonthDayChromePalette,
   resolveGazetteerMonthDayChromeStyle,
 } from "@cadence/shared/planner/calendar-day-chrome";
 
 describe("mobile calendar day chrome wiring", () => {
-  const palette = buildGazetteerMonthDayChromePalette(gazetteerLightTheme, "light");
+  const palette = buildGazetteerMonthDayChromePalette(GAZETTEER_THEME.colors, "light");
 
   it("uses adjacent zinc for out-of-month cells instead of opacity fade", () => {
     const style = resolveGazetteerMonthDayChromeStyle(
@@ -42,7 +43,7 @@ describe("mobile calendar day chrome wiring", () => {
       palette
     );
     expect(selected.selectedRing).toBe(true);
-    expect(selected.numberColor).toBe(gazetteerLightTheme.primary);
+    expect(selected.numberColor).toBe(GAZETTEER_THEME.colors.primary);
     expect(today.backgroundColor).toBe(palette.todayFill);
   });
 });

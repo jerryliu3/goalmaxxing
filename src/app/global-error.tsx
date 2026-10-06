@@ -2,6 +2,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
+import { FONT_VARIABLE_CLASSES } from "@/lib/brand/fonts";
 
 export default function GlobalError({
   error,
@@ -15,7 +16,7 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html lang="en">
+    <html lang="en" className={FONT_VARIABLE_CLASSES}>
       <body className="flex min-h-full flex-col items-center justify-center gap-4 bg-background p-6 text-foreground">
         <h1 className="text-xl font-semibold">Something went wrong</h1>
         <p className="max-w-md text-center text-sm text-muted-foreground">

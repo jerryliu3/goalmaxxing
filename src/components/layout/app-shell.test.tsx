@@ -183,7 +183,7 @@ describe("AppShell", () => {
       </AppShell>
     );
 
-    expect(document.querySelector(".gm-gazetteer")).not.toBeInTheDocument();
+    expect(document.querySelector("[data-ui-style=\"gazetteer\"]")).not.toBeInTheDocument();
   });
 
   it("keeps the mobile tab bar out of the page view-transition snapshot", () => {

@@ -1,5 +1,3 @@
-import type { ThemeTokenName } from "../tokens";
-
 /**
  * Production Gazetteer lock (paper, walnut, stamp rust, sage/copper chrome, Nest).
  * Keep hexes here so web, native, planner fills, and chrome share one palette.
@@ -51,60 +49,6 @@ export const GAZETTEER_RADIUS_PX = {
   md: 12,
   lg: 16,
 } as const;
-
-export type GazetteerThemeColors = Record<ThemeTokenName, string> & {
-  page: string;
-  gain: string;
-  recover: string;
-};
-
-export const gazetteerLightTheme: GazetteerThemeColors = {
-  background: GAZETTEER.page,
-  foreground: GAZETTEER.ink,
-  card: GAZETTEER.paper,
-  cardForeground: GAZETTEER.ink,
-  popover: GAZETTEER.paper,
-  popoverForeground: GAZETTEER.ink,
-  primary: GAZETTEER.stamp,
-  primaryForeground: GAZETTEER.paper,
-  secondary: "#efe4d0",
-  secondaryForeground: GAZETTEER.ink,
-  muted: "#efe4d0",
-  mutedForeground: GAZETTEER.muted,
-  accent: "#e8d9c0",
-  accentForeground: GAZETTEER.ink,
-  destructive: GAZETTEER.stamp,
-  border: GAZETTEER.rule,
-  input: GAZETTEER.rule,
-  ring: GAZETTEER.stamp,
-  page: GAZETTEER.page,
-  gain: GAZETTEER.gain,
-  recover: GAZETTEER.recover,
-};
-
-export const gazetteerDarkTheme: GazetteerThemeColors = {
-  background: "#1c1610",
-  foreground: GAZETTEER.page,
-  card: GAZETTEER.ink,
-  cardForeground: GAZETTEER.page,
-  popover: GAZETTEER.ink,
-  popoverForeground: GAZETTEER.page,
-  primary: GAZETTEER.stampLight,
-  primaryForeground: "#1c1610",
-  secondary: "#2a2218",
-  secondaryForeground: GAZETTEER.page,
-  muted: "#2a2218",
-  mutedForeground: "#c4b49a",
-  accent: "#3a2f24",
-  accentForeground: GAZETTEER.page,
-  destructive: GAZETTEER.stampLight,
-  border: GAZETTEER.mutedDeep,
-  input: GAZETTEER.mutedDeep,
-  ring: GAZETTEER.stampLight,
-  page: "#1c1610",
-  gain: GAZETTEER.gain,
-  recover: GAZETTEER.recover,
-};
 
 const LEGACY_GOAL_COLOR_TO_GAZETTEER: Record<string, string> = {
   "#10b981": GAZETTEER_CATEGORY_COLORS.health,

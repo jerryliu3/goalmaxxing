@@ -1,4 +1,4 @@
-import type { TabChromeKind } from "@/lib/brand/ui-style";
+import type { TabChromeKind } from "@cadence/shared/brand";
 import { cn } from "@/lib/utils";
 
 const GRID_BY_COUNT: Record<number, string> = {
