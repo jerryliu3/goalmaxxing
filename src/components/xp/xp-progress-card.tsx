@@ -59,7 +59,7 @@ export function XpMeter({ profile, rewardSequence, compact = false }: { profile:
       <motion.span key={rewardSequence} initial={false} animate={!still && rewardSequence > 0 ? { scaleY: [1, 1.65, 1] } : { scaleY: 1 }} transition={{ duration: 0.95, times: [0, 0.35, 1] }}
         role="progressbar" aria-label="XP toward next level" aria-valuemin={0} aria-valuemax={100}
         aria-valuenow={resolveProgressPercent(profile)} aria-valuetext={`Level ${profile.currentLevel}, ${profile.totalXp} XP`}
-        className={cn("relative block overflow-hidden rounded-full bg-muted", compact ? "h-2.5" : "h-2")} data-xp-reward-target="true">
+        className={cn("relative block overflow-hidden rounded-full bg-muted", compact ? "h-2.5 flex-1" : "h-2")} data-xp-reward-target="true">
         <span className="block size-full origin-left rounded-full bg-primary" style={{ transform: `scaleX(${progressPercent / 100})` }} />
       </motion.span>
     </>

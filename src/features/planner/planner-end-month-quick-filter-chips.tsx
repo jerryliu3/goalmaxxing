@@ -3,16 +3,7 @@
 import { useMemo } from "react";
 import { toggleExclusiveSelection } from "@/lib/filters/toggle-exclusive-selection";
 import { buildQuickEndDateChipOptions } from "@/lib/filters/quick-end-date-chips";
-
-/** Hairline filter chip; the selected chip is a solid ink pill. */
-function plannerChipClass(selected: boolean) {
-  return [
-    "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[13px] whitespace-nowrap transition-[border-color,background-color,color] outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97] [&_svg]:size-4",
-    selected
-      ? "border-foreground bg-foreground font-medium text-background"
-      : "border-border bg-background text-foreground/80 hover:border-foreground/40 hover:text-foreground",
-  ].join(" ");
-}
+import { cn } from "@/lib/utils";
 
 export function PlannerEndMonthQuickFilterChips({
   referenceMonth,
@@ -45,7 +36,13 @@ export function PlannerEndMonthQuickFilterChips({
             key={option.key}
             type="button"
             aria-pressed={selected}
-            className={plannerChipClass(selected)}
+            // Hairline chips; the selected one is a solid ink pill.
+            className={cn(
+              "inline-flex h-9 shrink-0 items-center rounded-full border px-3.5 text-[13px] whitespace-nowrap transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97]",
+              selected
+                ? "border-foreground bg-foreground font-medium text-background"
+                : "border-border bg-background text-foreground/80 hover:border-foreground/40 hover:text-foreground"
+            )}
             onClick={() => {
               if (option.value === null) {
                 onEndMonthFiltersChange([]);

@@ -21,7 +21,7 @@ export function XpProgressBar() {
     <Popover.Root>
       <Popover.Trigger
         aria-label={`Level ${profile.currentLevel} progress`}
-        className="flex h-9 w-full max-w-xs min-w-0 items-center gap-3 rounded-full border border-border bg-background px-3.5 text-left transition-colors outline-none hover:bg-muted/60 focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=open]:bg-muted/60 sm:min-w-[15rem] [&>[role=progressbar]]:flex-1"
+        className="flex h-9 w-full max-w-xs min-w-0 items-center gap-3 rounded-full border border-border bg-background px-3.5 text-left transition-colors outline-none hover:bg-muted/60 focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=open]:bg-muted/60 sm:min-w-[15rem]"
       >
         <XpMeter profile={profile} rewardSequence={rewardSequence} compact />
       </Popover.Trigger>
