@@ -19,9 +19,9 @@ test("reduced motion keeps navigation functional without panel animation", async
   });
   expect(reducedAnimationName).toBe("none");
 
-  const profileTab = page.getByRole("link", { name: /Settings|You|Profile/ }).first();
-  await expect(profileTab).toBeVisible();
-  await profileTab.click();
+  // Profile settings lives in the avatar's account menu.
+  await page.getByRole("button", { name: /Account menu/ }).click();
+  await page.getByRole("menuitem", { name: "Profile settings" }).click();
   await expect(page).toHaveURL(/\/settings/, { timeout: 10_000 });
   await expect(
     page.getByRole("navigation", { name: "Main navigation" })

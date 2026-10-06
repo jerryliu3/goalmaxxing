@@ -19,7 +19,7 @@ export function CoachHeader() {
   const busy = Object.values(coach.conversations).some(conversation => conversation.runs.some(run => run.status === "running"));
   return <div className={s.headerEntry}>
     <button ref={coach.launcher} className={s.headerButton} aria-label="Open your coach" aria-expanded={coach.mode !== "closed"} aria-controls="coach-surface" onClick={() => coach.mode === "closed" ? coach.open() : coach.close()}>
-      <CoachMark small /><span>Coach</span>{(busy || coach.offer.payload) && <i className={s.statusDot} aria-label={busy ? "Response in progress" : "Check-in ready"} />}
+      <CoachMark small /><span className={s.headerLabel}>Coach</span>{(busy || coach.offer.payload) && <i className={s.statusDot} aria-label={busy ? "Response in progress" : "Check-in ready"} />}
     </button>
     {coach.offer.payload && <aside className={s.invitation} aria-label="Check-in invitation">
       <p>Your {checkInHeading(coach.offer.payload.kind).toLowerCase()} is ready.</p>
