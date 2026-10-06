@@ -218,12 +218,14 @@ Goal View), not as a separate route. Code lives in
   sessions are all past, which have no lane while Calendar is off. Each
   lane's shape comes from its goal's loaded sessions, never the option, so a
   lane is the same height either way.
-- Every session card keeps its title. Under Calendar's date header its date
-  line cross-fades to the session's ordinal toward the goal's target ("2 of 3
-  per week", "Week 6" for one session a week, "12 of 30", "2 of 5" for
-  milestones), since the header already
-  names the date; with Calendar off the date shows. Phone rows show the
-  ordinal beside the time.
+- A session card leads with what tells it apart: its date, large, with the
+  ordinal toward the goal's target below ("2 of 3 per week", "Week 6" for one
+  session a week, "12 of 30", "2 of 5" for milestones). The title (which the
+  lane already names) and the time sit small on the check's row, the title
+  truncated. Under Calendar's date header the lead cross-fades from the date
+  to the count ("2 of 3") and the line below to its period ("per week"),
+  since the header already names the date. Phone rows show the ordinal
+  beside the time.
 - The toolbar's month ("October 2026") is the one place Goal View names where
   you are; it opens the date picker. Arrows page to the first date (or card)
   not fully in view, so a step never skips one, and Today returns. Switching keeps the leftmost

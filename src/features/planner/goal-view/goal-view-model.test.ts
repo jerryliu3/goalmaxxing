@@ -7,6 +7,7 @@ import {
   buildGoalViewWindow,
   groupSessions,
   listWindowDays,
+  ordinalText,
   selectGoalViewGoals,
   sessionOrdinals,
   upcomingSessionsForGoal,
@@ -157,8 +158,8 @@ describe("sessionOrdinals", () => {
       [at("run", "2026-10-07", "cadence:2026-10-05:2"), at("run", "2026-10-05", "cadence:2026-10-05:1")],
       1
     );
-    expect(ordinals.get("run:2026-10-05")).toBe("1 of 3 per week");
-    expect(ordinals.get("run:2026-10-07")).toBe("2 of 3 per week");
+    expect(ordinals.get("run:2026-10-05")).toEqual({ count: "1 of 3", period: "per week" });
+    expect(ordinals.get("run:2026-10-07")).toEqual({ count: "2 of 3", period: "per week" });
   });
 
   it("counts a session's place in its period when the key has no slot", () => {
@@ -172,7 +173,7 @@ describe("sessionOrdinals", () => {
       ],
       1
     );
-    expect([...ordinals.values()]).toEqual(["1 of 3 per week", "2 of 3 per week", "1 of 3 per week"]);
+    expect([...ordinals.values()].map(ordinalText)).toEqual(["1 of 3 per week", "2 of 3 per week", "1 of 3 per week"]);
   });
 
   it("counts toward a lifetime total or a milestone sequence", () => {
@@ -183,8 +184,8 @@ describe("sessionOrdinals", () => {
       [at("read", "2026-10-05", "total:12"), at("book", "2026-10-06", "milestone:2")],
       1
     );
-    expect(ordinals.get("read:2026-10-05")).toBe("12 of 30");
-    expect(ordinals.get("book:2026-10-06")).toBe("2 of 5");
+    expect(ordinals.get("read:2026-10-05")).toEqual({ count: "12 of 30", period: null });
+    expect(ordinals.get("book:2026-10-06")).toEqual({ count: "2 of 5", period: null });
   });
 
   it("counts periods for a goal with one session each", () => {
@@ -196,8 +197,8 @@ describe("sessionOrdinals", () => {
       [at("once", "2026-10-05", "cadence:2026-10-05:1"), at("daily", "2026-09-03", "cadence:2026-09-03:1")],
       1
     );
-    expect(ordinals.get("once:2026-10-05")).toBe("Week 6");
-    expect(ordinals.get("daily:2026-09-03")).toBe("Day 3");
+    expect(ordinals.get("once:2026-10-05")).toEqual({ count: "Week 6", period: null });
+    expect(ordinals.get("daily:2026-09-03")).toEqual({ count: "Day 3", period: null });
   });
 
   it("goes by the session's unit, not just the goal's settings", () => {

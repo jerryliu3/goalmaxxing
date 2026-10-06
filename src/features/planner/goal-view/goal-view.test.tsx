@@ -347,7 +347,7 @@ describe("GoalView", () => {
       expect(gymLane()).toBeNull();
     });
 
-    it("shows each card's ordinal instead of a date under the date header", () => {
+    it("leads each card with its ordinal instead of a date under the date header", () => {
       const weekly = {
         ...GOALS[1],
         frequency_type: "recurring",
@@ -363,7 +363,10 @@ describe("GoalView", () => {
       fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
       expect(within(gym()).getByText("Sat, Oct 3")).toHaveClass("opacity-0");
       // Oct 3 is the second gym session of the week that began Sep 28.
-      expect(within(gym()).getByText("2 of 2 per week")).not.toHaveClass("opacity-0");
+      const card = within(gym()).getByText("2 of 2").closest("article") as HTMLElement;
+      expect(within(card).getByText("2 of 2")).not.toHaveClass("opacity-0");
+      expect(within(card).getByText("per week")).not.toHaveClass("opacity-0");
+      expect(within(card).getByText("2 of 2 per week")).toHaveClass("opacity-0");
       expect(within(gym()).getAllByTestId("completion-title")[0]).toHaveTextContent("gym session");
     });
 
