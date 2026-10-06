@@ -13,7 +13,8 @@ import { type FaceRegion, useCardRegions } from "./use-card-regions";
 const PALETTE_WIDTH = 5 * 32 + 14;
 const VISIBILITY_WIDTH = 252;
 
-type Popup = "category" | "visibility";
+type Popup = "category" | "visibility" | "deadline" | "time";
+const SCHEDULE_POPUP_WIDTH = 236;
 
 function regionStyle(region: FaceRegion): CSSProperties {
   return { left: region.x, top: region.y, width: region.width, height: region.height };
@@ -161,8 +162,38 @@ export function DirectCard({ session, card, back, flipped }: { session: CardEdit
         );
       })()}
 
-      <PickerZone region={region("deadline")} type="date" label="Deadline" value={fields.end_date} min={fields.start_date} changed={changed("deadline")} onChange={(value) => patch({ end_date: value })} />
-      <PickerZone region={region("time")} type="time" label="Time of day" value={fields.default_local_time} changed={changed("time")} onChange={(value) => patch({ default_local_time: value })} />
+      {(["deadline", "time"] as const).map((fact) => {
+        const zone = region(fact);
+        if (!zone) return null;
+        const isDate = fact === "deadline";
+        const label = isDate ? "Deadline" : "Time of day";
+        const left = clampX(zone.x + zone.width / 2 - SCHEDULE_POPUP_WIDTH / 2, SCHEDULE_POPUP_WIDTH);
+        return (
+          <span key={fact}>
+            <button type="button" className="card-zone" data-popup-anchor={fact} data-present={zone.present} data-changed={changed(fact)} style={regionStyle(zone)} aria-label={`Change ${label.toLowerCase()}`} aria-expanded={popup === fact} onClick={() => toggle(fact)}>
+              {!zone.present && <span className="card-ghost">+ {label.toLowerCase()}</span>}
+            </button>
+            {popup === fact && (
+              // A visible input, so the platform's own picker (wheel, calendar) opens reliably.
+              <span ref={popupRef} className="card-popup card-schedule" data-placement="above" style={{ left, top: zone.y - 62, "--caret": `${zone.x + zone.width / 2 - 5 - left}px` } as CSSProperties} role="group" aria-label={label}>
+                <input
+                  autoFocus
+                  type={isDate ? "date" : "time"}
+                  aria-label={label}
+                  min={isDate ? fields.start_date : undefined}
+                  step={isDate ? undefined : 300}
+                  value={isDate ? fields.end_date : fields.default_local_time}
+                  onChange={(event) => patch(isDate ? { end_date: event.target.value } : { default_local_time: event.target.value })}
+                  onKeyDown={(event) => event.key === "Enter" && closePopup()}
+                />
+                <button type="button" onClick={() => { patch(isDate ? { end_date: "" } : { default_local_time: "" }); closePopup(); }}>
+                  {isDate ? "No deadline" : "Any time"}
+                </button>
+              </span>
+            )}
+          </span>
+        );
+      })}
 
       {visibility && session.canChangeVisibility && (
         <>
@@ -206,25 +237,6 @@ export function DirectCard({ session, card, back, flipped }: { session: CardEdit
         </div>
       }
     />
-  );
-}
-
-/** Native picker laid over the printed date or time; opens on tap. */
-function PickerZone({ region, type, label, value, min, changed, onChange }: { region?: FaceRegion; type: "date" | "time"; label: string; value: string; min?: string; changed: boolean; onChange: (value: string) => void }) {
-  if (!region) return null;
-  return (
-    <label className="card-zone card-picker-zone" data-present={region.present} data-changed={changed} style={regionStyle(region)}>
-      {!region.present && <span className="card-ghost">+ {label.toLowerCase()}</span>}
-      <input
-        type={type}
-        aria-label={label}
-        value={value}
-        min={min}
-        step={type === "time" ? 300 : undefined}
-        onClick={(event) => event.currentTarget.showPicker?.()}
-        onChange={(event) => onChange(event.target.value)}
-      />
-    </label>
   );
 }
 

@@ -63,7 +63,8 @@ export function useCardRegions(container: RefObject<HTMLElement | null>, version
     if (!root) return;
     const measure = () => {
       const dates = boxWithin(root.querySelector(".tempo-card-dates"), root);
-      const card = boxWithin(root.querySelector("[data-tempo-goal-card]"), root);
+      const article = root.querySelector("[data-tempo-goal-card]");
+      const card = boxWithin(article, root);
       const next = SELECTORS.map(([fact, selector]): FaceRegion => {
         const box = boxWithin(root.querySelector(selector), root);
         if (box && box.width > 1) {
@@ -73,12 +74,21 @@ export function useCardRegions(container: RefObject<HTMLElement | null>, version
           const x = fact === "deadline" || fact === "stretch" ? box.x + box.width - width : box.x;
           return { fact, x, y: box.y, width, height: Math.max(box.height, MIN_HEIGHT), present: true };
         }
-        // Absent facts get a ghost slot where the card would print them.
+        // Absent facts get a ghost slot exactly where the card would print them.
         const anchor = dates ?? card;
         if (!anchor) return { fact, x: 0, y: 0, width: 0, height: 0, present: false };
-        const y = fact === "time" ? anchor.y + anchor.height + 6 : anchor.y;
+        if (fact === "time" && card) {
+          // The time prints as the next row under the dates: one row gap down, inside the
+          // card's bottom padding so the slot always reads as part of the face.
+          const style = article ? getComputedStyle(article) : null;
+          const rowGap = parseFloat(style?.rowGap ?? "") || 6;
+          const inset = (parseFloat(style?.paddingBottom ?? "") || 12) / 2;
+          const height = Math.max(anchor.height, 16);
+          const y = Math.min(anchor.y + anchor.height + rowGap, card.y + card.height - inset - height);
+          return { fact, x: anchor.x, y, width: MIN_WIDTH + 24, height, present: false };
+        }
         const x = fact === "deadline" ? anchor.x + anchor.width - MIN_WIDTH : anchor.x;
-        return { fact, x, y, width: MIN_WIDTH + 24, height: MIN_HEIGHT, present: false };
+        return { fact, x, y: anchor.y, width: MIN_WIDTH, height: Math.max(anchor.height, 16), present: false };
       });
       setLayout({ regions: next, width: root.offsetWidth, height: root.offsetHeight });
     };
