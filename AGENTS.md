@@ -169,7 +169,6 @@ surfaces. The default is to simplify and reuse what already exists.
 
 - For Goalmaxxing web UX across product and marketing surfaces, follow
   `docs/ux/goalmaxxing-experience-design-guide.md`.
-<<<<<<< HEAD
 - Authenticated application leading direction is Spatial Plan (B). Use
   `docs/ux/goalmaxxing-application-design-guide.md` and `/ux/concepts`.
   Visual brand explorations live in
@@ -179,6 +178,11 @@ surfaces. The default is to simplify and reuse what already exists.
   lock. Original chrome stays Geist. Gazetteer type roles
   (Newsreader / Source Sans 3 / IBM Plex Mono) apply on live
   `font-display`, `font-sans`, and `font-mono` surfaces.
+- Every theme value (colors, typefaces, type roles, radius, per-theme
+  component variants) is defined once in `packages/shared/src/brand`
+  (see its README) and generated into `src/app/themes.css` with
+  `pnpm themes:css`. Components reference roles only: no hex values,
+  family names, or one theme's font variable outside that directory.
   First-principles interaction studies live in
   `docs/ux/goalmaxxing-first-principles-interface-study.md` and
   `/ux/first-principles`. They are divergent exploration, not a product lock.
