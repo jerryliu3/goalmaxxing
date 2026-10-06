@@ -25,7 +25,7 @@ export function ProfileMedalShelf({
       className="ach-showcase-root rounded-[16px] border bg-card px-4 py-4"
     >
       <div className="flex items-baseline justify-between gap-3">
-        <p className="ach-showcase-kicker text-[10px] font-semibold uppercase tracking-[0.16em]">
+        <p className="ach-showcase-kicker type-eyebrow text-[10px]">
           Level medals
         </p>
         {total > 0 ? (
@@ -64,7 +64,7 @@ export function ProfileMedalShelf({
                   Lv {level}
                 </span>
                 {achievement.title ? (
-                  <span className="ach-showcase-kicker mt-1 text-center text-[10px] uppercase tracking-[0.1em]">
+                  <span className="ach-showcase-kicker type-eyebrow mt-1 text-center text-[10px]">
                     {achievement.title}
                   </span>
                 ) : null}

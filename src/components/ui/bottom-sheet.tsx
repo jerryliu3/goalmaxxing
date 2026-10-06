@@ -63,7 +63,7 @@ function SheetDialog({
             {showHandle ? <BottomSheetHandle /> : null}
             <DialogTitle
               className={cn(
-                "font-display text-lg font-semibold tracking-tight",
+                "type-title text-lg tracking-tight",
                 showHandle ? "pt-2" : "pt-4"
               )}
             >

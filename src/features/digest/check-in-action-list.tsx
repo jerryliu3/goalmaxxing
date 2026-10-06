@@ -36,7 +36,7 @@ export function CheckInRowList({
         const href = digestActionHref(entry.action, hrefPrefix);
         return (
           <li key={entry.id} className="rounded-lg border p-3">
-            <p className="text-sm font-medium">{entry.title}</p>
+            <p className="type-item text-sm">{entry.title}</p>
             <p className="mt-1 text-sm text-muted-foreground">{entry.detail}</p>
             {href ? (
               <Button

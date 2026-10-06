@@ -201,10 +201,10 @@ export function PlannerFocusedDayPane({
     >
       {showDayHeading ? (
         <div className="border-b border-border pb-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          <p className="type-eyebrow text-[11px] text-muted-foreground">
             Day
           </p>
-          <TitleTag className="font-display mt-1 text-xl font-semibold tracking-tight">
+          <TitleTag className="type-title mt-1 text-xl tracking-tight">
             {format(parse(day, "yyyy-MM-dd", new Date()), "EEEE, MMM d")}
           </TitleTag>
         </div>
@@ -218,7 +218,7 @@ export function PlannerFocusedDayPane({
         <div className="w-14 shrink-0 px-1">
           <span
             data-plan-weekday="true"
-            className="block font-sans text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+            className="block type-eyebrow text-[11px] text-muted-foreground"
           >
             {format(parse(day, "yyyy-MM-dd", new Date()), "EEE")}
           </span>
@@ -372,7 +372,7 @@ export function PlannerFocusedDayPane({
               {partnerSubject ? (
                 <DuoLaneIdentity subject={partnerSubject} className="px-0" />
               ) : (
-                <p className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                <p className="type-eyebrow text-sm text-muted-foreground">
                   {partnerLabel ?? "Partner"}
                 </p>
               )}

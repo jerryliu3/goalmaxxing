@@ -6,6 +6,7 @@ import {
   colorRoleVariable,
   SCALE_COLOR_ROLES,
   SURFACE_COLOR_ROLES,
+  TEXT_ROLES,
 } from "./roles";
 import {
   DEFAULT_THEME_ID,
@@ -25,6 +26,15 @@ describe("theme registry", () => {
         for (const role of ROLES) {
           expect(colors?.[role], `${theme.id}.${role}`).toMatch(/\S/);
         }
+      }
+    }
+  });
+
+  it("styles every text role with a font slot and weight", () => {
+    for (const theme of THEMES) {
+      for (const role of TEXT_ROLES) {
+        expect(["sans", "display", "mono"]).toContain(theme.text[role].slot);
+        expect(theme.text[role].weight).toBeGreaterThanOrEqual(300);
       }
     }
   });
@@ -76,6 +86,15 @@ describe("theme stylesheet", () => {
     );
     expect(css).toContain("--font-app-display: var(--font-geist-sans), Inter, system-ui, sans-serif;");
     expect(css).toContain("--font-display: var(--font-app-display);");
+  });
+
+  it("generates one utility per text role that reads the active theme", () => {
+    for (const role of TEXT_ROLES) {
+      expect(css).toContain(`@utility type-${role} {`);
+      expect(css).toContain(`font-weight: var(--type-${role}-weight);`);
+    }
+    expect(css).toContain("--type-title-weight: 500;");
+    expect(css).toContain("--type-stat-font: var(--font-app-display);");
   });
 
   it("exposes Tailwind utilities for surface and app roles", () => {

@@ -20,7 +20,7 @@ export function WeekRhythmCard({
         className="rounded-xl border border-border bg-card p-4 shadow-sm"
         data-testid="progress-week-rhythm"
       >
-        <p className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <p className="type-eyebrow text-xs text-muted-foreground">
           Week rhythm
         </p>
         <p className="mt-3 text-sm text-muted-foreground">Loading planned sessions…</p>
@@ -34,7 +34,7 @@ export function WeekRhythmCard({
         className="rounded-xl border border-border bg-card p-4 shadow-sm"
         data-testid="progress-week-rhythm"
       >
-        <p className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <p className="type-eyebrow text-xs text-muted-foreground">
           Week rhythm
         </p>
         <p className="mt-3 text-sm text-destructive">{error}</p>
@@ -52,7 +52,7 @@ export function WeekRhythmCard({
       data-testid="progress-week-rhythm"
     >
       <div className="flex flex-wrap items-end justify-between gap-2">
-        <p className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <p className="type-eyebrow text-xs text-muted-foreground">
           Week rhythm
         </p>
         <p className="font-sans text-xs text-muted-foreground">
@@ -68,7 +68,7 @@ export function WeekRhythmCard({
           });
           return (
             <div key={row.goalId}>
-              <p className="font-display text-sm font-semibold tracking-tight">{row.title}</p>
+              <p className="type-item text-sm tracking-tight">{row.title}</p>
               <div className="relative mt-2 flex gap-1.5">
                 <span
                   className="pointer-events-none absolute top-[13px] right-[5%] left-[5%] h-0.5 bg-border"

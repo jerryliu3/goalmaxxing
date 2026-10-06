@@ -41,7 +41,7 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
       <div className="space-y-8">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="ach-showcase-heading font-display text-4xl font-semibold tracking-tight sm:text-5xl">
+            <h1 className="ach-showcase-heading type-hero text-4xl tracking-tight sm:text-5xl">
               Bests on the wall. Medals on the shelf.
             </h1>
             <p className="ach-showcase-body mt-3 max-w-xl text-sm leading-relaxed">
@@ -62,28 +62,28 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
                 style={{ width: `${fill}%` }}
               />
             </div>
-            <dl className="ach-showcase-stat-muted mt-4 grid grid-cols-3 gap-3 text-right font-mono text-sm">
+            <dl className="ach-showcase-stat-muted mt-4 grid grid-cols-3 gap-3 text-right text-sm">
               <div>
-                <dt className="ach-showcase-stat-label text-[10px] uppercase tracking-[0.14em]">
+                <dt className="ach-showcase-stat-label type-eyebrow text-[10px]">
                   Level
                 </dt>
-                <dd className="ach-showcase-stat-value mt-1 text-lg font-semibold">
+                <dd className="ach-showcase-stat-value mt-1 type-stat text-lg">
                   {payload.collection.level}
                 </dd>
               </div>
               <div>
-                <dt className="ach-showcase-stat-label text-[10px] uppercase tracking-[0.14em]">
+                <dt className="ach-showcase-stat-label type-eyebrow text-[10px]">
                   Medals
                 </dt>
-                <dd className="ach-showcase-stat-value mt-1 text-lg font-semibold">
+                <dd className="ach-showcase-stat-value mt-1 type-stat text-lg">
                   {payload.collection.unlockedAwards}/{payload.collection.totalAwards}
                 </dd>
               </div>
               <div>
-                <dt className="ach-showcase-stat-label text-[10px] uppercase tracking-[0.14em]">
+                <dt className="ach-showcase-stat-label type-eyebrow text-[10px]">
                   Goals
                 </dt>
-                <dd className="ach-showcase-stat-value mt-1 text-lg font-semibold">
+                <dd className="ach-showcase-stat-value mt-1 type-stat text-lg">
                   {payload.collection.achievedGoals}
                 </dd>
               </div>

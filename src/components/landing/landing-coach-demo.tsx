@@ -61,7 +61,7 @@ export function LandingCoachDemo() {
                 <Sparkles className="size-4" />
               </span>
               <div>
-                <h3 className="font-semibold tracking-tight">AI Coach</h3>
+                <h3 className="type-heading tracking-tight">AI Coach</h3>
                 <p className="text-[10px] text-muted-foreground">
                   Guidance grounded in your monthly plan
                 </p>

@@ -46,7 +46,7 @@ function Feedback({ detail, onDone, stampOnly = false }: { detail: XpRefreshRequ
       <div role="status">
         {(still ? goals : [parent]).map(goal => goal && <motion.div key={goal.goalId} initial={still ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           {goal.fromTitle && <p className="text-xs text-muted-foreground">Linked from {goal.fromTitle}</p>}
-          <p className="mt-1 font-display text-xl">{goal.title}</p>
+          <p className="mt-1 type-item text-xl">{goal.title}</p>
           <p className="mt-1 text-sm">{goal.before} → {goal.after}{goal.target > 0 ? ` / ${goal.target}` : ""} · {goal.achieved ? "Goal achieved" : "Progress recorded"}</p>
           {goal.target > 0 && <div className="completion-credit-track" aria-hidden="true"><motion.span initial={still ? false : { scaleX: Math.min(1, goal.before / goal.target) }} animate={{ scaleX: Math.min(1, goal.after / goal.target) }} transition={{ duration: still ? 0 : 0.7, delay: still ? 0 : 0.2 }} /></div>}
         </motion.div>)}

@@ -175,7 +175,7 @@ export function MonthHeatmap({
           onPrevious={onPreviousMonth}
           onNext={onNextMonth}
           center={
-            <p className="min-w-[120px] text-center font-display text-sm font-medium">
+            <p className="min-w-[120px] text-center type-heading text-sm">
               {format(month, "MMMM yyyy")}
             </p>
           }
@@ -183,14 +183,14 @@ export function MonthHeatmap({
           nextAriaLabel="Next month"
         />
       ) : showMonthLabel ? (
-        <p className="font-display text-sm font-medium">{format(month, "MMMM yyyy")}</p>
+        <p className="type-heading text-sm">{format(month, "MMMM yyyy")}</p>
       ) : null}
       <div className="w-full">
         <div className={styles.weekdays}>
           {weekdayHeaders.map((label) => (
             <div
               key={label}
-              className="font-sans text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+              className="type-eyebrow text-[10px] text-muted-foreground"
             >
               {label}
             </div>

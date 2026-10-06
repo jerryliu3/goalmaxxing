@@ -58,7 +58,7 @@ export function GoalLaneLabel({
           </span>
         ) : null}
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <strong className="line-clamp-2 font-display text-[15px] font-normal leading-tight [overflow-wrap:anywhere]">
+          <strong className="line-clamp-2 type-item text-[15px] leading-tight [overflow-wrap:anywhere]">
             {goal.title}
           </strong>
           <small className="text-[10px] text-muted-foreground">

@@ -11,7 +11,7 @@ export function PublicProfileChrome({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-page text-foreground">
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <Link href="/" className="font-display text-xl font-semibold tracking-tight">
+          <Link href="/" className="type-wordmark text-xl tracking-tight">
             Goalmaxxing
           </Link>
           <nav className="flex items-center gap-2">

@@ -6,7 +6,7 @@ import { useXpProfile } from "@/components/xp/xp-profile-provider";
 
 type XpWordmarkProfile = Parameters<typeof XpMeter>[0]["profile"];
 
-const wordmarkClassName = "font-display text-xl font-semibold leading-none tracking-tight whitespace-nowrap sm:text-2xl";
+const wordmarkClassName = "type-wordmark text-xl leading-none tracking-tight whitespace-nowrap sm:text-2xl";
 
 export function Wordmark() {
   return <p className={wordmarkClassName}>Goalmaxxing</p>;

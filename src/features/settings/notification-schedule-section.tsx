@@ -55,7 +55,7 @@ export function NotificationScheduleSection({
   return (
     <section className="space-y-5 border-t pt-5">
       <div>
-        <h3 className="flex items-center gap-2 text-base font-medium">
+        <h3 className="flex items-center gap-2 type-heading text-base">
           <Clock3 className="size-5" />
           Daily reminders
         </h3>

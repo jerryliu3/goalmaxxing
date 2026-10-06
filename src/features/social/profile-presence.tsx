@@ -32,7 +32,7 @@ function OverallStatsBlock({
 }) {
   return (
     <div>
-      <h4 className="mb-3 font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+      <h4 className="type-eyebrow mb-3 text-xs text-muted-foreground">
         Overall stats
       </h4>
       <InsightsOverallStatsTiles overallStats={overallStats} showMoreLink={showMoreLink} />

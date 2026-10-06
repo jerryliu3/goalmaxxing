@@ -32,7 +32,7 @@ export function DuoLaneIdentity({
           size="sm"
           alt={`${subject.label} avatar`}
         />
-        <span className="text-base font-medium uppercase tracking-wide text-muted-foreground">
+        <span className="type-eyebrow text-base text-muted-foreground">
           {subject.label}
         </span>
       </PublicProfileTrigger>

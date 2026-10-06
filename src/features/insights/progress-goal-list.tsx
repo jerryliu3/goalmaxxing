@@ -40,7 +40,7 @@ export function ProgressGoalList({
   return (
     <div>
       <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 className="font-display text-sm font-semibold">
+        <h2 className="type-heading text-sm">
           Goals ({selectedGoalIds.size})
         </h2>
         {showListActions ? (
@@ -99,7 +99,7 @@ export function ProgressGoalList({
                       aria-hidden
                     />
                     <span
-                      className="min-w-0 flex-1 font-display text-xs font-medium tracking-tight leading-snug line-clamp-2 md:truncate md:leading-normal"
+                      className="min-w-0 flex-1 type-item text-xs tracking-tight leading-snug line-clamp-2 md:truncate md:leading-normal"
                     >
                       {goal.title}
                     </span>

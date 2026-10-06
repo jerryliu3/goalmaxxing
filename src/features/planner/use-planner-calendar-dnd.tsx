@@ -97,7 +97,7 @@ export function usePlannerCalendarDnd({
           className={`${styles.sessionTile} ${styles.dragTile} border ${getEntryDraftPillClasses({ draftDiffKind: entry.draftDiffKind })}`}
           style={fillStyle}
         >
-          <span className="flex min-h-5 items-center truncate font-display leading-snug">{title}</span>
+          <span className="flex min-h-5 items-center truncate type-item leading-snug">{title}</span>
         </div>
       );
     },

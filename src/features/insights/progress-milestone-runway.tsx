@@ -32,10 +32,10 @@ export function ProgressMilestoneRunway({
     <section className="rounded-[12px] border border-border p-4">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          <p className="type-eyebrow text-[10px] text-muted-foreground">
             Milestone runway
           </p>
-          <h2 className="mt-1 font-display text-lg font-semibold tracking-tight">
+          <h2 className="mt-1 type-heading text-lg tracking-tight">
             {title}
           </h2>
         </div>
@@ -57,7 +57,7 @@ export function ProgressMilestoneRunway({
                     type="button"
                     onClick={() => onSelect?.(stop, index)}
                     aria-current={selected ? "step" : undefined}
-                    className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground"
+                    className="type-eyebrow text-[10px] text-muted-foreground"
                   >
                     {index + 1} / {stops.length}
                   </button>

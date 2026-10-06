@@ -30,10 +30,10 @@ export function AuthShell({
     >
       <section className="w-full max-w-md space-y-6 border-b border-border pb-8">
         <div className="space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+          <p className="type-eyebrow text-[11px] text-primary">
             Goalmaxxing
           </p>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="type-hero text-2xl tracking-tight">{title}</h1>
           <p className="text-sm text-muted-foreground">{description}</p>
         </div>
         <div className="space-y-6">

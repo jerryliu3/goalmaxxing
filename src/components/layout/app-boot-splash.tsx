@@ -115,7 +115,7 @@ export function AppBootSplash({ onReady }: { onReady?: () => void }) {
     >
       <div className="flex flex-col items-center gap-5 px-6 text-center">
         <BootClimbAnimation />
-        <p className="font-display text-3xl font-semibold tracking-tight">Goalmaxxing</p>
+        <p className="type-wordmark text-3xl tracking-tight">Goalmaxxing</p>
         <p className="text-sm text-muted-foreground">Preparing your plan…</p>
       </div>
     </div>

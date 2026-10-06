@@ -28,6 +28,9 @@ const FONT_FAMILY_DECLARATION = /font-family:\s*([^;}]+)/g;
 const FONT_SHORTHAND_DECLARATION = /(?<![-\w])font:\s*([^;}]+)/g;
 const INLINE_FONT_FAMILY = /fontFamily[=:]\s*["'`]([^"'`]*)/g;
 const ARBITRARY_FONT_CLASS = /font-\[(family-name:|["'A-Z])/;
+// A text role owns face and weight; extra font utilities beside it fight it.
+const ROLE_CLASS_STRING = /["'`]([^"'`]*\btype-(?:wordmark|hero|title|heading|item|eyebrow|stat)\b[^"'`]*)["'`]/g;
+const FONT_UTILITY = /(?:^|\s)font-(?:thin|light|normal|medium|semibold|bold|sans|display|mono)(?=\s|$)/;
 
 function productionFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -53,6 +56,11 @@ function findViolations(file: string, source: string) {
   }
   if (ARBITRARY_FONT_CLASS.test(source)) {
     violations.push(`${file}: uses an arbitrary Tailwind font family`);
+  }
+  for (const match of source.matchAll(ROLE_CLASS_STRING)) {
+    if (FONT_UTILITY.test(match[1])) {
+      violations.push(`${file}: font utility beside a text role: ${match[1].trim()}`);
+    }
   }
   for (const match of source.matchAll(FONT_FAMILY_DECLARATION)) {
     if (!isThemeAware(match[1])) {
@@ -98,8 +106,10 @@ describe("theme font sources", () => {
       findViolations("a.css", ".label { font: 500 9px var(--font-plex-mono), monospace; }")
     ).toHaveLength(1);
     expect(findViolations("a.tsx", '<text fontFamily="Inter" />')).toHaveLength(1);
+    expect(findViolations("a.tsx", '<h2 className="type-title font-semibold" />')).toHaveLength(1);
     expect(
       findViolations("a.css", ".ok { font-family: var(--font-app-display); font: inherit; }")
     ).toEqual([]);
+    expect(findViolations("a.tsx", '<h2 className="type-title text-lg tracking-tight" />')).toEqual([]);
   });
 });

@@ -5,7 +5,9 @@ import {
   colorRoleVariable,
   SCALE_COLOR_ROLES,
   SURFACE_COLOR_ROLES,
+  TEXT_ROLES,
   type ColorRole,
+  type TextRole,
   type ThemeColors,
   type ThemeDefinition,
 } from "./roles";
@@ -28,6 +30,34 @@ function block(selectors: string[], declarations: string[]) {
 
 function colorDeclarations(colors: ThemeColors) {
   return COLOR_ROLES.map((role) => `${colorRoleVariable(role)}: ${colors[role]}`);
+}
+
+function textDeclarations(theme: ThemeDefinition) {
+  return [
+    ...TEXT_ROLES.flatMap((role) => [
+      `--type-${role}-font: var(--font-app-${theme.text[role].slot})`,
+      `--type-${role}-weight: ${theme.text[role].weight}`,
+    ]),
+    `--type-eyebrow-tracking: ${theme.text.eyebrow.trackingEm}em`,
+  ];
+}
+
+const TEXT_ROLE_EXTRAS: Partial<Record<TextRole, string[]>> = {
+  eyebrow: ["letter-spacing: var(--type-eyebrow-tracking)", "text-transform: uppercase"],
+  stat: ["font-variant-numeric: tabular-nums"],
+};
+
+function textUtilities() {
+  return TEXT_ROLES.map((role) =>
+    block(
+      [`@utility type-${role}`],
+      [
+        `font-family: var(--type-${role}-font)`,
+        `font-weight: var(--type-${role}-weight)`,
+        ...(TEXT_ROLE_EXTRAS[role] ?? []),
+      ]
+    )
+  );
 }
 
 function tailwindTheme() {
@@ -53,6 +83,7 @@ function themeBlocks(theme: ThemeDefinition, isDefault: boolean) {
       `--font-app-sans: ${fontStack(theme.fonts.sans)}`,
       `--font-app-display: ${fontStack(theme.fonts.display)}`,
       `--font-app-mono: ${fontStack(theme.fonts.mono)}`,
+      ...textDeclarations(theme),
       `--gm-landing-atmosphere: ${theme.effects.landingAtmosphere}`,
     ]),
   ];
@@ -72,6 +103,7 @@ export function renderThemeCss(themes: readonly ThemeDefinition[] = THEMES): str
   return `${[
     HEADER,
     tailwindTheme(),
+    ...textUtilities(),
     ...themes.flatMap((theme, index) => themeBlocks(theme, index === 0)),
   ].join("\n\n")}\n`;
 }

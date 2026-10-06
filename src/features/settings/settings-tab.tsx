@@ -153,7 +153,7 @@ export function SettingsTab() {
       ) : null}
       {SETTINGS_GROUPS.map((group) => (
         <section key={group.key} className="space-y-1">
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          <h2 className="type-eyebrow text-[11px] text-muted-foreground">
             {group.label}
           </h2>
           <div className={cn("divide-y overflow-hidden", panelClass)}>
@@ -216,7 +216,7 @@ export function SettingsTab() {
                 <ArrowLeft className="size-4" />
                 Back
               </Button>
-              <p className="font-display text-lg font-semibold tracking-tight">
+              <p className="type-title text-lg tracking-tight">
                 {settingsCopy.label}
               </p>
             </div>

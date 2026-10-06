@@ -99,7 +99,7 @@ export function AccountMenu({ settingsHref, showPhotos }: { settingsHref: string
         >
           {partner ? (
             <>
-              <DropdownMenu.Label className="px-2.5 pt-1.5 pb-1 font-mono text-[10px] tracking-[0.12em] text-muted-foreground uppercase">
+              <DropdownMenu.Label className="type-eyebrow px-2.5 pt-1.5 pb-1 text-[10px] text-muted-foreground">
                 Viewing
               </DropdownMenu.Label>
               <DropdownMenu.RadioGroup value={scope} onValueChange={(value) => setScopePreference(value as DuoScope)}>

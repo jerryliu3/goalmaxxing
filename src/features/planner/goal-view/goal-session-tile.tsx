@@ -266,7 +266,7 @@ export function GoalSessionTile({
         >
           <span
             className={cn(
-              "grid min-w-0 font-display text-[17px] leading-5 tracking-tight",
+              "grid min-w-0 type-item text-[17px] leading-5 tracking-tight",
               session.done && "text-muted-foreground"
             )}
           >

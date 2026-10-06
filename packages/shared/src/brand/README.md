@@ -6,7 +6,7 @@ web and native read from it, and nothing else names a concrete value.
 
 | File | Owns |
 | --- | --- |
-| `roles.ts` | The contract: every color role, the type slots, chrome, variants |
+| `roles.ts` | The contract: color roles, type slots, text roles, chrome, variants |
 | `fonts.ts` | Every typeface a theme may use, and its CSS variable |
 | `themes/*.ts` | One file per theme, filling every role |
 | `themes/index.ts` | Theme order (first is the default) and lookup |
@@ -15,11 +15,26 @@ web and native read from it, and nothing else names a concrete value.
 
 ## How components use it
 
-- Web: Tailwind role utilities (`bg-card`, `text-muted-foreground`,
-  `bg-selection`, `font-display`, `font-mono`) or the CSS variables in CSS
-  (`var(--primary)`, `var(--font-app-display)`). Never a hex value, a family
-  name, or one theme's font variable (`--font-newsreader`); a source test
-  fails on those.
+- Web color: role utilities (`bg-card`, `text-muted-foreground`,
+  `bg-selection`) or the variables in CSS (`var(--primary)`).
+- Web type: say what the text *is* with a text role and set only size,
+  leading, and color at the call site. The theme picks face and weight.
+
+  | Role | For | Example |
+  | --- | --- | --- |
+  | `type-wordmark` | The Goalmaxxing wordmark | header, boot splash |
+  | `type-hero` | Statement headlines | landing, showcase, auth |
+  | `type-title` | Page, sheet, and dialog titles | "Agenda", "Current goals" |
+  | `type-heading` | Section and card headings | "Scheduled goals", `CardTitle` |
+  | `type-item` | Names of goals, tasks, milestones, people | planner rows, cards |
+  | `type-eyebrow` | Small uppercase labels | "PERSONAL RECORDS" |
+  | `type-stat` | Figures that are the point of a tile | streaks, scores |
+
+  In CSS use `var(--type-<role>-font)` / `var(--type-<role>-weight)`. Plain
+  `font-sans` / `font-display` / `font-mono` remain for body copy, calendar
+  numerals, and small quantities. Never a weight utility beside a role, a hex
+  value, a family name, or one theme's font variable (`--font-newsreader`);
+  a source test fails on those.
 - Per-theme component variants (`completionMark`, `tabChrome`) come from
   `useUiStyle().style`.
 - Native: `GAZETTEER_THEME.colors` / `.darkColors` (the roles native reads are

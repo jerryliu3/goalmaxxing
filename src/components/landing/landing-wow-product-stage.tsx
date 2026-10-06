@@ -92,7 +92,7 @@ export function LandingWowProductStage({
     >
       <div className="flex items-center justify-between border-b border-stone-200/80 px-5 py-3">
         <div>
-          <p className="text-[10px] font-semibold tracking-[0.18em] text-gain uppercase">
+          <p className="type-eyebrow text-[10px] text-gain">
             Goalmaxxing
           </p>
           <p className="text-sm font-semibold">{sceneTitle(productScene)}</p>

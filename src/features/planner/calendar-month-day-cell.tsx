@@ -417,7 +417,7 @@ export function CalendarMonthDayCell<
             <CompletionTitle
               completed={isCompleted}
               treatment="quiet"
-              className="flex min-h-5 min-w-0 items-center truncate font-display leading-snug"
+              className="flex min-h-5 min-w-0 items-center truncate type-item leading-snug"
             >
               {compactTitle}
             </CompletionTitle>
@@ -481,7 +481,7 @@ export function CalendarMonthDayCell<
             <span
               data-plan-weekday="true"
               className={cn(
-                "block font-sans text-[11px] font-medium uppercase tracking-[0.12em]",
+                "block type-eyebrow text-[11px]",
                 planFilledChromeMetaClass({ inMonth, isToday, isSelected })
               )}
             >
@@ -628,7 +628,7 @@ export function CalendarMonthDayCell<
             </p>
             {monthContextLabel ? (
               <span
-                className="text-[9px] font-medium uppercase leading-none tracking-wider text-muted-foreground"
+                className="type-eyebrow text-[9px] leading-none text-muted-foreground"
                 data-month-context-label={monthContextLabel}
               >
                 {monthContextLabel}

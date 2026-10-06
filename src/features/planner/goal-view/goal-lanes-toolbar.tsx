@@ -59,7 +59,7 @@ export function GoalLanesToolbar({
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
       {/* The month in view, the one place Goal View names where you are. */}
-      <h3 className="px-3 font-display text-lg leading-none tracking-tight">
+      <h3 className="px-3 type-heading text-lg leading-none tracking-tight">
         {dateLabel(leadingDate, "MMMM yyyy")}
       </h3>
       <div className="flex items-center gap-1">

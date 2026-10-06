@@ -42,7 +42,7 @@ export function PublicProfileContent({
           alt={`${title} avatar`}
         />
         <div className="min-w-0">
-          <p className="truncate font-display text-xl font-semibold">{title}</p>
+          <p className="truncate type-title text-xl">{title}</p>
           {bundle.profile.username ? (
             <p className="text-sm text-muted-foreground">@{bundle.profile.username}</p>
           ) : null}

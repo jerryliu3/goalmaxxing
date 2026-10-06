@@ -18,7 +18,7 @@ export default function GlobalError({
   return (
     <html lang="en" className={FONT_VARIABLE_CLASSES}>
       <body className="flex min-h-full flex-col items-center justify-center gap-4 bg-background p-6 text-foreground">
-        <h1 className="text-xl font-semibold">Something went wrong</h1>
+        <h1 className="type-title text-xl">Something went wrong</h1>
         <p className="max-w-md text-center text-sm text-muted-foreground">
           An unexpected error occurred. You can try again, or reload the page.
         </p>

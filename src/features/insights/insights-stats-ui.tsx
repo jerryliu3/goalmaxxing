@@ -90,14 +90,14 @@ export function InsightsStatPlaque({
 }) {
   return (
     <li className="bg-card px-3 py-3">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+      <p className="type-eyebrow text-[10px] text-muted-foreground">
         {tooltip ? (
           <InsightsLabelWithTooltip label={label} tooltip={tooltip} />
         ) : (
           label
         )}
       </p>
-      <p className="mt-1 font-mono text-2xl font-semibold tracking-tight">{value}</p>
+      <p className="mt-1 type-stat text-2xl tracking-tight">{value}</p>
       {hint}
     </li>
   );

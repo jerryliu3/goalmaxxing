@@ -238,7 +238,7 @@ export function GrowScoreTrendChart({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-1.5">
-            <h3 className="font-display text-2xl font-semibold tracking-tight">
+            <h3 className="type-title text-2xl tracking-tight">
               {title}
             </h3>
             <TooltipIcon content={GROW_SCORE_CHART_HELP} label={`${title} definition`} />
@@ -250,7 +250,7 @@ export function GrowScoreTrendChart({
         {latest ? (
           <div className="text-right">
             <p className="font-sans text-sm text-muted-foreground">Current score</p>
-            <p className="font-display text-2xl font-semibold tabular-nums tracking-tight">
+            <p className="type-stat text-2xl tracking-tight">
               {latest.score.toFixed(1)}
             </p>
           </div>

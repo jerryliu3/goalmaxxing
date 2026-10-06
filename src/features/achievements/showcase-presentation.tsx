@@ -37,7 +37,7 @@ export function ShowcasePersonalRecords({
   return (
     <section aria-label="Personal records">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="ach-showcase-kicker text-[10px] font-semibold uppercase tracking-[0.16em]">
+        <p className="ach-showcase-kicker type-eyebrow text-[10px]">
           Personal records
         </p>
         <p className="ach-showcase-kicker font-mono text-[11px]">Yours alone · no league shame</p>
@@ -49,11 +49,11 @@ export function ShowcasePersonalRecords({
             className="ach-showcase-record rounded-[16px] border px-4 py-5"
           >
             <p
-              className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${RECORD_ACCENT_CLASS[record.accent]}`}
+              className={`type-eyebrow text-[10px] ${RECORD_ACCENT_CLASS[record.accent]}`}
             >
               {record.label}
             </p>
-            <p className="ach-showcase-heading mt-3 font-mono text-4xl font-semibold tracking-tight">
+            <p className="ach-showcase-heading mt-3 type-stat text-4xl tracking-tight">
               {record.value}
             </p>
             <p className="ach-showcase-body mt-2 text-xs leading-snug">{record.hint}</p>
@@ -88,14 +88,14 @@ export function ShowcasePedestal({
           />
         )}
         <p
-          className={`mt-4 text-[10px] font-semibold uppercase tracking-[0.18em] ${
+          className={`type-eyebrow mt-4 text-[10px] ${
             locked ? "ach-showcase-kicker" : ""
           }`}
           style={locked ? undefined : { color: TIER_METAL[award.tier].glow }}
         >
           {locked ? "Locked" : "On display"}
         </p>
-        <Heading className="ach-showcase-heading mt-2 font-display text-2xl font-semibold tracking-tight">
+        <Heading className="ach-showcase-heading mt-2 type-title text-2xl tracking-tight">
           {locked ? "Still ahead" : award.title}
         </Heading>
         <p className="ach-showcase-body mt-2 max-w-sm text-sm leading-relaxed">
@@ -129,7 +129,7 @@ export function ShowcaseMedalShelf({
 
   return (
     <div className="mt-8">
-      <p className="ach-showcase-kicker text-[10px] font-semibold uppercase tracking-[0.16em]">
+      <p className="ach-showcase-kicker type-eyebrow text-[10px]">
         Medal shelf · XP levels
       </p>
       {/* Auto-fit so every earned and locked medal shares one row instead of orphaning the last. */}
@@ -175,7 +175,7 @@ function ShelfMedal({
               aria-hidden
             />
             <SealMark locked tier={award.tier} size={52} />
-            <span className="ach-showcase-kicker mt-3 text-[10px] uppercase tracking-[0.14em]">
+            <span className="ach-showcase-kicker type-eyebrow mt-3 text-[10px]">
               Locked
             </span>
           </>
@@ -190,7 +190,7 @@ function ShelfMedal({
             <span className="ach-showcase-stat-muted mt-2 font-mono text-[11px]">
               Lv {award.level}
             </span>
-            <span className="ach-showcase-kicker mt-0.5 text-[10px] uppercase tracking-[0.12em]">
+            <span className="ach-showcase-kicker type-eyebrow mt-0.5 text-[10px]">
               Earned
             </span>
           </>

@@ -37,7 +37,7 @@ export function ProgressSection({
       className="scroll-mt-28 border-t border-border py-6 first:border-t-0 first:pt-0"
     >
       {hideTitle ? null : (
-        <h3 className="font-display text-2xl font-semibold tracking-tight">
+        <h3 className="type-title text-2xl tracking-tight">
           {title}
         </h3>
       )}

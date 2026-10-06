@@ -283,7 +283,7 @@ describe("calendar surface extracted components", () => {
     expect(row).not.toHaveClass("text-day-selected-foreground");
     expect(row).not.toHaveClass("rounded-[10px]");
     expect(screen.getByText("Run").closest("[data-plan-drag-handle]")).toHaveClass("py-3");
-    expect(screen.getByText("Run").closest("p")).toHaveClass("font-display");
+    expect(screen.getByText("Run").closest("p")).toHaveClass("type-item");
     expect(screen.getByText("Easy run")).toHaveClass("text-sm");
     expect(screen.getByText("Easy run")).toHaveClass("font-sans");
     expect(screen.getByText("Easy run")).not.toHaveClass("uppercase");

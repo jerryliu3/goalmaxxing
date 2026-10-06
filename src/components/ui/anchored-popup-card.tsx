@@ -60,7 +60,7 @@ export function AnchoredPopupCard({
       onMouseLeave={onMouseLeave}
     >
       <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-sm font-medium">{title}</p>
+        <p className="type-heading text-sm">{title}</p>
         {actions ? <div className="flex items-center gap-1">{actions}</div> : null}
       </div>
       <div className={bodyClassName}>{children}</div>

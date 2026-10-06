@@ -52,10 +52,10 @@ function TourPanel({
     <LandingReveal>
       <article className="grid items-center gap-8 rounded-3xl border border-border bg-background/80 p-5 shadow-sm sm:p-8 md:grid-cols-2 md:gap-12">
         <div className={reverse ? "md:order-2" : ""}>
-          <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
+          <p className="type-eyebrow text-xs text-primary">
             {eyebrow}
           </p>
-          <h3 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h3 className="mt-3 type-heading text-2xl tracking-tight sm:text-3xl">
             {title}
           </h3>
           <p className="mt-4 max-w-xl leading-relaxed text-muted-foreground">
@@ -294,10 +294,10 @@ export function LandingProductTour() {
     <section className="border-b border-border">
       <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pt-4 pb-16 sm:px-6 md:pt-6 md:pb-20">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
+          <p className="type-eyebrow text-xs text-primary">
             Inside Goalmaxxing
           </p>
-          <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="mt-3 type-hero text-3xl tracking-tight sm:text-4xl">
             Built for the full loop
           </h2>
           <p className="mt-4 text-muted-foreground sm:text-lg">

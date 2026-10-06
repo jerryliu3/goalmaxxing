@@ -86,7 +86,7 @@ function TeamInviteControls({
         ) : (
           pendingInvites.map((invite) => (
             <div key={invite.teamId} className="rounded border p-3">
-              <p className="font-display font-medium">
+              <p className="type-item">
                 {invite.partnerDisplayName ?? invite.partnerUsername ?? invite.partnerId}
               </p>
               <p className="text-xs text-muted-foreground">
@@ -253,10 +253,10 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
     <section className="overflow-hidden rounded-[16px] border border-border">
       <div className="flex flex-wrap items-start justify-between gap-4 bg-muted/40 px-5 py-5">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          <p className="type-eyebrow text-[10px] text-muted-foreground">
             Team
           </p>
-          <h2 className="mt-1 font-display text-4xl font-semibold tracking-tight">
+          <h2 className="mt-1 type-hero text-4xl tracking-tight">
             {activeTeam ? partnerName : "Find a partner"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -293,7 +293,7 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
       {activeTeam ? (
         <div className="grid gap-px bg-border lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
           <div className="bg-background p-5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            <p className="type-eyebrow text-[10px] text-muted-foreground">
               Shared week
             </p>
             <Link
@@ -320,7 +320,7 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
             </Link>
           </div>
           <div className="bg-background p-5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            <p className="type-eyebrow text-[10px] text-muted-foreground">
               Shared goals
             </p>
             {activeTeam && sharedGoals.length === 0 ? (
@@ -335,7 +335,7 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
                       href="/calendar?view=week"
                       className="flex w-full items-center justify-between gap-3 rounded-md text-left text-sm hover:bg-muted/60"
                     >
-                      <span>{goal.title}</span>
+                      <span className="type-item">{goal.title}</span>
                       <span className="text-xs text-muted-foreground">Open on Plan</span>
                     </Link>
                   </li>
@@ -378,7 +378,7 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
               alt="Partner avatar"
             />
             <div className="min-w-0">
-              <p className="truncate font-display text-sm font-medium">{partnerName}</p>
+              <p className="truncate type-item text-sm">{partnerName}</p>
               <p className="truncate text-xs text-muted-foreground">Team partner</p>
             </div>
           </PublicProfileTrigger>

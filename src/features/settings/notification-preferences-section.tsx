@@ -31,7 +31,7 @@ export function NotificationPreferencesSection({
     return (
       <section className="space-y-4 border-t pt-5">
         <div>
-          <h3 className="text-base font-medium">Notification categories</h3>
+          <h3 className="type-heading text-base">Notification categories</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Choose which categories can trigger push notifications across your devices.
           </p>
@@ -52,7 +52,7 @@ export function NotificationPreferencesSection({
   return (
     <section className="space-y-4 border-t pt-5">
       <div>
-        <h3 className="text-base font-medium">Notification categories</h3>
+        <h3 className="type-heading text-base">Notification categories</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Choose which categories can trigger push notifications across your devices.
         </p>

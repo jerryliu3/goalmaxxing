@@ -6,6 +6,7 @@ export {
   colorRoleVariable,
   SCALE_COLOR_ROLES,
   SURFACE_COLOR_ROLES,
+  TEXT_ROLES,
   type AppColorRole,
   type ColorRole,
   type CompletionMarkKind,
@@ -13,8 +14,11 @@ export {
   type ScaleColorRole,
   type SurfaceColorRole,
   type TabChromeKind,
+  type TextRole,
+  type TextRoleStyle,
   type ThemeColors,
   type ThemeDefinition,
+  type ThemeText,
 } from "./roles";
 export {
   DEFAULT_THEME_ID,
