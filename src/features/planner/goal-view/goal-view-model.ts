@@ -2,7 +2,12 @@ import { format, parseISO } from "date-fns";
 import { isEntryCredited } from "@/features/planner/calendar-format";
 import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
-import { addDaysToDateString, startOfWeekDateString } from "@/lib/goals/periods";
+import {
+  addDaysToDateString,
+  getAnchoredPeriod,
+  startOfWeekDateString,
+} from "@/lib/goals/periods";
+import { cadencePeriodTarget, parseCadenceUnitKey } from "@/lib/goals/target-basis";
 import type { Goal } from "@/lib/goals/types";
 
 /** One rolling 90-day window: 21 prior days, today, and 68 following days. */
@@ -150,4 +155,52 @@ export function groupSessions(
     entries,
     label: `Week of ${dateLabel(date, "MMM d")}`,
   }));
+}
+
+const PER_PERIOD = { daily: "per day", weekly: "per week", monthly: "per month" } as const;
+const PERIOD = { daily: "Day", weekly: "Week", monthly: "Month" } as const;
+
+/**
+ * Which session each one is toward its goal's target, by the kind of unit it
+ * fills: "2 of 3 per week" for a cadence goal, "12 of 30" toward a lifetime
+ * total, "2 of 5" for milestones.
+ * The planner's unit keys carry the slot; where a key has none, a cadence
+ * session counts its place among the goal's sessions in the same period. A
+ * goal with one session per period counts periods instead: "Week 6" since it
+ * started.
+ */
+export function sessionOrdinals(
+  goals: readonly Goal[],
+  sessions: readonly GoalViewSession[],
+  weekStartsOn: number
+) {
+  const goalsById = new Map(goals.map((goal) => [goal.id, goal]));
+  const ordinals = new Map<string, string>();
+  const periodPlaces = new Map<string, number>();
+  for (const session of [...sessions].sort(byDateTime)) {
+    const goal = goalsById.get(session.goalId);
+    if (!goal) continue;
+    // The unit key says what kind of requirement the session fills.
+    const unitKey = session.entry.unitKey;
+    const indexed = /^(?:milestone|total):(\d+)$/.exec(unitKey);
+    if (indexed) {
+      ordinals.set(session.key, `${indexed[1]} of ${goal.target_count ?? 1}`);
+      continue;
+    }
+    if (!unitKey.startsWith("cadence:") || !goal.recurrence_interval) continue;
+    const perPeriod = cadencePeriodTarget(goal);
+    const { index, periodKey } = getAnchoredPeriod(goal.start_date, goal.recurrence_interval, session.date, {
+      weekStartsOn,
+    });
+    if (perPeriod < 2) {
+      ordinals.set(session.key, `${PERIOD[goal.recurrence_interval]} ${index + 1}`);
+      continue;
+    }
+    const placeKey = `${goal.id}|${periodKey}`;
+    const place = (periodPlaces.get(placeKey) ?? 0) + 1;
+    periodPlaces.set(placeKey, place);
+    const slot = parseCadenceUnitKey(session.entry.unitKey)?.slot ?? place;
+    ordinals.set(session.key, `${slot} of ${perPeriod} ${PER_PERIOD[goal.recurrence_interval]}`);
+  }
+  return ordinals;
 }

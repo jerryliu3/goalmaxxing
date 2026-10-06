@@ -7,10 +7,26 @@ import { goalCardFields } from "@/features/goals/goal-card-fields";
 import { goalCardProgress } from "@/features/goals/goal-card-progress";
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
 import type { Goal } from "@/lib/goals/types";
+import { cn } from "@/lib/utils";
 import { dateLabel } from "./goal-view-model";
 import { useGoalCardInteraction } from "@/features/goals/use-goal-card-interaction";
 
 const renderFlatLettering = (text: ReactNode) => text;
+
+function goalStatusLabel(
+  model: ReturnType<typeof goalCardProgress> | null,
+  progress: ProgressContextSummary | undefined
+) {
+  if (!model) return null;
+  if (model.achieved) return "Goal accomplished";
+  return progress?.lifecycle === "upcoming" ? `Starts soon · ${model.label}` : model.label;
+}
+
+function goalEndLabel(goal: Goal) {
+  return goal.end_date
+    ? `Ends ${dateLabel(goal.end_date, "MMM d, yyyy")}`
+    : "Ongoing · no end date";
+}
 
 /** The production material goal card with its progress line and end date. */
 export const GoalViewCard = memo(function GoalViewCard({
@@ -18,25 +34,30 @@ export const GoalViewCard = memo(function GoalViewCard({
   progress,
   fullRender = false,
   moving = false,
+  compact = false,
 }: {
   goal: Goal;
   progress: ProgressContextSummary | undefined;
   fullRender?: boolean;
   moving?: boolean;
+  /** Card only, sized by its container; the caption becomes its tooltip. */
+  compact?: boolean;
 }) {
-  const { ref, interactive, interactionProps } = useGoalCardInteraction({ fullRender, moving });
+  // A compact card is a thumbnail: always the flat face, never a rotation target.
+  const { ref, interactive, interactionProps } = useGoalCardInteraction({
+    fullRender,
+    moving: moving || compact,
+  });
   const fields = useMemo(() => goalCardFields(goal), [goal]);
   const model = useMemo(() => progress ? goalCardProgress(goal, progress) : null, [goal, progress]);
-  const statusLabel = !model
-    ? null
-    : model.achieved
-      ? "Goal accomplished"
-      : progress?.lifecycle === "upcoming"
-        ? `Starts soon · ${model.label}`
-        : model.label;
+  const statusLabel = goalStatusLabel(model, progress);
   return (
-    <div ref={ref} className="mx-auto w-full max-w-[244px]" data-goal-view-card={goal.id}
-      {...interactionProps}
+    <div
+      ref={ref}
+      className={cn("mx-auto w-full", !compact && "max-w-[244px]")}
+      data-goal-view-card={goal.id}
+      title={compact ? [statusLabel, goalEndLabel(goal)].filter(Boolean).join(" · ") : undefined}
+      {...(compact ? {} : interactionProps)}
     >
       <TempoGoalCard
         fields={fields}
@@ -49,23 +70,19 @@ export const GoalViewCard = memo(function GoalViewCard({
         // sixteen decorative glyph walls across every fragment during a tilt.
         renderLettering={renderFlatLettering}
       />
-      <div className="mt-3 space-y-1 text-center text-xs text-muted-foreground">
-        {statusLabel ? (
-          <p className="font-mono" role="status">
-            {statusLabel}
+      {compact ? null : (
+        <div className="mt-3 space-y-1 text-center text-xs text-muted-foreground">
+          {statusLabel ? (
+            <p className="font-mono" role="status">
+              {statusLabel}
+            </p>
+          ) : null}
+          <p className="flex items-center justify-center gap-1">
+            {goal.end_date ? null : <InfinityIcon size={14} aria-hidden />}
+            {goalEndLabel(goal)}
           </p>
-        ) : null}
-        <p className="flex items-center justify-center gap-1">
-          {goal.end_date ? (
-            <>Ends {dateLabel(goal.end_date, "MMM d, yyyy")}</>
-          ) : (
-            <>
-              <InfinityIcon size={14} aria-hidden />
-              Ongoing · no end date
-            </>
-          )}
-        </p>
-      </div>
+        </div>
+      )}
     </div>
   );
 });
