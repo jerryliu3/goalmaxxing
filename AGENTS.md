@@ -207,12 +207,13 @@ surfaces. The default is to simplify and reuse what already exists.
   button) and public-profile ownership concepts live in
   `docs/ux/goalmaxxing-profile-study.md` and `/ux/profile`. They are
   exploratory, not a product lock.
-  Missed-session recovery review concepts (Ledger, On the calendar, One at a
-  time) and the decided recovery rules live in
-  `docs/ux/goalmaxxing-recovery-study.md` and `/ux/recovery`. Recovery never
-  moves sessions without review; past-period cadence misses are not
-  recoverable and raise no warning; "just the missed session" is the default
-  strategy and rebalance is opt-in.
+  Missed-session recovery review concepts (Goal by goal with a recap, In Goal
+  View) and the decided recovery rules live in
+  `docs/ux/goalmaxxing-recovery-study.md` and `/ux/recovery`. Recovery starts
+  only when the user presses Review; each accept, edit+apply, or let-go saves
+  immediately; past-period cadence misses are not recoverable and raise no
+  warning; per item only "just the missed session", with one top-level
+  Auto-rebalance switch (off by default).
 - Period check-in is an `AppShell` overlay, not a tab or Progress
   destination. Cadence resolves widest-first — monthly on the first of the
   month, weekly on the profile week-start day, daily otherwise — so exactly

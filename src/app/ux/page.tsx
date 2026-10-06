@@ -13,12 +13,12 @@ export default function UxHubPage() {
         <ul className="mt-10 space-y-4">
           <li>
             <Link className="text-lg font-semibold underline" href="/ux/recovery">
-              Recovery — Ledger, On the calendar, One at a time
+              Recovery — Goal by goal, In Goal View
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">
-              Review slipped sessions before anything moves: a suggested day for
-              each, accept, edit or let it go, and choose between moving just the
-              missed session or rebalancing the goal.
+              Press Review to step through slipped sessions one goal at a time.
+              Each decision saves and stays as a confirmation with its own undo;
+              a recap of every change at the end; Auto-rebalance previews first.
             </p>
           </li>
           <li>

@@ -1,6 +1,8 @@
 /**
  * Pure suggestion model for the recovery study. Nothing here moves a session
- * on its own: `suggest` proposes, the user decides, `applyDecisions` writes.
+ * on its own: `suggest` proposes; each decision the user makes is written to
+ * the seed at once (`acceptSuggestions`, `moveSession`, `letGo`).
+ * Auto-rebalance is written in one batch (`acceptSuggestions` with `rebalance`).
  */
 import {
   addDays,
@@ -14,12 +16,8 @@ import {
   type Weekday,
 } from "@/features/ux-recovery/dates";
 
+/** Squeeze ("just the missed") is the default; rebalance is the global "Auto-rebalance". */
 export type Strategy = "squeeze" | "rebalance";
-
-export const STRATEGY_LABEL: Record<Strategy, string> = {
-  squeeze: "Just the missed",
-  rebalance: "Rebalance",
-};
 
 interface GoalBase {
   id: string;
@@ -51,6 +49,11 @@ export interface RecoverySession {
   locked?: boolean;
   /** "Let it go": stays missed, never prompts again. */
   dismissed?: boolean;
+  /**
+   * Original date, set when recovery moved the session (a slipped session or a
+   * rebalance shift). A later rebalance pins it rather than moving it again.
+   */
+  recoveredFrom?: IsoDate;
 }
 
 export interface RecoverySeed {
@@ -69,17 +72,6 @@ export interface Stranded {
   windowEnd: IsoDate;
 }
 
-export type RowDecision =
-  | { kind: "accept"; date: IsoDate; edited: boolean; reason?: string }
-  | { kind: "dismiss" };
-
-export interface Decisions {
-  rows: Readonly<Record<string, RowDecision>>;
-  strategyByGoal: Readonly<Record<string, Strategy>>;
-}
-
-export const NO_DECISIONS: Decisions = { rows: {}, strategyByGoal: {} };
-
 export interface DayOption {
   date: IsoDate;
   available: boolean;
@@ -95,8 +87,6 @@ export interface Shift {
   to: IsoDate;
 }
 
-export type SuggestionStatus = "pending" | "accepted" | "edited";
-
 export interface Suggestion {
   sessionId: string;
   goalId: string;
@@ -107,8 +97,7 @@ export interface Suggestion {
   date: IsoDate | null;
   reason: string;
   rest: boolean;
-  status: SuggestionStatus;
-  /** Valid/invalid days in the window, for "pick another day". */
+  /** Valid/invalid days in the window for a manual pick, against the saved plan. */
   options: DayOption[];
   /** Future sessions of this goal that move with the rebalance (shared per goal). */
   shifts: Shift[];
@@ -116,9 +105,8 @@ export interface Suggestion {
 
 export interface GoalPlan {
   goal: RecoveryGoal;
-  requested: Strategy;
   strategy: Strategy;
-  /** Set when the requested strategy could not be honoured. */
+  /** Set when Auto-rebalance could not be honoured for this goal. */
   note: string | null;
   windowEnd: IsoDate;
   rows: Suggestion[];
@@ -128,13 +116,11 @@ export interface GoalPlan {
 export interface RecoveryPlan {
   goals: GoalPlan[];
   rows: Suggestion[];
-  dismissedIds: string[];
 }
 
 export const REBALANCE_REASON = "Spread evenly with this goal’s other sessions.";
 export const REBALANCE_FALLBACK =
   "Not enough open days to rebalance, so only the missed sessions move.";
-const PICKED_REASON = "Your pick.";
 
 const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
@@ -220,22 +206,11 @@ function occupiedBy(ctx: Context, goalId: string): Set<IsoDate> {
   return days;
 }
 
-function acceptOf(decisions: Decisions, sessionId: string) {
-  const decision = decisions.rows[sessionId];
-  return decision?.kind === "accept" ? decision : null;
-}
-
-function dayOptions(
-  ctx: Context,
-  goal: RecoveryGoal,
-  windowEnd: IsoDate,
-  own: IsoDate | null = null
-): DayOption[] {
+function dayOptions(ctx: Context, goal: RecoveryGoal, windowEnd: IsoDate): DayOption[] {
   const occupied = occupiedBy(ctx, goal.id);
   return dateRange(ctx.today, windowEnd).map((date) => {
-    const load = (ctx.load.get(date) ?? 0) - (date === own ? 1 : 0);
-    const full = load >= ctx.seed.dailyCap;
-    const sameGoal = occupied.has(date) && date !== own;
+    const full = (ctx.load.get(date) ?? 0) >= ctx.seed.dailyCap;
+    const sameGoal = occupied.has(date);
     return { date, rest: isRestDay(goal, date), full, sameGoal, available: !full && !sameGoal };
   });
 }
@@ -313,12 +288,7 @@ function chooseEarliest(ctx: Context, item: Stranded): { date: IsoDate | null; r
 
 type DraftRow = Omit<Suggestion, "options" | "shifts">;
 
-function draftRow(
-  item: Stranded,
-  date: IsoDate | null,
-  reason: string,
-  status: SuggestionStatus
-): DraftRow {
+function draftRow(item: Stranded, date: IsoDate | null, reason: string): DraftRow {
   return {
     sessionId: item.session.id,
     goalId: item.goal.id,
@@ -328,35 +298,18 @@ function draftRow(
     date,
     reason,
     rest: date ? isRestDay(item.goal, date) : false,
-    status,
   };
 }
 
-function pinnedRow(item: Stranded, pin: Extract<RowDecision, { kind: "accept" }>, fallback: string) {
-  return draftRow(
-    item,
-    pin.date,
-    pin.edited ? PICKED_REASON : (pin.reason ?? fallback),
-    pin.edited ? "edited" : "accepted"
-  );
-}
-
 /** Squeeze: move only the stranded sessions, one by one, into the earliest open day. */
-function squeezeGoal(ctx: Context, items: Stranded[], decisions: Decisions): DraftRow[] {
+function squeezeGoal(ctx: Context, items: Stranded[]): DraftRow[] {
   return items.map((item) => {
-    const occupied = occupiedBy(ctx, item.goal.id);
-    const pin = acceptOf(decisions, item.session.id);
-    if (pin) {
-      // Load was reserved up front so earlier rows could see it.
-      occupied.add(pin.date);
-      return pinnedRow(item, pin, "First open day.");
-    }
     const choice = chooseEarliest(ctx, item);
     if (choice.date) {
       bump(ctx, choice.date, 1);
-      occupied.add(choice.date);
+      occupiedBy(ctx, item.goal.id).add(choice.date);
     }
-    return draftRow(item, choice.date, choice.reason, "pending");
+    return draftRow(item, choice.date, choice.reason);
   });
 }
 
@@ -387,59 +340,58 @@ function spreadDates(
 
 /**
  * Rebalance: stranded + this goal's future unlocked sessions reflow evenly
- * across the remaining window, in order. Returns null when it cannot fit.
+ * across the remaining window, in original-date order. Sessions an earlier
+ * recovery already moved are pinned where they are: they keep their slot when
+ * the spread agrees, and are worked around when it does not. Returns null when
+ * the window cannot hold the goal.
  */
-function rebalanceGoal(
-  ctx: Context,
-  items: Stranded[],
-  decisions: Decisions
-): { rows: DraftRow[]; shifts: Shift[] } | null {
+function rebalanceGoal(ctx: Context, items: Stranded[]): { rows: DraftRow[]; shifts: Shift[] } | null {
   const first = items[0];
   if (!first) return { rows: [], shifts: [] };
   const { goal, windowEnd } = first;
   const occupied = occupiedBy(ctx, goal.id);
-  const movable = ctx.seed.sessions
-    .filter(
-      (session) =>
-        session.goalId === goal.id &&
-        session.status === "scheduled" &&
-        !session.dismissed &&
-        !session.locked &&
-        session.date > ctx.today &&
-        session.date <= windowEnd
-    )
-    .sort((a, b) => compare(a.date, b.date));
-  const pins = new Map(
-    items.flatMap((item) => {
-      const pin = acceptOf(decisions, item.session.id);
-      return pin ? [[item.session.id, pin] as const] : [];
-    })
+  const future = ctx.seed.sessions.filter(
+    (session) =>
+      session.goalId === goal.id &&
+      session.status === "scheduled" &&
+      !session.dismissed &&
+      !session.locked &&
+      session.date >= ctx.today &&
+      session.date <= windowEnd
   );
+  const pinned = new Map(
+    future.filter((session) => session.recoveredFrom).map((session) => [session.id, session.date] as const)
+  );
+  const movable = future
+    .filter((session) => !session.recoveredFrom && session.date > ctx.today)
+    .sort((a, b) => compare(a.date, b.date));
+  const lifted = [...future.filter((session) => pinned.has(session.id)), ...movable];
 
   const lift = (by: 1 | -1) => {
-    for (const session of movable) {
+    for (const session of lifted) {
       bump(ctx, session.date, by);
       if (by < 0) occupied.delete(session.date);
       else occupied.add(session.date);
     }
-    for (const pin of pins.values()) bump(ctx, pin.date, by);
   };
   lift(-1);
 
-  const entries = [...items.map((item) => item.session), ...movable];
+  const origin = (session: RecoverySession) => session.recoveredFrom ?? session.date;
+  const entries = [...items.map((item) => item.session), ...lifted].sort(
+    (a, b) => compare(origin(a), origin(b)) || compare(a.id, b.id)
+  );
   const assignment = new Map<string, IsoDate>();
   const all = spreadDates(ctx, goal, windowEnd, entries.length, new Set());
   const pinsHold =
-    all !== null && entries.every((entry, i) => !pins.has(entry.id) || pins.get(entry.id)?.date === all[i]);
+    all !== null && entries.every((entry, i) => !pinned.has(entry.id) || pinned.get(entry.id) === all[i]);
   if (all && pinsHold) {
     entries.forEach((entry, i) => assignment.set(entry.id, all[i] as IsoDate));
   } else {
-    const free = entries.filter((entry) => !pins.has(entry.id));
-    const fixed = new Set([...pins.values()].map((pin) => pin.date));
-    const dates = spreadDates(ctx, goal, windowEnd, free.length, fixed);
+    const free = entries.filter((entry) => !pinned.has(entry.id));
+    const dates = spreadDates(ctx, goal, windowEnd, free.length, new Set(pinned.values()));
     if (dates) {
       free.forEach((entry, i) => assignment.set(entry.id, dates[i] as IsoDate));
-      for (const [id, pin] of pins) assignment.set(id, pin.date);
+      for (const [id, date] of pinned) assignment.set(id, date);
     }
   }
 
@@ -458,11 +410,9 @@ function rebalanceGoal(
       ? [{ sessionId: session.id, label: session.label, from: session.date, to }]
       : [];
   });
-  const rows = items.map((item) => {
-    const pin = pins.get(item.session.id);
-    if (pin) return pinnedRow(item, pin, REBALANCE_REASON);
-    return draftRow(item, assignment.get(item.session.id) ?? null, REBALANCE_REASON, "pending");
-  });
+  const rows = items.map((item) =>
+    draftRow(item, assignment.get(item.session.id) ?? null, REBALANCE_REASON)
+  );
   return { rows, shifts };
 }
 
@@ -477,82 +427,71 @@ function groupByGoal(items: Stranded[]): Stranded[][] {
 }
 
 /**
- * Proposes a date for every recoverable, non-dismissed session.
- * Accepted/edited rows keep their decided date; everything else is fitted
- * around them. Deterministic for the same inputs.
+ * Proposes a date for every recoverable session. With `rebalance`
+ * ("Auto-rebalance") each goal reflows its future sessions too, falling back to just the
+ * missed sessions when it cannot. Deterministic for the same inputs.
  */
-export function suggest(
-  seed: RecoverySeed,
-  today: IsoDate,
-  strategy: Strategy,
-  decisions: Decisions = NO_DECISIONS
-): RecoveryPlan {
-  const stranded = findRecoverable(seed, today);
-  const isDismissed = (item: Stranded) => decisions.rows[item.session.id]?.kind === "dismiss";
-  const active = stranded.filter((item) => !isDismissed(item));
+export function suggest(seed: RecoverySeed, today: IsoDate, rebalance = false): RecoveryPlan {
   const ctx = createContext(seed, today);
-  for (const item of active) {
-    const pin = acceptOf(decisions, item.session.id);
-    if (pin) bump(ctx, pin.date, 1);
-  }
-
-  const drafts = groupByGoal(active).map((items) => {
+  const drafts = groupByGoal(findRecoverable(seed, today)).map((items) => {
     const { goal, windowEnd } = items[0] as Stranded;
-    const requested = decisions.strategyByGoal[goal.id] ?? strategy;
-    const rebalanced = requested === "rebalance" ? rebalanceGoal(ctx, items, decisions) : null;
+    const rebalanced = rebalance ? rebalanceGoal(ctx, items) : null;
     if (rebalanced) {
-      return { goal, requested, strategy: "rebalance" as const, note: null, windowEnd, ...rebalanced };
+      return { goal, strategy: "rebalance" as const, note: null, windowEnd, ...rebalanced };
     }
     return {
       goal,
-      requested,
       strategy: "squeeze" as const,
-      note: requested === "rebalance" ? REBALANCE_FALLBACK : null,
+      note: rebalance ? REBALANCE_FALLBACK : null,
       windowEnd,
-      rows: squeezeGoal(ctx, items, decisions),
+      rows: squeezeGoal(ctx, items),
       shifts: [] as Shift[],
     };
   });
 
-  // Options are computed against the final placement so edits stay valid.
+  // Placement ran tightest window first; the plan lists goals in goal order.
+  const order = new Map(seed.goals.map((goal, index) => [goal.id, index]));
+  drafts.sort((a, b) => (order.get(a.goal.id) ?? 0) - (order.get(b.goal.id) ?? 0));
+  // A manual pick moves only that session, so its options are checked against
+  // the saved plan, not against other rows' unsaved suggestions.
+  const saved = createContext(seed, today);
   const goals: GoalPlan[] = drafts.map((draft) => ({
     ...draft,
     rows: draft.rows.map((row) => ({
       ...row,
-      options: dayOptions(ctx, draft.goal, row.windowEnd, row.date),
+      options: dayOptions(saved, draft.goal, row.windowEnd),
       shifts: draft.shifts,
     })),
   }));
-  return {
-    goals,
-    rows: goals.flatMap((goal) => goal.rows),
-    dismissedIds: stranded.filter(isDismissed).map((item) => item.session.id),
-  };
+  return { goals, rows: goals.flatMap((goal) => goal.rows) };
 }
 
-export interface ApplySummary {
+function relocate(session: RecoverySession, date: IsoDate): RecoverySession {
+  return { ...session, date, status: "scheduled", recoveredFrom: session.recoveredFrom ?? session.date };
+}
+
+export interface AcceptResult {
+  seed: RecoverySeed;
   moved: number;
   shifted: number;
-  letGo: number;
-  leftForLater: number;
 }
 
 /**
- * Writes accepted moves (and their goal's shifts) and dismissals.
- * Pending rows stay missed and will be suggested again next time.
+ * Accepts suggestions as they stand and writes them: every row with a date,
+ * or only `sessionIds`. Under rebalance a goal's shifts are written with any
+ * of its accepted rows.
  */
-export function applyDecisions(
+export function acceptSuggestions(
   seed: RecoverySeed,
   today: IsoDate,
-  strategy: Strategy,
-  decisions: Decisions
-): { seed: RecoverySeed; summary: ApplySummary } {
-  const plan = suggest(seed, today, strategy, decisions);
+  rebalance: boolean,
+  sessionIds?: ReadonlySet<string>
+): AcceptResult {
   const moves = new Map<string, IsoDate>();
   let moved = 0;
   let shifted = 0;
-  for (const goal of plan.goals) {
-    const accepted = goal.rows.filter((row) => row.status !== "pending" && row.date);
+  for (const goal of suggest(seed, today, rebalance).goals) {
+    const accepted = goal.rows.filter((row) => row.date && (!sessionIds || sessionIds.has(row.sessionId)));
     for (const row of accepted) moves.set(row.sessionId, row.date as IsoDate);
     moved += accepted.length;
     if (accepted.length && goal.strategy === "rebalance") {
@@ -560,21 +499,28 @@ export function applyDecisions(
       shifted += goal.shifts.length;
     }
   }
-  const letGo = new Set(plan.dismissedIds);
   const sessions = seed.sessions.map((session) => {
     const to = moves.get(session.id);
-    if (to) return { ...session, date: to, status: "scheduled" as const };
-    if (letGo.has(session.id)) return { ...session, dismissed: true };
-    return session;
+    return to ? relocate(session, to) : session;
   });
+  return { seed: { ...seed, sessions }, moved, shifted };
+}
+
+/** Edit + Apply: moves only this session to a day the caller already validated. */
+export function moveSession(seed: RecoverySeed, sessionId: string, date: IsoDate): RecoverySeed {
   return {
-    seed: { ...seed, sessions },
-    summary: {
-      moved,
-      shifted,
-      letGo: letGo.size,
-      leftForLater: plan.rows.filter((row) => row.status === "pending").length,
-    },
+    ...seed,
+    sessions: seed.sessions.map((session) => (session.id === sessionId ? relocate(session, date) : session)),
+  };
+}
+
+/** "Let it go": the session stays missed and never prompts again. */
+export function letGo(seed: RecoverySeed, sessionId: string): RecoverySeed {
+  return {
+    ...seed,
+    sessions: seed.sessions.map((session) =>
+      session.id === sessionId ? { ...session, dismissed: true } : session
+    ),
   };
 }
 

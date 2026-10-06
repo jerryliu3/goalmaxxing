@@ -1,7 +1,8 @@
-export type RecoveryConceptSlug = "ledger" | "calendar" | "deck";
+export type RecoveryConceptSlug = "goal-by-goal" | "goal-view";
 
 export interface RecoveryConcept {
   slug: RecoveryConceptSlug;
+  /** Letters kept from round 2 (A, Focused list, is retired). */
   number: string;
   name: string;
   thesis: string;
@@ -12,37 +13,26 @@ export interface RecoveryConcept {
 
 export const RECOVERY_CONCEPTS: readonly RecoveryConcept[] = [
   {
-    slug: "ledger",
-    number: "A",
-    name: "Ledger",
-    thesis:
-      "A review sheet over the calendar. Every slipped session is a row with a suggested day; the calendar behind previews the result.",
-    review:
-      "Rows grouped by goal. Missed date → suggested pill. Accept, Edit, or Let it go. Accept all and Apply in the footer.",
-    edit: "Tap the pill or Edit: a date strip limited to the goal's valid days.",
-    risk: "A sheet is one more surface; on phones it covers most of the preview.",
-  },
-  {
-    slug: "calendar",
+    slug: "goal-by-goal",
     number: "B",
-    name: "On the calendar",
+    name: "Goal by goal",
     thesis:
-      "No new surface. Slipped sessions sit on their day as amber chips, with a dashed ghost on the day we suggest.",
+      "Leading. One goal at a time — “Goal 2 of 4” — with the calendar filtered to it. Every decision saves and stays as a confirmation with its own Undo; the walk ends on a recap of every change.",
     review:
-      "A slim bar counts what slipped. Tap a chip to accept, choose a day, or let it go. Drag a chip onto any open day on desktop.",
-    edit: "Drag to an open day, or Choose day in the chip panel.",
-    risk: "Misses from last week live off-screen; the Earlier lane has to carry them.",
+      "Press “N sessions slipped · Review”. The panel shows one goal; Accept, Edit + Apply or Let it go saves at once and the row turns into “Moved to Thu Oct 8 ✓” (or “Let go ✓”) with Undo. Next goal is always there, Back too. After the last goal, the summary lists every goal’s sessions old → new, still undoable. Auto-rebalance skips to that summary as a proposal; Apply rebalance saves it in one go.",
+    edit: "Edit opens a strip of the goal’s valid days. Pick one, then Apply. A pick moves only that session.",
+    risk: "Extra steps when one session slipped; you can’t see what else is waiting without stepping (the summary shows it).",
   },
   {
-    slug: "deck",
+    slug: "goal-view",
     number: "C",
-    name: "One at a time",
+    name: "In Goal View",
     thesis:
-      "Triage cards. One slipped session, one decision, then the next — and a summary before anything changes.",
+      "Recovery inside Goal View’s lanes. A lane is already one goal, so the filter is free: open its “N slipped” marker and decide right there.",
     review:
-      "Each card shows the goal, the missed day, and a mini week with the suggestion lit. Accept, Pick another day, Let it go, or Later.",
-    edit: "Pick another day turns the mini week into a picker. Rebalance on the card reveals what else moves.",
-    risk: "Slow when many sessions slipped; Accept all lives only on the summary.",
+      "Review in the toolbar adds an “N slipped” marker to each lane that has one and opens the first. The open lane brings its slipped cards in ahead of today, ghosts the suggested days, and lists the rows under the lane — decided rows stay as confirmations with Undo, Back / Next goal step through the lanes, and Summary (or Auto-rebalance) shows the same recap above the lanes.",
+    edit: "Same per-row strip and Apply, in the tray under the lane.",
+    risk: "Goal View hides past sessions by default, so this only works because Review adds them back; on phones the goal deck has no lanes.",
   },
 ];
 
