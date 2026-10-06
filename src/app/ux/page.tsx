@@ -12,6 +12,15 @@ export default function UxHubPage() {
         </h1>
         <ul className="mt-10 space-y-4">
           <li>
+            <Link className="text-lg font-semibold underline" href="/ux/identity-edit">
+              Header identity &amp; goal editing
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Capsule and Wordmark meter identities with four ways to fold Coach into the
+              header. Edit a goal on the card itself, with advanced settings on its back.
+            </p>
+          </li>
+          <li>
             <Link className="text-lg font-semibold underline" href="/ux/goal-view">
               Goal View — Card Rails, Goal Desk and Time Weave
             </Link>
