@@ -2,8 +2,8 @@
 
 import { Award, ChevronDown, ChevronLeft, Gift, Link2, ListOrdered, Minus, Palette, Plus, Quote } from "lucide-react";
 import { type ComponentType, useRef, useState } from "react";
-import { DEFAULT_GOAL_CATEGORIES } from "@/lib/goals/category";
 import { EDIT_FACT_LABELS, isMilestoneGoal, summarizeFact, type EditFact } from "./edit-model";
+import { ColourPicker } from "./colour-picker";
 import { FactEditor, GoalLifecycleActions, Reveal } from "./fact-editors";
 import { InlineFact, useDismiss, WIDE_FACTS } from "./inline-fact";
 import type { EditSession } from "./use-edit-session";
@@ -29,13 +29,12 @@ function backFacts(session: EditSession): EditFact[] {
   return ["description", "reward", "plaque", ...(isMilestoneGoal(session.fields) ? (["milestones"] as const) : []), "link", "color"];
 }
 
-export function CardBack({ session, backStyle, onDone }: { session: EditSession; backStyle: BackStyle; onDone: () => void }) {
+export function CardBack({ session, backStyle }: { session: EditSession; backStyle: BackStyle }) {
   const Back = { list: ListBack, note: NoteBack, tiles: TilesBack }[backStyle];
   return (
     <div className="ie-back" data-style={backStyle}>
       <header className="ie-back-head">
         <span className="ie-overline">More about this goal</span>
-        <button type="button" className="ie-link" onClick={onDone}>Done</button>
       </header>
       <div className="ie-back-body">
         <Back session={session} />
@@ -76,6 +75,12 @@ function ListRow({ fact, session, open, onOpen, onDone }: { fact: EditFact; sess
   useDismiss(row, open, onDone);
   const Icon = ICONS[fact]!;
   const wide = WIDE_FACTS.includes(fact);
+  // The back is card-sized, so a wide editor scrolls its row to the top to make room.
+  // It waits for the editor's grow animation, since there is nothing to scroll until then.
+  const grown = () => {
+    const body = row.current?.closest(".ie-back-body");
+    if (wide && row.current && body) body.scrollTo({ top: row.current.offsetTop - 6, behavior: "smooth" });
+  };
   const head = (
     <>
       <Icon size={15} className="ie-back-icon" />
@@ -90,7 +95,7 @@ function ListRow({ fact, session, open, onOpen, onDone }: { fact: EditFact; sess
             {head}
             {!wide && <span className="ie-back-control"><InlineFact fact={fact} session={session} onDone={onDone} /></span>}
           </div>
-          {wide && <div className="ie-back-wide"><InlineFact fact={fact} session={session} onDone={onDone} /></div>}
+          {wide && <div className="ie-back-wide" onAnimationEnd={(event) => event.target === event.currentTarget && grown()}><InlineFact fact={fact} session={session} onDone={onDone} /></div>}
         </>
       ) : (
         <button type="button" className="ie-back-row-head" onClick={onOpen}>
@@ -137,7 +142,7 @@ function NoteBack({ session }: { session: EditSession }) {
         .
       </p>
       <p className="ie-note-line">
-        I earn its plaque after{" "}
+        I earn its achievement after{" "}
         <span className="ie-note-stepper">
           <button type="button" aria-label="Fewer" disabled={plaque <= 1} onClick={() => patch({ plaque_target: String(plaque - 1) })}><Minus size={12} /></button>
           <strong>{plaque}</strong>
@@ -171,20 +176,9 @@ function NoteBack({ session }: { session: EditSession }) {
           </Reveal>
         )}
       </div>
-      <div className="ie-note-line ie-note-colours">
+      <div className="ie-note-line">
         Card colour
-        <span role="group" aria-label="Card colour">
-          {DEFAULT_GOAL_CATEGORIES.map((category) => (
-            <button
-              key={category.key}
-              type="button"
-              aria-label={category.label}
-              aria-pressed={fields.color.toLowerCase() === category.color}
-              style={{ background: category.color }}
-              onClick={() => patch({ color: category.color })}
-            />
-          ))}
-        </span>
+        <ColourPicker session={session} />
       </div>
       {isMilestoneGoal(fields) && (
         <div className="ie-note-line">

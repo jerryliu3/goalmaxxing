@@ -13,6 +13,22 @@ export const EDIT_SAMPLES: { goal: Goal; completed: number; note: string }[] = [
   { goal: SAMPLE_GOALS.find((goal) => goal.id === "japanese")!, completed: 23, note: "Daily · private" },
 ];
 
+/** Lab-only goals so "Also counts toward" is tried with a realistically long list. */
+const EXTRA_LINK_TITLES = [
+  "Read 20 books this year",
+  "Meditate most mornings",
+  "Cook dinner at home",
+  "Learn to swim properly",
+  "Ship the side project",
+  "Call grandma weekly",
+  "Walk 8k steps a day",
+  "Sleep by 11pm",
+  "Practise guitar",
+  "Save for a trip to Japan",
+  "Volunteer once a month",
+  "Stretch after every run",
+];
+
 export type EditLifecycle = "active" | "archived" | "deleted";
 
 export interface EditSession {
@@ -63,7 +79,10 @@ export function useEditSessions() {
     setStates((previous) => ({ ...previous, [goalId]: next(previous[goalId]) }));
 
   const linkOptions = useMemo(
-    () => SAMPLE_GOALS.filter((goal) => goal.id !== goalId).map(({ id, title }) => ({ id, title })),
+    () => [
+      ...SAMPLE_GOALS.filter((goal) => goal.id !== goalId).map(({ id, title }) => ({ id, title })),
+      ...EXTRA_LINK_TITLES.map((title, index) => ({ id: `extra-${index}`, title })),
+    ],
     [goalId],
   );
 

@@ -34,32 +34,56 @@ const SELECTORS: [FaceFact, string][] = [
 const MIN_WIDTH = 72;
 const MIN_HEIGHT = 20;
 
+export interface Box {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * An element's layout box relative to `root`, from offsets. Offsets ignore CSS transforms,
+ * so measuring stays correct while the card is turned over or mid-flip; client rects
+ * would come back mirrored.
+ */
+export function boxWithin(element: Element | null, root: HTMLElement): Box | null {
+  if (!(element instanceof HTMLElement)) return null;
+  let x = 0;
+  let y = 0;
+  let node: HTMLElement | null = element;
+  while (node && node !== root) {
+    x += node.offsetLeft;
+    y += node.offsetTop;
+    node = node.offsetParent as HTMLElement | null;
+  }
+  return node === root ? { x, y, width: element.offsetWidth, height: element.offsetHeight } : null;
+}
+
 export function useCardRegions(container: RefObject<HTMLElement | null>, version: string) {
   const [layout, setLayout] = useState<{ regions: FaceRegion[]; width: number; height: number }>({ regions: [], width: 0, height: 0 });
   useLayoutEffect(() => {
     const root = container.current;
     if (!root) return;
     const measure = () => {
-      const origin = root.getBoundingClientRect();
-      const dates = root.querySelector(".tempo-card-dates")?.getBoundingClientRect();
-      const card = root.querySelector("[data-tempo-goal-card]")?.getBoundingClientRect();
+      const dates = boxWithin(root.querySelector(".tempo-card-dates"), root);
+      const card = boxWithin(root.querySelector("[data-tempo-goal-card]"), root);
       const next = SELECTORS.map(([fact, selector]): FaceRegion => {
-        const rect = root.querySelector(selector)?.getBoundingClientRect();
-        if (rect && rect.width > 1) {
+        const box = boxWithin(root.querySelector(selector), root);
+        if (box && box.width > 1) {
           // The effort bars keep their true width so controls can sit right beside them.
-          const width = fact === "stretch" ? rect.width : Math.max(rect.width, MIN_WIDTH);
+          const width = fact === "stretch" ? box.width : Math.max(box.width, MIN_WIDTH);
           // Right-aligned facts grow leftward so the hit area stays on the card.
-          const x = fact === "deadline" || fact === "stretch" ? rect.right - width - origin.left : rect.left - origin.left;
-          return { fact, x, y: rect.top - origin.top, width, height: Math.max(rect.height, MIN_HEIGHT), present: true };
+          const x = fact === "deadline" || fact === "stretch" ? box.x + box.width - width : box.x;
+          return { fact, x, y: box.y, width, height: Math.max(box.height, MIN_HEIGHT), present: true };
         }
         // Absent facts get a ghost slot where the card would print them.
         const anchor = dates ?? card;
         if (!anchor) return { fact, x: 0, y: 0, width: 0, height: 0, present: false };
-        const y = fact === "time" ? anchor.bottom - origin.top + 6 : anchor.top - origin.top;
-        const x = fact === "deadline" ? anchor.right - MIN_WIDTH - origin.left : anchor.left - origin.left;
+        const y = fact === "time" ? anchor.y + anchor.height + 6 : anchor.y;
+        const x = fact === "deadline" ? anchor.x + anchor.width - MIN_WIDTH : anchor.x;
         return { fact, x, y, width: MIN_WIDTH + 24, height: MIN_HEIGHT, present: false };
       });
-      setLayout({ regions: next, width: origin.width, height: origin.height });
+      setLayout({ regions: next, width: root.offsetWidth, height: root.offsetHeight });
     };
     measure();
     const observer = new ResizeObserver(measure);

@@ -1,5 +1,5 @@
 import { format, isValid, parseISO } from "date-fns";
-import { DEFAULT_GOAL_CATEGORIES, getCategoryLabel } from "@/lib/goals/category";
+import { type CategorySelection, getCategoryLabel, getCategorySwatchColor } from "@/lib/goals/category";
 import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import { getGoalCreationPeriodTargetMax } from "@/lib/goals/creation-model";
 
@@ -35,7 +35,7 @@ export const EDIT_FACT_LABELS: Record<EditFact, string> = {
   color: "Card colour",
   description: "Why it matters",
   reward: "Your reward",
-  plaque: "Earn its plaque",
+  plaque: "Earn achievement after",
 };
 
 const FACT_KEYS: Record<EditFact, (keyof EditDraft)[]> = {
@@ -153,9 +153,9 @@ export function summarizeFact(
     case "reward":
       return fields.reward_text.trim() || "Not set";
     case "plaque":
-      return `After ${fields.plaque_target} completions`;
+      return `${fields.plaque_target} completions`;
     case "color":
-      return DEFAULT_GOAL_CATEGORIES.find((category) => category.color === fields.color.toLowerCase())?.label ?? "Custom";
+      return colourFollowsCategory(fields) ? "Matches category" : (CARD_COLOURS.find((colour) => colour.hex === fields.color.toLowerCase())?.name ?? "Custom");
   }
 }
 
@@ -178,4 +178,28 @@ export function draftError(fields: GoalCreationFields, completed: number): strin
     }
   }
   return null;
+}
+
+/** Card colours offered as overrides, named so they never read as categories. */
+export const CARD_COLOURS: { name: string; hex: string }[] = [
+  { name: "Stamp", hex: "#9a4f2c" },
+  { name: "Rust", hex: "#b5522a" },
+  { name: "Clay", hex: "#c88968" },
+  { name: "Ochre", hex: "#8a6a3a" },
+  { name: "Moss", hex: "#4a6740" },
+  { name: "Sage", hex: "#6f8175" },
+  { name: "Pine", hex: "#3f4a3a" },
+  { name: "Earth", hex: "#5c4e3f" },
+  { name: "Sky", hex: "#5b8db8" },
+  { name: "Plum", hex: "#8a5a8c" },
+];
+
+/** The card colour tracks its category until someone picks a colour of their own. */
+export function colourFollowsCategory(fields: GoalCreationFields) {
+  return fields.color.toLowerCase() === getCategorySwatchColor(fields.category_selection).toLowerCase();
+}
+
+/** Changing category recolours the card only while the colour still follows the category. */
+export function categoryPatch(fields: GoalCreationFields, category: CategorySelection): Partial<GoalCreationFields> {
+  return { category_selection: category, ...(colourFollowsCategory(fields) ? { color: getCategorySwatchColor(category) } : {}) };
 }

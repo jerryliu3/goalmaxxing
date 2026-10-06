@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { BackStyle } from "./card-back";
 import { CardStage, FACE_LABELS, FaceControls, faceValue, goalColorStyle, isChanged, regionStyle } from "./card-stage";
 import { InlineFact } from "./inline-fact";
-import { useCardRegions, type FaceFact } from "./use-card-regions";
+import { boxWithin, useCardRegions, type FaceFact } from "./use-card-regions";
 import type { EditSession } from "./use-edit-session";
 
 // Facts printed at the card's left edge call out left; full-width and right-edge facts call
@@ -42,13 +42,15 @@ export function AnnotatedCard({ session, backStyle }: { session: EditSession; ba
   /** Stack each side's callouts level with their facts and derive the leader lines. */
   const relayout = useCallback(() => {
     const regions = regionsRef.current;
-    const board = boardRef.current?.getBoundingClientRect();
-    const stage = stageRef.current?.getBoundingClientRect();
-    const left = columns.current.left?.getBoundingClientRect();
-    const right = columns.current.right?.getBoundingClientRect();
-    if (!board || !stage || !left || !right || regions.length === 0) return;
-    const offsetY = stage.top - board.top;
-    const offsetX = stage.left - board.left;
+    const boardNode = boardRef.current;
+    if (!boardNode) return;
+    // Offsets, not client rects: the flip's rotation must not skew the leader lines.
+    const stage = boxWithin(stageRef.current, boardNode);
+    const left = boxWithin(columns.current.left, boardNode);
+    const right = boxWithin(columns.current.right, boardNode);
+    if (!stage || !left || !right || regions.length === 0) return;
+    const offsetY = stage.y;
+    const offsetX = stage.x;
     const tops: Partial<Record<FaceFact, number>> = {};
     const lines: Line[] = [];
     let height = 0;
@@ -68,7 +70,7 @@ export function AnnotatedCard({ session, backStyle }: { session: EditSession; ba
         cursor = top + (node?.offsetHeight ?? 56) + GAP;
         lines.push({
           fact: region.fact,
-          x1: side === "left" ? left.right - board.left : right.left - board.left,
+          x1: side === "left" ? left.x + left.width : right.x,
           y1: top + anchorY,
           x2: offsetX + (side === "left" ? region.x - 4 : region.x + region.width + 4),
           y2: target,
@@ -183,7 +185,7 @@ export function AnnotatedCard({ session, backStyle }: { session: EditSession; ba
         <div ref={(node) => { columns.current.left = node; }} className="ie-callouts" data-side="left" style={{ height: layout?.height }}>
           {LEFT.map(callout)}
         </div>
-        <CardStage session={session} stageRef={stageRef} overlay={overlay} back={back} backStyle={backStyle} onFlipBack={() => setBack(false)} />
+        <CardStage session={session} stageRef={stageRef} overlay={overlay} back={back} backStyle={backStyle} />
         <div ref={(node) => { columns.current.right = node; }} className="ie-callouts" data-side="right" style={{ height: layout?.height }}>
           {RIGHT.map(callout)}
         </div>

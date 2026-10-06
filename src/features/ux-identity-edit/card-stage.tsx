@@ -37,14 +37,12 @@ export function CardStage({
   overlay,
   back,
   backStyle,
-  onFlipBack,
 }: {
   session: EditSession;
   stageRef: RefObject<HTMLDivElement | null>;
   overlay: ReactNode;
   back: boolean;
   backStyle: BackStyle;
-  onFlipBack: () => void;
 }) {
   return (
     <div className="ie-card-scene" data-back={back} style={goalColorStyle(session)}>
@@ -55,7 +53,7 @@ export function CardStage({
         </div>
       </div>
       <div className="ie-card-side ie-card-reverse" aria-hidden={!back} inert={!back}>
-        <CardBack session={session} backStyle={backStyle} onDone={onFlipBack} />
+        <CardBack session={session} backStyle={backStyle} />
       </div>
     </div>
   );

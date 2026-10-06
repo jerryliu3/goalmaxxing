@@ -6,18 +6,19 @@ import { type ReactNode, useState } from "react";
 import { TempoGoalChoices as Choices } from "@/features/goals/tempo-goal-choices";
 import {
   DEFAULT_GOAL_CATEGORIES,
-  getCategorySwatchColor,
   type CategorySelection,
 } from "@/lib/goals/category";
 import type { GoalDifficulty } from "@/lib/goals/types";
 import {
   cadenceBounds,
   cadenceCountEditable,
+  categoryPatch,
   formatDate,
   isMilestoneGoal,
   lockedRhythmLabel,
   type EditFact,
 } from "./edit-model";
+import { ColourPicker } from "./colour-picker";
 import type { EditSession } from "./use-edit-session";
 import "@/features/goals/tempo-goal-creation.css";
 
@@ -49,7 +50,7 @@ export function FactEditor({ fact, session }: { fact: EditFact; session: EditSes
             label: category.label,
             color: category.color,
           }))}
-          onChange={(value) => patch({ category_selection: value, color: getCategorySwatchColor(value) })}
+          onChange={(value) => patch(categoryPatch(fields, value))}
         />
       );
     case "stretch":
@@ -191,24 +192,7 @@ export function FactEditor({ fact, session }: { fact: EditFact; session: EditSes
       );
     }
     case "color":
-      return (
-        <div className="ie-swatches" role="group" aria-label="Card colour">
-          {DEFAULT_GOAL_CATEGORIES.map((category) => (
-            <button
-              type="button"
-              key={category.key}
-              aria-label={category.label}
-              aria-pressed={fields.color.toLowerCase() === category.color}
-              style={{ background: category.color }}
-              onClick={() => patch({ color: category.color })}
-            />
-          ))}
-          <label className="ie-custom-swatch">
-            <input type="color" value={fields.color} onChange={(event) => patch({ color: event.target.value })} />
-            Custom
-          </label>
-        </div>
-      );
+      return <ColourPicker session={session} />;
   }
 }
 

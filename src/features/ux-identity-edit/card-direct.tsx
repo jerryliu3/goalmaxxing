@@ -2,9 +2,9 @@
 
 import { Eye, Lock, Minus, Plus } from "lucide-react";
 import { type CSSProperties, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { DEFAULT_GOAL_CATEGORIES, getCategorySwatchColor, type CategorySelection } from "@/lib/goals/category";
+import { DEFAULT_GOAL_CATEGORIES, type CategorySelection } from "@/lib/goals/category";
 import type { GoalDifficulty } from "@/lib/goals/types";
-import { cadenceBounds, cadenceCountEditable, isMilestoneGoal } from "./edit-model";
+import { cadenceBounds, cadenceCountEditable, categoryPatch, isMilestoneGoal } from "./edit-model";
 import type { BackStyle } from "./card-back";
 import { CardStage, FaceControls, goalColorStyle, isChanged, regionStyle } from "./card-stage";
 import { useCardRegions, type FaceFact, type FaceRegion } from "./use-card-regions";
@@ -127,7 +127,7 @@ export function DirectCard({ session, backStyle, touch }: { session: EditSession
                       onPointerLeave={() => setPreview(null)}
                       onFocus={() => setPreview(option.label)}
                       onBlur={() => setPreview(null)}
-                      onClick={() => patch({ category_selection: option.key as CategorySelection, color: getCategorySwatchColor(option.key as CategorySelection) })}
+                      onClick={() => patch(categoryPatch(fields, option.key as CategorySelection))}
                     />
                   ))}
                 </span>
@@ -195,7 +195,7 @@ export function DirectCard({ session, backStyle, touch }: { session: EditSession
 
   return (
     <div className="ie-cardface" data-design="direct" style={goalColorStyle(session)}>
-      <CardStage session={session} stageRef={stageRef} overlay={overlay} back={back} backStyle={backStyle} onFlipBack={() => setBack(false)} />
+      <CardStage session={session} stageRef={stageRef} overlay={overlay} back={back} backStyle={backStyle} />
       <FaceControls session={session} back={back} onFlip={() => { setPopup(null); setBack(!back); }} hint="Tap anything on the card to change it." />
     </div>
   );

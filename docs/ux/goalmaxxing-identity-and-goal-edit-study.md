@@ -93,9 +93,13 @@ doesn't print yet get a ghost "+ deadline" slot; the start date shows a lock.
   − n + steppers; category, effort and privacy become small segments that
   apply and close on pick.
 
-Both turn over to a **card-sized back** ("Turn over for more") with plain
-labels — Why it matters, Your reward, Earn its plaque, Also counts toward,
-Milestone names, Card colour — plus archive and delete. Three layouts:
+Both turn over to a **card-sized back** ("Turn over for more", no Done
+button) with plain labels — Why it matters, Your reward, Earn achievement
+after, Also counts toward, Milestone names, Card colour — plus archive and
+delete. "Also counts toward" is search-first with a short scrolling list, so
+it stays usable with many goals. Positions are measured from layout offsets,
+which ignore the flip's rotation, so editing the back never skews the face's
+leader lines. Three layouts:
 
 - **List** (current pick) — grouped rows (For you · Progress · Connections &
   look) with icons; short facts edit in the value's spot, "why it matters",
@@ -107,6 +111,22 @@ Milestone names, Card colour — plus archive and delete. Three layouts:
 Archive dims the card and offers Restore. Delete is a two-step confirm in place
 (it is the only irreversible action). Milestones already done cannot be
 renamed or removed; totals cannot drop below completed work.
+
+## Card colour vs category (production follow-up)
+
+In the lab, card colour is an override: "Match category" keeps the colour
+following the category; any named colour (Stamp, Rust, Clay, Ochre, Moss,
+Sage, Pine, Earth, Sky, Plum — never category names) sticks when the category
+changes later (`colourFollowsCategory` / `categoryPatch`).
+
+The database already stores `color` separately from `category`, but the app
+couples them in the UI: `TempoGoalFields` and `GoalCreationFieldControls` set
+`color: getCategorySwatchColor(value)` on every category change, overwriting
+a chosen colour. Shipping the override means applying the same rule there
+(follow the category only while the colour still equals the old category's
+swatch) and adding the "Match category" choice to the colour picker. Also
+check surfaces that derive goal colour from category rather than
+`goal.color` (e.g. Gazetteer fills) so an override shows consistently.
 
 ## Open questions
 

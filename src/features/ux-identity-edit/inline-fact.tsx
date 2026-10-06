@@ -1,15 +1,17 @@
 "use client";
 
 import { Lock, Minus, Plus } from "lucide-react";
-import { type CSSProperties, type KeyboardEvent, type RefObject, useEffect } from "react";
-import { DEFAULT_GOAL_CATEGORIES, getCategorySwatchColor, type CategorySelection } from "@/lib/goals/category";
+import { type CSSProperties, type KeyboardEvent, type RefObject, useEffect, useState } from "react";
+import { DEFAULT_GOAL_CATEGORIES, type CategorySelection } from "@/lib/goals/category";
+import { Search } from "lucide-react";
 import type { GoalDifficulty } from "@/lib/goals/types";
-import { cadenceBounds, cadenceCountEditable, cadenceSummary, isMilestoneGoal, lockedRhythmLabel, type EditFact } from "./edit-model";
+import { cadenceBounds, cadenceCountEditable, cadenceSummary, categoryPatch, isMilestoneGoal, lockedRhythmLabel, type EditFact } from "./edit-model";
+import { ColourPicker } from "./colour-picker";
 import { FactEditor } from "./fact-editors";
 import type { EditSession } from "./use-edit-session";
 
 /** Facts whose inline editor needs the full width under the label rather than the value's spot. */
-export const WIDE_FACTS: EditFact[] = ["description", "link", "milestones"];
+export const WIDE_FACTS: EditFact[] = ["description", "link", "milestones", "color"];
 
 /** Close an inline editor on a press outside its container. */
 export function useDismiss(ref: RefObject<HTMLElement | null>, active: boolean, onDone: () => void) {
@@ -107,7 +109,7 @@ export function InlineFact({ fact, session, onDone }: { fact: EditFact; session:
           value={fields.category_selection}
           options={DEFAULT_GOAL_CATEGORIES.map((category) => ({ value: category.key as CategorySelection, label: category.label, color: category.color }))}
           onPick={(value) => {
-            patch({ category_selection: value, color: getCategorySwatchColor(value) });
+            patch(categoryPatch(fields, value));
             onDone();
           }}
         />
@@ -151,24 +153,49 @@ export function InlineFact({ fact, session, onDone }: { fact: EditFact; session:
         </span>
       );
     case "color":
-      return (
-        <span className="ie-inline-swatches" role="group" aria-label="Card colour">
-          {DEFAULT_GOAL_CATEGORIES.map((category) => (
-            <button key={category.key} type="button" aria-label={category.label} aria-pressed={fields.color.toLowerCase() === category.color} style={{ background: category.color }} onClick={() => { patch({ color: category.color }); onDone(); }} />
-          ))}
-        </span>
-      );
+      return <ColourPicker session={session} />;
     case "link":
-      return (
-        <span className="ie-inline-options" role="listbox" aria-label="Also counts toward">
-          {[{ id: "none", title: "Just this goal" }, ...session.linkOptions].map((option) => (
-            <button key={option.id} type="button" role="option" aria-selected={fields.linked_target_goal_id === option.id} onClick={() => { patch({ linked_target_goal_id: option.id }); onDone(); }}>
-              {option.title}
-            </button>
-          ))}
-        </span>
-      );
+      return <LinkPicker session={session} onDone={onDone} />;
     case "milestones":
       return <FactEditor fact="milestones" session={session} />;
   }
+}
+
+/** Search-first goal picker, so a long list of goals stays usable. */
+function LinkPicker({ session, onDone }: { session: EditSession; onDone: () => void }) {
+  const { fields, patch } = session;
+  const [query, setQuery] = useState("");
+  const needle = query.trim().toLowerCase();
+  const options = [{ id: "none", title: "Just this goal" }, ...session.linkOptions].filter((option) => !needle || option.id === "none" || option.title.toLowerCase().includes(needle));
+  const pick = (id: string) => {
+    patch({ linked_target_goal_id: id });
+    onDone();
+  };
+  return (
+    <span className="ie-link-picker">
+      <label className="ie-link-search">
+        <Search size={13} aria-hidden="true" />
+        <input
+          autoFocus
+          aria-label="Search your goals"
+          placeholder="Search your goals"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") onDone();
+            const matches = options.filter((option) => option.id !== "none");
+            if (event.key === "Enter" && matches.length === 1) pick(matches[0].id);
+          }}
+        />
+      </label>
+      <span className="ie-inline-options ie-link-options" role="listbox" aria-label="Also counts toward">
+        {options.map((option) => (
+          <button key={option.id} type="button" role="option" aria-selected={fields.linked_target_goal_id === option.id} onClick={() => pick(option.id)}>
+            {option.title}
+          </button>
+        ))}
+        {options.length === 1 && needle && <span className="ie-link-empty">No goals match “{query.trim()}”</span>}
+      </span>
+    </span>
+  );
 }
