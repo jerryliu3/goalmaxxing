@@ -10,7 +10,7 @@ describe("showcase-theme.css", () => {
 
   it("defines adaptive production tokens and a study override", () => {
     expect(css).toContain(".ach-showcase-root {");
-    expect(css).toContain(".gm-gazetteer .ach-showcase-root:not(.ach-showcase-root--study)");
+    expect(css).toContain('[data-ui-style="gazetteer"] .ach-showcase-root:not(.ach-showcase-root--study)');
     expect(css).toContain(".dark .ach-showcase-root:not(.ach-showcase-root--study)");
     expect(css).toContain(".ach-showcase-root--study");
     expect(css).toContain("var(--background)");

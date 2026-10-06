@@ -1,8 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@import "./themes.css";
+
+/* Theme values live in packages/shared/src/brand (generated into themes.css). */
 :root {
-  --radius: 0.875rem;
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 3px);
   --radius-lg: var(--radius);
@@ -12,130 +14,6 @@
   --motion-duration-hold: 480ms;
   --motion-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --motion-ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
-
-  --background: oklch(0.985 0.003 286);
-  --foreground: oklch(0.22 0.01 286);
-  --card: oklch(0.995 0.002 286);
-  --card-foreground: oklch(0.22 0.01 286);
-  --popover: oklch(0.995 0.002 286);
-  --popover-foreground: oklch(0.22 0.01 286);
-  --primary: #0f64bf;
-  --primary-foreground: #ffffff;
-  --secondary: #e4e4e7;
-  --secondary-foreground: #3f3f46;
-  --muted: oklch(0.95 0.008 286);
-  --muted-foreground: oklch(0.5 0.01 286);
-  --accent: oklch(0.92 0.018 255);
-  --accent-foreground: oklch(0.28 0.01 286);
-  --destructive: oklch(0.6 0.21 28);
-  --border: oklch(0.89 0.008 286);
-  --input: oklch(0.89 0.008 286);
-  --ring: #0f64bf;
-  /* Original calendar chrome: today = blue L2, selected = outline, adjacent = grey L1. */
-  --gm-page: var(--background);
-  --gm-gain: #10b981;
-  --gm-recover: #eab308;
-  --gm-warning: #eab308;
-  --gm-warning-fill: #fef9c3;
-  --gm-selection: var(--primary);
-  --gm-selection-foreground: var(--primary-foreground);
-  --gm-today: var(--gm-heatmap-2);
-  --gm-today-foreground: var(--primary-foreground);
-  --gm-day-selected: #4687d8;
-  --gm-day-selected-foreground: #ffffff;
-  /* Concrete grey L1 — color-mix() here was dropped by the theme, so tiles never painted. */
-  --gm-adjacent: #e4e4e7;
-  --gm-adjacent-foreground: oklch(0.36 0.01 286);
-  --gm-stamp-light: var(--primary);
-  --gm-heatmap-0: #ebedf0;
-  --gm-heatmap-1: #c5ddf7;
-  --gm-heatmap-2: #7eace6;
-  --gm-heatmap-3: #0f64bf;
-  --gm-heatmap-4: #0a458c;
-  --font-app-sans: var(--font-geist-sans), Inter, system-ui, sans-serif;
-  --font-app-display: var(--font-geist-sans), Inter, system-ui, sans-serif;
-  --font-app-mono: var(--font-geist-mono), ui-monospace, monospace;
-}
-
-.dark {
-  --background: oklch(0.19 0.01 286);
-  --foreground: oklch(0.96 0.003 286);
-  --card: oklch(0.24 0.01 286);
-  --card-foreground: oklch(0.96 0.003 286);
-  --popover: oklch(0.24 0.01 286);
-  --popover-foreground: oklch(0.96 0.003 286);
-  --primary: #4687d8;
-  --primary-foreground: #0b1f38;
-  --secondary: #3f3f46;
-  --secondary-foreground: #e4e4e7;
-  --muted: oklch(0.3 0.01 286);
-  --muted-foreground: oklch(0.75 0.01 286);
-  --accent: oklch(0.36 0.03 255);
-  --accent-foreground: oklch(0.96 0.003 286);
-  --destructive: oklch(0.72 0.19 25);
-  --border: oklch(0.36 0.01 286);
-  --input: oklch(0.36 0.01 286);
-  --ring: #4687d8;
-  --gm-page: var(--background);
-  --gm-gain: #34d399;
-  --gm-recover: #facc15;
-  --gm-warning: #facc15;
-  --gm-warning-fill: color-mix(in srgb, #facc15 22%, var(--background));
-  --gm-selection: var(--primary);
-  --gm-selection-foreground: var(--primary-foreground);
-  --gm-today: var(--gm-heatmap-4);
-  --gm-today-foreground: var(--primary-foreground);
-  --gm-day-selected: #7eace6;
-  --gm-day-selected-foreground: #0b1f38;
-  --gm-adjacent: #3f3f46;
-  --gm-adjacent-foreground: oklch(0.92 0.003 286);
-  --gm-stamp-light: var(--primary);
-  --gm-heatmap-0: #2a2f36;
-  --gm-heatmap-1: #163a63;
-  --gm-heatmap-2: #245ea6;
-  --gm-heatmap-3: #4687d8;
-  --gm-heatmap-4: #7eace6;
-  --font-app-sans: var(--font-geist-sans), Inter, system-ui, sans-serif;
-  --font-app-display: var(--font-geist-sans), Inter, system-ui, sans-serif;
-  --font-app-mono: var(--font-geist-mono), ui-monospace, monospace;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-gain: var(--gm-gain);
-  --color-recover: var(--gm-recover);
-  --color-warning: var(--gm-warning);
-  --color-warning-fill: var(--gm-warning-fill);
-  --color-page: var(--gm-page);
-  --color-selection: var(--gm-selection);
-  --color-selection-foreground: var(--gm-selection-foreground);
-  --color-today: var(--gm-today);
-  --color-today-foreground: var(--gm-today-foreground);
-  --color-day-selected: var(--gm-day-selected);
-  --color-day-selected-foreground: var(--gm-day-selected-foreground);
-  --color-adjacent: var(--gm-adjacent);
-  --color-adjacent-foreground: var(--gm-adjacent-foreground);
-  --color-stamp-light: var(--gm-stamp-light);
-  --font-sans: var(--font-app-sans);
-  --font-mono: var(--font-app-mono);
-  --font-display: var(--font-app-display);
 }
 
 /*
@@ -150,6 +28,7 @@
 }
 
 html {
+  background: var(--gm-page);
   min-height: 100%;
   overflow-y: scroll;
   overflow-x: clip;
@@ -195,127 +74,23 @@ body {
 }
 
 /*
- * Gazetteer is an opt-in visual style. Original tokens live on :root.
- * `.gm-gazetteer` overlays paper/rust on html when that style is selected.
+ * A theme applies to <html> or any subtree via data-ui-style. Display type
+ * defaults onto headings; base-layer rules so utilities and component classes
+ * still choose their own face.
  */
-.gm-gazetteer {
-  /* Warm near-white canvas with white cards; the paper tone (#f3ead8) is the muted
-     fill for tracks, inputs, and panels, so regions separate instead of blending. */
-  --background: #fffdf8;
-  --foreground: #241c14;
-  --card: #ffffff;
-  --card-foreground: #241c14;
-  --popover: #ffffff;
-  --popover-foreground: #241c14;
-  --primary: #9a4f2c;
-  --primary-foreground: #f8f1e3;
-  --secondary: #e4e4e7;
-  --secondary-foreground: #3f3f46;
-  --muted: #f3ead8;
-  --muted-foreground: #7a6a56;
-  --accent: #e8d9c0;
-  --accent-foreground: #241c14;
-  --border: #e4d7bf;
-  --input: #d4c4a4;
-  --ring: #9a4f2c;
-  --radius: 0.75rem;
-  --gm-page: #fbf7ef;
-  --gm-gain: #4a6740;
-  --gm-recover: #eab308;
-  --gm-warning: #eab308;
-  --gm-warning-fill: #fef9c3;
-  --gm-selection: #6f8175;
-  --gm-selection-foreground: #f8f1e3;
-  --gm-today: var(--gm-heatmap-1);
-  --gm-today-foreground: var(--foreground);
-  --gm-day-selected: color-mix(in srgb, var(--gm-selection) 28%, var(--background));
-  --gm-day-selected-foreground: var(--foreground);
-  /* Opaque Zinc 300 — one layer darker than Original so the grey reads on warm paper. */
-  --gm-adjacent: #d4d4d8;
-  --gm-adjacent-foreground: oklch(0.36 0.01 286);
-  --gm-stamp-light: #c88968;
-  --gm-heatmap-0: #efe4d0;
-  --gm-heatmap-1: color-mix(in srgb, var(--primary) 28%, var(--background));
-  --gm-heatmap-2: var(--gm-stamp-light);
-  --gm-heatmap-3: var(--primary);
-  --gm-heatmap-4: #6e341c;
-  --font-app-sans: var(--font-source-sans), Inter, system-ui, sans-serif;
-  --font-app-mono: var(--font-plex-mono), ui-monospace, monospace;
-  --font-app-display: var(--font-newsreader), Georgia, "Times New Roman", serif;
-  --font-sans: var(--font-app-sans);
-  --font-mono: var(--font-app-mono);
-  --font-display: var(--font-app-display);
-  color: var(--foreground);
-  background: var(--gm-page);
-  font-family: var(--font-app-sans);
-}
+@layer base {
+  [data-ui-style] {
+    color: var(--foreground);
+    font-family: var(--font-app-sans);
+  }
 
-.gm-gazetteer h1,
-.gm-gazetteer h2,
-.gm-gazetteer h3,
-.gm-gazetteer .font-display {
-  font-family: var(--font-app-display), Georgia, "Times New Roman", serif;
-}
-
-.gm-gazetteer .font-sans {
-  font-family: var(--font-app-sans), Inter, system-ui, sans-serif;
-}
-
-.gm-gazetteer .font-mono {
-  font-family: var(--font-app-mono), ui-monospace, monospace;
-}
-
-.dark .gm-gazetteer {
-  --background: #1c1610;
-  --foreground: #f3ead8;
-  --card: #241c14;
-  --card-foreground: #f3ead8;
-  --popover: #241c14;
-  --popover-foreground: #f3ead8;
-  --primary: #c88968;
-  --primary-foreground: #1c1610;
-  --secondary: #3f3f46;
-  --secondary-foreground: #e4e4e7;
-  --muted: #2a2218;
-  --muted-foreground: #c4b49a;
-  --accent: #3a2f24;
-  --accent-foreground: #f3ead8;
-  --border: #5c4e3f;
-  --input: #5c4e3f;
-  --ring: #c88968;
-  --gm-page: #1c1610;
-  --gm-gain: #8aa37a;
-  --gm-recover: #facc15;
-  --gm-warning: #facc15;
-  --gm-warning-fill: color-mix(in srgb, #facc15 22%, var(--background));
-  --gm-selection: #8aa396;
-  --gm-selection-foreground: #1c1610;
-  --gm-today: var(--gm-heatmap-1);
-  --gm-today-foreground: var(--foreground);
-  --gm-day-selected: color-mix(in srgb, var(--gm-selection) 70%, var(--background));
-  --gm-day-selected-foreground: var(--foreground);
-  --gm-adjacent: #52525b;
-  --gm-adjacent-foreground: oklch(0.92 0.003 286);
-  --gm-stamp-light: #8a5a40;
-  --gm-heatmap-0: #2a2218;
-  --gm-heatmap-1: color-mix(in srgb, var(--gm-stamp-light) 70%, var(--background));
-  --gm-heatmap-2: var(--gm-stamp-light);
-  --gm-heatmap-3: var(--primary);
-  --gm-heatmap-4: #e2c4b0;
+  :where(h1, h2, h3) {
+    font-family: var(--font-app-display);
+  }
 }
 
 .gm-landing-atmosphere {
-  background:
-    radial-gradient(1200px circle at 12% -8%, rgba(191, 219, 254, 0.7), transparent 55%),
-    radial-gradient(900px circle at 92% 6%, rgba(219, 234, 254, 0.8), transparent 52%),
-    radial-gradient(800px circle at 78% 88%, rgba(224, 231, 255, 0.45), transparent 50%);
-}
-
-.gm-gazetteer .gm-landing-atmosphere {
-  background:
-    radial-gradient(1200px circle at 12% -8%, rgba(154, 79, 44, 0.12), transparent 55%),
-    radial-gradient(900px circle at 92% 6%, rgba(212, 196, 164, 0.55), transparent 52%),
-    radial-gradient(800px circle at 78% 88%, rgba(74, 103, 64, 0.12), transparent 50%);
+  background: var(--gm-landing-atmosphere);
 }
 
 .overflow-x-auto,

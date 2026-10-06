@@ -20,7 +20,7 @@ export function MotionProductStudy() {
   const still = forceStill || Boolean(systemStill);
 
   return <UiStyleProvider initialStyleId="gazetteer"><MotionConfig reducedMotion={still ? "always" : "user"}>
-    <main className="motion-study gm-gazetteer min-h-dvh bg-background font-sans text-foreground" data-still={still}>
+    <main data-ui-style="gazetteer" className="motion-study min-h-dvh bg-background font-sans text-foreground" data-still={still}>
       <header className="border-b border-border px-4 py-3 sm:px-6"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
         <Link href="/ux" className="inline-flex min-h-11 items-center text-sm">← UX labs</Link>
         <p className="text-xs text-muted-foreground">Motion in context · local sample data · no account writes</p>

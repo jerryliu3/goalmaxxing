@@ -11,7 +11,6 @@ import {
 describe("ui style catalog", () => {
   afterEach(() => {
     document.documentElement.removeAttribute("data-ui-style");
-    document.documentElement.classList.remove("gm-gazetteer");
   });
 
   it("defaults unknown values to original", () => {
@@ -27,16 +26,14 @@ describe("ui style catalog", () => {
   it("reads the document dataset when no explicit id is passed", () => {
     document.documentElement.dataset.uiStyle = "gazetteer";
     expect(resolveUiStyleId()).toBe("gazetteer");
-    expect(getUiStyle(resolveUiStyleId()).htmlClass).toBe("gm-gazetteer");
+    expect(getUiStyle(resolveUiStyleId()).completionMark).toBe("nest");
   });
 
-  it("applies and clears the html overlay class", () => {
+  it("selects the theme through the html data attribute", () => {
     applyDocumentUiStyle(getUiStyle("gazetteer"));
-    expect(document.documentElement).toHaveClass("gm-gazetteer");
     expect(document.documentElement.dataset.uiStyle).toBe("gazetteer");
 
     applyDocumentUiStyle(getUiStyle("original"));
-    expect(document.documentElement).not.toHaveClass("gm-gazetteer");
     expect(document.documentElement.dataset.uiStyle).toBe("original");
   });
 
