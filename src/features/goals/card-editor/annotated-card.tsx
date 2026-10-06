@@ -1,7 +1,7 @@
 "use client";
 
 import { Lock, Pencil } from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type CSSProperties, type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import type { CardEditorSession } from "./card-editor-session";
 import { CARD_FACT_LABELS, type FaceFact, summarizeFaceFact } from "./card-facts";
@@ -221,6 +221,8 @@ export function AnnotatedCard({
       className="card-annotated"
       data-back={flipped}
       data-ready={layout !== null}
+      // The leader lines and callouts sit beside the card scene, so they need the colour too.
+      style={{ "--goal-color": fields.color } as CSSProperties}
     >
       <div ref={(node) => { columns.current.left = node; }} className="card-callouts" data-side="left" style={{ height: layout?.height }}>
         {LEFT.filter(shown).map(callout)}
