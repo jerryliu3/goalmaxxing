@@ -145,7 +145,7 @@ export function GoalCreationEntry({ onExit }: { onExit?: () => void }) {
         )}
         <div hidden={choosing}>
           {mode === "single" ? (
-            <GoalForm showBackButton={false} onExit={onExit} />
+            <GoalForm onExit={onExit} />
           ) : mode === "multi" ? (
             <BulkGoalForm showBackButton={false} onExit={onExit} />
           ) : mode === "training" ? (

@@ -17,7 +17,6 @@ interface UseGoalFormSubmitOptions {
   goalId?: string;
   state: GoalFormState;
   selectedLinkTarget: string;
-  isEditing: boolean;
   isPlannerTask: boolean;
   linkTargetsReady: boolean;
   linkTargetsError: string | null;
@@ -32,7 +31,6 @@ export function useGoalFormSubmit({
   goalId,
   state,
   selectedLinkTarget,
-  isEditing,
   isPlannerTask,
   linkTargetsReady,
   linkTargetsError,
@@ -42,6 +40,7 @@ export function useGoalFormSubmit({
   dismissWithoutRefresh,
   onExitRefresh,
 }: UseGoalFormSubmitOptions) {
+  const isEditing = Boolean(goalId);
   const [saving, setSaving] = useState(false);
   const [recovery, setRecovery] = useState<GoalFormRecovery | null>(null);
   const stableCreateGoalIdRef = useRef<string | null>(null);

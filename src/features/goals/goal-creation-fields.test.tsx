@@ -59,15 +59,12 @@ function comboboxWithText(text: string) {
 function renderControls(
   fields: GoalCreationFields,
   options: {
-    definitionFieldsLocked?: boolean;
     onFieldChange?: (change: GoalCreationFieldChange) => void;
     onPatch?: (patch: Partial<GoalCreationFields>) => void;
     linkTarget?: Partial<GoalCreationLinkTargetProps>;
     createKind?: "recurring" | "fixed_milestones" | "planner_task";
-    isEditing?: boolean;
     includePlannerTask?: boolean;
     teamId?: string | null;
-    completedCount?: number;
   } = {}
 ) {
   const onFieldChange =
@@ -82,13 +79,10 @@ function renderControls(
       fields={fields}
       onFieldChange={onFieldChange}
       onPatch={onPatch}
-      definitionFieldsLocked={options.definitionFieldsLocked ?? false}
       includePlannerTask={options.includePlannerTask ?? false}
       createKind={options.createKind ?? fields.frequency_type}
       onCreateKindChange={onCreateKindChange}
-      isEditing={options.isEditing ?? false}
       isPlannerTask={options.createKind === "planner_task"}
-      completedCount={options.completedCount}
       linkTarget={baseLinkProps(options.linkTarget)}
       teamId={options.teamId ?? null}
     />
@@ -134,10 +128,8 @@ describe("GoalCreationFieldControls create mode", () => {
         })}
         onFieldChange={vi.fn()}
         onPatch={vi.fn()}
-        definitionFieldsLocked={false}
         createKind="recurring"
         onCreateKindChange={vi.fn()}
-        isEditing={false}
         isPlannerTask={false}
         linkTarget={baseLinkProps()}
         teamId={null}
@@ -155,10 +147,8 @@ describe("GoalCreationFieldControls create mode", () => {
         })}
         onFieldChange={vi.fn()}
         onPatch={vi.fn()}
-        definitionFieldsLocked={false}
         createKind="recurring"
         onCreateKindChange={vi.fn()}
-        isEditing={false}
         isPlannerTask={false}
         linkTarget={baseLinkProps()}
         teamId={null}
@@ -197,10 +187,8 @@ describe("GoalCreationFieldControls create mode", () => {
         })}
         onFieldChange={vi.fn()}
         onPatch={vi.fn()}
-        definitionFieldsLocked={false}
         createKind="recurring"
         onCreateKindChange={vi.fn()}
-        isEditing={false}
         isPlannerTask={false}
         linkTarget={baseLinkProps()}
         teamId={null}
@@ -220,10 +208,8 @@ describe("GoalCreationFieldControls create mode", () => {
         })}
         onFieldChange={vi.fn()}
         onPatch={vi.fn()}
-        definitionFieldsLocked={false}
         createKind="recurring"
         onCreateKindChange={vi.fn()}
-        isEditing={false}
         isPlannerTask={false}
         linkTarget={baseLinkProps()}
         teamId={null}
@@ -245,10 +231,8 @@ describe("GoalCreationFieldControls create mode", () => {
         })}
         onFieldChange={vi.fn()}
         onPatch={vi.fn()}
-        definitionFieldsLocked={false}
         createKind="recurring"
         onCreateKindChange={vi.fn()}
-        isEditing={false}
         isPlannerTask={false}
         linkTarget={baseLinkProps()}
         teamId={null}
@@ -269,10 +253,8 @@ describe("GoalCreationFieldControls create mode", () => {
         })}
         onFieldChange={vi.fn()}
         onPatch={vi.fn()}
-        definitionFieldsLocked={false}
         createKind="recurring"
         onCreateKindChange={vi.fn()}
-        isEditing={false}
         isPlannerTask={false}
         linkTarget={baseLinkProps()}
         teamId={null}
@@ -381,79 +363,5 @@ describe("GoalCreationFieldControls create mode", () => {
     expect(screen.queryByLabelText("Achievement reward text")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Description")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Color accent")).not.toBeInTheDocument();
-  });
-});
-
-describe("GoalCreationFieldControls locked mode", () => {
-  it("disables goal type, cadence, and start date when definition fields are locked", () => {
-    renderControls(
-      baseFields({
-        recurrence_interval: "weekly",
-        target_basis: "period",
-        target_count: "3",
-      }),
-      {
-        definitionFieldsLocked: true,
-        isEditing: true,
-        createKind: "recurring",
-      }
-    );
-
-    expect(comboboxWithText("Recurring")).toBeDisabled();
-    expect(comboboxWithText("Weekly")).toBeDisabled();
-    const targetInput = document.getElementById("recurring-target-count");
-    expect(targetInput).not.toBeDisabled();
-    expect(screen.getByLabelText("Start date")).toBeDisabled();
-    expect(screen.getByLabelText("End date (optional)")).not.toBeDisabled();
-    expect(
-      screen.getByText(/goal type, frequency, and start date are fixed/i)
-    ).toBeInTheDocument();
-  });
-
-  it("keeps the lifetime target editable and floors it at existing completions", () => {
-    renderControls(
-      baseFields({
-        recurrence_interval: "daily",
-        target_basis: "lifetime",
-        target_count: "250",
-      }),
-      {
-        definitionFieldsLocked: true,
-        isEditing: true,
-        createKind: "recurring",
-        completedCount: 200,
-      }
-    );
-
-    const targetInput = document.getElementById("daily-lifetime-target-count");
-    expect(targetInput).not.toBeDisabled();
-    expect(targetInput).toHaveAttribute("min", "200");
-  });
-
-  it("keeps end date editable and end-date quick actions usable in locked mode", async () => {
-    const user = userEvent.setup();
-    const onPatch = vi.fn<(patch: Partial<GoalCreationFields>) => void>();
-    renderControls(
-      baseFields({
-        recurrence_interval: "weekly",
-        target_basis: "period",
-        target_count: "3",
-        end_date: "",
-      }),
-      {
-        definitionFieldsLocked: true,
-        isEditing: true,
-        createKind: "recurring",
-        onPatch,
-      }
-    );
-
-    await user.type(screen.getByLabelText("End date (optional)"), "2026-12-31");
-    expect(onPatch).toHaveBeenCalled();
-
-    await user.click(screen.getByRole("button", { name: "month end" }));
-    expect(onPatch).toHaveBeenCalledWith(
-      expect.objectContaining({ end_date: expect.any(String) })
-    );
   });
 });

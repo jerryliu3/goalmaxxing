@@ -1,7 +1,8 @@
 import { format, isValid, parseISO } from "date-fns";
 import { cardColourName } from "@/lib/goals/card-colour";
 import { getCategoryLabel } from "@/lib/goals/category";
-import type { GoalCreationFields } from "@/lib/goals/creation-model";
+import { applyGoalCreationFieldChange, type GoalCreationFields } from "@/lib/goals/creation-model";
+import { formatGoalDateLabel } from "@/lib/goals/linked-goal-labels";
 import { getGoalPeriodTargetMax } from "@/lib/goals/target-basis";
 import type { GoalDifficulty } from "@/lib/goals/types";
 import type { GoalFormState } from "@/features/today/goal-form-model";
@@ -30,11 +31,17 @@ export const CARD_FACT_LABELS: Record<CardFact, string> = {
   color: "Card colour",
 };
 
-export const DIFFICULTY_OPTIONS: ReadonlyArray<{ value: GoalDifficulty; label: string; short: string }> = [
-  { value: "easy", label: "Easy · a little lift", short: "a little lift" },
-  { value: "medium", label: "Medium · a good push", short: "a good push" },
-  { value: "hard", label: "Hard · a big stretch", short: "a big stretch" },
+export const DIFFICULTY_OPTIONS: ReadonlyArray<{ value: GoalDifficulty; name: string; label: string; short: string }> = [
+  { value: "easy", name: "Easy", label: "Easy · a little lift", short: "a little lift" },
+  { value: "medium", name: "Medium", label: "Medium · a good push", short: "a good push" },
+  { value: "hard", name: "Hard", label: "Hard · a big stretch", short: "a big stretch" },
 ];
+
+/** A new target count, through the creation model so milestone names grow and shrink with it. */
+export function targetCountPatch(fields: GoalCreationFields, next: number): Pick<GoalCreationFields, "target_count" | "milestone_names"> {
+  const { target_count, milestone_names } = applyGoalCreationFieldChange(fields, { type: "target_count", value: String(next) });
+  return { target_count, milestone_names };
+}
 
 export function isMilestoneGoal(fields: Pick<GoalCreationFields, "frequency_type">) {
   return fields.frequency_type === "fixed_milestones";
@@ -80,11 +87,6 @@ export function cadenceSummary(fields: GoalCreationFields) {
   return count === 1 ? "once a week" : `${count} days a week`;
 }
 
-export function formatCardDate(value: string) {
-  const parsed = parseISO(value);
-  return value && isValid(parsed) ? format(parsed, "MMM d, yyyy") : value;
-}
-
 export function formatCardTime(value: string) {
   if (!value) return "";
   const parsed = parseISO(`2000-01-01T${value}`);
@@ -104,9 +106,9 @@ export function summarizeFaceFact(fact: FaceFact, fields: GoalCreationFields): s
     case "difficulty":
       return DIFFICULTY_OPTIONS.find((option) => option.value === fields.difficulty)?.short ?? "";
     case "start":
-      return formatCardDate(fields.start_date);
+      return formatGoalDateLabel(fields.start_date);
     case "deadline":
-      return fields.end_date ? formatCardDate(fields.end_date) : "No deadline";
+      return fields.end_date ? formatGoalDateLabel(fields.end_date) : "No deadline";
     case "time":
       return fields.default_local_time ? formatCardTime(fields.default_local_time) : "Any time";
   }

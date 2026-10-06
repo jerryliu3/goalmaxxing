@@ -5,7 +5,7 @@ import { type CSSProperties, type ReactNode, useCallback, useEffect, useLayoutEf
 import { categoryChangePatch } from "@/lib/goals/card-colour";
 import { DEFAULT_GOAL_CATEGORIES, getCategoryLabel, type CategorySelection } from "@/lib/goals/category";
 import type { CardEditorSession } from "./card-editor-session";
-import { cadenceBounds, cadenceCountEditable, type FaceFact, isMilestoneGoal, DIFFICULTY_OPTIONS } from "./card-facts";
+import { cadenceBounds, cadenceCountEditable, DIFFICULTY_OPTIONS, type FaceFact, targetCountPatch } from "./card-facts";
 import { CardScene } from "./card-scene";
 import { useEscapeLayer } from "./inline-fact";
 import { type FaceRegion, useCardRegions } from "./use-card-regions";
@@ -100,12 +100,12 @@ export function DirectCard({ session, card, back, flipped }: { session: CardEdit
         <span className="card-stepper-pill" data-changed={changed("cadence")} style={{ left: Math.max(cadence.x - 48, -14), top: cadence.y + cadence.height / 2 }}>
           {cadenceCountEditable(fields) ? (
             <>
-              <button type="button" aria-label="More" disabled={count >= max} onClick={() => patch({ target_count: String(count + 1) })}><Plus size={14} /></button>
+              <button type="button" aria-label="More" disabled={count >= max} onClick={() => patch(targetCountPatch(fields, count + 1))}><Plus size={14} /></button>
               <button
                 type="button"
                 aria-label="Fewer"
                 disabled={count <= min}
-                onClick={() => patch({ target_count: String(count - 1), ...(isMilestoneGoal(fields) ? { milestone_names: fields.milestone_names.slice(0, count - 1) } : {}) })}
+                onClick={() => patch(targetCountPatch(fields, count - 1))}
               >
                 <Minus size={14} />
               </button>
@@ -249,7 +249,6 @@ function useTitleFont(stageRef: React.RefObject<HTMLDivElement | null>, regions:
     const title = stageRef.current?.querySelector("[data-tempo-goal-card] h2");
     if (!title) return;
     const style = getComputedStyle(title);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- measured from the rendered card
     setFont({ fontFamily: style.fontFamily, fontSize: style.fontSize, fontWeight: style.fontWeight, letterSpacing: style.letterSpacing, lineHeight: style.lineHeight, color: style.color });
   }, [stageRef, regions]);
   return font;

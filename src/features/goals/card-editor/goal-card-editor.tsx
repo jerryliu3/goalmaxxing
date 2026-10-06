@@ -43,7 +43,6 @@ export function GoalCardEditor({ goalId, onExit, onDismiss }: { goalId: string; 
     goalId,
     state,
     selectedLinkTarget,
-    isEditing: true,
     isPlannerTask: false,
     linkTargetsReady: form.linkTargetsReady,
     linkTargetsError: form.linkTargetsError,
@@ -91,7 +90,8 @@ export function GoalCardEditor({ goalId, onExit, onDismiss }: { goalId: string; 
       state.team_id === null
         ? {
             value: selectedLinkTarget,
-            selectedTitle: form.selectedLinkTargetGoal?.title ?? null,
+            // A linked goal that's no longer a candidate (achieved, archived, or failed to load) is still linked.
+            selectedTitle: selectedLinkTarget === "none" ? null : form.selectedLinkTargetGoal?.title ?? "Another goal",
             options: form.filteredLinkTargets,
             search: form.linkTargetSearch,
             onSearch: form.setLinkTargetSearch,

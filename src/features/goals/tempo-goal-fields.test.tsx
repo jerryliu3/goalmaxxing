@@ -38,8 +38,6 @@ function renderCreation(
       onCreateKindChange={vi.fn()}
       includePlannerTask={false}
       isPlannerTask={false}
-      definitionFieldsLocked={false}
-      isEditing={false}
       disabled={false}
       prefilled={options.prefilled}
       linkTarget={linkTarget}

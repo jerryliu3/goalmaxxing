@@ -57,7 +57,7 @@ export function boxWithin(element: Element | null, root: HTMLElement): Box | nul
 }
 
 export function useCardRegions(container: RefObject<HTMLElement | null>, version: string) {
-  const [layout, setLayout] = useState<{ regions: FaceRegion[]; width: number; height: number }>({ regions: [], width: 0, height: 0 });
+  const [layout, setLayout] = useState<{ regions: FaceRegion[]; width: number }>({ regions: [], width: 0 });
   useLayoutEffect(() => {
     const root = container.current;
     if (!root) return;
@@ -90,7 +90,7 @@ export function useCardRegions(container: RefObject<HTMLElement | null>, version
         const x = fact === "deadline" ? anchor.x + anchor.width - MIN_WIDTH : anchor.x;
         return { fact, x, y: anchor.y, width: MIN_WIDTH, height: Math.max(anchor.height, 16), present: false };
       });
-      setLayout({ regions: next, width: root.offsetWidth, height: root.offsetHeight });
+      setLayout({ regions: next, width: root.offsetWidth });
     };
     measure();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);

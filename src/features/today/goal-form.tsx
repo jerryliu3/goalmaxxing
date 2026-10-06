@@ -2,7 +2,7 @@
 import { useCoachPageContext } from "@/features/coach/use-coach-page-context";
 
 import { useAppRouter } from "@/lib/navigation/use-app-router";
-import { type ReactNode, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,10 +12,7 @@ import {
   GoalFormLinkTargetsErrorAlert,
   GoalFormRecoveryAlert,
 } from "@/features/goals/goal-form-alerts";
-import {
-  completeGoalEditor,
-  dismissGoalEditor,
-} from "@/features/goals/goal-editor-navigation";
+import { completeGoalEditor } from "@/features/goals/goal-editor-navigation";
 import {
   applyGoalFormFieldChange,
   toGoalCreationFields,
@@ -26,28 +23,9 @@ import { useGoalFormSubmit } from "@/features/today/use-goal-form-submit";
 import { TempoGoalFields } from "@/features/goals/tempo-goal-fields";
 
 /** Creates a goal or one-time task. Editing an existing goal happens on its card (`GoalCardEditor`). */
-interface GoalFormProps {
-  showBackButton?: boolean;
-  modeSwitchControl?: ReactNode;
-  onExit?: () => void;
-  onDismiss?: () => void;
-}
-
-export function GoalForm({
-  showBackButton = true,
-  modeSwitchControl,
-  onExit,
-  onDismiss,
-}: GoalFormProps) {
+export function GoalForm({ onExit }: { onExit?: () => void }) {
   const router = useAppRouter();
   const [createReady, setCreateReady] = useState(false);
-  const dismissEditor = useCallback(() => {
-    if (onDismiss) {
-      onDismiss();
-      return;
-    }
-    dismissGoalEditor(router);
-  }, [onDismiss, router]);
   const completeAndExit = useCallback(() => {
     if (onExit) {
       onExit();
@@ -64,7 +42,6 @@ export function GoalForm({
     loading,
     linkTargetsReady,
     linkTargetsError,
-    linkLoadAttempt,
     setLinkLoadAttempt,
     linkTargetSearch,
     setLinkTargetSearch,
@@ -72,10 +49,7 @@ export function GoalForm({
     setLinkTargetOpen,
     createKind,
     updateCreateKind,
-    isEditing,
     isPlannerTask,
-    definitionFieldsLocked,
-    completedCount,
     filteredLinkTargets,
     selectedLinkTargetGoal,
     validationError,
@@ -93,36 +67,18 @@ export function GoalForm({
   } = useGoalFormSubmit({
     state,
     selectedLinkTarget,
-    isEditing,
     isPlannerTask,
     linkTargetsReady,
     linkTargetsError,
     validationError,
     supabase,
     completeAndExit,
-    dismissWithoutRefresh: dismissEditor,
-    onExitRefresh: () => router.refresh(),
   });
 
   const goalFormId = "goal-form-create";
 
   return (
     <Card className="gap-0 border-0 bg-transparent py-0 shadow-none">
-      {modeSwitchControl || showBackButton ? (
-        <div className="flex items-center justify-between px-4">
-          {modeSwitchControl}
-          {showBackButton && (
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={saving || recovery !== null}
-              onClick={dismissEditor}
-            >
-              Cancel
-            </Button>
-          )}
-        </div>
-      ) : null}
       <CardContent className="px-2 sm:px-4">
         {recovery ? (
           <GoalFormRecoveryAlert
@@ -196,8 +152,6 @@ export function GoalForm({
               }
               setState((previous) => ({ ...previous, ...patch }));
             }}
-            definitionFieldsLocked={definitionFieldsLocked}
-            completedCount={completedCount}
             disabled={saving || recovery !== null}
             includePlannerTask
             createKind={createKind}
@@ -207,7 +161,6 @@ export function GoalForm({
               }
               updateCreateKind(nextKind);
             }}
-            isEditing={isEditing}
             isPlannerTask={isPlannerTask}
             titlePlaceholder={
               isPlannerTask

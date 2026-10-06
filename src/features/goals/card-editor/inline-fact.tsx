@@ -8,7 +8,7 @@ import type { GoalDifficulty } from "@/lib/goals/types";
 import { MilestoneNameFields } from "../milestone-name-fields";
 import { clampPlaqueTarget, creationPlaqueTarget, MAX_PLAQUE_TARGET, MIN_PLAQUE_TARGET } from "../card-material/creation-plaque-target";
 import type { CardEditorSession } from "./card-editor-session";
-import { cadenceBounds, cadenceCountEditable, cadenceSummary, cadenceUnit, isMilestoneGoal, lockedRhythmLabel, type CardFact } from "./card-facts";
+import { cadenceBounds, cadenceCountEditable, cadenceSummary, cadenceUnit, DIFFICULTY_OPTIONS, lockedRhythmLabel, targetCountPatch, type CardFact } from "./card-facts";
 
 /** Facts whose editor needs the full width under the label rather than the value's spot. */
 export const WIDE_FACTS: CardFact[] = ["description", "link", "milestones", "color"];
@@ -106,7 +106,7 @@ export function InlineFact({ fact, session, onDone }: { fact: CardFact; session:
             min={min}
             max={max}
             unit={cadenceUnit(fields)}
-            onChange={(next) => patch({ target_count: String(next), ...(isMilestoneGoal(fields) ? { milestone_names: fields.milestone_names.slice(0, next) } : {}) })}
+            onChange={(next) => patch(targetCountPatch(fields, next))}
           />
         </span>
       );
@@ -137,7 +137,7 @@ export function InlineFact({ fact, session, onDone }: { fact: CardFact; session:
         <Segments<GoalDifficulty>
           label="Difficulty"
           value={fields.difficulty}
-          options={[{ value: "easy", label: "Easy" }, { value: "medium", label: "Medium" }, { value: "hard", label: "Hard" }]}
+          options={DIFFICULTY_OPTIONS.map(({ value, name }) => ({ value, label: name }))}
           onPick={(difficulty) => {
             patch({ difficulty });
             onDone();
