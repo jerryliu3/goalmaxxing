@@ -47,8 +47,6 @@ export function GoalForm({ onExit }: { onExit?: () => void }) {
     setLinkLoadAttempt,
     linkTargetSearch,
     setLinkTargetSearch,
-    linkTargetOpen,
-    setLinkTargetOpen,
     createKind,
     updateCreateKind,
     isPlannerTask,
@@ -130,6 +128,7 @@ export function GoalForm({ onExit }: { onExit?: () => void }) {
             }}
             onReviewChange={setCreateReady}
             onPlaqueTargetChange={(target) => setState((previous) => ({ ...previous, plaque_target: target }))}
+            reward={state.reward_text}
             error={validationError}
             action={
               <Button type="submit" disabled={submitDisabled}>
@@ -178,13 +177,6 @@ export function GoalForm({ onExit }: { onExit?: () => void }) {
                   return;
                 }
                 setSelectedLinkTarget(value);
-              },
-              open: linkTargetOpen,
-              onOpenChange: (open) => {
-                setLinkTargetOpen(open);
-                if (!open) {
-                  setLinkTargetSearch("");
-                }
               },
               searchQuery: linkTargetSearch,
               onSearchQueryChange: setLinkTargetSearch,

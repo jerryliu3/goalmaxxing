@@ -16,6 +16,10 @@
   justify-self: center;
   perspective: 1100px;
 }
+/* The preview's flip scene fills the preview; the back is the card's own size. */
+.tempo-preview > .card-scene {
+  width: 100%;
+}
 .tempo-card {
   --goal-color: #6366f1;
   position: relative;
@@ -180,8 +184,10 @@
 .tempo-fields details[open] > summary {
   margin-bottom: 1rem;
 }
-.tempo-fields details > label {
-  margin-bottom: 1rem;
+.tempo-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 1rem;
 }
 .tempo-choices {
   display: flex;
@@ -262,13 +268,38 @@
 .tempo-beats + .tempo-hint {
   margin-top: 1rem;
 }
-.tempo-advanced {
-  display: grid;
-  gap: 1.25rem;
-}
-.tempo-check {
-  display: flex !important;
+/* Turns the preview card over to its back (why, reward, colour, link). */
+.tempo-more {
+  display: flex;
   align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.8rem 1rem;
+  border: 1px dashed color-mix(in srgb, var(--goal-color) 45%, var(--border));
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--goal-color) 6%, var(--background));
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    border-color 0.18s;
+}
+.tempo-more:hover:not(:disabled),
+.tempo-more[aria-expanded="true"] {
+  border-style: solid;
+  border-color: var(--goal-color);
+}
+.tempo-more svg {
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--goal-color) 70%, var(--foreground));
+}
+.tempo-more strong {
+  display: block;
+  font-size: 0.85rem;
+}
+.tempo-more .tempo-hint {
+  display: block;
 }
 .tempo-footer {
   display: flex;
@@ -1073,6 +1104,10 @@
     width: min(66%, calc(48dvh * 330 / 382 * .66), 13.2rem);
     margin-inline: auto;
     justify-self: center;
+  }
+  /* The back's rows need more room than the small face preview gives. */
+  .tempo-preview[data-back="true"] {
+    width: min(100%, 21rem);
   }
 }
 
