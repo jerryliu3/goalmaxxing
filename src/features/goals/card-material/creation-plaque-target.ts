@@ -5,8 +5,8 @@ import {
   CADENCE_ASSEMBLY_SOFT_HORIZON_DAYS,
 } from "./cadence-assembly-target";
 
-const MIN_TARGET = 1;
-const MAX_TARGET = 20;
+export const MIN_PLAQUE_TARGET = 1;
+export const MAX_PLAQUE_TARGET = 20;
 
 function asGoal(fields: GoalCreationFields): Goal {
   return {
@@ -49,15 +49,15 @@ export function creationPlaqueTarget(fields: GoalCreationFields): number {
   ) {
     const count = Number(fields.target_count);
     const raw = Number.isFinite(count) && count > 0 ? Math.round(count) : 1;
-    return Math.min(MAX_TARGET, Math.max(MIN_TARGET, raw));
+    return Math.min(MAX_PLAQUE_TARGET, Math.max(MIN_PLAQUE_TARGET, raw));
   }
 
   return (
     artificialCadenceAssemblyTarget(asGoal(fields)) ??
     Math.min(
-      MAX_TARGET,
+      MAX_PLAQUE_TARGET,
       Math.max(
-        MIN_TARGET,
+        MIN_PLAQUE_TARGET,
         Math.round(CADENCE_ASSEMBLY_SOFT_HORIZON_DAYS * 0.9),
       ),
     )
@@ -66,7 +66,7 @@ export function creationPlaqueTarget(fields: GoalCreationFields): number {
 
 export function clampPlaqueTarget(value: number): number {
   if (!Number.isFinite(value)) {
-    return MIN_TARGET;
+    return MIN_PLAQUE_TARGET;
   }
-  return Math.min(MAX_TARGET, Math.max(MIN_TARGET, Math.round(value)));
+  return Math.min(MAX_PLAQUE_TARGET, Math.max(MIN_PLAQUE_TARGET, Math.round(value)));
 }

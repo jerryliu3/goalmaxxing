@@ -7,6 +7,7 @@ import {
   createDefaultGoalCreationFields,
   getGoalCreationValidationFeedback,
 } from "@/lib/goals/creation-model";
+import { GoalCardEditor } from "@/features/goals/card-editor/goal-card-editor";
 import { GoalForm } from "@/features/today/goal-form";
 import { resolveGoalDefinitionValidationFeedback } from "@/lib/goals/definition-validation";
 import { validateGoalDefinition } from "@/lib/goals/definition-validation";
@@ -669,17 +670,10 @@ describe("GoalForm persistence recovery", () => {
     });
     const user = userEvent.setup();
 
-    render(
-      <GoalForm goalId="goal-edit-1" showBackButton={false} onExit={vi.fn()} />,
-    );
+    render(<GoalCardEditor goalId="goal-edit-1" onExit={vi.fn()} onDismiss={vi.fn()} />);
 
-    await screen.findByText("Edit goal");
-    await user.click(
-      screen.getByRole("button", { name: /advanced settings/i }),
-    );
-    expect(
-      screen.getByRole("button", { name: "Select link target" }),
-    ).toHaveTextContent("goal-main-1");
+    await user.click(await screen.findByRole("button", { name: /Name\s*Existing goal/i }));
+    await user.type(screen.getByLabelText("Goal name"), " renamed");
     expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
     expect(screen.getByText("link candidates unavailable")).toBeInTheDocument();
     expect(
@@ -811,10 +805,9 @@ describe("GoalForm persistence recovery", () => {
     const onExit = vi.fn();
     const user = userEvent.setup();
 
-    render(
-      <GoalForm goalId="goal-edit-2" showBackButton={false} onExit={onExit} />,
-    );
-    await screen.findByText("Edit goal");
+    render(<GoalCardEditor goalId="goal-edit-2" onExit={onExit} onDismiss={vi.fn()} />);
+    await user.click(await screen.findByRole("button", { name: /Name\s*Existing goal/i }));
+    await user.type(screen.getByLabelText("Goal name"), " renamed");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() => {
@@ -865,15 +858,8 @@ describe("GoalForm persistence recovery", () => {
     const onDismiss = vi.fn();
     const user = userEvent.setup();
 
-    render(
-      <GoalForm
-        goalId="goal-archive-1"
-        showBackButton={false}
-        onExit={onExit}
-        onDismiss={onDismiss}
-      />,
-    );
-    await screen.findByText("Edit goal");
+    render(<GoalCardEditor goalId="goal-archive-1" onExit={onExit} onDismiss={onDismiss} />);
+    await user.click(await screen.findByRole("button", { name: "Turn over for more" }));
     await user.click(screen.getByRole("button", { name: "Archive goal" }));
 
     await waitFor(() => {

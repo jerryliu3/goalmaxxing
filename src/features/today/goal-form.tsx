@@ -1,25 +1,20 @@
 "use client";
 import { useCoachPageContext } from "@/features/coach/use-coach-page-context";
 
-import { Archive, Trash2, Undo2 } from "lucide-react";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
 import { type ReactNode, useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LoadingCard } from "@/components/ui/loading-card";
-import { GoalCreationFieldControls } from "@/features/goals/goal-creation-fields";
 import { GoalDefaultTimeField } from "@/features/goals/goal-schedule-fields";
 import {
   GoalFormLinkTargetsErrorAlert,
   GoalFormRecoveryAlert,
 } from "@/features/goals/goal-form-alerts";
-import { GoalFormHeader } from "@/features/goals/goal-form-header";
 import {
   completeGoalEditor,
   dismissGoalEditor,
-  goalEditorFallbackHref,
 } from "@/features/goals/goal-editor-navigation";
 import {
   applyGoalFormFieldChange,
@@ -30,8 +25,8 @@ import { useGoalFormSubmit } from "@/features/today/use-goal-form-submit";
 
 import { TempoGoalFields } from "@/features/goals/tempo-goal-fields";
 
+/** Creates a goal or one-time task. Editing an existing goal happens on its card (`GoalCardEditor`). */
 interface GoalFormProps {
-  goalId?: string;
   showBackButton?: boolean;
   modeSwitchControl?: ReactNode;
   onExit?: () => void;
@@ -39,7 +34,6 @@ interface GoalFormProps {
 }
 
 export function GoalForm({
-  goalId,
   showBackButton = true,
   modeSwitchControl,
   onExit,
@@ -47,8 +41,6 @@ export function GoalForm({
 }: GoalFormProps) {
   const router = useAppRouter();
   const [createReady, setCreateReady] = useState(false);
-  const GoalFields = goalId ? GoalCreationFieldControls : TempoGoalFields;
-  const exitHref = goalEditorFallbackHref;
   const dismissEditor = useCallback(() => {
     if (onDismiss) {
       onDismiss();
@@ -70,7 +62,6 @@ export function GoalForm({
     selectedLinkTarget,
     setSelectedLinkTarget,
     loading,
-    editingGoal,
     linkTargetsReady,
     linkTargetsError,
     linkLoadAttempt,
@@ -90,8 +81,8 @@ export function GoalForm({
     validationError,
     validationWarning,
     supabase,
-  } = useGoalFormState(goalId);
-  useCoachPageContext({ surface: "goal", selectedGoalId: isPlannerTask ? undefined : goalId, selectedTaskId: isPlannerTask ? goalId : undefined }, 10);
+  } = useGoalFormState();
+  useCoachPageContext({ surface: "goal" }, 10);
 
   const {
     saving,
@@ -99,10 +90,7 @@ export function GoalForm({
     submitDisabled,
     onSubmit,
     retryGoalLink,
-    toggleArchive,
-    softDeleteGoal,
   } = useGoalFormSubmit({
-    goalId,
     state,
     selectedLinkTarget,
     isEditing,
@@ -116,40 +104,11 @@ export function GoalForm({
     onExitRefresh: () => router.refresh(),
   });
 
-  const goalFormId = isEditing ? "goal-form-edit" : "goal-form-create";
-
-  if (loading && isEditing) {
-    return (
-      <LoadingCard
-        title="Loading goal form..."
-        description="Preparing your editing workspace."
-      />
-    );
-  }
+  const goalFormId = "goal-form-create";
 
   return (
-    <Card
-      className={
-        isEditing
-          ? "gap-6 shadow-sm"
-          : "gap-0 border-0 bg-transparent py-0 shadow-none"
-      }
-    >
-      {isEditing ? (
-        <GoalFormHeader
-          isEditing={isEditing}
-          isPlannerTask={isPlannerTask}
-          saving={saving}
-          hasRecovery={recovery !== null}
-          showBackButton={showBackButton}
-          exitHref={exitHref}
-          validationError={validationError}
-          submitDisabled={submitDisabled}
-          goalFormId={goalFormId}
-          modeSwitchControl={modeSwitchControl}
-          onBack={onExit || onDismiss ? dismissEditor : undefined}
-        />
-      ) : modeSwitchControl || showBackButton ? (
+    <Card className="gap-0 border-0 bg-transparent py-0 shadow-none">
+      {modeSwitchControl || showBackButton ? (
         <div className="flex items-center justify-between px-4">
           {modeSwitchControl}
           {showBackButton && (
@@ -164,7 +123,7 @@ export function GoalForm({
           )}
         </div>
       ) : null}
-      <CardContent className={isEditing ? "space-y-6" : "px-2 sm:px-4"}>
+      <CardContent className="px-2 sm:px-4">
         {recovery ? (
           <GoalFormRecoveryAlert
             kind={recovery.kind}
@@ -193,7 +152,7 @@ export function GoalForm({
           id={goalFormId}
           className="space-y-6"
           onSubmit={(event) => {
-            if (!isEditing && !createReady && !recovery) {
+            if (!createReady && !recovery) {
               event.preventDefault();
               return;
             }
@@ -205,7 +164,7 @@ export function GoalForm({
               {validationWarning}
             </div>
           ) : null}
-          <GoalFields
+          <TempoGoalFields
             taskSchedule={{
               date: state.task_scheduled_date,
               time: state.task_scheduled_time,
@@ -240,7 +199,7 @@ export function GoalForm({
             definitionFieldsLocked={definitionFieldsLocked}
             completedCount={completedCount}
             disabled={saving || recovery !== null}
-            includePlannerTask={!isEditing}
+            includePlannerTask
             createKind={createKind}
             onCreateKindChange={(nextKind) => {
               if (saving || recovery !== null) {
@@ -332,43 +291,6 @@ export function GoalForm({
                   </div>
                 </>
               ) : null
-            }
-            middleSlot={
-              <div className="flex flex-wrap items-center gap-2">
-                {isEditing && editingGoal?.archived_at ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={saving || recovery !== null}
-                    onClick={() => toggleArchive(true)}
-                  >
-                    <Undo2 className="size-4" />
-                    Restore goal
-                  </Button>
-                ) : null}
-                {isEditing && !editingGoal?.archived_at ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={saving || recovery !== null}
-                    onClick={() => toggleArchive(false)}
-                  >
-                    <Archive className="size-4" />
-                    Archive goal
-                  </Button>
-                ) : null}
-                {isEditing ? (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    disabled={saving || recovery !== null}
-                    onClick={softDeleteGoal}
-                  >
-                    <Trash2 className="size-4" />
-                    Delete goal
-                  </Button>
-                ) : null}
-              </div>
             }
             startDateId="start-date"
             endDateId="end-date"
