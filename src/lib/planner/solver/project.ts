@@ -45,6 +45,15 @@ export function projectWorkUnitsToSolver({
     unit.scheduledDate !== null &&
     unit.placementWindow !== null &&
     compareDateStrings(unit.scheduledDate, unit.placementWindow.start) < 0;
+  // Preparation runs in 12-month chunks that move with the month, and a cadence
+  // week belongs to the chunk holding most of its days. When a boundary moves
+  // onto a week already planned, its later days fall outside this chunk's
+  // placement window. Soft-locking such a date is an invalid lock that blocks
+  // the whole goal, so leave it free; prepare still keeps the persisted date.
+  const sitsAfterPlacementWindow = (unit: PlannerWorkUnit) =>
+    unit.scheduledDate !== null &&
+    unit.placementWindow !== null &&
+    compareDateStrings(unit.scheduledDate, unit.placementWindow.end) > 0;
   /**
    * Recovery releases a stale placement so the solver can re-place it. Only an
    * uncredited, unlocked, unpinned unit that still has a placement window
@@ -65,7 +74,7 @@ export function projectWorkUnitsToSolver({
     if (pinnedDate !== undefined) {
       return pinnedDate;
     }
-    if (isRecoverablePastPlacement(unit)) {
+    if (isRecoverablePastPlacement(unit) || sitsAfterPlacementWindow(unit)) {
       return null;
     }
     // Calendar-open prepare freezes unlocked persisted dates. Explicit rebuild

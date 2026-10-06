@@ -162,6 +162,56 @@ describe("projectWorkUnitsToSolver", () => {
     expect(frozen[0]?.candidateDates).toContain("2026-08-25");
   });
 
+  it("leaves a preserved assignment past its window free instead of locking it", () => {
+    // A preparation chunk ending Sep 30 owns the week of Mon Sep 27, so a
+    // session planned for Fri Oct 1 (when that week sat inside one chunk) now
+    // sits past its window.
+    const result = projectWorkUnitsToSolver({
+      workUnits: [
+        createWorkUnit({
+          kind: "cadence",
+          unitKey: "cadence:2027-09-27:1",
+          creditWindow: { start: "2027-09-27", end: "2027-10-03" },
+          placementWindow: { start: "2027-09-27", end: "2027-09-30" },
+          draftMoveWindow: { start: "2027-09-27", end: "2027-09-30" },
+          classification: "future",
+          scheduledDate: "2027-10-01",
+        }),
+      ],
+      compiledPolicy,
+      assessments,
+      preserveExistingAssignments: true,
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.lockedDate).toBeNull();
+    expect(result[0]?.previousDate).toBe("2027-10-01");
+    expect(result[0]?.candidateDates).toEqual([
+      "2027-09-27",
+      "2027-09-28",
+      "2027-09-29",
+      "2027-09-30",
+    ]);
+  });
+
+  it("keeps a hard lock past its window, which the solver reports as invalid", () => {
+    const result = projectWorkUnitsToSolver({
+      workUnits: [
+        createWorkUnit({
+          placementWindow: { start: "2026-08-20", end: "2026-08-25" },
+          draftMoveWindow: { start: "2026-08-20", end: "2026-08-25" },
+          scheduledDate: "2026-08-28",
+          locked: true,
+        }),
+      ],
+      compiledPolicy,
+      assessments,
+      preserveExistingAssignments: true,
+    });
+
+    expect(result[0]?.lockedDate).toBe("2026-08-28");
+  });
+
   it("keeps an in-window preserved assignment movable during rebuild rebalance", () => {
     const result = projectWorkUnitsToSolver({
       workUnits: [
