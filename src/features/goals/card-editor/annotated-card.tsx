@@ -89,7 +89,7 @@ export function AnnotatedCard({
         const anchor = node.querySelector<HTMLElement>("[data-anchor]");
         // offsetTop is measured inside the callout's border, so add it back.
         const anchorY = node.clientTop + (anchor ? anchor.offsetTop + anchor.offsetHeight / 2 : 30);
-        const target = stage.y + region.y + region.height / 2;
+        const target = stage.y + (region.point?.y ?? region.midY);
         const top = Math.max(target - columnTop - anchorY, cursor);
         tops[region.fact] = top;
         cursor = top + node.offsetHeight + (labelsOnly ? LABEL_GAP : GAP);
@@ -97,7 +97,7 @@ export function AnnotatedCard({
           fact: region.fact,
           x1: side === "left" ? left.x + left.width : right.x,
           y1: columnTop + top + anchorY,
-          x2: stage.x + (side === "left" ? region.x - 4 : region.x + region.width + 4),
+          x2: stage.x + (side === "left" ? region.x - 4 : (region.point?.x ?? region.x + region.width) + 4),
           y2: target,
         });
       }

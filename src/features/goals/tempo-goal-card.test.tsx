@@ -307,17 +307,17 @@ describe("TempoGoalCard metadata corners", () => {
 
   it("keeps start and end stacked at the left and the time at the right, reserved when empty", () => {
     const card = renderCard({ fields: { ...baseFields, end_date: "", default_local_time: "" }, visibility: fullVisibility });
-    const range = card.querySelectorAll(".tempo-card-date-range > span");
-    expect([...range].map((line) => line.textContent)).toEqual(["From 2026-01-01", ""]);
+    const range = card.querySelectorAll(".tempo-card-date-line");
+    expect([...range].map((line) => line.textContent)).toEqual(["From2026-01-01", ""]);
     expect(card.querySelector(".tempo-card-time")?.textContent).toBe("");
     // A single dates row whatever is filled in, so the face never shifts.
     expect(card.querySelectorAll(".tempo-card-dates")).toHaveLength(1);
     cleanup();
 
     const filled = renderCard({ fields: { ...baseFields, default_local_time: "07:30" }, visibility: fullVisibility });
-    expect([...filled.querySelectorAll(".tempo-card-date-range > span")].map((line) => line.textContent)).toEqual([
-      "From 2026-01-01",
-      "Until 2026-12-31",
+    expect([...filled.querySelectorAll(".tempo-card-date-line")].map((line) => line.textContent)).toEqual([
+      "From2026-01-01",
+      "Until2026-12-31",
     ]);
     expect(filled.querySelector(".tempo-card-time")?.textContent).toBe("07:30");
     expect(filled.querySelectorAll(".tempo-card-dates")).toHaveLength(1);

@@ -966,9 +966,19 @@
 }
 .tempo-card-date-range {
   display: grid;
-  gap: 0.15em;
+  grid-template-columns: auto auto;
+  column-gap: 0.35em;
+  row-gap: 0.15em;
 }
-.tempo-card-date-range > span,
+.tempo-card-date-line {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+.tempo-card-date-only {
+  grid-column: 1 / -1;
+}
+.tempo-card-date-line,
 .tempo-card-time {
   min-height: 1.25em;
   line-height: 1.25;
