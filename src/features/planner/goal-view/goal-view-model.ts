@@ -89,23 +89,20 @@ export function buildGoalViewSessions(
   return sessions;
 }
 
-const byDateTime = (a: GoalViewSession, b: GoalViewSession) =>
+/** Date, then time (untimed last), then key: one stable order for sessions. */
+export const byDateTime = (a: GoalViewSession, b: GoalViewSession) =>
   a.date.localeCompare(b.date) ||
   (a.time || "24:00").localeCompare(b.time || "24:00") ||
   a.key.localeCompare(b.key);
 
-/** One goal's sessions by date; past ones only when `showPast` is on. */
-export function sessionsForGoal(
+/** One goal's sessions from today on, by date. */
+export function upcomingSessionsForGoal(
   sessions: readonly GoalViewSession[],
   goalId: string,
-  showPast: boolean,
   today: string
 ) {
   return sessions
-    .filter(
-      (session) =>
-        session.goalId === goalId && (showPast || session.date >= today)
-    )
+    .filter((session) => session.goalId === goalId && session.date >= today)
     .sort(byDateTime);
 }
 
@@ -122,14 +119,15 @@ export function goalIdsWithUpcomingSessions(
 /**
  * Goals that have at least one session, in the planner's own goal order so
  * cards never reshuffle while dates are completed or moved. Goals that ended
- * before today, or have nothing left to do, only appear with `showPast`.
+ * before today, or have nothing left to do, only appear with `includePast`
+ * (the calendar, which shows past dates).
  */
 export function selectGoalViewGoals(
   goals: readonly Goal[],
   sessions: readonly GoalViewSession[],
-  { showPast, today }: { showPast: boolean; today: string }
+  { includePast, today }: { includePast: boolean; today: string }
 ) {
-  if (showPast) {
+  if (includePast) {
     const withSessions = new Set(sessions.map((session) => session.goalId));
     return goals.filter((goal) => withSessions.has(goal.id));
   }

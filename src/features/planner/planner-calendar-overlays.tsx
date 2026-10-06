@@ -80,6 +80,8 @@ export interface PlannerCalendarOverlaysProps {
   canNavigateToNextOpenInstance: boolean;
   canNavigateToLastOpenInstance: boolean;
   eventDetailCallbacks: PlannerEventDetailDialogCallbacks;
+  /** Goal View has no checklist row to unfold in, so session details pop up. */
+  eventDetailPresentation?: "inline" | "popup";
   filtersOpen: boolean;
   onFiltersOpenChange: (open: boolean) => void;
   hideTasks: boolean;
@@ -139,6 +141,7 @@ export function PlannerCalendarOverlays({
   canNavigateToNextOpenInstance,
   canNavigateToLastOpenInstance,
   eventDetailCallbacks,
+  eventDetailPresentation = "inline",
   filtersOpen,
   onFiltersOpenChange,
   hideTasks,
@@ -217,6 +220,7 @@ export function PlannerCalendarOverlays({
             canNavigateToNextOpenInstance={canNavigateToNextOpenInstance}
             canNavigateToLastOpenInstance={canNavigateToLastOpenInstance}
             callbacks={eventDetailCallbacks}
+            presentation={eventDetailPresentation}
           />
         </>
       ) : null}

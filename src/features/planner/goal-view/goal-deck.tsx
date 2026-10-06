@@ -11,7 +11,7 @@ import {
   useGoalDates,
   type GoalTileRenderer,
 } from "./goal-dates";
-import { sessionsForGoal, type GoalViewSession } from "./goal-view-model";
+import { upcomingSessionsForGoal, type GoalViewSession } from "./goal-view-model";
 
 const iconButtonClass =
   "grid size-10 place-items-center rounded-lg text-muted-foreground hover:bg-muted disabled:opacity-30";
@@ -26,7 +26,6 @@ export function GoalDeck({
   onSelect,
   progressByGoalId,
   sessions,
-  showPast,
   weekStartsOn,
   today,
   renderTile,
@@ -37,7 +36,6 @@ export function GoalDeck({
   progressByGoalId: ReadonlyMap<string, ProgressContextSummary>;
   /** Every session; the deck scopes them to the selected goal. */
   sessions: GoalViewSession[];
-  showPast: boolean;
   weekStartsOn: number;
   today: string;
   renderTile: GoalTileRenderer;
@@ -82,8 +80,7 @@ export function GoalDeck({
         // A new goal starts back on its first page of dates.
         key={selected.id}
         goal={selected}
-        sessions={sessionsForGoal(sessions, selected.id, showPast, today)}
-        showPast={showPast}
+        sessions={upcomingSessionsForGoal(sessions, selected.id, today)}
         weekStartsOn={weekStartsOn}
         today={today}
         renderTile={renderTile}
@@ -95,14 +92,12 @@ export function GoalDeck({
 function SelectedGoalDates({
   goal,
   sessions,
-  showPast,
   weekStartsOn,
   today,
   renderTile,
 }: {
   goal: Goal;
   sessions: GoalViewSession[];
-  showPast: boolean;
   weekStartsOn: number;
   today: string;
   renderTile: GoalTileRenderer;
@@ -110,13 +105,9 @@ function SelectedGoalDates({
   const dates = useGoalDates({ sessions, weekStartsOn, today });
   return (
     <section aria-label={`${goal.title} scheduled dates`} className="space-y-4 pt-3">
-      <GoalDatesHeading goal={goal} showPast={showPast} dates={dates} />
+      <GoalDatesHeading goal={goal} dates={dates} />
       <div className="flex flex-col gap-4">
-        <GoalDates
-          dates={dates}
-          layout="row"
-          renderTile={renderTile}
-        />
+        <GoalDates dates={dates} renderTile={renderTile} />
       </div>
     </section>
   );

@@ -256,4 +256,25 @@ describe("PlannerEventDetailDialog", () => {
       scrollIntoView.mockRestore()
     }
   })
+
+  it("pops the same editor up in a modal when asked", () => {
+    const { callbacks } = renderDialog({ presentation: "popup" })
+    const dialog = screen.getByRole("dialog", { name: "Goal A" })
+    expect(dialog).toHaveAttribute("data-plan-entry-editor", "true")
+    expect(within(dialog).getByRole("region", { name: "Edit planned session" })).toBeInTheDocument()
+    fireEvent.keyDown(dialog, { key: "Escape" })
+    expect(callbacks.onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it("closes only the time field on Escape inside the popup", () => {
+    const { callbacks } = renderDialog({
+      presentation: "popup",
+      selectedEventEntry: buildEntry({ effectiveScheduledLocalTime: "07:30" }),
+      selectedEventBaselineUnit: { effectiveScheduledLocalTime: "07:30" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "7:30 AM" }))
+    fireEvent.keyDown(screen.getByLabelText("Time"), { key: "Escape" })
+    expect(screen.queryByLabelText("Time")).not.toBeInTheDocument()
+    expect(callbacks.onOpenChange).not.toHaveBeenCalled()
+  })
 })

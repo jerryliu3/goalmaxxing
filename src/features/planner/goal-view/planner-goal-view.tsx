@@ -23,7 +23,13 @@ export interface PlannerGoalViewProps {
   window: { start: string; end: string };
   today: string;
   weekStartsOn: number | null | undefined;
-  showPast: boolean;
+  loading: boolean;
+  /** The date in view, so the planner can load sessions around it. */
+  onVisibleDate: (date: string) => void;
+  /** Opens the planner's day preview. */
+  onInspectDate: (date: string) => void;
+  /** Opens the planner's session details dialog (the checklist's popup). */
+  onOpenEntry: (entry: PlannerDayDetailEntry, day: string) => void;
   canMutatePlanItems: boolean;
   optimisticCompletionFacts: OptimisticCompletionFacts;
   mutationLoadingKey: string | null;
@@ -55,6 +61,7 @@ export function PlannerGoalView({
   canMutateEntryOnDay,
   onMoveEntry,
   onToggleEntry,
+  onOpenEntry,
   ...view
 }: PlannerGoalViewProps) {
   const progressByGoalId = useMemo(
@@ -92,6 +99,9 @@ export function PlannerGoalView({
       }
       isEditable={isEditable}
       onMoveSession={(session, date) => onMoveEntry(session.entry, date)}
+      onOpenSession={(session) => {
+        if (canOpenEntry(session.entry)) onOpenEntry(session.entry, session.date);
+      }}
       onToggleSession={(session, source) => {
         if (canMutateEntryOnDay(session.entry, session.date)) {
           onToggleEntry(session.entry, session.date, source);

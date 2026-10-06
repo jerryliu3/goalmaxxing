@@ -4,6 +4,12 @@ import type { ProgressContextSummary } from "@cadence/shared/goals/progress-cont
 
 import { GoalProgressCard } from "@/features/goals/goal-progress-card";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
@@ -62,6 +68,11 @@ interface PlannerEventDetailDialogProps {
   canNavigateToNextOpenInstance: boolean;
   canNavigateToLastOpenInstance: boolean;
   callbacks: PlannerEventDetailDialogCallbacks;
+  /**
+   * `inline` unfolds in the checklist row that opened it; `popup` shows the
+   * same editor in a modal, for surfaces without a checklist (Goal View).
+   */
+  presentation?: "inline" | "popup";
 }
 
 export function PlannerEventDetailDialog({
@@ -82,6 +93,7 @@ export function PlannerEventDetailDialog({
   canNavigateToNextOpenInstance,
   canNavigateToLastOpenInstance,
   callbacks,
+  presentation = "inline",
 }: PlannerEventDetailDialogProps) {
   const [host, setHost] = useState<HTMLElement | null>(null);
   const [factEditor, setFactEditor] = useState<{
@@ -316,6 +328,39 @@ export function PlannerEventDetailDialog({
       </WorkQuestCard>
     </section>
   );
+
+  if (presentation === "popup") {
+    return (
+      <Dialog
+        open
+        onOpenChange={(open) => {
+          if (!open) callbacks.onOpenChange(false);
+        }}
+      >
+        <DialogContent
+          // Marks the whole popup as the editor, so the planner's outside-tap
+          // dismissal ignores taps inside it.
+          data-plan-entry-editor="true"
+          className="max-h-[85dvh] overflow-y-auto sm:max-w-md"
+          // The dialog hears Escape first; while the date or time is being
+          // edited, Escape closes only that field, as it does inline.
+          onEscapeKeyDown={(event) => {
+            if (!editingFact) return;
+            event.preventDefault();
+            setFactEditor(null);
+          }}
+        >
+          <DialogTitle className="sr-only">
+            {selectedEventGoal?.title ?? selectedEventEntry.goalTitle ?? "Planned session"}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            Session details for {dateLabel}
+          </DialogDescription>
+          {editor}
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return host ? createPortal(editor, host) : editor;
 }
