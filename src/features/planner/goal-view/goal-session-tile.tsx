@@ -226,11 +226,11 @@ export function GoalSessionTile({
     );
   }
 
-  // The date is what tells one session from the next (the lane already names
-  // the goal), so it leads the card; the title and time sit small on the
-  // check's row. Under a date header the date would only repeat it, so the
-  // lead cross-fades to the count ("2 of 3") and its period stays below. A
-  // session with nothing to count keeps its date rather than going blank.
+  // The date is what tells one session from the next, and the lane already
+  // names the goal, so the card drops the title: the ordinal and time sit
+  // small on the check's row and the date leads. Under a date header the date
+  // would only repeat it, so the lead cross-fades to the count ("2 of 3") and
+  // the top row to its period. A session with nothing to count keeps its date.
   const showOrdinal = dateInHeader && Boolean(ordinal);
   // Toggling Calendar glides the cards for 720ms (the plan view morph), so the
   // swap lands on the glide's midpoint: the old text clears just before it and
@@ -243,13 +243,21 @@ export function GoalSessionTile({
   return (
     <article
       {...dataAttributes}
+      title={session.label}
       className={cn(
         frame,
-        "grid h-full w-full grid-cols-[auto_minmax(0,1fr)_auto] content-start items-center gap-x-1 gap-y-0.5 py-1.5 pr-1.5"
+        "grid h-full w-full grid-cols-[auto_minmax(0,1fr)_auto] content-start items-center gap-x-1 gap-y-1 py-1.5 pr-1.5"
       )}
     >
       <span className="-mt-0.5 -ml-1">{completionControl}</span>
-      <div className="min-w-0" title={session.label}>{title}</div>
+      <span className="grid min-w-0 text-[10.5px] leading-4 text-muted-foreground">
+        {ordinal ? (
+          <>
+            <span className={fade(showOrdinal)}>{ordinalText(ordinal)}</span>
+            <span className={fade(!showOrdinal)}>{ordinal.period ?? ""}</span>
+          </>
+        ) : null}
+      </span>
       <span className="text-[10.5px] leading-4 text-muted-foreground">{session.time}</span>
       <div className="col-span-3 flex min-w-0 items-center gap-1">
         <SessionDateField
@@ -257,11 +265,11 @@ export function GoalSessionTile({
           today={today}
           disabled={!movable}
           onMove={onMove}
-          className="-ml-1 min-h-5 min-w-0 rounded-md px-1 py-0"
+          className="-ml-1 min-h-6 min-w-0 rounded-md px-1 py-0"
         >
           <span
             className={cn(
-              "grid min-w-0 font-display text-[17px] leading-5 tracking-tight",
+              "grid min-w-0 font-display text-xl leading-6 tracking-tight",
               session.done && "text-muted-foreground"
             )}
           >
@@ -271,12 +279,6 @@ export function GoalSessionTile({
         </SessionDateField>
         {lock}
       </div>
-      {ordinal ? (
-        <span className="col-span-3 grid min-w-0 text-[10.5px] leading-4 text-muted-foreground">
-          <span className={fade(showOrdinal)}>{ordinalText(ordinal)}</span>
-          <span className={fade(!showOrdinal)}>{ordinal.period ?? ""}</span>
-        </span>
-      ) : null}
       {nudges}
     </article>
   );

@@ -133,7 +133,8 @@ describe("GoalView", () => {
   it("uses a directly interactive native date input and moves a session to the chosen date", () => {
     const props = renderView();
     const run = screen.getByRole("region", { name: "Run a half marathon scheduled dates" });
-    expect(within(run).getAllByTestId("completion-title")[1]).toHaveTextContent("2. run session");
+    // Cards drop the title (the lane names the goal); it stays as the tooltip.
+    expect(within(run).getAllByRole("article")[1]).toHaveAttribute("title", "run session");
     const field = within(run).getByLabelText("Change date of run session, Fri, Oct 9") as HTMLInputElement;
     // Only the date is a control: the rest of the tile is not a button.
     expect(
@@ -259,11 +260,11 @@ describe("GoalView", () => {
       fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
       fireEvent.click(screen.getByRole("button", { name: "Inspect Wednesday, September 30, 2026" }));
       expect(props.onInspectDate).toHaveBeenLastCalledWith("2026-09-30");
-      const title = within(lanes()).getAllByTestId("completion-title")[0];
-      fireEvent.click(title);
+      const card = within(lanes()).getAllByRole("article")[0];
+      fireEvent.click(card);
       expect(props.onOpenSession).toHaveBeenCalledWith(
         expect.objectContaining({
-          key: title.closest("article")!.getAttribute("data-planner-entry-key"),
+          key: card.getAttribute("data-planner-entry-key"),
         })
       );
       fireEvent.click(screen.getAllByRole("button", { name: /^Complete / })[0]);
@@ -367,7 +368,7 @@ describe("GoalView", () => {
       expect(within(card).getByText("2 of 2")).not.toHaveClass("opacity-0");
       expect(within(card).getByText("per week")).not.toHaveClass("opacity-0");
       expect(within(card).getByText("2 of 2 per week")).toHaveClass("opacity-0");
-      expect(within(gym()).getAllByTestId("completion-title")[0]).toHaveTextContent("gym session");
+      expect(card).toHaveAttribute("title", "gym session");
     });
 
     it("draws lanes only for Calendar; without it the cards float in a line", () => {

@@ -49,12 +49,11 @@ describe("GoalSessionTile", () => {
     expect(nudge.parentElement).toHaveClass("absolute");
   });
 
-  it("leads with the date where no header names it, under a small title", () => {
+  it("leads with the date where no header names it, with the ordinal on top and no title", () => {
     renderTile(false);
-    const title = screen.getByTestId("completion-title").parentElement;
-    expect(title).toHaveTextContent("Run a half marathon");
-    expect(title).toHaveClass("truncate");
-    expect(title?.parentElement).toHaveAttribute("title", "Run a half marathon");
+    // The lane names the goal, so the card keeps its title only as a tooltip.
+    expect(screen.queryByTestId("completion-title")).toBeNull();
+    expect(screen.getByRole("article")).toHaveAttribute("title", "Run a half marathon");
     const date = screen.getByText("Fri, Oct 9");
     expect(date).not.toHaveClass("opacity-0");
     expect(date.parentElement).toHaveClass("font-display");
@@ -63,9 +62,8 @@ describe("GoalSessionTile", () => {
     expect(screen.getByText("07:30")).toBeInTheDocument();
   });
 
-  it("cross-fades the date to the count under a date header, with its period below", () => {
+  it("cross-fades the date to the count under a date header, with its period on top", () => {
     renderTile(true);
-    expect(screen.getByTestId("completion-title")).toHaveTextContent("Run a half marathon");
     expect(screen.getByText("Fri, Oct 9")).toHaveClass("opacity-0");
     expect(screen.getByText("2 of 3")).not.toHaveClass("opacity-0");
     expect(screen.getByText("per week")).not.toHaveClass("opacity-0");
@@ -83,7 +81,7 @@ describe("GoalSessionTile", () => {
     const onOpen = vi.fn();
     renderTile(false, null, onOpen);
     const card = screen.getByRole("article", { name: "Run a half marathon, Fri, Oct 9. Open details" });
-    fireEvent.click(screen.getByTestId("completion-title"));
+    fireEvent.click(screen.getByText("07:30"));
     expect(onOpen).toHaveBeenCalledWith(session);
     fireEvent.click(screen.getByRole("button", { name: "Move Run a half marathon one day later" }));
     fireEvent.click(screen.getByLabelText("Change date of Run a half marathon, Fri, Oct 9"));
