@@ -156,13 +156,13 @@ export function SettingsTab() {
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             {group.label}
           </h2>
-          <div className={cn("divide-y px-4", panelClass)}>
+          <div className={cn("divide-y overflow-hidden", panelClass)}>
             {group.items.map((item) => (
               <button
                 key={item.key}
                 type="button"
                 className={cn(
-                  "flex w-full items-center justify-between py-3 text-left text-base font-medium transition-colors hover:bg-muted/30",
+                  "flex w-full items-center justify-between px-4 py-3 text-left text-base font-medium transition-colors hover:bg-muted/30",
                   requestedSection === item.key && "bg-muted/40"
                 )}
                 onClick={() =>
@@ -176,7 +176,7 @@ export function SettingsTab() {
               </button>
             ))}
             {group.key === "account" ? (
-              <div className="py-3">
+              <div className="px-4 py-3">
                 <Button
                   type="button"
                   variant="outline"
