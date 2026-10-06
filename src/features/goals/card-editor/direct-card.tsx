@@ -9,6 +9,7 @@ import { cadenceBounds, cadenceCountEditable, DIFFICULTY_OPTIONS, type FaceFact,
 import { CardScene } from "./card-scene";
 import { useEscapeLayer } from "./inline-fact";
 import { type FaceRegion, useCardRegions } from "./use-card-regions";
+import "./card-editor.css";
 
 const PALETTE_WIDTH = 5 * 32 + 14;
 const VISIBILITY_WIDTH = 252;

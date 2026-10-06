@@ -5,6 +5,7 @@ import { type ComponentType, useRef, useState } from "react";
 import type { CardEditorSession } from "./card-editor-session";
 import { type BackFact, CARD_FACT_LABELS, hasPlaqueTarget, isMilestoneGoal, summarizeBackFact } from "./card-facts";
 import { InlineFact, useDismiss, useEscapeLayer, WIDE_FACTS } from "./inline-fact";
+import "./card-editor.css";
 
 export interface CardLifecycle {
   archived: boolean;

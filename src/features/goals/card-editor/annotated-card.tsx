@@ -8,12 +8,15 @@ import { CARD_FACT_LABELS, type FaceFact, summarizeFaceFact } from "./card-facts
 import { CardScene } from "./card-scene";
 import { InlineFact, useEscapeLayer } from "./inline-fact";
 import { boxWithin, useCardRegions } from "./use-card-regions";
+import "./card-editor.css";
 
 // Facts printed at the card's left edge call out left (the target sits beside its number);
 // the title, effort and right-edge facts call out right, so no leader line crosses the face.
 const LEFT: FaceFact[] = ["visibility", "cadence", "category", "start", "time"];
 const RIGHT: FaceFact[] = ["name", "difficulty", "deadline"];
+// Space between stacked callouts; a legend's one-line names can sit closer.
 const GAP = 8;
+const LABEL_GAP = 2;
 
 interface Line {
   fact: FaceFact;
@@ -36,6 +39,7 @@ export function AnnotatedCard({
   flipped = false,
   labels,
   hidden = [],
+  labelsOnly = false,
 }: {
   fields: GoalCreationFields;
   card: ReactNode;
@@ -44,6 +48,8 @@ export function AnnotatedCard({
   flipped?: boolean;
   labels?: Partial<Record<FaceFact, string>>;
   hidden?: FaceFact[];
+  /** Read-only legend: each callout names the part; the card already shows its value. */
+  labelsOnly?: boolean;
 }) {
   const [open, setOpen] = useState<FaceFact | null>(null);
   const [hover, setHover] = useState<FaceFact | null>(null);
@@ -86,7 +92,7 @@ export function AnnotatedCard({
         const target = stage.y + region.y + region.height / 2;
         const top = Math.max(target - columnTop - anchorY, cursor);
         tops[region.fact] = top;
-        cursor = top + node.offsetHeight + GAP;
+        cursor = top + node.offsetHeight + (labelsOnly ? LABEL_GAP : GAP);
         lines.push({
           fact: region.fact,
           x1: side === "left" ? left.x + left.width : right.x,
@@ -98,7 +104,7 @@ export function AnnotatedCard({
       height = Math.max(height, cursor);
     }
     setLayout({ tops, height, lines });
-  }, []);
+  }, [labelsOnly]);
 
   // Facts moved or a callout opened: lay out now, then follow the editor frame by frame.
   useLayoutEffect(() => {
@@ -172,6 +178,10 @@ export function AnnotatedCard({
             <span className="card-overline">{label(fact)}</span>
             <span className="card-callout-value" data-anchor>{value}<Pencil size={11} aria-hidden="true" /></span>
           </button>
+        ) : labelsOnly ? (
+          <div className="card-callout-body">
+            <span className="card-callout-name" data-anchor>{label(fact)}</span>
+          </div>
         ) : (
           <div className="card-callout-body">
             <span className="card-overline">{label(fact)}</span>

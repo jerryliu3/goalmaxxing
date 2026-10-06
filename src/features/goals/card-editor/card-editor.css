@@ -92,6 +92,7 @@ button.card-callout-body { cursor: pointer; }
 .card-callout-value svg { flex-shrink: 0; color: var(--muted-foreground); opacity: .5; transition: opacity .15s; }
 .card-callout[data-hover="true"] .card-callout-value svg { opacity: 1; }
 .card-callout[data-changed="true"] .card-overline::after { content: " •"; color: var(--goal-color); }
+.card-callout-name { font-family: var(--font-newsreader), serif; font-size: 16px; line-height: 1.3; color: var(--foreground); }
 .card-callout-control { display: flex; min-height: 26px; align-items: center; }
 .card-callout-control .card-inline-text { font-family: var(--font-newsreader), serif; font-size: 17px; }
 .card-callouts[data-side="left"] .card-callout-control .card-inline-text { text-align: right; }
