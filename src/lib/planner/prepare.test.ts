@@ -755,9 +755,10 @@ describe("preparePlannerSchedule", () => {
               invalidGoalIds: [lockedGoal.id],
               publishable: false,
             },
+            // The kernel reports an unplaced lock as violations without throwing.
             validation: {
-              valid: true,
-              invariantViolations: [],
+              valid: false,
+              invariantViolations: ["lock_not_preserved"],
             },
             workUnits: [
               {

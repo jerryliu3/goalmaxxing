@@ -837,7 +837,14 @@ async function prepareOnce({
         preserveExistingAssignments: true,
         rebalanceExistingAssignments,
       });
-      if (kernel.validation.invariantViolations.length > 0) {
+      const issueCodeSet = new Set(kernel.solver.issueCodes);
+      // An invalid lock leaves that goal unplaced, which the kernel reports as
+      // violations (e.g. lock_not_preserved) without throwing; record the goal
+      // as unplaceable the same way instead of failing the whole prepare.
+      if (
+        kernel.validation.invariantViolations.length > 0 &&
+        !issueCodeSet.has("invalid_lock")
+      ) {
         throwPrepareInvariant({
           code: "invalid_kernel_output",
           message: "Planner prepare kernel output violated invariants.",
@@ -847,7 +854,6 @@ async function prepareOnce({
           },
         });
       }
-      const issueCodeSet = new Set(kernel.solver.issueCodes);
       if (issueCodeSet.has("invalid_lock")) {
         blockedByInvalidLock = true;
         goalUnplaceableReason = "invalid_lock";
