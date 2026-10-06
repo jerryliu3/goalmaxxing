@@ -1,9 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ArrowLeft, ArrowRight, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DateField } from "@/components/ui/date-field";
 import { cn } from "@/lib/utils";
 import { dateLabel } from "./goal-view-model";
 
@@ -45,56 +44,33 @@ export function GoalCalendarSwitch({
   );
 }
 
-/**
- * The month in view, the one place Goal View names where you are. It is also
- * the date picker: the native field covers it, so a tap opens the picker on
- * every device.
- */
-function MonthJump({ date, onJump }: { date: string; onJump: (date: string) => void }) {
-  return (
-    <label className="relative inline-flex h-9 cursor-pointer items-center gap-1 rounded-full px-3 hover:bg-muted focus-within:outline-2 focus-within:outline-ring">
-      <span aria-hidden className="font-display text-lg leading-none tracking-tight">
-        {dateLabel(date, "MMMM yyyy")}
-      </span>
-      <ChevronDown aria-hidden size={14} className="text-muted-foreground" />
-      <DateField
-        aria-label={`Jump to a date, showing ${dateLabel(date, "MMMM yyyy")}`}
-        value={date}
-        onValueChange={(next) => {
-          if (next) onJump(next);
-        }}
-        className="absolute inset-0 h-full w-full min-w-0 cursor-pointer opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-      />
-    </label>
-  );
-}
-
 export function GoalLanesToolbar({
   calendarSwitch,
   leadingDate,
   onStep,
   onToday,
-  onJump,
 }: {
   calendarSwitch: ReactNode;
   /** The date at the left edge (Calendar) or Cards' start date. */
   leadingDate: string;
   onStep: (direction: -1 | 1) => void;
   onToday: () => void;
-  onJump: (date: string) => void;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <MonthJump date={leadingDate} onJump={onJump} />
+      {/* The month in view, the one place Goal View names where you are. */}
+      <h3 className="px-3 font-display text-lg leading-none tracking-tight">
+        {dateLabel(leadingDate, "MMMM yyyy")}
+      </h3>
       <div className="flex items-center gap-1">
         <Button size="icon-round" variant="ghost" aria-label="Earlier dates" onClick={() => onStep(-1)}>
-          <ArrowLeft />
+          <ChevronLeft />
         </Button>
         <Button size="sm" variant="outline" className="h-9 rounded-full px-3.5 text-[13px]" onClick={onToday}>
           Today
         </Button>
         <Button size="icon-round" variant="ghost" aria-label="Later dates" onClick={() => onStep(1)}>
-          <ArrowRight />
+          <ChevronRight />
         </Button>
         <span aria-hidden className="mx-1 h-6 w-px shrink-0 bg-border" />
         {calendarSwitch}

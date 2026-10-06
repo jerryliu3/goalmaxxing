@@ -89,7 +89,6 @@ export function GoalLanes({
   const { canvas, start: startMorph, retained } = useLaneMorph(!reduceMotion);
   const weekStart = startOfWeekDateString(today, weekStartsOn);
   const [span, setSpan] = useState(() => initialTimelineSpan(weekStart));
-  const [focusedGoalId, setFocusedGoalId] = useState<string | null>(null);
   const [view, setView] = useState<LaneView>({ layout, reference: today });
   // Set by whatever changes the layout or its start, and consumed by the next
   // placement; without one, the leading session holds its place.
@@ -242,7 +241,6 @@ export function GoalLanes({
     else if (view.reference !== today) rebaseCards(today);
     else scroller.current?.scrollTo({ left: plan.origin * geometry.pitch, behavior });
   };
-  const jump = (date: string) => (calendar ? scrollToDate(date) : rebaseCards(date));
 
   // The commit that changes the plan still has the old scroll position, so
   // cards on screen may fall outside these columns until placement scrolls.
@@ -275,7 +273,6 @@ export function GoalLanes({
         leadingDate={leadingDate}
         onStep={step}
         onToday={goToday}
-        onJump={jump}
       />
       <div
         ref={scroller}
@@ -333,7 +330,6 @@ export function GoalLanes({
             ) : null}
             {plan.lanes.map(({ goalId, height, placements }) => {
               const goal = goalsById.get(goalId)!;
-              const muted = Boolean(focusedGoalId && focusedGoalId !== goalId);
               return (
                 <section
                   key={goalId}
@@ -351,17 +347,8 @@ export function GoalLanes({
                     progress={progressByGoalId.get(goalId)}
                     geometry={geometry}
                     lane={calendar}
-                    focused={focusedGoalId === goalId}
-                    onFocusToggle={() =>
-                      setFocusedGoalId((current) => (current === goalId ? null : goalId))
-                    }
                   />
-                  <div
-                    className={cn(
-                      "relative flex-1 transition-opacity motion-reduce:transition-none",
-                      muted && "opacity-45"
-                    )}
-                  >
+                  <div className="relative flex-1">
                     {placements.length === 0 && !calendar ? (
                       <p
                         className="sticky inline-block px-3 text-sm text-muted-foreground"

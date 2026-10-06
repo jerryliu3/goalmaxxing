@@ -60,7 +60,7 @@ export function CurrentGoalGrid({
           <GoalProgressCard goal={goal} progress={progress} gallery moving={moving} />
           {onDetails ? (
             <button className={styles.goalDetails} type="button" onClick={() => onDetails(goal.id)}>
-              Goal details <span aria-hidden="true">↗</span>
+              See details <span aria-hidden="true">↗</span>
             </button>
           ) : null}
         </section>

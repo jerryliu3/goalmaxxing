@@ -315,12 +315,10 @@ describe("GoalView", () => {
       expect(tileLeft("run:2026-10-09")).toBe("150px");
       expect(tileLeft(`run:${TODAY}`)).toBe("6px");
       expect(lanes().scrollLeft).toBe(144);
-      expect(screen.getByLabelText("Jump to a date, showing October 2026")).toHaveValue("2026-10-09");
 
       fireEvent.click(screen.getByRole("button", { name: "Today" }));
       expect(tileLeft("run:2026-10-09")).toBe("150px");
       expect(lanes().scrollLeft).toBe(0);
-      expect(screen.getByLabelText("Jump to a date, showing October 2026")).toHaveValue(TODAY);
     });
 
     it("keeps its controls when the loaded window has no sessions", () => {
@@ -394,15 +392,12 @@ describe("GoalView", () => {
       expect(screen.getByText("October 2026")).toBeInTheDocument();
     });
 
-    it("focuses one lane from its label", () => {
+    it("opens the goal from its lane title", () => {
       renderView();
-      const label = screen.getByRole("button", { name: /Get stronger/ });
-      fireEvent.click(label);
-      expect(label).toHaveAttribute("aria-pressed", "true");
       const run = screen.getByRole("region", { name: "Run a half marathon scheduled dates" });
-      expect(run.querySelector(".opacity-45")).not.toBeNull();
-      fireEvent.click(label);
-      expect(run.querySelector(".opacity-45")).toBeNull();
+      expect(within(run).getByRole("link", { name: "Edit goal Run a half marathon" })).toHaveTextContent(
+        "Run a half marathon"
+      );
     });
   });
 
@@ -476,7 +471,7 @@ describe("GoalView", () => {
       const lanes = screen.getByRole("region", { name: "Goal lanes, scroll across dates" });
       // Phone columns are 120px; Calendar opens on this week.
       expect(lanes.scrollLeft).toBe(365 * 120);
-      expect(screen.queryByRole("link", { name: /^Edit goal/ })).toBeNull();
+      expect(lanes.querySelector("[data-goal-view-card]")).toBeNull();
       fireEvent.click(screen.getByRole("switch", { name: "Calendar" }));
       expect(screen.getByTestId("goal-deck")).toBeInTheDocument();
     });
