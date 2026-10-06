@@ -5,6 +5,7 @@ const CATEGORY_KEYS = new Set<AchievementGoalCategory>([
   "career",
   "personal",
   "relationships",
+  "finance",
   "other",
 ]);
 
@@ -26,6 +27,13 @@ export function toAchievementGoalCategory(
   }
   if (normalizedLabel.includes("relationship")) {
     return "relationships";
+  }
+  if (
+    normalizedLabel.includes("financ") ||
+    normalizedLabel.includes("money") ||
+    normalizedLabel.includes("budget")
+  ) {
+    return "finance";
   }
   if (normalizedLabel.includes("personal")) {
     return "personal";

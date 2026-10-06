@@ -13,6 +13,7 @@ export const GAZETTEER = {
   stampLight: "#c88968",
   gain: "#4a6740",
   sage: "#6f8175",
+  ochre: "#8a6a3a",
   recover: "#eab308",
   colRust: "#b5522a",
 } as const;
@@ -22,6 +23,7 @@ export const GAZETTEER_CATEGORY_COLORS = {
   career: GAZETTEER.stamp,
   personal: GAZETTEER.mutedDeep,
   relationships: GAZETTEER.colRust,
+  finance: GAZETTEER.ochre,
   other: GAZETTEER.muted,
 } as const;
 
@@ -31,7 +33,7 @@ export const GAZETTEER_FALLBACK_COLORS = [
   GAZETTEER.mutedDeep,
   GAZETTEER.colRust,
   GAZETTEER.muted,
-  "#8a6a3a",
+  GAZETTEER.ochre,
   "#3f4a3a",
   "#6e341c",
 ] as const;
@@ -62,7 +64,8 @@ const LEGACY_GOAL_COLOR_TO_GAZETTEER: Record<string, string> = {
   "#0891b2": GAZETTEER.mutedDeep,
   "#0f766e": GAZETTEER.gain,
   "#15803d": GAZETTEER.gain,
-  "#ca8a04": "#8a6a3a",
+  "#ca8a04": GAZETTEER.ochre,
+  "#d97706": GAZETTEER.ochre,
   "#c2410c": GAZETTEER.colRust,
   "#be123c": GAZETTEER.colRust,
 };
@@ -85,6 +88,9 @@ export function gazetteerCategoryColor(category: string | null | undefined): str
   }
   if (normalized === "relationships") {
     return GAZETTEER_CATEGORY_COLORS.relationships;
+  }
+  if (normalized === "finance") {
+    return GAZETTEER_CATEGORY_COLORS.finance;
   }
   return GAZETTEER_CATEGORY_COLORS.other;
 }

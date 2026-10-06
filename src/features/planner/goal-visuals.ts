@@ -104,7 +104,8 @@ function resolveCategorySwatchColor(category: string | null): string | null {
     categoryKey !== "health" &&
     categoryKey !== "career" &&
     categoryKey !== "personal" &&
-    categoryKey !== "relationships"
+    categoryKey !== "relationships" &&
+    categoryKey !== "finance"
   ) {
     // Preserve goal-level colors for custom/unknown categories instead of forcing "other".
     return null;

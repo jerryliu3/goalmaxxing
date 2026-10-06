@@ -113,7 +113,7 @@ select is(
 
 select is(
   (select count(*)::integer from public.goal_categories),
-  5,
+  6,
   'goal_categories seed contains expected category keys'
 );
 
@@ -121,7 +121,7 @@ select is(
   (
     select count(*)::integer
     from public.goal_categories
-    where key in ('learning', 'finance', 'community')
+    where key in ('learning', 'community')
   ),
   0,
   'legacy category keys are removed from taxonomy seed'

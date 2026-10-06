@@ -144,7 +144,7 @@ function buildPrompt(userPrompt: string, today: string, categoryKeys: string[]):
     "Each goal object can include these keys:",
     '- "title" (required string)',
     '- "description" (optional string)',
-    '- "category" (string, prefer Personal/Relationships/Health; otherwise custom)',
+    '- "category" (string, prefer Personal/Relationships/Health/Finance; otherwise custom)',
     `- "category_key" (${categoryKeys.join(" | ")})`,
     '- "frequency_type" ("recurring" | "fixed_milestones")',
     '- "recurrence_interval" ("daily" | "weekly" | "monthly", only for recurring)',

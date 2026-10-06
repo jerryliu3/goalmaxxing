@@ -16,6 +16,7 @@ const CATEGORY_FILLS: Record<string, string> = {
   career: "var(--primary)",
   personal: "var(--secondary-foreground)",
   relationships: "color-mix(in srgb, var(--primary) 62%, var(--gm-recover))",
+  finance: "color-mix(in srgb, var(--gm-recover) 70%, var(--foreground))",
   other: "var(--muted-foreground)",
 };
 

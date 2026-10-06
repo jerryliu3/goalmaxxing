@@ -16,4 +16,11 @@ describe("insights chart theme", () => {
     expect(insightsCategoryFill("career")).toBe("var(--primary)");
     expect(insightsCategoryFill("mystery")).toBe("var(--muted-foreground)");
   });
+
+  it("gives every preset category its own fill, distinct from Other", () => {
+    const presets = ["health", "career", "personal", "relationships", "finance"];
+    const fills = presets.map(insightsCategoryFill);
+    expect(new Set(fills).size).toBe(presets.length);
+    expect(fills).not.toContain(insightsCategoryFill("other"));
+  });
 });

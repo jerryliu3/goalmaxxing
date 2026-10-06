@@ -9,7 +9,13 @@ export interface GoalCategory {
   sortOrder: number;
 }
 
-export type CategoryPresetId = "health" | "career" | "personal" | "relationships" | "other";
+export type CategoryPresetId =
+  | "health"
+  | "career"
+  | "personal"
+  | "relationships"
+  | "finance"
+  | "other";
 export type CategorySelection = CategoryPresetId | typeof CATEGORY_CUSTOM_VALUE;
 
 export const CATEGORY_CUSTOM_VALUE = "custom";
@@ -20,6 +26,7 @@ const CATEGORY_PRESET_IDS: readonly CategoryPresetId[] = [
   "career",
   "personal",
   "relationships",
+  "finance",
   "other",
 ];
 
@@ -55,6 +62,13 @@ export const DEFAULT_GOAL_CATEGORIES: GoalCategory[] = [
     aliases: [],
     color: "#f43f5e",
     sortOrder: 40,
+  },
+  {
+    key: "finance",
+    label: "Finance",
+    aliases: [],
+    color: "#d97706",
+    sortOrder: 50,
   },
   {
     key: "other",
@@ -256,6 +270,10 @@ export function getCategoryBadgeClass(categoryKey: string): string {
 
   if (normalized === "career") {
     return "border-primary/35 bg-primary/10 text-primary";
+  }
+
+  if (normalized === "finance") {
+    return "border-[color:var(--gm-recover)]/35 bg-[color:var(--gm-recover)]/10 text-foreground";
   }
 
   return "border-border bg-muted text-muted-foreground";
