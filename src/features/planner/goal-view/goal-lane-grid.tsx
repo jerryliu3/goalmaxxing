@@ -23,6 +23,7 @@ export function GoalLaneHeader({
   weekStartsOn,
   loading,
   onInspectDate,
+  heldAt,
 }: {
   plan: LanePlan;
   first: number;
@@ -31,20 +32,34 @@ export function GoalLaneHeader({
   weekStartsOn: number;
   loading: boolean;
   onInspectDate: (date: string) => void;
+  /**
+   * A fading copy left behind when Calendar turns off: drawn at the scroll
+   * position it had rather than sticky, and no longer interactive.
+   */
+  heldAt?: { left: number; top: number };
 }) {
   const { pitch, label, header } = plan.geometry;
   return (
     <div
       data-lane-header=""
-      className="sticky top-0 z-30 flex border-b border-border bg-card"
-      style={{ height: header }}
+      className={cn(
+        "z-30 flex border-b border-border bg-card",
+        heldAt ? "pointer-events-none absolute left-0" : "sticky top-0"
+      )}
+      style={{ height: header, top: heldAt?.top }}
     >
       <div
         aria-hidden
-        className="sticky left-0 z-[35] flex-none border-r border-border bg-card"
-        style={{ width: label }}
+        className={cn(
+          "left-0 z-[35] flex-none border-r border-border bg-card",
+          heldAt ? "absolute inset-y-0" : "sticky"
+        )}
+        style={{ width: label, left: heldAt?.left }}
       />
-      <div className="relative flex-none" style={{ width: plan.columns * pitch }}>
+      <div
+        className="relative flex-none"
+        style={{ width: plan.columns * pitch, marginLeft: heldAt ? label : undefined }}
+      >
         {columnsBetween(first, last).map((column) => {
           const date = dateAtColumn(plan, column);
           const isToday = date === today;
@@ -53,7 +68,7 @@ export function GoalLaneHeader({
               key={date}
               type="button"
               data-today={isToday}
-              disabled={loading}
+              disabled={loading || Boolean(heldAt)}
               aria-label={`Inspect ${dateLabel(date, "EEEE, MMMM d, yyyy")}`}
               onClick={() => onInspectDate(date)}
               className={cn(

@@ -21,6 +21,7 @@ import {
   buildLanePlan,
   columnOfDate,
   dateAtColumn,
+  laneTops,
   leadingAnchor,
   placementOffset,
   placementsInColumns,
@@ -35,6 +36,7 @@ import {
 } from "./goal-lanes-model";
 import type { GoalViewSession } from "./goal-view-model";
 import { extendTimelineSpan, initialTimelineSpan, isInsideTimelineSpan } from "./timeline-axis";
+import { useLaneMorph } from "./use-lane-morph";
 import { useLaneViewport } from "./use-lane-viewport";
 
 interface LaneView {
@@ -84,6 +86,7 @@ export function GoalLanes({
   const layout: GoalLaneLayout = calendarOn ? "calendar" : "cards";
   const reduceMotion = useReducedMotion();
   const { scroller, viewport, exact, scrollTo } = useLaneViewport(geometry);
+  const { canvas, start: startMorph, retained } = useLaneMorph(!reduceMotion);
   const weekStart = startOfWeekDateString(today, weekStartsOn);
   const [span, setSpan] = useState(() => initialTimelineSpan(weekStart));
   const [focusedGoalId, setFocusedGoalId] = useState<string | null>(null);
@@ -91,6 +94,8 @@ export function GoalLanes({
   // Set by whatever changes the layout or its start, and consumed by the next
   // placement; without one, the leading session holds its place.
   const pendingAnchor = useRef<LaneAnchor | null>(null);
+  // A jump far along the axis places everything without motion.
+  const jumped = useRef(false);
   const placed = useRef<{ plan: LanePlan; key: string } | null>(null);
 
   // The layout is the parent's; adopt a change here so the anchor is read
@@ -130,8 +135,9 @@ export function GoalLanes({
   );
 
   // Keep the viewer's place when the layout, its start, the axis or the
-  // column width changes. Data changes (a moved or completed session) keep
-  // scroll.
+  // column width changes, then move every card from where it was. Data
+  // changes (a moved or completed session) keep scroll and move only what
+  // changed.
   const placeKey = `${view.layout}|${view.reference}|${span.start}|${geometry.pitch}`;
   useLayoutEffect(() => {
     const previous = placed.current;
@@ -142,13 +148,29 @@ export function GoalLanes({
         (plan.layout === "calendar" ? columnOfDate(plan, weekStart) : plan.origin) *
           geometry.pitch
       );
-    } else if (previous.key !== placeKey) {
-      const { scrollLeft, trackWidth } = exact.current;
-      const anchor = pendingAnchor.current ?? leadingAnchor(previous.plan, scrollLeft, trackWidth);
-      scrollTo(scrollForAnchor(plan, anchor));
+      return;
+    }
+    const { scrollLeft: fromScroll, trackWidth } = exact.current;
+    let toScroll = scroller.current?.scrollLeft ?? fromScroll;
+    if (previous.key !== placeKey) {
+      const anchor = pendingAnchor.current ?? leadingAnchor(previous.plan, fromScroll, trackWidth);
+      toScroll = scrollTo(scrollForAnchor(plan, anchor));
+    } else if (toScroll !== fromScroll) {
+      // A shorter plan made the browser clamp the scroll position.
+      toScroll = scrollTo(toScroll);
     }
     pendingAnchor.current = null;
-  }, [plan, placeKey, exact, scroller, scrollTo, weekStart, geometry.pitch]);
+    startMorph({
+      from: previous.plan,
+      to: plan,
+      fromScroll,
+      toScroll,
+      trackWidth,
+      scrollTop: scroller.current?.scrollTop ?? 0,
+      instant: jumped.current || previous.plan.geometry !== plan.geometry,
+    });
+    jumped.current = false;
+  }, [plan, placeKey, exact, scroller, scrollTo, weekStart, geometry.pitch, startMorph]);
 
   const columns = visibleColumns(plan, viewport.scrollLeft, viewport.trackWidth);
   const calendar = view.layout === "calendar";
@@ -188,6 +210,7 @@ export function GoalLanes({
       scroller.current?.scrollTo({ left: index * geometry.pitch, behavior });
     } else {
       pendingAnchor.current = { key: null, date, offset: 0 };
+      jumped.current = true;
       setSpan(initialTimelineSpan(date));
     }
   };
@@ -223,12 +246,26 @@ export function GoalLanes({
 
   // The commit that changes the plan still has the old scroll position, so
   // cards on screen may fall outside these columns until placement scrolls.
-  // Keep them mounted (with their focus) meanwhile.
+  // Keep them mounted (with their focus and any in-flight move) meanwhile.
   const outgoing = placed.current?.plan;
   const carried =
     outgoing && outgoing !== plan
-      ? visibleKeys(outgoing, viewport.scrollLeft, viewport.trackWidth)
-      : undefined;
+      ? new Set([...retained.keys, ...visibleKeys(outgoing, viewport.scrollLeft, viewport.trackWidth)])
+      : retained.keys;
+  // Calendar's header and day rules: live, or held where they were drawn
+  // while they fade out after Calendar turns off.
+  const leaving = calendar ? null : retained.calendar;
+  const grid = calendar
+    ? { plan, columns }
+    : leaving
+      ? { plan: leaving, columns: visibleColumns(leaving, retained.scrollLeft, viewport.trackWidth) }
+      : null;
+  // Lanes only Calendar had, drawn where they were while they fade.
+  const liveGoalIds = new Set(plan.lanes.map((lane) => lane.goalId));
+  const leavingLanes = leaving
+    ? leaving.lanes.filter((lane) => !liveGoalIds.has(lane.goalId) && goalsById.has(lane.goalId))
+    : [];
+  const leavingTops = leaving ? laneTops(leaving) : null;
   const bodyHeight = plan.lanes.reduce((total, lane) => total + lane.height, 0);
 
   return (
@@ -255,21 +292,24 @@ export function GoalLanes({
         )}
       >
         <div
-          // Clip, not hidden: nothing outside the lanes may widen the scroll
-          // range, and the goal labels must stay sticky to the scroller. At
-          // least the viewport wide, so lane rules span it.
+          ref={canvas}
+          // Clip, not hidden: fading layers may not widen the scroll range,
+          // and the goal labels must stay sticky to the scroller. At least
+          // the viewport wide, so lane rules span it and short plans leave
+          // room for cards travelling in from the edge.
           className="relative overflow-clip"
           style={{ width: geometry.label + plan.columns * geometry.pitch, minWidth: "100%" }}
         >
-          {calendar ? (
+          {grid ? (
             <GoalLaneHeader
-              plan={plan}
-              first={columns.first}
-              last={columns.last}
+              plan={grid.plan}
+              first={grid.columns.first}
+              last={grid.columns.last}
               today={today}
               weekStartsOn={weekStartsOn}
               loading={loading}
               onInspectDate={onInspectDate}
+              heldAt={calendar ? undefined : { left: retained.scrollLeft, top: retained.scrollTop }}
             />
           ) : null}
           <div data-lane-body="" className="relative">
@@ -282,11 +322,11 @@ export function GoalLanes({
                     : "No upcoming sessions in this window."}
               </p>
             ) : null}
-            {calendar ? (
+            {grid ? (
               <GoalLaneGridlines
-                plan={plan}
-                first={columns.first}
-                last={columns.last}
+                plan={grid.plan}
+                first={grid.columns.first}
+                last={grid.columns.last}
                 today={today}
                 height={bodyHeight}
               />
@@ -342,6 +382,34 @@ export function GoalLanes({
                 </section>
               );
             })}
+            {grid && leavingTops
+              ? leavingLanes.map((lane) => (
+                  <section
+                    key={`leaving:${lane.goalId}`}
+                    data-lane-leaving=""
+                    aria-hidden
+                    inert
+                    className="pointer-events-none absolute inset-x-0 flex border-b border-border"
+                    style={{ top: leavingTops.get(lane.goalId), height: lane.height }}
+                  >
+                    <GoalLaneLabel
+                      goal={goalsById.get(lane.goalId)!}
+                      progress={progressByGoalId.get(lane.goalId)}
+                      geometry={geometry}
+                      lane
+                    />
+                    <div data-lane-hold="" className="relative flex-1">
+                      {placementsInColumns(lane.placements, grid.columns.first, grid.columns.last).map(
+                        (placement) => (
+                          <LaneTile key={placement.session.key} plan={grid.plan} placement={placement}>
+                            {renderTile(placement.session)}
+                          </LaneTile>
+                        )
+                      )}
+                    </div>
+                  </section>
+                ))
+              : null}
           </div>
         </div>
       </div>

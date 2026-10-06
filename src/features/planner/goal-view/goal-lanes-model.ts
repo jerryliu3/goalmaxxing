@@ -140,6 +140,17 @@ export function buildLanePlan({
   };
 }
 
+/** Each lane's top within the lanes body, by goal. */
+export function laneTops(plan: LanePlan) {
+  const tops = new Map<string, number>();
+  let top = 0;
+  for (const lane of plan.lanes) {
+    tops.set(lane.goalId, top);
+    top += lane.height;
+  }
+  return tops;
+}
+
 /** A session card's position inside its lane's date track, centred in its column. */
 export function placementOffset(plan: LanePlan, placement: LanePlacement) {
   const { pitch, gap, tileHeight, stackGap } = plan.geometry;

@@ -235,6 +235,23 @@ Goal View), not as a separate route. Code lives in
   the date in view. Only columns near the viewport mount. The date in view is
   reported to the planner (`onVisibleDate`), which re-anchors its rolling
   90-day window near the window's edges.
+- Turning Calendar on or off is an accordion morph (`use-lane-morph.ts`). The
+  leading session holds still while the rest spread out into their dates or
+  close back up around it. Lanes only Calendar shows fade in once the lanes
+  below have glided down to make room, and fade where they were as those
+  lanes rise again. The date header slides down from the frame's top edge in
+  step with the lanes, like a drawer, and slides back up on the way out. Day
+  rules fade in once the cards are moving, and fade out held still on screen.
+  Both endpoints come from the pure lane plans, so cards that were
+  virtualized out of view slide in from the lane edge, cards leaving the view
+  stay mounted until they are off it, and cards scrolled into view mid-flight
+  join on the same clock. Only `transform` and `opacity` animate (WAAPI),
+  using the plan morph's smootherstep curve (as CSS `linear()`) and its
+  720 ms duration. Equal timing keeps each lane's cards in order. An
+  interrupted switch starts from the pixels on screen. Data arriving
+  mid-switch finishes on the switch's clock. A moved session slides over
+  320 ms. Jumps far along the axis, resizes and reduced motion place
+  everything without motion.
 - Selecting a session card (outside its own controls, or Enter on the
   focused card) opens the planner's session details dialog with the goal
   card, the same popup the checklist opens. Selecting a date in Calendar's
