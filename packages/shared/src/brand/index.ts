@@ -11,3 +11,13 @@ export {
   type ThemeId,
 } from "./themes";
 export { studyTheme, type StudySkin } from "./themes/study";
+export { ARCHIVED_STUDY_SKINS } from "./library/archived-skins";
+export { MINERAL_CANDY_CATEGORIES, mineralCandyCategoryPair } from "./library/category-palettes";
+export {
+  COLOR_COLLECTIONS,
+  COLOR_LIBRARY,
+  colorPair,
+  type ColorId,
+  type ColorSwatch,
+} from "./library/colors";
+export { STUDY_SKIN_NOTES, type StudySkinNotes } from "./library/skin-notes";

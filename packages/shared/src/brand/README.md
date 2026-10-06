@@ -13,6 +13,7 @@ typefaces out of components; colors stay on roles by convention.
 | `themes/index.ts` | Theme order (first is the default) and lookup |
 | `themes/study.ts` | Builds a study skin from its /ux/brand palette |
 | `css.ts` | Renders `src/app/themes.css` (live themes) and the study-skin CSS |
+| `library/` | The rest of the brand library: archived skins, skin notes, colors |
 | `gazetteer.ts` | Gazetteer palette swatches and goal-category colors |
 
 ## How components use it
@@ -61,8 +62,11 @@ Google Fonts stylesheet, the picker offer them, and the cookie honor them, so
 production pages carry none of it. Promoting a skin means hand-tuning its
 derived roles and setting `status: "live"`.
 
-The rest of the brand library (archived pairings, concept notes, the color
-library, Mineral Candy) is reference data in `src/features/ux-brand/library`.
+The rest of the brand library sits in `library/`, exported alongside the
+themes: the six archived pairings as `StudySkin` data (pass one to
+`studyTheme(...)` to bring it back), concept notes and study-authored styling
+for all sixteen skins (`STUDY_SKIN_NOTES`), the named color library, and the
+Mineral Candy category palette study.
 
 ## Changing or adding a theme
 
