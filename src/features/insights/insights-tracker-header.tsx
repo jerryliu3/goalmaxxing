@@ -1,10 +1,10 @@
 "use client";
 
 import { format, startOfMonth, startOfYear } from "date-fns";
-import { CalendarRange, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchField } from "@/components/ui/search-field";
 import { InsightsGoalStatsFilters } from "@/features/insights/insights-goal-stats-filters";
 import { InsightsPeriodStepper } from "@/features/insights/insights-period-controls";
 import type { HeatmapViewMode } from "@/features/insights/insights-tab";
@@ -85,36 +85,23 @@ export function InsightsTrackerHeader({
       data-onboarding="insights.goal-stats"
       data-testid="insights-tracker-header"
     >
-      <div className="pb-3">
-        <div
-          data-title-date-row="true"
-          className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2"
+      <div data-title-date-row="true" className="flex items-center justify-center gap-2 pb-3">
+        <InsightsPeriodStepper
+          monthCursor={monthCursor}
+          onMonthCursorChange={onMonthCursorChange}
+          perGoalViewMode={perGoalViewMode}
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-round"
+          className="shrink-0"
+          aria-label="Open progress filters"
+          title="Open progress filters"
+          onClick={() => setFiltersOpen(true)}
         >
-          <div className="flex min-w-0 items-center gap-2">
-            <CalendarRange className="size-4 shrink-0 text-primary" />
-            <h2 className="font-display text-lg font-semibold tracking-tight">
-              Progress Tracker
-            </h2>
-          </div>
-          <div className="flex items-center gap-2 justify-self-center">
-            <InsightsPeriodStepper
-              monthCursor={monthCursor}
-              onMonthCursorChange={onMonthCursorChange}
-              perGoalViewMode={perGoalViewMode}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              className="shrink-0"
-              aria-label="Open Progress filters"
-              title="Open Progress filters"
-              onClick={() => setFiltersOpen(true)}
-            >
-              <SlidersHorizontal />
-            </Button>
-          </div>
-        </div>
+          <SlidersHorizontal />
+        </Button>
       </div>
       <div className="space-y-3">
         <InsightsGoalStatsFilters
@@ -132,11 +119,11 @@ export function InsightsTrackerHeader({
           open={filtersOpen}
           onOpenChange={setFiltersOpen}
         />
-        <Input
+        <SearchField
           value={goalSearchQuery}
           onChange={(event) => onGoalSearchQueryChange(event.target.value)}
-          placeholder="Search goals..."
-          className="h-8"
+          placeholder="Search goals"
+          aria-label="Search goals"
         />
       </div>
     </section>

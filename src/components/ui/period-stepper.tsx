@@ -30,8 +30,8 @@ export function PeriodStepper({
     <div className={cn("flex items-center gap-2", className)}>
       <Button
         type="button"
-        variant="outline"
-        size="icon-sm"
+        variant="ghost"
+        size="icon-round"
         onClick={() => onPrevious?.()}
         disabled={!onPrevious || previousDisabled}
         aria-label={previousAriaLabel}
@@ -41,8 +41,8 @@ export function PeriodStepper({
       {center}
       <Button
         type="button"
-        variant="outline"
-        size="icon-sm"
+        variant="ghost"
+        size="icon-round"
         onClick={() => onNext?.()}
         disabled={!onNext || nextDisabled}
         aria-label={nextAriaLabel}

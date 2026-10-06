@@ -36,7 +36,6 @@ import { ProfilePresenceSection } from "@/features/social/profile-presence";
 import { useOwnProfilePresence } from "@/features/social/use-own-profile-presence";
 import { useSocialTabData } from "@/features/social/use-social-tab-data";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
-import { useMediaQuery } from "@/lib/ui/use-media-query";
 import { cn } from "@/lib/utils";
 import type { Goal } from "@/lib/goals/types";
 
@@ -70,7 +69,6 @@ export function SettingsTab() {
   useReportAppSurfaceReady(!(loading && !state.userId));
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();
-  const isDesktopTwoPane = useMediaQuery("(min-width: 768px)");
   const requestedSection = resolveSettingsSection(searchParams.get("tab"));
   const [cachedSection, setCachedSection] = useState<SettingsSection>("preferences");
   const settingsSection = requestedSection ?? cachedSection;
@@ -108,23 +106,50 @@ export function SettingsTab() {
     );
   }
 
-  const editor = (
-    <SettingsSectionEditor
-      settingsSection={settingsSection}
-      ownGoals={state.ownGoals}
-      profileDraft={profileDraft}
-      setProfileDraft={setProfileDraft}
-      plannerPreferencesDraft={plannerPreferencesDraft}
-      setPlannerPreferencesDraft={setPlannerPreferencesDraft}
-      plannerPreferencesLoading={plannerPreferencesLoading}
-      saving={saving}
-      canSavePreferences={canSavePreferences}
-      savePreferences={savePreferences}
-    />
-  );
-
-  const groups = (
-    <div className="space-y-5">
+  return (
+    <div
+      data-testid="settings-pane"
+      data-settings-pane={settingsPanelOpen ? "open" : "closed"}
+      className="min-w-0 space-y-5"
+    >
+      <ProfileMembershipCard
+        profile={{
+          subjectUserId: state.userId,
+          username: profileDraft.username.trim() || null,
+          displayName: profileDraft.display_name.trim() || null,
+          avatarUrl: profileDraft.avatar_url.trim() || null,
+          isPrivate: false,
+          createdAt: presence?.profile.createdAt ?? state.profile?.created_at ?? null,
+          memberNumber: presence?.profile.memberNumber ?? null,
+        }}
+        overallStats={presence?.overallStats ?? null}
+        currentLevel={presence?.xp?.currentLevel ?? null}
+        editor={{
+          username: profileDraft.username,
+          displayName: profileDraft.display_name,
+          email: authEmail,
+          avatarUrl: profileDraft.avatar_url,
+          saving,
+          canSave: canSaveProfile,
+          onUsernameChange: (username) =>
+            setProfileDraft((prev) => ({ ...prev, username })),
+          onDisplayNameChange: (displayName) =>
+            setProfileDraft((prev) => ({ ...prev, display_name: displayName })),
+          onSave: saveProfile,
+          onUploadAvatar: uploadProfileAvatarFile,
+          onRemoveAvatar: () =>
+            setProfileDraft((prev) => ({ ...prev, avatar_url: "" })),
+        }}
+      />
+      {presence ? (
+        <ProfilePresenceSection
+          growSeries={presence.growSeries}
+          heatmap={presence.yearHeatmap}
+          selectedYear={new Date().getFullYear()}
+          overallStats={presence.overallStats}
+          showMoreLink
+        />
+      ) : null}
       {SETTINGS_GROUPS.map((group) => (
         <section key={group.key} className="space-y-1">
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
@@ -166,80 +191,21 @@ export function SettingsTab() {
           </div>
         </section>
       ))}
-    </div>
-  );
 
-  return (
-    <div
-      data-testid="settings-pane"
-      data-settings-pane={settingsPanelOpen ? "open" : "closed"}
-      className="md:flex md:items-start"
-    >
-      <div className="min-w-0 flex-1 space-y-5">
-        <ProfileMembershipCard
-          profile={{
-            subjectUserId: state.userId,
-            username: profileDraft.username.trim() || null,
-            displayName: profileDraft.display_name.trim() || null,
-            avatarUrl: profileDraft.avatar_url.trim() || null,
-            isPrivate: false,
-            createdAt: presence?.profile.createdAt ?? state.profile?.created_at ?? null,
-            memberNumber: presence?.profile.memberNumber ?? null,
-          }}
-          overallStats={presence?.overallStats ?? null}
-          currentLevel={presence?.xp?.currentLevel ?? null}
-          editor={{
-            username: profileDraft.username,
-            displayName: profileDraft.display_name,
-            email: authEmail,
-            avatarUrl: profileDraft.avatar_url,
-            saving,
-            canSave: canSaveProfile,
-            onUsernameChange: (username) =>
-              setProfileDraft((prev) => ({ ...prev, username })),
-            onDisplayNameChange: (displayName) =>
-              setProfileDraft((prev) => ({ ...prev, display_name: displayName })),
-            onSave: saveProfile,
-            onUploadAvatar: uploadProfileAvatarFile,
-            onRemoveAvatar: () =>
-              setProfileDraft((prev) => ({ ...prev, avatar_url: "" })),
-          }}
-        />
-        {presence ? (
-          <ProfilePresenceSection
-            growSeries={presence.growSeries}
-            heatmap={presence.yearHeatmap}
-            selectedYear={new Date().getFullYear()}
-            overallStats={presence.overallStats}
-            showMoreLink
-          />
-        ) : null}
-        {groups}
-      </div>
-
-      {isDesktopTwoPane ? (
-        <div
-          className={cn(
-            "min-w-0 overflow-hidden md:transition-[width] md:duration-[var(--motion-duration-hold)] md:ease-[var(--motion-ease-emphasized)] motion-reduce:md:transition-none",
-            settingsPanelOpen
-              ? "md:w-[min(100%,28rem)]"
-              : "md:pointer-events-none md:w-0"
-          )}
-          data-testid="settings-desktop-editor"
-          data-settings-slide={settingsPanelOpen ? "in" : "out"}
-          aria-hidden={!settingsPanelOpen}
-          inert={!settingsPanelOpen ? true : undefined}
-        >
-          <div className="space-y-3 md:w-[min(100%,28rem)] md:pl-10">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="font-display text-xl font-semibold tracking-tight">
-                  {settingsCopy.label}
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {settingsCopy.description}
-                </p>
-              </div>
+      {/* Every width opens a setting in the side panel, wherever the list was scrolled. */}
+      <SidePanel
+        open={settingsPanelOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeSettingsPanel();
+          }
+        }}
+        title={settingsCopy.label}
+        description={settingsCopy.description}
+        testId="settings-side-panel"
+        header={
+          <div className="border-b px-4 pb-3">
+            <div className="flex items-center gap-2 pt-4">
               <Button
                 type="button"
                 variant="ghost"
@@ -249,46 +215,29 @@ export function SettingsTab() {
                 <ArrowLeft className="size-4" />
                 Back
               </Button>
-            </div>
-            {editor}
-          </div>
-        </div>
-      ) : (
-        <SidePanel
-          open={settingsPanelOpen}
-          onOpenChange={(open) => {
-            if (!open) {
-              closeSettingsPanel();
-            }
-          }}
-          title={settingsCopy.label}
-          description={settingsCopy.description}
-          testId="settings-side-panel"
-          header={
-            <div className="border-b px-4 pb-3">
-              <div className="flex items-center gap-2 pt-4">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={closeSettingsPanel}
-                >
-                  <ArrowLeft className="size-4" />
-                  Back
-                </Button>
-                <p className="font-display text-lg font-semibold tracking-tight">
-                  {settingsCopy.label}
-                </p>
-              </div>
-              <p className="pt-1 text-sm text-muted-foreground">
-                {settingsCopy.description}
+              <p className="font-display text-lg font-semibold tracking-tight">
+                {settingsCopy.label}
               </p>
             </div>
-          }
-        >
-          {editor}
-        </SidePanel>
-      )}
+            <p className="pt-1 text-sm text-muted-foreground">
+              {settingsCopy.description}
+            </p>
+          </div>
+        }
+      >
+        <SettingsSectionEditor
+          settingsSection={settingsSection}
+          ownGoals={state.ownGoals}
+          profileDraft={profileDraft}
+          setProfileDraft={setProfileDraft}
+          plannerPreferencesDraft={plannerPreferencesDraft}
+          setPlannerPreferencesDraft={setPlannerPreferencesDraft}
+          plannerPreferencesLoading={plannerPreferencesLoading}
+          saving={saving}
+          canSavePreferences={canSavePreferences}
+          savePreferences={savePreferences}
+        />
+      </SidePanel>
     </div>
   );
 }

@@ -15,7 +15,6 @@ import {
   YAxis,
 } from "recharts";
 import { ArrowLeft, BarChart3 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
 import { LoadingCard } from "@/components/ui/loading-card";
@@ -116,7 +115,7 @@ function StatsSection({ title, stats }: StatsSectionProps) {
         <CardContent>
           <InsightsStatStrip>
             <InsightsStatPlaque
-              label="Current Week Completion %"
+              label="Current week completion %"
               tooltip="Numerator: completed goals this week. Denominator: goal opportunities this week, with weekly/monthly/milestone opportunities only counted on completion days."
               value={formatPercent(stats.currentWeekCompletion.percent)}
               hint={
@@ -124,7 +123,7 @@ function StatsSection({ title, stats }: StatsSectionProps) {
               }
             />
             <InsightsStatPlaque
-              label="Current Month Completion %"
+              label="Current month completion %"
               tooltip="Numerator: completed goals this month. Denominator: goal opportunities this month, with weekly/monthly/milestone opportunities only counted on completion days."
               value={formatPercent(stats.currentMonthCompletion.percent)}
               hint={
@@ -135,12 +134,12 @@ function StatsSection({ title, stats }: StatsSectionProps) {
               }
             />
             <InsightsStatPlaque
-              label="Total Active Days %"
+              label="Total active days %"
               tooltip="Numerator: days since account creation with one or more completions. Denominator: total days since account creation."
               value={formatPercent(stats.totalActiveDaysPercent.percent)}
             />
             <InsightsStatPlaque
-              label="Total Days #"
+              label="Total days #"
               tooltip="Numerator: total days elapsed since account creation. Denominator: not applicable."
               value={stats.totalDays.toLocaleString()}
             />
@@ -152,7 +151,7 @@ function StatsSection({ title, stats }: StatsSectionProps) {
         <CardHeader className="space-y-1">
           <CardTitle className="text-sm">
             <InsightsLabelWithTooltip
-              label="Completion by Day of Week (last 30 days)"
+              label="Completion by day of week (last 30 days)"
               tooltip="Numerator: completed goals on each weekday in the last 30 days. Denominator: goal opportunities on that weekday in the last 30 days."
             />
           </CardTitle>
@@ -188,7 +187,7 @@ function StatsSection({ title, stats }: StatsSectionProps) {
         <CardHeader className="space-y-1">
           <CardTitle className="text-sm">
             <InsightsLabelWithTooltip
-              label="Completion Rate % by Day (last 30 days)"
+              label="Completion rate % by day (last 30 days)"
               tooltip="Numerator: completed goals each day. Denominator: goal opportunities each day, with weekly/monthly/milestone opportunities only counted on completion days."
             />
           </CardTitle>
@@ -230,7 +229,7 @@ function StatsSection({ title, stats }: StatsSectionProps) {
         <CardHeader className="space-y-1">
           <CardTitle className="text-sm">
             <InsightsLabelWithTooltip
-              label="Completions per Day (last 30 days)"
+              label="Completions per day (last 30 days)"
               tooltip="Numerator: completion events per day. Denominator: not applicable."
             />
           </CardTitle>
@@ -272,7 +271,7 @@ function StatsSection({ title, stats }: StatsSectionProps) {
         <CardHeader className="space-y-1">
           <CardTitle className="text-sm">
             <InsightsLabelWithTooltip
-              label="Completion Rate % by Category (last 30 days)"
+              label="Completion rate % by category (last 30 days)"
               tooltip="Numerator: completed goals in each category over last 30 days. Denominator: category goal opportunities over last 30 days."
             />
           </CardTitle>
@@ -373,22 +372,17 @@ export function InsightsMoreStatsPage() {
 
   return (
     <div className="space-y-5">
-      <Card className="shadow-sm">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between gap-3">
-            <CardTitle>More stats</CardTitle>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/insights" className="inline-flex items-center gap-1">
-                <ArrowLeft className="size-3.5" />
-                Back
-              </Link>
-            </Button>
-          </div>
-        </CardHeader>
-      </Card>
+      {/* Reached from "View more" on Profile settings; a plain page header, not a card. */}
+      <header className="space-y-3">
+        <Link href="/settings" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back to profile
+        </Link>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">More stats</h1>
+      </header>
 
-      <StatsSection title="Your Goals" stats={stats.overall} />
-      {stats.team ? <StatsSection title="Team Goals" stats={stats.team} /> : null}
+      <StatsSection title="Your goals" stats={stats.overall} />
+      {stats.team ? <StatsSection title="Team goals" stats={stats.team} /> : null}
     </div>
   );
 }

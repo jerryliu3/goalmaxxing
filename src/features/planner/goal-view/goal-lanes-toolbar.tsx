@@ -24,13 +24,13 @@ export function GoalCalendarSwitch({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="group inline-flex min-h-8 shrink-0 items-center gap-2 rounded-lg px-1.5 text-xs font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+      className="group inline-flex h-9 shrink-0 items-center gap-2 rounded-full px-2.5 text-[13px] font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
     >
       <span
         aria-hidden
         className={cn(
           "relative h-[18px] w-8 rounded-full transition-colors duration-300 motion-reduce:transition-none",
-          checked ? "bg-primary" : "bg-muted-foreground/30"
+          checked ? "bg-foreground" : "bg-muted-foreground/30"
         )}
       >
         <span
@@ -52,7 +52,7 @@ export function GoalCalendarSwitch({
  */
 function MonthJump({ date, onJump }: { date: string; onJump: (date: string) => void }) {
   return (
-    <label className="relative inline-flex min-h-8 cursor-pointer items-center gap-1 rounded-lg px-2 hover:bg-muted focus-within:outline-2 focus-within:outline-ring">
+    <label className="relative inline-flex h-9 cursor-pointer items-center gap-1 rounded-full px-3 hover:bg-muted focus-within:outline-2 focus-within:outline-ring">
       <span aria-hidden className="font-display text-lg leading-none tracking-tight">
         {dateLabel(date, "MMMM yyyy")}
       </span>
@@ -87,16 +87,16 @@ export function GoalLanesToolbar({
     <div className="flex flex-wrap items-center justify-between gap-2">
       <MonthJump date={leadingDate} onJump={onJump} />
       <div className="flex items-center gap-1">
-        <Button size="icon-sm" variant="ghost" aria-label="Earlier dates" onClick={() => onStep(-1)}>
+        <Button size="icon-round" variant="ghost" aria-label="Earlier dates" onClick={() => onStep(-1)}>
           <ArrowLeft />
         </Button>
-        <Button size="sm" variant="outline" onClick={onToday}>
+        <Button size="sm" variant="outline" className="h-9 rounded-full px-3.5 text-[13px]" onClick={onToday}>
           Today
         </Button>
-        <Button size="icon-sm" variant="ghost" aria-label="Later dates" onClick={() => onStep(1)}>
+        <Button size="icon-round" variant="ghost" aria-label="Later dates" onClick={() => onStep(1)}>
           <ArrowRight />
         </Button>
-        <span aria-hidden className="mx-1 h-5 w-px bg-border" />
+        <span aria-hidden className="mx-1 h-6 w-px shrink-0 bg-border" />
         {calendarSwitch}
       </div>
     </div>

@@ -23,8 +23,8 @@ describe("ProgressGoalList", () => {
 
     const tempo = screen.getByRole("button", { name: /Tempo run/ });
     expect(tempo).toHaveAttribute("aria-pressed", "true");
-    expect(tempo).toHaveClass("bg-primary/15");
-    expect(tempo).not.toHaveClass("bg-foreground");
+    expect(tempo).toHaveClass("bg-muted");
+    expect(tempo).not.toHaveClass("bg-primary/15");
     await user.click(screen.getByRole("button", { name: /Lift/ }));
     expect(onToggleGoal).toHaveBeenCalledWith("lift");
   });
@@ -73,7 +73,7 @@ describe("ProgressGoalList", () => {
     );
 
     const only = screen.getAllByRole("button", { name: "Only" })[0];
-    expect(only).toHaveClass("text-primary");
+    expect(only).toHaveClass("text-foreground");
     expect(only).not.toHaveClass("shadow-sm");
     expect(only).not.toHaveClass("bg-background/90");
     await user.click(only);

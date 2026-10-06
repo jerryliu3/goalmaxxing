@@ -132,7 +132,7 @@ describe("PlannerCalendarToolbar", () => {
     renderToolbar({ hasDraftSession: true });
 
     const badge = screen.getByTestId("planner-preview-mode-badge");
-    expect(badge).toHaveTextContent("Planning Mode");
+    expect(badge).toHaveTextContent("Planning mode");
     expect(badge).toHaveAttribute("data-variant", "secondary");
     expect(badge.className).not.toMatch(/warning/);
   });

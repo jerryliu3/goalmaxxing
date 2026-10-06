@@ -75,7 +75,7 @@ export function CompeteSnapRail({
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
+            size="icon-round"
             aria-label={`Scroll ${label} left`}
             onClick={() => scroll(-1)}
           >
@@ -84,7 +84,7 @@ export function CompeteSnapRail({
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
+            size="icon-round"
             aria-label={`Scroll ${label} right`}
             onClick={() => scroll(1)}
           >
@@ -159,7 +159,7 @@ export function CompeteTile({
       data-testid="compete-plaque"
       className={`relative flex min-h-[16rem] snap-start flex-col overflow-hidden rounded-[14px] border border-border bg-card p-5 shadow-[inset_0_1px_0_color-mix(in_srgb,white_40%,transparent),0_12px_22px_-16px_color-mix(in_srgb,var(--foreground)_30%,transparent)] ${
         wide
-          ? "flex-[0_0_calc(100%-2.75rem)]"
+          ? "flex-[0_0_calc(100%-2.75rem)] md:flex-[0_0_min(calc(100%-2.75rem),34rem)]"
           : "w-[21rem] max-w-[calc(100%-1.5rem)] shrink-0"
       }`}
     >

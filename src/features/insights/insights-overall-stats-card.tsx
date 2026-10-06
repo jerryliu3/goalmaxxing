@@ -45,17 +45,17 @@ export function InsightsOverallStatsTiles({
     <>
       <InsightsStatStrip>
         <InsightsStatPlaque
-          label="Total Activities"
+          label="Total activities"
           tooltip="Numerator: every completion event ever logged."
           value={overallStats.totalActivities.toLocaleString()}
         />
         <InsightsStatPlaque
-          label="Total Goals Completed"
+          label="Total goals completed"
           tooltip="Numerator: unique goals in achieved outcome."
           value={overallStats.totalGoalsCompleted.toLocaleString()}
         />
         <InsightsStatPlaque
-          label="Current Month Activities"
+          label="Current month activities"
           tooltip="Numerator: completion events in the current month."
           value={overallStats.currentMonthActivities.current.toLocaleString()}
           hint={
@@ -66,7 +66,7 @@ export function InsightsOverallStatsTiles({
           }
         />
         <InsightsStatPlaque
-          label="Current Week Activities"
+          label="Current week activities"
           tooltip="Numerator: completion events in the current week."
           value={overallStats.currentWeekActivities.current.toLocaleString()}
           hint={
@@ -82,7 +82,7 @@ export function InsightsOverallStatsTiles({
           value={overallStats.todayActivities.toLocaleString()}
         />
         <InsightsStatPlaque
-          label="Active Streak"
+          label="Active streak"
           tooltip="Consecutive calendar weeks ending this week with at least one completed activity."
           value={`${overallStats.activeStreakWeeks.toLocaleString()} ${
             overallStats.activeStreakWeeks === 1 ? "week" : "weeks"

@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleHelp, Search, Settings, SlidersHorizontal } from "lucide-react";
+import { CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,21 +12,21 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { CheckboxDropdown } from "@/components/ui/checkbox-dropdown";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SearchField } from "@/components/ui/search-field";
+import { SegmentedControl, type SegmentedControlOption } from "@/components/ui/segmented-control";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { GoalCategoryFilterOption } from "@/features/goals/goal-filters";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
 import { PlannerEndMonthQuickFilterChips } from "@/features/planner/planner-end-month-quick-filter-chips";
 import type { PlannerEligibilityNotices } from "@/features/planner/planner-eligibility-notices";
 
-const PLANNER_VIEW_MODES: ReadonlyArray<{
-  value: PlannerCalendarViewMode;
-  label: string;
-}> = [
+// Goal View is the last segment; the calendar views lead.
+const PLAN_VIEW_OPTIONS: ReadonlyArray<SegmentedControlOption<PlannerCalendarViewMode | "goals">> = [
   { value: "day", label: "Day" },
   { value: "week", label: "Week" },
   { value: "month", label: "Month" },
+  { value: "goals", label: "Goal View" },
 ];
 
 interface PlannerCalendarToolbarProps {
@@ -73,47 +73,22 @@ function PlanViewModeSwitch({
   onGoalViewOpenChange: (open: boolean) => void;
 }) {
   const resolvedViewMode = viewMode === "three_day" ? "week" : viewMode;
-  const selectedViewIndex = goalViewOpen ? 3 : Math.max(0, PLANNER_VIEW_MODES.findIndex((option) => option.value === resolvedViewMode));
-  const optionClass = (selected: boolean) =>
-    selected
-      ? "relative z-10 h-8 whitespace-nowrap rounded-full px-3 font-medium text-foreground transition-colors sm:px-4"
-      : "relative z-10 h-8 whitespace-nowrap rounded-full px-3 text-muted-foreground transition-colors hover:text-foreground sm:px-4";
-
   return (
-    <div
-      role="group"
-      aria-label="Plan view mode"
-      className="relative isolate inline-grid shrink-0 grid-cols-4 rounded-full bg-muted p-0.5 text-xs sm:text-[13px]"
-    >
-      <span
-        aria-hidden
-        data-testid="plan-view-mode-thumb"
-        className="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc((100%-4px)/4)] rounded-full bg-background shadow-[0_1px_2px_rgb(0_0_0/0.08),0_0_0_0.5px_rgb(0_0_0/0.06)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
-        style={{ transform: `translateX(${selectedViewIndex * 100}%)` }}
-      />
-      {PLANNER_VIEW_MODES.map((modeOption) => {
-        const selected = !goalViewOpen && resolvedViewMode === modeOption.value;
-        return (
-          <button
-            key={modeOption.value}
-            type="button"
-            aria-pressed={selected}
-            disabled={loading}
-            onClick={() => {
-              onGoalViewOpenChange(false);
-              onViewModeChange(modeOption.value);
-            }}
-            className={optionClass(selected)}
-          >
-            {modeOption.label}
-          </button>
-        );
-      })}
-      <button type="button" aria-pressed={goalViewOpen} disabled={loading}
-        onClick={() => onGoalViewOpenChange(true)} className={optionClass(goalViewOpen)}>
-        Goal View
-      </button>
-    </div>
+    <SegmentedControl
+      label="Plan view mode"
+      thumbTestId="plan-view-mode-thumb"
+      options={PLAN_VIEW_OPTIONS}
+      value={goalViewOpen ? "goals" : resolvedViewMode}
+      disabled={loading}
+      onChange={(value) => {
+        if (value === "goals") {
+          onGoalViewOpenChange(true);
+          return;
+        }
+        onGoalViewOpenChange(false);
+        onViewModeChange(value);
+      }}
+    />
   );
 }
 
@@ -162,8 +137,8 @@ export function PlannerCalendarToolbar({
               <Tooltip content="Planner help" side="top" align="center">
                 <Button
                   type="button"
-                  variant="outline"
-                  size="icon-sm"
+                  variant="ghost"
+                  size="icon-round"
                   aria-label="Open planner help"
                   title="Planner help"
                   onClick={() => setHelpOpen(true)}
@@ -177,7 +152,7 @@ export function PlannerCalendarToolbar({
                   variant="secondary"
                   className="h-7 border-primary/40 px-3 text-sm font-semibold"
                 >
-                  Planning Mode
+                  Planning mode
                 </Badge>
               ) : null}
             </div>
@@ -230,19 +205,14 @@ export function PlannerCalendarToolbar({
           </> : null}
         </div>
         <div className="flex w-full items-center gap-2">
-          <div className="relative min-w-0 flex-1">
-            <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="planner-calendar-search"
-              type="search"
-              value={searchQuery}
-              onChange={(event) => onSearchQueryChange(event.target.value)}
-              placeholder="Filter by goal or milestone name"
-              className="h-9 w-full rounded-full border-transparent bg-muted pl-10 text-[13px] md:text-[13px] hover:bg-muted/70 focus-visible:border-border focus-visible:bg-background"
-              aria-label="Search goals"
-              disabled={loading}
-            />
-          </div>
+          <SearchField
+            id="planner-calendar-search"
+            value={searchQuery}
+            onChange={(event) => onSearchQueryChange(event.target.value)}
+            placeholder="Filter by goal or milestone name"
+            aria-label="Search goals"
+            disabled={loading}
+          />
           {goalFilterOptions.length > 0 ? (
             <div className="w-28 shrink-0 sm:w-36">
               <Label htmlFor="planner-goal-filter" className="sr-only">
@@ -266,8 +236,7 @@ export function PlannerCalendarToolbar({
             <Button
               type="button"
               variant="ghost"
-              size="icon-sm"
-              className="size-9 rounded-full hover:bg-muted"
+              size="icon-round"
               aria-label="Filters"
               title="Filters"
               onClick={onOpenFilters}
@@ -279,8 +248,7 @@ export function PlannerCalendarToolbar({
               <Button
                 type="button"
                 variant="ghost"
-                size="icon-sm"
-                className="size-9 rounded-full hover:bg-muted"
+                size="icon-round"
                 aria-label="Settings"
                 title="Settings"
                 onClick={onOpenSettings}

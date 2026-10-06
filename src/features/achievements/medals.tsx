@@ -1,5 +1,5 @@
-import { GAZETTEER, GAZETTEER_CATEGORY_COLORS } from "@/lib/brand/gazetteer";
-import type { AchievementGoalCategory, AwardTier } from "@/features/achievements/types";
+import { GAZETTEER } from "@/lib/brand/gazetteer";
+import type { AwardTier } from "@/features/achievements/types";
 
 export const TIER_METAL: Record<
   AwardTier,
@@ -36,10 +36,6 @@ export const TIER_METAL: Record<
     ink: GAZETTEER.paper,
   },
 };
-
-export function categoryColor(category: AchievementGoalCategory): string {
-  return GAZETTEER_CATEGORY_COLORS[category];
-}
 
 export function MedalMark({
   level,
@@ -116,42 +112,6 @@ export function MedalMark({
       >
         {locked ? "—" : level}
       </text>
-    </svg>
-  );
-}
-
-export function PlaqueMark({
-  category,
-  size = 56,
-}: {
-  category: AchievementGoalCategory;
-  size?: number;
-}) {
-  const fill = categoryColor(category);
-  return (
-    <svg width={size} height={size} viewBox="0 0 56 56" aria-hidden>
-      <rect
-        x="6"
-        y="8"
-        width="44"
-        height="40"
-        rx="4"
-        fill={GAZETTEER.paper}
-        stroke={GAZETTEER.rule}
-        strokeWidth="1.5"
-      />
-      <rect x="10" y="12" width="36" height="6" rx="1.5" fill={fill} opacity="0.9" />
-      <rect x="10" y="24" width="28" height="3" rx="1" fill={GAZETTEER.rule} />
-      <rect x="10" y="31" width="22" height="3" rx="1" fill={GAZETTEER.rule} />
-      <rect x="10" y="38" width="16" height="3" rx="1" fill={GAZETTEER.rule} />
-      <circle cx="40" cy="40" r="6" fill={fill} />
-      <path
-        d="M37.5 40 L39.2 41.7 L42.8 37.8"
-        fill="none"
-        stroke={GAZETTEER.paper}
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
     </svg>
   );
 }

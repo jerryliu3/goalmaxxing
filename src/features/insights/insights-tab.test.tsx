@@ -119,7 +119,9 @@ describe("InsightsTab goal ledger", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Progress Tracker" })).toBeInTheDocument();
+    // The section stack titles the tracker; the header no longer repeats it.
+    expect(screen.getByRole("heading", { name: "Progress tracker" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Progress Tracker" })).toBeNull();
     expect(
       screen.getByText("Aggregate of selected goals. This calendar logs completions, including unscheduled days.")
     ).toBeInTheDocument();

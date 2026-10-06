@@ -3,13 +3,11 @@
 import "@/features/achievements/showcase-theme.css";
 import {
   MedalMark,
-  PlaqueMark,
   SealMark,
   TIER_METAL,
 } from "@/features/achievements/medals";
-import { formatAwardDate, formatGoalDate } from "@/features/achievements/format";
+import { formatAwardDate } from "@/features/achievements/format";
 import type {
-  AchievementGoalCategory,
   AwardTier,
   PersonalRecord,
 } from "@/features/achievements/types";
@@ -29,14 +27,6 @@ export type ShowcaseLevelAwardView = {
   description: string;
   unlockedAt: string | null;
   tier: AwardTier;
-};
-
-export type ShowcaseGoalView = {
-  id: string;
-  title: string;
-  achievedOn: string | null;
-  rewardText: string | null;
-  category: AchievementGoalCategory;
 };
 
 export function ShowcasePersonalRecords({
@@ -142,7 +132,8 @@ export function ShowcaseMedalShelf({
       <p className="ach-showcase-kicker text-[10px] font-semibold uppercase tracking-[0.16em]">
         Medal shelf · XP levels
       </p>
-      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* Auto-fit so every earned and locked medal shares one row instead of orphaning the last. */}
+      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(9rem,1fr))]">
         {[...unlocked, ...locked].map((award) => (
           <ShelfMedal
             key={award.id}
@@ -152,41 +143,6 @@ export function ShowcaseMedalShelf({
           />
         ))}
       </ul>
-    </div>
-  );
-}
-
-export function ShowcasePlaqueRail({ goals }: { goals: readonly ShowcaseGoalView[] }) {
-  return (
-    <div className="mt-8">
-      <p className="ach-showcase-kicker text-[10px] font-semibold uppercase tracking-[0.16em]">
-        Plaque rail · finished goals
-      </p>
-      {goals.length === 0 ? (
-        <p className="ach-showcase-body mt-4 text-sm">No achieved goals yet.</p>
-      ) : (
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {goals.map((goal) => (
-            <li
-              key={goal.id}
-              className="ach-showcase-plaque flex items-start gap-3 rounded-[12px] border px-3 py-3"
-            >
-              <PlaqueMark category={goal.category} />
-              <div className="min-w-0">
-                <p className="ach-showcase-heading font-display text-base font-semibold leading-tight tracking-tight">
-                  {goal.title}
-                </p>
-                <p className="ach-showcase-kicker mt-1 font-mono text-[11px]">
-                  {formatGoalDate(goal.achievedOn)}
-                </p>
-                {goal.rewardText ? (
-                  <p className="ach-showcase-body mt-1 text-xs leading-snug">{goal.rewardText}</p>
-                ) : null}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }

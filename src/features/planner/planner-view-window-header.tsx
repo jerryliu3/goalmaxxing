@@ -57,8 +57,8 @@ export function PlannerViewWindowHeader({
             {viewMode === "month" ? (
               <Button
                 type="button"
-                variant="outline"
-                size="icon-sm"
+                variant="ghost"
+                size="icon-round"
                 disabled={loading}
                 aria-label={expandedMonthRows ? "Compact rows" : "Expand rows"}
                 title={expandedMonthRows ? "Compact rows" : "Expand rows"}

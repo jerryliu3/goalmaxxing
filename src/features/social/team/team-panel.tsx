@@ -278,7 +278,7 @@ export function TeamPanel({ isActive = true, refreshToken = 0 }: TeamPanelProps)
             <Button
               type="button"
               variant="ghost"
-              size="icon-sm"
+              size="icon-round"
               aria-expanded={settingsOpen}
               aria-label="Team settings"
               title="Team settings"

@@ -84,16 +84,17 @@ export function ProgressGoalList({
                 data-onboarding={index === 0 && onboarding ? "insights.goal" : undefined}
                 onClick={() => onToggleGoal(goal.id)}
                 className={cn(
-                  "flex min-h-10 w-full items-center rounded-[10px] border px-2 py-2 text-left touch-manipulation md:min-h-9 md:px-2.5 md:py-1.5",
+                  "flex min-h-10 w-full items-center rounded-xl px-2 py-2 text-left transition-colors touch-manipulation md:min-h-9 md:px-2.5 md:py-1.5",
+                  // Neutral selection like the app's chips: filled + ink when on, dimmed when off.
                   selected
-                    ? "border-primary/40 bg-primary/15 text-foreground"
-                    : "border-border text-foreground"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                 )}
               >
                 <span className="flex w-full min-w-0 items-center gap-1.5 md:justify-between md:gap-2">
                   <span className="flex min-w-0 flex-1 items-center gap-1.5 md:gap-2">
                     <span
-                      className="size-2 shrink-0 rounded-full"
+                      className={cn("size-2 shrink-0 rounded-full transition-opacity", !selected && "opacity-40")}
                       style={{ backgroundColor: toStyleDisplayColor(goal.color) }}
                       aria-hidden
                     />
@@ -115,7 +116,7 @@ export function ProgressGoalList({
               {onSelectOnly ? (
                 <button
                   type="button"
-                  className="absolute top-1/2 right-2 z-10 hidden -translate-y-1/2 text-[10px] font-semibold text-primary opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-visible:opacity-100 md:inline"
+                  className="absolute top-1/2 right-2 z-10 hidden -translate-y-1/2 text-[10px] font-semibold text-foreground underline underline-offset-2 opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-visible:opacity-100 md:inline"
                   onClick={(event) => {
                     event.stopPropagation();
                     onSelectOnly(goal.id);

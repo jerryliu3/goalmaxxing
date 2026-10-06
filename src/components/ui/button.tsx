@@ -33,6 +33,8 @@ const buttonVariants = cva(
         "icon-sm":
           "size-8 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-5",
         "icon-lg": "size-10 [&_svg:not([class*='size-'])]:size-6",
+        // The app's standard icon control: 36px round, muted fill on hover (use with ghost).
+        "icon-round": "size-9 rounded-full [&_svg:not([class*='size-'])]:size-[18px]",
       },
     },
     compoundVariants: [

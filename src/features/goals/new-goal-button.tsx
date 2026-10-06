@@ -29,7 +29,6 @@ export function NewGoalButton({ presentation = "button" }: { presentation?: "but
     return <section className="min-w-0">
       {onCreate ? <button type="button" aria-label="New Goal" className={className} onClick={onCreate} data-onboarding="nav.new-goal">{card}</button>
         : <Link aria-label="New Goal" className={className} href={`${prefix}/goals/new?returnTo=${encodeURIComponent(returnTo)}`} data-onboarding="nav.new-goal">{card}</Link>}
-      <p className="mt-5 text-center font-mono text-xs text-muted-foreground">Click to create</p>
     </section>;
   }
   return <Button asChild={!onCreate} size="sm" onClick={onCreate} data-onboarding="nav.new-goal">
