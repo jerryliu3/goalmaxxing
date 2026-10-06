@@ -95,7 +95,7 @@ function BackRow({ fact, session, open, onOpen, onDone }: { fact: BackFact; sess
           )}
         </>
       ) : (
-        <button type="button" className="card-back-row-head" onClick={onOpen}>
+        <button type="button" className="card-back-row-head" disabled={session.pastEnd} onClick={onOpen}>
           {head}
           <span className="card-back-value">
             {fact === "color" && <i className="card-dot" style={{ background: session.fields.color }} />}

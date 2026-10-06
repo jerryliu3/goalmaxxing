@@ -72,6 +72,8 @@ export function DirectCard({ session, card, back, flipped }: { session: CardEdit
     setPopup((current) => (current === which ? null : which));
   };
 
+  // Past its end date, only the deadline stays a control until it changes.
+  const frozen = session.pastEnd;
   const count = Number(fields.target_count) || 1;
   const { min, max } = cadenceBounds(fields, session.completed);
   const [name, cadence, category, effort, visibility] = (["name", "cadence", "category", "difficulty", "visibility"] as const).map(region);
@@ -79,7 +81,7 @@ export function DirectCard({ session, card, back, flipped }: { session: CardEdit
 
   const overlay = (
     <div className="card-overlay" data-direct="true" data-renaming={renaming}>
-      {name && (renaming ? (
+      {name && !frozen && (renaming ? (
         <textarea
           autoFocus
           className="card-title-input"
@@ -95,7 +97,7 @@ export function DirectCard({ session, card, back, flipped }: { session: CardEdit
         <button type="button" className="card-zone" data-changed={changed("name")} style={regionStyle(name)} aria-label="Rename goal" onClick={() => setRenaming(true)} />
       ))}
 
-      {cadence && (
+      {cadence && !frozen && (
         // The +/− pill sits on the card's left edge, beside the number it changes; the right
         // edge already carries the effort controls.
         <span className="card-stepper-pill" data-changed={changed("cadence")} style={{ left: Math.max(cadence.x - 48, -14), top: cadence.y + cadence.height / 2 }}>
@@ -117,7 +119,7 @@ export function DirectCard({ session, card, back, flipped }: { session: CardEdit
         </span>
       )}
 
-      {category && (
+      {category && !frozen && (
         <>
           <button type="button" className="card-zone" data-popup-anchor="category" data-changed={changed("category")} style={regionStyle(category)} aria-label="Change category" aria-expanded={popup === "category"} onClick={() => toggle("category")} />
           {popup === "category" && (() => {
@@ -148,7 +150,7 @@ export function DirectCard({ session, card, back, flipped }: { session: CardEdit
         </>
       )}
 
-      {effort && (() => {
+      {effort && !frozen && (() => {
         const step = (delta: number) => {
           const next = DIFFICULTY_OPTIONS[level + delta];
           patch({ difficulty: next.value });
@@ -167,7 +169,7 @@ export function DirectCard({ session, card, back, flipped }: { session: CardEdit
 
       {(["deadline", "time"] as const).map((fact) => {
         const zone = region(fact);
-        if (!zone) return null;
+        if (!zone || (frozen && fact !== "deadline")) return null;
         const isDate = fact === "deadline";
         const label = isDate ? "Deadline" : "Time of day";
         const left = clampX(zone.x + zone.width / 2 - SCHEDULE_POPUP_WIDTH / 2, SCHEDULE_POPUP_WIDTH);
@@ -198,7 +200,7 @@ export function DirectCard({ session, card, back, flipped }: { session: CardEdit
         );
       })}
 
-      {visibility && session.canChangeVisibility && (
+      {visibility && session.canChangeVisibility && !frozen && (
         <>
           <button type="button" className="card-zone" data-popup-anchor="visibility" data-changed={changed("visibility")} style={regionStyle(visibility)} aria-label={`Visibility: ${fields.is_private ? "private" : "visible to friends"}`} aria-expanded={popup === "visibility"} onClick={() => toggle("visibility")} />
           {popup === "visibility" && (() => {
