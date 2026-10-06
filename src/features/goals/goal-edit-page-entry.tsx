@@ -5,7 +5,7 @@ import {
   completeGoalEditor,
   dismissGoalEditor,
 } from "@/features/goals/goal-editor-navigation";
-import { GoalForm } from "@/features/today/goal-form";
+import { GoalCardEditor } from "@/features/goals/card-editor/goal-card-editor";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
 
 interface GoalEditPageEntryProps {
@@ -22,12 +22,8 @@ export function GoalEditPageEntry({ goalId }: GoalEditPageEntryProps) {
   }, [router]);
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
-      <GoalForm
-        goalId={goalId}
-        onExit={handleComplete}
-        onDismiss={handleDismiss}
-      />
+    <div className="mx-auto w-full max-w-6xl">
+      <GoalCardEditor goalId={goalId} onExit={handleComplete} onDismiss={handleDismiss} />
     </div>
   );
 }

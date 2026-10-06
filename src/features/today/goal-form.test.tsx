@@ -2,11 +2,11 @@ vi.mock("@/features/coach/use-coach-page-context", () => ({ useCoachPageContext:
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { GoalCreationFieldControls } from "@/features/goals/goal-creation-fields";
 import {
   createDefaultGoalCreationFields,
   getGoalCreationValidationFeedback,
 } from "@/lib/goals/creation-model";
+import { GoalCardEditor } from "@/features/goals/card-editor/goal-card-editor";
 import { GoalForm } from "@/features/today/goal-form";
 import { resolveGoalDefinitionValidationFeedback } from "@/lib/goals/definition-validation";
 import { validateGoalDefinition } from "@/lib/goals/definition-validation";
@@ -250,68 +250,6 @@ describe("goal form definition validation adapter", () => {
     expect(feedback.validationError).toBeNull();
     expect(feedback.validationWarning).toContain("Only 5 available days");
   });
-
-  it("keeps persisted single-goal definition fields disabled in edit mode", () => {
-    const fields = {
-      ...createDefaultGoalCreationFields(),
-      title: "Existing goal",
-      frequency_type: "recurring" as const,
-      recurrence_interval: "weekly" as const,
-      target_basis: "period" as const,
-      target_count: "3",
-      start_date: "2026-08-01",
-      end_date: "2026-12-31",
-    };
-
-    render(
-      <GoalCreationFieldControls
-        fields={fields}
-        onFieldChange={vi.fn()}
-        onPatch={vi.fn()}
-        definitionFieldsLocked
-        createKind="recurring"
-        onCreateKindChange={vi.fn()}
-        isEditing
-        isPlannerTask={false}
-        linkTarget={{
-          value: "none",
-          onValueChange: vi.fn(),
-          open: false,
-          onOpenChange: vi.fn(),
-          searchQuery: "",
-          onSearchQueryChange: vi.fn(),
-          filteredLinkTargets: [],
-          selectedTargetGoal: null,
-        }}
-      />,
-    );
-
-    expect(
-      screen.getByText(
-        "Goal type, frequency, and start date are fixed after creation. Archive this goal and create a new one to change them.",
-      ),
-    ).toBeInTheDocument();
-
-    const comboboxes = screen.getAllByRole("combobox");
-    const goalTypeCombobox = comboboxes.find((element) =>
-      element.textContent?.includes("Recurring"),
-    );
-    const frequencyCombobox = comboboxes.find((element) =>
-      element.textContent?.includes("Weekly"),
-    );
-    const targetField = document.querySelector<HTMLInputElement>(
-      "#recurring-target-count",
-    );
-
-    expect(goalTypeCombobox).toBeDefined();
-    expect(goalTypeCombobox).toBeDisabled();
-    expect(frequencyCombobox).toBeDefined();
-    expect(frequencyCombobox).toBeDisabled();
-    expect(targetField).toBeTruthy();
-    expect(targetField).not.toBeDisabled();
-    expect(screen.getByLabelText("Start date")).toBeDisabled();
-    expect(screen.getByLabelText("End date (optional)")).not.toBeDisabled();
-  });
 });
 
 describe("GoalForm target validation", () => {
@@ -477,7 +415,7 @@ describe("GoalForm persistence recovery", () => {
     const user = userEvent.setup({ delay: null });
 
     try {
-      render(<GoalForm showBackButton={false} onExit={onExit} />);
+      render(<GoalForm onExit={onExit} />);
       await screen.findByLabelText("Name");
       await user.type(screen.getByLabelText("Name"), "Daily reset");
       await chooseRequiredGoalFields(user);
@@ -546,7 +484,7 @@ describe("GoalForm persistence recovery", () => {
     const user = userEvent.setup({ delay: null });
 
     try {
-      render(<GoalForm showBackButton={false} onExit={onExit} />);
+      render(<GoalForm onExit={onExit} />);
       await screen.findByLabelText("Name");
       await user.type(screen.getByLabelText("Name"), "Stable goal");
       await chooseRequiredGoalFields(user);
@@ -602,7 +540,7 @@ describe("GoalForm persistence recovery", () => {
     const user = userEvent.setup();
 
     try {
-      render(<GoalForm showBackButton={false} onExit={onExit} />);
+      render(<GoalForm onExit={onExit} />);
       await screen.findByLabelText("Name");
       await user.type(screen.getByLabelText("Name"), "Resolved error goal");
       await chooseRequiredGoalFields(user);
@@ -669,19 +607,15 @@ describe("GoalForm persistence recovery", () => {
     });
     const user = userEvent.setup();
 
-    render(
-      <GoalForm goalId="goal-edit-1" showBackButton={false} onExit={vi.fn()} />,
-    );
+    render(<GoalCardEditor goalId="goal-edit-1" onExit={vi.fn()} onDismiss={vi.fn()} />);
 
-    await screen.findByText("Edit goal");
-    await user.click(
-      screen.getByRole("button", { name: /advanced settings/i }),
-    );
-    expect(
-      screen.getByRole("button", { name: "Select link target" }),
-    ).toHaveTextContent("goal-main-1");
+    await user.click(await screen.findByRole("button", { name: /Name\s*Existing goal/i }));
+    await user.type(screen.getByLabelText("Goal name"), " renamed");
     expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
     expect(screen.getByText("link candidates unavailable")).toBeInTheDocument();
+    // The link to goal-main-1 is kept, even though its title couldn't load.
+    expect(screen.queryByText("Just this goal")).not.toBeInTheDocument();
+    expect(screen.getByText("Another goal")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Retry loading link targets" }),
     ).toBeInTheDocument();
@@ -697,7 +631,7 @@ describe("GoalForm persistence recovery", () => {
     const onExit = vi.fn();
     const user = userEvent.setup();
 
-    render(<GoalForm showBackButton={false} onExit={onExit} />);
+    render(<GoalForm onExit={onExit} />);
     await screen.findByLabelText("Name");
     await user.type(screen.getByLabelText("Name"), "Editable link failure");
       await chooseRequiredGoalFields(user);
@@ -728,7 +662,7 @@ describe("GoalForm persistence recovery", () => {
     const onExit = vi.fn();
     const user = userEvent.setup();
 
-    render(<GoalForm showBackButton={false} onExit={onExit} />);
+    render(<GoalForm onExit={onExit} />);
     await screen.findByLabelText("Name");
     await user.type(screen.getByLabelText("Name"), "Retryable link failure");
       await chooseRequiredGoalFields(user);
@@ -811,10 +745,9 @@ describe("GoalForm persistence recovery", () => {
     const onExit = vi.fn();
     const user = userEvent.setup();
 
-    render(
-      <GoalForm goalId="goal-edit-2" showBackButton={false} onExit={onExit} />,
-    );
-    await screen.findByText("Edit goal");
+    render(<GoalCardEditor goalId="goal-edit-2" onExit={onExit} onDismiss={vi.fn()} />);
+    await user.click(await screen.findByRole("button", { name: /Name\s*Existing goal/i }));
+    await user.type(screen.getByLabelText("Goal name"), " renamed");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() => {
@@ -865,15 +798,8 @@ describe("GoalForm persistence recovery", () => {
     const onDismiss = vi.fn();
     const user = userEvent.setup();
 
-    render(
-      <GoalForm
-        goalId="goal-archive-1"
-        showBackButton={false}
-        onExit={onExit}
-        onDismiss={onDismiss}
-      />,
-    );
-    await screen.findByText("Edit goal");
+    render(<GoalCardEditor goalId="goal-archive-1" onExit={onExit} onDismiss={onDismiss} />);
+    await user.click(await screen.findByRole("button", { name: "Turn over for more" }));
     await user.click(screen.getByRole("button", { name: "Archive goal" }));
 
     await waitFor(() => {

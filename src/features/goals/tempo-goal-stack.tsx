@@ -156,8 +156,6 @@ export function TempoGoalStack({
       onCreateKindChange={(value) => {
         if (value !== "planner_task") update({ type: "frequency_type", value });
       }}
-      definitionFieldsLocked={false}
-      isEditing={false}
       isPlannerTask={false}
       disabled={locked}
       preview={preview}

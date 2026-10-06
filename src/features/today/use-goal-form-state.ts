@@ -58,7 +58,6 @@ export function useGoalFormState(goalId?: string) {
 
   const isEditing = Boolean(goalId);
   const isPlannerTask = !isEditing && isPlannerTaskCreateKind(createKind);
-  const definitionFieldsLocked = isEditing;
 
   useEffect(() => {
     const load = async () => {
@@ -324,9 +323,7 @@ export function useGoalFormState(goalId?: string) {
     setLinkTargetOpen,
     createKind,
     updateCreateKind,
-    isEditing,
     isPlannerTask,
-    definitionFieldsLocked,
     completedCount,
     filteredLinkTargets,
     selectedLinkTargetGoal,

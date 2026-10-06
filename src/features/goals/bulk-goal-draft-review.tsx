@@ -331,7 +331,6 @@ export function BulkGoalDraftReview(props: BulkGoalDraftReviewProps) {
                             ...patch,
                           }))
                         }
-                        definitionFieldsLocked={false}
                         disabled={editingDisabled}
                         createKind={draft.frequency_type}
                         onCreateKindChange={(kind) =>
@@ -339,7 +338,6 @@ export function BulkGoalDraftReview(props: BulkGoalDraftReviewProps) {
                             applyCreateKindChange(previous, kind)
                           )
                         }
-                        isEditing={false}
                         isPlannerTask={false}
                         linkTarget={{
                           value: draft.linked_target_goal_id,
