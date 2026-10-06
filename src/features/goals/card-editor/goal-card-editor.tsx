@@ -7,6 +7,7 @@ import { useCoachPageContext } from "@/features/coach/use-coach-page-context";
 import type { GoalFormState } from "@/features/today/goal-form-model";
 import { useGoalFormState } from "@/features/today/use-goal-form-state";
 import { useGoalFormSubmit } from "@/features/today/use-goal-form-submit";
+import { useReportUnsavedChanges } from "../unsaved-changes";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
 import { GoalFormLinkTargetsErrorAlert, GoalFormRecoveryAlert } from "../goal-form-alerts";
 import { TempoGoalCard } from "../tempo-goal-card";
@@ -70,6 +71,7 @@ export function GoalCardEditor({ goalId, onExit, onDismiss }: { goalId: string; 
     () => (baseline ? changedCardFacts(baseline.state, state, baseline.link !== selectedLinkTarget) : new Set<never>()),
     [baseline, state, selectedLinkTarget],
   );
+  useReportUnsavedChanges(changed.size > 0);
 
   if (loading || !editingGoal || !baseline) {
     return (

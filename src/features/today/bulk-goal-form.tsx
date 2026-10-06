@@ -4,6 +4,7 @@ import { TempoAiDraftPreview } from "@/features/goals/tempo-ai-draft-preview";
 
 import { useSearchParams } from "next/navigation";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
+import { useReportUnsavedChanges } from "@/features/goals/unsaved-changes";
 import {
   type ChangeEvent,
   type ReactNode,
@@ -129,6 +130,9 @@ export function BulkGoalForm({
     preparedRows: PreparedBulkGoalRow[];
   } | null>(null);
   const [availableGoals, setAvailableGoals] = useState<Goal[]>([]);
+  useReportUnsavedChanges(
+    naturalLanguageInput.trim() !== "" || csvInput.trim() !== "" || uploadedFile !== null || drafts.length > 0,
+  );
   const appliedStarterPackRef = useRef<string | null>(null);
 
   useEffect(() => {

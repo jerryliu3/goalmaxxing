@@ -15,8 +15,10 @@ import {
 import { completeGoalEditor } from "@/features/goals/goal-editor-navigation";
 import {
   applyGoalFormFieldChange,
+  defaultGoalFormState,
   toGoalCreationFields,
 } from "@/features/today/goal-form-model";
+import { useReportUnsavedChanges } from "@/features/goals/unsaved-changes";
 import { useGoalFormState } from "@/features/today/use-goal-form-state";
 import { useGoalFormSubmit } from "@/features/today/use-goal-form-submit";
 
@@ -57,6 +59,7 @@ export function GoalForm({ onExit }: { onExit?: () => void }) {
     supabase,
   } = useGoalFormState();
   useCoachPageContext({ surface: "goal" }, 10);
+  useReportUnsavedChanges(JSON.stringify(state) !== JSON.stringify(defaultGoalFormState));
 
   const {
     saving,

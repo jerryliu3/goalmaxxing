@@ -2,6 +2,12 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GoalRouteSheet } from "@/features/goals/goal-route-sheet";
+import { useReportUnsavedChanges } from "@/features/goals/unsaved-changes";
+
+function DirtyForm() {
+  useReportUnsavedChanges(true);
+  return <div>Edited form</div>;
+}
 
 describe("GoalRouteSheet", () => {
   afterEach(() => {
@@ -31,6 +37,29 @@ describe("GoalRouteSheet", () => {
 
     await user.click(screen.getByRole("button", { name: "Close goal editor" }));
 
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("asks before discarding unsaved changes", async () => {
+    const onClose = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <GoalRouteSheet onClose={onClose} title="Create goal">
+        <DirtyForm />
+      </GoalRouteSheet>
+    );
+
+    await user.click(screen.getByRole("button", { name: "Close goal editor" }));
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByText("Discard your changes?")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Keep editing" }));
+    expect(screen.queryByText("Discard your changes?")).not.toBeInTheDocument();
+    expect(screen.getByText("Edited form")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Close goal editor" }));
+    await user.click(screen.getByRole("button", { name: "Discard" }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
