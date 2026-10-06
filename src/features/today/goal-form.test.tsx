@@ -788,7 +788,7 @@ describe("GoalForm persistence recovery", () => {
     render(<GoalCardEditor goalId="goal-ended-1" onExit={vi.fn()} onDismiss={vi.fn()} />);
     expect(await screen.findByText(/Change the deadline to edit the rest of this goal/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Name\s*Ended goal/i })).toBeNull();
-    expect(screen.getByRole("button", { name: /Deadline/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit deadline" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Turn over for more" }));
     expect(screen.getByRole("button", { name: /Your reward/i })).toBeDisabled();
   });
