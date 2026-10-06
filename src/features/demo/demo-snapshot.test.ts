@@ -94,4 +94,21 @@ describe("buildDemoSnapshot", () => {
     expect(snapshot.feed.every((event) => Boolean(event.actor.avatarUrl))).toBe(true);
     expect(snapshot.duoState.activePartner?.partnerAvatarUrl).toBeTruthy();
   });
+
+  it("keys planner items the way production does", () => {
+    const keysFor = (goalId: string) =>
+      snapshot.plannerItems
+        .filter((item) => item.goal_id === goalId)
+        .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
+        .map((item) => item.unit_key);
+    expect(keysFor(DEMO_GOAL_IDS.conferenceProposal)).toEqual(["milestone:1", "milestone:2", "milestone:3"]);
+    const reading = keysFor(DEMO_GOAL_IDS.readPages);
+    expect(reading[0]).toBe("total:1");
+    expect(reading.at(-1)).toBe(`total:${reading.length}`);
+    // Strength is weekly: one slot in each Monday-start week.
+    for (const key of keysFor(DEMO_GOAL_IDS.strength)) {
+      expect(key).toMatch(/^cadence:\d{4}-\d{2}-\d{2}:1$/);
+    }
+    expect(new Set(snapshot.plannerItems.map((item) => item.id)).size).toBe(snapshot.plannerItems.length);
+  });
 });
