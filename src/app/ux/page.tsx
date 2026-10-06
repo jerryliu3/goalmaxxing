@@ -12,6 +12,16 @@ export default function UxHubPage() {
         </h1>
         <ul className="mt-10 space-y-4">
           <li>
+            <Link className="text-lg font-semibold underline" href="/ux/medals">
+              Medals — Postmark, Seal, Enamel and Coin
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Four award directions with named ranks, honest locked states, an
+              unlock moment, and how each extends to challenge, leaderboard,
+              streak, goal and team medals.
+            </p>
+          </li>
+          <li>
             <Link className="text-lg font-semibold underline" href="/ux/identity-edit">
               Header identity &amp; goal editing
             </Link>

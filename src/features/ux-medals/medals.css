@@ -1,0 +1,361 @@
+/*
+ * Medals study. Colours come from `themeVars()` (Gazetteer light/dark tokens)
+ * as --md-* variables on .md-root; this file only maps them onto surfaces and
+ * owns the unlock motion.
+ */
+.md-root {
+  --md-sans: var(--font-source-sans), "Source Sans 3", system-ui, sans-serif;
+  --md-mono: var(--font-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+  --md-display: var(--font-newsreader), Newsreader, Georgia, serif;
+  /* Lock Gazetteer type roles inside the study regardless of the active UI style. */
+  --font-sans: var(--md-sans);
+  --font-mono: var(--md-mono);
+  --font-display: var(--md-display);
+  min-height: 100dvh;
+  background: var(--md-page);
+  color: var(--md-ink);
+  font-family: var(--md-sans);
+  color-scheme: light;
+}
+
+.md-root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+.md-root h1,
+.md-root h2,
+.md-root h3,
+.md-root .font-display,
+.md-t-display {
+  font-family: var(--md-display);
+}
+
+.md-t-sans {
+  font-family: var(--md-sans);
+}
+
+.md-t-mono {
+  font-family: var(--md-mono);
+}
+
+.md-t-italic {
+  font-style: italic;
+}
+
+.md-muted {
+  color: var(--md-muted);
+}
+
+.md-deep {
+  color: var(--md-deep);
+}
+
+.md-hair {
+  border-color: var(--md-rule);
+}
+
+.md-kicker {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--md-muted);
+}
+
+/* Ink sits in the paper, not on it. */
+.md-root[data-theme="light"] .md-ink {
+  mix-blend-mode: multiply;
+}
+
+/* ---------------------------------------------------------------- */
+/* Surfaces: each direction gets the ground its object belongs on.   */
+/* ---------------------------------------------------------------- */
+
+.md-surface {
+  position: relative;
+  border: 1px solid var(--md-rule);
+  border-radius: 14px;
+  background: var(--md-paper);
+}
+
+/* Passport page: faint ruled lines and a margin rule. */
+.md-surface[data-direction="postmark"] {
+  background:
+    linear-gradient(90deg, transparent 22px, color-mix(in srgb, var(--md-stamp) 22%, transparent) 22px 23px, transparent 23px),
+    repeating-linear-gradient(0deg, transparent 0 27px, color-mix(in srgb, var(--md-rule) 42%, transparent) 27px 28px),
+    var(--md-paper);
+}
+
+/* Heavy cotton stock: a soft deckle shadow at the edges. */
+.md-surface[data-direction="seal"] {
+  background: var(--md-paper);
+  box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--md-page) 55%, transparent),
+    inset 0 1px 18px color-mix(in srgb, var(--md-lo) 22%, transparent);
+}
+
+/* Felt pin board. */
+.md-surface[data-direction="enamel"] {
+  background:
+    radial-gradient(color-mix(in srgb, var(--md-ink) 9%, transparent) 0.7px, transparent 1px) 0 0 / 5px 5px,
+    radial-gradient(color-mix(in srgb, var(--md-ink) 6%, transparent) 0.7px, transparent 1px) 2.5px 2.5px / 5px 5px,
+    color-mix(in srgb, var(--md-stamp) 9%, var(--md-paper));
+}
+
+/* Collector's tray. */
+.md-surface[data-direction="coin"] {
+  background: linear-gradient(180deg, var(--md-paper), color-mix(in srgb, var(--md-muted) 9%, var(--md-paper)));
+}
+
+.md-surface[data-direction="coin"] .md-well {
+  border-radius: 999px;
+  box-shadow: inset 0 2px 6px color-mix(in srgb, var(--md-lo) 55%, transparent);
+  background: color-mix(in srgb, var(--md-muted) 10%, var(--md-paper));
+}
+
+/* ---------------------------------------------------------------- */
+/* Controls                                                           */
+/* ---------------------------------------------------------------- */
+
+.md-slot {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.75rem 0.4rem 0.6rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.md-slot:hover {
+  background: color-mix(in srgb, var(--md-ink) 4%, transparent);
+}
+
+.md-slot[aria-pressed="true"] {
+  border-color: var(--md-stamp);
+  background: color-mix(in srgb, var(--md-stamp) 7%, transparent);
+}
+
+.md-slot:focus-visible,
+.md-button:focus-visible,
+.md-chip:focus-visible {
+  outline: 2px solid var(--md-ink);
+  outline-offset: 2px;
+}
+
+.md-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 40px;
+  padding: 0 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--md-rule);
+  background: var(--md-paper);
+  color: var(--md-ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.md-button[data-variant="primary"] {
+  border-color: transparent;
+  background: var(--md-ink);
+  color: var(--md-page);
+}
+
+.md-chip {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--md-muted);
+}
+
+.md-chip[aria-current="page"] {
+  background: var(--md-ink);
+  color: var(--md-page);
+}
+
+/* ---------------------------------------------------------------- */
+/* Unlock moments. Classes only exist while a replay is mounted.      */
+/* ---------------------------------------------------------------- */
+
+.md-hero-stage {
+  position: relative;
+}
+
+/* M1 — the stamp strikes the page. */
+.md-unlock[data-direction="postmark"] .md-hero-art {
+  animation: md-strike 640ms cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+
+.md-unlock[data-direction="postmark"] .md-hero-stage::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 70%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 999px;
+  border: 2px solid var(--md-stamp);
+  pointer-events: none;
+  animation: md-impact 700ms 260ms ease-out both;
+}
+
+@keyframes md-strike {
+  0% {
+    transform: scale(1.6) rotate(-14deg);
+    opacity: 0;
+  }
+  45% {
+    transform: scale(0.94) rotate(1deg);
+    opacity: 1;
+  }
+  62% {
+    transform: scale(1.03) rotate(0deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes md-impact {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+/* M2 — ink rolls across the blind seal, then the foil catches light. */
+.md-unlock[data-direction="seal"] .md-hero-art {
+  animation: md-press 360ms ease-out both;
+}
+
+.md-roll {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: md-roll 900ms 320ms cubic-bezier(0.55, 0, 0.25, 1) both;
+}
+
+.md-glint {
+  animation: md-glint 900ms 1250ms ease-in-out both;
+}
+
+@keyframes md-press {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(0.965);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes md-roll {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes md-glint {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(170px);
+    opacity: 0;
+  }
+}
+
+/* M3 — enamel floods each cell, then the glaze shines. */
+.md-unlock[data-direction="enamel"] .md-hero-art {
+  animation: md-pin 520ms cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}
+
+.md-cell {
+  animation: md-enamel 420ms ease-out both;
+}
+
+.md-gloss {
+  animation: md-gloss 600ms 1300ms ease-out both;
+}
+
+@keyframes md-pin {
+  from {
+    transform: translateY(-14px) scale(1.05);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes md-enamel {
+  from {
+    fill-opacity: 0;
+  }
+  to {
+    fill-opacity: 1;
+  }
+}
+
+@keyframes md-gloss {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.4;
+  }
+}
+
+/* M4 — the coin spins in edge-on and lands face up. */
+.md-unlock[data-direction="coin"] .md-hero-art {
+  animation: md-spin 1150ms cubic-bezier(0.15, 0.6, 0.25, 1) both;
+}
+
+@keyframes md-spin {
+  0% {
+    transform: perspective(700px) translateY(-28px) rotateY(-540deg) scale(0.72);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    transform: perspective(700px) translateY(0) rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Reduced motion: land on the earned state at once. */
+@media (prefers-reduced-motion: reduce) {
+  .md-root *,
+  .md-root *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    transition: none !important;
+  }
+}
