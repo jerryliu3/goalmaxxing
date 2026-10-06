@@ -832,6 +832,11 @@ body {
   fill: var(--gm-heatmap-4);
 }
 
+/* Sonner injects its own system font stack; toasts speak the theme's sans. */
+html [data-sonner-toaster] {
+  font-family: var(--font-app-sans);
+}
+
 [data-sonner-toaster][data-position="bottom-right"] {
   right: max(env(safe-area-inset-right), 0.75rem) !important;
   left: auto !important;
