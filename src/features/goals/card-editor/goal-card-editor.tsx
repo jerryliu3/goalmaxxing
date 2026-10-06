@@ -16,7 +16,6 @@ import type { CardEditorSession } from "./card-editor-session";
 import { changedCardFacts } from "./card-facts";
 import { DirectCard } from "./direct-card";
 import { useElementWidth } from "./use-card-regions";
-import "./card-editor.css";
 
 /** Below this width the callouts can't sit beside the card, so the card itself becomes the control. */
 const ANNOTATED_MIN_WIDTH = 860;

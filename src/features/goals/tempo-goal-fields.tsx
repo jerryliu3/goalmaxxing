@@ -29,10 +29,26 @@ import { TempoGoalRhythm } from "./tempo-goal-rhythm";
 import { getGoalCreationPeriodLimitError } from "@/lib/goals/creation-model";
 
 import { TempoStepNavigation } from "./tempo-step-navigation";
+import { AnnotatedCard } from "./card-editor/annotated-card";
+import type { FaceFact } from "./card-editor/card-facts";
 import type {
   TempoChoicesMade,
   TempoCardVisibility,
 } from "./tempo-creation-progress";
+
+const REVIEW_LABELS: Partial<Record<FaceFact, string>> = {
+  cadence: "Your target",
+  start: "Starts",
+  stretch: "Stretch · sets its finish",
+};
+
+/**
+ * Facts the review leaves out: ones the card doesn't print yet (no line should point at an
+ * empty spot) and visibility, which the creation card's opening line doesn't state.
+ */
+function unprintedFacts(fields: GoalCreationFieldControlsProps["fields"]): FaceFact[] {
+  return ["visibility", ...(fields.end_date ? [] : ["deadline" as const]), ...(fields.default_local_time ? [] : ["time" as const])];
+}
 
 export function TempoGoalFields({
   fields,
@@ -152,6 +168,26 @@ export function TempoGoalFields({
       ? { completed: 0, target: plaqueTarget, preview: true }
       : undefined;
 
+  const previewCard = (
+    <motion.div
+      ref={previewRef}
+      tabIndex={-1}
+      className="tempo-preview"
+      layout={!reducedMotion}
+      transition={{ type: "spring", stiffness: 180, damping: 26 }}
+    >
+      {(typeof preview === "function" ? preview(visibility) : preview) ?? (
+        <TempoGoalCard
+          fields={fields}
+          visibility={visibility}
+          isTask={isPlannerTask}
+          taskSchedule={taskSchedule}
+          assembly={reviewAssembly}
+        />
+      )}
+    </motion.div>
+  );
+
   return (
     <div
       className={`tempo-creation${step === 3 ? " tempo-creation-review" : ""}`}
@@ -167,23 +203,14 @@ export function TempoGoalFields({
         canVisit={canVisit}
         disabled={disabled}
       />
-      <motion.div
-        ref={previewRef}
-        tabIndex={-1}
-        className="tempo-preview"
-        layout={!reducedMotion}
-        transition={{ type: "spring", stiffness: 180, damping: 26 }}
-      >
-        {(typeof preview === "function" ? preview(visibility) : preview) ?? (
-          <TempoGoalCard
-            fields={fields}
-            visibility={visibility}
-            isTask={isPlannerTask}
-            taskSchedule={taskSchedule}
-            assembly={reviewAssembly}
-          />
-        )}
-      </motion.div>
+      {step === 3 && !isPlannerTask ? (
+        // The review labels each part of the plaque it is about to create (read-only).
+        <div className="tempo-review-legend">
+          <AnnotatedCard fields={fields} card={previewCard} labels={REVIEW_LABELS} hidden={unprintedFacts(fields)} />
+        </div>
+      ) : (
+        previewCard
+      )}
       {step < 3 && (
         <AnimatePresence mode="wait" initial={false}>
           <motion.div

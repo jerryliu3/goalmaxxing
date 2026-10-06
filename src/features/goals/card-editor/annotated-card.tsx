@@ -8,6 +8,7 @@ import { CARD_FACT_LABELS, type FaceFact, summarizeFaceFact } from "./card-facts
 import { CardScene } from "./card-scene";
 import { InlineFact, useEscapeLayer } from "./inline-fact";
 import { boxWithin, useCardRegions } from "./use-card-regions";
+import "./card-editor.css";
 
 // Facts printed at the card's left edge call out left (the target sits beside its number);
 // the title, effort and right-edge facts call out right, so no leader line crosses the face.

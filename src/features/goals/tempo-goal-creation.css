@@ -1047,3 +1047,23 @@
     justify-self: center;
   }
 }
+
+/* Review legend: the read-only annotated card labels each part of the plaque. */
+.tempo-review-legend {
+  container: card-legend / inline-size;
+  grid-area: preview;
+  width: 100%;
+}
+.tempo-review-legend .card-annotated {
+  grid-template-columns: minmax(0, 1fr) min(44%, max(14rem, calc((100dvh - 20rem) * 330 / 382 * .72)), 26rem) minmax(0, 1fr);
+}
+.tempo-review-legend .card-stage > .tempo-preview {
+  width: 100%;
+}
+/* Small screens keep the legend beside a smaller card, in a quieter type size. */
+@container card-legend (max-width: 560px) {
+  .tempo-review-legend .card-annotated { grid-template-columns: minmax(0, 1fr) 46% minmax(0, 1fr); gap: 10px; padding-top: 4px; }
+  .tempo-review-legend .card-callout-body { padding: 3px 2px; }
+  .tempo-review-legend .card-overline { font-size: 7.5px; letter-spacing: .06em; }
+  .tempo-review-legend .card-callout-value { min-height: 0; font-size: 11.5px; line-height: 1.25; }
+}
