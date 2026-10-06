@@ -169,7 +169,6 @@ surfaces. The default is to simplify and reuse what already exists.
 
 - For Goalmaxxing web UX across product and marketing surfaces, follow
   `docs/ux/goalmaxxing-experience-design-guide.md`.
-<<<<<<< HEAD
 - Authenticated application leading direction is Spatial Plan (B). Use
   `docs/ux/goalmaxxing-application-design-guide.md` and `/ux/concepts`.
   Visual brand explorations live in
@@ -192,6 +191,9 @@ surfaces. The default is to simplify and reuse what already exists.
   Day work inspect and checklist-replacement concepts live in
   `docs/ux/goalmaxxing-day-work-study.md` and `/ux/day-work`. They are
   exploratory, not a product lock.
+  Medal redesign directions (Postmark, Seal, Enamel, Coin) and future medal
+  families live in `docs/ux/goalmaxxing-medals-study.md` and `/ux/medals`.
+  They are exploratory, not a product lock.
 - Period check-in is an `AppShell` overlay, not a tab or Progress
   destination. Cadence resolves widest-first — monthly on the first of the
   month, weekly on the profile week-start day, daily otherwise — so exactly
