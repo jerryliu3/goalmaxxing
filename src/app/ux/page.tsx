@@ -12,6 +12,16 @@ export default function UxHubPage() {
         </h1>
         <ul className="mt-10 space-y-4">
           <li>
+            <Link className="text-lg font-semibold underline" href="/ux/goal-creation">
+              Goal creation — Blank card, Stamp by stamp, Say it
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Create a goal on the same card you edit it on, with the rhythm as
+              the one locked choice and three places to set the reward waiting
+              at the end.
+            </p>
+          </li>
+          <li>
             <Link className="text-lg font-semibold underline" href="/ux/medals">
               Medals — Postmark, Seal, Enamel and Coin
             </Link>

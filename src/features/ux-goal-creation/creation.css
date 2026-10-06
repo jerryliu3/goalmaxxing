@@ -1,0 +1,156 @@
+/* Goal creation study. The card, callouts, direct controls and back are the production
+   card editor (card-editor.css); this file only adds lab chrome, creation moments, and
+   styling hooks on `.gc-workbench` (pending, nudge, stamp). Card-face ink stays #20251e. */
+
+/* ─── Lab chrome ─── */
+.gc-study { min-height: 100dvh; background: var(--background); color: var(--foreground); font-family: var(--font-source-sans), sans-serif; }
+.gc-lab-header { display: flex; align-items: center; gap: 16px; min-height: 60px; padding: 10px 24px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.gc-lab-back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 600; }
+.gc-lab-title { flex: 1; margin: 0; font: 500 11px var(--font-plex-mono), monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--muted-foreground); text-align: center; }
+.gc-lab-header nav { display: flex; gap: 4px; }
+.gc-lab-header nav a { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; font-weight: 600; opacity: .6; }
+.gc-lab-header nav a:hover { opacity: 1; }
+.gc-lab-header nav a[aria-current="page"] { background: var(--foreground); color: var(--background); opacity: 1; }
+.gc-pitch { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; max-width: 1180px; margin: auto; padding: 16px 24px 4px; }
+.gc-pitch p { flex: 1 1 420px; margin: 0; font-family: var(--font-newsreader), serif; font-size: 17px; line-height: 1.4; }
+.gc-pitch > span { font: 500 10px var(--font-plex-mono), monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-foreground); }
+.gc-main { max-width: 1180px; margin: auto; padding: 16px 24px 40px; }
+.gc-note-section { max-width: 1180px; margin: auto; padding: 20px 24px 56px; border-top: 1px solid var(--border); }
+.gc-note-section dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px 24px; margin: 0; font-size: 13.5px; }
+.gc-note-section dt, .gc-step, .gc-eyebrow, .gc-summary dt { margin: 0; font: 500 10px var(--font-plex-mono), monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-foreground); }
+.gc-note-section dd { margin: 4px 0 0; line-height: 1.45; }
+.gc-study :is(button, a, input, textarea, select):focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
+
+/* ─── Shared bits ─── */
+.gc-hint { margin: 0; font-size: 13px; line-height: 1.45; color: var(--muted-foreground); }
+.gc-row { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.gc-text-button { display: inline-flex; align-items: center; gap: 5px; padding: 2px 4px; font-size: 12.5px; color: var(--muted-foreground); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.gc-text-button:hover { color: var(--foreground); }
+.gc-text-input { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--background); font-size: 16px; }
+.gc-text-input:focus { border-color: var(--goal-color); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--goal-color) 18%, transparent); }
+.gc-text-area { resize: vertical; line-height: 1.45; }
+.gc-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.gc-chips button { padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--background); font-size: 12.5px; text-align: left; cursor: pointer; }
+.gc-chips button:hover:not(:disabled) { border-color: color-mix(in srgb, var(--goal-color, var(--foreground)) 50%, var(--border)); }
+.gc-chips button[aria-pressed="true"] { border-color: var(--goal-color, var(--foreground)); background: color-mix(in srgb, var(--goal-color, var(--foreground)) 14%, var(--background)); font-weight: 600; }
+
+/* ─── A moment: card beside one question ─── */
+.gc-moment { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 440px); justify-content: center; align-items: center; gap: 56px; padding-top: 16px; }
+.gc-moment-card { width: min(100%, 360px); justify-self: center; }
+.gc-moment-copy { display: grid; gap: 14px; align-content: start; }
+.gc-moment-copy h2, .gc-question h2, .gc-created-copy h2 { margin: 0; font-family: var(--font-newsreader), serif; font-size: 30px; font-weight: 600; line-height: 1.1; letter-spacing: -.01em; }
+@media (max-width: 860px) {
+  .gc-moment { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .gc-moment-copy h2 { font-size: 24px; }
+}
+.gc-title-input { font-size: inherit; }
+.gc-title-input::placeholder { color: rgb(32 37 30 / .35); }
+
+/* The one locked choice */
+.gc-rhythm { display: grid; gap: 14px; }
+.gc-lock-note { display: flex; gap: 8px; margin: 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, #eab308 14%, var(--background)); font-size: 13px; line-height: 1.45; }
+.gc-lock-note svg { flex-shrink: 0; margin-top: 2px; }
+.gc-lock-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; padding: 6px 8px 6px 14px; border: 1px solid var(--border); border-radius: 999px; font-size: 13px; }
+.gc-lock-line-note { font: 500 9.5px var(--font-plex-mono), monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-foreground); }
+.gc-lock-line button { padding: 4px 10px; border-radius: 999px; font-size: 12.5px; cursor: pointer; }
+.gc-lock-line button:hover { background: var(--muted); }
+
+/* ─── The card flow ─── */
+.gc-flow { display: grid; gap: 14px; justify-items: center; }
+.gc-flow > .gc-step { text-align: center; }
+.gc-back { justify-self: start; }
+.gc-inline-panel { display: grid; gap: 12px; width: min(100%, 560px); padding: 16px; border: 1px solid var(--border); border-radius: 16px; }
+.gc-inline-panel > .card-button { justify-self: end; }
+.gc-nudge { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; font-size: 13px; color: var(--muted-foreground); }
+.gc-nudge svg { color: var(--goal-color); }
+
+/* Pending facts have no control yet (direct card; the annotated card takes `hidden`). */
+.gc-workbench[data-pending~="name"] .card-zone[aria-label="Rename goal"],
+.gc-workbench[data-pending~="cadence"] .card-stepper-pill,
+.gc-workbench[data-pending~="category"] [data-popup-anchor="category"],
+.gc-workbench[data-pending~="difficulty"] .card-effort,
+.gc-workbench[data-pending~="deadline"] [data-popup-anchor="deadline"],
+.gc-workbench[data-pending~="time"] [data-popup-anchor="time"],
+.gc-workbench[data-pending~="visibility"] [data-popup-anchor="visibility"] { display: none; }
+
+/* The next empty thing, gently: a breathing outline, never a gate. */
+@keyframes gc-breathe { 0%, 100% { outline-color: color-mix(in srgb, var(--goal-color) 30%, transparent); } 50% { outline-color: var(--goal-color); } }
+@keyframes gc-glow { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--goal-color) 0%, transparent); } 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--goal-color) 22%, transparent); } }
+.gc-workbench[data-nudge="deadline"] :is([data-spot="deadline"], [data-popup-anchor="deadline"]),
+.gc-workbench[data-nudge="time"] :is([data-spot="time"], [data-popup-anchor="time"]) { outline: 1.5px dashed var(--goal-color) !important; animation: gc-breathe 1.8s ease-in-out infinite; }
+.gc-workbench[data-nudge="deadline"] .card-callout[data-callout="deadline"]:not([data-open="true"]),
+.gc-workbench[data-nudge="time"] .card-callout[data-callout="time"]:not([data-open="true"]) { border: 1px dashed color-mix(in srgb, var(--goal-color) 60%, var(--border)); background: var(--background); }
+.gc-workbench[data-back-nudge="description"] .card-back-group:first-of-type .card-back-row:nth-of-type(1):not([data-open="true"]),
+.gc-workbench[data-back-nudge="reward"] .card-back-group:first-of-type .card-back-row:nth-of-type(2):not([data-open="true"]) { border-radius: 10px; background: color-mix(in srgb, var(--goal-color) 10%, transparent); animation: gc-glow 1.8s ease-in-out infinite; }
+.gc-turn[data-nudge="true"] { border-color: var(--goal-color); animation: gc-glow 1.8s ease-in-out infinite; }
+
+/* A region landing on the card. */
+@keyframes gc-stamp { 0% { opacity: 0; transform: scale(1.5) rotate(-5deg); } 55% { opacity: 1; transform: scale(.95) rotate(1deg); } 100% { opacity: 1; transform: none; } }
+.gc-workbench[data-stamp="name"] [data-tempo-goal-card] h2,
+.gc-workbench[data-stamp="rhythm"] .tempo-card-target,
+.gc-workbench[data-stamp="category"] .tempo-card-period,
+.gc-workbench[data-stamp="difficulty"] .tempo-card-effort,
+.gc-workbench[data-stamp="when"] .tempo-card-dates,
+.gc-workbench[data-stamp="why"] .card-back-group:first-of-type .card-back-row:nth-of-type(1) { animation: gc-stamp .55s cubic-bezier(.2,.8,.2,1) both; transform-origin: left center; }
+@keyframes gc-seal-stamp { 0% { opacity: 0; transform: scale(1.8) rotate(-10deg); } 60% { opacity: 1; transform: scale(.92) rotate(7deg); } 100% { opacity: 1; transform: rotate(5deg); } }
+.gc-workbench[data-stamp="reward"] .gc-seal { animation: gc-seal-stamp .6s cubic-bezier(.2,.8,.2,1) both; }
+
+/* ─── Sealed reward mark (prototype overlay on the card face) ─── */
+.gc-seal { position: absolute; z-index: 3; top: -12px; right: -10px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px 6px 9px; border-radius: 999px; background: color-mix(in srgb, var(--goal-color) 70%, #3b140b); color: #fff; font: 600 10px var(--font-plex-mono), monospace; letter-spacing: .1em; text-transform: uppercase; box-shadow: 0 6px 16px #0000002e, inset 0 0 0 1.5px #ffffff38; transform: rotate(5deg); pointer-events: none; }
+.gc-seal[data-state="waiting"] { background: var(--background); color: var(--foreground); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--goal-color) 60%, transparent); outline: 1.5px dashed transparent; animation: gc-glow 1.8s ease-in-out infinite; }
+
+/* ─── B: rail and questions ─── */
+.gc-rail { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.gc-rail button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px 0 6px; border: 1px solid transparent; border-radius: 999px; font-size: 12.5px; cursor: pointer; }
+.gc-rail button:disabled { opacity: .45; cursor: default; }
+.gc-rail button[data-state="current"] { border-color: var(--foreground); font-weight: 600; }
+.gc-rail button[data-state="stamped"]:hover { background: var(--muted); }
+.gc-rail-mark { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--muted); font: 600 10px var(--font-plex-mono), monospace; }
+.gc-rail button[data-state="stamped"] .gc-rail-mark { background: var(--foreground); color: var(--background); }
+.gc-question { display: grid; gap: 12px; width: 100%; padding-top: 14px; border-top: 1px solid var(--border); text-align: left; }
+.gc-question h2 { font-size: 24px; }
+.gc-when { display: grid; gap: 10px; }
+.gc-when-row { display: grid; grid-template-columns: 88px minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: 13px; }
+.gc-when-row input { min-width: 0; height: 40px; padding: 0 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--background); font-size: 14px; }
+.gc-when-row .gc-text-button[aria-pressed="true"] { color: var(--foreground); font-weight: 600; text-decoration: none; }
+
+/* The sealed envelope */
+.gc-envelope { position: relative; overflow: hidden; padding: 40px 18px 22px; border-radius: 14px; background: color-mix(in srgb, var(--goal-color) 7%, #fbf8f1); color: #20251e; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--goal-color) 24%, #20251e14), 0 10px 26px #0000000f; }
+.gc-envelope-flap { position: absolute; z-index: 2; inset: 0 0 auto; height: 72%; background: color-mix(in srgb, var(--goal-color) 20%, #f3ecdc); clip-path: polygon(0 0, 100% 0, 50% 100%); transform: scaleY(.16); transform-origin: top; transition: transform .45s cubic-bezier(.3,.7,.2,1); }
+.gc-envelope[data-sealing="true"] .gc-envelope-flap { transform: scaleY(1); }
+.gc-envelope-letter { position: relative; display: grid; gap: 10px; transition: opacity .35s, transform .35s; }
+.gc-envelope-letter label { font-family: var(--font-newsreader), serif; font-size: 22px; font-weight: 600; line-height: 1.15; }
+.gc-envelope-letter .gc-text-input { background: #fff; color: #20251e; }
+.gc-envelope-letter .gc-chips button { background: #fff; color: #20251e; border-color: rgb(32 37 30 / .15); }
+.gc-envelope[data-sealing="true"] .gc-envelope-letter { opacity: .2; transform: translateY(10px); }
+.gc-wax { position: absolute; z-index: 3; left: 50%; top: calc(72% - 24px); display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: color-mix(in srgb, var(--goal-color) 70%, #3b140b); color: #fff; box-shadow: 0 4px 12px #00000040, inset 0 0 0 3px #ffffff30; transform: translateX(-50%) scale(0); transition: transform .3s .35s cubic-bezier(.3,1.6,.5,1); }
+.gc-envelope[data-sealing="true"] .gc-wax { transform: translateX(-50%) scale(1); }
+
+/* ─── C: say it ─── */
+.gc-say-input { width: 100%; padding: 6px 0 8px; border: 0; border-bottom: 1.5px solid var(--goal-color, var(--border)); background: transparent; font-family: var(--font-newsreader), serif; font-size: 22px; line-height: 1.3; resize: none; outline: none; }
+.gc-say-input::placeholder { color: color-mix(in srgb, var(--foreground) 32%, transparent); }
+.gc-read { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 12.5px; }
+.gc-read li { padding: 4px 10px; border-radius: 999px; background: var(--muted); animation: card-pop .16s ease-out; }
+.gc-read li span { margin-right: 4px; color: var(--muted-foreground); }
+.gc-read .gc-read-head { display: inline-flex; align-items: center; gap: 5px; background: transparent; padding-left: 0; font-weight: 600; }
+.gc-reward-chip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; width: min(100%, 560px); padding: 8px 14px; border: 1px dashed color-mix(in srgb, var(--goal-color) 55%, var(--border)); border-radius: 999px; background: color-mix(in srgb, var(--goal-color) 7%, var(--background)); font-size: 13px; }
+.gc-reward-chip > svg { color: var(--goal-color); }
+.gc-reward-chip > span:not(.gc-reward-field) { flex: 1; min-width: 0; }
+.gc-reward-field { flex: 1; min-width: 160px; font-size: 14px; }
+
+/* ─── Created ─── */
+.gc-created { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 420px); justify-content: center; align-items: center; gap: 56px; padding-top: 24px; }
+.gc-created-stage { position: relative; width: min(100%, 360px); justify-self: center; }
+.gc-created-copy { display: grid; gap: 14px; }
+.gc-eyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--goal-color); }
+.gc-summary { display: grid; gap: 10px; margin: 0; }
+.gc-summary dt { display: inline-flex; align-items: center; gap: 5px; }
+.gc-summary dd { margin: 2px 0 0; font-size: 15px; }
+.gc-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 860px) {
+  .gc-created { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gc-study *, .gc-study *::before, .gc-study *::after { animation: none !important; transition: none !important; }
+}
