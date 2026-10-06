@@ -104,7 +104,7 @@ export function InsightsGoalStatsFilters({
                 checked={showEndedGoals}
                 disabled={endedGoalCount === 0}
                 onChange={(event) => onShowEndedGoalsChange(event.target.checked)}
-                className="size-4 rounded border-input accent-primary"
+                className="size-4 rounded border-input accent-highlight"
               />
               Show past goals
               <span>({endedGoalCount})</span>

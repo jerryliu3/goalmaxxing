@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Quiet calendar surfaces keep emphasis on work tiles. Today retains its brand
- * accent as a light wash; selection remains an inset outline on any date.
+ * Quiet calendar surfaces keep emphasis on work tiles. Today is a light wash
+ * of the today role; selection is an inset outline in the theme's highlight.
  */
 export function planMonthDaySurfaceClass({
   inMonth,
@@ -18,11 +18,11 @@ export function planMonthDaySurfaceClass({
   if (isToday) {
     return cn(
       "bg-today/10 text-foreground hover:bg-today/15",
-      isSelected && "ring-2 ring-inset ring-primary"
+      isSelected && "ring-2 ring-inset ring-highlight"
     );
   }
   if (isSelected) {
-    return "bg-primary/5 text-foreground ring-2 ring-inset ring-primary hover:bg-primary/10";
+    return "bg-highlight/5 text-foreground ring-2 ring-inset ring-highlight hover:bg-highlight/10";
   }
   if (!inMonth) {
     return "isolate bg-muted/40 text-muted-foreground hover:bg-muted/60";
@@ -42,11 +42,8 @@ export function planMonthDayNumberClass({
   isToday: boolean;
   isSelected?: boolean;
 }): string {
-  if (isToday) {
-    return "text-primary";
-  }
-  if (isSelected) {
-    return "text-primary";
+  if (isToday || isSelected) {
+    return "text-highlight";
   }
   if (!inMonth) {
     return "text-muted-foreground";
@@ -66,7 +63,7 @@ export function planAgendaDayRowClass({
   return cn(
     "border-b border-border/70 last:border-b-0 transition-[background-color,box-shadow] motion-reduce:transition-none",
     isToday && "bg-today/10 text-foreground",
-    isSelected && "ring-2 ring-inset ring-primary",
+    isSelected && "ring-2 ring-inset ring-highlight",
     !isToday && !isSelected && !inMonth && "isolate bg-muted/40 text-muted-foreground"
   );
 }
@@ -80,8 +77,8 @@ export function planAgendaDayNumberClass({
 }): string {
   return cn(
     "mt-0.5 inline-flex size-8 items-center justify-center rounded-lg text-lg font-medium leading-none tracking-tight",
-    isToday && "bg-today/10 text-primary",
-    isSelected && !isToday && "text-primary ring-2 ring-inset ring-primary"
+    isToday && "bg-today/10 text-highlight",
+    isSelected && !isToday && "text-highlight ring-2 ring-inset ring-highlight"
   );
 }
 
@@ -106,7 +103,7 @@ export function planSelectedWorkRowClass(selected: boolean) {
   if (!selected) {
     return "";
   }
-  return "bg-day-selected shadow-[inset_3px_0_0_var(--color-selection)]";
+  return "bg-day-selected shadow-[inset_3px_0_0_var(--color-highlight)]";
 }
 
 export const planLedgerTitleClass =

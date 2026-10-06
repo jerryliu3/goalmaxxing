@@ -41,8 +41,9 @@ export const ORIGINAL_THEME = {
     recover: "#eab308",
     warning: "#eab308",
     warningFill: "#fef9c3",
-    selection: "var(--primary)",
-    selectionForeground: "var(--primary-foreground)",
+    // No second hue yet: state reads in the identity blue.
+    highlight: "var(--primary)",
+    highlightForeground: "var(--primary-foreground)",
     // Today = blue L2, selected = outline, adjacent = grey L1.
     today: "var(--gm-heatmap-2)",
     todayForeground: "var(--primary-foreground)",
@@ -82,8 +83,8 @@ export const ORIGINAL_THEME = {
     recover: "#facc15",
     warning: "#facc15",
     warningFill: "color-mix(in srgb, #facc15 22%, var(--background))",
-    selection: "var(--primary)",
-    selectionForeground: "var(--primary-foreground)",
+    highlight: "var(--primary)",
+    highlightForeground: "var(--primary-foreground)",
     today: "var(--gm-heatmap-4)",
     todayForeground: "var(--primary-foreground)",
     daySelected: "#7eace6",

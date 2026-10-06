@@ -99,7 +99,7 @@ export function ChecklistFiltersForm({
               type="checkbox"
               checked={option.checked}
               onChange={(event) => option.onChange(event.target.checked)}
-              className="size-4 shrink-0 accent-primary"
+              className="size-4 shrink-0 accent-highlight"
             />
             <span className="min-w-0">
               {option.label}

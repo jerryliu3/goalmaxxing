@@ -36,8 +36,12 @@ export const APP_COLOR_ROLES = [
   "recover",
   "warning",
   "warningFill",
-  "selection",
-  "selectionForeground",
+  /**
+   * The theme's second hue, for state rather than action: today, the selected
+   * day or entry, checked filters. Primary stays on actions and identity.
+   */
+  "highlight",
+  "highlightForeground",
   "today",
   "todayForeground",
   "daySelected",

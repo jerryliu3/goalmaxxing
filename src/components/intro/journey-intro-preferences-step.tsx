@@ -195,7 +195,7 @@ export function JourneyIntroPreferencesStep({
             className={cn(
               "rounded-lg border px-3 py-2 text-left text-sm",
               value.socialActivityVisible !== false
-                ? "border-primary bg-primary/10"
+                ? "border-highlight bg-highlight/10"
                 : "border-border bg-background"
             )}
             onClick={() => onChange({ ...value, socialActivityVisible: true })}
@@ -212,7 +212,7 @@ export function JourneyIntroPreferencesStep({
             className={cn(
               "rounded-lg border px-3 py-2 text-left text-sm",
               value.socialActivityVisible === false
-                ? "border-primary bg-primary/10"
+                ? "border-highlight bg-highlight/10"
                 : "border-border bg-background"
             )}
             onClick={() => onChange({ ...value, socialActivityVisible: false })}

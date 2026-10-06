@@ -214,7 +214,7 @@ export function CheckboxDropdown({
                     type="checkbox"
                     checked={selectedValues.length === 0}
                     onChange={() => onSelectedValuesChange([])}
-                    className="size-4 shrink-0 accent-primary"
+                    className="size-4 shrink-0 accent-highlight"
                   />
                   <span className="min-w-0 truncate">{allLabel}</span>
                 </label>
@@ -242,7 +242,7 @@ export function CheckboxDropdown({
                               : [...selectedValues, option.value]
                           );
                         }}
-                        className="size-4 shrink-0 accent-primary"
+                        className="size-4 shrink-0 accent-highlight"
                       />
                       <span className="min-w-0 truncate">{option.label}</span>
                     </label>

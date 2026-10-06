@@ -51,13 +51,13 @@ describe("plan calendar day chrome", () => {
     expect(today).toContain("bg-today/10");
     expect(today).toContain("text-foreground");
     expect(todaySelected).toContain("bg-today/10");
-    expect(todaySelected).toContain("ring-primary");
+    expect(todaySelected).toContain("ring-highlight");
     expect(todaySelected).not.toContain("bg-adjacent");
     expect(todayAdjacent).toContain("bg-today/10");
     expect(todayAdjacent).not.toContain("bg-adjacent");
     expect(
       planMonthDayNumberClass({ inMonth: false, isToday: true, isSelected: false })
-    ).toBe("text-primary");
+    ).toBe("text-highlight");
   });
 
   it("outlines a user-selected day that is not today", () => {
@@ -67,19 +67,19 @@ describe("plan calendar day chrome", () => {
       isSelected: true,
       isPastInMonth: false,
     });
-    expect(selected).toContain("ring-primary");
+    expect(selected).toContain("ring-highlight");
     expect(selected).not.toContain("bg-day-selected");
     expect(selected).not.toContain("bg-adjacent");
     expect(selected).not.toContain("bg-today");
     expect(
       planMonthDayNumberClass({ inMonth: true, isToday: false, isSelected: true })
-    ).toBe("text-primary");
+    ).toBe("text-highlight");
   });
 
   it("outlines a selected week row that is not today", () => {
     expect(
       planAgendaDayRowClass({ inMonth: true, isToday: false, isSelected: true })
-    ).toContain("ring-primary");
+    ).toContain("ring-highlight");
     expect(
       planAgendaDayRowClass({ inMonth: true, isToday: false, isSelected: true })
     ).not.toContain("bg-day-selected");
@@ -88,16 +88,16 @@ describe("plan calendar day chrome", () => {
     ).toContain("bg-today/10");
     expect(
       planAgendaDayRowClass({ inMonth: true, isToday: true, isSelected: true })
-    ).toContain("ring-primary");
+    ).toContain("ring-highlight");
     expect(
       planAgendaDayRowClass({ inMonth: false, isToday: false, isSelected: false })
     ).toContain("bg-muted/40");
     expect(
       planAgendaDayNumberClass({ isToday: false, isSelected: true })
-    ).toContain("text-primary");
+    ).toContain("text-highlight");
     expect(
       planAgendaDayNumberClass({ isToday: true, isSelected: true })
-    ).toContain("text-primary");
+    ).toContain("text-highlight");
   });
 
   it("reserves overflow remainder as +N more, including zero", () => {

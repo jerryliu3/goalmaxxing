@@ -228,10 +228,10 @@ export function getEntrySelectedPillClasses({
     return "";
   }
   if (treatment === "ring") {
-    return "ring-1 ring-inset ring-primary/30";
+    return "ring-1 ring-inset ring-highlight/30";
   }
   if (treatment === "pulse") {
-    return "plan-selected-pulse border border-primary/35";
+    return "plan-selected-pulse border border-highlight/35";
   }
   return "plan-selected-shimmer border border-primary/35";
 }

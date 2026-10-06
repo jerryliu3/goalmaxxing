@@ -169,7 +169,7 @@ export function GoalSessionTile({
     onOpen && "cursor-pointer transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
     session.done && "bg-muted",
     session.draft && "border-dashed border-primary",
-    session.date === today && !session.draft && "ring-1 ring-primary/60"
+    session.date === today && !session.draft && "ring-1 ring-highlight/60"
   );
   const opener = onOpen
     ? {

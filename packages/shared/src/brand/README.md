@@ -15,8 +15,10 @@ web and native read from it, and nothing else names a concrete value.
 
 ## How components use it
 
-- Web color: role utilities (`bg-card`, `text-muted-foreground`,
-  `bg-selection`) or the variables in CSS (`var(--primary)`).
+- Web color: role utilities (`bg-card`, `text-muted-foreground`) or the
+  variables in CSS (`var(--primary)`). `primary` is for actions and identity
+  (buttons, nav, progress); `highlight` is the theme's second hue for state
+  (today, the selected day or entry, checked filters).
 - Web type: say what the text *is* with a text role and set only size,
   leading, and color at the call site. The theme picks face and weight.
 

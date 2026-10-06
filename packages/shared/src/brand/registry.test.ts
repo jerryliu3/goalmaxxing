@@ -64,6 +64,13 @@ describe("theme registry", () => {
     }
   });
 
+  it("keeps highlight a state hue: identity blue in Original, sage in Gazetteer", () => {
+    expect(getTheme("original").colors.highlight).toBe("var(--primary)");
+    expect(GAZETTEER_THEME.colors.highlight).toBe("#6f8175");
+    expect(GAZETTEER_THEME.colors.highlight).not.toBe(GAZETTEER_THEME.colors.primary);
+    expect(GAZETTEER_THEME.colors.today).toBe("var(--gm-highlight)");
+  });
+
   it("maps roles onto the CSS variables components already use", () => {
     expect(colorRoleVariable("cardForeground")).toBe("--card-foreground");
     expect(colorRoleVariable("warningFill")).toBe("--gm-warning-fill");

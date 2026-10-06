@@ -1,7 +1,7 @@
 import type { ThemeDefinition } from "../roles";
 
 /**
- * The surveyor's ledger: warm paper, walnut ink, stamp rust, sage selection,
+ * The surveyor's ledger: warm paper, walnut ink, stamp rust, sage highlight,
  * Newsreader names, Source Sans 3 labels, IBM Plex Mono figures, Nest marks.
  *
  * Native reads the surface roles plus page/gain/recover, so those stay hex.
@@ -49,11 +49,12 @@ export const GAZETTEER_THEME = {
     recover: "#eab308",
     warning: "#eab308",
     warningFill: "#fef9c3",
-    selection: "#6f8175",
-    selectionForeground: "#f8f1e3",
-    today: "var(--gm-heatmap-1)",
-    todayForeground: "var(--foreground)",
-    daySelected: "color-mix(in srgb, var(--gm-selection) 28%, var(--background))",
+    // Sage second hue marks today and the selection; rust stays on actions.
+    highlight: "#6f8175",
+    highlightForeground: "#f8f1e3",
+    today: "var(--gm-highlight)",
+    todayForeground: "var(--gm-highlight-foreground)",
+    daySelected: "color-mix(in srgb, var(--gm-highlight) 28%, var(--background))",
     daySelectedForeground: "var(--foreground)",
     // Opaque Zinc 300, one step darker than Original so the grey reads on paper.
     adjacent: "#d4d4d8",
@@ -89,11 +90,11 @@ export const GAZETTEER_THEME = {
     recover: "#facc15",
     warning: "#facc15",
     warningFill: "color-mix(in srgb, #facc15 22%, var(--background))",
-    selection: "#8aa396",
-    selectionForeground: "#1c1610",
-    today: "var(--gm-heatmap-1)",
-    todayForeground: "var(--foreground)",
-    daySelected: "color-mix(in srgb, var(--gm-selection) 70%, var(--background))",
+    highlight: "#8aa396",
+    highlightForeground: "#1c1610",
+    today: "var(--gm-highlight)",
+    todayForeground: "var(--gm-highlight-foreground)",
+    daySelected: "color-mix(in srgb, var(--gm-highlight) 70%, var(--background))",
     daySelectedForeground: "var(--foreground)",
     adjacent: "#52525b",
     adjacentForeground: "oklch(0.92 0.003 286)",

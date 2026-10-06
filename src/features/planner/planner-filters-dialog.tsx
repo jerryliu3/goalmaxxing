@@ -76,7 +76,7 @@ export function PlannerFiltersDialog({
           {showTasksToggle ? <label className="flex items-start gap-2">
             <input type="checkbox" checked={hideTasks} disabled={tasksToggleDisabled}
               onChange={(event) => onHideTasksChange(event.target.checked)}
-              aria-label="Hide tasks" className="mt-1 size-4 shrink-0 accent-primary" />
+              aria-label="Hide tasks" className="mt-1 size-4 shrink-0 accent-highlight" />
             <span className="space-y-1">
               <span className="block font-sans text-sm font-medium">Hide tasks</span>
               <span className="block text-xs text-muted-foreground">Hide one time tasks. Goal visibility stays the same.</span>
@@ -90,7 +90,7 @@ export function PlannerFiltersDialog({
                 onChange={(event) =>
                   onShowCompletedGoalsChange?.(event.target.checked)
                 }
-                className="mt-1 size-4 shrink-0 accent-primary"
+                className="mt-1 size-4 shrink-0 accent-highlight"
                 aria-label="Show completed goals"
               />
               <span className="min-w-0 space-y-1">

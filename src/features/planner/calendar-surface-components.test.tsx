@@ -186,9 +186,9 @@ describe("calendar surface extracted components", () => {
     expect(todayCell).toHaveClass("text-foreground");
     expect(todayCell).toHaveAttribute("aria-current", "date");
     expect(todayCell.querySelector('[data-plan-day-number]')).toHaveTextContent("6");
-    expect(todayCell.querySelector('[data-plan-day-number]')).toHaveClass("text-primary");
+    expect(todayCell.querySelector('[data-plan-day-number]')).toHaveClass("text-highlight");
     const selectedCell = screen.getByRole("button", { name: /august 7/i });
-    expect(selectedCell.className).toMatch(/ring-primary/);
+    expect(selectedCell.className).toMatch(/ring-highlight/);
     expect(selectedCell).toHaveAttribute("aria-pressed", "true");
     expect(selectedCell).not.toHaveClass("bg-day-selected");
     expect(selectedCell).not.toHaveClass("bg-today");
