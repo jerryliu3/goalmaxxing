@@ -5,6 +5,7 @@ export type AchievementGoalCategory =
   | "career"
   | "personal"
   | "relationships"
+  | "finance"
   | "other";
 
 export type PersonalRecordAccent = "stamp" | "sage" | "gain" | "copper" | "ink";

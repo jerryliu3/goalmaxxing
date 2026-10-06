@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   CATEGORY_CUSTOM_VALUE,
   DEFAULT_GOAL_CATEGORIES,
+  getCategoryBadgeClass,
+  getCategoryKeyForSelection,
   getCategorySelectionFromValue,
   getCategoryValueForWrite,
   resolveCategoryKey,
@@ -48,7 +50,17 @@ describe("goal category helpers", () => {
       "career",
       "personal",
       "relationships",
+      "finance",
       "other",
     ]);
+  });
+
+  it("resolves the Finance preset like the other presets", () => {
+    expect(
+      getCategorySelectionFromValue("Finance", DEFAULT_GOAL_CATEGORIES, "finance").selection
+    ).toBe("finance");
+    expect(resolveCategoryKey("Finance", DEFAULT_GOAL_CATEGORIES)).toBe("finance");
+    expect(getCategoryKeyForSelection("finance")).toBe("finance");
+    expect(getCategoryBadgeClass("finance")).not.toBe(getCategoryBadgeClass("other"));
   });
 });
