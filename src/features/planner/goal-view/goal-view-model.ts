@@ -158,6 +158,15 @@ export function groupSessions(
 const PER_PERIOD = { daily: "per day", weekly: "per week", monthly: "per month" } as const;
 const PERIOD = { daily: "Day", weekly: "Week", monthly: "Month" } as const;
 
+/** "2 of 3" with its period "per week", so a card can lead with the count. */
+export interface SessionOrdinal {
+  count: string;
+  period: string | null;
+}
+
+export const ordinalText = ({ count, period }: SessionOrdinal) =>
+  period ? `${count} ${period}` : count;
+
 /**
  * Which session each one is toward its goal's target, by the kind of unit it
  * fills: "2 of 3 per week" for a cadence goal, "12 of 30" toward a lifetime
@@ -173,7 +182,7 @@ export function sessionOrdinals(
   weekStartsOn: number
 ) {
   const goalsById = new Map(goals.map((goal) => [goal.id, goal]));
-  const ordinals = new Map<string, string>();
+  const ordinals = new Map<string, SessionOrdinal>();
   const periodPlaces = new Map<string, number>();
   for (const session of [...sessions].sort(byDateTime)) {
     const goal = goalsById.get(session.goalId);
@@ -182,7 +191,7 @@ export function sessionOrdinals(
     const unitKey = session.entry.unitKey;
     const indexed = /^(?:milestone|total):(\d+)$/.exec(unitKey);
     if (indexed) {
-      ordinals.set(session.key, `${indexed[1]} of ${goal.target_count ?? 1}`);
+      ordinals.set(session.key, { count: `${indexed[1]} of ${goal.target_count ?? 1}`, period: null });
       continue;
     }
     if (!unitKey.startsWith("cadence:") || !goal.recurrence_interval) continue;
@@ -191,14 +200,14 @@ export function sessionOrdinals(
       weekStartsOn,
     });
     if (perPeriod < 2) {
-      ordinals.set(session.key, `${PERIOD[goal.recurrence_interval]} ${index + 1}`);
+      ordinals.set(session.key, { count: `${PERIOD[goal.recurrence_interval]} ${index + 1}`, period: null });
       continue;
     }
     const placeKey = `${goal.id}|${periodKey}`;
     const place = (periodPlaces.get(placeKey) ?? 0) + 1;
     periodPlaces.set(placeKey, place);
     const slot = parseCadenceUnitKey(session.entry.unitKey)?.slot ?? place;
-    ordinals.set(session.key, `${slot} of ${perPeriod} ${PER_PERIOD[goal.recurrence_interval]}`);
+    ordinals.set(session.key, { count: `${slot} of ${perPeriod}`, period: PER_PERIOD[goal.recurrence_interval] });
   }
   return ordinals;
 }

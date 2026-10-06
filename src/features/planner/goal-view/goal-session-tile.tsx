@@ -9,7 +9,7 @@ import { PlanLedgerCompletionControl } from "@/features/planner/plan-ledger-comp
 import { cn } from "@/lib/utils";
 import { addDaysToDateString } from "@/lib/goals/periods";
 import type { GoalTileLayout } from "./goal-dates";
-import { dateLabel, type GoalViewSession } from "./goal-view-model";
+import { dateLabel, ordinalText, type GoalViewSession, type SessionOrdinal } from "./goal-view-model";
 import type { GoalSessionCompletion } from "./goal-session-completion";
 
 export interface GoalSessionTileProps {
@@ -19,9 +19,9 @@ export interface GoalSessionTileProps {
   /** False for sessions the planner cannot edit from the current snapshot. */
   editable: boolean;
   layout?: GoalTileLayout;
-  /** Which session this is toward the goal's target, e.g. "2 of 3 per week". */
-  ordinal?: string | null;
-  /** A date header already names the date, so the card shows its ordinal instead. */
+  /** Which session this is toward the goal's target, e.g. "2 of 3" per week. */
+  ordinal?: SessionOrdinal | null;
+  /** A date header already names the date, so the card leads with its ordinal instead. */
   dateInHeader?: boolean;
   onMove: (session: GoalViewSession, date: string) => void;
   onToggle: (session: GoalViewSession, source: HTMLButtonElement) => void;
@@ -144,8 +144,9 @@ export function GoalSessionTile({
       completed={session.done}
       treatment="quiet"
       className={cn(
-        "min-w-0 font-medium",
-        row ? "truncate text-[14px] leading-tight" : "line-clamp-2 text-[12.5px] leading-[15px]"
+        // The completion title is inline-block, so it truncates itself for the ellipsis to show.
+        "min-w-0 font-medium [&>span]:truncate",
+        row ? "truncate text-[14px] leading-tight" : "block truncate text-[11px] leading-4 text-foreground/75"
       )}
     >
       {session.milestone ? `${session.milestone}. ` : null}
@@ -215,7 +216,7 @@ export function GoalSessionTile({
           <span className="flex min-w-0 flex-col gap-0.5">
             {title}
             <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-              {[session.time || "Any time", ordinal].filter(Boolean).join(" · ")}
+              {[session.time || "Any time", ordinal && ordinalText(ordinal)].filter(Boolean).join(" · ")}
               {lock}
             </span>
           </span>
@@ -225,43 +226,55 @@ export function GoalSessionTile({
     );
   }
 
-  // The date and the ordinal share one line and cross-fade: under a date
-  // header the date would only repeat it. A session with nothing to count
-  // keeps its date rather than going blank. Both wrap rather than ever cut off.
+  // The date is what tells one session from the next (the lane already names
+  // the goal), so it leads the card; the title and time sit small on the
+  // check's row. Under a date header the date would only repeat it, so the
+  // lead cross-fades to the count ("2 of 3") and its period stays below. A
+  // session with nothing to count keeps its date rather than going blank.
   const showOrdinal = dateInHeader && Boolean(ordinal);
-  const fade = "col-start-1 row-start-1 [overflow-wrap:anywhere] transition-opacity duration-300 motion-reduce:transition-none";
-  // The check leads the date, as it leads checklist rows and calendar pills,
-  // and the title gets the card's full width below them.
+  // Toggling Calendar glides the cards for 720ms (the plan view morph), so the
+  // swap lands on the glide's midpoint: the old text clears just before it and
+  // the new one arrives just after, never overlapping.
+  const fade = (hidden: boolean) =>
+    cn(
+      "col-start-1 row-start-1 whitespace-nowrap transition-opacity duration-200 motion-reduce:transition-none",
+      hidden ? "opacity-0 delay-[160ms] ease-in" : "delay-[360ms] ease-out"
+    );
   return (
     <article
       {...dataAttributes}
       className={cn(
         frame,
-        "grid h-full w-full grid-cols-[auto_minmax(0,1fr)] content-start gap-x-0.5 gap-y-1 py-1.5 pr-1.5"
+        "grid h-full w-full grid-cols-[auto_minmax(0,1fr)_auto] content-start items-center gap-x-1 gap-y-0.5 py-1.5 pr-1.5"
       )}
     >
       <span className="-mt-0.5 -ml-1">{completionControl}</span>
-      <div className="flex min-w-0 items-center gap-1">
+      <div className="min-w-0" title={session.label}>{title}</div>
+      <span className="text-[10.5px] leading-4 text-muted-foreground">{session.time}</span>
+      <div className="col-span-3 flex min-w-0 items-center gap-1">
         <SessionDateField
           session={session}
           today={today}
           disabled={!movable}
           onMove={onMove}
-          className="min-h-5 min-w-0 rounded-md px-1 py-0"
+          className="-ml-1 min-h-5 min-w-0 rounded-md px-1 py-0"
         >
-          <span className="grid min-w-0 text-[10.5px] font-medium leading-4 text-muted-foreground">
-            <span className={cn(fade, showOrdinal && "opacity-0")}>
-              {dateLabel(session.date, "EEE, MMM d")}
-            </span>
-            <span className={cn(fade, !showOrdinal && "opacity-0")}>{ordinal ?? ""}</span>
+          <span
+            className={cn(
+              "grid min-w-0 font-display text-[17px] leading-5 tracking-tight",
+              session.done && "text-muted-foreground"
+            )}
+          >
+            <span className={fade(showOrdinal)}>{dateLabel(session.date, "EEE, MMM d")}</span>
+            <span className={fade(!showOrdinal)}>{ordinal?.count ?? ""}</span>
           </span>
         </SessionDateField>
         {lock}
       </div>
-      <div className="col-span-2 min-w-0">{title}</div>
-      {session.time ? (
-        <span className="col-span-2 text-[10.5px] leading-4 text-muted-foreground">
-          {session.time}
+      {ordinal ? (
+        <span className="col-span-3 grid min-w-0 text-[10.5px] leading-4 text-muted-foreground">
+          <span className={fade(showOrdinal)}>{ordinalText(ordinal)}</span>
+          <span className={fade(!showOrdinal)}>{ordinal.period ?? ""}</span>
         </span>
       ) : null}
       {nudges}

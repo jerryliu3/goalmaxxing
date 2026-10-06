@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import { GoalSessionTile } from "./goal-session-tile";
-import type { GoalViewSession } from "./goal-view-model";
+import type { GoalViewSession, SessionOrdinal } from "./goal-view-model";
 
 const session: GoalViewSession = {
   key: "run:2026-10-09",
@@ -19,7 +19,7 @@ const session: GoalViewSession = {
 
 function renderTile(
   dateInHeader: boolean,
-  ordinal: string | null = "2 of 3 per week",
+  ordinal: SessionOrdinal | null = { count: "2 of 3", period: "per week" },
   onOpen?: (session: GoalViewSession) => void
 ) {
   render(
@@ -42,26 +42,34 @@ describe("GoalSessionTile", () => {
 
   it("never truncates its date or ordinal, and keeps nudges out of the layout", () => {
     renderTile(false);
-    for (const text of ["Fri, Oct 9", "2 of 3 per week"]) {
+    for (const text of ["Fri, Oct 9", "2 of 3", "2 of 3 per week"]) {
       expect(screen.getByText(text).className).not.toMatch(/truncate|line-clamp|text-ellipsis/);
     }
     const nudge = screen.getByRole("button", { name: "Move Run a half marathon one day later" });
     expect(nudge.parentElement).toHaveClass("absolute");
   });
 
-  it("keeps its title and shows the date where no header names it", () => {
+  it("leads with the date where no header names it, under a small title", () => {
     renderTile(false);
-    expect(screen.getByTestId("completion-title")).toHaveTextContent("Run a half marathon");
-    expect(screen.getByText("Fri, Oct 9")).not.toHaveClass("opacity-0");
-    expect(screen.getByText("2 of 3 per week")).toHaveClass("opacity-0");
+    const title = screen.getByTestId("completion-title").parentElement;
+    expect(title).toHaveTextContent("Run a half marathon");
+    expect(title).toHaveClass("truncate");
+    expect(title?.parentElement).toHaveAttribute("title", "Run a half marathon");
+    const date = screen.getByText("Fri, Oct 9");
+    expect(date).not.toHaveClass("opacity-0");
+    expect(date.parentElement).toHaveClass("font-display");
+    expect(screen.getByText("2 of 3")).toHaveClass("opacity-0");
+    expect(screen.getByText("2 of 3 per week")).not.toHaveClass("opacity-0");
     expect(screen.getByText("07:30")).toBeInTheDocument();
   });
 
-  it("cross-fades the date to the ordinal under a date header", () => {
+  it("cross-fades the date to the count under a date header, with its period below", () => {
     renderTile(true);
     expect(screen.getByTestId("completion-title")).toHaveTextContent("Run a half marathon");
     expect(screen.getByText("Fri, Oct 9")).toHaveClass("opacity-0");
-    expect(screen.getByText("2 of 3 per week")).not.toHaveClass("opacity-0");
+    expect(screen.getByText("2 of 3")).not.toHaveClass("opacity-0");
+    expect(screen.getByText("per week")).not.toHaveClass("opacity-0");
+    expect(screen.getByText("2 of 3 per week")).toHaveClass("opacity-0");
     // The line is still the date control.
     expect(screen.getByLabelText("Change date of Run a half marathon, Fri, Oct 9")).toBeEnabled();
   });
