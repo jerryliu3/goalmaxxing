@@ -1,0 +1,152 @@
+.rc-root {
+  --rc-ink: #241c14;
+  --rc-muted: #7a6a56;
+  --rc-deep: #5c4e3f;
+  --rc-rule: #d4c4a4;
+  --rc-page: #f3ead8;
+  --rc-paper: #f8f1e3;
+  --rc-stamp: #9a4f2c;
+  --rc-gain: #4a6740;
+  --rc-amber: #8a5a07;
+  --rc-amber-dot: #eab308;
+  --rc-amber-wash: #fbefcf;
+  --rc-amber-line: #e3c26c;
+  min-height: 100dvh;
+  background: var(--rc-page);
+  color: var(--rc-ink);
+}
+
+.rc-card {
+  border: 1px solid var(--rc-rule);
+  background: var(--rc-paper);
+  border-radius: 14px;
+}
+
+/* Calendar chips — one shape, kind-specific treatment. */
+.rc-chip {
+  --goal: var(--rc-stamp);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.5rem;
+  width: 100%;
+  padding: 0.15rem 0.45rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--goal) 28%, transparent);
+  background: color-mix(in srgb, var(--goal) 14%, var(--rc-paper));
+  font-size: 0.72rem;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.rc-chip-dot {
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--goal);
+}
+
+.rc-chip[data-kind="done"] {
+  opacity: 0.55;
+}
+
+.rc-chip[data-kind="past"],
+.rc-chip[data-kind="let-go"] {
+  background: transparent;
+  border-style: dotted;
+  border-color: var(--rc-rule);
+  color: var(--rc-muted);
+}
+
+.rc-chip[data-kind="slipped"] {
+  background: var(--rc-amber-wash);
+  border-color: var(--rc-amber-line);
+}
+
+.rc-chip[data-kind="slipped"] .rc-chip-dot {
+  background: var(--rc-amber-dot);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--rc-amber-dot) 25%, transparent);
+}
+
+.rc-chip[data-kind="slipped"][data-moving="true"] .rc-chip-label,
+.rc-chip[data-kind="shift-from"] .rc-chip-label {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.rc-chip[data-kind="shift-from"] {
+  opacity: 0.5;
+  background: transparent;
+  border-style: dashed;
+}
+
+.rc-chip[data-kind="suggested"],
+.rc-chip[data-kind="shift-to"] {
+  background: transparent;
+  border: 1.5px dashed var(--goal);
+}
+
+.rc-chip[data-accepted="true"][data-kind="suggested"],
+.rc-chip[data-accepted="true"][data-kind="shift-to"] {
+  border-style: solid;
+  background: color-mix(in srgb, var(--goal) 10%, var(--rc-paper));
+}
+
+.rc-chip[data-selected="true"] {
+  outline: 2px solid var(--rc-ink);
+  outline-offset: 1px;
+}
+
+.rc-chip[draggable="true"] {
+  cursor: grab;
+}
+
+.rc-day[data-drop="valid"] {
+  background: color-mix(in srgb, var(--rc-gain) 10%, var(--rc-paper));
+  outline: 1.5px dashed var(--rc-gain);
+  outline-offset: -3px;
+}
+
+.rc-day[data-drop="invalid"] {
+  opacity: 0.45;
+}
+
+.rc-strip {
+  display: flex;
+  gap: 0.375rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 0.25rem;
+}
+
+.rc-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.rc-pill[data-rest="true"]::after {
+  content: " · rest";
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.rc-rise {
+  animation: rc-rise 220ms ease-out both;
+}
+
+@keyframes rc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rc-rise {
+    animation: none;
+  }
+}
