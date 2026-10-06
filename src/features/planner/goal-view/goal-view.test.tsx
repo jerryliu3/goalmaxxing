@@ -133,7 +133,8 @@ describe("GoalView", () => {
   it("uses a directly interactive native date input and moves a session to the chosen date", () => {
     const props = renderView();
     const run = screen.getByRole("region", { name: "Run a half marathon scheduled dates" });
-    expect(within(run).getAllByTestId("completion-title")[1]).toHaveTextContent("2. run session");
+    // A card's ordinal numbers the milestone, so its title drops the "2." prefix.
+    expect(within(run).getAllByTestId("completion-title")[1]).toHaveTextContent(/^run session$/);
     const field = within(run).getByLabelText("Change date of run session, Fri, Oct 9") as HTMLInputElement;
     // Only the date is a control: the rest of the tile is not a button.
     expect(

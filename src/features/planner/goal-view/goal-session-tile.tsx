@@ -144,12 +144,17 @@ export function GoalSessionTile({
       completed={session.done}
       treatment="quiet"
       className={cn(
-        // The completion title is inline-block, so it truncates itself for the ellipsis to show.
-        "min-w-0 font-medium [&>span]:truncate",
-        row ? "truncate text-[14px] leading-tight" : "block truncate text-[11px] leading-4 text-foreground/75"
+        "min-w-0 font-medium",
+        row
+          ? "truncate text-[14px] leading-tight"
+          : // The completion title is inline-block, so it truncates itself for
+            // the ellipsis to show. An ellipsis hides an overflowing button
+            // whole, so the rename button truncates its own text instead.
+            "block truncate text-[11px] leading-4 text-foreground/75 [&_button]:max-w-full [&_button]:truncate [&_button]:align-bottom [&>span]:truncate"
       )}
     >
-      {session.milestone ? `${session.milestone}. ` : null}
+      {/* A card's ordinal ("2 of 5") already numbers its milestone. */}
+      {row && session.milestone ? `${session.milestone}. ` : null}
       <MilestoneTitleEditor
         goalId={session.goalId}
         unitKey={session.entry.unitKey}

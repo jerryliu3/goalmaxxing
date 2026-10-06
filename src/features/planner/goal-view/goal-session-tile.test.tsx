@@ -74,6 +74,25 @@ describe("GoalSessionTile", () => {
     expect(screen.getByLabelText("Change date of Run a half marathon, Fri, Oct 9")).toBeEnabled();
   });
 
+  it("keeps a long milestone name readable: the rename button truncates itself", () => {
+    render(
+      <GoalSessionTile
+        session={{ ...session, label: "Long run ten kilometers", milestone: 2, entry: { ...session.entry, unitKey: "milestone:2" } }}
+        today="2026-10-02"
+        completion={{ credited: false, pending: false, disabledReason: null }}
+        editable
+        ordinal={{ count: "2 of 5", period: null }}
+        onMove={vi.fn()}
+        onToggle={vi.fn()}
+      />
+    );
+    const rename = screen.getByRole("button", { name: "Rename milestone Long run ten kilometers" });
+    // An ellipsis on the title would hide an overflowing button whole.
+    expect(rename.closest(".block")).toHaveClass("[&_button]:max-w-full", "[&_button]:truncate");
+    // The ordinal numbers the milestone, so the card drops the "2." prefix.
+    expect(screen.getByTestId("completion-title")).toHaveTextContent(/^Long run ten kilometers$/);
+  });
+
   it("keeps the date under a header when there is nothing to count", () => {
     renderTile(true, null);
     expect(screen.getByText("Fri, Oct 9")).not.toHaveClass("opacity-0");
