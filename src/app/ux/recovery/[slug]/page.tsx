@@ -1,17 +1,15 @@
 import type { ComponentType } from "react";
 import { notFound } from "next/navigation";
-import { CalendarConcept } from "@/features/ux-recovery/calendar-concept";
 import {
   RECOVERY_CONCEPTS,
   type RecoveryConceptSlug,
 } from "@/features/ux-recovery/concepts";
-import { DeckConcept } from "@/features/ux-recovery/deck-concept";
-import { LedgerConcept } from "@/features/ux-recovery/ledger-concept";
+import { GoalByGoalConcept } from "@/features/ux-recovery/goal-by-goal-concept";
+import { GoalViewConcept } from "@/features/ux-recovery/goal-view-concept";
 
 const CONCEPT_PAGES = {
-  ledger: LedgerConcept,
-  calendar: CalendarConcept,
-  deck: DeckConcept,
+  "goal-by-goal": GoalByGoalConcept,
+  "goal-view": GoalViewConcept,
 } as const satisfies Record<RecoveryConceptSlug, ComponentType>;
 
 export function generateStaticParams() {

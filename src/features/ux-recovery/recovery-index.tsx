@@ -3,19 +3,20 @@ import { ArrowUpRight } from "lucide-react";
 import { RECOVERY_CONCEPTS } from "@/features/ux-recovery/concepts";
 import { formatDay } from "@/features/ux-recovery/dates";
 import { recoveryPrompt, suggest, type RecoveryPlan, type RecoverySeed } from "@/features/ux-recovery/model";
-import { EntryPrompt } from "@/features/ux-recovery/primitives";
+import { ReviewEntry } from "@/features/ux-recovery/primitives";
 import { RECOVERY_SEED, TODAY } from "@/features/ux-recovery/seed";
 import "@/features/ux-recovery/recovery.css";
 
 const RULES = [
-  ["Never auto-move", "Every slipped session gets a suggested day. Nothing changes until you accept and apply."],
-  ["Just the missed, by default", "Only the slipped session moves. Rebalance — reflowing the goal’s future sessions — is opt-in, globally or per goal."],
+  ["Ask first", "Nothing about recovery shows until you press “N sessions slipped · Review”. Before that the calendar looks as it always does."],
+  ["Every decision saves at once, and stays undoable", "Accept, Edit + Apply, or Let it go writes right away. The row stays as a confirmation — “Moved to Thu Oct 8 ✓” or “Let go ✓” — with its own Undo, here and in the summary."],
+  ["Just the missed, unless you auto-rebalance", "Only the slipped session moves. One switch, Auto-rebalance, proposes new dates for every goal at once — later sessions respaced too — in the summary. Nothing saves until Apply rebalance."],
   ["Past periods stay quiet", "Last week’s weekly miss, yesterday’s daily miss: no row, no warning. Only in-period and lifetime misses come back."],
   ["Honest fit", "Inside the window, one per goal per day, at most 3 sessions a day, rest days last, never in the past. If nothing fits, the row says why."],
 ] as const;
 
 export function RecoveryIndex() {
-  const plan = suggest(RECOVERY_SEED, TODAY, "squeeze");
+  const plan = suggest(RECOVERY_SEED, TODAY);
   const prompt = recoveryPrompt(plan, TODAY);
 
   return (
@@ -33,8 +34,8 @@ export function RecoveryIndex() {
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[color:var(--rc-deep)]">
             Recovery today is a button in Planner settings that moves everything at once, often onto today,
-            and sometimes says nothing fits when it does. This study makes recovery a review: a suggested day for
-            each slipped session, your call on every one.
+            and sometimes says nothing fits when it does. This study makes recovery a review you ask for: a
+            suggested day for each slipped session, your call on every one, saved as you go.
           </p>
           <p className="mt-4 text-sm text-[color:var(--rc-muted)]">
             Study only · seeded data · today is {formatDay(TODAY)}.
@@ -49,9 +50,12 @@ export function RecoveryIndex() {
               Entry 1 · top of Agenda
             </p>
             <p className="mt-3 font-display text-xl font-semibold">Wednesday, October 7</p>
-            <EntryPrompt prompt={prompt} href="/ux/recovery/ledger" />
+            <div className="mt-2">
+              <ReviewEntry prompt={prompt} href="/ux/recovery/goal-by-goal" />
+            </div>
             <p className="mt-2 text-xs text-[color:var(--rc-muted)]">
-              Replaces “Recover missed activities” in Planner settings. Disappears when nothing slipped.
+              Replaces “Recover missed activities” in Planner settings. One button; nothing else changes on the
+              calendar until it’s pressed. Disappears when nothing slipped.
             </p>
           </div>
           <div className="rc-card p-5">
@@ -63,7 +67,7 @@ export function RecoveryIndex() {
                 <span className="font-semibold">{prompt.text}</span>
                 <span className="block text-xs text-[color:var(--rc-muted)]">{prompt.fit} can still fit this plan</span>
               </span>
-              <Link href="/ux/recovery/ledger" className="font-semibold underline-offset-4 hover:underline">
+              <Link href="/ux/recovery/goal-by-goal" className="font-semibold underline-offset-4 hover:underline">
                 Review
               </Link>
             </div>
@@ -76,8 +80,12 @@ export function RecoveryIndex() {
 
       <section className="border-t border-[color:var(--rc-rule)] px-5 py-10 sm:px-8">
         <div className="mx-auto max-w-6xl">
-          <h2 className="font-display text-3xl font-semibold tracking-tight">Three ways to review</h2>
-          <ul className="mt-6 grid gap-4 md:grid-cols-3">
+          <h2 className="font-display text-3xl font-semibold tracking-tight">Two ways to review</h2>
+          <p className="mt-2 max-w-2xl text-sm text-[color:var(--rc-deep)]">
+            Round 3. Goal by goal leads: one goal at a time, confirmations you can undo, and a recap of every
+            change at the end. In Goal View runs the same rows inside Goal View’s lanes. Focused list is retired.
+          </p>
+          <ul className="mt-6 grid gap-4 md:grid-cols-2">
             {RECOVERY_CONCEPTS.map((concept) => (
               <li key={concept.slug}>
                 <Link

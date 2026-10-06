@@ -1,4 +1,4 @@
-/** Calendar projection: what each day shows before and after the pending review. */
+/** Calendar projection: what each day shows, with or without a recovery preview. */
 import type { IsoDate } from "@/features/ux-recovery/dates";
 import type {
   RecoveryGoal,
@@ -10,15 +10,17 @@ import type {
 export type CalendarEntryKind =
   | "done"
   | "scheduled"
-  /** A past miss that is not recoverable (past period) — muted, never amber. */
+  /** A past miss shown as the plain calendar shows it — muted, never amber. */
   | "past"
   | "let-go"
-  /** Recoverable miss, sitting on its original day. */
+  /** Recoverable miss under review, sitting on its original day. */
   | "slipped"
   /** Ghost at the suggested day. */
   | "suggested"
   | "shift-from"
-  | "shift-to";
+  | "shift-to"
+  /** Saved by recovery, at its new day (shown while reviewing). */
+  | "recovered";
 
 export interface CalendarEntry {
   key: string;
@@ -26,28 +28,28 @@ export interface CalendarEntry {
   goal: RecoveryGoal;
   label: string;
   kind: CalendarEntryKind;
-  /** The decision is made (accepted/edited, or its goal has an accepted row). */
-  accepted: boolean;
   /** The other end of a move: suggestion date for a slip, origin for a ghost. */
   counterpart: IsoDate | null;
   row: Suggestion | null;
 }
 
+/**
+ * Entries per day. Without a `preview` plan the calendar looks as it always
+ * does: misses are quiet past entries, nothing is suggested. With `marks`
+ * (while reviewing) sessions recovery already moved show as recovered.
+ */
 export function projectDays(
   seed: RecoverySeed,
-  plan: RecoveryPlan,
-  dates: readonly IsoDate[]
+  preview: RecoveryPlan | null,
+  dates: readonly IsoDate[],
+  marks = preview !== null
 ): Map<IsoDate, CalendarEntry[]> {
   const days = new Map<IsoDate, CalendarEntry[]>(dates.map((date) => [date, []]));
   const goals = new Map(seed.goals.map((goal) => [goal.id, goal]));
   const order = new Map(seed.goals.map((goal, index) => [goal.id, index]));
-  const rows = new Map(plan.rows.map((row) => [row.sessionId, row]));
-  const dismissed = new Set(plan.dismissedIds);
+  const rows = new Map((preview?.rows ?? []).map((row) => [row.sessionId, row]));
   const shifts = new Map(
-    plan.goals.flatMap((goal) => {
-      const accepted = goal.rows.some((row) => row.status !== "pending");
-      return goal.shifts.map((shift) => [shift.sessionId, { shift, accepted }] as const);
-    })
+    (preview?.goals ?? []).flatMap((goal) => goal.shifts.map((shift) => [shift.sessionId, shift] as const))
   );
 
   const push = (date: IsoDate, entry: Omit<CalendarEntry, "key">) => {
@@ -59,27 +61,25 @@ export function projectDays(
     if (!goal) continue;
     const base = { sessionId: session.id, goal, label: session.label, row: null };
     const row = rows.get(session.id);
-    const moved = shifts.get(session.id);
+    const shift = shifts.get(session.id);
     if (row) {
-      const accepted = row.status !== "pending";
-      push(session.date, { ...base, row, kind: "slipped", accepted, counterpart: row.date });
-      if (row.date) {
-        push(row.date, { ...base, row, kind: "suggested", accepted, counterpart: session.date });
-      }
-    } else if (moved) {
-      const { shift, accepted } = moved;
-      push(shift.from, { ...base, kind: "shift-from", accepted, counterpart: shift.to });
-      push(shift.to, { ...base, kind: "shift-to", accepted, counterpart: shift.from });
+      push(session.date, { ...base, row, kind: "slipped", counterpart: row.date });
+      if (row.date) push(row.date, { ...base, row, kind: "suggested", counterpart: session.date });
+    } else if (shift) {
+      push(shift.from, { ...base, kind: "shift-from", counterpart: shift.to });
+      push(shift.to, { ...base, kind: "shift-to", counterpart: shift.from });
+    } else if (marks && session.recoveredFrom && session.status === "scheduled") {
+      push(session.date, { ...base, kind: "recovered", counterpart: session.recoveredFrom });
     } else {
       const kind =
         session.status === "done"
           ? "done"
-          : dismissed.has(session.id) || session.dismissed
+          : session.dismissed
             ? "let-go"
             : session.status === "missed"
               ? "past"
               : "scheduled";
-      push(session.date, { ...base, kind, accepted: false, counterpart: null });
+      push(session.date, { ...base, kind, counterpart: null });
     }
   }
 
@@ -89,16 +89,8 @@ export function projectDays(
   return days;
 }
 
-/** Same plan with suggestions hidden: slipped chips stay, ghosts and shifts go. */
-export function withoutPreview(plan: RecoveryPlan): RecoveryPlan {
-  const rows = plan.rows.map((row) => ({ ...row, date: null, shifts: [] }));
-  return {
-    ...plan,
-    rows,
-    goals: plan.goals.map((goal) => ({
-      ...goal,
-      shifts: [],
-      rows: rows.filter((row) => row.goalId === goal.goal.id),
-    })),
-  };
+/** The plan narrowed to one goal: only its slips, ghosts and shifts preview. */
+export function onlyGoal(plan: RecoveryPlan, goalId: string): RecoveryPlan {
+  const goals = plan.goals.filter((goal) => goal.goal.id === goalId);
+  return { goals, rows: goals.flatMap((goal) => goal.rows) };
 }

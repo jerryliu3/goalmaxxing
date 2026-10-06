@@ -87,10 +87,9 @@
   border: 1.5px dashed var(--goal);
 }
 
-.rc-chip[data-accepted="true"][data-kind="suggested"],
-.rc-chip[data-accepted="true"][data-kind="shift-to"] {
-  border-style: solid;
-  background: color-mix(in srgb, var(--goal) 10%, var(--rc-paper));
+/* Saved by this review: solid outline in the goal colour. */
+.rc-chip[data-kind="recovered"] {
+  border: 1.5px solid var(--goal);
 }
 
 .rc-chip[data-selected="true"] {
@@ -98,18 +97,33 @@
   outline-offset: 1px;
 }
 
-.rc-chip[draggable="true"] {
-  cursor: grab;
-}
-
-.rc-day[data-drop="valid"] {
-  background: color-mix(in srgb, var(--rc-gain) 10%, var(--rc-paper));
-  outline: 1.5px dashed var(--rc-gain);
-  outline-offset: -3px;
-}
-
-.rc-day[data-drop="invalid"] {
+/* Focus mode with the full calendar showing: other goals stay readable but quiet. */
+.rc-chip[data-dimmed="true"] {
   opacity: 0.45;
+}
+
+/* Goal View lane cards reuse the chip kinds at session-card size. */
+.rc-chip.rc-lane-card {
+  flex: none;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.1rem;
+  width: 9rem;
+  height: 4.75rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 10px;
+}
+
+.rc-lane-card[data-kind="scheduled"],
+.rc-lane-card[data-kind="done"] {
+  background: var(--rc-paper);
+  border-color: var(--rc-rule);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+}
+
+.rc-lane-card[data-today="true"][data-kind="scheduled"] {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc-stamp) 60%, transparent);
 }
 
 .rc-strip {

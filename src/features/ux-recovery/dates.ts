@@ -79,6 +79,11 @@ export function formatShort(date: IsoDate): string {
   return `${monthShort(date)} ${dayOfMonth(date)}`;
 }
 
+/** "Oct 13 → Oct 21": full dates on both sides, never a relative name. */
+export function dateMove(from: IsoDate, to: IsoDate): string {
+  return `${formatShort(from)} → ${formatShort(to)}`;
+}
+
 /** Lower-case name for running copy: "today", "tomorrow", "Fri", or "Oct 13". */
 export function dayName(date: IsoDate, today: IsoDate): string {
   const diff = diffDays(today, date);
