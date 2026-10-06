@@ -144,7 +144,8 @@ export function GoalSessionTile({
       completed={session.done}
       treatment="quiet"
       className={cn(
-        "min-w-0 font-medium",
+        // The completion title is inline-block, so it truncates itself for the ellipsis to show.
+        "min-w-0 font-medium [&>span]:truncate",
         row ? "truncate text-[14px] leading-tight" : "block truncate text-[11px] leading-4 text-foreground/75"
       )}
     >
