@@ -30,7 +30,7 @@ import { getGoalCreationPeriodLimitError } from "@/lib/goals/creation-model";
 
 import { TempoStepNavigation } from "./tempo-step-navigation";
 import { AnnotatedCard } from "./card-editor/annotated-card";
-import type { FaceFact } from "./card-editor/card-facts";
+import { DIFFICULTY_OPTIONS, type FaceFact } from "./card-editor/card-facts";
 import type {
   TempoChoicesMade,
   TempoCardVisibility,
@@ -40,7 +40,6 @@ const REVIEW_LABELS: Partial<Record<FaceFact, string>> = {
   cadence: "Your target",
   name: "Your goal",
   start: "Start date",
-  stretch: "Stretch · sets its finish",
   time: "Time of day",
 };
 
@@ -271,20 +270,13 @@ export function TempoGoalFields({
                       />
                       {chosen.category && (
                         <>
-                          <p className="tempo-label">How much of a stretch?</p>
+                          <p className="tempo-label">Difficulty</p>
                           <Choices
                             label="Difficulty"
                             value={
                               chosen.difficulty ? fields.difficulty : null
                             }
-                            options={[
-                              { value: "easy", label: "Easy · a little lift" },
-                              {
-                                value: "medium",
-                                label: "Medium · a good push",
-                              },
-                              { value: "hard", label: "Hard · a big stretch" },
-                            ]}
+                            options={DIFFICULTY_OPTIONS}
                             onChange={(difficulty) => {
                               choose({ difficulty: true });
                               onPatch({ difficulty });

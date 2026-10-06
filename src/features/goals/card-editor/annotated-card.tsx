@@ -14,7 +14,9 @@ import "./card-editor.css";
 // the title, effort and right-edge facts call out right, so no leader line crosses the face.
 const LEFT: FaceFact[] = ["visibility", "cadence", "category", "start", "time"];
 const RIGHT: FaceFact[] = ["name", "difficulty", "deadline"];
+// Space between stacked callouts; a legend's one-line names can sit closer.
 const GAP = 8;
+const LABEL_GAP = 2;
 
 interface Line {
   fact: FaceFact;
@@ -90,7 +92,7 @@ export function AnnotatedCard({
         const target = stage.y + region.y + region.height / 2;
         const top = Math.max(target - columnTop - anchorY, cursor);
         tops[region.fact] = top;
-        cursor = top + node.offsetHeight + GAP;
+        cursor = top + node.offsetHeight + (labelsOnly ? LABEL_GAP : GAP);
         lines.push({
           fact: region.fact,
           x1: side === "left" ? left.x + left.width : right.x,
@@ -102,7 +104,7 @@ export function AnnotatedCard({
       height = Math.max(height, cursor);
     }
     setLayout({ tops, height, lines });
-  }, []);
+  }, [labelsOnly]);
 
   // Facts moved or a callout opened: lay out now, then follow the editor frame by frame.
   useLayoutEffect(() => {

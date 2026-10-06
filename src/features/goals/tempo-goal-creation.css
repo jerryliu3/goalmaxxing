@@ -1063,8 +1063,6 @@
 /* Small screens keep the legend beside a smaller card, in a quieter type size. */
 @container card-legend (max-width: 560px) {
   .tempo-review-legend .card-annotated { grid-template-columns: minmax(0, 1fr) 46% minmax(0, 1fr); gap: 10px; padding-top: 4px; }
-  .tempo-review-legend .card-callout-body { padding: 3px 2px; }
-  .tempo-review-legend .card-overline { font-size: 7.5px; letter-spacing: .06em; }
-  .tempo-review-legend .card-callout-value { min-height: 0; font-size: 11.5px; line-height: 1.25; }
+  .tempo-review-legend .card-callout-body { padding: 0 2px; }
   .tempo-review-legend .card-callout-name { font-size: 12px; line-height: 1.25; }
 }
