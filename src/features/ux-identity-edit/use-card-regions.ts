@@ -26,9 +26,9 @@ const SELECTORS: [FaceFact, string][] = [
   ["name", "[data-tempo-goal-card] h2"],
   ["category", ".tempo-card-period"],
   ["stretch", ".tempo-card-effort"],
-  ["start", ".tempo-card-dates > span:first-child"],
-  ["deadline", ".tempo-card-dates > span:last-child"],
-  ["time", ".tempo-card-dates + .tempo-card-meta > span"],
+  ["start", ".tempo-card-date-range > span:first-child"],
+  ["deadline", ".tempo-card-date-range > span:last-child"],
+  ["time", ".tempo-card-time"],
 ];
 
 const MIN_WIDTH = 72;
@@ -73,7 +73,7 @@ export function useCardRegions(container: RefObject<HTMLElement | null>, version
           // The effort bars keep their true width so controls can sit right beside them.
           const width = fact === "stretch" ? box.width : Math.max(box.width, MIN_WIDTH);
           // Right-aligned facts grow leftward so the hit area stays on the card.
-          const x = fact === "deadline" || fact === "stretch" ? box.x + box.width - width : box.x;
+          const x = fact === "time" || fact === "stretch" ? box.x + box.width - width : box.x;
           return { fact, x, y: box.y, width, height: Math.max(box.height, MIN_HEIGHT), present: true };
         }
         // Absent facts get a ghost slot where the card would print them.

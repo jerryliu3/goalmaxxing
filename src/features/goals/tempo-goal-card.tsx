@@ -161,23 +161,17 @@ export function TempoGoalCard({
             </div>
           )}
         </div>
+        {/* Fixed corners: dates stacked bottom-left, time bottom-right. Every line is
+            reserved even when empty, so filling one in never shifts the face. */}
         <div className="tempo-card-meta tempo-card-dates">
-          <span>{isTask ? taskSchedule?.date : `From ${fields.start_date}`}</span>
-          {visibility.schedule && (
-            <span>
-              {isTask
-                ? taskSchedule?.time || "Any time"
-                : fields.end_date
-                  ? `Until ${fields.end_date}`
-                  : ""}
-            </span>
-          )}
+          <span className="tempo-card-date-range">
+            <span>{isTask ? taskSchedule?.date : `From ${fields.start_date}`}</span>
+            <span>{visibility.schedule && !isTask && fields.end_date ? `Until ${fields.end_date}` : ""}</span>
+          </span>
+          <span className="tempo-card-time">
+            {visibility.schedule ? (isTask ? taskSchedule?.time || "Any time" : fields.default_local_time) : ""}
+          </span>
         </div>
-        {visibility.schedule && !isTask && fields.default_local_time && (
-          <div className="tempo-card-meta">
-            <span>{fields.default_local_time}</span>
-          </div>
-        )}
       </article>
     </div>
   );

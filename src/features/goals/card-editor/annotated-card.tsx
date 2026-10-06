@@ -11,9 +11,9 @@ import { boxWithin, useCardRegions } from "./use-card-regions";
 import "./card-editor.css";
 
 // Facts printed at the card's left edge call out left (the target sits beside its number);
-// the title, effort and right-edge facts call out right, so no leader line crosses the face.
-const LEFT: FaceFact[] = ["visibility", "cadence", "category", "start", "time"];
-const RIGHT: FaceFact[] = ["name", "difficulty", "deadline"];
+// the title, effort and time call out right, so no leader line crosses the face.
+const LEFT: FaceFact[] = ["visibility", "cadence", "category", "start", "deadline"];
+const RIGHT: FaceFact[] = ["name", "difficulty", "time"];
 // Space between stacked callouts; a legend's one-line names can sit closer.
 const GAP = 8;
 const LABEL_GAP = 2;
