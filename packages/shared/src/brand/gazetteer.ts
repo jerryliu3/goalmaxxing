@@ -1,3 +1,5 @@
+import { goalCategoryColor } from "./categories";
+
 /**
  * Production Gazetteer lock (paper, walnut, stamp rust, sage/copper chrome, Nest).
  * Keep hexes here so web, native, planner fills, and chrome share one palette.
@@ -18,6 +20,10 @@ export const GAZETTEER = {
   colRust: "#b5522a",
 } as const;
 
+/**
+ * Gazetteer's earth-tone category set, used by the /ux studies. The live app
+ * colors categories from the shared palette in categories.ts.
+ */
 export const GAZETTEER_CATEGORY_COLORS = {
   health: GAZETTEER.gain,
   career: GAZETTEER.stamp,
@@ -52,12 +58,13 @@ export const GAZETTEER_RADIUS_PX = {
   lg: 16,
 } as const;
 
+/** Old Tailwind picker colors still saved on custom goals, re-inked for Gazetteer. */
 const LEGACY_GOAL_COLOR_TO_GAZETTEER: Record<string, string> = {
-  "#10b981": GAZETTEER_CATEGORY_COLORS.health,
-  "#8b5cf6": GAZETTEER_CATEGORY_COLORS.career,
-  "#6366f1": GAZETTEER_CATEGORY_COLORS.personal,
-  "#f43f5e": GAZETTEER_CATEGORY_COLORS.relationships,
-  "#64748b": GAZETTEER_CATEGORY_COLORS.other,
+  "#10b981": GAZETTEER.gain,
+  "#8b5cf6": GAZETTEER.stamp,
+  "#6366f1": GAZETTEER.mutedDeep,
+  "#f43f5e": GAZETTEER.colRust,
+  "#64748b": GAZETTEER.muted,
   "#22c55e": GAZETTEER.gain,
   "#2563eb": GAZETTEER.stamp,
   "#7c3aed": GAZETTEER.stamp,
@@ -65,7 +72,6 @@ const LEGACY_GOAL_COLOR_TO_GAZETTEER: Record<string, string> = {
   "#0f766e": GAZETTEER.gain,
   "#15803d": GAZETTEER.gain,
   "#ca8a04": GAZETTEER.ochre,
-  "#d97706": GAZETTEER.ochre,
   "#c2410c": GAZETTEER.colRust,
   "#be123c": GAZETTEER.colRust,
 };
@@ -73,26 +79,6 @@ const LEGACY_GOAL_COLOR_TO_GAZETTEER: Record<string, string> = {
 export function toGazetteerDisplayColor(color: string): string {
   const withHash = color.startsWith("#") ? color : `#${color}`;
   return LEGACY_GOAL_COLOR_TO_GAZETTEER[withHash.toLowerCase()] ?? withHash;
-}
-
-export function gazetteerCategoryColor(category: string | null | undefined): string {
-  const normalized = category?.trim().toLowerCase() ?? "";
-  if (normalized === "health") {
-    return GAZETTEER_CATEGORY_COLORS.health;
-  }
-  if (normalized === "career") {
-    return GAZETTEER_CATEGORY_COLORS.career;
-  }
-  if (normalized === "personal") {
-    return GAZETTEER_CATEGORY_COLORS.personal;
-  }
-  if (normalized === "relationships") {
-    return GAZETTEER_CATEGORY_COLORS.relationships;
-  }
-  if (normalized === "finance") {
-    return GAZETTEER_CATEGORY_COLORS.finance;
-  }
-  return GAZETTEER_CATEGORY_COLORS.other;
 }
 
 export function gazetteerFillForGoal(
@@ -103,7 +89,7 @@ export function gazetteerFillForGoal(
   if (trimmed) {
     return toGazetteerDisplayColor(trimmed);
   }
-  return gazetteerCategoryColor(category);
+  return goalCategoryColor(category);
 }
 
 export function getGazetteerHeatmapScaleHex(count: number) {

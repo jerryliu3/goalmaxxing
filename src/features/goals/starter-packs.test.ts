@@ -76,7 +76,7 @@ describe("starter packs", () => {
       careerRows.some((row) => row.frequency_type === "fixed_milestones")
     ).toBe(true);
     expect(
-      relationshipRows.some((row) => row.category === "Relationships")
+      relationshipRows.some((row) => row.category === "Interpersonal")
     ).toBe(true);
   });
 

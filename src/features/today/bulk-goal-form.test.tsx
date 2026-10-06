@@ -7,6 +7,7 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { GOAL_CATEGORY_COLORS } from "@cadence/shared/brand";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BulkGoalForm } from "@/features/today/bulk-goal-form";
 import type { Goal } from "@/lib/goals/types";
@@ -260,7 +261,7 @@ describe("BulkGoalForm", () => {
             description: "Base work",
             category_key: "health",
             category: "Health",
-            color: "#10b981",
+            color: GOAL_CATEGORY_COLORS.health,
             frequency_type: "recurring",
             recurrence_interval: "weekly",
             target_count: 2,
@@ -278,7 +279,7 @@ describe("BulkGoalForm", () => {
             description: null,
             category_key: "personal",
             category: "Personal",
-            color: "#6366f1",
+            color: GOAL_CATEGORY_COLORS.personal,
             frequency_type: "recurring",
             recurrence_interval: "weekly",
             target_count: 12,

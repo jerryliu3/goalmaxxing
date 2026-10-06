@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GAZETTEER_CATEGORY_COLORS } from "@cadence/shared/brand/gazetteer";
+import { GOAL_CATEGORY_COLORS } from "@cadence/shared/brand";
 import {
   buildInsightsLedgerGoals,
   countFilteredInsightsFactsByDay,
@@ -71,7 +71,7 @@ describe("insights ledger model", () => {
       {
         id: "g1",
         title: "Lift",
-        color: GAZETTEER_CATEGORY_COLORS.health,
+        color: GOAL_CATEGORY_COLORS.health,
         rateLabel: "1/3 this period · 1 total",
       },
     ]);

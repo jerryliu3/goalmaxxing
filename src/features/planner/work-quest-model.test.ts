@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GOAL_CATEGORY_COLORS } from "@cadence/shared/brand";
 import {
   formatQuestSittingDate,
   formatQuestSittingTime,
@@ -62,7 +63,7 @@ describe("work quest model", () => {
     expect(quest.id).toBe("tempo-run");
     expect(quest.title).toBe("Tempo run");
     expect(quest.categoryLabel).toBe("Health");
-    expect(quest.color).toBe("#10b981");
+    expect(quest.color).toBe(GOAL_CATEGORY_COLORS.health);
     expect(quest.cadenceLabel).toBe("3 days a week");
     expect(quest.deadlineLabel).toBe("Dec 31, 2026");
     expect(quest.progress).toEqual({

@@ -1,5 +1,6 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { GOAL_CATEGORY_COLORS } from "@cadence/shared/brand";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   CategorySelect,
@@ -25,7 +26,7 @@ describe("CategorySelect", () => {
     render(<CategorySelect value="health" onValueChange={onValueChange} />);
 
     await user.click(screen.getByRole("combobox"));
-    await user.click(screen.getByRole("option", { name: "Relationships" }));
+    await user.click(screen.getByRole("option", { name: "Interpersonal" }));
 
     expect(onValueChange).toHaveBeenCalledWith("relationships");
   });
@@ -37,12 +38,12 @@ describe("CategorySelect", () => {
     await user.click(screen.getByRole("combobox"));
     const listbox = screen.getByRole("listbox");
     expect(within(listbox).getByRole("option", { name: "Personal" })).toBeInTheDocument();
-    expect(within(listbox).getByRole("option", { name: "Relationships" })).toBeInTheDocument();
+    expect(within(listbox).getByRole("option", { name: "Interpersonal" })).toBeInTheDocument();
     expect(within(listbox).getByRole("option", { name: "Health" })).toBeInTheDocument();
     expect(within(listbox).getByRole("option", { name: "Custom" })).toBeInTheDocument();
   });
 
-  it("shows Gazetteer category swatches when the document style is gazetteer", async () => {
+  it("shows the shared category palette in Gazetteer too", async () => {
     const user = userEvent.setup();
     document.documentElement.dataset.uiStyle = "gazetteer";
     render(<CategorySelect value="health" onValueChange={vi.fn()} />);
@@ -50,9 +51,13 @@ describe("CategorySelect", () => {
     await user.click(screen.getByRole("combobox"));
     const health = screen.getByRole("option", { name: "Health" });
     const swatch = health.querySelector("[style]");
+    const [r, g, b] = GOAL_CATEGORY_COLORS.health
+      .slice(1)
+      .match(/../g)!
+      .map((channel) => parseInt(channel, 16));
     expect(swatch).toHaveAttribute(
       "style",
-      expect.stringContaining("rgb(74, 103, 64)")
+      expect.stringContaining(`rgb(${r}, ${g}, ${b})`)
     );
     delete document.documentElement.dataset.uiStyle;
   });

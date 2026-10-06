@@ -1,7 +1,8 @@
 /**
  * The named color library from the brand studies (#964): pigments plus the
  * Mineral Candy, Sorbet, and Pigment palette studies. Authored digital
- * colors, not Pantone specifications.
+ * colors, not Pantone specifications. Goal categories draw from it
+ * (categories.ts).
  */
 export interface ColorSwatch {
   name: string;

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GOAL_CATEGORY_COLORS } from "@cadence/shared/brand";
 import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
 import {
   getDisplayCategorySwatchColor,
@@ -46,7 +47,7 @@ describe("goal visuals", () => {
         color: "0A0B0C",
         category: "Health",
       }).color
-    ).toBe("#10b981");
+    ).toBe(GOAL_CATEGORY_COLORS.health);
   });
 
   it("uses opaque pastel fills with quieter ink and hue for completed tiles", () => {
@@ -126,7 +127,7 @@ describe("goal visuals", () => {
         },
         "gazetteer"
       ).color
-    ).toBe("#4a6740");
+    ).toBe(GOAL_CATEGORY_COLORS.health);
   });
 
   it("keeps goal-level color for custom categories", () => {
@@ -139,9 +140,9 @@ describe("goal visuals", () => {
     ).toBe("#112233");
   });
 
-  it("maps category swatches onto the active theme and keeps custom hexes", () => {
-    expect(getDisplayCategorySwatchColor("health")).toBe("#10b981");
-    expect(getDisplayCategorySwatchColor("health", "gazetteer")).toBe(GAZETTEER.gain);
+  it("keeps the shared category palette in every theme and re-inks custom hexes", () => {
+    expect(getDisplayCategorySwatchColor("health")).toBe(GOAL_CATEGORY_COLORS.health);
+    expect(getDisplayCategorySwatchColor("health", "gazetteer")).toBe(GOAL_CATEGORY_COLORS.health);
     expect(getDisplayCategorySwatchColor("custom", "gazetteer")).toBe(GAZETTEER.muted);
     expect(
       getGoalVisual(

@@ -13,8 +13,10 @@ typefaces out of components; colors stay on roles by convention.
 | `themes/index.ts` | Theme order (first is the default) and lookup |
 | `themes/study.ts` | Builds a study skin from its /ux/brand palette |
 | `css.ts` | Renders `src/app/themes.css` (live themes) and the study-skin CSS |
-| `library/` | The rest of the brand library: archived skins, skin notes, colors |
-| `gazetteer.ts` | Gazetteer palette swatches and goal-category colors |
+| `colors.ts` | The named color library (pigments and palette studies) |
+| `categories.ts` | Goal category colors: the Mineral Candy palette, shared by all themes |
+| `library/` | Archived study skins and per-skin concept notes |
+| `gazetteer.ts` | Gazetteer palette swatches and its legacy goal-color re-inking |
 
 ## How components use it
 
@@ -64,9 +66,17 @@ derived roles and setting `status: "live"`.
 The rest of the brand library sits in `library/`, exported alongside the
 themes: the six archived pairings and the four exploratory skins set aside
 for now (Quarry, Fieldwork, Longplay, Lido) as `StudySkin` data (pass one to
-`studyTheme(...)` to bring it back), concept notes and study-authored styling
-for all sixteen skins (`STUDY_SKIN_NOTES`), the named color library, and the
-Mineral Candy category palette study.
+`studyTheme(...)` to bring it back) and concept notes and study-authored
+styling for all sixteen skins (`STUDY_SKIN_NOTES`).
+
+## Goal categories
+
+Category colors are the same in every theme: the Mineral Candy palette in
+`categories.ts` (Health vermilion, Career Klein blue, Personal ultraviolet,
+Interpersonal black cherry, Finance malachite, Other saffron), each a
+surface/ink pair. The `goal_categories` table and `DEFAULT_GOAL_CATEGORIES`
+(src/lib/goals/category.ts) carry the same surfaces; change all three
+together, with a migration that moves existing goals.
 
 ## Changing or adding a theme
 

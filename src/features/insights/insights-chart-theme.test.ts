@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GOAL_CATEGORY_COLORS } from "@cadence/shared/brand";
 import {
   INSIGHTS_CHART_COLORS,
   insightsCategoryFill,
@@ -11,10 +12,10 @@ describe("insights chart theme", () => {
     expect(INSIGHTS_CHART_COLORS.highlight).toBe("var(--gm-recover)");
   });
 
-  it("maps known categories onto themed fills", () => {
-    expect(insightsCategoryFill("health")).toBe("var(--gm-gain)");
-    expect(insightsCategoryFill("career")).toBe("var(--primary)");
-    expect(insightsCategoryFill("mystery")).toBe("var(--muted-foreground)");
+  it("fills categories from the shared category palette", () => {
+    expect(insightsCategoryFill("health")).toBe(GOAL_CATEGORY_COLORS.health);
+    expect(insightsCategoryFill("career")).toBe(GOAL_CATEGORY_COLORS.career);
+    expect(insightsCategoryFill("mystery")).toBe(GOAL_CATEGORY_COLORS.other);
   });
 
   it("gives every preset category its own fill, distinct from Other", () => {

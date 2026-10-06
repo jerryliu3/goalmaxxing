@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { GOAL_CATEGORY_COLORS } from "./categories";
 import {
   GAZETTEER,
-  GAZETTEER_CATEGORY_COLORS,
   GAZETTEER_HEATMAP_SCALE,
-  gazetteerCategoryColor,
   gazetteerFillForGoal,
   getGazetteerHeatmapScaleHex,
   toGazetteerDisplayColor,
@@ -11,9 +10,9 @@ import {
 
 describe("gazetteer display colors", () => {
   it("maps leftover Tailwind preset hexes onto the paper palette", () => {
-    expect(toGazetteerDisplayColor("#10b981")).toBe(GAZETTEER_CATEGORY_COLORS.health);
+    expect(toGazetteerDisplayColor("#10b981")).toBe(GAZETTEER.gain);
     expect(toGazetteerDisplayColor("#2563eb")).toBe(GAZETTEER.stamp);
-    expect(toGazetteerDisplayColor("#6366f1")).toBe(GAZETTEER_CATEGORY_COLORS.personal);
+    expect(toGazetteerDisplayColor("#6366f1")).toBe(GAZETTEER.mutedDeep);
   });
 
   it("keeps unknown hexes so custom goal colors still win", () => {
@@ -21,19 +20,10 @@ describe("gazetteer display colors", () => {
     expect(toGazetteerDisplayColor("0A0B0C")).toBe("#0A0B0C");
   });
 
-  it("resolves category labels onto earth fills", () => {
-    expect(gazetteerCategoryColor("Health")).toBe(GAZETTEER_CATEGORY_COLORS.health);
-    expect(gazetteerCategoryColor("career")).toBe(GAZETTEER_CATEGORY_COLORS.career);
-    expect(gazetteerCategoryColor("unknown")).toBe(GAZETTEER_CATEGORY_COLORS.other);
-  });
-
   it("prefers stored color over category when both exist", () => {
-    expect(gazetteerFillForGoal("#10b981", "career")).toBe(
-      GAZETTEER_CATEGORY_COLORS.health
-    );
-    expect(gazetteerFillForGoal(null, "Personal")).toBe(
-      GAZETTEER_CATEGORY_COLORS.personal
-    );
+    expect(gazetteerFillForGoal("#10b981", "career")).toBe(GAZETTEER.gain);
+    // Without a stored color, a goal takes its category's shared palette color.
+    expect(gazetteerFillForGoal(null, "Personal")).toBe(GOAL_CATEGORY_COLORS.personal);
   });
 
   it("keeps sage as the chrome secondary distinct from gain green", () => {

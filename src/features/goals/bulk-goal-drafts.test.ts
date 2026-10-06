@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { GOAL_CATEGORY_COLORS } from "@cadence/shared/brand";
 import { createDefaultGoalCreationFields } from "@/lib/goals/creation-model";
 import { buildStarterPackRows } from "@/features/goals/starter-packs";
 import {
@@ -411,8 +412,8 @@ describe("bulk goal drafts", () => {
       description:
         "Set intentional check-ins to align on goals and support.",
       category_key: "relationships",
-      category: "Relationships",
-      color: "#f43f5e",
+      category: "Interpersonal",
+      color: GOAL_CATEGORY_COLORS.relationships,
       frequency_type: "recurring",
       recurrence_interval: "weekly",
       target_count: 10,
@@ -454,7 +455,7 @@ describe("bulk goal drafts", () => {
       description: null,
       category_key: "personal",
       category: "Personal",
-      color: "#6366f1",
+      color: GOAL_CATEGORY_COLORS.personal,
       frequency_type: "recurring",
       recurrence_interval: "weekly",
       target_count: 1,
@@ -564,7 +565,7 @@ describe("bulk goal drafts", () => {
         description: "Base building",
         category_key: "health",
         category: "Health",
-        color: "#10b981",
+        color: GOAL_CATEGORY_COLORS.health,
         frequency_type: "recurring",
         recurrence_interval: "weekly",
         target_count: 4,
