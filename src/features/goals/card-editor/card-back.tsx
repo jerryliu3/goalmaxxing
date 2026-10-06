@@ -27,8 +27,9 @@ const ICONS: Record<BackFact, ComponentType<{ size?: number; className?: string 
 /**
  * The card's back: the goal's quieter settings as grouped rows that edit in place.
  * Without `lifecycle` (a goal not created yet) there is nothing to archive or delete.
+ * `hidden` leaves out rows another surface already owns (creation sets those in its steps).
  */
-export function CardBack({ session, lifecycle }: { session: CardEditorSession; lifecycle?: CardLifecycle }) {
+export function CardBack({ session, lifecycle, hidden = [] }: { session: CardEditorSession; lifecycle?: CardLifecycle; hidden?: BackFact[] }) {
   const [open, setOpen] = useState<BackFact | null>(null);
   const { fields } = session;
   const groups: { title: string; facts: BackFact[] }[] = [
@@ -36,13 +37,16 @@ export function CardBack({ session, lifecycle }: { session: CardEditorSession; l
     { title: "Progress", facts: [...(hasPlaqueTarget(fields) ? (["plaque"] as const) : []), ...(isMilestoneGoal(fields) ? (["milestones"] as const) : [])] },
     { title: "Connections & look", facts: [...(session.link ? (["link"] as const) : []), "color"] },
   ];
+  const shown = groups
+    .map((group) => ({ ...group, facts: group.facts.filter((fact) => !hidden.includes(fact)) }))
+    .filter((group) => group.facts.length > 0);
   return (
     <div className="card-back">
       <header className="card-back-head">
         <span className="card-overline">More about this goal</span>
       </header>
       <div className="card-back-body">
-        {groups.filter((group) => group.facts.length > 0).map((group) => (
+        {shown.map((group) => (
           <section key={group.title} className="card-back-group">
             <h4>{group.title}</h4>
             {group.facts.map((fact) => (

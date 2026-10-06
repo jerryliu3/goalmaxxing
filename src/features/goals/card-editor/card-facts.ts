@@ -7,6 +7,7 @@ import { getGoalPeriodTargetMax } from "@/lib/goals/target-basis";
 import type { GoalDifficulty } from "@/lib/goals/types";
 import type { GoalFormState } from "@/features/today/goal-form-model";
 import { creationPlaqueTarget } from "../card-material/creation-plaque-target";
+import type { CardEditorFields } from "./card-editor-session";
 
 /** Facts the card face prints, in reading order. */
 export type FaceFact = "visibility" | "cadence" | "name" | "category" | "difficulty" | "start" | "deadline" | "time";
@@ -114,7 +115,7 @@ export function summarizeFaceFact(fact: FaceFact, fields: GoalCreationFields): s
   }
 }
 
-export function summarizeBackFact(fact: BackFact, fields: GoalFormState, linkTitle: string | null): string {
+export function summarizeBackFact(fact: BackFact, fields: CardEditorFields, linkTitle: string | null): string {
   switch (fact) {
     case "description":
       return fields.description.trim() || "A line for future you";
