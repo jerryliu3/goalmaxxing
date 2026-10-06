@@ -12,6 +12,16 @@ export default function UxHubPage() {
         </h1>
         <ul className="mt-10 space-y-4">
           <li>
+            <Link className="text-lg font-semibold underline" href="/ux/profile">
+              Profile and Growth — one public profile, four ways to own it
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Agenda · Goals · Growth · Community with the avatar as a button.
+              The public profile as a curated view of Growth: owner page with a
+              visitor preview, a settings card, pinning in place, and audiences.
+            </p>
+          </li>
+          <li>
             <Link className="text-lg font-semibold underline" href="/ux/goal-creation">
               Goal creation — Blank card, Stamp by stamp, Say it
             </Link>

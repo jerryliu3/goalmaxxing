@@ -198,6 +198,10 @@ surfaces. The default is to simplify and reuse what already exists.
   reward placement live in `docs/ux/goalmaxxing-goal-creation-study.md` and
   `/ux/goal-creation`. They compose the production card editor and are
   exploratory, not a product lock.
+  The Growth tab proposal (Agenda · Goals · Growth · Community, avatar stays a
+  button) and public-profile ownership concepts live in
+  `docs/ux/goalmaxxing-profile-study.md` and `/ux/profile`. They are
+  exploratory, not a product lock.
 - Period check-in is an `AppShell` overlay, not a tab or Progress
   destination. Cadence resolves widest-first — monthly on the first of the
   month, weekly on the profile week-start day, daily otherwise — so exactly
