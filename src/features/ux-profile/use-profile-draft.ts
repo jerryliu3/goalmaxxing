@@ -17,6 +17,11 @@ export function useProfileDraft(initial: ProfileDraft = INITIAL_DRAFT) {
   const [pinNotice, setPinNotice] = useState<string | null>(null);
 
   const actions = {
+    /** Discard edits back to a saved snapshot. */
+    restore(snapshot: ProfileDraft) {
+      setDraft(snapshot);
+      setPinNotice(null);
+    },
     setBio(bio: string) {
       setDraft((current) => ({ ...current, bio: bio.slice(0, BIO_LIMIT) }));
     },

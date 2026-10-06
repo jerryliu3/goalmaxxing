@@ -71,7 +71,7 @@ export function AudienceConcept() {
 
         <p role="status" className="mt-5 rounded-[12px] border border-border/70 bg-card px-4 py-3 text-sm">
           {viewer === "owner" ? (
-            "You see everything, including private goals and sections set to Only me."
+            "You see everything, including sections set to Only me."
           ) : (
             <>
               <span className="font-semibold">{viewer === "friend" ? "A friend" : "Anyone"} sees:</span>{" "}
