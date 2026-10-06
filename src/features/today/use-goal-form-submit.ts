@@ -251,10 +251,11 @@ export function useGoalFormSubmit({
     setSaving(false);
   }, [completeAndExit, isEditing, recovery, replaceGoalLink]);
 
+  /** Archives or restores; resolves true once the change is saved. */
   const toggleArchive = useCallback(
-    async (archived: boolean) => {
+    async (archived: boolean): Promise<boolean> => {
       if (!goalId) {
-        return;
+        return false;
       }
       setSaving(true);
 
@@ -266,7 +267,7 @@ export function useGoalFormSubmit({
       if (error) {
         toast.error(error.message);
         setSaving(false);
-        return;
+        return false;
       }
 
       invalidatePlannerRelatedTabCaches();
@@ -275,11 +276,12 @@ export function useGoalFormSubmit({
       if (archived) {
         onExitRefresh?.();
         setSaving(false);
-        return;
+        return true;
       }
 
       (dismissWithoutRefresh ?? completeAndExit)();
       setSaving(false);
+      return true;
     },
     [
       completeAndExit,

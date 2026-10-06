@@ -34,6 +34,7 @@ export function GoalCardEditor({ goalId, onExit, onDismiss }: { goalId: string; 
   const width = useElementWidth(editorRef, typeof window === "undefined" ? ANNOTATED_MIN_WIDTH : window.innerWidth);
   const direct = width < ANNOTATED_MIN_WIDTH;
   const [flipped, setFlipped] = useState(false);
+  const [restoredGoalId, setRestoredGoalId] = useState<string | null>(null);
   const form = useGoalFormState(goalId);
   const { state, setState, selectedLinkTarget, setSelectedLinkTarget, loading, editingGoal } = form;
   useCoachPageContext({ surface: "goal", selectedGoalId: goalId }, 10);
@@ -98,7 +99,8 @@ export function GoalCardEditor({ goalId, onExit, onDismiss }: { goalId: string; 
           }
         : null,
   };
-  const archived = Boolean(editingGoal.archived_at);
+  // The form loads the goal once, so a restore made here is reflected locally.
+  const archived = Boolean(editingGoal.archived_at) && restoredGoalId !== editingGoal.id;
   const card = <TempoGoalCard fields={state} context="history" rotatable={false} />;
   const back = (
     <CardBack
@@ -107,7 +109,7 @@ export function GoalCardEditor({ goalId, onExit, onDismiss }: { goalId: string; 
         archived,
         busy,
         onArchive: () => void submit.toggleArchive(false),
-        onRestore: () => void submit.toggleArchive(true),
+        onRestore: () => void submit.toggleArchive(true).then((restored) => restored && setRestoredGoalId(editingGoal.id)),
         onDelete: () => void submit.softDeleteGoal(),
       }}
     />
