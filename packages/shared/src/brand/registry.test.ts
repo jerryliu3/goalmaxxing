@@ -7,7 +7,14 @@ import {
   SCALE_COLOR_ROLES,
   SURFACE_COLOR_ROLES,
 } from "./roles";
-import { DEFAULT_THEME_ID, getTheme, isThemeId, THEME_IDS, THEMES } from "./themes";
+import {
+  DEFAULT_THEME_ID,
+  GAZETTEER_THEME,
+  getTheme,
+  isThemeId,
+  THEME_IDS,
+  THEMES,
+} from "./themes";
 
 const ROLES = [...SURFACE_COLOR_ROLES, ...APP_COLOR_ROLES, ...SCALE_COLOR_ROLES];
 
@@ -36,6 +43,15 @@ describe("theme registry", () => {
     expect(isThemeId("gazetteer")).toBe(true);
     expect(isThemeId("col")).toBe(false);
     expect(getTheme("gazetteer").fonts.display).toBe("newsreader");
+  });
+
+  it("keeps the roles native reads as plain hex React Native can paint", () => {
+    const nativeRoles = [...SURFACE_COLOR_ROLES, "page", "gain", "recover"] as const;
+    for (const colors of [GAZETTEER_THEME.colors, GAZETTEER_THEME.darkColors]) {
+      for (const role of nativeRoles) {
+        expect(colors[role], role).toMatch(/^#[0-9a-f]{6}$/i);
+      }
+    }
   });
 
   it("maps roles onto the CSS variables components already use", () => {

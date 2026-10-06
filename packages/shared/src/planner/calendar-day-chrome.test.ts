@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { GAZETTEER, gazetteerLightTheme } from "../brand/gazetteer";
+import { GAZETTEER } from "../brand/gazetteer";
+import { GAZETTEER_THEME } from "../brand/themes";
 import {
   buildGazetteerMonthDayChromePalette,
   planHiddenItemCountLabel,
@@ -8,7 +9,7 @@ import {
 } from "./calendar-day-chrome";
 
 describe("gazetteer calendar day chrome", () => {
-  const palette = buildGazetteerMonthDayChromePalette(gazetteerLightTheme, "light");
+  const palette = buildGazetteerMonthDayChromePalette(GAZETTEER_THEME.colors, "light");
 
   it("fills adjacent-month tiles with the adjacent token", () => {
     expect(
@@ -67,8 +68,8 @@ describe("gazetteer calendar day chrome", () => {
       palette
     );
     expect(selected.selectedRing).toBe(true);
-    expect(selected.numberColor).toBe(gazetteerLightTheme.primary);
-    expect(selected.backgroundColor).toBe(gazetteerLightTheme.page);
+    expect(selected.numberColor).toBe(GAZETTEER_THEME.colors.primary);
+    expect(selected.backgroundColor).toBe(GAZETTEER_THEME.colors.page);
   });
 
   it("hides overflow remainder as +N more", () => {

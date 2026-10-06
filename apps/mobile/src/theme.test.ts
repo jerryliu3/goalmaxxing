@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { GAZETTEER, gazetteerLightTheme } from "@cadence/shared/brand/gazetteer";
+import { GAZETTEER_THEME } from "@cadence/shared/brand";
+import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
 
 vi.mock("react-native", () => ({
   Platform: { select: (value: { default: unknown }) => value.default },
@@ -22,8 +23,8 @@ import { gazetteerFallbackFonts, gazetteerLoadedFonts } from "./ui/gazetteer-fon
 
 describe("mobile Gazetteer theme", () => {
   it("keeps paper, walnut, stamp rust, and Gazetteer type names", () => {
-    expect(gazetteerLightTheme.primary).toBe(GAZETTEER.stamp);
-    expect(gazetteerLightTheme.background).toBe(GAZETTEER.page);
+    expect(GAZETTEER_THEME.colors.primary).toBe(GAZETTEER.stamp);
+    expect(GAZETTEER_THEME.colors.foreground).toBe(GAZETTEER.ink);
     expect(gazetteerLoadedFonts.display).toBe("Newsreader_600SemiBold");
     expect(gazetteerLoadedFonts.sans).toBe("SourceSans3_400Regular");
     expect(gazetteerLoadedFonts.mono).toBe("IBMPlexMono_500Medium");
