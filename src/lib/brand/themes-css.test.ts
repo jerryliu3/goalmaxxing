@@ -12,10 +12,10 @@ describe("web theme sources", () => {
     expect(generated).toBe(renderThemeCss());
   });
 
-  it("loads every registry font under its registry variable", () => {
+  it("bundles every live face under its registry variable, and no study face", () => {
     const loaders = readFileSync(join(repoRoot, "src/lib/brand/fonts.ts"), "utf8");
-    for (const font of Object.values(FONTS)) {
-      expect(loaders).toContain(`variable: "${font.cssVariable}"`);
+    for (const font of Object.values(FONTS) as { cssVariable: string; googleWeights?: unknown }[]) {
+      expect(loaders.includes(`variable: "${font.cssVariable}"`)).toBe(!font.googleWeights);
     }
   });
 });

@@ -1,4 +1,4 @@
-import { fontStack } from "./fonts";
+import { FONTS, fontStack, type FontDefinition } from "./fonts";
 import {
   APP_COLOR_ROLES,
   colorRoleUtility,
@@ -75,9 +75,8 @@ function tailwindTheme() {
   );
 }
 
-function themeBlock(theme: ThemeDefinition, isDefault: boolean) {
-  const scope = `[data-ui-style="${theme.id}"]`;
-  return block(isDefault ? [":root", scope] : [scope], [
+function themeBlock(theme: ThemeDefinition, selectors: string[]) {
+  return block(selectors, [
     `--radius: ${theme.radiusRem}rem`,
     ...colorDeclarations(theme.colors),
     `--font-app-sans: ${fontStack(theme.fonts.sans)}`,
@@ -85,19 +84,46 @@ function themeBlock(theme: ThemeDefinition, isDefault: boolean) {
     `--font-app-mono: ${fontStack(theme.fonts.mono)}`,
     ...textDeclarations(theme),
     `--gm-landing-atmosphere: ${theme.effects.landingAtmosphere}`,
+    `color-scheme: ${theme.appearance}`,
   ]);
 }
 
 /**
- * The web stylesheet for every theme. A theme applies to `<html>` or any
- * subtree through `data-ui-style="<id>"`; the first theme is also `:root`.
- * The web app has no dark mode, so `darkColors` are native-only.
+ * The web stylesheet, generated into src/app/themes.css: Tailwind's mapping,
+ * the text-role utilities, and every live theme. A theme applies to `<html>`
+ * or any subtree through `data-ui-style="<id>"`; the first theme is also
+ * `:root`. The web app has no dark mode, so `darkColors` are native-only.
  */
 export function renderThemeCss(themes: readonly ThemeDefinition[] = THEMES): string {
+  const live = themes.filter((theme) => theme.status === "live");
   return `${[
     HEADER,
     tailwindTheme(),
     ...textUtilities(),
-    ...themes.map((theme, index) => themeBlock(theme, index === 0)),
+    ...live.map((theme, index) => {
+      const scope = `[data-ui-style="${theme.id}"]`;
+      return themeBlock(theme, index === 0 ? [":root", scope] : [scope]);
+    }),
   ].join("\n\n")}\n`;
+}
+
+/**
+ * Study skins, injected by the root layout only while STUDY_THEMES_ENABLED is
+ * on: their faces (loaded from Google Fonts) and their theme blocks. The
+ * `:root[...]` selector outranks the default theme's `:root` wherever the
+ * injected sheet lands in the cascade.
+ */
+export function renderStudyThemeCss(themes: readonly ThemeDefinition[] = THEMES): string {
+  const faces = Object.values(FONTS as Record<string, FontDefinition>)
+    .filter((font) => font.googleWeights)
+    .map((font) => `${font.cssVariable}: "${font.family}"`);
+  return [
+    block([":root"], faces),
+    ...themes
+      .filter((theme) => theme.status === "study")
+      .map((theme) => {
+        const scope = `[data-ui-style="${theme.id}"]`;
+        return themeBlock(theme, [`:root${scope}`, scope]);
+      }),
+  ].join("\n");
 }

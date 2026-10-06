@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { DEFAULT_THEME_ID, getTheme, THEMES } from "@cadence/shared/brand";
-import { applyDocumentUiStyle, parseUiStyleId, resolveUiStyleId } from "@/lib/brand/ui-style";
+import { DEFAULT_THEME_ID, getTheme } from "@cadence/shared/brand";
+import {
+  applyDocumentUiStyle,
+  parseUiStyleId,
+  resolveUiStyleId,
+  uiStyleOptions,
+} from "@/lib/brand/ui-style";
 
 describe("ui style catalog", () => {
   afterEach(() => {
@@ -13,8 +18,27 @@ describe("ui style catalog", () => {
     expect(DEFAULT_THEME_ID).toBe("original");
   });
 
-  it("lists original then gazetteer so later skins can append", () => {
-    expect(THEMES.map((style) => style.id)).toEqual(["original", "gazetteer"]);
+  it("offers the live styles, and study skins only when they are rolled out", () => {
+    expect(uiStyleOptions().map((style) => style.id)).toEqual(["original", "gazetteer"]);
+    expect(uiStyleOptions(true).map((style) => style.id)).toEqual([
+      "original",
+      "gazetteer",
+      "undertow",
+      "kiln",
+      "court",
+      "opaline",
+      "bloodstone",
+      "pitlane",
+      "quarry",
+      "fieldwork",
+      "longplay",
+      "lido",
+    ]);
+  });
+
+  it("falls back to Original for a study cookie while studies are off", () => {
+    expect(parseUiStyleId("pitlane")).toBe("original");
+    expect(parseUiStyleId("pitlane", true)).toBe("pitlane");
   });
 
   it("reads the document dataset when no explicit id is passed", () => {

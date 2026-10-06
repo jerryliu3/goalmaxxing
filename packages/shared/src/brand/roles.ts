@@ -108,6 +108,9 @@ export interface ThemeDefinition {
   readonly id: string;
   readonly label: string;
   readonly description: string;
+  /** `study` skins are offered only while STUDY_THEMES_ENABLED is on. */
+  readonly status: "live" | "study";
+  readonly appearance: "light" | "dark";
   /** Faces for body copy, display type, and figures. */
   readonly fonts: Readonly<Record<FontSlot, FontId>>;
   readonly text: ThemeText;

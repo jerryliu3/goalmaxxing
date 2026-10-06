@@ -146,6 +146,7 @@
   --type-figure-weight: 400;
   --type-eyebrow-tracking: 0.12em;
   --gm-landing-atmosphere: radial-gradient(1200px circle at 12% -8%, rgba(191, 219, 254, 0.7), transparent 55%), radial-gradient(900px circle at 92% 6%, rgba(219, 234, 254, 0.8), transparent 52%), radial-gradient(800px circle at 78% 88%, rgba(224, 231, 255, 0.45), transparent 50%);
+  color-scheme: light;
 }
 
 [data-ui-style="gazetteer"] {
@@ -208,4 +209,5 @@
   --type-figure-weight: 400;
   --type-eyebrow-tracking: 0.12em;
   --gm-landing-atmosphere: radial-gradient(1200px circle at 12% -8%, rgba(154, 79, 44, 0.12), transparent 55%), radial-gradient(900px circle at 92% 6%, rgba(212, 196, 164, 0.55), transparent 52%), radial-gradient(800px circle at 78% 88%, rgba(74, 103, 64, 0.12), transparent 50%);
+  color-scheme: light;
 }

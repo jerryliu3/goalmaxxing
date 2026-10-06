@@ -11,7 +11,8 @@ typefaces out of components; colors stay on roles by convention.
 | `fonts.ts` | Every typeface a theme may use, and its CSS variable |
 | `themes/*.ts` | One file per theme, filling every role |
 | `themes/index.ts` | Theme order (first is the default) and lookup |
-| `css.ts` | Renders the web stylesheet `src/app/themes.css` |
+| `themes/study.ts` | Builds a study skin from its /ux/brand palette |
+| `css.ts` | Renders `src/app/themes.css` (live themes) and the study-skin CSS |
 | `gazetteer.ts` | Gazetteer palette swatches and goal-category colors |
 
 ## How components use it
@@ -45,6 +46,23 @@ A theme applies to the document through `data-ui-style="<id>"` on `<html>`,
 or to any subtree with the same attribute. The web app has no dark mode:
 `darkColors` are read by native only, and Tailwind's `dark:` variant follows a
 `.dark` class that nothing sets.
+
+## Live themes and study skins
+
+Original and Gazetteer are `live`: they are the only themes in
+`src/app/themes.css` and the only faces bundled through `next/font`.
+
+Ten /ux/brand skins are `study` themes (shortlisted: Undertow, Kiln, Centre
+Court, Opaline, Bloodstone, Pitlane; exploratory: Quarry, Fieldwork,
+Longplay, Lido). Each keeps its authored palette, faces, and weights;
+`themes/study.ts` derives the rest. Only while `STUDY_THEMES_ENABLED` is on
+(default on in `next dev`) does the root layout inject their CSS and one
+Google Fonts stylesheet, the picker offer them, and the cookie honor them, so
+production pages carry none of it. Promoting a skin means hand-tuning its
+derived roles and setting `status: "live"`.
+
+The rest of the brand library (archived pairings, concept notes, the color
+library, Mineral Candy) is reference data in `src/features/ux-brand/library`.
 
 ## Changing or adding a theme
 

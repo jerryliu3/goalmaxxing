@@ -1,5 +1,5 @@
 import { Geist, Geist_Mono, IBM_Plex_Mono, Newsreader, Source_Sans_3 } from "next/font/google";
-import type { FontId } from "@cadence/shared/brand";
+import type { BundledFontId } from "@cadence/shared/brand";
 
 /*
  * next/font needs literal options, so each `variable` repeats the registry's
@@ -20,7 +20,8 @@ const plexMono = IBM_Plex_Mono({
   weight: ["400", "500", "600"],
 });
 
-const FONT_LOADERS: Record<FontId, { variable: string }> = {
+// Study faces are not bundled; they load from Google Fonts while enabled.
+const FONT_LOADERS: Record<BundledFontId, { variable: string }> = {
   geist,
   "geist-mono": geistMono,
   newsreader,
