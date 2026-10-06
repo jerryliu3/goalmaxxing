@@ -120,9 +120,10 @@ export function AppShell({
               <div>
                 <div className="relative z-10 flex min-h-screen w-full justify-center bg-page px-4 py-4 sm:px-6 sm:py-6 lg:px-12">
                   <div className={`${coachStyles.appLayout} flex w-full flex-col gap-4 md:gap-6`}>
-                  {/* Three zones at one 36px control height: status, destinations, then
-                      coach and the account menu (which also holds Solo / Duo). One row from
-                      lg; tabs wrap below on tablets. */}
+                  {/* Three zones: status, destinations, then coach and the account menu
+                      (which also holds Solo / Duo). Controls are 36px; the avatar is 40px
+                      to match the wordmark meter's height. One row from lg; tabs wrap
+                      below on tablets. */}
                   <header
                     data-testid="app-shell-header"
                     data-coach-anchor

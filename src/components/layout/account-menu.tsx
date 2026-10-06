@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Check, ChevronDown, Settings, UserRound } from "lucide-react";
+import { Check, Settings, UserRound } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import type { DuoScope } from "@cadence/shared/social/duo";
 import { useDuo, useDuoScope } from "@/features/social/duo/duo-context";
@@ -17,12 +17,19 @@ const SCOPE_OPTIONS: ReadonlyArray<{ value: DuoScope; label: string }> = [
   { value: "both", label: "Duo" },
 ];
 
-function Face({ person, showPhoto, size }: { person: Person; showPhoto: boolean; size: "md" | "sm" }) {
-  const box = size === "md" ? "size-8" : "size-7";
+// The header face is the trigger itself, so it can be as large as the
+// wordmark meter beside it; menu rows use the small one.
+const FACE_SIZE = {
+  lg: { box: "size-10 text-sm", icon: "size-5", overlap: "-ml-3.5" },
+  sm: { box: "size-7 text-[11px]", icon: "size-4", overlap: "-ml-2.5" },
+} as const;
+type FaceSize = keyof typeof FACE_SIZE;
+
+function Face({ person, showPhoto, size }: { person: Person; showPhoto: boolean; size: FaceSize }) {
   const words = person.name.trim().split(/\s+/).filter(Boolean);
   const initials = (words.length > 1 ? words[0][0] + words[1][0] : person.name.trim().slice(0, 2)).toUpperCase();
   return (
-    <span className={cn(box, "relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-[11px] font-medium text-muted-foreground ring-2 ring-background")}>
+    <span className={cn(FACE_SIZE[size].box, "relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted font-medium text-muted-foreground ring-2 ring-background")}>
       {showPhoto && person.avatarUrl ? (
         // Remote avatar URLs from Supabase storage; next/image would need per-host config.
         // eslint-disable-next-line @next/next/no-img-element
@@ -30,19 +37,19 @@ function Face({ person, showPhoto, size }: { person: Person; showPhoto: boolean;
       ) : showPhoto && initials ? (
         initials
       ) : (
-        <UserRound aria-hidden="true" className="size-4" />
+        <UserRound aria-hidden="true" className={FACE_SIZE[size].icon} />
       )}
     </span>
   );
 }
 
 /** Overlapping faces: one for Solo or Partner, both for Duo. */
-function Faces({ people, showPhoto, size = "md" }: { people: Person[]; showPhoto: boolean; size?: "md" | "sm" }) {
+function Faces({ people, showPhoto, size = "lg" }: { people: Person[]; showPhoto: boolean; size?: FaceSize }) {
   return (
     <span className="flex items-center" aria-hidden="true">
       {people.map((person, index) => (
         // Earlier faces sit in front, so the viewer leads the Duo stack.
-        <span key={`${person.name}-${index}`} className={cn("relative", index > 0 && (size === "md" ? "-ml-3" : "-ml-2.5"))} style={{ zIndex: people.length - index }}>
+        <span key={`${person.name}-${index}`} className={cn("relative", index > 0 && FACE_SIZE[size].overlap)} style={{ zIndex: people.length - index }}>
           <Face person={person} showPhoto={showPhoto} size={size} />
         </span>
       ))}
@@ -53,7 +60,8 @@ function Faces({ people, showPhoto, size = "md" }: { people: Person[]; showPhoto
 /**
  * The avatar is the account menu, as in most consumer apps: it always opens the
  * menu, which holds the Solo / Partner / Duo view (when paired) and profile.
- * The trigger shows whose plan is on screen.
+ * The trigger is just the faces, with no pill or chevron around them, so the
+ * photo gets the header's full height and shows whose plan is on screen.
  */
 export function AccountMenu({ settingsHref, showPhotos }: { settingsHref: string; showPhotos: boolean }) {
   const pathname = usePathname();
@@ -79,10 +87,9 @@ export function AccountMenu({ settingsHref, showPhotos }: { settingsHref: string
       <DropdownMenu.Trigger
         data-onboarding="nav.settings"
         aria-label={partner ? `Account menu, ${selectedLabel} view` : "Account menu"}
-        className="flex h-9 shrink-0 items-center gap-1 rounded-full border border-border bg-background pr-2 pl-0.5 transition-colors outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=open]:bg-muted"
+        className="flex shrink-0 items-center rounded-full transition-[box-shadow,opacity] outline-none hover:opacity-90 hover:ring-2 hover:ring-border focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=open]:ring-2 data-[state=open]:ring-border"
       >
         <Faces people={facesFor(scope)} showPhoto={showPhotos} />
-        <ChevronDown aria-hidden="true" className="size-3.5 text-muted-foreground" />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
