@@ -12,7 +12,7 @@ import { EarnedCeremony, type FlightOrigin } from "./earned-ceremony";
 import { studyFields } from "./study-model";
 import styles from "./plaque-motion.module.css";
 
-export function PlaqueMotionStudy({ share = false }: { share?: boolean }) {
+export function PlaqueMotionStudy() {
   const [scene, setScene] = useState<"review" | "earned">("review");
   const [target, setTarget] = useState(12);
   const [difficulty, setDifficulty] = useState<GoalCreationFields["difficulty"]>("hard");
@@ -28,7 +28,7 @@ export function PlaqueMotionStudy({ share = false }: { share?: boolean }) {
   const close = () => { setOrigin(null); requestAnimationFrame(() => trigger.current?.focus()); };
   return <main className={styles.page}>
     <div className={styles.container}>
-      {!share && <Link href="/ux/brand/card-rewards" className={styles.back}>← Card reward studies</Link>}
+      <Link href="/ux/brand/card-rewards" className={styles.back}>← Card reward studies</Link>
       <header className={styles.header}>
         <p className={styles.eyebrow}>Motion study / sample data</p>
         <h1>From intention<br />to keepsake.</h1>

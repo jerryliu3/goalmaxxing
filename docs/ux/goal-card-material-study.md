@@ -1,7 +1,6 @@
 # Goal card materials — twelve directions
 
 Study route: `/ux/brand/card-materials` (existing UX labs access applies).
-Unlisted public share URL: `/demo/card-materials` (noindex, no demo chrome, nothing in nav).
 All twelve render the real `TempoGoalCard`. Category color, information hierarchy,
 schedule, effort, and creation/history copy come from the same component used
 in the product. The full nine-material exploration remains scoped to this

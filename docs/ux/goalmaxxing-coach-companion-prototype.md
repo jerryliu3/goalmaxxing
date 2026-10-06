@@ -1,6 +1,7 @@
 # Companion: a continuous coach experience
 
-Interactive reference: `/prototype/coach`. This is an unlisted, noindex frontend
+Interactive reference: `/prototype/coach`, behind the moderator-only UX lab gate.
+This is an unlisted, noindex frontend
 study with fixed sample data for Friday, October 2, 2026. It makes no coach,
 planner, or digest API calls. It does not replace the production AppShell or the
 existing coach. Refresh or Reset clears the sample state. Responses are scripted,

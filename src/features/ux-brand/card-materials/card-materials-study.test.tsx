@@ -146,14 +146,4 @@ describe("card material comparison", () => {
     expect(screen.getByRole("combobox", { name: "Material" })).toHaveDisplayValue("Sapphire Prism");
   });
 
-  it("hides lab-only links on the public share page", () => {
-    render(<CardMaterialsStudy share />);
-    expect(screen.queryByRole("link", { name: "Visual language gallery" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /Explore reward transformations/ })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Try the folio opening/ })).toHaveAttribute(
-      "href",
-      "/demo/insights/folios"
-    );
-  });
-
 });
