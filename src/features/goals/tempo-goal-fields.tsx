@@ -38,8 +38,10 @@ import type {
 
 const REVIEW_LABELS: Partial<Record<FaceFact, string>> = {
   cadence: "Your target",
-  start: "Starts",
+  name: "Your goal",
+  start: "Start date",
   stretch: "Stretch · sets its finish",
+  time: "Time of day",
 };
 
 /**
@@ -206,7 +208,7 @@ export function TempoGoalFields({
       {step === 3 && !isPlannerTask ? (
         // The review labels each part of the plaque it is about to create (read-only).
         <div className="tempo-review-legend">
-          <AnnotatedCard fields={fields} card={previewCard} labels={REVIEW_LABELS} hidden={unprintedFacts(fields)} />
+          <AnnotatedCard fields={fields} card={previewCard} labels={REVIEW_LABELS} hidden={unprintedFacts(fields)} labelsOnly />
         </div>
       ) : (
         previewCard

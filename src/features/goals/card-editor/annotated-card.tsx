@@ -37,6 +37,7 @@ export function AnnotatedCard({
   flipped = false,
   labels,
   hidden = [],
+  labelsOnly = false,
 }: {
   fields: GoalCreationFields;
   card: ReactNode;
@@ -45,6 +46,8 @@ export function AnnotatedCard({
   flipped?: boolean;
   labels?: Partial<Record<FaceFact, string>>;
   hidden?: FaceFact[];
+  /** Read-only legend: each callout names the part; the card already shows its value. */
+  labelsOnly?: boolean;
 }) {
   const [open, setOpen] = useState<FaceFact | null>(null);
   const [hover, setHover] = useState<FaceFact | null>(null);
@@ -173,6 +176,10 @@ export function AnnotatedCard({
             <span className="card-overline">{label(fact)}</span>
             <span className="card-callout-value" data-anchor>{value}<Pencil size={11} aria-hidden="true" /></span>
           </button>
+        ) : labelsOnly ? (
+          <div className="card-callout-body">
+            <span className="card-callout-name" data-anchor>{label(fact)}</span>
+          </div>
         ) : (
           <div className="card-callout-body">
             <span className="card-overline">{label(fact)}</span>

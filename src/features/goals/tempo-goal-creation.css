@@ -1066,4 +1066,5 @@
   .tempo-review-legend .card-callout-body { padding: 3px 2px; }
   .tempo-review-legend .card-overline { font-size: 7.5px; letter-spacing: .06em; }
   .tempo-review-legend .card-callout-value { min-height: 0; font-size: 11.5px; line-height: 1.25; }
+  .tempo-review-legend .card-callout-name { font-size: 12px; line-height: 1.25; }
 }
