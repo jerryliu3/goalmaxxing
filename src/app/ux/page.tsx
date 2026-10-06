@@ -43,12 +43,12 @@ export default function UxHubPage() {
           </li>
           <li>
             <Link className="text-lg font-semibold underline" href="/ux/medals">
-              Medals — Postmark, Seal, Enamel and Coin
+              Medals — Prism (chosen) and Machined
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">
-              Four award directions with named ranks, honest locked states, an
-              unlock moment, and how each extends to challenge, leaderboard,
-              streak, goal and team medals.
+              Premium medals cut from the goal card materials (alloy, glass,
+              chromatic, sapphire, gold), one form per family, with the flat
+              Tile, Token and Mark systems kept as references.
             </p>
           </li>
           <li>

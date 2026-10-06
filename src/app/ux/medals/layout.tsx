@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 export const metadata: Metadata = {
   title: "Medals study · Goalmaxxing",
   description:
-    "Four Gazetteer medal directions — postmark, letterpress seal, enamel pin, engraved coin — with named ranks, locked states, unlock moments, and future families.",
+    "Round 3 premium medals — Machined and Prism — built from the goal card's materials (anodized metal, enamel, crystal, chromatic foil) across every award family, beside the real card, with the Round 2 flat systems kept as references.",
   robots: { index: false, follow: false },
 };
 
