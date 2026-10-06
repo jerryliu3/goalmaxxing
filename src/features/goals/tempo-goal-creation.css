@@ -961,6 +961,31 @@
 .tempo-card[data-tempo-goal-card] .tempo-card-dates {
   font-size: 2.91cqi;
 }
+.tempo-card-dates {
+  align-items: flex-end;
+}
+.tempo-card-date-range {
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 0.35em;
+  row-gap: 0.15em;
+}
+.tempo-card-date-line {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+.tempo-card-date-only {
+  grid-column: 1 / -1;
+}
+.tempo-card-date-line,
+.tempo-card-time {
+  min-height: 1.25em;
+  line-height: 1.25;
+}
+.tempo-card-time {
+  text-align: right;
+}
 .tempo-card-footer {
   margin-top: 0.2rem;
 }

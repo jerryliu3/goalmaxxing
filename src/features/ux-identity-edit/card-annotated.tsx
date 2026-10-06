@@ -10,8 +10,8 @@ import type { EditSession } from "./use-edit-session";
 
 // Facts printed at the card's left edge call out left; full-width and right-edge facts call
 // out right, so no leader line crosses the face.
-const LEFT: FaceFact[] = ["visibility", "category", "start", "time"];
-const RIGHT: FaceFact[] = ["cadence", "name", "stretch", "deadline"];
+const LEFT: FaceFact[] = ["visibility", "category", "start", "deadline"];
+const RIGHT: FaceFact[] = ["cadence", "name", "stretch", "time"];
 const GAP = 8;
 
 interface Line {

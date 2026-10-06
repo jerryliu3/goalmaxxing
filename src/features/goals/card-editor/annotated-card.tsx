@@ -11,9 +11,9 @@ import { boxWithin, useCardRegions } from "./use-card-regions";
 import "./card-editor.css";
 
 // Facts printed at the card's left edge call out left (the target sits beside its number);
-// the title, effort and right-edge facts call out right, so no leader line crosses the face.
-const LEFT: FaceFact[] = ["visibility", "cadence", "category", "start", "time"];
-const RIGHT: FaceFact[] = ["name", "difficulty", "deadline"];
+// the title, effort and time call out right, so no leader line crosses the face.
+const LEFT: FaceFact[] = ["visibility", "cadence", "category", "start", "deadline"];
+const RIGHT: FaceFact[] = ["name", "difficulty", "time"];
 // Space between stacked callouts; a legend's one-line names can sit closer.
 const GAP = 8;
 const LABEL_GAP = 2;
@@ -89,7 +89,7 @@ export function AnnotatedCard({
         const anchor = node.querySelector<HTMLElement>("[data-anchor]");
         // offsetTop is measured inside the callout's border, so add it back.
         const anchorY = node.clientTop + (anchor ? anchor.offsetTop + anchor.offsetHeight / 2 : 30);
-        const target = stage.y + region.y + region.height / 2;
+        const target = stage.y + (region.point?.y ?? region.midY);
         const top = Math.max(target - columnTop - anchorY, cursor);
         tops[region.fact] = top;
         cursor = top + node.offsetHeight + (labelsOnly ? LABEL_GAP : GAP);
@@ -97,7 +97,7 @@ export function AnnotatedCard({
           fact: region.fact,
           x1: side === "left" ? left.x + left.width : right.x,
           y1: columnTop + top + anchorY,
-          x2: stage.x + (side === "left" ? region.x - 4 : region.x + region.width + 4),
+          x2: stage.x + (side === "left" ? region.x - 4 : (region.point?.x ?? region.x + region.width) + 4),
           y2: target,
         });
       }

@@ -134,7 +134,11 @@ export function TempoGoalCard({
         </div> : null}
         <h2>
           {renderLettering(
-            fields.title.trim() || "Something worth starting.",
+            <>
+              {fields.title.trim() || "Something worth starting."}
+              {/* Marks where the title's last word ends, for callouts that point at it. */}
+              <span className="tempo-card-title-end" aria-hidden="true" />
+            </>,
             "title",
           )}
         </h2>
@@ -161,23 +165,34 @@ export function TempoGoalCard({
             </div>
           )}
         </div>
+        {/* Fixed corners: dates stacked bottom-left, time bottom-right. Every line is
+            reserved even when empty, so filling one in never shifts the face. */}
         <div className="tempo-card-meta tempo-card-dates">
-          <span>{isTask ? taskSchedule?.date : `From ${fields.start_date}`}</span>
-          {visibility.schedule && (
-            <span>
-              {isTask
-                ? taskSchedule?.time || "Any time"
-                : fields.end_date
-                  ? `Until ${fields.end_date}`
-                  : ""}
+          {/* Label and date columns are shared, so the two dates always line up. */}
+          <span className="tempo-card-date-range">
+            <span className="tempo-card-date-line">
+              {isTask ? (
+                <span className="tempo-card-date-only">{taskSchedule?.date}</span>
+              ) : (
+                <>
+                  <span>From</span>
+                  <span>{fields.start_date}</span>
+                </>
+              )}
             </span>
-          )}
+            <span className="tempo-card-date-line">
+              {visibility.schedule && !isTask && fields.end_date ? (
+                <>
+                  <span>Until</span>
+                  <span>{fields.end_date}</span>
+                </>
+              ) : null}
+            </span>
+          </span>
+          <span className="tempo-card-time">
+            {visibility.schedule ? (isTask ? taskSchedule?.time || "Any time" : fields.default_local_time) : ""}
+          </span>
         </div>
-        {visibility.schedule && !isTask && fields.default_local_time && (
-          <div className="tempo-card-meta">
-            <span>{fields.default_local_time}</span>
-          </div>
-        )}
       </article>
     </div>
   );

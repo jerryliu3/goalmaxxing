@@ -11,6 +11,10 @@ export interface FaceRegion {
   height: number;
   /** False when the card prints nothing for it yet (no deadline, no time). */
   present: boolean;
+  /** The printed line's middle; the hit area below it may be taller. */
+  midY: number;
+  /** Where a leader line should touch, when that isn't the box's edge (the title's last word). */
+  point?: { x: number; y: number };
 }
 
 /**
@@ -23,13 +27,14 @@ const SELECTORS: [FaceFact, string][] = [
   ["name", "[data-tempo-goal-card] h2"],
   ["category", ".tempo-card-period"],
   ["difficulty", ".tempo-card-effort"],
-  ["start", ".tempo-card-dates > span:first-child"],
-  ["deadline", ".tempo-card-dates > span:last-child"],
-  ["time", ".tempo-card-dates + .tempo-card-meta > span"],
+  ["start", ".tempo-card-date-line:first-child"],
+  ["deadline", ".tempo-card-date-line:last-child"],
+  ["time", ".tempo-card-time"],
 ];
 
 const MIN_WIDTH = 72;
 const MIN_HEIGHT = 20;
+const TITLE_POINT_GAP = 3;
 
 export interface Box {
   x: number;
@@ -62,33 +67,22 @@ export function useCardRegions(container: RefObject<HTMLElement | null>, version
     const root = container.current;
     if (!root) return;
     const measure = () => {
-      const dates = boxWithin(root.querySelector(".tempo-card-dates"), root);
-      const article = root.querySelector("[data-tempo-goal-card]");
-      const card = boxWithin(article, root);
       const next = SELECTORS.map(([fact, selector]): FaceRegion => {
-        const box = boxWithin(root.querySelector(selector), root);
-        if (box && box.width > 1) {
-          // The effort bars keep their true width so controls can sit right beside them.
-          const width = fact === "difficulty" ? box.width : Math.max(box.width, MIN_WIDTH);
-          // Right-aligned facts grow leftward so the hit area stays on the card.
-          const x = fact === "deadline" || fact === "difficulty" ? box.x + box.width - width : box.x;
-          return { fact, x, y: box.y, width, height: Math.max(box.height, MIN_HEIGHT), present: true };
-        }
-        // Absent facts get a ghost slot exactly where the card would print them.
-        const anchor = dates ?? card;
-        if (!anchor) return { fact, x: 0, y: 0, width: 0, height: 0, present: false };
-        if (fact === "time" && card) {
-          // The time prints as the next row under the dates: one row gap down, inside the
-          // card's bottom padding so the slot always reads as part of the face.
-          const style = article ? getComputedStyle(article) : null;
-          const rowGap = parseFloat(style?.rowGap ?? "") || 6;
-          const inset = (parseFloat(style?.paddingBottom ?? "") || 12) / 2;
-          const height = Math.max(anchor.height, 16);
-          const y = Math.min(anchor.y + anchor.height + rowGap, card.y + card.height - inset - height);
-          return { fact, x: anchor.x, y, width: MIN_WIDTH + 24, height, present: false };
-        }
-        const x = fact === "deadline" ? anchor.x + anchor.width - MIN_WIDTH : anchor.x;
-        return { fact, x, y: anchor.y, width: MIN_WIDTH, height: Math.max(anchor.height, 16), present: false };
+        const element = root.querySelector(selector);
+        const box = boxWithin(element, root);
+        if (!box) return { fact, x: 0, y: 0, width: 0, height: 0, present: false, midY: 0 };
+        // The card reserves every fact's line, so an empty fact still has a place: the
+        // slot sits exactly where its value will print. The effort bars are drawn, not text.
+        const present = fact === "difficulty" ? box.width > 1 : Boolean(element?.textContent?.trim());
+        // The effort bars keep their true width so controls can sit right beside them.
+        const width = fact === "difficulty" ? box.width : Math.max(box.width, present ? MIN_WIDTH : MIN_WIDTH + 24);
+        // Right-aligned facts grow leftward so the hit area stays on the card.
+        const x = fact === "time" || fact === "difficulty" ? box.x + box.width - width : box.x;
+        const end = fact === "name" ? boxWithin(root.querySelector(".tempo-card-title-end"), root) : null;
+        // Clear of the last letter, so the line reads as pointing at the whole title.
+        const point = end ? { x: end.x + TITLE_POINT_GAP, y: end.y + end.height / 2 } : undefined;
+        const height = Math.max(box.height, present ? MIN_HEIGHT : 16);
+        return { fact, x, y: box.y, width, height, present, midY: box.y + box.height / 2, point };
       });
       setLayout({ regions: next, width: root.offsetWidth });
     };
