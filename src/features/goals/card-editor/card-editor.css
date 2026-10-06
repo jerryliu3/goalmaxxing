@@ -33,6 +33,9 @@
 .card-reverse { transform: rotateY(180deg); }
 .card-scene[data-back="true"] .card-front { transform: rotateY(-180deg); }
 .card-scene[data-back="true"] .card-reverse { transform: rotateY(0deg); }
+/* Forward: back to the face by turning on in the same direction, a full revolution. */
+.card-scene[data-forward][data-back="false"] .card-front { transform: rotateY(-360deg); }
+.card-scene[data-forward][data-back="false"] .card-reverse { transform: rotateY(-180deg); }
 /* Hide the side facing away at the midpoint of the turn (the symmetric ease puts 90° at .35s): a card with 3D edges (the creation
    preview) would otherwise show them through the other side. */
 .card-scene[data-back="true"] .card-front, .card-scene[data-back="false"] .card-reverse { visibility: hidden; }

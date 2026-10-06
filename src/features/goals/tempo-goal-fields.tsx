@@ -124,6 +124,7 @@ export function TempoGoalFields({
     creationPlaqueTarget(fields),
   );
   const [plaqueTouched, setPlaqueTouched] = useState(false);
+  const [reviewTurn, setReviewTurn] = useState(false);
   const choose = (patch: Partial<TempoChoicesMade>) =>
     setChosen((previous) => ({ ...previous, ...patch }));
   // Category first: chromatic foil and effort bars borrow the category color.
@@ -161,6 +162,8 @@ export function TempoGoalFields({
     plaqueTarget: step === REVIEW ? plaqueTarget : undefined,
   };
   const go = (next: number) => {
+    // Leaving the reward step for review, the turned-over card turns on round to its face.
+    setReviewTurn(step === REWARD && next === REVIEW && !isPlannerTask);
     setStep(next);
     setFurthestStep((previous) => Math.max(previous, next));
     if (next === REVIEW && !isPlannerTask) {
@@ -252,11 +255,19 @@ export function TempoGoalFields({
       className="tempo-preview"
       data-back={showBack}
       layout={!reducedMotion}
+      // Review moves the card into the legend (a new parent); the shared id glides it there.
+      layoutId="tempo-preview-card"
       transition={{ type: "spring", stiffness: 180, damping: 26 }}
     >
       {/* Steps before review keep one scene, so the card doesn't remount as steps change. */}
-      {isPlannerTask || step === REVIEW ? (
+      {isPlannerTask ? (
         cardFace
+      ) : step === REVIEW ? (
+        reviewTurn ? (
+          <ReviewTurn color={goalColor} front={cardFace} back={<CardBack session={backSession} hidden={backHidden} heading="Advanced settings" unsetLabel="Optional" />} />
+        ) : (
+          cardFace
+        )
       ) : (
         <CardScene
           color={goalColor}
@@ -457,4 +468,24 @@ export function TempoGoalFields({
       )}
     </div>
   );
+}
+
+/**
+ * The review card arriving from the reward step: it mounts showing its back, then turns on
+ * in the same direction to its face, so the flip reads as one continuous turn.
+ */
+function ReviewTurn({ color, front, back }: { color: string; front: ReactNode; back: ReactNode }) {
+  const [flipped, setFlipped] = useState(true);
+  useEffect(() => {
+    // Two frames: the back must paint before the turn starts, or there is nothing to animate.
+    let second = 0;
+    const first = requestAnimationFrame(() => {
+      second = requestAnimationFrame(() => setFlipped(false));
+    });
+    return () => {
+      cancelAnimationFrame(first);
+      cancelAnimationFrame(second);
+    };
+  }, []);
+  return <CardScene color={color} flipped={flipped} forward front={front} back={back} />;
 }
