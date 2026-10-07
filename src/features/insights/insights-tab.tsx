@@ -22,9 +22,7 @@ import { buildProgressSections } from "@/features/insights/progress-overview/bui
 import { ProgressSectionStack } from "@/features/insights/progress-overview/progress-section-stack";
 import type {
   ProgressSectionId,
-  ProgressView,
 } from "@/features/insights/progress-overview/progress-view-model";
-import { useProgressPastSections } from "@/features/insights/progress-overview/progress-past-sections";
 import { useProgressWeekRhythm } from "@/features/insights/use-progress-week-rhythm";
 import {
   isLedgerHeatmapDayMutable,
@@ -153,7 +151,7 @@ interface InsightsTabProps {
   contentMode?: InsightsTabContentMode;
   onPersonalGoalsChange?: (goals: Goal[]) => void;
   /** Which Progress view to render. The shell owns the frame that picks it. */
-  progressView?: ProgressView | "all";
+  progressView?: "current" | "all";
   /**
    * False on secondary duo lanes so section anchors, test ids and onboarding
    * targets stay unique in the document.
@@ -696,12 +694,6 @@ export function InsightsTab({
     // completions-only week under the same "This week" legend. Omit it.
     enabled: insightsReady && !readOnly && progressView !== "all",
   });
-  const pastSections = useProgressPastSections({
-    goals: state.goals,
-    summaries: state.progress?.summaries ?? [],
-    userId: subjectUserId ?? state.userId,
-    includeAchievements: !readOnly && (!sectionIds || sectionIds.includes("achievements")),
-  });
   const ledgerCaption = progressLedgerCaption(
     ledgerMode,
     selectedLedgerGoalIds.length,
@@ -980,7 +972,6 @@ export function InsightsTab({
         {milestoneRunwayNode}
       </div>
     ),
-    pastSections,
   });
 
   const drilldownNode =
@@ -1043,7 +1034,6 @@ export function InsightsTab({
     <>
       <ProgressSectionStack
         sections={sectionIds ? progressSections.filter(section => sectionIds.includes(section.id)) : progressView === "all" ? progressSections.filter((section) => section.id !== "week") : progressSections}
-        view={progressView}
         anchored={anchorSections}
         onSectionsChange={onSectionsChange}
       />

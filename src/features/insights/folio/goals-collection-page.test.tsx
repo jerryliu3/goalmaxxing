@@ -2,9 +2,9 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildGoal } from "@/lib/goals/goal-test-fixtures";
 import { summary } from "./folio-test-fixtures";
-import { GoalLibraryPage } from "./goal-library-page";
+import { GoalsCollectionPage } from "./goals-collection-page";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/goals/library", useSearchParams: () => new URLSearchParams() }));
+vi.mock("next/navigation", () => ({ usePathname: () => "/goals", useSearchParams: () => new URLSearchParams() }));
 const mocks = vi.hoisted(() => ({ push: vi.fn(), data: vi.fn(), tracker: vi.fn() }));
 vi.mock("@/lib/navigation/use-app-router", () => ({ useAppRouter: () => ({ push: mocks.push }) }));
 vi.mock("@/features/insights/use-insights-data", () => ({ useInsightsData: () => mocks.data() }));
@@ -20,14 +20,14 @@ function loadCollection() {
 describe("goal library journey", () => {
   it("keeps a partner collection and its tracker read-only", () => {
     loadCollection();
-    render(<GoalLibraryPage subjectUserId="partner-1" readOnly anchorSections={false} />);
+    render(<GoalsCollectionPage subjectUserId="partner-1" readOnly anchorSections={false} />);
     expect(screen.queryByRole("link", { name: "New Goal" })).toBeNull();
     expect(screen.queryByRole("button", { name: /See details/ })).toBeNull();
-    expect(mocks.tracker).toHaveBeenCalledWith(expect.objectContaining({ readOnly: true, anchorSections: false }));
+    expect(mocks.tracker).not.toHaveBeenCalled();
   });
   it("opens Current from Goals with live progress and reward text", () => {
     loadCollection();
-    render(<GoalLibraryPage />);
+    render(<GoalsCollectionPage />);
     expect(screen.getByRole("status")).toHaveTextContent("2 / 6 completions");
     expect(screen.getByText("A weekend away", { exact: false })).toBeInTheDocument();
     expect(document.querySelector(".tempo-card-surface")).toHaveAttribute("data-rotatable", "false");
@@ -39,15 +39,11 @@ describe("goal library journey", () => {
     expect(document.querySelector("[data-card-solid]")).toBeNull();
     expect(screen.getAllByRole("article")).toHaveLength(2);
     const current = screen.getByRole("heading", { name: "Current goals" });
-    const tracker = screen.getByTestId("progress-tracker");
     const past = screen.getByRole("heading", { name: "Past goals" });
-    expect(current.compareDocumentPosition(tracker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(tracker.compareDocumentPosition(past) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(mocks.tracker).toHaveBeenCalledWith(expect.objectContaining({ subjectUserId: "user-1", sectionIds: ["history"] }));
+    expect(current.compareDocumentPosition(past) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(mocks.tracker).not.toHaveBeenCalled();
     expect(screen.getByRole("link", { name: "New Goal" })).toHaveAttribute("href", expect.stringContaining("/goals/new?returnTo="));
     expect(screen.queryByRole("navigation", { name: "Goal library collections" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Back to Goals" }));
-    expect(mocks.push).toHaveBeenLastCalledWith("/goals");
   });
 
   it("keeps creation available with no current goals and displays the past collection below the tracker", () => {
@@ -55,10 +51,11 @@ describe("goal library journey", () => {
     mocks.data.mockReturnValue({ loading: false, loadError: null, reload: vi.fn(), state: {
       userId: "user-1", goals: [ended], progress: { summaries: [summary(ended.id)] },
     } });
-    render(<GoalLibraryPage showBack={false} />);
+    render(<GoalsCollectionPage />);
     expect(screen.getByRole("link", { name: "New Goal" })).toBeInTheDocument();
     const pastCard = screen.getByRole("article", { name: `${ended.title} goal card` });
-    expect(screen.getByTestId("progress-tracker").compareDocumentPosition(pastCard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByTestId("progress-tracker")).toBeNull();
+    expect(document.getElementById("past-goals")).toContainElement(pastCard);
     fireEvent.click(screen.getByRole("button", { name: /See details/ }));
     expect(mocks.push).toHaveBeenCalledWith(`/goals/${ended.id}`);
   });
@@ -83,7 +80,7 @@ describe("goal library journey", () => {
         },
       },
     });
-    render(<GoalLibraryPage />);
+    render(<GoalsCollectionPage />);
     expect(screen.getByRole("status")).toHaveTextContent("6 / 6 completions");
     fireEvent.focus(document.querySelector("[data-goal-progress-card]")!);
     expect(document.querySelector(".tempo-card-surface")).toHaveAttribute("data-rotatable", "true");

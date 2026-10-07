@@ -6,7 +6,7 @@ export const goalEditorFallbackHref = "/calendar";
 
 /**
  * Routes the goal sheet opens over the current page (`/goals/new`, `/goals/:id`).
- * `/goals/library` and `/goals/bulk` are pages of their own.
+ * `/goals/bulk` is a page of its own; the retired library path redirects.
  */
 export function isGoalSheetPath(pathname: string) {
   return /\/goals\/(?!library$|bulk$)[^/]+$/.test(pathname);

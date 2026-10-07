@@ -11,7 +11,7 @@ vi.mock("@/features/social/duo/duo-lanes", () => ({
   DuoLanes: ({ scope, renderLane }: { scope: DuoScope; renderLane: (subject: DuoLaneSubject) => React.ReactNode }) =>
     <>{resolveDuoLanes({ scope, viewer, partner }).map(subject => <div key={subject.id}>{renderLane(subject)}</div>)}</>,
 }));
-vi.mock("@/features/insights/folio/goal-library-page", () => ({ GoalLibraryPage: (props: unknown) => { mocks.library(props); return null; } }));
+vi.mock("@/features/insights/folio/goals-collection-page", () => ({ GoalsCollectionPage: (props: unknown) => { mocks.library(props); return null; } }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
 it.each(["me", "partner", "both"] as const)("respects %s Mode and each lane's write permissions", scope => {
@@ -21,7 +21,7 @@ it.each(["me", "partner", "both"] as const)("respects %s Mode and each lane's wr
   expect(mocks.library).toHaveBeenCalledTimes(expected.length);
   expected.forEach((subject, index) => {
     expect(mocks.library).toHaveBeenNthCalledWith(index + 1, expect.objectContaining({
-      subjectUserId: subject.userId, readOnly: subject.readOnly, anchorSections: index === 0, showBack: false,
+      subjectUserId: subject.userId, readOnly: subject.readOnly, anchorSections: index === 0,
     }));
   });
 });

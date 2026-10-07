@@ -70,7 +70,7 @@ export function PlaqueCompletionProvider({ children }: { children: ReactNode }) 
     <DialogPrimitive.Root open={Boolean(celebration)} onOpenChange={open => { if (!open) close(); }}>
       {celebration ? <EarnedCeremony key={celebration.goal.id} fields={goalCardFields(celebration.goal)} target={celebration.target}
         reward={celebration.goal.reward_text ?? ""} still={reducedMotion} grand origin={celebration.origin} folio={celebration.folio}
-        onClose={close} onOpenLibrary={() => { setQueue([]); router.push("/achievements#progress-section-past-goals"); }} /> : null}
+        onClose={close} onOpenLibrary={() => { setQueue([]); router.push("/goals#past-goals"); }} /> : null}
     </DialogPrimitive.Root>
   </>;
 }
