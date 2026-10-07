@@ -1,12 +1,30 @@
 import type { ThemeDefinition } from "../roles";
+import { BLOODSTONE_THEME } from "./bloodstone";
+import { COURT_THEME } from "./court";
 import { GAZETTEER_THEME } from "./gazetteer";
+import { KILN_THEME } from "./kiln";
+import { OPALINE_THEME } from "./opaline";
 import { ORIGINAL_THEME } from "./original";
+import { PITLANE_THEME } from "./pitlane";
+import { UNDERTOW_THEME } from "./undertow";
 
 export { GAZETTEER_THEME } from "./gazetteer";
 export { ORIGINAL_THEME } from "./original";
 
-/** Every theme, in picker order. The first one is the default. */
-export const THEMES = [ORIGINAL_THEME, GAZETTEER_THEME] as const satisfies readonly ThemeDefinition[];
+/**
+ * Every theme, in picker order: live themes, then the shortlisted study
+ * skins. The first theme is the default.
+ */
+export const THEMES = [
+  ORIGINAL_THEME,
+  GAZETTEER_THEME,
+  UNDERTOW_THEME,
+  KILN_THEME,
+  COURT_THEME,
+  OPALINE_THEME,
+  BLOODSTONE_THEME,
+  PITLANE_THEME,
+] as const satisfies readonly ThemeDefinition[];
 
 export type Theme = (typeof THEMES)[number];
 export type ThemeId = Theme["id"];

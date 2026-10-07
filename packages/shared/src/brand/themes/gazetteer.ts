@@ -12,6 +12,8 @@ export const GAZETTEER_THEME = {
   id: "gazetteer",
   label: "Gazetteer",
   description: "Paper, walnut ink, stamp rust, Nest completion, and ledger chrome.",
+  status: "live",
+  appearance: "light",
   fonts: { sans: "source-sans-3", display: "newsreader", mono: "ibm-plex-mono" },
   // Newsreader names everything; regular weight below the page title, as in
   // the study kit. Source Sans 3 carries labels and small figures alike.

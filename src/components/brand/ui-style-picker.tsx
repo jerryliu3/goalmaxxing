@@ -9,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { THEMES } from "@cadence/shared/brand";
 import { cn } from "@/lib/utils";
 
 export function UiStylePicker({
@@ -23,7 +22,7 @@ export function UiStylePicker({
   size?: "sm" | "default";
   className?: string;
 }) {
-  const { styleId, setStyleId } = useUiStyle();
+  const { styleId, options, setStyleId } = useUiStyle();
 
   return (
     <div className={cn("space-y-1", className)}>
@@ -42,7 +41,7 @@ export function UiStylePicker({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {THEMES.map((style) => (
+          {options.map((style) => (
             <SelectItem key={style.id} value={style.id}>
               {style.label}
             </SelectItem>

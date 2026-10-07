@@ -33,6 +33,11 @@ export function isFeatureEnabled<K extends BooleanFeatureFlagKey>(
   return getFeatureFlags()[flag];
 }
 
+/** Offer the /ux/brand study skins in the visual style picker. */
+export function areStudyThemesEnabled(): boolean {
+  return getServerEnv().STUDY_THEMES_ENABLED;
+}
+
 /** Account API and MCP rollout; independent of device health integrations. */
 export function areExternalToolsEnabled(): boolean {
   return getServerEnv().EXTERNAL_TOOLS_ENABLED;

@@ -5,6 +5,8 @@ export const ORIGINAL_THEME = {
   id: "original",
   label: "Original",
   description: "Classic Goalmaxxing chrome: Geist, identity blue, and pill tabs.",
+  status: "live",
+  appearance: "light",
   fonts: { sans: "geist", display: "geist", mono: "geist-mono" },
   // One family throughout; hierarchy comes from weight.
   text: {
