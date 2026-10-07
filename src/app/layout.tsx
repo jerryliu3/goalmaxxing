@@ -63,6 +63,7 @@ export default async function RootLayout({
     <html
       lang="en"
       data-ui-style={style.id}
+      data-appearance={style.appearance}
       className={`${FONT_VARIABLE_CLASSES} h-full antialiased`}
       suppressHydrationWarning
     >
