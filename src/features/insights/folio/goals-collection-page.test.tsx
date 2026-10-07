@@ -65,6 +65,24 @@ describe("goal library journey", () => {
     expect(mocks.push).toHaveBeenCalledWith(`/goals/${ended.id}`);
   });
 
+  it("shows archived goals in their own section below past goals", () => {
+    const ended = buildGoal({ owner_id: "user-1", title: "Run a 10k", end_date: "2026-09-30" });
+    const archived = buildGoal({ owner_id: "user-1", title: "Learn the cello", archived_at: "2026-09-15T00:00:00Z", end_date: "2027-01-01" });
+    mocks.data.mockReturnValue({ loading: false, loadError: null, reload: vi.fn(), state: {
+      userId: "user-1", goals: [ended, archived],
+      progress: { summaries: [summary(ended.id), summary(archived.id, { lifecycle: "archived", outcome: "in_progress" })] },
+    } });
+    render(<GoalsCollectionPage />);
+    const past = screen.getByRole("heading", { name: "Past goals" });
+    const archivedHeading = screen.getByRole("heading", { name: "Archived goals" });
+    expect(past.compareDocumentPosition(archivedHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const pastSection = document.getElementById("past-goals")!;
+    const archivedSection = document.getElementById("archived-goals")!;
+    expect(pastSection).toContainElement(screen.getByRole("article", { name: "Run a 10k goal card" }));
+    expect(pastSection).not.toContainElement(screen.getByRole("article", { name: "Learn the cello goal card" }));
+    expect(archivedSection).toContainElement(screen.getByRole("article", { name: "Learn the cello goal card" }));
+  });
+
   it("lets a fused current goal stay a draggable 3D card", () => {
     const goal = buildGoal({ title: "Write six chapters", target_basis: "lifetime", target_count: 6, reward_text: "A weekend away" });
     mocks.data.mockReturnValue({

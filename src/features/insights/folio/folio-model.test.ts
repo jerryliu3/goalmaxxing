@@ -1,12 +1,24 @@
 import { describe, expect, it } from "vitest";
 import { summary } from "./folio-test-fixtures";
 import { buildGoal } from "@/lib/goals/goal-test-fixtures";
-import { buildCurrentGoals, buildGoalFolios } from "./folio-model";
+import { buildCurrentGoals, buildGoalFolios, splitPastGoals } from "./folio-model";
 import { selectCurrentGoals } from "@/lib/goals/current-goals";
 
 
 
 describe("past goal folios", () => {
+  it("splits archived goals out of past goals", () => {
+    const goals = [
+      buildGoal({ id: "ended", end_date: "2026-07-01" }),
+      buildGoal({ id: "archived", archived_at: "2026-08-01T00:00:00Z", end_date: "2027-01-01" }),
+      buildGoal({ id: "achieved", end_date: null, target_basis: "lifetime", target_count: 3 }),
+    ];
+    const summaries = goals.map(goal => summary(goal.id, goal.id === "archived" ? { lifecycle: "archived", outcome: "in_progress" } : goal.id === "achieved" ? { outcome: "achieved", lifecycle: "active", achievementDate: "2026-09-01" } : {}));
+    const { past, archived } = splitPastGoals(buildGoalFolios(goals, summaries, "user-1"));
+    expect(past.map(entry => entry.goal.id)).toEqual(["ended", "achieved"]);
+    expect(archived.map(entry => entry.goal.id)).toEqual(["archived"]);
+  });
+
   it("includes ended, archived, and achieved goals but excludes active, deleted, and other owners", () => {
     const goals = [
       buildGoal({ id: "ended", end_date: "2026-07-01" }),
