@@ -29,7 +29,7 @@ export function GoalLaneLabel({
   goal: Goal;
   progress: ProgressContextSummary | undefined;
   geometry: LaneGeometry;
-  /** Calendar's lane: framed, with the goal colour on its edge. */
+  /** Calendar's lane: framed. Either way the goal colour marks its edge. */
   lane: boolean;
 }) {
   const prefix = isDemoPathname(usePathname()) ? "/demo" : "";
@@ -45,7 +45,8 @@ export function GoalLaneLabel({
         LANE_CHROME,
         lane ? "border-border bg-card" : "border-transparent bg-background"
       )}
-      style={{ width: geometry.label, borderLeftColor: lane ? color : undefined }}
+      // The goal's colour marks its lane edge with or without Calendar's frame.
+      style={{ width: geometry.label, borderLeftColor: color }}
     >
       <Link
         href={`${prefix}/goals/${goal.id}`}

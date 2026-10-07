@@ -7,7 +7,6 @@ import { PlannerDndProvider } from "./calendar-dnd";
 import { CalendarDayPreviewList } from "./calendar-day-preview-list";
 import { CalendarMonthDayCell } from "./calendar-month-day-cell";
 import { CalendarPartnerChip } from "./calendar-partner-chip";
-import { mixOpaqueHex, WORK_PILL_HUE_AMOUNT } from "./goal-visuals";
 
 function renderWithDnd(ui: ReactNode) {
   return render(
@@ -90,7 +89,8 @@ describe("calendar surface extracted components", () => {
 
     expect(screen.getByText("Easy run")).toBeInTheDocument();
     expect(screen.getByText("Easy run").closest("[data-calendar-day-entry]")).toHaveStyle({
-      backgroundColor: mixOpaqueHex("#22c55e", "#ffffff", WORK_PILL_HUE_AMOUNT),
+      borderLeftColor: "#22c55e",
+      borderLeftWidth: "3px",
     });
     expect(screen.getByText("Stretch")).toBeInTheDocument();
     expect(

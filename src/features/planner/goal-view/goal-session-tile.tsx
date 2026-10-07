@@ -8,7 +8,9 @@ import { MilestoneTitleEditor } from "@/features/goals/milestone-title-editor";
 import { PlanLedgerCompletionControl } from "@/features/planner/plan-ledger-completion-control";
 import { cn } from "@/lib/utils";
 import { addDaysToDateString } from "@/lib/goals/periods";
+import { defaultMilestoneName } from "@/lib/goals/milestones";
 import type { GoalTileLayout } from "./goal-dates";
+import { GLIDE_KEY, useTileGlide } from "./use-tile-glide";
 import { dateLabel, ordinalText, type GoalViewSession, type SessionOrdinal } from "./goal-view-model";
 import type { GoalSessionCompletion } from "./goal-session-completion";
 
@@ -90,6 +92,7 @@ export function GoalSessionTile({
   onOpen,
 }: GoalSessionTileProps) {
   const row = layout === "row";
+  const glideRef = useTileGlide(dateInHeader && Boolean(ordinal));
   const movable = editable && !session.done && !session.locked;
 
   const completionControl = (
@@ -110,9 +113,10 @@ export function GoalSessionTile({
         "flex flex-none",
         // Cards float their nudges over the corner on hover or keyboard focus,
         // so they never take room from the text; rows on a phone have no
-        // hover, so theirs stay in place.
+        // hover, so theirs stay in place. While a field in the card is being
+        // edited (a milestone name, the date) they stay out of its way.
         !row &&
-          "absolute right-1 bottom-1 rounded-md bg-card/95 opacity-0 shadow-sm transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 motion-reduce:transition-none"
+          "absolute right-1 bottom-1 rounded-md bg-card/95 opacity-0 shadow-sm transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-has-[input:focus]:invisible motion-reduce:transition-none"
       )}
     >
       {([-1, 1] as const).map((direction) => {
@@ -139,22 +143,14 @@ export function GoalSessionTile({
   const lock = session.locked ? (
     <LockKeyhole size={11} aria-label="Locked date" className="flex-none text-muted-foreground" />
   ) : null;
+  // Phone rows have no lane label beside them, so they keep the title.
   const title = (
     <CompletionTitle
       completed={session.done}
       treatment="quiet"
-      className={cn(
-        "min-w-0 font-medium",
-        row
-          ? "truncate text-[14px] leading-tight"
-          : // The completion title is inline-block, so it truncates itself for
-            // the ellipsis to show. An ellipsis hides an overflowing button
-            // whole, so the rename button truncates its own text instead.
-            "block truncate text-[11px] leading-4 text-foreground/75 [&_button]:max-w-full [&_button]:truncate [&_button]:align-bottom [&>span]:truncate"
-      )}
+      className="min-w-0 truncate text-[14px] leading-tight font-medium"
     >
-      {/* A card's ordinal ("2 of 5") already numbers its milestone. */}
-      {row && session.milestone ? `${session.milestone}. ` : null}
+      {session.milestone ? `${session.milestone}. ` : null}
       <MilestoneTitleEditor
         goalId={session.goalId}
         unitKey={session.entry.unitKey}
@@ -231,55 +227,111 @@ export function GoalSessionTile({
     );
   }
 
-  // The date is what tells one session from the next (the lane already names
-  // the goal), so it leads the card; the title and time sit small on the
-  // check's row. Under a date header the date would only repeat it, so the
-  // lead cross-fades to the count ("2 of 3") and its period stays below. A
-  // session with nothing to count keeps its date rather than going blank.
-  const showOrdinal = dateInHeader && Boolean(ordinal);
-  // Toggling Calendar glides the cards for 720ms (the plan view morph), so the
-  // swap lands on the glide's midpoint: the old text clears just before it and
-  // the new one arrives just after, never overlapping.
-  const fade = (hidden: boolean) =>
-    cn(
-      "col-start-1 row-start-1 whitespace-nowrap transition-opacity duration-200 motion-reduce:transition-none",
-      hidden ? "opacity-0 delay-[160ms] ease-in" : "delay-[360ms] ease-out"
-    );
+  // The lane already names the goal, so a card is its check, its date, and
+  // its count ("2 of 3 per week"; every goal session has one), plus the time
+  // when set. Under a date header the date would only repeat it, so the count
+  // leads instead, gliding up from the line below.
+  const lead = dateInHeader && Boolean(ordinal);
+  const leadText = "type-item text-[17px] leading-5 tracking-tight";
+  // The third line names the session: always for a milestone, so it can be
+  // renamed from the start (an unnamed one reads lighter, as a prompt), and
+  // for other sessions only when they have a name beyond the goal's title.
+  const showName = session.milestone !== null || session.label !== session.entry.goalTitle;
+  const unnamed = session.milestone !== null && session.label === defaultMilestoneName(session.milestone - 1);
+  const glide = (key: string) => ({ [GLIDE_KEY]: key });
+  const line = "col-start-2 flex min-w-0 items-baseline gap-1 whitespace-nowrap px-1 text-[10.5px] leading-4 text-muted-foreground";
+  const smallCount = !lead && ordinal;
+  // With no name to show, the time takes the third line and the count keeps
+  // its full period ("1 of 3 per week"). Sharing the line with the time under
+  // a name, the period shortens ("1 of 3/wk · 07:30"). Once the count leads,
+  // the period and time share the second line.
+  const timeOnOwnLine = !lead && !showName && Boolean(session.time);
+  const shortPeriod = smallCount && showName && Boolean(session.time);
+  const period = (shortPeriod ? ordinal?.periodShort ?? ordinal?.period : ordinal?.period) ?? null;
+  const inlineTime = session.time && !timeOnOwnLine ? session.time : null;
+  const time = (inline: boolean) => (
+    <span {...glide("time")} className="inline-block">
+      {inline ? "· " : null}
+      {session.time}
+    </span>
+  );
   return (
     <article
       {...dataAttributes}
+      ref={glideRef}
       className={cn(
         frame,
-        "grid h-full w-full grid-cols-[auto_minmax(0,1fr)_auto] content-start items-center gap-x-1 gap-y-0.5 py-1.5 pr-1.5"
+        "grid h-full w-full grid-cols-[auto_minmax(0,1fr)] content-center items-center gap-x-0.5 py-1.5 pr-1.5"
       )}
     >
-      <span className="-mt-0.5 -ml-1">{completionControl}</span>
-      <div className="min-w-0" title={session.label}>{title}</div>
-      <span className="text-[10.5px] leading-4 text-muted-foreground">{session.time}</span>
-      <div className="col-span-3 flex min-w-0 items-center gap-1">
+      <span className="-ml-1">{completionControl}</span>
+      <div className="flex min-w-0 items-center gap-1">
         <SessionDateField
           session={session}
           today={today}
           disabled={!movable}
           onMove={onMove}
-          className="-ml-1 min-h-5 min-w-0 rounded-md px-1 py-0"
+          className="min-h-5 min-w-0 rounded-md px-1 py-0"
         >
-          <span
-            className={cn(
-              "grid min-w-0 type-item text-[17px] leading-5 tracking-tight",
-              session.done && "text-muted-foreground"
-            )}
-          >
-            <span className={fade(showOrdinal)}>{dateLabel(session.date, "EEE, MMM d")}</span>
-            <span className={fade(!showOrdinal)}>{ordinal?.count ?? ""}</span>
+          <span className={cn("grid min-w-0", leadText, session.done && "text-muted-foreground")}>
+            {/* The date rests above: under a header it rolls up and out of
+                its own clip, leaving the gliding count unclipped. */}
+            <span className="col-start-1 row-start-1 overflow-hidden">
+              <span
+                className={cn(
+                  "block whitespace-nowrap transition-[opacity,translate] duration-[360ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+                  // Returning, the date waits for the count to clear the line.
+                  lead ? "-translate-y-full opacity-0" : "delay-[300ms]"
+                )}
+              >
+                {dateLabel(session.date, "EEE, MMM d")}
+              </span>
+            </span>
+            {lead ? (
+              <span {...glide("count")} className="col-start-1 row-start-1 inline-block origin-top-left whitespace-nowrap">
+                {ordinal?.count}
+              </span>
+            ) : null}
           </span>
         </SessionDateField>
         {lock}
       </div>
-      {ordinal ? (
-        <span className="col-span-3 grid min-w-0 text-[10.5px] leading-4 text-muted-foreground">
-          <span className={fade(showOrdinal)}>{ordinalText(ordinal)}</span>
-          <span className={fade(!showOrdinal)}>{ordinal.period ?? ""}</span>
+      {/* Second line: the count (until a header lets it lead) and its period,
+          plus the time when the third line is taken. Third line: the session's
+          own name, or else the time. */}
+      {smallCount || period || inlineTime ? (
+        <span className={line}>
+          {smallCount ? (
+            <span {...glide("count")} className="inline-block flex-none origin-top-left">
+              {smallCount.count}
+            </span>
+          ) : null}
+          {period ? (
+            <span {...glide("period")} className={cn("inline-block", shortPeriod && ordinal?.periodShort && "-ml-1")}>
+              {period}
+            </span>
+          ) : null}
+          {inlineTime ? time(Boolean(smallCount || period)) : null}
+        </span>
+      ) : null}
+      {timeOnOwnLine ? <span className={line}>{time(false)}</span> : null}
+      {showName ? (
+        <span {...glide("name")} className={cn(line, "block")}>
+          <CompletionTitle
+            completed={session.done}
+            treatment="quiet"
+            className={cn(
+              "block min-w-0 truncate [&_button]:max-w-full [&_button]:truncate [&_button]:align-bottom [&>span]:truncate",
+              unnamed ? "text-muted-foreground/70" : "text-foreground/75"
+            )}
+          >
+            <MilestoneTitleEditor
+              goalId={session.goalId}
+              unitKey={session.entry.unitKey}
+              label={session.label}
+              disabled={!editable || session.entry.draftGhost}
+            />
+          </CompletionTitle>
         </span>
       ) : null}
       {nudges}

@@ -106,7 +106,8 @@ export function planSelectedWorkRowClass(selected: boolean) {
   if (!selected) {
     return "";
   }
-  return "bg-day-selected shadow-[inset_3px_0_0_var(--color-selection)]";
+  // The row's left edge carries its goal colour, so selection is the fill alone.
+  return "bg-day-selected";
 }
 
 export const planLedgerTitleClass =

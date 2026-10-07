@@ -143,6 +143,20 @@ describe("useLaneMorph", () => {
     expect(document.querySelector("[data-lane-grid]")).toBeNull();
   });
 
+  it("holds the canvas height and glides it, so closing Calendar doesn't clip the lanes", () => {
+    const canvas = () => document.querySelector("[data-plan-scroll-clip]")?.firstElementChild ?? null;
+    const measure = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      return { height: this === canvas() ? 240 : 0 } as DOMRect;
+    });
+    const view = render(lanes("calendar"));
+    calls = [];
+    view.rerender(lanes("cards"));
+    const frame = callsOn(canvas()).find((call) => "height" in call.keyframes[0])!;
+    expect(frame.keyframes).toEqual([{ height: `${240 + DESKTOP_LANES.header}px` }, { height: "240px" }]);
+    expect(frame.options.duration).toBe(LANE_LAYOUT_MORPH_MS);
+    measure.mockRestore();
+  });
+
   it("lets data that arrives mid-switch finish on the switch's clock", () => {
     const view = render(lanes("cards"));
     view.rerender(lanes("calendar"));

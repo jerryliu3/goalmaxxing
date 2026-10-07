@@ -156,12 +156,15 @@ export function groupSessions(
 }
 
 const PER_PERIOD = { daily: "per day", weekly: "per week", monthly: "per month" } as const;
+const PER_PERIOD_SHORT = { daily: "/day", weekly: "/wk", monthly: "/mo" } as const;
 const PERIOD = { daily: "Day", weekly: "Week", monthly: "Month" } as const;
 
 /** "2 of 3" with its period "per week", so a card can lead with the count. */
 export interface SessionOrdinal {
   count: string;
   period: string | null;
+  /** The period where the count shares a narrow line with the time: "/wk". */
+  periodShort?: string | null;
 }
 
 export const ordinalText = ({ count, period }: SessionOrdinal) =>
@@ -207,7 +210,11 @@ export function sessionOrdinals(
     const place = (periodPlaces.get(placeKey) ?? 0) + 1;
     periodPlaces.set(placeKey, place);
     const slot = parseCadenceUnitKey(session.entry.unitKey)?.slot ?? place;
-    ordinals.set(session.key, { count: `${slot} of ${perPeriod}`, period: PER_PERIOD[goal.recurrence_interval] });
+    ordinals.set(session.key, {
+      count: `${slot} of ${perPeriod}`,
+      period: PER_PERIOD[goal.recurrence_interval],
+      periodShort: PER_PERIOD_SHORT[goal.recurrence_interval],
+    });
   }
   return ordinals;
 }

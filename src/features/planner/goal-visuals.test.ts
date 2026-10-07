@@ -6,11 +6,8 @@ import {
   getGoalVisual,
   getWorkPillDraftFillStyle,
   getWorkPillFillStyle,
-  mixOpaqueHex,
+  getWorkRowEdgeStyle,
   normalizeGoalColor,
-  WORK_PILL_DRAFT_HUE_AMOUNT,
-  WORK_PILL_HUE_AMOUNT,
-  WORK_PILL_NEW_DRAFT_HUE_AMOUNT,
 } from "./goal-visuals";
 
 describe("goal visuals", () => {
@@ -50,60 +47,42 @@ describe("goal visuals", () => {
     ).toBe(GOAL_CATEGORY_COLORS.health);
   });
 
-  it("mixes a category goal's pigment into its pill so categories stay distinct", () => {
-    expect(getWorkPillFillStyle(GOAL_CATEGORY_COLORS.career).backgroundColor).toBe(
-      mixOpaqueHex(COLOR_LIBRARY["klein-blue"].pigment!, "#ffffff", WORK_PILL_HUE_AMOUNT)
-    );
-    expect(
-      getWorkPillFillStyle(GOAL_CATEGORY_COLORS.career, false, "gazetteer").backgroundColor
-    ).toBe(mixOpaqueHex(COLOR_LIBRARY["klein-blue"].pigment!, GAZETTEER.paper, WORK_PILL_HUE_AMOUNT));
+  it("carries a category goal's pigment on the pill's left edge", () => {
+    expect(getWorkPillFillStyle(GOAL_CATEGORY_COLORS.career)).toMatchObject({
+      borderLeftColor: COLOR_LIBRARY["klein-blue"].pigment,
+    });
   });
 
-  it("uses opaque pastel fills with quieter ink and hue for completed tiles", () => {
-    const original = getWorkPillFillStyle("#10b981", false);
-    const originalPastel = mixOpaqueHex("#10b981", "#ffffff", WORK_PILL_HUE_AMOUNT);
-    expect(original.backgroundColor).toBe(originalPastel);
-    expect(original.borderColor).toBe(originalPastel);
-    expect(original.backgroundColor).not.toBe("#10b981");
-    expect(original.color).toBe("#1c1917");
-    expect(getWorkPillFillStyle("#10b981", true).backgroundColor).toBe(
-      mixOpaqueHex("#10b981", "#ffffff", WORK_PILL_HUE_AMOUNT * 0.45)
+  it("paints every work pill on the theme's neutral surface and ink", () => {
+    expect(getWorkPillFillStyle("#10b981")).toEqual({
+      backgroundColor: "var(--muted)",
+      borderColor: "transparent",
+      borderLeftColor: "#10b981",
+      borderLeftWidth: 3,
+      color: "var(--foreground)",
+    });
+    expect(getWorkPillFillStyle("#10b981", true).color).toBe("var(--muted-foreground)");
+    expect(getWorkPillFillStyle("#10b981", false, "gazetteer").backgroundColor).toBe(
+      "var(--muted)"
     );
-    expect(getWorkPillFillStyle("#10b981", true).color).toBe("#57534e");
-
-    const originalBlue = getWorkPillFillStyle("#2563eb", false);
-    expect(originalBlue.backgroundColor).toBe(
-      mixOpaqueHex("#2563eb", "#ffffff", WORK_PILL_HUE_AMOUNT)
-    );
-    expect(originalBlue.color).toBe("#1c1917");
-
-    const gazetteerHealth = getWorkPillFillStyle("#10b981", false, "gazetteer");
-    const gazetteerPastel = mixOpaqueHex(
-      GAZETTEER.gain,
-      GAZETTEER.paper,
-      WORK_PILL_HUE_AMOUNT
-    );
-    expect(gazetteerHealth.backgroundColor).toBe(gazetteerPastel);
-    expect(gazetteerHealth.borderColor).toBe(gazetteerPastel);
-    expect(gazetteerHealth.color).toBe("#1c1917");
   });
 
-  it("darkens the original work color for draft placements", () => {
+  it("gives Day view rows the pills' goal-colour edge on their flat surface", () => {
+    expect(getWorkRowEdgeStyle("#10b981")).toEqual({
+      borderLeftStyle: "solid",
+      borderLeftWidth: 3,
+      borderLeftColor: "#10b981",
+      paddingLeft: 8,
+    });
+  });
+
+  it("mixes draft placements into the page so they read on any theme", () => {
     const moved = getWorkPillDraftFillStyle("#10b981", "moved_to");
     const created = getWorkPillDraftFillStyle("#10b981", "new");
-    const rest = getWorkPillFillStyle("#10b981");
-    expect(moved.backgroundColor).toBe(
-      mixOpaqueHex("#10b981", "#ffffff", WORK_PILL_DRAFT_HUE_AMOUNT)
-    );
-    expect(created.backgroundColor).toBe(
-      mixOpaqueHex("#10b981", "#ffffff", WORK_PILL_NEW_DRAFT_HUE_AMOUNT)
-    );
-    expect(moved.backgroundColor).not.toBe(rest.backgroundColor);
-    expect(created.backgroundColor).not.toBe(moved.backgroundColor);
-  });
-
-  it("mixes two opaque hexes without leaving an alpha channel", () => {
-    expect(mixOpaqueHex("#ff0000", "#ffffff", 0.5)).toBe("#ff8080");
+    expect(moved.backgroundColor).toBe("color-mix(in srgb, #10b981 30%, var(--background))");
+    expect(created.backgroundColor).toBe("color-mix(in srgb, #10b981 42%, var(--background))");
+    expect(moved.borderColor).toBe("#10b981");
+    expect(created.color).toBe("var(--foreground)");
   });
 
   it("keeps leftover blue goal hexes on original", () => {
