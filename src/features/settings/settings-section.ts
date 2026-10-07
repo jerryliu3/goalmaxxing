@@ -5,6 +5,7 @@ export const SETTINGS_SECTIONS = [
   "onboarding",
   "digest",
   "appearance",
+  "password",
   "report-issue",
 ] as const;
 
@@ -61,6 +62,11 @@ export const SETTINGS_GROUPS: Array<{
         label: "Appearance",
         description:
           "Choose a visual style for Goalmaxxing. Original is the default; more skins can be added here.",
+      },
+      {
+        key: "password",
+        label: "Change password",
+        description: "Confirm your current password and choose a new one.",
       },
       {
         key: "report-issue",
