@@ -16,7 +16,7 @@ import { TempoGoalCard } from "../tempo-goal-card";
 import { AnnotatedCard } from "./annotated-card";
 import { CardBack } from "./card-back";
 import type { CardEditorSession } from "./card-editor-session";
-import { changedCardFacts, endDatePassed } from "./card-facts";
+import { changedCardFacts, endDatePassed, PAST_END_EDITABLE_KEYS } from "./card-facts";
 import { DirectCard } from "./direct-card";
 import { useElementWidth } from "./use-card-regions";
 
@@ -62,14 +62,16 @@ export function GoalCardEditor({ goalId, onExit, onDismiss }: { goalId: string; 
   }
 
   const busy = submit.saving || submit.recovery !== null;
-  // A goal past its end date is a record: only a new end date reopens the rest of it.
+  // An ended goal's face is a record until its deadline moves to today or later;
+  // the deadline and the back's advanced settings stay editable throughout.
+  const today = toLocalDateString();
   const pastEnd = Boolean(
-    baseline && endDatePassed(baseline.state.end_date, toLocalDateString()) && state.end_date === baseline.state.end_date,
+    baseline && endDatePassed(baseline.state.end_date, today) && endDatePassed(state.end_date, today),
   );
   const patch = useCallback(
     (next: Partial<GoalFormState>) => {
       if (busy) return;
-      if (pastEnd && Object.keys(next).some((key) => key !== "end_date")) return;
+      if (pastEnd && Object.keys(next).some((key) => !PAST_END_EDITABLE_KEYS.has(key as keyof GoalFormState))) return;
       setState((previous) => ({ ...previous, ...next }));
     },
     [busy, pastEnd, setState],
@@ -104,7 +106,7 @@ export function GoalCardEditor({ goalId, onExit, onDismiss }: { goalId: string; 
             options: form.filteredLinkTargets,
             search: form.linkTargetSearch,
             onSearch: form.setLinkTargetSearch,
-            onChange: (target) => !busy && !pastEnd && setSelectedLinkTarget(target),
+            onChange: (target) => !busy && setSelectedLinkTarget(target),
           }
         : null,
   };
@@ -153,7 +155,7 @@ export function GoalCardEditor({ goalId, onExit, onDismiss }: { goalId: string; 
       ) : null}
       {pastEnd ? (
         <p className="card-editor-notice">
-          Ended {formatGoalDateLabel(state.end_date)}. Change the deadline to edit the rest of this goal.
+          Ended {formatGoalDateLabel(baseline.state.end_date)}. Settings on the back stay editable; move the deadline to today or later to change the card face.
         </p>
       ) : null}
       {archived ? <p className="card-editor-notice">Archived. It’s out of your plan; restore it from the back of the card.</p> : null}

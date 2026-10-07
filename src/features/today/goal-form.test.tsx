@@ -745,7 +745,7 @@ describe("GoalForm persistence recovery", () => {
     });
   });
 
-  it("locks everything but the deadline once a goal's end date has passed", async () => {
+  it("locks the face but keeps the deadline and back editable once a goal has ended", async () => {
     goalSingleMock.mockResolvedValueOnce({
       data: { ...activeLinkTarget, id: "goal-ended-1", title: "Ended goal", start_date: "2020-01-01", end_date: "2020-03-31" },
       error: null,
@@ -753,11 +753,11 @@ describe("GoalForm persistence recovery", () => {
     const user = userEvent.setup();
 
     render(<GoalCardEditor goalId="goal-ended-1" onExit={vi.fn()} onDismiss={vi.fn()} />);
-    expect(await screen.findByText(/Change the deadline to edit the rest of this goal/)).toBeInTheDocument();
+    expect(await screen.findByText(/Settings on the back stay editable/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Name\s*Ended goal/i })).toBeNull();
     expect(screen.getByRole("button", { name: "Edit deadline" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Turn over for more" }));
-    expect(screen.getByRole("button", { name: /Your reward/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Your reward/i })).toBeEnabled();
   });
 
   it("dismisses without using complete exit when archiving from the sheet", async () => {

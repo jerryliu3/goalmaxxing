@@ -135,7 +135,7 @@ function BackRow({
           )}
         </>
       ) : (
-        <button type="button" className="card-back-row-head" disabled={session.pastEnd} onClick={onOpen}>
+        <button type="button" className="card-back-row-head" onClick={onOpen}>
           {head}
           <span className="card-back-value">
             {showUnset ? (
