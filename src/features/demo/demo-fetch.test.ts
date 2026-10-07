@@ -288,6 +288,22 @@ describe("demo fetch router", () => {
     );
   });
 
+  it("serves Growth profile data entirely inside the demo sandbox", async () => {
+    const snapshot = buildDemoSnapshot("2026-08-22");
+    initDemoStore(snapshot);
+    const network = vi.fn();
+    const response = await handleDemoFetch(
+      `/api/social/profiles/${snapshot.profiles[0].id}?year=2026`,
+      { method: "GET" },
+      network as unknown as typeof fetch
+    );
+    const body = await response.json();
+    expect(response.ok).toBe(true);
+    expect(body.item.xp.totalXp).toBe(2460);
+    expect(body.item.yearHeatmap).toHaveLength(365);
+    expect(network).not.toHaveBeenCalled();
+  });
+
   it("keeps unsupported writes from pretending to succeed", async () => {
     initDemoStore(buildDemoSnapshot("2026-08-22"));
     const originalFetch = vi.fn();

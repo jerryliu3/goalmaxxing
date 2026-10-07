@@ -9,7 +9,7 @@ export { DUO_SURFACE_DEFAULTS };
 // shared package whenever a Duo surface is added or renamed.
 export function resolveDuoSurfaceDefault(pathname: string | null): DuoScope {
   const path = pathname?.replace(/^\/demo(?=\/)/, "");
-  if (path?.startsWith("/insights") || path?.startsWith("/achievements")) {
+  if (path?.startsWith("/insights") || path?.startsWith("/growth")) {
     return DUO_SURFACE_DEFAULTS.insights;
   }
   if (path?.startsWith("/checklist")) {

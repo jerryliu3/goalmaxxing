@@ -8,20 +8,8 @@ import type {
 } from "@cadence/shared/social/public-profile";
 import { GrowScoreTrendChart } from "@/features/insights/grow-score-trend-chart";
 import { InsightsOverallStatsTiles } from "@/features/insights/insights-overall-stats-card";
-import { hasGrowScoreSignal } from "@/features/insights/use-grow-score-series";
+import { hasGrowScoreSignal, toGrowScoreChartSeries } from "@/features/insights/use-grow-score-series";
 import { PublicProfileActivityHeatmap } from "@/features/social/public-profile/public-profile-activity-heatmap";
-import type { GrowScorePoint } from "@/lib/grow-score";
-
-function toChartSeries(series: readonly PublicProfileGrowPoint[]): GrowScorePoint[] {
-  return series.map((point) => ({
-    date: point.date,
-    score: point.score,
-    pace: point.pace,
-    rawCredits: point.rawCredits,
-    earned: 0,
-    mode: point.rawCredits > 0 ? "earn" : "hold",
-  }));
-}
 
 function OverallStatsBlock({
   overallStats,
@@ -54,7 +42,7 @@ export function ProfilePresenceSection({
   showMoreLink?: boolean;
 }) {
   const heatmapRef = useRef<HTMLDivElement | null>(null);
-  const chartSeries = toChartSeries(growSeries);
+  const chartSeries = toGrowScoreChartSeries(growSeries);
   const stats = overallStats ? (
     <OverallStatsBlock overallStats={overallStats} showMoreLink={showMoreLink} />
   ) : null;

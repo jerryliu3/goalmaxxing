@@ -10,6 +10,7 @@ const APP_ROUTE_PREFIXES = [
   "/goals",
   "/tasks",
   "/achievements",
+  "/growth",
 ] as const;
 
 export function isBrowserDemoPath() {

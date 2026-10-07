@@ -18,6 +18,7 @@ import { sha256Hex } from "@/lib/planner/canonical";
 import { createDefaultPlannerPolicy } from "@/lib/planner/policy";
 import { buildAchievementsShowcasePayload } from "@/features/achievements/build-showcase";
 import type { AchievementsShowcasePayload } from "@/features/achievements/types";
+import { buildPublicProfileBundle } from "@/lib/social/public-profile-model";
 import { progressionForTotalXp } from "@/lib/xp/progression";
 import {
   DEMO_ALEX_ID,
@@ -542,4 +543,38 @@ export function buildDemoNotificationPreferences() {
   return {
     notificationPreferences: defaultNotificationPreferences,
   };
+}
+
+export function buildDemoPublicProfile(subjectUserId: string, selectedYear: number) {
+  const snapshot = getDemoStore();
+  const profile = snapshot.profiles.find((item) => item.id === subjectUserId);
+  if (!profile) return null;
+  const achievements = subjectUserId === DEMO_ALEX_ID ? buildDemoAchievements() : null;
+  return buildPublicProfileBundle({
+    viewerUserId: DEMO_ALEX_ID,
+    subjectProfile: {
+      ...profile,
+      timezone: profile.timezone ?? snapshot.timezone,
+      week_starts_on: profile.week_starts_on ?? snapshot.weekStartsOn,
+      social_activity_visible: profile.social_activity_visible ?? true,
+    },
+    globalXpProfile: achievements ? { total_xp: achievements.collection.totalXp } : null,
+    globalAchievements: achievements?.levelAwards.flatMap((award) =>
+      award.awardId && award.unlockedAt ? [{
+        id: award.awardId,
+        unlocked_at: award.unlockedAt,
+        revoked_at: award.revokedAt,
+        xp_rewards: {
+          level: award.level,
+          reward_code: `xp.level.${award.level}`,
+          reward_title: award.title,
+          reward_description: award.description,
+        },
+      }] : []
+    ) ?? [],
+    awardCatalogCount: achievements?.levelAwards.length ?? 0,
+    goals: goalsForSubject(snapshot, subjectUserId),
+    completions: completionsForSubject(snapshot, subjectUserId),
+    selectedYear,
+  });
 }

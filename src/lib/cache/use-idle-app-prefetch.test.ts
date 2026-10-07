@@ -38,8 +38,8 @@ vi.mock("@/lib/cache/warm-app-tab-data", () => ({
 vi.mock("@/features/planner/calendar-page-shell", () => ({
   CalendarPageShell: () => null,
 }));
-vi.mock("@/features/insights/insights-shell", () => ({
-  InsightsShell: () => null,
+vi.mock("@/features/growth/growth-page", () => ({
+  GrowthPage: () => null,
 }));
 vi.mock("@/features/social/social-surface", () => ({
   SocialSurface: () => null,
@@ -97,7 +97,7 @@ describe("useIdleAppPrefetch", () => {
       // Settle the module warmups before this test environment is disposed.
       await Promise.all([
         import("@/features/planner/calendar-page-shell"),
-        import("@/features/insights/insights-shell"),
+        import("@/features/growth/growth-page"),
         import("@/features/social/social-surface"),
         import("@/features/goals/goals-destination"),
       ]);

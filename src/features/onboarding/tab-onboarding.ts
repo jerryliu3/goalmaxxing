@@ -33,15 +33,15 @@ export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]>
   ],
   "insights.main": [
     {
-      title: "Achievements",
+      title: "Medals",
       description: "Look back on the awards you have earned through your progress.",
       target: "insights.achievements",
-      fallbackTargets: ["insights.past-goals"],
+      fallbackTargets: ["insights.history"],
     },
     {
-      title: "Goal library",
-      description: "Completed, ended, and archived goals collect here with their original outcomes.",
-      target: "insights.past-goals",
+      title: "Progress tracker",
+      description: "Track the activity that shapes your goals over time.",
+      target: "insights.history",
     },
   ],
   "social.main": [
@@ -122,8 +122,8 @@ export const TAB_ONBOARDING_REPLAY_LINKS: TabOnboardingReplayLink[] = [
   },
   {
     key: "insights.main",
-    label: "Achievements",
-    href: `/achievements?${TAB_ONBOARDING_QUERY_PARAM}=insights.main`,
+    label: "Growth",
+    href: `/growth?${TAB_ONBOARDING_QUERY_PARAM}=insights.main`,
   },
   {
     key: "social.main",
