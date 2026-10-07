@@ -191,3 +191,13 @@ button.card-spot { cursor: pointer; }
 .card-confirm { display: grid; gap: 10px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--destructive) 45%, transparent); border-radius: 14px; background: color-mix(in srgb, var(--destructive) 6%, #fff); font-size: 12.5px; }
 .card-confirm p { margin: 0; }
 .card-confirm div { display: flex; justify-content: flex-end; gap: 8px; }
+/* A small card (the phone creation preview) keeps every row on one line: smaller type, no icons or chevrons. */
+.card-back { container-type: inline-size; }
+@container (max-width: 260px) {
+  .card-back-head { padding: 12px 12px 4px; }
+  .card-back-body { padding: 0 12px 6px; }
+  .card-back-row-head { gap: 6px; min-height: 34px; }
+  .card-back-label { font-size: 12px; }
+  .card-back-value { font-size: 11px; }
+  :is(.card-back-icon, .card-back-chevron) { display: none; }
+}
