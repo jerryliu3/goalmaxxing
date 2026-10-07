@@ -1,5 +1,8 @@
 "use client";
 
+import { PrismMedal } from "./prism/prism-medal";
+import { cardFinish } from "./prism/materials";
+
 import { useMemo, useState } from "react";
 import { claimedProgress } from "@/features/achievements/build-showcase";
 import {
@@ -28,14 +31,6 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
 
   const { claimed, total, fill } = claimedProgress(payload.collection);
 
-  if (!featured) {
-    return (
-      <div className="ach-showcase-root rounded-[20px] px-4 py-8 sm:px-6">
-        <p className="ach-showcase-body text-sm">No level awards are configured yet.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="ach-showcase-root -mx-4 rounded-[20px] px-4 pb-4 pt-6 sm:-mx-6 sm:px-6">
       <div className="space-y-8">
@@ -45,8 +40,8 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
               Bests on the wall. Medals on the shelf.
             </h1>
             <p className="ach-showcase-body mt-3 max-w-xl text-sm leading-relaxed">
-              Your records, level medals, and finished goals — locked mounts stay
-              dark until you earn them.
+              Your records, level medals, and finished goals — unstruck blanks wait
+              for your next level.
             </p>
           </div>
           <div className="min-w-[13rem]">
@@ -98,8 +93,22 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
         ) : null}
 
         <ShowcasePersonalRecords records={payload.personalRecords} />
+        {payload.achievedGoals.length ? (
+          <section aria-label="Goal-finish medals">
+            <h3 className="type-title text-xl">Finished goals</h3>
+            <ul className="mt-4 grid gap-4 sm:grid-cols-3">
+              {payload.achievedGoals.map(goal => (
+                <li key={goal.goalId} className="ach-showcase-mount flex flex-col items-center rounded-xl border p-4 text-center">
+                  <PrismMedal finish={cardFinish(goal.material, goal.color)} numeral="✓" goal size={72} />
+                  <h4 className="mt-3 font-medium">{goal.title}</h4>
+                  {goal.rewardText ? <p className="mt-1 text-sm text-muted-foreground">{goal.rewardText}</p> : null}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
-        <section
+        {featured ? <section
           className="ach-showcase-glass overflow-hidden rounded-[22px] px-4 pb-5 pt-8 sm:px-8"
           aria-label="Trophy showcase"
         >
@@ -110,7 +119,7 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
             featuredId={featuredId}
             onSelect={setSelectedFeaturedId}
           />
-        </section>
+        </section> : <p className="text-sm text-muted-foreground">No level medals yet.</p>}
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { MedalMark } from "@/features/achievements/medals";
+import { MedalMark } from "@/features/ux-achievements/medals";
 import { ShowcaseMedalShelf, ShowcasePedestal, ShowcasePersonalRecords } from "@/features/achievements/showcase-presentation";
 import { SHOWCASE } from "./seed";
 

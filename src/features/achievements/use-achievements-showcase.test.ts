@@ -11,7 +11,7 @@ describe("useAchievementsShowcase", () => {
       vi.fn(async () => ({
         ok: true,
         json: async () => ({
-          schemaVersion: "2",
+          schemaVersion: "3",
           collection: {
             level: 2,
             totalXp: 400,
@@ -41,7 +41,7 @@ describe("useAchievementsShowcase", () => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(result.current.payload?.schemaVersion).toBe("2");
+    expect(result.current.payload?.schemaVersion).toBe("3");
     expect(result.current.error).toBeNull();
   });
 
@@ -54,7 +54,7 @@ describe("useAchievementsShowcase", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          schemaVersion: "2",
+          schemaVersion: "3",
           collection: {
             level: 2,
             totalXp: 400,
@@ -84,6 +84,6 @@ describe("useAchievementsShowcase", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(result.current.error).toBeNull();
-    expect(result.current.payload?.schemaVersion).toBe("2");
+    expect(result.current.payload?.schemaVersion).toBe("3");
   });
 });

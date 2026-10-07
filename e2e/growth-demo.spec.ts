@@ -1,0 +1,85 @@
+import { expect, test } from "@playwright/test";
+
+const mainNavigation = (page: import("@playwright/test").Page) =>
+  page.getByRole("navigation", { name: "Main navigation" });
+
+test.use({ storageState: { cookies: [], origins: [] } });
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    for (const key of ["insights.main", "planner.calendar"]) {
+      localStorage.setItem(`cadence.tab_onboarding_completed.v1:${key}`, "done");
+    }
+  });
+});
+
+test("Growth has one home for each section and Settings has no score or stats", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/demo/growth");
+  await expect(page.getByTestId("growth-page")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Level 6 unlocked", exact: true })).toBeVisible();
+  expect(await page.locator("[data-growth-section]").evaluateAll(nodes =>
+    nodes.map(node => node.getAttribute("data-growth-section"))
+  )).toEqual(["score", "medals", "tracker", "stats"]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    await page.evaluate(() => window.innerWidth)
+  );
+
+  await mainNavigation(page).getByRole("link", { name: "Goals", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Current goals", exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Past goals", exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Progress tracker", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: /Account menu/ }).click();
+  await page.getByRole("menuitem", { name: "Profile settings" }).click();
+  await expect(page.getByRole("heading", { name: "Account", exact: true })).toBeVisible();
+  await expect(page.getByText("Goal score", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Total activities", { exact: true })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test("completion updates Growth stats without refreshing the browser", async ({ page }) => {
+  await page.goto("/demo/growth");
+  const stats = page.locator('[data-growth-section="stats"]');
+  await expect(stats).toBeAttached();
+  const count = async () => Number((await stats.innerText()).match(/total activities\s+([\d,]+)/i)?.[1].replaceAll(",", ""));
+  const before = await count();
+  await mainNavigation(page).getByRole("link", { name: "Agenda", exact: true }).click();
+  await expect(page.locator("[data-planner-entry-key]").first()).toBeVisible();
+  // The seeded day page uses the same snapshot as Growth. This navigation starts
+  // fresh before the mutation; all subsequent navigation stays in the same tab.
+  await page.goto("/demo/calendar?view=day");
+  const row = page.locator("[data-planner-entry-key]").filter({ hasText: "Read 20 pages" });
+  await row.getByRole("button", { name: "Mark session done", exact: true }).click({ delay: 550 });
+  await expect(row.getByRole("button", { name: "Mark session not done", exact: true })).toBeVisible();
+  await mainNavigation(page).getByRole("link", { name: "Growth", exact: true }).click();
+  await expect.poll(count).toBe(before + 1);
+});
+
+test("Prism shelf selection and reduced motion work", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/demo/growth");
+  await page.getByRole("button", { name: "Lv 2", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Level 2 unlocked", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Locked award", exact: true }).first().click();
+  await expect(page.getByRole("heading", { name: "Still ahead", exact: true })).toBeVisible();
+  const hero = page.locator('[aria-label="Trophy showcase"] .prism-medal[data-detail="hero"]');
+  expect(await hero.evaluate(node => getComputedStyle(node).transform)).toBe("none");
+  expect(await page.locator(".ach-showcase-hero").evaluate(node => getComputedStyle(node).animationName)).toBe("none");
+});
+
+for (const [from, to] of [
+  ["/demo/achievements", "/demo/growth"],
+  ["/demo/insights", "/demo/growth"],
+  ["/demo/insights/more", "/demo/growth#stats"],
+  ["/demo/goals/library", "/demo/goals"],
+  ["/demo/insights/folios?view=past", "/demo/goals#past-goals"],
+]) {
+  test(`${from} redirects to its canonical destination`, async ({ page }) => {
+    await page.goto(from);
+    await expect(page).toHaveURL(url => {
+      const target = new URL(to, url.origin);
+      return url.pathname === target.pathname && url.hash === target.hash;
+    });
+  });
+}

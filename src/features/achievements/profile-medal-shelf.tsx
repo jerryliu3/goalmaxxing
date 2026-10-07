@@ -3,7 +3,6 @@
 import "@/features/achievements/showcase-theme.css";
 import type { PublicProfileGlobalAchievement } from "@cadence/shared/social/public-profile";
 import { MedalMark } from "@/features/achievements/medals";
-import { awardTierForLevel } from "@/features/achievements/tier";
 
 export function ProfileMedalShelf({
   achievements,
@@ -48,7 +47,6 @@ export function ProfileMedalShelf({
         <ul className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
           {earned.map((achievement) => {
             const level = achievement.level ?? 0;
-            const tier = awardTierForLevel(level);
             return (
               <li
                 key={achievement.id}
@@ -56,9 +54,7 @@ export function ProfileMedalShelf({
               >
                 <MedalMark
                   level={level}
-                  tier={tier}
                   size={64}
-                  markId={`profile-medal-${achievement.id}`}
                 />
                 <span className="ach-showcase-stat-muted mt-2 type-figure text-[11px]">
                   Lv {level}

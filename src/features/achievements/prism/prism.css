@@ -1,0 +1,127 @@
+.prism-medal {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  isolation: isolate;
+  vertical-align: middle;
+  --prism-spin: calc(var(--ry, -14deg) * 2.4 - var(--rx, 7deg) * 1.6 + 30deg);
+  filter: drop-shadow(0 4px 4px color-mix(in srgb, var(--prism-black) 15%, transparent));
+}
+
+.prism-body, .prism-body > span, .prism-letter {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.prism-rim {
+  background: conic-gradient(from var(--prism-spin), var(--m-hi), var(--m-mid) 10%, var(--m-lo) 20%, var(--m-hi) 40%, var(--m-lo) 64%, var(--m-mid) 76%, var(--m-hi));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--m-hi) 70%, transparent);
+}
+
+.prism-body > .prism-face {
+  inset: 3.2%;
+  background: radial-gradient(ellipse 60% 50% at var(--light-x, 40%) var(--light-y, 28%), color-mix(in srgb, var(--m-shine) 42%, transparent), transparent 70%), linear-gradient(145deg, var(--m-fa), var(--m-fb) 48%, var(--m-fc) 82%, var(--m-fa));
+}
+
+.prism-facets {
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(from var(--prism-spin), color-mix(in srgb, var(--prism-white) 22%, transparent) 0deg 8deg, transparent 8deg 20deg, color-mix(in srgb, var(--prism-black) 18%, transparent) 20deg 26deg, transparent 26deg 36deg);
+  mask: radial-gradient(circle, transparent 46%, var(--prism-black) 72%);
+}
+
+.prism-medal[data-face="foil"] .prism-face {
+  background: conic-gradient(from var(--prism-spin), var(--m-f1), var(--m-f2), var(--m-f3), var(--m-f4), var(--m-f1)), linear-gradient(145deg, var(--m-fa), var(--m-fb) 48%, var(--m-fc));
+}
+
+.prism-medal[data-face="brushed"] .prism-face {
+  background: repeating-linear-gradient(105deg, transparent 0 2px, color-mix(in srgb, var(--prism-white) 14%, transparent) 2px 3px), linear-gradient(145deg, var(--m-fa), var(--m-fb), var(--m-fc));
+}
+
+.prism-medal[data-face="glass"] .prism-face {
+  background: radial-gradient(ellipse at var(--light-x, 40%) var(--light-y, 28%), color-mix(in srgb, var(--prism-white) 75%, transparent), transparent 62%), linear-gradient(145deg, var(--m-fa), var(--m-fb), var(--m-fc));
+}
+
+.prism-medal[data-detail="small"] .prism-face, .prism-medal[data-locked] .prism-face {
+  background: linear-gradient(145deg, var(--m-fa), var(--m-fb), var(--m-fc));
+}
+
+.prism-medal[data-goal] .prism-body, .prism-medal[data-goal] .prism-body > span, .prism-medal[data-goal] .prism-letter {
+  border-radius: 12%;
+}
+
+.prism-medal[data-detail="hero"] {
+  transform: perspective(700px) rotateX(var(--rx, 7deg)) rotateY(var(--ry, -14deg));
+}
+
+.prism-glint {
+  background: linear-gradient(var(--shine-angle, 113deg), transparent calc(var(--shine-position, 55%) - 8%), color-mix(in srgb, var(--m-shine) 40%, transparent) var(--shine-position, 55%), transparent calc(var(--shine-position, 55%) + 8%));
+  pointer-events: none;
+}
+
+.prism-medal[data-unlocking] {
+  animation: prism-strike 460ms ease-out both;
+}
+
+.prism-sweep {
+  will-change: translate, opacity;
+  background: linear-gradient(115deg, transparent 40%, var(--m-shine) 50%, transparent 60%);
+  animation: prism-sweep 900ms 160ms ease-out both;
+  pointer-events: none;
+}
+
+.prism-catch {
+  box-shadow: inset 0 0 0 2px var(--m-hi);
+  animation: prism-catch 600ms 650ms ease-out both;
+  pointer-events: none;
+}
+
+@keyframes prism-strike {
+  0% {
+    scale: 1.08;
+    opacity: .3;
+  }
+  70% {
+    scale: .97;
+  }
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+}
+
+@keyframes prism-sweep {
+  from {
+    translate: -120% 0;
+    opacity: 0;
+  }
+  30% {
+    opacity: .8;
+  }
+  to {
+    translate: 120% 0;
+    opacity: 0;
+  }
+}
+
+@keyframes prism-catch {
+  from {
+    opacity: .9;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prism-medal, .prism-medal > span {
+    animation: none !important;
+    transform: none !important;
+    scale: 1 !important;
+  }
+  .prism-glint, .prism-sweep, .prism-catch {
+    display: none;
+  }
+}
