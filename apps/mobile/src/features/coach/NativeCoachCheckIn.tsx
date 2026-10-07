@@ -39,7 +39,7 @@ export function NativeCoachCheckIn() {
     <Text style={text}>{window.completed} of {window.placed} done · {window.estimatedMinutes} minutes remaining</Text>
     {window.items.map(item => <View key={`${item.goalId}:${item.date}`} style={{gap:4}}><Text style={text}>{item.title} · {item.date} · {item.state}</Text>{tab === "recap" && item.state === "open" && <PrimaryButton label={saving === `${item.goalId}:${item.date}` ? "Saving…" : "Mark done"} disabled={saving !== null} onPress={() => void complete(item.goalId,item.date)} />}</View>)}
     {tab === "next" && <>
-      {payload.facts.recover.count > 0 && <Text style={text}>{payload.facts.recover.count} sessions to recover</Text>}
+      {payload.facts.recover.count > 0 && <Text style={text}>{payload.facts.recover.count} {payload.facts.recover.count === 1 ? "session" : "sessions"} slipped</Text>}
       {payload.facts.unscheduled.count > 0 && <Text style={text}>{payload.facts.unscheduled.count} goals need placement</Text>}
       <PrimaryButton label="Open planner" onPress={() => { coach.setOpen(false); router.push("/(tabs)/calendar"); }} />
       {payload.kind === "monthly" && <PrimaryButton label="Create goal" onPress={() => { coach.setOpen(false); router.push("/goals/new"); }} />}

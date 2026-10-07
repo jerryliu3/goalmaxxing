@@ -57,7 +57,6 @@ interface UsePlannerPersistenceActionsArgs {
     nextPolicy: PlannerPolicy;
     solveIntent: "stable" | "replan";
     draftCommands: PlannerDraftCommand[];
-    recoverPastPlacements?: boolean;
   }) => Promise<NonNullable<PlannerContextPayload["preview"]> | null>;
 }
 
@@ -93,18 +92,18 @@ export function usePlannerPersistenceActions({
     [context, draftSaveWindow]
   );
 
-  const savePlan = useCallback(async () => {
+  const savePlan = useCallback(async (): Promise<boolean> => {
     if (!context) {
-      return;
+      return false;
     }
     if (!draftSaveWindow) {
       toast.error(plannerDraftWindowUnavailableMessage(draftSaveWindowResult));
-      return;
+      return false;
     }
     const expectedDigest = context.revisions.scheduleDigest;
     if (!expectedDigest) {
       toast.error("Planner state is stale. Refresh and regenerate the preview.");
-      return;
+      return false;
     }
 
     setSaveLoading(true);
@@ -138,7 +137,7 @@ export function usePlannerPersistenceActions({
           });
         } catch (error) {
           toast.error(getApiErrorMessage(error, "Planner save failed."));
-          return;
+          return false;
         }
       } else {
         const monthWindow = getScopeDateRange(context.scopeMonth);
@@ -177,7 +176,7 @@ export function usePlannerPersistenceActions({
         if (!savePreview) {
           if (!refreshPolicy) {
             toast.error("Preview is unavailable. Regenerate before saving.");
-            return;
+            return false;
           }
           savePreview = await requestPreviewForWindow({
             startDate: draftSaveWindow.start,
@@ -198,13 +197,13 @@ export function usePlannerPersistenceActions({
         }
         if (!savePreview) {
           toast.error("Preview is unavailable. Regenerate before saving.");
-          return;
+          return false;
         }
         const publishBlockedByElapsedWindow =
           getWindowState(draftSaveWindow, context.asOfDate) === "historical";
         if (publishBlockedByElapsedWindow || !savePreview.solver.publishable) {
           toast.error(nonPublishablePreviewMessage(savePreview));
-          return;
+          return false;
         }
         const saveRequestBody = buildPlannerSaveRequestBody({
           expectedDigest,
@@ -231,10 +230,10 @@ export function usePlannerPersistenceActions({
             toast.error(
               `${error.message ?? "Planner save is currently blocked."}${detailSuffix}`
             );
-            return;
+            return false;
           }
           toast.error(getApiErrorMessage(error, "Planner save failed."));
-          return;
+          return false;
         }
       }
       onScheduleDigestChange(payload.scheduleDigest ?? null, payload.savedItems ?? null);
@@ -253,7 +252,7 @@ export function usePlannerPersistenceActions({
           toast.warning(
             "Plan saved. Calendar reload is temporarily unavailable, but the draft is no longer pending."
           );
-          return;
+          return true;
         }
         toast.success(payload.replayed ? "Save replayed." : "Plan saved.");
       } catch (error) {
@@ -263,6 +262,7 @@ export function usePlannerPersistenceActions({
             : "Plan saved. Calendar reload is temporarily unavailable."
         );
       }
+      return true;
     } finally {
       setSaveLoading(false);
     }

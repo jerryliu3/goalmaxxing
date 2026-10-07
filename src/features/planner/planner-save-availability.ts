@@ -41,7 +41,6 @@ interface PlannerSaveAvailabilityArgs {
   draftSaveWindow: { start: string; end: string } | null;
   draftWindowTooWide: boolean;
   hasDraftSession: boolean;
-  plannerReadOnly: boolean;
 }
 
 export interface PlannerSaveAvailability {
@@ -50,7 +49,6 @@ export interface PlannerSaveAvailability {
   draftSaveBlockedMessage: string | null;
   rebuildBlockedMessage: string | undefined;
   canResetPlan: boolean;
-  canRecoverPastSessions: boolean;
   hasUnsavedPlannerChanges: boolean;
   canShowSaveAction: boolean;
 }
@@ -61,7 +59,6 @@ export function selectPlannerSaveAvailability({
   draftSaveWindow,
   draftWindowTooWide,
   hasDraftSession,
-  plannerReadOnly,
 }: PlannerSaveAvailabilityArgs): PlannerSaveAvailability {
   const blockedSave = draftWindowTooWide
     ? PLANNER_DRAFT_WINDOW_TOO_WIDE_MESSAGE
@@ -83,12 +80,6 @@ export function selectPlannerSaveAvailability({
     context?.activePlan?.items.some((item) => item.locked)
   );
   const canResetPlan = Boolean(!hasDraftSession && hasLockedPlanItems);
-  const hasOverduePlannerItems = Boolean(
-    context?.staleness.reasons.some((reason) => reason.code === "overdue_item")
-  );
-  const canRecoverPastSessions = Boolean(
-    !plannerReadOnly && context?.activePlan && hasOverduePlannerItems
-  );
   const hasUnsavedPlannerChanges = Boolean(hasDraftSession || !context?.activePlan);
   const canShowSaveAction = Boolean(effectivePreview);
 
@@ -100,7 +91,6 @@ export function selectPlannerSaveAvailability({
       ? "Save or undo preview changes before rebuilding schedule."
       : undefined,
     canResetPlan,
-    canRecoverPastSessions,
     hasUnsavedPlannerChanges,
     canShowSaveAction,
   };

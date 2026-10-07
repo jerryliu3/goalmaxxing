@@ -245,6 +245,30 @@ describe("PlannerFocusedDayPane", () => {
     );
   });
 
+  it("lists only the scheduled sessions when scheduledOnly is set", () => {
+    renderWithDnd(
+      <PlannerFocusedDayPane
+        day="2026-08-06"
+        entries={[sampleEntry as never]}
+        completionFactMarkers={[]}
+        mutationLoadingKey={null}
+        asOfDate="2026-08-06"
+        canMutatePlanItems
+        canMutateEntryOnDay={() => true}
+        onEntryOpen={() => {}}
+        onToggleCompletion={() => {}}
+        onEntryPointerStart={() => {}}
+        onEntryPointerEnd={() => {}}
+        hideTasks
+        scheduledOnly
+      />
+    );
+
+    expect(screen.getByRole("button", { name: /Scheduled goals 1/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Unscheduled goals/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /One time tasks/ })).toBeNull();
+  });
+
   it("hides the redundant day heading when the date picker already names the day", () => {
     renderWithDnd(
       <PlannerFocusedDayPane

@@ -8,6 +8,7 @@ import {
   formatEstimatedDuration,
 } from "@/lib/digest/hours";
 import type { DigestKind } from "@/lib/digest/period";
+import { recoveryPromptText } from "@/lib/planner/recovery/model";
 
 export interface CheckInRow {
   id: string;
@@ -51,7 +52,7 @@ function recoverAction(facts: DigestFacts): CheckInRow | null {
   const named = recover.items.map((item) => item.title).join(", ");
   return {
     id: "recover",
-    title: `Recover ${recover.count} missed ${pluralSessions(recover.count)}`,
+    title: recoveryPromptText(recover.count),
     detail:
       named.length > 0
         ? `${named}${recover.count > recover.items.length ? ", and more" : ""}.`

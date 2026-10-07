@@ -367,7 +367,7 @@ export function CalendarScreen() {
               fontSize: 11,
             }}
           >
-            Recover
+            {"Doesn't fit"}
           </Text>
           <Text style={{ color: theme.colors.foreground }}>{recoverCopy}</Text>
         </View>

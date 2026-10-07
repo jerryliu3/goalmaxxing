@@ -79,7 +79,9 @@ export function PlannerGoalView({
     );
   }, [goals, sessions, view.today, completedGoalIds, showCompletedGoals]);
   const isEditable = (session: GoalViewSession) =>
-    canOpenEntry(session.entry) && canMutateEntryOnDay(session.entry, session.date);
+    !session.entry.draftGhost &&
+    canOpenEntry(session.entry) &&
+    canMutateEntryOnDay(session.entry, session.date);
 
   return (
     <GoalView

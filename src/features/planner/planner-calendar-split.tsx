@@ -26,6 +26,7 @@ export function PlannerCalendarSplit({
   pane,
 }: {
   calendar: ReactNode;
+  /** Null renders the calendar alone at full width. */
   pane: ReactNode;
 }) {
   const splitterId = useId();
@@ -90,6 +91,10 @@ export function PlannerCalendarSplit({
       setFraction(PLAN_CALENDAR_SPLIT_MAX);
     }
   }, []);
+
+  if (!pane) {
+    return <div className="@container min-w-0">{calendar}</div>;
+  }
 
   return (
     <div

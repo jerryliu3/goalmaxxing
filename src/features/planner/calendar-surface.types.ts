@@ -67,6 +67,9 @@ export type SelectedDayChangeOptions = {
 export interface CalendarSurfaceProps {
   goalTimelineOpen?: boolean;
   onGoalTimelineOpenChange?: (open: boolean) => void;
+  /** A deep link asked for the recovery review. */
+  recoveryReviewRequested?: boolean;
+  onRecoveryReviewRequestHandled?: () => void;
   activeTab: CalendarTab;
   month: string | null;
   selectedDay: string | null;

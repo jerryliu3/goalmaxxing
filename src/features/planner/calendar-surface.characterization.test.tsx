@@ -1676,12 +1676,12 @@ describe("CalendarSurface characterization", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("2 goals still have sessions to recover.")
+        screen.getByText("2 goals have sessions that don't fit.")
       ).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Recover" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Fix plan" })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Recover" }));
+    fireEvent.click(screen.getByRole("button", { name: "Fix plan" }));
     const dialog = await screen.findByRole("dialog");
     for (const expected of expectedSummaries) {
       expect(within(dialog).getByText(expected.title)).toBeInTheDocument();
@@ -1716,7 +1716,7 @@ describe("CalendarSurface characterization", () => {
       expect(postJsonMock).toHaveBeenCalled();
     });
     expect(
-      screen.queryByRole("button", { name: "Recover" })
+      screen.queryByRole("button", { name: "Fix plan" })
     ).not.toBeInTheDocument();
   });
 
@@ -1762,9 +1762,9 @@ describe("CalendarSurface characterization", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Recover" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Fix plan" })).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByRole("button", { name: "Recover" }));
+    fireEvent.click(screen.getByRole("button", { name: "Fix plan" }));
     const dialog = await screen.findByRole("dialog");
     expect(
       within(dialog).getByText(
@@ -1841,7 +1841,7 @@ describe("CalendarSurface characterization", () => {
       expect(postJsonMock).toHaveBeenCalled();
     });
     expect(
-      screen.queryByRole("button", { name: "Recover" })
+      screen.queryByRole("button", { name: "Fix plan" })
     ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Open planner help" }));
@@ -1888,9 +1888,9 @@ describe("CalendarSurface characterization", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Recover" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Fix plan" })).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByRole("button", { name: "Recover" }));
+    fireEvent.click(screen.getByRole("button", { name: "Fix plan" }));
     const dialog = await screen.findByRole("dialog");
     expect(
       within(dialog).getByText(

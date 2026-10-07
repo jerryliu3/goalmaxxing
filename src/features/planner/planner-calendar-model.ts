@@ -151,7 +151,6 @@ export function selectPlannerCalendarModel({
     draftSaveWindow: draftSession.draftSaveWindow,
     draftWindowTooWide: draftSession.draftWindowTooWide,
     hasDraftSession: draftSession.hasDraftSession,
-    plannerReadOnly: dayAccessors.plannerReadOnly,
   });
   const warningModel = selectPlannerWarningModel({
     unplaceableGoalCount: dayAccessors.unplaceableGoalSummaries.length,

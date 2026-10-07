@@ -43,8 +43,8 @@ export function selectMobileRecoverCopy(
   );
   if (unplacedCount > 0) {
     return `${unplacedCount} goal${
-      unplacedCount === 1 ? " still has" : "s still have"
-    } sessions to recover.`;
+      unplacedCount === 1 ? " has" : "s have"
+    } sessions that don't fit.`;
   }
-  return "Some sessions still need a home. Recover them when you're ready.";
+  return "Some sessions don't fit. Fix them when you're ready.";
 }

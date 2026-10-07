@@ -69,7 +69,8 @@ export function buildGoalViewSessions(
   const sessions: GoalViewSession[] = [];
   for (const date of days) {
     for (const entry of getEntriesForDay(date)) {
-      if (entry.draftGhost || isPlannerTaskCalendarEntry(entry)) {
+      // A moved session shows once, on its new day; one leaving the plan stays, crossed out.
+      if ((entry.draftGhost && entry.draftDiffToDate) || isPlannerTaskCalendarEntry(entry)) {
         continue;
       }
       sessions.push({

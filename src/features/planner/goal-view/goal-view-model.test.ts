@@ -56,11 +56,12 @@ describe("buildGoalViewSessions", () => {
         effectiveScheduledLocalTime: "07:30",
         creditState: "completed_as_scheduled",
       }),
-      entry("ghost", "run", { draftGhost: true }),
+      entry("ghost", "run", { draftGhost: true, draftDiffToDate: "2026-10-05" }),
       entry("task", "t1", { entryKind: "task" }),
     ],
     "2026-10-03": [
       entry("b", "run", { draftDiffKind: "moved" as never }),
+      entry("let-go", "run", { draftGhost: true, draftDiffKind: "moved_from" }),
     ],
   };
   const sessions = buildGoalViewSessions(
@@ -68,8 +69,8 @@ describe("buildGoalViewSessions", () => {
     (day) => byDay[day] ?? []
   );
 
-  it("skips draft ghosts and tasks", () => {
-    expect(sessions.map((session) => session.key)).toEqual(["a", "b"]);
+  it("skips tasks and the old day of a moved session, but keeps a session leaving the plan", () => {
+    expect(sessions.map((session) => session.key)).toEqual(["a", "b", "let-go"]);
   });
 
   it("derives milestone, time, completion and draft state", () => {

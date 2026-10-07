@@ -11,10 +11,7 @@ interface PlannerSettingsFormProps {
   onSetupRestWeekdaysChange: (next: number[]) => void;
   setupLoading: boolean;
   plannerReadOnly: boolean;
-  recoverLoading: boolean;
   loading: boolean;
-  saveLoading: boolean;
-  canRecoverPastSessions: boolean;
   canResetPlan: boolean;
   resetLoading: boolean;
   rebuildLoading: boolean;
@@ -25,7 +22,6 @@ interface PlannerSettingsFormProps {
   goalResetLoading: boolean;
   openGoals: PlannerResetGoalOption[];
   onSaveSettings: () => void;
-  onRecover: () => void;
   onUnlockAllGoals: () => void;
   onRefreshCalendar: () => void;
   onFullReset: () => void;
@@ -37,10 +33,7 @@ export function PlannerSettingsForm({
   onSetupRestWeekdaysChange,
   setupLoading,
   plannerReadOnly,
-  recoverLoading,
   loading,
-  saveLoading,
-  canRecoverPastSessions,
   canResetPlan,
   resetLoading,
   rebuildLoading,
@@ -51,7 +44,6 @@ export function PlannerSettingsForm({
   goalResetLoading,
   openGoals,
   onSaveSettings,
-  onRecover,
   onUnlockAllGoals,
   onRefreshCalendar,
   onFullReset,
@@ -116,19 +108,10 @@ export function PlannerSettingsForm({
       {!plannerReadOnly ? (
         <div className="space-y-2 rounded-md border p-3">
           <p className="text-xs text-muted-foreground">
-            Use these tools to recover missed past sessions, or refresh the calendar
-            to rebalance unlocked sessions onto open days.
+            Refresh the calendar to rebalance unlocked sessions onto open days.
+            Slipped sessions are reviewed from Agenda.
           </p>
           <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onRecover}
-              title="Recover missed activities that were left behind in the past"
-              disabled={recoverLoading || loading || saveLoading || !canRecoverPastSessions}
-            >
-              {recoverLoading ? "Recovering missed activities..." : "Recover missed activities"}
-            </Button>
             <Button
               type="button"
               variant="outline"

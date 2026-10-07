@@ -103,6 +103,10 @@ export interface PlannerCalendarBoardProps {
   viewerSubject?: DuoLaneSubject | null;
   partnerSubject?: DuoLaneSubject | null;
   splitPartnerChecklist?: boolean;
+  /** Week and Month drop the day checklist beside the grid; Day keeps it. */
+  hideWeekMonthChecklist?: boolean;
+  /** Day lists only its scheduled sessions. */
+  dayScheduledOnly?: boolean;
   calendarGridViewportRef: MutableRefObject<HTMLDivElement | null>;
   onCalendarGridViewportScroll: () => void;
   weekdayLabels: string[];
@@ -173,6 +177,8 @@ export function PlannerCalendarBoard({
   viewerSubject = null,
   partnerSubject = null,
   splitPartnerChecklist = false,
+  hideWeekMonthChecklist = false,
+  dayScheduledOnly = false,
   calendarGridViewportRef,
   onCalendarGridViewportScroll,
   weekdayLabels,
@@ -293,6 +299,7 @@ export function PlannerCalendarBoard({
               onEntryPointerStart={onEntryPointerStart}
               onEntryPointerEnd={onEntryPointerEnd}
               hideTasks={hideTasks}
+              scheduledOnly={dayScheduledOnly}
               selectedEntryKey={selectedEntryKey}
               dayChecklist={dayChecklist}
               partnerLabel={partnerLabel}
@@ -431,30 +438,32 @@ export function PlannerCalendarBoard({
                 )
               }
               pane={
-                <div style={{ viewTransitionName: "plan-focused-aside" }}>
-                  <PlannerFocusedDayPane
-                    day={focusedDay}
-                    entries={focusedDayEntries}
-                    completionFactMarkers={focusedDayCompletionFactMarkers}
-                    mutationLoadingKey={mutationLoadingKey}
-                    optimisticCompletionFacts={optimisticCompletionFacts}
-                    asOfDate={asOfDate}
-                    canMutatePlanItems={canMutatePlanItems}
-                    canMutateEntryOnDay={canMutateEntryOnDay}
-                    onEntryOpen={onFocusedDayEntryOpen}
-                    onToggleCompletion={onToggleCompletion}
-                    onEntryPointerStart={onEntryPointerStart}
-                    onEntryPointerEnd={onEntryPointerEnd}
-                    hideTasks={hideTasks}
-                    selectedEntryKey={selectedEntryKey}
-                    dayChecklist={dayChecklist}
-                    partnerLabel={partnerLabel}
-                    splitPartnerChecklist={false}
-                    onConfirmDraftMove={onConfirmDraftMove}
-                    onCancelDraftMove={onCancelDraftMove}
-                    onClearSelectedEntry={onClearSelectedEntry}
-                  />
-                </div>
+                hideWeekMonthChecklist ? null : (
+                  <div style={{ viewTransitionName: "plan-focused-aside" }}>
+                    <PlannerFocusedDayPane
+                      day={focusedDay}
+                      entries={focusedDayEntries}
+                      completionFactMarkers={focusedDayCompletionFactMarkers}
+                      mutationLoadingKey={mutationLoadingKey}
+                      optimisticCompletionFacts={optimisticCompletionFacts}
+                      asOfDate={asOfDate}
+                      canMutatePlanItems={canMutatePlanItems}
+                      canMutateEntryOnDay={canMutateEntryOnDay}
+                      onEntryOpen={onFocusedDayEntryOpen}
+                      onToggleCompletion={onToggleCompletion}
+                      onEntryPointerStart={onEntryPointerStart}
+                      onEntryPointerEnd={onEntryPointerEnd}
+                      hideTasks={hideTasks}
+                      selectedEntryKey={selectedEntryKey}
+                      dayChecklist={dayChecklist}
+                      partnerLabel={partnerLabel}
+                      splitPartnerChecklist={false}
+                      onConfirmDraftMove={onConfirmDraftMove}
+                      onCancelDraftMove={onCancelDraftMove}
+                      onClearSelectedEntry={onClearSelectedEntry}
+                    />
+                  </div>
+                )
               }
             />
           )}

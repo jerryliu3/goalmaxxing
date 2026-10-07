@@ -10,10 +10,7 @@ export function buildPlannerSettingsForm({
   setSetupRestWeekdays,
   setupLoading,
   plannerReadOnly,
-  recoverLoading,
   loading,
-  saveLoading,
-  canRecoverPastSessions,
   canResetPlan,
   resetLoading,
   rebuildLoading,
@@ -24,7 +21,6 @@ export function buildPlannerSettingsForm({
   goalResetLoading,
   openGoals,
   submitSetup,
-  recoverPastSessions,
   resetPlan,
   rebuildSchedule,
   resetPlanFully,
@@ -34,10 +30,7 @@ export function buildPlannerSettingsForm({
   setSetupRestWeekdays: (value: number[]) => void;
   setupLoading: boolean;
   plannerReadOnly: boolean;
-  recoverLoading: boolean;
   loading: boolean;
-  saveLoading: boolean;
-  canRecoverPastSessions: boolean;
   canResetPlan: boolean;
   resetLoading: boolean;
   rebuildLoading: boolean;
@@ -48,7 +41,6 @@ export function buildPlannerSettingsForm({
   goalResetLoading: boolean;
   openGoals: PlannerResetGoalOption[];
   submitSetup: () => Promise<void>;
-  recoverPastSessions: () => Promise<void>;
   resetPlan: () => void;
   rebuildSchedule: () => Promise<void>;
   resetPlanFully: () => Promise<void>;
@@ -60,10 +52,7 @@ export function buildPlannerSettingsForm({
       onSetupRestWeekdaysChange={setSetupRestWeekdays}
       setupLoading={setupLoading}
       plannerReadOnly={plannerReadOnly}
-      recoverLoading={recoverLoading}
       loading={loading}
-      saveLoading={saveLoading}
-      canRecoverPastSessions={canRecoverPastSessions}
       canResetPlan={canResetPlan}
       resetLoading={resetLoading}
       rebuildLoading={rebuildLoading}
@@ -75,9 +64,6 @@ export function buildPlannerSettingsForm({
       openGoals={openGoals}
       onSaveSettings={() => {
         void submitSetup();
-      }}
-      onRecover={() => {
-        void recoverPastSessions();
       }}
       onUnlockAllGoals={resetPlan}
       onRefreshCalendar={() => {

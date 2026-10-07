@@ -72,7 +72,7 @@ describe("mobile Plan Gazetteer helpers", () => {
           reason: "capacity",
         },
       ])
-    ).toBe("2 goals still have sessions to recover.");
+    ).toBe("2 goals have sessions that don't fit.");
     expect(
       selectMobileRecoverCopy([
         {
@@ -86,6 +86,6 @@ describe("mobile Plan Gazetteer helpers", () => {
           reason: "invalid_lock",
         },
       ])
-    ).toBe("Some sessions still need a home. Recover them when you're ready.");
+    ).toBe("Some sessions don't fit. Fix them when you're ready.");
   });
 });

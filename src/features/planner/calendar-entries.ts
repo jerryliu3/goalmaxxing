@@ -52,6 +52,7 @@ export function buildEntriesByDateProjection({
   linkSummaries,
   draftItemEdits,
   draftCommands = [],
+  letGoEntryKeys,
 }: {
   workUnits: PlannerWorkUnit[] | undefined;
   activeItems: PlannerActiveItemSnapshot[] | undefined;
@@ -62,6 +63,8 @@ export function buildEntriesByDateProjection({
   linkSummaries?: readonly PlannerGoalLinkSummary[];
   draftItemEdits: Record<string, DraftItemEdit>;
   draftCommands?: readonly PlannerDraftCommand[];
+  /** Sessions recovery mode staged as let go: drawn as removed from their day. */
+  letGoEntryKeys?: ReadonlySet<string>;
 }) {
   const byDate = new Map<string, Map<string, PlannerDayDetailEntry>>();
   const entryByKey = new Map<string, PlannerDayDetailEntry>();
@@ -382,6 +385,21 @@ export function buildEntriesByDateProjection({
       effectiveScheduledLocalTime: unit?.effectiveScheduledLocalTime ?? null,
     });
     byDate.set(diffEntry.date, dayEntries);
+  }
+
+  if (letGoEntryKeys?.size) {
+    for (const [day, dayEntries] of byDate) {
+      for (const [key, entry] of dayEntries) {
+        if (!letGoEntryKeys.has(key)) continue;
+        dayEntries.set(key, {
+          ...entry,
+          draftDiffKind: "moved_from",
+          draftDiffFromDate: day,
+          draftDiffToDate: null,
+          draftGhost: true,
+        });
+      }
+    }
   }
 
   const entriesByDate = new Map(

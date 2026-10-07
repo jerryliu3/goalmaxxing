@@ -45,15 +45,15 @@ export function selectPlannerWarningModel({
   const plannerWarningBannerCopy =
     unplaceableGoalCount > 0
       ? `${unplaceableGoalCount} goal${
-          unplaceableGoalCount === 1 ? " still has" : "s still have"
-        } sessions to recover.`
+          unplaceableGoalCount === 1 ? " has" : "s have"
+        } sessions that don't fit.`
       : eligibilityNotices.hardIneligible.length > 0
         ? `${eligibilityNotices.hardIneligible.length} goal${
             eligibilityNotices.hardIneligible.length === 1 ? " needs" : "s need"
           } a small update before ${
             eligibilityNotices.hardIneligible.length === 1 ? "it" : "they"
           } can be placed.`
-        : "Some sessions still need a home. Recover them when you're ready.";
+        : "Some sessions don't fit. Fix them when you're ready.";
 
   return {
     warningSuggestedNextSteps,
