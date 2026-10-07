@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
@@ -9,7 +10,7 @@ import {
   Star,
   Target,
 } from "lucide-react";
-import { GAZETTEER, toGazetteerDisplayColor } from "@cadence/shared/brand/gazetteer";
+import { toGazetteerDisplayColor } from "@cadence/shared/brand/gazetteer";
 import { getTheme, goalCategoryPigment, type ThemeId } from "@cadence/shared/brand";
 import { resolveUiStyleId } from "@/lib/brand/ui-style";
 import {
@@ -42,11 +43,11 @@ const FALLBACK_COLORS = [
 ] as const;
 
 const HEX_COLOR_REGEX = /^#?[0-9a-f]{6}$/i;
-export const WORK_PILL_HUE_AMOUNT = 0.24;
-export const WORK_PILL_DRAFT_HUE_AMOUNT = 0.48;
-export const WORK_PILL_NEW_DRAFT_HUE_AMOUNT = 0.62;
-const ORIGINAL_WORK_PILL_PAPER = "#ffffff";
-const WORK_PILL_INK = "#1c1917";
+/** Width of a work pill's goal-colour edge; matches Goal View's lane labels. */
+export const WORK_PILL_EDGE_PX = 3;
+/** How much goal colour a draft placement mixes into the page behind it. */
+export const WORK_PILL_DRAFT_HUE_PERCENT = 30;
+export const WORK_PILL_NEW_DRAFT_HUE_PERCENT = 42;
 type GoalVisualCategoryKey = Exclude<CategoryPresetId, "other">;
 
 export interface GoalVisualInput {
@@ -108,84 +109,45 @@ function resolveCategorySwatchColor(category: string | null): string | null {
   return getCategorySwatchColor(categoryKey as GoalVisualCategoryKey);
 }
 
-function parseHexChannels(hex: string): [number, number, number] {
-  const normalized = hex.startsWith("#") ? hex.slice(1) : hex;
-  return [
-    Number.parseInt(normalized.slice(0, 2), 16),
-    Number.parseInt(normalized.slice(2, 4), 16),
-    Number.parseInt(normalized.slice(4, 6), 16),
-  ];
-}
-
-function toHexChannel(value: number) {
-  return Math.round(Math.min(255, Math.max(0, value)))
-    .toString(16)
-    .padStart(2, "0");
-}
-
-export function mixOpaqueHex(hex: string, paper: string, amount: number): string {
-  const [red, green, blue] = parseHexChannels(hex);
-  const [paperRed, paperGreen, paperBlue] = parseHexChannels(paper);
-  const rest = 1 - amount;
-  return `#${toHexChannel(red * amount + paperRed * rest)}${toHexChannel(
-    green * amount + paperGreen * rest
-  )}${toHexChannel(blue * amount + paperBlue * rest)}`;
-}
-
-function workPillPaper(styleId?: ThemeId) {
-  return getTheme(resolveUiStyleId(styleId)).remapDisplayColors
-    ? GAZETTEER.paper
-    : ORIGINAL_WORK_PILL_PAPER;
-}
-
-function srgbChannel(value: number) {
-  const channel = value / 255;
-  return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
-}
-
-export function contrastingInkForColor(color: string, styleId?: ThemeId) {
-  const hex = toStyleDisplayColor(
-    normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0],
-    styleId
-  );
-  const red = Number.parseInt(hex.slice(1, 3), 16);
-  const green = Number.parseInt(hex.slice(3, 5), 16);
-  const blue = Number.parseInt(hex.slice(5, 7), 16);
-  const luminance =
-    0.2126 * srgbChannel(red) +
-    0.7152 * srgbChannel(green) +
-    0.0722 * srgbChannel(blue);
-  return luminance > 0.55 ? "#1c1917" : "#ffffff";
-}
-
-export function getWorkPillFillStyle(color: string, credited = false, styleId?: ThemeId) {
-  const hex = goalCategoryPigment(
+function workPillGoalColor(color: string, styleId?: ThemeId) {
+  return goalCategoryPigment(
     toStyleDisplayColor(normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0], styleId)
   );
-  const fill = mixOpaqueHex(hex, workPillPaper(styleId), credited ? WORK_PILL_HUE_AMOUNT * 0.45 : WORK_PILL_HUE_AMOUNT);
+}
+
+/**
+ * Work pills share one neutral surface in every theme, so they sit quietly on
+ * light and dark pages alike. The goal colour is a 3px left edge, the same
+ * mark Goal View's lane labels carry, so it costs the title no room.
+ */
+export function getWorkPillFillStyle(
+  color: string,
+  credited = false,
+  styleId?: ThemeId
+): CSSProperties {
   return {
-    backgroundColor: fill,
-    borderColor: fill,
-    color: credited ? "#57534e" : WORK_PILL_INK,
+    backgroundColor: "var(--muted)",
+    borderColor: "transparent",
+    borderLeftColor: workPillGoalColor(color, styleId),
+    borderLeftWidth: WORK_PILL_EDGE_PX,
+    color: credited ? "var(--muted-foreground)" : "var(--foreground)",
   };
 }
 
+/** Draft placements stand out with the goal colour mixed into the page itself. */
 export function getWorkPillDraftFillStyle(
   color: string,
   kind: "moved_to" | "new",
   styleId?: ThemeId
-) {
-  const hex = goalCategoryPigment(
-    toStyleDisplayColor(normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0], styleId)
-  );
-  const amount =
-    kind === "new" ? WORK_PILL_NEW_DRAFT_HUE_AMOUNT : WORK_PILL_DRAFT_HUE_AMOUNT;
-  const fill = mixOpaqueHex(hex, workPillPaper(styleId), amount);
-  const border = mixOpaqueHex(hex, workPillPaper(styleId), Math.min(1, amount + 0.18));
+): CSSProperties {
+  const hex = workPillGoalColor(color, styleId);
+  const percent =
+    kind === "new" ? WORK_PILL_NEW_DRAFT_HUE_PERCENT : WORK_PILL_DRAFT_HUE_PERCENT;
   return {
-    backgroundColor: fill,
-    borderColor: border,
-    color: contrastingInkForColor(fill, styleId),
+    backgroundColor: `color-mix(in srgb, ${hex} ${percent}%, var(--background))`,
+    borderColor: hex,
+    borderLeftWidth: WORK_PILL_EDGE_PX,
+    color: "var(--foreground)",
   };
 }
 
