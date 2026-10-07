@@ -2474,6 +2474,9 @@ begin
   end loop;
 end $$;
 
+-- Seeded accounts skip the required onboarding preferences step.
+update public.profiles set onboarding_completed_at = now() where onboarding_completed_at is null;
+
 -- Bring the seeded challenge rows in line with the ledger immediately, so the
 -- first page load matches what cron would produce a minute later.
 select public.refresh_challenge_progress_service();

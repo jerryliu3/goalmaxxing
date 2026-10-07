@@ -5,7 +5,6 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   JourneyIntroOverlay,
-  JOURNEY_INTRO_FORCE_USER_ID_KEY,
   JOURNEY_ONBOARDING_COMPLETED_KEY,
   JOURNEY_INTRO_OPEN_EVENT,
   JOURNEY_INTRO_SEEN_KEY,
@@ -19,6 +18,7 @@ const routerMock = vi.hoisted(() => ({
 }));
 const getJsonMock = vi.hoisted(() => vi.fn());
 const putJsonMock = vi.hoisted(() => vi.fn());
+const profileUpdateMock = vi.hoisted(() => vi.fn());
 const profileUpdateEqMock = vi.hoisted(() => vi.fn());
 const TEST_USER_ID = "user-1";
 const INTRO_WALKTHROUGH_TIMEOUT_MS = 20_000;
@@ -53,9 +53,12 @@ vi.mock("@/lib/supabase/client", () => ({
             }),
         }),
       }),
-      update: () => ({
-        eq: (...args: unknown[]) => profileUpdateEqMock(...args),
-      }),
+      update: (values: unknown) => {
+        profileUpdateMock(values);
+        return {
+          eq: (...args: unknown[]) => profileUpdateEqMock(...args),
+        };
+      },
     }),
   }),
 }));
@@ -99,7 +102,10 @@ function mockVisibleOnboardingTargets() {
   );
 }
 
-function renderIntro(onOpenChange?: (open: boolean) => void) {
+function renderIntro(
+  onOpenChange?: (open: boolean) => void,
+  preferencesRequired = false
+) {
   return render(
     <>
       <button type="button" data-onboarding="nav.calendar">
@@ -117,7 +123,11 @@ function renderIntro(onOpenChange?: (open: boolean) => void) {
       <button type="button" data-onboarding="nav.growth">
         New Goal +
       </button>
-      <JourneyIntroOverlay userId={TEST_USER_ID} onOpenChange={onOpenChange} />
+      <JourneyIntroOverlay
+        userId={TEST_USER_ID}
+        preferencesRequired={preferencesRequired}
+        onOpenChange={onOpenChange}
+      />
     </>
   );
 }
@@ -167,23 +177,34 @@ describe("JourneyIntroOverlay", () => {
     fireEvent.click(screen.getByRole("button", { name: "Finish loading" }));
     expect(await screen.findByRole("dialog", { name: "Agenda" })).toBeInTheDocument();
     expect(screen.queryByRole("dialog", { name: "Agenda views" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Skip intro" }));
+    fireEvent.click(screen.getByRole("button", { name: "Skip tour" }));
     expect(await screen.findByRole("dialog", { name: "Agenda views" })).toBeInTheDocument();
     expect(screen.queryByRole("dialog", { name: "Agenda" })).toBeNull();
   });
 
-  it("does not consume a forced intro until boot is finished", async () => {
+  it("waits for boot before opening required preferences", async () => {
     const onOpenChange = vi.fn();
-    window.localStorage.setItem(JOURNEY_INTRO_FORCE_USER_ID_KEY, TEST_USER_ID);
     const { rerender } = render(
-      <JourneyIntroOverlay userId={TEST_USER_ID} enabled={false} onOpenChange={onOpenChange} />
+      <JourneyIntroOverlay
+        userId={TEST_USER_ID}
+        enabled={false}
+        preferencesRequired
+        onOpenChange={onOpenChange}
+      />
     );
-    expect(window.localStorage.getItem(JOURNEY_INTRO_FORCE_USER_ID_KEY)).toBe(TEST_USER_ID);
     expect(onOpenChange).not.toHaveBeenCalled();
-    rerender(<JourneyIntroOverlay userId={TEST_USER_ID} enabled onOpenChange={onOpenChange} />);
-    expect(await screen.findByRole("dialog", { name: "Agenda" })).toBeInTheDocument();
+    rerender(
+      <JourneyIntroOverlay
+        userId={TEST_USER_ID}
+        enabled
+        preferencesRequired
+        onOpenChange={onOpenChange}
+      />
+    );
+    expect(
+      await screen.findByRole("dialog", { name: "Your preferences" })
+    ).toBeInTheDocument();
     expect(onOpenChange).toHaveBeenCalledWith(true);
-    expect(window.localStorage.getItem(JOURNEY_INTRO_FORCE_USER_ID_KEY)).toBeNull();
   });
 
   it("releases page guides for users who already completed the intro", async () => {
@@ -223,121 +244,99 @@ describe("JourneyIntroOverlay", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("opens once when signup forces intro for this user", async () => {
+  it("requires preferences even when this browser already finished the tour", async () => {
     window.localStorage.setItem(JOURNEY_ONBOARDING_COMPLETED_KEY, "done");
     window.localStorage.setItem(JOURNEY_INTRO_SEEN_KEY, toLocalDateString());
-    window.localStorage.setItem(JOURNEY_INTRO_FORCE_USER_ID_KEY, TEST_USER_ID);
+    renderIntro(undefined, true);
 
-    renderIntro();
-    expect(await screen.findByRole("dialog", { name: "Agenda" })).toBeInTheDocument();
-    expect(window.localStorage.getItem(JOURNEY_INTRO_FORCE_USER_ID_KEY)).toBeNull();
+    expect(
+      await screen.findByRole("dialog", { name: "Your preferences" })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Skip tour" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
   });
 
-  it("does not force intro for a different user", () => {
-    window.localStorage.setItem(JOURNEY_ONBOARDING_COMPLETED_KEY, "done");
-    window.localStorage.setItem(JOURNEY_INTRO_SEEN_KEY, toLocalDateString());
-    window.localStorage.setItem(JOURNEY_INTRO_FORCE_USER_ID_KEY, "other-user");
-
-    const { container } = render(<JourneyIntroOverlay userId={TEST_USER_ID} />);
-    expect(container).toBeEmptyDOMElement();
-    expect(window.localStorage.getItem(JOURNEY_INTRO_FORCE_USER_ID_KEY)).toBe("other-user");
-  });
-
-  it("reopens intro when settings triggers the revisit event", async () => {
+  it("reopens intro on preferences when settings triggers the revisit event", async () => {
     window.localStorage.setItem(JOURNEY_ONBOARDING_COMPLETED_KEY, "done");
     const onOpenChange = vi.fn();
     renderIntro(onOpenChange);
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
-    expect(screen.queryByRole("dialog", { name: "Agenda" })).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
 
     act(() => window.dispatchEvent(new Event(JOURNEY_INTRO_OPEN_EVENT)));
 
-    expect(await screen.findByRole("dialog", { name: "Agenda" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("dialog", { name: "Your preferences" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Skip tour" })).toBeInTheDocument();
   });
 
   it(
-    "walks through nav highlights and saves preferences on the last step",
+    "saves required preferences on Next, then walks the skippable tour",
     async () => {
-    const onOpenChange = vi.fn();
-    renderIntro(onOpenChange);
-    expect(await screen.findByRole("dialog", { name: "Agenda" })).toBeInTheDocument();
+      const onOpenChange = vi.fn();
+      renderIntro(onOpenChange, true);
 
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Goals" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Growth" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Community" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Profile" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+      expect(
+        await screen.findByRole("dialog", { name: "Your preferences" })
+      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Public/ })).toHaveAttribute(
+        "aria-pressed",
+        "true"
+      );
+      fireEvent.click(screen.getByRole("button", { name: /Private/ }));
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "Next" })).toBeEnabled();
+      });
 
-    expect(await screen.findByRole("dialog", { name: "Your preferences" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Public/ })).toHaveAttribute(
-      "aria-pressed",
-      "true"
-    );
-    expect(screen.getByRole("button", { name: /Private/ })).toHaveAttribute(
-      "aria-pressed",
-      "false"
-    );
-    fireEvent.click(screen.getByRole("button", { name: /Private/ }));
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Done" })).toBeEnabled();
-    });
+      fireEvent.click(screen.getByRole("button", { name: "Next" }));
+      expect(await screen.findByRole("dialog", { name: "Agenda" })).toBeInTheDocument();
+      expect(putJsonMock).toHaveBeenCalledWith(
+        "/api/planner/context",
+        expect.objectContaining({ timezone: "UTC" })
+      );
+      expect(profileUpdateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          social_activity_visible: false,
+          onboarding_completed_at: expect.any(String),
+        })
+      );
+      expect(screen.getByRole("button", { name: "Skip tour" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Done" }));
-    await waitFor(() => {
-      expect(putJsonMock).toHaveBeenCalled();
-      expect(profileUpdateEqMock).toHaveBeenCalled();
-      expect(onOpenChange).toHaveBeenLastCalledWith(false);
-      expect(screen.queryByRole("dialog", { name: "Your preferences" })).toBeNull();
-    });
-    expect(window.localStorage.getItem(JOURNEY_ONBOARDING_COMPLETED_KEY)).toBe("done");
+      for (const title of ["Goals", "Growth", "Community", "Profile"]) {
+        fireEvent.click(screen.getByRole("button", { name: "Next" }));
+        expect(await screen.findByRole("dialog", { name: title })).toBeInTheDocument();
+      }
+      fireEvent.click(screen.getByRole("button", { name: "Done" }));
+
+      await waitFor(() => {
+        expect(onOpenChange).toHaveBeenLastCalledWith(false);
+        expect(screen.queryByRole("dialog")).toBeNull();
+      });
+      expect(putJsonMock).toHaveBeenCalledTimes(1);
+      expect(window.localStorage.getItem(JOURNEY_ONBOARDING_COMPLETED_KEY)).toBe("done");
     },
     INTRO_WALKTHROUGH_TIMEOUT_MS
   );
 
-  it(
-    "centers the preferences step so actions stay reachable on small screens",
-    async () => {
-    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
-      function mockClientRect(this: HTMLElement) {
-        const target = this.getAttribute("data-onboarding") ?? "unknown";
-        if (target === "nav.settings") {
-          return {
-            top: 720,
-            left: 280,
-            width: 72,
-            height: 48,
-            bottom: 768,
-            right: 352,
-            x: 280,
-            y: 720,
-            toJSON: () => ({}),
-          } as DOMRect;
-        }
-        const index = [
-          "nav.calendar",
-          "nav.goals",
-          "nav.social",
-          "nav.settings",
-          "nav.growth",
-        ].indexOf(target);
-        const left = 20 + Math.max(index, 0) * 80;
-        return {
-          top: 12,
-          left,
-          width: 72,
-          height: 40,
-          bottom: 52,
-          right: left + 72,
-          x: left,
-          y: 12,
-          toJSON: () => ({}),
-        } as DOMRect;
-      }
-    );
+  it("keeps required preferences open when the save fails", async () => {
+    putJsonMock.mockRejectedValueOnce(new Error("offline"));
+    renderIntro(undefined, true);
+
+    expect(
+      await screen.findByRole("dialog", { name: "Your preferences" })
+    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Next" })).toBeEnabled();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+    await waitFor(() => expect(putJsonMock).toHaveBeenCalled());
+    expect(screen.getByRole("dialog", { name: "Your preferences" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Skip tour" })).toBeNull();
+  });
+
+  it("centers the preferences step so actions stay reachable on small screens", async () => {
     Object.defineProperty(window, "innerHeight", {
       configurable: true,
       value: 800,
@@ -347,18 +346,7 @@ describe("JourneyIntroOverlay", () => {
       value: 390,
     });
 
-    renderIntro();
-    expect(await screen.findByRole("dialog", { name: "Agenda" })).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Goals" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Growth" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Community" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(await screen.findByRole("dialog", { name: "Profile" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    renderIntro(undefined, true);
 
     const preferencesDialog = await screen.findByRole("dialog", {
       name: "Your preferences",
@@ -366,21 +354,19 @@ describe("JourneyIntroOverlay", () => {
     expect(screen.getByTestId("journey-intro-preferences-shell")).toBeInTheDocument();
     expect(screen.queryByTestId("onboarding-highlight")).not.toBeInTheDocument();
     expect(preferencesDialog).not.toHaveStyle({ top: "768px" });
+    expect(screen.getByRole("button", { name: "Next" })).toBeVisible();
+  });
 
-    const doneButton = screen.getByRole("button", { name: "Done" });
-    expect(doneButton).toBeVisible();
-    fireEvent.click(doneButton);
-    await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "Your preferences" })).toBeNull();
-    });
-    },
-    INTRO_WALKTHROUGH_TIMEOUT_MS
-  );
-
-  it("skips intro without saving preferences", async () => {
+  it("starts the tour after preferences for users who already saved them", async () => {
     renderIntro();
     expect(await screen.findByRole("dialog", { name: "Agenda" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Skip intro" }));
+    expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
+  });
+
+  it("skips the tour without saving preferences", async () => {
+    renderIntro();
+    expect(await screen.findByRole("dialog", { name: "Agenda" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Skip tour" }));
     expect(screen.queryByRole("dialog", { name: "Agenda" })).toBeNull();
     expect(putJsonMock).not.toHaveBeenCalled();
     expect(window.localStorage.getItem(JOURNEY_ONBOARDING_COMPLETED_KEY)).toBe("done");

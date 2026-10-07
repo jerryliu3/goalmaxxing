@@ -22,8 +22,6 @@ import { toLocalDateString } from "@/lib/dates/day";
 export const JOURNEY_INTRO_SEEN_KEY = "cadence.journey_intro_seen.v1";
 export const JOURNEY_ONBOARDING_COMPLETED_KEY =
   "cadence.journey_onboarding_completed.v1";
-export const JOURNEY_INTRO_FORCE_USER_ID_KEY =
-  "cadence.journey_intro_force_user_id.v1";
 export const JOURNEY_INTRO_OPEN_EVENT = "cadence.journey_intro.open";
 
 export function requestJourneyIntroOpen() {
@@ -34,6 +32,12 @@ export function requestJourneyIntroOpen() {
 }
 
 const JOURNEY_INTRO_STEPS = [
+  {
+    title: "Your preferences",
+    description: "",
+    target: "nav.settings",
+    kind: "preferences" as const,
+  },
   {
     title: "Agenda",
     description:
@@ -69,17 +73,14 @@ const JOURNEY_INTRO_STEPS = [
     target: "nav.settings",
     kind: "copy" as const,
   },
-  {
-    title: "Your preferences",
-    description: "",
-    target: "nav.settings",
-    kind: "preferences" as const,
-  },
 ] as const;
+
+const TOUR_START_INDEX = 1;
 
 interface JourneyIntroOverlayProps {
   userId: string;
   enabled?: boolean;
+  preferencesRequired?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
 
@@ -95,12 +96,19 @@ function getServerSnapshot() {
   return false;
 }
 
-export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: JourneyIntroOverlayProps) {
+export function JourneyIntroOverlay({
+  userId,
+  enabled = true,
+  preferencesRequired = false,
+  onOpenChange,
+}: JourneyIntroOverlayProps) {
   const requestedOpen = useRef(false);
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [preferencesPending, setPreferencesPending] = useState(preferencesRequired);
+  const preferencesPendingRef = useRef(preferencesRequired);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [hasMeasured, setHasMeasured] = useState(false);
   const step = JOURNEY_INTRO_STEPS[stepIndex];
@@ -123,11 +131,8 @@ export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: Jo
     }
     const timeoutId = window.setTimeout(() => {
       if (requestedOpen.current) return;
-      const forcedIntroUserId = window.localStorage.getItem(
-        JOURNEY_INTRO_FORCE_USER_ID_KEY
-      );
-      if (forcedIntroUserId === userId) {
-        window.localStorage.removeItem(JOURNEY_INTRO_FORCE_USER_ID_KEY);
+      if (preferencesPendingRef.current) {
+        setStepIndex(0);
         setOpen(true);
         onOpenChange?.(true);
         return;
@@ -135,6 +140,9 @@ export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: Jo
       const completed = window.localStorage.getItem(JOURNEY_ONBOARDING_COMPLETED_KEY);
       const lastSeen = window.localStorage.getItem(JOURNEY_INTRO_SEEN_KEY);
       const shouldOpen = completed !== "done" && lastSeen === null;
+      if (shouldOpen) {
+        setStepIndex(TOUR_START_INDEX);
+      }
       setOpen(shouldOpen);
       onOpenChange?.(shouldOpen);
     }, 0);
@@ -226,22 +234,27 @@ export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: Jo
     setStepIndex(0);
   };
 
-  const finishIntro = async (shouldSave: boolean) => {
-    if (shouldSave) {
-      setSaving(true);
-      try {
-        await saveJourneyIntroPreferences(userId, preferences.value);
-      } catch (error: unknown) {
-        toast.error(
-          getApiErrorMessage(error, "Preferences could not be saved.")
-        );
-        setSaving(false);
-        return;
-      }
-      setSaving(false);
-    }
-    closeAndPersist();
+  const goToStep = (nextIndex: number) => {
+    setHasMeasured(false);
+    setStepIndex(Math.min(JOURNEY_INTRO_STEPS.length - 1, Math.max(0, nextIndex)));
   };
+
+  const savePreferencesAndContinue = async () => {
+    setSaving(true);
+    try {
+      await saveJourneyIntroPreferences(userId, preferences.value);
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, "Preferences could not be saved."));
+      setSaving(false);
+      return;
+    }
+    setSaving(false);
+    preferencesPendingRef.current = false;
+    setPreferencesPending(false);
+    goToStep(TOUR_START_INDEX);
+  };
+
+  const canSkip = !(isPreferencesStep && preferencesPending);
 
   if (!enabled || !open || !isBrowser) {
     return null;
@@ -285,17 +298,19 @@ export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: Jo
           <p className="text-sm text-muted-foreground">{step.description}</p>
         )}
         <div className="flex flex-wrap justify-between gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={saving}
-            onClick={() => {
-              void finishIntro(false);
-            }}
-          >
-            Skip intro
-          </Button>
+          {canSkip ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={saving}
+              onClick={closeAndPersist}
+            >
+              Skip tour
+            </Button>
+          ) : (
+            <span />
+          )}
           <div className="flex gap-2">
             {stepIndex > 0 ? (
               <Button
@@ -303,10 +318,7 @@ export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: Jo
                 variant="outline"
                 size="sm"
                 disabled={saving}
-                onClick={() => {
-                  setHasMeasured(false);
-                  setStepIndex((current) => Math.max(0, current - 1));
-                }}
+                onClick={() => goToStep(stepIndex - 1)}
               >
                 Back
               </Button>
@@ -316,14 +328,15 @@ export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: Jo
               size="sm"
               disabled={saving || (isPreferencesStep && preferences.loading)}
               onClick={() => {
-                if (isLastStep) {
-                  void finishIntro(true);
+                if (isPreferencesStep) {
+                  void savePreferencesAndContinue();
                   return;
                 }
-                setHasMeasured(false);
-                setStepIndex((current) =>
-                  Math.min(JOURNEY_INTRO_STEPS.length - 1, current + 1)
-                );
+                if (isLastStep) {
+                  closeAndPersist();
+                  return;
+                }
+                goToStep(stepIndex + 1);
               }}
             >
               {isLastStep ? "Done" : "Next"}
