@@ -398,3 +398,71 @@ describe("completed title treatments during view changes", () => {
     }
   );
 });
+
+describe("view switch hand-offs", () => {
+  function weekScene(mode: "week" | "day", treatment: "quiet" | "strike", mark = "") {
+    const root = mount(`<div data-plan-view="${mode}">
+      <div data-testid="plan-calendar-split-calendar"><ol><li data-calendar-week-row="true" data-day="2026-09-14">
+        <button data-day-cell="true" data-day="2026-09-14"></button>
+        <div data-planner-entry-key="goal-1:cadence:0">
+          ${mark}
+          <span data-testid="completion-title" data-completed="false" data-completion-treatment="${treatment}">Read</span>
+        </div>
+      </li></ol></div></div>`);
+    return { root, scene: capturePlanScene(root, mode === "day" ? "week" : mode) };
+  }
+  const glyphs = (root: Element) =>
+    [...root.querySelectorAll<HTMLElement>("[data-plan-morph-overlay] div")].filter(
+      (node) => node.style.width === "max-content" && node.textContent === "Read"
+    );
+
+  it("draws an open title as one glyph even when the two views' treatments differ", () => {
+    const from = weekScene("week", "quiet");
+    const to = weekScene("day", "strike");
+    expect([...from.scene.items.values()][0].completionTreatment).toBeUndefined();
+    const run = animatePlanScene(from.root, from.root.firstElementChild as HTMLElement, from.scene, to.scene, () => {});
+    expect(glyphs(from.root)).toHaveLength(1);
+    run.cancel();
+  });
+
+  it("carries the completion mark as its own gliding piece, hidden inside the row clones", () => {
+    const circle = `<svg data-completion-mark="circle" aria-hidden="true"></svg>`;
+    const from = weekScene("week", "quiet", circle);
+    const to = weekScene("day", "quiet", circle);
+    const run = animatePlanScene(from.root, from.root.firstElementChild as HTMLElement, from.scene, to.scene, () => {});
+    const marks = [...from.root.querySelectorAll<HTMLElement>("[data-plan-morph-overlay] [data-completion-mark]")];
+    const carried = marks.filter((mark) => mark.style.visibility === "visible");
+    expect(carried).toHaveLength(2);
+    carried.forEach((mark) => expect(mark.style.transform).toMatch(/scale\(/));
+    expect(marks.some((mark) => mark.style.visibility === "hidden")).toBe(true);
+    run.cancel();
+  });
+
+  it("still flies sessions to wide Goal View's lanes", () => {
+    const from = weekScene("week", "quiet");
+    const goals = mount(GOAL_VIEW.replace('<div data-plan-scroll-clip="true"', '<div data-lane-body=""></div><div data-plan-scroll-clip="true"'));
+    place(goals.querySelector("[data-plan-scroll-clip]")!, rect(0, 0, 400, 120));
+    goals.querySelectorAll("[data-planner-entry-key]").forEach((tile) => place(tile, rect(20, 20)));
+    const to = capturePlanScene(goals, "goals");
+    expect(to.lanes).toBe(true);
+    const run = animatePlanScene(from.root, from.root.firstElementChild as HTMLElement, from.scene, to, () => {});
+    // The week session travels as its own surrogate rather than inside a fading copy.
+    expect(glyphs(from.root)).toHaveLength(1);
+    run.cancel();
+  });
+
+  it("cross-fades whole views with the phone's Goal View list, rather than flying sessions", () => {
+    const from = weekScene("week", "quiet");
+    const goals = mount(GOAL_VIEW);
+    place(goals.querySelector("[data-plan-scroll-clip]")!, rect(0, 0, 400, 120));
+    goals.querySelectorAll("[data-planner-entry-key]").forEach((tile) => place(tile, rect(20, 20)));
+    const to = capturePlanScene(goals, "goals");
+    const run = animatePlanScene(from.root, from.root.firstElementChild as HTMLElement, from.scene, to, () => {});
+    const overlay = from.root.querySelector("[data-plan-morph-overlay]")!;
+    expect(glyphs(from.root)).toHaveLength(0);
+    // Each view's own sessions stay in its cross-fading copy.
+    expect(overlay.querySelector<HTMLElement>('[data-plan-view="week"] [data-planner-entry-key]')!.style.visibility).toBe("");
+    expect(overlay.querySelector<HTMLElement>('[data-plan-view="goals"] [data-planner-entry-key]')!.style.visibility).toBe("");
+    run.cancel();
+  });
+});
