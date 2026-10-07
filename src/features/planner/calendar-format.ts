@@ -107,16 +107,18 @@ export function getEntryMilestoneFirstTitle(
   return getEntryGoalFirstTitle(entry);
 }
 
+/** The title leads so same-category pills stay tellable apart; the time trails it. */
+function withTrailingTime(title: string, time: string | null | undefined) {
+  return time ? `${title} · ${time}` : title;
+}
+
 export function getEntryGoalFirstTitleWithTime(
   entry: Pick<
     PlannerDayDetailEntry,
     "goalTitle" | "label" | "unitKey" | "effectiveScheduledLocalTime"
   >
 ) {
-  const baseTitle = getEntryGoalFirstTitle(entry);
-  return entry.effectiveScheduledLocalTime
-    ? `${entry.effectiveScheduledLocalTime} ${baseTitle}`
-    : baseTitle;
+  return withTrailingTime(getEntryGoalFirstTitle(entry), entry.effectiveScheduledLocalTime);
 }
 
 export function getEntryMilestoneFirstTitleWithTime(
@@ -125,10 +127,7 @@ export function getEntryMilestoneFirstTitleWithTime(
     "goalTitle" | "label" | "unitKey" | "effectiveScheduledLocalTime"
   >
 ) {
-  const baseTitle = getEntryMilestoneFirstTitle(entry);
-  return entry.effectiveScheduledLocalTime
-    ? `${entry.effectiveScheduledLocalTime} ${baseTitle}`
-    : baseTitle;
+  return withTrailingTime(getEntryMilestoneFirstTitle(entry), entry.effectiveScheduledLocalTime);
 }
 
 export function getEntryCompactTitleWithTime(
@@ -137,10 +136,7 @@ export function getEntryCompactTitleWithTime(
     "goalTitle" | "label" | "unitKey" | "effectiveScheduledLocalTime"
   >
 ) {
-  const baseTitle = getEntryCompactTitle(entry);
-  return entry.effectiveScheduledLocalTime
-    ? `${entry.effectiveScheduledLocalTime} ${baseTitle}`
-    : baseTitle;
+  return withTrailingTime(getEntryCompactTitle(entry), entry.effectiveScheduledLocalTime);
 }
 
 export function getEntrySubtitle(
