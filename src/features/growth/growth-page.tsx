@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useId, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { resolveDuoLanes } from "@cadence/shared/social/duo";
 import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
@@ -18,7 +18,6 @@ import { TabOnboardingOverlay } from "@/features/onboarding/tab-onboarding-overl
 import { DuoLanes } from "@/features/social/duo/duo-lanes";
 import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
 import { useOwnProfilePresence } from "@/features/social/use-own-profile-presence";
-import { PublicProfileActivityHeatmap } from "@/features/social/public-profile/public-profile-activity-heatmap";
 import { ProfileMedalShelf } from "@/features/achievements/profile-medal-shelf";
 import { GrowthDetailedStats } from "./growth-detailed-stats";
 
@@ -28,7 +27,8 @@ function GrowthLane({ userId, readOnly, anchors }: {
   anchors: boolean;
 }) {
   const year = new Date().getFullYear();
-  const heatmapRef = useRef<HTMLDivElement | null>(null);
+  const [showStats, setShowStats] = useState(false);
+  const detailsId = useId();
   const { state, loading, loadError, reload } = useInsightsData({
     subjectUserId: userId,
     selectedYear: String(year),
@@ -47,7 +47,7 @@ function GrowthLane({ userId, readOnly, anchors }: {
     );
   }
   if (loading || presenceLoading) {
-    return <LoadingCard title="Loading Growth…" description="Gathering your score, medals and progress." />;
+    return <LoadingCard title="Loading Growth…" description="Gathering your score, achievements and progress." />;
   }
   const series = toGrowScoreChartSeries(bundle?.growSeries ?? []);
 
@@ -56,34 +56,40 @@ function GrowthLane({ userId, readOnly, anchors }: {
       <section aria-label="Goal score" data-growth-section="score">
         <GrowScoreTrendChart title="Goal score" series={series} />
       </section>
+      <section aria-label="Progress tracker" data-growth-section="tracker">
+        <InsightsTab subjectUserId={userId} readOnly={readOnly} sectionIds={["history"]} progressView="all" anchorSections={anchors} />
+      </section>
       <section
-        id={anchors ? "medals" : undefined}
-        aria-label="Medals"
-        data-growth-section="medals"
+        id={anchors ? "achievements" : undefined}
+        aria-label="Achievements"
+        data-growth-section="achievements"
         data-onboarding={anchors ? "insights.achievements" : undefined}
       >
-        <h2 className="type-title mb-4 text-2xl">Medals</h2>
+        <h2 className="type-title mb-4 text-2xl">Achievements</h2>
         {readOnly ? (
           <ProfileMedalShelf achievements={bundle?.globalAchievements ?? []} awardCatalogCount={bundle?.awardCatalogCount ?? 0} />
         ) : awards.loading ? (
-          <p>Loading medals…</p>
+          <p>Loading achievements…</p>
         ) : awards.error || !awards.payload ? (
           <div role="alert">
-            <p>{awards.error ?? "Medals could not be loaded."}</p>
+            <p>{awards.error ?? "Achievements could not be loaded."}</p>
             <Button onClick={() => void awards.reload()}>Try again</Button>
           </div>
         ) : (
           <AchievementsShowcase payload={awards.payload} />
         )}
       </section>
-      <section aria-label="Progress tracker" data-growth-section="tracker">
-        <InsightsTab subjectUserId={userId} readOnly={readOnly} sectionIds={["history"]} progressView="all" anchorSections={anchors} />
-      </section>
       <section id={anchors ? "stats" : undefined} aria-label="Stats" data-growth-section="stats">
         <h2 className="type-title mb-4 text-2xl">Stats</h2>
         {state.insightsStats ? <InsightsOverallStatsTiles overallStats={state.insightsStats.overall} showMoreLink={false} /> : null}
-        {bundle ? <PublicProfileActivityHeatmap heatmapRef={heatmapRef} selectedYear={year} values={bundle.yearHeatmap} /> : null}
-        {state.insightsStats ? <GrowthDetailedStats stats={state.insightsStats} /> : null}
+        {state.insightsStats ? <>
+          <div className="mt-3 text-right">
+            <Button variant="ghost" aria-expanded={showStats} aria-controls={detailsId} onClick={() => setShowStats(value => !value)}>
+              {showStats ? "View less" : "View more"}
+            </Button>
+          </div>
+          {showStats ? <div id={detailsId} className="mt-5"><GrowthDetailedStats stats={state.insightsStats} /></div> : null}
+        </> : null}
       </section>
     </div>
   );

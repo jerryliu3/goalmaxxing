@@ -17,9 +17,9 @@ vi.mock("@/features/achievements/showcase", () => ({ AchievementsShowcase: () =>
 vi.mock("@/features/insights/grow-score-trend-chart", () => ({ GrowScoreTrendChart: () => <div>Score chart</div> }));
 vi.mock("@/features/insights/insights-tab", () => ({ InsightsTab: ({ sectionIds }: { sectionIds: string[] }) => <div>{sectionIds.join(",")}</div> }));
 afterEach(() => { cleanup(); presence.error = null; vi.clearAllMocks(); });
-it("gives each section one home in score, medals, tracker, stats order", () => {
+it("gives each section one home in score, tracker, achievements, stats order", () => {
   render(<GrowthPage />);
-  expect([...screen.getByTestId("growth-page").querySelectorAll("[data-growth-section]")].map(node => node.getAttribute("data-growth-section"))).toEqual(["score", "medals", "tracker", "stats"]);
+  expect([...screen.getByTestId("growth-page").querySelectorAll("[data-growth-section]")].map(node => node.getAttribute("data-growth-section"))).toEqual(["score", "tracker", "achievements", "stats"]);
   expect(screen.getByText("history")).toBeInTheDocument();
   expect(screen.queryByText("Goal library")).toBeNull();
 });

@@ -1,4 +1,4 @@
-import { CalendarDays, Target, Sprout, Globe } from "lucide-react";
+import { CalendarDays, Target, Rocket, Globe } from "lucide-react";
 import type { ComponentType } from "react";
 
 export type AppTab = {
@@ -11,7 +11,7 @@ export type AppTab = {
 export const APP_TABS: AppTab[] = [
   { key: "calendar", href: "/calendar", label: "Agenda", icon: CalendarDays },
   { key: "goals", href: "/goals", label: "Goals", icon: Target },
-  { key: "growth", href: "/growth", label: "Growth", icon: Sprout },
+  { key: "growth", href: "/growth", label: "Growth", icon: Rocket },
   { key: "social", href: "/social", label: "Community", icon: Globe },
 ];
 export const TAB_ORDER = APP_TABS.map((tab) => tab.href);

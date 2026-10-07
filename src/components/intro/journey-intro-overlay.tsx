@@ -51,7 +51,7 @@ const JOURNEY_INTRO_STEPS = [
   {
     title: "Growth",
     description:
-      "See your Goal score, medals and stats. The progress tracker lives on Growth.",
+      "See your Goal score, achievements and stats. The progress tracker lives on Growth.",
     target: "nav.growth",
     kind: "copy" as const,
   },
