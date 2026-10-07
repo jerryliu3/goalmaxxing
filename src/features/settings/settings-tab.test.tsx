@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/features/social/use-own-profile-presence", () => ({
-  useOwnProfilePresence: () => ({ bundle: null, loading: false }),
+  useOwnProfilePresence: () => ({ bundle: { profile: { createdAt: null, memberNumber: null }, xp: null, overallStats: null, growSeries: [], yearHeatmap: [] }, loading: false }),
 }));
 
 vi.mock("@/features/social/use-social-tab-data", () => ({
@@ -85,7 +85,18 @@ vi.mock("@/components/intro/journey-intro-overlay", () => ({
   requestJourneyIntroOpen: vi.fn(),
 }));
 
+vi.mock("@/features/social/profile-presence", () => ({
+  ProfilePresenceSection: () => <div data-testid="profile-presence">Goal score and stats</div>,
+}));
+
 describe("SettingsTab", () => {
+  it("keeps score, stats and heatmap off Settings", () => {
+    render(<SettingsTab />);
+    expect(screen.getByText("Profile card")).toBeInTheDocument();
+    expect(screen.queryByTestId("profile-presence")).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Goal score" })).toBeNull();
+    expect(screen.queryByText("Overall stats")).toBeNull();
+  });
   const originalMatchMedia = window.matchMedia;
 
   afterEach(() => {
