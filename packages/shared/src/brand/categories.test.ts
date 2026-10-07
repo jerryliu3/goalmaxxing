@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GOAL_CATEGORY_COLORS, goalCategoryColor, goalCategoryPair, goalCategoryTones } from "./categories";
+import { GOAL_CATEGORY_COLORS, goalCategoryColor, goalCategoryPair, goalCategoryPigment, goalCategoryTones } from "./categories";
 import { COLOR_LIBRARY } from "./colors";
 
 describe("goal category tones", () => {
@@ -29,5 +29,10 @@ describe("goal category tones", () => {
   it("returns null for custom and missing colors", () => {
     expect(goalCategoryTones("#123456")).toBeNull();
     expect(goalCategoryTones(null)).toBeNull();
+  });
+
+  it("swaps a category surface for its pigment and passes custom colors through", () => {
+    expect(goalCategoryPigment(GOAL_CATEGORY_COLORS.finance)).toBe(COLOR_LIBRARY.malachite.pigment);
+    expect(goalCategoryPigment("#123456")).toBe("#123456");
   });
 });

@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { GOAL_CATEGORY_COLORS } from "../brand/categories";
+import { COLOR_LIBRARY } from "../brand/colors";
 import { GAZETTEER } from "../brand/gazetteer";
 import {
   getGazetteerWorkPillDraftFillStyle,
@@ -20,6 +22,12 @@ describe("gazetteer work pill visuals", () => {
     expect(fill.backgroundColor).toBe(pastel);
     expect(fill.borderColor).toBe(pastel);
     expect(fill.backgroundColor).not.toBe(GAZETTEER.gain);
+  });
+
+  it("mixes a category goal's pigment rather than its pastel surface", () => {
+    expect(getGazetteerWorkPillFillStyle(GOAL_CATEGORY_COLORS.health).backgroundColor).toBe(
+      mixOpaqueHex(COLOR_LIBRARY.vermilion.pigment, GAZETTEER.paper, WORK_PILL_HUE_AMOUNT)
+    );
   });
 
   it("darkens draft placements more than credited fills", () => {

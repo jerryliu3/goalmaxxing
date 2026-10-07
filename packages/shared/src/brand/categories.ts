@@ -67,3 +67,11 @@ export function goalCategoryTones(
 ): { pigment: string; ink: string } | null {
   return TONES_BY_SURFACE.get(color?.trim().toLowerCase() ?? "") ?? null;
 }
+
+/**
+ * The hue to mix into paper for a goal color: a category's stronger pigment,
+ * since its pastel surface washes out when mixed; custom colors pass through.
+ */
+export function goalCategoryPigment(color: string): string {
+  return goalCategoryTones(color)?.pigment ?? color;
+}
