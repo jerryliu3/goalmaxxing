@@ -1,3 +1,4 @@
+import { NativeGrowthPresence } from "./NativeGrowthPresence";
 import { format } from "date-fns";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
@@ -73,11 +74,11 @@ export function InsightsScreen() {
   const lanePageSnapInterval = resolveLanePageSnapInterval(lanePageWidth);
 
   if (!ready) {
-    return <LoadingScreen label="Loading Progress…" />;
+    return <LoadingScreen label="Loading Growth…" />;
   }
 
   return (
-    <Screen title="Progress" kicker="Ledger">
+    <Screen title="Growth">
       <DuoScopeSegmentedControl surface="insights" />
       <View style={styles.row}>
         <Pressable
@@ -183,6 +184,8 @@ export function InsightsScreen() {
                   readOnly={Boolean(renderModel.heading?.readOnly)}
                   onOpenProfile={openPublicProfile}
                 >
+                  <NativeGrowthPresence userId={lane.userId ?? null} section="score-medals" />
+                  <Text accessibilityRole="header" style={{ color: theme.colors.foreground }}>Progress tracker</Text>
                   <InsightsLedgerPanel
                     goals={laneData.goals}
                     facts={laneData.facts}
@@ -192,6 +195,7 @@ export function InsightsScreen() {
                     readOnly={Boolean(renderModel.heading?.readOnly) || lane.readOnly}
                     onToggleCompletion={laneData.toggleCompletion ?? undefined}
                   />
+                  <NativeGrowthPresence userId={lane.userId ?? null} section="stats" />
                 </InsightsLaneSection>
               </View>
             );
@@ -268,6 +272,8 @@ export function InsightsScreen() {
               readOnly={Boolean(renderModel.heading?.readOnly)}
               onOpenProfile={openPublicProfile}
             >
+              <NativeGrowthPresence userId={lane.userId ?? null} section="score-medals" />
+              <Text accessibilityRole="header" style={{ color: theme.colors.foreground }}>Progress tracker</Text>
               <InsightsLedgerPanel
                 goals={laneData.goals}
                 facts={laneData.facts}
@@ -277,6 +283,7 @@ export function InsightsScreen() {
                 readOnly={Boolean(renderModel.heading?.readOnly) || lane.readOnly}
                 onToggleCompletion={laneData.toggleCompletion ?? undefined}
               />
+              <NativeGrowthPresence userId={lane.userId ?? null} section="stats" />
             </InsightsLaneSection>
           );
         })

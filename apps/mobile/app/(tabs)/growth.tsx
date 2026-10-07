@@ -1,5 +1,5 @@
 import { InsightsScreen } from "../../src/features/insights/InsightsScreen";
 
-export default function InsightsRoute() {
+export default function GrowthRoute() {
   return <InsightsScreen />;
 }

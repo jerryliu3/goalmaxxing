@@ -11,10 +11,9 @@ import { useTheme } from "../../src/theme";
 import { LoadingScreen } from "../../src/ui/screen";
 
 const TAB_ICONS: Record<string, string> = {
-  insights: "▤",
+  growth: "▤",
   calendar: "▣",
   social: "◎",
-  settings: "○",
 };
 
 function withHexAlpha(color: string, alpha: number) {
@@ -83,6 +82,7 @@ export default function TabsLayout() {
                 }}
               />
             ))}
+            <Tabs.Screen name="settings" options={{ href: null }} />
             <Tabs.Screen name="checklist" options={{ href: null }} />
             <Tabs.Screen name="tasks" options={{ href: null }} />
           </Tabs>
