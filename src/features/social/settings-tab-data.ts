@@ -21,6 +21,7 @@ export interface SocialState {
 
 export interface PlannerPreferencesState extends PlannerPreferencesDraft {
   restWeekdays: number[];
+  timezoneConfirmed: boolean;
 }
 
 export const initialState: SocialState = {
@@ -39,6 +40,7 @@ export const defaultPlannerPreferencesState: PlannerPreferencesState = {
   timezone: resolveUserTimezone(),
   weekStartsOn: 1,
   restWeekdays: [],
+  timezoneConfirmed: false,
 };
 
 export const SETTINGS_TAB_CACHE_KEY = `${SETTINGS_DATA_CACHE_PREFIX}v1`;

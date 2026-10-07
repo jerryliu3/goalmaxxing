@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildProfilePreferencesUpdate,
   plannerPreferencesFromProfile,
+  plannerPreferencesNeedSave,
 } from "@/features/social/profile-preferences";
 
 describe("buildProfilePreferencesUpdate", () => {
@@ -41,6 +42,7 @@ const fallback = {
   timezone: "America/New_York",
   weekStartsOn: 1,
   restWeekdays: [],
+  timezoneConfirmed: false,
 };
 
 describe("plannerPreferencesFromProfile", () => {
@@ -59,10 +61,11 @@ describe("plannerPreferencesFromProfile", () => {
       timezone: "UTC",
       weekStartsOn: 0,
       restWeekdays: [0, 6],
+      timezoneConfirmed: true,
     });
   });
 
-  it("falls back when timezone confirmation is still pending", () => {
+  it("keeps the displayed fallback when timezone confirmation is still pending", () => {
     expect(
       plannerPreferencesFromProfile(
         {
@@ -74,5 +77,25 @@ describe("plannerPreferencesFromProfile", () => {
         fallback
       )
     ).toEqual(fallback);
+  });
+});
+
+describe("plannerPreferencesNeedSave", () => {
+  it("stays saveable when the shown timezone has not been confirmed", () => {
+    expect(
+      plannerPreferencesNeedSave({
+        draft: { timezone: "America/New_York", weekStartsOn: 1 },
+        persisted: { timezone: "America/New_York", weekStartsOn: 1, timezoneConfirmed: false },
+      })
+    ).toBe(true);
+  });
+
+  it("stays clean once the shown timezone and week start are confirmed", () => {
+    expect(
+      plannerPreferencesNeedSave({
+        draft: { timezone: "America/New_York", weekStartsOn: 1 },
+        persisted: { timezone: "America/New_York", weekStartsOn: 1, timezoneConfirmed: true },
+      })
+    ).toBe(false);
   });
 });

@@ -60,6 +60,7 @@ export function SettingsTab() {
     plannerPreferencesLoading,
     plannerPreferencesDraft,
     setPlannerPreferencesDraft,
+    timezoneConfirmationPending,
     canSaveProfile,
     canSavePreferences,
     saveProfile,
@@ -228,6 +229,7 @@ export function SettingsTab() {
           saving={saving}
           canSavePreferences={canSavePreferences}
           savePreferences={savePreferences}
+          timezoneConfirmationPending={timezoneConfirmationPending}
         />
       </SidePanel>
     </div>
@@ -245,6 +247,7 @@ function SettingsSectionEditor({
   saving,
   canSavePreferences,
   savePreferences,
+  timezoneConfirmationPending,
 }: {
   settingsSection: SettingsSection;
   ownGoals: Goal[];
@@ -256,6 +259,7 @@ function SettingsSectionEditor({
   saving: boolean;
   canSavePreferences: boolean;
   savePreferences: () => Promise<void>;
+  timezoneConfirmationPending: boolean;
 }) {
   if (settingsSection === "preferences") {
     return (
@@ -264,6 +268,7 @@ function SettingsSectionEditor({
           value={plannerPreferencesDraft}
           onChange={(next) => setPlannerPreferencesDraft(next)}
           disabled={plannerPreferencesLoading || saving}
+          confirmationPending={timezoneConfirmationPending}
         />
         <div className="space-y-3 border-t pt-4">
           <div className="space-y-1">

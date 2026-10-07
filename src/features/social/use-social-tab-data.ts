@@ -24,7 +24,7 @@ import { unsubscribeCurrentBrowser } from "@/lib/push/client";
 import { createClient } from "@/lib/supabase/client";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
 import type { PlannerPreferencesDraft } from "@/features/settings/planner-preferences-settings";
-import { buildProfilePreferencesUpdate } from "@/features/social/profile-preferences";
+import { buildProfilePreferencesUpdate, plannerPreferencesNeedSave } from "@/features/social/profile-preferences";
 import {
   buildAvatarCleanupPathsForProfileChange,
   deleteProfileAvatar,
@@ -229,10 +229,12 @@ export function useSocialTabData() {
   const socialActivityVisibleDirty =
     normalizedProfileDraft.social_activity_visible !==
     normalizedPersistedProfile.social_activity_visible;
-  const plannerPreferencesDirty =
-    plannerPreferencesDraft.timezone !== plannerPreferencesPersisted.timezone ||
-    normalizeWeekStartsOn(plannerPreferencesDraft.weekStartsOn) !==
-      normalizeWeekStartsOn(plannerPreferencesPersisted.weekStartsOn);
+  const plannerPreferencesDirty = plannerPreferencesNeedSave({
+    draft: plannerPreferencesDraft,
+    persisted: plannerPreferencesPersisted,
+  });
+  const timezoneConfirmationPending =
+    !plannerPreferencesLoading && plannerPreferencesPersisted.timezoneConfirmed !== true;
   const canSaveProfile = Boolean(state.userId) && profileDirty;
   const canSavePreferences =
     Boolean(state.userId) &&
@@ -470,6 +472,7 @@ export function useSocialTabData() {
     plannerPreferencesLoading,
     plannerPreferencesDraft,
     setPlannerPreferencesDraft,
+    timezoneConfirmationPending,
     visibleSearchResults,
     shareableGoals,
     activeSelectedShareGoalIds,

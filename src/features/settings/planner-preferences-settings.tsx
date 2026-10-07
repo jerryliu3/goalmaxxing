@@ -22,12 +22,14 @@ interface PlannerPreferencesSettingsProps {
   value: PlannerPreferencesDraft;
   onChange: (next: PlannerPreferencesDraft) => void;
   disabled?: boolean;
+  confirmationPending?: boolean;
 }
 
 export function PlannerPreferencesSettings({
   value,
   onChange,
   disabled = false,
+  confirmationPending = false,
 }: PlannerPreferencesSettingsProps) {
   const timezoneOptions = useMemo(
     () => buildTimezoneOptions(value.timezone),
@@ -59,6 +61,11 @@ export function PlannerPreferencesSettings({
             ))}
           </SelectContent>
         </Select>
+        {confirmationPending ? (
+          <p className="text-xs text-muted-foreground">
+            Save preferences to confirm this timezone before publishing a plan.
+          </p>
+        ) : null}
       </label>
 
       <label className="block space-y-1">

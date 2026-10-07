@@ -41,6 +41,7 @@ vi.mock("@/features/social/use-social-tab-data", () => ({
       restWeekdays: [],
     },
     setPlannerPreferencesDraft: vi.fn(),
+    timezoneConfirmationPending: false,
     canSaveProfile: false,
     canSavePreferences: false,
     saveProfile: vi.fn(),
