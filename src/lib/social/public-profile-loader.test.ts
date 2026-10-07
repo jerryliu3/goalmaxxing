@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildPublicProfileBundle } from "@/lib/social/public-profile";
+import { buildPublicProfileBundle } from "@/lib/social/public-profile-model";
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(),

@@ -44,8 +44,15 @@ const JOURNEY_INTRO_STEPS = [
   {
     title: "Goals",
     description:
-      "See your current goals, create a new goal, or open your goal library.",
+      "See your current and past goals, or create a new goal.",
     target: "nav.goals",
+    kind: "copy" as const,
+  },
+  {
+    title: "Growth",
+    description:
+      "See your Goal score, achievements and stats. The progress tracker lives on Growth.",
+    target: "nav.growth",
     kind: "copy" as const,
   },
   {
@@ -60,13 +67,6 @@ const JOURNEY_INTRO_STEPS = [
     description:
       "Your avatar opens profile and settings. With a partner, it also switches between Solo, Partner, and Duo views.",
     target: "nav.settings",
-    kind: "copy" as const,
-  },
-  {
-    title: "Achievements",
-    description:
-      "Celebrate achievements and look back through your goal library. The progress tracker lives on Goals.",
-    target: "nav.achievements",
     kind: "copy" as const,
   },
   {

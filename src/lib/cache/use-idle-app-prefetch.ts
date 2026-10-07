@@ -16,7 +16,7 @@ export const PROGRESS_TAB_WARM_DELAY_MS = 2000;
 
 function prefetchAppTabModules() {
   void import("@/features/planner/calendar-page-shell");
-  void import("@/features/insights/insights-shell");
+  void import("@/features/growth/growth-page");
   void import("@/features/social/social-surface");
   void import("@/features/goals/goals-destination");
 }

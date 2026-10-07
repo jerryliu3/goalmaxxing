@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Bar,
   BarChart,
@@ -14,10 +13,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ArrowLeft, BarChart3 } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
-import { LoadingCard } from "@/components/ui/loading-card";
 import { INSIGHTS_CHART_COLORS, insightsCategoryFill } from "@/features/insights/insights-chart-theme";
 import {
   InsightsLabelWithTooltip,
@@ -26,10 +23,6 @@ import {
   InsightsStatStrip,
   RateTrendInline,
 } from "@/features/insights/insights-stats-ui";
-import {
-  fetchInsightsStats,
-  InsightsStatsAuthenticationError,
-} from "@/lib/insights/stats";
 import type { InsightsStatsGroup, InsightsStatsResponse } from "@/lib/insights/types";
 
 interface StatsSectionProps {
@@ -314,75 +307,9 @@ function StatsSection({ title, stats }: StatsSectionProps) {
   );
 }
 
-export function InsightsMoreStatsPage() {
-  const [stats, setStats] = useState<InsightsStatsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  useReportAppSurfaceReady(!loading);
-
-  useEffect(() => {
-    let cancelled = false;
-    const run = async () => {
-      try {
-        const payload = await fetchInsightsStats();
-        if (cancelled) {
-          return;
-        }
-        setStats(payload);
-      } catch (loadError) {
-        if (cancelled) {
-          return;
-        }
-        if (loadError instanceof InsightsStatsAuthenticationError) {
-          setError("Please sign in again to view more stats.");
-        } else {
-          setError(loadError instanceof Error ? loadError.message : "More stats could not be loaded.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void run();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (loading) {
-    return (
-      <LoadingCard
-        title="Loading more stats..."
-        description="Crunching trend and completion metrics."
-      />
-    );
-  }
-
-  if (!stats || error) {
-    return (
-      <Card className="shadow-sm">
-        <CardContent className="py-6 text-sm text-muted-foreground">
-          {error ?? "More stats are unavailable right now."}
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <div className="space-y-5">
-      {/* Reached from "View more" on Profile settings; a plain page header, not a card. */}
-      <header className="space-y-3">
-        <Link href="/settings" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" aria-hidden="true" />
-          Back to profile
-        </Link>
-        <h1 className="type-title text-2xl tracking-tight">More stats</h1>
-      </header>
-
-      <StatsSection title="Your goals" stats={stats.overall} />
-      {stats.team ? <StatsSection title="Team goals" stats={stats.team} /> : null}
-    </div>
-  );
+export function GrowthDetailedStats({ stats }: { stats: InsightsStatsResponse }) {
+  return <div className="space-y-5">
+    <StatsSection title="Your goals" stats={stats.overall} />
+    {stats.team ? <StatsSection title="Team goals" stats={stats.team} /> : null}
+  </div>;
 }

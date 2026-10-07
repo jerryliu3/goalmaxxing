@@ -46,7 +46,7 @@ describe("tab onboarding storage", () => {
     ]);
     expect(TAB_ONBOARDING_TOURS["insights.main"].map((step) => step.target)).toEqual([
       "insights.achievements",
-      "insights.past-goals",
+      "insights.history",
     ]);
     expect(TAB_ONBOARDING_TOURS["planner.calendar"].map((step) => [
       step.target,

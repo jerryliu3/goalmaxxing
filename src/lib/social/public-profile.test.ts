@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Completion, Goal } from "@/lib/goals/types";
-import { buildPublicProfileBundle } from "@/lib/social/public-profile";
+import { buildPublicProfileBundle } from "@/lib/social/public-profile-model";
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
   return {

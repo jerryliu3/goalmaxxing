@@ -1,3 +1,4 @@
+import { isBrowserDemoPath } from "@/lib/navigation/demo-path";
 import { toLocalDateString } from "@/lib/dates/day";
 import { buildDemoSnapshot } from "@/features/demo/demo-snapshot";
 import { handleDemoFetch } from "@/features/demo/demo-fetch";
@@ -13,7 +14,9 @@ export function installDemoRuntime(asOfDate = toLocalDateString()) {
       originalFetch = window.fetch.bind(window);
       const passthrough = originalFetch;
       window.fetch = (input: RequestInfo | URL, init?: RequestInit) =>
-        handleDemoFetch(input, init, passthrough);
+        isBrowserDemoPath()
+          ? handleDemoFetch(input, init, passthrough)
+          : passthrough(input, init);
     }
     installed = true;
   }

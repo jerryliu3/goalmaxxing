@@ -91,7 +91,7 @@ export function InsightsOverallStatsTiles({
       </InsightsStatStrip>
       {showMoreLink ? (
         <div className="text-right text-sm">
-          <Link href="/insights/more" className="font-medium text-primary hover:underline">
+          <Link href="/growth#stats" className="font-medium text-primary hover:underline">
             View more -&gt;
           </Link>
         </div>

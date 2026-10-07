@@ -8,13 +8,13 @@ describe("navigation tabs", () => {
     expect(tabs.map((tab) => tab.key)).toEqual([
       "calendar",
       "goals",
-      "achievements",
+      "growth",
       "social",
     ]);
     expect(tabs.map((tab) => tab.label)).toEqual([
       "Agenda",
       "Goals",
-      "Achievements",
+      "Growth",
       "Community",
     ]);
   });
@@ -25,7 +25,7 @@ describe("navigation tabs", () => {
     ).toEqual([
       "/demo/calendar",
       "/demo/goals",
-      "/demo/achievements",
+      "/demo/growth",
       "/demo/social",
     ]);
   });

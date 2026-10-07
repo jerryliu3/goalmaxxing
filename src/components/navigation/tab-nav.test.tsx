@@ -40,7 +40,7 @@ describe("TabNav", () => {
     mockPathname = "/social";
     const { container } = render(<TabNav />);
 
-    expect(screen.getByRole("link", { name: /Achievements/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Growth/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^Agenda$/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Community/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^Goals$/i })).toBeInTheDocument();
@@ -48,9 +48,9 @@ describe("TabNav", () => {
       "aria-current",
       "page"
     );
-    expect(screen.getByRole("link", { name: /Achievements/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Growth/i })).toHaveAttribute(
       "data-onboarding",
-      "nav.achievements"
+      "nav.growth"
     );
     expect(screen.getByRole("link", { name: /^Agenda$/i })).toHaveAttribute(
       "data-onboarding",
@@ -109,14 +109,14 @@ describe("TabNav", () => {
     expect(screen.getByRole("link", { name: "Agenda" })).not.toHaveAttribute(
       "data-transition-types"
     );
-    expect(screen.getByRole("link", { name: "Achievements" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Growth" })).toHaveAttribute(
       "data-transition-types",
       "nav-forward"
     );
   });
 
   it("updates the planner highlight immediately on click even if the route lags", () => {
-    mockPathname = "/achievements";
+    mockPathname = "/growth";
     render(<TabNav mobile />);
 
     fireEvent.click(screen.getByRole("link", { name: "Agenda" }));
@@ -125,13 +125,13 @@ describe("TabNav", () => {
       "aria-current",
       "page"
     );
-    expect(screen.getByRole("link", { name: "Achievements" })).not.toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Growth" })).not.toHaveAttribute(
       "aria-current"
     );
   });
 
   it("follows the real route once pathname catches up after an optimistic click", () => {
-    mockPathname = "/achievements";
+    mockPathname = "/growth";
     const { rerender } = render(<TabNav mobile />);
 
     fireEvent.click(screen.getByRole("link", { name: "Agenda" }));
@@ -195,11 +195,11 @@ describe("TabNav", () => {
       "aria-current",
       "page"
     );
-    expect(screen.getByRole("link", { name: /Achievements/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Growth/i })).toHaveAttribute(
       "href",
-      "/demo/achievements"
+      "/demo/growth"
     );
-    expect(screen.getByRole("link", { name: /Achievements/i })).not.toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Growth/i })).not.toHaveAttribute(
       "aria-current"
     );
   });

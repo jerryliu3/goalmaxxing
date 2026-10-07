@@ -11,6 +11,7 @@ const APP_BOOT_PATH_PREFIXES = [
   "/social",
   "/settings",
   "/achievements",
+  "/growth",
   "/goals",
 ] as const;
 
@@ -19,6 +20,7 @@ const APP_BOOT_GATED_PATH_PREFIXES = [
   "/insights",
   "/settings",
   "/achievements",
+  "/growth",
 ] as const;
 
 export function normalizeAppBootPath(pathname: string): string {

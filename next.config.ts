@@ -27,6 +27,21 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return ["", "/demo"].flatMap((prefix) => [
+      { source: `${prefix}/achievements`, destination: `${prefix}/growth`, permanent: true },
+      { source: `${prefix}/insights`, destination: `${prefix}/growth`, permanent: true },
+      { source: `${prefix}/insights/more`, destination: `${prefix}/growth#stats`, permanent: true },
+      {
+        source: `${prefix}/insights/folios`,
+        has: [{ type: "query" as const, key: "view", value: "past" }],
+        destination: `${prefix}/goals#past-goals`,
+        permanent: true,
+      },
+      { source: `${prefix}/insights/folios`, destination: `${prefix}/goals`, permanent: true },
+      { source: `${prefix}/goals/library`, destination: `${prefix}/goals`, permanent: true },
+    ]);
+  },
   async headers() {
     return [
       {

@@ -1,5 +1,7 @@
 "use client";
 
+import type { PublicProfileGrowPoint } from "@cadence/shared/social/public-profile";
+
 import { useMemo } from "react";
 import {
   buildGrowScoreSeries,
@@ -42,4 +44,8 @@ export function useGrowScoreSeries({
 /** A flat, all-zero series means the account has nothing to show yet. */
 export function hasGrowScoreSignal(series: readonly GrowScorePoint[]): boolean {
   return series.some((point) => point.rawCredits > 0 || point.score > 0);
+}
+
+export function toGrowScoreChartSeries(series: readonly PublicProfileGrowPoint[]): GrowScorePoint[] {
+  return series.map<GrowScorePoint>(point => ({ ...point, earned: 0, mode: point.rawCredits > 0 ? "earn" : "hold" }));
 }

@@ -38,8 +38,8 @@ vi.mock("@/lib/cache/warm-app-tab-data", () => ({
 vi.mock("@/features/planner/calendar-page-shell", () => ({
   CalendarPageShell: () => null,
 }));
-vi.mock("@/features/insights/insights-shell", () => ({
-  InsightsShell: () => null,
+vi.mock("@/features/growth/growth-page", () => ({
+  GrowthPage: () => null,
 }));
 vi.mock("@/features/social/social-surface", () => ({
   SocialSurface: () => null,
@@ -67,7 +67,7 @@ describe("useIdleAppPrefetch", () => {
     mocks.delayedTasks = [];
   });
 
-  it("prefetches tab routes immediately and warms Achievements after Agenda is ready", async () => {
+  it("prefetches tab routes immediately and warms Growth after Agenda is ready", async () => {
     renderHook(() =>
       useIdleAppPrefetch({
         userId: "user-1",
@@ -78,7 +78,7 @@ describe("useIdleAppPrefetch", () => {
     expect(mocks.idleTasks).toHaveLength(0);
     expect(mocks.delayedTasks).toHaveLength(1);
 
-    expect(mocks.prefetch).toHaveBeenCalledWith("/achievements");
+    expect(mocks.prefetch).toHaveBeenCalledWith("/growth");
     expect(mocks.prefetch).toHaveBeenCalledWith("/goals");
     expect(mocks.prefetch).toHaveBeenCalledWith("/social");
     expect(mocks.warmAppTabData).toHaveBeenCalledWith({
@@ -97,7 +97,7 @@ describe("useIdleAppPrefetch", () => {
       // Settle the module warmups before this test environment is disposed.
       await Promise.all([
         import("@/features/planner/calendar-page-shell"),
-        import("@/features/insights/insights-shell"),
+        import("@/features/growth/growth-page"),
         import("@/features/social/social-surface"),
         import("@/features/goals/goals-destination"),
       ]);

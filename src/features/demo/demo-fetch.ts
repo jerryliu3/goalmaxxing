@@ -9,6 +9,7 @@ import {
 import { monthKey } from "@/features/demo/demo-dates";
 import {
   buildDemoAchievements,
+  buildDemoPublicProfile,
   buildDemoInsightsStats,
   buildDemoNotificationPreferences,
   buildDemoPlannerContext,
@@ -205,6 +206,15 @@ export async function handleDemoFetch(
       digestAutoShow: false,
       correlationId: DEMO_CORRELATION_ID,
     });
+  }
+
+  const profileMatch = pathname.match(/^\/api\/social\/profiles\/([^/]+)$/);
+  if (profileMatch && method === "GET") {
+    const year = Number(url.searchParams.get("year") ?? getDemoStore().asOfDate.slice(0, 4));
+    const item = buildDemoPublicProfile(decodeURIComponent(profileMatch[1]), year);
+    return item
+      ? jsonResponse({ schemaVersion: "1", correlationId: DEMO_CORRELATION_ID, item })
+      : jsonResponse({ code: "profile_not_found", message: "Profile was not found.", correlationId: DEMO_CORRELATION_ID }, 404);
   }
 
   if (pathname === "/api/xp/profile" && method === "GET") {
