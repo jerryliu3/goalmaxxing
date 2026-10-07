@@ -9,6 +9,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function DemoLayout({ children }: { children: ReactNode }) {
-  return <DemoClientRuntime>{children}</DemoClientRuntime>;
+export default function DemoLayout({
+  children,
+  goalSheet,
+}: {
+  children: ReactNode;
+  goalSheet?: ReactNode;
+}) {
+  return <DemoClientRuntime goalSheet={goalSheet}>{children}</DemoClientRuntime>;
 }

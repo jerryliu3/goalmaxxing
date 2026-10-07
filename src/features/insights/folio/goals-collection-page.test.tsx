@@ -4,13 +4,14 @@ import { buildGoal } from "@/lib/goals/goal-test-fixtures";
 import { summary } from "./folio-test-fixtures";
 import { GoalsCollectionPage } from "./goals-collection-page";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/goals", useSearchParams: () => new URLSearchParams() }));
+const navigation = vi.hoisted(() => ({ pathname: "/goals" }));
+vi.mock("next/navigation", () => ({ usePathname: () => navigation.pathname, useSearchParams: () => new URLSearchParams() }));
 const mocks = vi.hoisted(() => ({ push: vi.fn(), data: vi.fn(), tracker: vi.fn() }));
 vi.mock("@/lib/navigation/use-app-router", () => ({ useAppRouter: () => ({ push: mocks.push }) }));
 vi.mock("@/features/insights/use-insights-data", () => ({ useInsightsData: () => mocks.data() }));
 vi.mock("@/components/layout/app-boot-ready", () => ({ useReportAppSurfaceReady: vi.fn() }));
 vi.mock("@/features/insights/insights-tab", () => ({ InsightsTab: (props: unknown) => { mocks.tracker(props); return <section data-testid="progress-tracker">Progress tracker</section>; } }));
-afterEach(() => { cleanup(); vi.clearAllMocks(); });
+afterEach(() => { cleanup(); navigation.pathname = "/goals"; vi.clearAllMocks(); });
 
 function loadCollection() {
   const goal = buildGoal({ title: "Write six chapters", target_basis: "lifetime", target_count: 6, reward_text: "A weekend away" });
@@ -92,5 +93,16 @@ describe("goal library journey", () => {
     expect(document.querySelector("[data-reassembly]")).not.toHaveAttribute("data-flat");
     expect(document.querySelector("[data-card-solid]")).not.toBeNull();
     expect(document.querySelector("[data-ghost]")).toBeNull();
+  });
+
+  it("opens goal details on the demo goal route", () => {
+    navigation.pathname = "/demo/goals";
+    const ended = buildGoal({ owner_id: "user-1", end_date: "2026-09-30" });
+    mocks.data.mockReturnValue({ loading: false, loadError: null, reload: vi.fn(), state: {
+      userId: "user-1", goals: [ended], progress: { summaries: [summary(ended.id)] },
+    } });
+    render(<GoalsCollectionPage />);
+    fireEvent.click(screen.getByRole("button", { name: /See details/ }));
+    expect(mocks.push).toHaveBeenCalledWith(`/demo/goals/${ended.id}`);
   });
 });

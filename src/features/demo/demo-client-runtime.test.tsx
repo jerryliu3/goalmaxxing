@@ -5,8 +5,11 @@ import { DemoClientRuntime } from "@/features/demo/demo-client-runtime";
 import { resetDemoRuntimeForTests } from "@/features/demo/demo-runtime";
 
 vi.mock("@/components/layout/app-shell", () => ({
-  AppShell: ({ children }: { children: ReactNode }) => (
-    <div data-testid="demo-app-shell">{children}</div>
+  AppShell: ({ children, goalSheet }: { children: ReactNode; goalSheet?: ReactNode }) => (
+    <div data-testid="demo-app-shell">
+      {children}
+      {goalSheet}
+    </div>
   ),
 }));
 
@@ -39,5 +42,18 @@ describe("DemoClientRuntime", () => {
     });
     expect(screen.getByText("Demo calendar")).toBeTruthy();
     expect(screen.getByTestId("demo-banner")).toBeTruthy();
+  });
+
+  it("keeps the goal sheet inside the demo shell", async () => {
+    render(
+      <DemoClientRuntime goalSheet={<div>Goal details</div>}>
+        <div>Demo goals</div>
+      </DemoClientRuntime>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Goal details")).toBeTruthy();
+    });
+    expect(screen.getByTestId("demo-app-shell")).toContainElement(screen.getByText("Goal details"));
   });
 });
