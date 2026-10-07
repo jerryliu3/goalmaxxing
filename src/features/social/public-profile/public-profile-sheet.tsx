@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { GoalRouteSheet } from "@/features/goals/goal-route-sheet";
-import { PublicProfileContent } from "@/features/social/public-profile/public-profile-content";
-import { PublicProfileShareButton } from "@/features/social/public-profile/public-profile-share-button";
+import { PublicProfileView } from "@/features/social/public-profile/public-profile-view";
 import { resolvePublicProfileLabel } from "@/features/social/public-profile/resolve-profile-label";
 import { fetchPublicProfileBundle } from "@/features/social/public-profile/data";
 import type { PublicProfileBundle } from "@cadence/shared/social/public-profile";
@@ -11,12 +10,10 @@ import type { PublicProfileBundle } from "@cadence/shared/social/public-profile"
 export function PublicProfileSheet({
   subjectUserId,
   onClose,
-  viewerUserId,
   xpEnabled = true,
 }: {
   subjectUserId: string;
   onClose: () => void;
-  viewerUserId?: string | null;
   xpEnabled?: boolean;
 }) {
   const selectedYear = useMemo(() => new Date().getUTCFullYear(), []);
@@ -66,11 +63,6 @@ export function PublicProfileSheet({
     return "Profile";
   }, [bundle]);
 
-  const canShare =
-    Boolean(bundle?.profile.username) &&
-    viewerUserId !== undefined &&
-    viewerUserId === bundle?.profile.subjectUserId;
-
   return (
     <GoalRouteSheet onClose={onClose} title={title} closeButtonLabel="Close profile">
       {loading ? (
@@ -80,17 +72,7 @@ export function PublicProfileSheet({
           {error ?? "Public profile could not be loaded."}
         </p>
       ) : (
-        <PublicProfileContent
-          bundle={bundle}
-          selectedYear={selectedYear}
-          variant="sheet"
-          xpEnabled={xpEnabled}
-          headerActions={
-            canShare && bundle.profile.username ? (
-              <PublicProfileShareButton username={bundle.profile.username} />
-            ) : null
-          }
-        />
+        <PublicProfileView bundle={bundle} variant="compact" xpEnabled={xpEnabled} />
       )}
     </GoalRouteSheet>
   );

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { PublicProfileContent } from "@/features/social/public-profile/public-profile-content";
 import { PublicProfileChrome } from "@/features/social/public-profile/public-profile-chrome";
+import { PublicProfileView } from "@/features/social/public-profile/public-profile-view";
 import { resolvePublicProfileLabel } from "@/features/social/public-profile/resolve-profile-label";
 import { ApiRouteError } from "@/lib/api/route";
 import { getFeatureFlags } from "@/lib/feature-flags";
@@ -62,7 +62,7 @@ export async function generateMetadata({
     const title = `${label} (${handle}) · Goalmaxxing`;
     const description = bundle.profile.isPrivate
       ? "This Goalmaxxing account is private."
-      : `${label}'s Goalmaxxing profile — score, yearly activity, and public goals.`;
+      : bundle.bio?.trim() || `${label}'s Goalmaxxing profile: showcase and current goals.`;
 
     return {
       title,
@@ -113,11 +113,10 @@ export default async function PublicProfilePage({
 
   return (
     <PublicProfileChrome>
-      <PublicProfileContent
+      <PublicProfileView
         bundle={bundle}
-        selectedYear={selectedYear}
-        variant="page"
         xpEnabled={flags.xpEnabled}
+        copyLink={bundle.showcaseCatalog !== null}
       />
     </PublicProfileChrome>
   );

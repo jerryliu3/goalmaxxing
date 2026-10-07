@@ -168,6 +168,24 @@ write the same ordered three-item list. Defer D until there is a friend
 graph; ship with today's account-level `social_activity_visible` plus
 per-goal `is_private`.
 
+## Production (October 2026)
+
+E shipped. `PublicProfileView` (`src/features/social/public-profile/`) is the
+one render for `/user/[username]` (full), the Community profile sheet
+(compact), and the Settings box (full, edit in place).
+
+- Storage: `profiles.bio` (≤140), `profile_showcase_pins` (≤3, slot order),
+  and `goals.featured_on_profile` (default true), written only through
+  `update_public_profile`.
+- The loader still owns visitor safety. Visitors get public, featured goals
+  and resolved pins only. The owner also gets private and unfeatured goals
+  (flagged) and the pin catalog, and the view drops private goals again before
+  rendering.
+- The membership card shows no metrics. Settings has no score, stats or
+  heatmap; those stay on Growth.
+- Done saves the identity row first (a taken username fails there and the
+  box stays in edit mode), then bio, pins and featured goals in one RPC.
+
 ## Open questions
 
 - **Preview must not drift.** Preview has to call the same server loader as

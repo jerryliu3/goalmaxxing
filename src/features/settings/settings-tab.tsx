@@ -32,7 +32,8 @@ import {
 } from "@/features/settings/settings-section";
 import { NotificationsSection } from "@/features/social/notifications-section";
 import { buildPublicProfileUrl } from "@/lib/social/public-profile-username";
-import { ProfileMembershipCard } from "@/features/social/profile-membership-card";
+import { SettingsProfileBox } from "@/features/settings/settings-profile-box";
+import { useProfileEditSession } from "@/features/settings/use-profile-edit-session";
 import { useOwnProfilePresence } from "@/features/social/use-own-profile-presence";
 import { useSocialTabData } from "@/features/social/use-social-tab-data";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
@@ -66,7 +67,21 @@ export function SettingsTab() {
     savePreferences,
     signOut,
   } = useSocialTabData();
-  const { bundle: presence } = useOwnProfilePresence(state.userId || null, state.profile);
+  const { bundle: presence, reload: reloadPresence } = useOwnProfilePresence(
+    state.userId || null,
+    state.profile
+  );
+  const profileSession = useProfileEditSession({
+    bundle: presence,
+    identityDraft: profileDraft,
+    setIdentityDraft: setProfileDraft,
+    authEmail,
+    identitySaving: saving,
+    canSaveIdentity: canSaveProfile,
+    saveIdentity: saveProfile,
+    uploadAvatar: uploadProfileAvatarFile,
+    reload: reloadPresence,
+  });
   useReportAppSurfaceReady(!(loading && !state.userId));
   const searchParams = useSearchParams();
   const { applySearchParams } = useClientSearchParamsUpdater();
@@ -113,35 +128,7 @@ export function SettingsTab() {
       data-settings-pane={settingsPanelOpen ? "open" : "closed"}
       className="min-w-0 space-y-5"
     >
-      <ProfileMembershipCard
-        profile={{
-          subjectUserId: state.userId,
-          username: profileDraft.username.trim() || null,
-          displayName: profileDraft.display_name.trim() || null,
-          avatarUrl: profileDraft.avatar_url.trim() || null,
-          isPrivate: false,
-          createdAt: presence?.profile.createdAt ?? state.profile?.created_at ?? null,
-          memberNumber: presence?.profile.memberNumber ?? null,
-        }}
-        overallStats={presence?.overallStats ?? null}
-        currentLevel={presence?.xp?.currentLevel ?? null}
-        editor={{
-          username: profileDraft.username,
-          displayName: profileDraft.display_name,
-          email: authEmail,
-          avatarUrl: profileDraft.avatar_url,
-          saving,
-          canSave: canSaveProfile,
-          onUsernameChange: (username) =>
-            setProfileDraft((prev) => ({ ...prev, username })),
-          onDisplayNameChange: (displayName) =>
-            setProfileDraft((prev) => ({ ...prev, display_name: displayName })),
-          onSave: saveProfile,
-          onUploadAvatar: uploadProfileAvatarFile,
-          onRemoveAvatar: () =>
-            setProfileDraft((prev) => ({ ...prev, avatar_url: "" })),
-        }}
-      />
+      <SettingsProfileBox bundle={presence} session={profileSession} />
       {SETTINGS_GROUPS.map((group) => (
         <section key={group.key} className="space-y-1">
           <h2 className="type-eyebrow text-[11px] text-muted-foreground">

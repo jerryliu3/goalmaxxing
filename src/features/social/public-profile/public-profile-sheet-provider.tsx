@@ -16,11 +16,9 @@ const PublicProfileSheet = dynamic(
 
 export function PublicProfileSheetProvider({
   children,
-  viewerUserId,
   xpEnabled = true,
 }: {
   children: ReactNode;
-  viewerUserId: string;
   xpEnabled?: boolean;
 }) {
   const [subjectUserId, setSubjectUserId] = useState<string | null>(null);
@@ -37,7 +35,6 @@ export function PublicProfileSheetProvider({
       {subjectUserId ? (
         <PublicProfileSheet
           subjectUserId={subjectUserId}
-          viewerUserId={viewerUserId}
           xpEnabled={xpEnabled}
           onClose={() => setSubjectUserId(null)}
         />
