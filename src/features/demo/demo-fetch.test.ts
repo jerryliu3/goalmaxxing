@@ -281,7 +281,7 @@ describe("demo fetch router", () => {
 
     expect(originalFetch).not.toHaveBeenCalled();
     expect(response.ok).toBe(true);
-    expect(payload.schemaVersion).toBe("2");
+    expect(payload.schemaVersion).toBe("3");
     expect(payload.collection.totalXp).toBe(2460);
     expect(payload.personalRecords.map((record) => record.label)).toContain(
       "Best active week"

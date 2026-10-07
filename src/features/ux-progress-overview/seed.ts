@@ -80,7 +80,7 @@ const closedSummaries: ProgressContextSummary[] = closedSeeds.map(seed => ({
 
 export const FOLIOS = buildGoalFolios(closedGoals, closedSummaries, OWNER);
 export const SHOWCASE: AchievementsShowcasePayload = {
-  schemaVersion: "2",
+  schemaVersion: "3",
   collection: { level: 8, totalXp: 2840, unlockedAwards: 3, totalAwards: 4, achievedGoals: 1, featuredAwardId: "level-8" },
   levelAwards: [2, 4, 8, 10].map(level => ({
     id: `level-${level}`, awardId: null, level, title: `Level ${level}`,
@@ -92,6 +92,6 @@ export const SHOWCASE: AchievementsShowcasePayload = {
     { id: "milestones", label: "Thesis milestones", value: "3", hint: "Of six lifetime milestones", accent: "sage" },
     { id: "closed", label: "Goal achieved", value: "1", hint: "Learn to swim · June 28", accent: "gain" },
   ],
-  achievedGoals: [{ goalId: "swim", title: "Learn to swim", rewardText: null, achievedOn: "2026-06-28", category: "personal" }],
+  achievedGoals: [{ goalId: "swim", title: "Learn to swim", rewardText: null, achievedOn: "2026-06-28", category: "personal", material: "alloy", color: "var(--primary)" }],
   truncated: { goals: false, completions: false },
 };

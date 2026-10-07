@@ -13,9 +13,9 @@ export function useCardRotation(disabled: boolean, solid: boolean) {
     const active = drag.current;
     drag.current = null;
     if (!active) return;
-    active.element.closest<HTMLElement>("[data-material]")?.removeAttribute("data-dragging");
+    pose.stage.current?.removeAttribute("data-dragging");
     if (active.element.hasPointerCapture(active.id)) active.element.releasePointerCapture(active.id);
-  }, []);
+  }, [pose.stage]);
   // Changing motion preferences or leaving the page must release capture.
   useEffect(() => stopDrag, [disabled, stopDrag]);
 

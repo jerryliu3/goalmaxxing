@@ -1,14 +1,10 @@
 "use client";
 
 import "@/features/achievements/showcase-theme.css";
-import {
-  MedalMark,
-  SealMark,
-  TIER_METAL,
-} from "@/features/achievements/medals";
+import { MedalMark } from "./medals";
+import { levelFinish } from "./prism/materials";
 import { formatAwardDate } from "@/features/achievements/format";
 import type {
-  AwardTier,
   PersonalRecord,
 } from "@/features/achievements/types";
 
@@ -26,7 +22,6 @@ export type ShowcaseLevelAwardView = {
   title: string;
   description: string;
   unlockedAt: string | null;
-  tier: AwardTier;
 };
 
 export function ShowcasePersonalRecords({
@@ -77,21 +72,13 @@ export function ShowcasePedestal({
   return (
     <div className="ach-showcase-pedestal mx-auto max-w-md rounded-[16px] border px-6 py-8 text-center">
       <div key={award.id} className="ach-showcase-hero flex flex-col items-center">
-        {locked ? (
-          <SealMark locked tier={award.tier} size={88} />
-        ) : (
-          <MedalMark
-            level={award.level}
-            tier={award.tier}
-            size={128}
-            markId={`showcase-hero-${award.id}`}
-          />
-        )}
+        <MedalMark level={award.level} locked={locked} size={128} />
+        <p className="ach-showcase-kicker mt-3 text-xs motion-reduce:hidden">Drag to rotate · Arrow keys to turn · Home to reset</p>
         <p
           className={`type-eyebrow mt-4 text-[10px] ${
             locked ? "ach-showcase-kicker" : ""
           }`}
-          style={locked ? undefined : { color: TIER_METAL[award.tier].glow }}
+          style={locked ? undefined : { color: levelFinish(award.level).type }}
         >
           {locked ? "Locked" : "On display"}
         </p>
@@ -100,7 +87,7 @@ export function ShowcasePedestal({
         </Heading>
         <p className="ach-showcase-body mt-2 max-w-sm text-sm leading-relaxed">
           {locked
-            ? "Earn the next altitude before this mount opens. The medal stays hidden until then."
+            ? "Earn the next altitude before this mount opens. The unstruck blank waits for your next level."
             : award.description}
         </p>
         <p className="ach-showcase-kicker mt-3 type-figure text-xs">
@@ -164,37 +151,13 @@ function ShelfMedal({
         onClick={onSelect}
         aria-pressed={selected}
         aria-label={locked ? "Locked award" : `Lv ${award.level}`}
-        className={`relative flex min-h-[8.5rem] w-full flex-col items-center justify-center rounded-[14px] border px-2 py-4 transition ${
+        className={`relative flex select-none min-h-[8.5rem] w-full flex-col items-center justify-center rounded-[14px] border px-2 py-4 transition ${
           locked ? "ach-showcase-mount-locked" : "ach-showcase-mount"
         } ${selected ? "is-selected" : ""}`}
       >
-        {locked ? (
-          <>
-            <span
-              className="ach-showcase-seal-line pointer-events-none absolute inset-x-3 top-3 h-px"
-              aria-hidden
-            />
-            <SealMark locked tier={award.tier} size={52} />
-            <span className="ach-showcase-kicker type-eyebrow mt-3 text-[10px]">
-              Locked
-            </span>
-          </>
-        ) : (
-          <>
-            <MedalMark
-              level={award.level}
-              tier={award.tier}
-              size={72}
-              markId={`showcase-shelf-${award.id}`}
-            />
-            <span className="ach-showcase-stat-muted mt-2 type-figure text-[11px]">
-              Lv {award.level}
-            </span>
-            <span className="ach-showcase-kicker type-eyebrow mt-0.5 text-[10px]">
-              Earned
-            </span>
-          </>
-        )}
+        <MedalMark level={award.level} locked={locked} size={72} />
+        <span className="ach-showcase-stat-muted mt-2 type-figure text-[11px]">Lv {award.level}</span>
+        <span className="ach-showcase-kicker type-eyebrow mt-0.5 text-[10px]">{locked ? "Locked" : "Earned"}</span>
       </button>
     </li>
   );

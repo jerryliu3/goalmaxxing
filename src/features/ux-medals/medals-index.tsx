@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { MedalMark } from "@/features/achievements/medals";
+import { MedalMark } from "@/features/ux-achievements/medals";
 import { AWARDS, FAMILY_EXAMPLE, PROPOSED_MIX } from "@/features/ux-medals/awards";
 import { MedalsStage } from "@/features/ux-medals/chrome";
 import { LightStage } from "@/features/ux-medals/light-stage";

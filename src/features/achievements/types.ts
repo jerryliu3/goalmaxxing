@@ -1,3 +1,4 @@
+import type { TempoCardMaterial } from "@/features/goals/card-material/tempo-card-material";
 export type AwardTier = "bronze" | "copper" | "sage" | "gold" | "ink";
 
 export type AchievementGoalCategory =
@@ -34,6 +35,8 @@ export interface AchievedGoalAchievement {
   title: string;
   rewardText: string | null;
   achievedOn: string | null;
+  material: TempoCardMaterial;
+  color: string;
   category: AchievementGoalCategory;
 }
 
@@ -47,7 +50,7 @@ export interface AchievementsCollectionSummary {
 }
 
 export interface AchievementsShowcasePayload {
-  schemaVersion: "2";
+  schemaVersion: "3";
   collection: AchievementsCollectionSummary;
   personalRecords: PersonalRecord[];
   levelAwards: LevelAward[];

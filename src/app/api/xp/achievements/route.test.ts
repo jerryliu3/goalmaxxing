@@ -139,7 +139,7 @@ describe("GET /api/xp/achievements", () => {
     expect(response.status).toBe(200);
 
     const body = await response.json();
-    expect(body.schemaVersion).toBe("2");
+    expect(body.schemaVersion).toBe("3");
     expect(body.levelAwards).toHaveLength(2);
     expect(body.levelAwards[0]?.unlockedAt).toBeTruthy();
     expect(body.levelAwards[1]?.unlockedAt).toBeNull();

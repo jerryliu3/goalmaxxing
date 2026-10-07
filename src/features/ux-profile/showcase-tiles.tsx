@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, type ReactNode } from "react";
-import { MedalMark } from "@/features/achievements/medals";
+import { MedalMark } from "@/features/ux-achievements/medals";
 import type { PersonalRecordAccent } from "@/features/achievements/types";
 import { GAZETTEER, GAZETTEER_CATEGORY_COLORS } from "@cadence/shared/brand/gazetteer";
 import type { ShowcaseItem } from "@/features/ux-profile/model";

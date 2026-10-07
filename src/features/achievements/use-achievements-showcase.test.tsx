@@ -31,7 +31,7 @@ describe("Achieved cache reuse", () => {
   it("reuses the warm session payload when revisiting", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    writeTabDataCache(`${ACHIEVEMENTS_DATA_CACHE_PREFIX}showcase`, cached);
+    writeTabDataCache(`${ACHIEVEMENTS_DATA_CACHE_PREFIX}showcase:v3`, cached);
     const { result } = renderHook(() => useAchievementsShowcase());
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.payload).toEqual(cached);
@@ -41,7 +41,7 @@ describe("Achieved cache reuse", () => {
     const updated = { medals: ["new"] };
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => updated });
     vi.stubGlobal("fetch", fetchMock);
-    writeTabDataCache(`${ACHIEVEMENTS_DATA_CACHE_PREFIX}showcase`, cached);
+    writeTabDataCache(`${ACHIEVEMENTS_DATA_CACHE_PREFIX}showcase:v3`, cached);
     const { result } = renderHook(() => useAchievementsShowcase());
     await waitFor(() => expect(result.current.loading).toBe(false));
     act(() => invalidatePlannerRelatedTabCaches());

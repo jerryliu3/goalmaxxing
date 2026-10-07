@@ -21,7 +21,6 @@
   --ach-accent-gain: color-mix(in srgb, var(--gm-gain) 82%, white);
   --ach-accent-copper: color-mix(in srgb, var(--primary) 72%, white);
   --ach-accent-ink: var(--border);
-  --ach-seal-line: var(--border);
   --ach-mount-locked-border: color-mix(in srgb, var(--border) 55%, var(--background));
 
   --ach-root-bg:
@@ -148,7 +147,6 @@
   --ach-accent-gain: #8fba7a;
   --ach-accent-copper: #e8b89a;
   --ach-accent-ink: #d4c4a4;
-  --ach-seal-line: #3a3128;
   --ach-mount-locked-border: #2e261e;
   --ach-root-bg:
     radial-gradient(ellipse 70% 45% at 50% 0%, rgba(154, 79, 44, 0.28), transparent 52%),
@@ -277,10 +275,6 @@
   color: var(--ach-accent-ink);
 }
 
-.ach-showcase-seal-line {
-  background: var(--ach-seal-line);
-}
-
 @keyframes ach-showcase-rise {
   from {
     opacity: 0;
@@ -294,4 +288,10 @@
 
 .ach-showcase-hero {
   animation: ach-showcase-rise 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ach-showcase-hero {
+    animation: none;
+  }
 }

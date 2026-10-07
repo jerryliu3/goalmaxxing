@@ -12,7 +12,7 @@ describe("buildDemoAchievements", () => {
     initDemoStore(buildDemoSnapshot("2026-08-22"));
     const payload = buildDemoAchievements();
 
-    expect(payload.schemaVersion).toBe("2");
+    expect(payload.schemaVersion).toBe("3");
     expect(payload.collection.totalXp).toBe(2460);
     expect(payload.collection.unlockedAwards).toBe(3);
     expect(payload.levelAwards).toHaveLength(5);

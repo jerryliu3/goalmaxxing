@@ -1,3 +1,5 @@
+import { resolveTempoCardMaterial } from "@/features/goals/card-material/tempo-card-material";
+import { getGoalVisual } from "@/features/planner/goal-visuals";
 import { toAchievementGoalCategory } from "@/features/achievements/category";
 import { buildPersonalRecords } from "@/features/achievements/personal-records";
 import { awardTierForLevel } from "@/features/achievements/tier";
@@ -69,6 +71,8 @@ function summarizeAchievedGoal({
     title: goal.title,
     rewardText: goal.reward_text ?? null,
     achievedOn,
+    material: resolveTempoCardMaterial(goal.difficulty),
+    color: getGoalVisual({ goalId: goal.id, color: goal.color, category: goal.category }).color,
     category: toAchievementGoalCategory(goal.category_key, goal.category),
   };
 }
@@ -150,8 +154,6 @@ function buildCollectionSummary(
 ): AchievementsCollectionSummary {
   const unlockedAwards = levelAwards.filter((award) => award.unlockedAt).length;
   const totalAwards = levelAwards.length;
-  const claimed = unlockedAwards + achievedGoalsCount;
-  const total = totalAwards + achievedGoalsCount;
   const featuredAward =
     [...levelAwards]
       .filter((award) => award.unlockedAt)
@@ -210,7 +212,7 @@ export function buildAchievementsShowcasePayload(
   const weekStartsOn = input.weeklyAnchor?.weekStartsOn ?? 1;
 
   return {
-    schemaVersion: "2",
+    schemaVersion: "3",
     collection,
     personalRecords: buildPersonalRecords({
       achievedGoalsCount: achievedGoals.length,

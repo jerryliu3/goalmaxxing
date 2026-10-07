@@ -7,7 +7,7 @@ import type { AchievementsShowcasePayload } from "@/features/achievements/types"
 afterEach(cleanup);
 
 const payload: AchievementsShowcasePayload = {
-  schemaVersion: "2",
+  schemaVersion: "3",
   collection: {
     level: 8,
     totalXp: 2840,
@@ -94,6 +94,8 @@ const payload: AchievementsShowcasePayload = {
       title: "Thesis defense",
       rewardText: "Weekend off-grid",
       achievedOn: "2026-08-22",
+      material: "chromatic",
+      color: "var(--primary)",
       category: "career",
     },
   ],
@@ -106,6 +108,8 @@ describe("AchievementsShowcase", () => {
     render(<AchievementsShowcase payload={payload} />);
 
     expect(screen.getByLabelText("Personal records")).toBeInTheDocument();
+    expect(screen.getByLabelText("Goal-finish medals")).toHaveTextContent("Weekend off-grid");
+    expect(document.querySelector("[data-goal][data-material=chromatic]")).not.toBeNull();
     expect(screen.getByText("21d")).toBeInTheDocument();
     expect(screen.getByText("Claimed")).toBeInTheDocument();
     expect(screen.getByText("3/5 · 60%")).toBeInTheDocument();
@@ -139,4 +143,11 @@ describe("AchievementsShowcase", () => {
 
     expect(screen.getAllByRole("heading", { name: "Level 2 unlocked" }).length).toBeGreaterThan(0);
   });
+  it("keeps finished goals and records visible when the level catalog is empty", () => {
+    render(<AchievementsShowcase payload={{ ...payload, levelAwards: [], collection: { ...payload.collection, featuredAwardId: null, totalAwards: 0, unlockedAwards: 0 } }} />);
+    expect(screen.getByLabelText("Goal-finish medals")).toHaveTextContent("Thesis defense");
+    expect(screen.getByLabelText("Personal records")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Trophy showcase")).toBeNull();
+  });
+
 });
