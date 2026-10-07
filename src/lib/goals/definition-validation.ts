@@ -1,5 +1,6 @@
 import type { GoalFrequencyType, GoalTargetBasis, RecurrenceInterval } from "@/lib/goals/types";
 import {
+  addDaysToDateString,
   compareDateStrings,
   getAnchoredPeriod,
 } from "@/lib/goals/periods";
@@ -195,6 +196,32 @@ export function getGoalHorizonEndDate(startDate: string): string | null {
   return `${endYear}-${String(endMonth).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
 }
 
+function openEndedRecurringPlanningEnd(
+  anchor: string,
+  interval: RecurrenceInterval,
+  targetCount: number,
+) {
+  const count = Math.max(1, targetCount);
+  if (interval === "daily") {
+    return addDaysToDateString(anchor, count - 1);
+  }
+  if (interval === "weekly") {
+    return addDaysToDateString(anchor, count * 7 - 1);
+  }
+  if (interval === "monthly") {
+    const [yearPart, monthPart, dayPart] = anchor.split("-");
+    const year = Number(yearPart);
+    const monthIndex = Number(monthPart) - 1 + count;
+    const endYear = year + Math.floor(monthIndex / 12);
+    const endMonth = (monthIndex % 12) + 1;
+    const day = Number(dayPart);
+    const lastDay = new Date(Date.UTC(endYear, endMonth, 0)).getUTCDate();
+    const sameDay = `${endYear}-${String(endMonth).padStart(2, "0")}-${String(Math.min(day, lastDay)).padStart(2, "0")}`;
+    return addDaysToDateString(sameDay, -1);
+  }
+  return null;
+}
+
 export function resolveGoalPlanningEndDate(
   input: Pick<
     GoalDefinitionValidationInput,
@@ -222,7 +249,26 @@ export function resolveGoalPlanningEndDate(
     compareDateStrings(normalizedAsOfDate, input.startDate) > 0
       ? normalizedAsOfDate
       : input.startDate;
-  return getGoalHorizonEndDate(horizonAnchor);
+  const softHorizonEnd = getGoalHorizonEndDate(horizonAnchor);
+  if (
+    input.frequencyType === "recurring" &&
+    input.recurrenceInterval &&
+    (input.targetCount ?? 0) > 0
+  ) {
+    const cadenceEnd = openEndedRecurringPlanningEnd(
+      horizonAnchor,
+      input.recurrenceInterval,
+      input.targetCount ?? 1,
+    );
+    if (
+      cadenceEnd &&
+      softHorizonEnd &&
+      compareDateStrings(cadenceEnd, softHorizonEnd) <= 0
+    ) {
+      return cadenceEnd;
+    }
+  }
+  return softHorizonEnd;
 }
 
 export function getGoalDeadlineMonthSpan({
