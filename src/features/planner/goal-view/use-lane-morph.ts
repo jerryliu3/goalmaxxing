@@ -75,6 +75,8 @@ function currentShift(element: HTMLElement): Point {
 }
 
 const headerHeight = (plan: LanePlan) => (plan.layout === "calendar" ? plan.geometry.header : 0);
+const contentHeight = (plan: LanePlan) =>
+  headerHeight(plan) + plan.lanes.reduce((total, lane) => total + lane.height, 0);
 
 const FADE_IN: Keyframe[] = [{ opacity: 0 }, { opacity: 1 }];
 const FADE_OUT: Keyframe[] = [{ opacity: 1 }, { opacity: 0 }];
@@ -291,6 +293,14 @@ export function useLaneMorph(enabled: boolean) {
         // into the room it leaves.
         const dy = headerHeight(from) - headerHeight(to) + bodyShift;
         if (body && dy) animateLayer(body, slideY(dy), glide(current.duration));
+        // The canvas clips its content and has already taken its new height; hold
+        // the old one and glide, so a shrinking layout doesn't clip lanes still
+        // sliding into place. The scrolling frame around it follows.
+        const height = root.getBoundingClientRect().height;
+        const was = Math.max(0, height + contentHeight(from) - contentHeight(to));
+        if (Math.abs(was - height) > 0.5) {
+          animateLayer(root, [{ height: `${was}px` }, { height: `${height}px` }], glide(current.duration));
+        }
         if (to.layout === "calendar") {
           // The header slides down from the frame's top edge in step with
           // the lanes, like a drawer; day rules arrive once the sessions are
