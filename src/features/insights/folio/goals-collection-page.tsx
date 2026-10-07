@@ -12,7 +12,7 @@ import { useInsightsData } from "@/features/insights/use-insights-data";
 import { FolioShelf } from "./folio-shelf";
 import { CurrentGoalGrid } from "./current-goal-grid";
 import { useGoalCardScrollMotion } from "@/features/goals/use-goal-card-scroll-motion";
-import { buildCurrentGoals, buildGoalFolios } from "./folio-model";
+import { buildCurrentGoals, buildGoalFolios, splitPastGoals } from "./folio-model";
 import styles from "./folio.module.css";
 
 export function GoalsCollectionPage({ subjectUserId, readOnly = false, anchorSections = true }: {
@@ -28,6 +28,8 @@ export function GoalsCollectionPage({ subjectUserId, readOnly = false, anchorSec
   useReportAppSurfaceReady(!loading);
   const folios = useMemo(() => buildGoalFolios(state.goals, state.progress?.summaries ?? [], state.userId), [state.goals, state.progress, state.userId]);
   const current = useMemo(() => buildCurrentGoals(state.goals, state.progress?.summaries ?? [], state.userId), [state.goals, state.progress, state.userId]);
+  const { past, archived } = useMemo(() => splitPastGoals(folios), [folios]);
+  const openDetails = readOnly ? undefined : (goalId: string) => router.push(`${prefix}/goals/${goalId}`);
   return (
     <div className={styles.page}>
       {loadError ? <div className={styles.empty} role="alert"><h2>Your collection couldn’t be loaded.</h2><p>{loadError}</p><Button variant="outline" className="mt-5" onClick={reload}>Try again</Button></div>
@@ -35,7 +37,7 @@ export function GoalsCollectionPage({ subjectUserId, readOnly = false, anchorSec
         : <div className="space-y-8">
           <section aria-labelledby={`${headingId}-current`}>
             <header className="mb-4"><h1 id={`${headingId}-current`} className="type-title text-2xl">Current goals</h1><p className="text-sm text-muted-foreground">Taking shape. Worth keeping.</p></header>
-            <CurrentGoalGrid entries={current} moving={moving} leadingCard={readOnly ? undefined : <NewGoalButton presentation="card" />} onDetails={readOnly ? undefined : goalId => router.push(`${prefix}/goals/${goalId}`)} />
+            <CurrentGoalGrid entries={current} moving={moving} leadingCard={readOnly ? undefined : <NewGoalButton presentation="card" />} onDetails={openDetails} />
           </section>
           <section id={anchorSections ? "goal-library" : undefined} aria-labelledby={`${headingId}-library`}>
             <header className="mb-4">
@@ -45,8 +47,12 @@ export function GoalsCollectionPage({ subjectUserId, readOnly = false, anchorSec
             {folios.length ? <FolioShelf folios={folios} /> : <p className="text-sm text-muted-foreground">Your yearbooks collect here as goals finish, end, or are archived.</p>}
           </section>
           <section id={anchorSections ? "past-goals" : undefined} aria-labelledby={`${headingId}-past`}>
-            <header className="mb-4"><h2 id={`${headingId}-past`} className="type-title text-2xl">Past goals</h2><p className="text-sm text-muted-foreground">Every goal that’s passed.</p></header>
-            {folios.length ? <CurrentGoalGrid entries={folios.flatMap(folio => folio.entries)} moving={moving} onDetails={readOnly ? undefined : goalId => router.push(`${prefix}/goals/${goalId}`)} /> : <p className="text-sm text-muted-foreground">Completed, ended, and archived goals collect here.</p>}
+            <header className="mb-4"><h2 id={`${headingId}-past`} className="type-title text-2xl">Past goals</h2><p className="text-sm text-muted-foreground">Every goal you’ve finished or seen through to its end.</p></header>
+            {past.length ? <CurrentGoalGrid entries={past} moving={moving} onDetails={openDetails} /> : <p className="text-sm text-muted-foreground">Completed and ended goals collect here.</p>}
+          </section>
+          <section id={anchorSections ? "archived-goals" : undefined} aria-labelledby={`${headingId}-archived`}>
+            <header className="mb-4"><h2 id={`${headingId}-archived`} className="type-title text-2xl">Archived goals</h2><p className="text-sm text-muted-foreground">Set aside. Restore any of them from the back of the card.</p></header>
+            {archived.length ? <CurrentGoalGrid entries={archived} moving={moving} onDetails={openDetails} /> : <p className="text-sm text-muted-foreground">Goals you archive collect here.</p>}
           </section>
         </div>}
 

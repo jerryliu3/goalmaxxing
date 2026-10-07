@@ -57,6 +57,15 @@ export function buildGoalFolios(
     }));
 }
 
+/** Past holds finished and ended goals; archived goals get their own section. */
+export function splitPastGoals(folios: GoalFolio[]) {
+  const entries = folios.flatMap(folio => folio.entries);
+  return {
+    past: entries.filter(entry => entry.progress.lifecycle !== "archived"),
+    archived: entries.filter(entry => entry.progress.lifecycle === "archived"),
+  };
+}
+
 /** Current includes unscheduled and upcoming goals, not just today's checklist. */
 export function buildCurrentGoals(goals: Goal[], summaries: ProgressContextSummary[], userId: string) {
   return selectCurrentGoals(goals, summaries, userId);
