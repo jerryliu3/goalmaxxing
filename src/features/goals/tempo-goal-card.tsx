@@ -1,12 +1,13 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useReducedMotion } from "motion/react";
 import { ReassemblingCard } from "./card-material/reassembling-card";
 import { ArrowUpRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/goals/category";
 import { resolveTempoCardMaterial } from "./card-material/tempo-card-material";
 import { renderSolidLettering } from "./card-material/solid-lettering";
+import { goalColorStyle } from "./card-material/goal-color-style";
 import { TempoCardSurface } from "./card-material/tempo-card-surface";
 import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import type { TempoCardVisibility } from "./tempo-creation-progress";
@@ -98,7 +99,7 @@ export function TempoGoalCard({
         data-empty={!visibility.category}
         data-effort={visibility.difficulty ? effort : undefined}
         data-material={material}
-        style={{ "--goal-color": goalColor } as CSSProperties}
+        style={goalColorStyle(goalColor)}
         aria-label={
           context === "history"
             ? `${fields.title} ${isTask ? "task" : "goal"} card`

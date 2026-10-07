@@ -3,6 +3,7 @@ export {
   GOAL_CATEGORY_PALETTE,
   goalCategoryColor,
   goalCategoryPair,
+  goalCategoryTones,
   type GoalCategoryKey,
 } from "./categories";
 export { renderStudyThemeCss, renderThemeCss } from "./css";

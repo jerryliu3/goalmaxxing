@@ -76,7 +76,10 @@ Category colors are the same in every theme: the Mineral Candy palette in
 Interpersonal black cherry, Finance malachite, Other saffron), each a
 surface/ink pair. The `goal_categories` table and `DEFAULT_GOAL_CATEGORIES`
 (src/lib/goals/category.ts) carry the same surfaces; change all three
-together, with a migration that moves existing goals.
+together, with a migration that moves existing goals. Goal cards look up a
+category color's authored pigment and ink with `goalCategoryTones` so glass,
+alloy, and chromatic cards read in the category; custom colors fall back to
+tones derived in CSS.
 
 ## Changing or adding a theme
 

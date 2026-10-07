@@ -1,4 +1,4 @@
-import { colorPair, COLOR_LIBRARY, type ColorId } from "./colors";
+import { colorPair, COLOR_LIBRARY, type ColorId, type ColorSwatch } from "./colors";
 
 /**
  * Goal category colors: the Mineral Candy palette from the brand library,
@@ -42,4 +42,22 @@ export function goalCategoryPair(
 ) {
   const key = categoryKey?.trim().toLowerCase() ?? "";
   return colorPair(GOAL_CATEGORY_PALETTE[isGoalCategoryKey(key) ? key : "other"], appearance);
+}
+
+const TONES_BY_SURFACE = new Map(
+  Object.values(GOAL_CATEGORY_PALETTE).map((colorId) => {
+    const swatch: ColorSwatch = COLOR_LIBRARY[colorId];
+    return [swatch.surface, { pigment: swatch.pigment ?? swatch.surface, ink: swatch.ink }] as const;
+  })
+);
+
+/**
+ * The authored pigment and ink behind a category surface color, so goal
+ * cards can tint and letter in the category's stronger tones. Null for
+ * custom colors, which cards derive their tones from instead.
+ */
+export function goalCategoryTones(
+  color: string | null | undefined
+): { pigment: string; ink: string } | null {
+  return TONES_BY_SURFACE.get(color?.trim().toLowerCase() ?? "") ?? null;
 }

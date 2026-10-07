@@ -1,3 +1,4 @@
+import { GOAL_CATEGORY_COLORS, goalCategoryTones } from "@cadence/shared/brand";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
@@ -119,6 +120,20 @@ describe("TempoGoalCard materials", () => {
 
     expect(surface).toHaveAttribute("data-material", "alloy");
     expect(surface).toHaveStyle({ "--goal-color": baseFields.color });
+  });
+
+  it("tints a category goal's card in that category's authored tones", () => {
+    const color = GOAL_CATEGORY_COLORS.health;
+    const tones = goalCategoryTones(color)!;
+    const card = renderCard({ fields: { ...baseFields, color } });
+
+    expect(card).toHaveStyle({
+      "--goal-pigment": tones.pigment,
+      "--goal-ink": tones.ink,
+    });
+    expect(card.closest(".tempo-card-surface")).toHaveStyle({
+      "--goal-pigment": tones.pigment,
+    });
   });
 
   it("does not wrap a card that has no material", () => {
