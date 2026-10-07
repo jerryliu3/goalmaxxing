@@ -63,6 +63,12 @@ CSS for switching, and loads a Google Fonts stylesheet only for the selected
 study skin. Original and Gazetteer do not fetch extra study fonts. Study
 status records provenance and distinguishes bundled from on-demand faces.
 
+`selection` / `selectionForeground` are the second-hue pair for persistent
+selection: navigation, in-page tabs, and segmented controls. Desktop
+navigation and line tabs use a selection-colored rule with ordinary ink;
+filled selections use the paired foreground. Gazetteer's selection uses a
+deeper sage so its cream labels remain readable. Primary remains the action color.
+
 The rest of the brand library sits in `library/`, exported alongside the
 themes: the six archived pairings and the four exploratory skins set aside
 for now (Quarry, Fieldwork, Longplay, Lido) as `StudySkin` data (pass one to

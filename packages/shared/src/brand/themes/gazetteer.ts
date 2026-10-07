@@ -54,7 +54,8 @@ export const GAZETTEER_THEME = {
     recover: GAZETTEER.recover,
     warning: GAZETTEER.recover,
     warningFill: "#fef9c3",
-    selection: GAZETTEER.sage,
+    // Deeper sage keeps cream labels readable on filled selection controls.
+    selection: "#526456",
     selectionForeground: GAZETTEER.paper,
     today: "var(--gm-heatmap-1)",
     todayForeground: "var(--foreground)",

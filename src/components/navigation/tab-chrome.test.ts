@@ -2,6 +2,16 @@ import { describe, expect, it } from "vitest";
 import { tabChromeClasses, tabGridClass } from "./tab-chrome";
 
 describe("tabChromeClasses", () => {
+  it("pairs filled mobile selection with its authored foreground in both chromes", () => {
+    for (const chrome of ["underline", "pills"] as const) {
+      const classes = tabChromeClasses(chrome, true, "grid-cols-4");
+      expect(classes.highlight).toContain("bg-selection");
+      expect(classes.linkActive).toBe("text-selection-foreground");
+      const desktop = tabChromeClasses(chrome, false, "grid-cols-4");
+      expect(desktop.highlight).toContain("bg-selection");
+      expect(desktop.linkActive).toBe("text-foreground");
+    }
+  });
   it("frames the whole tab on the phone bar, in every chrome", () => {
     for (const chrome of ["underline", "pills"] as const) {
       const highlight = tabChromeClasses(chrome, true, "grid-cols-4").highlight.split(" ");

@@ -212,7 +212,7 @@ describe("TabNav", () => {
       </UiStyleProvider>
     );
 
-    expect(screen.getByRole("link", { name: /Community/i })).toHaveClass("text-primary");
+    expect(screen.getByRole("link", { name: /Community/i })).toHaveClass("text-foreground");
     expect(screen.getByRole("navigation", { name: "Main navigation" })).toHaveClass(
       "border-b"
     );
