@@ -26,7 +26,7 @@ test("Growth has one home for each section and Settings has no score or stats", 
   await expect(page.getByText("2026 activity", { exact: true })).toHaveCount(0);
   await expect(statsSection.getByText("Completion by day of week (last 30 days)")).toHaveCount(0);
   await statsSection.getByRole("button", { name: "View more", exact: true }).click();
-  await expect(statsSection.getByText("Completion by day of week (last 30 days)")).toBeVisible();
+  await expect(statsSection.getByText("Completion by day of week (last 30 days)").first()).toBeVisible();
   await statsSection.getByRole("button", { name: "View less", exact: true }).click();
   await expect(statsSection.getByText("Completion by day of week (last 30 days)")).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
@@ -72,7 +72,10 @@ test("Prism shelf selection and reduced motion work", async ({ page }) => {
   await page.getByRole("button", { name: "Locked award", exact: true }).first().click();
   await expect(page.getByRole("heading", { name: "Still ahead", exact: true })).toBeVisible();
   const hero = page.locator('[aria-label="Trophy showcase"] .prism-medal[data-detail="hero"]');
-  expect(await hero.evaluate(node => getComputedStyle(node).transform)).toBe("none");
+  expect(await hero.evaluate(node => {
+    const transform = getComputedStyle(node).transform;
+    return transform === "none" || new DOMMatrixReadOnly(transform).isIdentity;
+  })).toBe(true);
   expect(await page.locator(".ach-showcase-hero").evaluate(node => getComputedStyle(node).animationName)).toBe("none");
 });
 
