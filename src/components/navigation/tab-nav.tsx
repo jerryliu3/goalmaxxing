@@ -52,7 +52,7 @@ export function TabNav({
     optimisticNav && optimisticNav.from === pathname
       ? optimisticNav.to
       : shownPath;
-  const gridClass = tabGridClass(tabs.length);
+  const gridClass = tabGridClass(tabs.length, { fitLabels: mobile });
   const currentIndex = tabs.findIndex((tab) =>
     isAppTabActive(activePath, tab.href)
   );
@@ -104,8 +104,8 @@ export function TabNav({
                     }
                   />
                 ) : null}
-                <Icon className="size-5 shrink-0" />
-                <span className={mobile ? "max-w-full truncate" : undefined}>{tab.label}</span>
+                <Icon className="size-5" />
+                <span>{tab.label}</span>
               </Link>
             </li>
           );
