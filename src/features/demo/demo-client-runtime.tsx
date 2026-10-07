@@ -14,7 +14,13 @@ function subscribeToClient() {
   return () => {};
 }
 
-export function DemoClientRuntime({ children }: { children: ReactNode }) {
+export function DemoClientRuntime({
+  children,
+  goalSheet,
+}: {
+  children: ReactNode;
+  goalSheet?: ReactNode;
+}) {
   const isClient = useSyncExternalStore(
     subscribeToClient,
     () => true,
@@ -33,6 +39,7 @@ export function DemoClientRuntime({ children }: { children: ReactNode }) {
             userId={DEMO_ALEX_ID}
             viewerLabel="Alex"
             viewerAvatarUrl={DEMO_AVATAR_URLS.alex}
+            goalSheet={goalSheet}
             hrefPrefix={DEMO_PATH_PREFIX}
             showJourneyIntro={false}
             onNewGoalClick={() => setNewGoalOpen(true)}
