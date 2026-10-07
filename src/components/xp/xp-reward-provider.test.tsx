@@ -34,11 +34,12 @@ describe("XpRewardProvider", () => {
       </XpRewardProvider>
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Celebrate" }));
-
-    expect(document.querySelectorAll("[data-reward-burst]")).toHaveLength(1);
     expect(
       document.querySelector("[data-motion='xp-reward-overlay']")
     ).toHaveClass("pointer-events-none");
+
+    fireEvent.click(screen.getByRole("button", { name: "Celebrate" }));
+
+    expect(document.querySelectorAll("[data-reward-burst]")).toHaveLength(1);
   });
 });

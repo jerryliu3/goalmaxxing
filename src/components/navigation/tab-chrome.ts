@@ -49,13 +49,13 @@ export function tabChromeClasses(
       nav: cn(
         "w-full",
         mobile
-          ? "fixed inset-x-0 bottom-0 z-50 flex justify-center px-2 pb-[max(env(safe-area-inset-bottom),0.4rem)]"
+          ? "fixed inset-x-0 bottom-0 z-50 flex w-full max-w-[100vw] justify-center overflow-x-clip px-2 pb-[max(env(safe-area-inset-bottom),0.4rem)]"
           : "border-b border-border"
       ),
       list: cn(
         "grid w-full gap-1",
         mobile
-          ? `${gridClass} max-w-[27rem] border-t border-border bg-background/90 px-1.5 pt-1.5 shadow-[0_-8px_24px_-18px_rgba(36,28,20,0.35)] backdrop-blur-md supports-[backdrop-filter]:bg-background/80`
+          ? `${gridClass} min-w-0 max-w-[min(100%,27rem)] border-t border-border bg-background/90 px-1.5 pt-1.5 shadow-[0_-8px_24px_-18px_rgba(36,28,20,0.35)] backdrop-blur-md supports-[backdrop-filter]:bg-background/80`
           : gridClass
       ),
       link: cn(
@@ -63,7 +63,7 @@ export function tabChromeClasses(
         // Narrow phone tabs keep their width for the label, with tighter
         // tracking so four equal tabs fit "Achievements" on a 375px phone.
         mobile
-          ? "min-h-12 flex-col gap-1 px-1 py-1.5 text-[10px] tracking-[0.06em]"
+          ? "min-h-12 min-w-0 flex-col gap-1 px-1 py-1.5 text-[10px] tracking-[0.06em]"
           : "min-h-11 flex-col gap-1 py-2 text-[11px]"
       ),
       linkActive: "text-primary",
@@ -83,14 +83,14 @@ export function tabChromeClasses(
     // Desktop tabs size to their labels so the header can center them between
     // status and account controls; the header's own border is their baseline.
     nav: mobile
-      ? "fixed inset-x-0 bottom-0 z-50 flex w-full justify-center px-2 pb-[max(env(safe-area-inset-bottom),0.4rem)]"
+      ? "fixed inset-x-0 bottom-0 z-50 flex w-full max-w-[100vw] justify-center overflow-x-clip px-2 pb-[max(env(safe-area-inset-bottom),0.4rem)]"
       : "",
     list: mobile
-      ? `grid w-full gap-1 ${gridClass} max-w-[27rem] rounded-[1.35rem] border border-border/20 bg-background/50 p-1.5 shadow-sm shadow-black/5 backdrop-blur-md supports-[backdrop-filter]:bg-background/50`
+      ? `grid w-full min-w-0 max-w-[min(100%,27rem)] gap-1 ${gridClass} rounded-[1.35rem] border border-border/20 bg-background/50 p-1.5 shadow-sm shadow-black/5 backdrop-blur-md supports-[backdrop-filter]:bg-background/50`
       : `grid w-max gap-1 ${gridClass}`,
     link: cn(
       "relative isolate flex w-full touch-manipulation items-center justify-center rounded-xl px-2 font-medium transition-[color,transform] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none",
-      mobile ? "min-h-12 flex-col gap-1 py-1.5 text-[10px]" : "min-h-16 min-w-[6.5rem] flex-col gap-1 px-3 py-2 text-xs"
+      mobile ? "min-h-12 min-w-0 flex-col gap-1 py-1.5 text-[10px]" : "min-h-16 min-w-[6.5rem] flex-col gap-1 px-3 py-2 text-xs"
     ),
     linkActive: mobile ? "text-white" : "text-foreground",
     linkIdle: mobile
