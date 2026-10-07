@@ -3,6 +3,7 @@
 import { useId, type CSSProperties, type ReactNode } from "react";
 import { useReducedMotion } from "motion/react";
 import { CardSolidBody } from "./card-solid-body";
+import { goalColorStyle } from "./goal-color-style";
 import { cardOptics, FLAT_POSE, REST_POSE } from "./card-optics";
 import type { TempoCardMaterial } from "./tempo-card-material";
 import { useCardRotation } from "./use-card-rotation";
@@ -53,7 +54,7 @@ export function TempoCardSurface({
       style={
         {
           ...cardOptics(frozen ? FLAT_POSE : REST_POSE),
-          "--goal-color": goalColor,
+          ...goalColorStyle(goalColor),
         } as CSSProperties
       }
       {...(held ? stageHandlers : {})}
