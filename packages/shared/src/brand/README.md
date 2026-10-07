@@ -57,11 +57,11 @@ Original and Gazetteer are `live`: they are the only themes in
 
 Six shortlisted /ux/brand skins are `study` themes (Undertow, Kiln, Centre
 Court, Opaline, Bloodstone, Pitlane). Each keeps its authored palette, faces, and weights;
-`themes/study.ts` derives the rest. Only while `STUDY_THEMES_ENABLED` is on
-(default on in `next dev`) does the root layout inject their CSS and one
-Google Fonts stylesheet, the picker offer them, and the cookie honor them, so
-production pages carry none of it. Promoting a skin means hand-tuning its
-derived roles and setting `status: "live"`.
+`themes/study.ts` derives the rest. All registered themes are available in
+every environment and saved cookies are honored. The provider injects study
+CSS for switching, and loads a Google Fonts stylesheet only for the selected
+study skin. Original and Gazetteer do not fetch extra study fonts. Study
+status records provenance and distinguishes bundled from on-demand faces.
 
 The rest of the brand library sits in `library/`, exported alongside the
 themes: the six archived pairings and the four exploratory skins set aside

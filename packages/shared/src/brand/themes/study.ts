@@ -4,8 +4,8 @@ import type { ThemeColors, ThemeDefinition, ThemeText } from "../roles";
 /**
  * Study skins are authored as the ten-color palettes from the UX brand
  * studies (/ux/brand). This derives every other role from that palette so a
- * skin can be tried in the live app; each still needs hand adaptation before
- * it ships, which is why they stay behind STUDY_THEMES_ENABLED.
+ * skin can be used in the live app. Study status records their origin; it
+ * does not gate the picker or a saved selection.
  */
 export interface StudyPalette {
   page: string;

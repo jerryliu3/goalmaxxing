@@ -15,17 +15,17 @@ import { appIconHref } from "@/lib/brand/app-icon";
 export const UI_STYLE_COOKIE_NAME = "gm_ui_style";
 export const UI_STYLE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
-/** Themes the picker offers: live ones, plus study skins when enabled. */
-export function uiStyleOptions(includeStudies = false): readonly Theme[] {
-  return THEMES.filter((theme) => includeStudies || theme.status === "live");
+/** Every registered theme is available in the picker. */
+export function uiStyleOptions(): readonly Theme[] {
+  return THEMES;
 }
 
-/** A cookie or request value as a theme id; study skins only when enabled. */
-export function parseUiStyleId(value: string | null | undefined, includeStudies = false): ThemeId {
+/** A cookie or request value as a registered theme id. */
+export function parseUiStyleId(value: string | null | undefined): ThemeId {
   if (!isThemeId(value)) {
     return DEFAULT_THEME_ID;
   }
-  return includeStudies || getTheme(value).status === "live" ? value : DEFAULT_THEME_ID;
+  return value;
 }
 
 export function resolveUiStyleId(explicit?: string | null): ThemeId {
@@ -33,8 +33,7 @@ export function resolveUiStyleId(explicit?: string | null): ThemeId {
     return explicit;
   }
   if (typeof document !== "undefined") {
-    // The server already gated what it rendered onto <html>.
-    return parseUiStyleId(document.documentElement.dataset.uiStyle, true);
+    return parseUiStyleId(document.documentElement.dataset.uiStyle);
   }
   return DEFAULT_THEME_ID;
 }

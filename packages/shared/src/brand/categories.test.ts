@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { GOAL_CATEGORY_COLORS, goalCategoryTones } from "./categories";
+import { GOAL_CATEGORY_COLORS, goalCategoryColor, goalCategoryPair, goalCategoryTones } from "./categories";
 import { COLOR_LIBRARY } from "./colors";
 
 describe("goal category tones", () => {
+  it("keeps renamed and legacy interpersonal labels on black cherry", () => {
+    for (const label of ["Interpersonal", "Relationships", "Relationship", " interpersonal "]) {
+      expect(goalCategoryColor(label)).toBe(GOAL_CATEGORY_COLORS.relationships);
+      expect(goalCategoryPair(label)).toEqual(goalCategoryPair("relationships"));
+    }
+    expect(goalCategoryColor("My custom category")).toBe(GOAL_CATEGORY_COLORS.other);
+  });
   it("resolves every category surface to its authored pigment and ink", () => {
     expect(goalCategoryTones(GOAL_CATEGORY_COLORS.health)).toEqual({
       pigment: COLOR_LIBRARY.vermilion.pigment,

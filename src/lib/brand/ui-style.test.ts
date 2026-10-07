@@ -18,9 +18,8 @@ describe("ui style catalog", () => {
     expect(DEFAULT_THEME_ID).toBe("original");
   });
 
-  it("offers the live styles, and study skins only when they are rolled out", () => {
-    expect(uiStyleOptions().map((style) => style.id)).toEqual(["original", "gazetteer"]);
-    expect(uiStyleOptions(true).map((style) => style.id)).toEqual([
+  it("offers all registered themes without a rollout flag", () => {
+    expect(uiStyleOptions().map((style) => style.id)).toEqual([
       "original",
       "gazetteer",
       "undertow",
@@ -32,9 +31,8 @@ describe("ui style catalog", () => {
     ]);
   });
 
-  it("falls back to Original for a study cookie while studies are off", () => {
-    expect(parseUiStyleId("pitlane")).toBe("original");
-    expect(parseUiStyleId("pitlane", true)).toBe("pitlane");
+  it("honors a study-theme cookie", () => {
+    expect(parseUiStyleId("pitlane")).toBe("pitlane");
   });
 
   it("reads the document dataset when no explicit id is passed", () => {

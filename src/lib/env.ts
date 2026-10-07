@@ -104,7 +104,6 @@ const serverEnvSchema = publicEnvSchema.extend({
   JOURNEY_ENABLED: booleanFromEnv(false),
   COACH_ENABLED: booleanFromEnv(false),
   DIGEST_ENABLED: booleanFromEnv(() => process.env.NODE_ENV === "development"),
-  STUDY_THEMES_ENABLED: booleanFromEnv(() => process.env.NODE_ENV === "development"),
   DIGEST_DAILY_LIMIT: optionalPositiveInt({ min: 1, max: 1_000_000 }),
   INTEGRATIONS_ROLLOUT_STAGE: z.preprocess((value) => {
     const normalized = emptyToUndefined(value);
@@ -181,7 +180,6 @@ function readServerEnvInput() {
     JOURNEY_ENABLED: process.env.JOURNEY_ENABLED,
     COACH_ENABLED: process.env.COACH_ENABLED,
     DIGEST_ENABLED: process.env.DIGEST_ENABLED,
-    STUDY_THEMES_ENABLED: process.env.STUDY_THEMES_ENABLED,
     DIGEST_DAILY_LIMIT: process.env.DIGEST_DAILY_LIMIT,
     INTEGRATIONS_ROLLOUT_STAGE: process.env.INTEGRATIONS_ROLLOUT_STAGE,
     INTEGRATIONS_ALLOWED_USER_IDS: process.env.INTEGRATIONS_ALLOWED_USER_IDS,

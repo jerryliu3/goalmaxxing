@@ -29,10 +29,17 @@ function isGoalCategoryKey(value: string): value is GoalCategoryKey {
   return Object.prototype.hasOwnProperty.call(GOAL_CATEGORY_PALETTE, value);
 }
 
-/** The palette color for a category key; unknown and custom categories use Other. */
+// Mobile checklist rows carry the display label. Preserve the canonical key
+// and both old labels when resolving the renamed Interpersonal category.
+function paletteKey(value: string | null | undefined): GoalCategoryKey {
+  const key = value?.trim().toLowerCase() ?? "";
+  if (key === "interpersonal" || key === "relationship") return "relationships";
+  return isGoalCategoryKey(key) ? key : "other";
+}
+
+/** The palette color for a category key or label; custom categories use Other. */
 export function goalCategoryColor(categoryKey: string | null | undefined): string {
-  const key = categoryKey?.trim().toLowerCase() ?? "";
-  return GOAL_CATEGORY_COLORS[isGoalCategoryKey(key) ? key : "other"];
+  return GOAL_CATEGORY_COLORS[paletteKey(categoryKey)];
 }
 
 /** Surface and ink for a category, reversed on dark surfaces. */
@@ -40,8 +47,7 @@ export function goalCategoryPair(
   categoryKey: string | null | undefined,
   appearance: "light" | "dark" = "light"
 ) {
-  const key = categoryKey?.trim().toLowerCase() ?? "";
-  return colorPair(GOAL_CATEGORY_PALETTE[isGoalCategoryKey(key) ? key : "other"], appearance);
+  return colorPair(GOAL_CATEGORY_PALETTE[paletteKey(categoryKey)], appearance);
 }
 
 const TONES_BY_SURFACE = new Map(

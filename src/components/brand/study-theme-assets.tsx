@@ -1,18 +1,18 @@
-import { googleFontsHref, renderStudyThemeCss, THEMES } from "@cadence/shared/brand";
+import { googleFontsHref, renderStudyThemeCss, type Theme } from "@cadence/shared/brand";
 
 const STUDY_THEME_CSS = renderStudyThemeCss();
-const STUDY_FONTS_HREF = googleFontsHref(
-  THEMES.filter((theme) => theme.status === "study").flatMap((theme) => Object.values(theme.fonts))
-);
 
 /**
- * Study skins' theme blocks and faces. Rendered only while STUDY_THEMES_ENABLED
- * is on, so production pages carry none of it; React hoists both into <head>.
+ * Theme blocks are always available for switching. Only the selected study
+ * skin's fonts load; Original and Gazetteer use their bundled faces.
+ * React hoists these assets into <head> on SSR and client-side switches.
  */
-export function StudyThemeAssets() {
+export function StudyThemeAssets({ theme }: { theme: Theme }) {
   return (
     <>
-      <link rel="stylesheet" href={STUDY_FONTS_HREF} precedence="default" />
+      {theme.status === "study" ? (
+        <link rel="stylesheet" href={googleFontsHref(Object.values(theme.fonts))} precedence="default" />
+      ) : null}
       <style href="gm-study-themes" precedence="default">
         {STUDY_THEME_CSS}
       </style>
