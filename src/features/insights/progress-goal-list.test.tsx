@@ -47,7 +47,7 @@ describe("ProgressGoalList", () => {
     );
 
     expect(screen.getByRole("list")).toHaveClass("grid-rows-2", "md:flex-col");
-    expect(screen.getByText("Tempo run")).toHaveClass("line-clamp-2", "text-xs", "font-medium");
+    expect(screen.getByText("Tempo run")).toHaveClass("line-clamp-2", "text-xs", "type-item");
     expect(screen.getByText("Tempo run")).not.toHaveClass("font-semibold");
     expect(screen.getByText("8 of 12")).toHaveClass("hidden", "md:inline");
     await user.click(screen.getByRole("button", { name: "Select all" }));

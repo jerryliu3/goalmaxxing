@@ -35,7 +35,7 @@ describe("CurrentGoalGrid", () => {
 
     expect(screen.getByText("Daily walk")).toHaveAttribute("data-gallery", "true");
     expect(screen.getByLabelText("Daily walk")).toBeInTheDocument();
-    screen.getByRole("button", { name: /goal details/i }).click();
+    screen.getByRole("button", { name: /see details/i }).click();
     expect(onDetails).toHaveBeenCalledWith("goal-1");
   });
 
