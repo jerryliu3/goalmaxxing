@@ -10,7 +10,7 @@ import {
   Target,
 } from "lucide-react";
 import { GAZETTEER, toGazetteerDisplayColor } from "@cadence/shared/brand/gazetteer";
-import { getTheme, type ThemeId } from "@cadence/shared/brand";
+import { getTheme, goalCategoryPigment, type ThemeId } from "@cadence/shared/brand";
 import { resolveUiStyleId } from "@/lib/brand/ui-style";
 import {
   getCategorySwatchColor,
@@ -159,9 +159,8 @@ export function contrastingInkForColor(color: string, styleId?: ThemeId) {
 }
 
 export function getWorkPillFillStyle(color: string, credited = false, styleId?: ThemeId) {
-  const hex = toStyleDisplayColor(
-    normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0],
-    styleId
+  const hex = goalCategoryPigment(
+    toStyleDisplayColor(normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0], styleId)
   );
   const fill = mixOpaqueHex(hex, workPillPaper(styleId), credited ? WORK_PILL_HUE_AMOUNT * 0.45 : WORK_PILL_HUE_AMOUNT);
   return {
@@ -176,9 +175,8 @@ export function getWorkPillDraftFillStyle(
   kind: "moved_to" | "new",
   styleId?: ThemeId
 ) {
-  const hex = toStyleDisplayColor(
-    normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0],
-    styleId
+  const hex = goalCategoryPigment(
+    toStyleDisplayColor(normalizeGoalColor(color, styleId) ?? FALLBACK_COLORS[0], styleId)
   );
   const amount =
     kind === "new" ? WORK_PILL_NEW_DRAFT_HUE_AMOUNT : WORK_PILL_DRAFT_HUE_AMOUNT;

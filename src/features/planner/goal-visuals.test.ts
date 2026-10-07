@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GOAL_CATEGORY_COLORS } from "@cadence/shared/brand";
+import { COLOR_LIBRARY, GOAL_CATEGORY_COLORS } from "@cadence/shared/brand";
 import { GAZETTEER } from "@cadence/shared/brand/gazetteer";
 import {
   getDisplayCategorySwatchColor,
@@ -48,6 +48,15 @@ describe("goal visuals", () => {
         category: "Health",
       }).color
     ).toBe(GOAL_CATEGORY_COLORS.health);
+  });
+
+  it("mixes a category goal's pigment into its pill so categories stay distinct", () => {
+    expect(getWorkPillFillStyle(GOAL_CATEGORY_COLORS.career).backgroundColor).toBe(
+      mixOpaqueHex(COLOR_LIBRARY["klein-blue"].pigment!, "#ffffff", WORK_PILL_HUE_AMOUNT)
+    );
+    expect(
+      getWorkPillFillStyle(GOAL_CATEGORY_COLORS.career, false, "gazetteer").backgroundColor
+    ).toBe(mixOpaqueHex(COLOR_LIBRARY["klein-blue"].pigment!, GAZETTEER.paper, WORK_PILL_HUE_AMOUNT));
   });
 
   it("uses opaque pastel fills with quieter ink and hue for completed tiles", () => {

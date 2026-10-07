@@ -1,3 +1,4 @@
+import { goalCategoryPigment } from "../brand/categories";
 import { GAZETTEER, toGazetteerDisplayColor } from "../brand/gazetteer";
 
 export const WORK_PILL_HUE_AMOUNT = 0.24;
@@ -42,7 +43,7 @@ export function normalizeGazetteerGoalColor(color: string | null | undefined) {
 }
 
 export function getGazetteerWorkPillFillStyle(color: string) {
-  const hex = normalizeGazetteerGoalColor(color) ?? GAZETTEER.stamp;
+  const hex = goalCategoryPigment(normalizeGazetteerGoalColor(color) ?? GAZETTEER.stamp);
   const fill = mixOpaqueHex(hex, GAZETTEER.paper, WORK_PILL_HUE_AMOUNT);
   return {
     backgroundColor: fill,
@@ -55,7 +56,7 @@ export function getGazetteerWorkPillDraftFillStyle(
   color: string,
   kind: "moved_to" | "new" = "moved_to"
 ) {
-  const hex = normalizeGazetteerGoalColor(color) ?? GAZETTEER.stamp;
+  const hex = goalCategoryPigment(normalizeGazetteerGoalColor(color) ?? GAZETTEER.stamp);
   const amount =
     kind === "new" ? WORK_PILL_NEW_DRAFT_HUE_AMOUNT : WORK_PILL_DRAFT_HUE_AMOUNT;
   const fill = mixOpaqueHex(hex, GAZETTEER.paper, amount);
