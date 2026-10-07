@@ -64,7 +64,6 @@ export function LoginForm() {
         return;
       }
 
-      toast.success("Welcome back.");
       router.replace(resolveSafePostLoginPath(searchParams.get("next")));
       router.refresh();
     } catch (error) {
