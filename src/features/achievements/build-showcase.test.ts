@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAchievementsShowcasePayload, claimedProgress } from "@/features/achievements/build-showcase";
+import { buildAchievementsShowcasePayload } from "@/features/achievements/build-showcase";
 import { awardTierForLevel } from "@/features/achievements/tier";
 import type { Completion, Goal } from "@/lib/goals/types";
 
@@ -203,20 +203,5 @@ describe("buildAchievementsShowcasePayload", () => {
 
     expect(payload.personalRecords[0]?.hint).toBe("Based on a bounded snapshot");
     expect(payload.personalRecords[2]?.hint).toBe("Based on a bounded snapshot");
-  });
-});
-
-describe("claimedProgress", () => {
-  it("computes claimed fill from awards and goals", () => {
-    const progress = claimedProgress({
-      level: 4,
-      totalXp: 400,
-      unlockedAwards: 2,
-      totalAwards: 5,
-      achievedGoals: 3,
-      featuredAwardId: null,
-    });
-
-    expect(progress).toEqual({ claimed: 5, total: 8, fill: 63 });
   });
 });

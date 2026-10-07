@@ -92,7 +92,7 @@ const payload: AchievementsShowcasePayload = {
 };
 
 describe("AchievementsShowcase", () => {
-  it("renders records, claimed progress, and trophy showcase interactions", async () => {
+  it("renders records and trophy showcase interactions", async () => {
     const user = userEvent.setup();
     render(<AchievementsShowcase payload={payload} />);
 
@@ -100,8 +100,7 @@ describe("AchievementsShowcase", () => {
     expect(screen.queryByLabelText("Goal-finish medals")).toBeNull();
     expect(screen.queryByRole("heading", { name: "Finished goals" })).toBeNull();
     expect(screen.getByText("21d")).toBeInTheDocument();
-    expect(screen.getByText("Claimed")).toBeInTheDocument();
-    expect(screen.getByText("3/5 · 60%")).toBeInTheDocument();
+    expect(screen.queryByText("Claimed")).toBeNull();
     expect(screen.getByLabelText("Trophy showcase")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Level 8 unlocked" })).toBeInTheDocument();
     expect(screen.queryByText(/plaque rail/i)).toBeNull();

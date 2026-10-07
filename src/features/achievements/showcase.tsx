@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { claimedProgress } from "@/features/achievements/build-showcase";
 import {
   ShowcaseMedalShelf,
   ShowcasePedestal,
@@ -26,8 +25,6 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
     [featuredId, payload.levelAwards]
   );
 
-  const { claimed, total, fill } = claimedProgress(payload.collection);
-
   return (
     <div className="ach-showcase-root -mx-4 rounded-[20px] px-4 pb-4 pt-6 sm:-mx-6 sm:px-6">
       <div className="space-y-8">
@@ -42,19 +39,7 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
             </p>
           </div>
           <div className="min-w-[13rem]">
-            <div className="ach-showcase-body flex items-baseline justify-between gap-3 type-figure text-xs">
-              <span>Claimed</span>
-              <span className="ach-showcase-stat-value text-base">
-                {claimed}/{total} · {fill}%
-              </span>
-            </div>
-            <div className="ach-showcase-track mt-2 h-2 overflow-hidden rounded-full">
-              <div
-                className="ach-showcase-fill h-full rounded-full"
-                style={{ width: `${fill}%` }}
-              />
-            </div>
-            <dl className="ach-showcase-stat-muted mt-4 grid grid-cols-3 gap-3 text-right text-sm">
+            <dl className="ach-showcase-stat-muted grid grid-cols-3 gap-3 text-right text-sm">
               <div>
                 <dt className="ach-showcase-stat-label type-eyebrow text-[10px]">
                   Level

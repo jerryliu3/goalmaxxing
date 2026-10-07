@@ -194,10 +194,3 @@ export function buildAchievementsShowcasePayload(
     truncated: input.truncated,
   };
 }
-
-export function claimedProgress(collection: AchievementsCollectionSummary) {
-  const claimed = collection.unlockedAwards + collection.achievedGoals;
-  const total = collection.totalAwards + collection.achievedGoals;
-  const fill = total === 0 ? 0 : Math.round((claimed / total) * 100);
-  return { claimed, total, fill };
-}
