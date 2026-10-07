@@ -4,6 +4,8 @@
   flex: none;
   isolation: isolate;
   vertical-align: middle;
+  user-select: none;
+  -webkit-user-select: none;
   --prism-spin: calc(var(--ry, -14deg) * 2.4 - var(--rx, 7deg) * 1.6 + 30deg);
   filter: drop-shadow(0 4px 4px color-mix(in srgb, var(--prism-black) 15%, transparent));
 }
@@ -52,7 +54,7 @@
   border-radius: 12%;
 }
 
-.prism-medal[data-detail="hero"] {
+.prism-stage .prism-medal {
   transform: perspective(700px) rotateX(var(--rx, 7deg)) rotateY(var(--ry, -14deg));
 }
 
@@ -124,4 +126,19 @@
   .prism-glint, .prism-sweep, .prism-catch {
     display: none;
   }
+}
+
+.prism-stage {
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  border-radius: 12px;
+}
+
+.prism-stage[data-dragging] { cursor: grabbing; }
+.prism-stage:focus-visible { outline: 2px solid var(--ring); outline-offset: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .prism-stage { cursor: default; }
 }

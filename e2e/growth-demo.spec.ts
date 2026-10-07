@@ -21,7 +21,14 @@ test("Growth has one home for each section and Settings has no score or stats", 
   await expect(page.getByRole("heading", { name: "Level 6 unlocked", exact: true })).toBeVisible();
   expect(await page.locator("[data-growth-section]").evaluateAll(nodes =>
     nodes.map(node => node.getAttribute("data-growth-section"))
-  )).toEqual(["score", "medals", "tracker", "stats"]);
+  )).toEqual(["score", "tracker", "achievements", "stats"]);
+  const statsSection = page.locator('[data-growth-section="stats"]');
+  await expect(page.getByText("2026 activity", { exact: true })).toHaveCount(0);
+  await expect(statsSection.getByText("Completion by day of week (last 30 days)")).toHaveCount(0);
+  await statsSection.getByRole("button", { name: "View more", exact: true }).click();
+  await expect(statsSection.getByText("Completion by day of week (last 30 days)")).toBeVisible();
+  await statsSection.getByRole("button", { name: "View less", exact: true }).click();
+  await expect(statsSection.getByText("Completion by day of week (last 30 days)")).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     await page.evaluate(() => window.innerWidth)
   );
@@ -84,3 +91,21 @@ for (const [from, to] of [
     });
   });
 }
+
+test("featured medal rotates on drag without selecting its numeral", async ({ page }) => {
+  await page.goto("/demo/growth");
+  const stage = page.getByRole("group", { name: "Level 6 medal", exact: true });
+  await stage.scrollIntoViewIfNeeded();
+  const medal = stage.locator(".prism-medal");
+  const box = await stage.boundingBox();
+  if (!box) throw new Error("Featured medal has no bounds");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 65, box.y + box.height / 2, { steps: 12 });
+  await page.mouse.up();
+  await expect.poll(async () => Number.parseFloat(await stage.evaluate(node => (node as HTMLElement).style.getPropertyValue("--ry")))).toBeGreaterThan(30);
+  expect(await medal.evaluate(node => getComputedStyle(node).userSelect)).toBe("none");
+  expect(await page.evaluate(() => getSelection()?.toString())).toBe("");
+  await stage.press("Home");
+  await expect.poll(async () => Number.parseFloat(await stage.evaluate(node => (node as HTMLElement).style.getPropertyValue("--ry")))).toBeCloseTo(-14, 1);
+});

@@ -87,5 +87,5 @@ export function PrismMedal({
       </span>
     </span>
   );
-  return hero ? <PrismLightStage className="inline-block">{mark}</PrismLightStage> : mark;
+  return hero || (goal && !compact) ? <PrismLightStage className="inline-block" label={goal ? "Finished goal medal" : `Level ${numeral} medal`}>{mark}</PrismLightStage> : mark;
 }
