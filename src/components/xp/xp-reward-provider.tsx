@@ -66,12 +66,12 @@ function XpRewardLayer({ children }: { children: ReactNode }) {
   return (
     <XpRewardContext.Provider value={{ celebrate }}>
       {children}
-      {flights.length > 0 && !still && createPortal(<div
+      {createPortal(<div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-[60] overflow-hidden"
         data-motion="xp-reward-overlay"
       >
-        {flights.map(flight => {
+        {!still && flights.map(flight => {
           const x = flight.sourceRect.left + flight.sourceRect.width / 2;
           const y = flight.sourceRect.top + flight.sourceRect.height / 2;
           const tx = flight.targetRect.left + flight.targetRect.width / 2 - x;

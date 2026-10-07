@@ -83,9 +83,10 @@ describe("TabNav", () => {
     expect(tabList).toHaveClass("grid-cols-4");
   });
 
-  it("sizes phone tabs so none is narrower than its label", () => {
+  it("truncates phone tab labels instead of widening the viewport", () => {
     const { container } = render(<TabNav mobile />);
-    expect(container.querySelector("ul")).toHaveClass("grid-cols-[repeat(4,minmax(min-content,1fr))]");
+    expect(container.querySelector("ul")).toHaveClass("grid-cols-4");
+    expect(container.querySelector("ul span")).toHaveClass("truncate");
   });
 
   it("keeps the mobile nav bar 50% transparent so content shows through", () => {

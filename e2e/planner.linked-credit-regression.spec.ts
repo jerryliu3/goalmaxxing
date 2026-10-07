@@ -51,11 +51,25 @@ for (const scenario of ["projected-source", "legacy-credit", "credited-old-place
       });
       await page.goto(`/calendar?view=day&month=${month}&day=${first}`);
       await expect(page.getByRole("button", { name: /Scheduled goals/ })).toBeVisible({ timeout: 30_000 });
-      const contextResponse = await page.request.get(`/api/planner/context?scopeMonth=${month}`);
-      expect(contextResponse.status(), await contextResponse.text()).toBe(200);
-      const context = await contextResponse.json();
-      const unit = context.preview.workUnits.find((candidate: { originalGoalId: string; unitKey: string }) => candidate.originalGoalId === goalId && candidate.unitKey === "total:1");
-      expect(unit).toBeTruthy();
+      const findWorkUnit = async () => {
+        const contextResponse = await page.request.get(`/api/planner/context?scopeMonth=${month}`);
+        expect(contextResponse.status(), await contextResponse.text()).toBe(200);
+        const context = await contextResponse.json();
+        return context.preview.workUnits.find(
+          (candidate: { originalGoalId: string; unitKey: string }) =>
+            candidate.originalGoalId === goalId && candidate.unitKey === "total:1"
+        );
+      };
+      let unit: Awaited<ReturnType<typeof findWorkUnit>>;
+      await expect
+        .poll(async () => {
+          unit = await findWorkUnit();
+          return unit;
+        }, { timeout: 30_000 })
+        .toBeTruthy();
+      if (!unit) {
+        throw new Error("Expected planner preview work unit total:1 to be present.");
+      }
       const moveToDestination = async (fromDate: string) => {
         await page.getByRole("button", { name: title, exact: true }).click();
         const editor = page.getByRole("region", { name: "Edit planned session" });
