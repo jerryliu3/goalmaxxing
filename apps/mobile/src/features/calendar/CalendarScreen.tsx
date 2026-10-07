@@ -327,14 +327,14 @@ export function CalendarScreen() {
       readOnlyState.showViewerSessions &&
       !draft.preview)
   ) {
-    return <LoadingScreen label="Loading Plan…" />;
+    return <LoadingScreen label="Loading Agenda…" />;
   }
 
   const sessionLabel = (unit: PlannerWorkUnit) =>
     planner.data?.goalTitles[unit.originalGoalId] ?? unit.label ?? unit.unitKey;
 
   return (
-    <Screen title="Plan" kicker={viewMode === "day" ? "Day" : "Calendar"}>
+    <Screen title="Agenda" kicker={viewMode === "day" ? "Day" : "Calendar"}>
       <DuoScopeSegmentedControl surface="calendar" />
       {readOnlyState.banner && (readOnlyState.allowMutations || viewMode === "month") ? (
         <View

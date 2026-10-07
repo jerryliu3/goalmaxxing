@@ -1,3 +1,8 @@
+import { router } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
+import { useSession } from "../lib/session";
+import { buildMobileProfileQueryOptions } from "../features/social/mobile-profile-query";
+import { UserAvatar } from "./user-avatar";
 import { type ReactNode } from "react";
 import {
   ActivityIndicator,
@@ -25,6 +30,8 @@ export function Screen({
   journeyPresentation?: Parameters<typeof useJourneyPresentationPreference>[0];
 }) {
   const theme = useTheme();
+  const { userId } = useSession();
+  const profile = useQuery(buildMobileProfileQueryOptions({ userId }));
   useJourneyPresentationPreference(journeyPresentation);
   const body = (
     <View style={styles.body}>
@@ -41,19 +48,30 @@ export function Screen({
           {kicker}
         </Text>
       ) : null}
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-      <Text
-        accessibilityRole="header"
-        style={[
-          styles.title,
-          {
-            color: theme.colors.foreground,
-            fontFamily: theme.fonts?.display,
-          },
-        ]}
-      >
-        {title}
-      </Text><CoachHeader /></View>
+      <View style={styles.header}>
+        <Text
+          accessibilityRole="header"
+          style={[
+            styles.title,
+            { color: theme.colors.foreground, fontFamily: theme.fonts?.display },
+          ]}
+        >
+          {title}
+        </Text>
+        <View style={styles.headerActions}>
+          <CoachHeader />
+          {userId ? (
+            <UserAvatar
+              avatarUrl={profile.data?.avatar_url ?? null}
+              displayName={profile.data?.display_name}
+              username={profile.data?.username}
+              size={22}
+              accessibilityLabel="Open profile and Settings"
+              onPress={() => router.push("/(tabs)/settings")}
+            />
+          ) : null}
+        </View>
+      </View>
       <NativeCoachCheckInInvitation />
       {children}
     </View>
@@ -109,6 +127,8 @@ export function LoadingScreen({ label = "Loading…" }: { label?: string }) {
 }
 
 const styles = StyleSheet.create({
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 12 },
   safe: { flex: 1 },
   center: { alignItems: "center", justifyContent: "center" },
   scroll: { padding: 20 },

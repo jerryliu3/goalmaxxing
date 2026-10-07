@@ -315,7 +315,7 @@ export function ChecklistScreen({
   ];
 
   if (!ready) {
-    return embedded ? null : <LoadingScreen label="Loading Plan…" />;
+    return embedded ? null : <LoadingScreen label="Loading Agenda…" />;
   }
 
   const body = (
@@ -463,7 +463,7 @@ export function ChecklistScreen({
   }
 
   return (
-    <Screen title="Plan" kicker="Day" scroll={false}>
+    <Screen title="Agenda" kicker="Day" scroll={false}>
       {body}
     </Screen>
   );
