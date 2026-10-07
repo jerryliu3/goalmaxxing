@@ -134,7 +134,8 @@ describe("buildPublicProfileBundle", () => {
     expect(
       bundle.yearHeatmap.find((entry) => entry.date === "2026-01-02")?.count
     ).toBe(1);
-    expect(bundle.growSeries).toHaveLength(28);
+    // The score chart runs from signup so its history scrolls back to day one.
+    expect(bundle.growSeries[0]?.date).toBe("2026-01-01");
     expect(bundle.profile.createdAt).toBe("2026-01-01T00:00:00.000Z");
     expect(bundle.currentGoals.map((goal) => goal.id)).toEqual(["goal-1"]);
     expect(bundle.profile.memberNumber).toBe(146);

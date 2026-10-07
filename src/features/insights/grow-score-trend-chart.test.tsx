@@ -35,8 +35,9 @@ describe("GrowScoreTrendChart", () => {
 
     expect(screen.getByRole("heading", { name: "Goal score" })).toBeInTheDocument();
     expect(
-      screen.getByRole("img", { name: "Goal score over the last 4 weeks" }),
+      screen.getByRole("img", { name: "Goal score since Sep 1, 2026" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Since Sep 1, 2026")).toBeInTheDocument();
     expect(container.querySelector("path")).not.toBeNull();
   });
 

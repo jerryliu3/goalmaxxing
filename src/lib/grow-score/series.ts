@@ -99,6 +99,11 @@ export type BuildGrowScoreSeriesOptions = {
   /** How many trailing days to return for the chart. */
   displayDays?: number;
   /**
+   * Inclusive first display date (e.g. the account creation date). Overrides
+   * `displayDays` when set; clamped to `asOfDate`.
+   */
+  displayFrom?: string;
+  /**
    * Extra warm-up days before the display window so EMA/rate are not cold-start.
    * Defaults to 56 (two half-lives of activity memory).
    */
@@ -121,7 +126,12 @@ export function buildGrowScoreSeries(
   const caps = options.caps ?? GROW_CAPS;
 
   const displayEnd = options.asOfDate;
-  const displayStart = addLocalDays(displayEnd, -(displayDays - 1));
+  const displayStart =
+    options.displayFrom !== undefined
+      ? options.displayFrom < displayEnd
+        ? options.displayFrom
+        : displayEnd
+      : addLocalDays(displayEnd, -(displayDays - 1));
   const simStart = addLocalDays(displayStart, -warmupDays);
 
   const dailyCredits = buildDailyGrowCredits({

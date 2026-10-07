@@ -196,18 +196,21 @@ function mapGrowSeries({
   completions,
   goals,
   asOfDate,
+  displayFrom,
   weekStartsOn,
 }: {
   completions: Completion[];
   goals: Goal[];
   asOfDate: string;
+  /** First charted day: the account creation date, so history scrolls back to signup. */
+  displayFrom: string;
   weekStartsOn: number;
 }): PublicProfileGrowPoint[] {
   return buildGrowScoreSeries({
     completions,
     goals,
     asOfDate,
-    displayDays: 28,
+    displayFrom,
     warmupDays: 56,
     weekStartsOn,
   }).map((point) => ({
@@ -328,6 +331,9 @@ export function buildPublicProfileBundle({
       completions: completableCompletions,
       goals: completableGoals,
       asOfDate,
+      // Signup, or earlier imported history, so the chart scrolls back to the first day.
+      displayFrom:
+        getEarliestDate([resolvedCreatedDate, earliestCompletionDate]) ?? resolvedCreatedDate,
       weekStartsOn,
     }),
     currentGoals: serializeCurrentGoals(
