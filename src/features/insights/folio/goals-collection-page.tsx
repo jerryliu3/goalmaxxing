@@ -9,6 +9,7 @@ import { LoadingCard } from "@/components/ui/loading-card";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
 import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
 import { useInsightsData } from "@/features/insights/use-insights-data";
+import { FolioShelf } from "./folio-shelf";
 import { CurrentGoalGrid } from "./current-goal-grid";
 import { useGoalCardScrollMotion } from "@/features/goals/use-goal-card-scroll-motion";
 import { buildCurrentGoals, buildGoalFolios } from "./folio-model";
@@ -35,6 +36,13 @@ export function GoalsCollectionPage({ subjectUserId, readOnly = false, anchorSec
           <section aria-labelledby={`${headingId}-current`}>
             <header className="mb-4"><h1 id={`${headingId}-current`} className="type-title text-2xl">Current goals</h1><p className="text-sm text-muted-foreground">Taking shape. Worth keeping.</p></header>
             <CurrentGoalGrid entries={current} moving={moving} leadingCard={readOnly ? undefined : <NewGoalButton presentation="card" />} onDetails={readOnly ? undefined : goalId => router.push(`${prefix}/goals/${goalId}`)} />
+          </section>
+          <section id={anchorSections ? "goal-library" : undefined} aria-labelledby={`${headingId}-library`}>
+            <header className="mb-4">
+              <h2 id={`${headingId}-library`} className="type-title text-2xl">Goal library</h2>
+              <p className="text-sm text-muted-foreground">Open a yearbook to revisit your goals.</p>
+            </header>
+            {folios.length ? <FolioShelf folios={folios} /> : <p className="text-sm text-muted-foreground">Your yearbooks collect here as goals finish, end, or are archived.</p>}
           </section>
           <section id={anchorSections ? "past-goals" : undefined} aria-labelledby={`${headingId}-past`}>
             <header className="mb-4"><h2 id={`${headingId}-past`} className="type-title text-2xl">Past goals</h2><p className="text-sm text-muted-foreground">Every goal that’s passed.</p></header>

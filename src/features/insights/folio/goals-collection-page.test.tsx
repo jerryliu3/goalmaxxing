@@ -18,12 +18,13 @@ function loadCollection() {
 }
 
 describe("goal library journey", () => {
-  it("keeps a partner collection and its tracker read-only", () => {
+  it("keeps a partner collection read-only", () => {
     loadCollection();
     render(<GoalsCollectionPage subjectUserId="partner-1" readOnly anchorSections={false} />);
     expect(screen.queryByRole("link", { name: "New Goal" })).toBeNull();
     expect(screen.queryByRole("button", { name: /See details/ })).toBeNull();
     expect(mocks.tracker).not.toHaveBeenCalled();
+    expect(document.getElementById("goal-library")).toBeNull();
   });
   it("opens Current from Goals with live progress and reward text", () => {
     loadCollection();
@@ -39,20 +40,23 @@ describe("goal library journey", () => {
     expect(document.querySelector("[data-card-solid]")).toBeNull();
     expect(screen.getAllByRole("article")).toHaveLength(2);
     const current = screen.getByRole("heading", { name: "Current goals" });
+    const library = screen.getByRole("heading", { name: "Goal library" });
     const past = screen.getByRole("heading", { name: "Past goals" });
-    expect(current.compareDocumentPosition(past) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(current.compareDocumentPosition(library) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(library.compareDocumentPosition(past) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(mocks.tracker).not.toHaveBeenCalled();
     expect(screen.getByRole("link", { name: "New Goal" })).toHaveAttribute("href", expect.stringContaining("/goals/new?returnTo="));
     expect(screen.queryByRole("navigation", { name: "Goal library collections" })).toBeNull();
   });
 
-  it("keeps creation available with no current goals and displays the past collection below the tracker", () => {
+  it("keeps creation available with no current goals and displays the past collection below the library", () => {
     const ended = buildGoal({ owner_id: "user-1", end_date: "2026-09-30" });
     mocks.data.mockReturnValue({ loading: false, loadError: null, reload: vi.fn(), state: {
       userId: "user-1", goals: [ended], progress: { summaries: [summary(ended.id)] },
     } });
     render(<GoalsCollectionPage />);
     expect(screen.getByRole("link", { name: "New Goal" })).toBeInTheDocument();
+    expect(document.getElementById("goal-library")).toContainElement(screen.getByRole("button", { name: "Open 2026, 1 goal" }));
     const pastCard = screen.getByRole("article", { name: `${ended.title} goal card` });
     expect(screen.queryByTestId("progress-tracker")).toBeNull();
     expect(document.getElementById("past-goals")).toContainElement(pastCard);
