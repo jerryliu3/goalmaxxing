@@ -30,23 +30,23 @@ const series = [
 describe("GrowScoreTrendChart", () => {
   it("renders the score line without measuring a parent container", () => {
     const { container } = render(
-      <GrowScoreTrendChart title="Goalmaxxing score" series={series} />,
+      <GrowScoreTrendChart title="Goal score" series={series} />,
     );
 
-    expect(screen.getByRole("heading", { name: "Goalmaxxing score" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Goal score" })).toBeInTheDocument();
     expect(
-      screen.getByRole("img", { name: "Goalmaxxing score over the last 4 weeks" }),
+      screen.getByRole("img", { name: "Goal score over the last 4 weeks" }),
     ).toBeInTheDocument();
     expect(container.querySelector("path")).not.toBeNull();
   });
 
   it("labels the latest value and explains the score", async () => {
     const user = userEvent.setup();
-    render(<GrowScoreTrendChart title="Goalmaxxing score" series={series} />);
+    render(<GrowScoreTrendChart title="Goal score" series={series} />);
 
     expect(screen.getByText("Current score")).toBeInTheDocument();
     expect(screen.getByText("19.4", { selector: "p" })).toBeInTheDocument();
-    await user.hover(screen.getByRole("button", { name: "Goalmaxxing score definition" }));
+    await user.hover(screen.getByRole("button", { name: "Goal score definition" }));
     expect(await screen.findByRole("tooltip")).toHaveTextContent(GROW_SCORE_CHART_HELP);
   });
 });

@@ -34,7 +34,7 @@ const overallStats = {
 };
 
 describe("ProfilePresenceSection", () => {
-  it("renders the Goalmaxxing score and overall stats when the series has signal", () => {
+  it("renders the Goal score and overall stats when the series has signal", () => {
     render(
       <ProfilePresenceSection
         selectedYear={2026}
@@ -46,7 +46,7 @@ describe("ProfilePresenceSection", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Goalmaxxing score" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Goal score" })).toBeInTheDocument();
     expect(screen.getByText("Overall stats")).toBeInTheDocument();
     expect(screen.getByText("Overall stats tiles")).toBeInTheDocument();
     expect(screen.getByText("2026 activity")).toBeInTheDocument();
@@ -62,7 +62,7 @@ describe("ProfilePresenceSection", () => {
       />
     );
 
-    expect(screen.queryByRole("heading", { name: "Goalmaxxing score" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Goal score" })).toBeNull();
     expect(screen.getByText("Overall stats")).toBeInTheDocument();
     expect(screen.getByText("2026 activity")).toBeInTheDocument();
   });

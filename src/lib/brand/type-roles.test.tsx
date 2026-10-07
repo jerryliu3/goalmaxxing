@@ -32,9 +32,9 @@ describe("text roles on live surfaces", () => {
   });
 
   it("lets the theme choose card heading weight", () => {
-    render(<CardTitle>Goalmaxxing score</CardTitle>);
+    render(<CardTitle>Goal score</CardTitle>);
 
-    const title = screen.getByText("Goalmaxxing score");
+    const title = screen.getByText("Goal score");
     expect(title).toHaveClass("type-heading");
     expect(title.className).not.toMatch(/\bfont-(medium|semibold|display)\b/);
   });

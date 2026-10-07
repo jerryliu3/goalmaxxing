@@ -62,7 +62,7 @@ export function ProfilePresenceSection({
   return (
     <div className="min-w-0 space-y-4" data-testid="profile-presence">
       {hasGrowScoreSignal(chartSeries) ? (
-        <GrowScoreTrendChart title="Goalmaxxing score" series={chartSeries}>
+        <GrowScoreTrendChart title="Goal score" series={chartSeries}>
           {stats}
         </GrowScoreTrendChart>
       ) : stats ? (
