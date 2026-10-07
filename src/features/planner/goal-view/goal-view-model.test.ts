@@ -158,8 +158,8 @@ describe("sessionOrdinals", () => {
       [at("run", "2026-10-07", "cadence:2026-10-05:2"), at("run", "2026-10-05", "cadence:2026-10-05:1")],
       1
     );
-    expect(ordinals.get("run:2026-10-05")).toEqual({ count: "1 of 3", period: "per week" });
-    expect(ordinals.get("run:2026-10-07")).toEqual({ count: "2 of 3", period: "per week" });
+    expect(ordinals.get("run:2026-10-05")).toEqual({ count: "1 of 3", period: "per week", periodShort: "/wk" });
+    expect(ordinals.get("run:2026-10-07")).toEqual({ count: "2 of 3", period: "per week", periodShort: "/wk" });
   });
 
   it("counts a session's place in its period when the key has no slot", () => {
