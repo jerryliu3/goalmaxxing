@@ -7,7 +7,7 @@ import { STUDY_SKIN_NOTES } from "./skin-notes";
 
 describe("brand library", () => {
   it("keeps archived skins promotable into complete themes", () => {
-    expect(ARCHIVED_STUDY_SKINS).toHaveLength(6);
+    expect(ARCHIVED_STUDY_SKINS).toHaveLength(10);
     for (const skin of ARCHIVED_STUDY_SKINS) {
       const theme = studyTheme(skin);
       expect(Object.values(theme.colors).every((value) => /^#[0-9a-f]{6}$/.test(value))).toBe(true);

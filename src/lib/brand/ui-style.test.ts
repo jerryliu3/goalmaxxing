@@ -29,10 +29,6 @@ describe("ui style catalog", () => {
       "opaline",
       "bloodstone",
       "pitlane",
-      "quarry",
-      "fieldwork",
-      "longplay",
-      "lido",
     ]);
   });
 

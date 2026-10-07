@@ -57,12 +57,12 @@ describe("theme registry", () => {
     expect(getTheme("gazetteer").fonts.display).toBe("newsreader");
   });
 
-  it("keeps Original and Gazetteer live and the ten study skins opt-in", () => {
+  it("keeps Original and Gazetteer live and the six shortlisted study skins opt-in", () => {
     expect(ALL_THEMES.filter((theme) => theme.status === "live").map((theme) => theme.id)).toEqual([
       "original",
       "gazetteer",
     ]);
-    expect(ALL_THEMES.filter((theme) => theme.status === "study")).toHaveLength(10);
+    expect(ALL_THEMES.filter((theme) => theme.status === "study")).toHaveLength(6);
     // Study ids stay literal, so a typo is a type error rather than a fallback.
     expect(getTheme("pitlane").label).toBe("Pitlane");
   });

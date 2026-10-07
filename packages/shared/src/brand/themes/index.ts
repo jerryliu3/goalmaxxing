@@ -1,23 +1,19 @@
 import type { ThemeDefinition } from "../roles";
 import { BLOODSTONE_THEME } from "./bloodstone";
 import { COURT_THEME } from "./court";
-import { FIELDWORK_THEME } from "./fieldwork";
 import { GAZETTEER_THEME } from "./gazetteer";
 import { KILN_THEME } from "./kiln";
-import { LIDO_THEME } from "./lido";
-import { LONGPLAY_THEME } from "./longplay";
 import { OPALINE_THEME } from "./opaline";
 import { ORIGINAL_THEME } from "./original";
 import { PITLANE_THEME } from "./pitlane";
-import { QUARRY_THEME } from "./quarry";
 import { UNDERTOW_THEME } from "./undertow";
 
 export { GAZETTEER_THEME } from "./gazetteer";
 export { ORIGINAL_THEME } from "./original";
 
 /**
- * Every theme, in picker order: live themes, then study skins (shortlisted,
- * then exploratory). The first theme is the default.
+ * Every theme, in picker order: live themes, then the shortlisted study
+ * skins. The first theme is the default.
  */
 export const THEMES = [
   ORIGINAL_THEME,
@@ -28,10 +24,6 @@ export const THEMES = [
   OPALINE_THEME,
   BLOODSTONE_THEME,
   PITLANE_THEME,
-  QUARRY_THEME,
-  FIELDWORK_THEME,
-  LONGPLAY_THEME,
-  LIDO_THEME,
 ] as const satisfies readonly ThemeDefinition[];
 
 export type Theme = (typeof THEMES)[number];

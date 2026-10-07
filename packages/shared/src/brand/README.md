@@ -53,9 +53,8 @@ or to any subtree with the same attribute. The web app has no dark mode:
 Original and Gazetteer are `live`: they are the only themes in
 `src/app/themes.css` and the only faces bundled through `next/font`.
 
-Ten /ux/brand skins are `study` themes (shortlisted: Undertow, Kiln, Centre
-Court, Opaline, Bloodstone, Pitlane; exploratory: Quarry, Fieldwork,
-Longplay, Lido). Each keeps its authored palette, faces, and weights;
+Six shortlisted /ux/brand skins are `study` themes (Undertow, Kiln, Centre
+Court, Opaline, Bloodstone, Pitlane). Each keeps its authored palette, faces, and weights;
 `themes/study.ts` derives the rest. Only while `STUDY_THEMES_ENABLED` is on
 (default on in `next dev`) does the root layout inject their CSS and one
 Google Fonts stylesheet, the picker offer them, and the cookie honor them, so
@@ -63,7 +62,8 @@ production pages carry none of it. Promoting a skin means hand-tuning its
 derived roles and setting `status: "live"`.
 
 The rest of the brand library sits in `library/`, exported alongside the
-themes: the six archived pairings as `StudySkin` data (pass one to
+themes: the six archived pairings and the four exploratory skins set aside
+for now (Quarry, Fieldwork, Longplay, Lido) as `StudySkin` data (pass one to
 `studyTheme(...)` to bring it back), concept notes and study-authored styling
 for all sixteen skins (`STUDY_SKIN_NOTES`), the named color library, and the
 Mineral Candy category palette study.
