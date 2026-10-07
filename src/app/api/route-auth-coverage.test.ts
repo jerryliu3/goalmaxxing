@@ -555,6 +555,7 @@ const unauthenticatedHandlers = new Set([
   "GET /api/push/dispatch",
   "POST /api/push/dispatch",
   "POST /api/push/outbox",
+  "POST /api/social/grow-score/standings",
   "GET /api/support/issues",
   "GET /api/integrations/calendar/feed/[token]/cadence.ics",
 ]);

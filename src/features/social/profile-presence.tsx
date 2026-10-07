@@ -30,12 +30,14 @@ function OverallStatsBlock({
 
 export function ProfilePresenceSection({
   growSeries,
+  growTopPercent = null,
   heatmap,
   selectedYear,
   overallStats = null,
   showMoreLink = false,
 }: {
   growSeries: readonly PublicProfileGrowPoint[];
+  growTopPercent?: number | null;
   heatmap: readonly PublicProfileHeatmapPoint[];
   selectedYear: number;
   overallStats?: PublicProfileOverallStats | null;
@@ -50,7 +52,7 @@ export function ProfilePresenceSection({
   return (
     <div className="min-w-0 space-y-4" data-testid="profile-presence">
       {hasGrowScoreSignal(chartSeries) ? (
-        <GrowScoreTrendChart title="Goal score" series={chartSeries}>
+        <GrowScoreTrendChart title="Goal score" series={chartSeries} topPercent={growTopPercent}>
           {stats}
         </GrowScoreTrendChart>
       ) : stats ? (

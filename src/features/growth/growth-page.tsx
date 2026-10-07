@@ -54,7 +54,7 @@ function GrowthLane({ userId, readOnly, anchors }: {
   return (
     <div className="space-y-8" data-testid="growth-page">
       <section aria-label="Goal score" data-growth-section="score">
-        <GrowScoreTrendChart title="Goal score" series={series} />
+        <GrowScoreTrendChart title="Goal score" series={series} topPercent={bundle?.growTopPercent ?? null} />
       </section>
       <section aria-label="Progress tracker" data-growth-section="tracker">
         <InsightsTab subjectUserId={userId} readOnly={readOnly} sectionIds={["history"]} progressView="all" anchorSections={anchors} />

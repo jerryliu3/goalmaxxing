@@ -88,5 +88,7 @@ export interface PublicProfileBundle {
   overallStats: PublicProfileOverallStats | null;
   yearHeatmap: PublicProfileHeatmapPoint[];
   growSeries: PublicProfileGrowPoint[];
+  /** "Top N%" of real accounts by current Goal score; null when private or unranked. */
+  growTopPercent: number | null;
   currentGoals: PublicProfileCurrentGoal[];
 }

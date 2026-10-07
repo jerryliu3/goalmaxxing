@@ -69,4 +69,13 @@ describe("GrowScoreTrendChart", () => {
     expect(screen.getByText("Jan 1 – Oct 7, 2026")).toBeInTheDocument();
     expect(screen.getByText("14.0", { selector: "p" })).toBeInTheDocument();
   });
+
+  it("shows the percentile under the current score when ranked", () => {
+    const { rerender } = render(
+      <GrowScoreTrendChart title="Goal score" series={series} topPercent={3} />,
+    );
+    expect(screen.getByText("Top 3%")).toBeInTheDocument();
+    rerender(<GrowScoreTrendChart title="Goal score" series={series} />);
+    expect(screen.queryByText(/^Top \d+%$/)).toBeNull();
+  });
 });

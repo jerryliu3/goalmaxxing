@@ -221,6 +221,75 @@ function mapGrowSeries({
   }));
 }
 
+interface ProfileHistory {
+  asOfDate: string;
+  weekStartsOn: number;
+  completableGoals: Goal[];
+  completableCompletions: Completion[];
+  resolvedCreatedDate: string;
+  earliestCompletionDate: string | null;
+}
+
+/** The subject's own goals and completions, dated in their timezone. */
+export function resolveProfileHistory({
+  subjectProfile,
+  goals,
+  completions,
+}: {
+  subjectProfile: Pick<ProfileRow, "id" | "timezone" | "week_starts_on" | "created_at">;
+  goals: Goal[];
+  completions: Completion[];
+}): ProfileHistory {
+  const timezone = resolveUserTimezone(subjectProfile.timezone);
+  const asOfDate = getDateInTimezone(new Date(), timezone);
+  const weekStartsOn = normalizeWeekStartsOn(subjectProfile.week_starts_on);
+  const completableGoalIds = buildCompletableGoalIds({
+    goals,
+    userId: subjectProfile.id,
+    memberTeamIds: [],
+  });
+  const completableGoals = selectCompletableGoals(goals, completableGoalIds);
+  const completableCompletions = filterCompletionsForGoalIds(completions, completableGoalIds);
+  const profileCreatedDate = toDateOnly(subjectProfile.created_at);
+  const earliestGoalStart = getEarliestDate(completableGoals.map((goal) => goal.start_date));
+  const earliestCompletionDate = getEarliestDate(
+    completableCompletions.map((completion) => completion.completed_on)
+  );
+  const fallbackCreatedDate =
+    getEarliestDate([asOfDate, earliestGoalStart, earliestCompletionDate]) ?? asOfDate;
+  const resolvedCreatedDate =
+    profileCreatedDate && compareDateStrings(profileCreatedDate, asOfDate) <= 0
+      ? profileCreatedDate
+      : fallbackCreatedDate;
+  return {
+    asOfDate,
+    weekStartsOn,
+    completableGoals,
+    completableCompletions,
+    resolvedCreatedDate,
+    earliestCompletionDate,
+  };
+}
+
+/** The Goal score history shown on Growth and public profiles, back to the first day. */
+export function buildProfileGrowSeries(history: ProfileHistory): PublicProfileGrowPoint[] {
+  return mapGrowSeries({
+    completions: history.completableCompletions,
+    goals: history.completableGoals,
+    asOfDate: history.asOfDate,
+    displayFrom:
+      getEarliestDate([history.resolvedCreatedDate, history.earliestCompletionDate]) ??
+      history.resolvedCreatedDate,
+    weekStartsOn: history.weekStartsOn,
+  });
+}
+
+/** Rank 1 is the highest score; rounds to the nearest whole percent, never below 1%. */
+export function growScoreTopPercent(rank: number, total: number): number | null {
+  if (total <= 0 || rank <= 0) return null;
+  return Math.min(100, Math.max(1, Math.round((rank / total) * 100)));
+}
+
 export function isPrivateForViewer(viewerUserId: string | null, subjectProfile: ProfileRow) {
   const isViewerSubject = viewerUserId !== null && viewerUserId === subjectProfile.id;
   return !isViewerSubject && subjectProfile.social_activity_visible === false;
@@ -239,6 +308,7 @@ export function buildPrivatePublicProfileBundle(
     overallStats: null,
     yearHeatmap: [],
     growSeries: [],
+    growTopPercent: null,
     currentGoals: [],
   };
 }
@@ -272,17 +342,9 @@ export function buildPublicProfileBundle({
     xpToNextLevel: progression.xpToNextLevel,
   };
 
-  const timezone = resolveUserTimezone(subjectProfile.timezone);
-  const asOfDate = getDateInTimezone(new Date(), timezone);
-  const weekStartsOn = normalizeWeekStartsOn(subjectProfile.week_starts_on);
+  const history = resolveProfileHistory({ subjectProfile, goals, completions });
+  const { asOfDate, weekStartsOn, completableGoals, completableCompletions, resolvedCreatedDate } = history;
   const weeklyAnchor: WeeklyAnchorContext = { weekStartsOn };
-  const completableGoalIds = buildCompletableGoalIds({
-    goals,
-    userId: subjectProfile.id,
-    memberTeamIds: [],
-  });
-  const completableGoals = selectCompletableGoals(goals, completableGoalIds);
-  const completableCompletions = filterCompletionsForGoalIds(completions, completableGoalIds);
   const completionsByGoal = groupCompletionsByGoal(completableCompletions);
 
   const summariesByGoal = new Map<string, GoalProgressSnapshot>();
@@ -294,18 +356,6 @@ export function buildPublicProfileBundle({
       })
     );
   }
-
-  const profileCreatedDate = toDateOnly(subjectProfile.created_at);
-  const earliestGoalStart = getEarliestDate(completableGoals.map((goal) => goal.start_date));
-  const earliestCompletionDate = getEarliestDate(
-    completableCompletions.map((completion) => completion.completed_on)
-  );
-  const fallbackCreatedDate =
-    getEarliestDate([asOfDate, earliestGoalStart, earliestCompletionDate]) ?? asOfDate;
-  const resolvedCreatedDate =
-    profileCreatedDate && compareDateStrings(profileCreatedDate, asOfDate) <= 0
-      ? profileCreatedDate
-      : fallbackCreatedDate;
 
   const statsGroup = buildInsightsStatsGroup({
     goals: completableGoals,
@@ -327,15 +377,8 @@ export function buildPublicProfileBundle({
       completions: completableCompletions,
       year: selectedYear,
     }),
-    growSeries: mapGrowSeries({
-      completions: completableCompletions,
-      goals: completableGoals,
-      asOfDate,
-      // Signup, or earlier imported history, so the chart scrolls back to the first day.
-      displayFrom:
-        getEarliestDate([resolvedCreatedDate, earliestCompletionDate]) ?? resolvedCreatedDate,
-      weekStartsOn,
-    }),
+    growSeries: buildProfileGrowSeries(history),
+    growTopPercent: null,
     currentGoals: serializeCurrentGoals(
       completableGoals,
       [...summariesByGoal.values()],

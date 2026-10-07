@@ -1675,6 +1675,35 @@ export type Database = {
           },
         ]
       }
+      grow_score_standings: {
+        Row: {
+          as_of_date: string
+          score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          as_of_date: string
+          score: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          as_of_date?: string
+          score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grow_score_standings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       health_activities: {
         Row: {
           created_at: string
@@ -3463,6 +3492,13 @@ export type Database = {
           subject_kind: Database["public"]["Enums"]["social_subject_kind"]
           tie_break_at: string
           viewer_rank: number
+        }[]
+      }
+      grow_score_rank: {
+        Args: { p_score: number; p_user_id: string }
+        Returns: {
+          rank: number
+          total: number
         }[]
       }
       get_partner_profile_service: {

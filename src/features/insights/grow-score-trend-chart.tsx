@@ -234,11 +234,14 @@ function ScoreLineChart({
 export function GrowScoreTrendChart({
   title,
   series,
+  topPercent = null,
   children,
 }: {
   /** Section heading, rendered inside the card. */
   title: string;
   series: readonly GrowScorePoint[];
+  /** Rank among all real accounts by current score, shown as "Top N%". */
+  topPercent?: number | null;
   /** Rendered below the chart, e.g. the overall stats tiles. */
   children?: ReactNode;
 }) {
@@ -314,6 +317,9 @@ export function GrowScoreTrendChart({
           <p className="type-stat text-2xl tracking-tight">
             {latest.score.toFixed(1)}
           </p>
+          {topPercent !== null ? (
+            <p className="font-sans text-sm text-muted-foreground">Top {topPercent}%</p>
+          ) : null}
         </div>
       </div>
       <SegmentedControl

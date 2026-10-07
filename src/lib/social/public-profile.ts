@@ -14,11 +14,12 @@ import {
   isValidPublicProfileUsername,
   normalizePublicProfileUsername,
 } from "./public-profile-username";
+import { loadGrowTopPercent } from "./grow-score-rank";
 
 const PAGE_SIZE = 1_000;
 const MAX_PROFILE_GOALS = 1_000;
 
-async function loadGoalsForSubject({
+export async function loadGoalsForSubject({
   admin,
   subjectUserId,
 }: {
@@ -66,7 +67,7 @@ async function loadGoalsForSubject({
   return goals;
 }
 
-async function loadCompletionsForSubject({
+export async function loadCompletionsForSubject({
   admin,
   subjectUserId,
 }: {
@@ -191,7 +192,7 @@ async function loadPublicProfileBundleForProfile({
     );
   }
 
-  return buildPublicProfileBundle({
+  const bundle = buildPublicProfileBundle({
     viewerUserId,
     subjectProfile,
     globalXpProfile: xpResponse.data,
@@ -202,6 +203,10 @@ async function loadPublicProfileBundleForProfile({
     selectedYear,
     memberNumber,
   });
+  return {
+    ...bundle,
+    growTopPercent: await loadGrowTopPercent(admin, subjectUserId, bundle.growSeries.at(-1)?.score),
+  };
 }
 
 export async function loadPublicProfileBundle({
