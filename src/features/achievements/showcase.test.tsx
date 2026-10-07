@@ -88,31 +88,19 @@ const payload: AchievementsShowcasePayload = {
       tier: "ink",
     },
   ],
-  achievedGoals: [
-    {
-      goalId: "goal-1",
-      title: "Thesis defense",
-      rewardText: "Weekend off-grid",
-      achievedOn: "2026-08-22",
-      material: "chromatic",
-      color: "var(--primary)",
-      category: "career",
-    },
-  ],
   truncated: { goals: false, completions: false },
 };
 
 describe("AchievementsShowcase", () => {
-  it("renders records, claimed progress, and trophy showcase interactions", async () => {
+  it("renders records and trophy showcase interactions", async () => {
     const user = userEvent.setup();
     render(<AchievementsShowcase payload={payload} />);
 
     expect(screen.getByLabelText("Personal records")).toBeInTheDocument();
-    expect(screen.getByLabelText("Goal-finish medals")).toHaveTextContent("Weekend off-grid");
-    expect(document.querySelector("[data-goal][data-material=chromatic]")).not.toBeNull();
+    expect(screen.queryByLabelText("Goal-finish medals")).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Finished goals" })).toBeNull();
     expect(screen.getByText("21d")).toBeInTheDocument();
-    expect(screen.getByText("Claimed")).toBeInTheDocument();
-    expect(screen.getByText("3/5 · 60%")).toBeInTheDocument();
+    expect(screen.queryByText("Claimed")).toBeNull();
     expect(screen.getByLabelText("Trophy showcase")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Level 8 unlocked" })).toBeInTheDocument();
     expect(screen.queryByText(/plaque rail/i)).toBeNull();
@@ -143,9 +131,8 @@ describe("AchievementsShowcase", () => {
 
     expect(screen.getAllByRole("heading", { name: "Level 2 unlocked" }).length).toBeGreaterThan(0);
   });
-  it("keeps finished goals and records visible when the level catalog is empty", () => {
+  it("keeps records visible when the level catalog is empty", () => {
     render(<AchievementsShowcase payload={{ ...payload, levelAwards: [], collection: { ...payload.collection, featuredAwardId: null, totalAwards: 0, unlockedAwards: 0 } }} />);
-    expect(screen.getByLabelText("Goal-finish medals")).toHaveTextContent("Thesis defense");
     expect(screen.getByLabelText("Personal records")).toBeInTheDocument();
     expect(screen.queryByLabelText("Trophy showcase")).toBeNull();
   });

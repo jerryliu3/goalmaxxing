@@ -92,6 +92,5 @@ export const SHOWCASE: AchievementsShowcasePayload = {
     { id: "milestones", label: "Thesis milestones", value: "3", hint: "Of six lifetime milestones", accent: "sage" },
     { id: "closed", label: "Goal achieved", value: "1", hint: "Learn to swim · June 28", accent: "gain" },
   ],
-  achievedGoals: [{ goalId: "swim", title: "Learn to swim", rewardText: null, achievedOn: "2026-06-28", category: "personal", material: "alloy", color: "var(--primary)" }],
   truncated: { goals: false, completions: false },
 };

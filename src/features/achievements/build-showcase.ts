@@ -1,10 +1,6 @@
-import { resolveTempoCardMaterial } from "@/features/goals/card-material/tempo-card-material";
-import { getGoalVisual } from "@/features/planner/goal-visuals";
-import { toAchievementGoalCategory } from "@/features/achievements/category";
 import { buildPersonalRecords } from "@/features/achievements/personal-records";
 import { awardTierForLevel } from "@/features/achievements/tier";
 import type {
-  AchievedGoalAchievement,
   AchievementsCollectionSummary,
   AchievementsShowcasePayload,
   LevelAward,
@@ -56,24 +52,6 @@ export interface BuildAchievementsShowcaseInput {
   truncated: {
     goals: boolean;
     completions: boolean;
-  };
-}
-
-function summarizeAchievedGoal({
-  goal,
-  achievedOn,
-}: {
-  goal: Goal;
-  achievedOn: string | null;
-}): AchievedGoalAchievement {
-  return {
-    goalId: goal.id,
-    title: goal.title,
-    rewardText: goal.reward_text ?? null,
-    achievedOn,
-    material: resolveTempoCardMaterial(goal.difficulty),
-    color: getGoalVisual({ goalId: goal.id, color: goal.color, category: goal.category }).color,
-    category: toAchievementGoalCategory(goal.category_key, goal.category),
   };
 }
 
@@ -184,29 +162,16 @@ export function buildAchievementsShowcasePayload(
     )
   );
 
-  const achievedGoals = input.goals
-    .map((goal, index) => ({
-      goal,
-      summary: goalSnapshots[index],
-      completions: completionsByGoal.get(goal.id) ?? [],
-    }))
-    .filter((entry) => entry.summary.outcome === "achieved")
-    .map((entry) =>
-      summarizeAchievedGoal({
-        goal: entry.goal,
-        achievedOn: resolveAchievedOn(entry.summary, entry.completions),
-      })
-    )
-    .sort((left, right) => {
-      const leftDate = left.achievedOn ?? "";
-      const rightDate = right.achievedOn ?? "";
-      return rightDate.localeCompare(leftDate);
-    });
+  const achievedOnDates = input.goals.flatMap((goal, index) =>
+    goalSnapshots[index].outcome === "achieved"
+      ? [resolveAchievedOn(goalSnapshots[index], completionsByGoal.get(goal.id) ?? [])]
+      : []
+  );
 
   const levelAwards = buildLevelAwards(input.rewardCatalog, input.userAwards);
   const collection = buildCollectionSummary(
     levelAwards,
-    achievedGoals.length,
+    achievedOnDates.length,
     input.totalXp
   );
   const weekStartsOn = input.weeklyAnchor?.weekStartsOn ?? 1;
@@ -215,10 +180,8 @@ export function buildAchievementsShowcasePayload(
     schemaVersion: "3",
     collection,
     personalRecords: buildPersonalRecords({
-      achievedGoalsCount: achievedGoals.length,
-      achievedGoalDates: achievedGoals
-        .map((goal) => goal.achievedOn)
-        .filter((date): date is string => Boolean(date)),
+      achievedGoalsCount: achievedOnDates.length,
+      achievedGoalDates: achievedOnDates.filter((date): date is string => Boolean(date)),
       asOfDate: input.asOfDate,
       goalSnapshots,
       completions: input.completions,
@@ -228,14 +191,6 @@ export function buildAchievementsShowcasePayload(
       truncated: input.truncated,
     }),
     levelAwards,
-    achievedGoals,
     truncated: input.truncated,
   };
-}
-
-export function claimedProgress(collection: AchievementsCollectionSummary) {
-  const claimed = collection.unlockedAwards + collection.achievedGoals;
-  const total = collection.totalAwards + collection.achievedGoals;
-  const fill = total === 0 ? 0 : Math.round((claimed / total) * 100);
-  return { claimed, total, fill };
 }
