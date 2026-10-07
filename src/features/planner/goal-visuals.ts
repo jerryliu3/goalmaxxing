@@ -134,6 +134,16 @@ export function getWorkPillFillStyle(
   };
 }
 
+/** Day view's ledger rows keep their flat look and carry the pills' goal-colour edge. */
+export function getWorkRowEdgeStyle(color: string, styleId?: ThemeId): CSSProperties {
+  return {
+    borderLeftStyle: "solid",
+    borderLeftWidth: WORK_PILL_EDGE_PX,
+    borderLeftColor: workPillGoalColor(color, styleId),
+    paddingLeft: 8,
+  };
+}
+
 /** Draft placements stand out with the goal colour mixed into the page itself. */
 export function getWorkPillDraftFillStyle(
   color: string,

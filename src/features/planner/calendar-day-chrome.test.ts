@@ -106,10 +106,10 @@ describe("plan calendar day chrome", () => {
     expect(planHiddenItemCountLabel(4)).toBe("+4 more");
   });
 
-  it("washes a selected work row with an inset selection bar", () => {
+  it("washes a selected work row, leaving its left edge to the goal colour", () => {
     expect(planSelectedWorkRowClass(false)).toBe("");
     expect(planSelectedWorkRowClass(true)).toContain("bg-day-selected");
-    expect(planSelectedWorkRowClass(true)).toContain("inset_3px_0_0");
+    expect(planSelectedWorkRowClass(true)).not.toContain("inset_3px_0_0");
     expect(planSelectedWorkRowClass(true)).not.toContain("text-day-selected-foreground");
   });
 

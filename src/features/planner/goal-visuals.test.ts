@@ -6,6 +6,7 @@ import {
   getGoalVisual,
   getWorkPillDraftFillStyle,
   getWorkPillFillStyle,
+  getWorkRowEdgeStyle,
   normalizeGoalColor,
 } from "./goal-visuals";
 
@@ -64,6 +65,15 @@ describe("goal visuals", () => {
     expect(getWorkPillFillStyle("#10b981", false, "gazetteer").backgroundColor).toBe(
       "var(--muted)"
     );
+  });
+
+  it("gives Day view rows the pills' goal-colour edge on their flat surface", () => {
+    expect(getWorkRowEdgeStyle("#10b981")).toEqual({
+      borderLeftStyle: "solid",
+      borderLeftWidth: 3,
+      borderLeftColor: "#10b981",
+      paddingLeft: 8,
+    });
   });
 
   it("mixes draft placements into the page so they read on any theme", () => {

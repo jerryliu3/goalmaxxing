@@ -21,7 +21,7 @@ import {
   type CalendarCompletionFactMarkerBase,
   type CalendarMonthCellEntryBase,
 } from "@/features/planner/calendar-month-day-cell";
-import { getGoalVisual, getWorkPillDraftFillStyle, getWorkPillFillStyle } from "@/features/planner/goal-visuals";
+import { getGoalVisual, getWorkPillDraftFillStyle, getWorkPillFillStyle, getWorkRowEdgeStyle } from "@/features/planner/goal-visuals";
 import { PLAN_MORPH_CLASS, planEntryViewTransitionName } from "@/features/planner/plan-view-transition";
 import {
   canCancelDraftMove,
@@ -144,9 +144,11 @@ export function CalendarDayPreviewList<
             const pillFillStyle =
               entry.draftDiffKind === "moved_to" || entry.draftDiffKind === "new"
                 ? getWorkPillDraftFillStyle(visual.color, entry.draftDiffKind)
-                : isDraft || expanded
+                : isDraft
                   ? undefined
-                  : getWorkPillFillStyle(visual.color, credited);
+                  : expanded
+                    ? getWorkRowEdgeStyle(visual.color)
+                    : getWorkPillFillStyle(visual.color, credited);
             const completionToggleState = getCompletionToggleState(entry, day);
             const currentlyCredited = overlayCurrentlyCredited(
               completionToggleState.currentlyCredited,
