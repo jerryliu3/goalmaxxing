@@ -154,7 +154,7 @@ function ScoreLineChart({
         cursor={{ stroke: CHART_COLORS.accent, strokeWidth: 1 }}
         formatter={(value) => {
           const resolved = Array.isArray(value) ? value[0] : value;
-          return [Number(resolved ?? 0).toFixed(1), "Goalmaxxing score"];
+          return [Number(resolved ?? 0).toFixed(1), "Goal score"];
         }}
         labelFormatter={(label, payload) => {
           const full = payload?.[0]?.payload?.fullDate;
@@ -261,7 +261,7 @@ export function GrowScoreTrendChart({
         ref={plotRef}
         className="mt-4 h-56 w-full min-w-0"
         role="img"
-        aria-label="Goalmaxxing score over the last 4 weeks"
+        aria-label="Goal score over the last 4 weeks"
       >
         {plotSize ? (
           <ScoreLineChart width={plotSize.width} height={plotSize.height} data={chartData} />

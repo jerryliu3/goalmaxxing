@@ -88,7 +88,7 @@ describe("PublicProfileContent page", () => {
 
     expect(screen.getByText("Membership card")).toBeInTheDocument();
     expect(screen.queryByText("@jerry")).toBeNull();
-    expect(screen.getByRole("heading", { name: "Goalmaxxing score" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Goal score" })).toBeInTheDocument();
     expect(screen.getByText("Overall stats")).toBeInTheDocument();
     expect(screen.getByText("2026 activity")).toBeInTheDocument();
     expect(screen.queryByText("XP progress")).toBeNull();
@@ -155,6 +155,6 @@ describe("PublicProfileContent page", () => {
     expect(screen.getByText("Jerry")).toBeInTheDocument();
     expect(screen.getByText("@jerry")).toBeInTheDocument();
     expect(screen.queryByText("Membership card")).toBeNull();
-    expect(screen.queryByRole("heading", { name: "Goalmaxxing score" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Goal score" })).toBeNull();
   });
 });
