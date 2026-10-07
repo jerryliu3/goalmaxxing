@@ -22,7 +22,6 @@ describe("useAchievementsShowcase", () => {
           },
           personalRecords: [],
           levelAwards: [],
-          achievedGoals: [],
           truncated: { goals: false, completions: false },
           correlationId: "corr-1",
         }),
@@ -65,7 +64,6 @@ describe("useAchievementsShowcase", () => {
           },
           personalRecords: [],
           levelAwards: [],
-          achievedGoals: [],
           truncated: { goals: false, completions: false },
         }),
       });
