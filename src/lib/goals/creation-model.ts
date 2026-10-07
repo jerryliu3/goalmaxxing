@@ -4,7 +4,7 @@ import {
   getCategorySwatchColor,
 } from "@/lib/goals/category";
 import {
-  type GoalCapacityInput,
+  type GoalScheduleInput,
   type GoalDefinitionValidationIssue,
   resolveGoalDefinitionValidationFeedback,
   validateGoalDefinition,
@@ -292,7 +292,7 @@ function resolveDefinitionTargetCount(
 function collectGoalCreationDefinitionIssues(
   fields: GoalCreationFields,
   options?: {
-    capacity?: GoalCapacityInput;
+    schedule?: GoalScheduleInput;
     asOfDate?: string;
     completedCount?: number;
     currentPeriodCompletedCount?: number;
@@ -308,7 +308,7 @@ function collectGoalCreationDefinitionIssues(
     startDate: fields.start_date,
     endDate: fields.end_date || null,
     asOfDate: options?.asOfDate ?? toLocalDateString(),
-    capacity: options?.capacity,
+    schedule: options?.schedule,
     completedCount: options?.completedCount,
     currentPeriodCompletedCount: options?.currentPeriodCompletedCount,
   });
@@ -427,7 +427,7 @@ export function validateGoalCreationFieldErrors(
 export function getGoalCreationValidationFeedback(
   fields: GoalCreationFields,
   options?: {
-    capacity?: GoalCapacityInput;
+    schedule?: GoalScheduleInput;
     asOfDate?: string;
     completedCount?: number;
     currentPeriodCompletedCount?: number;
