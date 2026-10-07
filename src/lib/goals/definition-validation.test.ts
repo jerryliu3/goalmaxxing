@@ -139,6 +139,42 @@ describe("goal definition validation", () => {
     ).toBe("2028-09-30");
   });
 
+  it("plans open-ended weekly and monthly totals across their cadence, not the two-year horizon", () => {
+    expect(
+      resolveGoalPlanningEndDate({
+        frequencyType: "recurring",
+        recurrenceInterval: "weekly",
+        targetCount: 3,
+        targetBasis: "lifetime",
+        startDate: "2026-10-07",
+        endDate: null,
+        asOfDate: "2026-10-07",
+      })
+    ).toBe("2026-10-27");
+    expect(
+      resolveGoalPlanningEndDate({
+        frequencyType: "recurring",
+        recurrenceInterval: "monthly",
+        targetCount: 3,
+        targetBasis: "lifetime",
+        startDate: "2026-10-07",
+        endDate: null,
+        asOfDate: "2026-10-07",
+      })
+    ).toBe("2027-01-06");
+    expect(
+      resolveGoalPlanningEndDate({
+        frequencyType: "recurring",
+        recurrenceInterval: "weekly",
+        targetCount: 3,
+        targetBasis: "period",
+        startDate: "2026-10-07",
+        endDate: null,
+        asOfDate: "2026-10-07",
+      })
+    ).toBeNull();
+  });
+
   it("flags likely capacity shortfall when target exceeds available days", () => {
     const issues = validateGoalDefinition({
       frequencyType: "fixed_milestones",
