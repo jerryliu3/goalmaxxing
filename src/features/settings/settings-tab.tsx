@@ -32,7 +32,6 @@ import {
 import { NotificationsSection } from "@/features/social/notifications-section";
 import { buildPublicProfileUrl } from "@/lib/social/public-profile-username";
 import { ProfileMembershipCard } from "@/features/social/profile-membership-card";
-import { ProfilePresenceSection } from "@/features/social/profile-presence";
 import { useOwnProfilePresence } from "@/features/social/use-own-profile-presence";
 import { useSocialTabData } from "@/features/social/use-social-tab-data";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
@@ -142,15 +141,6 @@ export function SettingsTab() {
             setProfileDraft((prev) => ({ ...prev, avatar_url: "" })),
         }}
       />
-      {presence ? (
-        <ProfilePresenceSection
-          growSeries={presence.growSeries}
-          heatmap={presence.yearHeatmap}
-          selectedYear={new Date().getFullYear()}
-          overallStats={presence.overallStats}
-          showMoreLink
-        />
-      ) : null}
       {SETTINGS_GROUPS.map((group) => (
         <section key={group.key} className="space-y-1">
           <h2 className="type-eyebrow text-[11px] text-muted-foreground">
