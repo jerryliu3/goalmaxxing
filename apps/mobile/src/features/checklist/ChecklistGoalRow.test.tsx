@@ -1,6 +1,7 @@
 import React from "react";
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
+import { GOAL_CATEGORY_COLORS } from "@cadence/shared/brand";
 import { ChecklistGoalRow } from "./ChecklistGoalRow";
 
 vi.mock("react-native", () => ({
@@ -130,6 +131,6 @@ describe("ChecklistGoalRow partner boundary", () => {
     });
 
     const rects = root.root.findAll((node) => String(node.type) === "rect");
-    expect(rects.some((rect) => rect.props.fill === "#4a6740")).toBe(true);
+    expect(rects.some((rect) => rect.props.fill === GOAL_CATEGORY_COLORS.health)).toBe(true);
   });
 });

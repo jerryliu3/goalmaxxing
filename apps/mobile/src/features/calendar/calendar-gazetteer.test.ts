@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GOAL_CATEGORY_COLORS } from "@cadence/shared/brand";
 import { GAZETTEER_CATEGORY_COLORS } from "@cadence/shared/brand/gazetteer";
 import type { PlannerContextPayload, PlannerWorkUnit } from "@cadence/shared/planner/context";
 import {
@@ -43,7 +44,7 @@ describe("mobile Plan Gazetteer helpers", () => {
       GAZETTEER_CATEGORY_COLORS.health
     );
     expect(resolveMobileSessionFill(context as PlannerContextPayload, unit("missing"))).toBe(
-      GAZETTEER_CATEGORY_COLORS.other
+      GOAL_CATEGORY_COLORS.other
     );
   });
 

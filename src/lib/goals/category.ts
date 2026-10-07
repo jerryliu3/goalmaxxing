@@ -1,3 +1,4 @@
+import { GOAL_CATEGORY_COLORS, goalCategoryPair } from "@cadence/shared/brand";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -34,47 +35,48 @@ function isCategoryPresetId(value: string): value is CategoryPresetId {
   return (CATEGORY_PRESET_IDS as readonly string[]).includes(value);
 }
 
+/** Mirrors the goal_categories rows; colors come from the shared category palette. */
 export const DEFAULT_GOAL_CATEGORIES: GoalCategory[] = [
   {
     key: "health",
     label: "Health",
     aliases: [],
-    color: "#10b981",
+    color: GOAL_CATEGORY_COLORS.health,
     sortOrder: 10,
   },
   {
     key: "career",
     label: "Career",
     aliases: [],
-    color: "#8b5cf6",
+    color: GOAL_CATEGORY_COLORS.career,
     sortOrder: 20,
   },
   {
     key: "personal",
     label: "Personal",
     aliases: [],
-    color: "#6366f1",
+    color: GOAL_CATEGORY_COLORS.personal,
     sortOrder: 30,
   },
   {
     key: "relationships",
-    label: "Relationships",
-    aliases: [],
-    color: "#f43f5e",
+    label: "Interpersonal",
+    aliases: ["Relationships", "Relationship"],
+    color: GOAL_CATEGORY_COLORS.relationships,
     sortOrder: 40,
   },
   {
     key: "finance",
     label: "Finance",
     aliases: [],
-    color: "#d97706",
+    color: GOAL_CATEGORY_COLORS.finance,
     sortOrder: 50,
   },
   {
     key: "other",
     label: "Other",
     aliases: [],
-    color: "#64748b",
+    color: GOAL_CATEGORY_COLORS.other,
     sortOrder: 999,
   },
 ];
@@ -209,6 +211,9 @@ export function resolveCategoryKey(
     if (normalizedInput === category.label.toLowerCase()) {
       return category.key;
     }
+    if (category.aliases.some((alias) => alias.toLowerCase() === normalizedInput)) {
+      return category.key;
+    }
   }
 
   return "other";
@@ -253,30 +258,16 @@ export function getGoalCategoryLabel(
   return category;
 }
 
-export function getCategoryBadgeClass(categoryKey: string): string {
-  const normalized = categoryKey.trim().toLowerCase();
-
-  if (normalized === "personal") {
-    return "border-foreground/20 bg-secondary text-foreground";
+/** A preset category's badge in its palette surface and ink; custom categories stay neutral. */
+export function getCategoryBadgeStyle(
+  categoryKeyOrLabel: string
+): { backgroundColor: string; color: string; borderColor: string } | undefined {
+  const key = resolveCategoryKey(categoryKeyOrLabel);
+  if (key === "other") {
+    return undefined;
   }
-
-  if (normalized === "relationships") {
-    return "border-primary/35 bg-primary/10 text-primary";
-  }
-
-  if (normalized === "health") {
-    return "border-[color:var(--gm-gain)]/35 bg-[color:var(--gm-gain)]/10 text-[color:var(--gm-gain)]";
-  }
-
-  if (normalized === "career") {
-    return "border-primary/35 bg-primary/10 text-primary";
-  }
-
-  if (normalized === "finance") {
-    return "border-[color:var(--gm-recover)]/35 bg-[color:var(--gm-recover)]/10 text-foreground";
-  }
-
-  return "border-border bg-muted text-muted-foreground";
+  const { surface, ink } = goalCategoryPair(key);
+  return { backgroundColor: surface, color: ink, borderColor: "transparent" };
 }
 
 export function getCategorySwatchColor(

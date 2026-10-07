@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 import type { ChecklistGoalPresentation } from "@/lib/goals/checklist-presentation";
 import { projectChecklistGoalPresentation } from "@/lib/goals/checklist-presentation";
-import { getCategoryBadgeClass, getGoalCategoryLabel } from "@/lib/goals/category";
+import { getCategoryBadgeStyle, getGoalCategoryLabel } from "@/lib/goals/category";
 import type { GoalProgressSnapshot } from "@/lib/goals/progress";
 import { getFrequencySummary } from "@/lib/goals/schedule";
 import { createChecklistTemporalContext } from "@/lib/goals/period-domain";
@@ -83,9 +83,8 @@ export function GoalCard({
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
-            className={`h-5 shrink-0 rounded-md px-1.5 text-[11px] font-semibold ${getCategoryBadgeClass(
-              goal.category_key ?? goal.category
-            )}`}
+            className="h-5 shrink-0 rounded-md border-border bg-muted px-1.5 text-[11px] font-semibold text-muted-foreground"
+            style={getCategoryBadgeStyle(goal.category_key ?? goal.category)}
           >
             {goalCategoryLabel}
           </Badge>

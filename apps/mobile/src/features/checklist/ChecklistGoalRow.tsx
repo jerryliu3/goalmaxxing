@@ -1,4 +1,4 @@
-import { gazetteerCategoryColor } from "@cadence/shared/brand/gazetteer";
+import { goalCategoryColor } from "@cadence/shared/brand";
 import { Link, type Href } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../theme";
@@ -24,7 +24,7 @@ export function ChecklistGoalRow({
   toggling?: boolean;
 }) {
   const theme = useTheme();
-  const categoryColor = gazetteerCategoryColor(category);
+  const categoryColor = goalCategoryColor(category);
   const nest = (
     <NestCompletionMark
       done={done}

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GOAL_CATEGORY_COLORS } from "@cadence/shared/brand";
 import {
   createDefaultGoalCreationFields,
   normalizeGoalCreationTarget,
@@ -427,7 +428,7 @@ describe("resolveGoalCreationColor", () => {
   });
 
   it("falls back to the category swatch for missing or invalid colors", () => {
-    expect(resolveGoalCreationColor(null, "health")).toBe("#10b981");
-    expect(resolveGoalCreationColor("#abc12", "health")).toBe("#10b981");
+    expect(resolveGoalCreationColor(null, "health")).toBe(GOAL_CATEGORY_COLORS.health);
+    expect(resolveGoalCreationColor("#abc12", "health")).toBe(GOAL_CATEGORY_COLORS.health);
   });
 });

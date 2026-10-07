@@ -25,7 +25,7 @@ export function toAchievementGoalCategory(
   if (normalizedLabel.includes("career") || normalizedLabel.includes("work")) {
     return "career";
   }
-  if (normalizedLabel.includes("relationship")) {
+  if (normalizedLabel.includes("relationship") || normalizedLabel.includes("interpersonal")) {
     return "relationships";
   }
   if (

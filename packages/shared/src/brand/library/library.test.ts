@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { THEMES } from "../themes";
 import { studyTheme } from "../themes/study";
 import { ARCHIVED_STUDY_SKINS } from "./archived-skins";
-import { MINERAL_CANDY_CATEGORIES, mineralCandyCategoryPair } from "./category-palettes";
 import { STUDY_SKIN_NOTES } from "./skin-notes";
 
 describe("brand library", () => {
@@ -19,12 +18,5 @@ describe("brand library", () => {
     for (const id of [...studyIds, ...ARCHIVED_STUDY_SKINS.map((skin) => skin.id)]) {
       expect(STUDY_SKIN_NOTES[id], id).toBeDefined();
     }
-  });
-
-  it("keeps the Mineral Candy category study, including Finance", () => {
-    expect(MINERAL_CANDY_CATEGORIES.finance.colorId).toBe("malachite");
-    const light = mineralCandyCategoryPair("health");
-    const dark = mineralCandyCategoryPair("health", "dark");
-    expect(dark.surface).toBe(light.ink);
   });
 });

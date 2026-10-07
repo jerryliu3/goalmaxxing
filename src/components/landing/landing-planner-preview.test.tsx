@@ -195,7 +195,7 @@ describe("seeded task details", () => {
     );
     expect(getSeededTaskDetail(WEEK_TODAY_TASKS[1])).toBe("Daily · Career");
     expect(getSeededTaskDetail(WEEK_TODAY_TASKS[3])).toBe(
-      "Weekly recurring · Relationships"
+      "Weekly recurring · Interpersonal"
     );
     expect(getSeededTaskDetail({})).toBeNull();
   });

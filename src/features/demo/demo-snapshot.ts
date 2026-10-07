@@ -360,7 +360,7 @@ export function buildDemoSnapshot(asOfDate: string): DemoSnapshot {
       ownerId: DEMO_ALEX_ID,
       title: "Neighborhood cleanup",
       categoryKey: "relationships",
-      categoryLabel: "Relationships",
+      categoryLabel: "Interpersonal",
       color: "#f43f5e",
       frequencyType: "recurring",
       recurrenceInterval: "weekly",

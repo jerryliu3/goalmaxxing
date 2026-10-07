@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { GOAL_CATEGORY_COLORS } from "@cadence/shared/brand";
 import {
   CATEGORY_CUSTOM_VALUE,
   DEFAULT_GOAL_CATEGORIES,
-  getCategoryBadgeClass,
+  getCategoryBadgeStyle,
   getCategoryKeyForSelection,
   getCategorySelectionFromValue,
   getCategoryValueForWrite,
@@ -53,6 +54,9 @@ describe("goal category helpers", () => {
       "finance",
       "other",
     ]);
+    expect(DEFAULT_GOAL_CATEGORIES.find((category) => category.key === "relationships")?.label).toBe(
+      "Interpersonal"
+    );
   });
 
   it("resolves the Finance preset like the other presets", () => {
@@ -61,6 +65,10 @@ describe("goal category helpers", () => {
     ).toBe("finance");
     expect(resolveCategoryKey("Finance", DEFAULT_GOAL_CATEGORIES)).toBe("finance");
     expect(getCategoryKeyForSelection("finance")).toBe("finance");
-    expect(getCategoryBadgeClass("finance")).not.toBe(getCategoryBadgeClass("other"));
+    expect(getCategoryBadgeStyle("finance")?.backgroundColor).toBe(GOAL_CATEGORY_COLORS.finance);
+    expect(getCategoryBadgeStyle("Relationships")?.backgroundColor).toBe(
+      GOAL_CATEGORY_COLORS.relationships
+    );
+    expect(getCategoryBadgeStyle("Deep Work")).toBeUndefined();
   });
 });

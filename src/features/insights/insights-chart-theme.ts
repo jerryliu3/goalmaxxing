@@ -1,3 +1,5 @@
+import { goalCategoryColor } from "@cadence/shared/brand";
+
 export const INSIGHTS_CHART_COLORS = {
   primary: "var(--primary)",
   secondary: "var(--gm-gain)",
@@ -11,15 +13,7 @@ export const INSIGHTS_CHART_COLORS = {
   cursor: "color-mix(in srgb, var(--primary) 12%, transparent)",
 } as const;
 
-const CATEGORY_FILLS: Record<string, string> = {
-  health: "var(--gm-gain)",
-  career: "var(--primary)",
-  personal: "var(--secondary-foreground)",
-  relationships: "color-mix(in srgb, var(--primary) 62%, var(--gm-recover))",
-  finance: "color-mix(in srgb, var(--gm-recover) 70%, var(--foreground))",
-  other: "var(--muted-foreground)",
-};
-
+/** Categories keep their shared palette color in every theme. */
 export function insightsCategoryFill(categoryKey: string) {
-  return CATEGORY_FILLS[categoryKey] ?? CATEGORY_FILLS.other;
+  return goalCategoryColor(categoryKey);
 }

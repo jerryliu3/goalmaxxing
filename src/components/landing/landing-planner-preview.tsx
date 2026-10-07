@@ -227,7 +227,7 @@ export const WEEK_TODAY_TASKS = [
     label: "Team sync",
     tone: "violet",
     schedule: "Weekly recurring",
-    category: "Relationships",
+    category: "Interpersonal",
   },
 ] as const satisfies ReadonlyArray<SeededTask>;
 
