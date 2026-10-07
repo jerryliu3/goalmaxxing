@@ -45,6 +45,10 @@ export const APP_COLOR_ROLES = [
   "adjacent",
   "adjacentForeground",
   "stampLight",
+  /** Name and count on a not-yet-started (ghost) goal card: quiet but readable. */
+  "ghostInk",
+  /** Frame, outlines, and meta on a ghost goal card: a faint trace. */
+  "ghostLine",
 ] as const;
 
 /** Five-step activity scale: `--gm-heatmap-<n>`, consumed by CSS only. */
@@ -55,6 +59,16 @@ export const SCALE_COLOR_ROLES = [
   "heatmap3",
   "heatmap4",
 ] as const;
+
+/**
+ * Ghost goal cards are drawn as translucent ink over whatever sits behind
+ * them, so one formula reads on light and dark pages alike. Themes spread
+ * this and override a value when their muted ink needs a different weight.
+ */
+export const DEFAULT_GHOST_COLORS = {
+  ghostInk: "color-mix(in srgb, var(--muted-foreground) 62%, transparent)",
+  ghostLine: "color-mix(in srgb, var(--muted-foreground) 22%, transparent)",
+} as const;
 
 export type SurfaceColorRole = (typeof SURFACE_COLOR_ROLES)[number];
 export type AppColorRole = (typeof APP_COLOR_ROLES)[number];

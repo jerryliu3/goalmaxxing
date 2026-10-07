@@ -36,6 +36,8 @@
   --color-adjacent: var(--gm-adjacent);
   --color-adjacent-foreground: var(--gm-adjacent-foreground);
   --color-stamp-light: var(--gm-stamp-light);
+  --color-ghost-ink: var(--gm-ghost-ink);
+  --color-ghost-line: var(--gm-ghost-line);
   --font-sans: var(--font-app-sans);
   --font-mono: var(--font-app-mono);
   --font-display: var(--font-app-display);
@@ -120,6 +122,8 @@
   --gm-adjacent: #e4e4e7;
   --gm-adjacent-foreground: oklch(0.36 0.01 286);
   --gm-stamp-light: var(--primary);
+  --gm-ghost-ink: color-mix(in srgb, var(--muted-foreground) 62%, transparent);
+  --gm-ghost-line: color-mix(in srgb, var(--muted-foreground) 22%, transparent);
   --gm-heatmap-0: #ebedf0;
   --gm-heatmap-1: #c5ddf7;
   --gm-heatmap-2: #7eace6;
@@ -183,6 +187,8 @@
   --gm-adjacent: #d4d4d8;
   --gm-adjacent-foreground: oklch(0.36 0.01 286);
   --gm-stamp-light: #c88968;
+  --gm-ghost-ink: color-mix(in srgb, var(--muted-foreground) 62%, transparent);
+  --gm-ghost-line: color-mix(in srgb, var(--muted-foreground) 22%, transparent);
   --gm-heatmap-0: #efe4d0;
   --gm-heatmap-1: color-mix(in srgb, var(--primary) 28%, var(--background));
   --gm-heatmap-2: var(--gm-stamp-light);

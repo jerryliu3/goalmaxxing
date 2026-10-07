@@ -1,4 +1,4 @@
-import type { ThemeDefinition } from "../roles";
+import { DEFAULT_GHOST_COLORS, type ThemeDefinition } from "../roles";
 
 /** Classic Goalmaxxing chrome: Geist throughout, identity blue, pill tabs. */
 export const ORIGINAL_THEME = {
@@ -55,6 +55,7 @@ export const ORIGINAL_THEME = {
     adjacent: "#e4e4e7",
     adjacentForeground: "oklch(0.36 0.01 286)",
     stampLight: "var(--primary)",
+    ...DEFAULT_GHOST_COLORS,
     heatmap0: "#ebedf0",
     heatmap1: "#c5ddf7",
     heatmap2: "#7eace6",
@@ -94,6 +95,7 @@ export const ORIGINAL_THEME = {
     adjacent: "#3f3f46",
     adjacentForeground: "oklch(0.92 0.003 286)",
     stampLight: "var(--primary)",
+    ...DEFAULT_GHOST_COLORS,
     heatmap0: "#2a2f36",
     heatmap1: "#163a63",
     heatmap2: "#245ea6",
