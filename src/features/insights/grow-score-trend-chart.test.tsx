@@ -35,9 +35,9 @@ describe("GrowScoreTrendChart", () => {
 
     expect(screen.getByRole("heading", { name: "Goal score" })).toBeInTheDocument();
     expect(
-      screen.getByRole("img", { name: "Goal score since Sep 1, 2026" }),
+      screen.getByRole("img", { name: "Goal score, Sep 1 – Sep 2, 2026" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Since Sep 1, 2026")).toBeInTheDocument();
+    expect(screen.getByText("Sep 1 – Sep 2, 2026")).toBeInTheDocument();
     expect(container.querySelector("path")).not.toBeNull();
   });
 
@@ -49,5 +49,24 @@ describe("GrowScoreTrendChart", () => {
     expect(screen.getByText("19.4", { selector: "p" })).toBeInTheDocument();
     await user.hover(screen.getByRole("button", { name: "Goal score definition" }));
     expect(await screen.findByRole("tooltip")).toHaveTextContent(GROW_SCORE_CHART_HELP);
+  });
+
+  it("narrows the chart and its date label with the range toggles", async () => {
+    const user = userEvent.setup();
+    const long = ["2025-06-01", "2026-01-01", "2026-08-15", "2026-09-20", "2026-10-07"].map((date, index) => ({
+      ...series[0]!,
+      date,
+      score: 10 + index,
+    }));
+    render(<GrowScoreTrendChart title="Goal score" series={long} />);
+
+    expect(screen.getByRole("button", { name: "All" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("Jun 1, 2025 – Oct 7, 2026")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "1M" }));
+    expect(screen.getByText("Sep 20 – Oct 7, 2026")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "YTD" }));
+    expect(screen.getByText("Jan 1 – Oct 7, 2026")).toBeInTheDocument();
+    expect(screen.getByText("14.0", { selector: "p" })).toBeInTheDocument();
   });
 });

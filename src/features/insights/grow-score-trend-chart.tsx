@@ -1,6 +1,5 @@
 "use client";
 
-import { format, parseISO } from "date-fns";
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   CartesianGrid,
@@ -10,7 +9,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { TooltipIcon } from "@/components/ui/tooltip-icon";
+import {
+  GROW_SCORE_RANGE_OPTIONS,
+  formatGrowScoreRangeLabel,
+  sliceGrowScoreRange,
+  type GrowScoreRange,
+} from "@/features/insights/grow-score-range";
 import { INSIGHTS_CHART_COLORS } from "@/features/insights/insights-chart-theme";
 import { growScoreChartLabel, type GrowScorePoint } from "@/lib/grow-score";
 
@@ -125,8 +131,8 @@ function ScoreSparkline({
 
 type ScoreChartDatum = { date: string; fullDate: string; score: number };
 
-/** Days visible at once; older history is a horizontal scroll away. */
-const VISIBLE_DAYS = 28;
+/** Longer ranges drop per-day dots so the line stays readable. */
+const MAX_DOTTED_DAYS = 90;
 const Y_AXIS_WIDTH = 40;
 const X_AXIS_HEIGHT = 30;
 const CHART_MARGIN = { top: 5, right: 0, bottom: 5, left: 0 };
@@ -157,21 +163,10 @@ function ScoreLineChart({
   height: number;
   data: readonly ScoreChartDatum[];
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
   const ticks = useMemo(() => scoreTicks(data), [data]);
   const domain: [number, number] = [ticks[0]!, ticks.at(-1)!];
-  const plotViewport = Math.max(width - Y_AXIS_WIDTH, 1);
-  const dayWidth = plotViewport / VISIBLE_DAYS;
-  const plotWidth = Math.max(plotViewport, Math.round(data.length * dayWidth));
+  const plotWidth = Math.max(width - Y_AXIS_WIDTH, 1);
   const rows = [...data];
-
-  // Open on the latest weeks; earlier history scrolls in from the left.
-  useLayoutEffect(() => {
-    const el = scrollRef.current;
-    if (el) {
-      el.scrollLeft = el.scrollWidth;
-    }
-  }, [plotWidth, data.length]);
 
   return (
     <div className="flex h-full w-full" style={{ height }}>
@@ -191,11 +186,7 @@ function ScoreLineChart({
         />
         <Line dataKey="score" stroke="none" dot={false} isAnimationActive={false} />
       </LineChart>
-      <div
-        ref={scrollRef}
-        className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:thin]"
-        data-testid="grow-score-scroll"
-      >
+      <div className="min-w-0 flex-1 overflow-hidden">
         <LineChart
           width={plotWidth}
           height={height}
@@ -229,7 +220,7 @@ function ScoreLineChart({
             dataKey="score"
             stroke={CHART_COLORS.primary}
             strokeWidth={2.5}
-            dot={data.length > VISIBLE_DAYS * 3 ? false : { r: 2, fill: CHART_COLORS.accent, strokeWidth: 0 }}
+            dot={data.length > MAX_DOTTED_DAYS ? false : { r: 2, fill: CHART_COLORS.accent, strokeWidth: 0 }}
             activeDot={{ r: 4, fill: CHART_COLORS.highlight, strokeWidth: 0 }}
             // The draw-in sweep starts off-screen at the oldest day; skip it.
             isAnimationActive={false}
@@ -253,15 +244,17 @@ export function GrowScoreTrendChart({
 }) {
   const plotRef = useRef<HTMLDivElement>(null);
   const [plotSize, setPlotSize] = useState<{ width: number; height: number } | null>(null);
+  const [range, setRange] = useState<GrowScoreRange>("all");
+  const visible = useMemo(() => sliceGrowScoreRange(series, range), [series, range]);
   const chartData = useMemo(
     () =>
-      series.map((point) => ({
+      visible.map((point) => ({
         date: growScoreChartLabel(point.date),
         fullDate: point.date,
         label: growScoreChartLabel(point.date),
         score: Number(point.score.toFixed(2)),
       })),
-    [series],
+    [visible],
   );
 
   useLayoutEffect(() => {
@@ -291,12 +284,13 @@ export function GrowScoreTrendChart({
     return () => observer.disconnect();
   }, []);
 
-  const latest = series.at(-1);
-  const since = series[0] ? format(parseISO(series[0].date), "MMM d, yyyy") : "";
+  const latest = visible.at(-1);
+  const first = visible[0];
 
-  if (series.length === 0) {
+  if (!latest || !first) {
     return null;
   }
+  const rangeLabel = formatGrowScoreRangeLabel(first.date, latest.date);
 
   return (
     <section
@@ -312,24 +306,29 @@ export function GrowScoreTrendChart({
             <TooltipIcon content={GROW_SCORE_CHART_HELP} label={`${title} definition`} />
           </div>
           <p className="mt-1 font-sans text-sm text-muted-foreground">
-            Since {since}
+            {rangeLabel}
           </p>
         </div>
-        {latest ? (
-          <div className="text-right">
-            <p className="font-sans text-sm text-muted-foreground">Current score</p>
-            <p className="type-stat text-2xl tracking-tight">
-              {latest.score.toFixed(1)}
-            </p>
-          </div>
-        ) : null}
+        <div className="text-right">
+          <p className="font-sans text-sm text-muted-foreground">Current score</p>
+          <p className="type-stat text-2xl tracking-tight">
+            {latest.score.toFixed(1)}
+          </p>
+        </div>
       </div>
+      <SegmentedControl
+        label="Goal score range"
+        options={GROW_SCORE_RANGE_OPTIONS}
+        value={range}
+        onChange={setRange}
+        className="mt-3"
+      />
 
       <div
         ref={plotRef}
         className="mt-4 h-56 w-full min-w-0"
         role="img"
-        aria-label={`Goal score since ${since}`}
+        aria-label={`Goal score, ${rangeLabel}`}
       >
         {plotSize ? (
           <ScoreLineChart width={plotSize.width} height={plotSize.height} data={chartData} />
