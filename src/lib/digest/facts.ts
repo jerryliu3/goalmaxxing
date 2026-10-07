@@ -11,11 +11,9 @@ export interface DigestSourceItem {
   goalId: string;
   title: string;
   scheduledDate: string;
-}
-
-export interface DigestSourceCompletion {
-  goalId: string;
-  completedOn: string;
+  /** Credited by the planner's reconciliation, which may match a completion on another day. */
+  credited: boolean;
+  requirementKind?: DigestFactItem["requirementKind"];
 }
 
 export interface DigestSourceGoal {
@@ -37,39 +35,24 @@ function windowLabel(kind: DigestPeriod["kind"], section: "recap" | "ahead") {
   return section === "recap" ? "Yesterday" : "Today";
 }
 
-/**
- * Every session placed in a window, tagged with whether it was credited on the
- * day it was placed. One completion exists per goal per day
- * (`planner_items_goal_date_unique`), so matching on that pair is exact.
- *
- * Both window summaries and the recover list are projections over these rows,
- * so each window is walked once and the two can never disagree.
- */
+/** Every session placed in a window, tagged with its planner credit state. */
 function windowRows({
   items,
-  completions,
   start,
   end,
 }: {
   items: DigestSourceItem[];
-  completions: DigestSourceCompletion[];
   start: string;
   end: string;
 }): DigestFactItem[] {
-  const completedKeys = new Set(
-    completions
-      .filter((completion) => inRange(completion.completedOn, start, end))
-      .map((completion) => `${completion.goalId}:${completion.completedOn}`)
-  );
   return items
     .filter((item) => inRange(item.scheduledDate, start, end))
     .map((item) => ({
       goalId: item.goalId,
       title: item.title,
       date: item.scheduledDate,
-      state: completedKeys.has(`${item.goalId}:${item.scheduledDate}`)
-        ? "completed"
-        : "open",
+      state: item.credited ? "completed" : "open",
+      ...(item.requirementKind ? { requirementKind: item.requirementKind } : {}),
     }));
 }
 
@@ -114,30 +97,32 @@ function summarizeUnscheduled({
   };
 }
 
+/**
+ * `recoverable` is the recovery review's own list (slipped sessions whose
+ * credit window still includes today), so the check-in row and the Agenda
+ * entry always count the same sessions. Past-period misses are not in it.
+ */
 export function buildDigestFacts({
   period,
   items,
-  completions,
+  recoverable = [],
   goals = [],
 }: {
   period: DigestPeriod;
   items: DigestSourceItem[];
-  completions: DigestSourceCompletion[];
+  recoverable?: DigestFactItem[];
   goals?: DigestSourceGoal[];
 }): DigestFacts {
   const recapRows = windowRows({
     items,
-    completions,
     start: period.recapStart,
     end: period.recapEnd,
   });
   const aheadRows = windowRows({
     items,
-    completions,
     start: period.aheadStart,
     end: period.aheadEnd,
   });
-  const missed = recapRows.filter((row) => row.state === "open");
 
   return digestFactsSchema.parse({
     recap: summarizeWindow(
@@ -152,7 +137,10 @@ export function buildDigestFacts({
       period.aheadEnd,
       aheadRows
     ),
-    recover: { count: missed.length, items: missed.slice(0, DIGEST_ITEM_LIMIT) },
+    recover: {
+      count: recoverable.length,
+      items: recoverable.slice(0, DIGEST_ITEM_LIMIT),
+    },
     unscheduled: summarizeUnscheduled({ period, items, goals }),
   });
 }

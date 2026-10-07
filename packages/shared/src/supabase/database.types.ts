@@ -2584,6 +2584,42 @@ export type Database = {
           },
         ]
       }
+      planner_recovery_dismissals: {
+        Row: {
+          dismissed_at: string
+          goal_id: string
+          missed_on: string
+          owner_id: string
+        }
+        Insert: {
+          dismissed_at?: string
+          goal_id: string
+          missed_on: string
+          owner_id: string
+        }
+        Update: {
+          dismissed_at?: string
+          goal_id?: string
+          missed_on?: string
+          owner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planner_recovery_dismissals_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planner_recovery_dismissals_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       planner_tasks: {
         Row: {
           completed_at: string | null
@@ -3429,6 +3465,10 @@ export type Database = {
       disconnect_health_provider_service: {
         Args: { p_provider: Database["public"]["Enums"]["health_provider"] }
         Returns: Json
+      }
+      dismiss_planner_recovery_sessions: {
+        Args: { p_dismissals: Json }
+        Returns: undefined
       }
       dissolve_team_service: { Args: never; Returns: boolean }
       drain_xp_recompute_outbox: { Args: { p_limit?: number }; Returns: number }

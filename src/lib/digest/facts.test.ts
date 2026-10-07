@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { buildDigestFacts } from "./facts";
+import { buildDigestFacts, type DigestSourceItem } from "./facts";
 import { DIGEST_DEFAULT_SESSION_MINUTES } from "./hours";
 import { extendDailyRecapToLastCheckIn, resolveDigestPeriod } from "./period";
 
+function item(
+  goalId: string,
+  title: string,
+  scheduledDate: string,
+  credited = false
+): DigestSourceItem {
+  return { goalId, title, scheduledDate, credited, requirementKind: "cadence" };
+}
+
 describe("buildDigestFacts", () => {
-  it("counts placed vs completed work in the recap and ahead windows", () => {
+  it("counts placed vs credited work in the recap and ahead windows", () => {
     const period = resolveDigestPeriod({
       localDate: "2026-09-09",
       weekStartsOn: 1,
@@ -12,24 +21,9 @@ describe("buildDigestFacts", () => {
     const facts = buildDigestFacts({
       period,
       items: [
-        {
-          goalId: "tempo",
-          title: "Tempo run",
-          scheduledDate: "2026-09-08",
-        },
-        {
-          goalId: "strength",
-          title: "Strength",
-          scheduledDate: "2026-09-08",
-        },
-        {
-          goalId: "deep-work",
-          title: "Deep work",
-          scheduledDate: "2026-09-09",
-        },
-      ],
-      completions: [
-        { goalId: "tempo", completedOn: "2026-09-08" },
+        item("tempo", "Tempo run", "2026-09-08", true),
+        item("strength", "Strength", "2026-09-08"),
+        item("deep-work", "Deep work", "2026-09-09"),
       ],
     });
 
@@ -47,6 +41,7 @@ describe("buildDigestFacts", () => {
       goalId: "tempo",
       title: "Tempo run",
       state: "completed",
+      requirementKind: "cadence",
     });
     expect(facts.recap.items[1]).toMatchObject({
       goalId: "strength",
@@ -55,12 +50,27 @@ describe("buildDigestFacts", () => {
     });
   });
 
+  it("trusts planner credit, so a completion on another day of the window counts", () => {
+    const period = resolveDigestPeriod({
+      localDate: "2026-09-09",
+      weekStartsOn: 1,
+    });
+    // Placed yesterday, done the day before: the planner credits the session.
+    const facts = buildDigestFacts({
+      period,
+      items: [item("tempo", "Tempo run", "2026-09-08", true)],
+    });
+
+    expect(facts.recap.completed).toBe(1);
+    expect(facts.recap.items[0]?.state).toBe("completed");
+  });
+
   it("labels windows for the monthly cadence", () => {
     const period = resolveDigestPeriod({
       localDate: "2026-09-01",
       weekStartsOn: 1,
     });
-    const facts = buildDigestFacts({ period, items: [], completions: [] });
+    const facts = buildDigestFacts({ period, items: [] });
 
     expect(facts.recap.label).toBe("Last month");
     expect(facts.ahead.label).toBe("This month");
@@ -77,10 +87,9 @@ describe("buildDigestFacts", () => {
     const facts = buildDigestFacts({
       period,
       items: [
-        { goalId: "run", title: "Long run", scheduledDate: "2026-09-06" },
-        { goalId: "read", title: "Read", scheduledDate: "2026-09-08" },
+        item("run", "Long run", "2026-09-06", true),
+        item("read", "Read", "2026-09-08"),
       ],
-      completions: [{ goalId: "run", completedOn: "2026-09-06" }],
     });
 
     expect(facts.recap).toMatchObject({
@@ -92,30 +101,38 @@ describe("buildDigestFacts", () => {
     });
   });
 
-  it("lists recap work that was never credited as recoverable", () => {
+  it("reports the recovery review's list, not every open recap session", () => {
     const period = resolveDigestPeriod({
       localDate: "2026-09-07",
       weekStartsOn: 1,
     });
     const facts = buildDigestFacts({
       period,
-      items: [
-        { goalId: "run", title: "Long run", scheduledDate: "2026-08-31" },
-        { goalId: "read", title: "Read", scheduledDate: "2026-09-01" },
-        { goalId: "run", title: "Long run", scheduledDate: "2026-09-08" },
+      // Last week's open session is a past-period miss: not recoverable.
+      items: [item("french", "French", "2026-08-31")],
+      recoverable: [
+        {
+          goalId: "portfolio",
+          title: "Ship portfolio",
+          date: "2026-09-03",
+          state: "open",
+          requirementKind: "milestone_sequence",
+        },
       ],
-      completions: [{ goalId: "read", completedOn: "2026-09-01" }],
     });
 
-    expect(facts.recover.count).toBe(1);
-    expect(facts.recover.items).toEqual([
-      {
-        goalId: "run",
-        title: "Long run",
-        date: "2026-08-31",
-        state: "open",
-      },
-    ]);
+    expect(facts.recover).toEqual({
+      count: 1,
+      items: [
+        {
+          goalId: "portfolio",
+          title: "Ship portfolio",
+          date: "2026-09-03",
+          state: "open",
+          requirementKind: "milestone_sequence",
+        },
+      ],
+    });
   });
 
   it("caps the recoverable list while keeping the honest count", () => {
@@ -125,12 +142,13 @@ describe("buildDigestFacts", () => {
     });
     const facts = buildDigestFacts({
       period,
-      items: Array.from({ length: 9 }, (_, index) => ({
+      items: [],
+      recoverable: Array.from({ length: 9 }, (_, index) => ({
         goalId: `goal-${index}`,
         title: `Session ${index}`,
-        scheduledDate: "2026-08-14",
+        date: "2026-08-14",
+        state: "open" as const,
       })),
-      completions: [],
     });
 
     expect(facts.recover.count).toBe(9);
@@ -144,8 +162,7 @@ describe("buildDigestFacts", () => {
     });
     const facts = buildDigestFacts({
       period,
-      items: [{ goalId: "run", title: "Long run", scheduledDate: "2026-09-04" }],
-      completions: [],
+      items: [item("run", "Long run", "2026-09-04")],
       goals: [
         { goalId: "run", title: "Running" },
         { goalId: "read", title: "Reading" },
@@ -165,11 +182,10 @@ describe("buildDigestFacts", () => {
     const facts = buildDigestFacts({
       period,
       items: [
-        { goalId: "a", title: "A", scheduledDate: "2026-09-09" },
-        { goalId: "b", title: "B", scheduledDate: "2026-09-09" },
-        { goalId: "c", title: "C", scheduledDate: "2026-09-09" },
+        item("a", "A", "2026-09-09", true),
+        item("b", "B", "2026-09-09"),
+        item("c", "C", "2026-09-09"),
       ],
-      completions: [{ goalId: "a", completedOn: "2026-09-09" }],
     });
 
     expect(facts.ahead.estimatedMinutes).toBe(2 * DIGEST_DEFAULT_SESSION_MINUTES);

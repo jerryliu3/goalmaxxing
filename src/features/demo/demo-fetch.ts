@@ -380,6 +380,20 @@ export async function handleDemoFetch(
     });
   }
 
+  if (pathname === "/api/planner/recovery" && method === "GET") {
+    const today = requireStore().asOfDate;
+    return jsonResponse({
+      snapshot: {
+        today,
+        horizonEnd: today,
+        blackoutRanges: [],
+        goals: [],
+        sessions: [],
+      },
+      correlationId: DEMO_CORRELATION_ID,
+    });
+  }
+
   if (pathname === "/api/planner/save" && method === "POST") {
     const body = await readJsonBody(init);
     const parsedCommands = plannerDraftCommandSchema.array().safeParse(

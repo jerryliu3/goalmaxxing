@@ -37,7 +37,7 @@ export function CheckInRecapPanel({
     setSavingKey(key);
     const result = await runCompletionMutation({
       decision: resolveCompletionDispatch({
-        requirementKind: "deadline_total",
+        requirementKind: item.requirementKind ?? "deadline_total",
         targetedRecurring: false,
         activePlanMembership: false,
         matchingItemState: "none",

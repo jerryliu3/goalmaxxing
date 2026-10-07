@@ -1,8 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/supabase/database.types";
 import { ApiRouteError } from "@/lib/api/route";
 import { digestFactsSchema, digestSuggestionsSchema } from "@/lib/digest/contract";
-import type { DigestFacts, DigestSuggestions } from "@/lib/digest/contract";
+import type { DigestFactItem, DigestFacts, DigestSuggestions } from "@/lib/digest/contract";
 import { buildDigestFacts } from "@/lib/digest/facts";
 import {
   extendDailyRecapToLastCheckIn,
@@ -12,10 +10,14 @@ import {
 } from "@/lib/digest/period";
 import { getDateInTimezone } from "@/lib/dates/timezone";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
+import type { Goal } from "@/lib/goals/types";
+import { findRecoverable } from "@/lib/planner/recovery/model";
+import {
+  loadRecoveryContext,
+  type RecoveryClient,
+} from "@/lib/planner/recovery/snapshot";
 
-const MAX_DIGEST_ROWS = 500;
-
-export type DigestClient = Pick<SupabaseClient<Database>, "from">;
+export type DigestClient = RecoveryClient;
 
 export interface DigestProfile {
   timezone: string;
@@ -102,18 +104,29 @@ async function assembleDigestSnapshot({
     ? getDateInTimezone(new Date(lastAcknowledgedAt), profile.timezone)
     : null;
   const period = extendDailyRecapToLastCheckIn(currentPeriod, lastCheckInDate);
-  const [goals, itemRows, completions] = await Promise.all([
-    loadGoals(supabase, userId),
-    loadPlacedItemRows(supabase, userId, period),
-    loadCompletions(supabase, userId, period),
-  ]);
+  const { goals, sessions, recovery } = await loadRecoveryContext({ supabase, userId, now });
   const titleByGoalId = new Map(goals.map((goal) => [goal.id, goal.title]));
-  const items = itemRows.flatMap((row) => {
-    const title = titleByGoalId.get(row.goal_id);
-    return title
-      ? [{ goalId: row.goal_id, title, scheduledDate: row.scheduled_date }]
+  const items = sessions.flatMap((session) => {
+    const title = titleByGoalId.get(session.goalId);
+    return title && session.date >= period.recapStart && session.date <= period.aheadEnd
+      ? [{
+          goalId: session.goalId,
+          title,
+          scheduledDate: session.date,
+          credited: session.credited,
+          requirementKind: session.requirementKind,
+        }]
       : [];
   });
+  const recoverable = findRecoverable(recovery).map(
+    ({ session, goal }): DigestFactItem => ({
+      goalId: goal.id,
+      title: goal.title,
+      date: session.date,
+      state: "open",
+      requirementKind: goal.kind,
+    })
+  );
   return {
     profile,
     localDate,
@@ -121,7 +134,7 @@ async function assembleDigestSnapshot({
     facts: buildDigestFacts({
       period,
       items,
-      completions,
+      recoverable,
       goals: goalsLiveInWindow(goals, period),
     }),
     record,
@@ -129,29 +142,10 @@ async function assembleDigestSnapshot({
 }
 
 /**
- * One read of the user's goals covers both jobs the facts have: titles for the
- * sessions that were placed, and the live set to check for goals with nothing
- * planned. Archived goals stay in, because a session placed against one still
- * belongs in the recap; they are filtered out of the live set below.
+ * Goals live enough to want work in the window ahead. Archived goals stay in
+ * the recap (a session placed against one still belongs there) but not here.
  */
-async function digestRows<T>(read: (offset: number) => PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[]> {
-  const rows: T[] = [];
-  for (let offset=0;;offset+=MAX_DIGEST_ROWS) {
-    const result = await read(offset);
-    if (result.error) throw new ApiRouteError(500,"digest_data_load_failed","Check-in data could not be loaded.",undefined,result.error);
-    rows.push(...result.data ?? []);
-    if ((result.data?.length ?? 0)<MAX_DIGEST_ROWS) return rows;
-  }
-}
-async function loadGoals(supabase: DigestClient, userId: string) {
-  return digestRows(offset=>supabase.from("goals").select("id,title,start_date,end_date,archived_at").eq("owner_id",userId).eq("is_deleted",false).order("id").range(offset,offset+MAX_DIGEST_ROWS-1));
-}
-
-/** Goals live enough to want work in the window ahead. */
-function goalsLiveInWindow(
-  goals: Awaited<ReturnType<typeof loadGoals>>,
-  period: DigestPeriod
-) {
+function goalsLiveInWindow(goals: Goal[], period: DigestPeriod) {
   return goals
     .filter(
       (goal) =>
@@ -160,14 +154,6 @@ function goalsLiveInWindow(
         (goal.end_date === null || goal.end_date >= period.aheadStart)
     )
     .map((goal) => ({ goalId: goal.id, title: goal.title }));
-}
-
-async function loadPlacedItemRows(supabase: DigestClient,userId: string,period: DigestPeriod) {
-  return digestRows(offset=>supabase.from("planner_items").select("goal_id,scheduled_date").eq("owner_id",userId).gte("scheduled_date",period.recapStart).lte("scheduled_date",period.aheadEnd).order("id").range(offset,offset+MAX_DIGEST_ROWS-1));
-}
-async function loadCompletions(supabase: DigestClient,userId: string,period: DigestPeriod) {
-  const rows=await digestRows(offset=>supabase.from("completions").select("goal_id,completed_on").eq("user_id",userId).gte("completed_on",period.recapStart).lte("completed_on",period.aheadEnd).order("id").range(offset,offset+MAX_DIGEST_ROWS-1));
-  return rows.map(row=>({goalId:row.goal_id,completedOn:row.completed_on}));
 }
 
 async function loadDigestRecord(
