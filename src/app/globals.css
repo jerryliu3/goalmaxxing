@@ -3,8 +3,8 @@
 
 @import "./themes.css";
 
-/* No dark mode yet: `dark:` utilities must not follow the OS onto light themes. */
-@custom-variant dark (&:where(.dark, .dark *));
+/* Dark-appearance themes turn `dark:` utilities on; the OS setting never does. */
+@custom-variant dark (&:where([data-appearance="dark"], [data-appearance="dark"] *));
 
 /*
  * Theme values live in packages/shared/src/brand (generated into themes.css).
