@@ -3,7 +3,6 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SignupForm } from "@/features/auth/signup-form";
 import {
-  JOURNEY_INTRO_FORCE_USER_ID_KEY,
   JOURNEY_INTRO_SEEN_KEY,
   JOURNEY_ONBOARDING_COMPLETED_KEY,
 } from "@/components/intro/journey-intro-overlay";
@@ -83,9 +82,6 @@ describe("SignupForm", () => {
     );
     expect(routerMock.replace).toHaveBeenCalledWith("/calendar");
     expect(routerMock.replace).not.toHaveBeenCalledWith("/");
-    expect(window.localStorage.getItem(JOURNEY_INTRO_FORCE_USER_ID_KEY)).toBe(
-      "user-1"
-    );
   });
 
   it("clears a previous user's onboarding storage even without a user id", async () => {
@@ -109,7 +105,6 @@ describe("SignupForm", () => {
     expect(
       window.localStorage.getItem(`${STARTER_PACKS_SEEN_PREFIX}old-user`)
     ).toBeNull();
-    expect(window.localStorage.getItem(JOURNEY_INTRO_FORCE_USER_ID_KEY)).toBeNull();
     expect(routerMock.replace).toHaveBeenCalledWith("/login");
   });
 });

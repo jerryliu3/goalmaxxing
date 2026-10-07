@@ -49,6 +49,7 @@ interface AppShellProps {
   journeyFlags: JourneyFeatureFlags;
   hrefPrefix?: string;
   showJourneyIntro?: boolean;
+  onboardingPreferencesRequired?: boolean;
   digestEnabled?: boolean;
   coachEnabled?: boolean;
   onNewGoalClick?: () => void;
@@ -67,6 +68,7 @@ export function AppShell({
   journeyFlags,
   hrefPrefix,
   showJourneyIntro = true,
+  onboardingPreferencesRequired = false,
   digestEnabled = false,
   coachEnabled = false,
   onNewGoalClick,
@@ -104,7 +106,14 @@ export function AppShell({
       <XpProfileProvider enabled={xpEnabled}>
         <JourneyProvider flags={journeyFlags}>
           <AltitudeBackdrop journeyFlags={journeyFlags} />
-          {showJourneyIntro ? <JourneyIntroOverlay userId={userId} enabled={bootReady} onOpenChange={onIntroOpenChange} /> : null}
+          {showJourneyIntro ? (
+            <JourneyIntroOverlay
+              userId={userId}
+              enabled={bootReady}
+              preferencesRequired={onboardingPreferencesRequired}
+              onOpenChange={onIntroOpenChange}
+            />
+          ) : null}
           {digestEnabled && (!coachEnabled || hrefPrefix) ? <CheckInOverlay hrefPrefix={hrefPrefix} /> : null}
           <DuoProvider
             key={`${duoAvailability}:${duoState.activePartner?.partnerId ?? "none"}`}

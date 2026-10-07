@@ -104,7 +104,10 @@ export async function saveJourneyIntroPreferences(
   const supabase = createClient();
   const { error } = await supabase
     .from("profiles")
-    .update({ social_activity_visible: value.socialActivityVisible })
+    .update({
+      social_activity_visible: value.socialActivityVisible,
+      onboarding_completed_at: new Date().toISOString(),
+    })
     .eq("id", userId);
   if (error) {
     throw new Error(error.message);

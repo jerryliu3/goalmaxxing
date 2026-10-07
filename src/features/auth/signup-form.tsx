@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  JOURNEY_INTRO_FORCE_USER_ID_KEY,
   JOURNEY_INTRO_SEEN_KEY,
   JOURNEY_ONBOARDING_COMPLETED_KEY,
 } from "@/components/intro/journey-intro-overlay";
@@ -135,9 +134,6 @@ export function SignupForm() {
     window.localStorage.removeItem(JOURNEY_INTRO_SEEN_KEY);
     clearAllTabOnboardingProgress();
     clearAllStarterPacksSeen();
-    if (data.user?.id) {
-      window.localStorage.setItem(JOURNEY_INTRO_FORCE_USER_ID_KEY, data.user.id);
-    }
 
     if (data.session) {
       toast.success("Account created.");

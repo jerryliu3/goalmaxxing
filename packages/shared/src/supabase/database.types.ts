@@ -2606,6 +2606,7 @@ export type Database = {
           display_name: string | null
           id: string
           notification_preferences: Json
+          onboarding_completed_at: string | null
           planner_primary_tab: string
           rest_weekdays: number[]
           social_activity_visible: boolean
@@ -2623,6 +2624,7 @@ export type Database = {
           display_name?: string | null
           id: string
           notification_preferences?: Json
+          onboarding_completed_at?: string | null
           planner_primary_tab?: string
           rest_weekdays?: number[]
           social_activity_visible?: boolean
@@ -2640,6 +2642,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           notification_preferences?: Json
+          onboarding_completed_at?: string | null
           planner_primary_tab?: string
           rest_weekdays?: number[]
           social_activity_visible?: boolean
