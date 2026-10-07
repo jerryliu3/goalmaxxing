@@ -108,8 +108,8 @@ export function renderThemeCss(themes: readonly ThemeDefinition[] = THEMES): str
 }
 
 /**
- * Study skins, injected by the root layout only while STUDY_THEMES_ENABLED is
- * on: their faces (loaded from Google Fonts) and their theme blocks. The
+ * Study skins' theme blocks and font variables, injected by the provider.
+ * Only the selected skin's faces are loaded from Google Fonts. The
  * `:root[...]` selector outranks the default theme's `:root` wherever the
  * injected sheet lands in the cascade.
  */

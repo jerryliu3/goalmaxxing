@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { DEFAULT_THEME_ID, getTheme, type Theme, type ThemeId } from "@cadence/shared/brand";
+import { StudyThemeAssets } from "./study-theme-assets";
 import {
   applyDocumentUiStyle,
   parseUiStyleId,
@@ -19,7 +20,7 @@ import {
 interface UiStyleContextValue {
   styleId: ThemeId;
   style: Theme;
-  /** Themes this user may pick (study skins only while enabled). */
+  /** All registered themes. */
   options: readonly Theme[];
   setStyleId: (next: string) => void;
 }
@@ -28,36 +29,39 @@ const UiStyleContext = createContext<UiStyleContextValue | null>(null);
 
 export function UiStyleProvider({
   initialStyleId = DEFAULT_THEME_ID,
-  includeStudies = false,
   children,
 }: {
   initialStyleId?: ThemeId;
-  includeStudies?: boolean;
   children: ReactNode;
 }) {
   const [styleId, setStyleIdState] = useState<ThemeId>(initialStyleId);
 
   const setStyleId = useCallback(
     (next: string) => {
-      const parsed = parseUiStyleId(next, includeStudies);
+      const parsed = parseUiStyleId(next);
       setStyleIdState(parsed);
       writeUiStyleCookie(parsed);
       applyDocumentUiStyle(getTheme(parsed));
     },
-    [includeStudies]
+    []
   );
 
   const value = useMemo<UiStyleContextValue>(
     () => ({
       styleId,
       style: getTheme(styleId),
-      options: uiStyleOptions(includeStudies),
+      options: uiStyleOptions(),
       setStyleId,
     }),
-    [includeStudies, setStyleId, styleId]
+    [setStyleId, styleId]
   );
 
-  return <UiStyleContext.Provider value={value}>{children}</UiStyleContext.Provider>;
+  return (
+    <UiStyleContext.Provider value={value}>
+      <StudyThemeAssets theme={value.style} />
+      {children}
+    </UiStyleContext.Provider>
+  );
 }
 
 export function useUiStyle(): UiStyleContextValue {

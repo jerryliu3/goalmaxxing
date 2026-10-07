@@ -1,13 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Toaster } from "sonner";
-import { StudyThemeAssets } from "@/components/brand/study-theme-assets";
 import { UiStyleProvider } from "@/components/brand/ui-style-provider";
 import { APP_BOOT_PRELOAD_SCRIPT } from "@/components/layout/app-boot-preload";
 import { appIconHref } from "@/lib/brand/app-icon";
 import { FONT_VARIABLE_CLASSES } from "@/lib/brand/fonts";
 import { requestTheme } from "@/lib/brand/request-theme";
-import { areStudyThemesEnabled } from "@/lib/feature-flags";
 import "./globals.css";
 
 const metadataBase = (() => {
@@ -60,7 +58,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const style = await requestTheme();
-  const studyThemes = areStudyThemesEnabled();
 
   return (
     <html
@@ -78,8 +75,7 @@ export default async function RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: APP_BOOT_PRELOAD_SCRIPT }}
         />
-        {studyThemes ? <StudyThemeAssets /> : null}
-        <UiStyleProvider initialStyleId={style.id} includeStudies={studyThemes}>
+        <UiStyleProvider initialStyleId={style.id}>
           {children}
         </UiStyleProvider>
         <Toaster position="bottom-right" richColors />
