@@ -43,6 +43,7 @@ export function applyDocumentUiStyle(theme: Theme) {
     return;
   }
   document.documentElement.dataset.uiStyle = theme.id;
+  document.documentElement.dataset.appearance = theme.appearance;
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta) {
     themeMeta.setAttribute("content", theme.backgroundColor);

@@ -49,6 +49,14 @@ describe("ui style catalog", () => {
     expect(document.documentElement.dataset.uiStyle).toBe("original");
   });
 
+  it("marks dark-appearance themes so dark: utilities follow the theme", () => {
+    applyDocumentUiStyle(getTheme("undertow"));
+    expect(document.documentElement.dataset.appearance).toBe("dark");
+
+    applyDocumentUiStyle(getTheme("original"));
+    expect(document.documentElement.dataset.appearance).toBe("light");
+  });
+
   it("updates theme-color and status bar when switching styles", () => {
     let themeMeta = document.querySelector('meta[name="theme-color"]');
     if (!themeMeta) {
