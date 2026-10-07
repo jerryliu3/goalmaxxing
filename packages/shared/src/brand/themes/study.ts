@@ -1,5 +1,10 @@
 import type { FontId } from "../fonts";
-import type { ThemeColors, ThemeDefinition, ThemeText } from "../roles";
+import {
+  DEFAULT_GHOST_COLORS,
+  type ThemeColors,
+  type ThemeDefinition,
+  type ThemeText,
+} from "../roles";
 
 /**
  * Study skins are authored as the ten-color palettes from the UX brand
@@ -99,6 +104,7 @@ function studyColors({ palette, appearance }: StudySkin): ThemeColors {
     adjacent: mixHex(ink, page, 0.14),
     adjacentForeground: palette.muted,
     stampLight: mixHex(primary, page, 0.6),
+    ...DEFAULT_GHOST_COLORS,
     heatmap0: mixHex(ink, page, 0.08),
     heatmap1: mixHex(primary, page, 0.28),
     heatmap2: mixHex(primary, page, 0.6),

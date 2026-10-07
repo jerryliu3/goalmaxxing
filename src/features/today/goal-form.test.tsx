@@ -158,7 +158,7 @@ beforeEach(() => {
     error: null,
   });
   profileMaybeSingleMock.mockReset().mockResolvedValue({
-    data: { rest_weekdays: [], blackout_ranges: [] },
+    data: { week_starts_on: 1 },
     error: null,
   });
   fetchProgressContextMock.mockReset().mockResolvedValue({
@@ -220,22 +220,19 @@ describe("goal form definition validation adapter", () => {
     }
   });
 
-  it("allows profile-capacity warnings without blocking submission", () => {
+  it("allows days-left warnings without blocking submission", () => {
     const issues = validateGoalDefinition({
       frequencyType: "fixed_milestones",
-      targetCount: 6,
+      targetCount: 8,
       startDate: "2026-08-01",
       endDate: "2026-08-07",
       asOfDate: "2026-08-01",
-      capacity: {
-        restWeekdays: [0, 6],
-        blackoutRanges: [],
-      },
+      schedule: {},
     });
     const feedback = resolveGoalDefinitionValidationFeedback(issues);
 
     expect(feedback.validationError).toBeNull();
-    expect(feedback.validationWarning).toContain("Only 5 available days");
+    expect(feedback.validationWarning).toContain("Only 7 days left");
   });
 });
 
@@ -324,28 +321,22 @@ describe("GoalForm target validation", () => {
     expect(feedback.validationError).toBeNull();
   });
 
-  it("credits existing completions in remaining lifetime capacity warnings", () => {
+  it("credits existing completions in remaining lifetime days-left warnings", () => {
     const fields = {
       ...createDefaultGoalCreationFields(),
       title: "Daily lifetime goal",
       frequency_type: "recurring" as const,
       recurrence_interval: "daily" as const,
       target_basis: "lifetime" as const,
-      target_count: "6",
+      target_count: "8",
       start_date: "2026-08-01",
       end_date: "2026-08-07",
     };
-    const capacity = {
-      asOfDate: "2026-08-01",
-      capacity: {
-        restWeekdays: [0, 6],
-        blackoutRanges: [] as Array<{ start: string; end: string }>,
-      },
-    };
+    const capacity = { asOfDate: "2026-08-01", schedule: {} };
 
     expect(
       getGoalCreationValidationFeedback(fields, capacity).validationWarning,
-    ).toContain("6 sessions");
+    ).toContain("8 remaining sessions");
     expect(
       getGoalCreationValidationFeedback(fields, {
         ...capacity,
@@ -354,7 +345,7 @@ describe("GoalForm target validation", () => {
     ).toBeNull();
   });
 
-  it("credits current-period completions in remaining period capacity warnings", () => {
+  it("credits current-period completions in remaining period days-left warnings", () => {
     const fields = {
       ...createDefaultGoalCreationFields(),
       title: "Weekly goal",
@@ -365,21 +356,16 @@ describe("GoalForm target validation", () => {
       start_date: "2026-08-03",
       end_date: "2026-08-09",
     };
-    const capacity = {
-      asOfDate: "2026-08-03",
-      capacity: {
-        restWeekdays: [0, 6],
-        blackoutRanges: [] as Array<{ start: string; end: string }>,
-      },
-    };
+    // Wednesday of a Monday-start week: five days left.
+    const capacity = { asOfDate: "2026-08-05", schedule: { weekStartsOn: 1 } };
 
     expect(
       getGoalCreationValidationFeedback(fields, capacity).validationWarning,
-    ).toContain("6 sessions");
+    ).toBe("Only 5 days left this week, so 6 sessions might not all fit.");
     expect(
       getGoalCreationValidationFeedback(fields, {
         ...capacity,
-        currentPeriodCompletedCount: 2,
+        currentPeriodCompletedCount: 1,
       }).validationWarning,
     ).toBeNull();
   });
@@ -759,7 +745,7 @@ describe("GoalForm persistence recovery", () => {
     });
   });
 
-  it("locks everything but the deadline once a goal's end date has passed", async () => {
+  it("locks the face but keeps the deadline and back editable once a goal has ended", async () => {
     goalSingleMock.mockResolvedValueOnce({
       data: { ...activeLinkTarget, id: "goal-ended-1", title: "Ended goal", start_date: "2020-01-01", end_date: "2020-03-31" },
       error: null,
@@ -767,11 +753,11 @@ describe("GoalForm persistence recovery", () => {
     const user = userEvent.setup();
 
     render(<GoalCardEditor goalId="goal-ended-1" onExit={vi.fn()} onDismiss={vi.fn()} />);
-    expect(await screen.findByText(/Change the deadline to edit the rest of this goal/)).toBeInTheDocument();
+    expect(await screen.findByText(/Settings on the back stay editable/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Name\s*Ended goal/i })).toBeNull();
     expect(screen.getByRole("button", { name: "Edit deadline" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Turn over for more" }));
-    expect(screen.getByRole("button", { name: /Your reward/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Your reward/i })).toBeEnabled();
   });
 
   it("dismisses without using complete exit when archiving from the sheet", async () => {

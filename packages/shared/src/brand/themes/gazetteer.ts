@@ -1,5 +1,5 @@
 import { GAZETTEER, GAZETTEER_HEATMAP_SCALE } from "../gazetteer";
-import type { ThemeDefinition } from "../roles";
+import { DEFAULT_GHOST_COLORS, type ThemeDefinition } from "../roles";
 
 /**
  * The surveyor's ledger: warm paper, walnut ink, stamp rust, sage selection,
@@ -64,6 +64,7 @@ export const GAZETTEER_THEME = {
     adjacent: "#d4d4d8",
     adjacentForeground: "oklch(0.36 0.01 286)",
     stampLight: GAZETTEER.stampLight,
+    ...DEFAULT_GHOST_COLORS,
     heatmap0: GAZETTEER_HEATMAP_SCALE[0],
     heatmap1: "color-mix(in srgb, var(--primary) 28%, var(--background))",
     heatmap2: "var(--gm-stamp-light)",
@@ -103,6 +104,7 @@ export const GAZETTEER_THEME = {
     adjacent: "#52525b",
     adjacentForeground: "oklch(0.92 0.003 286)",
     stampLight: "#8a5a40",
+    ...DEFAULT_GHOST_COLORS,
     heatmap0: "#2a2218",
     heatmap1: "color-mix(in srgb, var(--gm-stamp-light) 70%, var(--background))",
     heatmap2: "var(--gm-stamp-light)",

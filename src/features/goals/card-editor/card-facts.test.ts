@@ -7,6 +7,7 @@ import {
   changedCardFacts,
   endDatePassed,
   hasPlaqueTarget,
+  PAST_END_EDITABLE_KEYS,
   summarizeBackFact,
   summarizeFaceFact,
 } from "./card-facts";
@@ -65,5 +66,19 @@ describe("endDatePassed", () => {
     expect(endDatePassed("2026-10-05", "2026-10-06")).toBe(true);
     expect(endDatePassed("2026-10-06", "2026-10-06")).toBe(false);
     expect(endDatePassed("", "2026-10-06")).toBe(false);
+  });
+});
+
+describe("PAST_END_EDITABLE_KEYS", () => {
+  it("keeps the deadline and every back setting editable on an ended goal", () => {
+    expect([...PAST_END_EDITABLE_KEYS].sort()).toEqual(
+      ["color", "description", "end_date", "milestone_names", "plaque_target", "reward_text"].sort(),
+    );
+  });
+
+  it("leaves the card face locked", () => {
+    for (const key of ["title", "target_count", "difficulty", "is_private", "default_local_time"] as const) {
+      expect(PAST_END_EDITABLE_KEYS.has(key)).toBe(false);
+    }
   });
 });

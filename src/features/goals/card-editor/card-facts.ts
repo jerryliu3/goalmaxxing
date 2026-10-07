@@ -168,10 +168,18 @@ const FACT_KEYS: Record<CardFact, (keyof GoalFormState)[]> = {
   color: ["color"],
 };
 
-/** A saved end date before today; until it changes, only the deadline is editable. */
+/** An end date before today; while it stands, the face is a record and only the deadline and back edit. */
 export function endDatePassed(endDate: string, today: string) {
   return Boolean(endDate) && endDate < today;
 }
+
+const BACK_FACTS: readonly BackFact[] = ["description", "reward", "plaque", "milestones", "link", "color"];
+
+/** Form keys an ended goal still edits: its deadline and everything on the back. */
+export const PAST_END_EDITABLE_KEYS: ReadonlySet<keyof GoalFormState> = new Set([
+  ...FACT_KEYS.deadline,
+  ...BACK_FACTS.flatMap((fact) => FACT_KEYS[fact]),
+]);
 
 /** Which facts differ from the loaded goal, so the face and back can mark them. */
 export function changedCardFacts(base: GoalFormState, draft: GoalFormState, linkChanged: boolean): Set<CardFact> {

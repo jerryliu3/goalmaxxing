@@ -26,7 +26,7 @@ import {
 import { isPlannerTaskCreateKind, type GoalCreateKind } from "@/lib/goals/form-options";
 import type { Goal, GoalLink } from "@/lib/goals/types";
 import { resolveGoalTargetBasis } from "@/lib/goals/target-basis";
-import { type GoalCapacityInput } from "@/lib/goals/definition-validation";
+import { type GoalScheduleInput } from "@/lib/goals/definition-validation";
 import { createClient } from "@/lib/supabase/client";
 import { getRpcErrorMessage } from "@/lib/supabase/rpc-error";
 import { useAppRouter } from "@/lib/navigation/use-app-router";
@@ -48,8 +48,7 @@ export function useGoalFormState(goalId?: string) {
   const [linkTargetsReady, setLinkTargetsReady] = useState(false);
   const [linkTargetsError, setLinkTargetsError] = useState<string | null>(null);
   const [linkLoadAttempt, setLinkLoadAttempt] = useState(0);
-  const [goalCapacityInput, setGoalCapacityInput] =
-    useState<GoalCapacityInput | null>(null);
+  const [goalSchedule, setGoalSchedule] = useState<GoalScheduleInput | null>(null);
   const [completedCount, setCompletedCount] = useState(0);
   const [currentPeriodCompletedCount, setCurrentPeriodCompletedCount] = useState(0);
   const [linkTargetSearch, setLinkTargetSearch] = useState("");
@@ -102,7 +101,7 @@ export function useGoalFormState(goalId?: string) {
           fetchProgressContext({ asOfDate: toLocalDateString() }),
           supabase
             .from("profiles")
-            .select("rest_weekdays, blackout_ranges")
+            .select("week_starts_on")
             .eq("id", user.id)
             .maybeSingle(),
         ]);
@@ -129,43 +128,11 @@ export function useGoalFormState(goalId?: string) {
       } else {
         setLinkTargetsReady(true);
       }
-      if (profileResponse.error) {
-        setGoalCapacityInput(null);
-      } else {
-        const restWeekdays = Array.isArray(profileResponse.data?.rest_weekdays)
-          ? profileResponse.data.rest_weekdays.filter(
-              (weekday): weekday is number =>
-                Number.isInteger(weekday) && weekday >= 0 && weekday <= 6
-            )
-          : [];
-        const blackoutRanges = Array.isArray(profileResponse.data?.blackout_ranges)
-          ? profileResponse.data.blackout_ranges.flatMap((range) => {
-              if (
-                typeof range !== "object" ||
-                range === null ||
-                !("start" in range) ||
-                !("end" in range)
-              ) {
-                return [];
-              }
-              const start = (range as { start?: unknown }).start;
-              const end = (range as { end?: unknown }).end;
-              if (
-                typeof start !== "string" ||
-                typeof end !== "string" ||
-                !/^\d{4}-\d{2}-\d{2}$/.test(start) ||
-                !/^\d{4}-\d{2}-\d{2}$/.test(end)
-              ) {
-                return [];
-              }
-              if (start > end) {
-                return [];
-              }
-              return [{ start, end }];
-            })
-          : [];
-        setGoalCapacityInput({ restWeekdays, blackoutRanges });
-      }
+      setGoalSchedule(
+        profileResponse.error
+          ? null
+          : { weekStartsOn: profileResponse.data?.week_starts_on ?? undefined }
+      );
 
       if (goalResponse.data) {
         const goal = goalResponse.data as Goal;
@@ -175,9 +142,9 @@ export function useGoalFormState(goalId?: string) {
           goal.category_key
         );
         setEditingGoal(goal);
-        setCompletedCount(
-          (progress?.facts ?? []).filter((fact) => fact.goal_id === goal.id).length
-        );
+        // The context call carries no fact window, so facts are empty; the
+        // per-goal summary already counts every admissible completion.
+        setCompletedCount(progressByGoal.get(goal.id)?.admissibleCompletionCount ?? 0);
         setCurrentPeriodCompletedCount(
           progressByGoal.get(goal.id)?.currentPeriodCompletionCount ?? 0
         );
@@ -286,7 +253,7 @@ export function useGoalFormState(goalId?: string) {
     }
 
     const feedback = getGoalCreationValidationFeedback(toGoalCreationFields(state), {
-      capacity: goalCapacityInput ?? undefined,
+      schedule: goalSchedule ?? undefined,
       asOfDate: toLocalDateString(),
       completedCount,
       currentPeriodCompletedCount,
@@ -303,7 +270,7 @@ export function useGoalFormState(goalId?: string) {
     }
 
     return feedback;
-  }, [state, goalCapacityInput, completedCount, currentPeriodCompletedCount, isPlannerTask]);
+  }, [state, goalSchedule, completedCount, currentPeriodCompletedCount, isPlannerTask]);
 
   return {
     state,

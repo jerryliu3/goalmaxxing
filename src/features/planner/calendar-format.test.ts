@@ -52,6 +52,9 @@ describe("calendar entry subtitles", () => {
       effectiveScheduledLocalTime: null,
     };
     expect(getEntryGoalFirstTitleWithTime(entry)).toBe(entry.goalTitle);
+    expect(
+      getEntryGoalFirstTitleWithTime({ ...entry, effectiveScheduledLocalTime: "07:30" })
+    ).toBe(`${entry.goalTitle} · 07:30`);
     expect(getEntrySubtitle(entry)).toBe("Milestone: 100");
   });
   it("omits subtitles for recurring completion units", () => {

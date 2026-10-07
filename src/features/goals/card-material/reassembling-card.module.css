@@ -12,17 +12,24 @@
 .ghost, .piece, .pieceFace { position: absolute; inset: 0; pointer-events: none; }
 .ghost { border-radius: var(--card-radius,18px); overflow: hidden; }
 .surface[data-preview="true"][data-preview-phase="whole"] .ghost { opacity: 0; }
+/* An unstarted card is a trace (theme ghostLine) whose name and count stay
+   readable (theme ghostInk); themes tune both in the brand registry. */
 .ghost :global(.tempo-card) {
   height: 100% !important;
   background: transparent !important;
   border: 1px dashed var(--muted-foreground) !important;
   box-shadow: none !important;
-  color: var(--muted-foreground) !important;
+  color: var(--gm-ghost-line) !important;
 }
-.ghost :global(.tempo-card) > * { opacity: .22; }
 .ghost :global(.tempo-card)::before, .ghost :global(.tempo-card)::after { display: none; }
-.ghost :global(.tempo-card-target strong) { background: none !important; color: var(--muted-foreground) !important; -webkit-text-fill-color: var(--muted-foreground) !important; }
-.outlines { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--muted-foreground); stroke-width: .55; opacity: .22; }
+.ghost :global(.tempo-card) > :is(h2, .tempo-card-target),
+.ghost :global(.tempo-card-target) > * {
+  background: none !important;
+  color: var(--gm-ghost-ink) !important;
+  -webkit-text-fill-color: var(--gm-ghost-ink) !important;
+}
+.ghost :global(.tempo-effort-bars i) { background: var(--gm-ghost-line) !important; }
+.outlines { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--gm-ghost-line); stroke-width: .55; }
 .piece { transform-style: preserve-3d; }
 .piece[data-arriving="true"] { animation: land-piece 780ms cubic-bezier(.2,.75,.25,1) both; animation-delay: var(--arrival-delay); }
 .pieceFace {

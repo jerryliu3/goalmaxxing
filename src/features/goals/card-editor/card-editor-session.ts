@@ -26,7 +26,7 @@ export interface CardEditorSession {
     onChange: (goalId: string) => void;
   } | null;
   /**
-   * The goal's end date has passed and is unchanged: only the deadline edits until it moves.
+   * The saved and drafted end dates are both past: the face is locked; the deadline and back stay editable.
    */
   pastEnd: boolean;
   /** Team goals are visible to the team, so privacy is not theirs to change. */

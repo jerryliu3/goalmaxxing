@@ -127,4 +127,28 @@ describe("buildGrowScoreSeries", () => {
       expect(series[i]!.score).toBeGreaterThanOrEqual(series[i - 1]!.score - 1e-6);
     }
   });
+
+  it("charts every day from displayFrom (signup) through asOfDate", () => {
+    const series = buildGrowScoreSeries({
+      completions: [{ goal_id: "g1", completed_on: "2026-03-10" }],
+      goals: [{ id: "g1", difficulty: "medium" }],
+      asOfDate: "2026-10-07",
+      displayFrom: "2026-01-15",
+    });
+
+    expect(series[0]!.date).toBe("2026-01-15");
+    expect(series.at(-1)!.date).toBe("2026-10-07");
+    expect(series).toHaveLength(266);
+  });
+
+  it("clamps a future displayFrom to a single asOf point", () => {
+    const series = buildGrowScoreSeries({
+      completions: [],
+      goals: [],
+      asOfDate: "2026-10-07",
+      displayFrom: "2026-10-09",
+    });
+
+    expect(series.map((point) => point.date)).toEqual(["2026-10-07"]);
+  });
 });

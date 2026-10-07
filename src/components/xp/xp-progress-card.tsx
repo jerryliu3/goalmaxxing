@@ -54,7 +54,7 @@ export function XpMeter({ profile, rewardSequence, wordmark = false }: { profile
   return (
     <>
       <span className="flex shrink-0 items-center gap-2">
-        <span className={wordmark ? "rounded-full bg-primary/12 px-2 py-0.5 type-figure text-xs text-primary" : "type-figure text-xs text-muted-foreground"}>{levelLabel}</span>
+        <span className={wordmark ? "rounded-full bg-primary/12 px-2 py-0.5 type-figure text-xs text-[color-mix(in_srgb,var(--primary)_45%,var(--foreground))]" : "type-figure text-xs text-muted-foreground"}>{levelLabel}</span>
       </span>
       <motion.span key={rewardSequence} initial={false} animate={!still && rewardSequence > 0 ? { scaleY: [1, 1.65, 1] } : { scaleY: 1 }} transition={{ duration: 0.95, times: [0, 0.35, 1] }}
         role="progressbar" aria-label="XP toward next level" aria-valuemin={0} aria-valuemax={100}

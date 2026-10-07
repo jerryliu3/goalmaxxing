@@ -1,5 +1,6 @@
 "use client";
 
+import { format, parseISO } from "date-fns";
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   CartesianGrid,
@@ -122,6 +123,31 @@ function ScoreSparkline({
   );
 }
 
+type ScoreChartDatum = { date: string; fullDate: string; score: number };
+
+/** Days visible at once; older history is a horizontal scroll away. */
+const VISIBLE_DAYS = 28;
+const Y_AXIS_WIDTH = 40;
+const X_AXIS_HEIGHT = 30;
+const CHART_MARGIN = { top: 5, right: 0, bottom: 5, left: 0 };
+
+/** One shared y-scale so the pinned axis lines up with the scrolling plot. */
+function scoreTicks(data: readonly ScoreChartDatum[]): number[] {
+  const scores = data.map((point) => point.score);
+  const min = Math.min(...scores);
+  const max = Math.max(...scores);
+  const rough = Math.max((max - min) / 4, 1);
+  const magnitude = 10 ** Math.floor(Math.log10(rough));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((v) => v >= rough)!;
+  const low = Math.floor(min / step) * step;
+  const high = Math.max(Math.ceil(max / step) * step, low + step);
+  const ticks: number[] = [];
+  for (let tick = low; tick <= high + step / 2; tick += step) {
+    ticks.push(Number(tick.toFixed(2)));
+  }
+  return ticks;
+}
+
 function ScoreLineChart({
   width,
   height,
@@ -129,47 +155,88 @@ function ScoreLineChart({
 }: {
   width: number;
   height: number;
-  data: readonly { date: string; fullDate: string; score: number }[];
+  data: readonly ScoreChartDatum[];
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const ticks = useMemo(() => scoreTicks(data), [data]);
+  const domain: [number, number] = [ticks[0]!, ticks.at(-1)!];
+  const plotViewport = Math.max(width - Y_AXIS_WIDTH, 1);
+  const dayWidth = plotViewport / VISIBLE_DAYS;
+  const plotWidth = Math.max(plotViewport, Math.round(data.length * dayWidth));
+  const rows = [...data];
+
+  // Open on the latest weeks; earlier history scrolls in from the left.
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (el) {
+      el.scrollLeft = el.scrollWidth;
+    }
+  }, [plotWidth, data.length]);
+
   return (
-    <LineChart
-      width={width}
-      height={height}
-      data={[...data]}
-      style={{ width, height }}
-    >
-      <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
-      <XAxis
-        dataKey="date"
-        minTickGap={24}
-        tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
-      />
-      <YAxis
-        domain={["auto", "auto"]}
-        width={40}
-        tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
-      />
-      <Tooltip
-        contentStyle={chartTooltipStyle()}
-        cursor={{ stroke: CHART_COLORS.accent, strokeWidth: 1 }}
-        formatter={(value) => {
-          const resolved = Array.isArray(value) ? value[0] : value;
-          return [Number(resolved ?? 0).toFixed(1), "Goal score"];
-        }}
-        labelFormatter={(label, payload) => {
-          const full = payload?.[0]?.payload?.fullDate;
-          return typeof full === "string" ? full : String(label);
-        }}
-      />
-      <Line
-        type="monotone"
-        dataKey="score"
-        stroke={CHART_COLORS.primary}
-        strokeWidth={2.5}
-        dot={{ r: 2, fill: CHART_COLORS.accent, strokeWidth: 0 }}
-        activeDot={{ r: 4, fill: CHART_COLORS.highlight, strokeWidth: 0 }}
-      />
-    </LineChart>
+    <div className="flex h-full w-full" style={{ height }}>
+      <LineChart
+        width={Y_AXIS_WIDTH}
+        height={height}
+        data={rows}
+        margin={{ ...CHART_MARGIN, right: 0, bottom: CHART_MARGIN.bottom + X_AXIS_HEIGHT }}
+        aria-hidden
+      >
+        <YAxis
+          domain={domain}
+          ticks={ticks}
+          interval={0}
+          width={Y_AXIS_WIDTH}
+          tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
+        />
+        <Line dataKey="score" stroke="none" dot={false} isAnimationActive={false} />
+      </LineChart>
+      <div
+        ref={scrollRef}
+        className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:thin]"
+        data-testid="grow-score-scroll"
+      >
+        <LineChart
+          width={plotWidth}
+          height={height}
+          data={rows}
+          margin={CHART_MARGIN}
+          style={{ width: plotWidth, height }}
+        >
+          <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
+          <XAxis
+            dataKey="date"
+            height={X_AXIS_HEIGHT}
+            minTickGap={24}
+            padding={{ left: 16, right: 20 }}
+            tick={{ fill: CHART_COLORS.axis, fontSize: 12 }}
+          />
+          <YAxis hide domain={domain} ticks={ticks} />
+          <Tooltip
+            contentStyle={chartTooltipStyle()}
+            cursor={{ stroke: CHART_COLORS.accent, strokeWidth: 1 }}
+            formatter={(value) => {
+              const resolved = Array.isArray(value) ? value[0] : value;
+              return [Number(resolved ?? 0).toFixed(1), "Goal score"];
+            }}
+            labelFormatter={(label, payload) => {
+              const full = payload?.[0]?.payload?.fullDate;
+              return typeof full === "string" ? full : String(label);
+            }}
+          />
+          <Line
+            type="monotone"
+            dataKey="score"
+            stroke={CHART_COLORS.primary}
+            strokeWidth={2.5}
+            dot={data.length > VISIBLE_DAYS * 3 ? false : { r: 2, fill: CHART_COLORS.accent, strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: CHART_COLORS.highlight, strokeWidth: 0 }}
+            // The draw-in sweep starts off-screen at the oldest day; skip it.
+            isAnimationActive={false}
+          />
+        </LineChart>
+      </div>
+    </div>
   );
 }
 
@@ -225,6 +292,7 @@ export function GrowScoreTrendChart({
   }, []);
 
   const latest = series.at(-1);
+  const since = series[0] ? format(parseISO(series[0].date), "MMM d, yyyy") : "";
 
   if (series.length === 0) {
     return null;
@@ -244,7 +312,7 @@ export function GrowScoreTrendChart({
             <TooltipIcon content={GROW_SCORE_CHART_HELP} label={`${title} definition`} />
           </div>
           <p className="mt-1 font-sans text-sm text-muted-foreground">
-            Last 4 weeks
+            Since {since}
           </p>
         </div>
         {latest ? (
@@ -261,7 +329,7 @@ export function GrowScoreTrendChart({
         ref={plotRef}
         className="mt-4 h-56 w-full min-w-0"
         role="img"
-        aria-label="Goal score over the last 4 weeks"
+        aria-label={`Goal score since ${since}`}
       >
         {plotSize ? (
           <ScoreLineChart width={plotSize.width} height={plotSize.height} data={chartData} />

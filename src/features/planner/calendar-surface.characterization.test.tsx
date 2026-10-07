@@ -322,7 +322,7 @@ describe("CalendarSurface characterization", () => {
   });
 
   it.each(["month", "week"] as const)(
-    "keeps time prefix while using compact milestone labels in %s cells",
+    "keeps the time after compact milestone labels in %s cells",
     async (viewMode) => {
       postJsonMock.mockResolvedValue(
         buildContext([
@@ -352,12 +352,12 @@ describe("CalendarSurface characterization", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getAllByText("07:30 Tempo run 4x800").length).toBeGreaterThan(0);
+        expect(screen.getAllByText("Tempo run 4x800 · 07:30").length).toBeGreaterThan(0);
       });
       if (viewMode === "month") {
-        expect(screen.queryByText("07:30 Goal B")).not.toBeInTheDocument();
+        expect(screen.queryByText("Goal B · 07:30")).not.toBeInTheDocument();
       } else {
-        expect(screen.getByText("07:30 Goal B")).toBeInTheDocument();
+        expect(screen.getByText("Goal B · 07:30")).toBeInTheDocument();
       }
     }
   );
@@ -1213,7 +1213,7 @@ describe("CalendarSurface characterization", () => {
 
     await waitFor(() => {
       expect(dayPanel.textContent ?? "").toContain("Tempo run 4x800");
-      expect(dayPanel.textContent ?? "").not.toContain("07:30 Goal B");
+      expect(dayPanel.textContent ?? "").not.toContain("Goal B · 07:30");
     });
     expect(document.querySelector("[data-rolling-week-grid='cells']")).toBeNull();
     expect(dayPanel).toHaveStyle({ viewTransitionName: "plan-day-2026-08-31" });
@@ -1292,13 +1292,13 @@ describe("CalendarSurface characterization", () => {
       throw new Error("Expected preview popover element.");
     }
 
-    expect(within(previewPopover).getByText("07:30 Goal B")).toBeInTheDocument();
+    expect(within(previewPopover).getByText("Goal B · 07:30")).toBeInTheDocument();
     expect(
-      within(previewPopover).queryByText("07:30 Milestone 2")
+      within(previewPopover).queryByText("Milestone 2 · 07:30")
     ).not.toBeInTheDocument();
     expect(within(previewPopover).queryByText("Milestone: Milestone 2")).not.toBeInTheDocument();
 
-    fireEvent.click(within(previewPopover).getByText("07:30 Goal B"));
+    fireEvent.click(within(previewPopover).getByText("Goal B · 07:30"));
     const editor = await screen.findByRole("region", {
       name: "Edit planned session",
     });
