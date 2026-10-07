@@ -65,6 +65,10 @@ vi.mock("@/features/settings/planner-preferences-settings", () => ({
   PlannerPreferencesSettings: () => <div>Preferences body</div>,
 }));
 
+vi.mock("@/features/auth/password-update-form", () => ({
+  PasswordUpdateForm: ({ requireCurrentPassword }: { requireCurrentPassword?: boolean }) => <div>{requireCurrentPassword ? "Change password body" : "Reset password body"}</div>,
+}));
+
 vi.mock("@/features/settings/appearance-settings", () => ({
   AppearanceSettings: () => <div>Appearance body</div>,
 }));
@@ -103,6 +107,12 @@ describe("SettingsTab", () => {
     cleanup();
     mockSearch = "";
     window.matchMedia = originalMatchMedia;
+  });
+
+  it("opens the change-password form from Account", () => {
+    mockSearch = "tab=password";
+    render(<SettingsTab />);
+    expect(screen.getByText("Change password body")).toBeTruthy();
   });
 
   it("writes an opened settings panel into the tab query", async () => {

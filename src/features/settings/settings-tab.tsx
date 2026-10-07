@@ -18,6 +18,7 @@ import { useReportAppSurfaceReady } from "@/components/layout/app-boot-ready";
 import { LoadingCard } from "@/components/ui/loading-card";
 import { DigestSettings } from "@/features/digest/digest-settings";
 import { OnboardingGuidesSettings } from "@/features/onboarding/onboarding-guides-settings";
+import { PasswordUpdateForm } from "@/features/auth/password-update-form";
 import { AppearanceSettings } from "@/features/settings/appearance-settings";
 import { ExternalAppConnections } from "@/features/settings/external-app-connections";
 import { IntegrationsSettings } from "@/features/settings/integrations-settings";
@@ -311,6 +312,10 @@ function SettingsSectionEditor({
         </div>
       </div>
     );
+  }
+
+  if (settingsSection === "password") {
+    return <PasswordUpdateForm requireCurrentPassword />;
   }
 
   if (settingsSection === "notifications") {

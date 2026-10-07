@@ -13,6 +13,7 @@ describe("resolveSettingsSection", () => {
     expect(resolveSettingsSection("onboarding")).toBe("onboarding");
     expect(resolveSettingsSection("digest")).toBe("digest");
     expect(resolveSettingsSection("appearance")).toBe("appearance");
+    expect(resolveSettingsSection("password")).toBe("password");
     expect(resolveSettingsSection("report-issue")).toBe("report-issue");
   });
 
@@ -35,6 +36,7 @@ describe("resolveSettingsSection", () => {
       "notifications",
       "integrations",
       "appearance",
+      "password",
       "report-issue",
     ]);
     expect(getSettingsSectionCopy("appearance")).toEqual({
