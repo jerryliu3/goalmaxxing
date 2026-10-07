@@ -67,7 +67,7 @@ describe("useIdleAppPrefetch", () => {
     mocks.delayedTasks = [];
   });
 
-  it("prefetches tab routes immediately and warms Achievements after Agenda is ready", async () => {
+  it("prefetches tab routes immediately and warms Growth after Agenda is ready", async () => {
     renderHook(() =>
       useIdleAppPrefetch({
         userId: "user-1",
@@ -78,7 +78,7 @@ describe("useIdleAppPrefetch", () => {
     expect(mocks.idleTasks).toHaveLength(0);
     expect(mocks.delayedTasks).toHaveLength(1);
 
-    expect(mocks.prefetch).toHaveBeenCalledWith("/achievements");
+    expect(mocks.prefetch).toHaveBeenCalledWith("/growth");
     expect(mocks.prefetch).toHaveBeenCalledWith("/goals");
     expect(mocks.prefetch).toHaveBeenCalledWith("/social");
     expect(mocks.warmAppTabData).toHaveBeenCalledWith({

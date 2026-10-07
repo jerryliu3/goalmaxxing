@@ -33,7 +33,7 @@ export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]>
   ],
   "insights.main": [
     {
-      title: "Medals",
+      title: "Achievements",
       description: "Look back on the awards you have earned through your progress.",
       target: "insights.achievements",
       fallbackTargets: ["insights.history"],

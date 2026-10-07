@@ -163,7 +163,7 @@ describe("TabOnboardingOverlay", () => {
       </>
     );
 
-    expect(await screen.findByRole("dialog", { name: "Medals" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Achievements" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(await screen.findByRole("dialog", { name: "Progress tracker" })).toBeInTheDocument();
   });
