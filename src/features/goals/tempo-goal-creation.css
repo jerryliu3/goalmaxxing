@@ -729,25 +729,27 @@
     transparent calc(var(--shine-position) + 16%)
   );
 }
+/* Chromatic letters read as struck metal: a crisp top-lit fill with a hairline
+   edge. Stacked extrusion and blurred shadows turned muddy on the dark face. */
+.tempo-card-surface[data-material="chromatic"] {
+  --text-walls: none;
+  --text-depth: 0px;
+}
 .tempo-card[data-material="chromatic"] .tempo-card-target strong {
-  color: #dce8e9;
+  color: #eef4f6;
   background-image: linear-gradient(
-    125deg,
-    #f5f8f9 10%,
-    color-mix(in srgb, var(--goal-color) 40%, #c2cdd1) 30%,
-    #fff 44%,
-    color-mix(in srgb, var(--goal-color) 22%, #a7b9c0) 65%,
-    #e8f1f3
+    180deg,
+    #fff,
+    #eef4f6 45%,
+    color-mix(in srgb, var(--goal-color) 25%, #c9d6db)
   );
-  background-size: 200% 200%;
-  background-position: var(--metal-x) var(--metal-y);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(.61cqi 1.52cqi .61cqi #0005);
+  filter: drop-shadow(0 .3cqi 0 color-mix(in srgb, var(--goal-color) 40%, #0b1016));
 }
 .tempo-card[data-material="chromatic"] .tempo-card-target > span {
-  text-shadow: .61cqi 1.21cqi .61cqi #0006;
+  color: color-mix(in srgb, #e9f0f2 85%, transparent);
 }
 .tempo-card[data-material="chromatic"] .tempo-effort-bars i {
   background: #edf2f426;
