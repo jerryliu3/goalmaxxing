@@ -164,21 +164,6 @@ export function TempoGoalStack({
         value: draft.linked_target_goal_id,
         onValueChange: (linked_target_goal_id) =>
           update({ type: "patch", value: { linked_target_goal_id } }),
-        open: draft.link_target_open,
-        onOpenChange: (open) => {
-          if (!locked)
-            setDrafts((previous) =>
-              previous.map((item) =>
-                item.id === draft.id
-                  ? {
-                      ...item,
-                      link_target_open: open,
-                      link_target_search: open ? item.link_target_search : "",
-                    }
-                  : item,
-              ),
-            );
-        },
         searchQuery: draft.link_target_search,
         onSearchQueryChange: (value) => {
           if (!locked)

@@ -4,6 +4,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -97,25 +98,12 @@ vi.mock("sonner", () => ({
   },
 }));
 
-vi.mock("@/features/goals/goal-link-target-select", () => ({
-  GoalLinkTargetSelect: ({
-    value,
-    onValueChange,
-    filteredLinkTargets,
-  }: {
-    value: string;
-    onValueChange: (value: string) => void;
-    filteredLinkTargets: Array<{ id: string }>;
-  }) => (
-    <button
-      type="button"
-      aria-label="Select link target"
-      onClick={() => onValueChange(filteredLinkTargets[0]?.id ?? "none")}
-    >
-      {value}
-    </button>
-  ),
-}));
+/** Creation links on the card's back (the reward step turns it over), with the same picker as editing. */
+async function linkToMainGoal(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole("button", { name: /05Reward/ }));
+  await user.click(await screen.findByRole("button", { name: /Also counts toward/ }));
+  await user.click(screen.getByRole("option", { name: "Main goal" }));
+}
 
 const activeLinkTarget: Goal = {
   id: "goal-main-1",
@@ -249,17 +237,14 @@ describe("BulkGoalForm", () => {
       await user.click(screen.getByRole("button", { name: "Previous goal" }));
       await user.click(screen.getByRole("button", { name: /04Schedule/ }));
       await user.click(screen.getByRole("button", { name: /Hard ·/ }));
-      await user.click(await screen.findByText("Advanced settings (optional)"));
       await user.click(
-        screen.getByRole("checkbox", {
-          name: /make this goal private/i,
-        }),
+        within(
+          await screen.findByRole("group", { name: "Who can see this goal" }),
+        ).getByRole("button", { name: "Private" }),
       );
-      await user.click(
-        screen.getByRole("button", { name: "Select link target" }),
-      );
+      await linkToMainGoal(user);
 
-      await user.click(screen.getByRole("button", { name: /05Review/ }));
+      await user.click(screen.getByRole("button", { name: /06Review/ }));
       await user.click(
         screen.getByRole("button", { name: /Create \d+ selected goals?/ }),
       );
@@ -343,7 +328,7 @@ describe("BulkGoalForm", () => {
       user,
     );
 
-    await user.click(screen.getByRole("button", { name: /05Review/ }));
+    await user.click(screen.getByRole("button", { name: /06Review/ }));
     await user.click(
       screen.getByRole("button", { name: /Create \d+ selected goals?/ }),
     );
@@ -396,12 +381,9 @@ describe("BulkGoalForm", () => {
     );
 
     await user.click(screen.getByRole("button", { name: /04Schedule/ }));
-    await user.click(await screen.findByText("Advanced settings (optional)"));
-    await user.click(
-      screen.getByRole("button", { name: "Select link target" }),
-    );
+    await linkToMainGoal(user);
 
-    await user.click(screen.getByRole("button", { name: /05Review/ }));
+    await user.click(screen.getByRole("button", { name: /06Review/ }));
     await user.click(
       screen.getByRole("button", { name: /Create \d+ selected goals?/ }),
     );
@@ -472,7 +454,7 @@ describe("BulkGoalForm", () => {
     expect(
       screen.getByRole("button", { name: "Fix untitled goal" }),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /05Review/ }));
+    await user.click(screen.getByRole("button", { name: /06Review/ }));
     expect(
       screen.getByRole("button", { name: /Create \d+ selected goals?/ }),
     ).toBeDisabled();

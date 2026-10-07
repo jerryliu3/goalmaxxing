@@ -3,7 +3,7 @@
 import { Archive, Award, ChevronDown, Gift, Link2, ListOrdered, Palette, Quote, Trash2, Undo2 } from "lucide-react";
 import { type ComponentType, useRef, useState } from "react";
 import type { CardEditorSession } from "./card-editor-session";
-import { type BackFact, CARD_FACT_LABELS, hasPlaqueTarget, isMilestoneGoal, summarizeBackFact } from "./card-facts";
+import { type BackFact, backFactIsSet, CARD_FACT_LABELS, hasPlaqueTarget, isMilestoneGoal, summarizeBackFact } from "./card-facts";
 import { InlineFact, useDismiss, useEscapeLayer, WIDE_FACTS } from "./inline-fact";
 import "./card-editor.css";
 
@@ -27,8 +27,23 @@ const ICONS: Record<BackFact, ComponentType<{ size?: number; className?: string 
 /**
  * The card's back: the goal's quieter settings as grouped rows that edit in place.
  * Without `lifecycle` (a goal not created yet) there is nothing to archive or delete.
+ * `hidden` leaves out rows another surface already owns (creation sets those in its steps).
  */
-export function CardBack({ session, lifecycle }: { session: CardEditorSession; lifecycle?: CardLifecycle }) {
+export function CardBack({
+  session,
+  lifecycle,
+  hidden = [],
+  heading = "More about this goal",
+  unsetLabel,
+}: {
+  session: CardEditorSession;
+  lifecycle?: CardLifecycle;
+  hidden?: BackFact[];
+  /** The back's overline; creation names it "Advanced settings". */
+  heading?: string;
+  /** Shown instead of a fact's default summary while it is unset; creation says "Optional". */
+  unsetLabel?: string;
+}) {
   const [open, setOpen] = useState<BackFact | null>(null);
   const { fields } = session;
   const groups: { title: string; facts: BackFact[] }[] = [
@@ -36,13 +51,16 @@ export function CardBack({ session, lifecycle }: { session: CardEditorSession; l
     { title: "Progress", facts: [...(hasPlaqueTarget(fields) ? (["plaque"] as const) : []), ...(isMilestoneGoal(fields) ? (["milestones"] as const) : [])] },
     { title: "Connections & look", facts: [...(session.link ? (["link"] as const) : []), "color"] },
   ];
+  const shown = groups
+    .map((group) => ({ ...group, facts: group.facts.filter((fact) => !hidden.includes(fact)) }))
+    .filter((group) => group.facts.length > 0);
   return (
     <div className="card-back">
       <header className="card-back-head">
-        <span className="card-overline">More about this goal</span>
+        <span className="card-overline">{heading}</span>
       </header>
       <div className="card-back-body">
-        {groups.filter((group) => group.facts.length > 0).map((group) => (
+        {shown.map((group) => (
           <section key={group.title} className="card-back-group">
             <h4>{group.title}</h4>
             {group.facts.map((fact) => (
@@ -50,6 +68,7 @@ export function CardBack({ session, lifecycle }: { session: CardEditorSession; l
                 key={fact}
                 fact={fact}
                 session={session}
+                unsetLabel={unsetLabel}
                 open={open === fact}
                 onOpen={() => setOpen(fact)}
                 onDone={() => setOpen((current) => (current === fact ? null : current))}
@@ -68,12 +87,28 @@ export function CardBack({ session, lifecycle }: { session: CardEditorSession; l
 }
 
 /** A row edits where it stands: short facts swap their value for the control; wide ones open under the label. */
-function BackRow({ fact, session, open, onOpen, onDone }: { fact: BackFact; session: CardEditorSession; open: boolean; onOpen: () => void; onDone: () => void }) {
+function BackRow({
+  fact,
+  session,
+  unsetLabel,
+  open,
+  onOpen,
+  onDone,
+}: {
+  fact: BackFact;
+  session: CardEditorSession;
+  unsetLabel?: string;
+  open: boolean;
+  onOpen: () => void;
+  onDone: () => void;
+}) {
   const row = useRef<HTMLDivElement>(null);
   useDismiss(row, open, onDone);
   useEscapeLayer(open, onDone);
   const Icon = ICONS[fact];
   const wide = WIDE_FACTS.includes(fact);
+  const linkTitle = session.link?.selectedTitle ?? null;
+  const showUnset = unsetLabel !== undefined && !backFactIsSet(fact, session.fields, linkTitle);
   // The back is card-sized: once a wide editor has grown, scroll its row up to make room.
   const grown = () => {
     const body = row.current?.closest(".card-back-body");
@@ -103,8 +138,14 @@ function BackRow({ fact, session, open, onOpen, onDone }: { fact: BackFact; sess
         <button type="button" className="card-back-row-head" disabled={session.pastEnd} onClick={onOpen}>
           {head}
           <span className="card-back-value">
-            {fact === "color" && <i className="card-dot" style={{ background: session.fields.color }} />}
-            {summarizeBackFact(fact, session.fields, session.link?.selectedTitle ?? null)}
+            {showUnset ? (
+              unsetLabel
+            ) : (
+              <>
+                {fact === "color" && <i className="card-dot" style={{ background: session.fields.color }} />}
+                {summarizeBackFact(fact, session.fields, linkTitle)}
+              </>
+            )}
           </span>
           <ChevronDown size={14} className="card-back-chevron" />
         </button>

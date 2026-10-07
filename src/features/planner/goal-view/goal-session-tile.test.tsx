@@ -57,7 +57,7 @@ describe("GoalSessionTile", () => {
     expect(title?.parentElement).toHaveAttribute("title", "Run a half marathon");
     const date = screen.getByText("Fri, Oct 9");
     expect(date).not.toHaveClass("opacity-0");
-    expect(date.parentElement).toHaveClass("font-display");
+    expect(date.parentElement).toHaveClass("type-item");
     expect(screen.getByText("2 of 3")).toHaveClass("opacity-0");
     expect(screen.getByText("2 of 3 per week")).not.toHaveClass("opacity-0");
     expect(screen.getByText("07:30")).toBeInTheDocument();

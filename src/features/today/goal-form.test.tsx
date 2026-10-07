@@ -20,6 +20,13 @@ async function chooseRequiredGoalFields(user: ReturnType<typeof userEvent.setup>
   await user.click(screen.getByRole("button", { name: "Daily" }));
 }
 
+/** Creation links on the card's back (the reward step turns it over), with the same picker as editing. */
+async function linkToMainGoal(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole("button", { name: /05Reward/ }));
+  await user.click(await screen.findByRole("button", { name: /Also counts toward/ }));
+  await user.click(screen.getByRole("option", { name: "Main goal" }));
+}
+
 const authGetUserMock = vi.hoisted(() => vi.fn());
 const goalsOrderMock = vi.hoisted(() => vi.fn());
 const goalSingleMock = vi.hoisted(() => vi.fn());
@@ -105,26 +112,6 @@ vi.mock("sonner", () => ({
     error: toastErrorMock,
     warning: vi.fn(),
   },
-}));
-
-vi.mock("@/features/goals/goal-link-target-select", () => ({
-  GoalLinkTargetSelect: ({
-    value,
-    onValueChange,
-    filteredLinkTargets,
-  }: {
-    value: string;
-    onValueChange: (value: string) => void;
-    filteredLinkTargets: Array<{ id: string }>;
-  }) => (
-    <button
-      type="button"
-      aria-label="Select link target"
-      onClick={() => onValueChange(filteredLinkTargets[0]?.id ?? "none")}
-    >
-      {value}
-    </button>
-  ),
 }));
 
 const activeLinkTarget: Goal = {
@@ -420,11 +407,10 @@ describe("GoalForm persistence recovery", () => {
       await user.type(screen.getByLabelText("Name"), "Daily reset");
       await chooseRequiredGoalFields(user);
       await user.click(screen.getByRole("button", { name: /04Schedule/ }));
-      await user.click(await screen.findByText("Advanced settings (optional)"));
-      await user.click(
-        screen.getByRole("button", { name: "Select link target" }),
-      );
-      await user.click(screen.getByRole("button", { name: /05Review/ }));
+      await linkToMainGoal(user);
+      // The reward step's own field sets the reward, saved with the goal.
+      await user.type(await screen.findByRole("textbox", { name: /^Your reward/ }), "New shoes");
+      await user.click(screen.getByRole("button", { name: /06Review/ }));
       await user.click(screen.getByRole("button", { name: "Create goal" }));
 
       await waitFor(() => {
@@ -455,6 +441,7 @@ describe("GoalForm persistence recovery", () => {
       expect(createGoalCalls[0]?.[1]).toMatchObject({
         p_id: stableGoalId,
         p_title: "Daily reset",
+        p_reward_text: "New shoes",
       });
       expect(rpcMock).toHaveBeenNthCalledWith(2, "replace_goal_source_link", {
         p_source_goal_id: stableGoalId,
@@ -488,7 +475,7 @@ describe("GoalForm persistence recovery", () => {
       await screen.findByLabelText("Name");
       await user.type(screen.getByLabelText("Name"), "Stable goal");
       await chooseRequiredGoalFields(user);
-      await user.click(screen.getByRole("button", { name: /05Review/ }));
+      await user.click(screen.getByRole("button", { name: /06Review/ }));
       await user.click(screen.getByRole("button", { name: "Create goal" }));
 
       await waitFor(() => {
@@ -544,7 +531,7 @@ describe("GoalForm persistence recovery", () => {
       await screen.findByLabelText("Name");
       await user.type(screen.getByLabelText("Name"), "Resolved error goal");
       await chooseRequiredGoalFields(user);
-      await user.click(screen.getByRole("button", { name: /05Review/ }));
+      await user.click(screen.getByRole("button", { name: /06Review/ }));
       await user.click(screen.getByRole("button", { name: "Create goal" }));
 
       expect(toastErrorMock).toHaveBeenCalledWith(
@@ -556,7 +543,7 @@ describe("GoalForm persistence recovery", () => {
       ).not.toBeInTheDocument();
       expect(screen.getByRole("button", { name: /02Intention/ })).toBeEnabled();
 
-      await user.click(screen.getByRole("button", { name: /05Review/ }));
+      await user.click(screen.getByRole("button", { name: /06Review/ }));
       await user.click(screen.getByRole("button", { name: "Create goal" }));
 
       await waitFor(() => expect(onExit).toHaveBeenCalledTimes(1));
@@ -636,11 +623,8 @@ describe("GoalForm persistence recovery", () => {
     await user.type(screen.getByLabelText("Name"), "Editable link failure");
       await chooseRequiredGoalFields(user);
     await user.click(screen.getByRole("button", { name: /04Schedule/ }));
-    await user.click(await screen.findByText("Advanced settings (optional)"));
-    await user.click(
-      screen.getByRole("button", { name: "Select link target" }),
-    );
-    await user.click(screen.getByRole("button", { name: /05Review/ }));
+    await linkToMainGoal(user);
+    await user.click(screen.getByRole("button", { name: /06Review/ }));
     await user.click(screen.getByRole("button", { name: "Create goal" }));
 
     await waitFor(() => {
@@ -667,11 +651,8 @@ describe("GoalForm persistence recovery", () => {
     await user.type(screen.getByLabelText("Name"), "Retryable link failure");
       await chooseRequiredGoalFields(user);
     await user.click(screen.getByRole("button", { name: /04Schedule/ }));
-    await user.click(await screen.findByText("Advanced settings (optional)"));
-    await user.click(
-      screen.getByRole("button", { name: "Select link target" }),
-    );
-    await user.click(screen.getByRole("button", { name: /05Review/ }));
+    await linkToMainGoal(user);
+    await user.click(screen.getByRole("button", { name: /06Review/ }));
     await user.click(screen.getByRole("button", { name: "Create goal" }));
 
     await waitFor(() => {
@@ -709,7 +690,7 @@ describe("GoalForm persistence recovery", () => {
     await screen.findByLabelText("Name");
     await user.type(screen.getByLabelText("Name"), "Pending goal");
       await chooseRequiredGoalFields(user);
-    await user.click(screen.getByRole("button", { name: /05Review/ }));
+    await user.click(screen.getByRole("button", { name: /06Review/ }));
     await user.click(screen.getByRole("button", { name: "Create goal" }));
 
     await waitFor(() => {

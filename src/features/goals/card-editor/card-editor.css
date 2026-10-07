@@ -29,10 +29,17 @@
 
 /* Card and card-sized back sharing one flip */
 .card-scene { display: grid; justify-items: center; width: min(100%, 360px); perspective: 1600px; }
-.card-side { grid-area: 1 / 1; width: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; transition: transform .7s cubic-bezier(.3,.7,.2,1); }
+.card-side { grid-area: 1 / 1; width: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; transition: transform .7s cubic-bezier(.65,0,.35,1), visibility 0s .35s; }
 .card-reverse { transform: rotateY(180deg); }
-.card-scene[data-back="true"] .card-front { transform: rotateY(-180deg); }
-.card-scene[data-back="true"] .card-reverse { transform: rotateY(0deg); }
+.card-scene[data-back="true"] > .card-front { transform: rotateY(-180deg); }
+.card-scene[data-back="true"] > .card-reverse { transform: rotateY(0deg); }
+/* Forward: back to the face by turning on in the same direction, a full revolution. */
+.card-scene[data-forward][data-back="false"] > .card-front { transform: rotateY(-360deg); }
+.card-scene[data-forward][data-back="false"] > .card-reverse { transform: rotateY(-180deg); }
+/* Hide the side facing away at the midpoint of the turn (the symmetric ease puts 90° at .35s): a card with 3D edges (the creation
+   preview) would otherwise show them through the other side. */
+/* Child combinators: a scene nested in another (the review legend) keeps its own sides. */
+.card-scene[data-back="true"] > .card-front, .card-scene[data-back="false"] > .card-reverse { visibility: hidden; }
 .card-stage { position: relative; width: 100%; }
 .card-overlay { position: absolute; inset: 0; pointer-events: none; }
 .card-overlay > * { pointer-events: auto; }
@@ -184,3 +191,13 @@ button.card-spot { cursor: pointer; }
 .card-confirm { display: grid; gap: 10px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--destructive) 45%, transparent); border-radius: 14px; background: color-mix(in srgb, var(--destructive) 6%, #fff); font-size: 12.5px; }
 .card-confirm p { margin: 0; }
 .card-confirm div { display: flex; justify-content: flex-end; gap: 8px; }
+/* A small card (the phone creation preview) keeps every row on one line: smaller type, no icons or chevrons. */
+.card-back { container-type: inline-size; }
+@container (max-width: 260px) {
+  .card-back-head { padding: 12px 12px 4px; }
+  .card-back-body { padding: 0 12px 6px; }
+  .card-back-row-head { gap: 6px; min-height: 34px; }
+  .card-back-label { font-size: 12px; }
+  .card-back-value { font-size: 11px; }
+  :is(.card-back-icon, .card-back-chevron) { display: none; }
+}

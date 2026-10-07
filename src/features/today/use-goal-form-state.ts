@@ -53,7 +53,6 @@ export function useGoalFormState(goalId?: string) {
   const [completedCount, setCompletedCount] = useState(0);
   const [currentPeriodCompletedCount, setCurrentPeriodCompletedCount] = useState(0);
   const [linkTargetSearch, setLinkTargetSearch] = useState("");
-  const [linkTargetOpen, setLinkTargetOpen] = useState(false);
   const [createKind, setCreateKind] = useState<GoalCreateKind>("recurring");
 
   const isEditing = Boolean(goalId);
@@ -319,8 +318,6 @@ export function useGoalFormState(goalId?: string) {
     setLinkLoadAttempt,
     linkTargetSearch,
     setLinkTargetSearch,
-    linkTargetOpen,
-    setLinkTargetOpen,
     createKind,
     updateCreateKind,
     isPlannerTask,
