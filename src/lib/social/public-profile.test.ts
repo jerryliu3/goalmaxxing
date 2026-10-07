@@ -49,6 +49,7 @@ describe("buildPublicProfileBundle", () => {
         username: "subject",
         display_name: "Subject User",
         avatar_url: "https://example.com/avatar.png",
+        bio: null,
         social_activity_visible: false,
         week_starts_on: 1,
         created_at: "2026-01-01T00:00:00.000Z",
@@ -93,6 +94,7 @@ describe("buildPublicProfileBundle", () => {
         username: "subject",
         display_name: "Subject User",
         avatar_url: null,
+        bio: null,
         social_activity_visible: false,
         week_starts_on: 1,
         created_at: "2026-01-01T00:00:00.000Z",
@@ -149,6 +151,7 @@ describe("buildPublicProfileBundle", () => {
         username: "subject",
         display_name: "Subject User",
         avatar_url: null,
+        bio: null,
         social_activity_visible: true,
         week_starts_on: 1,
         created_at: "2026-01-01T00:00:00.000Z",
@@ -178,6 +181,7 @@ describe("buildPublicProfileBundle", () => {
         username: "subject",
         display_name: "Subject User",
         avatar_url: null,
+        bio: null,
         social_activity_visible: false,
         week_starts_on: 1,
         created_at: "2026-01-01T00:00:00.000Z",
@@ -193,5 +197,116 @@ describe("buildPublicProfileBundle", () => {
 
     expect(bundle.profile.isPrivate).toBe(true);
     expect(bundle.xp).toBeNull();
+  });
+});
+
+describe("public profile showcase and featured goals", () => {
+  const subjectProfile = {
+    id: "subject-1",
+    username: "subject",
+    display_name: "Subject User",
+    avatar_url: null,
+    bio: "Training for a spring half.",
+    social_activity_visible: true,
+    week_starts_on: 1,
+    created_at: "2026-01-01T00:00:00.000Z",
+    timezone: "America/New_York",
+  };
+  const award = {
+    id: "award-1",
+    unlocked_at: "2026-01-05T00:00:00.000Z",
+    revoked_at: null,
+    xp_rewards: {
+      level: 2,
+      reward_code: "lv2",
+      reward_title: "Level 2",
+      reward_description: "Reached level 2",
+    },
+  };
+  const finishedPublic = makeGoal({
+    id: "finished-public",
+    title: "Read a book",
+    frequency_type: "fixed_milestones",
+    recurrence_interval: null,
+    target_count: 1,
+    milestone_names: ["Book"],
+    start_date: "2026-01-01",
+    end_date: "2026-02-01",
+  });
+  const finishedPrivate = makeGoal({ ...finishedPublic, id: "finished-private", is_private: true });
+  const goals = [
+    makeGoal({ id: "public-featured", title: "Public walk" }),
+    makeGoal({ id: "public-hidden", title: "Quiet walk", featured_on_profile: false }),
+    makeGoal({ id: "private-goal", title: "Private lift", is_private: true }),
+    finishedPublic,
+    finishedPrivate,
+  ];
+  const completions = [
+    makeCompletion({ id: "c-public", goal_id: "finished-public", completed_on: "2026-01-10" }),
+    makeCompletion({ id: "c-private", goal_id: "finished-private", completed_on: "2026-01-10" }),
+  ];
+  const pins = [
+    { kind: "goal" as const, ref: "finished-private" },
+    { kind: "medal" as const, ref: "award-1" },
+    { kind: "goal" as const, ref: "finished-public" },
+  ];
+
+  function build(viewerUserId: string | null) {
+    return buildPublicProfileBundle({
+      viewerUserId,
+      subjectProfile,
+      globalXpProfile: { total_xp: 480 },
+      globalAchievements: [award],
+      awardCatalogCount: 10,
+      goals,
+      completions,
+      pins,
+      selectedYear: 2026,
+    });
+  }
+
+  it("never shows a private goal to a visitor", () => {
+    const bundle = build("viewer-1");
+    const text = JSON.stringify(bundle);
+
+    expect(bundle.currentGoals.map((goal) => goal.id)).toEqual(["public-featured"]);
+    expect(bundle.showcase.map((item) => item.ref)).toEqual(["award-1", "finished-public"]);
+    expect(bundle.showcaseCatalog).toBeNull();
+    expect(text).not.toContain("Private lift");
+    expect(text).not.toContain("finished-private");
+  });
+
+  it("gives the owner every current goal with its flags and the pin catalog", () => {
+    const bundle = build("subject-1");
+
+    expect(bundle.bio).toBe("Training for a spring half.");
+    expect(
+      bundle.currentGoals.map(({ id, isPrivate, featuredOnProfile }) => ({ id, isPrivate, featuredOnProfile }))
+    ).toEqual(
+      expect.arrayContaining([
+        { id: "public-featured", isPrivate: false, featuredOnProfile: true },
+        { id: "public-hidden", isPrivate: false, featuredOnProfile: false },
+        { id: "private-goal", isPrivate: true, featuredOnProfile: true },
+      ])
+    );
+    expect(bundle.showcaseCatalog?.medals.map((medal) => medal.ref)).toEqual(["award-1"]);
+    expect(bundle.showcaseCatalog?.goals.map((goal) => goal.ref)).toEqual(["finished-public"]);
+    expect(bundle.showcaseCatalog?.records.map((record) => record.ref)).toContain("rec-level");
+  });
+
+  it("drops pins whose source no longer exists", () => {
+    const bundle = buildPublicProfileBundle({
+      viewerUserId: "viewer-1",
+      subjectProfile,
+      globalXpProfile: { total_xp: 480 },
+      globalAchievements: [{ ...award, revoked_at: "2026-02-01T00:00:00.000Z" }],
+      awardCatalogCount: 10,
+      goals: [],
+      completions: [],
+      pins: [{ kind: "medal", ref: "award-1" }, { kind: "record", ref: "rec-level" }],
+      selectedYear: 2026,
+    });
+
+    expect(bundle.showcase.map((item) => item.ref)).toEqual(["rec-level"]);
   });
 });

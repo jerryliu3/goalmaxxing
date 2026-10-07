@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DEFAULT_GHOST_COLORS } from "../roles";
 import { THEMES } from "../themes";
 import { studyTheme } from "../themes/study";
 import { ARCHIVED_STUDY_SKINS } from "./archived-skins";
@@ -8,8 +9,9 @@ describe("brand library", () => {
   it("keeps archived skins promotable into complete themes", () => {
     expect(ARCHIVED_STUDY_SKINS).toHaveLength(10);
     for (const skin of ARCHIVED_STUDY_SKINS) {
-      const theme = studyTheme(skin);
-      expect(Object.values(theme.colors).every((value) => /^#[0-9a-f]{6}$/.test(value))).toBe(true);
+      const { ghostInk, ghostLine, ...colors } = studyTheme(skin).colors;
+      expect(Object.values(colors).every((value) => /^#[0-9a-f]{6}$/.test(value))).toBe(true);
+      expect({ ghostInk, ghostLine }).toEqual(DEFAULT_GHOST_COLORS);
     }
   });
 

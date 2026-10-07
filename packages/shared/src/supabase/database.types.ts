@@ -1574,6 +1574,7 @@ export type Database = {
           description: string | null
           difficulty: Database["public"]["Enums"]["goal_difficulty"]
           end_date: string | null
+          featured_on_profile: boolean
           frequency_type: Database["public"]["Enums"]["goal_frequency_type"]
           id: string
           is_deleted: boolean
@@ -1603,6 +1604,7 @@ export type Database = {
           description?: string | null
           difficulty?: Database["public"]["Enums"]["goal_difficulty"]
           end_date?: string | null
+          featured_on_profile?: boolean
           frequency_type: Database["public"]["Enums"]["goal_frequency_type"]
           id?: string
           is_deleted?: boolean
@@ -1632,6 +1634,7 @@ export type Database = {
           description?: string | null
           difficulty?: Database["public"]["Enums"]["goal_difficulty"]
           end_date?: string | null
+          featured_on_profile?: boolean
           frequency_type?: Database["public"]["Enums"]["goal_frequency_type"]
           id?: string
           is_deleted?: boolean
@@ -2625,9 +2628,42 @@ export type Database = {
           },
         ]
       }
+      profile_showcase_pins: {
+        Row: {
+          created_at: string
+          kind: string
+          ref: string
+          slot: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          kind: string
+          ref: string
+          slot: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          kind?: string
+          ref?: string
+          slot?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_showcase_pins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           blackout_ranges: Json
           calendar_feed_token_version: number
           created_at: string
@@ -2646,6 +2682,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           blackout_ranges?: Json
           calendar_feed_token_version?: number
           created_at?: string
@@ -2664,6 +2701,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           blackout_ranges?: Json
           calendar_feed_token_version?: number
           created_at?: string
@@ -3494,13 +3532,6 @@ export type Database = {
           viewer_rank: number
         }[]
       }
-      grow_score_rank: {
-        Args: { p_score: number; p_user_id: string }
-        Returns: {
-          rank: number
-          total: number
-        }[]
-      }
       get_partner_profile_service: {
         Args: { p_owner_id: string }
         Returns: Json
@@ -3645,6 +3676,13 @@ export type Database = {
           partner_username: string
           status: Database["public"]["Enums"]["team_status"]
           team_id: string
+        }[]
+      }
+      grow_score_rank: {
+        Args: { p_score: number; p_user_id: string }
+        Returns: {
+          rank: number
+          total: number
         }[]
       }
       health_local_date_from_offset: {
@@ -3942,6 +3980,15 @@ export type Database = {
           p_target_count?: number
           p_team_id?: string
           p_title: string
+        }
+        Returns: undefined
+      }
+      update_public_profile: {
+        Args: {
+          p_bio: string
+          p_featured_goal_ids: string[]
+          p_hidden_goal_ids: string[]
+          p_pins: Json
         }
         Returns: undefined
       }

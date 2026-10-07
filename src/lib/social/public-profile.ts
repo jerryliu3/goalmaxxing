@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PublicProfileShowcasePin } from "@cadence/shared/social/public-profile";
 import { ApiRouteError } from "@/lib/api/route";
 import type { Completion, Goal } from "@/lib/goals/types";
 import type { Database } from "@/lib/supabase/database.types";
@@ -127,7 +128,32 @@ async function loadAwardCatalogCount(admin: SupabaseClient<Database>) {
 }
 
 const PROFILE_SELECT =
-  "id,username,display_name,avatar_url,social_activity_visible,week_starts_on,created_at,timezone";
+  "id,username,display_name,avatar_url,bio,social_activity_visible,week_starts_on,created_at,timezone";
+
+const SHOWCASE_PIN_KINDS = new Set<string>(["medal", "goal", "record"]);
+
+async function loadShowcasePins(
+  admin: SupabaseClient<Database>,
+  subjectUserId: string
+): Promise<PublicProfileShowcasePin[]> {
+  const response = await admin
+    .from("profile_showcase_pins")
+    .select("kind,ref")
+    .eq("user_id", subjectUserId)
+    .order("slot");
+  if (response.error) {
+    throw new ApiRouteError(
+      500,
+      "public_profile_load_failed",
+      "Public profile data could not be loaded."
+    );
+  }
+  return (response.data ?? []).flatMap((row) =>
+    SHOWCASE_PIN_KINDS.has(row.kind)
+      ? [{ kind: row.kind as PublicProfileShowcasePin["kind"], ref: row.ref }]
+      : []
+  );
+}
 
 async function loadMemberNumber(
   admin: SupabaseClient<Database>,
@@ -163,7 +189,7 @@ async function loadPublicProfileBundleForProfile({
   }
 
   const subjectUserId = subjectProfile.id;
-  const [xpResponse, globalAchievementsResponse, goals, completions, awardCatalogCount, memberNumber] =
+  const [xpResponse, globalAchievementsResponse, goals, completions, awardCatalogCount, memberNumber, pins] =
     await Promise.all([
       admin
         .from("xp_profiles")
@@ -182,6 +208,7 @@ async function loadPublicProfileBundleForProfile({
       loadCompletionsForSubject({ admin, subjectUserId }),
       loadAwardCatalogCount(admin),
       loadMemberNumber(admin, subjectProfile.created_at),
+      loadShowcasePins(admin, subjectUserId),
     ]);
 
   if (xpResponse.error || globalAchievementsResponse.error) {
@@ -200,6 +227,7 @@ async function loadPublicProfileBundleForProfile({
     awardCatalogCount,
     goals,
     completions,
+    pins,
     selectedYear,
     memberNumber,
   });

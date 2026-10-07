@@ -77,6 +77,57 @@ export interface PublicProfileCurrentGoal {
   defaultLocalTime: string | null;
   createdAt: string;
   progress: ProgressContextSummary;
+  /** Only the owner ever receives private or unfeatured goals. */
+  isPrivate: boolean;
+  featuredOnProfile: boolean;
+}
+
+export const PUBLIC_PROFILE_BIO_LIMIT = 140;
+export const PUBLIC_PROFILE_PIN_LIMIT = 3;
+
+export type PublicProfileShowcaseKind = "medal" | "goal" | "record";
+
+export interface PublicProfileShowcasePin {
+  kind: PublicProfileShowcaseKind;
+  ref: string;
+}
+
+export interface PublicProfileShowcaseMedal {
+  kind: "medal";
+  ref: string;
+  level: number;
+  title: string | null;
+  unlockedAt: string;
+}
+
+export interface PublicProfileShowcaseGoal {
+  kind: "goal";
+  ref: string;
+  title: string;
+  rewardText: string | null;
+  achievedOn: string | null;
+  material: "glass" | "alloy" | "chromatic";
+  color: string;
+}
+
+export interface PublicProfileShowcaseRecord {
+  kind: "record";
+  ref: string;
+  label: string;
+  value: string;
+  hint: string;
+}
+
+export type PublicProfileShowcaseItem =
+  | PublicProfileShowcaseMedal
+  | PublicProfileShowcaseGoal
+  | PublicProfileShowcaseRecord;
+
+/** Everything the owner may pin. Never sent to visitors. */
+export interface PublicProfileShowcaseCatalog {
+  medals: PublicProfileShowcaseMedal[];
+  goals: PublicProfileShowcaseGoal[];
+  records: PublicProfileShowcaseRecord[];
 }
 
 export interface PublicProfileBundle {
@@ -91,4 +142,8 @@ export interface PublicProfileBundle {
   /** "Top N%" of real accounts by current Goal score; null when private or unranked. */
   growTopPercent: number | null;
   currentGoals: PublicProfileCurrentGoal[];
+  bio: string | null;
+  /** Resolved pins in slot order; pins whose source is gone are dropped. */
+  showcase: PublicProfileShowcaseItem[];
+  showcaseCatalog: PublicProfileShowcaseCatalog | null;
 }
