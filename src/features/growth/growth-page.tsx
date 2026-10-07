@@ -22,7 +22,7 @@ import { ProfileMedalShelf } from "@/features/achievements/profile-medal-shelf";
 import { GrowthDetailedStats } from "./growth-detailed-stats";
 
 function GrowthLane({ userId, readOnly, anchors }: {
-  userId: string;
+  userId?: string;
   readOnly: boolean;
   anchors: boolean;
 }) {
@@ -34,7 +34,7 @@ function GrowthLane({ userId, readOnly, anchors }: {
     selectedYear: String(year),
     failClosed: readOnly,
   });
-  const { bundle, loading: presenceLoading, error: presenceError, reload: reloadPresence } = useOwnProfilePresence(userId, null);
+  const { bundle, loading: presenceLoading, error: presenceError, reload: reloadPresence } = useOwnProfilePresence(userId ?? null, null);
   const awards = useAchievementsShowcase({ enabled: !readOnly });
   useReportAppSurfaceReady(!loading && !presenceLoading);
 
