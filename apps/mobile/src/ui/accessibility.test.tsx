@@ -2,6 +2,13 @@ import React from "react";
 import { act, create, type ReactTestInstance } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("expo-router", () => ({ router: { push: vi.fn() } }));
+vi.mock("@tanstack/react-query", () => ({ useQuery: () => ({ data: null }) }));
+vi.mock("../lib/session", () => ({ useSession: () => ({ userId: null }) }));
+vi.mock("../features/social/mobile-profile-query", () => ({ buildMobileProfileQueryOptions: () => ({}) }));
+vi.mock("../features/journey/useJourneyPresentation.native", () => ({ useJourneyPresentationPreference: vi.fn() }));
+vi.mock("../features/coach/CoachHeader", () => ({ CoachHeader: () => null, NativeCoachCheckInInvitation: () => null }));
+
 vi.mock("react-native", () => ({
   ActivityIndicator: (props: Record<string, unknown>) =>
     React.createElement("ActivityIndicator", props),
