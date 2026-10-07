@@ -223,16 +223,12 @@ describe("InsightsTab goal ledger", () => {
       perGoalViewMode: "month" as const,
       onPerGoalViewModeChange: () => {},
     };
-    const { rerender } = render(<InsightsTab sharedPeriod={period} />);
+    render(<InsightsTab sharedPeriod={period} />);
 
     expect(screen.getByTestId("progress-section-history")).toBeInTheDocument();
     expect(screen.getByTestId("progress-ledger-layout")).toBeInTheDocument();
     expect(screen.queryByTestId("progress-section-past-goals")).toBeNull();
 
-    rerender(<InsightsTab sharedPeriod={period} progressView="past" />);
-
-    expect(screen.getByTestId("progress-section-past-goals")).toBeInTheDocument();
-    expect(screen.queryByTestId("progress-ledger-layout")).toBeNull();
   });
 
   it("reports its sections and drops anchors on a secondary lane", () => {

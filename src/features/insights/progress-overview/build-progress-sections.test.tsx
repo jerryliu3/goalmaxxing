@@ -6,7 +6,6 @@ describe("buildProgressSections", () => {
     const sections = buildProgressSections({
       weekRhythm: { rows: [], loading: false, error: null },
       history: <p>Tracker</p>,
-      pastSections: [],
     });
 
     expect(sections.find((section) => section.id === "history")?.framed).toBe(true);

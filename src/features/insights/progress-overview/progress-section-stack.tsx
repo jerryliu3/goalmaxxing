@@ -6,7 +6,6 @@ import {
   PROGRESS_SECTIONS,
   progressSectionElementId,
   type ProgressSectionId,
-  type ProgressView,
 } from "@/features/insights/progress-overview/progress-view-model";
 
 export interface ProgressOverviewSectionContent {
@@ -21,18 +20,16 @@ export interface ProgressOverviewSectionContent {
 }
 
 /**
- * One column of Progress sections for the active view. Duo renders one stack
+ * One column of Progress sections. Duo renders one stack
  * per lane, so only the anchor lane owns the element ids the side index and
  * the onboarding tour point at.
  */
 export function ProgressSectionStack({
   sections,
-  view,
   anchored = true,
   onSectionsChange,
 }: {
   sections: readonly ProgressOverviewSectionContent[];
-  view: ProgressView | "all";
   /** False for secondary duo lanes, which must not duplicate element ids. */
   anchored?: boolean;
   /** Reports the sections this stack can show, for the shared side index. */
@@ -49,13 +46,10 @@ export function ProgressSectionStack({
   const visibleSections = useMemo(
     () =>
       PROGRESS_SECTIONS.flatMap((definition) => {
-        if (view !== "all" && definition.view !== view) {
-          return [];
-        }
         const content = sections.find((section) => section.id === definition.id);
         return content ? [{ definition, content }] : [];
       }),
-    [sections, view]
+    [sections]
   );
 
   return (

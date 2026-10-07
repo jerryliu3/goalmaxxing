@@ -10,17 +10,14 @@ export interface ProgressWeekRhythmState {
 }
 
 /**
- * Assemble the current-view sections. Past-view sections are appended by the
- * caller so each group keeps its own data ownership.
+ * Assemble the tracker and week rhythm. Medals and past goals have their own homes.
  */
 export function buildProgressSections({
   weekRhythm,
   history,
-  pastSections,
 }: {
   weekRhythm: ProgressWeekRhythmState;
   history: ReactNode;
-  pastSections: readonly ProgressOverviewSectionContent[];
 }): ProgressOverviewSectionContent[] {
   const sections: ProgressOverviewSectionContent[] = [
     // The tracker is a working region, so it sits on a panel like the day checklist.
@@ -39,8 +36,6 @@ export function buildProgressSections({
       ),
     });
   }
-
-  sections.push(...pastSections);
 
   return sections;
 }
