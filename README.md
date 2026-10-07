@@ -157,6 +157,13 @@ creates the hourly `dispatch-push-notifications-hourly` job. If the Vault secret
 the job safely performs no HTTP request. Job runs and HTTP responses can be inspected in
 **Supabase Dashboard → Integrations → Cron** and the `net._http_response` table.
 
+The Goal score percentile ("Top N%") ranks against a daily snapshot refreshed by the
+`refresh-grow-score-standings-daily` job (08:15 UTC). It reuses `push_cron_secret` and needs one
+more Vault secret:
+
+- `grow_score_standings_url`: the full deployed endpoint, such as
+  `https://your-app.vercel.app/api/social/grow-score/standings`
+
 Each user gets an enabled 9:00 PM reminder in their device's IANA timezone when notification
 settings are initialized. It can be disabled, and users can create additional daily reminders.
 Expired browser subscriptions are removed automatically.

@@ -75,6 +75,7 @@ function publicBundle(overrides: Partial<PublicProfileBundle> = {}): PublicProfi
     },
     yearHeatmap: [{ date: "2026-01-02", count: 2 }],
     growSeries: [{ date: "2026-09-01", score: 18, pace: 16, rawCredits: 2 }],
+    growTopPercent: 12,
     currentGoals: [],
     ...overrides,
   };
@@ -89,6 +90,7 @@ describe("PublicProfileContent page", () => {
     expect(screen.getByText("Membership card")).toBeInTheDocument();
     expect(screen.queryByText("@jerry")).toBeNull();
     expect(screen.getByRole("heading", { name: "Goal score" })).toBeInTheDocument();
+    expect(screen.getByText("Top 12%")).toBeInTheDocument();
     expect(screen.getByText("Overall stats")).toBeInTheDocument();
     expect(screen.getByText("2026 activity")).toBeInTheDocument();
     expect(screen.queryByText("XP progress")).toBeNull();

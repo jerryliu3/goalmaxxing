@@ -67,6 +67,7 @@ describe("PublicProfileSheet", () => {
       overallStats: null,
       yearHeatmap: [],
       growSeries: [],
+      growTopPercent: null,
     });
 
     render(
@@ -120,6 +121,7 @@ describe("PublicProfileSheet", () => {
       },
       yearHeatmap: [{ date: "2026-01-01", count: 1 }],
       growSeries: [],
+      growTopPercent: null,
     });
 
     render(
@@ -148,6 +150,7 @@ describe("PublicProfileSheet", () => {
       overallStats: null,
       yearHeatmap: [],
       growSeries: [],
+      growTopPercent: null,
     });
 
     render(

@@ -19,7 +19,7 @@ const bundle: PublicProfileBundle = {
   schemaVersion: "1",
   profile: { subjectUserId: "user-1", username: "alice", displayName: "Alice", avatarUrl: null, isPrivate: false, createdAt: null },
   xp: null, globalAchievements: [], awardCatalogCount: 0,
-  overallStats: null, yearHeatmap: [], growSeries: [], currentGoals: [],
+  overallStats: null, yearHeatmap: [], growSeries: [], growTopPercent: null, currentGoals: [],
 };
 
 describe("own Profile presence preload", () => {

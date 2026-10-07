@@ -68,6 +68,7 @@ export function PublicProfileContent({
           />
           <ProfilePresenceSection
             growSeries={bundle.growSeries}
+            growTopPercent={bundle.growTopPercent}
             heatmap={bundle.yearHeatmap}
             selectedYear={selectedYear}
             overallStats={bundle.overallStats}
