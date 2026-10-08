@@ -15,14 +15,23 @@ function mockOnboardingTargetRects(
   );
 }
 
+const account = vi.hoisted(() => ({
+  progress: { completed_at: "2026-09-01T12:00:00Z" as string | null, tours: { "app.tabs": "complete" } as Record<string, string> },
+  save: vi.fn(),
+}));
+vi.mock("./onboarding-progress-provider", () => ({ useOnboardingProgress: () => account }));
+
 describe("TabOnboardingOverlay", () => {
   beforeEach(() => {
-    window.localStorage.clear();
+    vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
+    account.progress = { completed_at: "2026-09-01T12:00:00Z", tours: { "app.tabs": "complete" } };
+    account.save.mockResolvedValue({});
   });
 
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it("walks through in-page targets without blurring the background", async () => {
@@ -46,22 +55,14 @@ describe("TabOnboardingOverlay", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(await screen.findByRole("dialog", { name: "Try the board" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Got it" }));
+    fireEvent.click(screen.getByRole("button", { name: "Finish tour" }));
 
-    expect(screen.queryByRole("dialog", { name: "Try the board" })).toBeNull();
-    expect(
-      window.localStorage.getItem(
-        "cadence.tab_onboarding_completed.v1:planner.calendar"
-      )
-    ).toBe("done");
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Try the board" })).toBeNull());
+    expect(account.save).toHaveBeenCalledWith({ action: "tour", key: "planner.calendar", status: "complete" });
   });
 
   it("stays hidden after completion unless force-opened", async () => {
-    window.localStorage.setItem(
-      "cadence.tab_onboarding_completed.v1:planner.calendar",
-      "done"
-    );
-
+    account.progress.tours["planner.calendar"] = "complete";
     const { rerender } = render(
       <TabOnboardingOverlay onboardingKey="planner.calendar" />
     );

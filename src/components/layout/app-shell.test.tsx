@@ -48,6 +48,10 @@ vi.mock("@/components/xp/xp-profile-provider", () => ({
   XpProfileProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
+vi.mock("@/features/onboarding/onboarding-progress-provider", () => ({
+  OnboardingProgressProvider: ({ children }: { children: ReactNode }) => children,
+}));
+
 vi.mock("@/components/intro/journey-intro-overlay", () => ({
   JourneyIntroOverlay: () => <div data-testid="journey-intro-overlay" />,
 }));

@@ -3,6 +3,7 @@
 import { CoachProvider } from "@/features/coach/coach-provider";
 import { usePathname } from "next/navigation";
 import { Fragment, type ReactNode, useCallback, useState, ViewTransition } from "react";
+import { OnboardingProgressProvider } from "@/features/onboarding/onboarding-progress-provider";
 import { JourneyIntroOverlay } from "@/components/intro/journey-intro-overlay";
 import { CoachHeader } from "@/features/coach/coach-header";
 import { CoachSurface } from "@/features/coach/coach-surface";
@@ -49,7 +50,6 @@ interface AppShellProps {
   journeyFlags: JourneyFeatureFlags;
   hrefPrefix?: string;
   showJourneyIntro?: boolean;
-  onboardingPreferencesRequired?: boolean;
   digestEnabled?: boolean;
   coachEnabled?: boolean;
   onNewGoalClick?: () => void;
@@ -68,7 +68,6 @@ export function AppShell({
   journeyFlags,
   hrefPrefix,
   showJourneyIntro = true,
-  onboardingPreferencesRequired = false,
   digestEnabled = false,
   coachEnabled = false,
   onNewGoalClick,
@@ -98,6 +97,7 @@ export function AppShell({
 
   return (
     <GoalCreationActionContext.Provider value={onNewGoalClick}>
+    <OnboardingProgressProvider userId={userId} enabled={showJourneyIntro && !hrefPrefix}>
     <PageOnboardingReadyContext.Provider value={bootReady && (!showJourneyIntro || navigationIntroReady)}>
     <CoachProvider userId={userId} enabled={coachEnabled && !hrefPrefix} digestEnabled={digestEnabled}>
     <XpRewardProvider>
@@ -110,7 +110,6 @@ export function AppShell({
             <JourneyIntroOverlay
               userId={userId}
               enabled={bootReady}
-              preferencesRequired={onboardingPreferencesRequired}
               onOpenChange={onIntroOpenChange}
             />
           ) : null}
@@ -193,6 +192,7 @@ export function AppShell({
     </XpRewardProvider>
     </CoachProvider>
     </PageOnboardingReadyContext.Provider>
+    </OnboardingProgressProvider>
     </GoalCreationActionContext.Provider>
   );
 }

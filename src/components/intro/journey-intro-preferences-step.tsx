@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
+import { TempoGoalChoices } from "@/features/goals/tempo-goal-choices";
+import "@/features/goals/tempo-goal-creation.css";
+import { SetupProfileCard } from "./setup-profile-card";
 import {
   Select,
   SelectContent,
@@ -17,21 +19,18 @@ import { buildTimezoneOptions } from "@/lib/dates/timezone-options";
 import { weekStartOptions } from "@/lib/dates/weekday-options";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
-import { createDefaultPlannerPolicy, type PlannerPolicy } from "@/lib/planner/policy";
+import { createDefaultPlannerPolicy, plannerPolicySchema, type PlannerPolicy } from "@/lib/planner/policy";
 import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
 
 interface PlannerPreferencesContextPayload {
   preferences: {
     timezone: string;
-    defaultPolicy: {
-      weekStartsOn: number;
-      restWeekdays: number[];
-    };
+    defaultPolicy: PlannerPolicy;
   } | null;
 }
 
 export interface JourneyIntroPreferencesValue {
+  defaultPolicy: PlannerPolicy;
   timezone: string;
   weekStartsOn: number;
   restWeekdays: number[];
@@ -45,8 +44,10 @@ export function resolveJourneyIntroSocialActivityVisible(
 }
 
 export function createDefaultJourneyIntroPreferences(): JourneyIntroPreferencesValue {
+  const timezone = resolveUserTimezone();
   return {
-    timezone: resolveUserTimezone(),
+    defaultPolicy: createDefaultPlannerPolicy(timezone, new Date().toISOString()),
+    timezone,
     weekStartsOn: 1,
     restWeekdays: [],
     socialActivityVisible: resolveJourneyIntroSocialActivityVisible(undefined),
@@ -62,7 +63,7 @@ export async function loadJourneyIntroPreferences(
   const [plannerContext, profileResult] = await Promise.all([
     getJson<PlannerPreferencesContextPayload>("/api/planner/context", {
       query: { scopeMonth },
-    }).catch(() => null),
+    }),
     supabase
       .from("profiles")
       .select("social_activity_visible")
@@ -70,7 +71,9 @@ export async function loadJourneyIntroPreferences(
       .maybeSingle(),
   ]);
 
+  if (profileResult.error) throw new Error(profileResult.error.message);
   return {
+    defaultPolicy: plannerContext?.preferences?.defaultPolicy ? plannerPolicySchema.parse(plannerContext.preferences.defaultPolicy) : defaults.defaultPolicy,
     timezone: plannerContext?.preferences?.timezone || defaults.timezone,
     weekStartsOn: normalizeWeekStartsOn(
       plannerContext?.preferences?.defaultPolicy.weekStartsOn ?? defaults.weekStartsOn
@@ -89,10 +92,7 @@ export async function saveJourneyIntroPreferences(
   userId: string,
   value: JourneyIntroPreferencesValue
 ) {
-  const defaultPolicy: PlannerPolicy = createDefaultPlannerPolicy(
-    value.timezone,
-    new Date().toISOString()
-  );
+  const defaultPolicy: PlannerPolicy = { ...value.defaultPolicy, timezone: value.timezone, timezoneConfirmedAt: new Date().toISOString() };
   defaultPolicy.weekStartsOn = normalizeWeekStartsOn(value.weekStartsOn);
   defaultPolicy.restWeekdays = [...value.restWeekdays];
   await putJson("/api/planner/context", {
@@ -106,7 +106,6 @@ export async function saveJourneyIntroPreferences(
     .from("profiles")
     .update({
       social_activity_visible: value.socialActivityVisible,
-      onboarding_completed_at: new Date().toISOString(),
     })
     .eq("id", userId);
   if (error) {
@@ -115,123 +114,90 @@ export async function saveJourneyIntroPreferences(
 }
 
 interface JourneyIntroPreferencesStepProps {
+  userId: string;
   value: JourneyIntroPreferencesValue;
   onChange: (next: JourneyIntroPreferencesValue) => void;
   loading?: boolean;
+  saveProfileRef: { current: () => Promise<void> };
+  onProfileReadyChange: (ready: boolean) => void;
 }
 
 export function JourneyIntroPreferencesStep({
+  userId,
   value,
   onChange,
   loading = false,
+  saveProfileRef,
+  onProfileReadyChange,
 }: JourneyIntroPreferencesStepProps) {
   const timezoneOptions = useMemo(
     () => buildTimezoneOptions(value.timezone),
     [value.timezone]
   );
 
+  const profileVisible = value.socialActivityVisible !== false;
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        Set your planner defaults now. You can change these anytime under Profile.
-      </p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block space-y-1">
-          <Label className="text-xs text-muted-foreground">Timezone</Label>
-          <Select
-            value={value.timezone}
-            onValueChange={(nextTimezone) =>
-              onChange({
-                ...value,
-                timezone: nextTimezone,
-              })
-            }
-            disabled={loading}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select timezone" />
-            </SelectTrigger>
-            <SelectContent className="max-h-80">
-              {timezoneOptions.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
+    <fieldset disabled={loading} className="min-w-0 space-y-5 border-0 p-0 disabled:opacity-60">
+      <SetupProfileCard
+        userId={userId}
+        isPrivate={!profileVisible}
+        saveRef={saveProfileRef}
+        onReadyChange={onProfileReadyChange}
+      />
+      <div className="tempo-creation space-y-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
+          <label className="block min-w-0 space-y-2">
+            <Label className="tempo-label">Timezone</Label>
+            <Select
+              value={value.timezone}
+              onValueChange={(nextTimezone) => onChange({ ...value, timezone: nextTimezone })}
+              disabled={loading}
+            >
+              <SelectTrigger className="h-11 w-full rounded-xl px-3 text-base">
+                <SelectValue placeholder="Select timezone" />
+              </SelectTrigger>
+              <SelectContent className="max-h-80">
+                {timezoneOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </label>
+          <div className="space-y-2">
+            <Label className="tempo-label">Profile visibility</Label>
+            <div className="tempo-choices flex-nowrap" role="group" aria-label="Profile visibility" style={{ flexWrap: "nowrap" }}>
+              {([
+                ["Public", true],
+                ["Private", false],
+              ] as const).map(([label, visible]) => (
+                <button
+                  key={label}
+                  type="button"
+                  aria-pressed={profileVisible === visible}
+                  onClick={() => onChange({ ...value, socialActivityVisible: visible })}
+                >
+                  {label}
+                </button>
               ))}
-            </SelectContent>
-          </Select>
-        </label>
-
-        <label className="block space-y-1">
-          <Label className="text-xs text-muted-foreground">First day of week</Label>
-          <Select
-            value={`${value.weekStartsOn}`}
-            onValueChange={(nextValue) =>
-              onChange({
-                ...value,
-                weekStartsOn: normalizeWeekStartsOn(
-                  Number.parseInt(nextValue, 10)
-                ),
-              })
-            }
-            disabled={loading}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {weekStartOptions.map((option) => (
-                <SelectItem key={option.value} value={`${option.value}`}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </label>
-      </div>
-      <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground">Account visibility</Label>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            disabled={loading}
-            aria-pressed={value.socialActivityVisible !== false}
-            className={cn(
-              "rounded-lg border px-3 py-2 text-left text-sm",
-              value.socialActivityVisible !== false
-                ? "border-primary bg-primary/10"
-                : "border-border bg-background"
-            )}
-            onClick={() => onChange({ ...value, socialActivityVisible: true })}
-          >
-            <span className="font-medium">Public</span>
-            <span className="mt-1 block text-xs text-muted-foreground">
-              Participate in Feed, Challenges, and Leaderboards
-            </span>
-          </button>
-          <button
-            type="button"
-            disabled={loading}
-            aria-pressed={value.socialActivityVisible === false}
-            className={cn(
-              "rounded-lg border px-3 py-2 text-left text-sm",
-              value.socialActivityVisible === false
-                ? "border-primary bg-primary/10"
-                : "border-border bg-background"
-            )}
-            onClick={() => onChange({ ...value, socialActivityVisible: false })}
-          >
-            <span className="font-medium">Private</span>
-            <span className="mt-1 block text-xs text-muted-foreground">
-              Your profile and goals are private
-            </span>
-          </button>
+            </div>
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground">
-          A private account can still form a private team. Leaderboards and challenges
-          stay hidden unless switched later.
-        </p>
+        <div className="space-y-2">
+          <Label className="tempo-label">First day of week</Label>
+          <TempoGoalChoices
+            label="First day of week"
+            value={`${value.weekStartsOn}`}
+            options={weekStartOptions.map((option) => ({ value: `${option.value}`, label: option.shortLabel }))}
+            onChange={(nextValue) => onChange({
+              ...value,
+              weekStartsOn: normalizeWeekStartsOn(Number.parseInt(nextValue, 10)),
+            })}
+          />
+        </div>
       </div>
-    </div>
+    </fieldset>
   );
 }
 
@@ -239,36 +205,19 @@ export function useJourneyIntroPreferences(userId: string, active: boolean) {
   const [value, setValue] = useState<JourneyIntroPreferencesValue>(
     createDefaultJourneyIntroPreferences
   );
-  const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
-  const loading = active && loadedUserId !== userId;
-
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [revision, setRevision] = useState(0);
   useEffect(() => {
-    if (!active) {
-      return;
-    }
+    if (!active) return;
     let cancelled = false;
-    void loadJourneyIntroPreferences(userId)
-      .then((next) => {
-        if (!cancelled) {
-          setValue(next);
-        }
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) {
-          toast.error(
-            getApiErrorMessage(error, "Preferences could not be loaded.")
-          );
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoadedUserId(userId);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [active, userId]);
-
-  return { value, setValue, loading };
+    setLoading(true); setError(null);
+    void loadJourneyIntroPreferences(userId).then(next => {
+      if (!cancelled) setValue(next);
+    }).catch(cause => {
+      if (!cancelled) setError(getApiErrorMessage(cause, "Preferences could not be loaded."));
+    }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [active, userId, revision]);
+  return { value, setValue, loading, error, reload: () => setRevision(value => value + 1) };
 }

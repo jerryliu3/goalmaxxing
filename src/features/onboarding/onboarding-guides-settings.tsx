@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { requestJourneyIntroOpen } from "@/components/intro/journey-intro-overlay";
+import { requestJourneyIntroOpen, requestTabTourOpen } from "@/components/intro/journey-intro-overlay";
 import { TAB_ONBOARDING_REPLAY_LINKS } from "@/features/onboarding/tab-onboarding";
 
 function GuideRow({
@@ -28,17 +28,18 @@ export function OnboardingGuidesSettings() {
       <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>General</CardTitle>
-          <CardDescription>Replay the app-wide intro.</CardDescription>
+          <CardDescription>Replay setup and the app-wide tab tour.</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <GuideRow
-            label="App intro"
+            label="Getting started"
             action={
               <Button type="button" variant="outline" size="sm" onClick={requestJourneyIntroOpen}>
                 Replay
               </Button>
             }
           />
+          <GuideRow label="Tab tour" action={<Button type="button" variant="outline" size="sm" onClick={requestTabTourOpen}>Replay</Button>} />
         </CardContent>
       </Card>
 

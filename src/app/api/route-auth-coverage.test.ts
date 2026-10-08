@@ -130,6 +130,10 @@ import {
   GET as notificationPreferencesGet,
   PUT as notificationPreferencesPut,
 } from "@/app/api/notifications/preferences/route";
+import {
+  GET as onboardingGet,
+  POST as onboardingPost,
+} from "@/app/api/onboarding/route";
 import { POST as xpAwardsPost } from "@/app/api/xp/awards/acknowledge/route";
 import { GET as xpProfileGet } from "@/app/api/xp/profile/route";
 import { POST as calendarFeedRotatePost } from "@/app/api/integrations/calendar/feed/rotate/route";
@@ -344,6 +348,8 @@ const auditedRouteCases: AuditedRouteCase[] = [
     "PUT /api/notifications/preferences",
     notificationPreferencesPut
   ),
+  routeCase("GET /api/onboarding", onboardingGet),
+  routeCase("POST /api/onboarding", onboardingPost),
   routeCase("POST /api/xp/awards/acknowledge", xpAwardsPost),
   routeCase("GET /api/xp/profile", xpProfileGet),
   routeCase("GET /api/xp/achievements", xpAchievementsGet),

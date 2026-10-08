@@ -6,12 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  JOURNEY_INTRO_SEEN_KEY,
-  JOURNEY_ONBOARDING_COMPLETED_KEY,
-} from "@/components/intro/journey-intro-overlay";
 import { clearAllStarterPacksSeen } from "@/features/goals/starter-packs";
-import { clearAllTabOnboardingProgress } from "@/features/onboarding/tab-onboarding";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
 import { createClient } from "@/lib/supabase/client";
 import { resolveAuthRedirectBaseUrl } from "@/lib/supabase/public-app-url";
@@ -130,9 +125,6 @@ export function SignupForm() {
       return;
     }
 
-    window.localStorage.removeItem(JOURNEY_ONBOARDING_COMPLETED_KEY);
-    window.localStorage.removeItem(JOURNEY_INTRO_SEEN_KEY);
-    clearAllTabOnboardingProgress();
     clearAllStarterPacksSeen();
 
     if (data.session) {

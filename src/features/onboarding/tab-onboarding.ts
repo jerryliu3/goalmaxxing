@@ -4,10 +4,6 @@ export type TabOnboardingKey =
   | "social.main";
 
 export const TAB_ONBOARDING_QUERY_PARAM = "onboarding";
-export const TAB_ONBOARDING_COMPLETED_PREFIX =
-  "cadence.tab_onboarding_completed.v1:";
-export const TAB_ONBOARDING_CHANGE_EVENT = "cadence.tab_onboarding.change";
-
 export interface TabOnboardingStep {
   title: string;
   description: string;
@@ -60,53 +56,12 @@ export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]>
   ],
 };
 
-function tabOnboardingStorageKey(onboardingKey: string) {
-  return `${TAB_ONBOARDING_COMPLETED_PREFIX}${onboardingKey}`;
-}
-
-export function isTabOnboardingCompleted(onboardingKey: TabOnboardingKey) {
-  if (typeof window === "undefined") {
-    return true;
-  }
-  return window.localStorage.getItem(tabOnboardingStorageKey(onboardingKey)) === "done";
-}
-
-export function markTabOnboardingCompleted(onboardingKey: TabOnboardingKey) {
-  if (typeof window === "undefined") {
-    return;
-  }
-  window.localStorage.setItem(tabOnboardingStorageKey(onboardingKey), "done");
-  window.dispatchEvent(new Event(TAB_ONBOARDING_CHANGE_EVENT));
-}
-
-export function clearAllTabOnboardingProgress() {
-  if (typeof window === "undefined") {
-    return;
-  }
-  const keysToRemove: string[] = [];
-  for (let index = 0; index < window.localStorage.length; index += 1) {
-    const key = window.localStorage.key(index);
-    if (key?.startsWith(TAB_ONBOARDING_COMPLETED_PREFIX)) {
-      keysToRemove.push(key);
-    }
-  }
-  for (const key of keysToRemove) {
-    window.localStorage.removeItem(key);
-  }
-  window.dispatchEvent(new Event(TAB_ONBOARDING_CHANGE_EVENT));
-}
-
-export function subscribeTabOnboarding(onStoreChange: () => void) {
-  if (typeof window === "undefined") {
-    return () => {};
-  }
-  window.addEventListener(TAB_ONBOARDING_CHANGE_EVENT, onStoreChange);
-  window.addEventListener("storage", onStoreChange);
-  return () => {
-    window.removeEventListener(TAB_ONBOARDING_CHANGE_EVENT, onStoreChange);
-    window.removeEventListener("storage", onStoreChange);
-  };
-}
+export const APP_TAB_TOUR_STEPS: TabOnboardingStep[] = [
+  { title: "Agenda", target: "nav.calendar", description: "Do today’s sessions here. Switch to Week, Month, or Goal View when you want to plan." },
+  { title: "Goals", target: "nav.goals", description: "Create and refine your current goals, or open your past goals." },
+  { title: "Growth", target: "nav.growth", description: "Your Goal score, achievements, stats, and progress tracker live here." },
+  { title: "Community", target: "nav.social", description: "Find your team, challenges, and leaderboards. Your avatar opens profile and Settings." },
+];
 
 export interface TabOnboardingReplayLink {
   key: TabOnboardingKey;

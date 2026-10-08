@@ -1,19 +1,18 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  JOURNEY_INTRO_SEEN_KEY,
-  JOURNEY_ONBOARDING_COMPLETED_KEY,
-} from "@/components/intro/journey-intro-overlay";
 import { CheckInOverlay } from "@/features/digest/check-in-overlay";
 import { DIGEST_OPEN_EVENT } from "@/features/digest/digest-api";
 
 const mocks = vi.hoisted(() => ({
+  completedAt: null as string | null,
   getJson: vi.fn(),
   postJson: vi.fn(),
   push: vi.fn(),
   runCompletionMutation: vi.fn(),
 }));
+
+vi.mock("@/features/onboarding/onboarding-progress-provider", () => ({ useOnboardingProgress: () => ({ progress: { completed_at: mocks.completedAt } }) }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mocks.push }),
@@ -90,12 +89,12 @@ const digestPayloadBase = {
 const digestPayload = { ...digestPayloadBase, historicalFacts: digestPayloadBase.facts };
 
 function finishOnboarding() {
-  window.localStorage.setItem(JOURNEY_ONBOARDING_COMPLETED_KEY, "done");
-  window.localStorage.setItem(JOURNEY_INTRO_SEEN_KEY, "2026-01-01");
+  mocks.completedAt = "2026-01-01T12:00:00Z";
 }
 
 describe("CheckInOverlay", () => {
   beforeEach(() => {
+    mocks.completedAt = null;
     window.localStorage.clear();
     window.sessionStorage.clear();
     mocks.getJson.mockResolvedValue(digestPayload);

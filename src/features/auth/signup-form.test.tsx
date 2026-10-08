@@ -2,10 +2,6 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SignupForm } from "@/features/auth/signup-form";
-import {
-  JOURNEY_INTRO_SEEN_KEY,
-  JOURNEY_ONBOARDING_COMPLETED_KEY,
-} from "@/components/intro/journey-intro-overlay";
 import { STARTER_PACKS_SEEN_PREFIX } from "@/features/goals/starter-packs";
 
 const signUpMock = vi.hoisted(() => vi.fn());
@@ -84,9 +80,7 @@ describe("SignupForm", () => {
     expect(routerMock.replace).not.toHaveBeenCalledWith("/");
   });
 
-  it("clears a previous user's onboarding storage even without a user id", async () => {
-    window.localStorage.setItem(JOURNEY_ONBOARDING_COMPLETED_KEY, "done");
-    window.localStorage.setItem(JOURNEY_INTRO_SEEN_KEY, "2026-08-01");
+  it("clears starter pack previews without writing account onboarding state", async () => {
     window.localStorage.setItem(`${STARTER_PACKS_SEEN_PREFIX}old-user`, "done");
     signUpMock.mockResolvedValue({
       data: { user: null, session: null },
@@ -100,8 +94,6 @@ describe("SignupForm", () => {
     await user.type(screen.getByLabelText("Password"), "password123");
     await user.click(screen.getByRole("button", { name: "Create account" }));
 
-    expect(window.localStorage.getItem(JOURNEY_ONBOARDING_COMPLETED_KEY)).toBeNull();
-    expect(window.localStorage.getItem(JOURNEY_INTRO_SEEN_KEY)).toBeNull();
     expect(
       window.localStorage.getItem(`${STARTER_PACKS_SEEN_PREFIX}old-user`)
     ).toBeNull();

@@ -27,7 +27,7 @@ export default async function AuthenticatedLayout({
   const [{ data: profile }, duo] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, username, avatar_url, onboarding_completed_at")
+      .select("display_name, username, avatar_url")
       .eq("id", user.id)
       .maybeSingle(),
     loadDuoContext({ supabase }),
@@ -77,7 +77,6 @@ export default async function AuthenticatedLayout({
       initialDuoScopePreference={initialDuoScopePreference}
       viewerAvatarUrl={viewerAvatarUrl}
       journeyFlags={journeyFlags}
-      onboardingPreferencesRequired={!profile?.onboarding_completed_at}
       xpEnabled={flags.xpEnabled}
       digestEnabled={flags.digestEnabled}
       coachEnabled={flags.coachEnabled}

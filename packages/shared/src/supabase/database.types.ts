@@ -3067,6 +3067,32 @@ export type Database = {
           },
         ]
       }
+      user_onboarding_progress: {
+        Row: {
+          setup_step: number
+          tours: Json
+          user_id: string
+        }
+        Insert: {
+          setup_step?: number
+          tours?: Json
+          user_id: string
+        }
+        Update: {
+          setup_step?: number
+          tours?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_onboarding_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       xp_ledger: {
         Row: {
           completion_id: string | null
@@ -4025,6 +4051,15 @@ export type Database = {
           p_title: string
         }
         Returns: undefined
+      }
+      update_onboarding_progress: {
+        Args: {
+          p_action: string
+          p_guide?: string
+          p_status?: string
+          p_step?: number
+        }
+        Returns: Json
       }
       update_public_profile: {
         Args: {
