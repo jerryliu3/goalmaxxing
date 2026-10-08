@@ -80,6 +80,17 @@ describe("goal library journey", () => {
     expect(mocks.push).toHaveBeenCalledWith(`/goals/${ended.id}`);
   });
 
+  it("files the current year from the profile date", () => {
+    vi.setSystemTime(new Date("2026-01-01T03:00:00Z"));
+    const december = buildGoal({ owner_id: "user-1", title: "December run", start_date: "2025-12-01", end_date: "2025-12-20" });
+    mocks.data.mockReturnValue({ loading: false, loadError: null, reload: vi.fn(), state: {
+      userId: "user-1", goals: [december], asOfDate: "2025-12-31",
+      progress: { summaries: [summary(december.id)] },
+    } });
+    render(<GoalsCollectionPage />);
+    expect(within(document.getElementById("past-goals")!).getByRole("button", { name: "Open December 2025, 1 goal" })).toBeInTheDocument();
+  });
+
   it("shows archived goals in their own section below past goals", () => {
     const ended = buildGoal({ owner_id: "user-1", title: "Run a 10k", end_date: "2026-09-30" });
     const archived = buildGoal({ id: "archived-goal", owner_id: "user-1", title: "Learn the cello", archived_at: "2026-09-15T00:00:00Z", end_date: "2027-01-01" });

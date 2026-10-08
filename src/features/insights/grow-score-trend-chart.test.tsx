@@ -54,6 +54,28 @@ describe("GrowScoreTrendChart", () => {
     expect(await screen.findByRole("tooltip")).toHaveTextContent(GROW_SCORE_CHART_HELP);
   });
 
+  it("labels one day once and draws a flat score on a single gridline", () => {
+    const { rerender } = render(
+      <GrowScoreTrendChart title="Goal score" series={[{ ...base, date: "2026-09-01", score: 18 }]} />
+    );
+    const axis = () => within(screen.getByRole("img").querySelector<HTMLElement>("[data-score-axis]")!);
+    expect(axis().getAllByText("Sep 1")).toHaveLength(1);
+    expect(axis().getByText("18")).toBeInTheDocument();
+    expect(axis().queryByText("19")).toBeNull();
+
+    rerender(
+      <GrowScoreTrendChart
+        title="Goal score"
+        series={[
+          { ...base, date: "2026-09-01", score: 18 },
+          { ...base, date: "2026-09-03", score: 18 },
+        ]}
+      />
+    );
+    expect(axis().getAllByText("18")).toHaveLength(1);
+    expect(axis().queryByText("19")).toBeNull();
+  });
+
   it("picks round score gridlines inside the range", () => {
     expect(scoreTicks(10, 20)).toEqual([10, 15, 20]);
     expect(scoreTicks(0.4, 81.5)).toEqual([20, 40, 60, 80]);

@@ -78,12 +78,15 @@ function ScoreLine({
   const last = points.length - 1;
   const scores = points.map((point) => point.score);
   const min = Math.min(...scores);
-  const scoreSpan = Math.max(...scores) - min || 1;
+  const max = Math.max(...scores);
+  const flat = min === max;
+  const scoreSpan = flat ? 1 : max - min;
   const innerWidth = width - PAD.left - PAD.right;
   const innerHeight = PLOT_HEIGHT - PAD.top - PAD.bottom;
   const axisY = PLOT_HEIGHT - PAD.bottom;
   const xFor = (index: number) => PAD.left + (last > 0 ? (index / last) * innerWidth : innerWidth / 2);
-  const yFor = (score: number) => PAD.top + (1 - (score - min) / scoreSpan) * innerHeight;
+  const yFor = (score: number) =>
+    flat ? PAD.top + innerHeight / 2 : PAD.top + (1 - (score - min) / scoreSpan) * innerHeight;
   const pathFor = (from: number, to: number) =>
     points
       .slice(from, to + 1)
@@ -102,7 +105,7 @@ function ScoreLine({
   const highlight = span ?? (selection ? [0, selection.index] : null);
   const longRange =
     last > 0 && parseISO(points[last]!.date).getTime() - parseISO(points[0]!.date).getTime() > 120 * 86_400_000;
-  const dateTicks = last > 1 ? [0, Math.round(last / 2), last] : [0, last];
+  const dateTicks = [...new Set(last > 1 ? [0, Math.round(last / 2), last] : [0, last])];
 
   return (
     <svg
@@ -132,7 +135,7 @@ function ScoreLine({
       onPointerCancel={() => onSelectionChange(null)}
     >
       <g data-score-axis="" aria-hidden>
-        {scoreTicks(min, min + scoreSpan).map((tick) => (
+        {(flat ? [min] : scoreTicks(min, max)).map((tick) => (
           <g key={tick}>
             <line x1={PAD.left} x2={width - PAD.right} y1={yFor(tick)} y2={yFor(tick)} {...GRID} />
             <text x={width - PAD.right + 6} y={yFor(tick)} dominantBaseline="middle" {...AXIS_TEXT}>
