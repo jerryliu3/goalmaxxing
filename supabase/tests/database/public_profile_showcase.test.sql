@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(15);
+select plan(18);
 
 insert into auth.users (id, email)
 values
@@ -67,6 +67,13 @@ select is(
   (select bio from public.profiles where id = 'b7111111-1111-4111-8111-111111111111'),
   'Running toward a spring half.',
   'bio is trimmed'
+);
+
+select is(
+  (select profile_card_configured from public.profiles
+    where id = 'b7111111-1111-4111-8111-111111111111'),
+  true,
+  'saving the card turns off the default fill'
 );
 
 select results_eq(
@@ -147,6 +154,17 @@ select throws_ok(
     '{}', array['b7500000-0000-4000-8000-000000000003']::uuid[])$$,
   'P0001', 'goal_not_found',
   'another user''s goal cannot be hidden'
+);
+
+select lives_ok(
+  $$select public.update_public_profile('', '[]'::jsonb, '{}', '{}')$$,
+  'clearing the bio is saved as empty'
+);
+
+select is(
+  (select bio from public.profiles where id = 'b7111111-1111-4111-8111-111111111111'),
+  '',
+  'a cleared bio stays empty so the default line does not come back'
 );
 
 select set_config('request.jwt.claim.sub', 'b7222222-2222-4222-8222-222222222222', true);

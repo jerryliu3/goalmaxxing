@@ -1,13 +1,16 @@
 import { eachDayOfInterval, endOfYear, format, parseISO, startOfYear } from "date-fns";
-import type {
-  PublicProfileBundle,
-  PublicProfileCurrentGoal,
-  PublicProfileGlobalAchievement,
-  PublicProfileGrowPoint,
-  PublicProfileOverallStats,
-  PublicProfileShowcaseCatalog,
-  PublicProfileShowcaseItem,
-  PublicProfileShowcasePin,
+import {
+  PUBLIC_PROFILE_DEFAULT_BIO,
+  PUBLIC_PROFILE_PIN_LIMIT,
+  PUBLIC_PROFILE_RECORD_LIMIT,
+  type PublicProfileBundle,
+  type PublicProfileCurrentGoal,
+  type PublicProfileGlobalAchievement,
+  type PublicProfileGrowPoint,
+  type PublicProfileOverallStats,
+  type PublicProfileShowcaseCatalog,
+  type PublicProfileShowcaseItem,
+  type PublicProfileShowcasePin,
 } from "@cadence/shared/social/public-profile";
 import { resolveAchievedOn } from "@/features/achievements/build-showcase";
 import { buildPersonalRecords } from "@/features/achievements/personal-records";
@@ -40,7 +43,10 @@ export type ProfileRow = Pick<
   | "week_starts_on"
   | "created_at"
   | "timezone"
->;
+> & {
+  /** False until the owner saves the card. Absent on older fixtures. */
+  profile_card_configured?: boolean;
+};
 
 type XpProfileRow = Pick<
   Database["public"]["Tables"]["xp_profiles"]["Row"],
@@ -72,6 +78,8 @@ export interface BuildPublicProfileBundleInput {
   pins?: PublicProfileShowcasePin[];
   selectedYear: number;
   memberNumber?: number | null;
+  /** False until the owner saves the card. Omitted means already configured. */
+  cardConfigured?: boolean;
 }
 
 function toDateOnly(value: string | null | undefined) {
@@ -289,6 +297,68 @@ function buildShowcaseCatalog({
   };
 }
 
+const DEFAULT_RECORD_ORDER = ["rec-streak", "rec-week", "rec-level", "rec-goals"];
+
+/** Highest medal and latest finished goal first, then whatever else is earned. */
+function defaultShowcasePins(catalog: PublicProfileShowcaseCatalog): PublicProfileShowcasePin[] {
+  const medals = [...catalog.medals].sort((left, right) => right.level - left.level);
+  const goals = [...catalog.goals].sort((left, right) =>
+    (right.achievedOn ?? "").localeCompare(left.achievedOn ?? "")
+  );
+  const picked: PublicProfileShowcasePin[] = [];
+  const take = (item: { kind: PublicProfileShowcasePin["kind"]; ref: string } | undefined) => {
+    if (item && picked.length < PUBLIC_PROFILE_PIN_LIMIT) {
+      picked.push({ kind: item.kind, ref: item.ref });
+    }
+  };
+  take(medals[0]);
+  take(goals[0]);
+  for (const medal of medals.slice(1)) take(medal);
+  for (const goal of goals.slice(1)) take(goal);
+  return picked;
+}
+
+function defaultRecordPins(catalog: PublicProfileShowcaseCatalog): PublicProfileShowcasePin[] {
+  const preferred = DEFAULT_RECORD_ORDER.flatMap((ref) => {
+    const record = catalog.records.find((item) => item.ref === ref);
+    return record ? [record] : [];
+  });
+  const rest = catalog.records.filter((record) => !DEFAULT_RECORD_ORDER.includes(record.ref));
+  return [...preferred, ...rest]
+    .slice(0, PUBLIC_PROFILE_RECORD_LIMIT)
+    .map((record) => ({ kind: "record" as const, ref: record.ref }));
+}
+
+/**
+ * An unsaved card shows a description, records, and showcase pins so the
+ * sections are visible. A saved card, including one saved empty, is left alone.
+ * Saved pins in a category win over the defaults for that category.
+ */
+function applyCardDefaults({
+  cardConfigured,
+  bio,
+  pins,
+  catalog,
+}: {
+  cardConfigured: boolean;
+  bio: string | null;
+  pins: PublicProfileShowcasePin[];
+  catalog: PublicProfileShowcaseCatalog;
+}): { bio: string | null; pins: PublicProfileShowcasePin[] } {
+  if (cardConfigured) {
+    return { bio, pins };
+  }
+  const savedRecords = pins.filter((pin) => pin.kind === "record");
+  const savedShowcase = pins.filter((pin) => pin.kind !== "record");
+  return {
+    bio: bio?.trim() ? bio : PUBLIC_PROFILE_DEFAULT_BIO,
+    pins: [
+      ...(savedShowcase.length > 0 ? savedShowcase : defaultShowcasePins(catalog)),
+      ...(savedRecords.length > 0 ? savedRecords : defaultRecordPins(catalog)),
+    ],
+  };
+}
+
 function resolveShowcase(
   pins: PublicProfileShowcasePin[],
   catalog: PublicProfileShowcaseCatalog
@@ -437,6 +507,7 @@ export function buildPublicProfileBundle({
   pins = [],
   selectedYear,
   memberNumber = null,
+  cardConfigured = true,
 }: BuildPublicProfileBundleInput): PublicProfileBundle {
   const isOwner = viewerUserId !== null && viewerUserId === subjectProfile.id;
   const isPrivate = isPrivateForViewer(viewerUserId, subjectProfile);
@@ -493,6 +564,12 @@ export function buildPublicProfileBundle({
     level: xp.currentLevel,
     totalXp,
   });
+  const card = applyCardDefaults({
+    cardConfigured,
+    bio: subjectProfile.bio,
+    pins,
+    catalog: showcaseCatalog,
+  });
 
   return {
     schemaVersion: "1",
@@ -513,8 +590,8 @@ export function buildPublicProfileBundle({
       subjectProfile.id,
       isOwner
     ),
-    bio: subjectProfile.bio,
-    showcase: resolveShowcase(pins, showcaseCatalog),
+    bio: card.bio,
+    showcase: resolveShowcase(card.pins, showcaseCatalog),
     showcaseCatalog: isOwner ? showcaseCatalog : null,
   };
 }

@@ -194,7 +194,10 @@ membership card. The card's metric row shows up to three pinned records
 with inline edit; there is no separate About section. The Showcase keeps up
 to three medals or finished goals. `profile_showcase_pins` now holds six
 slots, and `update_public_profile` caps records and showcase pins at three
-each.
+each. Until that save, `profile_card_configured` stays false and the loader
+fills a default description, up to three records, and up to three showcase
+pins (a medal and a finished goal when the owner has them). Clearing the
+bio or the pins and saving keeps the card empty.
 
 ## Open questions
 

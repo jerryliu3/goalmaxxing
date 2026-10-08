@@ -128,7 +128,7 @@ async function loadAwardCatalogCount(admin: SupabaseClient<Database>) {
 }
 
 const PROFILE_SELECT =
-  "id,username,display_name,avatar_url,bio,social_activity_visible,week_starts_on,created_at,timezone";
+  "id,username,display_name,avatar_url,bio,profile_card_configured,social_activity_visible,week_starts_on,created_at,timezone";
 
 const SHOWCASE_PIN_KINDS = new Set<string>(["medal", "goal", "record"]);
 
@@ -230,6 +230,7 @@ async function loadPublicProfileBundleForProfile({
     pins,
     selectedYear,
     memberNumber,
+    cardConfigured: subjectProfile.profile_card_configured !== false,
   });
   return {
     ...bundle,

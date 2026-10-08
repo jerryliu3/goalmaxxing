@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Completion, Goal } from "@/lib/goals/types";
+import { PUBLIC_PROFILE_DEFAULT_BIO } from "@cadence/shared/social/public-profile";
 import { buildPublicProfileBundle } from "@/lib/social/public-profile-model";
 
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
@@ -308,5 +309,44 @@ describe("public profile showcase and featured goals", () => {
     });
 
     expect(bundle.showcase.map((item) => item.ref)).toEqual(["rec-level"]);
+  });
+
+  it("fills a description, a medal, and records until the owner saves the card", () => {
+    const bundle = buildPublicProfileBundle({
+      viewerUserId: "viewer-1",
+      subjectProfile: { ...subjectProfile, bio: null },
+      globalXpProfile: { total_xp: 480 },
+      globalAchievements: [award],
+      awardCatalogCount: 10,
+      goals,
+      completions,
+      pins: [],
+      selectedYear: 2026,
+      cardConfigured: false,
+    });
+
+    expect(bundle.bio).toBe(PUBLIC_PROFILE_DEFAULT_BIO);
+    const refs = bundle.showcase.map((item) => item.ref);
+    expect(refs.slice(0, 2)).toEqual(["award-1", "finished-public"]);
+    expect(refs.filter((ref) => ref.startsWith("rec-")).length).toBeGreaterThan(0);
+    expect(refs.filter((ref) => ref.startsWith("rec-")).length).toBeLessThanOrEqual(3);
+  });
+
+  it("keeps a saved empty card empty", () => {
+    const bundle = buildPublicProfileBundle({
+      viewerUserId: "viewer-1",
+      subjectProfile: { ...subjectProfile, bio: "" },
+      globalXpProfile: { total_xp: 480 },
+      globalAchievements: [award],
+      awardCatalogCount: 10,
+      goals,
+      completions,
+      pins: [],
+      selectedYear: 2026,
+      cardConfigured: true,
+    });
+
+    expect(bundle.bio).toBe("");
+    expect(bundle.showcase).toEqual([]);
   });
 });

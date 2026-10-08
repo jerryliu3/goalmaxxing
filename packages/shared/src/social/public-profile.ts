@@ -83,6 +83,8 @@ export interface PublicProfileCurrentGoal {
 }
 
 export const PUBLIC_PROFILE_BIO_LIMIT = 140;
+/** Shown on the card until the owner saves their own line, including clearing it. */
+export const PUBLIC_PROFILE_DEFAULT_BIO = "Showing up for what I said I would.";
 /** Medals and finished goals in the showcase. */
 export const PUBLIC_PROFILE_PIN_LIMIT = 3;
 /** Records on the membership card; separate from the showcase budget. */

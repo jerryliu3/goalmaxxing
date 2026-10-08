@@ -2700,6 +2700,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          profile_card_configured: boolean
           blackout_ranges: Json
           calendar_feed_token_version: number
           created_at: string
@@ -2719,6 +2720,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          profile_card_configured?: boolean
           blackout_ranges?: Json
           calendar_feed_token_version?: number
           created_at?: string
@@ -2738,6 +2740,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          profile_card_configured?: boolean
           blackout_ranges?: Json
           calendar_feed_token_version?: number
           created_at?: string
