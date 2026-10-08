@@ -10,25 +10,16 @@ const emptyEligibility: PlannerEligibilityNotices = {
 };
 
 describe("selectPlannerWarningModel", () => {
-  it("uses Recover copy for unplaced sessions", () => {
-    const model = selectPlannerWarningModel({
-      unplaceableGoalCount: 2,
-      invalidLockGoalCount: 0,
-      capacityWarningGoalCount: 2,
-      eligibilityNotices: emptyEligibility,
-    });
-
-    expect(model.hasPlannerWarnings).toBe(true);
-    expect(model.plannerWarningBannerCopy).toBe(
-      "2 goals have sessions that don't fit."
-    );
+  it("does not warn without a lock conflict or eligibility blocker", () => {
+    const model = selectPlannerWarningModel({ invalidLockGoalCount: 0, eligibilityNotices: emptyEligibility });
+    expect(model.hasPlannerWarnings).toBe(false);
+    expect(model.plannerWarningSeverity).toBe("none");
+    expect(model.warningSuggestedNextSteps).toEqual([]);
   });
 
   it("uses adaptive copy when only eligibility is blocked", () => {
     const model = selectPlannerWarningModel({
-      unplaceableGoalCount: 0,
       invalidLockGoalCount: 0,
-      capacityWarningGoalCount: 0,
       eligibilityNotices: {
         ...emptyEligibility,
         hardIneligible: [
@@ -47,21 +38,18 @@ describe("selectPlannerWarningModel", () => {
     );
   });
 
-  it("surfaces lock and capacity issues under Recover", () => {
+  it("surfaces lock conflicts separately from missed-session recovery", () => {
     const model = selectPlannerWarningModel({
-      unplaceableGoalCount: 0,
       invalidLockGoalCount: 1,
-      capacityWarningGoalCount: 1,
       eligibilityNotices: emptyEligibility,
     });
 
     expect(model.hasPlannerWarnings).toBe(true);
     expect(model.plannerWarningBannerCopy).toBe(
-      "Some sessions don't fit. Fix them when you're ready."
+      "1 goal has conflicting locked sessions."
     );
     expect(model.warningSuggestedNextSteps).toEqual([
       "Unlock conflicting locked sessions and regenerate the calendar.",
-      "Open planner settings to adjust targets, deadlines, or rest-day constraints.",
     ]);
   });
 });

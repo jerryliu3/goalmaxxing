@@ -17,14 +17,13 @@ function panel(overrides: { hasPlannerWarnings?: boolean } = {}) {
       warningsDismissed={false}
       showBlockingLoading={false}
       error={null}
-      plannerWarningBannerCopy="2 goals have sessions that don't fit."
+      plannerWarningBannerCopy="2 goals have conflicting locked sessions."
       warningsOpen={false}
       setWarningsOpen={vi.fn()}
       onDismissBanner={vi.fn()}
-      unplaceableGoalSummaries={[]}
+      invalidLockGoalSummaries={[]}
       invalidLockGoalCount={0}
-      capacityWarningGoalCount={0}
-      totalUnplacedCount={0}
+      totalInvalidLockSessionCount={0}
       warningSuggestedNextSteps={[]}
       eligibilityNotices={emptyEligibility}
       plannerReadOnly={false}
@@ -32,7 +31,6 @@ function panel(overrides: { hasPlannerWarnings?: boolean } = {}) {
       resetLoading={false}
       loading={false}
       onUnlockAllGoals={vi.fn()}
-      onOpenPlannerSettings={vi.fn()}
     />
   );
 }
@@ -42,13 +40,13 @@ describe("PlannerWarningsPanel", () => {
     cleanup();
   });
 
-  it("omits the fit banner from server HTML so it cannot hydrate over the toolbar", () => {
+  it("omits the planning issues banner from server HTML so it cannot hydrate over the toolbar", () => {
     const html = renderToString(panel());
-    expect(html).not.toContain("plan-fit-banner");
+    expect(html).not.toContain("plan-issues-banner");
   });
 
-  it("shows the fit banner after the client mounts", () => {
+  it("shows the planning issues banner after the client mounts", () => {
     render(panel());
-    expect(screen.getByTestId("plan-fit-banner")).toBeInTheDocument();
+    expect(screen.getByTestId("plan-issues-banner")).toBeInTheDocument();
   });
 });

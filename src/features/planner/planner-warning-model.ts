@@ -10,55 +10,24 @@ export interface PlannerWarningModel {
 }
 
 interface PlannerWarningModelArgs {
-  unplaceableGoalCount: number;
   invalidLockGoalCount: number;
-  capacityWarningGoalCount: number;
   eligibilityNotices: PlannerEligibilityNotices;
 }
 
 export function selectPlannerWarningModel({
-  unplaceableGoalCount,
   invalidLockGoalCount,
-  capacityWarningGoalCount,
   eligibilityNotices,
 }: PlannerWarningModelArgs): PlannerWarningModel {
-  const warningSuggestedNextSteps: string[] = [];
-  if (invalidLockGoalCount > 0) {
-    warningSuggestedNextSteps.push(
-      "Unlock conflicting locked sessions and regenerate the calendar."
-    );
-  }
-  if (capacityWarningGoalCount > 0) {
-    warningSuggestedNextSteps.push(
-      "Open planner settings to adjust targets, deadlines, or rest-day constraints."
-    );
-  }
-
   const hasPlannerWarnings =
-    unplaceableGoalCount > 0 ||
-    eligibilityNotices.hardIneligible.length > 0 ||
-    invalidLockGoalCount > 0 ||
-    capacityWarningGoalCount > 0;
-  const plannerWarningSeverity: PlannerWarningSeverity = !hasPlannerWarnings
-    ? "none"
-    : "actionable";
-  const plannerWarningBannerCopy =
-    unplaceableGoalCount > 0
-      ? `${unplaceableGoalCount} goal${
-          unplaceableGoalCount === 1 ? " has" : "s have"
-        } sessions that don't fit.`
-      : eligibilityNotices.hardIneligible.length > 0
-        ? `${eligibilityNotices.hardIneligible.length} goal${
-            eligibilityNotices.hardIneligible.length === 1 ? " needs" : "s need"
-          } a small update before ${
-            eligibilityNotices.hardIneligible.length === 1 ? "it" : "they"
-          } can be placed.`
-        : "Some sessions don't fit. Fix them when you're ready.";
-
+    invalidLockGoalCount > 0 || eligibilityNotices.hardIneligible.length > 0;
   return {
-    warningSuggestedNextSteps,
+    warningSuggestedNextSteps: invalidLockGoalCount > 0
+      ? ["Unlock conflicting locked sessions and regenerate the calendar."]
+      : [],
     hasPlannerWarnings,
-    plannerWarningSeverity,
-    plannerWarningBannerCopy,
+    plannerWarningSeverity: hasPlannerWarnings ? "actionable" : "none",
+    plannerWarningBannerCopy: invalidLockGoalCount > 0
+      ? `${invalidLockGoalCount} goal${invalidLockGoalCount === 1 ? " has" : "s have"} conflicting locked sessions.`
+      : `${eligibilityNotices.hardIneligible.length} goal${eligibilityNotices.hardIneligible.length === 1 ? " needs" : "s need"} a small update before ${eligibilityNotices.hardIneligible.length === 1 ? "it" : "they"} can be placed.`,
   };
 }

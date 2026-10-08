@@ -1625,7 +1625,7 @@ describe("CalendarSurface characterization", () => {
     expect(onSelectedDayChange).not.toHaveBeenCalled();
   });
 
-  it("renders banner counts from the shared unplaceable selector", async () => {
+  it("raises the planning issues banner for lock conflicts only", async () => {
     const context = buildContext([
       unit({
         originalGoalId: "goal-a",
@@ -1642,7 +1642,7 @@ describe("CalendarSurface characterization", () => {
         lockSignature: "lock-a",
         effectiveSpanEnd: "2027-07-31",
         unplacedCount: 3,
-        reason: "capacity",
+        reason: "invalid_lock",
       },
       {
         goalId: "goal-b",
@@ -1658,7 +1658,9 @@ describe("CalendarSurface characterization", () => {
     postJsonMock.mockResolvedValue(context);
 
     const expectedSummaries = summarizePlannerGoalUnplaceableRecords({
-      records: context.unplaceableGoals ?? [],
+      records: (context.unplaceableGoals ?? []).filter(
+        (record) => record.reason === "invalid_lock"
+      ),
       goalTitles: context.goalTitles,
     });
     render(
@@ -1676,16 +1678,18 @@ describe("CalendarSurface characterization", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("2 goals have sessions that don't fit.")
+        screen.getByText("1 goal has conflicting locked sessions.")
       ).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Fix plan" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Review" })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Fix plan" }));
+    fireEvent.click(screen.getByRole("button", { name: "Review" }));
     const dialog = await screen.findByRole("dialog");
+    expect(expectedSummaries).toHaveLength(1);
     for (const expected of expectedSummaries) {
       expect(within(dialog).getByText(expected.title)).toBeInTheDocument();
     }
+    expect(within(dialog).queryByText(/capacity shortfall/i)).not.toBeInTheDocument();
   });
 
   it("does not render unplaceable banner when no record is present", async () => {
@@ -1716,7 +1720,7 @@ describe("CalendarSurface characterization", () => {
       expect(postJsonMock).toHaveBeenCalled();
     });
     expect(
-      screen.queryByRole("button", { name: "Fix plan" })
+      screen.queryByRole("button", { name: "Review" })
     ).not.toBeInTheDocument();
   });
 
@@ -1762,9 +1766,9 @@ describe("CalendarSurface characterization", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Fix plan" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Review" })).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByRole("button", { name: "Fix plan" }));
+    fireEvent.click(screen.getByRole("button", { name: "Review" }));
     const dialog = await screen.findByRole("dialog");
     expect(
       within(dialog).getByText(
@@ -1841,7 +1845,7 @@ describe("CalendarSurface characterization", () => {
       expect(postJsonMock).toHaveBeenCalled();
     });
     expect(
-      screen.queryByRole("button", { name: "Fix plan" })
+      screen.queryByRole("button", { name: "Review" })
     ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Open planner help" }));
@@ -1888,9 +1892,9 @@ describe("CalendarSurface characterization", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Fix plan" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Review" })).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByRole("button", { name: "Fix plan" }));
+    fireEvent.click(screen.getByRole("button", { name: "Review" }));
     const dialog = await screen.findByRole("dialog");
     expect(
       within(dialog).getByText(
