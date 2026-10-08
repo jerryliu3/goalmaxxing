@@ -1,13 +1,11 @@
--- Until the owner saves the card, the loader fills a default bio, default
--- records, and default showcase pins. Saving, including a cleared bio or an
--- empty pin list, marks the card configured so those defaults stay gone.
+-- Until the owner saves the card, the loader fills a blank bio, and any pin
+-- category they have not saved. A bio they already wrote is left as-is.
+-- Saving, including a cleared bio or an empty pin list, marks the card
+-- configured so those defaults stay gone. Existing rows stay unconfigured:
+-- a written bio is not the same as having saved this card.
 
 alter table public.profiles
   add column profile_card_configured boolean not null default false;
-
-update public.profiles
-set profile_card_configured = true
-where bio is not null;
 
 create or replace function public.update_public_profile(
   p_bio text,
@@ -97,10 +95,6 @@ begin
       raise exception using errcode = '22023', message = 'invalid_showcase_pins';
     end;
   end loop;
-
-  update public.profiles
-  set bio = v_bio, profile_card_configured = true
-  where id = v_uid;
 
   update public.goals set featured_on_profile = true
   where owner_id = v_uid and id = any(v_featured) and not featured_on_profile;
