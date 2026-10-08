@@ -1,5 +1,7 @@
 "use client";
 
+import type { LoadPlannerContextOptions, PlannerContextLoadResult } from "@/features/planner/use-planner-context-loader";
+
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 import { toast } from "sonner";
 import { completionDisabledReasonCopy } from "@/features/planner/calendar-format";
@@ -42,11 +44,7 @@ interface UsePlannerEntryMutationsArgs {
     input: RunCompletionMutationInput
   ) => Promise<{ ok: boolean; message: string | null }>;
   handlePlannerMutation: () => void;
-  loadContext: (options?: {
-    showLoading?: boolean;
-    toastOnError?: boolean;
-    forcePrepare?: boolean;
-  }) => Promise<boolean>;
+  loadContext: (options?: LoadPlannerContextOptions) => Promise<PlannerContextLoadResult>;
   refreshDraftPreview: (
     nextPolicy: PlannerPolicy
   ) => Promise<PlannerContextPayload["preview"]>;
@@ -106,7 +104,7 @@ export function usePlannerEntryMutations({
             timeoutMessage:
               "Lock updated, but calendar refresh timed out. Please refresh the page.",
           });
-          if (!refreshed) {
+          if (refreshed === "failed") {
             toast.error(
               "Lock updated, but calendar refresh failed. Please refresh the page."
             );
@@ -244,36 +242,13 @@ export function usePlannerEntryMutations({
           }
         }
 
-        handlePlannerMutation();
+        // useCompletionMutation invalidates once; the calendar subscriber owns reconciliation.
         releaseLoading();
-        void withPlannerRefreshTimeout({
-          operation: loadContext({
-            showLoading: false,
-            toastOnError: false,
-          }),
-          timeoutMessage:
-            "Completion updated, but calendar refresh timed out. Please refresh the page.",
-        })
-          .then((refreshed) => {
-            if (!refreshed) {
-              toast.error(
-                "Completion updated, but calendar refresh failed. Please refresh the page."
-              );
-              return;
-            }
-            if (draftDateOverlayActive || draftPreviewRefreshFailed) {
-              toast(
-                "This entry is still shown with preview overlays. Save or discard preview edits to view canonical placement only."
-              );
-            }
-          })
-          .catch((error) => {
-            toast.error(
-              error instanceof Error
-                ? error.message
-                : "Completion updated, but calendar refresh failed. Please refresh the page."
-            );
-          });
+        if (draftDateOverlayActive || draftPreviewRefreshFailed) {
+          toast(
+            "This entry is still shown with preview overlays. Save or discard preview edits to view canonical placement only."
+          );
+        }
       } catch (error) {
         setOptimisticCompletionFacts((overlay) =>
           withoutOptimisticCompletionFact(overlay, entry.originalGoalId, selectedDate)

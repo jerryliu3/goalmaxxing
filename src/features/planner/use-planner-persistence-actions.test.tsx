@@ -41,7 +41,7 @@ describe("usePlannerPersistenceActions", () => {
     const handlePlannerMutation = vi.fn(() => calls.push("invalidate"));
     const loadContext = vi.fn(async () => {
       calls.push("reload");
-      return false;
+      return "failed" as const;
     });
     const context = buildPlannerContext({
       overrides: {

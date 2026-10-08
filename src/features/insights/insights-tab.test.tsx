@@ -38,6 +38,8 @@ vi.mock("@/features/insights/use-insights-data", () => ({
     },
     loading: false,
     laneError: null,
+    loadError: null,
+    reload: vi.fn(),
     loadData: loadDataMock,
     redirectToLogin: vi.fn(),
   }),

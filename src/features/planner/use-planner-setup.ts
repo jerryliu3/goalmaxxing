@@ -9,7 +9,7 @@ import type {
 import { getApiErrorMessage, putJson } from "@/lib/api/client";
 import { createDefaultPlannerPolicy, type PlannerPolicy } from "@/lib/planner/policy";
 import { isValidIanaTimezone } from "@/lib/dates/timezone";
-import type { LoadPlannerContextOptions } from "@/features/planner/use-planner-context-loader";
+import type { LoadPlannerContextOptions, PlannerContextLoadResult } from "@/features/planner/use-planner-context-loader";
 
 interface UsePlannerSetupArgs {
   setupTimezone: string;
@@ -19,7 +19,7 @@ interface UsePlannerSetupArgs {
   onMonthChange: (month: string, mode: "push" | "replace") => void;
   clearDraftSession: () => void;
   handlePlannerMutation: () => void;
-  loadContext: (options?: LoadPlannerContextOptions) => Promise<boolean>;
+  loadContext: (options?: LoadPlannerContextOptions) => Promise<PlannerContextLoadResult>;
   setSettingsOpen: (open: boolean) => void;
 }
 

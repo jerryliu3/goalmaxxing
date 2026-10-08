@@ -31,8 +31,11 @@ import {
   writeTabDataCache,
 } from "@/lib/cache/tab-data-cache";
 import { getDateInTimezone } from "@/lib/dates/timezone";
+import { reportError } from "@/lib/observability/report-error";
 import type { PlannerPolicy } from "@/lib/planner/policy";
 import { fetchPlannerContext } from "@/lib/planner/fetch-planner-context";
+
+export type PlannerContextLoadResult = "applied" | "superseded" | "inactive" | "failed";
 
 export interface LoadPlannerContextOptions {
   showLoading?: boolean;
@@ -96,9 +99,9 @@ export function usePlannerContextLoader({
       forcePrepare = false,
       clearCachedContext = false,
       rebalanceExistingAssignments = false,
-    }: LoadPlannerContextOptions = {}) => {
+    }: LoadPlannerContextOptions = {}): Promise<PlannerContextLoadResult> => {
       if (activeTab !== "calendar") {
-        return false;
+        return "inactive";
       }
       const requestId = ++requestIdRef.current;
 
@@ -107,7 +110,7 @@ export function usePlannerContextLoader({
       if (!month) {
         const resolvedMonth = getMonthInTimezone(setupTimezone);
         onMonthChange(resolvedMonth, "replace");
-        return true;
+        return "applied";
       }
       const calendarToday = getDateInTimezone(new Date(), setupTimezone);
       const projection = selectCalendarViewWindowProjection({
@@ -123,7 +126,7 @@ export function usePlannerContextLoader({
         ? buildGoalViewWindow(goalViewAnchorDate ?? calendarToday)
         : calendarWindow;
       if (!visibleWindow) {
-        return false;
+        return "inactive";
       }
       const visibleStart = visibleWindow.start;
       const visibleEnd = visibleWindow.end;
@@ -162,11 +165,11 @@ export function usePlannerContextLoader({
           // A complete cached Goal View already has its projection; applying
           // the same expanded payload again would rebuild every projected day.
           if (!goalViewOpen) warmGoalView(cachedContextPayload);
-          if (!goalViewOpen || cachedWindowIsWide) return true;
+          if (!goalViewOpen || cachedWindowIsWide) return "applied";
         }
       }
 
-      if (shouldShowLoading || goalViewOpen) {
+      if (shouldShowLoading) {
         setLoading(true);
       }
       let contextPayload: PlannerContextPayload;
@@ -208,12 +211,13 @@ export function usePlannerContextLoader({
         } else {
           contextPayload = await readContext();
         }
-        if (requestId !== requestIdRef.current) return false;
+        if (requestId !== requestIdRef.current) return "superseded";
         calendarPreparedRef.current = true;
         if (shouldPrepare) writeTabDataCache(goalViewOpen ? goalCacheKey : plannerContextCacheKey, contextPayload);
       } catch (error) {
-        if (requestId !== requestIdRef.current) return false;
+        if (requestId !== requestIdRef.current) return "superseded";
         setLoading(false);
+        reportError(error, { surface: "planner-context" });
         const message = getApiErrorMessage(
           error,
           "Planner calendar context could not be loaded."
@@ -223,7 +227,7 @@ export function usePlannerContextLoader({
         if (toastOnError) {
           toast.error(message);
         }
-        return false;
+        return "failed";
       }
       setLoading(false);
       if (!contextPayload) {
@@ -235,12 +239,12 @@ export function usePlannerContextLoader({
         if (toastOnError) {
           toast.error(message);
         }
-        return false;
+        return "failed";
       }
 
       applyContext(contextPayload, visibleWindow);
       if (!goalViewOpen) warmGoalView(contextPayload);
-      return true;
+      return "applied";
     },
     [
       activeTab,

@@ -1,3 +1,4 @@
+import type { LoadPlannerContextOptions, PlannerContextLoadResult } from "@/features/planner/use-planner-context-loader";
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 import { toast } from "sonner";
 import {
@@ -56,11 +57,7 @@ export function useCalendarCompletionControls({
     input: RunCompletionMutationInput
   ) => Promise<{ ok: boolean; message: string | null }>;
   handlePlannerMutation: () => void;
-  loadContext: (options?: {
-    showLoading?: boolean;
-    toastOnError?: boolean;
-    forcePrepare?: boolean;
-  }) => Promise<boolean>;
+  loadContext: (options?: LoadPlannerContextOptions) => Promise<PlannerContextLoadResult>;
   refreshDraftPreview: (
     nextPolicy: PlannerPolicy
   ) => Promise<PlannerContextPayload["preview"]>;
