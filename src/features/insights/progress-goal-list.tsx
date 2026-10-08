@@ -1,5 +1,7 @@
 "use client";
 
+import { Check } from "lucide-react";
+import { useState, type CSSProperties } from "react";
 import { toStyleDisplayColor } from "@/features/planner/goal-visuals";
 import { cn } from "@/lib/utils";
 
@@ -8,9 +10,11 @@ export interface ProgressGoalListItem {
   title: string;
   color: string;
   rateLabel: string;
+  /** 0–1 toward the goal's target, or null when it has no fixed target. */
+  progress?: number | null;
 }
 
-const VERTICAL_LIST_MAX_ITEMS = 10;
+const COLLAPSED_ITEM_COUNT = 8;
 
 export function ProgressGoalList({
   goals,
@@ -29,6 +33,7 @@ export function ProgressGoalList({
   onClearAll?: () => void;
   onboarding?: boolean;
 }) {
+  const [expanded, setExpanded] = useState(false);
   if (goals.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">No goals match these controls.</p>
@@ -36,10 +41,12 @@ export function ProgressGoalList({
   }
 
   const showListActions = Boolean(onSelectAll || onClearAll);
+  const collapsible = goals.length > COLLAPSED_ITEM_COUNT + 1;
+  const shownGoals = collapsible && !expanded ? goals.slice(0, COLLAPSED_ITEM_COUNT) : goals;
 
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between gap-3">
+      <div className="mb-1 flex items-center justify-between gap-3">
         <h2 className="type-heading text-sm">
           Goals ({selectedGoalIds.size})
         </h2>
@@ -48,7 +55,7 @@ export function ProgressGoalList({
             {onSelectAll ? (
               <button
                 type="button"
-                className="text-xs font-semibold text-muted-foreground"
+                className="text-xs font-semibold text-muted-foreground hover:text-foreground"
                 onClick={onSelectAll}
               >
                 Select all
@@ -57,7 +64,7 @@ export function ProgressGoalList({
             {onClearAll ? (
               <button
                 type="button"
-                className="text-xs font-semibold text-muted-foreground"
+                className="text-xs font-semibold text-muted-foreground hover:text-foreground"
                 onClick={onClearAll}
               >
                 Clear all
@@ -66,57 +73,54 @@ export function ProgressGoalList({
           </div>
         ) : null}
       </div>
-      <ul
-        data-testid="progress-goal-list"
-        className={cn(
-          "grid auto-cols-[minmax(calc(50vw-1.25rem),13.5rem)] grid-flow-col grid-rows-2 gap-2 overflow-x-auto pb-1 md:mx-0 md:auto-cols-[minmax(10.5rem,13.5rem)] md:flex md:flex-col md:overflow-x-visible md:overflow-y-auto md:px-0 md:pb-0",
-          goals.length >= VERTICAL_LIST_MAX_ITEMS &&
-            "md:max-h-[calc(9.5*2.75rem+9*0.5rem)]"
-        )}
-      >
-        {goals.map((goal, index) => {
+      <ul data-testid="progress-goal-list" className="-mx-2 flex flex-col">
+        {shownGoals.map((goal, index) => {
           const selected = selectedGoalIds.has(goal.id);
+          const color = toStyleDisplayColor(goal.color);
           return (
             <li key={goal.id} className="group relative min-w-0">
               <button
                 type="button"
                 aria-pressed={selected}
+                title={goal.title}
                 data-onboarding={index === 0 && onboarding ? "insights.goal" : undefined}
                 onClick={() => onToggleGoal(goal.id)}
+                style={{ "--goal-color": color } as CSSProperties}
                 className={cn(
-                  "flex min-h-10 w-full items-center rounded-xl px-2 py-2 text-left transition-colors touch-manipulation md:min-h-9 md:px-2.5 md:py-1.5",
-                  // Neutral selection like the app's chips: filled + ink when on, dimmed when off.
-                  selected
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  "flex min-h-11 w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors touch-manipulation hover:bg-muted/60 md:min-h-10",
+                  selected ? "text-foreground" : "text-muted-foreground"
                 )}
               >
-                <span className="flex w-full min-w-0 items-center gap-1.5 md:justify-between md:gap-2">
-                  <span className="flex min-w-0 flex-1 items-center gap-1.5 md:gap-2">
-                    <span
-                      className={cn("size-2 shrink-0 rounded-full transition-opacity", !selected && "opacity-40")}
-                      style={{ backgroundColor: toStyleDisplayColor(goal.color) }}
-                      aria-hidden
-                    />
-                    <span
-                      className="min-w-0 flex-1 type-item text-xs tracking-tight leading-snug line-clamp-2 md:truncate md:leading-normal"
-                    >
-                      {goal.title}
+                <span
+                  aria-hidden
+                  data-goal-check
+                  className={cn(
+                    "flex size-4 shrink-0 items-center justify-center rounded-[5px] border-[1.5px] border-(--goal-color) transition-colors",
+                    selected ? "bg-(--goal-color) text-white" : "bg-transparent"
+                  )}
+                >
+                  {selected ? <Check className="size-3" strokeWidth={3} /> : null}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate type-item text-sm leading-snug">{goal.title}</span>
+                  {goal.progress != null ? (
+                    <span aria-hidden className="mt-1 block h-1 overflow-hidden rounded-full bg-muted">
+                      <span
+                        data-goal-progress
+                        className={cn("block h-full rounded-full bg-(--goal-color)", !selected && "opacity-50")}
+                        style={{ width: `${Math.round(Math.min(1, Math.max(0, goal.progress)) * 100)}%` }}
+                      />
                     </span>
-                  </span>
-                  <span
-                    className={cn(
-                      "hidden shrink-0 type-figure text-[10px] text-muted-foreground transition-opacity duration-150 md:inline group-hover:opacity-0 group-focus-within:opacity-0"
-                    )}
-                  >
-                    {goal.rateLabel}
-                  </span>
+                  ) : null}
+                </span>
+                <span className="shrink-0 type-figure text-[11px] text-muted-foreground transition-opacity duration-150 md:group-hover:opacity-0 md:group-focus-within:opacity-0">
+                  {goal.rateLabel}
                 </span>
               </button>
               {onSelectOnly ? (
                 <button
                   type="button"
-                  className="absolute top-1/2 right-2 z-10 hidden -translate-y-1/2 text-[10px] font-semibold text-foreground underline underline-offset-2 opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-visible:opacity-100 md:inline"
+                  className="absolute top-1/2 right-2 z-10 hidden -translate-y-1/2 text-[11px] font-semibold text-foreground underline underline-offset-2 opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-visible:opacity-100 md:inline"
                   onClick={(event) => {
                     event.stopPropagation();
                     onSelectOnly(goal.id);
@@ -130,6 +134,16 @@ export function ProgressGoalList({
           );
         })}
       </ul>
+      {collapsible ? (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          className="mt-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {expanded ? "Show fewer" : `Show all ${goals.length} goals`}
+        </button>
+      ) : null}
     </div>
   );
 }

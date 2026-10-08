@@ -42,6 +42,7 @@ describe("progress ledger selection", () => {
     expect(isLedgerHeatmapDayMutable("2026-09-06", "2026-09-06")).toBe(true);
     expect(isLedgerHeatmapDayMutable("2026-09-07", "2026-09-06")).toBe(false);
     expect(progressLedgerCaption("overlap", 2)).toContain("Read-only overlap");
+    expect(progressLedgerCaption("aggregate", 3)).toBe("All selected goals together. Tap a day to see its completions.");
     expect(progressLedgerCaption("edit", 1)).toContain("log or remove a completion");
     expect(progressLedgerCaption("edit", 1, "milestone")).toContain(
       "log or remove a milestone"

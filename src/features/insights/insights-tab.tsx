@@ -126,6 +126,23 @@ function getCompletionCountLabel(
   return `${completionCount} completion${completionCount === 1 ? "" : "s"}`;
 }
 
+/** Share of the goal's target reached, for goals that have one. */
+function getTargetProgress(
+  goal: Goal,
+  completionCount: number,
+  progress?: GoalProgressSnapshot
+): number | null {
+  if (goal.frequency_type === "fixed_milestones" || isDeadlineTotalGoal(goal)) {
+    const target = goal.target_count ?? 0;
+    return target > 0 ? completionCount / target : null;
+  }
+  if (isPeriodCadenceGoal(goal) && progress) {
+    const target = progress.currentPeriodTarget ?? cadencePeriodTarget(goal);
+    return target > 0 ? progress.currentPeriodCompletionCount / target : null;
+  }
+  return null;
+}
+
 interface AggregateDrilldownCompletionMarker {
   key: string;
   goalTitle: string;
@@ -366,6 +383,7 @@ export function InsightsTab({
             category: goal.category,
           }).color,
           rateLabel: getCompletionCountLabel(goal, completionCount, progress),
+          progress: getTargetProgress(goal, completionCount, progress),
         };
       }),
     [progressByGoal, visiblePerGoalHeatmaps]
@@ -592,7 +610,8 @@ export function InsightsTab({
   const showHeatmap = contentMode === "full" || contentMode === "lane";
   const showGoalStatsSection = contentMode === "full";
   const showGoalsSection = contentMode === "full" || contentMode === "lane";
-  const stackLedgerAndHeatmap = contentMode !== "full";
+  // The year grid needs the full width to read; month sits beside the list.
+  const stackLedgerAndHeatmap = contentMode !== "full" || perGoalViewMode === "year";
   const heatmapEditable = ledgerMode === "edit" && !readOnly && Boolean(editableGoal);
   const heatmapAllowsDrilldown = ledgerMode === "aggregate" && !readOnly;
   const heatmapDayClickEnabled = heatmapEditable || heatmapAllowsDrilldown;
@@ -807,6 +826,7 @@ export function InsightsTab({
                 interactive={heatmapEditable}
                 pendingDate={pendingRetroDate}
                 milestoneDates={milestonePinDates}
+                today={todayLocal}
                 showMonthLabel={false}
                 isDayDisabled={
                   heatmapEditable

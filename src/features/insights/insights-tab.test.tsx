@@ -125,7 +125,7 @@ describe("InsightsTab goal ledger", () => {
     expect(screen.getByRole("heading", { name: "Progress tracker" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Progress Tracker" })).toBeNull();
     expect(
-      screen.getByText("Aggregate of selected goals. This calendar logs completions, including unscheduled days.")
+      screen.getByText("All selected goals together. Tap a day to see its completions.")
     ).toBeInTheDocument();
     const layout = screen.getByTestId("progress-ledger-layout");
     expect(layout).toHaveClass(
@@ -144,7 +144,7 @@ describe("InsightsTab goal ledger", () => {
 
     expect(
       screen.getByText(
-        "Hold a past or today cell to log or remove a completion. Future days are closed."
+        "Hold a day to log or remove a completion."
       )
     ).toBeInTheDocument();
 
@@ -204,7 +204,7 @@ describe("InsightsTab goal ledger", () => {
 
     expect(
       screen.getByText(
-        "Hold a past or today cell to log or remove a milestone. Future days are closed."
+        "Hold a day to log or remove a milestone."
       )
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Thesis" })).toBeInTheDocument();
@@ -214,7 +214,7 @@ describe("InsightsTab goal ledger", () => {
     expect(screen.getByText("1 / 3")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Select all" }));
-    expect(screen.getByText(/Aggregate of selected goals/)).toBeInTheDocument();
+    expect(screen.getByText(/All selected goals together/)).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Thesis" })).not.toBeInTheDocument();
   });
 
@@ -269,7 +269,7 @@ describe("InsightsTab goal ledger", () => {
     );
 
     const help = screen.getByText(
-      "Aggregate of selected goals. This calendar logs completions, including unscheduled days."
+      "All selected goals together. Tap a day to see its completions."
     );
     const goalsHeading = screen.getByRole("heading", { name: /Goals/ });
     expect(screen.queryByRole("heading", { name: "Progress Tracker" })).toBeNull();
@@ -279,5 +279,22 @@ describe("InsightsTab goal ledger", () => {
     expect(
       help.compareDocumentPosition(goalsHeading) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("gives the year grid the full width above the goal list", () => {
+    render(
+      <InsightsTab
+        sharedPeriod={{
+          monthCursor: new Date(2026, 8, 6),
+          onMonthCursorChange: () => {},
+          perGoalViewMode: "year",
+          onPerGoalViewModeChange: () => {},
+        }}
+      />
+    );
+
+    const layout = screen.getByTestId("progress-ledger-layout");
+    expect(layout).toHaveClass("space-y-3");
+    expect(layout).not.toHaveClass("md:grid");
   });
 });

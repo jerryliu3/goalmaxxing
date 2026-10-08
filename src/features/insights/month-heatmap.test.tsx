@@ -38,6 +38,20 @@ describe("MonthHeatmap", () => {
     expect(screen.queryByText("September 2026")).not.toBeInTheDocument();
   });
 
+  it("marks today apart from completions and milestone pins", () => {
+    render(
+      <MonthHeatmap
+        month={new Date(2026, 8, 1)}
+        countsByDate={{ "2026-09-05": 1 }}
+        milestoneDates={["2026-09-05"]}
+        today="2026-09-06"
+      />
+    );
+
+    expect(screen.getByTitle("2026-09-06 (today): 0 completions")).toHaveAttribute("data-today", "true");
+    expect(screen.getByTitle("2026-09-05: 1 completion")).not.toHaveAttribute("data-today");
+  });
+
   it("commits an interactive day only after a hold", () => {
     vi.useFakeTimers();
     const onDayClick = vi.fn();
