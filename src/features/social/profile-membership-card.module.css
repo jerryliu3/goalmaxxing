@@ -267,14 +267,31 @@ button.portrait:focus-visible {
 .metrics {
   display: grid;
   grid-template-columns: 1.1fr 1fr 1fr;
+  column-gap: .5rem;
   align-self: end;
   align-items: end;
   padding: .52rem 0 .08rem;
   border-block: 1px solid color-mix(in srgb, currentColor 22%, transparent);
 }
-.metric { display: flex; min-width: 0; flex-direction: column; justify-content: flex-end; gap: .2rem; }
-.metrics strong { font: 3.35rem/.8 var(--font-display); letter-spacing: -.04em; }
-.metric > span { font-size: .68rem; opacity: .7; }
+.metric {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: .2rem;
+  container-type: inline-size;
+  overflow: hidden;
+}
+.metrics strong {
+  font: clamp(1.15rem, 38cqw, 3.35rem)/.8 var(--font-display);
+  letter-spacing: -.04em;
+}
+.metric > span {
+  font-size: .68rem;
+  line-height: 1.15;
+  opacity: .7;
+  overflow-wrap: anywhere;
+}
 .metricsEdit {
   appearance: none;
   width: 100%;
