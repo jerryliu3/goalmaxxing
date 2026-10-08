@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   useXpReward,
@@ -41,5 +42,16 @@ describe("XpRewardProvider", () => {
     fireEvent.click(screen.getByRole("button", { name: "Celebrate" }));
 
     expect(document.querySelectorAll("[data-reward-burst]")).toHaveLength(1);
+  });
+
+  it("server-renders without the browser-only overlay", () => {
+    const html = renderToString(
+      <XpRewardProvider>
+        <p>Page</p>
+      </XpRewardProvider>
+    );
+
+    expect(html).toContain("Page");
+    expect(html).not.toContain("xp-reward-overlay");
   });
 });
