@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   applyCalendarCompletionMarkerFilters,
-  buildCalendarCategoryFilterOptions,
   buildCalendarGoalFilterOptions,
   entryMatchesCalendarSearchQuery,
   goalPassesCalendarFilters,
@@ -11,21 +10,6 @@ import {
 } from "@/features/planner/calendar-filters";
 
 describe("calendar filters", () => {
-  it("builds sorted category options and trims category labels", () => {
-    const options = buildCalendarCategoryFilterOptions(
-      new Map([
-        ["goal-a", { category: "  Personal  ", end_date: "2026-08-31" }],
-        ["goal-b", { category: "Health", end_date: "2026-09-30" }],
-        ["goal-c", { category: "Personal", end_date: null }],
-      ])
-    );
-
-    expect(options).toEqual([
-      { value: "Health", label: "Health" },
-      { value: "Personal", label: "Personal" },
-    ]);
-  });
-
   it("limits goal filter choices by the other active calendar filters", () => {
     const goals = new Map([
       ["run", { category: "Health", end_date: "2026-08-31" }],
@@ -33,7 +17,7 @@ describe("calendar filters", () => {
       ["write", { category: "Health", end_date: "2026-08-31" }],
     ]);
     expect(buildCalendarGoalFilterOptions(goals, { run: "Run", read: "Read", write: "Write" }, {
-      categoryFilters: ["Health"], endMonthFilters: ["2026-08"], searchQuery: "tempo",
+      categoryFilters: ["health"], endMonthFilters: ["2026-08"], searchQuery: "tempo",
       workUnits: [
         { originalGoalId: "run", label: "Easy miles", unitKey: "milestone:1" },
         { originalGoalId: "read", label: "Tempo reads", unitKey: "milestone:1" },
@@ -51,10 +35,23 @@ describe("calendar filters", () => {
       goalPassesCalendarFilters({
         goalId: "goal-a",
         goalsByOriginalId: goals,
-        categoryFilters: ["Personal"],
+        categoryFilters: ["personal"],
         endMonthFilters: ["2026-08"],
       })
     ).toBe(true);
+  });
+
+  it("matches custom categories by label and legacy labels by key", () => {
+    const goals = new Map([
+      ["guitar", { category: " Music ", end_date: null }],
+      ["call-mom", { category: "Relationships", end_date: null }],
+    ]);
+    const passes = (goalId: string, categoryFilters: string[]) =>
+      goalPassesCalendarFilters({ goalId, goalsByOriginalId: goals, categoryFilters, endMonthFilters: [] });
+
+    expect(passes("guitar", ["custom:music"])).toBe(true);
+    expect(passes("guitar", ["other"])).toBe(false);
+    expect(passes("call-mom", ["relationships"])).toBe(true);
   });
 
   it("matches selected categories and ending months with OR", () => {
@@ -68,7 +65,7 @@ describe("calendar filters", () => {
       goalPassesCalendarFilters({
         goalId: "goal-a",
         goalsByOriginalId: goals,
-        categoryFilters: ["Personal", "Health"],
+        categoryFilters: ["personal", "health"],
         endMonthFilters: [],
       })
     ).toBe(true);
@@ -76,7 +73,7 @@ describe("calendar filters", () => {
       goalPassesCalendarFilters({
         goalId: "goal-b",
         goalsByOriginalId: goals,
-        categoryFilters: ["Personal", "Health"],
+        categoryFilters: ["personal", "health"],
         endMonthFilters: [],
       })
     ).toBe(true);
@@ -84,7 +81,7 @@ describe("calendar filters", () => {
       goalPassesCalendarFilters({
         goalId: "goal-c",
         goalsByOriginalId: goals,
-        categoryFilters: ["Personal", "Health"],
+        categoryFilters: ["personal", "health"],
         endMonthFilters: [],
       })
     ).toBe(false);
@@ -147,7 +144,7 @@ describe("calendar filters", () => {
       goalPassesCalendarFilters({
         goalId: "missing-goal",
         goalsByOriginalId: goals,
-        categoryFilters: ["Personal"],
+        categoryFilters: ["personal"],
         endMonthFilters: [],
       })
     ).toBe(false);

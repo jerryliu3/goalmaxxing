@@ -219,6 +219,48 @@ export function resolveCategoryKey(
   return "other";
 }
 
+const CUSTOM_CATEGORY_FILTER_PREFIX = "custom:";
+
+/**
+ * A goal's Category filter value: its default category's key, or one value per
+ * custom label (custom goals store `category_key = "other"` with the label in `category`).
+ */
+export function categoryFilterValue(category: string, categoryKey?: string | null): string {
+  const key = resolveCategoryKey(
+    categoryKey && categoryKey !== "other" ? categoryKey : category
+  );
+  if (key !== "other") {
+    return key;
+  }
+  const label = category.trim().toLowerCase();
+  return label.length > 0 && !GENERIC_OTHER_LABELS.has(label)
+    ? `${CUSTOM_CATEGORY_FILTER_PREFIX}${label}`
+    : "other";
+}
+
+/** Every default category, then each custom label the goals use. */
+export function buildCategoryFilterOptions(
+  goals: ReadonlyArray<{ category: string; category_key?: string | null }>
+): Array<{ value: string; label: string }> {
+  const customLabels = new Map<string, string>();
+  for (const goal of goals) {
+    const value = categoryFilterValue(goal.category, goal.category_key);
+    if (value.startsWith(CUSTOM_CATEGORY_FILTER_PREFIX) && !customLabels.has(value)) {
+      customLabels.set(value, goal.category.trim());
+    }
+  }
+  const custom = Array.from(customLabels, ([value, label]) => ({ value, label })).sort(
+    (left, right) => left.label.localeCompare(right.label)
+  );
+  return [
+    ...normalizeCategoryCatalog(DEFAULT_GOAL_CATEGORIES).map((category) => ({
+      value: category.key,
+      label: category.label,
+    })),
+    ...custom,
+  ];
+}
+
 export function getCategoryValueForWrite(
   selection: CategorySelection,
   customValue?: string,

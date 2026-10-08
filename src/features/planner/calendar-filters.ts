@@ -5,6 +5,7 @@ import type {
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import { mergeCompletionFactMarkers } from "@cadence/shared/planner/partner-completion";
+import { categoryFilterValue } from "@/lib/goals/category";
 import { NO_END_DATE_FILTER } from "@/lib/goals/list-view";
 
 interface CalendarFilterGoalSnapshot {
@@ -52,21 +53,6 @@ function normalizeSearchCandidate(candidate: string | null | undefined) {
 
 function matchesNormalizedCalendarSearchQuery(candidate: string, normalizedQuery: string) {
   return candidate.length > 0 && candidate.includes(normalizedQuery);
-}
-
-export function buildCalendarCategoryFilterOptions(
-  goalsByOriginalId: Map<string, CalendarFilterGoalSnapshot>
-): GoalCategoryFilterOption[] {
-  const labels = new Set<string>();
-  for (const goal of goalsByOriginalId.values()) {
-    const normalized = goal.category.trim();
-    if (normalized.length > 0) {
-      labels.add(normalized);
-    }
-  }
-  return Array.from(labels)
-    .sort((left, right) => left.localeCompare(right))
-    .map((label) => ({ value: label, label }));
 }
 
 export function buildCalendarGoalFilterOptions(
@@ -124,13 +110,8 @@ export function goalPassesCalendarFilters({
   if (!goal) {
     return !hasActiveFilters;
   }
-  if (categoryFilters.length > 0) {
-    const allowedCategories = new Set(
-      categoryFilters.map((category) => category.trim())
-    );
-    if (!allowedCategories.has(goal.category.trim())) {
-      return false;
-    }
+  if (categoryFilters.length > 0 && !categoryFilters.includes(categoryFilterValue(goal.category))) {
+    return false;
   }
   if (endMonthFilters.length > 0) {
     const endMonth = goal.end_date?.slice(0, 7) ?? null;
