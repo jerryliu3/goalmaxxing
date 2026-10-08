@@ -143,7 +143,6 @@ export function selectPlannerCalendarModel({
   const eligibilityNotices = selectPlannerEligibilityNotices({
     context,
     effectivePreview: draftSession.effectivePreview,
-    month,
   });
   const saveAvailability = selectPlannerSaveAvailability({
     context,

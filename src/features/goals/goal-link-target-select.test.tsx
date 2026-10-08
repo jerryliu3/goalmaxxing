@@ -19,8 +19,6 @@ describe("GoalLinkTargetSelect", () => {
         searchQuery=""
         onSearchQueryChange={vi.fn()}
         filteredLinkTargets={[]}
-        selectedTargetGoal={null}
-        sourceEndDate={null}
       />
     );
 
@@ -39,8 +37,6 @@ describe("GoalLinkTargetSelect", () => {
         searchQuery=""
         onSearchQueryChange={vi.fn()}
         filteredLinkTargets={[]}
-        selectedTargetGoal={null}
-        sourceEndDate={null}
       />
     );
 
@@ -66,8 +62,6 @@ describe("GoalLinkTargetSelect", () => {
         searchQuery=""
         onSearchQueryChange={vi.fn()}
         filteredLinkTargets={[goal]}
-        selectedTargetGoal={null}
-        sourceEndDate={null}
       />
     );
 
@@ -88,8 +82,6 @@ describe("GoalLinkTargetSelect", () => {
         searchQuery=""
         onSearchQueryChange={vi.fn()}
         filteredLinkTargets={[buildGoal({ id: "goal-2", title: "Read daily" })]}
-        selectedTargetGoal={null}
-        sourceEndDate={null}
       />
     );
 
@@ -111,8 +103,6 @@ describe("GoalLinkTargetSelect", () => {
         searchQuery=""
         onSearchQueryChange={vi.fn()}
         filteredLinkTargets={[goal]}
-        selectedTargetGoal={null}
-        sourceEndDate={null}
       />
     );
 
@@ -130,8 +120,6 @@ describe("GoalLinkTargetSelect", () => {
         searchQuery="zzz"
         onSearchQueryChange={vi.fn()}
         filteredLinkTargets={[]}
-        selectedTargetGoal={null}
-        sourceEndDate={null}
       />
     );
 
@@ -150,12 +138,10 @@ describe("GoalLinkTargetSelect", () => {
         searchQuery=""
         onSearchQueryChange={onSearchQueryChange}
         filteredLinkTargets={[]}
-        selectedTargetGoal={null}
-        sourceEndDate={null}
       />
     );
 
-    await user.type(screen.getByPlaceholderText("Choose a main goal"), "run");
+    await user.type(screen.getByPlaceholderText("Choose a goal"), "run");
     expect(onSearchQueryChange).toHaveBeenCalled();
   });
 
@@ -170,8 +156,6 @@ describe("GoalLinkTargetSelect", () => {
         searchQuery=""
         onSearchQueryChange={vi.fn()}
         filteredLinkTargets={[goal]}
-        selectedTargetGoal={null}
-        sourceEndDate={null}
         keyPrefix="edit"
       />
     );
@@ -179,7 +163,7 @@ describe("GoalLinkTargetSelect", () => {
     expect(screen.getByRole("option", { name: /meditate/i })).toBeInTheDocument();
   });
 
-  it("shows scheduling warning copy for selected linked target", () => {
+  it("describes completion credit without hiding the selected target", () => {
     const selectedTarget = buildGoal({ id: "goal-9", title: "Read daily" });
     render(
       <GoalLinkTargetSelect
@@ -190,20 +174,11 @@ describe("GoalLinkTargetSelect", () => {
         searchQuery=""
         onSearchQueryChange={vi.fn()}
         filteredLinkTargets={[selectedTarget]}
-        selectedTargetGoal={selectedTarget}
-        sourceEndDate="2026-08-31"
       />
     );
 
-    expect(
-      screen.getByText(
-        "Linking this subgoal to Read daily may hide that main goal in some calendar months."
-      )
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Linked main goals stay hidden through Aug 31, 2026 and can show from Sep 1, 2026."
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByText("Also counts toward...")).toBeInTheDocument();
+    expect(screen.getByText("Completing this goal also counts toward the linked goal for that day.")).toBeInTheDocument();
+    expect(screen.queryByText(/hidden|may hide/i)).toBeNull();
   });
 });

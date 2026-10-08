@@ -168,32 +168,6 @@ describe("pure planner kernel", () => {
     );
   });
 
-  it("omits projected source-covered ordinals from kernel placement output", () => {
-    const milestoneGoal = goal({
-      id: "goal-precovered",
-      frequency_type: "fixed_milestones",
-      recurrence_interval: null,
-      target_count: 5,
-      milestone_names: ["One", "Two", "Three", "Four", "Five"],
-      start_date: "2026-08-01",
-      end_date: "2026-08-31",
-    });
-    const output = runPlannerKernel(
-      input({
-        goals: [milestoneGoal],
-        precoveredCountByGoalId: {
-          [milestoneGoal.id]: 2,
-        },
-      })
-    );
-
-    expect(output.workUnits.map((unit) => unit.unitKey)).toEqual([
-      "milestone:3",
-      "milestone:4",
-      "milestone:5",
-    ]);
-  });
-
   it("produces identical assignments for identical fresh runs", () => {
     const runA = runPlannerKernel(input());
     const runB = runPlannerKernel(input());
@@ -734,304 +708,41 @@ describe("pure planner kernel", () => {
     );
   });
 
-  it("suppresses linked targets while the source is still active in the scope window", () => {
-    const sourceGoal = goal({ id: "goal-a", target_count: 2 });
-    const mixedRoleGoal = goal({ id: "goal-b", target_count: 2 });
-    const downstreamTargetGoal = goal({ id: "goal-c", target_count: 2 });
-    const output = runPlannerKernel(
-      input({
-        goals: [sourceGoal, mixedRoleGoal, downstreamTargetGoal],
-        links: [
-          { sourceGoalId: "goal-a", targetGoalId: "goal-b" },
-          { sourceGoalId: "goal-b", targetGoalId: "goal-c" },
-        ],
-      })
-    );
-
-    expect(
-      output.eligibility.find((entry) => entry.goalId === "goal-a")
-    ).toMatchObject({
-      eligible: true,
-      reason: "eligible",
-    });
-    expect(
-      output.eligibility.find((entry) => entry.goalId === "goal-b")
-    ).toMatchObject({
-      eligible: false,
-      reason: "linked_target",
-    });
-    expect(
-      output.eligibility.find((entry) => entry.goalId === "goal-c")
-    ).toMatchObject({
-      eligible: false,
-      reason: "linked_target",
-    });
-    expect(output.workUnits.every((unit) => unit.originalGoalId === "goal-a")).toBe(
-      true
-    );
-  });
-
-  it("suppresses through a transitive ancestor when an intermediate source is missing", () => {
-    const ancestorGoal = goal({
-      id: "goal-a",
-      target_count: 2,
-      start_date: "2026-01-01",
-      end_date: "2026-12-31",
-    });
-    const targetGoal = goal({
-      id: "goal-c",
-      target_count: 2,
-      start_date: "2026-08-01",
-      end_date: "2026-08-31",
-    });
-    const output = runPlannerKernel(
-      input({
-        goals: [targetGoal],
-        links: [
-          { sourceGoalId: ancestorGoal.id, targetGoalId: "goal-b" },
-          { sourceGoalId: "goal-b", targetGoalId: targetGoal.id },
-        ],
-        linkSourceGoals: [ancestorGoal],
-      })
-    );
-
-    expect(
-      output.eligibility.find((entry) => entry.goalId === targetGoal.id)
-    ).toMatchObject({
-      eligible: false,
-      reason: "linked_target",
-    });
-    expect(output.workUnits).toHaveLength(0);
-  });
-
-  it("keeps linked targets eligible when source already ended before the scope window", () => {
-    const sourceGoal = goal({
-      id: "goal-source",
-      target_count: 2,
-      start_date: "2026-05-01",
-      end_date: "2026-07-31",
-    });
-    const targetGoal = goal({
-      id: "goal-target",
-      target_count: 2,
-      start_date: "2026-08-01",
-      end_date: "2026-08-31",
-    });
-    const output = runPlannerKernel(
-      input({
-        goals: [targetGoal],
-        links: [{ sourceGoalId: sourceGoal.id, targetGoalId: targetGoal.id }],
-        linkSourceGoals: [sourceGoal],
-      })
-    );
-
-    expect(
-      output.eligibility.find((entry) => entry.goalId === targetGoal.id)
-    ).toMatchObject({
-      eligible: true,
-      reason: "eligible",
-    });
-    expect(output.workUnits.every((unit) => unit.originalGoalId === targetGoal.id)).toBe(
-      true
-    );
-  });
-
-  it("keeps linked targets eligible in multi-month windows once source suppression has resumed", () => {
-    const sourceGoal = goal({
-      id: "goal-source-august",
-      target_count: 2,
-      start_date: "2026-08-01",
-      end_date: "2026-08-31",
-    });
-    const targetGoal = goal({
-      id: "goal-target-annual",
-      frequency_type: "fixed_milestones",
-      recurrence_interval: null,
-      target_count: 4,
-      milestone_names: ["M1", "M2", "M3", "M4"],
-      start_date: "2026-01-01",
-      end_date: "2026-12-31",
-    });
-    const requirementFingerprint = computeRequirementFingerprint(targetGoal);
-    const output = runPlannerKernel(
-      input({
-        startDate: "2026-08-01",
-        endDate: "2026-10-31",
-        asOfDate: "2026-09-03",
-        goals: [sourceGoal, targetGoal],
-        links: [{ sourceGoalId: sourceGoal.id, targetGoalId: targetGoal.id }],
-        basePlan: {
-          planId: "test-plan",
-          version: 1,
-          assignments: [
-            {
-              goalId: targetGoal.id,
-              requirementFingerprint,
-              unitKey: "milestone:4",
-              scheduledDate: "2026-09-03",
-              locked: false,
-              scheduledTimeOverride: null,
-            },
-          ],
-          completionToUnit: {},
-          issueCodes: [],
-        },
-        preserveExistingAssignments: true,
-      })
-    );
-
-    expect(
-      output.eligibility.find((entry) => entry.goalId === targetGoal.id)
-    ).toMatchObject({
-      eligible: true,
-      reason: "eligible",
-    });
-    expect(
-      output.workUnits.some(
-        (unit) =>
-          unit.originalGoalId === targetGoal.id && unit.unitKey === "milestone:4"
-      )
-    ).toBe(true);
-  });
-
-  it("applies monotone suppression before source start when source ends after scope start", () => {
-    const sourceGoal = goal({
-      id: "goal-source-future",
-      target_count: 2,
-      start_date: "2026-09-01",
-      end_date: "2026-10-31",
-    });
-    const targetGoal = goal({
-      id: "goal-target-future",
-      target_count: 2,
-    });
-    const output = runPlannerKernel(
-      input({
-        goals: [targetGoal],
-        links: [{ sourceGoalId: sourceGoal.id, targetGoalId: targetGoal.id }],
-        linkSourceGoals: [sourceGoal],
-      })
-    );
-
-    expect(
-      output.eligibility.find((entry) => entry.goalId === targetGoal.id)
-    ).toMatchObject({
-      eligible: false,
-      reason: "linked_target",
-    });
-    expect(output.workUnits).toHaveLength(0);
-  });
-
-  it("keeps unresolved resumed-prefix ordinals in scope after linked suppression resumes", () => {
-    const sourceGoal = goal({
-      id: "goal-source-resume",
-      target_count: 5,
-      start_date: "2026-08-01",
-      end_date: "2026-08-31",
-    });
-    const targetGoal = goal({
-      id: "goal-target-resumed",
-      frequency_type: "fixed_milestones",
-      recurrence_interval: null,
-      target_count: 100,
-      milestone_names: Array.from({ length: 100 }, (_, index) => `M${index + 1}`),
-      start_date: "2026-01-01",
-      end_date: "2026-12-31",
-    });
-    const requirementFingerprint = computeRequirementFingerprint(targetGoal);
-    const addDays = (startDate: string, days: number) => {
-      const date = new Date(`${startDate}T00:00:00.000Z`);
-      date.setUTCDate(date.getUTCDate() + days);
-      return date.toISOString().slice(0, 10);
-    };
-    const preservedSuffixAssignments = Array.from({ length: 89 }, (_, index) => {
-      const ordinal = index + 12;
-      return {
-        goalId: targetGoal.id,
-        requirementFingerprint,
-        unitKey: `milestone:${ordinal}`,
-        scheduledDate: addDays("2026-09-01", index),
-        locked: false,
-      };
-    });
-    const targetCompletions: Completion[] = [
-      "2026-05-24",
-      "2026-06-14",
-      "2026-06-30",
-      "2026-07-27",
-      "2026-07-28",
-      "2026-08-03",
-      "2026-08-04",
-      "2026-08-05",
-    ].map((completedOn, index) => ({
-      id: `completion-${index + 1}`,
-      goal_id: targetGoal.id,
-      user_id: targetGoal.owner_id,
-      completed_on: completedOn,
-      source: "manual",
-      created_at: `${completedOn}T00:00:00.000Z`,
-    }));
-    const output = runPlannerKernel(
-      input({
-        startDate: "2026-09-01",
-        endDate: "2026-12-31",
-        asOfDate: "2026-08-18",
-        goals: [targetGoal],
-        completions: targetCompletions,
-        links: [{ sourceGoalId: sourceGoal.id, targetGoalId: targetGoal.id }],
-        linkSourceGoals: [sourceGoal],
-        preserveExistingAssignments: true,
-        rebalanceExistingAssignments: true,
-        basePlan: {
-          planId: "plan-a",
-          version: 1,
-          assignments: preservedSuffixAssignments,
-          completionToUnit: {},
-          issueCodes: [],
-        },
-      })
-    );
-
-    expect(output.workUnits.map((unit) => unit.unitKey)).toEqual(
-      expect.arrayContaining(["milestone:9", "milestone:10", "milestone:11"])
-    );
-    for (const unitKey of ["milestone:9", "milestone:10", "milestone:11"]) {
-      const unit = output.workUnits.find((entry) => entry.unitKey === unitKey);
-      expect(unit?.scheduledDate).not.toBeNull();
+  it.each(["2026-07-31", "2026-08-31", "2026-12-31", null])(
+    "keeps linked target placement independent of source end %s",
+    (endDate) => {
+      const target = goal({ id: "target", target_count: 3 });
+      const source = goal({ id: "source", start_date: "2026-07-01", end_date: endDate });
+      const unlinked = runPlannerKernel(input({ goals: [target, source] }));
+      const linked = runPlannerKernel(input({ goals: [target, source], links: [{ sourceGoalId: source.id, targetGoalId: target.id }] }));
+      expect(linked.eligibility).toEqual(unlinked.eligibility);
+      expect(linked.workUnits).toEqual(unlinked.workUnits);
+      expect(linked.solver.assignments).toEqual(unlinked.solver.assignments);
+      expect(linked.workUnits.filter((unit) => unit.originalGoalId === target.id)).toHaveLength(3);
     }
-    expect(output.solver.issueCodes).not.toContain("placement_shortfall");
+  );
+
+  it("keeps every target in a transitive link chain independently eligible", () => {
+    const goals = ["a", "b", "c"].map((id) => goal({ id, target_count: 2 }));
+    const output = runPlannerKernel(input({ goals, links: [
+      { sourceGoalId: "a", targetGoalId: "b" },
+      { sourceGoalId: "b", targetGoalId: "c" },
+    ] }));
+    expect(output.eligibility.every((entry) => entry.eligible)).toBe(true);
+    for (const id of ["a", "b", "c"]) {
+      expect(output.workUnits.filter((unit) => unit.originalGoalId === id)).toHaveLength(2);
+    }
   });
 
-  it("does not enforce resumed omission guard on partial resumed windows", () => {
-    const sourceGoal = goal({
-      id: "goal-source-partial-window",
-      target_count: 5,
-      start_date: "2026-08-01",
-      end_date: "2026-08-31",
-    });
-    const targetGoal = goal({
-      id: "goal-target-partial-window",
-      frequency_type: "fixed_milestones",
-      recurrence_interval: null,
-      target_count: 20,
-      milestone_names: Array.from({ length: 20 }, (_, index) => `M${index + 1}`),
-      start_date: "2026-01-01",
-      end_date: "2026-12-31",
-    });
-
-    expect(() =>
-      runPlannerKernel(
-        input({
-          startDate: "2026-09-01",
-          endDate: "2026-09-30",
-          asOfDate: "2026-08-18",
-          goals: [targetGoal],
-          links: [{ sourceGoalId: sourceGoal.id, targetGoalId: targetGoal.id }],
-          linkSourceGoals: [sourceGoal],
-          preserveExistingAssignments: true,
-        })
-      )
-    ).not.toThrow();
+  it("credits actual cascaded completions without treating source facts as target facts", () => {
+    const target = goal({ id: "target", target_count: 3 });
+    const source = goal({ id: "source", target_count: 3 });
+    const sourceFact: Completion = { id: "source-fact", goal_id: source.id, user_id: "owner-a", completed_on: "2026-08-04", source: "manual", created_at: "2026-08-04T00:00:00Z" };
+    const config = input({ goals: [source, target], links: [{ sourceGoalId: source.id, targetGoalId: target.id }] });
+    const sourceOnly = runPlannerKernel({ ...config, completions: [sourceFact] });
+    expect(sourceOnly.workUnits.filter((unit) => unit.originalGoalId === target.id && unit.creditState !== "uncredited")).toHaveLength(0);
+    const cascaded = runPlannerKernel({ ...config, completions: [sourceFact, { ...sourceFact, id: "target-fact", goal_id: target.id, source: "linked_cascade", planner_unit_key: "total:1" }] });
+    expect(cascaded.workUnits.find((unit) => unit.originalGoalId === target.id && unit.unitKey === "total:1")).toMatchObject({ creditedCompletionId: "target-fact" });
   });
 
   it("honors locks that invert ordinal order", () => {
@@ -2175,11 +1886,6 @@ describe("solve intent and draft pins", () => {
     expect(
       runPlannerKernel(
         input({ draftPinnedDates: { "goal-a:total:1": "2026-08-20" } })
-      ).generationInputHash
-    ).not.toBe(base);
-    expect(
-      runPlannerKernel(
-        input({ precoveredCountByGoalId: { "goal-a": 2 } })
       ).generationInputHash
     ).not.toBe(base);
   });

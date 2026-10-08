@@ -35,22 +35,11 @@ import { normalizeGoalRequirement } from "@/lib/planner/requirements";
 import type { PlannerIssueCode } from "@/lib/planner/solver/types";
 import { evaluateActivePlanStaleness } from "@/lib/planner/staleness";
 import {
-  buildLinkSuppressionInboundIndex,
-  getLinkResumeDate,
-  resolveLinkSuppression,
-  toLinkSuppressionSource,
-} from "@/lib/planner/link-suppression";
-import {
   buildPlannerGoalLockSignature,
   isPlannerGoalUnplaceableReason,
   isPlannerGoalUnplaceableRecordValid,
   type PlannerGoalUnplaceableRecord,
 } from "@/lib/planner/unplaceable";
-import {
-  computeLinkedSourceCoverageByGoalId,
-  buildPlannedDatesByGoalIdFromPlannerItems,
-  indexCompletionsByGoalId,
-} from "@/lib/planner/linked-source-coverage";
 import type { PlannerBaseAssignment } from "@/lib/planner/work-units";
 import {
   detectActivePlanReconciliationMismatches,
@@ -703,50 +692,6 @@ function toPlannerGoalSemanticSnapshot(goal: PlannerActiveGoalRow) {
   };
 }
 
-function buildPlannerGoalLinkSummaries({
-  links,
-  goals,
-  ownerId,
-  asOfDate,
-}: {
-  links: PlannerCanonicalLink[];
-  goals: Goal[];
-  ownerId: string;
-  asOfDate: string;
-}) {
-  const suppressionSourcesById = new Map(
-    goals.map((goal) => [goal.id, toLinkSuppressionSource(goal)])
-  );
-  const suppressionByTargetGoalId = new Map<
-    string,
-    ReturnType<typeof resolveLinkSuppression>
-  >();
-  const suppressionInboundIndex = buildLinkSuppressionInboundIndex(links);
-  for (const targetGoalId of new Set(links.map((link) => link.targetGoalId))) {
-    suppressionByTargetGoalId.set(
-      targetGoalId,
-      resolveLinkSuppression({
-        goalId: targetGoalId,
-        inboundSourceIdsByTargetId: suppressionInboundIndex,
-        sourcesById: suppressionSourcesById,
-        ownerId,
-        asOfDate,
-      })
-    );
-  }
-  return links.map((link) => {
-    const suppression = suppressionByTargetGoalId.get(link.targetGoalId) ?? {
-      kind: "none" as const,
-    };
-    return {
-      sourceGoalId: link.sourceGoalId,
-      targetGoalId: link.targetGoalId,
-      targetSuppressionKind: suppression.kind,
-      targetResumesOn: getLinkResumeDate(suppression),
-    };
-  });
-}
-
 export async function loadPlannerContextPayload({
   supabase,
   ownerId,
@@ -778,7 +723,7 @@ export async function loadPlannerContextPayload({
   const preparationStart = preparationWindows[0]?.start ?? startDate;
   const preparationEnd = preparationWindows.at(-1)?.end ?? endDate;
   const needsPreparationHorizonItems =
-    (snapshot.unplaceableGoals?.length ?? 0) > 0 || snapshot.links.length > 0;
+    (snapshot.unplaceableGoals?.length ?? 0) > 0;
   const goalById = new Map(snapshot.goals.map((goal) => [goal.id, goal]));
   const persistedItemsInPreparationHorizon = needsPreparationHorizonItems
     ? partitionPlannerItemsByKnownGoals(
@@ -797,10 +742,6 @@ export async function loadPlannerContextPayload({
   );
   const policyFingerprint = canonicalHash(effectivePolicy);
   const policyRevision = snapshot.preferences?.policy_revision ?? 0;
-  const plannedDatesByGoalId = buildPlannedDatesByGoalIdFromPlannerItems(
-    persistedItemsInPreparationHorizon
-  );
-  const completionsByGoalId = indexCompletionsByGoalId(snapshot.completions);
   const lockSignatureByGoalId = new Map<string, string>();
   const lockEntriesByGoalId = new Map<
     string,
@@ -821,16 +762,6 @@ export async function loadPlannerContextPayload({
       buildPlannerGoalLockSignature(lockEntriesByGoalId.get(goal.id) ?? [])
     );
   }
-  const { projectedCoverageCountByGoalId } = computeLinkedSourceCoverageByGoalId({
-    goals: snapshot.goals,
-    links: snapshot.links,
-    ownerId,
-    asOfDate,
-    preparationStart,
-    preparationEnd,
-    completionsByGoalId,
-    plannedDatesByGoalId,
-  });
   const validUnplaceableGoals = (snapshot.unplaceableGoals ?? []).filter((record) => {
     const goal = goalById.get(record.goalId);
     if (!goal) {
@@ -858,11 +789,6 @@ export async function loadPlannerContextPayload({
     goals: snapshot.goals,
     completions: snapshot.completions,
     links: snapshot.links,
-    precoveredCountByGoalId: Object.fromEntries(
-      Array.from(projectedCoverageCountByGoalId.entries()).filter(
-        ([, count]) => count > 0
-      )
-    ),
     assessments: activeAssessments.length > 0 ? activeAssessments : undefined,
     policy: effectivePolicy,
     basePlan: snapshot.activePlan?.basePlan ?? null,
@@ -909,16 +835,6 @@ export async function loadPlannerContextPayload({
           timezone: effectiveTimezone,
           policyFingerprint,
           goals: currentGoals,
-          linkedGoalIds: Array.from(
-            new Set(
-              preview.eligibility
-                .filter(
-                  (eligibility) =>
-                    !eligibility.eligible && eligibility.reason === "linked_target"
-                )
-                .map((eligibility) => eligibility.goalId)
-            )
-          ),
           workUnits: preview.workUnits,
           driftFacts: preview.driftFacts,
           invalidGoalIds: preview.solver.invalidGoalIds,
@@ -929,13 +845,6 @@ export async function loadPlannerContextPayload({
         },
       })
     : { status: "not_applicable" as const, stale: false, reasons: [] };
-  const linkSummaries = buildPlannerGoalLinkSummaries({
-    links: snapshot.links,
-    goals: snapshot.goals,
-    ownerId,
-    asOfDate,
-  });
-
   const hydratedActivePlan = snapshot.activePlan
     ? (() => {
         const goalIdByPlanGoalId = new Map(
@@ -979,7 +888,7 @@ export async function loadPlannerContextPayload({
     goalTitles: Object.fromEntries(
       snapshot.goals.map((goal) => [goal.id, goal.title])
     ),
-    links: linkSummaries,
+    links: snapshot.links,
     revisions: snapshot.revisions,
     capabilities,
     preferences: snapshot.preferences

@@ -76,7 +76,7 @@ describe("planner contract fixtures", () => {
       fixture.cases.find(
         (fixtureCase) => fixtureCase.id === "linked_target_goal"
       )?.expected.reason
-    ).toBe("linked_target");
+    ).toBe("eligible");
     expect(
       fixture.cases.find(
         (fixtureCase) => fixtureCase.id === "deadline_after_scope"

@@ -1,5 +1,7 @@
 "use client";
 
+import type { PlannerGoalLinkSummary } from "@cadence/shared/planner/context";
+
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 
 import { GoalProgressCard } from "@/features/goals/goal-progress-card";
@@ -43,17 +45,11 @@ export interface PlannerEventDetailDialogCallbacks {
 
 interface PlannerEventDetailDialogProps {
   selectedEventEntry: PlannerDayDetailEntry | null;
-  selectedEventLinkedTargets: Array<{
-    sourceGoalId: string;
-    targetGoalId: string;
-    targetSuppressionKind: "none" | "until" | "indefinite";
-    targetResumesOn: string | null;
-  }>;
+  selectedEventLinkedTargets: PlannerGoalLinkSummary[];
   selectedEventGoal: Goal | null;
   selectedEventPresentation: ChecklistGoalPresentation | null;
   selectedEventProgress?: ProgressContextSummary | null;
   goalTitles: Record<string, string>;
-  scopeMonth: string;
   selectedEventBaselineUnit:
     | {
         effectiveScheduledLocalTime?: string | null;
@@ -82,7 +78,6 @@ export function PlannerEventDetailDialog({
   selectedEventPresentation,
   selectedEventProgress,
   goalTitles,
-  scopeMonth,
   selectedEventBaselineUnit,
   selectedEventDraftScheduledDate,
   selectedEventDraftTimeInputValue,
@@ -226,7 +221,6 @@ export function PlannerEventDetailDialog({
             <LinkedTargetsNote
               linkedTargets={selectedEventLinkedTargets}
               goalTitles={goalTitles}
-              scopeMonth={scopeMonth}
             />
           ) : null}
           {draftDiffSummary ? (

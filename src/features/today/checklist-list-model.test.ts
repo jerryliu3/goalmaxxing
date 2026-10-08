@@ -61,7 +61,6 @@ describe("selectChecklistListModel", () => {
       todayEndMonths: [],
       todaySort: "earliest_end",
       showTargetAchievedGoals: false,
-      showSuppressedLinkedTargets: false,
     });
 
     expect([...model.filteredTodayGoalIds]).toEqual(["weekly"]);
@@ -91,12 +90,28 @@ describe("selectChecklistListModel", () => {
       todayEndMonths: [],
       todaySort: "earliest_end",
       showTargetAchievedGoals: false,
-      showSuppressedLinkedTargets: false,
     });
 
     expect([...model.filteredTodayGoalIds]).toEqual(["guitar"]);
     expect(model.pastGoals.map((item) => item.id)).toEqual(["old-guitar"]);
     expect(model.archivedGoals.map((item) => item.id)).toEqual(["shelved-guitar"]);
+  });
+
+  it("keeps linked targets in today's list and upcoming goals", () => {
+    const source = goal({ id: "source", title: "Practice" });
+    const target = goal({ id: "target", title: "Improve fitness" });
+    const upcoming = goal({ id: "upcoming", title: "Future target", start_date: "2026-10-01" });
+    const model = selectChecklistListModel({
+      data: { ...emptyTodayData, userId: "user-1", goals: [source, target, upcoming], links: [
+        { id: "link-1", owner_id: "user-1", created_at: "2026-01-01T00:00:00Z", source_goal_id: source.id, target_goal_id: target.id },
+        { id: "link-2", owner_id: "user-1", created_at: "2026-01-01T00:00:00Z", source_goal_id: target.id, target_goal_id: upcoming.id },
+      ] },
+      viewDate: "2026-09-06", todayLocalDate: "2026-09-06",
+      categoryFilters: [], recurrenceFilters: [], searchQuery: "", todayEndMonths: [],
+      todaySort: "earliest_end", showTargetAchievedGoals: false,
+    });
+    expect([...model.filteredTodayGoalIds]).toEqual([source.id, target.id]);
+    expect(model.upcoming.map((item) => item.id)).toEqual([upcoming.id]);
   });
 
   it("restores achieved milestones when showTargetAchievedGoals is on", () => {
@@ -165,7 +180,6 @@ describe("selectChecklistListModel", () => {
       todayEndMonths: [],
       todaySort: "earliest_end",
       showTargetAchievedGoals: false,
-      showSuppressedLinkedTargets: false,
     });
     const shown = selectChecklistListModel({
       data,
@@ -177,7 +191,6 @@ describe("selectChecklistListModel", () => {
       todayEndMonths: [],
       todaySort: "earliest_end",
       showTargetAchievedGoals: true,
-      showSuppressedLinkedTargets: false,
     });
 
     expect([...hidden.filteredTodayGoalIds]).toEqual([]);

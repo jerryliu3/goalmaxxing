@@ -11,7 +11,6 @@
         "ownedByViewer": true,
         "isDeleted": false,
         "archivedAt": null,
-        "currentLinkRole": "none",
         "outgoingShareCount": 0,
         "startDate": "2026-07-15",
         "endDate": "2026-08-31"
@@ -29,7 +28,6 @@
         "ownedByViewer": true,
         "isDeleted": false,
         "archivedAt": null,
-        "currentLinkRole": "none",
         "outgoingShareCount": 0,
         "startDate": "2026-09-10",
         "endDate": "2026-09-30"
@@ -47,7 +45,6 @@
         "ownedByViewer": true,
         "isDeleted": false,
         "archivedAt": null,
-        "currentLinkRole": "none",
         "outgoingShareCount": 3,
         "startDate": "2026-08-01",
         "endDate": "2026-08-31"
@@ -65,7 +62,6 @@
         "ownedByViewer": false,
         "isDeleted": false,
         "archivedAt": null,
-        "currentLinkRole": "none",
         "outgoingShareCount": 0,
         "startDate": "2026-08-01",
         "endDate": "2026-08-31"
@@ -83,7 +79,6 @@
         "ownedByViewer": true,
         "isDeleted": true,
         "archivedAt": null,
-        "currentLinkRole": "none",
         "outgoingShareCount": 0,
         "startDate": "2026-08-01",
         "endDate": "2026-08-31"
@@ -101,7 +96,6 @@
         "ownedByViewer": true,
         "isDeleted": false,
         "archivedAt": "2026-08-10T15:00:00Z",
-        "currentLinkRole": "none",
         "outgoingShareCount": 0,
         "startDate": "2026-08-01",
         "endDate": "2026-08-31"
@@ -119,7 +113,6 @@
         "ownedByViewer": true,
         "isDeleted": false,
         "archivedAt": null,
-        "currentLinkRole": "source",
         "outgoingShareCount": 0,
         "startDate": "2026-08-01",
         "endDate": "2026-08-31"
@@ -131,20 +124,19 @@
     },
     {
       "id": "linked_target_goal",
-      "description": "A goal that is the target of a current link is excluded.",
+      "description": "An owned linked target is eligible on the same terms as any other goal.",
       "scopeMonth": "2026-08",
       "goal": {
         "ownedByViewer": true,
         "isDeleted": false,
         "archivedAt": null,
-        "currentLinkRole": "target",
         "outgoingShareCount": 0,
         "startDate": "2026-08-01",
         "endDate": "2026-08-31"
       },
       "expected": {
-        "eligible": false,
-        "reason": "linked_target"
+        "eligible": true,
+        "reason": "eligible"
       }
     },
     {
@@ -155,7 +147,6 @@
         "ownedByViewer": true,
         "isDeleted": false,
         "archivedAt": null,
-        "currentLinkRole": "none",
         "outgoingShareCount": 0,
         "startDate": "2026-08-01",
         "endDate": null
@@ -173,7 +164,6 @@
         "ownedByViewer": true,
         "isDeleted": false,
         "archivedAt": null,
-        "currentLinkRole": "none",
         "outgoingShareCount": 0,
         "startDate": "2026-08-20",
         "endDate": "2026-08-10"
@@ -191,7 +181,6 @@
         "ownedByViewer": true,
         "isDeleted": false,
         "archivedAt": null,
-        "currentLinkRole": "none",
         "outgoingShareCount": 0,
         "startDate": "2026-07-01",
         "endDate": "2026-07-31"
@@ -209,7 +198,6 @@
         "ownedByViewer": true,
         "isDeleted": false,
         "archivedAt": null,
-        "currentLinkRole": "none",
         "outgoingShareCount": 0,
         "startDate": "2026-08-15",
         "endDate": "2026-09-15"

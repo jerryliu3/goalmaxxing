@@ -71,14 +71,12 @@ export function usePlanDayChecklistModel({
         todayEndMonths: endMonthFilters,
         todaySort: filters.todaySort,
         showTargetAchievedGoals,
-        showSuppressedLinkedTargets: filters.showSuppressedLinkedTargets,
       }),
     [
       data,
       categoryFilters,
       recurrenceFilters,
       goalIdFilters,
-      filters.showSuppressedLinkedTargets,
       showTargetAchievedGoals,
       endMonthFilters,
       filters.todaySort,
@@ -149,12 +147,6 @@ export function usePlanDayChecklistModel({
       count: listModel.targetAchievedGoalIds.size,
       checked: showTargetAchievedGoals,
       onChange: filters.setShowTargetAchievedGoals,
-    },
-    {
-      label: "Show suppressed linked goals",
-      count: listModel.hiddenLinkedTargetGoalIds.size,
-      checked: filters.showSuppressedLinkedTargets,
-      onChange: filters.setShowSuppressedLinkedTargets,
     },
   ];
   const filterFormProps = {

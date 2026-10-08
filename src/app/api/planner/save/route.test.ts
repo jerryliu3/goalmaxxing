@@ -160,7 +160,7 @@ describe("planner save route", () => {
     );
   });
 
-  it("threads linked-source projected coverage into save kernel input", async () => {
+  it("saves linked goals from canonical facts without source-plan projection", async () => {
     const sourceGoalId = "55555555-5555-4555-8555-555555555555";
     const targetGoalId = "66666666-6666-4666-8666-666666666666";
     mocks.loadPlannerCanonicalSnapshot.mockResolvedValueOnce({
@@ -222,12 +222,6 @@ describe("planner save route", () => {
       },
       activePlan: null,
     });
-    mocks.loadPlannerItemsForWindow.mockResolvedValueOnce([
-      {
-        goal_id: sourceGoalId,
-        scheduled_date: "2026-08-10",
-      },
-    ]);
     mocks.runPlannerKernel.mockImplementationOnce(() => {
       throw new PlannerError(
         "validation_failed",
@@ -244,7 +238,7 @@ describe("planner save route", () => {
 
     expect(mocks.runPlannerKernel).toHaveBeenCalledWith(
       expect.objectContaining({
-        precoveredCountByGoalId: { [targetGoalId]: 2 },
+        links: [{ sourceGoalId, targetGoalId }],
       })
     );
   });

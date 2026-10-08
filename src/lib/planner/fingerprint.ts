@@ -32,7 +32,6 @@ export interface GenerationHashInput {
   preserveExistingAssignments: boolean;
   rebalanceExistingAssignments?: boolean;
   draftPinnedDates: Record<string, string>;
-  precoveredCountByGoalId?: Record<string, number>;
   startDate: string;
   endDate: string;
   asOfDate: string;
@@ -40,7 +39,6 @@ export interface GenerationHashInput {
   goals: Goal[];
   completions: Completion[];
   links: PlannerCanonicalLink[];
-  linkSourceGoals?: Goal[];
   assessments: GoalAssessment[];
   policy: PlannerPolicy;
   basePlan: {
@@ -70,11 +68,6 @@ export function computeGenerationInputHash(input: GenerationHashInput) {
         compareCanonicalStrings(left, right)
       )
     ),
-    precoveredCountByGoalId: Object.fromEntries(
-      Object.entries(input.precoveredCountByGoalId ?? {})
-        .sort(([left], [right]) => compareCanonicalStrings(left, right))
-        .map(([goalId, count]) => [goalId, Math.max(Math.floor(count), 0)])
-    ),
     startDate: input.startDate,
     endDate: input.endDate,
     asOfDate: input.asOfDate,
@@ -102,13 +95,6 @@ export function computeGenerationInputHash(input: GenerationHashInput) {
         ? bySource
         : compareCanonicalStrings(left.targetGoalId, right.targetGoalId);
     }),
-    ...(input.linkSourceGoals && input.linkSourceGoals.length > 0
-      ? {
-          linkSourceGoals: [...input.linkSourceGoals].sort((left, right) =>
-            compareCanonicalStrings(left.id, right.id)
-          ),
-        }
-      : {}),
     assessments: [...input.assessments].sort((left, right) =>
       compareCanonicalStrings(left.goalId, right.goalId)
     ),

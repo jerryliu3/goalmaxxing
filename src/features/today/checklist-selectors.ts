@@ -137,7 +137,6 @@ export function selectFilteredTodayGoals({
   endMonths,
   targetAchievedGoalIds = new Set<string>(),
   showTargetAchievedGoals = true,
-  hiddenLinkedTargetGoalIds = new Set<string>(),
 }: {
   activeGoals: Goal[];
   todayDate: string;
@@ -148,10 +147,8 @@ export function selectFilteredTodayGoals({
   endMonths: string[];
   targetAchievedGoalIds?: ReadonlySet<string>;
   showTargetAchievedGoals?: boolean;
-  hiddenLinkedTargetGoalIds?: ReadonlySet<string>;
 }): Goal[] {
   const matchingGoals = activeGoals
-    .filter((goal) => !hiddenLinkedTargetGoalIds.has(goal.id))
     .filter((goal) => goal.start_date <= todayDate)
     .filter((goal) => showTargetAchievedGoals || !targetAchievedGoalIds.has(goal.id))
     .filter((goal) =>

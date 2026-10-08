@@ -77,7 +77,7 @@ describe("checklist selectors", () => {
     ).toEqual(["weekly"]);
   });
 
-  it("hides linked targets while their source is active on the viewed day", () => {
+  it("keeps linked targets eligible for ordinary checklist filtering", () => {
     const source = goal({
       id: "source-a",
       owner_id: "me",
@@ -101,9 +101,8 @@ describe("checklist selectors", () => {
         recurrenceFilters: [],
         searchQuery: "",
         endMonths: [],
-        hiddenLinkedTargetGoalIds: new Set(["target-b"]),
       }).map((row) => row.id)
-    ).toEqual(["source-a"]);
+    ).toEqual(["source-a", "target-b"]);
   });
 
   it("applies OR filtering for categories, cadence, and end months", () => {

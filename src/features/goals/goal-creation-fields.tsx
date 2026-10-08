@@ -39,7 +39,6 @@ import {
 } from "@/lib/goals/form-options";
 import { type CategorySelection } from "@/lib/goals/category";
 import { categoryChangePatch } from "@/lib/goals/card-colour";
-import { getLinkedTargetSchedulingNotice } from "@/lib/goals/linked-goal-labels";
 import { getPerPeriodTargetLabel } from "@/lib/goals/recurrence-labels";
 import { getGoalPeriodTargetMax } from "@/lib/goals/target-basis";
 import type { Goal, GoalDifficulty } from "@/lib/goals/types";
@@ -477,7 +476,7 @@ export function GoalCreationFieldControls({
                     {showTeamScopedFields ? (
                       <Label className="inline-flex min-h-8 items-center gap-2 self-start">
                         <Link2 className="size-4 shrink-0 text-muted-foreground" />
-                        <span>Make this a subgoal linked to...</span>
+                        <span>Also counts toward...</span>
                       </Label>
                     ) : null}
 
@@ -514,11 +513,8 @@ export function GoalCreationFieldControls({
                         searchQuery={linkTarget.searchQuery}
                         onSearchQueryChange={linkTarget.onSearchQueryChange}
                         filteredLinkTargets={linkTarget.filteredLinkTargets}
-                        selectedTargetGoal={linkTarget.selectedTargetGoal}
-                        sourceEndDate={fields.end_date.trim() || null}
                         showLabel={false}
                         showHelperText={false}
-                        showLinkedNotice={false}
                         disabled={disabled || linkTarget.disabled}
                       />
                     ) : null}
@@ -553,24 +549,9 @@ export function GoalCreationFieldControls({
                   {showTeamScopedFields ? (
                     <>
                       <p className="text-xs text-muted-foreground">
-                        Completing this subgoal also counts toward its linked main goal for that
+                        Completing this goal also counts toward the linked goal for that
                         day.
                       </p>
-                      {hasLinkedTarget && linkTarget.selectedTargetGoal ? (
-                        <div
-                          className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-400/50 dark:bg-amber-500/10 dark:text-amber-100"
-                        >
-                          <p className="font-medium">
-                            Linking this subgoal to {linkTarget.selectedTargetGoal.title} may hide
-                            that main goal in some calendar months.
-                          </p>
-                          <p className="mt-1">
-                            {getLinkedTargetSchedulingNotice({
-                              sourceEndDate: fields.end_date.trim() || null,
-                            })}
-                          </p>
-                        </div>
-                      ) : null}
                     </>
                   ) : null}
                 </div>
