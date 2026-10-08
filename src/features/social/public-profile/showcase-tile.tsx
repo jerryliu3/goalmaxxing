@@ -57,7 +57,7 @@ export function ShowcaseTile({
     return (
       <TileFrame label={name} size={size}>
         <p className="type-eyebrow text-[9px] text-primary">{item.label}</p>
-        <p className={cn("type-figure font-semibold tracking-tight", full ? "mt-2 text-4xl" : "text-2xl")}>
+        <p className={cn("type-figure tracking-tight", full ? "mt-2 text-4xl" : "text-2xl")}>
           {item.value}
         </p>
         {full ? <p className="text-xs text-muted-foreground">{item.hint}</p> : null}
@@ -104,7 +104,7 @@ export function ShowcaseThumb({ item }: { item: PublicProfileShowcaseItem }) {
     return <PrismMedal finish={cardFinish(item.material, item.color)} numeral="✓" goal size={36} />;
   }
   return (
-    <span className="grid size-9 place-items-center rounded-md bg-muted type-figure text-xs font-semibold text-primary">
+    <span className="grid size-9 place-items-center rounded-md bg-muted type-figure text-xs text-primary">
       {item.value}
     </span>
   );

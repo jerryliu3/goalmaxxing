@@ -131,7 +131,7 @@ describe("SettingsTab", () => {
       screen.getByText("Editing — changes are visible to everyone when you press Done")
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Done" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Add a pin" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Add a pin" })).toHaveLength(3);
 
     await user.click(screen.getByRole("button", { name: "Cancel" }));
     expect(screen.getByRole("button", { name: /Edit profile/ })).toBeInTheDocument();
