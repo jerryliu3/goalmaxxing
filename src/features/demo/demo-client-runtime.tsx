@@ -30,7 +30,7 @@ export function DemoClientRuntime({
   const snapshot = isClient ? installDemoRuntime(toLocalDateString()) : null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div data-demo-root="" className="min-h-screen bg-background">
       <DemoBanner />
       {snapshot ? (
         <>

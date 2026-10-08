@@ -9,7 +9,7 @@ export function DemoBanner() {
     >
       <div className="mx-auto flex min-h-12 max-w-5xl flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
-          You&apos;re exploring a demo. Changes stay in this tab until you refresh.
+          You&apos;re exploring a read-only demo. Nothing you do here is saved.
         </p>
         <div className="flex items-center gap-2">
           <Button asChild size="sm">

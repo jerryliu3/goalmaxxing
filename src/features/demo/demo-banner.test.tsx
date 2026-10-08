@@ -9,7 +9,9 @@ describe("DemoBanner", () => {
 
   it("explains the demo and offers conversion exits", () => {
     render(<DemoBanner />);
-    expect(screen.getByText(/you're exploring a demo/i)).toBeTruthy();
+    expect(
+      screen.getByText("You're exploring a read-only demo. Nothing you do here is saved.")
+    ).toBeTruthy();
     expect(
       screen.getByRole("link", { name: "Create account" }).getAttribute("href")
     ).toBe("/signup");
