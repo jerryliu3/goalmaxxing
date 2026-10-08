@@ -6,10 +6,10 @@ import { ArrowLeft, ArrowRight, Check, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TempoGoalCard } from "@/features/goals/tempo-goal-card";
 import { buildMilestoneNames } from "@/lib/goals/milestones";
-import { folioDate, type GoalFolio } from "./folio-model";
+import { folioDate, folioLabel, type GoalFolio } from "./folio-model";
 import styles from "./folio.module.css";
 
-export function FolioReader({ folio }: { folio: GoalFolio }) {
+export function FolioReader({ folio, onDetails }: { folio: GoalFolio; onDetails?: (goalId: string) => void }) {
   const [page, setPage] = useState({ index: 0, direction: 1 });
   const reduceMotion = useReducedMotion();
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
@@ -43,7 +43,7 @@ export function FolioReader({ folio }: { folio: GoalFolio }) {
       }}
     >
       <header className={styles.readerHeader}>
-        <span>PAST GOALS <span className={styles.readerYear}>{folio.year}</span></span>
+        <span>PAST GOALS <span className={styles.readerYear}>{folioLabel(folio).toUpperCase()}</span></span>
         <span className={styles.pageNumber}>GOAL {String(page.index + 1).padStart(2, "0")} / {String(folio.entries.length).padStart(2, "0")}</span>
       </header>
       <div className={styles.spread}>
@@ -68,6 +68,7 @@ export function FolioReader({ folio }: { folio: GoalFolio }) {
             </li>)}</ol>
           </div>}
           <p className={styles.began}>Started {folioDate(entry.goal.start_date)}</p>
+          {onDetails && <Button variant="outline" size="sm" className="mt-4" onClick={() => onDetails(entry.goal.id)}>See details</Button>}
         </div>
         <div className={styles.cardStage}
           onPointerDown={event => {

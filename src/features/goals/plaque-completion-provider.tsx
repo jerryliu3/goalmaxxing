@@ -12,7 +12,7 @@ import { reportError } from "@/lib/observability/report-error";
 import { goalCardFields } from "./goal-card-fields";
 import { createClient } from "@/lib/supabase/client";
 import { EarnedCeremony, type FlightOrigin } from "@/features/ux-brand/plaque-motion/earned-ceremony";
-import { buildGoalFolios, type GoalFolio } from "@/features/insights/folio/folio-model";
+import { buildFolioEntries, buildGoalBooks, splitPastGoals, type GoalFolio } from "@/features/insights/folio/folio-model";
 import type { Goal } from "@/lib/goals/types";
 
 type Celebration = { goal: Goal; target: number; origin: FlightOrigin; folio: GoalFolio };
@@ -42,18 +42,19 @@ export function PlaqueCompletionProvider({ children }: { children: ReactNode }) 
         const { data: auth } = await supabase.auth.getUser();
         if (!auth.user || !mounted) return;
         const timezone = resolveUserTimezone();
+        const today = getDateInTimezone(new Date(), timezone);
         const [result, progress] = await Promise.all([
           supabase.from("goals").select("*").eq("owner_id", auth.user.id).eq("is_deleted", false).order("id").limit(1001),
-          fetchProgressContext({ asOfDate: getDateInTimezone(new Date(), timezone), timezone, forceRefresh: true }),
+          fetchProgressContext({ asOfDate: today, timezone, forceRefresh: true }),
         ]);
         if (result.error) throw result.error;
         if (!mounted || result.data.length > 1000) return;
         const goals = result.data as Goal[];
-        const folios = buildGoalFolios(goals, progress.summaries, auth.user.id);
+        const books = buildGoalBooks(splitPastGoals(buildFolioEntries(goals, progress.summaries, auth.user.id)).past, today.slice(0, 4));
         const celebrations = earned.flatMap(item => {
           const goal = goals.find(goal => goal.id === item.goalId);
           const summary = progress.summaries.find(summary => summary.goalId === item.goalId);
-          const folio = folios.find(book => book.entries.some(entry => entry.goal.id === item.goalId));
+          const folio = books.find(book => book.entries.some(entry => entry.goal.id === item.goalId));
           if (!goal || !summary || summary.outcome !== "achieved" || !folio || undone.has(item.goalId)) return [];
           const origin = detail.sourceRect ?? { left: window.innerWidth / 2 - 80, top: window.innerHeight / 2 - 80, width: 160, height: 160 };
           return [{ goal, target: Math.max(1, summary.expectedUnitCount), origin, folio }];

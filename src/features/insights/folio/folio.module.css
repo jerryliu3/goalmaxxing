@@ -7,6 +7,8 @@
 .intro { max-width: 29rem; color: var(--muted-foreground); line-height: 1.7; font-size: .95rem; }
 .collectionCount { font-family: var(--type-figure-font); font-size: .7rem; color: var(--muted-foreground); white-space: nowrap; padding-bottom: .35rem; }
 .shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 3.5rem 3rem; padding: 3.5rem 1.25rem 2rem; }
+.shelf.shelfCompact { grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr)); gap: 2.5rem 2rem; padding: 1.5rem .75rem 1.5rem; }
+.shelfCompact .volume { max-width: 12rem; }
 .volume { width: 100%; max-width: 310px; justify-self: center; perspective: 1300px; text-align: left; border-radius: .4rem; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .volume:focus-visible { outline: 2px solid var(--ring); outline-offset: 16px; }
 /* Cover type is measured against the book (cqw; 100cqw = 296px on the shelf), so
@@ -14,12 +16,12 @@
 .book { display: block; position: relative; container-type: inline-size; width: calc(100% - 14px); aspect-ratio: 3 / 4; transform-style: preserve-3d; transform: rotateY(-17deg) rotateX(5deg) rotateZ(-2deg); transition: transform .5s cubic-bezier(.2,.8,.2,1); }
 .book::after { content: ""; position: absolute; left: 0; right: 4%; bottom: 0; height: 25%; background: #262d2545; transform: translateY(24px) translateZ(-24px) rotateX(78deg); filter: blur(14px); }
 .cover { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 8.9cqw 7.8cqw 8.1cqw 10.8cqw; border-radius: 3px 9px 9px 3px; color: #f5ecd7; background: linear-gradient(90deg,#0004 0%,#fff1 3%,#0002 6%,transparent 9%), repeating-linear-gradient(0deg,#ffffff04 0px,#ffffff04 1px,transparent 1px,transparent 3px), var(--folio-cloth); box-shadow: inset 0 1px 1px #fff5, inset -1px -1px 1px #0005, 5px 12px 22px #1720151c; transform: translateZ(13px); border: 1px solid #ffffff13; }
-.cover::after { content: ""; position: absolute; inset: 12px 12px 12px 22px; border: 1px solid #e9dabb28; border-radius: 1px 4px 4px 1px; pointer-events: none; }
+.cover::after { content: ""; position: absolute; inset: 4cqw 4cqw 4cqw 7.4cqw; border: 1px solid #e9dabb28; border-radius: 1px 4px 4px 1px; pointer-events: none; }
 .pageEdges { position: absolute; inset: 7px -12px 6px 12px; border-radius: 1px 6px 6px 1px; background: repeating-linear-gradient(0deg,#ece7d9 0px,#ece7d9 2px,#cfc5b3 2px,#f9f4e7 3px); box-shadow: 3px 4px 0 var(--folio-cloth), 6px 7px 10px #17201524; transform: translateZ(0); }
 .spine { position: absolute; top: 0; bottom: 0; left: 0; width: 26px; background: linear-gradient(90deg,#0004,#fff1),var(--folio-cloth); transform-origin: left center; transform: translateZ(13px) rotateY(90deg); writing-mode: vertical-rl; text-orientation: mixed; padding: 8cqw 5px; font-family: var(--type-figure-font); font-size: max(6px, 2.7cqw); letter-spacing: .14em; color: #e9ddc2; border-radius: 3px; }
 .coverTop { display: flex; align-items: center; justify-content: space-between; gap: .5rem; font-family: var(--type-figure-font); font-size: max(6px, 3cqw); letter-spacing: .1em; }
 .coverTop svg { width: 5.7cqw; height: 5.7cqw; }
-.coverYear { font-family: var(--font-display); font-size: 28cqw; letter-spacing: -.055em; font-weight: 400; line-height: 1; margin-top: 12.4cqw; text-shadow: 0 1px 1px #0008; }
+.coverYear { font-family: var(--font-display); font-size: min(28cqw, calc(140cqw / var(--cover-chars, 4))); white-space: nowrap; letter-spacing: -.055em; font-weight: 400; line-height: 1; margin-top: 12.4cqw; text-shadow: 0 1px 1px #0008; }
 .coverRule { height: 1px; width: 13.5cqw; background: #e7d9b86b; margin: 6.5cqw 0; }
 .coverTitle { font-family: var(--font-display); font-size: 8.6cqw; line-height: 1.12; letter-spacing: -.015em; }
 .coverFooter { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-top: auto; padding-top: 8cqw; font-size: max(7px, 3.5cqw); line-height: 1.6; color: #e6dbc4; }

@@ -1,5 +1,5 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildGoal } from "@/lib/goals/goal-test-fixtures";
 import { summary } from "./folio-test-fixtures";
 import { GoalsCollectionPage } from "./goals-collection-page";
@@ -11,7 +11,17 @@ vi.mock("@/lib/navigation/use-app-router", () => ({ useAppRouter: () => ({ push:
 vi.mock("@/features/insights/use-insights-data", () => ({ useInsightsData: () => mocks.data() }));
 vi.mock("@/components/layout/app-boot-ready", () => ({ useReportAppSurfaceReady: vi.fn() }));
 vi.mock("@/features/insights/insights-tab", () => ({ InsightsTab: (props: unknown) => { mocks.tracker(props); return <section data-testid="progress-tracker">Progress tracker</section>; } }));
-afterEach(() => { cleanup(); navigation.pathname = "/goals"; vi.clearAllMocks(); });
+beforeEach(() => { vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date("2026-10-08T12:00:00")); });
+afterEach(() => { cleanup(); navigation.pathname = "/goals"; vi.clearAllMocks(); vi.useRealTimers(); });
+
+/** Opens a book on the past-goals shelf and lands the cover flight. */
+function openBook(name: string) {
+  fireEvent.click(within(document.getElementById("past-goals")!).getByRole("button", { name }));
+  const reader = screen.getByRole("dialog");
+  const flight = reader.querySelector("[data-folio-flight]");
+  if (flight) fireEvent(flight, new Event("webkitAnimationEnd", { bubbles: true }));
+  return reader;
+}
 
 function loadCollection() {
   const goal = buildGoal({ title: "Write six chapters", target_basis: "lifetime", target_count: 6, reward_text: "A weekend away" });
@@ -41,27 +51,32 @@ describe("goal library journey", () => {
     expect(document.querySelector("[data-card-solid]")).toBeNull();
     expect(screen.getAllByRole("article")).toHaveLength(2);
     const current = screen.getByRole("heading", { name: "Current goals" });
-    const library = screen.getByRole("heading", { name: "Goal library" });
     const past = screen.getByRole("heading", { name: "Past goals" });
-    expect(current.compareDocumentPosition(library) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(library.compareDocumentPosition(past) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(current.compareDocumentPosition(past) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Goal library" })).toBeNull();
     expect(mocks.tracker).not.toHaveBeenCalled();
     expect(screen.getByRole("link", { name: "New Goal" })).toHaveAttribute("href", expect.stringContaining("/goals/new?returnTo="));
     expect(screen.queryByRole("navigation", { name: "Goal library collections" })).toBeNull();
   });
 
-  it("keeps creation available with no current goals and displays the past collection below the library", () => {
-    const ended = buildGoal({ owner_id: "user-1", end_date: "2026-09-30" });
+  it("keeps creation available with no current goals and files past goals into books by start date", () => {
+    const ended = buildGoal({ owner_id: "user-1", start_date: "2026-08-01", end_date: "2026-09-30" });
+    const older = buildGoal({ id: "older-goal", owner_id: "user-1", title: "Read 12 books", start_date: "2025-03-01", end_date: "2026-02-01" });
     mocks.data.mockReturnValue({ loading: false, loadError: null, reload: vi.fn(), state: {
-      userId: "user-1", goals: [ended], progress: { summaries: [summary(ended.id)] },
+      userId: "user-1", goals: [ended, older], progress: { summaries: [summary(ended.id), summary(older.id)] },
     } });
     render(<GoalsCollectionPage />);
     expect(screen.getByRole("link", { name: "New Goal" })).toBeInTheDocument();
-    expect(document.getElementById("goal-library")).toContainElement(screen.getByRole("button", { name: "Open 2026, 1 goal" }));
-    const pastCard = screen.getByRole("article", { name: `${ended.title} goal card` });
     expect(screen.queryByTestId("progress-tracker")).toBeNull();
-    expect(document.getElementById("past-goals")).toContainElement(pastCard);
-    fireEvent.click(screen.getByRole("button", { name: /See details/ }));
+    const shelf = within(document.getElementById("past-goals")!);
+    expect(shelf.getAllByRole("button", { name: /^Open / }).map(book => book.getAttribute("aria-label")))
+      .toEqual(["Open August 2026, 1 goal", "Open 2025, 1 goal"]);
+    expect(screen.queryByRole("article", { name: `${ended.title} goal card` })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Archived goals" })).toBeNull();
+
+    const reader = openBook("Open August 2026, 1 goal");
+    expect(within(reader).getByRole("article", { name: `${ended.title} goal card` })).toBeInTheDocument();
+    fireEvent.click(within(reader).getByRole("button", { name: "See details" }));
     expect(mocks.push).toHaveBeenCalledWith(`/goals/${ended.id}`);
   });
 
@@ -76,11 +91,10 @@ describe("goal library journey", () => {
     const past = screen.getByRole("heading", { name: "Past goals" });
     const archivedHeading = screen.getByRole("heading", { name: "Archived goals" });
     expect(past.compareDocumentPosition(archivedHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    const pastSection = document.getElementById("past-goals")!;
     const archivedSection = document.getElementById("archived-goals")!;
-    expect(pastSection).toContainElement(screen.getByRole("article", { name: "Run a 10k goal card" }));
-    expect(pastSection).not.toContainElement(screen.getByRole("article", { name: "Learn the cello goal card" }));
+    expect(within(document.getElementById("past-goals")!).getAllByRole("button", { name: /^Open / })).toHaveLength(1);
     expect(archivedSection).toContainElement(screen.getByRole("article", { name: "Learn the cello goal card" }));
+    expect(within(openBook("Open August 2026, 1 goal")).getByRole("article", { name: "Run a 10k goal card" })).toBeInTheDocument();
   });
 
   it("lets a fused current goal stay a draggable 3D card", () => {
@@ -120,7 +134,7 @@ describe("goal library journey", () => {
       userId: "user-1", goals: [ended], progress: { summaries: [summary(ended.id)] },
     } });
     render(<GoalsCollectionPage />);
-    fireEvent.click(screen.getByRole("button", { name: /See details/ }));
+    fireEvent.click(within(openBook("Open August 2026, 1 goal")).getByRole("button", { name: "See details" }));
     expect(mocks.push).toHaveBeenCalledWith(`/demo/goals/${ended.id}`);
   });
 });

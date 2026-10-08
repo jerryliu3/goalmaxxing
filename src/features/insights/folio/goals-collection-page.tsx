@@ -12,7 +12,7 @@ import { useInsightsData } from "@/features/insights/use-insights-data";
 import { FolioShelf } from "./folio-shelf";
 import { CurrentGoalGrid } from "./current-goal-grid";
 import { useGoalCardScrollMotion } from "@/features/goals/use-goal-card-scroll-motion";
-import { buildCurrentGoals, buildGoalFolios, splitPastGoals } from "./folio-model";
+import { buildCurrentGoals, buildFolioEntries, buildGoalBooks, splitPastGoals } from "./folio-model";
 import styles from "./folio.module.css";
 
 export function GoalsCollectionPage({ subjectUserId, readOnly = false, anchorSections = true }: {
@@ -24,11 +24,13 @@ export function GoalsCollectionPage({ subjectUserId, readOnly = false, anchorSec
   const moving = useGoalCardScrollMotion();
   const router = useAppRouter();
   const prefix = isDemoPathname(usePathname() ?? "") ? "/demo" : "";
-  const { state, loading, loadError, reload } = useInsightsData({ subjectUserId, selectedYear: String(new Date().getFullYear()), failClosed: readOnly });
+  const currentYear = String(new Date().getFullYear());
+  const { state, loading, loadError, reload } = useInsightsData({ subjectUserId, selectedYear: currentYear, failClosed: readOnly });
   useReportAppSurfaceReady(!loading);
-  const folios = useMemo(() => buildGoalFolios(state.goals, state.progress?.summaries ?? [], state.userId), [state.goals, state.progress, state.userId]);
+  const entries = useMemo(() => buildFolioEntries(state.goals, state.progress?.summaries ?? [], state.userId), [state.goals, state.progress, state.userId]);
   const current = useMemo(() => buildCurrentGoals(state.goals, state.progress?.summaries ?? [], state.userId), [state.goals, state.progress, state.userId]);
-  const { past, archived } = useMemo(() => splitPastGoals(folios), [folios]);
+  const { past, archived } = useMemo(() => splitPastGoals(entries), [entries]);
+  const books = useMemo(() => buildGoalBooks(past, currentYear), [past, currentYear]);
   const openDetails = readOnly ? undefined : (goalId: string) => router.push(`${prefix}/goals/${goalId}`);
   return (
     <div className={styles.page}>
@@ -36,24 +38,17 @@ export function GoalsCollectionPage({ subjectUserId, readOnly = false, anchorSec
         : loading || !state.progress ? <LoadingCard title="Opening your collection..." description="Gathering your goals." />
         : <div className="space-y-8">
           <section aria-labelledby={`${headingId}-current`}>
-            <header className="mb-4"><h1 id={`${headingId}-current`} className="type-title text-2xl">Current goals</h1><p className="text-sm text-muted-foreground">Taking shape. Worth keeping.</p></header>
+            <h1 id={`${headingId}-current`} className="type-title mb-4 text-2xl">Current goals</h1>
             <CurrentGoalGrid entries={current} moving={moving} leadingCard={readOnly ? undefined : <NewGoalButton presentation="card" />} onDetails={openDetails} />
           </section>
-          <section id={anchorSections ? "goal-library" : undefined} aria-labelledby={`${headingId}-library`}>
-            <header className="mb-4">
-              <h2 id={`${headingId}-library`} className="type-title text-2xl">Goal library</h2>
-              <p className="text-sm text-muted-foreground">Open a yearbook to revisit your goals.</p>
-            </header>
-            {folios.length ? <FolioShelf folios={folios} /> : <p className="text-sm text-muted-foreground">Your yearbooks collect here as goals finish, end, or are archived.</p>}
-          </section>
           <section id={anchorSections ? "past-goals" : undefined} aria-labelledby={`${headingId}-past`}>
-            <header className="mb-4"><h2 id={`${headingId}-past`} className="type-title text-2xl">Past goals</h2><p className="text-sm text-muted-foreground">Every goal you’ve finished or seen through to its end.</p></header>
-            {past.length ? <CurrentGoalGrid entries={past} moving={moving} onDetails={openDetails} /> : <p className="text-sm text-muted-foreground">Completed and ended goals collect here.</p>}
+            <h2 id={`${headingId}-past`} className="type-title mb-4 text-2xl">Past goals</h2>
+            {books.length ? <FolioShelf folios={books} compact onDetails={openDetails} /> : <p className="text-sm text-muted-foreground">Completed and ended goals collect here.</p>}
           </section>
-          <section id={anchorSections ? "archived-goals" : undefined} aria-labelledby={`${headingId}-archived`}>
-            <header className="mb-4"><h2 id={`${headingId}-archived`} className="type-title text-2xl">Archived goals</h2><p className="text-sm text-muted-foreground">Set aside. Restore any of them from the back of the card.</p></header>
-            {archived.length ? <CurrentGoalGrid entries={archived} moving={moving} onDetails={openDetails} /> : <p className="text-sm text-muted-foreground">Goals you archive collect here.</p>}
-          </section>
+          {archived.length ? <section id={anchorSections ? "archived-goals" : undefined} aria-labelledby={`${headingId}-archived`}>
+            <h2 id={`${headingId}-archived`} className="type-title mb-4 text-2xl">Archived goals</h2>
+            <CurrentGoalGrid entries={archived} moving={moving} onDetails={openDetails} />
+          </section> : null}
         </div>}
 
     </div>

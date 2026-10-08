@@ -39,7 +39,7 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       { source: `${prefix}/insights/folios`, destination: `${prefix}/goals`, permanent: true },
-      { source: `${prefix}/goals/library`, destination: `${prefix}/goals#goal-library`, permanent: true },
+      { source: `${prefix}/goals/library`, destination: `${prefix}/goals#past-goals`, permanent: true },
     ]);
   },
   async headers() {

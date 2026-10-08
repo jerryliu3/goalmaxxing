@@ -35,7 +35,7 @@ test("Growth has one home for each section and Settings has no score or stats", 
 
   await mainNavigation(page).getByRole("link", { name: "Goals", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Current goals", exact: true }).first()).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Goal library", exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Goal library", exact: true })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Past goals", exact: true }).first()).toBeVisible();
   await expect(page.getByText("Progress tracker", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: /Account menu/ }).click();
@@ -83,7 +83,7 @@ for (const [from, to] of [
   ["/demo/achievements", "/demo/growth"],
   ["/demo/insights", "/demo/growth"],
   ["/demo/insights/more", "/demo/growth#stats"],
-  ["/demo/goals/library", "/demo/goals#goal-library"],
+  ["/demo/goals/library", "/demo/goals#past-goals"],
   ["/demo/insights/folios?view=past", "/demo/goals#past-goals"],
 ]) {
   test(`${from} redirects to its canonical destination`, async ({ page }) => {
