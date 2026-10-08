@@ -1625,7 +1625,7 @@ describe("CalendarSurface characterization", () => {
     expect(onSelectedDayChange).not.toHaveBeenCalled();
   });
 
-  it("raises the planning issues banner for lock conflicts only", async () => {
+  it("shows lock conflicts without counting or listing capacity records", async () => {
     const context = buildContext([
       unit({
         originalGoalId: "goal-a",
@@ -1642,7 +1642,7 @@ describe("CalendarSurface characterization", () => {
         lockSignature: "lock-a",
         effectiveSpanEnd: "2027-07-31",
         unplacedCount: 3,
-        reason: "invalid_lock",
+        reason: "capacity",
       },
       {
         goalId: "goal-b",
@@ -1652,15 +1652,13 @@ describe("CalendarSurface characterization", () => {
         lockSignature: "lock-b",
         effectiveSpanEnd: "2027-07-31",
         unplacedCount: 1,
-        reason: "capacity",
+        reason: "invalid_lock",
       },
     ];
     postJsonMock.mockResolvedValue(context);
 
     const expectedSummaries = summarizePlannerGoalUnplaceableRecords({
-      records: (context.unplaceableGoals ?? []).filter(
-        (record) => record.reason === "invalid_lock"
-      ),
+      records: (context.unplaceableGoals ?? []).filter((record) => record.reason === "invalid_lock"),
       goalTitles: context.goalTitles,
     });
     render(
@@ -1686,13 +1684,15 @@ describe("CalendarSurface characterization", () => {
     fireEvent.click(screen.getByRole("button", { name: "Review" }));
     const dialog = await screen.findByRole("dialog");
     expect(expectedSummaries).toHaveLength(1);
+    expect(within(dialog).queryByText("Goal A")).toBeNull();
+    expect(within(dialog).queryByText(/capacity shortfall/i)).toBeNull();
     for (const expected of expectedSummaries) {
       expect(within(dialog).getByText(expected.title)).toBeInTheDocument();
     }
     expect(within(dialog).queryByText(/capacity shortfall/i)).not.toBeInTheDocument();
   });
 
-  it("does not render unplaceable banner when no record is present", async () => {
+  it.each([false, true])("does not show a warning for capacity-only state (%s)", async (hasCapacityRecord) => {
     const context = buildContext([
       unit({
         originalGoalId: "goal-a",
@@ -1700,7 +1700,11 @@ describe("CalendarSurface characterization", () => {
         scheduledDate: "2026-08-31",
       }),
     ]);
-    context.unplaceableGoals = [];
+    context.unplaceableGoals = hasCapacityRecord ? [{
+      goalId: "goal-a", requirementFingerprint: "a".repeat(64),
+      policyFingerprint: "p".repeat(64), policyRevision: 1, lockSignature: "",
+      effectiveSpanEnd: "2027-07-31", unplacedCount: 3, reason: "capacity",
+    }] : [];
     postJsonMock.mockResolvedValue(context);
 
     render(
@@ -1720,7 +1724,7 @@ describe("CalendarSurface characterization", () => {
       expect(postJsonMock).toHaveBeenCalled();
     });
     expect(
-      screen.queryByRole("button", { name: "Review" })
+      screen.queryByTestId("plan-recover-banner")
     ).not.toBeInTheDocument();
   });
 
