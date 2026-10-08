@@ -11,12 +11,15 @@ export function TempoStepNavigation({
   step,
   onStep,
   canVisit = [],
+  canChooseMethod = true,
   disabled = false,
   showDetails = false,
 }: {
   step: number;
   onStep?: (step: number) => void;
   canVisit?: boolean[];
+  /** False once the goal is saved: there is no other way to begin it any more. */
+  canChooseMethod?: boolean;
   disabled?: boolean;
   /** More details joins the bar only once the person opens them (tasks never have them). */
   showDetails?: boolean;
@@ -38,7 +41,7 @@ export function TempoStepNavigation({
           aria-current={step === index ? "step" : undefined}
           data-optional={index === OPTIONAL_STEP || undefined}
           disabled={
-            disabled || (index === 0 ? !chooseMethod : !canVisit[index - 1])
+            disabled || (index === 0 ? !chooseMethod || !canChooseMethod : !canVisit[index - 1])
           }
           onClick={() => (index === 0 ? chooseMethod?.() : onStep?.(index - 1))}
         >

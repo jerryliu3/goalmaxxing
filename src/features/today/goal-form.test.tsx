@@ -20,10 +20,17 @@ async function chooseRequiredGoalFields(user: ReturnType<typeof userEvent.setup>
   await user.click(screen.getByRole("button", { name: "Daily" }));
 }
 
-/** Creation links on the card's back (the details turn it over), with the same picker as editing. */
-async function linkToMainGoal(user: ReturnType<typeof userEvent.setup>) {
+const createdNotice = "Your goal is created. Everything here is optional.";
+
+/** "Add more details" saves the goal at review, then opens the details on the saved goal. */
+async function createAndOpenDetails(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: /05Review/ }));
   await user.click(await screen.findByRole("button", { name: "Add more details (optional) →" }));
+  await screen.findByText(createdNotice);
+}
+
+/** The details link on the card's back, with the same picker as editing. */
+async function linkToMainGoal(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole("button", { name: /Also counts toward/ }));
   await user.click(screen.getByRole("option", { name: "Main goal" }));
 }
@@ -377,12 +384,79 @@ describe("GoalForm persistence recovery", () => {
     cleanup();
   });
 
+  it("saves at review for more details, then saves the details as an update of that goal", async () => {
+    const randomUuidSpy = vi
+      .spyOn(globalThis.crypto, "randomUUID")
+      .mockReturnValue("99000000-0000-4000-8000-000000000004");
+    const onExit = vi.fn();
+    rpcMock.mockResolvedValue({ error: null });
+    const user = userEvent.setup({ delay: null });
+
+    try {
+      render(<GoalForm onExit={onExit} />);
+      await screen.findByLabelText("Name");
+      await user.type(screen.getByLabelText("Name"), "Daily reset");
+      await chooseRequiredGoalFields(user);
+      await createAndOpenDetails(user);
+
+      expect(rpcMock).toHaveBeenNthCalledWith(
+        1,
+        "create_goal",
+        expect.objectContaining({ p_id: "99000000-0000-4000-8000-000000000004", p_title: "Daily reset" }),
+      );
+      expect(toastSuccessMock).toHaveBeenCalledWith("Goal created.");
+      expect(onExit).not.toHaveBeenCalled();
+      // The saved goal's definition is settled: only the details stay open.
+      expect(screen.getByRole("button", { name: /02Intention/ })).toBeDisabled();
+      expect(screen.getByRole("button", { name: /05Review/ })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Done" })).toBeEnabled();
+
+      await user.type(screen.getByRole("textbox", { name: /^Your reward/ }), "New shoes");
+      await user.click(screen.getByRole("button", { name: "Save details" }));
+
+      await waitFor(() => expect(onExit).toHaveBeenCalledTimes(1));
+      expect(rpcMock.mock.calls.filter(([method]) => method === "create_goal")).toHaveLength(1);
+      expect(rpcMock).toHaveBeenCalledWith(
+        "update_goal",
+        expect.objectContaining({
+          p_id: "99000000-0000-4000-8000-000000000004",
+          p_title: "Daily reset",
+          p_reward_text: "New shoes",
+        }),
+      );
+      expect(toastSuccessMock).toHaveBeenLastCalledWith("Goal updated.");
+    } finally {
+      randomUuidSpy.mockRestore();
+    }
+  }, 15_000);
+
+  it("finishes the details with Done, without another save, when nothing changed", async () => {
+    const onExit = vi.fn();
+    rpcMock.mockResolvedValue({ error: null });
+    const user = userEvent.setup({ delay: null });
+
+    render(<GoalForm onExit={onExit} />);
+    await screen.findByLabelText("Name");
+    await user.type(screen.getByLabelText("Name"), "Quiet finish");
+    await chooseRequiredGoalFields(user);
+    await createAndOpenDetails(user);
+    await user.click(screen.getByRole("button", { name: "Done" }));
+
+    expect(onExit).toHaveBeenCalledTimes(1);
+    expect(rpcMock.mock.calls.map(([method]) => method)).toEqual([
+      "create_goal",
+      "replace_goal_source_link",
+    ]);
+  }, 15_000);
+
   it("retains a saved goal and retries a rejected link without reporting success", async () => {
     const randomUuidSpy = vi
       .spyOn(globalThis.crypto, "randomUUID")
       .mockReturnValue("99000000-0000-4000-8000-000000000001");
     const onExit = vi.fn();
     rpcMock
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null })
       .mockResolvedValueOnce({ error: null })
       .mockRejectedValueOnce({})
       .mockResolvedValueOnce({ error: null });
@@ -393,24 +467,23 @@ describe("GoalForm persistence recovery", () => {
       await screen.findByLabelText("Name");
       await user.type(screen.getByLabelText("Name"), "Daily reset");
       await chooseRequiredGoalFields(user);
-      await user.click(screen.getByRole("button", { name: /04Schedule/ }));
+      await createAndOpenDetails(user);
       await linkToMainGoal(user);
-      // The reward step's own field sets the reward, saved with the goal.
-      await user.type(await screen.findByRole("textbox", { name: /^Your reward/ }), "New shoes");
-      await user.click(screen.getByRole("button", { name: /05Review/ }));
-      await user.click(screen.getByRole("button", { name: "Create goal" }));
+      await user.type(screen.getByRole("textbox", { name: /^Your reward/ }), "New shoes");
+      await user.click(screen.getByRole("button", { name: "Save details" }));
 
       await waitFor(() => {
         expect(
           screen.getByRole("button", { name: "Retry saving link" }),
         ).toBeInTheDocument();
       });
-      expect(toastSuccessMock).not.toHaveBeenCalled();
+      expect(toastSuccessMock).toHaveBeenCalledTimes(1);
+      expect(toastSuccessMock).toHaveBeenCalledWith("Goal created.");
       expect(onExit).not.toHaveBeenCalled();
       expect(toastErrorMock).toHaveBeenCalledWith(
         "Could not save the selected goal link. Try again.",
       );
-      expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(1);
+      expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(3);
 
       await user.click(
         screen.getByRole("button", { name: "Retry saving link" }),
@@ -419,28 +492,28 @@ describe("GoalForm persistence recovery", () => {
       await waitFor(() => {
         expect(onExit).toHaveBeenCalledTimes(1);
       });
-      const createGoalCalls = rpcMock.mock.calls.filter(
-        ([method]) => method === "create_goal",
-      );
-      expect(createGoalCalls).toHaveLength(1);
-      const stableGoalId = createGoalCalls[0]?.[1]?.p_id;
-      expect(stableGoalId).toEqual(expect.any(String));
-      expect(createGoalCalls[0]?.[1]).toMatchObject({
-        p_id: stableGoalId,
-        p_title: "Daily reset",
-        p_reward_text: "New shoes",
-      });
+      const stableGoalId = "99000000-0000-4000-8000-000000000001";
+      expect(rpcMock.mock.calls.filter(([method]) => method === "create_goal")).toHaveLength(1);
       expect(rpcMock).toHaveBeenNthCalledWith(2, "replace_goal_source_link", {
         p_source_goal_id: stableGoalId,
-        p_target_goal_id: "goal-main-1",
+        p_target_goal_id: undefined,
       });
-      expect(rpcMock).toHaveBeenNthCalledWith(3, "replace_goal_source_link", {
+      expect(rpcMock).toHaveBeenNthCalledWith(
+        3,
+        "update_goal",
+        expect.objectContaining({ p_id: stableGoalId, p_reward_text: "New shoes" }),
+      );
+      expect(rpcMock).toHaveBeenNthCalledWith(4, "replace_goal_source_link", {
         p_source_goal_id: stableGoalId,
         p_target_goal_id: "goal-main-1",
       });
-      expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(2);
-      expect(requestXpRefreshMock).toHaveBeenCalledTimes(1);
-      expect(toastSuccessMock).toHaveBeenCalledWith("Goal created.");
+      expect(rpcMock).toHaveBeenNthCalledWith(5, "replace_goal_source_link", {
+        p_source_goal_id: stableGoalId,
+        p_target_goal_id: "goal-main-1",
+      });
+      expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(4);
+      expect(requestXpRefreshMock).toHaveBeenCalledTimes(2);
+      expect(toastSuccessMock).toHaveBeenLastCalledWith("Goal updated.");
     } finally {
       randomUuidSpy.mockRestore();
     }
@@ -598,8 +671,10 @@ describe("GoalForm persistence recovery", () => {
     expect(rpcMock).not.toHaveBeenCalled();
   });
 
-  it("keeps the form editable after a definitive link error", async () => {
+  it("keeps the details editable after a definitive link error", async () => {
     rpcMock
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null })
       .mockResolvedValueOnce({ error: null })
       .mockResolvedValueOnce({ error: { message: "link rejected" } });
     const onExit = vi.fn();
@@ -608,25 +683,26 @@ describe("GoalForm persistence recovery", () => {
     render(<GoalForm onExit={onExit} />);
     await screen.findByLabelText("Name");
     await user.type(screen.getByLabelText("Name"), "Editable link failure");
-      await chooseRequiredGoalFields(user);
-    await user.click(screen.getByRole("button", { name: /04Schedule/ }));
+    await chooseRequiredGoalFields(user);
+    await createAndOpenDetails(user);
     await linkToMainGoal(user);
-    await user.click(screen.getByRole("button", { name: /05Review/ }));
-    await user.click(screen.getByRole("button", { name: "Create goal" }));
+    await user.click(screen.getByRole("button", { name: "Save details" }));
 
     await waitFor(() => {
       expect(toastErrorMock).toHaveBeenCalledWith("link rejected");
-      expect(screen.getByRole("button", { name: /02Intention/ })).toBeEnabled();
+      expect(screen.getByRole("textbox", { name: /^Your reward/ })).toBeEnabled();
     });
     expect(
       screen.queryByRole("button", { name: "Retry saving link" }),
     ).not.toBeInTheDocument();
     expect(onExit).not.toHaveBeenCalled();
-    expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(1);
+    expect(invalidatePlannerRelatedTabCachesMock).toHaveBeenCalledTimes(3);
   });
 
   it("clears link recovery after a definitive retry error but retains it after rejected retries", async () => {
     rpcMock
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null })
       .mockResolvedValueOnce({ error: null })
       .mockRejectedValueOnce(new Error("link request timed out"))
       .mockResolvedValueOnce({ error: { message: "link no longer allowed" } });
@@ -636,24 +712,23 @@ describe("GoalForm persistence recovery", () => {
     render(<GoalForm onExit={onExit} />);
     await screen.findByLabelText("Name");
     await user.type(screen.getByLabelText("Name"), "Retryable link failure");
-      await chooseRequiredGoalFields(user);
-    await user.click(screen.getByRole("button", { name: /04Schedule/ }));
+    await chooseRequiredGoalFields(user);
+    await createAndOpenDetails(user);
     await linkToMainGoal(user);
-    await user.click(screen.getByRole("button", { name: /05Review/ }));
-    await user.click(screen.getByRole("button", { name: "Create goal" }));
+    await user.click(screen.getByRole("button", { name: "Save details" }));
 
     await waitFor(() => {
       expect(
         screen.getByRole("button", { name: "Retry saving link" }),
       ).toBeInTheDocument();
     });
-    expect(screen.getByRole("button", { name: /02Intention/ })).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: /^Your reward/ })).toBeDisabled();
 
     await user.click(screen.getByRole("button", { name: "Retry saving link" }));
 
     await waitFor(() => {
       expect(toastErrorMock).toHaveBeenCalledWith("link no longer allowed");
-      expect(screen.getByRole("button", { name: /02Intention/ })).toBeEnabled();
+      expect(screen.getByRole("textbox", { name: /^Your reward/ })).toBeEnabled();
     });
     expect(
       screen.queryByRole("button", { name: "Retry saving link" }),

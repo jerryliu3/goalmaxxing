@@ -2,7 +2,7 @@
 import { useCoachPageContext } from "@/features/coach/use-coach-page-context";
 
 import { useAppRouter } from "@/lib/navigation/use-app-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { completeGoalEditor } from "@/features/goals/goal-editor-navigation";
 import {
   applyGoalFormFieldChange,
   defaultGoalFormState,
+  type GoalFormState,
   toGoalCreationFields,
 } from "@/features/today/goal-form-model";
 import { useReportUnsavedChanges } from "@/features/goals/unsaved-changes";
@@ -24,10 +25,23 @@ import { useGoalFormSubmit } from "@/features/today/use-goal-form-submit";
 
 import { TempoGoalFields } from "@/features/goals/tempo-goal-fields";
 
-/** Creates a goal or one-time task. Editing an existing goal happens on its card (`GoalCardEditor`). */
+const goalFormId = "goal-form-create";
+
+function submitGoalForm() {
+  (document.getElementById(goalFormId) as HTMLFormElement | null)?.requestSubmit();
+}
+
+/**
+ * Creates a goal or one-time task. A goal is saved at review; "Add more details" saves it and
+ * stays open, so the optional details then update the saved goal. Editing an existing goal
+ * otherwise happens on its card (`GoalCardEditor`).
+ */
 export function GoalForm({ onExit }: { onExit?: () => void }) {
   const router = useAppRouter();
   const [createReady, setCreateReady] = useState(false);
+  // The saved goal and what was saved, so the details know what changed since.
+  const [created, setCreated] = useState<{ goalId: string; state: GoalFormState; link: string } | null>(null);
+  const openDetailsAfterCreate = useRef(false);
   const completeAndExit = useCallback(() => {
     if (onExit) {
       onExit();
@@ -57,7 +71,21 @@ export function GoalForm({ onExit }: { onExit?: () => void }) {
     supabase,
   } = useGoalFormState();
   useCoachPageContext({ surface: "goal" }, 10);
-  useReportUnsavedChanges(JSON.stringify(state) !== JSON.stringify(defaultGoalFormState));
+  const dirty = created
+    ? JSON.stringify(state) !== JSON.stringify(created.state) || selectedLinkTarget !== created.link
+    : JSON.stringify(state) !== JSON.stringify(defaultGoalFormState);
+  useReportUnsavedChanges(dirty);
+
+  const onCreated = useCallback(
+    (goalId: string) => {
+      if (!openDetailsAfterCreate.current) {
+        completeAndExit();
+        return;
+      }
+      setCreated({ goalId, state, link: selectedLinkTarget });
+    },
+    [completeAndExit, state, selectedLinkTarget],
+  );
 
   const {
     saving,
@@ -66,6 +94,7 @@ export function GoalForm({ onExit }: { onExit?: () => void }) {
     onSubmit,
     retryGoalLink,
   } = useGoalFormSubmit({
+    goalId: created?.goalId,
     state,
     selectedLinkTarget,
     isPlannerTask,
@@ -74,9 +103,8 @@ export function GoalForm({ onExit }: { onExit?: () => void }) {
     validationError,
     supabase,
     completeAndExit,
+    onCreated,
   });
-
-  const goalFormId = "goal-form-create";
 
   return (
     <Card className="gap-0 border-0 bg-transparent py-0 shadow-none">
@@ -86,13 +114,7 @@ export function GoalForm({ onExit }: { onExit?: () => void }) {
             kind={recovery.kind}
             saving={saving}
             onRetry={() =>
-              recovery.kind === "link"
-                ? void retryGoalLink()
-                : void (
-                    document.getElementById(
-                      goalFormId,
-                    ) as HTMLFormElement | null
-                  )?.requestSubmit()
+              recovery.kind === "link" ? void retryGoalLink() : submitGoalForm()
             }
           />
         ) : null}
@@ -131,7 +153,13 @@ export function GoalForm({ onExit }: { onExit?: () => void }) {
             reward={state.reward_text}
             error={validationError}
             action={
-              <Button type="submit" disabled={submitDisabled}>
+              <Button
+                type="submit"
+                disabled={submitDisabled}
+                onClick={() => {
+                  openDetailsAfterCreate.current = false;
+                }}
+              >
                 {saving
                   ? "Creating…"
                   : isPlannerTask
@@ -139,6 +167,22 @@ export function GoalForm({ onExit }: { onExit?: () => void }) {
                     : "Create goal"}
               </Button>
             }
+            details={{
+              saved: created !== null,
+              onOpen: () => {
+                openDetailsAfterCreate.current = true;
+                submitGoalForm();
+              },
+              action: (
+                <Button
+                  type="button"
+                  disabled={dirty ? submitDisabled : saving}
+                  onClick={() => (dirty ? submitGoalForm() : completeAndExit())}
+                >
+                  {saving ? "Saving…" : dirty ? "Save details" : "Done"}
+                </Button>
+              ),
+            }}
             fields={toGoalCreationFields(state)}
             onFieldChange={(change) => {
               if (saving || recovery !== null) {

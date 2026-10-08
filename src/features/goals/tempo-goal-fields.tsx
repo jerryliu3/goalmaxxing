@@ -89,6 +89,7 @@ export function TempoGoalFields({
   taskSchedule,
   reward,
   prefilled = false,
+  details,
 }: Omit<GoalCreationFieldControlsProps, "onPatch" | "linkTarget"> & {
   onPatch: (patch: Partial<CardEditorFields>) => void;
   /** Search and pick for the back's "Also counts toward" row (the back has its own picker). */
@@ -105,6 +106,12 @@ export function TempoGoalFields({
   /** Where the caller saves the plaque target; without it the target is shown but not editable. */
   onPlaqueTargetChange?: (target: number) => void;
   taskSchedule?: { date: string; time: string };
+  /**
+   * Saving at review: "Add more details" calls `onOpen` (the caller creates the goal), and
+   * once `saved` the details edit the saved goal, with `action` at their foot. Without it
+   * (bulk drafts) the details open before anything is saved and end with `action`.
+   */
+  details?: { saved: boolean; onOpen: () => void; action: ReactNode };
 }) {
   const [step, setStep] = useState(0);
   const error = getGoalCreationPeriodLimitError(fields) || suppliedError;
@@ -129,6 +136,18 @@ export function TempoGoalFields({
   const [reviewTurn, setReviewTurn] = useState(false);
   const choose = (patch: Partial<TempoChoicesMade>) =>
     setChosen((previous) => ({ ...previous, ...patch }));
+  const saved = Boolean(details?.saved);
+  // Once saved, only the details stay open: what came before is the goal's definition.
+  const [openedSaved, setOpenedSaved] = useState(false);
+  if (saved && !openedSaved) {
+    setOpenedSaved(true);
+    setReviewTurn(false);
+    setStep(DETAILS);
+    setFurthestStep(DETAILS);
+  }
+  useEffect(() => {
+    if (saved) requestAnimationFrame(() => heading.current?.focus());
+  }, [saved]);
   // Category first: chromatic foil and effort bars borrow the category color.
   const intentionValid =
     fields.title.trim().length > 0 &&
@@ -145,13 +164,16 @@ export function TempoGoalFields({
           : chosen.interval && chosen.basis)));
   const scheduleValid = !error;
   const essentialsValid = Boolean(intentionValid && rhythmValid && scheduleValid);
-  const canVisit = [
-    true,
-    intentionValid,
-    intentionValid && rhythmValid,
-    essentialsValid,
-    !isPlannerTask && essentialsValid,
-  ];
+  // Saving at review, the details open through "Add more details" (which creates the goal).
+  const canVisit = saved
+    ? [false, false, false, false, true]
+    : [
+        true,
+        intentionValid,
+        intentionValid && rhythmValid,
+        essentialsValid,
+        !isPlannerTask && essentialsValid && !details,
+      ];
   const currentValid =
     step === 0 ? intentionValid : step === 1 ? rhythmValid : step === SCHEDULE ? scheduleValid : true;
   const visibility: TempoCardVisibility = {
@@ -301,6 +323,7 @@ export function TempoGoalFields({
         step={step + 1}
         onStep={go}
         canVisit={canVisit}
+        canChooseMethod={!saved}
         disabled={disabled}
         showDetails={!isPlannerTask && furthestStep >= DETAILS}
       />
@@ -335,6 +358,11 @@ export function TempoGoalFields({
                     "Give it a place in your life.",
                   ][step]}
             </h2>
+            {step === DETAILS && saved && (
+              <p className="tempo-hint" role="status">
+                Your goal is created. Everything here is optional.
+              </p>
+            )}
             <fieldset className="tempo-fields" disabled={disabled}>
               {step === 0 && (
                 <TempoGoalIntention
@@ -388,7 +416,7 @@ export function TempoGoalFields({
             )}
             <div className="tempo-footer">
               {step === DETAILS ? (
-                action
+                (details?.action ?? action)
               ) : (
                 <Button
                   type="button"
@@ -407,7 +435,7 @@ export function TempoGoalFields({
           plaqueTarget={isPlannerTask ? undefined : plaqueTarget}
           disabled={disabled}
           action={action}
-          onDetails={isPlannerTask ? undefined : () => go(DETAILS)}
+          onDetails={isPlannerTask ? undefined : (details?.onOpen ?? (() => go(DETAILS)))}
           error={error}
         />
       )}

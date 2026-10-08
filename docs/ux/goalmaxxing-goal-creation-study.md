@@ -75,6 +75,30 @@ that edits with the card back's own reward field. Reward: from the sentence.
   a real version would need the same "what we read" readback and should ask, not
   guess, the rhythm when unsure.
 
+## Production update (Oct 2026): what a goal needs, then more details
+
+Feedback: the wizard asked for optional facts before the goal could exist. The
+production Tempo flow (`TempoGoalFields`) now asks only what a goal needs, then
+offers the rest:
+
+- **Needed, in order:** Intention (name, category, difficulty — difficulty stays
+  because each difficulty has its own card design), Rhythm, Schedule (start,
+  finish, who can see it), Review. The rhythm and start date are fixed after
+  creation (`update_goal` rejects them), so they are settled first; schedule
+  facts all default and never block Continue. Visibility stays before the save
+  because people care who sees a new goal.
+- **Review is the checkpoint.** It states the plaque target and offers
+  **Create goal** (save and leave) or **Add more details →**, which also saves
+  the goal and then keeps the sheet open.
+- **More details** is an optional tab after Review: reward, time of day, and the
+  card's back (why it matters, plaque target, card colour, also counts toward).
+  For a single goal they edit the saved goal through `update_goal` ("Save
+  details", or "Done" when nothing changed); the earlier steps are locked once
+  it is saved. Closing the sheet keeps the goal.
+- **Bulk AI drafts** still edit details before saving and create all selected
+  drafts from Review or the details; a better bulk flow is a follow-up.
+- Tasks have no details: Intention, Rhythm, Schedule (date and time), Review.
+
 Functional coverage is included as code (`goal-creation.test.tsx`). Tests,
 typecheck, lint and browser checks have not been run; verification remains
 approval-gated by AGENTS.md.
