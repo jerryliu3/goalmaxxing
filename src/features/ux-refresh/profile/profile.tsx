@@ -20,7 +20,7 @@ import {
   OVERALL_STATS,
   LEVEL,
 } from "@/features/ux-profile/seed";
-import { SAMPLE_GOALS } from "../sample";
+import { INITIAL_LOG, SAMPLE_GOALS } from "../sample";
 import { PreferencesConcept } from "./settings";
 
 export function ProfileConcept({ variant }: { variant: number }) {
@@ -107,7 +107,7 @@ export function ProfileConcept({ variant }: { variant: number }) {
             <GoalArtifact
               key={goal.id}
               id={goal.id}
-              completed={goal.id === "run" ? 4 : 2}
+              completed={INITIAL_LOG[goal.id].length}
             />
           ))}
         </div>

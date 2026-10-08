@@ -6,7 +6,7 @@ import { DayWork, WeekStrip, toggleId } from "./work";
 
 export function WeekConcept() {
   const [day, setDay] = useState(8);
-  const [completed, setCompleted] = useState<string[]>(["run-5", "language-6"]);
+  const [completed, setCompleted] = useState<string[]>(["language-6"]);
   return (
     <>
       <AppNav />

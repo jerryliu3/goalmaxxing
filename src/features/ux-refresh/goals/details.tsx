@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Action, GoalArtifact, StudyDialog } from "../primitives";
-import { SAMPLE_GOALS, type SampleGoalId } from "../sample";
+import { INITIAL_LOG, SAMPLE_GOALS, type SampleGoalId } from "../sample";
 
 export function GoalDetails({
   goalId,
@@ -61,7 +61,7 @@ export function GoalDetails({
         <GoalArtifact
           id={goalId}
           nameOverride={name}
-          completed={goalId === "run" ? 4 : 2}
+          completed={INITIAL_LOG[goalId].length}
           rotatable={rotating}
         />
         <Action

@@ -26,7 +26,7 @@ export function AgendaConcept({ variant }: { variant: number }) {
   const [category, setCategory] = useState("All");
   const [filters, setFilters] = useState(false);
   const [searching, setSearching] = useState(variant === 1);
-  const [completed, setCompleted] = useState<string[]>(["run-5", "language-6"]);
+  const [completed, setCompleted] = useState<string[]>(["language-6"]);
   const work = (
     <Panel>
       <DayWork

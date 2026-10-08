@@ -5,6 +5,7 @@ import { RecoveryConcept } from "./agenda/recovery";
 import { BooksConcept } from "./goals/books";
 import { CreationConcept } from "./goals/creation";
 import { EditorConcept } from "./goals/editor";
+import { CollectionConcept } from "./goals/collection";
 import { TrackerConcept } from "./growth/tracker";
 import { ShowcaseConcept } from "./profile/showcase";
 import { REFRESH_CONCEPTS, CONCEPT_COUNT } from "./catalog";
@@ -143,6 +144,19 @@ describe("interactive refresh journeys", () => {
     expect(
       screen.getByText("Best week · 12 completions", { exact: true }),
     ).toBeInTheDocument();
+  });
+  it("keeps a goal's completion count consistent when opening its details", async () => {
+    const user = userEvent.setup();
+    render(<CollectionConcept />);
+    await user.click(
+      screen.getByRole("button", { name: "Open Practice Japanese" }),
+    );
+    const progress = within(screen.getByRole("dialog")).getByRole(
+      "progressbar",
+      { name: "Practice Japanese progress" },
+    );
+    expect(progress).toHaveAttribute("value", "6");
+    expect(progress).toHaveAttribute("max", "20");
   });
   it("separates reading from editing and discards an unsaved name", async () => {
     const user = userEvent.setup();

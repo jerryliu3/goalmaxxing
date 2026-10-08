@@ -11,7 +11,7 @@ import {
 } from "../primitives";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { SAMPLE_GOALS, type SampleGoalId } from "../sample";
+import { INITIAL_LOG, SAMPLE_GOALS, type SampleGoalId } from "../sample";
 import { GoalDetails } from "./details";
 
 export function CollectionConcept() {
@@ -25,9 +25,9 @@ export function CollectionConcept() {
   });
   const [message, setMessage] = useState("");
   const progress: Record<SampleGoalId, number> = {
-    run: 4,
-    language: 6,
-    film: 2,
+    run: INITIAL_LOG.run.length,
+    language: INITIAL_LOG.language.length,
+    film: INITIAL_LOG.film.length,
   };
   const goals = SAMPLE_GOALS.filter((goal) =>
     names[goal.id].toLowerCase().includes(query.toLowerCase()),
