@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import {
   resolveDuoLanes,
@@ -50,12 +50,19 @@ export function DuoLanes({
   viewer,
   partner,
   renderLane,
+  alignRows,
   className,
 }: {
   scope: DuoScope;
   viewer: DuoLaneSubject;
   partner: DuoLaneSubject | null;
   renderLane: (subject: DuoLaneSubject) => ReactNode;
+  /**
+   * Side by side, line up each lane's sections in shared rows. The lane must
+   * render this many row items after the identity row, as direct children
+   * of a `md:contents` wrapper.
+   */
+  alignRows?: number;
   className?: string;
 }): ReactNode {
   const lanes = resolveDuoLanes({
@@ -64,6 +71,7 @@ export function DuoLanes({
     partner,
   });
   const swipeColumns = lanes.length > 1;
+  const aligned = swipeColumns && alignRows !== undefined;
 
   return (
     <div
@@ -73,20 +81,24 @@ export function DuoLanes({
         swipeColumns
           ? "flex snap-x snap-mandatory overflow-x-auto pb-1 md:grid md:snap-none md:overflow-visible md:pb-0 md:grid-cols-2"
           : "grid grid-cols-1",
+        aligned && "md:gap-y-8",
         className
       )}
     >
       {lanes.map((subject) => (
         <section
           key={subject.id}
+          data-duo-aligned={aligned || undefined}
+          style={aligned ? ({ "--duo-rows": alignRows + 1 } as CSSProperties) : undefined}
           className={cn(
             "space-y-2 content-start",
             swipeColumns
               ? "w-[85vw] max-w-[30rem] shrink-0 snap-center md:w-auto md:max-w-none md:shrink"
-              : undefined
+              : undefined,
+            aligned && "md:row-span-(--duo-rows) md:grid md:grid-rows-subgrid md:space-y-0"
           )}
         >
-          {scope !== "me" ? <DuoLaneIdentity subject={subject} /> : null}
+          {scope !== "me" ? <DuoLaneIdentity subject={subject} className={aligned ? "md:-mb-6" : undefined} /> : null}
           {renderLane(subject)}
         </section>
       ))}

@@ -73,7 +73,6 @@ export function ShowcasePedestal({
     <div className="ach-showcase-pedestal mx-auto max-w-md rounded-[16px] border px-6 py-8 text-center">
       <div key={award.id} className="ach-showcase-hero flex flex-col items-center">
         <MedalMark level={award.level} locked={locked} size={128} />
-        <p className="ach-showcase-kicker mt-3 text-xs motion-reduce:hidden">Drag to rotate · Arrow keys to turn · Home to reset</p>
         <p
           className={`type-eyebrow mt-4 text-[10px] ${
             locked ? "ach-showcase-kicker" : ""
