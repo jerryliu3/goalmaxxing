@@ -23,7 +23,7 @@ export const SETTINGS_GROUPS: Array<{
       {
         key: "preferences",
         label: "Preferences",
-        description: "Manage planner defaults for Plan.",
+        description: "Timezone, first day of the week, and activity privacy.",
       },
       {
         key: "onboarding",
@@ -60,8 +60,7 @@ export const SETTINGS_GROUPS: Array<{
       {
         key: "appearance",
         label: "Appearance",
-        description:
-          "Choose a visual style for Goalmaxxing. Original is the default; more skins can be added here.",
+        description: "Choose how Goalmaxxing looks on this device.",
       },
       {
         key: "password",

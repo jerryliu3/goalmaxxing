@@ -19,7 +19,9 @@ const duo = vi.hoisted(() => ({
   setScopePreference: vi.fn(),
 }));
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/calendar" }));
+const nav = vi.hoisted(() => ({ pathname: "/calendar" }));
+
+vi.mock("next/navigation", () => ({ usePathname: () => nav.pathname }));
 vi.mock("@/features/social/duo/duo-context", () => ({
   useDuo: () => ({ viewerLabel: "Alice Park", viewerAvatarUrl: "https://example.com/alice.png" }),
   useDuoScope: () => duo,
@@ -34,6 +36,7 @@ function openMenu() {
 
 describe("AccountMenu", () => {
   beforeEach(() => {
+    nav.pathname = "/calendar";
     duo.scope = "me";
     duo.activePartner = partner;
     duo.setScopePreference.mockReset();
@@ -73,6 +76,21 @@ describe("AccountMenu", () => {
 
     fireEvent.click(screen.getByRole("menuitemradio", { name: "Duo" }));
     expect(duo.setScopePreference).toHaveBeenCalledWith("both");
+  });
+
+  it("marks the face as the current page on profile settings, since profile has no tab", () => {
+    render(<AccountMenu settingsHref="/settings" showPhotos />);
+    expect(screen.getByRole("button", { name: /Account menu/ })).not.toHaveAttribute("aria-current");
+    cleanup();
+
+    nav.pathname = "/settings";
+    render(<AccountMenu settingsHref="/settings" showPhotos />);
+    const trigger = screen.getByRole("button", { name: /Account menu/ });
+    expect(trigger).toHaveAttribute("aria-current", "page");
+    expect(trigger).toHaveAttribute("data-active");
+    expect(trigger).toHaveClass("data-active:ring-foreground");
+    openMenu();
+    expect(screen.getByRole("menuitem", { name: "Profile settings" })).toHaveAttribute("aria-current", "page");
   });
 
   it("is a plain profile menu without a partner", () => {

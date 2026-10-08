@@ -231,6 +231,15 @@ describe("SettingsTab", () => {
     expect(screen.getByRole("button", { name: "Preferences" }).parentElement).toHaveClass("bg-card", "rounded-2xl");
   });
 
+  it("titles the page Profile and says what each setting holds", () => {
+    render(<SettingsTab />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "Profile" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preferences" })).toHaveAccessibleDescription(
+      "Timezone, first day of the week, and activity privacy."
+    );
+  });
+
   it("opens settings in the side panel on desktop too, wherever the list sits", async () => {
     window.matchMedia = ((query: string) =>
       ({

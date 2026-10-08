@@ -128,6 +128,10 @@ export function SettingsTab() {
       data-settings-pane={settingsPanelOpen ? "open" : "closed"}
       className="min-w-0 space-y-5"
     >
+      <header>
+        <h1 className="type-title text-2xl">Profile</h1>
+        <p className="text-sm text-muted-foreground">How others see you, and how Goalmaxxing works for you.</p>
+      </header>
       <SettingsProfileBox bundle={presence} session={profileSession} />
       {SETTINGS_GROUPS.map((group) => (
         <section key={group.key} className="space-y-1">
@@ -139,8 +143,10 @@ export function SettingsTab() {
               <button
                 key={item.key}
                 type="button"
+                aria-label={item.label}
+                aria-describedby={`settings-row-${item.key}`}
                 className={cn(
-                  "flex w-full items-center justify-between px-4 py-3 text-left text-base font-medium transition-colors hover:bg-muted/30",
+                  "flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/30",
                   requestedSection === item.key && "bg-muted/40"
                 )}
                 onClick={() =>
@@ -149,23 +155,25 @@ export function SettingsTab() {
                   )
                 }
               >
-                <span>{item.label}</span>
-                <ChevronRight className="size-4 text-muted-foreground" />
+                <span className="min-w-0">
+                  <span className="block text-base font-medium">{item.label}</span>
+                  <span id={`settings-row-${item.key}`} className="block truncate text-xs text-muted-foreground">
+                    {item.description}
+                  </span>
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
               </button>
             ))}
             {group.key === "account" ? (
-              <div className="px-4 py-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void signOut()}
-                  disabled={signingOut}
-                >
-                  <LogOut className="size-4" />
-                  {signingOut ? "Signing out..." : "Sign out"}
-                </Button>
-              </div>
+              <button
+                type="button"
+                onClick={() => void signOut()}
+                disabled={signingOut}
+                className="flex w-full items-center gap-2 px-4 py-3 text-left text-base font-medium text-destructive transition-colors hover:bg-destructive/5 disabled:opacity-60"
+              >
+                <LogOut aria-hidden className="size-4" />
+                {signingOut ? "Signing out..." : "Sign out"}
+              </button>
             ) : null}
           </div>
         </section>

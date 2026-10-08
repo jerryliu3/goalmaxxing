@@ -79,6 +79,8 @@ export function AccountMenu({ settingsHref, showPhotos }: { settingsHref: string
   const facesFor = (value: DuoScope): Person[] =>
     !partner || value === "me" ? [viewer] : value === "partner" ? [partner] : [viewer, partner];
   const selectedLabel = SCOPE_OPTIONS.find((option) => option.value === scope)?.label ?? "Solo";
+  // Profile has no tab, so the face carries the "you are here" state instead.
+  const onProfile = pathname === settingsHref || pathname.startsWith(`${settingsHref}/`);
   const itemClass =
     "flex cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2 text-sm outline-none select-none data-[highlighted]:bg-muted";
 
@@ -87,7 +89,9 @@ export function AccountMenu({ settingsHref, showPhotos }: { settingsHref: string
       <DropdownMenu.Trigger
         data-onboarding="nav.settings"
         aria-label={partner ? `Account menu, ${selectedLabel} view` : "Account menu"}
-        className="flex shrink-0 items-center rounded-full transition-[box-shadow,opacity] outline-none hover:opacity-90 hover:ring-2 hover:ring-border focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=open]:ring-2 data-[state=open]:ring-border"
+        aria-current={onProfile ? "page" : undefined}
+        data-active={onProfile ? "" : undefined}
+        className="flex shrink-0 items-center rounded-full transition-[box-shadow,opacity] outline-none hover:opacity-90 hover:ring-2 hover:ring-border focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=open]:ring-2 data-[state=open]:ring-border data-active:ring-2 data-active:ring-foreground data-active:ring-offset-2 data-active:ring-offset-page"
       >
         <Faces people={facesFor(scope)} showPhoto={showPhotos} />
       </DropdownMenu.Trigger>
@@ -118,8 +122,8 @@ export function AccountMenu({ settingsHref, showPhotos }: { settingsHref: string
               <DropdownMenu.Separator className="mx-1 my-1.5 h-px bg-border" />
             </>
           ) : null}
-          <DropdownMenu.Item asChild className={itemClass}>
-            <Link href={settingsHref}>
+          <DropdownMenu.Item asChild className={cn(itemClass, onProfile && "bg-muted/60")}>
+            <Link href={settingsHref} aria-current={onProfile ? "page" : undefined}>
               <Settings aria-hidden="true" className="size-4 text-muted-foreground" />
               Profile settings
             </Link>
