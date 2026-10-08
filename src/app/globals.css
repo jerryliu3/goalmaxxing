@@ -634,6 +634,11 @@ html [data-sonner-toaster] {
   ) !important;
 }
 
+/* The demo is read-only and its banner says so; failed saves stay silent. */
+body:has([data-demo-root]) [data-sonner-toast][data-type="error"] {
+  display: none !important;
+}
+
 /* The editor belongs to the selected checklist row, not a modal layer. */
 @keyframes plan-row-unfold {
   from { clip-path: inset(0 0 100% 0); transform: translateY(-6px); }
