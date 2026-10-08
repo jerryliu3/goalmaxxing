@@ -2,14 +2,18 @@
 
 import { useState } from "react";
 import { PencilLine } from "lucide-react";
-import type { PublicProfileBundle } from "@cadence/shared/social/public-profile";
+import {
+  PUBLIC_PROFILE_PIN_LIMIT,
+  PUBLIC_PROFILE_RECORD_LIMIT,
+  type PublicProfileBundle,
+} from "@cadence/shared/social/public-profile";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import type { useProfileEditSession } from "@/features/settings/use-profile-edit-session";
 import { FeaturedGoalPicker, ShowcasePicker } from "@/features/social/public-profile/profile-pickers";
 import { PublicProfileView } from "@/features/social/public-profile/public-profile-view";
 import { cn } from "@/lib/utils";
 
-type Picker = "pins" | "goals" | null;
+type Picker = "pins" | "records" | "goals" | null;
 
 /**
  * Settings opens with the same profile a visitor sees. Edit profile turns the
@@ -88,6 +92,7 @@ export function SettingsProfileBox({
                   draft,
                   cardEditor: session.cardEditor,
                   onBioChange: session.actions.setBio,
+                  onEditRecords: () => setPicker("records"),
                   onEditPins: () => setPicker("pins"),
                   onChooseGoals: () => setPicker("goals"),
                 }
@@ -108,10 +113,29 @@ export function SettingsProfileBox({
           open={picker === "pins"}
           onOpenChange={(next) => setPicker(next ? "pins" : null)}
           title="Edit showcase"
-          description="Pick up to three medals, records, or finished goals."
+          description="Pick up to three medals or finished goals."
         >
           <ShowcasePicker
             catalog={bundle.showcaseCatalog}
+            sections={["medals", "goals"]}
+            limit={PUBLIC_PROFILE_PIN_LIMIT}
+            pins={draft.pins}
+            notice={session.pinNotice}
+            onToggle={session.actions.togglePin}
+          />
+        </BottomSheet>
+      ) : null}
+      {bundle?.showcaseCatalog && draft ? (
+        <BottomSheet
+          open={picker === "records"}
+          onOpenChange={(next) => setPicker(next ? "records" : null)}
+          title="Card records"
+          description="Pick up to three records to show on your card."
+        >
+          <ShowcasePicker
+            catalog={bundle.showcaseCatalog}
+            sections={["records"]}
+            limit={PUBLIC_PROFILE_RECORD_LIMIT}
             pins={draft.pins}
             notice={session.pinNotice}
             onToggle={session.actions.togglePin}

@@ -2,10 +2,21 @@
 
 import { format, parseISO } from "date-fns";
 import { useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import type {
-  PublicProfileIdentity,
-  PublicProfileOverallStats,
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
+import {
+  PUBLIC_PROFILE_BIO_LIMIT,
+  PUBLIC_PROFILE_RECORD_LIMIT,
+  type PublicProfileIdentity,
+  type PublicProfileOverallStats,
+  type PublicProfileShowcaseRecord,
 } from "@cadence/shared/social/public-profile";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +50,8 @@ export type ProfileMembershipEditor = {
   onSave: () => Promise<void>;
   onUploadAvatar: (file: File) => Promise<void>;
   onRemoveAvatar: () => void;
+  onBioChange?: (bio: string) => void;
+  onEditRecords?: () => void;
 };
 
 function Horizon() {
@@ -65,12 +78,52 @@ function formatMemberNo(memberNumber: number) {
 
 function Metric({ value, label }: { value: string; label: string }) {
   return (
-    <div>
+    <span className={styles.metric}>
       <strong>
         <SolidLettering>{value}</SolidLettering>
       </strong>
       <span>{label}</span>
-    </div>
+    </span>
+  );
+}
+
+/** Pinned records fill the metric row; the owner taps the row to choose them. */
+function RecordMetrics({
+  records,
+  onEdit,
+}: {
+  records: readonly PublicProfileShowcaseRecord[];
+  onEdit?: () => void;
+}) {
+  const slots = onEdit ? PUBLIC_PROFILE_RECORD_LIMIT : records.length;
+  const style = { gridTemplateColumns: `repeat(${slots}, minmax(0, 1fr))` };
+  const cells = Array.from({ length: slots }, (_, index) => {
+    const record = records[index];
+    return record ? (
+      <Metric key={record.ref} value={record.value} label={record.label} />
+    ) : (
+      <Metric key={`empty-${index}`} value="—" label="Add a record" />
+    );
+  });
+
+  if (!onEdit) {
+    return (
+      <div className={styles.metrics} style={style}>
+        {cells}
+      </div>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className={`${styles.metrics} ${styles.metricsEdit}`}
+      style={style}
+      aria-label="Choose records"
+      onClick={onEdit}
+      onPointerDown={(event) => event.stopPropagation()}
+    >
+      {cells}
+    </button>
   );
 }
 
@@ -95,6 +148,8 @@ function InlineField({
   value,
   rest,
   inputClassName,
+  multiline = false,
+  maxLength,
   transform,
   onChange,
   onEditingChange,
@@ -103,11 +158,13 @@ function InlineField({
   value: string;
   rest: ReactNode;
   inputClassName?: string;
+  multiline?: boolean;
+  maxLength?: number;
   transform?: (next: string) => string;
   onChange?: (next: string) => void;
   onEditingChange?: (editing: boolean) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
   const [editing, setEditing] = useState(false);
 
   const setLive = (next: boolean) => {
@@ -140,24 +197,24 @@ function InlineField({
     );
   }
 
-  return (
-    <input
-      ref={inputRef}
-      aria-label={label}
-      className={`${styles.compose} ${inputClassName ?? ""}`}
-      value={value}
-      onPointerDown={(event) => event.stopPropagation()}
-      onChange={(event) =>
-        onChange(transform ? transform(event.target.value) : event.target.value)
+  const fieldProps = {
+    ref: inputRef,
+    "aria-label": label,
+    className: `${styles.compose} ${inputClassName ?? ""}`,
+    value,
+    maxLength,
+    onPointerDown: (event: ReactPointerEvent) => event.stopPropagation(),
+    onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      onChange(transform ? transform(event.target.value) : event.target.value),
+    onBlur: () => setLive(false),
+    onKeyDown: (event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      if (event.key === "Enter" || event.key === "Escape") {
+        event.preventDefault();
+        event.currentTarget.blur();
       }
-      onBlur={() => setLive(false)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === "Escape") {
-          event.currentTarget.blur();
-        }
-      }}
-    />
-  );
+    },
+  };
+  return multiline ? <textarea rows={3} {...fieldProps} /> : <input {...fieldProps} />;
 }
 
 function Portrait({
@@ -199,11 +256,15 @@ export function ProfileMembershipCard({
   profile,
   overallStats,
   currentLevel,
+  bio = "",
+  records = [],
   editor,
 }: {
   profile: PublicProfileIdentity;
   overallStats: PublicProfileOverallStats | null;
   currentLevel: number | null;
+  bio?: string;
+  records?: readonly PublicProfileShowcaseRecord[];
   editor?: ProfileMembershipEditor;
 }) {
   const reducedMotion = useReducedMotion();
@@ -234,6 +295,8 @@ export function ProfileMembershipCard({
       ? formatMemberNo(profile.memberNumber)
       : null;
   const handle = username.trim() ? `@${username.trim()}` : "Goalmaxxing member";
+  const showBio = bio.trim().length > 0 || Boolean(editor?.onBioChange);
+  const showRecords = records.length > 0 || Boolean(editor?.onEditRecords);
 
   const uploadSelectedFile = (file: File | undefined) => {
     if (!file || !editor) {
@@ -296,6 +359,24 @@ export function ProfileMembershipCard({
                   rest={<SolidLettering>{title}</SolidLettering>}
                 />
               </h2>
+              {showBio ? (
+                <p className={styles.bio}>
+                  <InlineField
+                    label="bio"
+                    value={bio}
+                    multiline
+                    maxLength={PUBLIC_PROFILE_BIO_LIMIT}
+                    onChange={editor?.onBioChange}
+                    onEditingChange={setFieldEditing}
+                    inputClassName={styles.bioCompose}
+                    rest={
+                      <span className={styles.bioText}>
+                        {bio.trim() || "Add a line about what you’re working toward."}
+                      </span>
+                    }
+                  />
+                </p>
+              ) : null}
               {editor?.canSave ? (
                 <button
                   type="button"
@@ -307,7 +388,9 @@ export function ProfileMembershipCard({
                 </button>
               ) : null}
             </div>
-            {overallStats ? (
+            {showRecords ? (
+              <RecordMetrics records={records} onEdit={editor?.onEditRecords} />
+            ) : overallStats ? (
               <div className={styles.metrics}>
                 <Metric value={String(overallStats.totalGoalsCompleted)} label="goals completed" />
                 <Metric value={String(overallStats.totalActivities)} label="activities" />

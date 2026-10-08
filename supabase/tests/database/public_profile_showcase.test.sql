@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions, pg_catalog;
-select plan(13);
+select plan(15);
 
 insert into auth.users (id, email)
 values
@@ -97,7 +97,28 @@ select throws_ok(
       {"kind":"record","ref":"rec-goals"},{"kind":"record","ref":"rec-level"}]'::jsonb,
     '{}', '{}')$$,
   '22023', 'invalid_showcase_pins',
-  'more than three pins is rejected'
+  'more than three records is rejected'
+);
+
+select throws_ok(
+  $$select public.update_public_profile(null,
+    '[{"kind":"goal","ref":"b7500000-0000-4000-8000-0000000000a1"},
+      {"kind":"goal","ref":"b7500000-0000-4000-8000-0000000000a2"},
+      {"kind":"goal","ref":"b7500000-0000-4000-8000-0000000000a3"},
+      {"kind":"medal","ref":"b7600000-0000-4000-8000-000000000001"}]'::jsonb,
+    '{}', '{}')$$,
+  '22023', 'invalid_showcase_pins',
+  'more than three medals or goals is rejected'
+);
+
+select lives_ok(
+  $$select public.update_public_profile(null,
+    '[{"kind":"record","ref":"rec-streak"},{"kind":"record","ref":"rec-week"},
+      {"kind":"record","ref":"rec-goals"},
+      {"kind":"goal","ref":"b7500000-0000-4000-8000-000000000001"},
+      {"kind":"medal","ref":"b7600000-0000-4000-8000-000000000001"}]'::jsonb,
+    '{}', '{}')$$,
+  'three card records save alongside the showcase pins'
 );
 
 select throws_ok(

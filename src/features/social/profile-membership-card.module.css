@@ -272,9 +272,47 @@ button.portrait:focus-visible {
   padding: .52rem 0 .08rem;
   border-block: 1px solid color-mix(in srgb, currentColor 22%, transparent);
 }
-.metrics > div { display: flex; flex-direction: column; justify-content: flex-end; gap: .2rem; }
+.metric { display: flex; min-width: 0; flex-direction: column; justify-content: flex-end; gap: .2rem; }
 .metrics strong { font: 3.35rem/.8 var(--font-display); letter-spacing: -.04em; }
-.metrics > div > span { font-size: .68rem; opacity: .7; }
+.metric > span { font-size: .68rem; opacity: .7; }
+.metricsEdit {
+  appearance: none;
+  width: 100%;
+  margin: 0;
+  padding-inline: 0;
+  background: none;
+  border-inline: 0;
+  border-radius: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.metricsEdit:hover,
+.metricsEdit:focus-visible {
+  border-block-color: currentColor;
+  outline: none;
+}
+.titleBlock .bio {
+  margin: .5rem 0 0;
+  line-height: 1.45;
+}
+.bio .quiet {
+  display: block;
+  text-align: left;
+}
+.bioText {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.bioCompose {
+  display: block;
+  resize: none;
+  line-height: 1.45;
+}
 .photoPreview {
   display: flex;
   justify-content: center;

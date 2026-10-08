@@ -47,26 +47,36 @@ describe("public profile draft", () => {
     expect(content.goals.map((entry) => entry.id)).toEqual(["shown"]);
   });
 
-  it("resolves draft pins through the owner catalog", () => {
+  it("resolves draft pins through the owner catalog, records apart for the card", () => {
     const content = resolveProfileContent(bundle, {
       bio: "",
       pins: [{ kind: "record", ref: "rec-level" }, { kind: "medal", ref: "award-1" }],
       featuredGoalIds: [],
     });
-    expect(content.showcase.map((item) => item.ref)).toEqual(["rec-level", "award-1"]);
+    expect(content.records.map((item) => item.ref)).toEqual(["rec-level"]);
+    expect(content.showcase.map((item) => item.ref)).toEqual(["award-1"]);
   });
 
-  it("caps pins at three with a notice", () => {
-    const full = [
+  it("caps the showcase and the card records at three each", () => {
+    const medals = [
       { kind: "medal" as const, ref: "a" },
       { kind: "medal" as const, ref: "b" },
       { kind: "medal" as const, ref: "c" },
     ];
-    expect(togglePin(full, { kind: "record", ref: "rec-level" })).toEqual({
-      pins: full,
+    expect(togglePin(medals, { kind: "goal", ref: "g" })).toEqual({
+      pins: medals,
       notice: "You can pin 3. Unpin one to add another.",
     });
-    expect(togglePin(full, { kind: "medal", ref: "b" }).pins.map((pin) => pin.ref)).toEqual(["a", "c"]);
+    expect(togglePin(medals, { kind: "medal", ref: "b" }).pins.map((pin) => pin.ref)).toEqual(["a", "c"]);
+
+    const withRecord = togglePin(medals, { kind: "record", ref: "rec-level" });
+    expect(withRecord).toEqual({ pins: [...medals, { kind: "record", ref: "rec-level" }], notice: null });
+
+    const records = ["rec-streak", "rec-week", "rec-goals"].map((ref) => ({ kind: "record" as const, ref }));
+    expect(togglePin(records, { kind: "record", ref: "rec-level" })).toEqual({
+      pins: records,
+      notice: "Your card shows 3 records. Remove one to add another.",
+    });
   });
 
   it("sends only the featured flags that change", () => {

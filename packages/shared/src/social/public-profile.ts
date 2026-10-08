@@ -83,7 +83,10 @@ export interface PublicProfileCurrentGoal {
 }
 
 export const PUBLIC_PROFILE_BIO_LIMIT = 140;
+/** Medals and finished goals in the showcase. */
 export const PUBLIC_PROFILE_PIN_LIMIT = 3;
+/** Records on the membership card; separate from the showcase budget. */
+export const PUBLIC_PROFILE_RECORD_LIMIT = 3;
 
 export type PublicProfileShowcaseKind = "medal" | "goal" | "record";
 

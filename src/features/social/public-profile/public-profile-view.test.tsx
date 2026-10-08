@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
   PublicProfileBundle,
@@ -7,7 +7,12 @@ import type {
 import { PublicProfileView } from "@/features/social/public-profile/public-profile-view";
 
 vi.mock("@/features/social/profile-membership-card", () => ({
-  ProfileMembershipCard: () => <div>Membership card</div>,
+  ProfileMembershipCard: ({ bio, records }: { bio?: string; records?: { ref: string; label: string }[] }) => (
+    <section aria-label="Membership card">
+      <p>{bio}</p>
+      {records?.map((record) => <span key={record.ref}>{record.label}</span>)}
+    </section>
+  ),
 }));
 
 vi.mock("@/features/goals/goal-progress-card", () => ({
@@ -89,6 +94,27 @@ describe("PublicProfileView", () => {
     expect(screen.queryByRole("button", { name: "Copy link" })).toBeNull();
   });
 
+  it("puts the bio and pinned records on the card, not in the showcase", () => {
+    render(
+      <PublicProfileView
+        bundle={bundle({
+          showcase: [
+            { kind: "record", ref: "rec-streak", label: "Best streak", value: "12d", hint: "" },
+            { kind: "medal", ref: "award-1", level: 3, title: "Level 3", unlockedAt: "2026-05-01T00:00:00Z" },
+          ],
+        })}
+      />
+    );
+
+    const card = screen.getByRole("region", { name: "Membership card" });
+    expect(within(card).getByText("Running toward a spring half.")).toBeInTheDocument();
+    expect(within(card).getByText("Best streak")).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "About" })).toBeNull();
+    const showcase = screen.getByRole("region", { name: "Showcase" });
+    expect(within(showcase).getByRole("article", { name: "Level 3" })).toBeInTheDocument();
+    expect(within(showcase).queryByText("Best streak")).toBeNull();
+  });
+
   it("renders the compact variant with level and a link to the full page", () => {
     render(<PublicProfileView bundle={bundle()} variant="compact" />);
 
@@ -110,6 +136,6 @@ describe("PublicProfileView", () => {
       />
     );
     expect(screen.getByText("This account is private")).toBeInTheDocument();
-    expect(screen.queryByText("Membership card")).toBeNull();
+    expect(screen.queryByRole("region", { name: "Membership card" })).toBeNull();
   });
 });

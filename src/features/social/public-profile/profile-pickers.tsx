@@ -2,7 +2,6 @@
 
 import { Check, Lock, Pin } from "lucide-react";
 import {
-  PUBLIC_PROFILE_PIN_LIMIT,
   type PublicProfileCurrentGoal,
   type PublicProfileShowcaseCatalog,
   type PublicProfileShowcaseItem,
@@ -12,11 +11,13 @@ import { pinKey } from "@/features/social/public-profile/profile-draft";
 import { ShowcaseThumb, showcaseItemName } from "@/features/social/public-profile/showcase-tile";
 import { cn } from "@/lib/utils";
 
-const CATALOG_SECTIONS: ReadonlyArray<{ key: keyof PublicProfileShowcaseCatalog; label: string; empty: string }> = [
-  { key: "medals", label: "Medals", empty: "Level up to earn your first medal." },
-  { key: "goals", label: "Finished goals", empty: "Finish a public goal to pin it here." },
-  { key: "records", label: "Records", empty: "Records appear once you have some history." },
-];
+type CatalogSection = keyof PublicProfileShowcaseCatalog;
+
+const CATALOG_SECTIONS: Record<CatalogSection, { label: string; empty: string }> = {
+  medals: { label: "Medals", empty: "Level up to earn your first medal." },
+  goals: { label: "Finished goals", empty: "Finish a public goal to pin it here." },
+  records: { label: "Records", empty: "Records appear once you have some history." },
+};
 
 function PinToggle({
   item,
@@ -46,23 +47,32 @@ function PinToggle({
   );
 }
 
+/** Pins one budget: the showcase (medals, goals) or the card (records). */
 export function ShowcasePicker({
   catalog,
+  sections,
+  limit,
   pins,
   notice,
   onToggle,
 }: {
   catalog: PublicProfileShowcaseCatalog;
+  sections: readonly CatalogSection[];
+  limit: number;
   pins: readonly PublicProfileShowcasePin[];
   notice: string | null;
   onToggle: (pin: PublicProfileShowcasePin) => void;
 }) {
   const pinned = new Set(pins.map(pinKey));
+  const pinnedCount = sections.reduce(
+    (count, key) => count + catalog[key].filter((item) => pinned.has(pinKey(item))).length,
+    0
+  );
   return (
     <div className="space-y-5 px-4 pb-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="type-figure text-xs" aria-live="polite">
-          <span className="font-semibold">{pins.length}</span>/{PUBLIC_PROFILE_PIN_LIMIT} on profile
+          <span className="font-semibold">{pinnedCount}</span>/{limit} on profile
         </p>
         {notice ? (
           <p role="status" className="text-xs font-semibold text-primary">
@@ -70,27 +80,30 @@ export function ShowcasePicker({
           </p>
         ) : null}
       </div>
-      {CATALOG_SECTIONS.map(({ key, label, empty }) => (
-        <section key={key} aria-label={label}>
-          <h4 className="type-eyebrow text-[10px] text-muted-foreground">{label}</h4>
-          {catalog[key].length === 0 ? (
-            <p className="mt-2 text-xs text-muted-foreground">{empty}</p>
-          ) : (
-            <ul className="mt-2 space-y-1.5">
-              {catalog[key].map((item) => (
-                <li
-                  key={pinKey(item)}
-                  className="flex items-center gap-3 rounded-lg border border-border/70 bg-card px-3 py-2"
-                >
-                  <ShowcaseThumb item={item} />
-                  <span className="min-w-0 flex-1 truncate text-sm">{showcaseItemName(item)}</span>
-                  <PinToggle item={item} pinned={pinned.has(pinKey(item))} onToggle={onToggle} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      ))}
+      {sections.map((key) => {
+        const { label, empty } = CATALOG_SECTIONS[key];
+        return (
+          <section key={key} aria-label={label}>
+            <h4 className="type-eyebrow text-[10px] text-muted-foreground">{label}</h4>
+            {catalog[key].length === 0 ? (
+              <p className="mt-2 text-xs text-muted-foreground">{empty}</p>
+            ) : (
+              <ul className="mt-2 space-y-1.5">
+                {catalog[key].map((item) => (
+                  <li
+                    key={pinKey(item)}
+                    className="flex items-center gap-3 rounded-lg border border-border/70 bg-card px-3 py-2"
+                  >
+                    <ShowcaseThumb item={item} />
+                    <span className="min-w-0 flex-1 truncate text-sm">{showcaseItemName(item)}</span>
+                    <PinToggle item={item} pinned={pinned.has(pinKey(item))} onToggle={onToggle} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        );
+      })}
     </div>
   );
 }
@@ -135,7 +148,7 @@ export function FeaturedGoalPicker({
               {goal.isPrivate ? <span className="text-[11px] text-muted-foreground">Private goal</span> : null}
             </button>
           </li>
-        );
+          );
       })}
     </ul>
   );
