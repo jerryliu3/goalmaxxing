@@ -54,7 +54,6 @@ export function useSocialTabData() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
-  const [authEmail, setAuthEmail] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Profile[]>([]);
   const [selectedShareGoalIds, setSelectedShareGoalIds] = useState<string[]>(
@@ -90,7 +89,6 @@ export function useSocialTabData() {
     const requestId = ++loadRequestIdRef.current;
     const apply = (payload: SettingsTabCachePayload | null) => {
       setState(payload?.state ?? initialState);
-      setAuthEmail(payload?.authEmail ?? "");
       setProfileDraft(payload?.profileDraft ?? {
         username: "", display_name: "", avatar_url: "", social_activity_visible: true,
       });
@@ -456,7 +454,6 @@ export function useSocialTabData() {
     loading,
     saving,
     signingOut,
-    authEmail,
     searchTerm,
     setSearchTerm,
     selectedShareGoalIds,

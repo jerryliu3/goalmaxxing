@@ -3,7 +3,6 @@
 import { useState } from "react";
 import type { ProfileMembershipEditor } from "@/features/social/profile-membership-card";
 import type { ProfileDraft, ProfileSnapshot } from "@/features/ux-profile/model";
-import { OWNER_EMAIL } from "@/features/ux-profile/seed";
 import { useProfileDraft } from "@/features/ux-profile/use-profile-draft";
 import { isValidPublicProfileUsername } from "@/lib/social/public-profile-username";
 
@@ -60,7 +59,6 @@ export function useProfileEditSession(profile: ProfileSnapshot) {
   const cardEditor: ProfileMembershipEditor = {
     username: identity.username,
     displayName: identity.displayName,
-    email: OWNER_EMAIL,
     avatarUrl: identity.avatarUrl,
     saving: false,
     canSave: false,

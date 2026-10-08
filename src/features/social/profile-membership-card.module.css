@@ -183,8 +183,7 @@ button.portrait:focus-visible {
   text-transform: uppercase;
   opacity: .75;
 }
-.titleBlock p,
-.email {
+.titleBlock p {
   font-size: .92rem;
   line-height: 1.55;
   opacity: .8;

@@ -46,7 +46,6 @@ vi.mock("@/features/social/use-social-tab-data", () => ({
     loading: false,
     saving: false,
     signingOut: false,
-    authEmail: "user@example.com",
     profileDraft: {
       username: "user",
       display_name: "User",
