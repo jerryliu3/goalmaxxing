@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { dateLabel } from "./goal-view-model";
 
 /**
@@ -18,29 +18,9 @@ export function GoalCalendarSwitch({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className="group inline-flex h-9 shrink-0 items-center gap-2 rounded-full px-2.5 text-[13px] font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
-    >
-      <span
-        aria-hidden
-        className={cn(
-          "relative h-[18px] w-8 rounded-full transition-colors duration-300 motion-reduce:transition-none",
-          checked ? "bg-foreground" : "bg-muted-foreground/30"
-        )}
-      >
-        <span
-          className={cn(
-            "absolute top-0.5 left-0.5 size-3.5 rounded-full bg-background shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
-            checked && "translate-x-3.5"
-          )}
-        />
-      </span>
+    <ToggleSwitch checked={checked} onChange={onChange}>
       Calendar
-    </button>
+    </ToggleSwitch>
   );
 }
 

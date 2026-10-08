@@ -124,7 +124,7 @@ describe("check-in actions", () => {
       "unscheduled",
       "workload",
     ]);
-    expect(actions[0]?.title).toBe("Recover 1 missed session");
+    expect(actions[0]?.title).toBe("1 session slipped");
   });
 
   it("keeps daily workload as information without making it actionable", () => {
@@ -237,7 +237,7 @@ describe("buildCheckInCoachQuestion", () => {
 
     expect(question).toContain("Following up on my weekly check-in.");
     expect(question).toContain("How it went — last week: 5 of 8 done.");
-    expect(question).toContain("- Recover 1 missed session");
+    expect(question).toContain("- 1 session slipped");
     expect(question).toContain("- 2 goals have nothing in this week");
     expect(question).toContain("- 5 sessions in this week, about 2h 30m");
     expect(question).toContain("Help me decide how to tackle this week.");

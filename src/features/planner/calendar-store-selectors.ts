@@ -68,12 +68,14 @@ export function selectPlannerCalendarStoreProjection({
   draftCommandState,
   activeGoalsByPlanGoalId,
   activeGoalsByOriginalGoalId,
+  letGoEntryKeys,
 }: {
   context: PlannerContextPayload | null;
   effectivePreview: PlannerContextPayload["preview"] | null;
   draftCommandState: DraftCommandState;
   activeGoalsByPlanGoalId: Map<string, PlannerActiveGoalSnapshot>;
   activeGoalsByOriginalGoalId: Map<string, PlannerActiveGoalSnapshot>;
+  letGoEntryKeys?: ReadonlySet<string>;
 }): PlannerCalendarStoreProjection {
   const effectiveDraftCommands = sortPlannerDraftCommands(
     selectDraftCommands(draftCommandState)
@@ -97,6 +99,7 @@ export function selectPlannerCalendarStoreProjection({
     linkSummaries: context?.links ?? [],
     draftItemEdits: effectiveDraftItemEdits,
     draftCommands: effectiveDraftCommands,
+    letGoEntryKeys,
   });
   const previewUnitByEntryKey = buildPreviewUnitByEntryKey(effectivePreview?.workUnits);
   const completionFactUnitsByGoalDate = buildCompletionFactUnitsByGoalDate(

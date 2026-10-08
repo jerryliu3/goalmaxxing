@@ -81,6 +81,9 @@ import {
   useCalendarViewNavigation,
 } from "@/features/planner/use-calendar-view-navigation";
 import { PlannerCalendarSurfaceLayout } from "@/features/planner/planner-calendar-surface-layout";
+import { RecoveryEntry } from "@/features/planner/recovery/recovery-entry";
+import { RecoveryReviewPanel } from "@/features/planner/recovery/recovery-review-panel";
+import { useRecoveryReview, type RecoveryLens } from "@/features/planner/recovery/use-recovery-review";
 import { persistImmediatePlannerMove } from "@/lib/planner/persist-immediate-move";
 import { canConfirmDraftMove, resolveStagedDraftMove } from "@/features/planner/draft-move-confirm";
 import {
@@ -100,10 +103,13 @@ import {
   type OptimisticCompletionFacts,
 } from "@/lib/planner/optimistic-completion-facts";
 
+const noop = () => {};
 
 export function CalendarSurface({
   goalTimelineOpen = false,
   onGoalTimelineOpenChange,
+  recoveryReviewRequested = false,
+  onRecoveryReviewRequestHandled = noop,
   activeTab,
   month,
   selectedDay,
@@ -140,6 +146,9 @@ export function CalendarSurface({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
   const [goalIdFilters, setGoalIdFilters] = useState<string[]>([]);
+  // Recovery mode: only the slipped goals show (unless the full calendar is on) and only they move.
+  const [recoveryLens, setRecoveryLens] = useState<RecoveryLens | null>(null);
+  const [plannerMutationCount, setPlannerMutationCount] = useState(0);
   const [calendarFocusedGoalId, setCalendarFocusedGoalId] = useState<string | null>(
     null
   );
@@ -327,6 +336,7 @@ export function CalendarSurface({
   const handlePlannerMutation = useCallback(() => {
     skipInvalidationReloadRef.current = true;
     invalidatePlannerRelatedTabCaches();
+    setPlannerMutationCount((count) => count + 1);
     onPlannerMutation();
   }, [onPlannerMutation]);
 
@@ -370,6 +380,14 @@ export function CalendarSurface({
     window: goalViewWindow,
     baseProjectionDays: additionalProjectionDays,
   });
+  const recoveryGoalIds =
+    recoveryLens && !recoveryLens.showFullCalendar ? recoveryLens.goalIds : null;
+  const calendarHidesTasks = hideTasks || recoveryGoalIds !== null;
+  const recoveryLetGoKeys = recoveryLens?.letGoEntryKeys;
+  const letGoEntryKeys = useMemo(
+    () => (recoveryLetGoKeys?.length ? new Set(recoveryLetGoKeys) : undefined),
+    [recoveryLetGoKeys]
+  );
   const { taskEntriesByDate, completeTask, rescheduleTask } = useCalendarPlannerTasks({
     enabled: !hideTasks && duoScope !== "partner",
     from: calendarTaskQueryWindow?.start ?? null,
@@ -398,14 +416,15 @@ export function CalendarSurface({
     setupTimezone,
     duoScope,
     categoryFilters: viewMode === "day" ? [] : categoryFilters,
-    goalIdFilters: viewMode === "day" ? [] : goalIdFilters,
+    goalIdFilters: recoveryGoalIds ?? (viewMode === "day" ? [] : goalIdFilters),
     endMonthFilters,
     searchQuery,
     partnerCompletionMarkersByDate,
     previewEntryOrderByDay,
     additionalProjectionDays: modelProjectionDays,
     calendarTaskEntriesByDate: taskEntriesByDate,
-    hideTasks,
+    hideTasks: calendarHidesTasks,
+    letGoEntryKeys,
     // Goal View is a list lens, so it follows the Filters toggle even over Day.
     showCompletedGoals:
       viewMode === "day" && !goalViewOpen ? true : showCompletedGoals,
@@ -459,9 +478,17 @@ export function CalendarSurface({
     effectiveEndMonthFilters,
     getCompletionFactMarkersForDay,
     getOrderedEntriesForDay,
-    canMutateEntryOnDay,
+    canMutateEntryOnDay: canMutatePlannerEntryOnDay,
     plannerReadOnly,
   } = dayAccessors;
+  const canMutateEntryOnDay = useMemo(() => {
+    if (!recoveryLens) return canMutatePlannerEntryOnDay;
+    const goalIds = new Set(recoveryLens.goalIds);
+    return (entry: PlannerDayDetailEntry, day: string | null) =>
+      !isPlannerTaskCalendarEntry(entry) &&
+      goalIds.has(entry.originalGoalId) &&
+      canMutatePlannerEntryOnDay(entry, day);
+  }, [canMutatePlannerEntryOnDay, recoveryLens]);
   useEffect(() => {
     if (loading || !context) return;
     const visibleGoalIds = new Set(goalFilterOptions.map((option) => option.value));
@@ -751,7 +778,6 @@ export function CalendarSurface({
     draftSaveBlockedMessage,
     rebuildBlockedMessage,
     canResetPlan,
-    canRecoverPastSessions,
     hasUnsavedPlannerChanges,
     canShowSaveAction,
   } = saveAvailability;
@@ -807,17 +833,14 @@ export function CalendarSurface({
   } = dayPreviewInteractions;
 
   const {
-    recoverLoading,
     requestPreviewForWindow,
     refreshDraftPreview,
     applyPolicyReplanMoves,
-    recoverPastSessions,
     clearDraftMoveCommands,
     cacheDraftPreviewForWindow,
   } = usePlannerPreviewSession({
     context,
     effectivePreview,
-    effectiveDraftPolicy,
     draftSaveWindow,
     draftSaveWindowResult,
     draftWindowWorkUnits,
@@ -1028,6 +1051,40 @@ export function CalendarSurface({
     },
     [clearDraftMoveCommands]
   );
+  const recoveryDraftMoves = useMemo(
+    () =>
+      draftSaveCommands.flatMap((command) =>
+        command.kind === "move_item" && command.scheduledDate !== command.sourceDate ? [command] : []
+      ),
+    [draftSaveCommands]
+  );
+  const stageRecoveryMoves = useCallback(
+    (moves: Array<{ goalId: string; unitKey: string; sourceDate: string; scheduledDate: string | null }>) => {
+      for (const move of moves) dispatchDraftCommand({ type: "upsert_move", ...move });
+    },
+    [dispatchDraftCommand]
+  );
+  const unstageRecoveryMoves = useCallback(
+    (entries: Array<{ goalId: string; unitKey: string }>) => {
+      for (const entry of entries) dispatchDraftCommand({ type: "remove_kind", kind: "move_item", ...entry });
+    },
+    [dispatchDraftCommand]
+  );
+  const recoveryReview = useRecoveryReview({
+    enabled: activeTab === "calendar" && !plannerReadOnly,
+    refreshKey: `${context?.asOfDate ?? ""}:${context?.revisions.scheduleDigest ?? ""}:${plannerMutationCount}`,
+    plannerDraftPending: hasDraftSession,
+    draftMoves: recoveryDraftMoves,
+    requested: recoveryReviewRequested,
+    onRequestHandled: onRecoveryReviewRequestHandled,
+    onLensChange: setRecoveryLens,
+    onSaved: handlePlannerMutation,
+    stageMoves: stageRecoveryMoves,
+    unstageMoves: unstageRecoveryMoves,
+    savePlannerDraft: savePlan,
+    discardPlannerDraft: clearDraftSession,
+  });
+
   const layoutProps = useCalendarSurfacePresentation({
     saveLoading,
     jumpToTodayBase,
@@ -1056,17 +1113,14 @@ export function CalendarSurface({
     dayPreviewInteractions,
     setupRestWeekdays,
     setSetupRestWeekdays,
-    hideTasks: hideTasks || plannerReadOnly,
+    hideTasks: calendarHidesTasks || plannerReadOnly,
     onHideTasksChange: setHideTasks,
     setupLoading,
-    recoverLoading,
-    canRecoverPastSessions,
     rebuildBlockedMessage,
     fullResetLoading,
     goalResetLoading,
     openGoals: resetGoalOptions,
     submitSetup,
-    recoverPastSessions,
     rebuildSchedule,
     resetPlanFully,
     resetPlanForGoals,
@@ -1215,7 +1269,17 @@ export function CalendarSurface({
       asOfDate={context?.asOfDate ?? null}
       onDraftMove={queueUnscheduledDraftMove}
     >
-      <PlannerCalendarSurfaceLayout {...layoutProps} />
+      <PlannerCalendarSurfaceLayout
+        {...layoutProps}
+        recoveryMode={recoveryReview.state.reviewing}
+        recoveryGoalsOnly={recoveryGoalIds !== null}
+        recoveryEntry={<RecoveryEntry review={recoveryReview} />}
+        recoveryPanel={
+          recoveryReview.state.reviewing && recoveryReview.suggestionsOpen ? (
+            <RecoveryReviewPanel review={recoveryReview} />
+          ) : null
+        }
+      />
     </UnscheduledDraftMoveProvider>
   );
 }

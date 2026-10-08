@@ -17,7 +17,7 @@ function panel(overrides: { hasPlannerWarnings?: boolean } = {}) {
       warningsDismissed={false}
       showBlockingLoading={false}
       error={null}
-      plannerWarningBannerCopy="2 goals still have sessions to recover."
+      plannerWarningBannerCopy="2 goals have sessions that don't fit."
       warningsOpen={false}
       setWarningsOpen={vi.fn()}
       onDismissBanner={vi.fn()}
@@ -42,13 +42,13 @@ describe("PlannerWarningsPanel", () => {
     cleanup();
   });
 
-  it("omits the recover banner from server HTML so it cannot hydrate over the toolbar", () => {
+  it("omits the fit banner from server HTML so it cannot hydrate over the toolbar", () => {
     const html = renderToString(panel());
-    expect(html).not.toContain("plan-recover-banner");
+    expect(html).not.toContain("plan-fit-banner");
   });
 
-  it("shows the recover banner after the client mounts", () => {
+  it("shows the fit banner after the client mounts", () => {
     render(panel());
-    expect(screen.getByTestId("plan-recover-banner")).toBeInTheDocument();
+    expect(screen.getByTestId("plan-fit-banner")).toBeInTheDocument();
   });
 });

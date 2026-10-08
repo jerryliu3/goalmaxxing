@@ -68,7 +68,7 @@ export function PlannerWarningsPanel({
     () => true,
     () => false
   );
-  const showRecoverBanner =
+  const showFitBanner =
     isClient &&
     hasPlannerWarnings &&
     !warningsDismissed &&
@@ -77,10 +77,10 @@ export function PlannerWarningsPanel({
 
   return (
     <>
-      {showRecoverBanner ? (
+      {showFitBanner ? (
         <div
           className="rounded-[10px] border border-warning bg-warning-fill px-3 py-2 text-xs text-foreground shadow-[inset_3px_0_0_0_var(--color-warning)]"
-          data-testid="plan-recover-banner"
+          data-testid="plan-fit-banner"
         >
           <div className="flex items-center justify-between gap-2">
             <p className="min-w-0 flex-1">{plannerWarningBannerCopy}</p>
@@ -92,7 +92,7 @@ export function PlannerWarningsPanel({
                 className="h-7 border-warning bg-background text-xs text-foreground"
                 onClick={() => setWarningsOpen(true)}
               >
-                Recover
+                Fix plan
               </Button>
               <button
                 type="button"
@@ -109,7 +109,7 @@ export function PlannerWarningsPanel({
       <Dialog open={warningsOpen} onOpenChange={setWarningsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Recover</DialogTitle>
+            <DialogTitle>Sessions that don&apos;t fit</DialogTitle>
             <DialogDescription>
               {unplaceableGoalSummaries.length > 0 && invalidLockGoalCount > 0
                 ? `${unplaceableGoalSummaries.length} goal${

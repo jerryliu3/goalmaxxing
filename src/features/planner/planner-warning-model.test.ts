@@ -20,7 +20,7 @@ describe("selectPlannerWarningModel", () => {
 
     expect(model.hasPlannerWarnings).toBe(true);
     expect(model.plannerWarningBannerCopy).toBe(
-      "2 goals still have sessions to recover."
+      "2 goals have sessions that don't fit."
     );
   });
 
@@ -57,7 +57,7 @@ describe("selectPlannerWarningModel", () => {
 
     expect(model.hasPlannerWarnings).toBe(true);
     expect(model.plannerWarningBannerCopy).toBe(
-      "Some sessions still need a home. Recover them when you're ready."
+      "Some sessions don't fit. Fix them when you're ready."
     );
     expect(model.warningSuggestedNextSteps).toEqual([
       "Unlock conflicting locked sessions and regenerate the calendar.",

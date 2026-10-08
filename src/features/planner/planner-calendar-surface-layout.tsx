@@ -12,6 +12,7 @@ import { PlannerCalendarBoard } from "@/features/planner/planner-calendar-board"
 import { PlannerCalendarOverlays } from "@/features/planner/planner-calendar-overlays";
 import { PlannerCalendarToolbar } from "@/features/planner/planner-calendar-toolbar";
 import { PlannerWarningsPanel } from "@/features/planner/planner-warnings-panel";
+import { cn } from "@/lib/utils";
 import type { PlannerEventDetailDialogCallbacks } from "@/features/planner/planner-event-detail-dialog";
 import type {
   DayPreviewState,
@@ -202,6 +203,14 @@ export interface PlannerCalendarSurfaceLayoutProps {
   setShowCompletedGoals: (value: boolean) => void;
   settingsOpen: boolean;
   plannerSettingsForm: ReactNode;
+  /** Recovery mode is on: its bar owns Save and Cancel for the draft. */
+  recoveryMode?: boolean;
+  /** Recovery mode without the full calendar: Day lists only the slipped goals' sessions. */
+  recoveryGoalsOnly?: boolean;
+  /** Agenda's "N sessions slipped · Review" line, or recovery mode's bar. */
+  recoveryEntry?: ReactNode;
+  /** Recovery mode's suggestions; the calendar makes room for them. */
+  recoveryPanel?: ReactNode;
 }
 
 export function buildCalendarSurfaceLayoutProps<
@@ -348,6 +357,10 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     setShowCompletedGoals,
     settingsOpen,
     plannerSettingsForm,
+    recoveryMode = false,
+    recoveryGoalsOnly = false,
+    recoveryEntry = null,
+    recoveryPanel = null,
   } = props;
   // Goal View lists goals like Week/Month, so Day's own checklist filters
   // must not replace the planner's Filters while it is open.
@@ -421,6 +434,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
 
   return (
     <div className="space-y-4">
+      {recoveryEntry}
       <PlannerWarningsPanel
         hasPlannerWarnings={hasPlannerWarnings}
         warningsDismissed={warningsDismissed}
@@ -450,7 +464,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         }}
       />
       <PlannerCalendarToolbar
-        hasDraftSession={hasDraftSession}
+        hasDraftSession={hasDraftSession && !recoveryMode}
         plannerReadOnly={plannerReadOnly}
         canShowSaveAction={canShowSaveAction}
         saveButtonLabel={saveButtonLabel}
@@ -485,183 +499,200 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         onSearchQueryChange={setSearchQuery}
       />
 
-      {partnerOverlayError ? (
-        <p className="text-xs text-muted-foreground">{partnerOverlayError}</p>
-      ) : null}
-      {showBlockingLoading ? (
-        <LoadingCard
-          title="Loading planner context..."
-          description="Preparing your schedule and completion state."
-        />
-      ) : error && !context ? (
-        <div className="rounded-xl border bg-card p-6 text-sm text-destructive">
-          {error}
-        </div>
-      ) : month ? (
-        <>
-          {error && goalViewOpen ? <div role="alert" className="flex items-center gap-3 text-sm text-destructive">
-            <p>{error}</p><button type="button" className="underline" onClick={onGoalTimelineRetry}>Retry loading dates</button>
-          </div> : null}
-          <PlannerCalendarBoard
-            loading={loading}
-            viewMode={viewMode}
-            // Until Goal View's window has loaded, the calendar stays (dimmed by
-            // the board's loading state), so the switch morphs the calendar's
-            // pills into Goal View's cards rather than into a loading card.
-            goalView={
-              goalViewVisible ? (
-                <PlannerGoalView
-                  loading={loading}
-                  onVisibleDate={onGoalTimelineVisibleDateChange}
-                  onInspectDate={(date) => setExpandedPreviewDay(date)}
-                  onOpenEntry={(entry, day) => {
-                    // The checklist's session popup, with the goal card.
-                    setLocalSelectedDay(day);
-                    setSelectedEventEntryKey(entry.key);
-                  }}
-                  window={goalViewWindow!}
-                  progressSummaries={dayChecklist.data.progress?.summaries ?? []}
-                  onMoveEntry={onGoalViewMoveSession}
-                  goals={dayChecklist.data.goals}
-                  completedGoalIds={dayChecklist.listModel.targetAchievedGoalIds}
-                  showCompletedGoals={showCompletedGoals}
-                  sessions={goalViewSessions}
-                  today={context?.asOfDate ?? focusedDay}
-                  weekStartsOn={context?.preferences?.defaultPolicy.weekStartsOn}
-                  canMutatePlanItems={canMutatePlanItems}
-                  optimisticCompletionFacts={optimisticCompletionFacts}
-                  mutationLoadingKey={mutationLoadingKey}
-                  canOpenEntry={canOpenPlannerEventDetails}
-                  canMutateEntryOnDay={canMutateEntryOnDay}
-                  onToggleEntry={(entry, day, source) => {
-                    void toggleDateFact(entry, day, source);
-                  }}
-                />
-              ) : null
-            }
-            hideTasks={hideTasks}
-            previousWindowAriaLabel={previousWindowAriaLabel}
-            nextWindowAriaLabel={nextWindowAriaLabel}
-            fixedViewHeadingWidthCh={fixedViewHeadingWidthCh}
-            viewHeading={viewHeading}
-            showTodayShortcut={showTodayShortcut}
-            expandedMonthRows={expandedMonthRows}
-            onMoveViewWindow={moveViewWindow}
-            onJumpToToday={jumpToToday}
-            onToggleExpandedMonthRows={onToggleExpandedMonthRows}
-            getDragEntryLabel={getDragEntryLabel}
-            getDragDayLabel={getDragDayLabel}
-            renderEntryDragOverlay={renderEntryDragOverlay}
-            onEntryDragStart={handleDndEntryDragStart}
-            onEntryDragOverTarget={handleDndEntryDragOver}
-            onEntryDragEnd={handleDndEntryDragEnd}
-            onEntryDragCancel={handleDndEntryDragCancel}
-            focusedDay={focusedDay}
-            focusedDayEntries={focusedDayEntries}
-            focusedDayCompletionFactMarkers={focusedDayCompletionFactMarkers}
-            mutationLoadingKey={mutationLoadingKey}
-            optimisticCompletionFacts={optimisticCompletionFacts}
-            asOfDate={context?.asOfDate ?? null}
-            canMutatePlanItems={canMutatePlanItems}
-            canMutateEntryOnDay={canMutateEntryOnDay}
-            onFocusedDayEntryOpen={(entryKey) => {
-              const entry = focusedDayEntries.find(
-                (candidate) => candidate.key === entryKey
-              );
-              if (
-                !entry ||
-                !canMutateEntryOnDay(entry, focusedDay)
-              ) {
-                return;
-              }
-              setLocalSelectedDay(focusedDay);
-              togglePlannerGoalSelection(entry, {
-                applyGoalFocus: viewMode === "month",
-              });
-            }}
-            onToggleCompletion={(entry, day, sourceElement) => {
-              void toggleDateFact(entry, day, sourceElement ?? undefined);
-            }}
-            onEntryPointerStart={(immovable) => {
-              void immovable;
-              pointerPressActiveRef.current = true;
-            }}
-            onEntryPointerEnd={() => {
-              pointerPressActiveRef.current = false;
-            }}
-            selectedEntryKey={selectedEventEntry?.key ?? null}
-            dayChecklist={dayChecklist}
-            partnerLabel={partnerLabel}
-            viewerSubject={viewerSubject}
-            partnerSubject={partnerSubject}
-            splitPartnerChecklist={viewMode === "day" && duoScope === "both"}
-            calendarGridViewportRef={calendarGridViewportRef}
-            onCalendarGridViewportScroll={handleCalendarGridViewportScroll}
-            weekdayLabels={weekdayLabels}
-            multiMonthGridScrollRef={multiMonthGridScrollRef}
-            onMonthScopedGridScroll={handleMonthScopedGridScroll}
-            cells={cells}
-            renderCalendarDayCell={renderCalendarDayCell}
-            focusedWeekCells={focusedWeekCells}
-            dayPreview={dayPreview}
-            dayPreviewRef={dayPreviewRef}
-            previewDayEntries={previewDayEntries}
-            previewDayCompletionFactMarkers={previewDayCompletionFactMarkers}
-            onPreviewEntryOpen={(entryKey, day) => {
-              const entry = previewDayEntries.find(
-                (candidate) => candidate.key === entryKey
-              );
-              if (
-                !entry ||
-                !canMutateEntryOnDay(entry, day)
-              ) {
-                return;
-              }
-              setLocalSelectedDay(day);
-              togglePlannerGoalSelection(entry, {
-                applyGoalFocus: viewMode === "month",
-              });
-            }}
-            onPreviewToggleCompletion={(entry, day, sourceElement) => {
-              if (!canMutateEntryOnDay(entry, day)) {
-                return;
-              }
-              void toggleDateFact(entry, day, sourceElement ?? undefined);
-            }}
-            onMoveDay={openMoveDialogForDay}
-            onExpandPreviewDay={(day) => {
-              setExpandedPreviewDay(day);
-              setDayPreview(null);
-            }}
-            onCloseDayPreview={() => setDayPreview(null)}
-            onDayPreviewPointerDownCapture={() => {
-              setDayPreview((current) =>
-                current && !current.pinned ? { ...current, pinned: true } : current
-              );
-            }}
-            onDayPreviewMouseEnter={() => {
-              pointerInsideDayPreviewRef.current = true;
-              clearHoverPreviewTimer();
-              clearHoverPreviewCloseTimer();
-            }}
-            onDayPreviewMouseLeave={() => {
-              pointerInsideDayPreviewRef.current = false;
-              if (dayPreview?.pinned) {
-                return;
-              }
-              clearHoverPreviewTimer();
-              clearHoverPreviewCloseTimer();
-              setDayPreview(null);
-            }}
-            onConfirmDraftMove={onConfirmDraftMove}
-            onCancelDraftMove={onCancelDraftMove}
-            onCalendarViewModeChange={setCalendarViewMode}
-            onClearSelectedEntry={onClearSelectedEntry}
-            pinchDisabled
-          />
+      <div
+        className={cn(
+          "grid grid-cols-[minmax(0,1fr)] items-start gap-5",
+          recoveryPanel && "lg:grid-cols-[minmax(0,1fr)_400px]"
+        )}
+      >
+        <div className={cn("min-w-0 space-y-4", recoveryPanel && "pb-[45dvh] lg:pb-0")}>
+          {partnerOverlayError ? (
+            <p className="text-xs text-muted-foreground">{partnerOverlayError}</p>
+          ) : null}
+          {showBlockingLoading ? (
+            <LoadingCard
+              title="Loading planner context..."
+              description="Preparing your schedule and completion state."
+            />
+          ) : error && !context ? (
+            <div className="rounded-xl border bg-card p-6 text-sm text-destructive">
+              {error}
+            </div>
+          ) : month ? (
+            <>
+              {error && goalViewOpen ? <div role="alert" className="flex items-center gap-3 text-sm text-destructive">
+                <p>{error}</p><button type="button" className="underline" onClick={onGoalTimelineRetry}>Retry loading dates</button>
+              </div> : null}
+              <PlannerCalendarBoard
+                loading={loading}
+                viewMode={viewMode}
+                // Until Goal View's window has loaded, the calendar stays (dimmed by
+                // the board's loading state), so the switch morphs the calendar's
+                // pills into Goal View's cards rather than into a loading card.
+                goalView={
+                  goalViewVisible ? (
+                    <PlannerGoalView
+                      loading={loading}
+                      onVisibleDate={onGoalTimelineVisibleDateChange}
+                      onInspectDate={(date) => setExpandedPreviewDay(date)}
+                      onOpenEntry={(entry, day) => {
+                        // The checklist's session popup, with the goal card.
+                        setLocalSelectedDay(day);
+                        setSelectedEventEntryKey(entry.key);
+                      }}
+                      window={goalViewWindow!}
+                      progressSummaries={dayChecklist.data.progress?.summaries ?? []}
+                      onMoveEntry={onGoalViewMoveSession}
+                      goals={dayChecklist.data.goals}
+                      completedGoalIds={dayChecklist.listModel.targetAchievedGoalIds}
+                      showCompletedGoals={showCompletedGoals}
+                      sessions={goalViewSessions}
+                      today={context?.asOfDate ?? focusedDay}
+                      weekStartsOn={context?.preferences?.defaultPolicy.weekStartsOn}
+                      canMutatePlanItems={canMutatePlanItems}
+                      optimisticCompletionFacts={optimisticCompletionFacts}
+                      mutationLoadingKey={mutationLoadingKey}
+                      canOpenEntry={canOpenPlannerEventDetails}
+                      canMutateEntryOnDay={canMutateEntryOnDay}
+                      onToggleEntry={(entry, day, source) => {
+                        void toggleDateFact(entry, day, source);
+                      }}
+                    />
+                  ) : null
+                }
+                hideTasks={hideTasks}
+                previousWindowAriaLabel={previousWindowAriaLabel}
+                nextWindowAriaLabel={nextWindowAriaLabel}
+                fixedViewHeadingWidthCh={fixedViewHeadingWidthCh}
+                viewHeading={viewHeading}
+                showTodayShortcut={showTodayShortcut}
+                expandedMonthRows={expandedMonthRows}
+                onMoveViewWindow={moveViewWindow}
+                onJumpToToday={jumpToToday}
+                onToggleExpandedMonthRows={onToggleExpandedMonthRows}
+                getDragEntryLabel={getDragEntryLabel}
+                getDragDayLabel={getDragDayLabel}
+                renderEntryDragOverlay={renderEntryDragOverlay}
+                onEntryDragStart={handleDndEntryDragStart}
+                onEntryDragOverTarget={handleDndEntryDragOver}
+                onEntryDragEnd={handleDndEntryDragEnd}
+                onEntryDragCancel={handleDndEntryDragCancel}
+                focusedDay={focusedDay}
+                focusedDayEntries={focusedDayEntries}
+                focusedDayCompletionFactMarkers={focusedDayCompletionFactMarkers}
+                mutationLoadingKey={mutationLoadingKey}
+                optimisticCompletionFacts={optimisticCompletionFacts}
+                asOfDate={context?.asOfDate ?? null}
+                canMutatePlanItems={canMutatePlanItems}
+                canMutateEntryOnDay={canMutateEntryOnDay}
+                onFocusedDayEntryOpen={(entryKey) => {
+                  const entry = focusedDayEntries.find(
+                    (candidate) => candidate.key === entryKey
+                  );
+                  if (
+                    !entry ||
+                    !canMutateEntryOnDay(entry, focusedDay)
+                  ) {
+                    return;
+                  }
+                  setLocalSelectedDay(focusedDay);
+                  togglePlannerGoalSelection(entry, {
+                    applyGoalFocus: viewMode === "month",
+                  });
+                }}
+                onToggleCompletion={(entry, day, sourceElement) => {
+                  void toggleDateFact(entry, day, sourceElement ?? undefined);
+                }}
+                onEntryPointerStart={(immovable) => {
+                  void immovable;
+                  pointerPressActiveRef.current = true;
+                }}
+                onEntryPointerEnd={() => {
+                  pointerPressActiveRef.current = false;
+                }}
+                selectedEntryKey={selectedEventEntry?.key ?? null}
+                dayChecklist={dayChecklist}
+                partnerLabel={partnerLabel}
+                viewerSubject={viewerSubject}
+                partnerSubject={partnerSubject}
+                splitPartnerChecklist={viewMode === "day" && duoScope === "both"}
+                hideWeekMonthChecklist={recoveryMode}
+                dayScheduledOnly={recoveryGoalsOnly}
+                calendarGridViewportRef={calendarGridViewportRef}
+                onCalendarGridViewportScroll={handleCalendarGridViewportScroll}
+                weekdayLabels={weekdayLabels}
+                multiMonthGridScrollRef={multiMonthGridScrollRef}
+                onMonthScopedGridScroll={handleMonthScopedGridScroll}
+                cells={cells}
+                renderCalendarDayCell={renderCalendarDayCell}
+                focusedWeekCells={focusedWeekCells}
+                dayPreview={dayPreview}
+                dayPreviewRef={dayPreviewRef}
+                previewDayEntries={previewDayEntries}
+                previewDayCompletionFactMarkers={previewDayCompletionFactMarkers}
+                onPreviewEntryOpen={(entryKey, day) => {
+                  const entry = previewDayEntries.find(
+                    (candidate) => candidate.key === entryKey
+                  );
+                  if (
+                    !entry ||
+                    !canMutateEntryOnDay(entry, day)
+                  ) {
+                    return;
+                  }
+                  setLocalSelectedDay(day);
+                  togglePlannerGoalSelection(entry, {
+                    applyGoalFocus: viewMode === "month",
+                  });
+                }}
+                onPreviewToggleCompletion={(entry, day, sourceElement) => {
+                  if (!canMutateEntryOnDay(entry, day)) {
+                    return;
+                  }
+                  void toggleDateFact(entry, day, sourceElement ?? undefined);
+                }}
+                onMoveDay={openMoveDialogForDay}
+                onExpandPreviewDay={(day) => {
+                  setExpandedPreviewDay(day);
+                  setDayPreview(null);
+                }}
+                onCloseDayPreview={() => setDayPreview(null)}
+                onDayPreviewPointerDownCapture={() => {
+                  setDayPreview((current) =>
+                    current && !current.pinned ? { ...current, pinned: true } : current
+                  );
+                }}
+                onDayPreviewMouseEnter={() => {
+                  pointerInsideDayPreviewRef.current = true;
+                  clearHoverPreviewTimer();
+                  clearHoverPreviewCloseTimer();
+                }}
+                onDayPreviewMouseLeave={() => {
+                  pointerInsideDayPreviewRef.current = false;
+                  if (dayPreview?.pinned) {
+                    return;
+                  }
+                  clearHoverPreviewTimer();
+                  clearHoverPreviewCloseTimer();
+                  setDayPreview(null);
+                }}
+                onConfirmDraftMove={onConfirmDraftMove}
+                onCancelDraftMove={onCancelDraftMove}
+                onCalendarViewModeChange={setCalendarViewMode}
+                onClearSelectedEntry={onClearSelectedEntry}
+                pinchDisabled
+              />
 
-        </>
-      ) : null}
+            </>
+          ) : null}
+        </div>
+        {recoveryPanel ? (
+          // On desktop the column adds no height of its own, so it ends where the calendar does.
+          <div className="lg:relative lg:min-h-[28rem] lg:self-stretch">
+            <div className="lg:absolute lg:inset-0">{recoveryPanel}</div>
+          </div>
+        ) : null}
+      </div>
 
       <PlannerCalendarOverlays
         renderMonthScopedOverlays={Boolean(month)}

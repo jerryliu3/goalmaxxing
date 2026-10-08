@@ -210,6 +210,14 @@ export function getEntryDraftPillClasses(input: {
   return "rounded-[10px] border-border text-foreground";
 }
 
+/** A moved session's old day stays a faded outline; a session leaving the plan reads crossed out. */
+export function getEntryGhostClasses(entry: { draftGhost: boolean; draftDiffToDate: string | null }) {
+  if (!entry.draftGhost) {
+    return "";
+  }
+  return entry.draftDiffToDate ? "opacity-75" : "opacity-60 line-through";
+}
+
 /** Selected month pill treatment in Plan focus mode (border trace animation). */
 export const PLAN_SELECTED_PILL_TREATMENT = "shimmer" as const;
 

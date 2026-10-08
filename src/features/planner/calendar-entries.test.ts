@@ -112,6 +112,28 @@ describe("planner calendar entries", () => {
     });
   });
 
+  it("draws a session staged as let go as removed from its day", () => {
+    const entriesByDate = buildEntriesByDate({
+      workUnits: [unit("2026-08-05")],
+      activeItems: [persistedItem("2026-08-05")],
+      activeGoalsByPlanGoalId: new Map(),
+      activeGoalsByOriginalGoalId: new Map(),
+      goalTitles: { "goal-a": "Goal A" },
+      draftItemEdits: {},
+      letGoEntryKeys: new Set(["goal-a:total:1"]),
+    });
+
+    expect(entriesByDate.get("2026-08-05")).toEqual([
+      expect.objectContaining({
+        key: "goal-a:total:1",
+        draftGhost: true,
+        draftDiffKind: "moved_from",
+        draftDiffFromDate: "2026-08-05",
+        draftDiffToDate: null,
+      }),
+    ]);
+  });
+
   it("never renders a preview-only session", () => {
     const entriesByDate = buildEntriesByDate({
       workUnits: [unit("2026-08-07")],

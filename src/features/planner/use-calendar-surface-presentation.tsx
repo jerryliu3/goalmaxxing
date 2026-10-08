@@ -71,14 +71,11 @@ type CalendarSurfacePresentationArgs = Omit<
   setupRestWeekdays: number[];
   setSetupRestWeekdays: (value: number[]) => void;
   setupLoading: boolean;
-  recoverLoading: boolean;
-  canRecoverPastSessions: boolean;
   rebuildBlockedMessage: string | undefined;
   fullResetLoading: boolean;
   goalResetLoading: boolean;
   openGoals: PlannerResetGoalOption[];
   submitSetup: () => Promise<void>;
-  recoverPastSessions: () => Promise<void>;
   rebuildSchedule: () => Promise<void>;
   resetPlanFully: () => Promise<void>;
   resetPlanForGoals: (goals: PlannerResetGoalOption[]) => Promise<void>;
@@ -124,14 +121,11 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
     setupRestWeekdays,
     setSetupRestWeekdays,
     setupLoading,
-    recoverLoading,
-    canRecoverPastSessions,
     rebuildBlockedMessage,
     fullResetLoading,
     goalResetLoading,
     openGoals,
     submitSetup,
-    recoverPastSessions,
     rebuildSchedule,
     resetPlanFully,
     resetPlanForGoals,
@@ -193,10 +187,7 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
         setSetupRestWeekdays,
         setupLoading,
         plannerReadOnly,
-        recoverLoading,
         loading: layoutProps.loading,
-        saveLoading,
-        canRecoverPastSessions,
         canResetPlan: layoutProps.canResetPlan,
         resetLoading: layoutProps.resetLoading,
         rebuildLoading,
@@ -207,14 +198,12 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
         goalResetLoading,
         openGoals,
         submitSetup,
-        recoverPastSessions,
         resetPlan: layoutProps.resetPlan,
         rebuildSchedule,
         resetPlanFully,
         resetPlanForGoals,
       }),
     [
-      canRecoverPastSessions,
       fullResetLoading,
       goalResetLoading,
       layoutProps.canResetPlan,
@@ -227,11 +216,8 @@ export function useCalendarSurfacePresentation(args: CalendarSurfacePresentation
       layoutProps.resetPlan,
       rebuildBlockedMessage,
       rebuildSchedule,
-      recoverLoading,
-      recoverPastSessions,
       resetPlanForGoals,
       resetPlanFully,
-      saveLoading,
       setSetupRestWeekdays,
       setupLoading,
       setupRestWeekdays,

@@ -10,7 +10,10 @@ import {
   type PlannerCalendarModelArgs,
 } from "@/features/planner/planner-calendar-model";
 
-type UsePlannerCalendarModelArgs = Omit<PlannerCalendarModelArgs, "memoizedState">;
+type UsePlannerCalendarModelArgs = Omit<PlannerCalendarModelArgs, "memoizedState"> & {
+  /** Sessions recovery mode staged as let go. */
+  letGoEntryKeys?: ReadonlySet<string>;
+};
 
 export function usePlannerCalendarModel({
   context,
@@ -32,6 +35,7 @@ export function usePlannerCalendarModel({
   calendarTaskEntriesByDate,
   hideTasks,
   showCompletedGoals,
+  letGoEntryKeys,
 }: UsePlannerCalendarModelArgs): PlannerCalendarModel {
   const currentScopeMonth = month ?? context?.scopeMonth ?? null;
   const draftSession = useMemo(
@@ -57,6 +61,7 @@ export function usePlannerCalendarModel({
         draftCommandState,
         activeGoalsByPlanGoalId: activeGoalIndexes.byPlanGoalId,
         activeGoalsByOriginalGoalId: activeGoalIndexes.byOriginalGoalId,
+        letGoEntryKeys,
       }),
     [
       activeGoalIndexes.byOriginalGoalId,
@@ -64,6 +69,7 @@ export function usePlannerCalendarModel({
       context,
       draftCommandState,
       draftSession.effectivePreview,
+      letGoEntryKeys,
     ]
   );
 

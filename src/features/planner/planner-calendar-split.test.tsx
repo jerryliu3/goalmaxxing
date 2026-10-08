@@ -77,4 +77,12 @@ describe("PlannerCalendarSplit", () => {
     expect(screen.getByTestId("plan-desktop-day-pane")).toHaveClass("bg-card", "rounded-2xl", "border");
     expect(screen.getByTestId("plan-calendar-split-calendar").firstElementChild).not.toHaveClass("bg-card");
   });
+
+  it("renders the calendar alone, with no splitter, when there is no pane", () => {
+    render(<PlannerCalendarSplit calendar={<div>Calendar</div>} pane={null} />);
+
+    expect(screen.getByText("Calendar")).toBeInTheDocument();
+    expect(screen.queryByRole("separator")).toBeNull();
+    expect(screen.queryByTestId("plan-desktop-day-pane")).toBeNull();
+  });
 });

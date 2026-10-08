@@ -58,6 +58,8 @@ interface PlannerFocusedDayPaneProps {
   onEntryPointerStart: (immovable: boolean) => void;
   onEntryPointerEnd: () => void;
   hideTasks?: boolean;
+  /** Only the day's scheduled sessions: no unscheduled, upcoming, ended, or archived goals. */
+  scheduledOnly?: boolean;
   titleAs?: "h2" | "p";
   showDayHeading?: boolean;
   shareDayTransition?: boolean;
@@ -86,6 +88,7 @@ export function PlannerFocusedDayPane({
   onEntryPointerStart,
   onEntryPointerEnd,
   hideTasks = false,
+  scheduledOnly = false,
   titleAs = "p",
   showDayHeading = true,
   shareDayTransition = false,
@@ -309,7 +312,8 @@ export function PlannerFocusedDayPane({
                 ))
               : null}
           </PlanDaySection>
-          <PlanDaySection
+          {scheduledOnly ? null : (
+            <PlanDaySection
               key={`${day}-unplanned`}
               title="Unscheduled goals"
               count={unscheduledCount}
@@ -320,7 +324,8 @@ export function PlannerFocusedDayPane({
                 placedEntries={visibleEntries}
                 checklist={dayChecklist}
               />
-          </PlanDaySection>
+            </PlanDaySection>
+          )}
           {hideTasks ? null : (
             <>
               <PlannerTasksPrefetch scheduledDate={day} onCountChange={setTaskCount} />
@@ -343,6 +348,7 @@ export function PlannerFocusedDayPane({
             </>
           )}
           {dayChecklist &&
+          !scheduledOnly &&
           (dayChecklist.filters.showUpcomingGoals ||
             dayChecklist.filters.showEndedGoals ||
             dayChecklist.filters.showArchivedGoals) ? (

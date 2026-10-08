@@ -13,6 +13,10 @@ import {
   type PlannerCalendarViewMode,
 } from "@/features/today/checklist-shell-routing";
 import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
+import {
+  RECOVERY_REVIEW_PARAM,
+  RECOVERY_REVIEW_VALUE,
+} from "@/features/planner/recovery/review-link";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
 import {
   DEFAULT_CALENDAR_VIEW_MODE,
@@ -163,8 +167,19 @@ export function CalendarPageShell({ isActive = true }: { isActive?: boolean }) {
     [applySearchParams, normalized.month, normalized.viewMode, routeIsActive]
   );
 
+  const recoveryReviewRequested =
+    routeIsActive &&
+    searchParams.get(RECOVERY_REVIEW_PARAM) === RECOVERY_REVIEW_VALUE;
+  const clearRecoveryReviewRequest = useCallback(() => {
+    applySearchParams((params) => {
+      params.delete(RECOVERY_REVIEW_PARAM);
+    }, "replace");
+  }, [applySearchParams]);
+
   return (
     <CalendarSurface
+      recoveryReviewRequested={recoveryReviewRequested}
+      onRecoveryReviewRequestHandled={clearRecoveryReviewRequest}
       goalTimelineOpen={goalLensRef.current}
       onGoalTimelineOpenChange={(open) => {
         if (!routeIsActive) return;

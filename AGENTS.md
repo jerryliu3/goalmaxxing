@@ -212,10 +212,17 @@ surfaces. The default is to simplify and reuse what already exists.
   Missed-session recovery review concepts (Goal by goal with a recap, In Goal
   View) and the decided recovery rules live in
   `docs/ux/goalmaxxing-recovery-study.md` and `/ux/recovery`. Recovery starts
-  only when the user presses Review; each accept, edit+apply, or let-go saves
-  immediately; past-period cadence misses are not recoverable and raise no
-  warning; per item only "just the missed session", with one top-level
-  Auto-rebalance switch (off by default).
+  only when the user presses Review, which enters Recovery mode: Planning mode
+  limited to the slipped goals (only they show by default and only they
+  drag; with the full calendar on, other goals are visible but locked).
+  Accept, edit+apply, and let-go are staged, not saved: moves are planner
+  draft commands the calendar previews, decided rows leave the suggestions
+  and Auto-rebalance, and one Save (bar or summary) persists everything while
+  Cancel discards it. Past-period cadence misses are not recoverable and raise
+  no warning; per item only "just the missed session", with one top-level
+  Auto-rebalance switch (off by default). Goal by goal ships from the Agenda
+  line in `src/features/planner/recovery`; moves save through
+  `/api/planner/save`, let-gos through `/api/planner/recovery`.
 - Period check-in is an `AppShell` overlay, not a tab or Progress
   destination. Cadence resolves widest-first — monthly on the first of the
   month, weekly on the profile week-start day, daily otherwise — so exactly

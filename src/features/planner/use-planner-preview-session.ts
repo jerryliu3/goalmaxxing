@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type Dispatch } from "react";
+import { useCallback, useEffect, useRef, type Dispatch } from "react";
 import { toast } from "sonner";
 import {
   draftCommandReducer,
@@ -27,16 +27,10 @@ import {
   tryBuildPlannerDraftSaveWindow,
 } from "@/lib/planner/draft-window";
 import type { PlannerPolicy } from "@/lib/planner/policy";
-import {
-  buildPlannerRecoveryPlan,
-  buildPlannerRecoveryWindow,
-  describePlannerRecoveryOutcome,
-} from "@/lib/planner/recovery";
 
 interface UsePlannerPreviewSessionArgs {
   context: PlannerContextPayload | null;
   effectivePreview: PlannerContextPayload["preview"] | null;
-  effectiveDraftPolicy: PlannerPolicy | null;
   draftSaveWindow: { start: string; end: string } | null;
   draftSaveWindowResult: PlannerDraftWindowResult;
   draftWindowWorkUnits: PlannerWorkUnit[];
@@ -52,7 +46,6 @@ interface UsePlannerPreviewSessionArgs {
 export function usePlannerPreviewSession({
   context,
   effectivePreview,
-  effectiveDraftPolicy,
   draftSaveWindow,
   draftSaveWindowResult,
   draftWindowWorkUnits,
@@ -62,7 +55,6 @@ export function usePlannerPreviewSession({
   setDraftPreview,
   setDraftPreviewWindow,
 }: UsePlannerPreviewSessionArgs) {
-  const [recoverLoading, setRecoverLoading] = useState(false);
   const draftSaveCommandsRef = useRef(draftSaveCommands);
 
   useEffect(() => {
@@ -76,14 +68,12 @@ export function usePlannerPreviewSession({
       nextPolicy,
       solveIntent,
       draftCommands,
-      recoverPastPlacements = false,
     }: {
       startDate: string;
       endDate: string;
       nextPolicy: PlannerPolicy;
       solveIntent: "stable" | "replan";
       draftCommands: PlannerDraftCommand[];
-      recoverPastPlacements?: boolean;
     }) => {
       if (!context?.timezone) {
         throw new Error("Planner context is unavailable.");
@@ -99,7 +89,6 @@ export function usePlannerPreviewSession({
             source: context.activePlan ? "update" : "manual",
             solveIntent,
             draftCommands,
-            recoverPastPlacements,
           }
         );
         return previewPayload.preview;
@@ -271,106 +260,6 @@ export function usePlannerPreviewSession({
     ]
   );
 
-  const recoverPastSessions = useCallback(async () => {
-    if (recoverLoading) {
-      return;
-    }
-    if (!context?.scopeMonth || !context.asOfDate) {
-      toast.error("Planner context is unavailable.");
-      return;
-    }
-    const policy = effectiveDraftPolicy ?? context.preferences?.defaultPolicy ?? null;
-    if (!policy) {
-      toast.error("Confirm planner settings before recovering past sessions.");
-      return;
-    }
-
-    setRecoverLoading(true);
-    try {
-      const window = buildPlannerRecoveryWindow(context.asOfDate);
-      const priorCommands = draftSaveCommandsRef.current;
-      const [baseline, recovered] = await Promise.all([
-        requestPreviewForWindow({
-          startDate: window.start,
-          endDate: window.end,
-          nextPolicy: policy,
-          solveIntent: "stable",
-          draftCommands: priorCommands,
-        }),
-        requestPreviewForWindow({
-          startDate: window.start,
-          endDate: window.end,
-          nextPolicy: policy,
-          solveIntent: "stable",
-          draftCommands: priorCommands,
-          recoverPastPlacements: true,
-        }),
-      ]);
-      if (!baseline || !recovered) {
-        toast.error("Recovery preview returned no planner data.");
-        return;
-      }
-
-      const plan = buildPlannerRecoveryPlan({
-        baselineUnits: baseline.workUnits,
-        recoveredUnits: recovered.workUnits,
-        asOfDate: context.asOfDate,
-      });
-      if (plan.moves.length === 0) {
-        toast(describePlannerRecoveryOutcome(plan));
-        return;
-      }
-
-      let nextState = draftCommandState;
-      const pendingActions = plan.moves.map((move) => ({
-        type: "upsert_move" as const,
-        goalId: move.goalId,
-        unitKey: move.unitKey,
-        scheduledDate: move.scheduledDate,
-        sourceDate: move.sourceDate,
-      }));
-      for (const action of pendingActions) {
-        nextState = draftCommandReducer(nextState, action);
-      }
-
-      const prospectiveWindow = tryBuildPlannerDraftSaveWindow({
-        currentMonth: context.scopeMonth,
-        commands: selectDraftCommands(nextState),
-        workUnits: draftWindowWorkUnits,
-      });
-      if (!prospectiveWindow.ok) {
-        toast.error(
-          prospectiveWindow.code === "too_wide"
-            ? PLANNER_DRAFT_WINDOW_TOO_WIDE_MESSAGE
-            : "Those recovered sessions cannot fit in a single draft window."
-        );
-        return;
-      }
-
-      for (const action of pendingActions) {
-        dispatchDraftCommand(action);
-      }
-      draftSaveCommandsRef.current = sortPlannerDraftCommands(
-        selectDraftCommands(nextState)
-      );
-      await refreshDraftPreview(policy);
-      toast.success(describePlannerRecoveryOutcome(plan));
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Past sessions could not be recovered."));
-    } finally {
-      setRecoverLoading(false);
-    }
-  }, [
-    context,
-    dispatchDraftCommand,
-    draftCommandState,
-    draftWindowWorkUnits,
-    effectiveDraftPolicy,
-    recoverLoading,
-    refreshDraftPreview,
-    requestPreviewForWindow,
-  ]);
-
   const clearDraftMoveCommands = useCallback(
     (entryKeys: string[]) => {
       if (!context?.scopeMonth || entryKeys.length === 0) {
@@ -396,11 +285,9 @@ export function usePlannerPreviewSession({
   );
 
   return {
-    recoverLoading,
     requestPreviewForWindow,
     refreshDraftPreview,
     applyPolicyReplanMoves,
-    recoverPastSessions,
     clearDraftMoveCommands,
     cacheDraftPreviewForWindow,
   };

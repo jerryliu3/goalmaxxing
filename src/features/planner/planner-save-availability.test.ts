@@ -15,7 +15,6 @@ describe("selectPlannerSaveAvailability", () => {
       draftSaveWindow: null,
       draftWindowTooWide: true,
       hasDraftSession: true,
-      plannerReadOnly: false,
     });
     expect(availability.draftSaveBlocked).toBe(true);
     expect(availability.draftSaveBlockedMessage).toBe(
@@ -35,7 +34,6 @@ describe("selectPlannerSaveAvailability", () => {
       draftSaveWindow: { start: "2026-08-01", end: "2026-08-05" },
       draftWindowTooWide: false,
       hasDraftSession: true,
-      plannerReadOnly: false,
     });
     expect(availability.draftSaveBlocked).toBe(true);
     expect(availability.draftSaveBlockedMessage).toContain(
@@ -55,7 +53,6 @@ describe("selectPlannerSaveAvailability", () => {
       draftSaveWindow: { start: "2026-08-15", end: "2026-08-31" },
       draftWindowTooWide: false,
       hasDraftSession: false,
-      plannerReadOnly: false,
     });
     expect(availability.hasUnsavedPlannerChanges).toBe(true);
     expect(availability.canShowSaveAction).toBe(true);

@@ -1,6 +1,7 @@
 # Recovery study
 
-Status: **Exploratory. Not a lock.** Production recovery is unchanged.
+Status: **Exploratory. Not a lock.** Goal by goal shipped to production in
+October 2026; see [Production (October 2026)](#production-october-2026).
 
 Clickable study: `/ux/recovery` (index) · `/ux/recovery/goal-by-goal`
 (leading) · `/ux/recovery/goal-view`
@@ -356,3 +357,66 @@ lanes.
   marker.
 - **Cap source.** 3/day is a seed constant here; production would read it
   from profile capacity settings.
+
+## Production (October 2026)
+
+Goal by goal shipped on Agenda. The study pages above stay as the reference;
+production code does not import from `src/features/ux-recovery`.
+
+- **Data.** `GET /api/planner/recovery` returns a snapshot built by
+  `src/lib/planner/recovery/snapshot.ts`: today through a 42-day horizon,
+  plus every past session that is uncredited, unlocked, not let go, and whose
+  credit window still includes today. Past-period cadence misses never
+  appear, so they raise no row or warning. The check-in's `recover` fact uses
+  the same computation, so Agenda and the check-in always agree.
+- **Model.** `src/lib/planner/recovery/model.ts` is the pure suggestion
+  model: one session per goal per day, rest days avoided unless nothing else
+  is open, never in the past, may land after the goal's next session, an
+  honest reason when nothing fits, and no cross-goal daily cap.
+- **Writes (Recovery mode, revised October 2026).** Nothing saves until
+  Save. Accept, Edit + Apply, and Auto-rebalance stage planner draft moves,
+  so the calendar previews them exactly like a Planning-mode drag, and a drag
+  of a slipped goal's session reads back in the panel as the same decision.
+  Let it go is staged in the review. Save writes the let-gos first
+  (`POST /api/planner/recovery`, one atomic
+  `dismiss_planner_recovery_sessions` call into
+  `planner_recovery_dismissals`, keyed by goal + missed day because unit keys
+  renumber on save), then the moves through the planner's own Save
+  (`/api/planner/save`: stale-digest checks, credit windows,
+  one-per-goal-day). If the planner save fails, Recovery mode stays open
+  with only the moves left. Undo just removes the staged change; Cancel
+  discards all of them. The first version saved each decision at once with
+  an inverse write for Undo; staging replaced it so the calendar can be
+  reviewed before anything changes.
+- **UI.** `src/features/planner/recovery/*`. The Agenda line
+  "N sessions slipped · Review" sits at the top of Agenda, above the
+  toolbar. It shows only when N > 0, and is disabled with
+  "Save or discard your changes to review" while a planner draft is unsaved.
+  Review turns it into the Recovery mode bar: "N left", Hide/Show
+  suggestions, Show full calendar / Only slipped goals, Cancel, and Save; the
+  toolbar's Planning mode badge and Save/Undo step aside. Every view shows
+  only the slipped goals by default, with tasks hidden; Day lists just their
+  scheduled sessions (no unscheduled, upcoming, ended, or archived goals).
+  The full calendar shows every goal and task. Everywhere, only the slipped
+  goals' sessions drag. Week and Month drop the day
+  checklist beside the grid; Day keeps it. The suggestions are a side column
+  on desktop, no taller than the calendar (at least 28rem) or the screen,
+  and a short sheet on phones (taller on the summary), open by
+  default and closable to see the calendar. Decided rows leave the open list
+  and Auto-rebalance plans around them. Turning Auto-rebalance on stages
+  every goal's reflow at once, lets go of the sessions with no day left, and
+  opens the summary, so Save is the only step left (the study's proposal and
+  Apply rebalance step is gone); turning it off removes exactly what it
+  staged. A session staged as let go stays on its day crossed out and faded
+  (calendar views and Goal View), like a moved session's old day but with no
+  destination.
+- **Rollout.** The planner-settings Recover button and its client-side
+  kernel diff are gone (the `recoverPastPlacements` preview flag stays for
+  external tools). The capacity banner now reads "Some sessions don't fit"
+  with a "Fix plan" button. The check-in row reads "N sessions slipped" and
+  its Review link opens `/calendar?review=recovery`.
+- **Answered open questions.** Dismissals persist in their own table rather
+  than on the planner item. Recovery first used a direct write path; Recovery
+  mode now stages moves as planner drafts.
+  There is no daily cap, so cap-on-undo does not apply. Milestones are still
+  treated as interchangeable when suggesting dates.

@@ -15,6 +15,7 @@ import { planSelectedWorkRowClass, planLedgerTitleClass, planLedgerSubtitleClass
 import {
   getEntryDraftDiffSummary,
   getEntryDraftPillClasses,
+  getEntryGhostClasses,
 } from "@/features/planner/calendar-format";
 import { planCompletionControlMode } from "@/features/planner/completion-entry-dispatch";
 import {
@@ -203,14 +204,14 @@ export function CalendarDayPreviewList<
                               ? `${pillToneClasses} my-1 px-1.5`
                               : "bg-transparent"
                           } ${planSelectedWorkRowClass(isSelectedRow)} ${
-                            entry.draftGhost ? "opacity-75" : ""
+                            getEntryGhostClasses(entry)
                           } ${
                             immovable ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing"
                           } ${isDragging ? "pointer-events-none opacity-0" : ""}`
                         : `${styles.sessionTile} border ${
                             shareEntryTransition ? PLAN_MORPH_CLASS : ""
                           } ${pillToneClasses} ${
-                            entry.draftGhost ? "opacity-75" : ""
+                            getEntryGhostClasses(entry)
                           } hover:border-primary/60 ${
                             immovable ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing"
                           } ${isDragging ? "pointer-events-none opacity-0" : ""}`
