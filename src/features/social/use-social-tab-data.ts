@@ -239,16 +239,17 @@ export function useSocialTabData() {
     !plannerPreferencesLoading &&
     (socialActivityVisibleDirty || plannerPreferencesDirty);
 
-  const saveProfile = async () => {
+  /** Resolves true once the identity fields are saved (or had nothing to save). */
+  const saveProfile = async (): Promise<boolean> => {
     if (!canSaveProfile) {
-      return;
+      return true;
     }
     const avatarValidationError = getAvatarUrlValidationError(
       normalizedProfileDraft.avatar_url
     );
     if (avatarValidationError) {
       toast.error(avatarValidationError);
-      return;
+      return false;
     }
     setSaving(true);
     const payload = {
@@ -268,28 +269,30 @@ export function useSocialTabData() {
     });
     if (error) {
       toast.error(error.message);
-    } else {
-      if (cleanupAvatarPaths.length > 0) {
-        try {
-          await deleteProfileAvatar({
-            supabase,
-            objectPaths: cleanupAvatarPaths,
-          });
-        } catch (avatarDeleteError) {
-          toast.error(
-            getApiErrorMessage(
-              avatarDeleteError,
-              "Profile saved, but previous avatar file cleanup failed."
-            )
-          );
-        }
-      }
-      toast.success("Profile saved.");
-      markTabDataCacheStaleByPrefix(PUBLIC_PROFILE_CACHE_PREFIX);
-      await loadData(true);
-      router.refresh();
+      setSaving(false);
+      return false;
     }
+    if (cleanupAvatarPaths.length > 0) {
+      try {
+        await deleteProfileAvatar({
+          supabase,
+          objectPaths: cleanupAvatarPaths,
+        });
+      } catch (avatarDeleteError) {
+        toast.error(
+          getApiErrorMessage(
+            avatarDeleteError,
+            "Profile saved, but previous avatar file cleanup failed."
+          )
+        );
+      }
+    }
+    toast.success("Profile saved.");
+    markTabDataCacheStaleByPrefix(PUBLIC_PROFILE_CACHE_PREFIX);
+    await loadData(true);
+    router.refresh();
     setSaving(false);
+    return true;
   };
 
   const uploadProfileAvatarFile = async (file: File) => {
@@ -310,7 +313,7 @@ export function useSocialTabData() {
         file,
       });
       setProfileDraft((prev) => ({ ...prev, avatar_url: avatarUrl }));
-      toast.success("Avatar uploaded. Save profile to publish the change.");
+      toast.success("Photo uploaded. Press Done to publish it.");
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Avatar upload failed."));
     }

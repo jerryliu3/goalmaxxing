@@ -12,7 +12,28 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/features/social/use-own-profile-presence", () => ({
-  useOwnProfilePresence: () => ({ bundle: { profile: { createdAt: null, memberNumber: null }, xp: null, overallStats: null, growSeries: [], yearHeatmap: [] }, loading: false }),
+  useOwnProfilePresence: () => ({
+    bundle: {
+      schemaVersion: "1",
+      profile: { subjectUserId: "user-1", username: "user", displayName: "User", avatarUrl: null, isPrivate: false, createdAt: null, memberNumber: null },
+      xp: null,
+      globalAchievements: [],
+      awardCatalogCount: 0,
+      overallStats: { totalActivities: 9, totalGoalsCompleted: 1, todayActivities: 0, activeStreakWeeks: 2, currentWeekActivities: { current: 0, previous: 0, delta: 0, deltaPercent: null }, currentMonthActivities: { current: 0, previous: 0, delta: 0, deltaPercent: null } },
+      growSeries: [],
+      yearHeatmap: [],
+      currentGoals: [],
+      bio: "Training for a spring half.",
+      showcase: [],
+      showcaseCatalog: { medals: [], goals: [], records: [] },
+    },
+    loading: false,
+    reload: vi.fn(),
+  }),
+}));
+
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({ rpc: vi.fn() }),
 }));
 
 vi.mock("@/features/social/use-social-tab-data", () => ({
@@ -89,17 +110,31 @@ vi.mock("@/components/intro/journey-intro-overlay", () => ({
   requestJourneyIntroOpen: vi.fn(),
 }));
 
-vi.mock("@/features/social/profile-presence", () => ({
-  ProfilePresenceSection: () => <div data-testid="profile-presence">Goal score and stats</div>,
-}));
-
 describe("SettingsTab", () => {
-  it("keeps score, stats and heatmap off Settings", () => {
+  it("opens with the public profile and keeps score, stats and heatmap off Settings", () => {
     render(<SettingsTab />);
-    expect(screen.getByText("Profile card")).toBeInTheDocument();
-    expect(screen.queryByTestId("profile-presence")).toBeNull();
+    const box = screen.getByRole("region", { name: "Your Goalmaxxing profile" });
+    expect(box).toHaveTextContent("Profile card");
+    expect(box).toHaveTextContent("Training for a spring half.");
+    expect(screen.getByRole("button", { name: /Edit profile/ })).toBeInTheDocument();
+    expect(screen.queryByText("activities")).toBeNull();
     expect(screen.queryByRole("heading", { name: "Goal score" })).toBeNull();
     expect(screen.queryByText("Overall stats")).toBeNull();
+  });
+
+  it("edits the profile in place with Cancel and Done", async () => {
+    const user = userEvent.setup();
+    render(<SettingsTab />);
+
+    await user.click(screen.getByRole("button", { name: /Edit profile/ }));
+    expect(
+      screen.getByText("Editing — changes are visible to everyone when you press Done")
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Done" })).toBeEnabled();
+    expect(screen.getAllByRole("button", { name: "Add a pin" })).toHaveLength(3);
+
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.getByRole("button", { name: /Edit profile/ })).toBeInTheDocument();
   });
   const originalMatchMedia = window.matchMedia;
 
