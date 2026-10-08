@@ -27,6 +27,7 @@ interface PlannerDayEntriesPanelProps {
   onEntryPointerStart: (immovable: boolean) => void;
   onEntryPointerEnd: () => void;
   density?: "compact" | "expanded";
+  showGoalColorEdge?: boolean;
   selectedEntryKey?: string | null;
   shareEntryTransition?: boolean;
   onConfirmDraftMove?: (entry: PlannerDayDetailEntry, day: string) => void;
@@ -50,6 +51,7 @@ export function PlannerDayEntriesPanel({
   onEntryPointerStart,
   onEntryPointerEnd,
   density = "compact",
+  showGoalColorEdge = false,
   selectedEntryKey = null,
   shareEntryTransition = false,
   onConfirmDraftMove,
@@ -82,6 +84,7 @@ export function PlannerDayEntriesPanel({
       onEntryPointerStart={onEntryPointerStart}
       onEntryPointerEnd={onEntryPointerEnd}
       density={density}
+      showGoalColorEdge={showGoalColorEdge}
       selectedEntryKey={selectedEntryKey}
       shareEntryTransition={shareEntryTransition}
       onConfirmDraftMove={onConfirmDraftMove}

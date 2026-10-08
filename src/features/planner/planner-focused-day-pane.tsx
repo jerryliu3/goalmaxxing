@@ -63,6 +63,7 @@ interface PlannerFocusedDayPaneProps {
   titleAs?: "h2" | "p";
   showDayHeading?: boolean;
   shareDayTransition?: boolean;
+  showGoalColorEdge?: boolean;
   selectedEntryKey?: string | null;
   dayChecklist?: PlanDayChecklistModel | null;
   partnerLabel?: string | null;
@@ -92,6 +93,7 @@ export function PlannerFocusedDayPane({
   titleAs = "p",
   showDayHeading = true,
   shareDayTransition = false,
+  showGoalColorEdge = false,
   selectedEntryKey = null,
   dayChecklist = null,
   partnerLabel = null,
@@ -294,6 +296,7 @@ export function PlannerFocusedDayPane({
               onEntryPointerStart={onEntryPointerStart}
               onEntryPointerEnd={onEntryPointerEnd}
               density="expanded"
+              showGoalColorEdge={showGoalColorEdge}
               selectedEntryKey={selectedEntryKey}
               shareEntryTransition={shareDayTransition}
               onConfirmDraftMove={onConfirmDraftMove}
