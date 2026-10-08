@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(()=>({snapshot:vi.fn(),profile:vi.fn()}));
 vi.mock("@/lib/planner/context-loader",()=>({loadPlannerCanonicalSnapshot:mocks.snapshot}));
 vi.mock("@/lib/digest/load",()=>({loadDigestProfile:mocks.profile}));
+vi.mock("@/lib/planner/recovery/snapshot",()=>({annotatePlannerSessions:()=>[]}));
 vi.mock("@/lib/coach/api",()=>({coachDatabaseError:(error:unknown)=>{if(error)throw error;}}));
 import { loadCoachContext } from "./context";
 const goalId="11111111-1111-4111-8111-111111111111";

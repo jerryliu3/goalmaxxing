@@ -10,6 +10,10 @@ export const digestFactItemSchema = z
     title: z.string().trim().min(1).max(200),
     date: z.iso.date(),
     state: digestCreditStateSchema,
+    /** Optional so check-ins saved before it existed still parse. */
+    requirementKind: z
+      .enum(["cadence", "milestone_sequence", "deadline_total"])
+      .optional(),
   })
   .strict();
 
@@ -26,9 +30,9 @@ export const digestWindowFactsSchema = z
   .strict();
 
 /**
- * Work that was placed in the recap window and never credited. Kept separate
- * from `recap.items` because that list is the first few sessions in date order,
- * which over a month says nothing about what still needs recovering.
+ * Slipped sessions the recovery review can still place: uncredited, and their
+ * credit window still includes today. Kept separate from `recap.items`, which
+ * is the first few recap sessions in date order.
  */
 export const digestRecoverFactsSchema = z
   .object({

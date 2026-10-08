@@ -8,13 +8,19 @@ describe("buildDigestPrompt", () => {
     const facts = buildDigestFacts({
       period: resolveDigestPeriod({ localDate: "2026-09-09", weekStartsOn: 1 }),
       items: [
-        { goalId: "tempo", title: "Tempo run", scheduledDate: "2026-09-09" },
+        {
+          goalId: "tempo",
+          title: "Tempo run",
+          scheduledDate: "2026-09-09",
+          credited: false,
+          requirementKind: "cadence",
+        },
       ],
-      completions: [],
     });
     const prompt = buildDigestPrompt({ kind: "daily", facts });
     expect(prompt).toContain("Tempo run");
     expect(prompt).not.toContain("goalId");
+    expect(prompt).not.toContain("requirementKind");
     expect(prompt).toContain("Do not invent sessions");
     expect(prompt).toContain("today");
   });
@@ -23,7 +29,6 @@ describe("buildDigestPrompt", () => {
     const facts = buildDigestFacts({
       period: resolveDigestPeriod({ localDate: "2026-09-01", weekStartsOn: 1 }),
       items: [],
-      completions: [],
       goals: [{ goalId: "write", title: "Write every week" }],
     });
     const prompt = buildDigestPrompt({ kind: "monthly", facts });
@@ -38,7 +43,6 @@ describe("buildDigestPrompt", () => {
     const facts = buildDigestFacts({
       period: resolveDigestPeriod({ localDate: "2026-09-09", weekStartsOn: 1 }),
       items: [],
-      completions: [],
     });
 
     expect(buildDigestPrompt({ kind: "daily", facts })).toContain(
@@ -50,7 +54,6 @@ describe("buildDigestPrompt", () => {
     const facts = buildDigestFacts({
       period: resolveDigestPeriod({ localDate: "2026-09-09", weekStartsOn: 1 }),
       items: [],
-      completions: [],
     });
 
     expect(buildDigestPrompt({ kind: "daily", facts })).toContain(

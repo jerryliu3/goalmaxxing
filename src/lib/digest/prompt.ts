@@ -23,8 +23,9 @@ function focusFor(kind: DigestKind) {
 
 function factsForPrompt(facts: DigestFacts) {
   const withoutGoalIds = (items: DigestFacts["recap"]["items"]) =>
-    items.map(({ goalId, ...item }) => {
+    items.map(({ goalId, requirementKind, ...item }) => {
       void goalId;
+      void requirementKind;
       return item;
     });
   return {
@@ -61,7 +62,7 @@ export function buildDigestPrompt({
     "",
     "READING THE FACTS",
     "recap and ahead each carry placed, completed, and estimatedMinutes for still-open work.",
-    "recover lists work that was placed in the recap window and never credited.",
+    "recover lists slipped sessions that were never credited and can still be moved to a day from today on.",
     "unscheduled lists live goals with nothing placed in the window ahead.",
     "estimatedMinutes is derived from a flat per-session estimate, so describe it as approximate or leave it out.",
     "",

@@ -5,7 +5,8 @@ import { loadPlannerCanonicalSnapshot } from "@/lib/planner/context-loader";
 import { loadDigestProfile } from "@/lib/digest/load";
 import { getDateInTimezone } from "@/lib/dates/timezone";
 import { addDaysToDateString, getAnchoredPeriod } from "@/lib/goals/periods";
-import { buildDigestFacts } from "@/lib/digest/facts";
+import { buildDigestFacts, type DigestSourceItem } from "@/lib/digest/facts";
+import { annotatePlannerSessions } from "@/lib/planner/recovery/snapshot";
 import { coachDatabaseError, type CoachRequestContext } from "./api";
 import { COACH_SURFACE_PURPOSE } from "./surface-registry";
 
@@ -14,8 +15,8 @@ export async function readCoachRevision(context:CoachRequestContext) {
   coachDatabaseError(result.error);
   return String(result.data?.revision??0);
 }
-export function coachWindowCounts(items:Array<{goalId:string;title:string;scheduledDate:string}>,completions:Array<{goalId:string;completedOn:string}>,start:string,end:string) {
-  const facts=buildDigestFacts({period:{kind:'weekly',periodKey:start,recapStart:start,recapEnd:end,aheadStart:start,aheadEnd:end},items,completions,goals:[]}).ahead;
+export function coachWindowCounts(items:DigestSourceItem[],completions:Array<{goalId:string;completedOn:string}>,start:string,end:string) {
+  const facts=buildDigestFacts({period:{kind:'weekly',periodKey:start,recapStart:start,recapEnd:end,aheadStart:start,aheadEnd:end},items,goals:[]}).ahead;
   return {scheduled:facts.placed,completed:facts.completed,allCompletions:completions.filter(c=>c.completedOn>=start&&c.completedOn<=end).length};
 }
 export function coachSelectedWindow(page: CoachPage, today: string, weekStartsOn: number) {
@@ -48,9 +49,9 @@ export async function loadCoachContext(context:CoachRequestContext,page:CoachPag
     }
     if (currentPage.selectedGoalId) selected = selected.filter(item => item.goal_id === currentPage.selectedGoalId);
     const completions=snapshot.completions.map(c=>({goalId:c.goal_id,completedOn:c.completed_on}));
-    const credited=new Set(completions.map(c=>c.goalId+':'+c.completedOn));
+    const credited=new Set(annotatePlannerSessions({goals:snapshot.goals,completions:snapshot.completions,items:allItems,asOfDate:today,weekStartsOn:profile.weekStartsOn}).filter(s=>s.credited).map(s=>s.goalId+':'+s.date));
     const toSessions=(rows:typeof raw)=>rows.filter(i=>goalsById.has(i.goal_id)).map(i=>({id:i.id,goalId:i.goal_id,title:goalsById.get(i.goal_id)!.title,unitKey:i.unit_key,date:i.scheduled_date,completed:credited.has(i.goal_id+':'+i.scheduled_date),locked:i.locked}));
-    const items=raw.filter(i=>goalsById.has(i.goal_id)).map(i=>({goalId:i.goal_id,title:goalsById.get(i.goal_id)!.title,scheduledDate:i.scheduled_date}));
+    const items=raw.filter(i=>goalsById.has(i.goal_id)).map(i=>({goalId:i.goal_id,title:goalsById.get(i.goal_id)!.title,scheduledDate:i.scheduled_date,credited:credited.has(i.goal_id+':'+i.scheduled_date)}));
     const tasks=[];
     for(let offset=0;;offset+=500) {
       const result=await context.supabase.from('planner_tasks').select('id,title,scheduled_date,completed_at,updated_at').eq('owner_id',context.userId).eq('is_deleted',false).or(`and(scheduled_date.gte.${week.start},scheduled_date.lte.${week.end}),and(scheduled_date.gte.${window.start},scheduled_date.lte.${window.end}),and(scheduled_date.lt.${week.start},completed_at.is.null)`).order('id').range(offset,offset+499);

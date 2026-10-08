@@ -284,10 +284,14 @@ describe("JourneyIntroOverlay", () => {
         "aria-pressed",
         "true"
       );
-      fireEvent.click(screen.getByRole("button", { name: /Private/ }));
       await waitFor(() => {
         expect(screen.getByRole("button", { name: "Next" })).toBeEnabled();
       });
+      fireEvent.click(screen.getByRole("button", { name: /Private/ }));
+      expect(screen.getByRole("button", { name: /Private/ })).toHaveAttribute(
+        "aria-pressed",
+        "true"
+      );
 
       fireEvent.click(screen.getByRole("button", { name: "Next" }));
       expect(await screen.findByRole("dialog", { name: "Agenda" })).toBeInTheDocument();

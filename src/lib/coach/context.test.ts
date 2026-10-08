@@ -7,7 +7,7 @@ describe('coach context facts',()=>{
     expect(coachSelectedWindow({surface:'progress',view:'year',selectedDate:'2025-06-01',scope:'self',hasDraft:false},'2026-10-02',1)).toEqual({start:'2025-01-01',end:'2025-12-31'});
   });
   it('keeps off-plan completions separate from scheduled completion rates',()=>{
-    const result=coachWindowCounts([{goalId:'g',title:'Writing',scheduledDate:'2026-09-28'}],[{goalId:'g',completedOn:'2026-09-28'},{goalId:'other',completedOn:'2026-09-28'}],'2026-09-28','2026-10-04');
+    const result=coachWindowCounts([{goalId:'g',title:'Writing',scheduledDate:'2026-09-28',credited:true}],[{goalId:'g',completedOn:'2026-09-28'},{goalId:'other',completedOn:'2026-09-28'}],'2026-09-28','2026-10-04');
     expect(result).toEqual({scheduled:1,completed:1,allCompletions:2});
   });
   it('resolves the actual visible month even when the selected day is this week', () => {
