@@ -54,7 +54,7 @@ describe("CompletionToggle", () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it("commits after a pointer hold and fills the inner mark", () => {
+  it("traces the circle during a hold and fills only after committing", () => {
     vi.useFakeTimers();
     const onClick = vi.fn();
     render(
@@ -72,6 +72,8 @@ describe("CompletionToggle", () => {
     expect(toggle).toHaveAttribute("data-holding", "true");
     expect(mark).toHaveAttribute("data-fill-progress", "1");
     expect(mark).toHaveAttribute("data-pressed", "true");
+    expect(mark?.querySelector("[data-completion-fill]")).toHaveStyle({ transform: "scale(0)" });
+    expect(mark?.querySelector("[data-completion-ring]")).toHaveStyle({ strokeDashoffset: "0" });
     expect(toggle).not.toHaveClass("bg-primary/15");
     expect(toggle).not.toHaveClass("scale-95");
     expect(onClick).not.toHaveBeenCalled();
@@ -81,6 +83,7 @@ describe("CompletionToggle", () => {
     });
     expect(onClick).toHaveBeenCalledOnce();
     expect(toggle).toHaveAttribute("data-visual-completed", "true");
+    expect(mark?.querySelector("[data-completion-fill]")).toHaveStyle({ transform: "scale(1)" });
 
     vi.useRealTimers();
   });
@@ -306,7 +309,7 @@ describe("CompletionToggle", () => {
     vi.useRealTimers();
   });
 
-  it("uses the Nest mark when Gazetteer is selected", () => {
+  it("uses the circular hold control in Gazetteer too", () => {
     render(
       <UiStyleProvider initialStyleId="gazetteer">
         <CompletionToggle completed aria-label="Mark session not done" />
@@ -315,7 +318,7 @@ describe("CompletionToggle", () => {
 
     expect(
       screen.getByRole("button", { name: "Mark session not done" }).querySelector(
-        '[data-completion-mark="nest"]'
+        '[data-completion-mark="circle"]'
       )
     ).toHaveAttribute("data-completed", "true");
   });

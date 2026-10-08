@@ -67,9 +67,11 @@ describe("MonthHeatmap", () => {
     const day = screen.getByTitle("2026-09-01: 0 completions");
     fireEvent.click(day);
     expect(onDayClick).not.toHaveBeenCalled();
-    expect(day.querySelector("[data-completion-mark]")).not.toBeInTheDocument();
+    expect(day.querySelector("[data-completion-mark]")).toHaveClass("opacity-0");
 
     fireEvent.pointerDown(day);
+    expect(day.querySelector("[data-completion-ring]")).toHaveStyle({ strokeDashoffset: "0" });
+    expect(day.querySelector("[data-completion-fill]")).toHaveStyle({ transform: "scale(0)" });
     expect(day.querySelector("[data-fill-progress='1']")).toBeInTheDocument();
     act(() => {
       vi.advanceTimersByTime(COMPLETION_HOLD_MS);
