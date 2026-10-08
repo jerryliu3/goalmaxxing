@@ -523,6 +523,13 @@ export type Database = {
   }
   public: {
     Tables: {
+      user_onboarding_progress: {
+        Row: { user_id: string; setup_step: number; tours: Json }
+        Insert: { user_id: string; setup_step?: number; tours?: Json }
+        Update: { user_id?: string; setup_step?: number; tours?: Json }
+        Relationships: []
+      }
+
       admin_users: {
         Row: {
           granted_at: string
@@ -3264,6 +3271,11 @@ export type Database = {
       }
     }
     Functions: {
+      update_onboarding_progress: {
+        Args: { p_action: string; p_step?: number | null; p_guide?: string | null; p_status?: string | null }
+        Returns: Json
+      }
+
       accept_team_invite_service: {
         Args: { p_team_id: string; p_visibility_acknowledged: boolean }
         Returns: boolean
@@ -4314,4 +4326,3 @@ export const Constants = {
     },
   },
 } as const
-

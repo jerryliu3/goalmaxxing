@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -17,21 +16,19 @@ import { buildTimezoneOptions } from "@/lib/dates/timezone-options";
 import { weekStartOptions } from "@/lib/dates/weekday-options";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
-import { createDefaultPlannerPolicy, type PlannerPolicy } from "@/lib/planner/policy";
+import { createDefaultPlannerPolicy, plannerPolicySchema, type PlannerPolicy } from "@/lib/planner/policy";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 interface PlannerPreferencesContextPayload {
   preferences: {
     timezone: string;
-    defaultPolicy: {
-      weekStartsOn: number;
-      restWeekdays: number[];
-    };
+    defaultPolicy: PlannerPolicy;
   } | null;
 }
 
 export interface JourneyIntroPreferencesValue {
+  defaultPolicy: PlannerPolicy;
   timezone: string;
   weekStartsOn: number;
   restWeekdays: number[];
@@ -45,8 +42,10 @@ export function resolveJourneyIntroSocialActivityVisible(
 }
 
 export function createDefaultJourneyIntroPreferences(): JourneyIntroPreferencesValue {
+  const timezone = resolveUserTimezone();
   return {
-    timezone: resolveUserTimezone(),
+    defaultPolicy: createDefaultPlannerPolicy(timezone, new Date().toISOString()),
+    timezone,
     weekStartsOn: 1,
     restWeekdays: [],
     socialActivityVisible: resolveJourneyIntroSocialActivityVisible(undefined),
@@ -62,7 +61,7 @@ export async function loadJourneyIntroPreferences(
   const [plannerContext, profileResult] = await Promise.all([
     getJson<PlannerPreferencesContextPayload>("/api/planner/context", {
       query: { scopeMonth },
-    }).catch(() => null),
+    }),
     supabase
       .from("profiles")
       .select("social_activity_visible")
@@ -70,7 +69,9 @@ export async function loadJourneyIntroPreferences(
       .maybeSingle(),
   ]);
 
+  if (profileResult.error) throw new Error(profileResult.error.message);
   return {
+    defaultPolicy: plannerContext?.preferences?.defaultPolicy ? plannerPolicySchema.parse(plannerContext.preferences.defaultPolicy) : defaults.defaultPolicy,
     timezone: plannerContext?.preferences?.timezone || defaults.timezone,
     weekStartsOn: normalizeWeekStartsOn(
       plannerContext?.preferences?.defaultPolicy.weekStartsOn ?? defaults.weekStartsOn
@@ -89,10 +90,7 @@ export async function saveJourneyIntroPreferences(
   userId: string,
   value: JourneyIntroPreferencesValue
 ) {
-  const defaultPolicy: PlannerPolicy = createDefaultPlannerPolicy(
-    value.timezone,
-    new Date().toISOString()
-  );
+  const defaultPolicy: PlannerPolicy = { ...value.defaultPolicy, timezone: value.timezone, timezoneConfirmedAt: new Date().toISOString() };
   defaultPolicy.weekStartsOn = normalizeWeekStartsOn(value.weekStartsOn);
   defaultPolicy.restWeekdays = [...value.restWeekdays];
   await putJson("/api/planner/context", {
@@ -106,7 +104,6 @@ export async function saveJourneyIntroPreferences(
     .from("profiles")
     .update({
       social_activity_visible: value.socialActivityVisible,
-      onboarding_completed_at: new Date().toISOString(),
     })
     .eq("id", userId);
   if (error) {
@@ -239,36 +236,19 @@ export function useJourneyIntroPreferences(userId: string, active: boolean) {
   const [value, setValue] = useState<JourneyIntroPreferencesValue>(
     createDefaultJourneyIntroPreferences
   );
-  const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
-  const loading = active && loadedUserId !== userId;
-
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [revision, setRevision] = useState(0);
   useEffect(() => {
-    if (!active) {
-      return;
-    }
+    if (!active) return;
     let cancelled = false;
-    void loadJourneyIntroPreferences(userId)
-      .then((next) => {
-        if (!cancelled) {
-          setValue(next);
-        }
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) {
-          toast.error(
-            getApiErrorMessage(error, "Preferences could not be loaded.")
-          );
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoadedUserId(userId);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [active, userId]);
-
-  return { value, setValue, loading };
+    setLoading(true); setError(null);
+    void loadJourneyIntroPreferences(userId).then(next => {
+      if (!cancelled) setValue(next);
+    }).catch(cause => {
+      if (!cancelled) setError(getApiErrorMessage(cause, "Preferences could not be loaded."));
+    }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [active, userId, revision]);
+  return { value, setValue, loading, error, reload: () => setRevision(value => value + 1) };
 }

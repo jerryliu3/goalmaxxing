@@ -31,10 +31,10 @@ function plaquePhaseFor(phase: CeremonyPhase): PlaquePhase {
   return "fused";
 }
 
-export function EarnedCeremony({ fields, target, reward, still, grand, origin, onClose, folio, onOpenLibrary }: {
+export function EarnedCeremony({ fields, target, reward, still, grand, origin, onClose, folio, onOpenLibrary, preview = false }: {
   fields: GoalCreationFields; target: number; reward: string; still: boolean; grand: boolean;
   origin: FlightOrigin; onClose: () => void;
-  folio?: GoalFolio; onOpenLibrary?: () => void;
+  folio?: GoalFolio; onOpenLibrary?: () => void; preview?: boolean;
 }) {
   const book = folio ?? studyFolio(fields);
   const [phase, setPhase] = useState<CeremonyPhase>(still ? "celebrate" : "lift");
@@ -67,10 +67,10 @@ export function EarnedCeremony({ fields, target, reward, still, grand, origin, o
       onCloseAutoFocus={event => event.preventDefault()}>
       <div className={styles.atmosphere} aria-hidden="true" />
       <header className={styles.ceremonyHeader}>
-        <p className={styles.eyebrow}>A commitment, kept.</p>
+        <p className={styles.eyebrow}>{preview ? "Practice · Achievement preview" : "A commitment, kept."}</p>
         <DialogPrimitive.Title>{phase === "kept" ? "A chapter worth keeping." : "You made it whole."}</DialogPrimitive.Title>
         <DialogPrimitive.Description id="ceremony-description">
-          {phase === "kept" ? `Saved in your ${folioLabel(book)} goal book.` : `${target} completions. Every one of them yours.`}
+          {preview ? "This is what finishing a real goal looks like. Nothing is saved or awarded during practice." : phase === "kept" ? `Saved in your ${folioLabel(book)} goal book.` : `${target} completions. Every one of them yours.`}
         </DialogPrimitive.Description>
       </header>
       <Button className={styles.close} variant="ghost" onClick={onClose}>Close</Button>
@@ -93,13 +93,13 @@ export function EarnedCeremony({ fields, target, reward, still, grand, origin, o
       </div>
       <footer className={styles.ceremonyFooter}>
         <div role="status" aria-live="polite">
-          {phase === "celebrate" && <><h3>Congratulations. You earned this.</h3>{reward.trim() && <p>Your reward · {reward.trim()}</p>}</>}
+          {phase === "celebrate" && <><h3>{preview ? "A glimpse of what you’re working toward." : "Congratulations. You earned this."}</h3>{reward.trim() && <p>Your reward · {reward.trim()}</p>}</>}
           {phase === "kept" && <p>{fields.title}<br />Part of your story, now.</p>}
           {phase === "shelve" && <p>Finding its place in your book…</p>}
         </div>
         <div className={styles.actions}>
-          {phase === "celebrate" ? <Button onClick={() => setPhase(still ? "kept" : "shelve")}>{folio ? "See it in my book" : "Keep in my book"}</Button>
-            : phase === "kept" ? <><Button onClick={onClose}>{folio ? "Continue" : "Back to the study"}</Button>{onOpenLibrary && <Button variant="outline" onClick={onOpenLibrary}>Open past goals</Button>}</>
+          {phase === "celebrate" ? <Button onClick={() => setPhase(still ? "kept" : "shelve")}>{preview ? "Preview the goal book" : folio ? "See it in my book" : "Keep in my book"}</Button>
+            : phase === "kept" ? <><Button onClick={onClose}>{preview ? "Return to setup" : folio ? "Continue" : "Back to the study"}</Button>{onOpenLibrary && <Button variant="outline" onClick={onOpenLibrary}>Open past goals</Button>}</>
             : <Button variant="outline" onClick={() => setPhase(inBook ? "kept" : "celebrate")}>Skip animation</Button>}
         </div>
       </footer>

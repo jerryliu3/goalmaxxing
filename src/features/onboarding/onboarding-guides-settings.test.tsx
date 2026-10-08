@@ -11,9 +11,10 @@ describe("OnboardingGuidesSettings", () => {
     render(<OnboardingGuidesSettings />);
 
     expect(screen.getByText("General")).toBeInTheDocument();
-    expect(screen.getByText("App intro")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Replay" })).toBeInTheDocument();
+    expect(screen.getByText("Getting started")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Replay" })[0]).toBeInTheDocument();
 
+    expect(screen.getByText("Tab tour")).toBeInTheDocument();
     expect(screen.getByText("Page")).toBeInTheDocument();
     expect(screen.getByText("Agenda")).toBeInTheDocument();
     expect(screen.getByText("Growth")).toBeInTheDocument();
