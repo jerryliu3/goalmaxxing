@@ -63,14 +63,14 @@ describe("interactive refresh journeys", () => {
     const user = userEvent.setup();
     render(<RecoveryConcept variant={1} />);
     await user.click(
-      screen.getByRole("button", { name: "Planner", exact: true }),
+      screen.getByRole("button", { name: "Planner" }),
     );
     await user.selectOptions(
       screen.getByRole("combobox", { name: "Proposed day" }),
       "9",
     );
     expect(screen.getByRole("button", { name: "Save plan" })).toBeEnabled();
-    await user.click(screen.getByRole("button", { name: "Undo", exact: true }));
+    await user.click(screen.getByRole("button", { name: "Undo" }));
     expect(screen.getByRole("combobox", { name: "Proposed day" })).toHaveValue(
       "8",
     );
@@ -91,13 +91,13 @@ describe("interactive refresh journeys", () => {
     await user.click(screen.getByRole("button", { name: /Oct 6,/ }));
     await user.click(screen.getByRole("button", { name: "Log completion" }));
     expect(
-      screen.getByRole("button", { name: "Remove", exact: true }),
+      screen.getByRole("button", { name: "Remove" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Oct 9,.*Future/ }),
     ).toBeDisabled();
     await user.click(
-      screen.getByRole("button", { name: "Remove", exact: true }),
+      screen.getByRole("button", { name: "Remove" }),
     );
     expect(
       screen.getByRole("button", { name: "Log completion" }),
@@ -133,13 +133,13 @@ describe("interactive refresh journeys", () => {
     ).toBeDisabled();
     await user.click(screen.getByRole("button", { name: "Remove Level 8" }));
     await user.click(
-      screen.getByRole("button", { name: "Records", exact: true }),
+      screen.getByRole("button", { name: "Records" }),
     );
     await user.click(
       screen.getByRole("button", { name: "Pin Best week · 12 completions" }),
     );
     expect(screen.getByText("3 / 3 pinned")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Done", exact: true }));
+    await user.click(screen.getByRole("button", { name: "Done" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(
       screen.getByText("Best week · 12 completions", { exact: true }),
@@ -166,7 +166,7 @@ describe("interactive refresh journeys", () => {
       screen.getByRole("dialog", { name: "Goal details" }),
     ).toBeInTheDocument();
     await user.click(
-      screen.getByRole("button", { name: "Edit goal", exact: true }),
+      screen.getByRole("button", { name: "Edit goal" }),
     );
     await user.clear(screen.getByRole("textbox", { name: "Goal name" }));
     await user.type(
