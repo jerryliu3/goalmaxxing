@@ -155,7 +155,21 @@ jobs:
         run: pnpm test:concurrency
 
       - name: Build production application
-        run: pnpm build
+        run: |
+          set -euo pipefail
+          # Google Fonts sometimes returns extensionless URLs whose `&` splits
+          # Turbopack's font query. The bad CSS is cached, so clear it and retry
+          # once. https://github.com/vercel/next.js/issues/99114
+          log="$(mktemp)"
+          if pnpm build 2>&1 | tee "$log"; then
+            exit 0
+          fi
+          if ! grep -q "next/font/google queries have exactly one entry" "$log"; then
+            exit 1
+          fi
+          echo "Google font build hit the Turbopack query bug. Clearing .next and retrying once."
+          rm -rf .next
+          pnpm build
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4

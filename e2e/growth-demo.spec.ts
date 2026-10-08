@@ -107,7 +107,11 @@ test("featured medal rotates on drag without selecting its numeral", async ({ pa
   await page.mouse.move(box.x + box.width / 2 + 65, box.y + box.height / 2, { steps: 12 });
   await page.mouse.up();
   await expect.poll(async () => Number.parseFloat(await stage.evaluate(node => (node as HTMLElement).style.getPropertyValue("--ry")))).toBeGreaterThan(30);
-  expect(await medal.evaluate(node => getComputedStyle(node).userSelect)).toBe("none");
+  // WebKit does not expose the unprefixed CSSOM `userSelect` property.
+  expect(await medal.evaluate(node => {
+    const style = getComputedStyle(node);
+    return style.getPropertyValue("-webkit-user-select") || style.getPropertyValue("user-select");
+  })).toBe("none");
   expect(await page.evaluate(() => getSelection()?.toString())).toBe("");
   await stage.press("Home");
   await expect.poll(async () => Number.parseFloat(await stage.evaluate(node => (node as HTMLElement).style.getPropertyValue("--ry")))).toBeCloseTo(-14, 1);
