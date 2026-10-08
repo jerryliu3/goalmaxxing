@@ -5,7 +5,7 @@ import { useReducedMotion } from "motion/react";
 import { FolioBook } from "./folio-book";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { FolioReader } from "./folio-reader";
-import type { GoalFolio } from "./folio-model";
+import { folioKey, folioLabel, type GoalFolio } from "./folio-model";
 import styles from "./folio.module.css";
 
 function dialogBox() {
@@ -33,17 +33,22 @@ function measureOrigin(book: HTMLElement, dialog?: HTMLElement | null) {
   };
 }
 
-export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
-  const [openYear, setOpenYear] = useState<string | null>(null);
+/** `compact` sizes the books for a long shelf of month books. */
+export function FolioShelf({ folios, compact = false, onDetails }: {
+  folios: GoalFolio[];
+  compact?: boolean;
+  onDetails?: (goalId: string) => void;
+}) {
+  const [openKey, setOpenKey] = useState<string | null>(null);
   const [phase, setPhase] = useState<"enter" | "open" | "leave">("open");
   const [origin, setOrigin] = useState({ x: 0, y: 0, width: 296, height: 395, transform: "none", revealSx: 0.28, revealSy: 0.52 });
   const reduceMotion = useReducedMotion();
-  const entering = Boolean(openYear) && phase === "enter" && !reduceMotion;
-  const leaving = Boolean(openYear) && phase === "leave" && !reduceMotion;
+  const entering = Boolean(openKey) && phase === "enter" && !reduceMotion;
+  const leaving = Boolean(openKey) && phase === "leave" && !reduceMotion;
   const inFlight = entering || leaving;
   const dialogRef = useRef<HTMLDivElement>(null);
   const returnFocus = useRef<HTMLButtonElement | null>(null);
-  const selected = folios.find(folio => folio.year === openYear);
+  const selected = folios.find(folio => folioKey(folio) === openKey);
   const flightStyle = {
     "--flight-x": `${origin.x}px`,
     "--flight-y": `${origin.y}px`,
@@ -63,9 +68,9 @@ export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
   }, [inFlight, origin.height, origin.revealSx, origin.revealSy, origin.width]);
 
   const closeReader = () => {
-    if (!openYear || phase === "leave") return;
+    if (!openKey || phase === "leave") return;
     if (reduceMotion || phase === "enter") {
-      setOpenYear(null);
+      setOpenKey(null);
       return;
     }
     const book = returnFocus.current?.querySelector<HTMLElement>("[data-folio-book]");
@@ -75,22 +80,22 @@ export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
 
   return (
     <>
-      <div className={styles.shelf}>
+      <div className={compact ? `${styles.shelf} ${styles.shelfCompact}` : styles.shelf}>
         {folios.map(folio => (
           <button
-            key={folio.year}
+            key={folioKey(folio)}
             type="button"
             className={styles.volume}
-            data-open={openYear === folio.year}
-            aria-label={`Open ${folio.year}, ${folio.entries.length} ${folio.entries.length === 1 ? "goal" : "goals"}`}
+            data-open={openKey === folioKey(folio)}
+            aria-label={`Open ${folioLabel(folio)}, ${folio.entries.length} ${folio.entries.length === 1 ? "goal" : "goals"}`}
             aria-haspopup="dialog"
             onClick={event => {
-              if (openYear) return;
+              if (openKey) return;
               returnFocus.current = event.currentTarget;
               const book = event.currentTarget.querySelector<HTMLElement>("[data-folio-book]");
               if (book) setOrigin(measureOrigin(book));
               setPhase(reduceMotion ? "open" : "enter");
-              setOpenYear(folio.year);
+              setOpenKey(folioKey(folio));
             }}
           >
             <FolioBook folio={folio} />
@@ -111,14 +116,14 @@ export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
           overlayClassName={leaving ? `${styles.readerOverlay} ${styles.readerOverlayLeaving}` : styles.readerOverlay}
           onCloseAutoFocus={event => { event.preventDefault(); returnFocus.current?.focus(); }}
         >
-          <DialogTitle className="sr-only">{selected?.year} past goals</DialogTitle>
+          <DialogTitle className="sr-only">{selected ? folioLabel(selected) : null} past goals</DialogTitle>
           <DialogDescription className="sr-only">Your past goals, in chronological order. Use the previous and next buttons or left and right arrow keys. Drag a goal card to turn it in place. On touch screens, swipe beside the card to change pages. Press Escape to close.</DialogDescription>
           {selected && <>
             {inFlight && <div className={styles.flightStage} data-folio-flight-layer="pages" aria-hidden="true">
               <div className={styles.flyingBook} style={flightStyle}><FolioBook folio={selected} /></div>
             </div>}
             <div className={styles.readerSurface} data-folio-reader="" inert={inFlight}>
-              <FolioReader key={selected.year} folio={selected} />
+              <FolioReader key={folioKey(selected)} folio={selected} onDetails={onDetails} />
             </div>
             {inFlight && <div className={styles.flightStage} data-folio-flight-layer="cover" aria-hidden="true">
               <div
@@ -128,7 +133,7 @@ export function FolioShelf({ folios }: { folios: GoalFolio[] }) {
                 onAnimationEnd={event => {
                   if (event.target !== event.currentTarget) return;
                   if (leaving) {
-                    setOpenYear(null);
+                    setOpenKey(null);
                     return;
                   }
                   setPhase("open");

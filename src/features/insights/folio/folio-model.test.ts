@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { summary } from "./folio-test-fixtures";
 import { buildGoal } from "@/lib/goals/goal-test-fixtures";
-import { buildCurrentGoals, buildGoalFolios, splitPastGoals } from "./folio-model";
+import { buildCurrentGoals, buildFolioEntries, buildGoalBooks, buildGoalFolios, folioLabel, splitPastGoals } from "./folio-model";
 import { selectCurrentGoals } from "@/lib/goals/current-goals";
 
 
@@ -14,7 +14,7 @@ describe("past goal folios", () => {
       buildGoal({ id: "achieved", end_date: null, target_basis: "lifetime", target_count: 3 }),
     ];
     const summaries = goals.map(goal => summary(goal.id, goal.id === "archived" ? { lifecycle: "archived", outcome: "in_progress" } : goal.id === "achieved" ? { outcome: "achieved", lifecycle: "active", achievementDate: "2026-09-01" } : {}));
-    const { past, archived } = splitPastGoals(buildGoalFolios(goals, summaries, "user-1"));
+    const { past, archived } = splitPastGoals(buildFolioEntries(goals, summaries, "user-1"));
     expect(past.map(entry => entry.goal.id)).toEqual(["ended", "achieved"]);
     expect(archived.map(entry => entry.goal.id)).toEqual(["archived"]);
   });
@@ -51,6 +51,34 @@ describe("past goal folios", () => {
     const [folio] = buildGoalFolios([goal], [summary(goal.id)], goal.owner_id);
     expect(folio.entries[0].fields).toMatchObject({ category_selection: "custom", custom_category: "Music", color: "#f49a70", difficulty: "hard", is_private: true, milestone_names: goal.milestone_names, target_count: "3" });
     expect(buildGoalFolios([goal], [], goal.owner_id)).toEqual([]);
+  });
+});
+
+describe("past goal books", () => {
+  const entries = (goals: ReturnType<typeof buildGoal>[]) => buildFolioEntries(goals, goals.map(goal => summary(goal.id)), "user-1");
+
+  it("files this year's goals by start month and earlier goals by start year, newest first", () => {
+    const books = buildGoalBooks(entries([
+      buildGoal({ id: "aug-b", start_date: "2026-08-20", end_date: "2026-09-01" }),
+      buildGoal({ id: "mar", start_date: "2026-03-02", end_date: "2026-04-01" }),
+      buildGoal({ id: "aug-a", start_date: "2026-08-03", end_date: "2026-10-01" }),
+      // Started last year, ended this year: still last year's book.
+      buildGoal({ id: "carried", start_date: "2025-11-01", end_date: "2026-02-01" }),
+      buildGoal({ id: "old", start_date: "2023-05-01", end_date: "2023-06-01" }),
+    ]), "2026");
+    expect(books.map(book => [folioLabel(book), book.entries.map(entry => entry.goal.id)])).toEqual([
+      ["August 2026", ["aug-a", "aug-b"]],
+      ["March 2026", ["mar"]],
+      ["2025", ["carried"]],
+      ["2023", ["old"]],
+    ]);
+    expect(books[0]).toMatchObject({ year: "2026", month: "2026-08", completions: 16 });
+    expect(books[2].month).toBeUndefined();
+  });
+
+  it("turns this year's months into last year's book once the year rolls over", () => {
+    const goals = entries([buildGoal({ id: "a", start_date: "2026-03-02", end_date: "2026-04-01" })]);
+    expect(buildGoalBooks(goals, "2027").map(folioLabel)).toEqual(["2026"]);
   });
 });
 

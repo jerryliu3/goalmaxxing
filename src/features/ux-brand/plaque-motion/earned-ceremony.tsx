@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react"
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { Button } from "@/components/ui/button";
 import { FolioBook } from "@/features/insights/folio/folio-book";
-import type { GoalFolio } from "@/features/insights/folio/folio-model";
+import { folioLabel, type GoalFolio } from "@/features/insights/folio/folio-model";
 import folioStyles from "@/features/insights/folio/folio.module.css";
 import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import { FragmentPlaque } from "./fragment-plaque";
@@ -70,7 +70,7 @@ export function EarnedCeremony({ fields, target, reward, still, grand, origin, o
         <p className={styles.eyebrow}>A commitment, kept.</p>
         <DialogPrimitive.Title>{phase === "kept" ? "A chapter worth keeping." : "You made it whole."}</DialogPrimitive.Title>
         <DialogPrimitive.Description id="ceremony-description">
-          {phase === "kept" ? `Saved in your ${book.year} goal book.` : `${target} completions. Every one of them yours.`}
+          {phase === "kept" ? `Saved in your ${folioLabel(book)} goal book.` : `${target} completions. Every one of them yours.`}
         </DialogPrimitive.Description>
       </header>
       <Button className={styles.close} variant="ghost" onClick={onClose}>Close</Button>
@@ -99,7 +99,7 @@ export function EarnedCeremony({ fields, target, reward, still, grand, origin, o
         </div>
         <div className={styles.actions}>
           {phase === "celebrate" ? <Button onClick={() => setPhase(still ? "kept" : "shelve")}>{folio ? "See it in my book" : "Keep in my book"}</Button>
-            : phase === "kept" ? <><Button onClick={onClose}>{folio ? "Continue" : "Back to the study"}</Button>{onOpenLibrary && <Button variant="outline" onClick={onOpenLibrary}>Open goal library</Button>}</>
+            : phase === "kept" ? <><Button onClick={onClose}>{folio ? "Continue" : "Back to the study"}</Button>{onOpenLibrary && <Button variant="outline" onClick={onOpenLibrary}>Open past goals</Button>}</>
             : <Button variant="outline" onClick={() => setPhase(inBook ? "kept" : "celebrate")}>Skip animation</Button>}
         </div>
       </footer>

@@ -11,7 +11,7 @@ describe("legacy application redirects", () => {
       ["/achievements", "/growth"],
       ["/insights", "/growth"],
       ["/insights/more", "/growth#stats"],
-      ["/goals/library", "/goals#goal-library"],
+      ["/goals/library", "/goals#past-goals"],
     ]) {
       expect(redirects).toContainEqual({ source: `${prefix}${from}`, destination: `${prefix}${to}`, permanent: true });
     }
