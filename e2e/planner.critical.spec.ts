@@ -922,7 +922,7 @@ test.describe("planner critical rails", () => {
     expect(["stale_schedule", "stale_revision", "preview_hash_mismatch"]).toContain(body.code ?? "");
 
     await expect(
-      page.getByRole("button", { name: "Undo", exact: true })
+      page.getByRole("button", { name: "Discard", exact: true })
     ).toBeVisible({ timeout: 10_000 });
   });
 });

@@ -82,7 +82,7 @@ import {
   useCalendarViewNavigation,
 } from "@/features/planner/use-calendar-view-navigation";
 import { PlannerCalendarSurfaceLayout } from "@/features/planner/planner-calendar-surface-layout";
-import { RecoveryEntry } from "@/features/planner/recovery/recovery-entry";
+import { RecoveryBar, RecoveryPrompt } from "@/features/planner/recovery/recovery-entry";
 import { RecoveryReviewPanel } from "@/features/planner/recovery/recovery-review-panel";
 import { useRecoveryReview, type RecoveryLens } from "@/features/planner/recovery/use-recovery-review";
 import { persistImmediatePlannerMove } from "@/lib/planner/persist-immediate-move";
@@ -1273,7 +1273,8 @@ export function CalendarSurface({
         {...layoutProps}
         recoveryMode={recoveryReview.state.reviewing}
         recoveryGoalsOnly={recoveryGoalIds !== null}
-        recoveryEntry={<RecoveryEntry review={recoveryReview} />}
+        recoveryPrompt={<RecoveryPrompt review={recoveryReview} />}
+        recoveryBar={<RecoveryBar review={recoveryReview} />}
         recoveryPanel={
           recoveryReview.state.reviewing && recoveryReview.suggestionsOpen ? (
             <RecoveryReviewPanel review={recoveryReview} />
