@@ -77,6 +77,9 @@ function publicBundle(overrides: Partial<PublicProfileBundle> = {}): PublicProfi
     growSeries: [{ date: "2026-09-01", score: 18, pace: 16, rawCredits: 2 }],
     growTopPercent: 12,
     currentGoals: [],
+    bio: null,
+    showcase: [],
+    showcaseCatalog: null,
     ...overrides,
   };
 }
@@ -104,6 +107,8 @@ describe("PublicProfileContent page", () => {
             {
               id: "goal-1",
               ownerId: "subject-1",
+              isPrivate: false,
+              featuredOnProfile: true,
               title: "Daily walk",
               description: null,
               category: "Health",
