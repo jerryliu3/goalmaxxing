@@ -109,7 +109,7 @@ export function PlannerWarningsPanel({
       <Dialog open={warningsOpen} onOpenChange={setWarningsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sessions that don't fit</DialogTitle>
+            <DialogTitle>Sessions that don&apos;t fit</DialogTitle>
             <DialogDescription>
               {unplaceableGoalSummaries.length > 0 && invalidLockGoalCount > 0
                 ? `${unplaceableGoalSummaries.length} goal${
