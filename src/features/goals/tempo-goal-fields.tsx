@@ -69,6 +69,9 @@ const NO_CHANGES = new Set<never>();
 const SCHEDULE = 2;
 const REWARD = 3;
 const REVIEW = 4;
+const PREVIEW_SPRING = { type: "spring", stiffness: 180, damping: 26 } as const;
+// Matches the .card-side turn in card-editor.css, so the glide into review and the flip are one motion.
+const REVIEW_ARRIVAL = { duration: 0.7, ease: [0.65, 0, 0.35, 1] } as const;
 
 export function TempoGoalFields({
   fields,
@@ -257,7 +260,7 @@ export function TempoGoalFields({
       layout={!reducedMotion}
       // Review moves the card into the legend (a new parent); the shared id glides it there.
       layoutId="tempo-preview-card"
-      transition={{ type: "spring", stiffness: 180, damping: 26 }}
+      transition={step === REVIEW ? REVIEW_ARRIVAL : PREVIEW_SPRING}
     >
       {/* Steps before review keep one scene, so the card doesn't remount as steps change. */}
       {isPlannerTask ? (
