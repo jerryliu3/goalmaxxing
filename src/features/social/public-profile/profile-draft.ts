@@ -1,9 +1,11 @@
 import {
   PUBLIC_PROFILE_PIN_LIMIT,
+  PUBLIC_PROFILE_RECORD_LIMIT,
   type PublicProfileBundle,
   type PublicProfileCurrentGoal,
   type PublicProfileShowcaseItem,
   type PublicProfileShowcasePin,
+  type PublicProfileShowcaseRecord,
 } from "@cadence/shared/social/public-profile";
 
 export interface PublicProfileDraft {
@@ -14,11 +16,25 @@ export interface PublicProfileDraft {
 
 export interface PublicProfileContent {
   bio: string;
-  showcase: PublicProfileShowcaseItem[];
+  /** Pinned records, shown on the membership card. */
+  records: PublicProfileShowcaseRecord[];
+  /** Pinned medals and finished goals. */
+  showcase: ShowcasePinItem[];
   goals: PublicProfileCurrentGoal[];
 }
 
 export const pinKey = (pin: PublicProfileShowcasePin) => `${pin.kind}:${pin.ref}`;
+
+const isRecordPin = (pin: PublicProfileShowcasePin) => pin.kind === "record";
+
+type ShowcasePinItem = Exclude<PublicProfileShowcaseItem, PublicProfileShowcaseRecord>;
+
+function splitPinned(items: readonly PublicProfileShowcaseItem[]) {
+  return {
+    records: items.filter((item): item is PublicProfileShowcaseRecord => item.kind === "record"),
+    showcase: items.filter((item): item is ShowcasePinItem => item.kind !== "record"),
+  };
+}
 
 function isVisibleGoal(goal: PublicProfileCurrentGoal) {
   return !goal.isPrivate && goal.featuredOnProfile;
@@ -43,7 +59,7 @@ export function resolveProfileContent(
   if (!draft) {
     return {
       bio: bundle.bio ?? "",
-      showcase: bundle.showcase,
+      ...splitPinned(bundle.showcase),
       goals: bundle.currentGoals.filter(isVisibleGoal),
     };
   }
@@ -53,7 +69,7 @@ export function resolveProfileContent(
   const featured = new Set(draft.featuredGoalIds);
   return {
     bio: draft.bio,
-    showcase: draft.pins.flatMap((pin) => byKey.get(pinKey(pin)) ?? []),
+    ...splitPinned(draft.pins.flatMap((pin) => byKey.get(pinKey(pin)) ?? [])),
     goals: bundle.currentGoals.filter((goal) => !goal.isPrivate && featured.has(goal.id)),
   };
 }
@@ -66,10 +82,14 @@ export function togglePin(
   if (pins.some((current) => pinKey(current) === key)) {
     return { pins: pins.filter((current) => pinKey(current) !== key), notice: null };
   }
-  if (pins.length >= PUBLIC_PROFILE_PIN_LIMIT) {
+  const record = isRecordPin(pin);
+  const limit = record ? PUBLIC_PROFILE_RECORD_LIMIT : PUBLIC_PROFILE_PIN_LIMIT;
+  if (pins.filter((current) => isRecordPin(current) === record).length >= limit) {
     return {
       pins: [...pins],
-      notice: `You can pin ${PUBLIC_PROFILE_PIN_LIMIT}. Unpin one to add another.`,
+      notice: record
+        ? `Your card shows ${limit} records. Remove one to add another.`
+        : `You can pin ${limit}. Unpin one to add another.`,
     };
   }
   return { pins: [...pins, { kind: pin.kind, ref: pin.ref }], notice: null };

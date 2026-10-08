@@ -148,6 +148,67 @@ describe("ProfileMembershipCard", () => {
     expect(onUploadAvatar).toHaveBeenCalledTimes(1);
   });
 
+  it("shows the bio and pinned records on the card instead of stats", () => {
+    render(
+      <ProfileMembershipCard
+        profile={profile}
+        overallStats={stats}
+        currentLevel={18}
+        bio="Running toward a spring half."
+        records={[
+          { kind: "record", ref: "rec-streak", label: "Best streak", value: "12d", hint: "" },
+          { kind: "record", ref: "rec-goals", label: "Goals finished", value: "4", hint: "" },
+        ]}
+      />
+    );
+
+    const card = screen.getByRole("article", { name: "Jerry membership card" });
+    expect(within(card).getByText("Running toward a spring half.")).toBeInTheDocument();
+    expect(within(card).getByText("12d")).toBeInTheDocument();
+    expect(within(card).getByText("Best streak")).toBeInTheDocument();
+    expect(within(card).getByText("Goals finished")).toBeInTheDocument();
+    expect(within(card).queryByText("activities")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Choose records" })).toBeNull();
+  });
+
+  it("lets the owner edit the bio and choose records from the card", async () => {
+    const user = userEvent.setup();
+    const onBioChange = vi.fn();
+    const onEditRecords = vi.fn();
+
+    render(
+      <ProfileMembershipCard
+        profile={profile}
+        overallStats={null}
+        currentLevel={18}
+        bio=""
+        records={[]}
+        editor={{
+          username: "jerry",
+          displayName: "Jerry",
+          avatarUrl: "",
+          saving: false,
+          canSave: false,
+          onUsernameChange: vi.fn(),
+          onDisplayNameChange: vi.fn(),
+          onSave: vi.fn(async () => undefined),
+          onUploadAvatar: vi.fn(async () => undefined),
+          onRemoveAvatar: vi.fn(),
+          onBioChange,
+          onEditRecords,
+        }}
+      />
+    );
+
+    expect(screen.getAllByText("Add a record")).toHaveLength(3);
+    await user.click(screen.getByRole("button", { name: "Choose records" }));
+    expect(onEditRecords).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole("button", { name: "Edit bio" }));
+    await user.type(screen.getByLabelText("bio"), "H");
+    expect(onBioChange).toHaveBeenCalledWith("H");
+  });
+
   it("keeps the photo inside the horizon rings", () => {
     render(
       <ProfileMembershipCard

@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { PencilLine } from "lucide-react";
 import {
-  PUBLIC_PROFILE_BIO_LIMIT,
   PUBLIC_PROFILE_PIN_LIMIT,
   type PublicProfileBundle,
   type PublicProfileCurrentGoal,
-  type PublicProfileShowcaseItem,
 } from "@cadence/shared/social/public-profile";
 import { UserAvatar } from "@/components/user-avatar";
 import { GoalProgressCard } from "@/features/goals/goal-progress-card";
@@ -21,6 +19,7 @@ import { ProfileLink } from "@/features/social/public-profile/profile-link";
 import {
   pinKey,
   resolveProfileContent,
+  type PublicProfileContent,
   type PublicProfileDraft,
 } from "@/features/social/public-profile/profile-draft";
 import { resolvePublicProfileLabel } from "@/features/social/public-profile/resolve-profile-label";
@@ -35,6 +34,7 @@ export interface PublicProfileOwnerControls {
   draft: PublicProfileDraft;
   cardEditor: ProfileMembershipEditor;
   onBioChange: (bio: string) => void;
+  onEditRecords: () => void;
   onEditPins: () => void;
   onChooseGoals: () => void;
 }
@@ -76,6 +76,15 @@ export function PublicProfileView({
       <div className="space-y-4" role="region" aria-label={`${resolvePublicProfileLabel(bundle.profile)} public profile`}>
         <CompactIdentity bundle={bundle} level={level} />
         {content.bio.trim() ? <p className="text-sm leading-snug">{content.bio}</p> : null}
+        {content.records.length > 0 ? (
+          <ul className="flex flex-wrap gap-x-4 gap-y-1" aria-label="Records">
+            {content.records.map((record) => (
+              <li key={record.ref} className="text-xs text-muted-foreground">
+                <span className="type-figure text-sm text-foreground">{record.value}</span> {record.label}
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {showcase.length > 0 ? (
           <ul className="grid grid-cols-3 gap-2" aria-label="Pinned">
             {showcase.map((item) => (
@@ -101,7 +110,6 @@ export function PublicProfileView({
   }
 
   const editing = Boolean(owner);
-  const showBio = editing || content.bio.trim().length > 0;
   const showShowcase = editing || showcase.length > 0;
   const showGoals = editing || content.goals.length > 0;
 
@@ -111,16 +119,16 @@ export function PublicProfileView({
         profile={bundle.profile}
         overallStats={null}
         currentLevel={level}
-        editor={owner?.cardEditor}
+        bio={content.bio}
+        records={content.records}
+        editor={
+          owner
+            ? { ...owner.cardEditor, onBioChange: owner.onBioChange, onEditRecords: owner.onEditRecords }
+            : undefined
+        }
       />
 
       {username ? <ProfileLink username={username} copyable={copyLink} className="-mt-4" /> : null}
-
-      {showBio ? (
-        <Section title="About">
-          <Bio bio={content.bio} onChange={owner?.onBioChange} />
-        </Section>
-      ) : null}
 
       {showShowcase ? (
         <Section title="Showcase" meta={editing ? `${showcase.length}/${PUBLIC_PROFILE_PIN_LIMIT} pinned` : undefined}>
@@ -217,48 +225,6 @@ function Section({
   );
 }
 
-function Bio({ bio, onChange }: { bio: string; onChange?: (bio: string) => void }) {
-  const [editing, setEditing] = useState(false);
-
-  if (onChange && editing) {
-    return (
-      <div className="space-y-2">
-        <textarea
-          aria-label="Bio"
-          autoFocus
-          rows={2}
-          maxLength={PUBLIC_PROFILE_BIO_LIMIT}
-          value={bio}
-          onChange={(event) => onChange(event.target.value)}
-          onBlur={() => setEditing(false)}
-          className="w-full resize-none rounded-lg border border-border bg-card px-3 py-2 type-title text-lg leading-snug outline-none focus:border-primary"
-        />
-        <p className="text-right type-figure text-[11px] text-muted-foreground">
-          {bio.length}/{PUBLIC_PROFILE_BIO_LIMIT}
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-start gap-3">
-      <p className="flex-1 type-title text-xl leading-snug">
-        {bio.trim() || <span className="text-muted-foreground">Add a line about what you’re working toward.</span>}
-      </p>
-      {onChange ? (
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-semibold"
-        >
-          <PencilLine aria-hidden className="size-3.5" />
-          Edit bio
-        </button>
-      ) : null}
-    </div>
-  );
-}
-
 /** Full cards fill columns about as wide as the Goals tab's, at any container width. */
 function GoalCards({ goals, size }: { goals: readonly PublicProfileCurrentGoal[]; size: "full" | "mini" }) {
   return (
@@ -282,7 +248,13 @@ function GoalCards({ goals, size }: { goals: readonly PublicProfileCurrentGoal[]
   );
 }
 
-function PinSlotButton({ item, onClick }: { item: PublicProfileShowcaseItem | undefined; onClick: () => void }) {
+function PinSlotButton({
+  item,
+  onClick,
+}: {
+  item: PublicProfileContent["showcase"][number] | undefined;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
@@ -290,7 +262,7 @@ function PinSlotButton({ item, onClick }: { item: PublicProfileShowcaseItem | un
       aria-label={item ? `Change pin: ${showcaseItemName(item)}` : "Add a pin"}
       className="relative block h-full w-full rounded-[14px] text-left outline-none ring-primary transition hover:ring-2 focus-visible:ring-2"
     >
-      {item ? <ShowcaseTile item={item} /> : <EmptyPinSlot hint="Pin a medal, record, or finished goal" />}
+      {item ? <ShowcaseTile item={item} /> : <EmptyPinSlot hint="Pin a medal or finished goal" />}
       {item ? (
         <span
           aria-hidden

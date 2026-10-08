@@ -181,10 +181,24 @@ one render for `/user/[username]` (full), the Community profile sheet
   and resolved pins only. The owner also gets private and unfeatured goals
   (flagged) and the pin catalog, and the view drops private goals again before
   rendering.
-- The membership card shows no metrics. Settings has no score, stats or
-  heatmap; those stay on Growth.
+- The membership card shows no computed stats. Settings has no score, stats
+  or heatmap; those stay on Growth.
 - Done saves the identity row first (a taken username fails there and the
   box stays in edit mode), then bio, pins and featured goals in one RPC.
+- The account email never appears on the profile, including the owner's
+  editor.
+
+Follow-up (October 2026): the bio and pinned records moved onto the
+membership card. The card's metric row shows up to three pinned records
+(the owner taps the row to choose them) and the bio sits under the name
+with inline edit; there is no separate About section. The Showcase keeps up
+to three medals or finished goals. `profile_showcase_pins` now holds six
+slots, and `update_public_profile` caps records and showcase pins at three
+each. Until that save, `profile_card_configured` stays false. The loader
+keeps a description they already wrote, fills a blank one, and fills
+whichever of the record row and the showcase is still empty (a medal and a
+finished goal when the owner has them). Clearing the bio or the pins and
+saving keeps the card empty.
 
 ## Open questions
 

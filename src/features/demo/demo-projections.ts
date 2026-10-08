@@ -558,7 +558,9 @@ export function buildDemoPublicProfile(subjectUserId: string, selectedYear: numb
       timezone: profile.timezone ?? snapshot.timezone,
       week_starts_on: profile.week_starts_on ?? snapshot.weekStartsOn,
       social_activity_visible: profile.social_activity_visible ?? true,
+      profile_card_configured: false,
     },
+    cardConfigured: false,
     globalXpProfile: achievements ? { total_xp: achievements.collection.totalXp } : null,
     globalAchievements: achievements?.levelAwards.flatMap((award) =>
       award.awardId && award.unlockedAt ? [{
