@@ -27,19 +27,10 @@ export function AchievementsShowcase({ payload }: { payload: AchievementsShowcas
 
   return (
     <div className="ach-showcase-root -mx-4 rounded-[20px] px-4 pb-4 pt-6 sm:-mx-6 sm:px-6">
-      <div className="space-y-8">
-        <header className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="ach-showcase-heading type-hero text-4xl tracking-tight sm:text-5xl">
-              Bests on the wall. Medals on the shelf.
-            </h1>
-            <p className="ach-showcase-body mt-3 max-w-xl text-sm leading-relaxed">
-              Your records and level medals. Unstruck blanks wait for your next
-              level.
-            </p>
-          </div>
-          <div className="min-w-[13rem]">
-            <dl className="ach-showcase-stat-muted grid grid-cols-3 gap-3 text-right text-sm">
+      <div className="space-y-6">
+        <header>
+          <div className="w-fit">
+            <dl className="ach-showcase-stat-muted grid grid-cols-3 gap-8 text-sm">
               <div>
                 <dt className="ach-showcase-stat-label type-eyebrow text-[10px]">
                   Level

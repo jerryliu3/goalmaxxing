@@ -130,9 +130,10 @@ describe("InsightsTab goal ledger", () => {
     const layout = screen.getByTestId("progress-ledger-layout");
     expect(layout).toHaveClass(
       "flex-col",
-      "md:grid",
-      "md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]"
+      "@xl:grid",
+      "@xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]"
     );
+    expect(layout.parentElement).toHaveClass("@container");
     expect(layout).not.toHaveClass("flex-col-reverse");
     const goalsHeading = screen.getByRole("heading", { name: /Goals/ });
     expect(
@@ -275,7 +276,7 @@ describe("InsightsTab goal ledger", () => {
     expect(screen.queryByRole("heading", { name: "Progress Tracker" })).toBeNull();
     expect(screen.queryByText("September 2026")).not.toBeInTheDocument();
     expect(screen.getByTestId("progress-ledger-layout")).toHaveClass("space-y-3");
-    expect(screen.getByTestId("progress-ledger-layout")).not.toHaveClass("md:grid");
+    expect(screen.getByTestId("progress-ledger-layout")).not.toHaveClass("@xl:grid");
     expect(
       help.compareDocumentPosition(goalsHeading) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
@@ -295,6 +296,6 @@ describe("InsightsTab goal ledger", () => {
 
     const layout = screen.getByTestId("progress-ledger-layout");
     expect(layout).toHaveClass("space-y-3");
-    expect(layout).not.toHaveClass("md:grid");
+    expect(layout).not.toHaveClass("@xl:grid");
   });
 });

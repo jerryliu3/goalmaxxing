@@ -799,12 +799,14 @@ export function InsightsTab({
 
   const ledgerLayoutNode =
     showGoalsSection || showHeatmap ? (
+      // Sized by its own width so a growth duo lane stacks like a phone does.
+      <div className="@container">
       <div
         data-testid="progress-ledger-layout"
         className={
           stackLedgerAndHeatmap
             ? "space-y-3"
-            : "flex flex-col gap-6 md:grid md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] md:items-start"
+            : "flex flex-col gap-6 @xl:grid @xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] @xl:items-start"
         }
       >
         {showHeatmap ? (
@@ -813,7 +815,7 @@ export function InsightsTab({
               className={
                 stackLedgerAndHeatmap
                   ? "space-y-1"
-                  : "md:col-start-2 md:row-start-1"
+                  : "@xl:col-start-2 @xl:row-start-1"
               }
               data-onboarding="insights.overall"
               data-no-swipe="true"
@@ -880,7 +882,7 @@ export function InsightsTab({
         ) : null}
 
         {showGoalsSection ? (
-          <div className={stackLedgerAndHeatmap ? undefined : "md:col-start-1 md:row-start-1"}>
+          <div className={stackLedgerAndHeatmap ? undefined : "@xl:col-start-1 @xl:row-start-1"}>
             <ProgressGoalList
               goals={ledgerGoalItems}
               selectedGoalIds={selectedLedgerIdSet}
@@ -896,6 +898,7 @@ export function InsightsTab({
             />
           </div>
         ) : null}
+      </div>
       </div>
     ) : null;
 

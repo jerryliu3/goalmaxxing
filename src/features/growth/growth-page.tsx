@@ -19,9 +19,14 @@ import { DuoLanes } from "@/features/social/duo/duo-lanes";
 import { useDuoSurface } from "@/features/social/duo/use-duo-surface";
 import { useOwnProfilePresence } from "@/features/social/use-own-profile-presence";
 import { ProfileMedalShelf } from "@/features/achievements/profile-medal-shelf";
+import { cn } from "@/lib/utils";
 import { GrowthDetailedStats } from "./growth-detailed-stats";
 
-function GrowthLane({ userId, readOnly, anchors }: {
+const GROWTH_SECTION_COUNT = 4;
+
+function GrowthLane({ userId, readOnly, anchors, duo }: {
+  /** Side by side with a partner: sections join the shared rows, medals stay compact. */
+  duo: boolean;
   userId?: string;
   readOnly: boolean;
   anchors: boolean;
@@ -35,7 +40,8 @@ function GrowthLane({ userId, readOnly, anchors }: {
     failClosed: readOnly,
   });
   const { bundle, loading: presenceLoading, error: presenceError, reload: reloadPresence } = useOwnProfilePresence(userId ?? null, null);
-  const awards = useAchievementsShowcase({ enabled: !readOnly });
+  const compactMedals = readOnly || duo;
+  const awards = useAchievementsShowcase({ enabled: !compactMedals });
   useReportAppSurfaceReady(!loading && !presenceLoading);
 
   if (loadError || (presenceError && !bundle)) {
@@ -52,7 +58,7 @@ function GrowthLane({ userId, readOnly, anchors }: {
   const series = toGrowScoreChartSeries(bundle?.growSeries ?? []);
 
   return (
-    <div className="space-y-8" data-testid="growth-page">
+    <div className={cn("space-y-8", duo && "md:contents md:space-y-0")} data-testid="growth-page">
       <section aria-label="Goal score" data-growth-section="score">
         <GrowScoreTrendChart title="Goal score" series={series} topPercent={bundle?.growTopPercent ?? null} />
       </section>
@@ -66,7 +72,7 @@ function GrowthLane({ userId, readOnly, anchors }: {
         data-onboarding={anchors ? "insights.achievements" : undefined}
       >
         <h2 className="type-title mb-4 text-2xl">Achievements</h2>
-        {readOnly ? (
+        {compactMedals ? (
           <ProfileMedalShelf achievements={bundle?.globalAchievements ?? []} awardCatalogCount={bundle?.awardCatalogCount ?? 0} />
         ) : awards.loading ? (
           <p>Loading achievements…</p>
@@ -107,7 +113,15 @@ export function GrowthPage() {
         scope={scope}
         viewer={viewer}
         partner={partner}
-        renderLane={subject => <GrowthLane userId={subject.userId} readOnly={subject.readOnly} anchors={subject.id === lanes[0]?.id} />}
+        alignRows={GROWTH_SECTION_COUNT}
+        renderLane={subject => (
+          <GrowthLane
+            userId={subject.userId}
+            readOnly={subject.readOnly}
+            anchors={subject.id === lanes[0]?.id}
+            duo={lanes.length > 1}
+          />
+        )}
       />
     </div>
   );

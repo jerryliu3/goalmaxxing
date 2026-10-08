@@ -52,4 +52,28 @@ describe("DuoLanes", () => {
     expect(screen.getByText("Mine content")).toBeInTheDocument();
     expect(screen.getByText("Alex content")).toBeInTheDocument();
   });
+
+  it("lines lanes up on a shared subgrid when asked", () => {
+    render(
+      <DuoLanes
+        scope="both"
+        viewer={viewer}
+        partner={partner}
+        alignRows={4}
+        renderLane={(subject) => <p>{subject.label} content</p>}
+      />
+    );
+
+    const lane = screen.getByText("Mine content").closest("section")!;
+    expect(lane).toHaveAttribute("data-duo-aligned", "true");
+    expect(lane).toHaveClass("md:grid-rows-subgrid", "md:row-span-(--duo-rows)");
+    expect(lane.style.getPropertyValue("--duo-rows")).toBe("5");
+  });
+
+  it("does not align a single lane", () => {
+    render(
+      <DuoLanes scope="me" viewer={viewer} partner={partner} alignRows={4} renderLane={() => <p>content</p>} />
+    );
+    expect(screen.getByText("content").closest("section")).not.toHaveAttribute("data-duo-aligned");
+  });
 });

@@ -97,6 +97,9 @@ describe("AchievementsShowcase", () => {
     render(<AchievementsShowcase payload={payload} />);
 
     expect(screen.getByLabelText("Personal records")).toBeInTheDocument();
+    // Growth titles the section; the showcase adds no hero copy or viewer instructions.
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    expect(screen.queryByText(/Drag to rotate · Arrow keys/)).toBeNull();
     expect(screen.queryByLabelText("Goal-finish medals")).toBeNull();
     expect(screen.queryByRole("heading", { name: "Finished goals" })).toBeNull();
     expect(screen.getByText("21d")).toBeInTheDocument();
