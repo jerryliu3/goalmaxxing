@@ -12,6 +12,18 @@ export const GROW_SCORE_RANGE_OPTIONS: ReadonlyArray<SegmentedControlOption<Grow
   { value: "all", label: "All" },
 ];
 
+const PERIOD_LABELS: Record<GrowScoreRange, string> = {
+  "1m": "Past month",
+  "3m": "Past 3 months",
+  ytd: "Year to date",
+  "1y": "Past year",
+  all: "All time",
+};
+
+export function growScoreRangePeriodLabel(range: GrowScoreRange): string {
+  return PERIOD_LABELS[range];
+}
+
 function rangeStart(range: GrowScoreRange, latest: string): string | null {
   const asOf = parseISO(latest);
   switch (range) {
