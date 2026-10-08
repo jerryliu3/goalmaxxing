@@ -8,22 +8,24 @@ import { reportError } from "@/lib/observability/report-error";
 type Connection = { client_id: string; client_name: string; connected_at: string; revoked_at: string | null };
 export function ExternalAppConnections() {
   const supabase = useMemo(() => createClient(), []);
-  const [enabled, setEnabled] = useState(false);
+  const [enabled, setEnabled] = useState<boolean | null>(null);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
     void getJson<{ externalToolsEnabled: boolean }>("/api/config").then(async config => {
-      if (!active || !config.externalToolsEnabled) return;
-      setEnabled(true);
+      if (!active) return;
+      setEnabled(Boolean(config.externalToolsEnabled));
+      if (!config.externalToolsEnabled) return;
       const { data, error } = await supabase.from("external_app_connections").select("client_id,client_name,connected_at,revoked_at").is("revoked_at", null).order("connected_at");
       if (error) throw error;
       if (active) setConnections(data ?? []);
     }).catch(cause => { reportError(cause); if (active) setError("Connected apps could not be loaded."); });
     return () => { active = false; };
   }, [supabase]);
-  if (!enabled) return null;
+  if (enabled === null) return null;
+  if (!enabled) return <p className="text-sm text-muted-foreground">No integrations are available yet.</p>;
   const disconnect = async (clientId: string) => {
     setBusy(clientId); setError(null);
     try {

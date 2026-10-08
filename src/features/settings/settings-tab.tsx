@@ -21,7 +21,6 @@ import { OnboardingGuidesSettings } from "@/features/onboarding/onboarding-guide
 import { PasswordUpdateForm } from "@/features/auth/password-update-form";
 import { AppearanceSettings } from "@/features/settings/appearance-settings";
 import { ExternalAppConnections } from "@/features/settings/external-app-connections";
-import { IntegrationsSettings } from "@/features/settings/integrations-settings";
 import { PlannerPreferencesSettings, type PlannerPreferencesDraft } from "@/features/settings/planner-preferences-settings";
 import { ReportIssueSettings } from "@/features/settings/report-issue-settings";
 import {
@@ -39,7 +38,6 @@ import { useSocialTabData } from "@/features/social/use-social-tab-data";
 import { useClientSearchParamsUpdater } from "@/lib/navigation/use-client-search-params-updater";
 import { panelClass } from "@/components/ui/panel";
 import { cn } from "@/lib/utils";
-import type { Goal } from "@/lib/goals/types";
 
 type ProfileDraft = {
   username: string;
@@ -214,7 +212,6 @@ export function SettingsTab() {
       >
         <SettingsSectionEditor
           settingsSection={settingsSection}
-          ownGoals={state.ownGoals}
           profileDraft={profileDraft}
           setProfileDraft={setProfileDraft}
           plannerPreferencesDraft={plannerPreferencesDraft}
@@ -231,7 +228,6 @@ export function SettingsTab() {
 
 function SettingsSectionEditor({
   settingsSection,
-  ownGoals,
   profileDraft,
   setProfileDraft,
   plannerPreferencesDraft,
@@ -242,7 +238,6 @@ function SettingsSectionEditor({
   savePreferences,
 }: {
   settingsSection: SettingsSection;
-  ownGoals: Goal[];
   profileDraft: ProfileDraft;
   setProfileDraft: Dispatch<SetStateAction<ProfileDraft>>;
   plannerPreferencesDraft: PlannerPreferencesDraft;
@@ -330,7 +325,7 @@ function SettingsSectionEditor({
   }
 
   if (settingsSection === "integrations") {
-    return <div className="space-y-6"><ExternalAppConnections /><IntegrationsSettings goals={ownGoals} /></div>;
+    return <ExternalAppConnections />;
   }
 
   return <ReportIssueSettings />;

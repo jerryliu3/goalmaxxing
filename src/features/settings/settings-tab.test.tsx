@@ -78,10 +78,6 @@ vi.mock("@/features/social/notifications-section", () => ({
   NotificationsSection: () => <div>Notifications body</div>,
 }));
 
-vi.mock("@/features/settings/integrations-settings", () => ({
-  IntegrationsSettings: () => <div>Integrations body</div>,
-}));
-
 vi.mock("@/features/settings/planner-preferences-settings", () => ({
   PlannerPreferencesSettings: () => <div>Preferences body</div>,
 }));

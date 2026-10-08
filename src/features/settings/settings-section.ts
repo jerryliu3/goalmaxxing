@@ -49,7 +49,7 @@ export const SETTINGS_GROUPS: Array<{
       {
         key: "integrations",
         label: "Integrations",
-        description: "Connect Apple Health or Health Connect and opt into auto-complete.",
+        description: "Connect an AI assistant to your goals and plans.",
       },
     ],
   },
