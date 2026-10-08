@@ -12,6 +12,16 @@ export default function UxHubPage() {
         </h1>
         <ul className="mt-10 space-y-4">
           <li>
+            <Link className="text-lg font-semibold underline" href="/ux/refresh">
+              Everyday refresh — 24 findings, 31 interactive concepts
+            </Link>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Two alternatives for each high-priority audit finding and one for
+              every medium-priority finding across Agenda, Growth, Profile,
+              Goals, Community and shared controls. Local sample interactions.
+            </p>
+          </li>
+          <li>
             <Link className="text-lg font-semibold underline" href="/ux/recovery">
               Recovery — Goal by goal, In Goal View
             </Link>
