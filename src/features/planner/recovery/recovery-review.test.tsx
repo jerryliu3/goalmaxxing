@@ -178,7 +178,7 @@ describe("recovery mode", () => {
     await user.click(await screen.findByRole("button", { name: "2 sessions slipped · Review" }));
     await user.click(screen.getByRole("button", { name: "Next goal" }));
 
-    await user.click(screen.getByRole("button", { name: "Hide suggestions" }));
+    await user.click(bar().getByRole("button", { name: "Hide suggestions" }));
     expect(screen.queryByTestId("recovery-review-panel")).toBeNull();
     await user.click(bar().getByRole("button", { name: "Show full calendar" }));
     expect(mocks.onLensChange).toHaveBeenLastCalledWith({
