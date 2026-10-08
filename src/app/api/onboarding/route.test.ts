@@ -25,7 +25,7 @@ describe("account onboarding boundary", () => {
   it("uses the authenticated RPC without accepting a target user", async () => {
     const response = await POST(request({ action: "advance", step: 1 }));
     expect(response.status).toBe(200);
-    expect(mocks.rpc).toHaveBeenCalledWith("update_onboarding_progress", { p_action: "advance", p_step: 1, p_guide: null, p_status: null });
+    expect(mocks.rpc).toHaveBeenCalledWith("update_onboarding_progress", { p_action: "advance", p_step: 1 });
     expect(await response.json()).toMatchObject({ progress: { setup_step: 1 }, correlationId: expect.any(String) });
   });
   it("reports incomplete setup as an actionable conflict", async () => {

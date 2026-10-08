@@ -523,13 +523,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      user_onboarding_progress: {
-        Row: { user_id: string; setup_step: number; tours: Json }
-        Insert: { user_id: string; setup_step?: number; tours?: Json }
-        Update: { user_id?: string; setup_step?: number; tours?: Json }
-        Relationships: []
-      }
-
       admin_users: {
         Row: {
           granted_at: string
@@ -3074,6 +3067,32 @@ export type Database = {
           },
         ]
       }
+      user_onboarding_progress: {
+        Row: {
+          setup_step: number
+          tours: Json
+          user_id: string
+        }
+        Insert: {
+          setup_step?: number
+          tours?: Json
+          user_id: string
+        }
+        Update: {
+          setup_step?: number
+          tours?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_onboarding_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       xp_ledger: {
         Row: {
           completion_id: string | null
@@ -3271,11 +3290,6 @@ export type Database = {
       }
     }
     Functions: {
-      update_onboarding_progress: {
-        Args: { p_action: string; p_step?: number | null; p_guide?: string | null; p_status?: string | null }
-        Returns: Json
-      }
-
       accept_team_invite_service: {
         Args: { p_team_id: string; p_visibility_acknowledged: boolean }
         Returns: boolean
@@ -4038,6 +4052,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_onboarding_progress: {
+        Args: {
+          p_action: string
+          p_guide?: string
+          p_status?: string
+          p_step?: number
+        }
+        Returns: Json
+      }
       update_public_profile: {
         Args: {
           p_bio: string
@@ -4326,3 +4349,4 @@ export const Constants = {
     },
   },
 } as const
+

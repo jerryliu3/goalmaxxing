@@ -21,9 +21,9 @@ export async function POST(request: Request) {
     const body = await parseJsonBody({ request, schema: onboardingActionSchema });
     const { data, error } = await supabase.rpc("update_onboarding_progress", {
       p_action: body.action,
-      p_step: body.action === "advance" ? body.step : null,
-      p_guide: body.action === "tour" ? body.key : null,
-      p_status: body.action === "tour" ? body.status : null,
+      p_step: body.action === "advance" ? body.step : undefined,
+      p_guide: body.action === "tour" ? body.key : undefined,
+      p_status: body.action === "tour" ? body.status : undefined,
     });
     if (error) {
       if (error.message === "ONBOARDING_SETUP_INCOMPLETE") throw new ApiRouteError(409, "onboarding_setup_incomplete", "Finish the practice steps before completing setup.");
