@@ -35,7 +35,6 @@ const cachedPayload = {
     completions: [],
     profileDirectory: {},
   },
-  authEmail: "alice@example.com",
   profileDraft: {
     username: "alice",
     display_name: "Alice Park",
@@ -57,13 +56,12 @@ describe("useSocialTabData cache and hydration", () => {
 
     // Effects have already flushed by the time renderHook returns, so the first
     // render has to be recorded while it happens.
-    const renders: { loading: boolean; userId: string; authEmail: string }[] = [];
+    const renders: { loading: boolean; userId: string }[] = [];
     renderHook(() => {
       const value = useSocialTabData();
       renders.push({
         loading: value.loading,
         userId: value.state.userId,
-        authEmail: value.authEmail,
       });
       return value;
     });
@@ -71,7 +69,7 @@ describe("useSocialTabData cache and hydration", () => {
     // The cache is sessionStorage-backed and therefore absent on the server.
     // Seeding the first render from it would make the client tree disagree with
     // the server HTML and React would discard the whole settings subtree.
-    expect(renders[0]).toEqual({ loading: true, userId: "", authEmail: "" });
+    expect(renders[0]).toEqual({ loading: true, userId: "" });
   });
 
   it("applies the cached settings once mounted, without refetching", async () => {
@@ -81,7 +79,6 @@ describe("useSocialTabData cache and hydration", () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.state.userId).toBe("user-1");
-    expect(result.current.authEmail).toBe("alice@example.com");
     expect(result.current.profileDraft.username).toBe("alice");
     expect(result.current.plannerPreferencesLoading).toBe(false);
   });

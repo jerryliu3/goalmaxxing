@@ -31,7 +31,6 @@ const PEARL_COLOR = "#c4b089";
 export type ProfileMembershipEditor = {
   username: string;
   displayName: string;
-  email: string;
   avatarUrl: string;
   saving: boolean;
   canSave: boolean;
@@ -297,7 +296,6 @@ export function ProfileMembershipCard({
                   rest={<SolidLettering>{title}</SolidLettering>}
                 />
               </h2>
-              {editor ? <p className={styles.email}>{editor.email}</p> : null}
               {editor?.canSave ? (
                 <button
                   type="button"

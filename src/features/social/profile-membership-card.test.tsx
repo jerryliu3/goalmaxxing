@@ -85,7 +85,6 @@ describe("ProfileMembershipCard", () => {
         editor={{
           username: "jerry",
           displayName: "Jerry",
-          email: "jerry@example.com",
           avatarUrl: "",
           saving: false,
           canSave: true,
@@ -100,7 +99,6 @@ describe("ProfileMembershipCard", () => {
 
     expect(screen.queryByLabelText("username")).toBeNull();
     expect(screen.queryByLabelText("display name")).toBeNull();
-    expect(screen.getByText("jerry@example.com")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Edit username" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Edit display name" }));
@@ -124,7 +122,6 @@ describe("ProfileMembershipCard", () => {
         editor={{
           username: "jerry",
           displayName: "Jerry",
-          email: "jerry@example.com",
           avatarUrl: "https://example.com/avatar.jpg",
           saving: false,
           canSave: false,

@@ -43,7 +43,6 @@ export function useProfileEditSession<T extends IdentityDraft>({
   bundle,
   identityDraft,
   setIdentityDraft,
-  authEmail,
   identitySaving,
   canSaveIdentity,
   saveIdentity,
@@ -53,7 +52,6 @@ export function useProfileEditSession<T extends IdentityDraft>({
   bundle: PublicProfileBundle | null;
   identityDraft: T;
   setIdentityDraft: Dispatch<SetStateAction<T>>;
-  authEmail: string;
   identitySaving: boolean;
   canSaveIdentity: boolean;
   saveIdentity: () => Promise<boolean>;
@@ -131,7 +129,6 @@ export function useProfileEditSession<T extends IdentityDraft>({
   const cardEditor: ProfileMembershipEditor = {
     username: identityDraft.username,
     displayName: identityDraft.display_name,
-    email: authEmail,
     avatarUrl: identityDraft.avatar_url,
     saving: busy,
     canSave: false,

@@ -21,7 +21,6 @@ export const IDENTITY: PublicProfileIdentity = {
 };
 
 /** Shown only on the owner's editable membership card, as production does. */
-export const OWNER_EMAIL = "maya.chen@example.com";
 
 export const OVERALL_STATS: PublicProfileOverallStats = {
   totalActivities: 412,

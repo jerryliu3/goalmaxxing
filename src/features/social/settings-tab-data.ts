@@ -45,7 +45,6 @@ export const SETTINGS_TAB_CACHE_KEY = `${SETTINGS_DATA_CACHE_PREFIX}v1`;
 
 export interface SettingsTabCachePayload {
   state: SocialState;
-  authEmail: string;
   profileDraft: {
     username: string;
     display_name: string;
@@ -135,7 +134,6 @@ export function fetchSettingsTabData({ forceRefresh = false } = {}) {
         userId: user.id, profile, ownGoals, sharedGoals, sharedEntries,
         outgoingShares, sharedOwners, completions, profileDirectory: profileById,
       },
-      authEmail: user.email ?? "",
       profileDraft: {
         username: profile?.username ?? "",
         display_name: profile?.display_name ?? "",
