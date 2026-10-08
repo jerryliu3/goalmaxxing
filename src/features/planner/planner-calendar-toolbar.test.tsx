@@ -153,5 +153,16 @@ describe("PlannerCalendarToolbar", () => {
         /Goal B: hidden while linked subgoals are still active Linked source goals: Goal A\./i
       )
     ).toBeInTheDocument();
+    expect(within(dialog).queryByRole("button", { name: "Back to plan" })).toBeNull();
+  });
+
+  it("keeps plan help to the guide when nothing is hidden", async () => {
+    renderToolbar();
+
+    fireEvent.click(screen.getByRole("button", { name: "Open planner help" }));
+    const dialog = await screen.findByRole("dialog");
+
+    expect(within(dialog).getByText(/Save plan or Discard from the bar/)).toBeInTheDocument();
+    expect(within(dialog).queryByRole("button", { name: "See hidden goals" })).toBeNull();
   });
 });

@@ -184,14 +184,6 @@ export function PlannerWarningsPanel({
                 {resetLoading ? "Unlocking..." : "Unlock all goals"}
               </Button>
             ) : null}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setWarningsOpen(false)}
-            >
-              Back to plan
-            </Button>
           </div>
         </DialogContent>
       </Dialog>

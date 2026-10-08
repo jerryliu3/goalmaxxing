@@ -1788,7 +1788,7 @@ describe("CalendarSurface characterization", () => {
         /Goal B: hidden while linked subgoals are still active/i
       )
     ).not.toBeInTheDocument();
-    fireEvent.click(within(dialog).getByRole("button", { name: "Back to plan" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Close" }));
     await waitFor(() => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });

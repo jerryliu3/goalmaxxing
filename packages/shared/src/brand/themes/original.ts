@@ -4,7 +4,7 @@ import { DEFAULT_GHOST_COLORS, type ThemeDefinition } from "../roles";
 export const ORIGINAL_THEME = {
   id: "original",
   label: "Original",
-  description: "Classic Goalmaxxing chrome: Geist, identity blue, and pill tabs.",
+  description: "Clean and bright, with crisp type and blue accents.",
   status: "live",
   appearance: "light",
   fonts: { sans: "geist", display: "geist", mono: "geist-mono" },

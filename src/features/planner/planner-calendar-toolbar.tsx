@@ -19,6 +19,7 @@ import type { GoalCategoryFilterOption } from "@/features/goals/goal-filters";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
 import { PlannerEndMonthQuickFilterChips } from "@/features/planner/planner-end-month-quick-filter-chips";
 import type { PlannerEligibilityNotices } from "@/features/planner/planner-eligibility-notices";
+import { cn } from "@/lib/utils";
 
 // Goal View is the last segment; the calendar views lead.
 const PLAN_VIEW_OPTIONS: ReadonlyArray<SegmentedControlOption<PlannerCalendarViewMode | "goals">> = [
@@ -229,58 +230,52 @@ export function PlannerCalendarToolbar({
           <DialogHeader>
             <DialogTitle>Planner help</DialogTitle>
             <DialogDescription>
-              Use this plan to preview scheduling changes before saving them.
+              Try scheduling changes on the calendar. Nothing is saved until you press Save plan.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 text-sm">
-            <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
+            <ul className="list-disc space-y-1.5 pl-4 text-muted-foreground">
               <li>Switch between day, week, and month views.</li>
-              <li>Drag sessions or use the detail editor to move dates and time overrides.</li>
-              <li>
-                Regenerate from planner settings when needed, then save once the preview looks
-                right.
-              </li>
+              <li>Drag a session, or open it to change its date and time.</li>
+              <li>Save plan or Discard from the bar at the bottom of the calendar.</li>
+              <li>Refresh calendar in Settings rebalances unlocked sessions onto open days.</li>
             </ul>
-            <p className="text-xs text-muted-foreground">
-              Linked main goals are hidden for clarity while linked source goals remain active.
-            </p>
             {hiddenLinkedGoalCount > 0 ? (
-              <div className="space-y-2 rounded-md border border-warning bg-warning-fill px-3 py-2 text-xs text-foreground">
-                <p>
+              <div className="space-y-2 rounded-lg bg-muted/60 px-3 py-2.5 text-xs">
+                <p className="text-muted-foreground">
                   {hiddenLinkedGoalCount} linked main goal
-                  {hiddenLinkedGoalCount === 1 ? " is" : "s are"} currently hidden in this
-                  preview window.
+                  {hiddenLinkedGoalCount === 1 ? " is" : "s are"} hidden while their linked
+                  source goals are still active.
                 </p>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   className="h-7 text-xs"
+                  aria-expanded={showHiddenGoals}
                   onClick={() => setShowHiddenGoals((current) => !current)}
                 >
                   {showHiddenGoals ? "Hide hidden goals" : "See hidden goals"}
                 </Button>
                 {showHiddenGoals ? (
-                  <div
-                    className={`space-y-1 rounded-md border border-warning/30 bg-background/70 p-2 text-xs text-foreground ${
-                      hiddenLinkedGoalCount > 5 ? "max-h-36 overflow-y-auto pr-1" : ""
-                    }`}
+                  <ul
+                    className={cn(
+                      "space-y-1 border-t border-border pt-2 text-foreground",
+                      hiddenLinkedGoalCount > 5 && "max-h-36 overflow-y-auto pr-1"
+                    )}
                   >
                     {linkedTargetDetails.map((detail) => (
-                      <p key={`linked-target-help-${detail.goalId}`}>
+                      <li key={`linked-target-help-${detail.goalId}`}>
                         {detail.goalTitle}: {detail.statusCopy}
                         {detail.sourceGoalTitles.length > 0
                           ? ` Linked source goals: ${detail.sourceGoalTitles.join(", ")}.`
                           : ""}
-                      </p>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 ) : null}
               </div>
             ) : null}
-            <Button type="button" variant="outline" size="sm" onClick={() => setHelpOpen(false)}>
-              Back to plan
-            </Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -11,7 +11,7 @@ import { DEFAULT_GHOST_COLORS, type ThemeDefinition } from "../roles";
 export const GAZETTEER_THEME = {
   id: "gazetteer",
   label: "Gazetteer",
-  description: "Paper, walnut ink, stamp rust, Nest completion, and ledger chrome.",
+  description: "Warm paper and ink, with serif goal names and rust accents.",
   status: "live",
   appearance: "light",
   fonts: { sans: "source-sans-3", display: "newsreader", mono: "ibm-plex-mono" },
