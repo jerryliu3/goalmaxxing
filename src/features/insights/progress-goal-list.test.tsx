@@ -57,7 +57,7 @@ describe("ProgressGoalList", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Goals (1)" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Selected goals (1)" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Select all" }));
     expect(onSelectAll).toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Clear all" }));

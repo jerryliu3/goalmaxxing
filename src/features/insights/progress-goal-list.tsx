@@ -48,7 +48,7 @@ export function ProgressGoalList({
     <div>
       <div className="mb-1 flex items-center justify-between gap-3">
         <h2 className="type-heading text-sm">
-          Goals ({selectedGoalIds.size})
+          Selected goals ({selectedGoalIds.size})
         </h2>
         {showListActions ? (
           <div className="flex items-center gap-3">
