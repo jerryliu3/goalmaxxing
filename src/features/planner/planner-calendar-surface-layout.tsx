@@ -29,11 +29,16 @@ import type { MoveSourceCandidate } from "@/features/planner/planner-move-source
 import type { GoalMonthOption } from "@/lib/goals/list-view";
 import type { OptimisticCompletionFacts } from "@/lib/planner/optimistic-completion-facts";
 import { usePlanDayChecklistModel } from "@/features/planner/use-plan-day-checklist-model";
+import {
+  filterPlannerDayEntries,
+  filterPlannerDayMarkers,
+} from "@/features/planner/plan-day-filters";
 import type { PlannerWorkUnit } from "@cadence/shared/planner/context";
 import type { DuoLaneSubject } from "@cadence/shared/social/duo";
 import {
   useCallback,
   useLayoutEffect,
+  useMemo,
   useRef,
   type Dispatch,
   type MutableRefObject,
@@ -191,7 +196,6 @@ export interface PlannerCalendarSurfaceLayoutProps {
   filtersOpen: boolean;
   categoryFilters: string[];
   setCategoryFilters: (value: string[]) => void;
-  categoryOptions: GoalCategoryFilterOption[];
   goalIdFilters: string[];
   setGoalIdFilters: (value: string[]) => void;
   goalFilterOptions: GoalCategoryFilterOption[];
@@ -345,7 +349,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     filtersOpen,
     categoryFilters,
     setCategoryFilters,
-    categoryOptions,
     goalIdFilters,
     setGoalIdFilters,
     goalFilterOptions,
@@ -371,10 +374,23 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     searchQuery,
     asOfDate: context?.asOfDate ?? null,
     timezone: context?.timezone ?? null,
+    categoryFilters,
+    onCategoryFiltersChange: setCategoryFilters,
+    goalIdFilters,
     endMonthFilters: effectiveEndMonthFilters,
+    onEndMonthFiltersChange: setEndMonthFilters,
     viewMode: checklistViewMode,
     plannerShowCompletedGoals: showCompletedGoals,
   });
+  const dayEntries = useMemo(
+    () => filterPlannerDayEntries(focusedDayEntries, dayChecklist.recurrenceGoalIds),
+    [dayChecklist.recurrenceGoalIds, focusedDayEntries]
+  );
+  const dayCompletionFactMarkers = useMemo(
+    () =>
+      filterPlannerDayMarkers(focusedDayCompletionFactMarkers, dayChecklist.recurrenceGoalIds),
+    [dayChecklist.recurrenceGoalIds, focusedDayCompletionFactMarkers]
+  );
   const selectedEventGoal = selectedEventEntry
     ? dayChecklist.data.goals.find(
         (goal) => goal.id === selectedEventEntry.originalGoalId
@@ -578,15 +594,15 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
                 onEntryDragEnd={handleDndEntryDragEnd}
                 onEntryDragCancel={handleDndEntryDragCancel}
                 focusedDay={focusedDay}
-                focusedDayEntries={focusedDayEntries}
-                focusedDayCompletionFactMarkers={focusedDayCompletionFactMarkers}
+                focusedDayEntries={dayEntries}
+                focusedDayCompletionFactMarkers={dayCompletionFactMarkers}
                 mutationLoadingKey={mutationLoadingKey}
                 optimisticCompletionFacts={optimisticCompletionFacts}
                 asOfDate={context?.asOfDate ?? null}
                 canMutatePlanItems={canMutatePlanItems}
                 canMutateEntryOnDay={canMutateEntryOnDay}
                 onFocusedDayEntryOpen={(entryKey) => {
-                  const entry = focusedDayEntries.find(
+                  const entry = dayEntries.find(
                     (candidate) => candidate.key === entryKey
                   );
                   if (
@@ -775,7 +791,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         showTasksToggle={!goalViewOpen}
         categoryFilters={categoryFilters}
         onCategoryFiltersChange={setCategoryFilters}
-        categoryOptions={categoryOptions}
+        categoryOptions={dayChecklist.categoryOptions}
         endMonthFilters={effectiveEndMonthFilters}
         onEndMonthFiltersChange={setEndMonthFilters}
         endMonthOptions={endMonthOptions}

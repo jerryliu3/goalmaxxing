@@ -315,7 +315,7 @@ describe("selectPlannerCalendarModel", () => {
       buildArgs({
         context,
         selectedDay: "2026-08-06",
-        categoryFilters: ["Health"],
+        categoryFilters: ["health"],
         hideTasks: false,
         calendarTaskEntriesByDate: new Map([["2026-08-06", [taskEntry]]]),
       })

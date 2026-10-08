@@ -5,7 +5,6 @@ import {
 import { isEntryCredited } from "@/features/planner/calendar-format";
 import {
   applyCalendarCompletionMarkerFilters,
-  buildCalendarCategoryFilterOptions,
   buildCalendarGoalFilterOptions,
   entryMatchesCalendarSearchQuery,
   goalPassesCalendarFilters,
@@ -87,7 +86,6 @@ export interface CalendarDayAccessorsResult {
   totalUnplacedCount: number;
   invalidLockGoalCount: number;
   capacityWarningGoalCount: number;
-  categoryOptions: ReturnType<typeof buildCalendarCategoryFilterOptions>;
   goalFilterOptions: ReturnType<typeof buildCalendarGoalFilterOptions>;
   endMonthOptions: ReturnType<typeof buildGoalEndMonthOptions>;
   effectiveEndMonthFilters: string[];
@@ -138,7 +136,6 @@ export function selectCalendarDayAccessorsModel({
     filterReferenceMonth
   );
 
-  const categoryOptions = buildCalendarCategoryFilterOptions(activeGoalsByOriginalGoalId);
   const goalFilterOptions = buildCalendarGoalFilterOptions(
     activeGoalsByOriginalGoalId,
     context?.goalTitles ?? {},
@@ -350,7 +347,6 @@ export function selectCalendarDayAccessorsModel({
     totalUnplacedCount,
     invalidLockGoalCount,
     capacityWarningGoalCount,
-    categoryOptions,
     goalFilterOptions,
     endMonthOptions,
     effectiveEndMonthFilters,

@@ -1,4 +1,5 @@
 import {
+  matchesChecklistFilters,
   selectActiveGoals,
   selectArchivedGoals,
   selectEndedGoals,
@@ -47,6 +48,7 @@ export function selectChecklistListModel({
   todayLocalDate,
   categoryFilters,
   recurrenceFilters,
+  goalIdFilters = [],
   searchQuery,
   todayEndMonths,
   todaySort,
@@ -58,6 +60,7 @@ export function selectChecklistListModel({
   todayLocalDate: string;
   categoryFilters: string[];
   recurrenceFilters: RecurrenceGroup[];
+  goalIdFilters?: string[];
   searchQuery: string;
   todayEndMonths: string[];
   todaySort: GoalDateSort;
@@ -115,6 +118,7 @@ export function selectChecklistListModel({
     todayDate: viewDate,
     categoryFilters,
     recurrenceFilters,
+    goalIdFilters,
     searchQuery,
     endMonths: effectiveEndMonths,
     targetAchievedGoalIds,
@@ -122,7 +126,21 @@ export function selectChecklistListModel({
     hiddenLinkedTargetGoalIds: hiddenForFilter,
   });
   const prepareSupplementalGoals = (goals: Goal[]) =>
-    sortGoalsByDate(filterGoalsByEndMonths(goals, effectiveEndMonths), todaySort);
+    sortGoalsByDate(
+      filterGoalsByEndMonths(
+        goals.filter((goal) =>
+          matchesChecklistFilters({
+            goal,
+            categoryFilters,
+            recurrenceFilters,
+            goalIdFilters,
+            searchQuery,
+          })
+        ),
+        effectiveEndMonths
+      ),
+      todaySort
+    );
 
   return {
     completableGoals,

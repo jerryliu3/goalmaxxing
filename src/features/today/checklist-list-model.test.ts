@@ -28,7 +28,7 @@ function goal(overrides: Partial<Goal> & Pick<Goal, "id" | "title">): Goal {
 }
 
 describe("selectChecklistListModel", () => {
-  it("filters today's goals by recurrence while keeping upcoming counts", () => {
+  it("filters today's goals and the upcoming list by recurrence", () => {
     const model = selectChecklistListModel({
       data: {
         ...emptyTodayData,
@@ -43,6 +43,12 @@ describe("selectChecklistListModel", () => {
           goal({
             id: "later",
             title: "Future block",
+            start_date: "2026-10-01",
+            recurrence_interval: "weekly",
+          }),
+          goal({
+            id: "later-daily",
+            title: "Future daily",
             start_date: "2026-10-01",
           }),
         ],
@@ -60,6 +66,37 @@ describe("selectChecklistListModel", () => {
 
     expect([...model.filteredTodayGoalIds]).toEqual(["weekly"]);
     expect(model.upcoming.map((item) => item.id)).toEqual(["later"]);
+  });
+
+  it("applies the goal, category, and search filters to past and archived goals", () => {
+    const model = selectChecklistListModel({
+      data: {
+        ...emptyTodayData,
+        userId: "user-1",
+        goals: [
+          goal({ id: "guitar", title: "Guitar", category: "Music", category_key: "other" }),
+          goal({ id: "run", title: "Run" }),
+          goal({ id: "old-guitar", title: "Old guitar", category: "Music", category_key: "other", end_date: "2026-03-31" }),
+          goal({ id: "old-run", title: "Old run", end_date: "2026-03-31" }),
+          goal({ id: "shelved-guitar", title: "Shelved guitar", category: "Music", category_key: "other", archived_at: "2026-05-01T00:00:00.000Z" }),
+          goal({ id: "shelved-scales", title: "Scales", category: "Music", category_key: "other", archived_at: "2026-05-01T00:00:00.000Z" }),
+        ],
+      },
+      viewDate: "2026-09-06",
+      todayLocalDate: "2026-09-06",
+      categoryFilters: ["custom:music"],
+      recurrenceFilters: [],
+      goalIdFilters: ["guitar", "old-guitar", "shelved-guitar", "shelved-scales", "run"],
+      searchQuery: "guitar",
+      todayEndMonths: [],
+      todaySort: "earliest_end",
+      showTargetAchievedGoals: false,
+      showSuppressedLinkedTargets: false,
+    });
+
+    expect([...model.filteredTodayGoalIds]).toEqual(["guitar"]);
+    expect(model.pastGoals.map((item) => item.id)).toEqual(["old-guitar"]);
+    expect(model.archivedGoals.map((item) => item.id)).toEqual(["shelved-guitar"]);
   });
 
   it("restores achieved milestones when showTargetAchievedGoals is on", () => {

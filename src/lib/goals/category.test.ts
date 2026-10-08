@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { GOAL_CATEGORY_COLORS } from "@cadence/shared/brand";
 import {
+  buildCategoryFilterOptions,
+  categoryFilterValue,
   CATEGORY_CUSTOM_VALUE,
   DEFAULT_GOAL_CATEGORIES,
   getCategoryBadgeStyle,
@@ -70,5 +72,29 @@ describe("goal category helpers", () => {
       GOAL_CATEGORY_COLORS.relationships
     );
     expect(getCategoryBadgeStyle("Deep Work")).toBeUndefined();
+  });
+
+  it("gives defaults their key and each custom label its own filter value", () => {
+    expect(categoryFilterValue("Health", "health")).toBe("health");
+    expect(categoryFilterValue("Relationships")).toBe("relationships");
+    expect(categoryFilterValue("Other", "other")).toBe("other");
+    expect(categoryFilterValue("Music", "other")).toBe("custom:music");
+    expect(categoryFilterValue(" music ")).toBe("custom:music");
+  });
+
+  it("lists every default category, then the custom labels goals use", () => {
+    const options = buildCategoryFilterOptions([
+      { category: "Music", category_key: "other" },
+      { category: "Health", category_key: "health" },
+      { category: "music" },
+      { category: "Deep Work", category_key: "other" },
+    ]);
+
+    expect(options.map((option) => option.value)).toEqual([
+      ...DEFAULT_GOAL_CATEGORIES.map((category) => category.key),
+      "custom:deep work",
+      "custom:music",
+    ]);
+    expect(options.at(-1)).toEqual({ value: "custom:music", label: "Music" });
   });
 });

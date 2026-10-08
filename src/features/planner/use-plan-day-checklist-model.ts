@@ -4,11 +4,15 @@ import { useMemo } from "react";
 import { resolvePlannerShowTargetAchievedGoals } from "@/features/planner/calendar-filters";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
 import { selectChecklistListModel } from "@/features/today/checklist-list-model";
+import { getRecurrenceGroup, type RecurrenceGroup } from "@/features/today/checklist-selectors";
 import { useChecklistCompletionActions } from "@/features/today/use-checklist-completion-actions";
 import { useChecklistData } from "@/features/today/use-checklist-data";
 import { useChecklistFilters } from "@/features/today/use-checklist-filters";
+import { buildCategoryFilterOptions } from "@/lib/goals/category";
 import { groupCompletionsByGoalId } from "@/lib/goals/completion-grouping";
 import { applyOptimisticChecklistPresentations } from "@/lib/planner/optimistic-completion-facts";
+
+const NO_RECURRENCE_FILTERS: RecurrenceGroup[] = [];
 
 export function usePlanDayChecklistModel({
   isActive,
@@ -16,7 +20,11 @@ export function usePlanDayChecklistModel({
   searchQuery,
   asOfDate = null,
   timezone = null,
-  endMonthFilters = [],
+  categoryFilters,
+  onCategoryFiltersChange,
+  goalIdFilters,
+  endMonthFilters,
+  onEndMonthFiltersChange,
   viewMode = "day",
   plannerShowCompletedGoals = false,
 }: {
@@ -25,7 +33,12 @@ export function usePlanDayChecklistModel({
   searchQuery: string;
   asOfDate?: string | null;
   timezone?: string | null;
-  endMonthFilters?: string[];
+  /** The planner's Category, Goal, and End month filters, shared by every view. */
+  categoryFilters: string[];
+  onCategoryFiltersChange: (value: string[]) => void;
+  goalIdFilters: string[];
+  endMonthFilters: string[];
+  onEndMonthFiltersChange: (value: string[]) => void;
   viewMode?: PlannerCalendarViewMode;
   plannerShowCompletedGoals?: boolean;
 }) {
@@ -35,6 +48,8 @@ export function usePlanDayChecklistModel({
     dayFilterValue: filters.showTargetAchievedGoals,
     plannerShowCompletedGoals,
   });
+  // Recurrence is a Day filter; Week and Month don't show it, so it doesn't apply there.
+  const recurrenceFilters = viewMode === "day" ? filters.recurrenceFilters : NO_RECURRENCE_FILTERS;
   const { data, loading, todayLocalDate } =
     useChecklistData({
       isActive,
@@ -49,8 +64,9 @@ export function usePlanDayChecklistModel({
         data,
         viewDate,
         todayLocalDate: completionAsOfDate,
-        categoryFilters: filters.categoryFilters,
-        recurrenceFilters: filters.recurrenceFilters,
+        categoryFilters,
+        recurrenceFilters,
+        goalIdFilters,
         searchQuery,
         todayEndMonths: endMonthFilters,
         todaySort: filters.todaySort,
@@ -59,8 +75,9 @@ export function usePlanDayChecklistModel({
       }),
     [
       data,
-      filters.categoryFilters,
-      filters.recurrenceFilters,
+      categoryFilters,
+      recurrenceFilters,
+      goalIdFilters,
       filters.showSuppressedLinkedTargets,
       showTargetAchievedGoals,
       endMonthFilters,
@@ -69,6 +86,21 @@ export function usePlanDayChecklistModel({
       completionAsOfDate,
       viewDate,
     ]
+  );
+  const categoryOptions = useMemo(
+    () => buildCategoryFilterOptions(data.goals),
+    [data.goals]
+  );
+  const recurrenceGoalIds = useMemo(
+    () =>
+      recurrenceFilters.length === 0
+        ? null
+        : new Set(
+            data.goals
+              .filter((goal) => recurrenceFilters.includes(getRecurrenceGroup(goal)))
+              .map((goal) => goal.id)
+          ),
+    [data.goals, recurrenceFilters]
   );
   const completionsByGoal = useMemo(
     () => groupCompletionsByGoalId(data.completions),
@@ -113,7 +145,7 @@ export function usePlanDayChecklistModel({
       onChange: filters.setShowArchivedGoals,
     },
     {
-      label: "Show completed goals",
+      label: "Show achieved goals",
       count: listModel.targetAchievedGoalIds.size,
       checked: showTargetAchievedGoals,
       onChange: filters.setShowTargetAchievedGoals,
@@ -125,18 +157,17 @@ export function usePlanDayChecklistModel({
       onChange: filters.setShowSuppressedLinkedTargets,
     },
   ];
-  const quickCategories = filters.quickCategoryOptions(data.goals);
   const filterFormProps = {
-    categoryFilterOptions: filters.categoryFilterOptions,
-    categoryFilters: filters.categoryFilters,
-    onCategoryFiltersChange: filters.setCategoryFilters,
+    categoryFilterOptions: categoryOptions,
+    categoryFilters,
+    onCategoryFiltersChange,
     recurrenceQuickFilters: filters.recurrenceQuickFilters,
     recurrenceFilters: filters.recurrenceFilters,
     onRecurrenceFiltersChange: filters.setRecurrenceFilters,
     completableGoals: listModel.completableGoals,
     checklistFilterStartMonth: viewDate.slice(0, 7),
     effectiveTodayEndMonths: listModel.effectiveEndMonths,
-    onTodayEndMonthsChange: filters.setTodayEndMonths,
+    onTodayEndMonthsChange: onEndMonthFiltersChange,
     todaySort: filters.todaySort,
     onTodaySortChange: filters.setTodaySort,
     visibilityOptions,
@@ -150,7 +181,9 @@ export function usePlanDayChecklistModel({
     filters,
     listModel: mergedListModel,
     visibilityOptions,
-    quickCategories,
+    categoryOptions,
+    /** Goals matching the Day Recurrence filter, or null when it is off. */
+    recurrenceGoalIds,
     filterFormProps,
     savingGoalId,
     toggleCompletion,
