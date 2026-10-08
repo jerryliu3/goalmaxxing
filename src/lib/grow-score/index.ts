@@ -24,7 +24,6 @@ export {
 export {
   buildDailyGrowCredits,
   buildGrowScoreSeries,
-  growScoreChartLabel,
   isIsoDateString,
   type BuildGrowScoreSeriesOptions,
   type GrowCompletionFact,
