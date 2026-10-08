@@ -4,7 +4,6 @@ import { useCoachPageContext } from "@/features/coach/use-coach-page-context";
 import {
   format,
   parseISO,
-  startOfMonth,
   startOfYear,
   endOfYear,
 } from "date-fns";
@@ -32,6 +31,7 @@ import {
   toggleLedgerGoalSelection,
 } from "@/features/insights/progress-ledger-selection";
 import {
+  selectProgressPeriodWindow,
   selectSearchedGoals,
   selectVisiblePerGoalHeatmaps,
   selectYearHeatmapValues,
@@ -168,8 +168,6 @@ export interface InsightsSharedGoalFilters {
   setGoalEndMonths: (value: string[]) => void;
   goalSort: GoalDateSort;
   setGoalSort: (value: GoalDateSort) => void;
-  showHistoricalGoals: boolean;
-  setShowHistoricalGoals: (value: boolean) => void;
 }
 
 export function InsightsTab({
@@ -206,17 +204,12 @@ export function InsightsTab({
   const [internalGoalSearchQuery, setInternalGoalSearchQuery] = useState("");
   const [internalGoalEndMonths, setInternalGoalEndMonths] = useState<string[]>([]);
   const [internalGoalSort, setInternalGoalSort] = useState<GoalDateSort>("earliest_end");
-  const [internalShowHistoricalGoals, setInternalShowHistoricalGoals] = useState(progressView === "all");
   const goalSearchQuery = sharedGoalFilters?.goalSearchQuery ?? internalGoalSearchQuery;
   const setGoalSearchQuery = sharedGoalFilters?.setGoalSearchQuery ?? setInternalGoalSearchQuery;
   const goalEndMonths = sharedGoalFilters?.goalEndMonths ?? internalGoalEndMonths;
   const setGoalEndMonths = sharedGoalFilters?.setGoalEndMonths ?? setInternalGoalEndMonths;
   const goalSort = sharedGoalFilters?.goalSort ?? internalGoalSort;
   const setGoalSort = sharedGoalFilters?.setGoalSort ?? setInternalGoalSort;
-  const showHistoricalGoals =
-    sharedGoalFilters?.showHistoricalGoals ?? internalShowHistoricalGoals;
-  const setShowHistoricalGoals =
-    sharedGoalFilters?.setShowHistoricalGoals ?? setInternalShowHistoricalGoals;
   const [selectedGoalIds, setSelectedGoalIds] = useState<string[] | null>(null);
   const [aggregateDrilldownDate, setAggregateDrilldownDate] = useState<string | null>(null);
   const [aggregateDrilldownPosition, setAggregateDrilldownPosition] = useState<
@@ -286,12 +279,8 @@ export function InsightsTab({
 
   const selectedYearStart = useMemo(() => startOfYear(monthCursor), [monthCursor]);
   const selectedYearEnd = useMemo(() => endOfYear(monthCursor), [monthCursor]);
-  const visiblePeriodStart = useMemo(
-    () =>
-      format(
-        perGoalViewMode === "month" ? startOfMonth(monthCursor) : startOfYear(monthCursor),
-        "yyyy-MM-dd"
-      ),
+  const { start: visiblePeriodStart, end: visiblePeriodEnd } = useMemo(
+    () => selectProgressPeriodWindow(monthCursor, perGoalViewMode),
     [monthCursor, perGoalViewMode]
   );
   const goalFilterStartMonth = visiblePeriodStart.slice(0, 7);
@@ -303,21 +292,21 @@ export function InsightsTab({
     () => selectSearchedGoals(personalGoals, goalSearchQuery),
     [goalSearchQuery, personalGoals]
   );
-  const { visiblePerGoalHeatmaps } = useMemo(
+  const visiblePerGoalHeatmaps = useMemo(
     () =>
       selectVisiblePerGoalHeatmaps({
         goals: searchedPersonalGoals,
         visiblePeriodStart,
+        visiblePeriodEnd,
         endMonths: effectiveGoalEndMonths,
-        showHistoricalGoals,
         sort: goalSort,
       }),
     [
       effectiveGoalEndMonths,
       goalSort,
       searchedPersonalGoals,
-      showHistoricalGoals,
       visiblePeriodStart,
+      visiblePeriodEnd,
     ]
   );
 
@@ -786,8 +775,6 @@ export function InsightsTab({
       onGoalEndMonthsChange={setGoalEndMonths}
       goalSort={goalSort}
       onGoalSortChange={setGoalSort}
-      showHistoricalGoals={showHistoricalGoals}
-      onShowHistoricalGoalsChange={setShowHistoricalGoals}
     />
   ) : null;
 

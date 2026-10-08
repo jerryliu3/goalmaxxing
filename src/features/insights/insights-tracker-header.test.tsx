@@ -21,8 +21,6 @@ describe("InsightsTrackerHeader", () => {
         onGoalEndMonthsChange={vi.fn()}
         goalSort="earliest_end"
         onGoalSortChange={vi.fn()}
-        showHistoricalGoals={false}
-        onShowHistoricalGoalsChange={vi.fn()}
       />
     );
 
