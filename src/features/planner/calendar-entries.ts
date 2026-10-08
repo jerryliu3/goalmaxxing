@@ -541,6 +541,17 @@ export function resolveCalendarDayData({
   };
 }
 
+// Draft rows sort ahead of manual and time order so capped day cells show unsaved changes before "+N more".
+const DRAFT_DISPLAY_RANK: Record<NonNullable<PlannerDayDetailEntry["draftDiffKind"]>, number> = {
+  moved_from: 0,
+  new: 1,
+  moved_to: 2,
+};
+
+function draftDisplayRank(entry: PlannerDayDetailEntry) {
+  return entry.draftDiffKind ? DRAFT_DISPLAY_RANK[entry.draftDiffKind] : 3;
+}
+
 export function orderEntriesForDay({
   day,
   entries,
@@ -562,6 +573,10 @@ export function orderEntriesForDay({
   const savedOrderSet = new Set(savedOrder);
   const orderIndex = new Map(order.map((entryKey, index) => [entryKey, index]));
   const compareEntries = (left: PlannerDayDetailEntry, right: PlannerDayDetailEntry) => {
+    const byDraftRank = draftDisplayRank(left) - draftDisplayRank(right);
+    if (byDraftRank !== 0) {
+      return byDraftRank;
+    }
     const leftPinned = savedOrderSet.has(left.key);
     const rightPinned = savedOrderSet.has(right.key);
     if (!leftPinned && !rightPinned) {
