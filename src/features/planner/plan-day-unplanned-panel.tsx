@@ -103,7 +103,7 @@ function PlanDayUnplannedList({
   day: string;
   placedGoalIds: ReadonlySet<string>;
 }) {
-  const { data, loading, loadData, redirectToLogin, todayLocalDate } = useChecklistData({
+  const { data, loading, todayLocalDate } = useChecklistData({
     isActive: true,
     viewDate: day,
   });
@@ -151,8 +151,6 @@ function PlanDayUnplannedList({
     viewDate: day,
     todayLocalDate,
     completionsByGoal,
-    loadData,
-    redirectToLogin,
   });
   const presentationByGoalId = useMemo(
     () =>

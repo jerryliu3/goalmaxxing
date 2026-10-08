@@ -1,6 +1,8 @@
 import { createElement } from "react";
 import { act, render, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { toast } from "sonner";
+import { reportError } from "@/lib/observability/report-error";
 import { CHECKLIST_DATA_CACHE_PREFIX } from "@/lib/cache/planner-tab-cache";
 import {
   readTabDataCache,
@@ -10,6 +12,9 @@ import {
 import type { TodayData } from "@/features/today/use-checklist-data";
 import type { Goal } from "@/lib/goals/types";
 
+const cacheEvents = vi.hoisted(() => ({ handler: null as (() => void) | null }));
+vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
+vi.mock("@/lib/observability/report-error", () => ({ reportError: vi.fn() }));
 const fetchProgressContext = vi.fn();
 const getUser = vi.fn();
 const goalsSelect = vi.fn();
@@ -29,6 +34,7 @@ vi.mock("@/lib/dates/day", async () => {
 
 vi.mock("@/lib/goals/progress-context", () => ({
   fetchProgressContext: (...args: unknown[]) => fetchProgressContext(...args),
+  isProgressContextAuthenticationError: () => false,
 }));
 
 vi.mock("@/lib/navigation/use-app-router", () => ({
@@ -43,7 +49,7 @@ vi.mock("@/features/social/duo/duo-context", () => ({
 }));
 
 vi.mock("@/lib/cache/use-planner-tab-cache-invalidation", () => ({
-  usePlannerTabCacheInvalidation: () => undefined,
+  usePlannerTabCacheInvalidation: (handler: () => void) => { cacheEvents.handler = handler; },
 }));
 
 vi.mock("@/lib/supabase/client", () => ({
@@ -121,6 +127,9 @@ describe("useChecklistData cache behavior", () => {
     teamMembersSelect.mockReset();
     goalLinksSelect.mockReset();
     routerReplace.mockReset();
+    vi.mocked(toast.error).mockClear();
+    vi.mocked(reportError).mockClear();
+    cacheEvents.handler = null;
 
     getUser.mockResolvedValue({ data: { user: { id: "viewer-1" } } });
     goalsSelect.mockReturnValue(buildGoalsQuery({ data: [baseGoal], error: null }));
@@ -238,7 +247,7 @@ describe("useChecklistData cache behavior", () => {
     ]);
   });
 
-  it("preserves goals during completion-only refresh", async () => {
+  it("preserves goals while refreshing completion data", async () => {
     const { result } = renderHook(() =>
       useChecklistData({
         isActive: true,
@@ -261,7 +270,6 @@ describe("useChecklistData cache behavior", () => {
       await result.current.loadData({
         showLoading: false,
         forceRefresh: true,
-        completionOnly: true,
       });
     });
 
@@ -269,6 +277,22 @@ describe("useChecklistData cache behavior", () => {
     expect(result.current.data.completions).toEqual([
       { goal_id: "goal-1", completed_on: "2026-08-12", source: "manual" },
     ]);
+  });
+
+  it("retries a failed background read quietly and retains the last good checklist", async () => {
+    const { result, unmount } = renderHook(() => useChecklistData({
+      isActive: true, viewDate: "2026-08-12",
+    }));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    const lastGood = result.current.data;
+    const before = fetchProgressContext.mock.calls.length;
+    fetchProgressContext.mockRejectedValue(new Error("offline"));
+    act(() => { cacheEvents.handler?.(); });
+    await waitFor(() => expect(reportError).toHaveBeenCalledTimes(2));
+    expect(fetchProgressContext.mock.calls.length).toBe(before + 2);
+    expect(result.current.data).toEqual(lastGood);
+    expect(toast.error).not.toHaveBeenCalled();
+    unmount();
   });
 
   it("uses the planner asOfDate and timezone for progress fetches", async () => {
