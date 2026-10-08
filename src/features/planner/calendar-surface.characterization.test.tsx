@@ -1724,7 +1724,7 @@ describe("CalendarSurface characterization", () => {
       expect(postJsonMock).toHaveBeenCalled();
     });
     expect(
-      screen.queryByTestId("plan-recover-banner")
+      screen.queryByTestId("plan-issues-banner")
     ).not.toBeInTheDocument();
   });
 
