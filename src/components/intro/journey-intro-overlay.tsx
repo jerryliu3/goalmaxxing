@@ -52,15 +52,14 @@ export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: { 
     onClose={status => { void save({ action: "tour", key: "app.tabs", status }, () => setPhase(replay || progress?.tours["planner.calendar"] ? "closed" : "page-invite")); }} />;
   const startPage = () => { setPhase("closed"); router.push("/calendar?onboarding=planner.calendar"); };
   return <Dialog open onOpenChange={open => { if (!open && !saving && !account.error) void save(phase === "page-invite" ? { action: "tour", key: "planner.calendar", status: "skipped" } : { action: "skip-tours" }, () => setPhase("closed")); }}>
-    <DialogContent showCloseButton={false} onInteractOutside={event => event.preventDefault()}>
+    <DialogContent className="z-[80]" overlayClassName="z-[80]" showCloseButton={false} onInteractOutside={event => event.preventDefault()}>
       <DialogHeader>
         <p className="type-eyebrow text-muted-foreground">{account.error ? "Getting started" : phase === "page-invite" ? "Optional · Agenda tour" : "Setup complete"}</p>
         <DialogTitle className="type-heading">{account.error ? "Let’s try that again." : phase === "page-invite" ? "Get to know Agenda." : "Your space is ready."}</DialogTitle>
-        <DialogDescription>{account.error ?? (phase === "page-invite" ? "A short guide to views, sessions, and planning. Skip it whenever you like." : "Setup is finished. Want a quick look around the tabs, followed by Agenda?")}</DialogDescription>
+        <DialogDescription>{account.error ?? (phase === "page-invite" ? "A short guide to Agenda. Skip it whenever you like." : "Want a quick look around?")}</DialogDescription>
       </DialogHeader>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       {account.error ? <Button onClick={account.reload}>Try again</Button> : <>
-        <p className="text-sm text-muted-foreground">Setup won’t appear again. Replay setup or any tour in Settings → Onboarding.</p>
         <DialogFooter>
           <Button variant="ghost" disabled={saving} onClick={() => void save(phase === "page-invite" ? { action: "tour", key: "planner.calendar", status: "skipped" } : { action: "skip-tours" }, () => setPhase("closed"))}>{phase === "page-invite" ? "Skip Agenda tour" : "Skip all tours"}</Button>
           <Button disabled={saving || !progress} onClick={() => { if (phase === "page-invite") startPage(); else { setReplay(false); setPhase("tabs"); } }}>{phase === "page-invite" ? "Take Agenda tour" : "Take tab tour"}</Button>

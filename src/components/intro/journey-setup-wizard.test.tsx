@@ -43,9 +43,8 @@ describe("required setup practice", () => {
     await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Continue" })); });
     expect(mocks.save).toHaveBeenLastCalledWith({ action: "advance", step: 3 });
     expect(screen.getByRole("button", { name: "Done" })).toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: "Build practice goal" }));
     expect(screen.getByText("Goal card: Make time to move")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Preview achievement ceremony" }));
+    fireEvent.click(screen.getByRole("button", { name: "Preview ceremony" }));
     fireEvent.click(screen.getByRole("button", { name: "Return from practice ceremony" }));
     await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Done" })); });
     expect(mocks.save).toHaveBeenLastCalledWith({ action: "complete" });
@@ -56,7 +55,7 @@ describe("required setup practice", () => {
     render(<JourneySetupWizard userId="user-1" replay={false} onDone={vi.fn()} onCancelReplay={vi.fn()} />);
     await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Continue" })); });
     expect(screen.getByRole("alert")).toBeInTheDocument();
-    expect(screen.getByText(/Setup · 1 of 4/)).toBeInTheDocument();
+    expect(screen.getByText("1 of 4")).toBeInTheDocument();
   });
   it("does not overwrite preferences with defaults when loading failed", () => {
     mocks.preferenceError = "Could not load preferences";

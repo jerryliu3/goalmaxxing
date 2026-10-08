@@ -129,9 +129,6 @@ export function JourneyIntroPreferencesStep({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        Set your planner defaults now. You can change these anytime under Profile.
-      </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block space-y-1">
           <Label className="text-xs text-muted-foreground">Timezone</Label>
@@ -185,48 +182,33 @@ export function JourneyIntroPreferencesStep({
           </Select>
         </label>
       </div>
-      <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground">Account visibility</Label>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            disabled={loading}
-            aria-pressed={value.socialActivityVisible !== false}
-            className={cn(
-              "rounded-lg border px-3 py-2 text-left text-sm",
-              value.socialActivityVisible !== false
-                ? "border-primary bg-primary/10"
-                : "border-border bg-background"
-            )}
-            onClick={() => onChange({ ...value, socialActivityVisible: true })}
-          >
-            <span className="font-medium">Public</span>
-            <span className="mt-1 block text-xs text-muted-foreground">
-              Participate in Feed, Challenges, and Leaderboards
-            </span>
-          </button>
-          <button
-            type="button"
-            disabled={loading}
-            aria-pressed={value.socialActivityVisible === false}
-            className={cn(
-              "rounded-lg border px-3 py-2 text-left text-sm",
-              value.socialActivityVisible === false
-                ? "border-primary bg-primary/10"
-                : "border-border bg-background"
-            )}
-            onClick={() => onChange({ ...value, socialActivityVisible: false })}
-          >
-            <span className="font-medium">Private</span>
-            <span className="mt-1 block text-xs text-muted-foreground">
-              Your profile and goals are private
-            </span>
-          </button>
+      <div className="space-y-1.5">
+        <Label className="text-xs text-muted-foreground">Visibility</Label>
+        <div role="group" aria-label="Account visibility" className="flex gap-1.5">
+          {([
+            ["Public", true],
+            ["Private", false],
+          ] as const).map(([label, visible]) => {
+            const selected = (value.socialActivityVisible !== false) === visible;
+            return (
+              <button
+                key={label}
+                type="button"
+                disabled={loading}
+                aria-pressed={selected}
+                className={cn(
+                  "inline-flex h-8 items-center rounded-full border px-3 text-[13px]",
+                  selected
+                    ? "border-foreground bg-foreground font-medium text-background"
+                    : "border-border bg-background text-foreground/80"
+                )}
+                onClick={() => onChange({ ...value, socialActivityVisible: visible })}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
-        <p className="text-xs text-muted-foreground">
-          A private account can still form a private team. Leaderboards and challenges
-          stay hidden unless switched later.
-        </p>
       </div>
     </div>
   );
