@@ -89,6 +89,10 @@ The checklist has three separate concepts and they should not be collapsed:
    - Once that day has passed, target-achieved goals are hidden when the filter is
      off.
    - A period goal becomes eligible for hiding again independently in each period.
+   - Day labels this toggle "Show achieved goals". Achieved means the period
+     target or the total target was reached; the card's presentation-only plaque
+     target for open-ended goals does not count, and an open-ended goal is never
+     achieved overall.
 
 The checkbox being checked does not by itself imply that the card should be green,
 hidden, or considered lifetime-achieved.

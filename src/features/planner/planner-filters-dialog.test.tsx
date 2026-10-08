@@ -145,6 +145,12 @@ describe("PlannerFiltersDialog", () => {
               onChange: vi.fn(),
             },
             {
+              label: "Show achieved goals",
+              count: 0,
+              checked: false,
+              onChange: vi.fn(),
+            },
+            {
               label: "Show suppressed linked goals",
               count: 0,
               checked: false,
@@ -160,6 +166,7 @@ describe("PlannerFiltersDialog", () => {
     expect(screen.getByText("Show past goals")).toBeInTheDocument();
     expect(screen.getByText("Show upcoming goals")).toBeInTheDocument();
     expect(screen.getByText("Show archived goals")).toBeInTheDocument();
+    expect(screen.getByText("Show achieved goals")).toBeInTheDocument();
     expect(screen.getByText("Show suppressed linked goals")).toBeInTheDocument();
     expect(screen.getByText("(2)")).toBeInTheDocument();
   });

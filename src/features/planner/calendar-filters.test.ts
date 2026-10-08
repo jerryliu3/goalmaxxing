@@ -5,6 +5,7 @@ import {
   entryMatchesCalendarSearchQuery,
   goalPassesCalendarFilters,
   normalizeCalendarSearchQuery,
+  resolvePlannerShowTargetAchievedGoals,
   shouldHideCompletedOnFutureCalendarDay,
 } from "@/features/planner/calendar-filters";
 
@@ -290,6 +291,30 @@ describe("calendar filters", () => {
         day: "2026-08-20",
         calendarToday: "2026-08-15",
         showCompletedGoals: true,
+      })
+    ).toBe(false);
+  });
+
+  it("uses the week/month completed-goals filter for the checklist outside day view", () => {
+    expect(
+      resolvePlannerShowTargetAchievedGoals({
+        viewMode: "month",
+        dayFilterValue: false,
+        plannerShowCompletedGoals: true,
+      })
+    ).toBe(true);
+    expect(
+      resolvePlannerShowTargetAchievedGoals({
+        viewMode: "week",
+        dayFilterValue: true,
+        plannerShowCompletedGoals: false,
+      })
+    ).toBe(false);
+    expect(
+      resolvePlannerShowTargetAchievedGoals({
+        viewMode: "day",
+        dayFilterValue: false,
+        plannerShowCompletedGoals: true,
       })
     ).toBe(false);
   });

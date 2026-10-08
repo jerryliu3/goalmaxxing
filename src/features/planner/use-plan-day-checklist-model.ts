@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { resolvePlannerShowTargetAchievedGoals } from "@/features/planner/calendar-filters";
 import type { PlannerCalendarViewMode } from "@/features/planner/calendar-surface.types";
 import { selectChecklistListModel } from "@/features/today/checklist-list-model";
 import { getRecurrenceGroup, type RecurrenceGroup } from "@/features/today/checklist-selectors";
@@ -42,8 +43,11 @@ export function usePlanDayChecklistModel({
   plannerShowCompletedGoals?: boolean;
 }) {
   const filters = useChecklistFilters();
-  // Day always hides goals that already hit their target; Week and Month have a toggle.
-  const showTargetAchievedGoals = viewMode !== "day" && plannerShowCompletedGoals;
+  const showTargetAchievedGoals = resolvePlannerShowTargetAchievedGoals({
+    viewMode,
+    dayFilterValue: filters.showTargetAchievedGoals,
+    plannerShowCompletedGoals,
+  });
   // Recurrence is a Day filter; Week and Month don't show it, so it doesn't apply there.
   const recurrenceFilters = viewMode === "day" ? filters.recurrenceFilters : NO_RECURRENCE_FILTERS;
   const { data, loading, todayLocalDate } =
@@ -139,6 +143,12 @@ export function usePlanDayChecklistModel({
       count: listModel.archivedGoals.length,
       checked: filters.showArchivedGoals,
       onChange: filters.setShowArchivedGoals,
+    },
+    {
+      label: "Show achieved goals",
+      count: listModel.targetAchievedGoalIds.size,
+      checked: showTargetAchievedGoals,
+      onChange: filters.setShowTargetAchievedGoals,
     },
     {
       label: "Show suppressed linked goals",
