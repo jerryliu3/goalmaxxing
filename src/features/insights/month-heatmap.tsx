@@ -2,6 +2,7 @@
 
 import { eachDayOfInterval, endOfMonth, format, getISODay, startOfMonth } from "date-fns";
 import { useCompletionHold } from "@/components/ui/use-completion-hold";
+import { CompletionProgressMark } from "@/components/ui/completion-progress-mark";
 import { getHeatmapScaleClass } from "@/lib/goals/heatmap";
 import { PeriodStepper } from "@/components/ui/period-stepper";
 import { cn } from "@/lib/utils";
@@ -23,11 +24,6 @@ interface MonthHeatmapProps {
 }
 
 const weekdayHeaders = ["M", "T", "W", "Th", "F", "S", "Su"];
-
-function heatmapFillClipPath(fillProgress: number) {
-  const inset = (1 - fillProgress) * 50;
-  return `inset(${inset}%)`;
-}
 
 function MonthHeatmapDay({
   date,
@@ -53,6 +49,7 @@ function MonthHeatmapDay({
   const drilldownOnly = !interactive && Boolean(onDayClick);
   const title = `${date}${isToday ? " (today)" : ""}: ${value} completion${value === 1 ? "" : "s"}`;
   const {
+    visualCompleted,
     holding,
     fillTransition,
     fillProgress,
@@ -82,12 +79,11 @@ function MonthHeatmapDay({
             data-fill-progress={fillProgress}
             data-fill-transition={fillTransition ? "true" : "false"}
             className={cn("absolute inset-0", fillScaleClass)}
-            style={{
-              clipPath: heatmapFillClipPath(fillProgress),
-              transition: fillTransition
-                ? "clip-path var(--motion-duration-hold, 480ms) linear"
-                : "none",
-            }}
+            style={{ opacity: visualCompleted && !holding ? 1 : 0 }}
+          />
+          <CompletionProgressMark
+            done={false} holding={holding} fillProgress={fillProgress} fillTransition={fillTransition}
+            className={cn("pointer-events-none absolute inset-1 size-[calc(100%_-_0.5rem)] text-primary", !holding && "opacity-0")}
           />
           <span className={cn("relative z-[1] font-display", styles.number)}>{dayNumber}</span>
         </span>

@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import { Check } from "lucide-react";
-import { useUiStyle } from "@/components/brand/ui-style-provider";
-import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
+import { CompletionProgressMark } from "@/components/ui/completion-progress-mark";
 import {
   type CompletionHoldCommitHandler,
   COMPLETION_HOLD_MS,
@@ -58,7 +57,6 @@ export function CompletionToggle({
   title,
   ...props
 }: CompletionToggleProps) {
-  const { style } = useUiStyle();
   const classes = sizeClasses[size];
   const {
     visualCompleted,
@@ -85,7 +83,7 @@ export function CompletionToggle({
           "border border-border bg-background shadow-sm hover:border-primary hover:bg-background active:bg-background active:shadow-none",
         chrome === "plain" && "border-0 shadow-none",
         chrome === "button" &&
-          (style.completionMark === "nest" ? "rounded-md" : "rounded-full"),
+          "rounded-full",
         holding && "text-primary",
         classes.button,
         className
@@ -116,11 +114,11 @@ export function CompletionToggle({
     >
       {renderMark && visualCompleted && !holding ? renderMark(visualCompleted) : completedMark === "check" && visualCompleted && !holding ? (
         <Check className={classes.icon} aria-hidden="true" />
-      ) : <StyleCompletionMark
+      ) : <CompletionProgressMark
         done={visualCompleted}
         fillProgress={fillProgress}
         fillTransition={fillTransition}
-        pressed={holding}
+        holding={holding}
         className={cn(
           visualCompleted || holding ? "text-primary" : "text-muted-foreground",
           chrome === "plain" ? classes.button : classes.icon
