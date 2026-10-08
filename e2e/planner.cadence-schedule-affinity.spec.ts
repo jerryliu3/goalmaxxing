@@ -233,8 +233,16 @@ test.describe("cadence schedule-affinity", () => {
     // Current/future unscheduled rows now offer a planning move. Exercise the
     // direct completion control on a past day, where it is still available.
     const completionDay = new Date(`${fixture.today}T12:00:00Z`);
-    completionDay.setUTCDate(completionDay.getUTCDate() - 1);
+    const initialCredits = await fetchGoalUnitCredits(page, fixture.scopeMonth);
+    const scheduledDates = new Set(Object.values(initialCredits).map((unit) => unit.scheduledDate));
+    do {
+      completionDay.setUTCDate(completionDay.getUTCDate() - 1);
+    } while (scheduledDates.has(completionDay.toISOString().slice(0, 10)));
     const completionDate = completionDay.toISOString().slice(0, 10);
+    test.skip(
+      !completionDate.startsWith(fixture.scopeMonth),
+      "No unscheduled past day is available in the fixture month.",
+    );
 
     // This fixture is shared with the credit-move rail. Restore its past
     // session before exercising direct credit assignment so test order cannot

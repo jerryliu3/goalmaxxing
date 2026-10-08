@@ -13,6 +13,7 @@ export interface Goal {
   category: string;
   category_key?: string;
   is_private?: boolean;
+  featured_on_profile?: boolean;
   color: string | null;
   frequency_type: GoalFrequencyType;
   recurrence_interval: RecurrenceInterval | null;
@@ -68,6 +69,7 @@ export interface Profile {
   username: string;
   display_name: string | null;
   avatar_url: string | null;
+  bio?: string | null;
   planner_primary_tab?: PlannerPrimaryTabPreference | null;
   timezone?: string | null;
   timezone_confirmed_at?: string | null;

@@ -59,6 +59,8 @@ describe("CurrentGoalGrid", () => {
       rewardText: goal.reward_text ?? null,
       defaultLocalTime: goal.default_local_time ?? null,
       createdAt: goal.created_at,
+      isPrivate: false,
+      featuredOnProfile: false,
       progress,
     };
 

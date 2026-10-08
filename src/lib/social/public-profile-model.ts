@@ -5,7 +5,14 @@ import type {
   PublicProfileGlobalAchievement,
   PublicProfileGrowPoint,
   PublicProfileOverallStats,
+  PublicProfileShowcaseCatalog,
+  PublicProfileShowcaseItem,
+  PublicProfileShowcasePin,
 } from "@cadence/shared/social/public-profile";
+import { resolveAchievedOn } from "@/features/achievements/build-showcase";
+import { buildPersonalRecords } from "@/features/achievements/personal-records";
+import { resolveTempoCardMaterial } from "@/features/goals/card-material/tempo-card-material";
+import { getGoalVisual } from "@/features/planner/goal-visuals";
 import { buildGrowScoreSeries } from "@/lib/grow-score";
 import {
   buildCompletableGoalIds,
@@ -28,6 +35,7 @@ export type ProfileRow = Pick<
   | "username"
   | "display_name"
   | "avatar_url"
+  | "bio"
   | "social_activity_visible"
   | "week_starts_on"
   | "created_at"
@@ -61,6 +69,7 @@ export interface BuildPublicProfileBundleInput {
   awardCatalogCount: number;
   goals: Goal[];
   completions: Completion[];
+  pins?: PublicProfileShowcasePin[];
   selectedYear: number;
   memberNumber?: number | null;
 }
@@ -165,12 +174,16 @@ function buildProfileIdentity(
   };
 }
 
+/** The owner gets every current goal so they can choose what to feature. */
 function serializeCurrentGoals(
   goals: Goal[],
   summaries: GoalProgressSnapshot[],
-  userId: string
+  userId: string,
+  isOwner: boolean
 ): PublicProfileCurrentGoal[] {
-  return selectCurrentGoals(goals, summaries, userId, { publicOnly: true }).map(({ goal, progress }) => ({
+  return selectCurrentGoals(goals, summaries, userId, { publicOnly: !isOwner })
+    .filter(({ goal }) => isOwner || goal.featured_on_profile !== false)
+    .map(({ goal, progress }) => ({
     id: goal.id,
     ownerId: goal.owner_id,
     title: goal.title,
@@ -189,7 +202,104 @@ function serializeCurrentGoals(
     defaultLocalTime: goal.default_local_time ?? null,
     createdAt: goal.created_at,
     progress,
+    isPrivate: goal.is_private === true,
+    featuredOnProfile: goal.featured_on_profile !== false,
   }));
+}
+
+/** Finished goals, newest finish first. `snapshots` is index-aligned with `goals`. */
+function listFinishedGoals({
+  goals,
+  snapshots,
+  completionsByGoal,
+}: {
+  goals: Goal[];
+  snapshots: GoalProgressSnapshot[];
+  completionsByGoal: ReadonlyMap<string, Completion[]>;
+}) {
+  return goals
+    .flatMap((goal, index) =>
+      snapshots[index]?.outcome === "achieved"
+        ? [{ goal, achievedOn: resolveAchievedOn(snapshots[index], completionsByGoal.get(goal.id) ?? []) }]
+        : []
+    )
+    .sort((left, right) => (right.achievedOn ?? "").localeCompare(left.achievedOn ?? ""));
+}
+
+function buildShowcaseCatalog({
+  achievements,
+  goals,
+  snapshots,
+  completionsByGoal,
+  completions,
+  asOfDate,
+  weekStartsOn,
+  level,
+  totalXp,
+}: {
+  achievements: PublicProfileGlobalAchievement[];
+  goals: Goal[];
+  snapshots: GoalProgressSnapshot[];
+  completionsByGoal: ReadonlyMap<string, Completion[]>;
+  completions: Completion[];
+  asOfDate: string;
+  weekStartsOn: number;
+  level: number;
+  totalXp: number;
+}): PublicProfileShowcaseCatalog {
+  const achievedGoals = listFinishedGoals({ goals, snapshots, completionsByGoal });
+  const privateGoalIds = new Set(goals.filter((goal) => goal.is_private).map((goal) => goal.id));
+  const records = buildPersonalRecords({
+    achievedGoalsCount: achievedGoals.length,
+    achievedGoalDates: achievedGoals.flatMap((goal) => (goal.achievedOn ? [goal.achievedOn] : [])),
+    asOfDate,
+    goalSnapshots: snapshots,
+    completions,
+    level,
+    totalXp,
+    weekStartsOn,
+    truncated: { goals: false, completions: false },
+  });
+  return {
+    medals: achievements.flatMap((award) =>
+      award.revokedAt === null && award.level !== null
+        ? [{ kind: "medal" as const, ref: award.id, level: award.level, title: award.title, unlockedAt: award.unlockedAt }]
+        : []
+    ),
+    goals: achievedGoals
+      .filter(({ goal }) => !privateGoalIds.has(goal.id))
+      .map(({ goal, achievedOn }) => ({
+        kind: "goal" as const,
+        ref: goal.id,
+        title: goal.title,
+        rewardText: goal.reward_text ?? null,
+        achievedOn,
+        material: resolveTempoCardMaterial(goal.difficulty),
+        color: getGoalVisual({ goalId: goal.id, color: goal.color, category: goal.category }).color,
+      })),
+    records: records
+      .filter((record) => record.value !== "—")
+      .map((record) => ({
+        kind: "record" as const,
+        ref: record.id,
+        label: record.label,
+        value: record.value,
+        hint: record.hint,
+      })),
+  };
+}
+
+function resolveShowcase(
+  pins: PublicProfileShowcasePin[],
+  catalog: PublicProfileShowcaseCatalog
+): PublicProfileShowcaseItem[] {
+  const byKey = new Map<string, PublicProfileShowcaseItem>(
+    [...catalog.medals, ...catalog.goals, ...catalog.records].map((item) => [`${item.kind}:${item.ref}`, item])
+  );
+  return pins.flatMap((pin) => {
+    const item = byKey.get(`${pin.kind}:${pin.ref}`);
+    return item ? [item] : [];
+  });
 }
 
 function mapGrowSeries({
@@ -310,6 +420,9 @@ export function buildPrivatePublicProfileBundle(
     growSeries: [],
     growTopPercent: null,
     currentGoals: [],
+    bio: null,
+    showcase: [],
+    showcaseCatalog: null,
   };
 }
 
@@ -321,9 +434,11 @@ export function buildPublicProfileBundle({
   awardCatalogCount,
   goals,
   completions,
+  pins = [],
   selectedYear,
   memberNumber = null,
 }: BuildPublicProfileBundleInput): PublicProfileBundle {
+  const isOwner = viewerUserId !== null && viewerUserId === subjectProfile.id;
   const isPrivate = isPrivateForViewer(viewerUserId, subjectProfile);
   const profile = buildProfileIdentity(subjectProfile, isPrivate, memberNumber);
 
@@ -366,11 +481,24 @@ export function buildPublicProfileBundle({
     accountCreatedDate: resolvedCreatedDate,
   });
 
+  const mappedAchievements = mapGlobalAchievements(globalAchievements);
+  const showcaseCatalog = buildShowcaseCatalog({
+    achievements: mappedAchievements,
+    goals: completableGoals,
+    snapshots: completableGoals.map((goal) => summariesByGoal.get(goal.id)!),
+    completionsByGoal,
+    completions: completableCompletions,
+    asOfDate,
+    weekStartsOn,
+    level: xp.currentLevel,
+    totalXp,
+  });
+
   return {
     schemaVersion: "1",
     profile,
     xp,
-    globalAchievements: mapGlobalAchievements(globalAchievements),
+    globalAchievements: mappedAchievements,
     awardCatalogCount,
     overallStats: mapOverallStats(statsGroup),
     yearHeatmap: buildYearHeatmap({
@@ -382,7 +510,11 @@ export function buildPublicProfileBundle({
     currentGoals: serializeCurrentGoals(
       completableGoals,
       [...summariesByGoal.values()],
-      subjectProfile.id
+      subjectProfile.id,
+      isOwner
     ),
+    bio: subjectProfile.bio,
+    showcase: resolveShowcase(pins, showcaseCatalog),
+    showcaseCatalog: isOwner ? showcaseCatalog : null,
   };
 }

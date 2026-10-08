@@ -20,6 +20,7 @@ const bundle: PublicProfileBundle = {
   profile: { subjectUserId: "user-1", username: "alice", displayName: "Alice", avatarUrl: null, isPrivate: false, createdAt: null },
   xp: null, globalAchievements: [], awardCatalogCount: 0,
   overallStats: null, yearHeatmap: [], growSeries: [], growTopPercent: null, currentGoals: [],
+  bio: null, showcase: [], showcaseCatalog: null,
 };
 
 describe("own Profile presence preload", () => {

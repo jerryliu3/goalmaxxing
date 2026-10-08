@@ -21,6 +21,7 @@ describe("buildPublicProfileBundle award catalog", () => {
         username: "subject",
         display_name: "Subject User",
         avatar_url: null,
+        bio: null,
         social_activity_visible: true,
         week_starts_on: 1,
         created_at: "2026-01-01T00:00:00.000Z",

@@ -55,7 +55,7 @@ export interface BuildAchievementsShowcaseInput {
   };
 }
 
-function resolveAchievedOn(
+export function resolveAchievedOn(
   summary: GoalProgressSnapshot,
   completions: Completion[]
 ): string | null {

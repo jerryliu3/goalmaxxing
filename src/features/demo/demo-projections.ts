@@ -554,6 +554,7 @@ export function buildDemoPublicProfile(subjectUserId: string, selectedYear: numb
     viewerUserId: DEMO_ALEX_ID,
     subjectProfile: {
       ...profile,
+      bio: profile.bio ?? null,
       timezone: profile.timezone ?? snapshot.timezone,
       week_starts_on: profile.week_starts_on ?? snapshot.weekStartsOn,
       social_activity_visible: profile.social_activity_visible ?? true,

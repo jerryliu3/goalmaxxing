@@ -233,10 +233,10 @@ describe("planner work units", () => {
     });
 
     expect(units.map((unit) => unit.unitKey)).toEqual(["total:1"]);
-    expect(units[0]?.creditWindow.end).toBe("2028-07-31");
+    expect(units[0]?.creditWindow.end).toBe("2026-08-05");
   });
 
-  it("materializes ordinal goals without explicit deadlines using the soft horizon", () => {
+  it("materializes open-ended recurring ordinals using their cadence horizon", () => {
     const goal = buildGoal({
       target_count: 3,
       start_date: "2026-08-01",
@@ -255,8 +255,8 @@ describe("planner work units", () => {
       "total:2",
       "total:3",
     ]);
-    expect(units[0]?.creditWindow.end).toBe("2028-07-31");
-    expect(units.every((unit) => unit.placementWindow?.end === "2026-08-31")).toBe(
+    expect(units[0]?.creditWindow.end).toBe("2026-08-25");
+    expect(units.every((unit) => unit.placementWindow?.end === "2026-08-25")).toBe(
       true
     );
   });
