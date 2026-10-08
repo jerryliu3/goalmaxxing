@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   selectOverallCompletionPercent,
+  selectProgressPeriodWindow,
   selectSearchedGoals,
   selectVisiblePerGoalHeatmaps,
   unionGoalsById,
@@ -56,41 +57,61 @@ describe("insights selectors", () => {
     ).toEqual(["shared", "mine", "theirs"]);
   });
 
-  it("splits current and historical heatmaps from the visible period", () => {
-    const goals = [
-      goal({
-        id: "current",
-        owner_id: "me",
-        title: "Current",
-        start_date: "2026-08-01",
-        end_date: "2026-12-31",
-      }),
-      goal({
-        id: "historical",
-        owner_id: "me",
-        title: "Historical",
-        start_date: "2026-01-01",
-        end_date: "2026-03-01",
-      }),
-    ];
-    const hiddenHistorical = selectVisiblePerGoalHeatmaps({
+  it("uses inclusive overlap and excludes both past and future goals", () => {
+    const ranges = [
+      ["past", "2026-01-01", "2026-07-31"],
+      ["future", "2026-09-01", "2026-12-31"],
+      ["spans", "2026-01-01", "2026-12-31"],
+      ["ends-at-start", "2026-07-01", "2026-08-01"],
+      ["starts-at-end", "2026-08-31", "2026-10-01"],
+      ["open", "2026-08-01", null],
+      ["open-future", "2026-09-01", null],
+    ] as const;
+    const goals = ranges.map(([id, start_date, end_date]) =>
+      goal({ id, owner_id: "me", title: id, start_date, end_date })
+    );
+    const visible = selectVisiblePerGoalHeatmaps({
       goals,
       visiblePeriodStart: "2026-08-01",
+      visiblePeriodEnd: "2026-08-31",
       endMonths: [],
-      showHistoricalGoals: false,
       sort: "earliest_end",
     });
-    expect(hiddenHistorical.visiblePerGoalHeatmaps.map((row) => row.id)).toEqual(["current"]);
-    const shownHistorical = selectVisiblePerGoalHeatmaps({
-      goals,
-      visiblePeriodStart: "2026-08-01",
-      endMonths: [],
-      showHistoricalGoals: true,
-      sort: "earliest_end",
-    });
-    expect(shownHistorical.visiblePerGoalHeatmaps.map((row) => row.id)).toEqual([
-      "current",
-      "historical",
+    expect(visible.map((row) => row.id)).toEqual([
+      "ends-at-start", "starts-at-end", "spans", "open",
     ]);
+    expect(selectVisiblePerGoalHeatmaps({
+      goals,
+      visiblePeriodStart: "2026-08-01",
+      visiblePeriodEnd: "2026-08-31",
+      endMonths: ["2026-12"],
+      sort: "earliest_end",
+    }).map((row) => row.id)).toEqual(["spans"]);
+  });
+
+  it("derives month and year bounds including leap days", () => {
+    expect(selectProgressPeriodWindow(new Date(2024, 1, 12), "month")).toEqual({
+      start: "2024-02-01", end: "2024-02-29",
+    });
+    expect(selectProgressPeriodWindow(new Date(2024, 1, 12), "year")).toEqual({
+      start: "2024-01-01", end: "2024-12-31",
+    });
+  });
+
+  it("recomputes overlap when the displayed period changes", () => {
+    const goals = [
+      goal({ id: "august", owner_id: "me", title: "August", start_date: "2026-08-01", end_date: "2026-08-31" }),
+      goal({ id: "september", owner_id: "me", title: "September", start_date: "2026-09-01", end_date: "2026-09-30" }),
+    ];
+    const visible = (cursor: Date, mode: "month" | "year") => {
+      const window = selectProgressPeriodWindow(cursor, mode);
+      return selectVisiblePerGoalHeatmaps({
+        goals, visiblePeriodStart: window.start, visiblePeriodEnd: window.end,
+        endMonths: [], sort: "earliest_end",
+      }).map((row) => row.id);
+    };
+    expect(visible(new Date(2026, 7, 1), "month")).toEqual(["august"]);
+    expect(visible(new Date(2026, 8, 1), "month")).toEqual(["september"]);
+    expect(visible(new Date(2026, 8, 1), "year")).toEqual(["august", "september"]);
   });
 });

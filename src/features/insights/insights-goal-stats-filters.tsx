@@ -28,9 +28,6 @@ interface InsightsGoalStatsFiltersProps {
   onSortChange: (sort: GoalDateSort) => void;
   viewMode: HeatmapViewMode;
   onViewModeChange: (mode: HeatmapViewMode) => void;
-  showEndedGoals: boolean;
-  endedGoalCount: number;
-  onShowEndedGoalsChange: (show: boolean) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -44,9 +41,6 @@ export function InsightsGoalStatsFilters({
   onSortChange,
   viewMode,
   onViewModeChange,
-  showEndedGoals,
-  endedGoalCount,
-  onShowEndedGoalsChange,
   open,
   onOpenChange,
 }: InsightsGoalStatsFiltersProps) {
@@ -81,7 +75,7 @@ export function InsightsGoalStatsFilters({
           <DialogHeader>
             <DialogTitle>Progress filters</DialogTitle>
             <DialogDescription>
-              Refine which goal statistics are shown.
+              Only goals overlapping the displayed period appear. Refine them by end date or sort order.
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[min(24rem,calc(85vh-8rem))] space-y-4 overflow-y-auto overflow-x-visible pr-0.5">
@@ -94,21 +88,6 @@ export function InsightsGoalStatsFilters({
               onSortChange={onSortChange}
               className="grid grid-cols-2 gap-3 [&>div]:min-w-0 [&>div]:w-full [&_[role=combobox]]:w-full"
             />
-            <label
-              className={`flex min-h-8 items-center gap-2 text-sm ${
-                endedGoalCount === 0 ? "text-muted-foreground opacity-60" : ""
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={showEndedGoals}
-                disabled={endedGoalCount === 0}
-                onChange={(event) => onShowEndedGoalsChange(event.target.checked)}
-                className="size-4 rounded border-input accent-primary"
-              />
-              Show past goals
-              <span>({endedGoalCount})</span>
-            </label>
           </div>
         </DialogContent>
       </Dialog>

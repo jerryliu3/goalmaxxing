@@ -1,17 +1,13 @@
 "use client";
 
-import { format, startOfMonth, startOfYear } from "date-fns";
 import { SlidersHorizontal } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchField } from "@/components/ui/search-field";
 import { InsightsGoalStatsFilters } from "@/features/insights/insights-goal-stats-filters";
 import { InsightsPeriodStepper } from "@/features/insights/insights-period-controls";
 import type { HeatmapViewMode } from "@/features/insights/insights-tab";
-import {
-  selectSearchedGoals,
-  selectVisiblePerGoalHeatmaps,
-} from "@/features/insights/insights-selectors";
+import { selectProgressPeriodWindow } from "@/features/insights/insights-selectors";
 import {
   resolveEffectiveEndMonths,
   type GoalDateSort,
@@ -30,8 +26,6 @@ export function InsightsTrackerHeader({
   onGoalEndMonthsChange,
   goalSort,
   onGoalSortChange,
-  showHistoricalGoals,
-  onShowHistoricalGoalsChange,
 }: {
   goals: Goal[];
   monthCursor: Date;
@@ -44,39 +38,16 @@ export function InsightsTrackerHeader({
   onGoalEndMonthsChange: (value: string[]) => void;
   goalSort: GoalDateSort;
   onGoalSortChange: (value: GoalDateSort) => void;
-  showHistoricalGoals: boolean;
-  onShowHistoricalGoalsChange: (value: boolean) => void;
 }) {
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const visiblePeriodStart = format(
-    perGoalViewMode === "month" ? startOfMonth(monthCursor) : startOfYear(monthCursor),
-    "yyyy-MM-dd"
+  const { start: visiblePeriodStart } = selectProgressPeriodWindow(
+    monthCursor,
+    perGoalViewMode
   );
   const goalFilterStartMonth = visiblePeriodStart.slice(0, 7);
   const effectiveGoalEndMonths = resolveEffectiveEndMonths(
     goalEndMonths,
     goalFilterStartMonth
-  );
-  const searchedGoals = useMemo(
-    () => selectSearchedGoals(goals, goalSearchQuery),
-    [goalSearchQuery, goals]
-  );
-  const { historicalGoals } = useMemo(
-    () =>
-      selectVisiblePerGoalHeatmaps({
-        goals: searchedGoals,
-        visiblePeriodStart,
-        endMonths: effectiveGoalEndMonths,
-        showHistoricalGoals,
-        sort: goalSort,
-      }),
-    [
-      effectiveGoalEndMonths,
-      goalSort,
-      searchedGoals,
-      showHistoricalGoals,
-      visiblePeriodStart,
-    ]
   );
 
   return (
@@ -113,9 +84,6 @@ export function InsightsTrackerHeader({
           onSortChange={onGoalSortChange}
           viewMode={perGoalViewMode}
           onViewModeChange={onPerGoalViewModeChange}
-          showEndedGoals={showHistoricalGoals}
-          endedGoalCount={historicalGoals.length}
-          onShowEndedGoalsChange={onShowHistoricalGoalsChange}
           open={filtersOpen}
           onOpenChange={setFiltersOpen}
         />

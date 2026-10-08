@@ -24,9 +24,6 @@ function renderFilters({
       onSortChange={vi.fn()}
       viewMode="month"
       onViewModeChange={onViewModeChange}
-      showEndedGoals={false}
-      endedGoalCount={3}
-      onShowEndedGoalsChange={vi.fn()}
       open={open}
       onOpenChange={vi.fn()}
     />
@@ -86,8 +83,8 @@ describe("InsightsGoalStatsFilters", () => {
     expect(screen.getByRole("dialog", { name: "Progress filters" })).not.toHaveClass(
       "overflow-visible"
     );
-    expect(screen.getByText("Show past goals")).toBeInTheDocument();
-    expect(screen.getByText("(3)")).toBeInTheDocument();
+    expect(screen.queryByText("Show past goals")).not.toBeInTheDocument();
+    expect(screen.getByText(/Only goals overlapping the displayed period appear/)).toBeInTheDocument();
     expect(screen.queryByLabelText("Goal stats view mode")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Choose month and year")).not.toBeInTheDocument();
   });
@@ -105,9 +102,6 @@ describe("InsightsGoalStatsFilters", () => {
           onSortChange={vi.fn()}
           viewMode="month"
           onViewModeChange={vi.fn()}
-          showEndedGoals={false}
-          endedGoalCount={3}
-          onShowEndedGoalsChange={vi.fn()}
           open={false}
           onOpenChange={vi.fn()}
         />

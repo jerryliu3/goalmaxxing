@@ -1,12 +1,13 @@
 import {
   eachDayOfInterval,
+  endOfMonth,
   endOfYear,
   format,
+  startOfMonth,
   startOfYear,
 } from "date-fns";
 import {
   filterGoalsByEndMonths,
-  partitionGoalsByVisibleStart,
   sortGoalsByDate,
   type GoalDateSort,
 } from "@/lib/goals/list-view";
@@ -37,37 +38,41 @@ export function selectSearchedGoals(goals: Goal[], query: string): Goal[] {
   );
 }
 
+export function selectProgressPeriodWindow(
+  monthCursor: Date,
+  viewMode: "month" | "year"
+): { start: string; end: string } {
+  return {
+    start: format(
+      viewMode === "month" ? startOfMonth(monthCursor) : startOfYear(monthCursor),
+      "yyyy-MM-dd"
+    ),
+    end: format(
+      viewMode === "month" ? endOfMonth(monthCursor) : endOfYear(monthCursor),
+      "yyyy-MM-dd"
+    ),
+  };
+}
+
 export function selectVisiblePerGoalHeatmaps({
   goals,
   visiblePeriodStart,
+  visiblePeriodEnd,
   endMonths,
-  showHistoricalGoals,
   sort,
 }: {
   goals: Goal[];
   visiblePeriodStart: string;
+  visiblePeriodEnd: string;
   endMonths: string[];
-  showHistoricalGoals: boolean;
   sort: GoalDateSort;
-}): {
-  currentPeriodGoals: Goal[];
-  historicalGoals: Goal[];
-  visiblePerGoalHeatmaps: Goal[];
-} {
-  const filteredGoals = filterGoalsByEndMonths(goals, endMonths);
-  const partitioned = partitionGoalsByVisibleStart(
-    filteredGoals,
-    visiblePeriodStart
+}): Goal[] {
+  const overlappingGoals = goals.filter(
+    (goal) =>
+      goal.start_date <= visiblePeriodEnd &&
+      (goal.end_date === null || goal.end_date >= visiblePeriodStart)
   );
-  const currentGoals = sortGoalsByDate(partitioned.current, sort);
-  const historicalGoals = sortGoalsByDate(partitioned.historical, sort);
-  return {
-    currentPeriodGoals: currentGoals,
-    historicalGoals,
-    visiblePerGoalHeatmaps: showHistoricalGoals
-      ? [...currentGoals, ...historicalGoals]
-      : currentGoals,
-  };
+  return sortGoalsByDate(filterGoalsByEndMonths(overlappingGoals, endMonths), sort);
 }
 
 export function selectOverallCompletionPercent(
