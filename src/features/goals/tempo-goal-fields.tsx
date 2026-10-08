@@ -10,22 +10,14 @@ import {
 } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  DEFAULT_GOAL_CATEGORIES,
-  type CategorySelection,
-} from "@/lib/goals/category";
-import { categoryChangePatch } from "@/lib/goals/card-colour";
 import type {
   GoalCreationFieldControlsProps,
   GoalCreationLinkTargetProps,
 } from "./goal-creation-fields";
-import {
-  clampPlaqueTarget,
-  creationPlaqueTarget,
-} from "./card-material/creation-plaque-target";
+import { creationPlaqueTarget } from "./card-material/creation-plaque-target";
 import { TempoGoalCard } from "./tempo-goal-card";
-import { TempoGoalChoices as Choices } from "./tempo-goal-choices";
+import { TempoGoalCheckpoint } from "./tempo-goal-checkpoint";
+import { TempoGoalIntention } from "./tempo-goal-intention";
 import { TempoGoalReward } from "./tempo-goal-reward";
 import { TempoGoalRhythm } from "./tempo-goal-rhythm";
 import { TempoGoalSchedule } from "./tempo-goal-schedule";
@@ -35,7 +27,7 @@ import { TempoStepNavigation } from "./tempo-step-navigation";
 import { AnnotatedCard } from "./card-editor/annotated-card";
 import { CardBack } from "./card-editor/card-back";
 import type { CardEditorFields, CardEditorSession } from "./card-editor/card-editor-session";
-import { type BackFact, DIFFICULTY_OPTIONS, type FaceFact } from "./card-editor/card-facts";
+import type { BackFact, FaceFact } from "./card-editor/card-facts";
 import { CardScene } from "./card-editor/card-scene";
 import type {
   TempoChoicesMade,
@@ -329,57 +321,14 @@ export function TempoGoalFields({
             </h2>
             <fieldset className="tempo-fields" disabled={disabled}>
               {step === 0 && (
-                <>
-                  <label htmlFor={`${id}-title`}>
-                    Name your {isPlannerTask ? "task" : "goal"}
-                  </label>
-                  <Input
-                    id={`${id}-title`}
-                    aria-label="Name"
-                    className="tempo-title-input"
-                    placeholder="Read a little, every week"
-                    value={fields.title}
-                    onChange={(e) => onPatch({ title: e.target.value })}
-                  />
-                  {!isPlannerTask && (
-                    <>
-                      <p className="tempo-label">Category</p>
-                      <Choices
-                        label="Category"
-                        value={
-                          chosen.category ? fields.category_selection : null
-                        }
-                        options={[
-                          ...DEFAULT_GOAL_CATEGORIES.map((c) => ({
-                            value: c.key as CategorySelection,
-                            label: c.label,
-                            color: c.color,
-                          })),
-                        ]}
-                        onChange={(value) => {
-                          choose({ category: true });
-                          onPatch(categoryChangePatch(fields, value));
-                        }}
-                      />
-                      {chosen.category && (
-                        <>
-                          <p className="tempo-label">Difficulty</p>
-                          <Choices
-                            label="Difficulty"
-                            value={
-                              chosen.difficulty ? fields.difficulty : null
-                            }
-                            options={DIFFICULTY_OPTIONS}
-                            onChange={(difficulty) => {
-                              choose({ difficulty: true });
-                              onPatch({ difficulty });
-                            }}
-                          />
-                        </>
-                      )}
-                    </>
-                  )}
-                </>
+                <TempoGoalIntention
+                  id={id}
+                  fields={fields}
+                  onPatch={onPatch}
+                  isPlannerTask={isPlannerTask}
+                  chosen={chosen}
+                  onChosen={choose}
+                />
               )}
               {step === 1 && (
                 <TempoGoalRhythm
@@ -433,41 +382,23 @@ export function TempoGoalFields({
         </AnimatePresence>
       )}
       {step === REVIEW && (
-        <div className="tempo-review-action">
-          {!isPlannerTask && (
-            <p className="tempo-plaque-copy">
-              Your target before earning this achievement plaque will be{" "}
-              <label className="tempo-plaque-input">
-                <span className="sr-only">Plaque completion target</span>
-                <Input
-                  type="number"
-                  min={1}
-                  max={20}
-                  inputMode="numeric"
-                  value={plaqueTarget}
-                  disabled={disabled}
-                  onChange={(event) => {
+        <TempoGoalCheckpoint
+          plaque={
+            isPlannerTask
+              ? undefined
+              : {
+                  target: plaqueTarget,
+                  onChange: (target) => {
                     setPlaqueTouched(true);
-                    const next = Number(event.target.value);
-                    setPlaqueTarget(
-                      event.target.value === ""
-                        ? 1
-                        : clampPlaqueTarget(next),
-                    );
-                    onPlaqueTargetChange?.(event.target.value === "" ? 1 : clampPlaqueTarget(next));
-                  }}
-                />
-              </label>{" "}
-              completions.
-            </p>
-          )}
-          {action}
-          {error && error !== "Title is required." && (
-            <p className="tempo-error" role="status">
-              {error}
-            </p>
-          )}
-        </div>
+                    setPlaqueTarget(target);
+                    onPlaqueTargetChange?.(target);
+                  },
+                }
+          }
+          disabled={disabled}
+          action={action}
+          error={error}
+        />
       )}
     </div>
   );
