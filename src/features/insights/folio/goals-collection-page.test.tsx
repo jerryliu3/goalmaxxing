@@ -67,7 +67,7 @@ describe("goal library journey", () => {
 
   it("shows archived goals in their own section below past goals", () => {
     const ended = buildGoal({ owner_id: "user-1", title: "Run a 10k", end_date: "2026-09-30" });
-    const archived = buildGoal({ owner_id: "user-1", title: "Learn the cello", archived_at: "2026-09-15T00:00:00Z", end_date: "2027-01-01" });
+    const archived = buildGoal({ id: "archived-goal", owner_id: "user-1", title: "Learn the cello", archived_at: "2026-09-15T00:00:00Z", end_date: "2027-01-01" });
     mocks.data.mockReturnValue({ loading: false, loadError: null, reload: vi.fn(), state: {
       userId: "user-1", goals: [ended, archived],
       progress: { summaries: [summary(ended.id), summary(archived.id, { lifecycle: "archived", outcome: "in_progress" })] },

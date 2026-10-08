@@ -8,12 +8,15 @@ vi.mock("@/features/insights/grow-score-trend-chart", () => ({
   GrowScoreTrendChart: ({
     title,
     children,
+    topPercent,
   }: {
     title: string;
     children?: ReactNode;
+    topPercent?: number | null;
   }) => (
     <>
       <h3>{title}</h3>
+      {topPercent != null ? <span>Top {topPercent}%</span> : null}
       {children}
     </>
   ),
