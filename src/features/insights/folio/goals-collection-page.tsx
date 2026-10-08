@@ -1,7 +1,8 @@
 "use client";
 
-import { useId, useMemo } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
+import { getDateInTimezone } from "@/lib/dates/timezone";
 import { isDemoPathname } from "@/lib/navigation/demo-path";
 import { NewGoalButton } from "@/features/goals/new-goal-button";
 import { Button } from "@/components/ui/button";
@@ -24,13 +25,19 @@ export function GoalsCollectionPage({ subjectUserId, readOnly = false, anchorSec
   const moving = useGoalCardScrollMotion();
   const router = useAppRouter();
   const prefix = isDemoPathname(usePathname() ?? "") ? "/demo" : "";
-  const currentYear = String(new Date().getFullYear());
-  const { state, loading, loadError, reload } = useInsightsData({ subjectUserId, selectedYear: currentYear, failClosed: readOnly });
+  // The profile timezone decides "this year", the same date the insights load uses.
+  // Until that date arrives, ask for the UTC year so the first request has a window.
+  const [selectedYear, setSelectedYear] = useState(() => getDateInTimezone(new Date(), "UTC").slice(0, 4));
+  const { state, loading, loadError, reload } = useInsightsData({ subjectUserId, selectedYear, failClosed: readOnly });
+  const profileYear = state.asOfDate.slice(0, 4);
+  useEffect(() => {
+    if (profileYear && profileYear !== selectedYear) setSelectedYear(profileYear);
+  }, [profileYear, selectedYear]);
   useReportAppSurfaceReady(!loading);
   const entries = useMemo(() => buildFolioEntries(state.goals, state.progress?.summaries ?? [], state.userId), [state.goals, state.progress, state.userId]);
   const current = useMemo(() => buildCurrentGoals(state.goals, state.progress?.summaries ?? [], state.userId), [state.goals, state.progress, state.userId]);
   const { past, archived } = useMemo(() => splitPastGoals(entries), [entries]);
-  const books = useMemo(() => buildGoalBooks(past, currentYear), [past, currentYear]);
+  const books = useMemo(() => buildGoalBooks(past, profileYear || selectedYear), [past, profileYear, selectedYear]);
   const openDetails = readOnly ? undefined : (goalId: string) => router.push(`${prefix}/goals/${goalId}`);
   return (
     <div className={styles.page}>

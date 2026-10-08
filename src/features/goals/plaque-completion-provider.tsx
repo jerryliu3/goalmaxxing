@@ -7,7 +7,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { fetchProgressContext } from "@/lib/goals/progress-context";
 import { subscribeCompletionAchievement } from "@/lib/goals/completion-presentation";
 import { subscribeXpRefresh } from "@/lib/xp/events";
-import { getDateInTimezone, resolveUserTimezone } from "@/lib/dates/timezone";
+import { getDateInTimezone, timezoneFromPreferences } from "@/lib/dates/timezone";
 import { reportError } from "@/lib/observability/report-error";
 import { goalCardFields } from "./goal-card-fields";
 import { createClient } from "@/lib/supabase/client";
@@ -41,14 +41,16 @@ export function PlaqueCompletionProvider({ children }: { children: ReactNode }) 
       pending = pending.then(async () => {
         const { data: auth } = await supabase.auth.getUser();
         if (!auth.user || !mounted) return;
-        const timezone = resolveUserTimezone();
-        const today = getDateInTimezone(new Date(), timezone);
-        const [result, progress] = await Promise.all([
+        const [result, profile] = await Promise.all([
           supabase.from("goals").select("*").eq("owner_id", auth.user.id).eq("is_deleted", false).order("id").limit(1001),
-          fetchProgressContext({ asOfDate: today, timezone, forceRefresh: true }),
+          supabase.from("profiles").select("timezone").eq("id", auth.user.id).maybeSingle(),
         ]);
         if (result.error) throw result.error;
+        if (profile.error) throw profile.error;
         if (!mounted || result.data.length > 1000) return;
+        const timezone = timezoneFromPreferences(profile.data?.timezone);
+        const today = getDateInTimezone(new Date(), timezone);
+        const progress = await fetchProgressContext({ asOfDate: today, timezone, forceRefresh: true });
         const goals = result.data as Goal[];
         const books = buildGoalBooks(splitPastGoals(buildFolioEntries(goals, progress.summaries, auth.user.id)).past, today.slice(0, 4));
         const celebrations = earned.flatMap(item => {
