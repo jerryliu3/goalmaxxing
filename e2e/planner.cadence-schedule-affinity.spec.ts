@@ -233,8 +233,8 @@ test.describe("cadence schedule-affinity", () => {
     // Current/future unscheduled rows now offer a planning move. Exercise the
     // direct completion control on a past day, where it is still available.
     const completionDay = new Date(`${fixture.today}T12:00:00Z`);
-    const credits = await fetchGoalUnitCredits(page, fixture.scopeMonth);
-    const scheduledDates = new Set(Object.values(credits).map((unit) => unit.scheduledDate));
+    const initialCredits = await fetchGoalUnitCredits(page, fixture.scopeMonth);
+    const scheduledDates = new Set(Object.values(initialCredits).map((unit) => unit.scheduledDate));
     do {
       completionDay.setUTCDate(completionDay.getUTCDate() - 1);
     } while (scheduledDates.has(completionDay.toISOString().slice(0, 10)));
