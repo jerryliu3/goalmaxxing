@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { GoalListControls } from "@/features/goals/goal-list-controls";
-import { PlannerEndMonthQuickFilterChips } from "@/features/planner/planner-end-month-quick-filter-chips";
 import type { HeatmapViewMode } from "@/features/insights/insights-tab";
 import type { GoalDateSort } from "@/lib/goals/list-view";
 import type { Goal } from "@/lib/goals/types";
@@ -46,22 +45,12 @@ export function InsightsGoalStatsFilters({
 }: InsightsGoalStatsFiltersProps) {
   return (
     <>
-      <div
-        data-testid="insights-quick-filters"
-        className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1"
-      >
+      <div data-testid="insights-quick-filters" className="flex shrink-0 items-center">
         <SegmentedControl
           label="Progress period"
           options={PERIOD_OPTIONS}
           value={viewMode}
           onChange={onViewModeChange}
-        />
-        <span aria-hidden className="mx-1 h-6 w-px shrink-0 bg-border" />
-        <PlannerEndMonthQuickFilterChips
-          referenceMonth={referenceMonth}
-          endMonthFilters={endMonths}
-          onEndMonthFiltersChange={onEndMonthsChange}
-          testId="insights-end-date-chips"
         />
       </div>
 
@@ -78,7 +67,7 @@ export function InsightsGoalStatsFilters({
               Only goals overlapping the displayed period appear. Refine them by end date or sort order.
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[min(24rem,calc(85vh-8rem))] space-y-4 overflow-y-auto overflow-x-visible pr-0.5">
+          <div className="max-h-[min(24rem,calc(85vh-8rem))] overflow-y-auto overflow-x-visible pr-0.5">
             <GoalListControls
               goals={goals}
               referenceMonth={referenceMonth}

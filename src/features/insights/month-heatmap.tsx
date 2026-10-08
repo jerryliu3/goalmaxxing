@@ -14,6 +14,8 @@ interface MonthHeatmapProps {
   pendingDate?: string | null;
   isDayDisabled?: (date: string) => boolean;
   milestoneDates?: ReadonlySet<string> | readonly string[];
+  /** Marks today's number so it is not mistaken for a completion or a milestone. */
+  today?: string;
   onDayClick?: (date: string, sourceElement: HTMLButtonElement) => void;
   onPreviousMonth?: () => void;
   onNextMonth?: () => void;
@@ -32,6 +34,7 @@ function MonthHeatmapDay({
   dayNumber,
   value,
   pinned,
+  isToday,
   interactive,
   disabled,
   onDayClick,
@@ -40,6 +43,7 @@ function MonthHeatmapDay({
   dayNumber: string;
   value: number;
   pinned: boolean;
+  isToday: boolean;
   interactive: boolean;
   disabled: boolean;
   onDayClick?: (date: string, sourceElement: HTMLButtonElement) => void;
@@ -47,7 +51,7 @@ function MonthHeatmapDay({
   const completed = value > 0;
   const interactiveEditable = interactive && Boolean(onDayClick);
   const drilldownOnly = !interactive && Boolean(onDayClick);
-  const title = `${date}: ${value} completion${value === 1 ? "" : "s"}`;
+  const title = `${date}${isToday ? " (today)" : ""}: ${value} completion${value === 1 ? "" : "s"}`;
   const {
     holding,
     fillTransition,
@@ -115,6 +119,7 @@ function MonthHeatmapDay({
         title={title}
         disabled={disabled}
         data-motion="completion-toggle"
+        data-today={isToday || undefined}
         className={cn(
           styles.day,
           holding && styles.holding
@@ -131,6 +136,7 @@ function MonthHeatmapDay({
       <button
         type="button"
         title={title}
+        data-today={isToday || undefined}
         className={cn(
           styles.day,
           "cursor-pointer"
@@ -143,7 +149,7 @@ function MonthHeatmapDay({
   }
 
   return (
-    <div title={title} className={styles.day}>
+    <div title={title} data-today={isToday || undefined} className={styles.day}>
       {body}
     </div>
   );
@@ -156,6 +162,7 @@ export function MonthHeatmap({
   pendingDate = null,
   isDayDisabled,
   milestoneDates,
+  today,
   onDayClick,
   onPreviousMonth,
   onNextMonth,
@@ -213,6 +220,7 @@ export function MonthHeatmap({
                 dayNumber={format(day, "d")}
                 value={countsByDate[key] ?? 0}
                 pinned={pinDates.has(key)}
+                isToday={key === today}
                 interactive={Boolean(interactive && onDayClick)}
                 disabled={
                   pendingDate === key || Boolean(isDayDisabled?.(key))
