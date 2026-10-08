@@ -8,6 +8,7 @@ import {
   useState,
   useRef,
   useEffect,
+  useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
 import { motion, useReducedMotion } from "motion/react";
@@ -63,10 +64,12 @@ function XpRewardLayer({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(timeout);
   }, [flights]);
 
+  const mounted = useSyncExternalStore(subscribeNothing, () => true, () => false);
+
   return (
     <XpRewardContext.Provider value={{ celebrate }}>
       {children}
-      {createPortal(<div
+      {mounted && createPortal(<div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-[60] overflow-hidden"
         data-motion="xp-reward-overlay"
@@ -95,3 +98,5 @@ export function XpRewardProvider({ children }: { children: ReactNode }) {
 export function useXpReward() {
   return useContext(XpRewardContext);
 }
+
+const subscribeNothing = () => () => {};
