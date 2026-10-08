@@ -36,6 +36,7 @@ import type { PlannerIssueCode } from "@/lib/planner/solver/types";
 import { evaluateActivePlanStaleness } from "@/lib/planner/staleness";
 import {
   buildPlannerGoalLockSignature,
+  computePlannerUnplaceablePolicyFingerprint,
   isPlannerGoalUnplaceableReason,
   isPlannerGoalUnplaceableRecordValid,
   type PlannerGoalUnplaceableRecord,
@@ -741,6 +742,8 @@ export async function loadPlannerContextPayload({
       createDefaultPlannerPolicy(effectiveTimezone, new Date().toISOString())
   );
   const policyFingerprint = canonicalHash(effectivePolicy);
+  const unplaceablePolicyFingerprint =
+    computePlannerUnplaceablePolicyFingerprint(effectivePolicy);
   const policyRevision = snapshot.preferences?.policy_revision ?? 0;
   const lockSignatureByGoalId = new Map<string, string>();
   const lockEntriesByGoalId = new Map<
@@ -770,7 +773,7 @@ export async function loadPlannerContextPayload({
     return isPlannerGoalUnplaceableRecordValid({
       record,
       goal,
-      policyFingerprint,
+      policyFingerprint: unplaceablePolicyFingerprint,
       policyRevision,
       lockSignature: lockSignatureByGoalId.get(goal.id) ?? "",
       preparationEnd,

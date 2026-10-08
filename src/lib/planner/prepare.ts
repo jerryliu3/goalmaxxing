@@ -3,7 +3,6 @@ import type { Completion, Goal } from "@/lib/goals/types";
 import { matchesCadenceUnitKey } from "@/lib/goals/target-basis";
 import { reportError } from "@/lib/observability/report-error";
 import { createDefaultAssessment } from "@/lib/planner/assessment";
-import { canonicalHash } from "@/lib/planner/canonical";
 import {
   resolveCanonicalAsOfDate,
   PlannerRouteError,
@@ -35,6 +34,7 @@ import { reconcilePlannerCompletions } from "@/lib/planner/reconciliation";
 import { normalizeGoalRequirement } from "@/lib/planner/requirements";
 import {
   buildPlannerGoalLockSignature,
+  computePlannerUnplaceablePolicyFingerprint,
   isPlannerGoalUnplaceableReason,
   isPlannerGoalUnplaceableRecordValid,
   type PlannerGoalUnplaceableRecord,
@@ -439,7 +439,7 @@ async function prepareOnce({
     preparation.snapshot.preferences?.default_policy ??
       createDefaultPlannerPolicy(timezone, new Date().toISOString())
   );
-  const policyFingerprint = canonicalHash(policy);
+  const policyFingerprint = computePlannerUnplaceablePolicyFingerprint(policy);
   const windows = buildPreparationWindows(asOfDate);
   const preparationStart = windows[0]!.start;
   const preparationEnd = windows.at(-1)!.end;

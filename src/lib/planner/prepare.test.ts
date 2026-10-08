@@ -8,6 +8,7 @@ import { createDefaultPlannerPolicy } from "@/lib/planner/policy";
 import { computeRequirementFingerprint } from "@/lib/planner/requirements";
 import {
   buildPlannerGoalLockSignature,
+  computePlannerUnplaceablePolicyFingerprint,
   type PlannerGoalUnplaceableRecord,
 } from "@/lib/planner/unplaceable";
 
@@ -17,7 +18,8 @@ const DEFAULT_POLICY = createDefaultPlannerPolicy(
   "UTC",
   "2026-08-01T00:00:00.000Z"
 );
-const DEFAULT_POLICY_FINGERPRINT = canonicalHash(DEFAULT_POLICY);
+const DEFAULT_POLICY_FINGERPRINT =
+  computePlannerUnplaceablePolicyFingerprint(DEFAULT_POLICY);
 
 const mocks = vi.hoisted(() => ({
   loadPlannerPreparationSnapshot: vi.fn(),
@@ -958,6 +960,43 @@ describe("preparePlannerSchedule", () => {
     expect(mocks.runPlannerKernel.mock.calls.some(([kernelInput]) => kernelInput.goals[0]?.id === target.id)).toBe(true);
     expect(mocks.rpc.mock.calls[0]?.[1].p_items).toEqual(expect.arrayContaining([
       expect.objectContaining({ goal_id: target.id, unit_key: "milestone:1" }),
+    ]));
+  });
+
+  it("rechecks capacity cached under source-substitution scheduling", async () => {
+    const source = goal({ id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" });
+    const target = goal({ id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" });
+    const saved = persistedItem({ goal_id: target.id, unit_key: "milestone:1" });
+    const legacyOutcome = unplaceableRecord({
+      goalId: target.id,
+      requirementFingerprint: computeRequirementFingerprint(target),
+      policyFingerprint: canonicalHash(DEFAULT_POLICY),
+      effectiveSpanEnd: target.end_date!,
+      unplacedCount: 1,
+      lockSignature: buildPlannerGoalLockSignature([{
+        unitKey: saved.unit_key,
+        scheduledDate: saved.scheduled_date,
+        locked: saved.locked,
+      }]),
+    });
+    mocks.loadPlannerPreparationSnapshot.mockResolvedValue(
+      preparationSnapshot([source, target], [saved], [legacyOutcome], [], [
+        { sourceGoalId: source.id, targetGoalId: target.id },
+      ])
+    );
+    mocks.runPlannerKernel.mockImplementation((kernelInput) =>
+      kernelOutput(kernelInput.goals[0].id, [
+        { unitKey: "milestone:2", scheduledDate: "2026-08-14" },
+      ])
+    );
+
+    await prepare();
+
+    expect(mocks.runPlannerKernel.mock.calls.some(
+      ([kernelInput]) => kernelInput.goals[0]?.id === target.id
+    )).toBe(true);
+    expect(mocks.rpc.mock.calls[0]?.[1].p_items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ goal_id: target.id, unit_key: "milestone:2" }),
     ]));
   });
 
