@@ -124,6 +124,10 @@
 .tempo-steps button span {
   font-family: var(--type-figure-font);
 }
+.tempo-steps button[data-optional] {
+  border-left: 1px solid var(--border);
+  padding-left: 0.9rem;
+}
 .tempo-heading {
   font-family: var(--type-hero-font);
   font-size: clamp(1.45rem, 2.6vw, 2rem);

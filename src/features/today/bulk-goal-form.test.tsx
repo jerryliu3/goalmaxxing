@@ -99,9 +99,9 @@ vi.mock("sonner", () => ({
   },
 }));
 
-/** Creation links on the card's back (the reward step turns it over), with the same picker as editing. */
+/** Creation links on the card's back (the details turn it over), with the same picker as editing. */
 async function linkToMainGoal(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(await screen.findByRole("button", { name: /05Reward/ }));
+  await user.click(await screen.findByRole("button", { name: /More details/ }));
   await user.click(await screen.findByRole("button", { name: /Also counts toward/ }));
   await user.click(screen.getByRole("option", { name: "Main goal" }));
 }
@@ -245,7 +245,7 @@ describe("BulkGoalForm", () => {
       );
       await linkToMainGoal(user);
 
-      await user.click(screen.getByRole("button", { name: /06Review/ }));
+      await user.click(screen.getByRole("button", { name: /05Review/ }));
       await user.click(
         screen.getByRole("button", { name: /Create \d+ selected goals?/ }),
       );
@@ -329,7 +329,7 @@ describe("BulkGoalForm", () => {
       user,
     );
 
-    await user.click(screen.getByRole("button", { name: /06Review/ }));
+    await user.click(screen.getByRole("button", { name: /05Review/ }));
     await user.click(
       screen.getByRole("button", { name: /Create \d+ selected goals?/ }),
     );
@@ -384,7 +384,7 @@ describe("BulkGoalForm", () => {
     await user.click(screen.getByRole("button", { name: /04Schedule/ }));
     await linkToMainGoal(user);
 
-    await user.click(screen.getByRole("button", { name: /06Review/ }));
+    await user.click(screen.getByRole("button", { name: /05Review/ }));
     await user.click(
       screen.getByRole("button", { name: /Create \d+ selected goals?/ }),
     );
@@ -455,7 +455,7 @@ describe("BulkGoalForm", () => {
     expect(
       screen.getByRole("button", { name: "Fix untitled goal" }),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /06Review/ }));
+    await user.click(screen.getByRole("button", { name: /05Review/ }));
     expect(
       screen.getByRole("button", { name: /Create \d+ selected goals?/ }),
     ).toBeDisabled();

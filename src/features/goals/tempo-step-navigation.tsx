@@ -3,7 +3,9 @@
 import { createContext, useContext } from "react";
 
 export const TempoMethodContext = createContext<(() => void) | null>(null);
-const steps = ["Start", "Intention", "Rhythm", "Schedule", "Reward", "Review"];
+/** The steps a goal needs, numbered; "More details" is optional, so it sits apart unnumbered. */
+const steps = ["Start", "Intention", "Rhythm", "Schedule", "Review", "More details"];
+const OPTIONAL_STEP = steps.length - 1;
 
 export function TempoStepNavigation({
   step,
@@ -16,7 +18,7 @@ export function TempoStepNavigation({
   onStep?: (step: number) => void;
   canVisit?: boolean[];
   disabled?: boolean;
-  /** Wizard steps (0 = Intention) this flow leaves out, e.g. a task has no reward. */
+  /** Wizard steps (0 = Intention) this flow leaves out, e.g. a task has no details. */
   skip?: number[];
 }) {
   const chooseMethod = useContext(TempoMethodContext);
@@ -27,12 +29,13 @@ export function TempoStepNavigation({
           type="button"
           key={name}
           aria-current={step === index ? "step" : undefined}
+          data-optional={index === OPTIONAL_STEP || undefined}
           disabled={
             disabled || (index === 0 ? !chooseMethod : !canVisit[index - 1])
           }
           onClick={() => (index === 0 ? chooseMethod?.() : onStep?.(index - 1))}
         >
-          <span>0{index + 1}</span>
+          <span>{index === OPTIONAL_STEP ? "+" : `0${index + 1}`}</span>
           {name}
         </button>
       ))}
