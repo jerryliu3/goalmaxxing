@@ -145,12 +145,6 @@ describe("PlannerFiltersDialog", () => {
               onChange: vi.fn(),
             },
             {
-              label: "Show completed goals",
-              count: 0,
-              checked: false,
-              onChange: vi.fn(),
-            },
-            {
               label: "Show suppressed linked goals",
               count: 0,
               checked: false,
@@ -166,7 +160,6 @@ describe("PlannerFiltersDialog", () => {
     expect(screen.getByText("Show past goals")).toBeInTheDocument();
     expect(screen.getByText("Show upcoming goals")).toBeInTheDocument();
     expect(screen.getByText("Show archived goals")).toBeInTheDocument();
-    expect(screen.getByText("Show completed goals")).toBeInTheDocument();
     expect(screen.getByText("Show suppressed linked goals")).toBeInTheDocument();
     expect(screen.getByText("(2)")).toBeInTheDocument();
   });
@@ -181,11 +174,11 @@ describe("PlannerFiltersDialog", () => {
         onOpenChange={vi.fn()}
         hideTasks={false}
         onHideTasksChange={vi.fn()}
-        categoryFilters={["Health"]}
+        categoryFilters={["health"]}
         onCategoryFiltersChange={onCategoryFiltersChange}
         categoryOptions={[
-          { value: "Health", label: "Health" },
-          { value: "Personal", label: "Personal" },
+          { value: "health", label: "Health" },
+          { value: "personal", label: "Personal" },
         ]}
         endMonthFilters={["2026-08"]}
         onEndMonthFiltersChange={onEndMonthFiltersChange}
@@ -198,7 +191,7 @@ describe("PlannerFiltersDialog", () => {
 
     await user.click(screen.getByRole("button", { name: "Category" }));
     await user.click(screen.getByRole("checkbox", { name: "Personal" }));
-    expect(onCategoryFiltersChange).toHaveBeenCalledWith(["Health", "Personal"]);
+    expect(onCategoryFiltersChange).toHaveBeenCalledWith(["health", "personal"]);
 
     await user.click(screen.getByRole("button", { name: "Ending in" }));
     await user.click(screen.getByRole("checkbox", { name: "September 2026" }));

@@ -19,7 +19,6 @@ export function useChecklistFilters() {
   const [showEndedGoals, setShowEndedGoals] = useState(false);
   const [showUpcomingGoals, setShowUpcomingGoals] = useState(false);
   const [showArchivedGoals, setShowArchivedGoals] = useState(false);
-  const [showTargetAchievedGoals, setShowTargetAchievedGoals] = useState(false);
   const [showSuppressedLinkedTargets, setShowSuppressedLinkedTargets] = useState(false);
   const [recurrenceFilters, setRecurrenceFilters] = useState<RecurrenceGroup[]>([]);
   const [todaySort, setTodaySort] = useState<GoalDateSort>("earliest_end");
@@ -37,8 +36,6 @@ export function useChecklistFilters() {
     setShowUpcomingGoals,
     showArchivedGoals,
     setShowArchivedGoals,
-    showTargetAchievedGoals,
-    setShowTargetAchievedGoals,
     showSuppressedLinkedTargets,
     setShowSuppressedLinkedTargets,
     recurrenceFilters,
