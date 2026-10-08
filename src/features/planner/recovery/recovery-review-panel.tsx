@@ -52,9 +52,9 @@ function StepNav({ review }: { review: RecoveryReview }) {
 
 /**
  * Recovery mode's suggestions, goal by goal. A side column on desktop, no
- * taller than the calendar beside it or the screen; on phones a short sheet
- * over the tab bar so the calendar stays visible above it, taller on the
- * summary where the list is the point. Hiding it leaves
+ * taller than the calendar beside it or the screen; on smaller screens a short
+ * sheet resting on the recovery bar so the calendar stays visible above it,
+ * taller on the summary where the list is the point. Hiding it leaves
  * recovery mode on; the bar brings it back.
  */
 export function RecoveryReviewPanel({ review }: { review: RecoveryReview }) {
@@ -71,7 +71,8 @@ export function RecoveryReviewPanel({ review }: { review: RecoveryReview }) {
       data-testid="recovery-review-panel"
       className={cn(
         panelClass,
-        "fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-[60] flex flex-col shadow-lg md:bottom-0 md:rounded-b-none lg:sticky lg:top-4 lg:bottom-auto lg:z-auto lg:max-h-[min(100%,calc(100dvh-2rem))] lg:rounded-2xl lg:shadow-none",
+        // Sits on top of the floating recovery bar (5rem up on phones, 1rem from md; 3.25rem tall).
+        "fixed inset-x-3 bottom-[calc(8.75rem+env(safe-area-inset-bottom))] z-[60] flex flex-col shadow-lg md:inset-x-auto md:left-1/2 md:w-full md:max-w-2xl md:-translate-x-1/2 md:bottom-[4.75rem] lg:sticky lg:top-4 lg:bottom-auto lg:left-auto lg:z-auto lg:max-h-[min(100%,calc(100dvh-2rem))] lg:max-w-none lg:translate-x-0 lg:shadow-none",
         goal ? "max-h-[42dvh]" : "max-h-[70dvh]"
       )}
     >
@@ -97,7 +98,7 @@ export function RecoveryReviewPanel({ review }: { review: RecoveryReview }) {
           {goal ? <RecoveryGoalStep goalId={goal.id} review={review} /> : <RecoverySummary review={review} />}
         </div>
       </div>
-      <div className="border-t border-border p-3 md:pb-[calc(env(safe-area-inset-bottom)+0.75rem)] lg:pb-3">
+      <div className="border-t border-border p-3">
         {goal ? <StepNav review={review} /> : <RecoverySummaryActions review={review} />}
       </div>
     </aside>

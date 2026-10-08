@@ -11,6 +11,7 @@ import { PlannerGoalView } from "@/features/planner/goal-view/planner-goal-view"
 import { PlannerCalendarBoard } from "@/features/planner/planner-calendar-board";
 import { PlannerCalendarOverlays } from "@/features/planner/planner-calendar-overlays";
 import { PlannerCalendarToolbar } from "@/features/planner/planner-calendar-toolbar";
+import { PlanningActionBar } from "@/features/planner/plan-action-bar";
 import { PlannerWarningsPanel } from "@/features/planner/planner-warnings-panel";
 import { cn } from "@/lib/utils";
 import type { PlannerEventDetailDialogCallbacks } from "@/features/planner/planner-event-detail-dialog";
@@ -210,8 +211,10 @@ export interface PlannerCalendarSurfaceLayoutProps {
   recoveryMode?: boolean;
   /** Recovery mode without the full calendar: Day lists only the slipped goals' sessions. */
   recoveryGoalsOnly?: boolean;
-  /** Agenda's "N sessions slipped · Review" line, or recovery mode's bar. */
-  recoveryEntry?: ReactNode;
+  /** Agenda's "N sessions slipped · Review" prompt beside the title. */
+  recoveryPrompt?: ReactNode;
+  /** Recovery mode's floating bar. */
+  recoveryBar?: ReactNode;
   /** Recovery mode's suggestions; the calendar makes room for them. */
   recoveryPanel?: ReactNode;
 }
@@ -360,9 +363,11 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     plannerSettingsForm,
     recoveryMode = false,
     recoveryGoalsOnly = false,
-    recoveryEntry = null,
+    recoveryPrompt = null,
+    recoveryBar = null,
     recoveryPanel = null,
   } = props;
+  const showPlanningBar = hasDraftSession && !recoveryMode;
   // Goal View lists goals like Week/Month, so Day's own checklist filters
   // must not replace the planner's Filters while it is open.
   const checklistViewMode = goalViewVisible && viewMode === "day" ? "week" : viewMode;
@@ -447,8 +452,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
   }, [expandedMonthRows, multiMonthGridScrollRef]);
 
   return (
-    <div className="space-y-4">
-      {recoveryEntry}
+    <div className={cn("space-y-4", (showPlanningBar || recoveryMode) && "pb-20")}>
       <PlannerWarningsPanel
         hasPlannerWarnings={hasPlannerWarnings}
         warningsDismissed={warningsDismissed}
@@ -472,21 +476,28 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
           void resetPlan();
         }}
       />
+      {showPlanningBar ? (
+        <PlanningActionBar
+          canSave={canShowSaveAction && !plannerReadOnly}
+          saveLabel={saveButtonLabel}
+          saveBlockedMessage={draftSaveBlockedMessage}
+          saveDisabled={
+            saveLoading ||
+            loading ||
+            !context ||
+            !draftSaveWindow ||
+            !hasUnsavedPlannerChanges ||
+            draftSaveBlocked
+          }
+          discardDisabled={saveLoading || loading}
+          onSave={savePlan}
+          onDiscard={discardDraftChanges}
+        />
+      ) : null}
+      {recoveryBar}
       <PlannerCalendarToolbar
-        hasDraftSession={hasDraftSession && !recoveryMode}
         plannerReadOnly={plannerReadOnly}
-        canShowSaveAction={canShowSaveAction}
-        saveButtonLabel={saveButtonLabel}
-        draftSaveBlockedMessage={draftSaveBlockedMessage}
-        saveDisabled={
-          saveLoading ||
-          loading ||
-          !context ||
-          !draftSaveWindow ||
-          !hasUnsavedPlannerChanges ||
-          draftSaveBlocked
-        }
-        undoDisabled={saveLoading || loading}
+        status={recoveryPrompt}
         loading={loading}
         viewMode={viewMode}
         goalViewOpen={goalViewOpen}
@@ -497,8 +508,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         referenceMonth={month ?? focusedDay.slice(0, 7)}
         endMonthFilters={endMonthFilters}
         onEndMonthFiltersChange={setEndMonthFilters}
-        onSave={savePlan}
-        onDiscardDraftChanges={discardDraftChanges}
         onViewModeChange={setCalendarViewMode}
         goalIdFilters={goalIdFilters}
         onGoalIdFiltersChange={setGoalIdFilters}

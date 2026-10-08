@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RecoverySession, RecoverySnapshot } from "@/lib/planner/recovery/contract";
 import { REBALANCE_FALLBACK } from "@/lib/planner/recovery/model";
-import { RecoveryEntry } from "@/features/planner/recovery/recovery-entry";
+import { RecoveryBar, RecoveryPrompt } from "@/features/planner/recovery/recovery-entry";
 import { RecoveryReviewPanel } from "@/features/planner/recovery/recovery-review-panel";
 import type { DraftMove } from "@/features/planner/recovery/review-state";
 import { useRecoveryReview } from "@/features/planner/recovery/use-recovery-review";
@@ -87,7 +87,8 @@ function Harness({ draft: initialDraft = [], requested = false }: { draft?: Draf
   });
   return (
     <>
-      <RecoveryEntry review={review} />
+      <RecoveryPrompt review={review} />
+      <RecoveryBar review={review} />
       <RecoveryReviewPanel review={review} />
       <button
         type="button"
@@ -129,6 +130,8 @@ describe("recovery mode", () => {
 
     await user.click(await screen.findByRole("button", { name: "2 sessions slipped · Review" }));
     expect(screen.getByRole("region", { name: "Recovery mode" })).toHaveTextContent("2 left");
+    // The prompt steps aside while the bar owns recovery mode.
+    expect(screen.queryByTestId("recovery-entry")).toBeNull();
     expect(screen.getByText("Goal 1 of 2")).toBeInTheDocument();
     expect(mocks.onLensChange).toHaveBeenLastCalledWith({
       goalIds: [READ, RUN],

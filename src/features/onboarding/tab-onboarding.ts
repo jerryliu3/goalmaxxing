@@ -26,7 +26,7 @@ export const TAB_ONBOARDING_TOURS: Record<TabOnboardingKey, TabOnboardingStep[]>
     {
       title: "Try the board",
       description:
-        "Drag sessions to rearrange them. That opens Planning mode so you can preview, then Save or Undo.",
+        "Drag sessions to rearrange them. That opens Planning mode so you can preview, then Save or Discard from the bar at the bottom.",
       target: "planner.calendar.today",
       fallbackTargets: ["planner.calendar.item", "planner.calendar.board"],
     },

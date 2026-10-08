@@ -7,13 +7,7 @@ function renderToolbar(
   overrides?: Partial<ComponentProps<typeof PlannerCalendarToolbar>>
 ) {
   const props: ComponentProps<typeof PlannerCalendarToolbar> = {
-    hasDraftSession: false,
     plannerReadOnly: false,
-    canShowSaveAction: false,
-    saveButtonLabel: "Save plan",
-    draftSaveBlockedMessage: null,
-    saveDisabled: false,
-    undoDisabled: false,
     loading: false,
     viewMode: "week",
     canOpenSettings: true,
@@ -22,8 +16,6 @@ function renderToolbar(
     referenceMonth: "2026-08",
     endMonthFilters: [],
     onEndMonthFiltersChange: vi.fn(),
-    onSave: vi.fn(),
-    onDiscardDraftChanges: vi.fn(),
     onViewModeChange: vi.fn(),
     goalIdFilters: [],
     onGoalIdFiltersChange: vi.fn(),
@@ -128,13 +120,16 @@ describe("PlannerCalendarToolbar", () => {
     expect(title.parentElement).toContainElement(helpButton);
   });
 
-  it("themes Planning Mode with secondary chrome instead of warning yellow", () => {
-    renderToolbar({ hasDraftSession: true });
+  it("renders the status slot in the heading row, not save controls", () => {
+    renderToolbar({ status: <button type="button">3 sessions slipped · Review</button> });
 
-    const badge = screen.getByTestId("planner-preview-mode-badge");
-    expect(badge).toHaveTextContent("Planning mode");
-    expect(badge).toHaveAttribute("data-variant", "secondary");
-    expect(badge.className).not.toMatch(/warning/);
+    const heading = screen.getByRole("heading", { name: "Agenda" });
+    const status = screen.getByRole("button", { name: "3 sessions slipped · Review" });
+    expect(
+      heading.compareDocumentPosition(status) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Save plan" })).toBeNull();
+    expect(screen.queryByTestId("planner-preview-mode-badge")).toBeNull();
   });
 
   it("shows hidden linked goals from the plan help dialog", async () => {

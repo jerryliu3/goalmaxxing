@@ -1,8 +1,7 @@
 "use client";
 
 import { CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,13 +29,9 @@ const PLAN_VIEW_OPTIONS: ReadonlyArray<SegmentedControlOption<PlannerCalendarVie
 ];
 
 interface PlannerCalendarToolbarProps {
-  hasDraftSession: boolean;
   plannerReadOnly: boolean;
-  canShowSaveAction: boolean;
-  saveButtonLabel: string;
-  draftSaveBlockedMessage: string | null;
-  saveDisabled: boolean;
-  undoDisabled: boolean;
+  /** Right of the Agenda title: the recovery prompt when sessions slipped. */
+  status?: ReactNode;
   loading: boolean;
   viewMode: PlannerCalendarViewMode;
   goalViewOpen: boolean;
@@ -46,8 +41,6 @@ interface PlannerCalendarToolbarProps {
   referenceMonth: string;
   endMonthFilters: string[];
   onEndMonthFiltersChange: (months: string[]) => void;
-  onSave: () => void;
-  onDiscardDraftChanges: () => void;
   onViewModeChange: (viewMode: PlannerCalendarViewMode) => void;
   goalIdFilters: string[];
   onGoalIdFiltersChange: (goalIds: string[]) => void;
@@ -93,13 +86,8 @@ function PlanViewModeSwitch({
 }
 
 export function PlannerCalendarToolbar({
-  hasDraftSession,
   plannerReadOnly,
-  canShowSaveAction,
-  saveButtonLabel,
-  draftSaveBlockedMessage,
-  saveDisabled,
-  undoDisabled,
+  status = null,
   loading,
   viewMode,
   goalViewOpen,
@@ -109,8 +97,6 @@ export function PlannerCalendarToolbar({
   referenceMonth,
   endMonthFilters,
   onEndMonthFiltersChange,
-  onSave,
-  onDiscardDraftChanges,
   onViewModeChange,
   goalIdFilters,
   onGoalIdFiltersChange,
@@ -146,45 +132,15 @@ export function PlannerCalendarToolbar({
                   <CircleHelp />
                 </Button>
               </Tooltip>
-              {hasDraftSession ? (
-                <Badge
-                  data-testid="planner-preview-mode-badge"
-                  variant="secondary"
-                  className="h-7 border-primary/40 px-3 text-sm font-semibold"
-                >
-                  Planning mode
-                </Badge>
-              ) : null}
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
-            {!plannerReadOnly && canShowSaveAction && hasDraftSession ? (
-              <Button
-                type="button"
-                size="sm"
-                onClick={onSave}
-                title={draftSaveBlockedMessage ?? undefined}
-                disabled={saveDisabled}
-              >
-                {saveButtonLabel}
-              </Button>
-            ) : null}
             {plannerReadOnly ? (
               <span className="text-xs text-muted-foreground">
                 Partner completions (view only)
               </span>
             ) : null}
-            {hasDraftSession ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onDiscardDraftChanges}
-                disabled={undoDisabled}
-              >
-                Undo
-              </Button>
-            ) : null}
+            {status}
           </div>
         </div>
         <div data-onboarding="planner.calendar.controls" className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1">
