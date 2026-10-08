@@ -4,9 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { captureViewportRect } from "@/lib/xp/events";
 import { resolveUserTimezone } from "@/lib/dates/timezone";
-import {
-  isProgressContextAuthenticationError,
-} from "@/lib/goals/progress-context";
 import type { CompletionDateFact, Goal } from "@/lib/goals/types";
 import { resolveChecklistCompletionIntent } from "@/lib/planner/completion-intent";
 import {
@@ -24,12 +21,6 @@ interface UseChecklistCompletionActionsOptions {
   todayLocalDate: string;
   timezone?: string | null;
   completionsByGoal: ReadonlyMap<string, CompletionDateFact[]>;
-  loadData: (options: {
-    showLoading: boolean;
-    forceRefresh: boolean;
-    completionOnly: boolean;
-  }) => Promise<unknown>;
-  redirectToLogin: () => void;
 }
 
 export function useChecklistCompletionActions({
@@ -38,8 +29,6 @@ export function useChecklistCompletionActions({
   todayLocalDate,
   timezone,
   completionsByGoal,
-  loadData,
-  redirectToLogin,
 }: UseChecklistCompletionActionsOptions) {
   const [savingGoalId, setSavingGoalId] = useState<string | null>(null);
   const [optimisticFacts, setOptimisticFacts] = useState<OptimisticCompletionFacts>(
@@ -50,32 +39,6 @@ export function useChecklistCompletionActions({
   );
   const recentlyCompletedTimerRef = useRef<number | null>(null);
   const runCompletionMutation = useCompletionMutation();
-
-  const refreshChecklistInBackground = useCallback(
-    (scrollY: number) => {
-      void loadData({ showLoading: false, forceRefresh: true, completionOnly: true })
-        .then(() => {
-          requestAnimationFrame(() => {
-            window.scrollTo({ top: scrollY, behavior: "auto" });
-          });
-        })
-        .catch((error) => {
-          if (isProgressContextAuthenticationError(error)) {
-            redirectToLogin();
-            return;
-          }
-          const timeoutLike =
-            error instanceof Error &&
-            error.message.toLowerCase().includes("timed out");
-          toast.error(
-            timeoutLike
-              ? "Completion updated, but calendar refresh timed out. Please refresh the page."
-              : "Completion updated, but calendar refresh failed. Please refresh the page."
-          );
-        });
-    },
-    [loadData, redirectToLogin]
-  );
 
   const pinRecentlyCompletedGoal = useCallback((goalId: string) => {
     setRecentlyCompletedGoalId(goalId);
@@ -136,7 +99,6 @@ export function useChecklistCompletionActions({
           routeDesiredFactState === "present"
         )
       );
-      const currentScrollY = window.scrollY;
       const result = await runCompletionMutation({
         decision,
         desiredFactState: routeDesiredFactState,
@@ -169,12 +131,10 @@ export function useChecklistCompletionActions({
       }
 
       setSavingGoalId(null);
-      refreshChecklistInBackground(currentScrollY);
     },
     [
       completionsByGoal,
       readOnly,
-      refreshChecklistInBackground,
       runCompletionMutation,
       pinRecentlyCompletedGoal,
       timezone,

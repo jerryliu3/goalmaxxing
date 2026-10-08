@@ -8,6 +8,8 @@ import {
   buildChecklistDataCacheKey,
   buildPartnerCacheScope,
 } from "@/lib/cache/planner-tab-cache";
+import { useCoalescedRefresh } from "@/lib/cache/use-coalesced-refresh";
+import { reportError } from "@/lib/observability/report-error";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import {
   isTabDataCacheFresh,
@@ -15,7 +17,7 @@ import {
   writeTabDataCache,
 } from "@/lib/cache/tab-data-cache";
 import { toLocalDateString } from "@/lib/dates/day";
-import { fetchProgressContext } from "@/lib/goals/progress-context";
+import { fetchProgressContext, isProgressContextAuthenticationError } from "@/lib/goals/progress-context";
 import { createClient } from "@/lib/supabase/client";
 import { useDuoLaneError } from "@/features/social/duo/use-duo-lane-error";
 import { useDuo } from "@/features/social/duo/duo-context";
@@ -138,11 +140,9 @@ export function useChecklistData({
       {
         showLoading = true,
         forceRefresh = false,
-        completionOnly = false,
       }: {
         showLoading?: boolean;
         forceRefresh?: boolean;
-        completionOnly?: boolean;
       } = {}
     ) => {
       const requestId = loadRequestIdRef.current + 1;
@@ -169,7 +169,6 @@ export function useChecklistData({
           return;
         }
 
-        const targetSubjectUserId = subjectUserId ?? userId;
         const todayDataCacheKey = resolveChecklistCacheKey({
           viewerUserId: userId,
           subjectUserId,
@@ -196,38 +195,6 @@ export function useChecklistData({
           setLoading(true);
         }
         try {
-          if (completionOnly) {
-            const progress = await withAbortSignal(
-              fetchProgressContext({
-                asOfDate: todayLocalDate,
-                timezone: timezone ?? undefined,
-                viewDate: currentViewDateRef.current,
-                subjectUserId:
-                  targetSubjectUserId === userId ? undefined : targetSubjectUserId,
-                forceRefresh,
-              }),
-              controller.signal
-            );
-            const previousData = dataRef.current;
-            if (previousData.userId === targetSubjectUserId && previousData.goals.length > 0) {
-              if (requestId !== loadRequestIdRef.current) {
-                return;
-              }
-              const nextData: TodayData = {
-                ...previousData,
-                completions: progress.facts,
-                progress,
-              };
-              dataRef.current = nextData;
-              setData(nextData);
-              if (todayDataCacheKey) {
-                writeTabDataCache(todayDataCacheKey, nextData);
-              }
-              clearLaneError();
-              return;
-            }
-          }
-
           const nextData = await withAbortSignal(
             fetchChecklistTodayData({
               userId,
@@ -260,6 +227,9 @@ export function useChecklistData({
             setLoading(false);
           }
         }
+      } catch (error) {
+        if (requestId !== loadRequestIdRef.current) return;
+        throw error;
       } finally {
         window.clearTimeout(timeoutId);
       }
@@ -346,13 +316,21 @@ export function useChecklistData({
     viewerUserId,
   ]);
 
-  const refreshInBackground = useCallback(() => {
-    void loadData({ showLoading: false, forceRefresh: true }).catch(
-      (error: unknown) => {
-        reportLoadError(error);
+  const refreshInBackground = useCoalescedRefresh(async () => {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        await loadData({ showLoading: false, forceRefresh: true });
+        return;
+      } catch (error) {
+        if (isProgressContextAuthenticationError(error)) {
+          redirectToLogin();
+          return;
+        }
+        reportError(error, { surface: "checklist-background-refresh" });
+        if (attempt === 1 && failClosed) reportLoadError(error);
       }
-    );
-  }, [loadData, reportLoadError]);
+    }
+  });
 
   useEffect(() => {
     if (!isActive || !pendingRefreshRef.current) {

@@ -39,6 +39,7 @@ import {
   invalidatePlannerRelatedTabCaches,
 } from "@/lib/cache/planner-tab-cache";
 import { readTabDataCache, writeTabDataCache } from "@/lib/cache/tab-data-cache";
+import { useCoalescedRefresh } from "@/lib/cache/use-coalesced-refresh";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import type {
   CalendarSurfaceProps,
@@ -450,6 +451,12 @@ export function CalendarSurface({
     draftSaveWindowResult,
     draftSaveWindow,
   } = draftSession;
+  const refreshContextInBackground = useCoalescedRefresh(async () => {
+    const options = { showLoading: false, toastOnError: false, forcePrepare: true };
+    const result = await loadContext(options);
+    // One quiet retry; a persistent failure stays available through the existing inline Retry.
+    if (result === "failed") await loadContext(options);
+  });
   usePlannerTabCacheInvalidation(() => {
     if (activeTab !== "calendar") {
       return;
@@ -458,10 +465,7 @@ export function CalendarSurface({
       skipInvalidationReloadRef.current = false;
       return;
     }
-    void loadContext({
-      showLoading: false,
-      forcePrepare: true,
-    });
+    refreshContextInBackground();
   });
   const {
     entriesByDate,
@@ -1020,7 +1024,7 @@ export function CalendarSurface({
         });
         handlePlannerMutation();
         const loaded = await loadContext({ showLoading: false, toastOnError: false });
-        if (loaded) {
+        if (loaded === "applied") {
           dispatchDraftCommand({
             type: "remove_kind",
             kind: "move_item",

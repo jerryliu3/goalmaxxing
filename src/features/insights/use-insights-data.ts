@@ -8,6 +8,7 @@ import {
   buildInsightsDataCacheKey,
   buildPartnerCacheScope,
 } from "@/lib/cache/planner-tab-cache";
+import { useCoalescedRefresh } from "@/lib/cache/use-coalesced-refresh";
 import { usePlannerTabCacheInvalidation } from "@/lib/cache/use-planner-tab-cache-invalidation";
 import {
   isTabDataCacheFresh,
@@ -19,7 +20,6 @@ import { toLocalDateString } from "@/lib/dates/day";
 import { createClient } from "@/lib/supabase/client";
 import { useDuoLaneError } from "@/features/social/duo/use-duo-lane-error";
 import { useDuo } from "@/features/social/duo/duo-context";
-import { subscribeXpRefresh } from "@/lib/xp/events";
 import {
   emptyInsights,
   fetchInsightsData,
@@ -188,9 +188,8 @@ export function useInsightsData({
           }
         }
       } catch (error) {
-        if (requestId === loadRequestIdRef.current) {
-          setLoadError(error instanceof Error ? error.message : "Goal history could not be loaded.");
-        }
+        if (requestId !== loadRequestIdRef.current) return;
+        setLoadError(error instanceof Error ? error.message : "Goal history could not be loaded.");
         reportError(error, { surface: "insights" });
         throw error;
       } finally {
@@ -201,15 +200,21 @@ export function useInsightsData({
     [clearLaneError, partnerId, redirectToLogin, selectedYear, subjectUserId, supabase, viewerUserId]
   );
 
-  const refreshInBackground = useCallback(() => {
-    void loadData({ showLoading: false, forceRefresh: true }).catch((error) => {
-      if (error instanceof InsightsStatsAuthenticationError) {
-        redirectToLogin();
+  const refreshInBackground = useCoalescedRefresh(async () => {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        await loadData({ showLoading: false, forceRefresh: true });
         return;
+      } catch (error) {
+        if (error instanceof InsightsStatsAuthenticationError) {
+          redirectToLogin();
+          return;
+        }
+        // loadData reports the failure; saved completions must not trigger refresh toasts.
+        if (attempt === 1 && failClosed) reportLoadError(error);
       }
-      reportLoadError(error);
-    });
-  }, [loadData, redirectToLogin, reportLoadError]);
+    }
+  });
 
   useEffect(() => {
     const run = async () => {
@@ -228,10 +233,6 @@ export function useInsightsData({
 
     void run();
   }, [loadData, redirectToLogin, reportLoadError]);
-
-  useEffect(() => {
-    return subscribeXpRefresh(refreshInBackground);
-  }, [refreshInBackground]);
 
   usePlannerTabCacheInvalidation(refreshInBackground);
 

@@ -520,8 +520,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
             </div>
           ) : month ? (
             <>
-              {error && goalViewOpen ? <div role="alert" className="flex items-center gap-3 text-sm text-destructive">
-                <p>{error}</p><button type="button" className="underline" onClick={onGoalTimelineRetry}>Retry loading dates</button>
+              {error ? <div role="status" className="flex items-center gap-3 text-sm text-muted-foreground">
+                <p>Calendar could not refresh.</p><button type="button" className="underline" onClick={onGoalTimelineRetry}>Retry</button>
               </div> : null}
               <PlannerCalendarBoard
                 loading={loading}

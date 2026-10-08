@@ -1,5 +1,7 @@
 "use client";
 
+import type { LoadPlannerContextOptions, PlannerContextLoadResult } from "@/features/planner/use-planner-context-loader";
+
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import type {
@@ -40,13 +42,7 @@ interface UsePlannerPersistenceActionsArgs {
   clearDraftSession: () => void;
   onScheduleDigestChange: (scheduleDigest: string | null, savedItems: SavedPlannerItem[] | null) => void;
   handlePlannerMutation: () => void;
-  loadContext: (options?: {
-    showLoading?: boolean;
-    toastOnError?: boolean;
-    forcePrepare?: boolean;
-    clearCachedContext?: boolean;
-    rebalanceExistingAssignments?: boolean;
-  }) => Promise<boolean>;
+  loadContext: (options?: LoadPlannerContextOptions) => Promise<PlannerContextLoadResult>;
   cacheDraftPreviewForWindow: (args: {
     preview: NonNullable<PlannerContextPayload["preview"]>;
     window: { start: string; end: string };
@@ -248,7 +244,7 @@ export function usePlannerPersistenceActions({
           timeoutMessage:
             "Plan saved, but calendar refresh timed out. Please refresh the page.",
         });
-        if (!refreshed) {
+        if (refreshed === "failed") {
           toast.warning(
             "Plan saved. Calendar reload is temporarily unavailable, but the draft is no longer pending."
           );
@@ -314,7 +310,7 @@ export function usePlannerPersistenceActions({
           }),
           timeoutMessage: "Plan reset, but calendar refresh timed out. Please refresh the page.",
         });
-        if (!refreshed) {
+        if (refreshed === "failed") {
           toast.error("Plan reset, but calendar refresh failed. Please refresh the page.");
           return;
         }
@@ -376,7 +372,7 @@ export function usePlannerPersistenceActions({
         timeoutMessage:
           "Full reset ran, but calendar refresh timed out. Please refresh the page.",
       });
-      if (!refreshed) {
+      if (refreshed === "failed") {
         toast.error("Full reset ran, but calendar refresh failed. Please refresh the page.");
         return;
       }
@@ -447,7 +443,7 @@ export function usePlannerPersistenceActions({
           timeoutMessage:
             "Goal reset ran, but calendar refresh timed out. Please refresh the page.",
         });
-        if (!refreshed) {
+        if (refreshed === "failed") {
           toast.error("Goal reset ran, but calendar refresh failed. Please refresh the page.");
           return;
         }
@@ -501,7 +497,7 @@ export function usePlannerPersistenceActions({
         timeoutMessage:
           "Schedule rebuild ran, but calendar refresh timed out. Please refresh the page.",
       });
-      if (!refreshed) {
+      if (refreshed === "failed") {
         toast.error("Schedule rebuild ran, but calendar refresh failed. Please refresh the page.");
         return;
       }

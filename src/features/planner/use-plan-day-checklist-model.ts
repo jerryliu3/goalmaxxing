@@ -35,7 +35,7 @@ export function usePlanDayChecklistModel({
     dayFilterValue: filters.showTargetAchievedGoals,
     plannerShowCompletedGoals,
   });
-  const { data, loading, loadData, redirectToLogin, todayLocalDate } =
+  const { data, loading, todayLocalDate } =
     useChecklistData({
       isActive,
       viewDate,
@@ -80,8 +80,6 @@ export function usePlanDayChecklistModel({
     todayLocalDate: completionAsOfDate,
     timezone,
     completionsByGoal,
-    loadData,
-    redirectToLogin,
   });
   const mergedListModel = useMemo(
     () => ({

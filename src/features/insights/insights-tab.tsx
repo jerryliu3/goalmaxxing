@@ -229,7 +229,7 @@ export function InsightsTab({
   const aggregateDrilldownRef = useRef<HTMLDivElement | null>(null);
   const runCompletionMutation = useCompletionMutation();
   const selectedYear = useMemo(() => format(monthCursor, "yyyy"), [monthCursor]);
-  const { state, loading, laneError, loadData, redirectToLogin } = useInsightsData({
+  const { state, loading, laneError, loadError, reload, loadData, redirectToLogin } = useInsightsData({
     subjectUserId,
     selectedYear,
     failClosed: Boolean(readOnly && subjectUserId),
@@ -382,32 +382,6 @@ export function InsightsTab({
     [progressByGoal, visiblePerGoalHeatmaps]
   );
 
-  const refreshInsightsInBackground = useCallback(
-    (scrollY: number) => {
-      void loadData({ showLoading: false, forceRefresh: true })
-        .then(() => {
-          requestAnimationFrame(() => {
-            window.scrollTo({ top: scrollY, behavior: "auto" });
-          });
-        })
-        .catch((error) => {
-          if (isProgressContextAuthenticationError(error)) {
-            redirectToLogin();
-            return;
-          }
-          const timeoutLike =
-            error instanceof Error &&
-            error.message.toLowerCase().includes("timed out");
-          toast.error(
-            timeoutLike
-              ? "Completion updated, but calendar refresh timed out. Please refresh the page."
-              : "Completion updated, but calendar refresh failed. Please refresh the page."
-          );
-        });
-    },
-    [loadData, redirectToLogin]
-  );
-
   const toggleMilestoneDateSelection = useCallback(
     async (
       goal: Goal,
@@ -456,7 +430,6 @@ export function InsightsTab({
       }
 
       setPendingRetroDate(completionDate);
-      const currentScrollY = window.scrollY;
       const { decision, mutation } = intent;
 
       const result = await runCompletionMutation({
@@ -483,9 +456,8 @@ export function InsightsTab({
 
       toast.success(isSelected ? `Removed ${completionDate}.` : `Selected ${completionDate}.`);
       setPendingRetroDate(null);
-      refreshInsightsInBackground(currentScrollY);
     },
-    [completionTimezone, pendingRetroDate, readOnly, refreshInsightsInBackground, runCompletionMutation, todayLocal]
+    [completionTimezone, pendingRetroDate, readOnly, runCompletionMutation, todayLocal]
   );
 
   const toggleRecurringDateSelection = useCallback(
@@ -528,7 +500,6 @@ export function InsightsTab({
       }
 
       setPendingRetroDate(completionDate);
-      const currentScrollY = window.scrollY;
       const { decision, mutation } = intent;
 
       const result = await runCompletionMutation({
@@ -555,9 +526,8 @@ export function InsightsTab({
 
       toast.success(hasCompletionOnDate ? `Removed ${completionDate}.` : `Selected ${completionDate}.`);
       setPendingRetroDate(null);
-      refreshInsightsInBackground(currentScrollY);
     },
-    [completionTimezone, pendingRetroDate, readOnly, refreshInsightsInBackground, runCompletionMutation, todayLocal]
+    [completionTimezone, pendingRetroDate, readOnly, runCompletionMutation, todayLocal]
   );
 
   const saveMilestoneNames = useCallback(
@@ -703,7 +673,14 @@ export function InsightsTab({
     heatmapEditable
   );
   const ledgerHelp = (
-    <p className="text-sm text-muted-foreground">{ledgerCaption}</p>
+    <div className="space-y-1">
+      <p className="text-sm text-muted-foreground">{ledgerCaption}</p>
+      {loadError ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          Progress could not refresh. <button type="button" className="underline underline-offset-2" onClick={reload}>Retry</button>
+        </p>
+      ) : null}
+    </div>
   );
 
   const openLedgerDrilldown = (
