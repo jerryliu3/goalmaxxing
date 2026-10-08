@@ -10,7 +10,7 @@ import { createDefaultGoalCreationFields } from "@/lib/goals/creation-model";
 import { toLocalDateString } from "@/lib/dates/day";
 import { PracticeSessionStep } from "./practice-session-step";
 
-const TARGET = 3;
+const TARGET = 7;
 
 export function PracticeGoalStep({ onComplete }: { onComplete: () => void }) {
   const cardRef = useRef<HTMLDivElement>(null);

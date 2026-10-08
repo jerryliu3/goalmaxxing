@@ -145,25 +145,45 @@ export function JourneyIntroPreferencesStep({
         onReadyChange={onProfileReadyChange}
       />
       <div className="tempo-creation space-y-4">
-        <label className="block space-y-2">
-          <Label className="tempo-label">Timezone</Label>
-          <Select
-            value={value.timezone}
-            onValueChange={(nextTimezone) => onChange({ ...value, timezone: nextTimezone })}
-            disabled={loading}
-          >
-            <SelectTrigger className="h-11 w-full rounded-xl px-3 text-base">
-              <SelectValue placeholder="Select timezone" />
-            </SelectTrigger>
-            <SelectContent className="max-h-80">
-              {timezoneOptions.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
+          <label className="block min-w-0 space-y-2">
+            <Label className="tempo-label">Timezone</Label>
+            <Select
+              value={value.timezone}
+              onValueChange={(nextTimezone) => onChange({ ...value, timezone: nextTimezone })}
+              disabled={loading}
+            >
+              <SelectTrigger className="h-11 w-full rounded-xl px-3 text-base">
+                <SelectValue placeholder="Select timezone" />
+              </SelectTrigger>
+              <SelectContent className="max-h-80">
+                {timezoneOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </label>
+          <div className="space-y-2">
+            <Label className="tempo-label">Profile visibility</Label>
+            <div className="tempo-choices flex-nowrap" role="group" aria-label="Profile visibility" style={{ flexWrap: "nowrap" }}>
+              {([
+                ["Public", true],
+                ["Private", false],
+              ] as const).map(([label, visible]) => (
+                <button
+                  key={label}
+                  type="button"
+                  aria-pressed={profileVisible === visible}
+                  onClick={() => onChange({ ...value, socialActivityVisible: visible })}
+                >
+                  {label}
+                </button>
               ))}
-            </SelectContent>
-          </Select>
-        </label>
+            </div>
+          </div>
+        </div>
         <div className="space-y-2">
           <Label className="tempo-label">First day of week</Label>
           <TempoGoalChoices
@@ -175,23 +195,6 @@ export function JourneyIntroPreferencesStep({
               weekStartsOn: normalizeWeekStartsOn(Number.parseInt(nextValue, 10)),
             })}
           />
-        </div>
-        <div className="space-y-2">
-          <Label className="tempo-label">Profile visibility</Label>
-          <TempoGoalChoices
-            label="Profile visibility"
-            value={profileVisible ? "public" : "private"}
-            options={[
-              { value: "public", label: "Public" },
-              { value: "private", label: "Private" },
-            ]}
-            onChange={(next) => onChange({ ...value, socialActivityVisible: next === "public" })}
-          />
-          <p role="status" className="text-sm text-muted-foreground">
-            {profileVisible
-              ? "Public. This card can appear on your profile, in Feed, and on leaderboards."
-              : "Private. This card stays hidden from other people."}
-          </p>
         </div>
       </div>
     </fieldset>

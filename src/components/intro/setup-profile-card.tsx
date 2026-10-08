@@ -120,6 +120,8 @@ export function SetupProfileCard({
 
   return (
     <div className="space-y-3">
+      <div className="relative">
+      <div className="[zoom:0.5]">
       <ProfileMembershipCard
         profile={{
           subjectUserId: userId,
@@ -157,6 +159,14 @@ export function SetupProfileCard({
           onRemoveAvatar: () => setDraft((current) => current && { ...current, avatarUrl: "" }),
         }}
       />
+      </div>
+      <p
+        role="status"
+        className={`pointer-events-none absolute top-2 right-2 z-40 rounded-full border px-2.5 py-1 text-[13px] font-semibold shadow-sm ${isPrivate ? "border-border bg-background text-muted-foreground" : "border-foreground bg-foreground text-background"}`}
+      >
+        {isPrivate ? "Private" : "Public"}
+      </p>
+      </div>
       {!usernameValid ? (
         <p role="alert" className="text-xs font-semibold text-primary">
           Usernames are 3–32 lowercase letters, numbers, or underscores.
