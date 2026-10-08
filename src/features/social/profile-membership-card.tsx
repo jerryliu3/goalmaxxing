@@ -406,7 +406,7 @@ export function ProfileMembershipCard({
       </MaterialStage>
       {editor ? (
         <Dialog open={photoOpen} onOpenChange={setPhotoOpen}>
-          <DialogContent>
+          <DialogContent className="z-[90]" overlayClassName="z-[90]">
             <DialogHeader>
               <DialogTitle>Profile photo</DialogTitle>
               <DialogDescription>

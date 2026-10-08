@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { Label } from "@/components/ui/label";
+import { TempoGoalChoices } from "@/features/goals/tempo-goal-choices";
+import "@/features/goals/tempo-goal-creation.css";
+import { SetupProfileCard } from "./setup-profile-card";
 import {
   Select,
   SelectContent,
@@ -18,7 +21,6 @@ import { resolveUserTimezone } from "@/lib/dates/timezone";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
 import { createDefaultPlannerPolicy, plannerPolicySchema, type PlannerPolicy } from "@/lib/planner/policy";
 import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
 
 interface PlannerPreferencesContextPayload {
   preferences: {
@@ -112,37 +114,45 @@ export async function saveJourneyIntroPreferences(
 }
 
 interface JourneyIntroPreferencesStepProps {
+  userId: string;
   value: JourneyIntroPreferencesValue;
   onChange: (next: JourneyIntroPreferencesValue) => void;
   loading?: boolean;
+  saveProfileRef: { current: () => Promise<void> };
+  onProfileReadyChange: (ready: boolean) => void;
 }
 
 export function JourneyIntroPreferencesStep({
+  userId,
   value,
   onChange,
   loading = false,
+  saveProfileRef,
+  onProfileReadyChange,
 }: JourneyIntroPreferencesStepProps) {
   const timezoneOptions = useMemo(
     () => buildTimezoneOptions(value.timezone),
     [value.timezone]
   );
 
+  const profileVisible = value.socialActivityVisible !== false;
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block space-y-1">
-          <Label className="text-xs text-muted-foreground">Timezone</Label>
+    <fieldset disabled={loading} className="min-w-0 space-y-5 border-0 p-0 disabled:opacity-60">
+      <SetupProfileCard
+        userId={userId}
+        isPrivate={!profileVisible}
+        saveRef={saveProfileRef}
+        onReadyChange={onProfileReadyChange}
+      />
+      <div className="tempo-creation space-y-4">
+        <label className="block space-y-2">
+          <Label className="tempo-label">Timezone</Label>
           <Select
             value={value.timezone}
-            onValueChange={(nextTimezone) =>
-              onChange({
-                ...value,
-                timezone: nextTimezone,
-              })
-            }
+            onValueChange={(nextTimezone) => onChange({ ...value, timezone: nextTimezone })}
             disabled={loading}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-11 w-full rounded-xl px-3 text-base">
               <SelectValue placeholder="Select timezone" />
             </SelectTrigger>
             <SelectContent className="max-h-80">
@@ -154,63 +164,37 @@ export function JourneyIntroPreferencesStep({
             </SelectContent>
           </Select>
         </label>
-
-        <label className="block space-y-1">
-          <Label className="text-xs text-muted-foreground">First day of week</Label>
-          <Select
+        <div className="space-y-2">
+          <Label className="tempo-label">First day of week</Label>
+          <TempoGoalChoices
+            label="First day of week"
             value={`${value.weekStartsOn}`}
-            onValueChange={(nextValue) =>
-              onChange({
-                ...value,
-                weekStartsOn: normalizeWeekStartsOn(
-                  Number.parseInt(nextValue, 10)
-                ),
-              })
-            }
-            disabled={loading}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {weekStartOptions.map((option) => (
-                <SelectItem key={option.value} value={`${option.value}`}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </label>
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">Visibility</Label>
-        <div role="group" aria-label="Account visibility" className="flex gap-1.5">
-          {([
-            ["Public", true],
-            ["Private", false],
-          ] as const).map(([label, visible]) => {
-            const selected = (value.socialActivityVisible !== false) === visible;
-            return (
-              <button
-                key={label}
-                type="button"
-                disabled={loading}
-                aria-pressed={selected}
-                className={cn(
-                  "inline-flex h-8 items-center rounded-full border px-3 text-[13px]",
-                  selected
-                    ? "border-foreground bg-foreground font-medium text-background"
-                    : "border-border bg-background text-foreground/80"
-                )}
-                onClick={() => onChange({ ...value, socialActivityVisible: visible })}
-              >
-                {label}
-              </button>
-            );
-          })}
+            options={weekStartOptions.map((option) => ({ value: `${option.value}`, label: option.shortLabel }))}
+            onChange={(nextValue) => onChange({
+              ...value,
+              weekStartsOn: normalizeWeekStartsOn(Number.parseInt(nextValue, 10)),
+            })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label className="tempo-label">Profile visibility</Label>
+          <TempoGoalChoices
+            label="Profile visibility"
+            value={profileVisible ? "public" : "private"}
+            options={[
+              { value: "public", label: "Public" },
+              { value: "private", label: "Private" },
+            ]}
+            onChange={(next) => onChange({ ...value, socialActivityVisible: next === "public" })}
+          />
+          <p role="status" className="text-sm text-muted-foreground">
+            {profileVisible
+              ? "Public. This card can appear on your profile, in Feed, and on leaderboards."
+              : "Private. This card stays hidden from other people."}
+          </p>
         </div>
       </div>
-    </div>
+    </fieldset>
   );
 }
 

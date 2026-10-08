@@ -71,7 +71,7 @@ function XpRewardLayer({ children }: { children: ReactNode }) {
       {children}
       {mounted && createPortal(<div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-[60] overflow-hidden"
+        className="pointer-events-none fixed inset-0 z-[85] overflow-hidden"
         data-motion="xp-reward-overlay"
       >
         {!still && flights.map(flight => {

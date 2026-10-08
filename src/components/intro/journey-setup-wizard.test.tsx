@@ -44,7 +44,10 @@ describe("required setup practice", () => {
     expect(mocks.save).toHaveBeenLastCalledWith({ action: "advance", step: 3 });
     expect(screen.getByRole("button", { name: "Done" })).toBeDisabled();
     expect(screen.getByText("Goal card: Make time to move")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Preview ceremony" }));
+    vi.useFakeTimers();
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Complete the last session" }));
+    act(() => { vi.advanceTimersByTime(COMPLETION_HOLD_MS + 900); });
+    vi.useRealTimers();
     fireEvent.click(screen.getByRole("button", { name: "Return from practice ceremony" }));
     await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Done" })); });
     expect(mocks.save).toHaveBeenLastCalledWith({ action: "complete" });

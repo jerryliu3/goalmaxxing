@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getApiErrorMessage } from "@/lib/api/client";
@@ -10,12 +10,12 @@ import { PracticeSessionStep } from "./practice-session-step";
 import { PracticeMoveStep } from "./practice-move-step";
 import { PracticeGoalStep } from "./practice-goal-step";
 
-const titles = ["Your settings", "Hold to complete", "Move a session", "A finished goal"];
+const titles = ["Welcome", "Mark a session done", "Move a session", "Finish a goal"];
 const descriptions = [
-  "Change these anytime in Settings.",
-  "Hold the circle until it fills.",
-  "Drag the session to another day, then save.",
-  "Preview what finishing a goal looks like.",
+  "Goalmaxxing turns a goal into sessions on your week. You plan the work, mark it done, and the goal card fills in as you go.",
+  "Hold the circle to mark a session complete. This is the same control on your plan, and the stars are the XP it earns.",
+  "Drag a session to another day when your week changes. Save keeps the move. Undo puts it back.",
+  "One session is still missing. Hold it to finish the goal and play the ceremony.",
 ];
 
 export function JourneySetupWizard({ userId, replay, onDone, onCancelReplay }: { userId: string; replay: boolean; onDone: () => void; onCancelReplay: () => void }) {
@@ -26,13 +26,18 @@ export function JourneySetupWizard({ userId, replay, onDone, onCancelReplay }: {
   const [ceremonyViewed, setCeremonyViewed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [profileReady, setProfileReady] = useState(true);
+  const saveProfileRef = useRef<() => Promise<void>>(async () => {});
   const preferences = useJourneyIntroPreferences(userId, true);
-  const eligible = step === 0 ? !preferences.loading && !preferences.error : step === 1 ? held : step === 2 ? moved : ceremonyViewed;
+  const eligible = step === 0 ? !preferences.loading && !preferences.error && profileReady : step === 1 ? held : step === 2 ? moved : ceremonyViewed;
   const advance = async () => {
     if (!eligible || saving) return;
     setSaving(true); setError(null);
     try {
-      if (step === 0) await saveJourneyIntroPreferences(userId, preferences.value);
+      if (step === 0) {
+        await saveJourneyIntroPreferences(userId, preferences.value);
+        await saveProfileRef.current();
+      }
       if (!replay) await account.save(step === 3 ? { action: "complete" } : { action: "advance", step: step + 1 });
       if (step === 3) onDone(); else setStep(value => value + 1);
     } catch (cause) { setError(getApiErrorMessage(cause, "Getting started could not be saved. Try again.")); }
@@ -48,7 +53,7 @@ export function JourneySetupWizard({ userId, replay, onDone, onCancelReplay }: {
         <DialogTitle>{titles[step]}</DialogTitle>
         <DialogDescription>{descriptions[step]}</DialogDescription>
       </DialogHeader>
-      {step === 0 && <JourneyIntroPreferencesStep value={preferences.value} loading={preferences.loading || saving} onChange={preferences.setValue} />}
+      {step === 0 && <JourneyIntroPreferencesStep userId={userId} value={preferences.value} loading={preferences.loading || saving} onChange={preferences.setValue} saveProfileRef={saveProfileRef} onProfileReadyChange={setProfileReady} />}
       {step === 0 && preferences.error && <div role="alert"><p className="text-sm text-destructive">{preferences.error}</p><Button variant="outline" onClick={preferences.reload}>Reload preferences</Button></div>}
       {step === 1 && <PracticeSessionStep completed={held} onComplete={() => setHeld(true)} />}
       {step === 2 && <PracticeMoveStep completed={moved} onComplete={() => setMoved(true)} />}
