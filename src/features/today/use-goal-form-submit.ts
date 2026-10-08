@@ -44,6 +44,10 @@ export function useGoalFormSubmit({
   onExitRefresh,
 }: UseGoalFormSubmitOptions) {
   const isEditing = Boolean(goalId);
+  const [saving, setSaving] = useState(false);
+  const [recovery, setRecovery] = useState<GoalFormRecovery | null>(null);
+  const stableCreateGoalIdRef = useRef<string | null>(null);
+
   const finishSave = useCallback(
     (savedGoalId: string) => {
       if (!isEditing && onCreated) {
@@ -54,9 +58,6 @@ export function useGoalFormSubmit({
     },
     [completeAndExit, isEditing, onCreated],
   );
-  const [saving, setSaving] = useState(false);
-  const [recovery, setRecovery] = useState<GoalFormRecovery | null>(null);
-  const stableCreateGoalIdRef = useRef<string | null>(null);
 
   const submitDisabled =
     saving ||

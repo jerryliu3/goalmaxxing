@@ -25,12 +25,6 @@ import { useGoalFormSubmit } from "@/features/today/use-goal-form-submit";
 
 import { TempoGoalFields } from "@/features/goals/tempo-goal-fields";
 
-const goalFormId = "goal-form-create";
-
-function submitGoalForm() {
-  (document.getElementById(goalFormId) as HTMLFormElement | null)?.requestSubmit();
-}
-
 /**
  * Creates a goal or one-time task. A goal is saved at review; "Add more details" saves it and
  * stays open, so the optional details then update the saved goal. Editing an existing goal
@@ -42,6 +36,8 @@ export function GoalForm({ onExit }: { onExit?: () => void }) {
   // The saved goal and what was saved, so the details know what changed since.
   const [created, setCreated] = useState<{ goalId: string; state: GoalFormState; link: string } | null>(null);
   const openDetailsAfterCreate = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const submitGoalForm = () => formRef.current?.requestSubmit();
   const completeAndExit = useCallback(() => {
     if (onExit) {
       onExit();
@@ -128,7 +124,7 @@ export function GoalForm({ onExit }: { onExit?: () => void }) {
           />
         ) : null}
         <form
-          id={goalFormId}
+          ref={formRef}
           className="space-y-6"
           onSubmit={(event) => {
             if (!createReady && !recovery) {
