@@ -29,9 +29,10 @@ describe("saved card assembly", () => {
     rerender(card(3));
     expect(container.querySelector('[data-reward-piece="2"]')).toHaveAttribute("data-arriving", "true");
   });
-  it("extrudes each landed fragment; the ghost outline stays flat", () => {
+  it("extrudes each landed fragment; the ghost stays a flat, seamless card", () => {
     const { container } = render(card(2));
     expect(container.querySelector('[data-ghost] [data-card-solid]')).toBeNull();
+    expect(container.querySelector('[data-ghost] polygon')).toBeNull();
     const pieces = container.querySelectorAll('[data-reward-piece]');
     expect(pieces).toHaveLength(2);
     for (const piece of pieces) {
@@ -125,13 +126,14 @@ describe("saved card assembly", () => {
     expect(container.querySelectorAll(".tempo-card")).toHaveLength(3);
   });
 
-  it("keeps the dashed ghost map for unearthed gallery cards", () => {
+  it("keeps the dashed ghost card, without seams, for unearthed gallery cards", () => {
     const { container } = render(
       <ReassemblingCard completed={0} target={4} still flat>
         <article className="tempo-card">A real goal</article>
       </ReassemblingCard>,
     );
     expect(container.querySelector("[data-ghost]")).not.toBeNull();
+    expect(container.querySelector("[data-ghost] polygon")).toBeNull();
     expect(container.querySelector("[data-flat-shards]")).toBeNull();
     expect(container.querySelector("[data-reassembly]")).toHaveAttribute("data-fused", "false");
     expect(container.querySelectorAll(".tempo-card")).toHaveLength(2);
