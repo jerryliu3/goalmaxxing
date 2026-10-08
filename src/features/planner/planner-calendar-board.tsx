@@ -312,6 +312,7 @@ export function PlannerCalendarBoard({
               titleAs="h2"
               showDayHeading={false}
               shareDayTransition
+              showGoalColorEdge
             />
           ) : (
             <PlannerCalendarSplit

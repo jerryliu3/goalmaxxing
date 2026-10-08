@@ -48,6 +48,29 @@ describe("PlannerFocusedDayPane", () => {
     vi.useRealTimers();
   });
 
+  it.each([undefined, true])("keeps ledger rows flat unless the Day goal edge is enabled (%s)", (showGoalColorEdge) => {
+    const { container } = renderWithDnd(
+      <PlannerFocusedDayPane
+        day="2026-08-06"
+        entries={[sampleEntry as never]}
+        completionFactMarkers={[]}
+        mutationLoadingKey={null}
+        asOfDate="2026-08-06"
+        canMutatePlanItems
+        canMutateEntryOnDay={() => true}
+        onEntryOpen={vi.fn()}
+        onToggleCompletion={vi.fn()}
+        onEntryPointerStart={vi.fn()}
+        onEntryPointerEnd={vi.fn()}
+        hideTasks
+        showGoalColorEdge={showGoalColorEdge}
+      />
+    );
+    const row = container.querySelector<HTMLElement>('[data-plan-work-row="ledger"]')!;
+    expect(row.style.borderLeftWidth).toBe(showGoalColorEdge ? "3px" : "");
+    expect(row.style.borderLeftColor).toBe(showGoalColorEdge ? "rgb(34, 197, 94)" : "");
+  });
+
   it("forwards the held completion button as the stamp and XP origin", () => {
     vi.useFakeTimers();
     const onToggleCompletion = vi.fn();

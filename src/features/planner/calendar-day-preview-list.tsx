@@ -74,6 +74,7 @@ interface CalendarDayPreviewListProps<
   onEntryPointerStart: (immovable: boolean) => void;
   onEntryPointerEnd: () => void;
   density?: "compact" | "expanded";
+  showGoalColorEdge?: boolean;
   selectedEntryKey?: string | null;
   shareEntryTransition?: boolean;
   onConfirmDraftMove?: (entry: TEntry, day: string) => void;
@@ -99,6 +100,7 @@ export function CalendarDayPreviewList<
   onEntryPointerStart,
   onEntryPointerEnd,
   density = "compact",
+  showGoalColorEdge = false,
   selectedEntryKey = null,
   shareEntryTransition = false,
   onConfirmDraftMove,
@@ -148,7 +150,9 @@ export function CalendarDayPreviewList<
                 : isDraft
                   ? undefined
                   : expanded
-                    ? getWorkRowEdgeStyle(visual.color)
+                    ? showGoalColorEdge
+                      ? getWorkRowEdgeStyle(visual.color)
+                      : undefined
                     : getWorkPillFillStyle(visual.color, credited);
             const completionToggleState = getCompletionToggleState(entry, day);
             const currentlyCredited = overlayCurrentlyCredited(
