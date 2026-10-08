@@ -65,7 +65,7 @@ export function SettingsProfileBox({
         </div>
       ) : (
         <div className="mb-5 flex items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold">Your Goalmaxxing profile</h2>
+          <h2 className="type-eyebrow text-[11px] text-muted-foreground">Public profile</h2>
           <button
             type="button"
             onClick={session.start}

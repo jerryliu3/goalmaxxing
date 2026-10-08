@@ -37,7 +37,8 @@ export function tabGridClass(count: number, { fitLabels = false } = {}): string 
 
 /**
  * Class recipe shared by the app tab bar and in-page segmented tabs so both
- * follow the active UI style chrome.
+ * follow the active UI style chrome. Every chrome marks the destination in
+ * ink, the same color as the account avatar's "you are here" ring.
  */
 export function tabChromeClasses(
   tabChrome: TabChromeKind,
@@ -66,15 +67,15 @@ export function tabChromeClasses(
           ? "min-h-12 flex-col gap-1 px-1 py-1.5 text-[10px] tracking-[0.06em]"
           : "min-h-11 flex-col gap-1 py-2 text-[11px]"
       ),
-      linkActive: "text-primary",
+      linkActive: "text-foreground",
       linkIdle: "text-muted-foreground hover:text-foreground",
       highlight: cn(
         "absolute -z-10 bg-transparent shadow-none",
         mobile
           ? // The whole tab, so every tab's frame is the same size and
             // always wider than its label.
-            "inset-0 rounded-md border border-primary/40"
-          : "inset-x-2 bottom-0 h-0.5 rounded-none bg-primary"
+            "inset-0 rounded-md border border-foreground/40"
+          : "inset-x-2 bottom-0 h-0.5 rounded-none bg-foreground"
       ),
     };
   }
@@ -92,13 +93,12 @@ export function tabChromeClasses(
       "relative isolate flex w-full touch-manipulation items-center justify-center rounded-xl px-2 font-medium transition-[color,transform] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-standard)] active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none",
       mobile ? "min-h-12 flex-col gap-1 py-1.5 text-[10px]" : "min-h-16 min-w-[6.5rem] flex-col gap-1 px-3 py-2 text-xs"
     ),
-    linkActive: mobile ? "text-white" : "text-foreground",
+    linkActive: mobile ? "text-background" : "text-foreground",
     linkIdle: mobile
       ? "text-muted-foreground hover:bg-muted hover:text-foreground"
       : "text-muted-foreground hover:text-foreground",
-    // Desktop marks the destination with an ink rule, not a brand-colored fill.
     highlight: mobile
-      ? "absolute inset-0 -z-10 rounded-xl bg-primary shadow-sm"
+      ? "absolute inset-0 -z-10 rounded-xl bg-foreground shadow-sm"
       : "absolute inset-x-4 bottom-0 -z-10 h-0.5 rounded-full bg-foreground",
   };
 }
