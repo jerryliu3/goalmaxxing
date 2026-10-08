@@ -33,6 +33,7 @@ vi.mock("next/link", () => ({
 describe("TabNav", () => {
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
     mockPathname = "/";
   });
 
@@ -66,6 +67,27 @@ describe("TabNav", () => {
       "text-foreground"
     );
     expect(container.querySelectorAll("[data-motion='tab-nav-highlight']")).toHaveLength(1);
+  });
+
+  it("keeps one indicator mounted on a fixed local baseline after scrolling and changing tabs", () => {
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(100);
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(48);
+    vi.spyOn(HTMLElement.prototype, "offsetTop", "get").mockReturnValue(6);
+    vi.spyOn(HTMLElement.prototype, "offsetLeft", "get").mockImplementation(function (this: HTMLElement) {
+      return Array.from(this.parentElement?.children ?? []).indexOf(this) * 108;
+    });
+    mockPathname = "/calendar";
+    const { container, rerender } = render(<TabNav />);
+    const indicator = container.querySelector("[data-motion='tab-nav-highlight']")!;
+    const track = indicator.parentElement!;
+    expect(track.style.top).toBe("6px");
+    fireEvent.scroll(window, { target: { scrollY: 900 } });
+    fireEvent.click(screen.getByRole("link", { name: "Goals" }));
+    mockPathname = "/goals";
+    rerender(<TabNav />);
+    expect(container.querySelector("[data-motion='tab-nav-highlight']")).toBe(indicator);
+    expect(track.style.top).toBe("6px");
+    expect(track.style.height).toBe("48px");
   });
 
   it("routes the planner tab to calendar path", () => {
