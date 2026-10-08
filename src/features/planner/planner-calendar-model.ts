@@ -153,9 +153,7 @@ export function selectPlannerCalendarModel({
     hasDraftSession: draftSession.hasDraftSession,
   });
   const warningModel = selectPlannerWarningModel({
-    unplaceableGoalCount: dayAccessors.unplaceableGoalSummaries.length,
     invalidLockGoalCount: dayAccessors.invalidLockGoalCount,
-    capacityWarningGoalCount: dayAccessors.capacityWarningGoalCount,
     eligibilityNotices,
   });
   const viewWindow = selectCalendarViewWindowModel({

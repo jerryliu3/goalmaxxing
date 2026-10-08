@@ -22,15 +22,14 @@ interface PlannerWarningsPanelProps {
   warningsOpen: boolean;
   setWarningsOpen: (open: boolean) => void;
   onDismissBanner: () => void;
-  unplaceableGoalSummaries: Array<{
+  invalidLockGoalSummaries: Array<{
     goalId: string;
     title: string;
     unplacedCount: number;
     reason: "capacity" | "invalid_lock";
   }>;
   invalidLockGoalCount: number;
-  capacityWarningGoalCount: number;
-  totalUnplacedCount: number;
+  totalInvalidLockSessionCount: number;
   warningSuggestedNextSteps: string[];
   eligibilityNotices: PlannerEligibilityNotices;
   plannerReadOnly: boolean;
@@ -38,7 +37,6 @@ interface PlannerWarningsPanelProps {
   resetLoading: boolean;
   loading: boolean;
   onUnlockAllGoals: () => void;
-  onOpenPlannerSettings: () => void;
 }
 
 export function PlannerWarningsPanel({
@@ -50,10 +48,9 @@ export function PlannerWarningsPanel({
   warningsOpen,
   setWarningsOpen,
   onDismissBanner,
-  unplaceableGoalSummaries,
+  invalidLockGoalSummaries,
   invalidLockGoalCount,
-  capacityWarningGoalCount,
-  totalUnplacedCount,
+  totalInvalidLockSessionCount,
   warningSuggestedNextSteps,
   eligibilityNotices,
   plannerReadOnly,
@@ -61,14 +58,13 @@ export function PlannerWarningsPanel({
   resetLoading,
   loading,
   onUnlockAllGoals,
-  onOpenPlannerSettings,
 }: PlannerWarningsPanelProps) {
   const isClient = useSyncExternalStore(
     subscribeToNothing,
     () => true,
     () => false
   );
-  const showFitBanner =
+  const showPlanningIssuesBanner =
     isClient &&
     hasPlannerWarnings &&
     !warningsDismissed &&
@@ -77,10 +73,10 @@ export function PlannerWarningsPanel({
 
   return (
     <>
-      {showFitBanner ? (
+      {showPlanningIssuesBanner ? (
         <div
           className="rounded-[10px] border border-warning bg-warning-fill px-3 py-2 text-xs text-foreground shadow-[inset_3px_0_0_0_var(--color-warning)]"
-          data-testid="plan-fit-banner"
+          data-testid="plan-issues-banner"
         >
           <div className="flex items-center justify-between gap-2">
             <p className="min-w-0 flex-1">{plannerWarningBannerCopy}</p>
@@ -92,7 +88,7 @@ export function PlannerWarningsPanel({
                 className="h-7 border-warning bg-background text-xs text-foreground"
                 onClick={() => setWarningsOpen(true)}
               >
-                Fix plan
+                Review
               </Button>
               <button
                 type="button"
@@ -109,52 +105,32 @@ export function PlannerWarningsPanel({
       <Dialog open={warningsOpen} onOpenChange={setWarningsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sessions that don&apos;t fit</DialogTitle>
+            <DialogTitle>Planning issues</DialogTitle>
             <DialogDescription>
-              {unplaceableGoalSummaries.length > 0 && invalidLockGoalCount > 0
-                ? `${unplaceableGoalSummaries.length} goal${
-                    unplaceableGoalSummaries.length === 1 ? "" : "s"
-                  } need attention (${invalidLockGoalCount} locked conflict${
-                    invalidLockGoalCount === 1 ? "" : "s"
-                  }, ${totalUnplacedCount} unresolved session${
-                    totalUnplacedCount === 1 ? "" : "s"
-                  }).`
-                : unplaceableGoalSummaries.length > 0
-                  ? `${unplaceableGoalSummaries.length} goal${
-                      unplaceableGoalSummaries.length === 1 ? "" : "s"
-                    } are not fully scheduled (${totalUnplacedCount} unresolved session${
-                      totalUnplacedCount === 1 ? "" : "s"
-                    }).`
-                  : eligibilityNotices.hardIneligible.length > 0
-                    ? `${eligibilityNotices.hardIneligible.length} goal${
-                        eligibilityNotices.hardIneligible.length === 1 ? "" : "s"
-                      } need updates before they can be fully planned.`
-                    : "Review planner warnings and resolve any blockers before saving."}
+              {invalidLockGoalCount > 0
+                ? `${invalidLockGoalCount} goal${invalidLockGoalCount === 1 ? " has" : "s have"} conflicting locked sessions (${totalInvalidLockSessionCount} session${totalInvalidLockSessionCount === 1 ? "" : "s"}).`
+                : "Review goal settings that prevent scheduling."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 text-sm">
-            {unplaceableGoalSummaries.length > 0 ? (
+            {invalidLockGoalSummaries.length > 0 ? (
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground">
-                  Not fully scheduled goals
+                  Conflicting locked sessions
                 </p>
                 <div
                   className={`space-y-2 ${
-                    unplaceableGoalSummaries.length > 5
+                    invalidLockGoalSummaries.length > 5
                       ? "max-h-[17.5rem] overflow-y-auto pr-1"
                       : ""
                   }`}
                 >
-                  {unplaceableGoalSummaries.map((warning) => (
+                  {invalidLockGoalSummaries.map((warning) => (
                     <div key={`warning-${warning.goalId}`} className="rounded-md border p-2">
                       <p className="font-medium">{warning.title}</p>
                       <p className="text-xs text-muted-foreground">
                         {warning.unplacedCount} unresolved session
-                        {warning.unplacedCount === 1 ? "" : "s"} (
-                        {warning.reason === "invalid_lock"
-                          ? "locked conflict"
-                          : "capacity shortfall"}
-                        )
+                        {warning.unplacedCount === 1 ? "" : "s"} (locked conflict)
                       </p>
                     </div>
                   ))}
@@ -197,31 +173,16 @@ export function PlannerWarningsPanel({
                 ))}
               </div>
             ) : null}
-            {(invalidLockGoalCount > 0 || capacityWarningGoalCount > 0) &&
-            !plannerReadOnly ? (
-              <div className="flex flex-wrap gap-2">
-                {invalidLockGoalCount > 0 ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={resetLoading || loading || !canResetPlan}
-                    onClick={onUnlockAllGoals}
-                  >
-                    {resetLoading ? "Unlocking..." : "Unlock all goals"}
-                  </Button>
-                ) : null}
-                {capacityWarningGoalCount > 0 ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={onOpenPlannerSettings}
-                  >
-                    Open planner settings
-                  </Button>
-                ) : null}
-              </div>
+            {invalidLockGoalCount > 0 && !plannerReadOnly ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={resetLoading || loading || !canResetPlan}
+                onClick={onUnlockAllGoals}
+              >
+                {resetLoading ? "Unlocking..." : "Unlock all goals"}
+              </Button>
             ) : null}
             <Button
               type="button"

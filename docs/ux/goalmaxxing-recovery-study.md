@@ -414,7 +414,10 @@ production code does not import from `src/features/ux-recovery`.
   kernel diff are gone (the `recoverPastPlacements` preview flag stays for
   external tools). The capacity banner now reads "Some sessions don't fit"
   with a "Fix plan" button. The check-in row reads "N sessions slipped" and
-  its Review link opens `/calendar?review=recovery`.
+  its Review link opens `/calendar?review=recovery`. Capacity shortfall later
+  left that banner entirely: it is now "Planning issues" with a Review button,
+  raised only by locked-session conflicts and goal settings that block
+  scheduling.
 - **Answered open questions.** Dismissals persist in their own table rather
   than on the planner item. Recovery first used a direct write path; Recovery
   mode now stages moves as planner drafts.

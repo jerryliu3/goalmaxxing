@@ -82,10 +82,9 @@ export interface CalendarDayAccessorsResult {
   entryByKey: Map<string, PlannerDayDetailEntry>;
   entryDayByKey: Map<string, string>;
   effectiveDraftItemEdits: PlannerCalendarStoreProjection["effectiveDraftItemEdits"];
-  unplaceableGoalSummaries: PlannerCalendarStoreProjection["unplaceableGoalSummaries"];
-  totalUnplacedCount: number;
+  invalidLockGoalSummaries: PlannerCalendarStoreProjection["invalidLockGoalSummaries"];
+  totalInvalidLockSessionCount: number;
   invalidLockGoalCount: number;
-  capacityWarningGoalCount: number;
   goalFilterOptions: ReturnType<typeof buildCalendarGoalFilterOptions>;
   endMonthOptions: ReturnType<typeof buildGoalEndMonthOptions>;
   effectiveEndMonthFilters: string[];
@@ -185,16 +184,11 @@ export function selectCalendarDayAccessorsModel({
     entriesByDate,
     entryByKey: goalEntryByKey,
     entryDayByKey: goalEntryDayByKey,
-    unplaceableGoalSummaries,
-    totalUnplacedCount,
+    invalidLockGoalSummaries,
+    totalInvalidLockSessionCount,
   } = calendarStoreProjection;
 
-  const invalidLockGoalCount = unplaceableGoalSummaries.filter(
-    (entry) => entry.reason === "invalid_lock"
-  ).length;
-  const capacityWarningGoalCount = unplaceableGoalSummaries.filter(
-    (entry) => entry.reason === "capacity"
-  ).length;
+  const invalidLockGoalCount = invalidLockGoalSummaries.length;
 
   const projectionDays = (() => {
     const days = new Set<string>(visibleDays);
@@ -343,10 +337,9 @@ export function selectCalendarDayAccessorsModel({
     entryByKey,
     entryDayByKey,
     effectiveDraftItemEdits,
-    unplaceableGoalSummaries,
-    totalUnplacedCount,
+    invalidLockGoalSummaries,
+    totalInvalidLockSessionCount,
     invalidLockGoalCount,
-    capacityWarningGoalCount,
     goalFilterOptions,
     endMonthOptions,
     effectiveEndMonthFilters,

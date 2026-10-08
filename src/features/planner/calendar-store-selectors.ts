@@ -34,13 +34,13 @@ export interface PlannerCalendarStoreProjection {
   previewUnitByEntryKey: Map<string, PlannerWorkUnit>;
   completionFactUnitsByGoalDate: Map<string, PlannerWorkUnit[]>;
   completionFactMarkersByDate: Map<string, PlannerCompletionFactMarker[]>;
-  unplaceableGoalSummaries: Array<{
+  invalidLockGoalSummaries: Array<{
     goalId: string;
     title: string;
     unplacedCount: number;
     reason: "capacity" | "invalid_lock";
   }>;
-  totalUnplacedCount: number;
+  totalInvalidLockSessionCount: number;
 }
 
 export interface PlannerCalendarDayProjection {
@@ -111,8 +111,10 @@ export function selectPlannerCalendarStoreProjection({
     goalTitles: context?.goalTitles,
     linkSummaries: context?.links ?? [],
   });
-  const unplaceableGoalSummaries = summarizePlannerGoalUnplaceableRecords({
-    records: context?.unplaceableGoals ?? [],
+  const invalidLockGoalSummaries = summarizePlannerGoalUnplaceableRecords({
+    records: (context?.unplaceableGoals ?? []).filter(
+      (record) => record.reason === "invalid_lock"
+    ),
     goalTitles: context?.goalTitles ?? {},
   });
   return {
@@ -124,8 +126,8 @@ export function selectPlannerCalendarStoreProjection({
     previewUnitByEntryKey,
     completionFactUnitsByGoalDate,
     completionFactMarkersByDate,
-    unplaceableGoalSummaries,
-    totalUnplacedCount: unplaceableGoalSummaries.reduce(
+    invalidLockGoalSummaries,
+    totalInvalidLockSessionCount: invalidLockGoalSummaries.reduce(
       (count, entry) => count + entry.unplacedCount,
       0
     ),

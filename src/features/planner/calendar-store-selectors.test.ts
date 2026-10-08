@@ -217,8 +217,8 @@ describe("calendar store selectors", () => {
       ]),
       completionFactUnitsByGoalDate: new Map(),
       completionFactMarkersByDate: new Map(),
-      unplaceableGoalSummaries: [],
-      totalUnplacedCount: 0,
+      invalidLockGoalSummaries: [],
+      totalInvalidLockSessionCount: 0,
     };
 
     const projectionByDay = selectPlannerCalendarDayProjectionsByDay({
@@ -365,7 +365,7 @@ describe("calendar store selectors", () => {
     warnSpy.mockRestore();
   });
 
-  it("derives unplaceable summaries from durable planner state", () => {
+  it("excludes capacity shortfalls from warning and recovery summaries", () => {
     const context = buildContext([
       unit({ goalId: "goal-a", unitKey: "total:1", scheduledDate: "2026-08-05" }),
     ]);
@@ -380,6 +380,16 @@ describe("calendar store selectors", () => {
         unplacedCount: 3,
         reason: "capacity",
       },
+      {
+        requirementFingerprint: "b".repeat(64),
+        policyFingerprint: "p".repeat(64),
+        policyRevision: 1,
+        lockSignature: "lock-b",
+        effectiveSpanEnd: "2027-07-31",
+        goalId: "goal-b",
+        unplacedCount: 2,
+        reason: "invalid_lock",
+      },
     ];
     const projection = selectPlannerCalendarStoreProjection({
       context,
@@ -389,14 +399,9 @@ describe("calendar store selectors", () => {
       activeGoalsByOriginalGoalId: new Map(),
     });
 
-    expect(projection.totalUnplacedCount).toBe(3);
-    expect(projection.unplaceableGoalSummaries).toEqual([
-      expect.objectContaining({
-        goalId: "goal-a",
-        title: "Goal A",
-        unplacedCount: 3,
-        reason: "capacity",
-      }),
+    expect(projection.totalInvalidLockSessionCount).toBe(2);
+    expect(projection.invalidLockGoalSummaries).toEqual([
+      expect.objectContaining({ goalId: "goal-b", unplacedCount: 2, reason: "invalid_lock" }),
     ]);
   });
 });

@@ -60,15 +60,14 @@ export interface PlannerCalendarSurfaceLayoutProps {
   plannerWarningBannerCopy: string;
   warningsOpen: boolean;
   setWarningsOpen: (open: boolean) => void;
-  unplaceableGoalSummaries: Array<{
+  invalidLockGoalSummaries: Array<{
     goalId: string;
     title: string;
     unplacedCount: number;
     reason: "capacity" | "invalid_lock";
   }>;
   invalidLockGoalCount: number;
-  capacityWarningGoalCount: number;
-  totalUnplacedCount: number;
+  totalInvalidLockSessionCount: number;
   warningSuggestedNextSteps: string[];
   eligibilityNotices: PlannerEligibilityNotices;
   plannerReadOnly: boolean;
@@ -233,10 +232,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     plannerWarningBannerCopy,
     warningsOpen,
     setWarningsOpen,
-    unplaceableGoalSummaries,
+    invalidLockGoalSummaries,
     invalidLockGoalCount,
-    capacityWarningGoalCount,
-    totalUnplacedCount,
+    totalInvalidLockSessionCount,
     warningSuggestedNextSteps,
     eligibilityNotices,
     plannerReadOnly,
@@ -460,10 +458,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         warningsOpen={warningsOpen}
         setWarningsOpen={setWarningsOpen}
         onDismissBanner={() => setWarningsDismissed(true)}
-        unplaceableGoalSummaries={unplaceableGoalSummaries}
+        invalidLockGoalSummaries={invalidLockGoalSummaries}
         invalidLockGoalCount={invalidLockGoalCount}
-        capacityWarningGoalCount={capacityWarningGoalCount}
-        totalUnplacedCount={totalUnplacedCount}
+        totalInvalidLockSessionCount={totalInvalidLockSessionCount}
         warningSuggestedNextSteps={warningSuggestedNextSteps}
         eligibilityNotices={eligibilityNotices}
         plannerReadOnly={plannerReadOnly}
@@ -473,10 +470,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         onUnlockAllGoals={() => {
           setWarningsOpen(false);
           void resetPlan();
-        }}
-        onOpenPlannerSettings={() => {
-          setWarningsOpen(false);
-          setSettingsOpen(true);
         }}
       />
       <PlannerCalendarToolbar
