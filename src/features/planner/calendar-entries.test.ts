@@ -79,6 +79,47 @@ describe("planner calendar entries", () => {
     expect(order(entries, ["c", "a", "b"])).toEqual(["c", "a", "b"]);
   });
 
+  it("puts draft rows ahead of saved, timed, and titled order", () => {
+    const row = (
+      key: string,
+      overrides: Partial<PlannerDayDetailEntry> = {}
+    ): PlannerDayDetailEntry => ({
+      ...unit("2026-08-07"),
+      key,
+      originalGoalId: key,
+      goalTitle: key,
+      activeGoal: null,
+      activeItem: null,
+      draftDiffKind: null,
+      draftDiffFromDate: null,
+      draftDiffToDate: null,
+      draftGhost: false,
+      ...overrides,
+    });
+    const order = (rows: PlannerDayDetailEntry[], saved: string[] = []) => orderEntriesForDay({
+      day: "2026-08-07",
+      entries: rows,
+      previewEntryOrderByDay: { "2026-08-07": saved },
+    }).map(entry => entry.key);
+    const existing = [
+      row("a", { effectiveScheduledLocalTime: "08:00" }),
+      row("b"),
+      row("c", { creditState: "credited", classification: "completed" }),
+    ];
+    const movedIn = row("z", { draftDiffKind: "moved_to", draftDiffFromDate: "2026-08-05" });
+
+    expect(order([...existing, movedIn])).toEqual(["z", "a", "b", "c"]);
+    expect(order([...existing, movedIn], ["c", "b", "a"])).toEqual(["z", "c", "b", "a"]);
+    expect(order([...existing, { ...movedIn, draftDiffKind: null }], ["c", "b", "a"]))
+      .toEqual(["c", "b", "a", "z"]);
+    expect(order([
+      ...existing,
+      movedIn,
+      row("y", { draftDiffKind: "new" }),
+      row("x", { draftDiffKind: "moved_from", draftGhost: true }),
+    ])).toEqual(["x", "y", "z", "a", "b", "c"]);
+  });
+
   it("shows moved-from and moved-to markers for a persisted session", () => {
     const entriesByDate = buildEntriesByDate({
       workUnits: [unit("2026-08-07")],
