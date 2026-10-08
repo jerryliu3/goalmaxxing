@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const BOTTOM_SHEET_FRAME_CLASS =
-  "left-0 right-0 top-auto bottom-0 z-[70] grid w-screen max-w-none translate-x-0 translate-y-0 gap-0 rounded-t-3xl rounded-b-none border-x-0 border-b-0 border-t bg-background p-0 ring-0 data-open:slide-in-from-bottom-6 data-open:zoom-in-100 data-closed:slide-out-to-bottom-6 data-closed:zoom-out-100 sm:max-w-none md:left-1/2 md:right-auto md:w-[min(100vw-3rem,40rem)] md:max-w-[40rem] md:-translate-x-1/2";
+  "left-0 right-0 top-auto bottom-0 z-[70] grid w-screen max-w-none translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-t-3xl rounded-b-none border-x-0 border-b-0 border-t bg-background p-0 ring-0 data-open:slide-in-from-bottom-6 data-open:zoom-in-100 data-closed:slide-out-to-bottom-6 data-closed:zoom-out-100 sm:max-w-none md:bottom-6 md:left-1/2 md:right-auto md:w-[min(100vw-3rem,40rem)] md:max-w-[40rem] md:-translate-x-1/2 md:rounded-b-3xl md:border";
 
 export const SIDE_PANEL_FRAME_CLASS =
   "left-auto right-0 top-0 bottom-0 z-[70] grid h-[100dvh] max-h-[100dvh] w-[min(100vw,28rem)] max-w-none translate-x-0 translate-y-0 gap-0 rounded-none border-y-0 border-r-0 border-l bg-background p-0 ring-0 data-open:slide-in-from-right-8 data-open:zoom-in-100 data-closed:slide-out-to-right-8 data-closed:zoom-out-100 sm:max-w-none";

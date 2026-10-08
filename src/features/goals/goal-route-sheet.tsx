@@ -108,12 +108,15 @@ export function GoalRouteSheet({
       contentClassName="h-[min(92dvh,100dvh)] max-h-[92dvh] md:w-[min(100vw-3rem,64rem)] md:max-w-[64rem] md:h-[88dvh] md:max-h-[88dvh]"
       header={
         <div
-          className="border-b bg-background/95 px-4 pb-3 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur supports-[backdrop-filter]:bg-background/80"
+          className="border-b bg-background/95 px-4 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:px-6"
           onTouchStart={onHeaderTouchStart}
           onTouchEnd={onHeaderTouchEnd}
         >
           <BottomSheetHandle />
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-between gap-3">
+            <p aria-hidden className="type-title truncate text-base tracking-tight">
+              {title}
+            </p>
             <Button
               type="button"
               variant="ghost"

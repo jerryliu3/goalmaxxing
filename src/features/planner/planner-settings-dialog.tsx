@@ -22,11 +22,11 @@ export function PlannerSettingsDialog({
 }: PlannerSettingsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
-      <DialogContent>
+      <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Planner settings</DialogTitle>
           <DialogDescription>
-            Update rest weekdays used by planner default policy.
+            Rest days and calendar upkeep. Timezone and week start live in Profile.
           </DialogDescription>
         </DialogHeader>
         {children}

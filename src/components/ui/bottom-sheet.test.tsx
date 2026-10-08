@@ -15,7 +15,12 @@ describe("BottomSheet", () => {
       </BottomSheet>
     );
 
-    expect(screen.getByTestId("app-bottom-sheet")).toHaveClass("rounded-t-3xl");
+    expect(screen.getByTestId("app-bottom-sheet")).toHaveClass(
+      "rounded-t-3xl",
+      "overflow-hidden",
+      "md:bottom-6",
+      "md:rounded-b-3xl"
+    );
     expect(screen.getByRole("dialog", { name: "Preferences" })).toBeInTheDocument();
     expect(screen.getByText("Sheet body")).toBeVisible();
     expect(document.querySelector('[aria-hidden="true"].rounded-full')).toBeTruthy();

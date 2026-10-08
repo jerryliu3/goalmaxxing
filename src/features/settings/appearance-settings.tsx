@@ -11,7 +11,7 @@ export function AppearanceSettings() {
       <UiStylePicker />
       <p className="text-sm text-muted-foreground">{style.description}</p>
       <p className="text-xs text-muted-foreground">
-        Applies immediately across the app and marketing pages on this device.
+        Changes apply right away on this device.
       </p>
     </div>
   );

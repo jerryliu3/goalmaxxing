@@ -23,6 +23,7 @@ describe("GoalRouteSheet", () => {
 
     expect(screen.getByText("Goal sheet body")).toBeVisible();
     expect(screen.getByTestId("goal-route-sheet")).toHaveClass("rounded-t-3xl");
+    expect(screen.getByText("Create goal", { selector: "p" })).toBeVisible();
   });
 
   it("closes when the close button is pressed", async () => {
