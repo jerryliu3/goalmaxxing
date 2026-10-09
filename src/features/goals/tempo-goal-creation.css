@@ -107,8 +107,16 @@
   padding-bottom: 1rem;
   margin-bottom: 0;
   justify-content: space-between;
+  /* Narrow screens scroll the bar itself rather than widening the sheet. */
+  position: relative;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tempo-steps::-webkit-scrollbar {
+  display: none;
 }
 .tempo-steps button {
+  flex-shrink: 0;
   font-size: 0.7rem;
   display: flex;
   flex-direction: column;
@@ -123,6 +131,15 @@
 }
 .tempo-steps button span {
   font-family: var(--type-figure-font);
+}
+.tempo-steps button[data-optional] {
+  border-left: 1px solid var(--border);
+  padding-left: 0.9rem;
+}
+.tempo-optional {
+  font-size: inherit;
+  font-weight: 400;
+  opacity: 0.7;
 }
 .tempo-heading {
   font-family: var(--type-hero-font);

@@ -1,49 +1,42 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Input } from "@/components/ui/input";
-import { clampPlaqueTarget } from "./card-material/creation-plaque-target";
+import { Button } from "@/components/ui/button";
 
-/** The review's action row: the plaque target, the create action, and any blocking error. */
+/**
+ * The review checkpoint: everything the goal needs is set, so it can be created here. The
+ * optional details (and the plaque target) come after, through "Add more details".
+ */
 export function TempoGoalCheckpoint({
-  plaque,
+  plaqueTarget,
   disabled,
   action,
+  onDetails,
   error,
 }: {
   /** Absent for tasks, which earn no plaque. */
-  plaque?: { target: number; onChange: (target: number) => void };
+  plaqueTarget?: number;
   disabled?: boolean;
   action: ReactNode;
+  /** Absent for tasks, which have no optional details. */
+  onDetails?: () => void;
   error?: string | null;
 }) {
   return (
     <div className="tempo-review-action">
-      {plaque && (
+      {plaqueTarget !== undefined && (
         <p className="tempo-plaque-copy">
-          Your target before earning this achievement plaque will be{" "}
-          <label className="tempo-plaque-input">
-            <span className="sr-only">Plaque completion target</span>
-            <Input
-              type="number"
-              min={1}
-              max={20}
-              inputMode="numeric"
-              value={plaque.target}
-              disabled={disabled}
-              onChange={(event) =>
-                plaque.onChange(
-                  event.target.value === ""
-                    ? 1
-                    : clampPlaqueTarget(Number(event.target.value)),
-                )
-              }
-            />
-          </label>{" "}
-          completions.
+          You’ll earn this achievement plaque after{" "}
+          <strong>{plaqueTarget}</strong>{" "}
+          {plaqueTarget === 1 ? "completion" : "completions"}.
         </p>
       )}
       {action}
+      {onDetails && (
+        <Button type="button" variant="ghost" disabled={disabled} onClick={onDetails}>
+          Add more details <small className="tempo-optional">(optional)</small> →
+        </Button>
+      )}
       {error && error !== "Title is required." && (
         <p className="tempo-error" role="status">
           {error}

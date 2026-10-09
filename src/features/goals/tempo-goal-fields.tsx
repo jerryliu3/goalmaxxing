@@ -20,14 +20,14 @@ import { TempoGoalCheckpoint } from "./tempo-goal-checkpoint";
 import { TempoGoalIntention } from "./tempo-goal-intention";
 import { TempoGoalReward } from "./tempo-goal-reward";
 import { TempoGoalRhythm } from "./tempo-goal-rhythm";
-import { TempoGoalSchedule } from "./tempo-goal-schedule";
+import { TempoGoalSchedule, TempoGoalTimeOfDay } from "./tempo-goal-schedule";
 import { getGoalCreationPeriodLimitError } from "@/lib/goals/creation-model";
 
 import { TempoStepNavigation } from "./tempo-step-navigation";
 import { AnnotatedCard } from "./card-editor/annotated-card";
 import { CardBack } from "./card-editor/card-back";
 import type { CardEditorFields, CardEditorSession } from "./card-editor/card-editor-session";
-import type { BackFact, FaceFact } from "./card-editor/card-facts";
+import { type BackFact, type FaceFact, hasPlaqueTarget } from "./card-editor/card-facts";
 import { CardScene } from "./card-editor/card-scene";
 import type {
   TempoChoicesMade,
@@ -49,7 +49,7 @@ function unprintedFacts(fields: GoalCreationFieldControlsProps["fields"]): FaceF
   return ["visibility", ...(fields.end_date ? [] : ["deadline" as const]), ...(fields.default_local_time ? [] : ["time" as const])];
 }
 
-/** "a, b & c": what the back holds, named in the reward step. */
+/** "a, b & c": what the back holds, named in the details step. */
 function listTopics(topics: string[]) {
   return topics.length > 1 ? `${topics.slice(0, -1).join(", ")} & ${topics.at(-1)}` : topics.join("");
 }
@@ -57,12 +57,16 @@ function listTopics(topics: string[]) {
 /** Creation marks nothing as changed: every fact on a new card is the person's own. */
 const NO_CHANGES = new Set<never>();
 
-/** Wizard steps after Start (the step bar numbers them 02–06). Tasks skip the reward. */
+/**
+ * Wizard steps after Start. Intention through Review are what a goal needs (the step bar
+ * numbers them 02–05); More details is optional, opened from Review, and only joins the step
+ * bar once opened. Tasks have no details.
+ */
 const SCHEDULE = 2;
-const REWARD = 3;
-const REVIEW = 4;
+const REVIEW = 3;
+const DETAILS = 4;
 const PREVIEW_SPRING = { type: "spring", stiffness: 180, damping: 26 } as const;
-// Matches the .card-side turn in card-editor.css, so the glide into review and the flip are one motion.
+// Matches the .card-side turn in card-editor.css, so the glide into or out of review and the flip are one motion.
 const REVIEW_ARRIVAL = { duration: 0.7, ease: [0.65, 0, 0.35, 1] } as const;
 
 export function TempoGoalFields({
@@ -91,11 +95,14 @@ export function TempoGoalFields({
   linkTarget: Omit<GoalCreationLinkTargetProps, "open" | "onOpenChange">;
   /** The reward line, where the caller saves one (bulk drafts don't); without it the back leaves it out. */
   reward?: string;
+  /** Creates the goal: on review, and at the foot of the details. */
   action: ReactNode;
   preview?: ReactNode | ((visibility: TempoCardVisibility) => ReactNode);
   prefilled?: boolean;
   error?: string | null;
+  /** Whether the goal can be created now: review or details is open and every needed step is valid. */
   onReviewChange?: (ready: boolean) => void;
+  /** Where the caller saves the plaque target; without it the target is shown but not editable. */
   onPlaqueTargetChange?: (target: number) => void;
   taskSchedule?: { date: string; time: string };
 }) {
@@ -137,12 +144,13 @@ export function TempoGoalFields({
           ? Number(fields.target_count) <= 999
           : chosen.interval && chosen.basis)));
   const scheduleValid = !error;
+  const essentialsValid = Boolean(intentionValid && rhythmValid && scheduleValid);
   const canVisit = [
     true,
     intentionValid,
     intentionValid && rhythmValid,
-    !isPlannerTask && intentionValid && rhythmValid && scheduleValid,
-    intentionValid && rhythmValid && scheduleValid,
+    essentialsValid,
+    !isPlannerTask && essentialsValid,
   ];
   const currentValid =
     step === 0 ? intentionValid : step === 1 ? rhythmValid : step === SCHEDULE ? scheduleValid : true;
@@ -157,16 +165,14 @@ export function TempoGoalFields({
     plaqueTarget: step === REVIEW ? plaqueTarget : undefined,
   };
   const go = (next: number) => {
-    // Leaving the reward step for review, the turned-over card turns on round to its face.
-    setReviewTurn(step === REWARD && next === REVIEW && !isPlannerTask);
+    // Leaving the details for review, the turned-over card turns on round to its face.
+    setReviewTurn(step === DETAILS && next === REVIEW);
     setStep(next);
     setFurthestStep((previous) => Math.max(previous, next));
     if (next === REVIEW && !isPlannerTask) {
       onPlaqueTargetChange?.(plaqueTarget);
     }
-    onReviewChange?.(
-      next === REVIEW && intentionValid && rhythmValid && scheduleValid,
-    );
+    onReviewChange?.((next === REVIEW || next === DETAILS) && essentialsValid);
     requestAnimationFrame(() =>
       (next === REVIEW ? previewRef.current : heading.current)?.focus(),
     );
@@ -194,11 +200,19 @@ export function TempoGoalFields({
       : undefined;
   const goalColor = chosen.category ? fields.color : "#b99060";
 
-  // The back edits with the card editor's own rows. The plaque target is set on review and
-  // milestone names in the rhythm step, so the back leaves those to them.
+  // The back edits with the card editor's own rows. Milestone names are set in the rhythm
+  // step, so the back leaves those to it; the plaque target edits here when the caller saves it.
+  const editsPlaque = Boolean(onPlaqueTargetChange) && hasPlaqueTarget(fields);
   const backSession: CardEditorSession = {
-    fields: { ...fields, reward_text: reward ?? "", plaque_target: null },
-    patch: onPatch,
+    fields: { ...fields, reward_text: reward ?? "", plaque_target: plaqueTarget },
+    patch: ({ plaque_target, ...rest }) => {
+      if (plaque_target != null) {
+        setPlaqueTouched(true);
+        setPlaqueTarget(plaque_target);
+        onPlaqueTargetChange?.(plaque_target);
+      }
+      if (Object.keys(rest).length > 0) onPatch(rest);
+    },
     completed: 0,
     changed: NO_CHANGES,
     pastEnd: false,
@@ -219,18 +233,19 @@ export function TempoGoalFields({
           },
   };
   const backHidden: BackFact[] = [
-    "plaque",
     "milestones",
+    ...(editsPlaque ? [] : (["plaque"] as const)),
     ...(reward === undefined ? (["reward"] as const) : []),
   ];
   const backTopics = listTopics([
     "Why it matters",
+    ...(editsPlaque ? ["your plaque target"] : []),
     "card colour",
     ...(backSession.link ? ["what it also counts toward"] : []),
   ]);
-  // The reward step always shows the card's back: the reward is written there, beside the
-  // advanced settings.
-  const showBack = step === REWARD && !isPlannerTask;
+  const back = <CardBack session={backSession} hidden={backHidden} heading="Advanced settings" unsetLabel="Optional" />;
+  // The details always show the card's back: the reward and advanced settings are written there.
+  const showBack = step === DETAILS;
 
   const cardFace = (typeof preview === "function"
     ? preview(visibility)
@@ -252,29 +267,31 @@ export function TempoGoalFields({
       layout={!reducedMotion}
       // Review moves the card into the legend (a new parent); the shared id glides it there.
       layoutId="tempo-preview-card"
-      transition={step === REVIEW ? REVIEW_ARRIVAL : PREVIEW_SPRING}
+      transition={step === REVIEW || step === DETAILS ? REVIEW_ARRIVAL : PREVIEW_SPRING}
     >
-      {/* Steps before review keep one scene, so the card doesn't remount as steps change. */}
+      {/* Steps outside review keep one scene, so the card doesn't remount as steps change. */}
       {isPlannerTask ? (
         cardFace
       ) : step === REVIEW ? (
         reviewTurn ? (
-          <ReviewTurn color={goalColor} front={cardFace} back={<CardBack session={backSession} hidden={backHidden} heading="Advanced settings" unsetLabel="Optional" />} />
+          <TurningScene color={goalColor} from flipped={false} forward front={cardFace} back={back} />
         ) : (
           cardFace
         )
       ) : (
-        <CardScene
+        // Mounted face up, so arriving at the details from review still turns the card over.
+        <TurningScene
           color={goalColor}
+          from={false}
           flipped={showBack}
           front={cardFace}
-          // Mounted on every step so it turns in with the card rather than appearing flat.
-          back={<CardBack session={backSession} hidden={backHidden} heading="Advanced settings" unsetLabel="Optional" />}
+          back={back}
         />
       )}
     </motion.div>
   );
 
+  const showWorkspace = step < REVIEW || step === DETAILS;
   return (
     <div
       className={`tempo-creation${step === REVIEW ? " tempo-creation-review" : ""}`}
@@ -285,7 +302,7 @@ export function TempoGoalFields({
         onStep={go}
         canVisit={canVisit}
         disabled={disabled}
-        skip={isPlannerTask ? [REWARD] : undefined}
+        showDetails={!isPlannerTask && furthestStep >= DETAILS}
       />
       {step === REVIEW && !isPlannerTask ? (
         // The review labels each part of the plaque it is about to create (read-only).
@@ -295,7 +312,7 @@ export function TempoGoalFields({
       ) : (
         previewCard
       )}
-      {step < REVIEW && (
+      {showWorkspace && (
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={step}
@@ -306,18 +323,17 @@ export function TempoGoalFields({
             transition={{ duration: 0.18, ease: "easeOut" }}
           >
             <h2 ref={heading} tabIndex={-1} className="tempo-heading">
-              {
-                [
-                  "What are you making room for?",
-                  isPlannerTask
-                    ? "Keep it beautifully simple."
-                    : "Find your rhythm.",
-                  "Give it a place in your life.",
-                  reward === undefined
-                    ? "A few more settings."
-                    : "What’s waiting at the finish line?",
-                ][step]
-              }
+              {step === DETAILS
+                ? reward === undefined
+                  ? "A few more settings."
+                  : "What’s waiting at the finish line?"
+                : [
+                    "What are you making room for?",
+                    isPlannerTask
+                      ? "Keep it beautifully simple."
+                      : "Find your rhythm.",
+                    "Give it a place in your life.",
+                  ][step]}
             </h2>
             <fieldset className="tempo-fields" disabled={disabled}>
               {step === 0 && (
@@ -353,13 +369,16 @@ export function TempoGoalFields({
                     showVisibility={!teamId}
                   />
                 ))}
-              {step === REWARD && (
-                <TempoGoalReward
-                  id={id}
-                  reward={reward}
-                  onReward={(reward_text) => onPatch({ reward_text })}
-                  advancedTopics={backTopics}
-                />
+              {step === DETAILS && (
+                <>
+                  <TempoGoalReward
+                    id={id}
+                    reward={reward}
+                    onReward={(reward_text) => onPatch({ reward_text })}
+                    advancedTopics={backTopics}
+                  />
+                  <TempoGoalTimeOfDay id={id} fields={fields} onPatch={onPatch} />
+                </>
               )}
             </fieldset>
             {error && error !== "Title is required." && step > 0 && (
@@ -368,35 +387,27 @@ export function TempoGoalFields({
               </p>
             )}
             <div className="tempo-footer">
-              <Button
-                type="button"
-                disabled={disabled || !currentValid}
-                onClick={() =>
-                  go(isPlannerTask && step + 1 === REWARD ? REVIEW : step + 1)
-                }
-              >
-                Continue →
-              </Button>
+              {step === DETAILS ? (
+                action
+              ) : (
+                <Button
+                  type="button"
+                  disabled={disabled || !currentValid}
+                  onClick={() => go(step + 1)}
+                >
+                  Continue →
+                </Button>
+              )}
             </div>
           </motion.div>
         </AnimatePresence>
       )}
       {step === REVIEW && (
         <TempoGoalCheckpoint
-          plaque={
-            isPlannerTask
-              ? undefined
-              : {
-                  target: plaqueTarget,
-                  onChange: (target) => {
-                    setPlaqueTouched(true);
-                    setPlaqueTarget(target);
-                    onPlaqueTargetChange?.(target);
-                  },
-                }
-          }
+          plaqueTarget={isPlannerTask ? undefined : plaqueTarget}
           disabled={disabled}
           action={action}
+          onDetails={isPlannerTask ? undefined : () => go(DETAILS)}
           error={error}
         />
       )}
@@ -405,21 +416,36 @@ export function TempoGoalFields({
 }
 
 /**
- * The review card arriving from the reward step: it mounts showing its back, then turns on
- * in the same direction to its face, so the flip reads as one continuous turn.
+ * A card scene that mounts showing `from`, then turns to `flipped`. Arriving from another
+ * layout (into or out of review), the card still reads as one continuous turn.
  */
-function ReviewTurn({ color, front, back }: { color: string; front: ReactNode; back: ReactNode }) {
-  const [flipped, setFlipped] = useState(true);
+function TurningScene({
+  color,
+  front,
+  back,
+  from,
+  flipped,
+  forward,
+}: {
+  color: string;
+  front: ReactNode;
+  back: ReactNode;
+  from: boolean;
+  flipped: boolean;
+  forward?: boolean;
+}) {
+  const [arrived, setArrived] = useState(from === flipped);
   useEffect(() => {
-    // Two frames: the back must paint before the turn starts, or there is nothing to animate.
+    if (arrived) return;
+    // Two frames: the starting side must paint before the turn starts, or there is nothing to animate.
     let second = 0;
     const first = requestAnimationFrame(() => {
-      second = requestAnimationFrame(() => setFlipped(false));
+      second = requestAnimationFrame(() => setArrived(true));
     });
     return () => {
       cancelAnimationFrame(first);
       cancelAnimationFrame(second);
     };
-  }, []);
-  return <CardScene color={color} flipped={flipped} forward front={front} back={back} />;
+  }, [arrived]);
+  return <CardScene color={color} flipped={arrived ? flipped : from} forward={forward} front={front} back={back} />;
 }

@@ -22,9 +22,9 @@ const VISIBILITY_OPTIONS = [
 ] as const;
 
 /**
- * The schedule step as labelled rows: when the goal starts, whether it has a finish, its usual
- * time, and who sees it. The optional facts default to "open" and "any time"; picking the
- * other choice reveals the one input it needs.
+ * The schedule step as labelled rows: when the goal starts, whether it has a finish, and who
+ * sees it. These are settled before the goal is saved: the start date can't change after
+ * creation. The finish defaults to "open"; picking a date reveals its input.
  */
 export function TempoGoalSchedule({
   id,
@@ -38,7 +38,6 @@ export function TempoGoalSchedule({
   showVisibility: boolean;
 }) {
   const [finishing, setFinishing] = useState(Boolean(fields.end_date));
-  const [timed, setTimed] = useState(Boolean(fields.default_local_time));
 
   return (
     <div className="tempo-schedule">
@@ -83,6 +82,34 @@ export function TempoGoalSchedule({
         </div>
       </div>
 
+      {showVisibility ? (
+        <div className="tempo-schedule-row">
+          <p className="tempo-schedule-label">Who can see it</p>
+          <Choices
+            label="Who can see this goal"
+            value={fields.is_private ? "private" : "friends"}
+            options={VISIBILITY_OPTIONS}
+            onChange={(value) => onPatch({ is_private: value === "private" })}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** The usual time of day, an optional detail: "any time" until the person sets one. */
+export function TempoGoalTimeOfDay({
+  id,
+  fields,
+  onPatch,
+}: {
+  id: string;
+  fields: GoalCreationFields;
+  onPatch: (patch: Partial<CardEditorFields>) => void;
+}) {
+  const [timed, setTimed] = useState(Boolean(fields.default_local_time));
+  return (
+    <div className="tempo-schedule">
       <div className="tempo-schedule-row">
         <p className="tempo-schedule-label">Time of day</p>
         <div className="tempo-schedule-control">
@@ -109,18 +136,6 @@ export function TempoGoalSchedule({
           )}
         </div>
       </div>
-
-      {showVisibility ? (
-        <div className="tempo-schedule-row">
-          <p className="tempo-schedule-label">Who can see it</p>
-          <Choices
-            label="Who can see this goal"
-            value={fields.is_private ? "private" : "friends"}
-            options={VISIBILITY_OPTIONS}
-            onChange={(value) => onPatch({ is_private: value === "private" })}
-          />
-        </div>
-      ) : null}
     </div>
   );
 }
