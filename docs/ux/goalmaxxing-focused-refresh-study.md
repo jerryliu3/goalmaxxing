@@ -53,6 +53,58 @@ goal, explicit draft/save state, existing app/demo destinations, and readable
 session rows. There is no invented AI behavior, autonomous plan application,
 autoplay requirement, or fabricated social proof.
 
+## Tracker — finding 5
+
+Main's selection refresh is retained. Both options reuse `MonthHeatmap` and the
+production hold completion hook, with stable date-number surfaces and an intensity
+key. A adds Inspect a day, leaving the calendar in log mode for one goal. B adds
+Log/Inspect and inline date detail. Multiple goals stay read only. Future-day
+logging is disabled; inspection can still explain future dates. No week-log
+replacement, count semantics change, or parallel production completion path.
+
+## Profile and utility sheets — findings 6, 7, 15–18
+
+Keep the actual membership card, bio and records on the card, separate record /
+showcase budgets and existing goal-card renderers. Add a Settings button beside
+Edit profile, not a tab bar. Privacy gets a direct entry; Calendar reuses
+`PlannerPreferencesSettings`. Other settings remain labeled context, not fake
+working editors. Identity editing is outside this excerpt; Edit profile studies
+the bio entrance only, with the shared bio limit.
+
+The centered sheet reuses Radix dialog primitives, with bounded scrolling body,
+Close/Escape, fixed heading/footer and visible Done. A searchable pin picker
+keeps selected items/count sticky so search never hides the removal controls.
+It uses production `togglePin` and `pinKey`, respecting separate three-record and
+three-showcase budgets. Done stages profile changes; Save profile explicitly
+commits the local sample, and Undo restores it. Calendar/privacy save separately.
+
+Exact before/after copy examples include their source locations. They address
+Growth streak units and statistics tooltips, Agenda's hidden linked-goal filter,
+and Team's empty state. Already-cleaned planner/appearance/check-in examples are
+excluded. No statistics definitions, windows or visibility rules change.
+
+## Collection and small creation navigation — findings 1, 21, 24
+
+One combined proposal: add search, name/progress sorting and a stable name band
+above the existing `GoalProgressCard`. Its artwork, rotation, progress and reward
+remain. The current card already has a progress footer: the proposal explicitly
+acknowledges that and reuses its canonical formatter rather than inventing a
+new progress calculation. Stable names add height and repeat artwork lettering;
+this is a hypothesis to assess, not an automatic win. The profile example also
+renders actual current-goal cards instead of replacing that context with a stub.
+
+A bounded creation excerpt adds adjacent Back/Cancel on Intention and preserves
+the typed name when going back to Start. It reuses the production step navigation;
+Rhythm is shown only as the next-stage entrance. The rest of the wizard, AI/import
+flows and details-versus-editing behavior are not redesigned.
+
+## Excluded findings
+
+Resolved on main: 3, 4, 9 and the active-profile part of 6. Substantially overlapped
+by main: 7 and 12. Rejected: 8, 20. Withdrawn: broad 2, 10, 11, 13, 14. Deferred: 22. Finding 21 is combined with 1 rather than another card redesign. Findings 15
+and 18 share the precise copy review. Only mobile's concrete crowding problem is
+carried forward from 2. Existing score, scope switch, medals and goal lanes stay.
+
 ## Delivery and verification
 
 Functional test coverage is written as code. Browser checks, tests, builds,

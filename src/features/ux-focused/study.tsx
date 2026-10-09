@@ -9,12 +9,21 @@ import { BASELINE_COMMIT, type FocusedStudy } from "./catalog";
 import { TeamStudy, TeamBaseline } from "./team";
 import { MobileStudy, MobileBaseline } from "./mobile";
 import { LandingStudy, LandingBaseline } from "./landing";
+import { TrackerStudy, TrackerBaseline } from "./tracker";
+import { ProfileStudy, ProfileBaseline } from "./profile";
+import { CollectionStudy, CollectionBaseline } from "./collection";
 function Baseline({ slug }: { slug: string }) {
+  if (slug === "tracker") return <TrackerBaseline />;
+  if (slug === "profile") return <ProfileBaseline />;
+  if (slug === "goal-collection") return <CollectionBaseline />;
   if (slug === "phone-agenda") return <MobileBaseline />;
   if (slug === "mobile-landing") return <LandingBaseline />;
   return <TeamBaseline />;
 }
 function Proposal({ slug, variant }: { slug: string; variant: number }) {
+  if (slug === "tracker") return <TrackerStudy variant={variant} />;
+  if (slug === "profile") return <ProfileStudy />;
+  if (slug === "goal-collection") return <CollectionStudy />;
   if (slug === "phone-agenda") return <MobileStudy variant={variant} />;
   if (slug === "mobile-landing") return <LandingStudy variant={variant} />;
   return <TeamStudy variant={variant} />;
