@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { getTheme, type ThemeId } from "@cadence/shared/brand";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -87,6 +87,62 @@ export function HueBoard(props: BoardProps) {
           </Specimen>
         </div>
       </div>
+    </BoardFrame>
+  );
+}
+
+const DRAFT_TILE = "plan-draft-shimmer rounded-md px-2 py-1.5 text-xs";
+
+function DraftOption({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="space-y-1">
+      <p className="type-eyebrow text-[9px] text-muted-foreground">{label}</p>
+      {children}
+    </div>
+  );
+}
+
+/** A committed session beside three draft treatments, for one theme. */
+export function DraftComparison(props: BoardProps) {
+  const { themeId, palette } = props;
+  const accentLine = { "--primary": "var(--hue-accent-line)" } as CSSProperties;
+  return (
+    <BoardFrame {...props} className="space-y-3 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="type-heading text-base">{getTheme(themeId).label}</h3>
+        <span style={jobAsPrimary("act", "fill")}>
+          <Button size="sm">Save</Button>
+        </span>
+      </div>
+      <div
+        className="rounded-md border border-border bg-card px-2 py-1.5 text-xs"
+        style={{ boxShadow: "inset 3px 0 0 var(--hue-identity)" }}
+      >
+        Morning run · 7:00 · committed
+      </div>
+      <DraftOption label="Identity · shipped">
+        <div className={cn(DRAFT_TILE, "border border-primary/40 bg-primary/15")} style={{ "--primary": "var(--hue-identity)" } as CSSProperties}>
+          Draft · Stretch 10 min · 7:30
+        </div>
+      </DraftOption>
+      {palette.hasAccent ? (
+        <DraftOption label="Accent · same treatment">
+          <div className={cn(DRAFT_TILE, "border border-primary/40 bg-primary/15")} style={accentLine}>
+            Draft · Stretch 10 min · 7:30
+          </div>
+        </DraftOption>
+      ) : null}
+      <DraftOption label={palette.hasAccent ? "Accent · marked" : "Identity · marked"}>
+        <div
+          className={cn(DRAFT_TILE, "flex items-center gap-2 border-[1.5px] border-dashed border-primary bg-primary/10")}
+          style={accentLine}
+        >
+          <span className="rounded bg-[color:var(--hue-accent)] px-1.5 text-[10px] font-semibold text-[color:var(--hue-accent-on)]">
+            Draft
+          </span>
+          Stretch 10 min · 7:30
+        </div>
+      </DraftOption>
     </BoardFrame>
   );
 }

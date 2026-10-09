@@ -10,7 +10,7 @@ import { getTheme, type ThemeId } from "@cadence/shared/brand";
  */
 
 export type HueJob = "act" | "place" | "pick" | "today" | "done" | "focus" | "draft";
-export type HueTone = "identity" | "shade" | "accent" | "accentTint" | "ink";
+export type HueTone = "identity" | "shade" | "shadeOrSolid" | "accent" | "accentTint" | "ink";
 export type HueMix = Readonly<Record<HueJob, HueTone>>;
 
 export interface HueJobInfo {
@@ -68,6 +68,7 @@ export const HUE_JOBS: readonly HueJobInfo[] = [
 export const HUE_TONES: readonly { id: HueTone; label: string }[] = [
   { id: "identity", label: "Identity" },
   { id: "shade", label: "Shade" },
+  { id: "shadeOrSolid", label: "Shade or solid" },
   { id: "accent", label: "Accent" },
   { id: "accentTint", label: "Accent tint" },
   { id: "ink", label: "Ink" },
@@ -86,12 +87,13 @@ export const SHIPPED_MIX: HueMix = {
 
 /**
  * The lab's current proposal: the accent marks where you are and what is only
- * proposed; what you picked sits in the shade; identity keeps doing, now, and done.
+ * proposed; what you picked sits in the shade, going solid where the shade
+ * would vanish into the card; identity keeps doing, now, and done.
  */
 export const PROPOSED_MIX: HueMix = {
   ...SHIPPED_MIX,
   place: "accent",
-  pick: "shade",
+  pick: "shadeOrSolid",
   draft: "accent",
 };
 
@@ -137,7 +139,7 @@ export const HUE_MIXES: readonly HueMixOption[] = [
     id: "proposal",
     name: "Proposal",
     premise:
-      "Accent marks where you are and drafts; shade sits behind what you picked. Tonal themes drop the accent and Pitlane tones its lime down.",
+      "Accent marks where you are and drafts; shade sits behind what you picked, solid where it would vanish. Original, Gazetteer, and Bloodstone drop the accent.",
     mix: PROPOSED_MIX,
   },
 ];
@@ -249,9 +251,11 @@ export interface Swatch {
 /** Everything a board needs beyond the identity and ink it reads from the theme. */
 export interface HuePalette {
   shade: Swatch;
+  /** The shade, or solid identity where the shade does not separate from the card. */
+  selected: Swatch;
   accent: Swatch & { line: string };
   accentTint: Swatch;
-  /** False when the theme has no accent and accent jobs fall back to the shade. */
+  /** False when the theme has no accent: solid accent jobs use `selected`, tint ones the shade. */
   hasAccent: boolean;
 }
 
@@ -276,7 +280,7 @@ const REGISTRY: AccentCandidate = {
 const NO_ACCENT: AccentCandidate = {
   id: "none",
   name: "No accent",
-  note: "Identity and shade only: every accent job uses the shade.",
+  note: "Identity and shade only: accent jobs use the shade, solid where it would vanish into the card.",
 };
 
 const EXTRA_ACCENTS: Partial<Record<ThemeId, readonly AccentCandidate[]>> = {
@@ -345,19 +349,18 @@ const EXTRA_ACCENTS: Partial<Record<ThemeId, readonly AccentCandidate[]>> = {
   ],
 };
 
-/**
- * Accents the proposal loads: tonal themes drop theirs, an accent louder than
- * its identity is toned down, and the rest keep the registry pair.
- */
+/** Accents the proposal loads: tonal themes drop theirs; the rest keep the registry pair. */
 export const PROPOSED_ACCENTS: Partial<Record<ThemeId, string>> = {
   original: "none",
   gazetteer: "none",
   bloodstone: "none",
-  pitlane: "lime-tint",
 };
 
-/** An accent may be at most this much louder against the page than its identity. */
+/** Above this, an accent out-shouts its identity. Advisory: Pitlane keeps a louder lime on purpose. */
 export const MAX_ACCENT_LOUDNESS = 1.25;
+
+/** Below this contrast against the card, a shade reads as no selection and goes solid. */
+export const MIN_SHADE_SEPARATION = 1.2;
 
 export function accentCandidates(themeId: ThemeId): readonly AccentCandidate[] {
   return [REGISTRY, NO_ACCENT, ...(EXTRA_ACCENTS[themeId] ?? [])];
@@ -387,10 +390,16 @@ export function resolvePalette(themeId: ThemeId, accentId: string): HuePalette {
   const amount = isLightPage(page) ? TINT_AMOUNT.light : TINT_AMOUNT.dark;
   const tint = (color: string) => mixHex(color, page, amount);
   const shade = { fill: tint(identity), onFill: ink };
+  const card = themeHex(themeId, "card") ?? page;
+  const selected =
+    contrastRatio(shade.fill, card) >= MIN_SHADE_SEPARATION
+      ? shade
+      : { fill: identity, onFill: themeHex(themeId, "primaryForeground") ?? page };
 
   if (candidate.id === NO_ACCENT.id) {
     return {
       shade,
+      selected,
       accent: { fill: identity, onFill: themeHex(themeId, "primaryForeground") ?? page, line: identity },
       accentTint: shade,
       hasAccent: false,
@@ -402,6 +411,7 @@ export function resolvePalette(themeId: ThemeId, accentId: string): HuePalette {
     candidate.onFill ?? (candidate.fill ? ink : (themeHex(themeId, "selectionForeground") ?? page));
   return {
     shade,
+    selected,
     accent: { fill, onFill, line: lineFor(fill, page, ink) },
     accentTint: { fill: candidate.tintFill ?? tint(fill), onFill: ink },
     hasAccent: true,
@@ -413,6 +423,8 @@ export interface HueReadout {
   identityLine: number;
   /** Ink on the shade. */
   shadeLabel: number;
+  /** Shade against the card it sits on. */
+  shadeSeparation: number;
   /** The accent's line form as a rule or mark on the page. */
   accentLine: number;
   /** Label on the solid accent. */
@@ -431,6 +443,7 @@ export function hueReadout(themeId: ThemeId, palette: HuePalette): HueReadout {
   return {
     identityLine: contrastRatio(identity, page),
     shadeLabel: contrastRatio(palette.shade.onFill, palette.shade.fill),
+    shadeSeparation: contrastRatio(palette.shade.fill, themeHex(themeId, "card") ?? page),
     accentLine: contrastRatio(palette.accent.line, page),
     accentLabel: contrastRatio(palette.accent.onFill, palette.accent.fill),
     accentTintLabel: contrastRatio(palette.accentTint.onFill, palette.accentTint.fill),
@@ -448,6 +461,11 @@ const TONE_VARIABLES: Record<HueTone, { fill: string; on: string; line: string }
     line: "var(--hue-identity)",
   },
   shade: { fill: "var(--hue-shade)", on: "var(--hue-shade-on)", line: "var(--hue-identity)" },
+  shadeOrSolid: {
+    fill: "var(--hue-selected)",
+    on: "var(--hue-selected-on)",
+    line: "var(--hue-identity)",
+  },
   accent: { fill: "var(--hue-accent)", on: "var(--hue-accent-on)", line: "var(--hue-accent-line)" },
   accentTint: {
     fill: "var(--hue-accent-tint)",
@@ -465,7 +483,7 @@ const TONE_VARIABLES: Record<HueTone, { fill: string; on: string; line: string }
 export function hueBoardStyle(mix: HueMix, palette: HuePalette): CSSProperties {
   const fallback: Partial<Record<HueTone, HueTone>> = palette.hasAccent
     ? {}
-    : { accent: "shade", accentTint: "shade" };
+    : { accent: "shadeOrSolid", accentTint: "shade" };
   const variables: Record<string, string> = {
     "--hue-identity": "var(--primary)",
     "--hue-identity-on": "var(--primary-foreground)",
@@ -473,6 +491,8 @@ export function hueBoardStyle(mix: HueMix, palette: HuePalette): CSSProperties {
     "--hue-ink-on": "var(--background)",
     "--hue-shade": palette.shade.fill,
     "--hue-shade-on": palette.shade.onFill,
+    "--hue-selected": palette.selected.fill,
+    "--hue-selected-on": palette.selected.onFill,
     "--hue-accent": palette.accent.fill,
     "--hue-accent-on": palette.accent.onFill,
     "--hue-accent-line": palette.accent.line,

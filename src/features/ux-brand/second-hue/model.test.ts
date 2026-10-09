@@ -12,8 +12,7 @@ import {
   LABEL_CONTRAST,
   LINE_CONTRAST,
   matchingMixId,
-  MAX_ACCENT_LOUDNESS,
-  PROPOSED_ACCENTS,
+  MIN_SHADE_SEPARATION,
   PROPOSED_MIX,
   resolvePalette,
   SHIPPED_MIX,
@@ -52,21 +51,25 @@ describe("second hue mixes", () => {
     expect((jobAsPrimary("act", "fill") as Record<string, string>)["--primary"]).toBe("var(--job-act-fill)");
   });
 
-  it("falls back to the shade when a theme has no accent", () => {
+  it("falls back to the selected swatch when a theme has no accent", () => {
     const board = hueBoardStyle(PROPOSED_MIX, resolvePalette("original", "none")) as Record<string, string>;
-    expect(board["--job-place-fill"]).toBe("var(--hue-shade)");
+    expect(board["--job-place-fill"]).toBe("var(--hue-selected)");
     expect(board["--job-draft-line"]).toBe("var(--hue-identity)");
     const withAccent = hueBoardStyle(PROPOSED_MIX, resolvePalette("kiln", "registry")) as Record<string, string>;
     expect(withAccent["--job-place-fill"]).toBe("var(--hue-accent)");
-    expect(withAccent["--job-pick-fill"]).toBe("var(--hue-shade)");
+    expect(withAccent["--job-pick-fill"]).toBe("var(--hue-selected)");
     expect(withAccent["--job-draft-line"]).toBe("var(--hue-accent-line)");
   });
 
-  it("keeps every proposed accent no louder than its identity", () => {
-    for (const theme of THEMES) {
-      const palette = resolvePalette(theme.id, PROPOSED_ACCENTS[theme.id] ?? "registry");
-      if (!palette.hasAccent) continue;
-      expect(hueReadout(theme.id, palette).loudness, theme.id).toBeLessThanOrEqual(MAX_ACCENT_LOUDNESS);
+  it("goes solid only where the shade vanishes into the card", () => {
+    for (const id of ["opaline", "bloodstone"] as const) {
+      const palette = resolvePalette(id, "registry");
+      expect(hueReadout(id, palette).shadeSeparation, id).toBeLessThan(MIN_SHADE_SEPARATION);
+      expect(palette.selected.fill, id).toBe(themeHex(id, "primary"));
+    }
+    for (const id of ["original", "gazetteer", "undertow", "kiln"] as const) {
+      const palette = resolvePalette(id, "registry");
+      expect(palette.selected, id).toEqual(palette.shade);
     }
   });
 });

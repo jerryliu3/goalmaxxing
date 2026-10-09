@@ -41,8 +41,18 @@ describe("second hue study", () => {
     await user.click(within(screen.getByRole("radiogroup", { name: "Mix" })).getByRole("radio", { name: /proposal/i }));
     expect(screen.getByRole("combobox", { name: "Original accent" })).toHaveValue("none");
     expect(screen.getByRole("combobox", { name: "Kiln accent" })).toHaveValue("registry");
-    expect(board("original").style.getPropertyValue("--job-place-fill")).toBe("var(--hue-shade)");
+    expect(screen.getByRole("combobox", { name: "Pitlane accent" })).toHaveValue("registry");
+    expect(board("original").style.getPropertyValue("--job-place-fill")).toBe("var(--hue-selected)");
     expect(board("kiln").style.getPropertyValue("--job-place-fill")).toBe("var(--hue-accent)");
+  });
+
+  it("compares draft treatments, marking in identity where a theme has no accent", async () => {
+    const user = userEvent.setup();
+    render(<SecondHueStudy />);
+    await user.click(within(screen.getByRole("radiogroup", { name: "Mix" })).getByRole("radio", { name: /proposal/i }));
+    await expand(user, "Drafts compared");
+    expect(screen.getAllByText("Accent · marked")).toHaveLength(5);
+    expect(screen.getAllByText("Identity · marked")).toHaveLength(3);
   });
 
   it("applies a theme's accent to every board for that theme", async () => {

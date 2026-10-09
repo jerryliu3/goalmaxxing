@@ -6,7 +6,7 @@ import { StudyThemeAssets } from "@/components/brand/study-theme-assets";
 import { useUiStyle } from "@/components/brand/ui-style-provider";
 import { BrandExploreBar } from "@/features/ux-brand/brand-stage";
 import { cn } from "@/lib/utils";
-import { HueBoard, HueBoardCompact } from "./board";
+import { DraftComparison, HueBoard, HueBoardCompact } from "./board";
 import {
   accentCandidates,
   HUE_JOBS,
@@ -17,6 +17,7 @@ import {
   LINE_CONTRAST,
   matchingMixId,
   MAX_ACCENT_LOUDNESS,
+  MIN_SHADE_SEPARATION,
   PROPOSED_ACCENTS,
   resolvePalette,
   SHIPPED_MIX,
@@ -100,6 +101,15 @@ function Readout({ themeId, accentId }: { themeId: ThemeId; accentId: string }) 
     <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
       <Ratio label="Identity line" value={readout.identityLine} floor={LINE_CONTRAST} />
       <Ratio label="Shade label" value={readout.shadeLabel} floor={LABEL_CONTRAST} />
+      <span
+        className={cn(
+          "whitespace-nowrap",
+          readout.shadeSeparation < MIN_SHADE_SEPARATION ? "text-amber-700" : "text-zinc-700"
+        )}
+      >
+        Shade on card <span className="font-mono">{readout.shadeSeparation.toFixed(2)}</span>
+        {readout.shadeSeparation < MIN_SHADE_SEPARATION ? " · goes solid" : ""}
+      </span>
       {palette.hasAccent ? (
         <>
           <Ratio label="Accent line" value={readout.accentLine} floor={LINE_CONTRAST} />
@@ -117,7 +127,7 @@ function Readout({ themeId, accentId }: { themeId: ThemeId; accentId: string }) 
           <span
             className={cn(
               "whitespace-nowrap",
-              readout.loudness > MAX_ACCENT_LOUDNESS ? "text-red-700" : "text-zinc-700"
+              readout.loudness > MAX_ACCENT_LOUDNESS ? "text-amber-700" : "text-zinc-700"
             )}
           >
             Loudness <span className="font-mono">{readout.loudness.toFixed(1)}×</span>
@@ -256,6 +266,22 @@ export function SecondHueStudy() {
                 />
                 <Readout themeId={theme.id} accentId={accentFor(theme.id)} />
               </div>
+            ))}
+          </div>
+        </Fold>
+
+        <Fold
+          title="Drafts compared"
+          hint="A committed session beside three draft treatments, using each theme's accent above."
+        >
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {THEMES.map((theme) => (
+              <DraftComparison
+                key={theme.id}
+                themeId={theme.id}
+                mix={mix}
+                palette={resolvePalette(theme.id, accentFor(theme.id))}
+              />
             ))}
           </div>
         </Fold>
