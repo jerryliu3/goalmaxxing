@@ -27,7 +27,8 @@ export function PlanActionBar({
   children: ReactNode;
 }) {
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-(--plan-action-bar-bottom) z-40 flex justify-center px-3">
+    // m-0: a parent's space-y margin would otherwise lift the fixed bar off the offset panels stack from.
+    <div className="pointer-events-none fixed inset-x-0 bottom-(--plan-action-bar-bottom) z-40 m-0 flex justify-center px-3">
       <div
         role="region"
         aria-label={label}
