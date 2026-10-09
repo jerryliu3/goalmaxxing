@@ -7,7 +7,15 @@
 .left, .right { top: var(--card-radius); height: calc(100% - 2 * var(--card-radius)); width: var(--card-depth); transform-origin: left center; }
 .left { --nx: -1; --ny: 0; left: 0; transform: translateZ(calc(-1 * var(--card-depth))) rotateY(-90deg); }
 .right { --nx: 1; --ny: 0; left: 100%; transform: rotateY(90deg); }
-.corner { position: absolute; width: calc(2 * var(--card-radius)); height: calc(2 * var(--card-radius)); transform-style: preserve-3d; }
+.corner {
+  position: absolute;
+  width: calc(2 * var(--card-radius));
+  height: calc(2 * var(--card-radius));
+  transform-style: preserve-3d;
+  /* High-DPR Chromium paints these backface-hidden facets as opaque white
+     rectangles at some tilt angles. Clipping the corner stops that. */
+  overflow: hidden;
+}
 .topLeft { top: 0; left: 0; }
 .topRight { top: 0; right: 0; }
 .bottomLeft { bottom: 0; left: 0; }
