@@ -43,8 +43,13 @@ export function SetupProfileCard({
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    void supabase.from("profiles").select("username, display_name, avatar_url, created_at").eq("id", userId).maybeSingle()
-      .then(({ data, error }) => {
+    void (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("username, display_name, avatar_url, created_at")
+          .eq("id", userId)
+          .maybeSingle();
         if (cancelled) return;
         if (error || !data) {
           setLoadError(true);
@@ -58,8 +63,10 @@ export function SetupProfileCard({
         setCreatedAt(data.created_at);
         setDraft((current) => current ?? next);
         setOrigin((current) => current ?? next);
-      })
-      .finally(() => { if (!cancelled) setLoading(false); });
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
     return () => { cancelled = true; };
   }, [supabase, userId]);
 
