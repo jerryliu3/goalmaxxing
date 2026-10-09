@@ -287,7 +287,10 @@ Round 1's starting position, superseded by the round 2 proposal above:
 8. Round 2: is Pitlane's toned-down olive still Pitlane? Answered: no; it
    keeps the registry lime.
 9. Bloodstone: no accent with solid red navigation, or its registry slate?
-   The lab shows both side by side under "Open decision".
+   Decided for now: no accent, solid red navigation. Known cost: Save,
+   today, the selected row, and navigation share one red, so selection and
+   action are told apart by position rather than color. Registry slate is
+   the fallback if that reads as noise in use.
 
 ## Evaluating in the lab
 
