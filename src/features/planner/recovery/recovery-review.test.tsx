@@ -181,9 +181,14 @@ describe("recovery mode", () => {
     await user.click(await screen.findByRole("button", { name: "2 sessions slipped · Review" }));
     await user.click(screen.getByRole("button", { name: "Next goal" }));
 
+    expect(screen.getByTestId("recovery-review-panel")).toHaveClass("recovery-border-trace");
+    expect(bar().getByRole("button", { name: "Hide suggestions" })).toHaveAttribute("aria-pressed", "true");
+    expect(bar().getByRole("button", { name: "Show full calendar" })).toHaveAttribute("aria-pressed", "false");
     await user.click(bar().getByRole("button", { name: "Hide suggestions" }));
     expect(screen.queryByTestId("recovery-review-panel")).toBeNull();
+    expect(bar().getByRole("button", { name: "Show suggestions" })).toHaveAttribute("aria-pressed", "false");
     await user.click(bar().getByRole("button", { name: "Show full calendar" }));
+    expect(bar().getByRole("button", { name: "Only slipped goals" })).toHaveAttribute("aria-pressed", "true");
     expect(mocks.onLensChange).toHaveBeenLastCalledWith({
       goalIds: [READ, RUN],
       showFullCalendar: true,

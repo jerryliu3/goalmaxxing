@@ -6,7 +6,8 @@ import { PLAN_ACTION_BUTTON_CLASS, PlanActionBar } from "@/features/planner/plan
 import { recoveryPromptText } from "@/lib/planner/recovery/model";
 import { RECOVERY_BLOCKED_NOTE, type RecoveryReview } from "@/features/planner/recovery/use-recovery-review";
 
-const toggleClass = "size-9 rounded-full px-0 sm:w-auto sm:px-3";
+const toggleClass =
+  "size-9 rounded-full px-0 sm:w-auto sm:px-3 aria-pressed:bg-recover/15 aria-pressed:text-foreground aria-pressed:ring-1 aria-pressed:ring-recover aria-pressed:ring-inset";
 
 /**
  * Recovery mode's bar: what is left, the suggestions and calendar toggles,
