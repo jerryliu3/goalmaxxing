@@ -35,6 +35,7 @@ export function usePlannerCalendarModel({
   calendarTaskEntriesByDate,
   hideTasks,
   showCompletedGoals,
+  hideLinkedParents,
   letGoEntryKeys,
 }: UsePlannerCalendarModelArgs): PlannerCalendarModel {
   const currentScopeMonth = month ?? context?.scopeMonth ?? null;
@@ -95,6 +96,7 @@ export function usePlannerCalendarModel({
         calendarTaskEntriesByDate,
         hideTasks,
         showCompletedGoals,
+        hideLinkedParents,
         memoizedState: {
           draftSession,
           activeGoalIndexes,
@@ -106,6 +108,7 @@ export function usePlannerCalendarModel({
       calendarTaskEntriesByDate,
       hideTasks,
       showCompletedGoals,
+      hideLinkedParents,
       activeGoalIndexes,
       calendarStoreProjection,
       categoryFilters,

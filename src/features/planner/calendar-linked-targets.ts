@@ -25,3 +25,23 @@ export function buildPlannerLinkedTargetIndexes(
   };
 }
 
+export function linkedParentGoalIds(
+  links: ReadonlyArray<Pick<PlannerGoalLinkSummary, "targetGoalId">>
+) {
+  return new Set(links.map((link) => link.targetGoalId));
+}
+
+/** A parent is any goal another goal counts toward. Hiding them leaves the goals you complete. */
+export function showsGoalWhenHidingLinkedParents({
+  hideLinkedParents,
+  goalId,
+  parentGoalIds,
+}: {
+  hideLinkedParents: boolean;
+  goalId: string;
+  parentGoalIds: ReadonlySet<string>;
+}) {
+  if (!hideLinkedParents) return true;
+  return !parentGoalIds.has(goalId);
+}
+

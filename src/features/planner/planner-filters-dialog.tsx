@@ -32,6 +32,8 @@ interface PlannerFiltersDialogProps {
   endMonthOptions: GoalMonthOption[];
   showCompletedGoals?: boolean;
   onShowCompletedGoalsChange?: (value: boolean) => void;
+  hideLinkedParents?: boolean;
+  onHideLinkedParentsChange?: (value: boolean) => void;
   dayFilters?: ChecklistFiltersFormProps | null;
 }
 
@@ -50,6 +52,8 @@ export function PlannerFiltersDialog({
   endMonthOptions,
   showCompletedGoals = false,
   onShowCompletedGoalsChange,
+  hideLinkedParents = false,
+  onHideLinkedParentsChange,
   dayFilters = null,
 }: PlannerFiltersDialogProps) {
   const usingDayFilters = dayFilters !== null;
@@ -82,6 +86,21 @@ export function PlannerFiltersDialog({
               <span className="block text-xs text-muted-foreground">Hide one time tasks. Goal visibility stays the same.</span>
             </span>
           </label> : null}
+          <label className="flex min-w-0 items-start gap-2">
+            <input
+              type="checkbox"
+              checked={hideLinkedParents}
+              onChange={(event) => onHideLinkedParentsChange?.(event.target.checked)}
+              className="mt-1 size-4 shrink-0 accent-primary"
+              aria-label="Hide linked parent goals"
+            />
+            <span className="min-w-0 space-y-1">
+              <span className="block font-sans text-sm font-medium">Hide linked parent goals</span>
+              <span className="block text-xs text-muted-foreground">
+                Show the goals you complete. Hide a goal when another goal counts toward it.
+              </span>
+            </span>
+          </label>
           {usingDayFilters ? null : (
             <label className="flex min-w-0 items-start gap-2">
               <input
