@@ -7,6 +7,18 @@ import { StudyThemeAssets } from "@/components/brand/study-theme-assets";
 import { Action, PreviewTheme } from "@/features/ux-refresh/primitives";
 import { BASELINE_COMMIT, type FocusedStudy } from "./catalog";
 import { TeamStudy, TeamBaseline } from "./team";
+import { MobileStudy, MobileBaseline } from "./mobile";
+import { LandingStudy, LandingBaseline } from "./landing";
+function Baseline({ slug }: { slug: string }) {
+  if (slug === "phone-agenda") return <MobileBaseline />;
+  if (slug === "mobile-landing") return <LandingBaseline />;
+  return <TeamBaseline />;
+}
+function Proposal({ slug, variant }: { slug: string; variant: number }) {
+  if (slug === "phone-agenda") return <MobileStudy variant={variant} />;
+  if (slug === "mobile-landing") return <LandingStudy variant={variant} />;
+  return <TeamStudy variant={variant} />;
+}
 
 export function FocusedStudyPage({
   study,
@@ -18,7 +30,9 @@ export function FocusedStudyPage({
   const { styleId, options } = useUiStyle();
   const [theme, setTheme] = useState<ThemeId>(styleId);
   const [compare, setCompare] = useState(true);
-  const [phone, setPhone] = useState(false);
+  const [phone, setPhone] = useState(
+    study.slug === "phone-agenda" || study.slug === "mobile-landing",
+  );
   const [revision, setRevision] = useState(0);
   const selected = study.variants[variant];
   return (
@@ -130,7 +144,7 @@ export function FocusedStudyPage({
                   Current structure · source reconstruction
                 </p>
                 <div className="fc-demo">
-                  <TeamBaseline />
+                  <Baseline slug={study.slug} />
                 </div>
               </section>
             )}
@@ -139,7 +153,8 @@ export function FocusedStudyPage({
                 Proposal {String.fromCharCode(65 + variant)} · {selected.name}
               </p>
               <div className="fc-demo">
-                <TeamStudy
+                <Proposal
+                  slug={study.slug}
                   key={`${study.slug}-${variant}-${revision}`}
                   variant={variant}
                 />

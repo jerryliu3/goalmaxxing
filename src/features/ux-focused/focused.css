@@ -320,3 +320,224 @@
   padding-left: 14px;
   background: var(--muted);
 }
+
+.fc-baseline-controls {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.fc-baseline-controls span {
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+.fc-baseline-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(62px, 1fr));
+  overflow-x: auto;
+  margin-top: 16px;
+}
+.fc-baseline-calendar > div {
+  min-height: 210px;
+  border: 1px solid var(--border);
+  padding: 6px;
+  min-width: 0;
+}
+.fc-baseline-calendar strong {
+  font-size: 10px;
+}
+.fc-baseline-calendar p {
+  font-size: 10px;
+  border-radius: var(--radius-sm);
+  padding: 5px 3px;
+  background: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 12px;
+}
+.fc-date-rail {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding: 4px;
+}
+.fc-date-rail button {
+  display: grid;
+  place-items: center;
+  flex: 0 0 76px;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 4px;
+  scroll-snap-align: start;
+}
+.fc-date-rail small {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.fc-date-rail strong {
+  font-size: 22px;
+}
+.fc-date-rail button[aria-pressed="true"] {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  background: var(--muted);
+}
+.fc-date-rail button[aria-current="date"] strong {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+.fc-day-work {
+  padding: 20px 0;
+  border-top: 1px solid var(--border);
+}
+.fc-day-work h3 {
+  font-size: 22px;
+}
+.fc-draft {
+  position: sticky;
+  bottom: 12px;
+  padding: 16px;
+  margin-top: 24px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-lg);
+  background: var(--background);
+  z-index: 2;
+}
+.fc-marketing {
+  line-height: 1.7;
+}
+.fc-marketing h2 {
+  font-size: clamp(32px, 8cqi, 58px);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+.fc-marketing-hero {
+  padding: 40px 0;
+}
+.fc-marketing-hero > p:first-child {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  margin-bottom: 16px;
+}
+.fc-marketing-hero > p:not(:first-child) {
+  margin-top: 20px;
+  max-width: 430px;
+}
+.fc-story-chapter {
+  border-top: 1px solid var(--border);
+  padding: 32px 0;
+  display: grid;
+  gap: 24px;
+  align-items: center;
+}
+.fc-chapter-copy > span {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.fc-chapter-copy h3 {
+  font-size: 28px;
+  line-height: 1.15;
+  margin: 12px 0;
+}
+.fc-chapter-copy p {
+  color: var(--muted-foreground);
+  font-size: 15px;
+}
+.fc-story-art {
+  max-width: 260px;
+  width: 100%;
+  margin: auto;
+}
+.fc-plan-proof {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  padding: 16px;
+  margin-top: 20px;
+}
+.fc-plan-proof h4 {
+  font-size: 17px;
+}
+.fc-date-stamp {
+  flex: 0 0 44px;
+  display: grid;
+  text-align: center;
+  gap: 4px;
+}
+.fc-date-stamp small {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.fc-date-stamp strong {
+  font-size: 22px;
+}
+.fc-plan-proof .fc-line[data-moved="true"] {
+  border-left: 3px solid var(--primary);
+  padding-left: 10px;
+}
+.fc-interactive-proof {
+  border-top: 1px solid var(--border);
+  padding: 28px 0;
+  display: grid;
+  gap: 24px;
+}
+.fc-proof-card {
+  max-width: 220px;
+  width: 100%;
+  margin: auto;
+}
+.fc-proof-controls h3 {
+  font-size: 28px;
+  line-height: 1.15;
+  margin-top: 12px;
+}
+.fc-marketing-end {
+  border-top: 1px solid var(--border);
+  padding: 40px 0 20px;
+}
+.fc-marketing-end h3 {
+  font-size: 32px;
+  line-height: 1.15;
+}
+.fc-mini-browser {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+}
+.fc-dense-proof {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  margin-top: 16px;
+}
+.fc-dense-proof > div {
+  min-height: 64px;
+  border: 1px solid var(--border);
+  padding: 3px;
+  overflow: hidden;
+}
+.fc-dense-proof small {
+  font-size: 9px;
+}
+.fc-dense-proof span {
+  font-size: 9px;
+  background: var(--muted);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@container (min-width: 700px) {
+  .fc-story-chapter {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 32px;
+  }
+  .fc-interactive-proof {
+    grid-template-columns: minmax(200px, 0.8fr) minmax(0, 1.2fr);
+  }
+}
