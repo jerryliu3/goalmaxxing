@@ -25,7 +25,8 @@ import { HUE_JOBS, jobAsPrimary, type HueJob, type HueMix } from "./model";
  * Specimens paint through the board's `--job-<job>-fill|on|line` variables.
  * Production components that use `primary` are re-pointed with jobAsPrimary;
  * controls whose selection is neutral take a scoped class override instead.
- * Under the ink tone, in-page controls keep their shipped neutral treatment.
+ * Under the ink tone, in-page controls keep their pre-second-hue neutral
+ * treatment (a raised background thumb with an ink label).
  */
 
 const TODAY = 9;
@@ -155,7 +156,7 @@ export function ViewSwitcherSpecimen({ mix }: { mix: HueMix }) {
       onChange={setView}
       className={
         mix.place === "ink"
-          ? undefined
+          ? "[&>span]:bg-background [&>button[aria-pressed=true]]:text-foreground"
           : "[&>span]:bg-[color:var(--job-place-fill)] [&>button[aria-pressed=true]]:text-[color:var(--job-place-on)]"
       }
     />
@@ -175,7 +176,7 @@ export function InPageTabsSpecimen({
       ? // The base line variant sizes its rule on data-horizontal, which Radix never sets.
         "after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-[color:var(--job-place-line)]"
       : mix.place === "ink"
-        ? undefined
+        ? "data-[state=active]:bg-background data-[state=active]:text-foreground"
         : "data-[state=active]:bg-[color:var(--job-place-fill)] data-[state=active]:text-[color:var(--job-place-on)]";
   return (
     <Tabs defaultValue={options[0]}>

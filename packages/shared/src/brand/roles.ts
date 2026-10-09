@@ -36,10 +36,14 @@ export const APP_COLOR_ROLES = [
   "recover",
   "warning",
   "warningFill",
+  /** Where you are: the active tab, view, or section, as a fill with its label. */
   "selection",
   "selectionForeground",
+  /** Where you are as a rule or frame on the page (desktop tab rules, line tabs). */
+  "selectionLine",
   "today",
   "todayForeground",
+  /** What you picked: the selected agenda row, drawn with its own label color. */
   "daySelected",
   "daySelectedForeground",
   "adjacent",

@@ -8,8 +8,8 @@ export interface SegmentedControlOption<T extends string> {
 }
 
 /**
- * Neutral pill track with a raised thumb that slides to the selected option.
- * Selection reads through elevation and ink, never a brand-colored fill.
+ * Neutral pill track with a thumb in the theme's selection pair that slides
+ * to the current option. Primary stays reserved for actions.
  */
 export function SegmentedControl<T extends string>({
   label,
@@ -39,7 +39,7 @@ export function SegmentedControl<T extends string>({
       <span
         aria-hidden
         data-testid={thumbTestId}
-        className="pointer-events-none absolute inset-y-0.5 left-0.5 rounded-full bg-background shadow-[0_1px_2px_rgb(0_0_0/0.08),0_0_0_0.5px_rgb(0_0_0/0.06)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+        className="pointer-events-none absolute inset-y-0.5 left-0.5 rounded-full bg-selection shadow-[0_1px_2px_rgb(0_0_0/0.08),0_0_0_0.5px_rgb(0_0_0/0.06)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
         style={{ width: `calc((100% - 4px) / ${options.length})`, transform: `translateX(${selectedIndex * 100}%)` }}
       />
       {options.map((option) => {
@@ -53,7 +53,7 @@ export function SegmentedControl<T extends string>({
             onClick={() => onChange(option.value)}
             className={cn(
               "relative z-10 h-8 whitespace-nowrap rounded-full px-3 transition-colors sm:px-4",
-              selected ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground"
+              selected ? "font-medium text-selection-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
             {option.label}

@@ -1,5 +1,8 @@
 import { DEFAULT_GHOST_COLORS, type ThemeDefinition } from "../roles";
 
+/** Primary washed toward the page: 18% on the light page, 40% on the dark one. */
+const ORIGINAL_SHADE = { light: "#d0dff1", dark: "#274165" } as const;
+
 /** Classic Goalmaxxing chrome: Geist throughout, identity blue, pill tabs. */
 export const ORIGINAL_THEME = {
   id: "original",
@@ -44,13 +47,16 @@ export const ORIGINAL_THEME = {
     recover: "#eab308",
     warning: "#eab308",
     warningFill: "#fef9c3",
-    selection: "var(--primary)",
-    selectionForeground: "var(--primary-foreground)",
+    // No second hue: where you are and what you picked share the identity
+    // shade (primary 18% over the page), with ink labels and blue rules.
+    selection: ORIGINAL_SHADE.light,
+    selectionForeground: "var(--foreground)",
+    selectionLine: "var(--primary)",
     // Today = blue L2, selected = outline, adjacent = grey L1.
     today: "var(--gm-heatmap-2)",
     todayForeground: "var(--primary-foreground)",
-    daySelected: "#4687d8",
-    daySelectedForeground: "#ffffff",
+    daySelected: ORIGINAL_SHADE.light,
+    daySelectedForeground: "var(--foreground)",
     // Concrete grey: a color-mix() here was dropped and tiles never painted.
     adjacent: "#e4e4e7",
     adjacentForeground: "oklch(0.36 0.01 286)",
@@ -86,12 +92,13 @@ export const ORIGINAL_THEME = {
     recover: "#facc15",
     warning: "#facc15",
     warningFill: "color-mix(in srgb, #facc15 22%, var(--background))",
-    selection: "var(--primary)",
-    selectionForeground: "var(--primary-foreground)",
+    selection: ORIGINAL_SHADE.dark,
+    selectionForeground: "var(--foreground)",
+    selectionLine: "var(--primary)",
     today: "var(--gm-heatmap-4)",
     todayForeground: "var(--primary-foreground)",
-    daySelected: "#7eace6",
-    daySelectedForeground: "#0b1f38",
+    daySelected: ORIGINAL_SHADE.dark,
+    daySelectedForeground: "var(--foreground)",
     adjacent: "#3f3f46",
     adjacentForeground: "oklch(0.92 0.003 286)",
     stampLight: "var(--primary)",

@@ -69,6 +69,22 @@ for now (Quarry, Fieldwork, Longplay, Lido) as `StudySkin` data (pass one to
 `studyTheme(...)` to bring it back) and concept notes and study-authored
 styling for all sixteen skins (`STUDY_SKIN_NOTES`).
 
+## Identity, shade, and second hue
+
+Each theme marks state with up to three colors, split by job
+(`docs/ux/goalmaxxing-second-hue-study.md`, `/ux/brand/second-hue`):
+
+| Job | Roles | Color |
+| --- | --- | --- |
+| Act, today, done, focus | `primary`, `today`, `ring` | Identity |
+| Where you are: nav tabs, view switchers, in-page tabs | `selection` + `selectionForeground` fills, `selectionLine` rules and frames | The second hue; the identity shade where a theme has none (Original, Gazetteer); identity on Bloodstone |
+| What you picked: the selected agenda row | `daySelected` + `daySelectedForeground` | The identity shade (18% over a light page, 40% over a dark one), solid identity where the shade would not separate from the card (Opaline, Bloodstone) |
+
+Fills always come with their foreground, and rules use `selectionLine`, never
+the fill. Study skins derive all of this in `themes/study.ts`; a skin opts its
+navigation out of the second hue with `selection: "primary"`. Planner drafts
+are not a theme job: they keep their category color.
+
 ## Goal categories
 
 Category colors are the same in every theme: the Mineral Candy palette in
