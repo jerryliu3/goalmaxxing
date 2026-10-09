@@ -28,6 +28,7 @@ export function SettingsProfileBox({
 }) {
   const [picker, setPicker] = useState<Picker>(null);
   const { editing, draft } = session;
+  const visibility = bundle?.profile.visibility ?? "public";
 
   const finish = (commit: boolean) => {
     setPicker(null);
@@ -46,7 +47,9 @@ export function SettingsProfileBox({
       {editing ? (
         <div className="sticky top-2 z-10 -mx-2 mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-primary/40 bg-card/95 px-3 py-2.5 backdrop-blur">
           <p role="status" className="min-w-0 flex-1 text-sm">
-            Editing — changes are visible to everyone when you press Done
+            {visibility === "private"
+              ? "Editing — changes are saved when you press Done. Your profile stays private."
+              : "Editing — changes are visible to everyone when you press Done"}
           </p>
           <div className="flex shrink-0 gap-2">
             <button
@@ -69,7 +72,7 @@ export function SettingsProfileBox({
         </div>
       ) : (
         <div className="mb-5 flex items-center justify-between gap-3">
-          <h2 className="type-eyebrow text-[11px] text-muted-foreground">Public profile</h2>
+          <h2 className="type-eyebrow text-[11px] text-muted-foreground">{visibility === "private" ? "Private profile" : "Public profile"}</h2>
           <button
             type="button"
             onClick={session.start}

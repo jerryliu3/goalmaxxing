@@ -373,3 +373,57 @@ button.portrait:focus-visible {
 .embed :global([data-layout="landscape"]) .titleCompose { font-size: 2.55rem; }
 .embed :global([data-layout="landscape"]) .metrics { padding: .45rem 0 .02rem; }
 .embed :global([data-layout="landscape"]) .metrics strong { font-size: 3rem; }
+
+
+/* Sealed Cameo is confined to the portrait arch; the card stays Pearl Reserve. */
+.identityArt[data-profile-visibility="private"] {
+  color: #67523b;
+  border-color: #c1ad90;
+  background: radial-gradient(ellipse at 50% 20%, #f8f3e9, #ded4c4 80%);
+  box-shadow: inset 0 2px 5px #8f7b6250, inset 0 0 0 4px #ffffff99;
+}
+.cameoHalo {
+  position: absolute;
+  left: 50%;
+  top: calc(91 / 190 * 100%);
+  width: calc(176 / 280 * 100%);
+  height: calc(176 / 190 * 100%);
+  border: 1px solid #9e886266;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.identityArt[data-profile-visibility="private"] .portrait {
+  border: 3px solid #b49b74;
+  box-shadow: 0 0 0 3px #f4ebdc, 0 0 0 4px #9e8862, 0 2px 5px #68533630;
+}
+.cameoSeal {
+  position: absolute;
+  left: 50%;
+  top: calc(156 / 190 * 100%);
+  display: grid;
+  place-items: center;
+  width: calc(34 / 280 * 100%);
+  height: calc(34 / 190 * 100%);
+  box-sizing: border-box;
+  transform: translate(-50%, -50%);
+  border: 2px solid #dfccb0;
+  border-radius: 50%;
+  background: linear-gradient(120deg, #675038, #927756 45%, #56412d);
+  color: #f6eedf;
+  box-shadow: 0 1px 3px #493a2b40;
+  font: .65rem/1 var(--font-display);
+  pointer-events: none;
+}
+.privateStatus {
+  align-self: center;
+  flex-shrink: 0;
+  margin: .15rem .4rem;
+  padding: .25rem .4rem;
+  border-radius: 3px;
+  background: #67523b;
+  color: #fff7e8;
+  font: .5rem/1.2 var(--type-figure-font);
+  letter-spacing: .08em;
+  white-space: nowrap;
+}

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { SettingsTab } from "@/features/settings/settings-tab";
 
 let mockSearch = "";
+let mockVisibility: "public" | "private" = "public";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/settings",
@@ -15,7 +16,7 @@ vi.mock("@/features/social/use-own-profile-presence", () => ({
   useOwnProfilePresence: () => ({
     bundle: {
       schemaVersion: "1",
-      profile: { subjectUserId: "user-1", username: "user", displayName: "User", avatarUrl: null, isPrivate: false, createdAt: null, memberNumber: null },
+      profile: { subjectUserId: "user-1", username: "user", displayName: "User", avatarUrl: null, isPrivate: false, visibility: mockVisibility, createdAt: null, memberNumber: null },
       xp: null,
       globalAchievements: [],
       awardCatalogCount: 0,
@@ -70,7 +71,7 @@ vi.mock("@/features/social/use-social-tab-data", () => ({
 }));
 
 vi.mock("@/features/social/profile-membership-card", () => ({
-  ProfileMembershipCard: () => <div>Profile card</div>,
+  ProfileMembershipCard: ({ profile, bio }: { profile: { visibility?: string }; bio?: string }) => <div data-testid="profile-card" data-visibility={profile.visibility}>Profile card<p>{bio}</p></div>,
 }));
 
 vi.mock("@/features/social/notifications-section", () => ({
@@ -106,6 +107,22 @@ vi.mock("@/components/intro/journey-intro-overlay", () => ({
 }));
 
 describe("SettingsTab", () => {
+  it("shows the saved private appearance at rest and while editing", async () => {
+    mockVisibility = "private";
+    const user = userEvent.setup();
+    const { rerender } = render(<SettingsTab />);
+    expect(screen.getByRole("heading", { name: "Private profile" })).toBeInTheDocument();
+    expect(screen.getByTestId("profile-card")).toHaveAttribute("data-visibility", "private");
+    await user.click(screen.getByRole("button", { name: /Edit profile/ }));
+    expect(screen.getByRole("status")).toHaveTextContent("Your profile stays private");
+    expect(screen.getByTestId("profile-card")).toHaveAttribute("data-visibility", "private");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    mockVisibility = "public";
+    rerender(<SettingsTab />);
+    expect(screen.getByRole("heading", { name: "Public profile" })).toBeInTheDocument();
+    expect(screen.getByTestId("profile-card")).toHaveAttribute("data-visibility", "public");
+  });
+
   it("opens with the public profile and keeps score, stats and heatmap off Settings", () => {
     render(<SettingsTab />);
     const box = screen.getByRole("region", { name: "Your Goalmaxxing profile" });
@@ -136,6 +153,7 @@ describe("SettingsTab", () => {
   afterEach(() => {
     cleanup();
     mockSearch = "";
+    mockVisibility = "public";
     window.matchMedia = originalMatchMedia;
   });
 

@@ -177,6 +177,7 @@ function buildProfileIdentity(
     displayName: subjectProfile.display_name,
     avatarUrl: subjectProfile.avatar_url,
     isPrivate,
+    visibility: subjectProfile.social_activity_visible === false ? "private" as const : "public" as const,
     createdAt: subjectProfile.created_at,
     memberNumber,
   };

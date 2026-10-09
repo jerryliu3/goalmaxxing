@@ -77,6 +77,7 @@ describe("buildPublicProfileBundle", () => {
     });
 
     expect(bundle.profile.isPrivate).toBe(true);
+    expect(bundle.profile.visibility).toBe("private");
     expect(bundle.xp).toBeNull();
     expect(bundle.globalAchievements).toEqual([]);
     expect(bundle.awardCatalogCount).toBe(0);
@@ -123,6 +124,7 @@ describe("buildPublicProfileBundle", () => {
     });
 
     expect(bundle.profile.isPrivate).toBe(false);
+    expect(bundle.profile.visibility).toBe("private");
     expect(bundle.xp?.totalXp).toBe(480);
     expect(bundle.awardCatalogCount).toBe(10);
     expect(bundle.globalAchievements).toHaveLength(1);
@@ -170,6 +172,7 @@ describe("buildPublicProfileBundle", () => {
     });
 
     expect(bundle.profile.isPrivate).toBe(false);
+    expect(bundle.profile.visibility).toBe("public");
     expect(bundle.currentGoals.map((goal) => goal.id)).toEqual(["public-goal"]);
     expect(bundle.currentGoals[0]?.title).toBe("Public walk");
   });
