@@ -18,7 +18,7 @@ describe("setup preferences", () => {
   it("updates the guide card when switching Private and Public", async () => {
     function Guide() {
       const [value, onChange] = useState(createDefaultJourneyIntroPreferences);
-      return createElement(JourneyIntroPreferencesStep, { userId: "owner", value, onChange, saveProfileRef: { current: async () => undefined }, onProfileReadyChange: () => undefined });
+      return createElement(JourneyIntroPreferencesStep, { userId: "owner", value, onChange, saveProfileRef: { current: async () => undefined }, onProfileStatusChange: () => undefined });
     }
     const user = userEvent.setup();
     render(createElement(Guide));
