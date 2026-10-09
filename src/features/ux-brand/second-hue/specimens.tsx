@@ -172,7 +172,8 @@ export function InPageTabsSpecimen({
   const options = variant === "line" ? ["Upcoming", "Done", "Missed"] : ["Sessions", "Tasks"];
   const trigger =
     variant === "line"
-      ? "after:bg-[color:var(--job-place-line)]"
+      ? // The base line variant sizes its rule on data-horizontal, which Radix never sets.
+        "after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-[color:var(--job-place-line)]"
       : mix.place === "ink"
         ? undefined
         : "data-[state=active]:bg-[color:var(--job-place-fill)] data-[state=active]:text-[color:var(--job-place-on)]";
