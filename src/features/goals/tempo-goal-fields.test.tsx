@@ -202,6 +202,43 @@ describe("TempoGoalFields creation flow", () => {
     expect(onPatch).toHaveBeenCalledWith({ default_local_time: "07:30" });
   });
 
+  it("saves at review before opening the details, then keeps only the details open", () => {
+    const onOpen = vi.fn();
+    const fields = { ...createDefaultGoalCreationFields(), title: "Read a little", ...weekly };
+    const creation = (saved: boolean) => (
+      <TempoGoalFields
+        fields={fields}
+        onFieldChange={vi.fn()}
+        onPatch={vi.fn()}
+        createKind={fields.frequency_type}
+        onCreateKindChange={vi.fn()}
+        includePlannerTask={false}
+        isPlannerTask={false}
+        disabled={false}
+        prefilled
+        reward=""
+        linkTarget={linkTarget}
+        action={<button type="submit">Create goal</button>}
+        details={{ saved, onOpen, action: <button type="button">Done</button> }}
+      />
+    );
+    const { rerender } = render(creation(false));
+    // The details open through review, which saves the goal first.
+    expect(screen.queryByRole("button", { name: /More details/ })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /05Review/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Add more details (optional) →" }));
+    expect(onOpen).toHaveBeenCalledTimes(1);
+
+    rerender(creation(true));
+    expect(screen.getByText("Your goal is created. Everything here is optional.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /More details/ })).toHaveAttribute("aria-current", "step");
+    expect(screen.getByRole("button", { name: "Done" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Create goal" })).toBeNull();
+    for (const step of [/02Intention/, /03Rhythm/, /04Schedule/, /05Review/]) {
+      expect(screen.getByRole("button", { name: step })).toBeDisabled();
+    }
+  });
+
   it("gives tasks no optional details", () => {
     renderCreation({ isPlannerTask: true });
     expect(screen.queryByRole("button", { name: /More details/ })).toBeNull();

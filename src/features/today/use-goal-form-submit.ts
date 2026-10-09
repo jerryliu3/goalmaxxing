@@ -23,6 +23,8 @@ interface UseGoalFormSubmitOptions {
   validationError: string | null;
   supabase: SupabaseClient;
   completeAndExit: () => void;
+  /** Called instead of `completeAndExit` once a new goal is saved, so creation can stay open. */
+  onCreated?: (goalId: string) => void;
   dismissWithoutRefresh?: () => void;
   onExitRefresh?: () => void;
 }
@@ -37,6 +39,7 @@ export function useGoalFormSubmit({
   validationError,
   supabase,
   completeAndExit,
+  onCreated,
   dismissWithoutRefresh,
   onExitRefresh,
 }: UseGoalFormSubmitOptions) {
@@ -44,6 +47,17 @@ export function useGoalFormSubmit({
   const [saving, setSaving] = useState(false);
   const [recovery, setRecovery] = useState<GoalFormRecovery | null>(null);
   const stableCreateGoalIdRef = useRef<string | null>(null);
+
+  const finishSave = useCallback(
+    (savedGoalId: string) => {
+      if (!isEditing && onCreated) {
+        onCreated(savedGoalId);
+        return;
+      }
+      completeAndExit();
+    },
+    [completeAndExit, isEditing, onCreated],
+  );
 
   const submitDisabled =
     saving ||
@@ -193,11 +207,11 @@ export function useGoalFormSubmit({
       setRecovery(null);
       toast.success(isEditing ? "Goal updated." : "Goal created.");
       requestXpRefresh();
-      completeAndExit();
+      finishSave(savedGoalId);
       setSaving(false);
     },
     [
-      completeAndExit,
+      finishSave,
       goalId,
       isEditing,
       isPlannerTask,
@@ -246,9 +260,9 @@ export function useGoalFormSubmit({
     invalidatePlannerRelatedTabCaches();
     toast.success(isEditing ? "Goal updated." : "Goal created.");
     requestXpRefresh();
-    completeAndExit();
+    finishSave(recovery.savedGoalId);
     setSaving(false);
-  }, [completeAndExit, isEditing, recovery, replaceGoalLink]);
+  }, [finishSave, isEditing, recovery, replaceGoalLink]);
 
   /** Archives or restores; resolves true once the change is saved. */
   const toggleArchive = useCallback(
