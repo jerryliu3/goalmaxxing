@@ -88,7 +88,8 @@
   letter-spacing: var(--type-eyebrow-tracking);
 }
 .tempo-card[data-tempo-goal-card] h2 {
-  font-size: 8.18cqi;
+  /* `useFittedTitle` lowers the scale so a title never wraps past two lines. */
+  font-size: calc(8.18cqi * var(--title-scale, 1));
 }
 .tempo-card[data-tempo-goal-card] .tempo-card-meta {
   gap: 4.85cqi;
