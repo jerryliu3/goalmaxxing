@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useReducedMotion } from "motion/react";
 import { ReassemblingCard } from "./card-material/reassembling-card";
 import { ArrowUpRight } from "lucide-react";
@@ -11,6 +11,7 @@ import { goalColorStyle } from "./card-material/goal-color-style";
 import { TempoCardSurface } from "./card-material/tempo-card-surface";
 import type { GoalCreationFields } from "@/lib/goals/creation-model";
 import type { TempoCardVisibility } from "./tempo-creation-progress";
+import { useFittedTitle } from "./use-fitted-title";
 import "./tempo-goal-creation.css";
 
 export function TempoGoalCard({
@@ -52,6 +53,8 @@ export function TempoGoalCard({
   ) => ReactNode;
 }) {
   const still = Boolean(useReducedMotion());
+  const title = fields.title.trim() || "Something worth starting.";
+  const fittedTitle = useFittedTitle(title);
   const milestones = fields.frequency_type === "fixed_milestones";
   const count = Number(fields.target_count) || 1;
   const hasCount = visibility.rhythm && (isTask || visibility.count);
@@ -133,10 +136,13 @@ export function TempoGoalCard({
           </strong>
           {hasCount && <span>{renderLettering(unit, "supporting")}</span>}
         </div> : null}
-        <h2>
+        <h2
+          ref={fittedTitle.ref}
+          style={{ "--title-scale": fittedTitle.scale } as CSSProperties}
+        >
           {renderLettering(
             <>
-              {fields.title.trim() || "Something worth starting."}
+              {title}
               {/* Marks where the title's last word ends, for callouts that point at it. */}
               <span className="tempo-card-title-end" aria-hidden="true" />
             </>,
