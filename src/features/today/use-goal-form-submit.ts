@@ -8,6 +8,7 @@ import { requestXpRefresh } from "@/lib/xp/events";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   buildGoalMutationArgs,
+  shouldReplaceGoalSourceLink,
   type GoalFormGoalArgs,
   type GoalFormRecovery,
   type GoalFormState,
@@ -17,6 +18,7 @@ interface UseGoalFormSubmitOptions {
   goalId?: string;
   state: GoalFormState;
   selectedLinkTarget: string;
+  savedLinkTarget?: string;
   isPlannerTask: boolean;
   linkTargetsReady: boolean;
   linkTargetsError: string | null;
@@ -33,6 +35,7 @@ export function useGoalFormSubmit({
   goalId,
   state,
   selectedLinkTarget,
+  savedLinkTarget = "none",
   isPlannerTask,
   linkTargetsReady,
   linkTargetsError,
@@ -181,8 +184,15 @@ export function useGoalFormSubmit({
 
       const targetGoalId =
         selectedLinkTarget !== "none" ? selectedLinkTarget : undefined;
+      const writeLink = shouldReplaceGoalSourceLink({
+        isEditing,
+        savedLinkTarget,
+        selectedLinkTarget,
+      });
       try {
-        const linkError = await replaceGoalLink(savedGoalId, targetGoalId);
+        const linkError = writeLink
+          ? await replaceGoalLink(savedGoalId, targetGoalId)
+          : null;
         if (linkError) {
           setRecovery(null);
           toast.error(
@@ -219,6 +229,7 @@ export function useGoalFormSubmit({
       linkTargetsReady,
       recovery,
       replaceGoalLink,
+      savedLinkTarget,
       selectedLinkTarget,
       state,
       supabase,

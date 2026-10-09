@@ -815,10 +815,9 @@ describe("GoalForm persistence recovery", () => {
       "update_goal",
       expect.objectContaining({ p_id: "goal-edit-2" }),
     );
-    expect(rpcMock).toHaveBeenNthCalledWith(3, "replace_goal_source_link", {
-      p_source_goal_id: "goal-edit-2",
-      p_target_goal_id: undefined,
-    });
+    expect(rpcMock.mock.calls.map(([method]) => method)).not.toContain(
+      "replace_goal_source_link",
+    );
   });
 
   it("locks the face but keeps the deadline and back editable once a goal has ended", async () => {

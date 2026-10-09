@@ -8,6 +8,10 @@ Links no longer hide targets from the checklist or calendar, delay their placeme
 
 The goal editor calls the relationship “Also counts toward”; session details expose direct links to the target goals. There is no hidden-linked-goals filter, return date, or suppression explanation.
 
+Saving a goal rewrites its outgoing link only when the selected target changed. An unrelated edit leaves other outgoing links in place, because the editor displays one target and `replace_goal_source_link` would otherwise delete the rest.
+
+A cascade credit is written only while that descendant is inside its own start and end. Completing the source before a target starts does not insert a row. Undoing the source removes descendant rows it wrote (`linked_cascade`) and leaves a completion the user made on the target. The walk continues past a kept row, so a later cascade credit is still removed.
+
 ## Implementation boundary
 
 Remove suppression and projected source coverage from preparation, preview, and save together. Keep completion reconciliation, durable planner unit keys, completion cascades, ownership validation, and exact-date completion writes intact. Link summaries contain only source and target IDs. Intrinsic eligibility rules (ownership, deletion/archive, dates, and bounds) still apply.
@@ -28,4 +32,4 @@ The coach can eventually adjust the same annual goal's placements to monthly int
 
 ## Coverage
 
-Write regression coverage for independent target eligibility and placement across source deadlines and transitive links, preservation of saved target sessions, lack of projected source credit, actual cascaded completion credit, checklist visibility, and direct target navigation. Remove tests for deleted suppression APIs. No verification suites are run without the repository's explicit verification approval.
+Write regression coverage for independent target eligibility and placement across source deadlines and transitive links, preservation of saved target sessions, lack of projected source credit, actual cascaded completion credit, checklist visibility, and direct target navigation. Cover an edit that does not touch the link, a direct target completion that survives source undo, and a cascade that skips a descendant outside its lifetime while still crediting an active grandchild. Remove tests for deleted suppression APIs. No verification suites are run without the repository's explicit verification approval.
