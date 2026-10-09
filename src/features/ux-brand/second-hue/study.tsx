@@ -19,7 +19,6 @@ import {
   MAX_ACCENT_LOUDNESS,
   MIN_SHADE_SEPARATION,
   PROPOSED_ACCENTS,
-  PROPOSED_MIX,
   resolvePalette,
   SHIPPED_MIX,
   type HueMix,
@@ -29,19 +28,6 @@ import {
 const HUE_ONLY_SEPARATION = 1.5;
 
 type AccentPicks = Partial<Record<ThemeId, string>>;
-
-const BLOODSTONE_OPTIONS = [
-  {
-    accentId: "none",
-    label: "A · No accent: solid red navigation",
-    note: "One color family. Save, today, the selected row, and navigation are all red.",
-  },
-  {
-    accentId: "registry",
-    label: "B · Registry slate navigation",
-    note: "Selection solid's look: slate says where you are, red keeps doing and picking.",
-  },
-] as const;
 
 function Choice({
   selected,
@@ -233,26 +219,6 @@ export function SecondHueStudy() {
           </div>
           {mixId === null ? <p className="text-xs text-zinc-600">Custom mix.</p> : null}
         </section>
-
-        <Fold
-          title="Open decision: Bloodstone navigation"
-          hint="Both sides use the Proposal mix; only Bloodstone's accent differs."
-          defaultOpen
-        >
-          <div className="grid max-w-3xl gap-4 sm:grid-cols-2">
-            {BLOODSTONE_OPTIONS.map((option) => (
-              <div key={option.accentId} className="space-y-2">
-                <p className="text-sm font-medium">{option.label}</p>
-                <HueBoardCompact
-                  themeId="bloodstone"
-                  mix={PROPOSED_MIX}
-                  palette={resolvePalette("bloodstone", option.accentId)}
-                />
-                <p className="text-xs text-zinc-600">{option.note}</p>
-              </div>
-            ))}
-          </div>
-        </Fold>
 
         <Fold title="Jobs" hint="What the mix changes. Click a tone to build a custom mix.">
           <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white/60">

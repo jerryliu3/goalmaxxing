@@ -42,16 +42,9 @@ describe("second hue study", () => {
     expect(screen.getByRole("combobox", { name: "Original accent" })).toHaveValue("none");
     expect(screen.getByRole("combobox", { name: "Kiln accent" })).toHaveValue("registry");
     expect(screen.getByRole("combobox", { name: "Pitlane accent" })).toHaveValue("registry");
+    expect(screen.getByRole("combobox", { name: "Bloodstone accent" })).toHaveValue("none");
     expect(board("original").style.getPropertyValue("--job-place-fill")).toBe("var(--hue-selected)");
     expect(board("kiln").style.getPropertyValue("--job-place-fill")).toBe("var(--hue-accent)");
-  });
-
-  it("shows the Bloodstone decision on the proposal whatever mix is chosen", () => {
-    render(<SecondHueStudy />);
-    const [solidRed, slate] = screen.getAllByTestId("hue-board-bloodstone");
-    expect(solidRed.style.getPropertyValue("--job-place-fill")).toBe("var(--hue-selected)");
-    expect(slate.style.getPropertyValue("--job-place-fill")).toBe("var(--hue-accent)");
-    expect(slate.style.getPropertyValue("--job-pick-fill")).toBe("var(--hue-selected)");
   });
 
   it("applies a theme's accent to every board for that theme", async () => {
