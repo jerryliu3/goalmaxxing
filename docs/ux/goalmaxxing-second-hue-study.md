@@ -91,6 +91,35 @@ Bold values miss their floor (3:1 for lines and marks, 4.5:1 for labels).
 6. **#1161's deep sage trades one problem for another.** It fixes the label
    (3.7 to 5.6) but collapses separation from rust (1.44 to 1.06).
 
+## Lab review (2026-10-09)
+
+First pass in the browser at desktop width, all eight themes.
+
+- **Original's selected row is hard to read today.** Its `daySelected` is
+  solid `#4687d8` under ink, and the muted subtitle nearly disappears. The
+  lab renders production's own class, so this is a production issue. A
+  petroleum tint wash under Containers fixes it.
+- **Original, Containers, petroleum tint reads cleanly.** Blue keeps Save,
+  today, completion, and progress; the pale petroleum marks the open tab,
+  view, chip, and selected row.
+- **Gazetteer, pistachio tint keeps rust as the only loud color.** Deep
+  sage reads as a second dark ink beside rust.
+- **Tint lines collapse toward ink.** Pistachio's line form is 9.2:1, so
+  desktop tab rules and selected-day rings look like ink. That matches
+  shipped navigation, but the second hue then shows only in fills.
+- **Today as a tint loses salience.** Under Where and when, Original's
+  today becomes a pale circle and is harder to find than the selected day.
+  This supports keeping today on identity.
+- **Pitlane's lime out-shouts its identity.** Any mix that puts the second
+  hue on fills makes lime the loudest color on the page, ahead of blue Save.
+- **Court's derived line works.** The desktop rule and line-tab underline
+  stay visible in a dark olive; #1161's literal `bg-selection` would draw
+  them in lime at 1.1:1.
+- **The base line tabs draw no underline.** `TabsTrigger` sizes its rule on
+  `data-horizontal`, which Radix does not set (it sets `data-orientation`).
+  The check-in supplies its own rule geometry, and the lab does the same.
+  #1161's selection-colored line-tab rule was therefore never visible.
+
 ## Hypotheses
 
 The lab compares these mixes; each job can also be set by hand.
@@ -142,6 +171,8 @@ A starting position for review, not a lock:
 4. Is a near-neutral second hue (silver lilac) enough identity, or does
    each theme want a clearly colored partner?
 5. Should status messages stop using identity text and get their own role?
+6. Where a second hue is louder than the identity (Pitlane), should it be
+   toned down, or should the two swap jobs?
 
 ## Evaluating in the lab
 
