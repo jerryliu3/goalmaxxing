@@ -55,6 +55,31 @@ function Choice({
   );
 }
 
+function Fold({
+  title,
+  hint,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <details open={defaultOpen} className="group">
+      <summary className="flex cursor-pointer list-none items-baseline gap-2 [&::-webkit-details-marker]:hidden">
+        <span aria-hidden className="text-zinc-400 transition-transform group-open:rotate-90">
+          ▸
+        </span>
+        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+        {hint ? <span className="text-xs text-zinc-500">{hint}</span> : null}
+      </summary>
+      <div className="mt-4 space-y-4">{children}</div>
+    </details>
+  );
+}
+
 function Ratio({ label, value, floor }: { label: string; value: number; floor?: number }) {
   const fails = floor !== undefined && value < floor;
   return (
@@ -124,6 +149,9 @@ export function SecondHueStudy() {
             ))}
           </div>
           {mixId === null ? <p className="text-xs text-zinc-600">Custom mix.</p> : null}
+        </section>
+
+        <Fold title="Jobs" hint="What the mix changes. Click a tone to build a custom mix.">
           <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white/60">
             {HUE_JOBS.map((job) => (
               <div
@@ -151,10 +179,27 @@ export function SecondHueStudy() {
               </div>
             ))}
           </div>
-        </section>
+        </Fold>
 
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold tracking-tight">Theme</h2>
+        <Fold
+          title="Every theme, same mix"
+          hint="Original and Gazetteer use the second hue picked under Theme."
+          defaultOpen
+        >
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {THEMES.map((theme) => (
+              <div key={theme.id} className="space-y-2">
+                <HueBoardCompact themeId={theme.id} mix={mix} hue={hueFor(theme.id)} />
+                <Readout themeId={theme.id} hue={hueFor(theme.id)} />
+              </div>
+            ))}
+          </div>
+        </Fold>
+
+        <Fold
+          title="Theme"
+          hint={`${getTheme(themeId).label} · ${candidate.name} · every component, one theme`}
+        >
           <div role="radiogroup" aria-label="Theme" className="flex flex-wrap gap-2">
             {THEMES.map((theme) => (
               <Choice key={theme.id} selected={theme.id === themeId} onSelect={() => setThemeId(theme.id)}>
@@ -188,25 +233,8 @@ export function SecondHueStudy() {
             {candidate.name}: {candidate.note}
           </p>
           <Readout themeId={themeId} hue={hueFor(themeId)} />
-        </section>
-
-        <HueBoard themeId={themeId} mix={mix} hue={hueFor(themeId)} />
-
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold tracking-tight">Every theme, same mix</h2>
-          <p className="max-w-3xl text-sm text-zinc-600">
-            A mix only works if it holds across the registry. Each theme uses
-            the second hue picked above (its registry pair by default).
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {THEMES.map((theme) => (
-              <div key={theme.id} className="space-y-2">
-                <HueBoardCompact themeId={theme.id} mix={mix} hue={hueFor(theme.id)} />
-                <Readout themeId={theme.id} hue={hueFor(theme.id)} />
-              </div>
-            ))}
-          </div>
-        </section>
+          <HueBoard themeId={themeId} mix={mix} hue={hueFor(themeId)} />
+        </Fold>
 
         <section className="max-w-3xl space-y-2 text-sm text-zinc-700">
           <h2 className="text-lg font-semibold tracking-tight text-zinc-900">What to look for</h2>

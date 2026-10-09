@@ -9,6 +9,10 @@ function board(themeId: string) {
   return screen.getAllByTestId(`hue-board-${themeId}`)[0];
 }
 
+async function expand(user: ReturnType<typeof userEvent.setup>, title: string) {
+  await user.click(screen.getByRole("heading", { name: title }));
+}
+
 describe("second hue study", () => {
   it("starts on the shipped mix and re-points jobs when a mix is chosen", async () => {
     const user = userEvent.setup();
@@ -25,6 +29,7 @@ describe("second hue study", () => {
   it("marks a hand-tuned mix as custom", async () => {
     const user = userEvent.setup();
     render(<SecondHueStudy />);
+    await expand(user, "Jobs");
     const focusTone = screen.getByRole("radiogroup", { name: "Focus and drafts tone" });
     await user.click(within(focusTone).getByRole("radio", { name: "Second" }));
     expect(screen.getByText("Custom mix.")).toBeInTheDocument();
@@ -33,6 +38,7 @@ describe("second hue study", () => {
   it("offers Original candidates and applies one to every board for that theme", async () => {
     const user = userEvent.setup();
     render(<SecondHueStudy />);
+    await expand(user, "Theme");
     const candidates = screen.getByRole("radiogroup", { name: "Original second hue" });
     await user.click(within(candidates).getByRole("radio", { name: /petroleum tint/i }));
     for (const element of screen.getAllByTestId("hue-board-original")) {
@@ -46,6 +52,7 @@ describe("second hue study", () => {
     for (const id of ["original", "gazetteer", "undertow", "kiln", "court", "opaline", "bloodstone", "pitlane"]) {
       expect(screen.getAllByTestId(`hue-board-${id}`).length).toBeGreaterThan(0);
     }
+    await expand(user, "Theme");
     await user.click(within(screen.getByRole("radiogroup", { name: "Theme" })).getByRole("radio", { name: "Court" }));
     expect(screen.queryByRole("radiogroup", { name: "Court second hue" })).toBeNull();
     expect(screen.getAllByText(/fails/).length).toBeGreaterThan(0);
