@@ -202,6 +202,31 @@ accent with a line form; a registry test for loudness (at most 1.25×),
 labels (4.5:1), and lines (3:1). #1161's selection pair becomes the accent
 and is used for navigation only.
 
+### Refinements after review
+
+- **Pitlane keeps its registry lime.** The toned-down olive lost the theme.
+  The loudness ratio stays in the readout as advice, not a gate: Pitlane is
+  a deliberate exception.
+- **Selected things go solid where the shade would vanish.** A new "Shade
+  or solid" tone uses the shade where it separates from the card by at
+  least 1.2:1, and solid identity where it does not. Shade on card: Original
+  1.33, Gazetteer 1.37, Undertow 2.17, Kiln 1.98, Court 1.21, Pitlane 1.25,
+  Opaline 1.04, Bloodstone 1.09. Opaline and Bloodstone go solid, which
+  gives them the clear selected row that Selection solid had.
+- **A theme without an accent falls back the same way.** Solid accent jobs
+  use "Shade or solid", so Bloodstone's navigation pill is solid red. With
+  Save, today, and the row also red, Bloodstone gets loud; its registry
+  slate for navigation is the alternative.
+- **Drafts: the treatment matters more than the color.** In the lab's
+  drafts comparison, the shipped wash in the accent ("same treatment") is
+  indistinguishable from a card on dark themes and from identity on Court.
+  A marked draft (dashed border plus a small solid "Draft" chip) reads in
+  all eight, with the chip in the accent where a theme has one and in
+  identity otherwise.
+
+Updated proposal rows: What you picked is "Shade or solid"; Drafts are a
+marked tile in the accent, or identity without one.
+
 ## Hypotheses
 
 The lab compares these mixes; each job can also be set by hand.
@@ -256,7 +281,10 @@ Round 1's starting position, superseded by the round 2 proposal above:
 6. Where a second hue is louder than the identity (Pitlane), should it be
    toned down, or should the two swap jobs?
 7. Round 2: should drafts take the accent, or stay identity everywhere?
-8. Round 2: is Pitlane's toned-down olive still Pitlane?
+   Lean: marked drafts, accent chip where a theme has one.
+8. Round 2: is Pitlane's toned-down olive still Pitlane? Answered: no; it
+   keeps the registry lime.
+9. Bloodstone: no accent with solid red navigation, or its registry slate?
 
 ## Evaluating in the lab
 
