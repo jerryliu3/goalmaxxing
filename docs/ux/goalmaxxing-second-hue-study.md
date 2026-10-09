@@ -217,15 +217,17 @@ and is used for navigation only.
   use "Shade or solid", so Bloodstone's navigation pill is solid red. With
   Save, today, and the row also red, Bloodstone gets loud; its registry
   slate for navigation is the alternative.
-- **Drafts: the treatment matters more than the color.** In the lab's
-  drafts comparison, the shipped wash in the accent ("same treatment") is
-  indistinguishable from a card on dark themes and from identity on Court.
-  A marked draft (dashed border plus a small solid "Draft" chip) reads in
-  all eight, with the chip in the accent where a theme has one and in
-  identity otherwise.
+- **Drafts are not a theme-color job.** The lab's "draft" tile copied the
+  task quick-add composer, which is an input being edited and belongs with
+  focus. Planner drafts already use their category color: new and moved
+  sessions get a full 2px category border, a stronger category tint, and
+  the shimmer; a moved session's old day is a dashed muted ghost. Color
+  says what kind of session; the border and shimmer say not yet. That stays
+  as shipped, with no theme color and no chip. The drafts job and the
+  drafts comparison are removed from the lab.
 
-Updated proposal rows: What you picked is "Shade or solid"; Drafts are a
-marked tile in the accent, or identity without one.
+Updated proposal: What you picked is "Shade or solid"; the drafts row is
+dropped, and the quick-add composer follows focus.
 
 ## Hypotheses
 
@@ -281,10 +283,11 @@ Round 1's starting position, superseded by the round 2 proposal above:
 6. Where a second hue is louder than the identity (Pitlane), should it be
    toned down, or should the two swap jobs?
 7. Round 2: should drafts take the accent, or stay identity everywhere?
-   Lean: marked drafts, accent chip where a theme has one.
+   Answered: neither; planner drafts keep their category colors.
 8. Round 2: is Pitlane's toned-down olive still Pitlane? Answered: no; it
    keeps the registry lime.
 9. Bloodstone: no accent with solid red navigation, or its registry slate?
+   The lab shows both side by side under "Open decision".
 
 ## Evaluating in the lab
 
