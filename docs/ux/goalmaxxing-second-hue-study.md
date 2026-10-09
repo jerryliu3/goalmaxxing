@@ -120,6 +120,88 @@ First pass in the browser at desktop width, all eight themes.
   The check-in supplies its own rule geometry, and the lab does the same.
   #1161's selection-colored line-tab rule was therefore never visible.
 
+## Round 2: identity, shade, optional accent (2026-10-09)
+
+Review feedback: Original, Gazetteer, and Bloodstone want a shade of their
+identity rather than a new color. Undertow and Kiln read well with a
+contrasting partner, and Court's lime reads as a complementary one. The lab
+now models every theme with three colors:
+
+- **Identity**: the theme's primary, solid.
+- **Shade**: the identity washed toward the page (18% on light pages, 40% on
+  dark ones) with ink labels. Every theme has one; nothing is authored.
+- **Accent** (optional): a second hue, drawn solid or as a tint. A theme
+  without one uses its shade wherever a mix asks for the accent.
+
+Drafts are split from focus as their own job, and the selected agenda row
+now follows the "What you picked" tone in every theme.
+
+### Findings
+
+1. **Solid against tint is not a global switch.** A computed tint only works
+   when its source is a mid-tone. On dark pages, tinted pastels go gray
+   (Undertow lavender, Kiln periwinkle, Bloodstone slate). Accents that are
+   already pale (Court lime, Opaline mint) vanish when tinted, because their
+   registry fill already is a tint. Strength belongs to each theme's
+   authored accent, not to the mix.
+2. **Shade works on every theme.** Identities are mid-tones, so their wash
+   is always a soft container; ink on the shade is at least 5.2:1 in all
+   eight. Containers with shade is the only mix with no failing board.
+3. **The accent's problem is loudness, not hue.** Accent-to-page contrast
+   over identity-to-page contrast: Court 0.1×, Opaline 0.2×, Undertow 0.7×,
+   Kiln 1.2×, Bloodstone 3.4×, Pitlane 4.7×. The two themes where the accent
+   felt wrong are the two where it is louder than the identity. Proposed
+   rule: an accent is at most 1.25× as loud as its identity. Pitlane passes
+   with its lime washed to olive (1.1×).
+4. **Selected rows want the shade.** Rows drawn in solid identity (a mint bar
+   on Undertow, an orange one on Kiln) compete with Save.
+5. **Today and done stay identity**, as round 1 found.
+6. **Drafts in the accent are clean in meaning but faint.** On dark pages a
+   15% wash of the accent barely separates from the card. Adopting it needs
+   a stronger draft treatment.
+7. **Bloodstone's shade sits close to its card.** The selected row is only a
+   little redder than an unselected one; it may need a deeper shade or a
+   ring.
+8. **Two pairs differ by hue alone**: Kiln periwinkle with orange (1.18) and
+   Pitlane olive with blue (1.10). They are far apart in hue, but still need
+   a color-vision emulation check.
+
+### Proposal
+
+| Job | Color |
+| --- | --- |
+| Act | Identity |
+| Where you are | Accent; shade without one |
+| What you picked | Shade |
+| Now | Identity |
+| Done | Identity |
+| Focus | Identity |
+| Drafts | Accent; identity without one |
+
+Accents: none for Original, Gazetteer, and Bloodstone; the registry pair for
+Undertow, Kiln, Court, and Opaline; a toned-down lime for Pitlane.
+
+The rule in one line: identity is for doing, now, and done; the shade sits
+behind what you picked; the accent, where a theme has one, says where you
+are.
+
+Ranking of the options compared:
+
+1. **Proposal.** Every theme keeps one loud color, and contrast themes keep
+   their partner in the most visible chrome.
+2. **Containers with shade, no accents.** The safest. It loses the Undertow
+   and Kiln contrast you liked.
+3. **Selection solid (#1161) with the loudness rule.** Fine for contrast
+   themes, but selected rows stay solid identity.
+
+Set aside: tint as a global strength (gray on dark pages), Reward (thin
+marks go muddy), and Where and when (today loses salience).
+
+Registry implications: a derived `shade` role with no authoring; an optional
+accent with a line form; a registry test for loudness (at most 1.25×),
+labels (4.5:1), and lines (3:1). #1161's selection pair becomes the accent
+and is used for navigation only.
+
 ## Hypotheses
 
 The lab compares these mixes; each job can also be set by hand.
@@ -137,7 +219,7 @@ The lab compares these mixes; each job can also be set by hand.
 
 ## Lean, to confirm in the lab
 
-A starting position for review, not a lock:
+Round 1's starting position, superseded by the round 2 proposal above:
 
 - **Containers, in tint form.** The second hue fills selected things
   (phone tab indicator, view switcher thumb, selected chips, selected-row
@@ -173,6 +255,8 @@ A starting position for review, not a lock:
 5. Should status messages stop using identity text and get their own role?
 6. Where a second hue is louder than the identity (Pitlane), should it be
    toned down, or should the two swap jobs?
+7. Round 2: should drafts take the accent, or stay identity everywhere?
+8. Round 2: is Pitlane's toned-down olive still Pitlane?
 
 ## Evaluating in the lab
 
