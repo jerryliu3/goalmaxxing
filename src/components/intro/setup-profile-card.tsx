@@ -22,16 +22,18 @@ interface IdentityDraft {
   avatarUrl: string;
 }
 
+export type SetupProfileStatus = "loading" | "ready" | "invalid";
+
 export function SetupProfileCard({
   userId,
   isPrivate,
   saveRef,
-  onReadyChange,
+  onStatusChange,
 }: {
   userId: string;
   isPrivate: boolean;
   saveRef: { current: () => Promise<void> };
-  onReadyChange: (ready: boolean) => void;
+  onStatusChange: (status: SetupProfileStatus) => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
@@ -63,6 +65,8 @@ export function SetupProfileCard({
         setCreatedAt(data.created_at);
         setDraft((current) => current ?? next);
         setOrigin((current) => current ?? next);
+      } catch {
+        if (!cancelled) setLoadError(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -74,11 +78,11 @@ export function SetupProfileCard({
     draft && origin && normalizePublicProfileUsername(draft.username) !== normalizePublicProfileUsername(origin.username)
   );
   const usernameValid = !draft || !usernameChanged || isValidPublicProfileUsername(draft.username);
-  const ready = !loading && (loadError || Boolean(draft)) && usernameValid;
+  const status: SetupProfileStatus = loading ? "loading" : usernameValid ? "ready" : "invalid";
 
   useEffect(() => {
-    onReadyChange(ready);
-  }, [onReadyChange, ready]);
+    onStatusChange(status);
+  }, [onStatusChange, status]);
 
   useEffect(() => {
     saveRef.current = async () => {

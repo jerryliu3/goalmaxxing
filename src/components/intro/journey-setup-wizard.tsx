@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { getApiErrorMessage } from "@/lib/api/client";
 import { useOnboardingProgress } from "@/features/onboarding/onboarding-progress-provider";
 import { JourneyIntroPreferencesStep, saveJourneyIntroPreferences, useJourneyIntroPreferences } from "./journey-intro-preferences-step";
+import type { SetupProfileStatus } from "./setup-profile-card";
 import { PracticeSessionStep } from "./practice-session-step";
 import { PracticeMoveStep } from "./practice-move-step";
 import { PracticeGoalStep } from "./practice-goal-step";
@@ -18,6 +19,18 @@ const descriptions = [
   "One session is still missing. Hold it to finish the goal and play the ceremony.",
 ];
 
+function SetupStepLoading() {
+  return <div role="status" className="space-y-4">
+    <span className="sr-only">Loading your setup…</span>
+    <div aria-hidden className="mx-auto h-44 w-full max-w-sm animate-pulse rounded-2xl bg-muted" />
+    <div aria-hidden className="grid grid-cols-[minmax(0,1fr)_auto] gap-3">
+      <div className="h-11 animate-pulse rounded-xl bg-muted/80" />
+      <div className="h-11 w-40 animate-pulse rounded-full bg-muted/80" />
+    </div>
+    <div aria-hidden className="h-11 w-full animate-pulse rounded-full bg-muted/70" />
+  </div>;
+}
+
 export function JourneySetupWizard({ userId, replay, onDone, onCancelReplay }: { userId: string; replay: boolean; onDone: () => void; onCancelReplay: () => void }) {
   const account = useOnboardingProgress()!;
   const [step, setStep] = useState(replay ? 0 : account.progress!.setup_step);
@@ -26,10 +39,11 @@ export function JourneySetupWizard({ userId, replay, onDone, onCancelReplay }: {
   const [ceremonyViewed, setCeremonyViewed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [profileReady, setProfileReady] = useState(true);
+  const [profileStatus, setProfileStatus] = useState<SetupProfileStatus>("loading");
   const saveProfileRef = useRef<() => Promise<void>>(async () => {});
   const preferences = useJourneyIntroPreferences(userId, true);
-  const eligible = step === 0 ? !preferences.loading && !preferences.error && profileReady : step === 1 ? held : step === 2 ? moved : ceremonyViewed;
+  const preparing = step === 0 && (preferences.loading || profileStatus === "loading");
+  const eligible = step === 0 ? !preparing && !preferences.error && profileStatus === "ready" : step === 1 ? held : step === 2 ? moved : ceremonyViewed;
   const advance = async () => {
     if (!eligible || saving) return;
     setSaving(true); setError(null);
@@ -53,7 +67,8 @@ export function JourneySetupWizard({ userId, replay, onDone, onCancelReplay }: {
         <DialogTitle>{titles[step]}</DialogTitle>
         <DialogDescription>{descriptions[step]}</DialogDescription>
       </DialogHeader>
-      {step === 0 && <JourneyIntroPreferencesStep userId={userId} value={preferences.value} loading={preferences.loading || saving} onChange={preferences.setValue} saveProfileRef={saveProfileRef} onProfileReadyChange={setProfileReady} />}
+      {preparing && <SetupStepLoading />}
+      {step === 0 && <div hidden={preparing}><JourneyIntroPreferencesStep userId={userId} value={preferences.value} loading={preferences.loading || saving} onChange={preferences.setValue} saveProfileRef={saveProfileRef} onProfileStatusChange={setProfileStatus} /></div>}
       {step === 0 && preferences.error && <div role="alert"><p className="text-sm text-destructive">{preferences.error}</p><Button variant="outline" onClick={preferences.reload}>Reload preferences</Button></div>}
       {step === 1 && <PracticeSessionStep completed={held} onComplete={() => setHeld(true)} />}
       {step === 2 && <PracticeMoveStep completed={moved} onComplete={() => setMoved(true)} />}

@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { Label } from "@/components/ui/label";
 import { TempoGoalChoices } from "@/features/goals/tempo-goal-choices";
 import "@/features/goals/tempo-goal-creation.css";
-import { SetupProfileCard } from "./setup-profile-card";
+import { SetupProfileCard, type SetupProfileStatus } from "./setup-profile-card";
 import {
   Select,
   SelectContent,
@@ -119,7 +119,7 @@ interface JourneyIntroPreferencesStepProps {
   onChange: (next: JourneyIntroPreferencesValue) => void;
   loading?: boolean;
   saveProfileRef: { current: () => Promise<void> };
-  onProfileReadyChange: (ready: boolean) => void;
+  onProfileStatusChange: (status: SetupProfileStatus) => void;
 }
 
 export function JourneyIntroPreferencesStep({
@@ -128,7 +128,7 @@ export function JourneyIntroPreferencesStep({
   onChange,
   loading = false,
   saveProfileRef,
-  onProfileReadyChange,
+  onProfileStatusChange,
 }: JourneyIntroPreferencesStepProps) {
   const timezoneOptions = useMemo(
     () => buildTimezoneOptions(value.timezone),
@@ -142,7 +142,7 @@ export function JourneyIntroPreferencesStep({
         userId={userId}
         isPrivate={!profileVisible}
         saveRef={saveProfileRef}
-        onReadyChange={onProfileReadyChange}
+        onStatusChange={onProfileStatusChange}
       />
       <div className="tempo-creation space-y-4">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
@@ -153,12 +153,12 @@ export function JourneyIntroPreferencesStep({
               onValueChange={(nextTimezone) => onChange({ ...value, timezone: nextTimezone })}
               disabled={loading}
             >
-              <SelectTrigger className="h-11 w-full rounded-xl px-3 text-base">
+              <SelectTrigger className="h-11 w-full rounded-xl px-3 text-[0.8rem]">
                 <SelectValue placeholder="Select timezone" />
               </SelectTrigger>
               <SelectContent className="max-h-80">
                 {timezoneOptions.map((option) => (
-                  <SelectItem key={option} value={option}>
+                  <SelectItem key={option} value={option} className="text-[0.8rem]">
                     {option}
                   </SelectItem>
                 ))}
