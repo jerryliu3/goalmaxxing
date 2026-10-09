@@ -40,6 +40,12 @@ has no interior crack. The study uses #963’s 1–20 range; the shared partitio
 supports one piece per unit through 24, grouping above that. Never display a
 false exact one-piece-per-completion promise for a grouped target.
 
+**Production update (Oct 2026): the ghost has no seams.** Feedback: the seam map
+on the empty card read as cracks. In production the ghost is the whole empty
+dashed card; seams appear only on the material itself (the Etch beat and earned
+pieces), never as outlines showing where missing pieces go. The study keeps its
+outlines as a reference.
+
 ## 2. Final completion: the keepsake
 
 | Beat | Duration | Visible behavior |

@@ -100,11 +100,9 @@ export function ReassemblingCard({ children, completed, target, still, preview, 
         {children}
       </div>
       {!fused && <>
+        {/* The ghost is the whole empty card: seams belong to earned pieces only. */}
         <div className={styles.ghost} data-ghost="" aria-hidden="true">
           {children}
-          <svg className={styles.outlines} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            {pieces.map(piece => <polygon key={piece.id} points={piece.points.map(point => `${point.x},${point.y}`).join(" ")} />)}
-          </svg>
         </div>
         {flat ? (
           shownPieces.length > 0 ? (
