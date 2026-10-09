@@ -174,7 +174,7 @@ export function AppShell({
                   )}
                   </div>
                 </div>
-                <div className="relative z-50 md:hidden" style={{ viewTransitionName: "app-mobile-tab-nav" }}>
+                <div data-mobile-tab-nav className="relative z-50 md:hidden" style={{ viewTransitionName: "app-mobile-tab-nav" }}>
                   <TabNav
                     mobile
                     hrefPrefix={hrefPrefix}

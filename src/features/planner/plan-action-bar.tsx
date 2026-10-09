@@ -8,8 +8,8 @@ export const PLAN_ACTION_BUTTON_CLASS = "h-9 rounded-full px-3.5";
 
 /**
  * The one place a pending plan change is kept or thrown away: a bar floating
- * at the bottom of the screen, above the phone tab bar, so Save stays in reach
- * while scrolling a month. Planning and Recovery share it.
+ * at the bottom of the screen, standing in for the phone tab bar, so Save
+ * stays in reach while scrolling a month. Planning and Recovery share it.
  */
 export function PlanActionBar({
   label,
@@ -27,12 +27,13 @@ export function PlanActionBar({
   children: ReactNode;
 }) {
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-3 md:bottom-4">
+    <div className="pointer-events-none fixed inset-x-0 bottom-(--plan-action-bar-bottom) z-40 flex justify-center px-3">
       <div
         role="region"
         aria-label={label}
         data-testid={testId}
-        className="pointer-events-auto flex min-h-13 w-full max-w-2xl items-center gap-2 rounded-2xl border border-border bg-popover/95 py-1.5 pl-4 pr-1.5 text-popover-foreground shadow-[0_12px_40px_rgb(0_0_0/0.16)] backdrop-blur supports-[backdrop-filter]:bg-popover/85"
+        data-plan-action-bar
+        className="pointer-events-auto flex h-(--plan-action-bar-height) w-full max-w-2xl items-center gap-2 rounded-2xl border border-border bg-popover/95 py-1.5 pl-4 pr-1.5 text-popover-foreground shadow-[0_12px_40px_rgb(0_0_0/0.16)] backdrop-blur supports-[backdrop-filter]:bg-popover/85"
       >
         <p className="flex min-w-0 flex-1 items-center gap-2 text-sm">
           <span aria-hidden className={cn("size-2 flex-none rounded-full", dotClassName)} />

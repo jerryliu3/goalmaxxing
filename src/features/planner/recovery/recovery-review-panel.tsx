@@ -71,8 +71,8 @@ export function RecoveryReviewPanel({ review }: { review: RecoveryReview }) {
       data-testid="recovery-review-panel"
       className={cn(
         panelClass,
-        // Sits on top of the floating recovery bar (5rem up on phones, 1rem from md; 3.25rem tall).
-        "fixed inset-x-3 bottom-[calc(8.75rem+env(safe-area-inset-bottom))] z-[60] flex flex-col shadow-lg md:inset-x-auto md:left-1/2 md:w-full md:max-w-2xl md:-translate-x-1/2 md:bottom-[4.75rem] lg:sticky lg:top-4 lg:bottom-auto lg:left-auto lg:z-auto lg:max-h-[min(100%,calc(100dvh-2rem))] lg:max-w-none lg:translate-x-0 lg:shadow-none",
+        // Rests on the floating recovery bar; the shadow lifts upward so it never smudges the bar.
+        "fixed inset-x-3 bottom-[calc(var(--plan-action-bar-bottom)+var(--plan-action-bar-height)+0.5rem)] z-[60] flex flex-col shadow-[0_-8px_28px_rgb(0_0_0/0.12)] md:inset-x-auto md:left-1/2 md:w-full md:max-w-2xl md:-translate-x-1/2 lg:sticky lg:top-4 lg:bottom-auto lg:left-auto lg:z-auto lg:max-h-[min(100%,calc(100dvh-2rem))] lg:max-w-none lg:translate-x-0 lg:shadow-none",
         goal ? "max-h-[42dvh]" : "max-h-[70dvh]"
       )}
     >
