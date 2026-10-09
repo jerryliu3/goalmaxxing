@@ -42,6 +42,11 @@ describe("PlanningActionBar", () => {
     expect(within(bar).getByRole("button", { name: "Save plan" })).toBeDisabled();
   });
 
+  it("marks itself so the phone tab bar steps aside while it is open", () => {
+    renderBar();
+    expect(screen.getByRole("region", { name: "Planning" })).toHaveAttribute("data-plan-action-bar");
+  });
+
   it("offers only Discard when the draft cannot be saved", () => {
     renderBar({ canSave: false });
     expect(screen.queryByRole("button", { name: "Save plan" })).toBeNull();
