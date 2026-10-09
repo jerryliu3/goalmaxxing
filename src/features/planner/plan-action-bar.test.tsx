@@ -25,8 +25,9 @@ describe("PlanningActionBar", () => {
 
   it("names the draft and keeps Discard and Save together", () => {
     const props = renderBar();
-    const bar = screen.getByRole("region", { name: "Planning mode" });
-    expect(bar).toHaveTextContent("Unsaved changes");
+    const bar = screen.getByRole("region", { name: "Planning" });
+    expect(bar).toHaveTextContent("Planning");
+    expect(bar).not.toHaveTextContent("Unsaved changes");
 
     fireEvent.click(within(bar).getByRole("button", { name: "Discard" }));
     fireEvent.click(within(bar).getByRole("button", { name: "Save plan" }));
@@ -36,7 +37,7 @@ describe("PlanningActionBar", () => {
 
   it("explains why Save is blocked", () => {
     renderBar({ saveDisabled: true, saveBlockedMessage: "Resolve the conflict first" });
-    const bar = screen.getByRole("region", { name: "Planning mode" });
+    const bar = screen.getByRole("region", { name: "Planning" });
     expect(bar).toHaveTextContent("Resolve the conflict first");
     expect(within(bar).getByRole("button", { name: "Save plan" })).toBeDisabled();
   });
