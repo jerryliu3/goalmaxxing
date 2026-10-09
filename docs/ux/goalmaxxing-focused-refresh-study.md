@@ -28,6 +28,31 @@ view remains the planning owner. Production adoption needs goal/date-specific
 handoff through its canonical navigation, existing sharing rules, and current
 team mutations. No new backend or alternate planner is implemented.
 
+## Mobile app — finding 23 (and the specific crowding concern from 2)
+
+Both alternatives use the same three goals, placed sessions, completion controls,
+filter, session detail and draft move/save/undo flow. Calendar + day retains
+horizontal date browsing and reveals full selected-day titles. Date-grouped
+agenda leads with today and upcoming dates; earlier days fold below. It is an
+optional representation, not a new default or a replacement for Week.
+
+Completion uses the production hold hook and progress mark. Dates and completion
+state are kept separate: undoing a move cannot undo a completion. The sample
+shows one week to isolate the comparison; adoption must keep full month
+navigation, existing filters, linked completion semantics and planner commands.
+
+## Mobile marketing — new exploration within 23
+
+The landing page was not browser-audited. This is a hypothesis based on the
+current hero/proof composition, not a validated conversion finding. Compare
+Readable chapters (A), a vertical goal → sessions → adjustment narrative, with
+Make a little plan (B), a deterministic two/three-run example. Both reuse the
+production Tempo goal-card rendering. A is understandable without participation;
+B makes the cause/effect tangible but requires input. Both use the same running
+goal, explicit draft/save state, existing app/demo destinations, and readable
+session rows. There is no invented AI behavior, autonomous plan application,
+autoplay requirement, or fabricated social proof.
+
 ## Delivery and verification
 
 Functional test coverage is written as code. Browser checks, tests, builds,
