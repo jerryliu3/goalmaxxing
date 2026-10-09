@@ -57,6 +57,12 @@ skins (faces, card materials, heading styling). They share one question,
 6. **Study skin materials and headings.** Decide which of #965's card
    materials and heading treatments (tracking, uppercase) come back as
    per-theme variants, and which stay in skin notes.
+7. **Second hue.** Every theme fills `selection`, but production barely
+   reads it and Original maps it to primary. Decide which jobs (act,
+   place, pick, today, done, focus) take each theme's second hue, and in
+   which form (fill, label, line). Explored in
+   `docs/ux/goalmaxxing-second-hue-study.md` and `/ux/brand/second-hue`;
+   #1161 waits on that answer.
 
 ## Constraints
 
@@ -77,6 +83,8 @@ skins (faces, card materials, heading styling). They share one question,
   pigment on Gazetteer paper.
 - A short proposal for the registry shape (category role per theme, display
   resolution by category key) with the migration story, if any.
+- A locked second hue mix, with a line form added to the selection pair
+  and a registry contrast test.
 
 ## Already decided
 
