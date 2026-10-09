@@ -3,7 +3,10 @@
 import { createContext, useContext } from "react";
 
 export const TempoMethodContext = createContext<(() => void) | null>(null);
-/** The steps a goal needs, numbered; "More details" is optional, so it sits apart unnumbered. */
+/**
+ * The steps a goal needs, numbered; "More details" is optional, so it sits apart unnumbered
+ * (and the caller leaves it out until the person opens it).
+ */
 const steps = ["Start", "Intention", "Rhythm", "Schedule", "Review", "More details"];
 const OPTIONAL_STEP = steps.length - 1;
 
@@ -36,7 +39,13 @@ export function TempoStepNavigation({
           onClick={() => (index === 0 ? chooseMethod?.() : onStep?.(index - 1))}
         >
           <span>{index === OPTIONAL_STEP ? "+" : `0${index + 1}`}</span>
-          {name}
+          {index === OPTIONAL_STEP ? (
+            <em>
+              {name} <small>(optional)</small>
+            </em>
+          ) : (
+            name
+          )}
         </button>
       ))}
     </nav>

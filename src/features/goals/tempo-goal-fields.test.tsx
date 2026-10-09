@@ -77,6 +77,11 @@ function previewScene() {
   return scene;
 }
 
+async function openDetails() {
+  fireEvent.click(screen.getByRole("button", { name: /05Review/ }));
+  fireEvent.click(await screen.findByRole("button", { name: "Add more details →" }));
+}
+
 describe("TempoGoalFields creation flow", () => {
   it("keeps difficulty on the intention step under category", () => {
     const { onPatch } = renderCreation();
@@ -107,11 +112,12 @@ describe("TempoGoalFields creation flow", () => {
 
   it("opens the details from review, with the create action at their foot", async () => {
     renderCreation({ prefilled: true, reward: "", fields: weekly });
-    fireEvent.click(screen.getByRole("button", { name: /05Review/ }));
-    fireEvent.click(await screen.findByRole("button", { name: "Add more details →" }));
+    // The optional step stays out of the step bar until it is opened.
+    expect(screen.queryByRole("button", { name: /More details/ })).toBeNull();
+    await openDetails();
 
     expect(await screen.findByRole("heading", { name: /What’s waiting at the finish line/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /More details/ })).toHaveAttribute("aria-current", "step");
+    expect(screen.getByRole("button", { name: /More details \(optional\)/ })).toHaveAttribute("aria-current", "step");
     expect(screen.getByRole("button", { name: "Create goal" })).toBeVisible();
     // Arriving from review, the card mounts face up and then turns over.
     await waitFor(() => expect(previewScene()).toHaveAttribute("data-back", "true"));
@@ -122,9 +128,9 @@ describe("TempoGoalFields creation flow", () => {
     fireEvent.click(screen.getByRole("button", { name: /04Schedule/ }));
     expect(previewScene()).toHaveAttribute("data-back", "false");
 
-    fireEvent.click(screen.getByRole("button", { name: /More details/ }));
+    await openDetails();
     expect(await screen.findByRole("heading", { name: /What’s waiting at the finish line/ })).toBeInTheDocument();
-    expect(previewScene()).toHaveAttribute("data-back", "true");
+    await waitFor(() => expect(previewScene()).toHaveAttribute("data-back", "true"));
     expect(screen.getByText("Advanced settings")).toBeVisible();
     expect(screen.getByText(/Advanced settings are on the back of the card/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Why it matters/ })).toBeVisible();
@@ -147,7 +153,7 @@ describe("TempoGoalFields creation flow", () => {
   it("sets the plaque target on the card's back when the caller saves it", async () => {
     const onPlaqueTargetChange = vi.fn();
     renderCreation({ prefilled: true, reward: "", fields: weekly, onPlaqueTargetChange });
-    fireEvent.click(screen.getByRole("button", { name: /More details/ }));
+    await openDetails();
 
     fireEvent.click(await screen.findByRole("button", { name: /Earn achievement after/ }));
     const fewer = screen.getByRole("button", { name: "Fewer completions" });
@@ -158,8 +164,8 @@ describe("TempoGoalFields creation flow", () => {
 
   it("turns the card back to its face when leaving the details", async () => {
     renderCreation({ prefilled: true, reward: "", fields: weekly });
-    fireEvent.click(screen.getByRole("button", { name: /More details/ }));
-    expect(previewScene()).toHaveAttribute("data-back", "true");
+    await openDetails();
+    await waitFor(() => expect(previewScene()).toHaveAttribute("data-back", "true"));
 
     fireEvent.click(screen.getByRole("button", { name: /04Schedule/ }));
     expect(previewScene()).toHaveAttribute("data-back", "false");
@@ -167,7 +173,7 @@ describe("TempoGoalFields creation flow", () => {
 
   it("keeps only the advanced settings when the caller can't save a reward", async () => {
     renderCreation({ prefilled: true, fields: weekly });
-    fireEvent.click(screen.getByRole("button", { name: /More details/ }));
+    await openDetails();
 
     expect(await screen.findByRole("heading", { name: "A few more settings." })).toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: /^Your reward/ })).toBeNull();
@@ -189,7 +195,7 @@ describe("TempoGoalFields creation flow", () => {
     expect(onPatch).toHaveBeenCalledWith({ end_date: "" });
     expect(screen.queryByRole("group", { name: "Time of day" })).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: /More details/ }));
+    await openDetails();
     const time = await screen.findByRole("group", { name: "Time of day" });
     fireEvent.click(within(time).getByRole("button", { name: "Set a time" }));
     fireEvent.change(screen.getByLabelText("Usual time"), { target: { value: "07:30" } });

@@ -59,7 +59,8 @@ const NO_CHANGES = new Set<never>();
 
 /**
  * Wizard steps after Start. Intention through Review are what a goal needs (the step bar
- * numbers them 02–05); More details is optional and comes after Review. Tasks have no details.
+ * numbers them 02–05); More details is optional, opened from Review, and only joins the step
+ * bar once opened. Tasks have no details.
  */
 const SCHEDULE = 2;
 const REVIEW = 3;
@@ -301,7 +302,7 @@ export function TempoGoalFields({
         onStep={go}
         canVisit={canVisit}
         disabled={disabled}
-        skip={isPlannerTask ? [DETAILS] : undefined}
+        skip={isPlannerTask || furthestStep < DETAILS ? [DETAILS] : undefined}
       />
       {step === REVIEW && !isPlannerTask ? (
         // The review labels each part of the plaque it is about to create (read-only).
