@@ -1,6 +1,7 @@
 "use client";
 
 import type { PlannerGoalLinkSummary } from "@cadence/shared/planner/context";
+import { PlannerGoalLinksProvider } from "@/features/planner/planner-goal-links";
 
 import { LoadingCard } from "@/components/ui/loading-card";
 import {
@@ -453,6 +454,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
   }, [expandedMonthRows, multiMonthGridScrollRef]);
 
   return (
+    <PlannerGoalLinksProvider links={context?.links ?? []}>
     <div className={cn("space-y-4", (showPlanningBar || recoveryMode) && "pb-20")}>
       <PlannerWarningsPanel
         hasPlannerWarnings={hasPlannerWarnings}
@@ -810,6 +812,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         plannerSettingsForm={plannerSettingsForm}
       />
     </div>
+    </PlannerGoalLinksProvider>
 
   );
 }

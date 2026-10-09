@@ -25,6 +25,18 @@ export function buildPlannerLinkedTargetIndexes(
   };
 }
 
+export function directLinkedGoalIds(
+  links: ReadonlyArray<Pick<PlannerGoalLinkSummary, "sourceGoalId" | "targetGoalId">>,
+  goalId: string
+) {
+  const ids = new Set<string>();
+  for (const link of links) {
+    if (link.sourceGoalId === goalId) ids.add(link.targetGoalId);
+    else if (link.targetGoalId === goalId) ids.add(link.sourceGoalId);
+  }
+  return ids;
+}
+
 export function linkedParentGoalIds(
   links: ReadonlyArray<Pick<PlannerGoalLinkSummary, "targetGoalId">>
 ) {

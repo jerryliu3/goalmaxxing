@@ -1,9 +1,11 @@
 "use client";
 
 import { MilestoneTitleEditor } from "@/features/goals/milestone-title-editor";
-import { Fragment } from "react";
+import { Fragment, useLayoutEffect, useRef, useState } from "react";
 import { Check, X } from "lucide-react";
+import { directLinkedGoalIds } from "@/features/planner/calendar-linked-targets";
 import { LinkedGoalMarks } from "@/features/planner/linked-goal-marks";
+import { usePlannerGoalLinks } from "@/features/planner/planner-goal-links";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
@@ -108,14 +110,70 @@ export function CalendarDayPreviewList<
   onCancelDraftMove,
 }: CalendarDayPreviewListProps<TEntry, TCompletionFactMarker>) {
   const expanded = density === "expanded";
+  const links = usePlannerGoalLinks();
+  const listRef = useRef<HTMLDivElement>(null);
+  const [threadGoalId, setThreadGoalId] = useState<string | null>(null);
+  const [thread, setThread] = useState<{
+    height: number;
+    segments: Array<{ x1: number; y1: number; x2: number; y2: number }>;
+  } | null>(null);
+  useLayoutEffect(() => {
+    const root = listRef.current;
+    if (!root || !threadGoalId) {
+      setThread(null);
+      return;
+    }
+    const related = directLinkedGoalIds(links, threadGoalId);
+    const rows = [...root.querySelectorAll<HTMLElement>("[data-plan-goal-id]")];
+    const focusRows = rows.filter((row) => row.dataset.planGoalId === threadGoalId);
+    const rootRect = root.getBoundingClientRect();
+    const center = (node: HTMLElement) => {
+      const mark = node.querySelector<HTMLElement>("[data-plan-link-mark]") ?? node;
+      const rect = mark.getBoundingClientRect();
+      return {
+        x: rect.left + rect.width / 2 - rootRect.left + root.scrollLeft,
+        y: rect.top + rect.height / 2 - rootRect.top + root.scrollTop,
+      };
+    };
+    const segments = focusRows.flatMap((from) => {
+      const start = center(from);
+      return rows.flatMap((to) => {
+        const goalId = to.dataset.planGoalId;
+        if (!goalId || !related.has(goalId)) return [];
+        const end = center(to);
+        return [{ x1: start.x, y1: start.y, x2: end.x, y2: end.y }];
+      });
+    });
+    setThread(segments.length > 0 ? { height: root.scrollHeight, segments } : null);
+  }, [entries, links, threadGoalId]);
   return (
     <div
-      className={`overflow-x-hidden ${
+      ref={listRef}
+      className={`relative overflow-x-hidden [&>svg+*]:border-t-0 ${
         expanded
           ? "divide-y"
           : "max-h-44 space-y-1.5 overflow-y-auto overscroll-y-auto text-xs [touch-action:pan-y] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       }`}
     >
+      {thread ? (
+        <svg
+          className="pointer-events-none absolute left-0 top-0 w-full text-muted-foreground"
+          height={thread.height}
+          aria-hidden="true"
+        >
+          {thread.segments.map((segment, index) => (
+            <line
+              key={`${segment.x1}-${segment.y1}-${segment.x2}-${segment.y2}-${index}`}
+              x1={segment.x1}
+              y1={segment.y1}
+              x2={segment.x2}
+              y2={segment.y2}
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+          ))}
+        </svg>
+      ) : null}
       {entries.length === 0 && completionFactMarkers.length === 0 ? (
         <p className="text-muted-foreground">No planned sessions.</p>
       ) : (
@@ -247,6 +305,7 @@ export function CalendarDayPreviewList<
                       onEntryPointerEnd();
                     }}
                     data-planner-entry-key={entry.key}
+                    data-plan-goal-id={entry.originalGoalId}
                     data-plan-work-row={expanded ? "ledger" : "pill"}
                     {...attributes}
                     {...(immovable ? {} : listeners)}
@@ -353,6 +412,16 @@ export function CalendarDayPreviewList<
                     <LinkedGoalMarks
                       outgoing={Boolean(entry.hasLinkedTargets)}
                       incoming={Boolean(entry.hasIncomingLinks)}
+                      pressed={threadGoalId === entry.originalGoalId}
+                      onToggle={
+                        entry.hasLinkedTargets || entry.hasIncomingLinks
+                          ? () => {
+                              setThreadGoalId((current) =>
+                                current === entry.originalGoalId ? null : entry.originalGoalId
+                              );
+                            }
+                          : undefined
+                      }
                     />
                     {showDraftMoveActions ? (
                       <div
