@@ -74,7 +74,7 @@ describe("second hue color math", () => {
 
   it("keeps every explored candidate readable as a line and as a label", () => {
     for (const theme of THEMES) {
-      for (const candidate of secondHueCandidates(theme.id).filter((option) => option.hue)) {
+      for (const candidate of secondHueCandidates(theme.id).filter((option) => option.form !== "registry")) {
         const readout = hueReadout(theme.id, resolveSecondHue(theme.id, candidate.id));
         expect(readout.secondLine, `${theme.id}.${candidate.id}`).toBeGreaterThanOrEqual(LINE_CONTRAST);
         expect(readout.secondLabel, `${theme.id}.${candidate.id}`).toBeGreaterThanOrEqual(LABEL_CONTRAST);
@@ -89,6 +89,13 @@ describe("second hue color math", () => {
         if (candidate.form === "tint") expect(separation, `${id}.${candidate.id}`).toBeGreaterThan(2);
         if (candidate.form === "solid") expect(separation, `${id}.${candidate.id}`).toBeLessThan(1.5);
       }
+    }
+  });
+
+  it("derives a shade from the identity that differs from it by strength", () => {
+    expect(resolveSecondHue("original", "shade").onFill).toBe(themeHex("original", "foreground"));
+    for (const theme of THEMES) {
+      expect(hueReadout(theme.id, resolveSecondHue(theme.id, "shade")).separation, theme.id).toBeGreaterThan(1.5);
     }
   });
 });

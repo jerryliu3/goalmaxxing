@@ -53,8 +53,9 @@ describe("second hue study", () => {
       expect(screen.getAllByTestId(`hue-board-${id}`).length).toBeGreaterThan(0);
     }
     await expand(user, "Theme");
-    await user.click(within(screen.getByRole("radiogroup", { name: "Theme" })).getByRole("radio", { name: "Court" }));
-    expect(screen.queryByRole("radiogroup", { name: "Court second hue" })).toBeNull();
+    await user.click(within(screen.getByRole("radiogroup", { name: "Theme" })).getByRole("radio", { name: "Centre Court" }));
+    const courtHues = screen.getByRole("radiogroup", { name: "Centre Court second hue" });
+    expect(within(courtHues).getAllByRole("radio").map((radio) => radio.textContent)).toEqual(["Registry", "Shade"]);
     expect(screen.getAllByText(/fails/).length).toBeGreaterThan(0);
   });
 });

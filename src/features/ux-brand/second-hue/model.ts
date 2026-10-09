@@ -230,7 +230,7 @@ export interface SecondHue {
   line: string;
 }
 
-export type SecondHueForm = "registry" | "solid" | "tint";
+export type SecondHueForm = "registry" | "shade" | "solid" | "tint";
 
 export interface SecondHueCandidate {
   id: string;
@@ -260,6 +260,16 @@ const REGISTRY: SecondHueCandidate = {
   form: "registry",
   note: "The theme's own selection pair; its line is darkened toward ink where the hue is too light to draw with.",
 };
+
+const SHADE: SecondHueCandidate = {
+  id: "shade",
+  name: "Shade",
+  form: "shade",
+  note: "The identity itself washed toward the page: one color family in two strengths, with ink labels.",
+};
+
+/** Share of identity in a shade fill; dark pages need more to read as a color. */
+const SHADE_AMOUNT = { light: 0.18, dark: 0.4 } as const;
 
 const EXTRA_CANDIDATES: Partial<Record<ThemeId, readonly SecondHueCandidate[]>> = {
   original: [
@@ -332,7 +342,7 @@ const EXTRA_CANDIDATES: Partial<Record<ThemeId, readonly SecondHueCandidate[]>> 
 };
 
 export function secondHueCandidates(themeId: ThemeId): readonly SecondHueCandidate[] {
-  return [REGISTRY, ...(EXTRA_CANDIDATES[themeId] ?? [])];
+  return [REGISTRY, SHADE, ...(EXTRA_CANDIDATES[themeId] ?? [])];
 }
 
 /** The lightest blend of `fill` toward `ink` that reads as a line on `page`. */
@@ -350,6 +360,15 @@ export function resolveSecondHue(themeId: ThemeId, candidateId: string): SecondH
   if (candidate.hue) return candidate.hue;
   const page = themeHex(themeId, "page") ?? "#ffffff";
   const ink = themeHex(themeId, "foreground") ?? "#000000";
+  if (candidate.form === "shade") {
+    const identity = themeHex(themeId, "primary") ?? ink;
+    const lightPage = contrastRatio(page, "#000000") > contrastRatio(page, "#ffffff");
+    return {
+      fill: mixHex(identity, page, lightPage ? SHADE_AMOUNT.light : SHADE_AMOUNT.dark),
+      onFill: ink,
+      line: lineFor(identity, page, ink),
+    };
+  }
   const fill = themeHex(themeId, "selection") ?? ink;
   return {
     fill,

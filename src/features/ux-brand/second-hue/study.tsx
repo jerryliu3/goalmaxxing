@@ -183,7 +183,7 @@ export function SecondHueStudy() {
 
         <Fold
           title="Every theme, same mix"
-          hint="Original and Gazetteer use the second hue picked under Theme."
+          hint="Each theme uses the second hue picked for it under Theme."
           defaultOpen
         >
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
