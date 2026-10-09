@@ -22,9 +22,7 @@ vi.mock("@/features/achievements/medals", () => ({
 describe("tracker inspection", () => {
   it("inspection reads a date without changing it; its separate control logs with the existing keyboard interaction", () => {
     render(<TrackerStudy variant={1} />);
-    fireEvent.click(
-      screen.getByRole("button", { name: "Inspect", exact: true }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Inspect" }));
     fireEvent.click(screen.getByTitle("2026-10-06: 0 completions"));
     const detail = screen.getByRole("region", {
       name: "Inspected completion day",
@@ -62,16 +60,18 @@ describe("tracker inspection", () => {
 describe("profile refinements", () => {
   it("reaches privacy directly and saves its local setting", () => {
     render(<ProfileStudy />);
-    fireEvent.click(
-      screen.getByRole("button", { name: "Settings", exact: true }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     fireEvent.click(screen.getByRole("button", { name: /Privacy Activity/ }));
     expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
     fireEvent.click(
       screen.getByRole("checkbox", { name: /Social activity enabled/ }),
     );
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
-    fireEvent.click(screen.getByRole("button", { name: "Close", exact: true }));
+    fireEvent.click(
+      within(screen.getByRole("dialog")).getAllByRole("button", {
+        name: "Close",
+      })[0],
+    );
     expect(screen.getByRole("status")).toHaveTextContent(
       "Privacy preference saved in the sample",
     );
@@ -86,6 +86,19 @@ describe("profile refinements", () => {
       screen.getByRole("button", { name: "Undo profile changes" }),
     );
     expect(screen.queryByLabelText("Profile changes")).not.toBeInTheDocument();
+  });
+  it("keeps record places available when the separate showcase budget is full", () => {
+    render(
+      <FocusedPicker
+        records
+        pins={[...PROFILE_PINS, { kind: "medal", ref: "level-6" }]}
+        onToggle={() => {}}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Pin Total activities" }),
+    ).toBeEnabled();
+    expect(screen.getByRole("status")).toHaveTextContent("2/3");
   });
   it("keeps selected items removable during search and respects the separate record budget", () => {
     render(
@@ -130,9 +143,7 @@ describe("bounded collection changes", () => {
     fireEvent.click(screen.getByRole("button", { name: "← Back" }));
     fireEvent.click(screen.getByRole("button", { name: "Create one goal" }));
     expect(screen.getByLabelText("Goal name")).toHaveValue("Run a 10K");
-    fireEvent.click(
-      screen.getByRole("button", { name: "Cancel", exact: true }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     fireEvent.click(
       screen.getByRole("button", { name: "Try creation navigation" }),
     );
