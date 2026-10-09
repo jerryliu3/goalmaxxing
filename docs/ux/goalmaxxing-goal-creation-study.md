@@ -90,8 +90,9 @@ offers the rest:
 - **Review is the checkpoint.** It states the plaque target and offers
   **Create goal** (save and leave) or **Add more details →**, which also saves
   the goal and then keeps the sheet open.
-- **More details (optional)** joins the step bar only once opened from Review:
-  reward, time of day, and the card's back (why it matters, plaque target, card colour, also counts toward).
+- **More details** are offered on Review as "Add more details (optional)" and
+  join the step bar only once opened: reward, time of day, and the card's back
+  (why it matters, plaque target, card colour, also counts toward).
   For a single goal they edit the saved goal through `update_goal` ("Save
   details", or "Done" when nothing changed); the earlier steps are locked once
   it is saved. Closing the sheet keeps the goal.
