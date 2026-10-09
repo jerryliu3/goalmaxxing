@@ -27,6 +27,12 @@ export function RefreshIndex() {
         </span>
       </header>
       <div className="rf-main">
+        <p className="rf-notice mb-6">
+          This first round is superseded.{" "}
+          <Link className="underline" href="/ux/focused">
+            Open the focused replacement studies →
+          </Link>
+        </p>
         <div className="rf-intro">
           <p className="type-eyebrow">
             24 audit findings · {CONCEPT_COUNT} interactive concepts
