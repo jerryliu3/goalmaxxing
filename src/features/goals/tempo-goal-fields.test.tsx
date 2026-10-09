@@ -224,7 +224,7 @@ describe("TempoGoalFields creation flow", () => {
     );
     const { rerender } = render(creation(false));
     // The details open through review, which saves the goal first.
-    expect(screen.getByRole("button", { name: /More details/ })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /More details/ })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /05Review/ }));
     fireEvent.click(screen.getByRole("button", { name: "Add more details (optional) →" }));
     expect(onOpen).toHaveBeenCalledTimes(1);
