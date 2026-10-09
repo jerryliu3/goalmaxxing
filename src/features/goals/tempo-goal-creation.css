@@ -107,8 +107,16 @@
   padding-bottom: 1rem;
   margin-bottom: 0;
   justify-content: space-between;
+  /* Narrow screens scroll the bar itself rather than widening the sheet. */
+  position: relative;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tempo-steps::-webkit-scrollbar {
+  display: none;
 }
 .tempo-steps button {
+  flex-shrink: 0;
   font-size: 0.7rem;
   display: flex;
   flex-direction: column;
