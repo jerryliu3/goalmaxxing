@@ -181,8 +181,13 @@ surfaces. The default is to simplify and reuse what already exists.
 - Every theme value (colors, typefaces, type roles, radius, per-theme
   component variants) is defined once in `packages/shared/src/brand`
   (see its README) and generated into `src/app/themes.css` with
-  `pnpm themes:css`. Components reference roles only: no hex values,
-  family names, or one theme's font variable outside that directory.
+ `pnpm themes:css`. Components reference roles only: no hex values,
+ family names, or one theme's font variable outside that directory.
+ Which jobs (act, place, pick, today, done, focus) take each theme's second
+ hue, and in which form (fill, label, line), is studied in
+ `docs/ux/goalmaxxing-second-hue-study.md` and `/ux/brand/second-hue`.
+ It is exploratory, not a lock; the selection roles stay unused in
+ production until a mix locks.
   First-principles interaction studies live in
   `docs/ux/goalmaxxing-first-principles-interface-study.md` and
   `/ux/first-principles`. They are divergent exploration, not a product lock.
