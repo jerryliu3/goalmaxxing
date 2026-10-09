@@ -136,11 +136,7 @@
   border-left: 1px solid var(--border);
   padding-left: 0.9rem;
 }
-.tempo-steps button em {
-  font-style: normal;
-  white-space: nowrap;
-}
-.tempo-steps button small {
+.tempo-optional {
   font-size: inherit;
   font-weight: 400;
   opacity: 0.7;

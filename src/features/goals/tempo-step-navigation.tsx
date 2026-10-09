@@ -43,13 +43,7 @@ export function TempoStepNavigation({
           onClick={() => (index === 0 ? chooseMethod?.() : onStep?.(index - 1))}
         >
           <span>{index === OPTIONAL_STEP ? "+" : `0${index + 1}`}</span>
-          {index === OPTIONAL_STEP ? (
-            <em>
-              {name} <small>(optional)</small>
-            </em>
-          ) : (
-            name
-          )}
+          {name}
         </button>
       ))}
     </nav>

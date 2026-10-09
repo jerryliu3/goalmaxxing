@@ -102,7 +102,7 @@ vi.mock("sonner", () => ({
 /** Creation links on the card's back (the details turn it over), with the same picker as editing. */
 async function linkToMainGoal(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: /05Review/ }));
-  await user.click(await screen.findByRole("button", { name: "Add more details →" }));
+  await user.click(await screen.findByRole("button", { name: "Add more details (optional) →" }));
   await user.click(await screen.findByRole("button", { name: /Also counts toward/ }));
   await user.click(screen.getByRole("option", { name: "Main goal" }));
 }

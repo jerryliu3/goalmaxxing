@@ -79,7 +79,7 @@ function previewScene() {
 
 async function openDetails() {
   fireEvent.click(screen.getByRole("button", { name: /05Review/ }));
-  fireEvent.click(await screen.findByRole("button", { name: "Add more details →" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Add more details (optional) →" }));
 }
 
 describe("TempoGoalFields creation flow", () => {
@@ -107,7 +107,7 @@ describe("TempoGoalFields creation flow", () => {
     // The target is set in the details now, not on review.
     expect(screen.queryByLabelText("Plaque completion target")).toBeNull();
     expect(screen.getByRole("button", { name: "Create goal" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Add more details →" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Add more details (optional) →" })).toBeVisible();
   });
 
   it("opens the details from review, with the create action at their foot", async () => {
@@ -117,7 +117,7 @@ describe("TempoGoalFields creation flow", () => {
     await openDetails();
 
     expect(await screen.findByRole("heading", { name: /What’s waiting at the finish line/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /More details \(optional\)/ })).toHaveAttribute("aria-current", "step");
+    expect(screen.getByRole("button", { name: /More details/ })).toHaveAttribute("aria-current", "step");
     expect(screen.getByRole("button", { name: "Create goal" })).toBeVisible();
     // Arriving from review, the card mounts face up and then turns over.
     await waitFor(() => expect(previewScene()).toHaveAttribute("data-back", "true"));

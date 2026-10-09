@@ -34,7 +34,7 @@ export function TempoGoalCheckpoint({
       {action}
       {onDetails && (
         <Button type="button" variant="ghost" disabled={disabled} onClick={onDetails}>
-          Add more details →
+          Add more details <small className="tempo-optional">(optional)</small> →
         </Button>
       )}
       {error && error !== "Title is required." && (
