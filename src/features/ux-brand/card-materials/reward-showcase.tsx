@@ -2,7 +2,7 @@
 
 import { useState, type CSSProperties } from "react";
 import { Rotate3D } from "lucide-react";
-import type { CardMaterial } from "./materials";
+import { resolveMaterialColor, type CardMaterial } from "./materials";
 import { cardOptics, FLAT_POSE, REST_POSE, pointerPose } from "@/features/goals/card-material/card-optics";
 import { useCardPose } from "@/features/goals/card-material/use-card-pose";
 import { RewardSculpture, type RewardShape } from "./reward-sculptures";
@@ -19,8 +19,8 @@ function RewardStage({ reward, material, still, color }: { reward: typeof REWARD
   const [posed, setPosed] = useState(false);
   const pose = useCardPose(still, posed);
   return <section className={styles.item} aria-label={reward.label}>
-    <div className={styles.stage} ref={pose.stage} data-material={material.id} data-still={still}
-      style={{ ...cardOptics(still ? FLAT_POSE : REST_POSE), "--material-color": color } as CSSProperties}
+    <div className={styles.stage} ref={pose.stage} data-material={material.id} data-color-mode={"colorMode" in material ? material.colorMode : undefined} data-still={still}
+      style={{ ...cardOptics(still ? FLAT_POSE : REST_POSE), "--material-color": resolveMaterialColor(material, color) } as CSSProperties}
       onPointerMove={event => {
         if (still || event.pointerType !== "mouse") return;
         const rect = event.currentTarget.getBoundingClientRect();

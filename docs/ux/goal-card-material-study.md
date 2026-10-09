@@ -1,7 +1,7 @@
-# Goal card materials — twelve directions
+# Goal card materials — seventeen directions
 
 Study route: `/ux/brand/card-materials` (existing UX labs access applies).
-All twelve render the real `TempoGoalCard`. Category color, information hierarchy,
+All seventeen render the real `TempoGoalCard`. Category color, information hierarchy,
 schedule, effort, and creation/history copy come from the same component used
 in the product. The full nine-material exploration remains scoped to this
 gallery, while the selected production trio is now mapped in the canonical card
@@ -191,7 +191,7 @@ bevel and keeps this printed treatment as an option.
 
 ## Application formats and earned objects
 
-The study now has three views. Goal cards preserve the twelve-way comparison.
+The study now has three views. Goal cards preserve the seventeen-way comparison.
 “In the app” applies one selected material to a community challenge, compact
 leaderboard, profile trading card, and landscape team membership card. Their proportions and information
 hierarchies differ, but face treatment, edge, and moving light remain one
@@ -231,7 +231,7 @@ removes geometric and shading treatments. No production typography is changed.
 ## Application card editions
 
 Challenge, league, profile, and landscape team membership studies now compose
-the same MaterialStage as the original goal previews: all twelve face recipes,
+the same MaterialStage as the original goal previews: all seventeen face recipes,
 rounded sidewalls, reverse face, tilt, held rotation, and keyboard controls.
 Application CSS owns layout only. The team edition adapts into a readable vertical
 layout on phones. Category color and lettering controls work across all editions.
@@ -244,7 +244,38 @@ fluted annual chalice with open handles; a reeded milestone medal and woven
 ribbon; an asymmetric faceted summit award; and an enamel compass with a jewel
 bearing. They are dimensional illustrations with bounded perspective tilt, not
 full 360-degree meshes. Unique per-instance SVG definitions supply metal, rim,
-cavity, enamel and moving spectral coatings. All twelve finish selections and
+cavity, enamel and moving spectral coatings. All seventeen finish selections and
 category-responsive colors are supported. Still mode and OS reduced motion
 stop movement; each sculpture has an accessible description and a tilt control.
 These are illustrative achievement concepts, not new award eligibility rules.
+
+## Dark monochrome prototypes
+
+Five achromatic directions extend the gallery to seventeen materials:
+
+| Finish | Material behavior | Closest counterpart |
+| --- | --- | --- |
+| Black Pearl | Broad charcoal nacre pools, silver type, fine ruled frame | Pearl Reserve |
+| Smoked Platinum | Dark horizontal brushing, polished rim, broad reflection | Platinum Mirror |
+| Carbon Foil | Graphite microgrooves, split silver beam, reflective numerals | Chromatic Foil without category tint |
+| Obsidian Lacquer | Piano-black enamel and curved edge reflections | A deeper lacquered premium edition |
+| Graphite Silk | Fine engine-turned engraving with diffuse satin light | A quieter tactile dark edition |
+
+All five are study prototypes. They reuse the real Tempo goal card, solid body,
+reverse face, pose-driven optics, keyboard/drag rotation, lettering comparison,
+sample goals, completed state, and still/reduced-motion controls. The shared
+registry also makes them available to the four application card formats and
+four reward objects. Object palettes have grayscale equivalents; they do not
+fall back to the original champagne/gold palette.
+
+The new recipes live in `dark-materials.module.css`. Their registry entries mark
+`colorMode: "achromatic"`; `resolveMaterialColor` supplies one neutral optical
+input across goal previews, application stages, and object stages. Changing the
+sample updates goal content and category labels without recoloring these
+finishes. Category-responsive materials keep their current behavior.
+
+No production difficulty mapping, card surface, or user preference is changed.
+Promoting a chosen finish into the app remains a separate decision.
+Functional coverage is included for neutral inputs, completed/sample content,
+keyboard posing, and availability across formats. Tests, browser checks,
+typecheck, lint, and CI were not run, following the repository verification gate.

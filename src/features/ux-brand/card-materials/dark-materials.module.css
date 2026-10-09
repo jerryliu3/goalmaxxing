@@ -1,0 +1,112 @@
+/* Achromatic study finishes use the shared body and cardOptics coordinates.
+   The coating is a sibling of the raised lettering, preserving its 3D chain. */
+.stage[data-color-mode="achromatic"]:not([data-embedded="true"]) {
+  background: radial-gradient(ellipse at 30% 20%,#ffffff0a,transparent 65%),linear-gradient(145deg,#3030300d,#11111112);
+}
+.stage[data-color-mode="achromatic"][data-form="solid"] [data-card-object] {
+  --card-radius: 13px;
+  --edge: #777;
+  --bevel: inset 0 1px 0 #ffffff70,inset 0 0 0 3px #161616,inset 0 0 0 4px #ffffff35;
+}
+.stage[data-color-mode="achromatic"] :global(.tempo-card) { color: #e8e8e8; border: 1px solid #777; }
+/* Application formats place their content article directly above the glaze. */
+.stage[data-color-mode="achromatic"] [data-card-object] > :global(.tempo-card):not([data-material-surface]) {
+  background: none; border-color: transparent; box-shadow: none;
+}
+
+.stage[data-color-mode="achromatic"] [data-material-surface]::before {
+  content: ""; position: absolute; inset: 12px; border: 1px solid #ffffff22; border-radius: 4px; pointer-events: none;
+}
+.stage[data-color-mode="achromatic"] [data-material-surface]::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+}
+.stage[data-color-mode="achromatic"] :global(.tempo-card-target) [data-lettering-face] {
+  color: #dedede;
+  background-image: linear-gradient(125deg,#a3a3a3 4%,#e9e9e9 22%,#b7b7b7 36%,#fafafa 48%,#bdbdbd 66%,#ededed 84%);
+  background-size: 220% 220%; background-position: var(--metal-x) var(--metal-y);
+  background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.stage[data-color-mode="achromatic"] :global(.tempo-card-meta),
+.stage[data-color-mode="achromatic"] :global(.tempo-card-period),
+.stage[data-color-mode="achromatic"] :global(.tempo-card-schedule) { color: #d0d0d0; }
+.stage[data-color-mode="achromatic"] :global(.tempo-effort-bars i) { background: #ffffff38; }
+.stage[data-color-mode="achromatic"] :global(.tempo-effort-bars i[data-active="true"]) { background: #c4c4c4; }
+
+/* Black Pearl: broad nacre pools instead of a narrow specular beam. */
+.stage[data-color-mode="achromatic"][data-material="black-pearl"] [data-material-surface] {
+  background: radial-gradient(ellipse at var(--light-x) var(--light-y),#58585855,transparent 64%),linear-gradient(125deg,#181818 6%,#343434 29%,#202020 46%,#3c3c3c 64%,#151515 84%);
+  background-size: 100% 100%,175% 175%; background-position: 0 0,var(--pearl-x) var(--pearl-y);
+}
+.stage[data-color-mode="achromatic"][data-material="black-pearl"] [data-material-surface]::before { inset: 14px; border-color: #ffffff24; }
+.stage[data-color-mode="achromatic"][data-material="black-pearl"] [data-material-surface]::after {
+  background: radial-gradient(ellipse at 80% 85%,#b0b0b018,transparent 50%),radial-gradient(ellipse at var(--light-x) var(--light-y),#ffffff10,transparent 55%);
+}
+
+/* Smoked Platinum: horizontal brushing, a mirror rim and a broad reflection. */
+.stage[data-color-mode="achromatic"][data-material="smoked-platinum"] [data-card-object] {
+  --edge: #8b8b8b;
+  --bevel: inset 0 0 0 1px #b7b7b7,inset 0 0 0 3px #383838,inset 0 0 0 5px #8b8b8b,inset 0 0 0 6px #111;
+}
+.stage[data-color-mode="achromatic"][data-material="smoked-platinum"] [data-material-surface] {
+  border-color: #9a9a9a;
+  background: repeating-linear-gradient(0deg,#ffffff05 0px,#ffffff05 .5px,transparent .5px,transparent 2px),linear-gradient(128deg,#242424,#454545 27%,#252525 56%,#393939 79%,#1d1d1d);
+}
+.stage[data-color-mode="achromatic"][data-material="smoked-platinum"] [data-material-surface]::before { inset: 10px; border-color: #aaaaaa40; }
+.stage[data-color-mode="achromatic"][data-material="smoked-platinum"] [data-material-surface]::after {
+  opacity: var(--shine-strength);
+  background: linear-gradient(var(--shine-angle),transparent calc(var(--shine-position) - 25%),#ffffff05 calc(var(--shine-position) - 17%),#ffffff30 var(--shine-position),#ffffff08 calc(var(--shine-position) + 14%),transparent calc(var(--shine-position) + 27%));
+}
+
+/* Carbon Foil: microgrooves and a split silver diffraction band. */
+.stage[data-color-mode="achromatic"][data-material="carbon-foil"] [data-card-object] { --card-radius: 10px; --edge: #939393; }
+.stage[data-color-mode="achromatic"][data-material="carbon-foil"] [data-material-surface] {
+  border-color: #939393;
+  background: radial-gradient(ellipse at var(--light-x) var(--light-y),#ffffff09,transparent 65%),#131313;
+}
+.stage[data-color-mode="achromatic"][data-material="carbon-foil"] [data-material-surface]::after {
+  opacity: var(--shine-strength);
+  background: repeating-linear-gradient(128deg,#ffffff03 0px,#ffffff03 .5px,transparent .5px,transparent 3px),linear-gradient(var(--shine-angle),transparent calc(var(--shine-position) - 12%),#ffffff04 calc(var(--shine-position) - 7%),#c4c4c455 calc(var(--shine-position) - 2%),#ffffffb0 var(--shine-position),#5d5d5d20 calc(var(--shine-position) + 2%),#ffffff50 calc(var(--shine-position) + 4%),transparent calc(var(--shine-position) + 11%));
+}
+.stage[data-color-mode="achromatic"][data-material="carbon-foil"] :global(.tempo-card-target) [data-lettering-face] {
+  background-image: linear-gradient(125deg,#9e9e9e,#f9f9f9 25%,#a2a2a2 38%,#fff 45%,#aaa 53%,#f6f6f6 66%,#a3a3a3);
+}
+
+/* Obsidian Lacquer: curved edge reflections around a deep piano-black center. */
+.stage[data-color-mode="achromatic"][data-material="obsidian-lacquer"] [data-card-object] {
+  --card-radius: 18px; --edge: #444;
+  --bevel: inset 0 1px 0 #ededed,inset 0 0 0 2px #444,inset 0 0 0 4px #111;
+}
+.stage[data-color-mode="achromatic"][data-material="obsidian-lacquer"] [data-material-surface] {
+  border-color: #8d8d8d;
+  background: radial-gradient(ellipse at 96% 4%,#5d5d5d 0%,#292929 10%,#111 26%,#080808 55%);
+}
+.stage[data-color-mode="achromatic"][data-material="obsidian-lacquer"] [data-material-surface]::before { border-color: #ffffff13; border-radius: 9px; }
+.stage[data-color-mode="achromatic"][data-material="obsidian-lacquer"] [data-material-surface]::after {
+  background: radial-gradient(ellipse 95% 32% at var(--light-x) -5%,#ffffff4d,transparent 74%),radial-gradient(ellipse 18% 140% at calc(140% - var(--light-x)) 35%,#ffffff20,transparent 75%),radial-gradient(ellipse 55% 28% at 10% 115%,#ffffff24,transparent 85%);
+}
+.stage[data-color-mode="achromatic"][data-material="obsidian-lacquer"] :global(.tempo-card-target) [data-lettering-face] {
+  background-image: linear-gradient(120deg,#d9d9d9,#fff 38%,#aaa 48%,#eee 65%,#d2d2d2);
+}
+
+/* Graphite Silk: engine-turned engraving and low satin reflection. */
+.stage[data-color-mode="achromatic"][data-material="graphite-silk"] [data-card-object] { --edge: #707070; }
+.stage[data-color-mode="achromatic"][data-material="graphite-silk"] [data-material-surface] {
+  border-color: #707070;
+  background: repeating-radial-gradient(ellipse at 82% 110%,transparent 0px,transparent 4px,#ffffff08 4px,#ffffff08 4.5px,transparent 5px,transparent 8px),repeating-radial-gradient(ellipse at -30% -40%,transparent 0px,transparent 5px,#ffffff04 5px,#ffffff04 5.5px,transparent 6px,transparent 12px),linear-gradient(135deg,#343434,#222 46%,#181818 78%,#292929);
+}
+.stage[data-color-mode="achromatic"][data-material="graphite-silk"] [data-material-surface]::after {
+  background: radial-gradient(ellipse at var(--light-x) var(--light-y),#ffffff14,transparent 65%);
+}
+.stage[data-color-mode="achromatic"][data-material="graphite-silk"] :global(.tempo-card-target) [data-lettering-face] {
+  background-image: linear-gradient(125deg,#bcbcbc,#e1e1e1 30%,#b6b6b6 55%,#dedede 80%);
+}
+@media (forced-colors: active) {
+  .stage[data-color-mode="achromatic"][data-material] :global(.tempo-card),
+  .stage[data-color-mode="achromatic"][data-material] [data-material-surface] { background: Canvas; color: CanvasText; border-color: CanvasText; }
+  .stage[data-color-mode="achromatic"][data-material] [data-material-surface]::before,
+  .stage[data-color-mode="achromatic"][data-material] [data-material-surface]::after { display: none; }
+  .stage[data-color-mode="achromatic"][data-material] :global(.tempo-card) [data-lettering-face] { background: none; color: CanvasText; -webkit-text-fill-color: CanvasText; }
+  .stage[data-color-mode="achromatic"][data-material] :global(.tempo-card-meta),
+  .stage[data-color-mode="achromatic"][data-material] :global(.tempo-card-period),
+  .stage[data-color-mode="achromatic"][data-material] :global(.tempo-card-schedule) { color: CanvasText; }
+}
