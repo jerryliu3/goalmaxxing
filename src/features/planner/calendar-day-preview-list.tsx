@@ -2,7 +2,8 @@
 
 import { MilestoneTitleEditor } from "@/features/goals/milestone-title-editor";
 import { Fragment } from "react";
-import { Check, Link2, X } from "lucide-react";
+import { Check, X } from "lucide-react";
+import { LinkedGoalMarks } from "@/features/planner/linked-goal-marks";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
@@ -325,19 +326,11 @@ export function CalendarDayPreviewList<
                               : "flex min-h-6 min-w-0 items-center truncate type-item leading-snug"
                           }
                         >
-                          <span className="inline-flex items-center gap-1">
-                            <CompletionTitle
-                              completed={credited || currentlyCredited}
-                            >
-                              {displayTitle}
-                            </CompletionTitle>
-                            {entry.hasLinkedTargets ? (
-                              <Link2
-                                className="size-3 shrink-0 text-muted-foreground"
-                                aria-label="Links this subgoal to a main goal"
-                              />
-                            ) : null}
-                          </span>
+                          <CompletionTitle
+                            completed={credited || currentlyCredited}
+                          >
+                            {displayTitle}
+                          </CompletionTitle>
                         </p>
                         {draftDiffSummary ? (
                           <p
@@ -357,6 +350,10 @@ export function CalendarDayPreviewList<
                         ) : null}
                       </div>
                     </div>
+                    <LinkedGoalMarks
+                      outgoing={Boolean(entry.hasLinkedTargets)}
+                      incoming={Boolean(entry.hasIncomingLinks)}
+                    />
                     {showDraftMoveActions ? (
                       <div
                         className="flex items-center gap-1 py-3 pr-1"
