@@ -1,9 +1,11 @@
 "use client";
 
 import { MilestoneTitleEditor } from "@/features/goals/milestone-title-editor";
-import { Fragment } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, X } from "lucide-react";
 import { LinkedGoalMarks } from "@/features/planner/linked-goal-marks";
+import { usePlannerGoalLinks, usePlannerGoalTitles } from "@/features/planner/planner-goal-links";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { StyleCompletionMark } from "@/components/ui/style-completion-mark";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
@@ -108,14 +110,147 @@ export function CalendarDayPreviewList<
   onCancelDraftMove,
 }: CalendarDayPreviewListProps<TEntry, TCompletionFactMarker>) {
   const expanded = density === "expanded";
+  const links = usePlannerGoalLinks();
+  const goalTitles = usePlannerGoalTitles();
+  const listRef = useRef<HTMLDivElement>(null);
+  const [threadGoalId, setThreadGoalId] = useState<string | null>(null);
+  const [thread, setThread] = useState<{ paths: string[] } | null>(null);
+  const [popupPlace, setPopupPlace] = useState<{ top: number; left: number } | null>(null);
+  useLayoutEffect(() => {
+    const root = listRef.current;
+    if (!root || !threadGoalId) {
+      setThread(null);
+      setPopupPlace(null);
+      return;
+    }
+    const measure = () => {
+      const rows = [...root.querySelectorAll<HTMLElement>("[data-plan-goal-id]")];
+      const focusRows = rows.filter((row) => row.dataset.planGoalId === threadGoalId);
+      const arrowTip = (node: HTMLElement, end: "out" | "in") => {
+        const arrow = node.querySelector<HTMLElement>(`[data-plan-link-arrow="${end}"]`);
+        const mark = arrow ?? node.querySelector<HTMLElement>("[data-plan-link-mark]") ?? node;
+        const rect = mark.getBoundingClientRect();
+        return { x: rect.right, y: rect.top + rect.height / 2 };
+      };
+      const rowsByGoal = new Map<string, HTMLElement[]>();
+      for (const row of rows) {
+        const goalId = row.dataset.planGoalId;
+        if (!goalId) continue;
+        const group = rowsByGoal.get(goalId) ?? [];
+        group.push(row);
+        rowsByGoal.set(goalId, group);
+      }
+      const paths = links.flatMap((link) => {
+        if (link.sourceGoalId !== threadGoalId && link.targetGoalId !== threadGoalId) return [];
+        const sources = rowsByGoal.get(link.sourceGoalId) ?? [];
+        const targets = rowsByGoal.get(link.targetGoalId) ?? [];
+        return sources.flatMap((source) =>
+          targets.flatMap((target) => {
+            const start = arrowTip(source, "out");
+            const end = arrowTip(target, "in");
+            const bulge = Math.min(Math.max(start.x, end.x) + 72, window.innerWidth - 6);
+            return [`M ${start.x} ${start.y} C ${bulge} ${start.y}, ${bulge} ${end.y}, ${end.x} ${end.y}`];
+          })
+        );
+      });
+      setThread(paths.length > 0 ? { paths } : null);
+      const mark = focusRows[0]?.querySelector<HTMLElement>("[data-plan-link-mark]");
+      if (!mark) {
+        setPopupPlace(null);
+        return;
+      }
+      const rect = mark.getBoundingClientRect();
+      const width = 240;
+      const preferredLeft = rect.left - width - 8;
+      const left = preferredLeft >= 8 ? preferredLeft : Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
+      const top = rect.bottom + 8 + 160 > window.innerHeight ? Math.max(8, rect.top - 160) : rect.bottom + 8;
+      setPopupPlace({ top, left });
+    };
+    measure();
+    root.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      root.removeEventListener("scroll", measure);
+      window.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+    };
+  }, [entries, links, threadGoalId]);
+  useEffect(() => {
+    if (!threadGoalId) return;
+    const close = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest("[data-plan-link-popup], [data-plan-link-mark]")) return;
+      setThreadGoalId(null);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [threadGoalId]);
+  const popupGoalTitle = threadGoalId ? goalTitles[threadGoalId] ?? "Linked goal" : "";
+  const popupCountsToward = threadGoalId
+    ? links.filter((link) => link.sourceGoalId === threadGoalId).map((link) => link.targetGoalId)
+    : [];
+  const popupCountedFrom = threadGoalId
+    ? links.filter((link) => link.targetGoalId === threadGoalId).map((link) => link.sourceGoalId)
+    : [];
+  const goalsOnThisDay = new Set(entries.map((entry) => entry.originalGoalId));
   return (
     <div
-      className={`overflow-x-hidden ${
+      ref={listRef}
+      className={`relative overflow-x-hidden ${
         expanded
-          ? "divide-y"
-          : "max-h-44 space-y-1.5 overflow-y-auto overscroll-y-auto text-xs [touch-action:pan-y] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          ? ""
+          : "max-h-44 overflow-y-auto overscroll-y-auto text-xs [touch-action:pan-y] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       }`}
     >
+      {thread && typeof document !== "undefined"
+        ? createPortal(
+            <svg
+              className="pointer-events-none fixed inset-0 z-30 h-screen w-screen text-muted-foreground"
+              aria-hidden="true"
+            >
+              {thread.paths.map((path) => (
+                <g key={path}>
+                  <path d={path} className={styles.linkThreadHalo} />
+                  <path d={path} className={styles.linkThread} />
+                </g>
+              ))}
+            </svg>,
+            document.body
+          )
+        : null}
+      {popupPlace && threadGoalId && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              data-plan-link-popup="true"
+              role="dialog"
+              aria-label={`Links for ${popupGoalTitle}`}
+              className="fixed z-40 w-60 rounded-xl bg-popover p-3 text-popover-foreground shadow-lg ring-1 ring-foreground/10"
+              style={{ top: popupPlace.top, left: popupPlace.left }}
+            >
+              <p className="truncate text-sm font-medium">{popupGoalTitle}</p>
+              {popupCountsToward.length > 0 ? (
+                <LinkedGoalPopupSection
+                  label="Counts toward"
+                  goalIds={popupCountsToward}
+                  goalTitles={goalTitles}
+                  goalsOnThisDay={goalsOnThisDay}
+                />
+              ) : null}
+              {popupCountedFrom.length > 0 ? (
+                <LinkedGoalPopupSection
+                  label="Counted from"
+                  goalIds={popupCountedFrom}
+                  goalTitles={goalTitles}
+                  goalsOnThisDay={goalsOnThisDay}
+                />
+              ) : null}
+            </div>,
+            document.body
+          )
+        : null}
+      <div className={expanded ? "divide-y" : "space-y-1.5"}>
       {entries.length === 0 && completionFactMarkers.length === 0 ? (
         <p className="text-muted-foreground">No planned sessions.</p>
       ) : (
@@ -247,6 +382,7 @@ export function CalendarDayPreviewList<
                       onEntryPointerEnd();
                     }}
                     data-planner-entry-key={entry.key}
+                    data-plan-goal-id={entry.originalGoalId}
                     data-plan-work-row={expanded ? "ledger" : "pill"}
                     {...attributes}
                     {...(immovable ? {} : listeners)}
@@ -353,6 +489,17 @@ export function CalendarDayPreviewList<
                     <LinkedGoalMarks
                       outgoing={Boolean(entry.hasLinkedTargets)}
                       incoming={Boolean(entry.hasIncomingLinks)}
+                      className={expanded ? "mt-3 self-start" : undefined}
+                      pressed={threadGoalId === entry.originalGoalId}
+                      onToggle={
+                        entry.hasLinkedTargets || entry.hasIncomingLinks
+                          ? () => {
+                              setThreadGoalId((current) =>
+                                current === entry.originalGoalId ? null : entry.originalGoalId
+                              );
+                            }
+                          : undefined
+                      }
                     />
                     {showDraftMoveActions ? (
                       <div
@@ -469,6 +616,35 @@ export function CalendarDayPreviewList<
           })}
         </>
       )}
+      </div>
     </div>
+  );
+}
+
+function LinkedGoalPopupSection({
+  label,
+  goalIds,
+  goalTitles,
+  goalsOnThisDay,
+}: {
+  label: string;
+  goalIds: string[];
+  goalTitles: Record<string, string>;
+  goalsOnThisDay: Set<string>;
+}) {
+  return (
+    <section className="mt-2">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <ul className="mt-1 space-y-1">
+        {goalIds.map((goalId) => (
+          <li key={goalId} className="flex items-baseline justify-between gap-2 text-sm">
+            <span className="min-w-0 truncate">{goalTitles[goalId] ?? "Linked goal"}</span>
+            {goalsOnThisDay.has(goalId) ? (
+              <span className="shrink-0 text-[11px] text-muted-foreground">On this day</span>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import type { PlannerGoalLinkSummary } from "@cadence/shared/planner/context";
+import { PlannerGoalLinksProvider } from "@/features/planner/planner-goal-links";
 
 import { LoadingCard } from "@/components/ui/loading-card";
 import {
@@ -181,7 +181,6 @@ export interface PlannerCalendarSurfaceLayoutProps {
   setMoveDialogSourceEntryKey: (key: string) => void;
   submitMoveDialog: () => void;
   selectedEventEntry: PlannerDayDetailEntry | null;
-  selectedEventLinkedTargets: PlannerGoalLinkSummary[];
   selectedEventBaselineUnit: PlannerWorkUnit | null;
   selectedEventDraftScheduledDate: string | null;
   selectedEventDraftTimeInputValue: string;
@@ -337,7 +336,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     setMoveDialogSourceEntryKey,
     submitMoveDialog,
     selectedEventEntry,
-    selectedEventLinkedTargets,
     selectedEventBaselineUnit,
     selectedEventDraftScheduledDate,
     selectedEventDraftTimeInputValue,
@@ -453,6 +451,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
   }, [expandedMonthRows, multiMonthGridScrollRef]);
 
   return (
+    <PlannerGoalLinksProvider links={context?.links ?? []} goalTitles={context?.goalTitles ?? {}}>
     <div className={cn("space-y-4", (showPlanningBar || recoveryMode) && "pb-20")}>
       <PlannerWarningsPanel
         hasPlannerWarnings={hasPlannerWarnings}
@@ -770,11 +769,9 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         onMoveDialogCancel={closeMoveDialog}
         onMoveDialogSubmit={submitMoveDialog}
         selectedEventEntry={selectedEventEntry?.entryKind === "task" ? null : selectedEventEntry}
-        selectedEventLinkedTargets={selectedEventLinkedTargets}
         selectedEventGoal={selectedEventGoal}
         selectedEventPresentation={selectedEventPresentation}
         selectedEventProgress={dayChecklist.data.progress?.summaries.find(summary => summary.goalId === selectedEventGoal?.id) ?? null}
-        goalTitles={context?.goalTitles ?? {}}
         selectedEventBaselineUnit={selectedEventBaselineUnit}
         selectedEventDraftScheduledDate={selectedEventDraftScheduledDate}
         selectedEventDraftTimeInputValue={selectedEventDraftTimeInputValue}
@@ -810,6 +807,7 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         plannerSettingsForm={plannerSettingsForm}
       />
     </div>
+    </PlannerGoalLinksProvider>
 
   );
 }

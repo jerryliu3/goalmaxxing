@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildPlannerLinkedTargetIndexes,
+  directLinkedGoalIds,
   linkedParentGoalIds,
   showsGoalWhenHidingLinkedParents,
 } from "@/features/planner/calendar-linked-targets";
@@ -64,6 +65,16 @@ describe("buildPlannerLinkedTargetIndexes", () => {
       goalId: "goal-c",
       parentGoalIds: parents,
     })).toBe(false);
+  });
+
+  it("lists the goals directly linked in either direction", () => {
+    const links = [
+      { sourceGoalId: "goal-a", targetGoalId: "goal-b" },
+      { sourceGoalId: "goal-b", targetGoalId: "goal-c" },
+    ];
+    expect([...directLinkedGoalIds(links, "goal-b")].sort()).toEqual(["goal-a", "goal-c"]);
+    expect([...directLinkedGoalIds(links, "goal-a")]).toEqual(["goal-b"]);
+    expect([...directLinkedGoalIds(links, "goal-c")]).toEqual(["goal-b"]);
   });
 });
 

@@ -80,10 +80,8 @@ function renderDialog(props: Partial<Parameters<typeof PlannerEventDetailDialog>
   render(
     <PlannerEventDetailDialog
       selectedEventEntry={buildEntry()}
-      selectedEventLinkedTargets={[]}
       selectedEventGoal={goal}
       selectedEventPresentation={presentation}
-      goalTitles={{}}
       selectedEventBaselineUnit={null}
       selectedEventDraftScheduledDate="2026-08-31"
       selectedEventDraftTimeInputValue=""

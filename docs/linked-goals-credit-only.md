@@ -6,7 +6,7 @@ A link means completing the source goal also counts toward the target goal on th
 
 Links no longer hide targets from the checklist or calendar, delay their placement until a source ends, prohibit moving them onto source-active dates, or reserve target work based on planned source sessions. A planned source session is not a completion. Only canonical completion facts reduce remaining target work.
 
-The goal editor calls the relationship “Also counts toward”; session details expose direct links to the target goals. There is no hidden-linked-goals filter, return date, or suppression explanation.
+The goal editor calls the relationship “Also counts toward.” Checklist rows show the link. Opening a session does not repeat it. There is no return date or suppression explanation.
 
 Saving a goal rewrites its outgoing link only when the selected target changed. An unrelated edit leaves other outgoing links in place, because the editor displays one target and `replace_goal_source_link` would otherwise delete the rest.
 
