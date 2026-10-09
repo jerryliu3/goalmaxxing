@@ -27,7 +27,8 @@ export type BrandSlug =
   | "riverstone"
   | "helios"
   | "aero"
-  | "hue-contrast";
+  | "hue-contrast"
+  | "second-hue";
 
 export interface BrandCardStyle {
   bg: string;
@@ -379,6 +380,28 @@ export const BRAND_STUDIES: readonly BrandDirection[] = [
       fg: "#241c14",
       accent: "#2c6470",
       type: "ui-serif, Georgia, serif",
+    },
+  },
+  {
+    slug: "second-hue",
+    href: "/ux/brand/second-hue",
+    letter: "S2",
+    name: "Second hue",
+    epithet: "Which jobs take the second color",
+    feeling:
+      "Assign act, place, pick, today, done, and focus to identity, second hue, or ink, and read it on production components in every theme.",
+    refs: "PR #1161 selection treatment, the theme identity study, the brand color library.",
+    fonts: "Each registered theme's own faces.",
+    palette:
+      "Registry selection pairs, plus solid and tint candidates for Original and Gazetteer.",
+    motif:
+      "Mixes: One hue, Selection, Containers, Where and when, Reward. Contrast readouts per theme.",
+    round: "study",
+    card: {
+      bg: "#fafafb",
+      fg: "#1f1f24",
+      accent: "#246b78",
+      type: "ui-sans-serif, system-ui, sans-serif",
     },
   },
 ] as const;
