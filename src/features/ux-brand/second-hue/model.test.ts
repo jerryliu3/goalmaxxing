@@ -54,11 +54,11 @@ describe("second hue mixes", () => {
   it("falls back to the selected swatch when a theme has no accent", () => {
     const board = hueBoardStyle(PROPOSED_MIX, resolvePalette("original", "none")) as Record<string, string>;
     expect(board["--job-place-fill"]).toBe("var(--hue-selected)");
-    expect(board["--job-draft-line"]).toBe("var(--hue-identity)");
+    expect(board["--job-place-line"]).toBe("var(--hue-identity)");
     const withAccent = hueBoardStyle(PROPOSED_MIX, resolvePalette("kiln", "registry")) as Record<string, string>;
     expect(withAccent["--job-place-fill"]).toBe("var(--hue-accent)");
     expect(withAccent["--job-pick-fill"]).toBe("var(--hue-selected)");
-    expect(withAccent["--job-draft-line"]).toBe("var(--hue-accent-line)");
+    expect(withAccent["--job-place-line"]).toBe("var(--hue-accent-line)");
   });
 
   it("goes solid only where the shade vanishes into the card", () => {

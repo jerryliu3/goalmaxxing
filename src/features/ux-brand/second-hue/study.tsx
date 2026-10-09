@@ -6,7 +6,7 @@ import { StudyThemeAssets } from "@/components/brand/study-theme-assets";
 import { useUiStyle } from "@/components/brand/ui-style-provider";
 import { BrandExploreBar } from "@/features/ux-brand/brand-stage";
 import { cn } from "@/lib/utils";
-import { DraftComparison, HueBoard, HueBoardCompact } from "./board";
+import { HueBoard, HueBoardCompact } from "./board";
 import {
   accentCandidates,
   HUE_JOBS,
@@ -19,6 +19,7 @@ import {
   MAX_ACCENT_LOUDNESS,
   MIN_SHADE_SEPARATION,
   PROPOSED_ACCENTS,
+  PROPOSED_MIX,
   resolvePalette,
   SHIPPED_MIX,
   type HueMix,
@@ -28,6 +29,19 @@ import {
 const HUE_ONLY_SEPARATION = 1.5;
 
 type AccentPicks = Partial<Record<ThemeId, string>>;
+
+const BLOODSTONE_OPTIONS = [
+  {
+    accentId: "none",
+    label: "A · No accent: solid red navigation",
+    note: "One color family. Save, today, the selected row, and navigation are all red.",
+  },
+  {
+    accentId: "registry",
+    label: "B · Registry slate navigation",
+    note: "Selection solid's look: slate says where you are, red keeps doing and picking.",
+  },
+] as const;
 
 function Choice({
   selected,
@@ -220,6 +234,26 @@ export function SecondHueStudy() {
           {mixId === null ? <p className="text-xs text-zinc-600">Custom mix.</p> : null}
         </section>
 
+        <Fold
+          title="Open decision: Bloodstone navigation"
+          hint="Both sides use the Proposal mix; only Bloodstone's accent differs."
+          defaultOpen
+        >
+          <div className="grid max-w-3xl gap-4 sm:grid-cols-2">
+            {BLOODSTONE_OPTIONS.map((option) => (
+              <div key={option.accentId} className="space-y-2">
+                <p className="text-sm font-medium">{option.label}</p>
+                <HueBoardCompact
+                  themeId="bloodstone"
+                  mix={PROPOSED_MIX}
+                  palette={resolvePalette("bloodstone", option.accentId)}
+                />
+                <p className="text-xs text-zinc-600">{option.note}</p>
+              </div>
+            ))}
+          </div>
+        </Fold>
+
         <Fold title="Jobs" hint="What the mix changes. Click a tone to build a custom mix.">
           <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white/60">
             {HUE_JOBS.map((job) => (
@@ -266,22 +300,6 @@ export function SecondHueStudy() {
                 />
                 <Readout themeId={theme.id} accentId={accentFor(theme.id)} />
               </div>
-            ))}
-          </div>
-        </Fold>
-
-        <Fold
-          title="Drafts compared"
-          hint="A committed session beside three draft treatments, using each theme's accent above."
-        >
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {THEMES.map((theme) => (
-              <DraftComparison
-                key={theme.id}
-                themeId={theme.id}
-                mix={mix}
-                palette={resolvePalette(theme.id, accentFor(theme.id))}
-              />
             ))}
           </div>
         </Fold>

@@ -30,8 +30,8 @@ describe("second hue study", () => {
     const user = userEvent.setup();
     render(<SecondHueStudy />);
     await expand(user, "Jobs");
-    const draftTone = screen.getByRole("radiogroup", { name: "Drafts tone" });
-    await user.click(within(draftTone).getByRole("radio", { name: "Accent" }));
+    const focusTone = screen.getByRole("radiogroup", { name: "Focus tone" });
+    await user.click(within(focusTone).getByRole("radio", { name: "Accent" }));
     expect(screen.getByText("Custom mix.")).toBeInTheDocument();
   });
 
@@ -46,13 +46,12 @@ describe("second hue study", () => {
     expect(board("kiln").style.getPropertyValue("--job-place-fill")).toBe("var(--hue-accent)");
   });
 
-  it("compares draft treatments, marking in identity where a theme has no accent", async () => {
-    const user = userEvent.setup();
+  it("shows the Bloodstone decision on the proposal whatever mix is chosen", () => {
     render(<SecondHueStudy />);
-    await user.click(within(screen.getByRole("radiogroup", { name: "Mix" })).getByRole("radio", { name: /proposal/i }));
-    await expand(user, "Drafts compared");
-    expect(screen.getAllByText("Accent · marked")).toHaveLength(5);
-    expect(screen.getAllByText("Identity · marked")).toHaveLength(3);
+    const [solidRed, slate] = screen.getAllByTestId("hue-board-bloodstone");
+    expect(solidRed.style.getPropertyValue("--job-place-fill")).toBe("var(--hue-selected)");
+    expect(slate.style.getPropertyValue("--job-place-fill")).toBe("var(--hue-accent)");
+    expect(slate.style.getPropertyValue("--job-pick-fill")).toBe("var(--hue-selected)");
   });
 
   it("applies a theme's accent to every board for that theme", async () => {

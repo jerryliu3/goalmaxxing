@@ -9,7 +9,7 @@ import { getTheme, type ThemeId } from "@cadence/shared/brand";
  * lab compares. Everything here is study data, not a production contract.
  */
 
-export type HueJob = "act" | "place" | "pick" | "today" | "done" | "focus" | "draft";
+export type HueJob = "act" | "place" | "pick" | "today" | "done" | "focus";
 export type HueTone = "identity" | "shade" | "shadeOrSolid" | "accent" | "accentTint" | "ink";
 export type HueMix = Readonly<Record<HueJob, HueTone>>;
 
@@ -55,13 +55,7 @@ export const HUE_JOBS: readonly HueJobInfo[] = [
     id: "focus",
     label: "Focus",
     question: "What is being edited?",
-    surfaces: "Focus ring on inputs",
-  },
-  {
-    id: "draft",
-    label: "Drafts",
-    question: "What is proposed but not yet yours?",
-    surfaces: "Unsaved and suggested plan drafts",
+    surfaces: "Focus ring on inputs, task quick-add",
   },
 ];
 
@@ -82,19 +76,18 @@ export const SHIPPED_MIX: HueMix = {
   today: "identity",
   done: "identity",
   focus: "identity",
-  draft: "identity",
 };
 
 /**
- * The lab's current proposal: the accent marks where you are and what is only
- * proposed; what you picked sits in the shade, going solid where the shade
- * would vanish into the card; identity keeps doing, now, and done.
+ * The lab's current proposal: the accent marks where you are; what you
+ * picked sits in the shade, going solid where the shade would vanish into the
+ * card; identity keeps doing, now, done, and focus. Planner drafts keep their
+ * category colors and take no theme color.
  */
 export const PROPOSED_MIX: HueMix = {
   ...SHIPPED_MIX,
   place: "accent",
   pick: "shadeOrSolid",
-  draft: "accent",
 };
 
 export interface HueMixOption {
@@ -139,7 +132,7 @@ export const HUE_MIXES: readonly HueMixOption[] = [
     id: "proposal",
     name: "Proposal",
     premise:
-      "Accent marks where you are and drafts; shade sits behind what you picked, solid where it would vanish. Original, Gazetteer, and Bloodstone drop the accent.",
+      "Accent marks where you are; shade sits behind what you picked, solid where it would vanish. Original, Gazetteer, and Bloodstone drop the accent.",
     mix: PROPOSED_MIX,
   },
 ];

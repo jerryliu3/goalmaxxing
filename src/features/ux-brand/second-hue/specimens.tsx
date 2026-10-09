@@ -412,25 +412,15 @@ export function ActionsSpecimen() {
 
 export function FocusSpecimen() {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" style={jobAsPrimary("focus", "line")}>
       <Input
         aria-label="Goal name (shown focused)"
         defaultValue="Morning run"
         className="border-ring ring-3 ring-ring/50"
-        style={jobAsPrimary("focus", "line")}
       />
-      <DraftTile />
-    </div>
-  );
-}
-
-export function DraftTile() {
-  return (
-    <div
-      className="plan-draft-shimmer rounded-md border border-primary/40 bg-primary/15 px-2 py-1.5 text-xs"
-      style={jobAsPrimary("draft", "line")}
-    >
-      Draft · Stretch 10 min · unsaved
+      <div className="plan-draft-shimmer rounded-md border border-primary/40 bg-primary/15 px-2 py-1.5 text-xs">
+        Add a task · Call the dentist
+      </div>
     </div>
   );
 }
