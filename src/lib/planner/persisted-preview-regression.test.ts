@@ -30,7 +30,7 @@ const fact = (id: string, date: string, unitKey?: string, factGoal = goal): Comp
   planner_unit_key: unitKey ?? null, source: "manual", created_at: `${date}T00:00:00Z`,
 });
 
-function preview(items: PlannerItemRow[], completions: Completion[], projectedCoverage = 0) {
+function preview(items: PlannerItemRow[], completions: Completion[]) {
   const reconciled = reconcilePersistedGoalCompletions({ goal, persistedItems: items, completions, asOfDate });
   const visibleItems = items.filter((row) => row.scheduled_date.startsWith("2026-10"));
   const assignments = visibleItems.map((row) => ({
@@ -43,8 +43,7 @@ function preview(items: PlannerItemRow[], completions: Completion[], projectedCo
     schemaVersion: "1", eligibilityMode: "overlap_v1", ownerId: goal.owner_id,
     startDate: "2026-10-01", endDate: "2026-10-31", asOfDate, timezone: "UTC",
     goals: [goal], completions, policy, basePlan, preserveExistingAssignments: true,
-    links: [{ sourceGoalId: source.id, targetGoalId: goal.id }], linkSourceGoals: [source],
-    precoveredCountByGoalId: { [goal.id]: projectedCoverage },
+    links: [{ sourceGoalId: source.id, targetGoalId: goal.id }],
   });
   const activeItems = visibleItems.map((row) => ({
     id: row.id, plan_goal_id: row.goal_id, unit_key: row.unit_key,
@@ -65,22 +64,18 @@ function preview(items: PlannerItemRow[], completions: Completion[], projectedCo
 describe("persisted preview / move / save consistency", () => {
   it("keeps an October 1 saved target movable after its source ends in September", () => {
     const items = [item("total:1", "2026-10-01"), item("total:2", "2026-10-18")];
-    const { result, projection, snapshot } = preview(items, [], 1);
+    const { result, projection, snapshot } = preview(items, []);
     const entry = projection.entryByKey.get("goal-a:total:1")!;
     const previewUnit = result.workUnits.find((unit) => unit.unitKey === "total:1");
     expect(previewUnit).toMatchObject({ creditState: "uncredited", scheduledDate: "2026-10-01" });
     expect(planDraftMove({
       entry, previewUnit, scopeMonth: "2026-10", nextDate: "2026-10-03",
-      destinationSuppressedByLink: false, conflictKeys: undefined, completionFactConflict: undefined,
+      conflictKeys: undefined, completionFactConflict: undefined,
     })).toEqual({ ok: true, scheduledDate: "2026-10-03" });
     expect(buildDirectDraftPersistence({ snapshot, persistedItems: items, asOfDate, writeWindow: october, commands: [{
       id: "move", sequence: 1, kind: "move_item", goalId: goal.id, unitKey: "total:1",
       sourceDate: "2026-10-01", scheduledDate: "2026-10-03",
     }] })).toEqual(expect.arrayContaining([expect.objectContaining({ unit_key: "total:1", scheduled_date: "2026-10-03" })]));
-    expect(planDraftMove({
-      entry, previewUnit, scopeMonth: "2026-10", nextDate: "2026-09-30",
-      destinationSuppressedByLink: true, conflictKeys: undefined, completionFactConflict: undefined,
-    })).toMatchObject({ ok: false, message: expect.stringContaining("linked target is suppressed") });
   });
 
   it("matches a legacy completion against all saved dates before narrowing to October", () => {

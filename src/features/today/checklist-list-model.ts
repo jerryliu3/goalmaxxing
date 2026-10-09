@@ -25,7 +25,6 @@ import {
 import { createChecklistTemporalContext } from "@/lib/goals/period-domain";
 import { progressSummaryMap } from "@/lib/goals/progress-context";
 import type { Goal } from "@/lib/goals/types";
-import { selectSuppressedGoalIdsOnDate } from "@/lib/planner/link-suppression";
 import { normalizeWeekStartsOn } from "@/lib/dates/week-start";
 
 export interface ChecklistListModel {
@@ -37,7 +36,6 @@ export interface ChecklistListModel {
   pastGoals: Goal[];
   archivedGoals: Goal[];
   targetAchievedGoalIds: Set<string>;
-  hiddenLinkedTargetGoalIds: ReadonlySet<string>;
   effectiveEndMonths: string[];
   presentationByGoalId: ReturnType<typeof projectChecklistPresentationsByGoalId>;
 }
@@ -53,7 +51,6 @@ export function selectChecklistListModel({
   todayEndMonths,
   todaySort,
   showTargetAchievedGoals,
-  showSuppressedLinkedTargets,
 }: {
   data: TodayData;
   viewDate: string;
@@ -65,7 +62,6 @@ export function selectChecklistListModel({
   todayEndMonths: string[];
   todaySort: GoalDateSort;
   showTargetAchievedGoals: boolean;
-  showSuppressedLinkedTargets: boolean;
 }): ChecklistListModel {
   const completionsByGoal = groupCompletionsByGoalId(data.completions);
   const progressByGoal = progressSummaryMap(data.progress);
@@ -104,15 +100,6 @@ export function selectChecklistListModel({
   });
   const targetAchievedGoalIds =
     selectTargetAchievedGoalIdsFromPresentations(presentationByGoalId);
-  const hiddenLinkedTargetGoalIds = selectSuppressedGoalIdsOnDate({
-    goals: completableGoals,
-    links: data.links,
-    ownerId: data.userId,
-    date: viewDate,
-  });
-  const hiddenForFilter = showSuppressedLinkedTargets
-    ? new Set<string>()
-    : hiddenLinkedTargetGoalIds;
   const filteredTodayGoals = selectFilteredTodayGoals({
     activeGoals,
     todayDate: viewDate,
@@ -123,7 +110,6 @@ export function selectChecklistListModel({
     endMonths: effectiveEndMonths,
     targetAchievedGoalIds,
     showTargetAchievedGoals,
-    hiddenLinkedTargetGoalIds: hiddenForFilter,
   });
   const prepareSupplementalGoals = (goals: Goal[]) =>
     sortGoalsByDate(
@@ -148,9 +134,7 @@ export function selectChecklistListModel({
     filteredTodayGoals,
     filteredTodayGoalIds: new Set(filteredTodayGoals.map((goal) => goal.id)),
     upcoming: prepareSupplementalGoals(
-      selectUpcomingGoals(activeGoals, viewDate).filter(
-        (goal) => !hiddenForFilter.has(goal.id)
-      )
+      selectUpcomingGoals(activeGoals, viewDate)
     ),
     pastGoals: prepareSupplementalGoals(
       selectEndedGoals({
@@ -160,7 +144,6 @@ export function selectChecklistListModel({
     ),
     archivedGoals: prepareSupplementalGoals(selectArchivedGoals(completableGoals)),
     targetAchievedGoalIds,
-    hiddenLinkedTargetGoalIds,
     effectiveEndMonths,
     presentationByGoalId,
   };

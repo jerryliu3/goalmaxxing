@@ -14,7 +14,6 @@ import {
 import {
   getLinkedGoalDeadlineLabel,
   getLinkedGoalRecurrenceLabel,
-  getLinkedTargetSchedulingNotice,
 } from "@/lib/goals/linked-goal-labels";
 import type { Goal } from "@/lib/goals/types";
 import { cn } from "@/lib/utils";
@@ -27,12 +26,9 @@ interface GoalLinkTargetSelectProps {
   searchQuery: string;
   onSearchQueryChange: (value: string) => void;
   filteredLinkTargets: Goal[];
-  selectedTargetGoal: Goal | null;
-  sourceEndDate: string | null;
   keyPrefix?: string;
   showLabel?: boolean;
   showHelperText?: boolean;
-  showLinkedNotice?: boolean;
   triggerClassName?: string;
   disabled?: boolean;
 }
@@ -45,24 +41,18 @@ export function GoalLinkTargetSelect({
   searchQuery,
   onSearchQueryChange,
   filteredLinkTargets,
-  selectedTargetGoal,
-  sourceEndDate,
   keyPrefix = "",
   showLabel = true,
   showHelperText = true,
-  showLinkedNotice = true,
   triggerClassName,
   disabled = false,
 }: GoalLinkTargetSelectProps) {
-  const linkedTargetSchedulingNotice = getLinkedTargetSchedulingNotice({
-    sourceEndDate,
-  });
   return (
     <div className="space-y-2">
       {showLabel ? (
         <Label className="inline-flex items-center gap-2">
           <Link2 className="size-4 text-muted-foreground" />
-          Make this a subgoal linked to...
+          Also counts toward...
         </Label>
       ) : null}
       <Select
@@ -80,7 +70,7 @@ export function GoalLinkTargetSelect({
             <Input
               value={searchQuery}
               onChange={(event) => onSearchQueryChange(event.target.value)}
-              placeholder="Choose a main goal"
+              placeholder="Choose a goal"
               className="h-8"
               disabled={disabled}
               onKeyDown={(event) => event.stopPropagation()}
@@ -106,17 +96,8 @@ export function GoalLinkTargetSelect({
       </Select>
       {showHelperText ? (
         <p className="text-xs text-muted-foreground">
-          Completing this subgoal also counts toward its linked main goal for that day.
+          Completing this goal also counts toward the linked goal for that day.
         </p>
-      ) : null}
-      {showLinkedNotice && value !== "none" && selectedTargetGoal ? (
-        <div className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-400/50 dark:bg-amber-500/10 dark:text-amber-100">
-          <p className="font-medium">
-            Linking this subgoal to {selectedTargetGoal.title} may hide that main goal in
-            some calendar months.
-          </p>
-          <p className="mt-1">{linkedTargetSchedulingNotice}</p>
-        </div>
       ) : null}
     </div>
   );

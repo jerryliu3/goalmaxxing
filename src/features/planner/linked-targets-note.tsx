@@ -1,53 +1,27 @@
 "use client";
 
+import Link from "next/link";
 import { Link2 } from "lucide-react";
-import {
-  describeLinkedTargetStatus,
-  getLinkedTargetScopeStatus,
-} from "@/features/planner/calendar-linked-targets";
 import type { PlannerGoalLinkSummary } from "@cadence/shared/planner/context";
 
-export function LinkedTargetsNote({
-  linkedTargets,
-  goalTitles,
-  scopeMonth,
-}: {
+export function LinkedTargetsNote({ linkedTargets, goalTitles }: {
   linkedTargets: PlannerGoalLinkSummary[];
   goalTitles: Record<string, string>;
-  scopeMonth: string;
 }) {
-  if (linkedTargets.length === 0) {
-    return null;
-  }
-  const rows = linkedTargets
-    .map((link) => ({
-      targetGoalId: link.targetGoalId,
-      title: goalTitles[link.targetGoalId] ?? link.targetGoalId,
-      status: getLinkedTargetScopeStatus({
-        scopeMonth,
-        targetSuppressionKind: link.targetSuppressionKind,
-        targetResumesOn: link.targetResumesOn,
-      }),
-    }))
+  if (linkedTargets.length === 0) return null;
+  const targets = Array.from(new Set(linkedTargets.map((link) => link.targetGoalId)))
+    .map((id) => ({ id, title: goalTitles[id] ?? id }))
     .sort((left, right) => left.title.localeCompare(right.title));
-  const hiddenCount = rows.filter((row) => row.status.state !== "visible").length;
-  const summary =
-    hiddenCount === 0
-      ? "Linked main goals can show this month."
-      : hiddenCount === 1
-        ? "1 linked main goal is hidden this month."
-        : `${hiddenCount} linked main goals are hidden this month.`;
   return (
     <div className="min-w-0 overflow-hidden rounded-md border border-dashed p-2 text-xs">
       <div className="flex min-w-0 items-center gap-1.5 font-medium">
         <Link2 className="size-3.5" />
-        <span>Linked main goals</span>
+        <span>Also counts toward</span>
       </div>
-      <p className="mt-1 break-words text-muted-foreground">{summary}</p>
       <ul className="mt-2 min-w-0 space-y-1 text-muted-foreground">
-        {rows.map((row) => (
-          <li key={row.targetGoalId} className="break-words">
-            {row.title}: {describeLinkedTargetStatus(row.status)}
+        {targets.map((target) => (
+          <li key={target.id} className="break-words">
+            <Link href={`/goals/${target.id}`} className="underline underline-offset-2">{target.title}</Link>
           </li>
         ))}
       </ul>

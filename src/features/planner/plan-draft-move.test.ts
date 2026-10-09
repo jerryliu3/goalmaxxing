@@ -73,26 +73,6 @@ describe("planDraftMove", () => {
     });
   });
 
-  it("rejects moves into a linked suppression date", () => {
-    const result = planDraftMove({
-      ...validMove,
-      entry: buildPlannerDayEntry(),
-      previewUnit: buildPlannerWorkUnit({
-        placementWindow: {
-          start: "2026-08-01",
-          end: "2026-08-31",
-        },
-      }),
-      destinationSuppressedByLink: true,
-    });
-
-    expect(result).toEqual({
-      ok: false,
-      message:
-        "This linked target is suppressed on that date. Move it to a date on or after the linked resume date.",
-    });
-  });
-
   it("rejects moves for an active item locked by the planner", () => {
     const result = planDraftMove({
       ...validMove,

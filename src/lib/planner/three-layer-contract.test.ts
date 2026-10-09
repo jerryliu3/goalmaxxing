@@ -13,17 +13,6 @@ import {
 import { withLifetimeTargetBasisForTests } from "@/lib/goals/goal-test-fixtures";
 import type { Goal } from "@/lib/goals/types";
 import { detectActivePlanReconciliationMismatches } from "@/lib/planner/active-plan-reconciliation";
-import { toKernelWindow } from "@/lib/planner/dates";
-import { evaluateGoalEligibility } from "@/lib/planner/eligibility";
-import { runPlannerKernel, type PlannerKernelInput } from "@/lib/planner/kernel";
-import {
-  isFullySuppressedForWindow,
-  isSuppressedOnDate,
-  resolveLinkSuppression,
-  selectSuppressedGoalIdsOnDate,
-  toLinkSuppressionSource,
-} from "@/lib/planner/link-suppression";
-import { createDefaultPlannerPolicy } from "@/lib/planner/policy";
 import {
   applyPlannerGoalDateFact,
   mapCompletionRpcError,
@@ -34,7 +23,6 @@ import type { PlannerWorkUnit as KernelWorkUnit } from "@/lib/planner/work-units
 const OWNER_ID = "owner-a";
 const VIEW_DATE = "2026-09-04";
 const RESUME_DATE = "2026-10-01";
-const SEPTEMBER = { start: "2026-09-01", end: "2026-09-30" };
 
 function goal(overrides: Partial<Goal> & Pick<Goal, "id" | "title">): Goal {
   return withLifetimeTargetBasisForTests(
@@ -62,30 +50,7 @@ function goal(overrides: Partial<Goal> & Pick<Goal, "id" | "title">): Goal {
   );
 }
 
-function kernelInput(overrides: Partial<PlannerKernelInput> = {}): PlannerKernelInput {
-  return {
-    schemaVersion: "1",
-    eligibilityMode: "overlap_v1",
-    ownerId: OWNER_ID,
-    ...toKernelWindow("2026-09"),
-    asOfDate: VIEW_DATE,
-    timezone: "UTC",
-    goals: [],
-    completions: [],
-    links: [],
-    policy: createDefaultPlannerPolicy("UTC", "2026-09-01T00:00:00Z"),
-    basePlan: null,
-    ...overrides,
-  };
-}
-
-function todayVisibleIds(goals: Goal[], date: string, links: Array<{ sourceGoalId: string; targetGoalId: string }>) {
-  const hiddenLinkedTargetGoalIds = selectSuppressedGoalIdsOnDate({
-    goals,
-    links,
-    ownerId: OWNER_ID,
-    date,
-  });
+function todayVisibleIds(goals: Goal[], date: string) {
   return selectFilteredTodayGoals({
     activeGoals: goals,
     todayDate: date,
@@ -93,41 +58,11 @@ function todayVisibleIds(goals: Goal[], date: string, links: Array<{ sourceGoalI
     recurrenceFilters: [],
     searchQuery: "",
     endMonths: [],
-    hiddenLinkedTargetGoalIds,
   }).map((row) => row.id);
 }
 
 function calendarDates(args: Parameters<typeof buildEntriesByDate>[0]) {
   return [...buildEntriesByDate(args).keys()].sort();
-}
-
-function suppressionFor(goalId: string, goals: Goal[], links: Array<{ sourceGoalId: string; targetGoalId: string }>, asOfDate: string) {
-  return resolveLinkSuppression({
-    goalId,
-    links,
-    sourcesById: new Map(goals.map((row) => [row.id, toLinkSuppressionSource(row)])),
-    ownerId: OWNER_ID,
-    asOfDate,
-  });
-}
-
-function prepareWouldSkipKernel({
-  goalId,
-  goals,
-  links,
-  asOfDate,
-  preparationEnd,
-}: {
-  goalId: string;
-  goals: Goal[];
-  links: Array<{ sourceGoalId: string; targetGoalId: string }>;
-  asOfDate: string;
-  preparationEnd: string;
-}) {
-  return isSuppressedOnDate(
-    suppressionFor(goalId, goals, links, asOfDate),
-    preparationEnd
-  );
 }
 
 const GOAL_DISPATCH_DIGEST =
@@ -192,87 +127,9 @@ describe("prepare / kernel / projection contract", () => {
     target_count: null,
     target_basis: "period",
   });
-  const links = [{ sourceGoalId: "create-videos", targetGoalId: "post-videos" }];
   const goals = [createVideos, postVideos];
 
-  describe("linked target while the source still covers the date", () => {
-    it("agrees across prepare skip, kernel eligibility, Today, and calendar", () => {
-      const source = goal({ id: "source", title: "Source" });
-      const target = goal({
-        id: "target",
-        title: "Target",
-        start_date: "2026-01-01",
-        end_date: null,
-      });
-      const pair = [source, target];
-      const pairLinks = [{ sourceGoalId: "source", targetGoalId: "target" }];
-
-      expect(
-        prepareWouldSkipKernel({
-          goalId: "target",
-          goals: pair,
-          links: pairLinks,
-          asOfDate: VIEW_DATE,
-          preparationEnd: SEPTEMBER.end,
-        })
-      ).toBe(true);
-      expect(
-        evaluateGoalEligibility({
-          window: SEPTEMBER,
-          ownerId: OWNER_ID,
-          goal: target,
-          currentLinkRole: isFullySuppressedForWindow(
-            suppressionFor("target", pair, pairLinks, VIEW_DATE),
-            SEPTEMBER
-          )
-            ? "target"
-            : "none",
-          asOfDate: VIEW_DATE,
-        })
-      ).toMatchObject({ eligible: false, reason: "linked_target" });
-
-      const output = runPlannerKernel(
-        kernelInput({
-          goals: pair,
-          links: pairLinks,
-        })
-      );
-      expect(output.eligibility.find((entry) => entry.goalId === "target")).toMatchObject({
-        eligible: false,
-        reason: "linked_target",
-      });
-      expect(output.workUnits.every((unit) => unit.originalGoalId === "source")).toBe(
-        true
-      );
-      expect(todayVisibleIds(pair, VIEW_DATE, pairLinks)).toEqual(["source"]);
-      const projected = buildEntriesByDate({
-        workUnits: output.workUnits.map((unit) => ({
-          originalGoalId: unit.originalGoalId,
-          unitKey: unit.unitKey,
-          label: unit.label,
-          scheduledDate: unit.scheduledDate,
-          classification: unit.classification,
-          creditState: unit.creditState,
-        })),
-        activeItems: [],
-        activeGoalsByPlanGoalId: new Map(),
-        activeGoalsByOriginalGoalId: new Map(),
-        goalTitles: { source: "Source", target: "Target" },
-        linkSummaries: [
-          {
-            sourceGoalId: "source",
-            targetGoalId: "target",
-            targetSuppressionKind: "until",
-            targetResumesOn: RESUME_DATE,
-          },
-        ],
-        draftItemEdits: {},
-      });
-      expect(
-        [...projected.values()].flat().every((entry) => entry.originalGoalId === "source")
-      ).toBe(true);
-    });
-
+  describe("linked target session projection", () => {
     it("still hides a kernel preview unit when prepare stored no planner_item", () => {
       const previewUnit: PlannerWorkUnit = {
         originalGoalId: "post-videos",
@@ -288,14 +145,6 @@ describe("prepare / kernel / projection contract", () => {
         activeGoalsByPlanGoalId: new Map(),
         activeGoalsByOriginalGoalId: new Map(),
         goalTitles: { "post-videos": "Post videos" },
-        linkSummaries: [
-          {
-            sourceGoalId: "create-videos",
-            targetGoalId: "post-videos",
-            targetSuppressionKind: "until",
-            targetResumesOn: RESUME_DATE,
-          },
-        ],
         draftItemEdits: {},
       });
       expect(entriesByDate.size).toBe(0);
@@ -333,14 +182,6 @@ describe("prepare / kernel / projection contract", () => {
         activeGoalsByPlanGoalId: new Map(),
         activeGoalsByOriginalGoalId: new Map(),
         goalTitles: { "post-videos": "Post videos" },
-        linkSummaries: [
-          {
-            sourceGoalId: "create-videos",
-            targetGoalId: "post-videos",
-            targetSuppressionKind: "until",
-            targetResumesOn: RESUME_DATE,
-          },
-        ],
         draftItemEdits: {},
       });
       expect(entriesByDate.get(VIEW_DATE)).toBeUndefined();
@@ -353,7 +194,7 @@ describe("prepare / kernel / projection contract", () => {
 
   describe("Today lists goals, Planner lists sessions", () => {
     it("keeps a source goal on Today even when Planner has no session that day", () => {
-      expect(todayVisibleIds(goals, VIEW_DATE, links)).toEqual(["create-videos"]);
+      expect(todayVisibleIds(goals, VIEW_DATE)).toEqual(["create-videos", "post-videos"]);
       expect(
         calendarDates({
           workUnits: [],
@@ -587,14 +428,8 @@ describe("prepare / kernel / projection contract", () => {
       );
     });
 
-    it("keeps planning suppression while still calling mark_goal_complete for a linked target", async () => {
-      expect(isSuppressedOnDate(suppressionFor("post-videos", goals, links, VIEW_DATE), VIEW_DATE)).toBe(
-        true
-      );
-      expect(todayVisibleIds(goals, VIEW_DATE, links)).toEqual(["create-videos"]);
-      expect(isSuppressedOnDate(suppressionFor("create-videos", goals, links, VIEW_DATE), VIEW_DATE)).toBe(
-        false
-      );
+    it("keeps linked targets visible and directly completable", async () => {
+      expect(todayVisibleIds(goals, VIEW_DATE)).toEqual(["create-videos", "post-videos"]);
 
       const write = await dispatchGoalCompletionWrite({
         goalId: postVideos.id,
@@ -621,76 +456,27 @@ describe("prepare / kernel / projection contract", () => {
       ).toBeNull();
     });
 
-    it("shows the linked target again after the stored source end_date", async () => {
-      vi.setSystemTime(new Date(`${RESUME_DATE}T12:00:00.000Z`));
-      expect(
-        isSuppressedOnDate(
-          suppressionFor("post-videos", goals, links, RESUME_DATE),
-          RESUME_DATE
-        )
-      ).toBe(false);
-      expect(todayVisibleIds(goals, RESUME_DATE, links)).toEqual([
-        "create-videos",
-        "post-videos",
-      ]);
-
-      const write = await dispatchGoalCompletionWrite({
-        goalId: postVideos.id,
-        date: RESUME_DATE,
-        lifetime: postVideos,
-      });
-      expect(write.result).toMatchObject({ ok: true });
-      expect(write.rpc).toHaveBeenLastCalledWith("mark_goal_complete", {
-        p_goal_id: postVideos.id,
-        p_date: RESUME_DATE,
-      });
-    });
-
-    it("keeps TS planning-horizon resume distinct from the target's stored lifetime", async () => {
-      const openOrdinalSource = goal({
-        id: "open-source",
-        title: "Open source",
-        start_date: "2024-01-01",
-        end_date: null,
-        frequency_type: "fixed_milestones",
-        target_count: 3,
-        milestone_names: ["A", "B", "C"],
-        target_basis: "lifetime",
-      });
+    it("uses stored lifetime rather than a planning horizon for direct completion", async () => {
       const openTarget = goal({
         id: "open-target",
         title: "Open target",
         start_date: "2024-01-01",
         end_date: null,
       });
-      const pair = [openOrdinalSource, openTarget];
-      const pairLinks = [{ sourceGoalId: "open-source", targetGoalId: "open-target" }];
-      const afterSoftHorizon = "2028-09-01";
-
-      expect(
-        isSuppressedOnDate(suppressionFor("open-target", pair, pairLinks, VIEW_DATE), VIEW_DATE)
-      ).toBe(true);
-      expect(
-        isSuppressedOnDate(
-          suppressionFor("open-target", pair, pairLinks, VIEW_DATE),
-          afterSoftHorizon
-        )
-      ).toBe(false);
-
-      const duringSuppression = await dispatchGoalCompletionWrite({
+      const currentCompletion = await dispatchGoalCompletionWrite({
         goalId: openTarget.id,
         date: VIEW_DATE,
         lifetime: openTarget,
       });
-      expect(duringSuppression.result).toMatchObject({ ok: true });
-      expect(duringSuppression.rpc).toHaveBeenLastCalledWith("mark_goal_complete", {
+      expect(currentCompletion.result).toMatchObject({ ok: true });
+      expect(currentCompletion.rpc).toHaveBeenLastCalledWith("mark_goal_complete", {
         p_goal_id: openTarget.id,
         p_date: VIEW_DATE,
       });
 
       const afterHorizon = await dispatchGoalCompletionWrite({
         goalId: openTarget.id,
-        date: afterSoftHorizon,
+        date: "2028-09-01",
         lifetime: openTarget,
       });
       expect(afterHorizon.result).toMatchObject({

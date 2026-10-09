@@ -97,9 +97,6 @@ export const plannerKernelInputSchema = z
     rebalanceExistingAssignments: z.boolean().optional(),
     recoverPastPlacements: z.boolean().optional(),
     draftPinnedDates: z.record(z.string(), dateSchema).optional(),
-    precoveredCountByGoalId: z
-      .record(z.string(), z.number().int().nonnegative())
-      .optional(),
     ownerId: z.string().min(1).max(100),
     startDate: dateSchema,
     endDate: dateSchema,
@@ -115,7 +112,6 @@ export const plannerKernelInputSchema = z
         })
         .strict()
     ),
-    linkSourceGoals: z.array(plannerGoalSchema).optional(),
     assessments: z.array(goalAssessmentSchema).optional(),
     policy: plannerPolicySchema,
     basePlan: z
@@ -303,7 +299,6 @@ export const plannerKernelOutputSchema = z
             "not_owner",
             "deleted",
             "archived",
-            "linked_target",
             "invalid_date_range",
             "end_outside_scope",
             "starts_after_scope",

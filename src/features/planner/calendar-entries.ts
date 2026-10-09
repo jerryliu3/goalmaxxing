@@ -1,9 +1,7 @@
 import type {
-  PlannerGoalLinkSummary,
   PlannerWorkUnitClassification,
   PlannerWorkUnitCreditState,
 } from "@cadence/shared/planner/context";
-import { isLinkedTargetSuppressedOnDate } from "@/lib/planner/link-suppression";
 import { resolveWorkUnitDisplayDate } from "@/lib/planner/session-display-date";
 import { getEntryGoalFirstTitle } from "@/features/planner/calendar-format";
 import type {
@@ -49,7 +47,6 @@ export function buildEntriesByDateProjection({
   activeGoalsByOriginalGoalId,
   goalTitles,
   linkedTargetSourceGoalIds,
-  linkSummaries,
   draftItemEdits,
   draftCommands = [],
   letGoEntryKeys,
@@ -60,7 +57,6 @@ export function buildEntriesByDateProjection({
   activeGoalsByOriginalGoalId: Map<string, PlannerActiveGoalSnapshot>;
   goalTitles: Record<string, string> | undefined;
   linkedTargetSourceGoalIds?: ReadonlySet<string>;
-  linkSummaries?: readonly PlannerGoalLinkSummary[];
   draftItemEdits: Record<string, DraftItemEdit>;
   draftCommands?: readonly PlannerDraftCommand[];
   /** Sessions recovery mode staged as let go: drawn as removed from their day. */
@@ -76,12 +72,6 @@ export function buildEntriesByDateProjection({
     const originalGoalId = activeGoal?.original_goal_id ?? item.plan_goal_id;
     activeItemByEntryKey.set(`${originalGoalId}:${item.unit_key}`, item);
   }
-  const isSuppressedLinkedTargetOnDay = (goalId: string, day: string) =>
-    isLinkedTargetSuppressedOnDate({
-      goalId,
-      date: day,
-      linkSummaries,
-    });
   const persistedEntryKeys = new Set(
     (activeItems ?? []).map((item) => {
       const activeGoal = activeGoalsByPlanGoalId.get(item.plan_goal_id);
@@ -176,8 +166,7 @@ export function buildEntriesByDateProjection({
     });
     if (
       !displayDay ||
-      (!isCreditedHistoricalUnit && !persistedEntryKeys.has(key)) ||
-      isSuppressedLinkedTargetOnDay(unit.originalGoalId, displayDay)
+      (!isCreditedHistoricalUnit && !persistedEntryKeys.has(key))
     ) {
       continue;
     }
@@ -226,9 +215,6 @@ export function buildEntriesByDateProjection({
       continue;
     }
     if (!item.scheduled_date) {
-      continue;
-    }
-    if (isSuppressedLinkedTargetOnDay(originalGoalId, item.scheduled_date)) {
       continue;
     }
     setEntryOnDay(item.scheduled_date, key, {
@@ -290,15 +276,6 @@ export function buildEntriesByDateProjection({
       }
       continue;
     }
-    const draftGoalId = unit?.originalGoalId ?? existingEntry?.originalGoalId;
-    if (
-      draftGoalId &&
-      isSuppressedLinkedTargetOnDay(draftGoalId, nextDay) &&
-      edit.scheduledDate !== undefined
-    ) {
-      continue;
-    }
-
     if (!existingEntry) {
       if (!unit) {
         continue;
@@ -463,12 +440,10 @@ export function buildCompletionFactMarkersByDate({
   workUnits,
   activeGoalsByOriginalGoalId,
   goalTitles,
-  linkSummaries,
 }: {
   workUnits: PlannerWorkUnit[] | undefined;
   activeGoalsByOriginalGoalId: Map<string, PlannerActiveGoalSnapshot>;
   goalTitles: Record<string, string> | undefined;
-  linkSummaries?: readonly PlannerGoalLinkSummary[];
 }) {
   const map = new Map<string, PlannerCompletionFactMarker[]>();
   for (const unit of workUnits ?? []) {
@@ -490,15 +465,6 @@ export function buildCompletionFactMarkersByDate({
       continue;
     }
     const markerDay = unit.creditedCompletionDate;
-    if (
-      isLinkedTargetSuppressedOnDate({
-        goalId: unit.originalGoalId,
-        date: markerDay,
-        linkSummaries,
-      })
-    ) {
-      continue;
-    }
     const markersForDay = map.get(markerDay) ?? [];
     const goalTitle =
       activeGoalsByOriginalGoalId.get(unit.originalGoalId)?.title ??

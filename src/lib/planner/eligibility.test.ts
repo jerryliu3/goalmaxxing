@@ -28,7 +28,6 @@ describe("overlap-v1 eligibility", () => {
     ownedByViewer: true,
     isDeleted: false,
     archivedAt: null,
-    currentLinkRole: "none",
     outgoingShareCount: 0,
     startDate: "2026-07-15",
     endDate: "2026-09-20",
@@ -98,7 +97,6 @@ describe("goal-level eligibility guards", () => {
         ownerId: "owner-a",
         goal: cadenceGoal,
         asOfDate: "2026-08-15",
-        currentLinkRole: "none",
       })
     ).toEqual({
       eligible: true,
@@ -116,7 +114,6 @@ describe("goal-level eligibility guards", () => {
           start_date: "2026-09-01",
         },
         asOfDate: "2026-08-15",
-        currentLinkRole: "none",
       })
     ).toEqual({
       eligible: false,
@@ -135,7 +132,6 @@ describe("goal-level eligibility guards", () => {
           target_count: 12,
         },
         asOfDate: "2026-08-15",
-        currentLinkRole: "none",
       })
     ).toEqual({
       eligible: true,
@@ -156,7 +152,6 @@ describe("goal-level eligibility guards", () => {
           end_date: null,
         },
         asOfDate: "2026-08-15",
-        currentLinkRole: "none",
       })
     ).toEqual({
       eligible: false,
@@ -193,7 +188,6 @@ describe("goal-level eligibility guards", () => {
         ownerId: "owner-a",
         goal: longHorizonGoal,
         asOfDate: "2026-08-15",
-        currentLinkRole: "none",
       })
     ).toEqual({
       eligible: false,
@@ -212,7 +206,6 @@ describe("goal-level eligibility guards", () => {
           end_date: "2028-12-31",
         },
         asOfDate: "2026-08-15",
-        currentLinkRole: "none",
       })
     ).toEqual({
       eligible: false,
@@ -233,7 +226,6 @@ describe("goal-level eligibility guards", () => {
           end_date: "2026-12-31",
         },
         asOfDate: "2026-08-15",
-        currentLinkRole: "none",
       })
     ).toEqual({
       eligible: false,
@@ -256,7 +248,6 @@ describe("goal-level eligibility guards", () => {
           end_date: "2026-12-31",
         },
         asOfDate: "2026-08-15",
-        currentLinkRole: "none",
       })
     ).toEqual({
       eligible: false,

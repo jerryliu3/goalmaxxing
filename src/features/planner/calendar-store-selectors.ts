@@ -96,7 +96,6 @@ export function selectPlannerCalendarStoreProjection({
     linkedTargetSourceGoalIds: new Set(
       (context?.links ?? []).map((link) => link.sourceGoalId)
     ),
-    linkSummaries: context?.links ?? [],
     draftItemEdits: effectiveDraftItemEdits,
     draftCommands: effectiveDraftCommands,
     letGoEntryKeys,
@@ -109,7 +108,6 @@ export function selectPlannerCalendarStoreProjection({
     workUnits: effectivePreview?.workUnits,
     activeGoalsByOriginalGoalId,
     goalTitles: context?.goalTitles,
-    linkSummaries: context?.links ?? [],
   });
   const invalidLockGoalSummaries = summarizePlannerGoalUnplaceableRecords({
     records: (context?.unplaceableGoals ?? []).filter(

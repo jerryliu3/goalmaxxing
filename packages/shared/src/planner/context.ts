@@ -14,7 +14,6 @@ export type EligibilityReason =
   | "not_owner"
   | "deleted"
   | "archived"
-  | "linked_target"
   | "invalid_date_range"
   | "end_outside_scope"
   | "starts_after_scope"
@@ -187,8 +186,6 @@ export interface PlannerContextPayload {
 export interface PlannerGoalLinkSummary {
   sourceGoalId: string;
   targetGoalId: string;
-  targetSuppressionKind: "none" | "until" | "indefinite";
-  targetResumesOn: string | null;
 }
 
 export interface PlannerVisibleMonthContextPayload {

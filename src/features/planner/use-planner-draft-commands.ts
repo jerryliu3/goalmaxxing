@@ -21,7 +21,6 @@ import {
   tryBuildPlannerDraftSaveWindow,
 } from "@/lib/planner/draft-window";
 import type { PlannerDraftCommand } from "@/lib/planner/draft-commands";
-import { isLinkedTargetSuppressedOnDate } from "@/lib/planner/link-suppression";
 import { plannerUnitOccupiesScheduledDate } from "@/lib/planner/occupancy";
 
 interface UsePlannerDraftCommandsArgs {
@@ -99,18 +98,12 @@ export function usePlannerDraftCommands({
       const completionConflictUnitKey = moveCompletionConflictByGoalDate.get(
         `${entry.originalGoalId}:${normalizedDate}`
       );
-      const destinationSuppressedByLink = isLinkedTargetSuppressedOnDate({
-        goalId: entry.originalGoalId,
-        date: normalizedDate,
-        linkSummaries: context?.links,
-      });
       const planned = planDraftMove({
         entry,
         nextDate: normalizedDate,
         scopeMonth,
         source,
         previewUnit: baselineUnit,
-        destinationSuppressedByLink,
         conflictKeys: moveConflictByGoalDate.get(
           `${entry.originalGoalId}:${normalizedDate}`
         ),

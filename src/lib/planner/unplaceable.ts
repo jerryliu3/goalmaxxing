@@ -1,6 +1,7 @@
 import { compareDateStrings } from "@/lib/goals/periods";
 import type { Goal } from "@/lib/goals/types";
 import { canonicalHash } from "@/lib/planner/canonical";
+import type { PlannerPolicy } from "@/lib/planner/policy";
 import { normalizeGoalRequirement } from "@/lib/planner/requirements";
 
 export type PlannerGoalUnplaceableReason = "capacity" | "invalid_lock";
@@ -21,6 +22,12 @@ interface PlannerGoalLockSignatureInput {
   unitKey: string;
   scheduledDate: string;
   locked: boolean;
+}
+
+// Cached outcomes from source-substitution scheduling cannot account for missing
+// work under independent scheduling. Include the placement semantics in the key.
+export function computePlannerUnplaceablePolicyFingerprint(policy: PlannerPolicy) {
+  return canonicalHash({ policy, placementSemantics: "independent_goals_v1" });
 }
 
 export function isPlannerGoalUnplaceableReason(

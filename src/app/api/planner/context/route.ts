@@ -14,7 +14,6 @@ import { goalAssessmentSchema } from "@/lib/planner/assessment";
 import {
   loadPlannerCanonicalSnapshot,
   loadPlannerContextPayload,
-  loadPlannerItemsForWindow,
 } from "@/lib/planner/context-loader";
 import {
   MAX_API_BODY_BYTES,
@@ -39,14 +38,6 @@ import {
   getScopeDateRange,
   toKernelWindowFromDates,
 } from "@/lib/planner/dates";
-import {
-  buildPreparationWindows,
-} from "@/lib/planner/preparation-windows";
-import {
-  buildPlannedDatesByGoalIdFromPlannerItems,
-  computeLinkedSourceCoverageByGoalId,
-  indexCompletionsByGoalId,
-} from "@/lib/planner/linked-source-coverage";
 
 export const runtime = "nodejs";
 
@@ -94,7 +85,6 @@ function resolvePlannerPreview({
   recoverPastPlacements = false,
   solveIntent = "stable",
   draftPinnedDates = {},
-  plannedDatesByGoalId,
 }: {
   ownerId: string;
   startDate: string;
@@ -110,7 +100,6 @@ function resolvePlannerPreview({
   recoverPastPlacements?: boolean;
   solveIntent?: "stable" | "replan";
   draftPinnedDates?: Record<string, string>;
-  plannedDatesByGoalId: Map<string, string[]>;
 }) {
   const effectiveTimezone =
     requestedTimezone ??
@@ -155,25 +144,6 @@ function resolvePlannerPreview({
     );
   }
 
-  const preparationWindows = buildPreparationWindows(asOfDate);
-  const preparationStart = preparationWindows[0]?.start ?? startDate;
-  const preparationEnd = preparationWindows.at(-1)?.end ?? endDate;
-  const completionsByGoalId = indexCompletionsByGoalId(snapshot.completions);
-  const { projectedCoverageCountByGoalId } = computeLinkedSourceCoverageByGoalId({
-    goals: snapshot.goals,
-    links: snapshot.links,
-    ownerId,
-    asOfDate,
-    preparationStart,
-    preparationEnd,
-    completionsByGoalId,
-    plannedDatesByGoalId,
-  });
-  const precoveredCountByGoalId = Object.fromEntries(
-    Array.from(projectedCoverageCountByGoalId.entries())
-      .filter(([, count]) => count > 0)
-  );
-
   const preview = includeKernel
     ? runPlannerKernel({
         schemaVersion: PLANNER_CONTRACT_VERSION,
@@ -185,7 +155,6 @@ function resolvePlannerPreview({
         goals: snapshot.goals,
         completions: snapshot.completions,
         links: snapshot.links,
-        precoveredCountByGoalId,
         assessments,
         policy: effectivePolicy,
         basePlan: snapshot.activePlan?.basePlan ?? null,
@@ -330,31 +299,6 @@ export async function POST(request: Request) {
       ownerId: routeContext.userId,
       ...kernelWindow,
     });
-    const effectiveTimezoneForCoverage =
-      body.timezone ?? snapshot.preferences?.timezone;
-    if (!effectiveTimezoneForCoverage) {
-      throw new PlannerRouteError(
-        422,
-        "timezone_confirmation_required",
-        "Confirm planner timezone before requesting a preview."
-      );
-    }
-    const asOfDateForCoverage = resolveCanonicalAsOfDate({
-      timezone: effectiveTimezoneForCoverage,
-      requestedAsOfDate: body.asOfDate,
-    });
-    const preparationWindows = buildPreparationWindows(asOfDateForCoverage);
-    const preparationStart = preparationWindows[0]?.start ?? body.startDate;
-    const preparationEnd = preparationWindows.at(-1)?.end ?? body.endDate;
-    const preparationItems = await loadPlannerItemsForWindow(
-      routeContext.supabase,
-      routeContext.userId,
-      preparationStart,
-      preparationEnd
-    );
-    const plannedDatesByGoalId =
-      buildPlannedDatesByGoalIdFromPlannerItems(preparationItems);
-
     let resolvedPreview: ReturnType<typeof resolvePlannerPreview>;
     try {
       resolvedPreview = resolvePlannerPreview({
@@ -371,7 +315,6 @@ export async function POST(request: Request) {
         draftPinnedDates: buildDraftPinnedDatesFromCommands(
           body.draftCommands ?? []
         ),
-        plannedDatesByGoalId,
       });
     } catch (error) {
       if (error instanceof PlannerError) {

@@ -6,8 +6,6 @@ import { PlannerWarningsPanel } from "@/features/planner/planner-warnings-panel"
 const emptyEligibility = {
   hardIneligible: [],
   groupedHardIneligible: [],
-  linkedTargetCount: 0,
-  linkedTargetDetails: [],
 };
 
 function panel(overrides: { hasPlannerWarnings?: boolean } = {}) {

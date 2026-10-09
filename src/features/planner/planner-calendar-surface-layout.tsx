@@ -1,5 +1,7 @@
 "use client";
 
+import type { PlannerGoalLinkSummary } from "@cadence/shared/planner/context";
+
 import { LoadingCard } from "@/components/ui/loading-card";
 import {
   captureCalendarDayScreenTop,
@@ -179,12 +181,7 @@ export interface PlannerCalendarSurfaceLayoutProps {
   setMoveDialogSourceEntryKey: (key: string) => void;
   submitMoveDialog: () => void;
   selectedEventEntry: PlannerDayDetailEntry | null;
-  selectedEventLinkedTargets: Array<{
-    sourceGoalId: string;
-    targetGoalId: string;
-    targetSuppressionKind: "none" | "until" | "indefinite";
-    targetResumesOn: string | null;
-  }>;
+  selectedEventLinkedTargets: PlannerGoalLinkSummary[];
   selectedEventBaselineUnit: PlannerWorkUnit | null;
   selectedEventDraftScheduledDate: string | null;
   selectedEventDraftTimeInputValue: string;
@@ -503,7 +500,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         goalViewOpen={goalViewOpen}
         onGoalViewOpenChange={onGoalViewOpenChange}
         canOpenSettings={Boolean(context?.preferences)}
-        linkedTargetDetails={eligibilityNotices.linkedTargetDetails}
         searchQuery={searchQuery}
         referenceMonth={month ?? focusedDay.slice(0, 7)}
         endMonthFilters={endMonthFilters}
@@ -775,7 +771,6 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         selectedEventPresentation={selectedEventPresentation}
         selectedEventProgress={dayChecklist.data.progress?.summaries.find(summary => summary.goalId === selectedEventGoal?.id) ?? null}
         goalTitles={context?.goalTitles ?? {}}
-        scopeMonth={context?.scopeMonth ?? month ?? "1970-01"}
         selectedEventBaselineUnit={selectedEventBaselineUnit}
         selectedEventDraftScheduledDate={selectedEventDraftScheduledDate}
         selectedEventDraftTimeInputValue={selectedEventDraftTimeInputValue}

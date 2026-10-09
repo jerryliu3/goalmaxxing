@@ -17,7 +17,6 @@ export interface EligibilityGoal {
   ownedByViewer: boolean;
   isDeleted: boolean;
   archivedAt: string | null;
-  currentLinkRole: "none" | "source" | "target";
   outgoingShareCount: number;
   startDate: string;
   endDate: string | null;
@@ -37,9 +36,6 @@ function evaluateStaticEligibility(goal: EligibilityGoal): EligibilityDecision |
   }
   if (goal.archivedAt !== null) {
     return { eligible: false, reason: "archived" };
-  }
-  if (goal.currentLinkRole === "target") {
-    return { eligible: false, reason: "linked_target" };
   }
   if (goal.endDate !== null && goal.startDate > goal.endDate) {
     return { eligible: false, reason: "invalid_date_range" };
@@ -69,13 +65,11 @@ export function evaluateGoalEligibility({
   window,
   ownerId,
   goal,
-  currentLinkRole,
   asOfDate,
 }: {
   window: DateWindow;
   ownerId: string;
   goal: Goal;
-  currentLinkRole: EligibilityGoal["currentLinkRole"];
   asOfDate: string;
 }): EligibilityDecision {
   const effectiveEndDate = resolveGoalPlanningEndDate({
@@ -91,7 +85,6 @@ export function evaluateGoalEligibility({
     ownedByViewer: goal.owner_id === ownerId,
     isDeleted: goal.is_deleted,
     archivedAt: goal.archived_at,
-    currentLinkRole,
     outgoingShareCount: 0,
     startDate: goal.start_date,
     endDate: effectiveEndDate,

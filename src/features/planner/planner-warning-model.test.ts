@@ -5,8 +5,6 @@ import { selectPlannerWarningModel } from "@/features/planner/planner-warning-mo
 const emptyEligibility: PlannerEligibilityNotices = {
   hardIneligible: [],
   groupedHardIneligible: [],
-  linkedTargetCount: 0,
-  linkedTargetDetails: [],
 };
 
 describe("selectPlannerWarningModel", () => {

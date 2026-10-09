@@ -258,15 +258,7 @@ describe("planner calendar entries", () => {
     expect(markers.size).toBe(0);
   });
 
-  it("hides linked targets on suppressed dates", () => {
-    const links = [
-      {
-        sourceGoalId: "source-a",
-        targetGoalId: "target-b",
-        targetSuppressionKind: "until" as const,
-        targetResumesOn: "2026-10-01",
-      },
-    ];
+  it("shows a linked target on its saved date while its source is active", () => {
     const entriesByDate = buildEntriesByDate({
       workUnits: [
         {
@@ -284,8 +276,8 @@ describe("planner calendar entries", () => {
           plan_goal_id: "target-b",
           unit_key: "milestone:21",
           requirement_kind: "deadline_total",
-          scheduled_date: "2026-10-01",
-          original_scheduled_date: "2026-10-01",
+          scheduled_date: "2026-09-04",
+          original_scheduled_date: "2026-09-04",
           locked: false,
           revision: 0,
         },
@@ -293,12 +285,10 @@ describe("planner calendar entries", () => {
       activeGoalsByPlanGoalId: new Map(),
       activeGoalsByOriginalGoalId: new Map(),
       goalTitles: { "target-b": "Post videos" },
-      linkSummaries: links,
       draftItemEdits: {},
     });
 
-    expect(entriesByDate.get("2026-09-04")).toBeUndefined();
-    expect(entriesByDate.get("2026-10-01")?.[0]).toMatchObject({
+    expect(entriesByDate.get("2026-09-04")?.[0]).toMatchObject({
       originalGoalId: "target-b",
       unitKey: "milestone:21",
       creditState: "uncredited",

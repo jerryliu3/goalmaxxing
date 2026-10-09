@@ -234,7 +234,7 @@ describe("planner context preview route", () => {
     );
   });
 
-  it("threads linked-source projected coverage into preview kernel input", async () => {
+  it("plans linked goals from canonical facts without source-plan projection", async () => {
     mocks.parseBoundedJsonBody.mockResolvedValueOnce({
       startDate: "2026-08-01",
       endDate: "2026-08-31",
@@ -298,12 +298,6 @@ describe("planner context preview route", () => {
       },
       activePlan: null,
     });
-    mocks.loadPlannerItemsForWindow.mockResolvedValueOnce([
-      {
-        goal_id: sourceGoalId,
-        scheduled_date: "2026-08-10",
-      },
-    ]);
     mocks.runPlannerKernel.mockImplementationOnce(() => {
       throw new Error("forced");
     });
@@ -312,7 +306,7 @@ describe("planner context preview route", () => {
 
     expect(mocks.runPlannerKernel).toHaveBeenCalledWith(
       expect.objectContaining({
-        precoveredCountByGoalId: { [targetGoalId]: 2 },
+        links: [{ sourceGoalId, targetGoalId }],
       })
     );
   });

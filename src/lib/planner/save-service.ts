@@ -35,14 +35,6 @@ import {
   getWindowState,
   toKernelWindowFromDates,
 } from "@/lib/planner/dates";
-import {
-  buildPreparationWindows,
-} from "@/lib/planner/preparation-windows";
-import {
-  buildPlannedDatesByGoalIdFromPlannerItems,
-  computeLinkedSourceCoverageByGoalId,
-  indexCompletionsByGoalId,
-} from "@/lib/planner/linked-source-coverage";
 import { plannerPolicySchema } from "@/lib/planner/policy";
 import { shouldUseDirectDraftPersistence } from "@/lib/planner/save-persistence";
 import type { Json } from "@/lib/supabase/database.types";
@@ -333,32 +325,6 @@ export async function preparePlannerSchedule(
         throw error;
       }
     } else {
-    const preparationWindows = buildPreparationWindows(asOfDate);
-    const preparationStart = preparationWindows[0]?.start ?? body.startDate;
-    const preparationEnd = preparationWindows.at(-1)?.end ?? body.endDate;
-    const preparationItems = await loadPlannerItemsForWindow(
-      routeContext.supabase,
-      routeContext.userId,
-      preparationStart,
-      preparationEnd
-    );
-    const plannedDatesByGoalId =
-      buildPlannedDatesByGoalIdFromPlannerItems(preparationItems);
-    const completionsByGoalId = indexCompletionsByGoalId(snapshot.completions);
-    const { projectedCoverageCountByGoalId } = computeLinkedSourceCoverageByGoalId({
-      goals: snapshot.goals,
-      links: snapshot.links,
-      ownerId: routeContext.userId,
-      asOfDate,
-      preparationStart,
-      preparationEnd,
-      completionsByGoalId,
-      plannedDatesByGoalId,
-    });
-    const precoveredCountByGoalId = Object.fromEntries(
-      Array.from(projectedCoverageCountByGoalId.entries())
-        .filter(([, count]) => count > 0)
-    );
     const activeAssessments = (snapshot.activePlan?.goals ?? []).map((goal) =>
       goalAssessmentSchema.parse(goal.assessment_snapshot)
     );
@@ -386,7 +352,6 @@ export async function preparePlannerSchedule(
         goals: snapshot.goals,
         completions: snapshot.completions,
         links: snapshot.links,
-        precoveredCountByGoalId,
         assessments,
         policy: effectivePolicy,
         basePlan: snapshot.activePlan?.basePlan ?? null,

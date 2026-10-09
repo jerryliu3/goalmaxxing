@@ -80,7 +80,6 @@ function current(
     timezone: "America/New_York",
     policyFingerprint: fingerprintA,
     goals: { "goal-a": semanticGoal() },
-    linkedGoalIds: [],
     workUnits: [unit()],
     driftFacts: [],
     invalidGoalIds: [],
@@ -156,34 +155,19 @@ describe("active plan semantic staleness", () => {
     ]);
   });
 
-  it("reports policy, timezone, and link semantic changes", () => {
+  it("reports policy and timezone semantic changes", () => {
     const result = evaluateActivePlanStaleness({
       snapshot: snapshot(),
       current: current({
         timezone: "UTC",
         policyFingerprint: fingerprintB,
-        linkedGoalIds: ["goal-a", "unplanned-goal"],
       }),
     });
 
     expect(result.reasons.map((reason) => reason.code)).toEqual([
-      "link_changed",
       "policy_changed",
       "timezone_changed",
     ]);
-  });
-
-  it("does not report link changes for linked ids outside the planned goal set", () => {
-    const result = evaluateActivePlanStaleness({
-      snapshot: snapshot(),
-      current: current({
-        linkedGoalIds: ["unplanned-goal"],
-      }),
-    });
-
-    expect(result.reasons.map((reason) => reason.code)).not.toContain(
-      "link_changed"
-    );
   });
 
   it("maps completion reconciliation drift to stable reasons", () => {

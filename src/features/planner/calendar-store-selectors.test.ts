@@ -154,8 +154,6 @@ describe("calendar store selectors", () => {
       [{
         sourceGoalId: "goal-a",
         targetGoalId: "goal-b",
-        targetSuppressionKind: "until",
-        targetResumesOn: "2026-09-01",
       }]
     );
     const projection = selectPlannerCalendarStoreProjection({

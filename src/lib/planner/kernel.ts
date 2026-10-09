@@ -42,14 +42,6 @@ import {
   isArchivedGoal,
 } from "@/lib/planner/archived-historical-work-units";
 import {
-  buildLinkSuppressionInboundIndex,
-  getLinkResumeDate,
-  isFullySuppressedForWindow,
-  isSuppressedOnDate,
-  resolveLinkSuppression,
-  toLinkSuppressionSource,
-} from "@/lib/planner/link-suppression";
-import {
   computeGenerationInputHash,
   type PlannerCanonicalLink,
 } from "@/lib/planner/fingerprint";
@@ -69,7 +61,6 @@ import {
   positiveTarget,
   type NormalizedGoalRequirement,
 } from "@/lib/planner/requirements";
-import { mapProjectedCoverageOrdinals } from "@/lib/planner/linked-source-coverage";
 import { solveOrderedDpV1 } from "@/lib/planner/solver/ordered-dp-v1";
 import { computeLifetimeIdealDate } from "@/lib/planner/solver/ideal-dates";
 import { projectWorkUnitsToSolver } from "@/lib/planner/solver/project";
@@ -128,7 +119,6 @@ export interface PlannerKernelInput {
    */
   recoverPastPlacements?: boolean;
   draftPinnedDates?: Record<string, string>;
-  precoveredCountByGoalId?: Record<string, number>;
   ownerId: string;
   startDate: string;
   endDate: string;
@@ -137,7 +127,6 @@ export interface PlannerKernelInput {
   goals: Goal[];
   completions: Completion[];
   links: PlannerCanonicalLink[];
-  linkSourceGoals?: Goal[];
   assessments?: GoalAssessment[];
   policy: PlannerPolicy;
   basePlan: {
@@ -215,16 +204,12 @@ function allocateOrdinalWindow({
   normalizedRequirement,
   window,
   asOfDate,
-  effectivePlacementStart,
-  precoveredOrdinals,
   reconciledUnits,
 }: {
   goal: Goal;
   normalizedRequirement: NormalizedGoalRequirement;
   window: DateWindow;
   asOfDate: string;
-  effectivePlacementStart: string | null;
-  precoveredOrdinals: Set<number>;
   reconciledUnits: PlannerWorkUnit[];
 }): OrdinalScopeAllocation | undefined {
   const requirement = normalizedRequirement.requirement;
@@ -261,15 +246,10 @@ function allocateOrdinalWindow({
   const monthWindows = new Map(
     lifetimeMonths.map((month) => [month, getScopeDateRange(month)])
   );
-  const baselineProjectableStart =
+  const projectableStart =
     compareCanonicalStrings(asOfDate, goal.start_date) > 0
       ? asOfDate
       : goal.start_date;
-  const projectableStart =
-    effectivePlacementStart &&
-    compareCanonicalStrings(effectivePlacementStart, baselineProjectableStart) > 0
-      ? effectivePlacementStart
-      : baselineProjectableStart;
   const lifetimeEnd = effectiveGoalEndDate;
   const idealLifetimeWindow = {
     start: goal.start_date,
@@ -405,14 +385,6 @@ function allocateOrdinalWindow({
     }
   }
 
-  if (precoveredOrdinals.size > 0) {
-    for (const [month, ordinals] of finalOrdinalsByMonth) {
-      finalOrdinalsByMonth.set(
-        month,
-        ordinals.filter((ordinal) => !precoveredOrdinals.has(ordinal))
-      );
-    }
-  }
   const scopedOrdinals = new Set(
     windowMonths.flatMap((month) => finalOrdinalsByMonth.get(month) ?? [])
   );
@@ -489,40 +461,15 @@ export function runPlannerKernel(
       ? bySource
       : compareCanonicalStrings(left.targetGoalId, right.targetGoalId);
   });
-  const suppressionSourcesById = new Map<string, ReturnType<typeof toLinkSuppressionSource>>();
-  for (const sourceGoal of rawInput.linkSourceGoals ?? []) {
-    suppressionSourcesById.set(sourceGoal.id, toLinkSuppressionSource(sourceGoal));
-  }
-  for (const goal of goals) {
-    suppressionSourcesById.set(goal.id, toLinkSuppressionSource(goal));
-  }
-  const suppressionInboundIndex = buildLinkSuppressionInboundIndex(links);
-  const suppressionByGoalId = new Map<
-    string,
-    ReturnType<typeof resolveLinkSuppression>
-  >();
-  const eligibility = goals.map((goal) => {
-    const suppression = resolveLinkSuppression({
-      goalId: goal.id,
-      inboundSourceIdsByTargetId: suppressionInboundIndex,
-      sourcesById: suppressionSourcesById,
+  const eligibility = goals.map((goal) => ({
+    goal,
+    decision: evaluateGoalEligibility({
+      window,
       ownerId: rawInput.ownerId,
-      asOfDate: rawInput.asOfDate,
-    });
-    suppressionByGoalId.set(goal.id, suppression);
-    return {
       goal,
-      decision: evaluateGoalEligibility({
-        window,
-        ownerId: rawInput.ownerId,
-        goal,
-        currentLinkRole: isFullySuppressedForWindow(suppression, window)
-          ? "target"
-          : "none",
-        asOfDate: rawInput.asOfDate,
-      }),
-    };
-  });
+      asOfDate: rawInput.asOfDate,
+    }),
+  }));
   const eligibleGoals = eligibility
     .filter((entry) => entry.decision.eligible)
     .map((entry) => entry.goal);
@@ -626,10 +573,6 @@ export function runPlannerKernel(
   const horizonSummary: PlannerGoalHorizonSummary[] = [];
   for (const goal of eligibleGoals) {
     const requirement = normalizedRequirements.get(goal.id)!;
-    const rawPrecoveredCount = rawInput.precoveredCountByGoalId?.[goal.id] ?? 0;
-    const precoveredCount = Number.isFinite(rawPrecoveredCount)
-      ? Math.max(Math.floor(rawPrecoveredCount), 0)
-      : 0;
     if (
       requirement.requirement.kind !== "cadence" &&
       requirement.requirement.targetCount >
@@ -694,22 +637,6 @@ export function runPlannerKernel(
       // scheduled dates, which can differ between date-window base plans.
       allowScheduledDateMatching: scopeState !== "historical",
     });
-    const completionCreditedOrdinals =
-      requirement.requirement.kind === "cadence"
-        ? new Set<number>()
-        : new Set(
-            reconciled.units
-              .filter((unit) => unit.creditedCompletionId !== null)
-              .map((unit) => unit.ordinal)
-          );
-    const precoveredOrdinals =
-      requirement.requirement.kind === "cadence"
-        ? new Set<number>()
-        : mapProjectedCoverageOrdinals({
-            targetCount: requirement.requirement.targetCount,
-            completionCreditedOrdinals,
-            projectedCoverageCount: precoveredCount,
-          });
     const ordinalAllocation =
       requirement.requirement.kind === "cadence"
         ? undefined
@@ -718,36 +645,19 @@ export function runPlannerKernel(
             normalizedRequirement: requirement,
             window,
             asOfDate: rawInput.asOfDate,
-            effectivePlacementStart: (() => {
-              const resumeDate = getLinkResumeDate(
-                suppressionByGoalId.get(goal.id) ?? { kind: "none" }
-              );
-              return resumeDate &&
-                compareCanonicalStrings(resumeDate, rawInput.asOfDate) > 0
-                ? resumeDate
-                : null;
-            })(),
-            precoveredOrdinals,
             reconciledUnits: reconciled.units,
           });
     const scopedOrdinals =
       requirement.requirement.kind === "cadence"
         ? null
         : (ordinalAllocation?.scopedOrdinals ?? new Set<number>());
-    // A preserve preview describes saved sessions, not just the solver's new
-    // workload. Projected source coverage must not erase a saved target after
-    // its resume date. Retain credited rows too: otherwise the calendar falls
-    // back to their old saved placement and displays them as uncredited.
+    // Preserve previews include saved sessions and their completion credits.
     if (rawInput.preserveExistingAssignments && scopedOrdinals) {
       for (const unit of reconciled.units) {
         if (
           unit.scheduledDate &&
           unit.scheduledDate >= window.start &&
-          unit.scheduledDate <= window.end &&
-          (unit.creditedCompletionId !== null || !isSuppressedOnDate(
-            suppressionByGoalId.get(goal.id) ?? { kind: "none" },
-            unit.scheduledDate
-          ))
+          unit.scheduledDate <= window.end
         ) {
           scopedOrdinals.add(unit.ordinal);
         }
@@ -1103,7 +1013,6 @@ export function runPlannerKernel(
     rebalanceExistingAssignments:
       rawInput.rebalanceExistingAssignments === true,
     draftPinnedDates: rawInput.draftPinnedDates ?? {},
-    precoveredCountByGoalId: rawInput.precoveredCountByGoalId ?? {},
     startDate: rawInput.startDate,
     endDate: rawInput.endDate,
     asOfDate: rawInput.asOfDate,
@@ -1111,7 +1020,6 @@ export function runPlannerKernel(
     goals: eligibleGoals,
     completions,
     links,
-    linkSourceGoals: rawInput.linkSourceGoals,
     assessments: normalizedAssessments,
     policy,
     basePlan: rawInput.basePlan

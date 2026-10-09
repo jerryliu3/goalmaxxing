@@ -11,7 +11,6 @@ function renderToolbar(
     loading: false,
     viewMode: "week",
     canOpenSettings: true,
-    linkedTargetDetails: [],
     searchQuery: "",
     referenceMonth: "2026-08",
     endMonthFilters: [],
@@ -132,37 +131,12 @@ describe("PlannerCalendarToolbar", () => {
     expect(screen.queryByTestId("planner-preview-mode-badge")).toBeNull();
   });
 
-  it("shows hidden linked goals from the plan help dialog", async () => {
-    renderToolbar({
-      linkedTargetDetails: [
-        {
-          goalId: "goal-b",
-          goalTitle: "Goal B",
-          statusCopy: "hidden while linked subgoals are still active",
-          sourceGoalTitles: ["Goal A"],
-        },
-      ],
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: "Open planner help" }));
-    const dialog = await screen.findByRole("dialog");
-    fireEvent.click(within(dialog).getByRole("button", { name: "See hidden goals" }));
-
-    expect(
-      within(dialog).getByText(
-        /Goal B: hidden while linked subgoals are still active Linked source goals: Goal A\./i
-      )
-    ).toBeInTheDocument();
-    expect(within(dialog).queryByRole("button", { name: "Back to plan" })).toBeNull();
-  });
-
-  it("keeps plan help to the guide when nothing is hidden", async () => {
+  it("keeps planner help focused on planning controls", async () => {
     renderToolbar();
-
     fireEvent.click(screen.getByRole("button", { name: "Open planner help" }));
     const dialog = await screen.findByRole("dialog");
-
-    expect(within(dialog).getByText(/Save plan or Discard from the bar/)).toBeInTheDocument();
     expect(within(dialog).queryByRole("button", { name: "See hidden goals" })).toBeNull();
+    expect(within(dialog).getByText("Switch between day, week, and month views.")).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Back to plan" })).toBeInTheDocument();
   });
 });

@@ -16,7 +16,6 @@ export type PlannerStalenessReasonCode =
   | "orphaned_goal"
   | "policy_changed"
   | "timezone_changed"
-  | "link_changed"
   | "inadmissible_fact"
   | "out_of_plan_fact"
   | "credited_work_removed"
@@ -47,7 +46,6 @@ export interface CurrentPlanSemanticState {
   timezone: string;
   policyFingerprint: string;
   goals: Record<string, PlannerGoalSemanticSnapshot>;
-  linkedGoalIds: string[];
   workUnits: PlannerWorkUnit[];
   driftFacts: PlannerDriftFact[];
   invalidGoalIds: string[];
@@ -200,17 +198,6 @@ export function evaluateActivePlanStaleness({
     }
   }
 
-  const plannedGoalIds = new Set(snapshotGoalIds);
-  for (const goalId of current.linkedGoalIds) {
-    if (plannedGoalIds.has(goalId)) {
-      reasons.push({
-        code: "link_changed",
-        goalId,
-        unitKey: null,
-        completionId: null,
-      });
-    }
-  }
   for (const drift of current.driftFacts) {
     reasons.push({
       code: driftReasonByType[drift.driftType],
