@@ -446,14 +446,26 @@ body:has([data-plan-action-bar]) [data-mobile-tab-nav] {
   isolation: isolate;
 }
 
+/* The recovery panel wears the same trace in the recovery hue, so the switch
+   from checklist to review reads at a glance. It keeps its own fixed/sticky
+   positioning, which already anchors the traces. */
+.recovery-border-trace {
+  isolation: isolate;
+  --plan-selected-shimmer-color: var(--gm-recover);
+  --plan-selected-trace-width: 2px;
+  border-color: color-mix(in srgb, var(--gm-recover) 60%, var(--border));
+}
+
 /* Traces follow the session tile's corners while leaving its text stationary. */
 .plan-selected-shimmer::before,
-.plan-selected-shimmer::after {
+.plan-selected-shimmer::after,
+.recovery-border-trace::before,
+.recovery-border-trace::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 1px;
+  padding: var(--plan-selected-trace-width, 1px);
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
@@ -465,7 +477,8 @@ body:has([data-plan-action-bar]) [data-mobile-tab-nav] {
   pointer-events: none;
 }
 
-.plan-selected-shimmer::before {
+.plan-selected-shimmer::before,
+.recovery-border-trace::before {
   background: conic-gradient(
     from var(--plan-selected-border-angle-b),
     transparent 0deg 250deg,
@@ -476,7 +489,8 @@ body:has([data-plan-action-bar]) [data-mobile-tab-nav] {
   animation: plan-selected-border-trace-b 3.2s linear infinite;
 }
 
-.plan-selected-shimmer::after {
+.plan-selected-shimmer::after,
+.recovery-border-trace::after {
   background: conic-gradient(
     from var(--plan-selected-border-angle-a),
     transparent 0deg 250deg,
@@ -564,6 +578,8 @@ body:has([data-plan-action-bar]) [data-mobile-tab-nav] {
   .plan-draft-shimmer::after,
   .plan-selected-shimmer::before,
   .plan-selected-shimmer::after,
+  .recovery-border-trace::before,
+  .recovery-border-trace::after,
   .plan-selected-pulse,
   .plan-adjacent-month-nudge-up,
   .plan-adjacent-month-nudge-down,
