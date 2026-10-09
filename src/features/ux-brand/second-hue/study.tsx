@@ -8,6 +8,7 @@ import { BrandExploreBar } from "@/features/ux-brand/brand-stage";
 import { cn } from "@/lib/utils";
 import { HueBoard, HueBoardCompact } from "./board";
 import {
+  accentCandidates,
   HUE_JOBS,
   HUE_MIXES,
   HUE_TONES,
@@ -15,15 +16,17 @@ import {
   LABEL_CONTRAST,
   LINE_CONTRAST,
   matchingMixId,
-  resolveSecondHue,
-  secondHueCandidates,
+  MAX_ACCENT_LOUDNESS,
+  PROPOSED_ACCENTS,
+  resolvePalette,
   SHIPPED_MIX,
   type HueMix,
-  type SecondHue,
 } from "./model";
 
-/** Lightness ratio below which identity and second hue differ by hue alone. */
+/** Lightness ratio below which identity and accent differ by hue alone. */
 const HUE_ONLY_SEPARATION = 1.5;
+
+type AccentPicks = Partial<Record<ThemeId, string>>;
 
 function Choice({
   selected,
@@ -90,20 +93,69 @@ function Ratio({ label, value, floor }: { label: string; value: number; floor?: 
   );
 }
 
-function Readout({ themeId, hue }: { themeId: ThemeId; hue: SecondHue }) {
-  const readout = hueReadout(themeId, hue);
-  const derived = hue.line !== hue.fill;
+function Readout({ themeId, accentId }: { themeId: ThemeId; accentId: string }) {
+  const palette = resolvePalette(themeId, accentId);
+  const readout = hueReadout(themeId, palette);
   return (
     <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
       <Ratio label="Identity line" value={readout.identityLine} floor={LINE_CONTRAST} />
-      <Ratio label="Second as line" value={readout.fillLine} floor={LINE_CONTRAST} />
-      {derived ? <Ratio label="Line form" value={readout.secondLine} floor={LINE_CONTRAST} /> : null}
-      <Ratio label="Label on second" value={readout.secondLabel} floor={LABEL_CONTRAST} />
-      <span className={cn("whitespace-nowrap", readout.separation < HUE_ONLY_SEPARATION ? "text-amber-700" : "text-zinc-700")}>
-        Separation <span className="font-mono">{readout.separation.toFixed(2)}</span>
-        {readout.separation < HUE_ONLY_SEPARATION ? " · hue only" : ""}
-      </span>
+      <Ratio label="Shade label" value={readout.shadeLabel} floor={LABEL_CONTRAST} />
+      {palette.hasAccent ? (
+        <>
+          <Ratio label="Accent line" value={readout.accentLine} floor={LINE_CONTRAST} />
+          <Ratio label="Accent label" value={readout.accentLabel} floor={LABEL_CONTRAST} />
+          <Ratio label="Tint label" value={readout.accentTintLabel} floor={LABEL_CONTRAST} />
+          <span
+            className={cn(
+              "whitespace-nowrap",
+              readout.separation < HUE_ONLY_SEPARATION ? "text-amber-700" : "text-zinc-700"
+            )}
+          >
+            Separation <span className="font-mono">{readout.separation.toFixed(2)}</span>
+            {readout.separation < HUE_ONLY_SEPARATION ? " · hue only" : ""}
+          </span>
+          <span
+            className={cn(
+              "whitespace-nowrap",
+              readout.loudness > MAX_ACCENT_LOUDNESS ? "text-red-700" : "text-zinc-700"
+            )}
+          >
+            Loudness <span className="font-mono">{readout.loudness.toFixed(1)}×</span>
+            {readout.loudness > MAX_ACCENT_LOUDNESS ? " · louder than identity" : ""}
+          </span>
+        </>
+      ) : (
+        <span className="text-zinc-500">No accent</span>
+      )}
     </p>
+  );
+}
+
+function AccentSelect({
+  themeId,
+  value,
+  onChange,
+}: {
+  themeId: ThemeId;
+  value: string;
+  onChange: (accentId: string) => void;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-xs text-zinc-600">
+      Accent
+      <select
+        aria-label={`${getTheme(themeId).label} accent`}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="rounded-md border border-zinc-300 bg-white px-1.5 py-0.5 text-xs text-zinc-900"
+      >
+        {accentCandidates(themeId).map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.name}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 
@@ -111,12 +163,12 @@ export function SecondHueStudy() {
   const { styleId } = useUiStyle();
   const [mix, setMix] = useState<HueMix>(SHIPPED_MIX);
   const [themeId, setThemeId] = useState<ThemeId>(styleId);
-  const [candidates, setCandidates] = useState<Partial<Record<ThemeId, string>>>({});
+  const [accents, setAccents] = useState<AccentPicks>({});
   const mixId = matchingMixId(mix);
-  const candidateFor = (id: ThemeId) => candidates[id] ?? "registry";
-  const hueFor = (id: ThemeId) => resolveSecondHue(id, candidateFor(id));
-  const themeCandidates = secondHueCandidates(themeId);
-  const candidate = themeCandidates.find((option) => option.id === candidateFor(themeId)) ?? themeCandidates[0];
+  const accentFor = (id: ThemeId) => accents[id] ?? "registry";
+  const setAccent = (id: ThemeId, accentId: string) => setAccents({ ...accents, [id]: accentId });
+  const themeAccents = accentCandidates(themeId);
+  const accent = themeAccents.find((option) => option.id === accentFor(themeId)) ?? themeAccents[0];
 
   return (
     <div className="min-h-dvh bg-[#f6f4f0] text-zinc-900">
@@ -131,18 +183,25 @@ export function SecondHueStudy() {
           </p>
           <h1 className="mt-2 text-4xl font-semibold tracking-tight">Second hue</h1>
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-600">
-            Every colored mark does a job. Pick which color does each one, then
-            read the result on production components in every theme. Identity
-            is the theme&apos;s primary, second is its selection hue, ink is its
-            foreground. Notes and findings: docs/ux/goalmaxxing-second-hue-study.md.
+            Every colored mark does a job. Each theme has an identity, a shade
+            (the identity washed toward the page), and an optional accent that
+            can be drawn solid or as a tint. A mix decides which of those does
+            each job. Notes and findings: docs/ux/goalmaxxing-second-hue-study.md.
           </p>
         </header>
 
         <section className="space-y-4">
           <h2 className="text-lg font-semibold tracking-tight">Mix</h2>
-          <div role="radiogroup" aria-label="Mix" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+          <div role="radiogroup" aria-label="Mix" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {HUE_MIXES.map((option) => (
-              <Choice key={option.id} selected={option.id === mixId} onSelect={() => setMix(option.mix)}>
+              <Choice
+                key={option.id}
+                selected={option.id === mixId}
+                onSelect={() => {
+                  setMix(option.mix);
+                  if (option.id === "proposal") setAccents(PROPOSED_ACCENTS);
+                }}
+              >
                 <span className="block font-medium">{option.name}</span>
                 <span className="mt-1 block text-xs text-zinc-600">{option.premise}</span>
               </Choice>
@@ -181,16 +240,21 @@ export function SecondHueStudy() {
           </div>
         </Fold>
 
-        <Fold
-          title="Every theme, same mix"
-          hint="Each theme uses the second hue picked for it under Theme."
-          defaultOpen
-        >
+        <Fold title="Every theme, same mix" hint="Pick each theme's accent under its board." defaultOpen>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {THEMES.map((theme) => (
               <div key={theme.id} className="space-y-2">
-                <HueBoardCompact themeId={theme.id} mix={mix} hue={hueFor(theme.id)} />
-                <Readout themeId={theme.id} hue={hueFor(theme.id)} />
+                <HueBoardCompact
+                  themeId={theme.id}
+                  mix={mix}
+                  palette={resolvePalette(theme.id, accentFor(theme.id))}
+                />
+                <AccentSelect
+                  themeId={theme.id}
+                  value={accentFor(theme.id)}
+                  onChange={(accentId) => setAccent(theme.id, accentId)}
+                />
+                <Readout themeId={theme.id} accentId={accentFor(theme.id)} />
               </div>
             ))}
           </div>
@@ -198,7 +262,7 @@ export function SecondHueStudy() {
 
         <Fold
           title="Theme"
-          hint={`${getTheme(themeId).label} · ${candidate.name} · every component, one theme`}
+          hint={`${getTheme(themeId).label} · ${accent.name} · every component, one theme`}
         >
           <div role="radiogroup" aria-label="Theme" className="flex flex-wrap gap-2">
             {THEMES.map((theme) => (
@@ -207,44 +271,42 @@ export function SecondHueStudy() {
               </Choice>
             ))}
           </div>
-          {themeCandidates.length > 1 ? (
-            <div role="radiogroup" aria-label={`${getTheme(themeId).label} second hue`} className="flex flex-wrap gap-2">
-              {themeCandidates.map((option) => {
-                const hue = resolveSecondHue(themeId, option.id);
-                return (
-                  <Choice
-                    key={option.id}
-                    selected={option.id === candidate.id}
-                    onSelect={() => setCandidates({ ...candidates, [themeId]: option.id })}
-                    className="flex items-center gap-2 text-xs"
-                  >
-                    <span
-                      aria-hidden
-                      className="size-5 rounded-full border border-black/10"
-                      style={{ background: hue.fill, boxShadow: `inset 0 0 0 3px ${hue.line}` }}
-                    />
-                    {option.name}
-                  </Choice>
-                );
-              })}
-            </div>
-          ) : null}
+          <div role="radiogroup" aria-label={`${getTheme(themeId).label} accent choices`} className="flex flex-wrap gap-2">
+            {themeAccents.map((option) => {
+              const palette = resolvePalette(themeId, option.id);
+              return (
+                <Choice
+                  key={option.id}
+                  selected={option.id === accent.id}
+                  onSelect={() => setAccent(themeId, option.id)}
+                  className="flex items-center gap-2 text-xs"
+                >
+                  <span aria-hidden className="flex">
+                    <span className="size-5 rounded-l-full border border-black/10" style={{ background: palette.accent.fill }} />
+                    <span className="size-5 rounded-r-full border border-black/10" style={{ background: palette.accentTint.fill }} />
+                  </span>
+                  {option.name}
+                </Choice>
+              );
+            })}
+          </div>
           <p className="text-xs text-zinc-600">
-            {candidate.name}: {candidate.note}
+            {accent.name}: {accent.note} Swatches show the accent solid, then as a tint.
           </p>
-          <Readout themeId={themeId} hue={hueFor(themeId)} />
-          <HueBoard themeId={themeId} mix={mix} hue={hueFor(themeId)} />
+          <Readout themeId={themeId} accentId={accentFor(themeId)} />
+          <HueBoard themeId={themeId} mix={mix} palette={resolvePalette(themeId, accentFor(themeId))} />
         </Fold>
 
         <section className="max-w-3xl space-y-2 text-sm text-zinc-700">
           <h2 className="text-lg font-semibold tracking-tight text-zinc-900">What to look for</h2>
           <ul className="list-disc space-y-1 pl-5">
+            <li>Solid against tint: switch between the two Selection mixes; only the strength changes.</li>
             <li>Can you name what each color means after a few seconds, without the labels?</li>
-            <li>Does the identity still feel like the theme&apos;s color, or has the second hue taken over?</li>
+            <li>Does the identity still feel like the theme&apos;s color, or has the accent taken over?</li>
             <li>Does Save still read as the one thing to press?</li>
             <li>Do today and the selected day stay distinct when they are the same date?</li>
             <li>Do category pills stay the loudest color on the calendar?</li>
-            <li>Do light second hues (Court, Opaline) still draw a visible rule or ring?</li>
+            <li>Do light accents (Court, Opaline) still draw a visible rule or ring?</li>
           </ul>
         </section>
       </main>

@@ -1,14 +1,16 @@
 import type { CSSProperties } from "react";
-import { COLOR_LIBRARY, getTheme, type ColorId, type ThemeId } from "@cadence/shared/brand";
+import { getTheme, type ThemeId } from "@cadence/shared/brand";
 
 /**
  * Second hue study model. A "job" is what a colored mark tells the user; a
- * "tone" is which theme color does that job. Mixes are the hypotheses the
+ * "tone" is which theme color does that job, at which strength. Each theme
+ * has an identity, a shade (the identity at tint strength), and an optional
+ * accent that can be drawn solid or as a tint. Mixes are the hypotheses the
  * lab compares. Everything here is study data, not a production contract.
  */
 
-export type HueJob = "act" | "place" | "pick" | "today" | "done" | "focus";
-export type HueTone = "identity" | "second" | "ink";
+export type HueJob = "act" | "place" | "pick" | "today" | "done" | "focus" | "draft";
+export type HueTone = "identity" | "shade" | "accent" | "accentTint" | "ink";
 export type HueMix = Readonly<Record<HueJob, HueTone>>;
 
 export interface HueJobInfo {
@@ -51,15 +53,23 @@ export const HUE_JOBS: readonly HueJobInfo[] = [
   },
   {
     id: "focus",
-    label: "Focus and drafts",
+    label: "Focus",
     question: "What is being edited?",
-    surfaces: "Focus ring, unsaved draft tile",
+    surfaces: "Focus ring on inputs",
+  },
+  {
+    id: "draft",
+    label: "Drafts",
+    question: "What is proposed but not yet yours?",
+    surfaces: "Unsaved and suggested plan drafts",
   },
 ];
 
 export const HUE_TONES: readonly { id: HueTone; label: string }[] = [
   { id: "identity", label: "Identity" },
-  { id: "second", label: "Second" },
+  { id: "shade", label: "Shade" },
+  { id: "accent", label: "Accent" },
+  { id: "accentTint", label: "Accent tint" },
   { id: "ink", label: "Ink" },
 ];
 
@@ -71,6 +81,18 @@ export const SHIPPED_MIX: HueMix = {
   today: "identity",
   done: "identity",
   focus: "identity",
+  draft: "identity",
+};
+
+/**
+ * The lab's current proposal: the accent marks where you are and what is only
+ * proposed; what you picked sits in the shade; identity keeps doing, now, and done.
+ */
+export const PROPOSED_MIX: HueMix = {
+  ...SHIPPED_MIX,
+  place: "accent",
+  pick: "shade",
+  draft: "accent",
 };
 
 export interface HueMixOption {
@@ -84,44 +106,39 @@ export const HUE_MIXES: readonly HueMixOption[] = [
   {
     id: "shipped",
     name: "One hue",
-    premise:
-      "As shipped. Identity does every job; navigation marks the destination in ink.",
+    premise: "As shipped. Identity does every job; navigation marks the destination in ink.",
     mix: SHIPPED_MIX,
   },
   {
-    id: "selection",
-    name: "Selection",
-    premise:
-      "PR #1161. The second hue marks navigation, in-page tabs, and the view switcher. Everything else stays identity.",
-    mix: { ...SHIPPED_MIX, place: "second" },
+    id: "selection-solid",
+    name: "Selection · solid",
+    premise: "PR #1161 as built: the accent at full strength marks where you are.",
+    mix: { ...SHIPPED_MIX, place: "accent" },
   },
   {
-    id: "containers",
-    name: "Containers",
-    premise:
-      "The second hue sits behind what is selected (destination, view, chips, selected row), as Material 3's secondary container does. Today, focus, actions, and completion stay identity.",
-    mix: { ...SHIPPED_MIX, place: "second", pick: "second" },
+    id: "selection-tint",
+    name: "Selection · tint",
+    premise: "Same jobs, accent washed toward the page with ink labels. Compare with solid to judge strength alone.",
+    mix: { ...SHIPPED_MIX, place: "accentTint" },
   },
   {
-    id: "state",
-    name: "Where and when",
-    premise:
-      "Identity is for doing and earning. The second hue carries state: destination, selection, today, focus.",
-    mix: {
-      act: "identity",
-      place: "second",
-      pick: "second",
-      today: "second",
-      done: "identity",
-      focus: "second",
-    },
+    id: "selection-shade",
+    name: "Selection · shade",
+    premise: "No new color: the identity at tint strength marks where you are.",
+    mix: { ...SHIPPED_MIX, place: "shade" },
   },
   {
-    id: "reward",
-    name: "Reward",
+    id: "containers-shade",
+    name: "Containers · shade",
+    premise: "Shade also sits behind what you picked: selected row, chips, filters. One color family throughout.",
+    mix: { ...SHIPPED_MIX, place: "shade", pick: "shade" },
+  },
+  {
+    id: "proposal",
+    name: "Proposal",
     premise:
-      "The second hue is what you earn: completion and progress. Navigation stays ink; actions and selection stay identity.",
-    mix: { ...SHIPPED_MIX, done: "second" },
+      "Accent marks where you are and drafts; shade sits behind what you picked. Tonal themes drop the accent and Pitlane tones its lime down.",
+    mix: PROPOSED_MIX,
   },
 ];
 
@@ -221,128 +238,136 @@ export function themeHex(themeId: ThemeId, role: ColorKey, depth = 0): string | 
   return rgb ? toHex(rgb) : null;
 }
 
-// --- Second hue candidates ---------------------------------------------
+// --- Theme palette ----------------------------------------------------------
 
-/** A second hue in its three forms: a fill, the label on it, a line on the page. */
-export interface SecondHue {
+/** A fill and the label drawn on it. */
+export interface Swatch {
   fill: string;
   onFill: string;
-  line: string;
 }
 
-export type SecondHueForm = "registry" | "shade" | "solid" | "tint";
+/** Everything a board needs beyond the identity and ink it reads from the theme. */
+export interface HuePalette {
+  shade: Swatch;
+  accent: Swatch & { line: string };
+  accentTint: Swatch;
+  /** False when the theme has no accent and accent jobs fall back to the shade. */
+  hasAccent: boolean;
+}
 
-export interface SecondHueCandidate {
+export interface AccentCandidate {
   id: string;
   name: string;
-  form: SecondHueForm;
   note: string;
-  /** Explicit triad; registry candidates derive theirs from the theme. */
-  hue?: SecondHue;
+  /** Solid accent; registry and none derive theirs from the theme. */
+  fill?: string;
+  /** Label on the solid fill; defaults to the theme's ink. */
+  onFill?: string;
+  /** Authored tint; defaults to the fill washed toward the page. */
+  tintFill?: string;
 }
 
-function libraryTint(id: ColorId, line: "pigment" | "ink" = "ink"): SecondHue {
-  const swatch = COLOR_LIBRARY[id] as { surface: string; ink: string; pigment?: string };
-  return {
-    fill: swatch.surface,
-    onFill: swatch.ink,
-    line: line === "pigment" && swatch.pigment ? swatch.pigment : swatch.ink,
-  };
-}
-
-function solid(fill: string, onFill: string): SecondHue {
-  return { fill, onFill, line: fill };
-}
-
-const REGISTRY: SecondHueCandidate = {
+const REGISTRY: AccentCandidate = {
   id: "registry",
   name: "Registry",
-  form: "registry",
-  note: "The theme's own selection pair; its line is darkened toward ink where the hue is too light to draw with.",
+  note: "The theme's own selection pair.",
 };
 
-const SHADE: SecondHueCandidate = {
-  id: "shade",
-  name: "Shade",
-  form: "shade",
-  note: "The identity itself washed toward the page: one color family in two strengths, with ink labels.",
+const NO_ACCENT: AccentCandidate = {
+  id: "none",
+  name: "No accent",
+  note: "Identity and shade only: every accent job uses the shade.",
 };
 
-/** Share of identity in a shade fill; dark pages need more to read as a color. */
-const SHADE_AMOUNT = { light: 0.18, dark: 0.4 } as const;
-
-const EXTRA_CANDIDATES: Partial<Record<ThemeId, readonly SecondHueCandidate[]>> = {
+const EXTRA_ACCENTS: Partial<Record<ThemeId, readonly AccentCandidate[]>> = {
   original: [
     {
       id: "teal",
       name: "Teal",
-      form: "solid",
-      note: "Cool partner at the same lightness as blue; told apart by hue alone. Close to gain green.",
-      hue: solid("#0f766e", "#ffffff"),
+      note: "Cool partner at blue's lightness; told apart by hue alone. Close to gain green.",
+      fill: "#0f766e",
+      onFill: "#ffffff",
     },
     {
       id: "violet",
       name: "Violet",
-      form: "solid",
       note: "Strong and distinct from blue, but it shares a family with Personal ultraviolet.",
-      hue: solid("#6d28d9", "#ffffff"),
+      fill: "#6d28d9",
+      onFill: "#ffffff",
     },
     {
       id: "petroleum",
-      name: "Petroleum tint",
-      form: "tint",
-      note: "Library petroleum: pale fill, deep ink. Differs from blue by lightness as well as hue.",
-      hue: libraryTint("petroleum", "pigment"),
+      name: "Petroleum",
+      note: "Library petroleum: a blue-green neighbor that stays in Original's cool family.",
+      fill: "#246b78",
+      onFill: "#ffffff",
+      tintFill: "#c8e3e4",
     },
     {
       id: "tangerine",
-      name: "Tangerine tint",
-      form: "tint",
+      name: "Tangerine",
       note: "Warm complement to blue. Near the recovery yellow and Other saffron.",
-      hue: libraryTint("tangerine"),
-    },
-    {
-      id: "lilac",
-      name: "Silver lilac tint",
-      form: "tint",
-      note: "Barely a hue: a quiet state color that leaves blue as the only loud color.",
-      hue: libraryTint("silver-lilac"),
+      fill: "#f69729",
+      tintFill: "#ffe9c6",
     },
   ],
   gazetteer: [
     {
       id: "deep-sage",
       name: "Deep sage",
-      form: "solid",
       note: "PR #1161's deeper sage: cream labels pass, but it sits at rust's lightness.",
-      hue: solid("#526456", "#f8f1e3"),
+      fill: "#526456",
+      onFill: "#f8f1e3",
     },
     {
       id: "prussian",
       name: "Prussian",
-      form: "solid",
       note: "From the hue contrast study: harbor water against stamp rust.",
-      hue: solid("#2c6470", "#f8f1e3"),
+      fill: "#2c6470",
+      onFill: "#f8f1e3",
     },
     {
       id: "pistachio",
-      name: "Pistachio tint",
-      form: "tint",
-      note: "Mineral Candy pistachio as a pale sage: reads as paper with a cast, not a second ink.",
-      hue: libraryTint("mineral-candy-pistachio"),
+      name: "Pistachio",
+      note: "Mineral Candy pistachio: an olive ink with a pale sage tint.",
+      fill: "#394823",
+      onFill: "#f8f1e3",
+      tintFill: "#c5d49a",
     },
+  ],
+  pitlane: [
     {
-      id: "glacier",
-      name: "Glacier tint",
-      form: "tint",
-      note: "Sorbet glacier: cool water on warm paper, with a deep teal line.",
-      hue: libraryTint("sorbet-glacier"),
+      id: "lime-tint",
+      name: "Lime, toned down",
+      note: "The registry lime washed toward the page so it stays quieter than the blue.",
+      fill: "#656e3f",
     },
   ],
 };
 
-export function secondHueCandidates(themeId: ThemeId): readonly SecondHueCandidate[] {
-  return [REGISTRY, SHADE, ...(EXTRA_CANDIDATES[themeId] ?? [])];
+/**
+ * Accents the proposal loads: tonal themes drop theirs, an accent louder than
+ * its identity is toned down, and the rest keep the registry pair.
+ */
+export const PROPOSED_ACCENTS: Partial<Record<ThemeId, string>> = {
+  original: "none",
+  gazetteer: "none",
+  bloodstone: "none",
+  pitlane: "lime-tint",
+};
+
+/** An accent may be at most this much louder against the page than its identity. */
+export const MAX_ACCENT_LOUDNESS = 1.25;
+
+export function accentCandidates(themeId: ThemeId): readonly AccentCandidate[] {
+  return [REGISTRY, NO_ACCENT, ...(EXTRA_ACCENTS[themeId] ?? [])];
+}
+
+/** Share of a color in its tint; dark pages need more to read as a color. */
+const TINT_AMOUNT = { light: 0.18, dark: 0.4 } as const;
+
+function isLightPage(page: string) {
+  return contrastRatio(page, "#000000") > contrastRatio(page, "#ffffff");
 }
 
 /** The lightest blend of `fill` toward `ink` that reads as a line on `page`. */
@@ -354,51 +379,63 @@ function lineFor(fill: string, page: string, ink: string) {
   return ink;
 }
 
-export function resolveSecondHue(themeId: ThemeId, candidateId: string): SecondHue {
-  const candidate =
-    secondHueCandidates(themeId).find((option) => option.id === candidateId) ?? REGISTRY;
-  if (candidate.hue) return candidate.hue;
+export function resolvePalette(themeId: ThemeId, accentId: string): HuePalette {
+  const candidate = accentCandidates(themeId).find((option) => option.id === accentId) ?? REGISTRY;
   const page = themeHex(themeId, "page") ?? "#ffffff";
   const ink = themeHex(themeId, "foreground") ?? "#000000";
-  if (candidate.form === "shade") {
-    const identity = themeHex(themeId, "primary") ?? ink;
-    const lightPage = contrastRatio(page, "#000000") > contrastRatio(page, "#ffffff");
+  const identity = themeHex(themeId, "primary") ?? ink;
+  const amount = isLightPage(page) ? TINT_AMOUNT.light : TINT_AMOUNT.dark;
+  const tint = (color: string) => mixHex(color, page, amount);
+  const shade = { fill: tint(identity), onFill: ink };
+
+  if (candidate.id === NO_ACCENT.id) {
     return {
-      fill: mixHex(identity, page, lightPage ? SHADE_AMOUNT.light : SHADE_AMOUNT.dark),
-      onFill: ink,
-      line: lineFor(identity, page, ink),
+      shade,
+      accent: { fill: identity, onFill: themeHex(themeId, "primaryForeground") ?? page, line: identity },
+      accentTint: shade,
+      hasAccent: false,
     };
   }
-  const fill = themeHex(themeId, "selection") ?? ink;
+
+  const fill = candidate.fill ?? themeHex(themeId, "selection") ?? identity;
+  const onFill =
+    candidate.onFill ?? (candidate.fill ? ink : (themeHex(themeId, "selectionForeground") ?? page));
   return {
-    fill,
-    onFill: themeHex(themeId, "selectionForeground") ?? page,
-    line: lineFor(fill, page, ink),
+    shade,
+    accent: { fill, onFill, line: lineFor(fill, page, ink) },
+    accentTint: { fill: candidate.tintFill ?? tint(fill), onFill: ink },
+    hasAccent: true,
   };
 }
 
 export interface HueReadout {
   /** Identity as a rule or mark on the page. */
   identityLine: number;
-  /** Second hue fill as a rule or mark on the page, before any line fallback. */
-  fillLine: number;
-  /** The line form actually used for rules and marks. */
-  secondLine: number;
-  /** Selection label on the second hue fill. */
-  secondLabel: number;
-  /** Lightness separation between identity and the second fill (1 = hue only). */
+  /** Ink on the shade. */
+  shadeLabel: number;
+  /** The accent's line form as a rule or mark on the page. */
+  accentLine: number;
+  /** Label on the solid accent. */
+  accentLabel: number;
+  /** Ink on the accent tint. */
+  accentTintLabel: number;
+  /** Lightness separation between identity and the solid accent (1 = hue only). */
   separation: number;
+  /** Accent-to-page contrast over identity-to-page contrast; above 1 the accent is louder. */
+  loudness: number;
 }
 
-export function hueReadout(themeId: ThemeId, hue: SecondHue): HueReadout {
+export function hueReadout(themeId: ThemeId, palette: HuePalette): HueReadout {
   const page = themeHex(themeId, "page") ?? "#ffffff";
   const identity = themeHex(themeId, "primary") ?? page;
   return {
     identityLine: contrastRatio(identity, page),
-    fillLine: contrastRatio(hue.fill, page),
-    secondLine: contrastRatio(hue.line, page),
-    secondLabel: contrastRatio(hue.onFill, hue.fill),
-    separation: contrastRatio(identity, hue.fill),
+    shadeLabel: contrastRatio(palette.shade.onFill, palette.shade.fill),
+    accentLine: contrastRatio(palette.accent.line, page),
+    accentLabel: contrastRatio(palette.accent.onFill, palette.accent.fill),
+    accentTintLabel: contrastRatio(palette.accentTint.onFill, palette.accentTint.fill),
+    separation: contrastRatio(identity, palette.accent.fill),
+    loudness: contrastRatio(palette.accent.fill, page) / contrastRatio(identity, page),
   };
 }
 
@@ -410,10 +447,12 @@ const TONE_VARIABLES: Record<HueTone, { fill: string; on: string; line: string }
     on: "var(--hue-identity-on)",
     line: "var(--hue-identity)",
   },
-  second: {
-    fill: "var(--hue-second)",
-    on: "var(--hue-second-on)",
-    line: "var(--hue-second-line)",
+  shade: { fill: "var(--hue-shade)", on: "var(--hue-shade-on)", line: "var(--hue-identity)" },
+  accent: { fill: "var(--hue-accent)", on: "var(--hue-accent-on)", line: "var(--hue-accent-line)" },
+  accentTint: {
+    fill: "var(--hue-accent-tint)",
+    on: "var(--hue-accent-tint-on)",
+    line: "var(--hue-accent-line)",
   },
   ink: { fill: "var(--hue-ink)", on: "var(--hue-ink-on)", line: "var(--hue-ink)" },
 };
@@ -423,21 +462,28 @@ const TONE_VARIABLES: Record<HueTone, { fill: string; on: string; line: string }
  * the theme's identity and ink before descendants re-point `--primary`, then
  * exposes `--job-<job>-fill|on|line` for every job.
  */
-export function hueBoardStyle(mix: HueMix, hue: SecondHue): CSSProperties {
+export function hueBoardStyle(mix: HueMix, palette: HuePalette): CSSProperties {
+  const fallback: Partial<Record<HueTone, HueTone>> = palette.hasAccent
+    ? {}
+    : { accent: "shade", accentTint: "shade" };
   const variables: Record<string, string> = {
     "--hue-identity": "var(--primary)",
     "--hue-identity-on": "var(--primary-foreground)",
     "--hue-ink": "var(--foreground)",
     "--hue-ink-on": "var(--background)",
-    "--hue-second": hue.fill,
-    "--hue-second-on": hue.onFill,
-    "--hue-second-line": hue.line,
+    "--hue-shade": palette.shade.fill,
+    "--hue-shade-on": palette.shade.onFill,
+    "--hue-accent": palette.accent.fill,
+    "--hue-accent-on": palette.accent.onFill,
+    "--hue-accent-line": palette.accent.line,
+    "--hue-accent-tint": palette.accentTint.fill,
+    "--hue-accent-tint-on": palette.accentTint.onFill,
   };
   for (const job of HUE_JOBS) {
-    const tone = TONE_VARIABLES[mix[job.id]];
-    variables[`--job-${job.id}-fill`] = tone.fill;
-    variables[`--job-${job.id}-on`] = tone.on;
-    variables[`--job-${job.id}-line`] = tone.line;
+    const tone = fallback[mix[job.id]] ?? mix[job.id];
+    variables[`--job-${job.id}-fill`] = TONE_VARIABLES[tone].fill;
+    variables[`--job-${job.id}-on`] = TONE_VARIABLES[tone].on;
+    variables[`--job-${job.id}-line`] = TONE_VARIABLES[tone].line;
   }
   return variables as CSSProperties;
 }

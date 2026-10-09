@@ -277,17 +277,18 @@ export function MonthGridSpecimen({ mix }: { mix: HueMix }) {
   );
 }
 
-export function AgendaRowsSpecimen({ mix, rows = ROWS.length }: { mix: HueMix; rows?: number }) {
+/** Production's selected-row color is theme-specific; the lab draws it in the pick tone. */
+const SELECTED_ROW_STYLE = {
+  "--gm-day-selected": "var(--job-pick-fill)",
+  "--muted-foreground": "color-mix(in srgb, var(--job-pick-on) 72%, transparent)",
+  color: "var(--job-pick-on)",
+} as CSSProperties;
+
+export function AgendaRowsSpecimen({ rows = ROWS.length }: { rows?: number }) {
   const [selected, setSelected] = useState<string>(ROWS[1].id);
   const [done, setDone] = useState<Record<string, boolean>>({ run: true });
-  const selectionStyle =
-    mix.pick === "identity"
-      ? undefined
-      : ({
-          "--gm-day-selected": "color-mix(in srgb, var(--job-pick-line) 14%, var(--background))",
-        } as CSSProperties);
   return (
-    <ul className="overflow-hidden rounded-lg border border-border bg-card" style={selectionStyle}>
+    <ul className="overflow-hidden rounded-lg border border-border bg-card">
       {ROWS.slice(0, rows).map((row) => {
         const isSelected = row.id === selected;
         return (
@@ -297,7 +298,10 @@ export function AgendaRowsSpecimen({ mix, rows = ROWS.length }: { mix: HueMix; r
               "flex items-center gap-3 border-b border-border/70 px-3 py-2.5 last:border-b-0",
               planSelectedWorkRowClass(isSelected)
             )}
-            style={{ boxShadow: `inset 3px 0 0 ${goalCategoryPigment(goalCategoryColor(row.category))}` }}
+            style={{
+              ...(isSelected ? SELECTED_ROW_STYLE : null),
+              boxShadow: `inset 3px 0 0 ${goalCategoryPigment(goalCategoryColor(row.category))}`,
+            }}
           >
             <span style={jobAsPrimary("done", "line")}>
               <CompletionToggle
@@ -408,15 +412,25 @@ export function ActionsSpecimen() {
 
 export function FocusSpecimen() {
   return (
-    <div className="space-y-2" style={jobAsPrimary("focus", "line")}>
+    <div className="space-y-2">
       <Input
         aria-label="Goal name (shown focused)"
         defaultValue="Morning run"
         className="border-ring ring-3 ring-ring/50"
+        style={jobAsPrimary("focus", "line")}
       />
-      <div className="plan-draft-shimmer rounded-md border border-primary/40 bg-primary/15 px-2 py-1.5 text-xs">
-        Draft · Stretch 10 min · unsaved
-      </div>
+      <DraftTile />
+    </div>
+  );
+}
+
+export function DraftTile() {
+  return (
+    <div
+      className="plan-draft-shimmer rounded-md border border-primary/40 bg-primary/15 px-2 py-1.5 text-xs"
+      style={jobAsPrimary("draft", "line")}
+    >
+      Draft · Stretch 10 min · unsaved
     </div>
   );
 }

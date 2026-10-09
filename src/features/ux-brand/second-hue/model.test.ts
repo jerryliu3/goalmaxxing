@@ -1,41 +1,73 @@
 import { describe, expect, it } from "vitest";
 import { THEMES } from "@cadence/shared/brand";
 import {
+  accentCandidates,
   contrastRatio,
   HUE_JOBS,
   HUE_MIXES,
+  HUE_TONES,
   hueBoardStyle,
   hueReadout,
   jobAsPrimary,
   LABEL_CONTRAST,
   LINE_CONTRAST,
   matchingMixId,
-  resolveSecondHue,
-  secondHueCandidates,
+  MAX_ACCENT_LOUDNESS,
+  PROPOSED_ACCENTS,
+  PROPOSED_MIX,
+  resolvePalette,
   SHIPPED_MIX,
   themeHex,
 } from "./model";
+
+const TONE_IDS = HUE_TONES.map((tone) => tone.id);
 
 describe("second hue mixes", () => {
   it("gives every mix a tone for every job", () => {
     for (const option of HUE_MIXES) {
       for (const job of HUE_JOBS) {
-        expect(option.mix[job.id], `${option.id}.${job.id}`).toMatch(/identity|second|ink/);
+        expect(TONE_IDS, `${option.id}.${job.id}`).toContain(option.mix[job.id]);
       }
     }
   });
 
-  it("matches the shipped mix and reports custom mixes as unnamed", () => {
+  it("matches named mixes and reports custom mixes as unnamed", () => {
     expect(matchingMixId(SHIPPED_MIX)).toBe("shipped");
+    expect(matchingMixId(PROPOSED_MIX)).toBe("proposal");
     expect(matchingMixId({ ...SHIPPED_MIX, focus: "ink" })).toBeNull();
   });
 
+  it("separates the two selection mixes by strength alone", () => {
+    const solid = HUE_MIXES.find((option) => option.id === "selection-solid")!.mix;
+    const tint = HUE_MIXES.find((option) => option.id === "selection-tint")!.mix;
+    expect(HUE_JOBS.filter((job) => solid[job.id] !== tint[job.id]).map((job) => job.id)).toEqual(["place"]);
+    expect([solid.place, tint.place]).toEqual(["accent", "accentTint"]);
+  });
+
   it("captures identity at the board root so re-pointing primary cannot cycle", () => {
-    const board = hueBoardStyle(SHIPPED_MIX, { fill: "#111111", onFill: "#ffffff", line: "#111111" }) as Record<string, string>;
+    const board = hueBoardStyle(SHIPPED_MIX, resolvePalette("kiln", "registry")) as Record<string, string>;
     expect(board["--hue-identity"]).toBe("var(--primary)");
     expect(board["--job-act-fill"]).toBe("var(--hue-identity)");
     expect(board["--job-place-line"]).toBe("var(--hue-ink)");
     expect((jobAsPrimary("act", "fill") as Record<string, string>)["--primary"]).toBe("var(--job-act-fill)");
+  });
+
+  it("falls back to the shade when a theme has no accent", () => {
+    const board = hueBoardStyle(PROPOSED_MIX, resolvePalette("original", "none")) as Record<string, string>;
+    expect(board["--job-place-fill"]).toBe("var(--hue-shade)");
+    expect(board["--job-draft-line"]).toBe("var(--hue-identity)");
+    const withAccent = hueBoardStyle(PROPOSED_MIX, resolvePalette("kiln", "registry")) as Record<string, string>;
+    expect(withAccent["--job-place-fill"]).toBe("var(--hue-accent)");
+    expect(withAccent["--job-pick-fill"]).toBe("var(--hue-shade)");
+    expect(withAccent["--job-draft-line"]).toBe("var(--hue-accent-line)");
+  });
+
+  it("keeps every proposed accent no louder than its identity", () => {
+    for (const theme of THEMES) {
+      const palette = resolvePalette(theme.id, PROPOSED_ACCENTS[theme.id] ?? "registry");
+      if (!palette.hasAccent) continue;
+      expect(hueReadout(theme.id, palette).loudness, theme.id).toBeLessThanOrEqual(MAX_ACCENT_LOUDNESS);
+    }
   });
 });
 
@@ -50,52 +82,43 @@ describe("second hue color math", () => {
     expect(contrastRatio(themeHex("original", "primary")!, themeHex("original", "page")!)).toBeGreaterThan(5);
   });
 
-  it("finds that Original has no second hue of its own", () => {
-    const hue = resolveSecondHue("original", "registry");
-    expect(hueReadout("original", hue).separation).toBe(1);
+  it("finds that Original's registry accent is its identity", () => {
+    expect(hueReadout("original", resolvePalette("original", "registry")).separation).toBe(1);
   });
 
-  it("derives a drawable line where the authored second hue is fill-only", () => {
+  it("derives a drawable line where the registry accent is fill-only", () => {
     for (const id of ["court", "opaline"] as const) {
-      const hue = resolveSecondHue(id, "registry");
-      const readout = hueReadout(id, hue);
-      expect(readout.fillLine, id).toBeLessThan(LINE_CONTRAST);
-      expect(hue.line, id).not.toBe(hue.fill);
-      expect(readout.secondLine, id).toBeGreaterThanOrEqual(LINE_CONTRAST);
+      const palette = resolvePalette(id, "registry");
+      expect(contrastRatio(palette.accent.fill, themeHex(id, "page")!), id).toBeLessThan(LINE_CONTRAST);
+      expect(palette.accent.line, id).not.toBe(palette.accent.fill);
+      expect(hueReadout(id, palette).accentLine, id).toBeGreaterThanOrEqual(LINE_CONTRAST);
     }
   });
 
-  it("gives every theme's registry hue a line that reads on its page", () => {
+  it("keeps every accent drawable as a line and readable as a tint", () => {
     for (const theme of THEMES) {
-      const readout = hueReadout(theme.id, resolveSecondHue(theme.id, "registry"));
-      expect(readout.secondLine, theme.id).toBeGreaterThanOrEqual(LINE_CONTRAST);
-    }
-  });
-
-  it("keeps every explored candidate readable as a line and as a label", () => {
-    for (const theme of THEMES) {
-      for (const candidate of secondHueCandidates(theme.id).filter((option) => option.form !== "registry")) {
-        const readout = hueReadout(theme.id, resolveSecondHue(theme.id, candidate.id));
-        expect(readout.secondLine, `${theme.id}.${candidate.id}`).toBeGreaterThanOrEqual(LINE_CONTRAST);
-        expect(readout.secondLabel, `${theme.id}.${candidate.id}`).toBeGreaterThanOrEqual(LABEL_CONTRAST);
+      for (const candidate of accentCandidates(theme.id).filter((option) => option.id !== "none")) {
+        const readout = hueReadout(theme.id, resolvePalette(theme.id, candidate.id));
+        expect(readout.accentLine, `${theme.id}.${candidate.id}`).toBeGreaterThanOrEqual(LINE_CONTRAST);
+        expect(readout.accentTintLabel, `${theme.id}.${candidate.id}`).toBeGreaterThanOrEqual(LABEL_CONTRAST);
       }
     }
   });
 
-  it("separates tint candidates from identity by lightness, not hue alone", () => {
+  it("keeps ink readable on every theme's shade", () => {
+    for (const theme of THEMES) {
+      const palette = resolvePalette(theme.id, "registry");
+      expect(palette.shade.onFill, theme.id).toBe(themeHex(theme.id, "foreground"));
+      expect(hueReadout(theme.id, palette).shadeLabel, theme.id).toBeGreaterThanOrEqual(LABEL_CONTRAST);
+    }
+  });
+
+  it("labels authored solid accents legibly", () => {
     for (const id of ["original", "gazetteer"] as const) {
-      for (const candidate of secondHueCandidates(id)) {
-        const separation = hueReadout(id, resolveSecondHue(id, candidate.id)).separation;
-        if (candidate.form === "tint") expect(separation, `${id}.${candidate.id}`).toBeGreaterThan(2);
-        if (candidate.form === "solid") expect(separation, `${id}.${candidate.id}`).toBeLessThan(1.5);
+      for (const candidate of accentCandidates(id).filter((option) => option.fill)) {
+        const readout = hueReadout(id, resolvePalette(id, candidate.id));
+        expect(readout.accentLabel, `${id}.${candidate.id}`).toBeGreaterThanOrEqual(LABEL_CONTRAST);
       }
-    }
-  });
-
-  it("derives a shade from the identity that differs from it by strength", () => {
-    expect(resolveSecondHue("original", "shade").onFill).toBe(themeHex("original", "foreground"));
-    for (const theme of THEMES) {
-      expect(hueReadout(theme.id, resolveSecondHue(theme.id, "shade")).separation, theme.id).toBeGreaterThan(1.5);
     }
   });
 });

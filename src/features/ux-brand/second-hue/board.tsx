@@ -4,11 +4,12 @@ import type { ReactNode } from "react";
 import { getTheme, type ThemeId } from "@cadence/shared/brand";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { hueBoardStyle, jobAsPrimary, type HueMix, type SecondHue } from "./model";
+import { hueBoardStyle, jobAsPrimary, type HueMix, type HuePalette } from "./model";
 import {
   ActionsSpecimen,
   AgendaRowsSpecimen,
   AppTabsSpecimen,
+  DraftTile,
   FocusSpecimen,
   InPageTabsSpecimen,
   MonthGridSpecimen,
@@ -22,16 +23,16 @@ import {
 interface BoardProps {
   themeId: ThemeId;
   mix: HueMix;
-  hue: SecondHue;
+  palette: HuePalette;
 }
 
 /** The theme scope: `data-ui-style` and the hue variables sit on one element. */
-function BoardFrame({ themeId, mix, hue, className, children }: BoardProps & { className?: string; children: ReactNode }) {
+function BoardFrame({ themeId, mix, palette, className, children }: BoardProps & { className?: string; children: ReactNode }) {
   return (
     <div
       data-ui-style={themeId}
       data-testid={`hue-board-${themeId}`}
-      style={hueBoardStyle(mix, hue)}
+      style={hueBoardStyle(mix, palette)}
       className={cn("rounded-2xl border border-border bg-page text-foreground shadow-sm", className)}
     >
       {children}
@@ -70,7 +71,7 @@ export function HueBoard(props: BoardProps) {
             <WeekStripSpecimen />
           </Specimen>
           <Specimen jobs={["pick", "done"]} title="Agenda rows">
-            <AgendaRowsSpecimen mix={mix} />
+            <AgendaRowsSpecimen />
           </Specimen>
           <Specimen jobs={["pick"]} title="Pickers and filters">
             <PickersSpecimen />
@@ -78,7 +79,7 @@ export function HueBoard(props: BoardProps) {
           <Specimen jobs={["done"]} title="Progress">
             <ProgressSpecimen />
           </Specimen>
-          <Specimen jobs={["focus"]} title="Editing">
+          <Specimen jobs={["focus", "draft"]} title="Editing">
             <FocusSpecimen />
           </Specimen>
           <Specimen jobs={["place"]} title="App tabs, phone">
@@ -103,7 +104,8 @@ export function HueBoardCompact(props: BoardProps) {
         </span>
       </div>
       <WeekStripSpecimen />
-      <AgendaRowsSpecimen mix={mix} rows={2} />
+      <AgendaRowsSpecimen rows={2} />
+      <DraftTile />
       <ViewSwitcherSpecimen mix={mix} />
       <AppTabsSpecimen chrome={theme.tabChrome} mobile />
     </BoardFrame>

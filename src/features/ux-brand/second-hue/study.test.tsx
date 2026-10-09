@@ -19,34 +19,43 @@ describe("second hue study", () => {
     render(<SecondHueStudy />);
     const mixes = screen.getByRole("radiogroup", { name: "Mix" });
     expect(within(mixes).getByRole("radio", { name: /one hue/i })).toHaveAttribute("aria-checked", "true");
-    expect(board("original").style.getPropertyValue("--job-place-fill")).toBe("var(--hue-ink)");
+    expect(board("kiln").style.getPropertyValue("--job-place-fill")).toBe("var(--hue-ink)");
 
-    await user.click(within(mixes).getByRole("radio", { name: /where and when/i }));
-    expect(board("original").style.getPropertyValue("--job-pick-fill")).toBe("var(--hue-second)");
-    expect(board("original").style.getPropertyValue("--job-act-fill")).toBe("var(--hue-identity)");
+    await user.click(within(mixes).getByRole("radio", { name: /selection · tint/i }));
+    expect(board("kiln").style.getPropertyValue("--job-place-fill")).toBe("var(--hue-accent-tint)");
+    expect(board("kiln").style.getPropertyValue("--job-act-fill")).toBe("var(--hue-identity)");
   });
 
   it("marks a hand-tuned mix as custom", async () => {
     const user = userEvent.setup();
     render(<SecondHueStudy />);
     await expand(user, "Jobs");
-    const focusTone = screen.getByRole("radiogroup", { name: "Focus and drafts tone" });
-    await user.click(within(focusTone).getByRole("radio", { name: "Second" }));
+    const draftTone = screen.getByRole("radiogroup", { name: "Drafts tone" });
+    await user.click(within(draftTone).getByRole("radio", { name: "Accent" }));
     expect(screen.getByText("Custom mix.")).toBeInTheDocument();
   });
 
-  it("offers Original candidates and applies one to every board for that theme", async () => {
+  it("loads the proposal's accents, dropping them for tonal themes", async () => {
     const user = userEvent.setup();
     render(<SecondHueStudy />);
-    await expand(user, "Theme");
-    const candidates = screen.getByRole("radiogroup", { name: "Original second hue" });
-    await user.click(within(candidates).getByRole("radio", { name: /petroleum tint/i }));
+    await user.click(within(screen.getByRole("radiogroup", { name: "Mix" })).getByRole("radio", { name: /proposal/i }));
+    expect(screen.getByRole("combobox", { name: "Original accent" })).toHaveValue("none");
+    expect(screen.getByRole("combobox", { name: "Kiln accent" })).toHaveValue("registry");
+    expect(board("original").style.getPropertyValue("--job-place-fill")).toBe("var(--hue-shade)");
+    expect(board("kiln").style.getPropertyValue("--job-place-fill")).toBe("var(--hue-accent)");
+  });
+
+  it("applies a theme's accent to every board for that theme", async () => {
+    const user = userEvent.setup();
+    render(<SecondHueStudy />);
+    await user.selectOptions(screen.getByRole("combobox", { name: "Original accent" }), "petroleum");
     for (const element of screen.getAllByTestId("hue-board-original")) {
-      expect(element.style.getPropertyValue("--hue-second")).toBe("#88bbbf");
+      expect(element.style.getPropertyValue("--hue-accent")).toBe("#246b78");
+      expect(element.style.getPropertyValue("--hue-accent-tint")).toBe("#c8e3e4");
     }
   });
 
-  it("renders every registered theme in the comparison and flags fill-only hues", async () => {
+  it("renders every registered theme and offers each one an accent or none", async () => {
     const user = userEvent.setup();
     render(<SecondHueStudy />);
     for (const id of ["original", "gazetteer", "undertow", "kiln", "court", "opaline", "bloodstone", "pitlane"]) {
@@ -54,8 +63,7 @@ describe("second hue study", () => {
     }
     await expand(user, "Theme");
     await user.click(within(screen.getByRole("radiogroup", { name: "Theme" })).getByRole("radio", { name: "Centre Court" }));
-    const courtHues = screen.getByRole("radiogroup", { name: "Centre Court second hue" });
-    expect(within(courtHues).getAllByRole("radio").map((radio) => radio.textContent)).toEqual(["Registry", "Shade"]);
-    expect(screen.getAllByText(/fails/).length).toBeGreaterThan(0);
+    const courtAccents = screen.getByRole("radiogroup", { name: "Centre Court accent choices" });
+    expect(within(courtAccents).getAllByRole("radio").map((radio) => radio.textContent)).toEqual(["Registry", "No accent"]);
   });
 });
