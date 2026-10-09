@@ -202,6 +202,8 @@ export interface PlannerCalendarSurfaceLayoutProps {
   endMonthOptions: GoalMonthOption[];
   showCompletedGoals: boolean;
   setShowCompletedGoals: (value: boolean) => void;
+  hideLinkedParents: boolean;
+  setHideLinkedParents: (value: boolean) => void;
   settingsOpen: boolean;
   plannerSettingsForm: ReactNode;
   /** Recovery mode is on: its bar owns Save and Cancel for the draft. */
@@ -356,6 +358,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
     endMonthOptions,
     showCompletedGoals,
     setShowCompletedGoals,
+    hideLinkedParents,
+    setHideLinkedParents,
     settingsOpen,
     plannerSettingsForm,
     recoveryMode = false,
@@ -794,6 +798,8 @@ export function PlannerCalendarSurfaceLayout(props: PlannerCalendarSurfaceLayout
         endMonthOptions={endMonthOptions}
         showCompletedGoals={showCompletedGoals}
         onShowCompletedGoalsChange={setShowCompletedGoals}
+        hideLinkedParents={hideLinkedParents}
+        onHideLinkedParentsChange={setHideLinkedParents}
         dayFilters={
           !goalViewOpen && checklistViewMode === "day" && dayChecklist
             ? dayChecklist.filterFormProps

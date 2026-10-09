@@ -59,6 +59,7 @@ export interface PlannerCalendarModelArgs {
   calendarTaskEntriesByDate?: Map<string, PlannerDayDetailEntry[]>;
   hideTasks?: boolean;
   showCompletedGoals?: boolean;
+  hideLinkedParents?: boolean;
   memoizedState: PlannerCalendarMemoizedState;
 }
 
@@ -99,6 +100,7 @@ export function selectPlannerCalendarModel({
   calendarTaskEntriesByDate,
   hideTasks = false,
   showCompletedGoals = false,
+  hideLinkedParents = false,
   memoizedState,
 }: PlannerCalendarModelArgs): PlannerCalendarModel {
   const weekStartsOn = normalizeWeekStartsOn(
@@ -138,6 +140,7 @@ export function selectPlannerCalendarModel({
     calendarTaskEntriesByDate,
     hideTasks,
     showCompletedGoals,
+    hideLinkedParents,
     memoizedState,
   });
   const eligibilityNotices = selectPlannerEligibilityNotices({

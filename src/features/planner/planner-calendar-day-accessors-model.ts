@@ -10,6 +10,10 @@ import {
   goalPassesCalendarFilters,
   shouldHideCompletedOnFutureCalendarDay,
 } from "@/features/planner/calendar-filters";
+import {
+  linkedParentGoalIds,
+  showsGoalWhenHidingLinkedParents,
+} from "@/features/planner/calendar-linked-targets";
 import { isPlannerTaskCalendarEntry } from "@/features/planner/calendar-task-entries";
 import {
   readPlannerCalendarDayProjection,
@@ -70,6 +74,7 @@ export interface CalendarDayAccessorsArgs {
   calendarTaskEntriesByDate?: Map<string, PlannerDayDetailEntry[]>;
   hideTasks?: boolean;
   showCompletedGoals?: boolean;
+  hideLinkedParents?: boolean;
 }
 
 export interface CalendarDayAccessorsMemoizedState {
@@ -120,6 +125,7 @@ export function selectCalendarDayAccessorsModel({
   calendarTaskEntriesByDate,
   hideTasks = false,
   showCompletedGoals = false,
+  hideLinkedParents = false,
   memoizedState,
 }: CalendarDayAccessorsArgs & {
   memoizedState?: CalendarDayAccessorsMemoizedState;
@@ -156,6 +162,7 @@ export function selectCalendarDayAccessorsModel({
     );
   })();
 
+  const parentGoalIds = linkedParentGoalIds(context?.links ?? []);
   const goalPassesFilters = (
     goalId: string,
     goalOverride?: { category: string; end_date?: string | null }
@@ -167,6 +174,11 @@ export function selectCalendarDayAccessorsModel({
       endMonthFilters: effectiveEndMonthFilters,
       goalIdFilters,
       goalOverride,
+    }) &&
+    showsGoalWhenHidingLinkedParents({
+      hideLinkedParents,
+      goalId,
+      parentGoalIds,
     });
 
   const calendarStoreProjection =

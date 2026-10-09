@@ -92,6 +92,8 @@ export interface PlannerCalendarOverlaysProps {
   endMonthOptions: GoalMonthOption[];
   showCompletedGoals?: boolean;
   onShowCompletedGoalsChange?: (value: boolean) => void;
+  hideLinkedParents?: boolean;
+  onHideLinkedParentsChange?: (value: boolean) => void;
   dayFilters?: ChecklistFiltersFormProps | null;
   settingsOpen: boolean;
   onSettingsOpenChange: (open: boolean) => void;
@@ -151,6 +153,8 @@ export function PlannerCalendarOverlays({
   endMonthOptions,
   showCompletedGoals = false,
   onShowCompletedGoalsChange,
+  hideLinkedParents = false,
+  onHideLinkedParentsChange,
   dayFilters = null,
   settingsOpen,
   onSettingsOpenChange,
@@ -234,6 +238,8 @@ export function PlannerCalendarOverlays({
         endMonthOptions={endMonthOptions}
         showCompletedGoals={showCompletedGoals}
         onShowCompletedGoalsChange={onShowCompletedGoalsChange}
+        hideLinkedParents={hideLinkedParents}
+        onHideLinkedParentsChange={onHideLinkedParentsChange}
         dayFilters={dayFilters}
       />
 

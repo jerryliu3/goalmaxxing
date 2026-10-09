@@ -155,6 +155,7 @@ export function CalendarSurface({
   );
   const [endMonthFilters, setEndMonthFilters] = useState<string[]>([]);
   const [showCompletedGoals, setShowCompletedGoals] = useState(false);
+  const [hideLinkedParents, setHideLinkedParents] = useState(false);
   // Goal View is a lens on the same planner context, not a calendar view mode.
   const [goalViewOpen, setGoalViewOpen] = useState(goalTimelineOpen);
   const [goalViewWindow, setGoalViewWindow] = useState<{ start: string; end: string } | null>(null);
@@ -429,6 +430,7 @@ export function CalendarSurface({
     // Goal View is a list lens, so it follows the Filters toggle even over Day.
     showCompletedGoals:
       viewMode === "day" && !goalViewOpen ? true : showCompletedGoals,
+    hideLinkedParents,
   });
   const {
     cells,
@@ -1257,6 +1259,8 @@ export function CalendarSurface({
     endMonthOptions,
     showCompletedGoals,
     setShowCompletedGoals,
+    hideLinkedParents,
+    setHideLinkedParents,
     settingsOpen,
     rebuildLoading,
   });

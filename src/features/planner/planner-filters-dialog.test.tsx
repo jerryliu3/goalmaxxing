@@ -38,6 +38,30 @@ describe("PlannerFiltersDialog", () => {
     expect(onHideTasksChange).toHaveBeenCalledWith(true);
   });
 
+  it("hides linked parent goals only when the filter is turned on", () => {
+    const onHideLinkedParentsChange = vi.fn();
+    render(
+      <PlannerFiltersDialog
+        open
+        onOpenChange={vi.fn()}
+        hideTasks={false}
+        onHideTasksChange={vi.fn()}
+        hideLinkedParents={false}
+        onHideLinkedParentsChange={onHideLinkedParentsChange}
+        categoryFilters={[]}
+        onCategoryFiltersChange={vi.fn()}
+        categoryOptions={[]}
+        endMonthFilters={[]}
+        onEndMonthFiltersChange={vi.fn()}
+        endMonthOptions={[]}
+      />
+    );
+    const toggle = screen.getByRole("checkbox", { name: "Hide linked parent goals" });
+    expect(toggle).not.toBeChecked();
+    fireEvent.click(toggle);
+    expect(onHideLinkedParentsChange).toHaveBeenCalledWith(true);
+  });
+
   it("keeps Goal View focused on goals", () => {
     render(
       <PlannerFiltersDialog open onOpenChange={vi.fn()}
