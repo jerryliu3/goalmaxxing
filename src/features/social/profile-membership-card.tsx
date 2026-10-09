@@ -278,6 +278,7 @@ export function ProfileMembershipCard({
     return null;
   }
 
+  const privateArch = profile.visibility === "private" || (profile.visibility === undefined && profile.isPrivate);
   const username = editor?.username ?? profile.username ?? "";
   const displayName = editor?.displayName ?? profile.displayName ?? "";
   const avatarUrl = (editor?.avatarUrl ?? profile.avatarUrl ?? "").trim() || null;
@@ -328,15 +329,17 @@ export function ProfileMembershipCard({
               <span>GOALMAXXING / MEMBER</span>
               {memberSince ? <span>MEMBER SINCE {memberSince}</span> : null}
             </div>
-            <div className={styles.identityArt}>
+            <div className={styles.identityArt} data-profile-visibility={privateArch ? "private" : "public"}>
               <div className={styles.horizonWrap} data-horizon-frame="">
-                <Horizon />
+                {privateArch ? <span className={styles.cameoHalo} aria-hidden="true" /> : <Horizon />}
                 <Portrait
                   avatarUrl={avatarUrl}
                   initials={monogram}
                   onOpen={editor ? () => setPhotoOpen(true) : undefined}
                 />
+                {privateArch ? <span className={styles.cameoSeal} aria-hidden="true">G</span> : null}
               </div>
+              {privateArch ? <span className={styles.privateStatus}>PRIVATE PROFILE</span> : null}
               {memberNo ? <span className={styles.serial}>{memberNo}</span> : null}
             </div>
             <div className={styles.titleBlock}>

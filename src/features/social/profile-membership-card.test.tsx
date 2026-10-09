@@ -6,7 +6,7 @@ import { ProfileMembershipCard } from "@/features/social/profile-membership-card
 import type { PublicProfileIdentity, PublicProfileOverallStats } from "@cadence/shared/social/public-profile";
 
 vi.mock("@/features/ux-brand/card-materials/material-stage", () => ({
-  MaterialStage: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  MaterialStage: ({ children, material }: { children: ReactNode; material: { id: string } }) => <div data-testid="material" data-material={material.id}>{children}</div>,
 }));
 
 afterEach(cleanup);
@@ -31,6 +31,23 @@ const stats: PublicProfileOverallStats = {
 };
 
 describe("ProfileMembershipCard", () => {
+  it("uses saved visibility for the owner's arch while keeping Pearl Reserve and the photo", () => {
+    const privateProfile = { ...profile, visibility: "private" as const, avatarUrl: "https://example.com/avatar.jpg" };
+    const { rerender } = render(<ProfileMembershipCard profile={privateProfile} overallStats={null} currentLevel={18} />);
+    expect(screen.getByText("PRIVATE PROFILE")).toBeInTheDocument();
+    expect(screen.getByTestId("material")).toHaveAttribute("data-material", "pearl");
+    const card = screen.getByRole("article", { name: "Jerry membership card" });
+    expect(card.querySelector("[data-portrait] img")).toHaveAttribute("src", privateProfile.avatarUrl);
+    expect(card.querySelector("[data-horizon-frame] svg")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Change profile photo" })).toBeNull();
+
+    rerender(<ProfileMembershipCard profile={{ ...privateProfile, visibility: "public" }} overallStats={null} currentLevel={18} />);
+    expect(screen.queryByText("PRIVATE PROFILE")).toBeNull();
+    expect(card.querySelector("[data-horizon-frame] svg")).not.toBeNull();
+    expect(screen.getByTestId("material")).toHaveAttribute("data-material", "pearl");
+    expect(card.querySelector("[data-portrait] img")).toHaveAttribute("src", privateProfile.avatarUrl);
+  });
+
   it("renders Pearl Reserve stats from the public profile bundle", () => {
     render(
       <ProfileMembershipCard profile={profile} overallStats={stats} currentLevel={18} />
@@ -109,14 +126,14 @@ describe("ProfileMembershipCard", () => {
     expect(onSave).toHaveBeenCalledTimes(1);
   });
 
-  it("opens a photo dialog with upload and remove actions", async () => {
+  it.each([false, true])("opens the photo editor when private is %s", async (isPrivate) => {
     const user = userEvent.setup();
     const onUploadAvatar = vi.fn(async () => undefined);
     const onRemoveAvatar = vi.fn();
 
     render(
       <ProfileMembershipCard
-        profile={profile}
+        profile={{ ...profile, isPrivate }}
         overallStats={stats}
         currentLevel={18}
         editor={{

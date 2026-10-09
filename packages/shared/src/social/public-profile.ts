@@ -45,7 +45,10 @@ export interface PublicProfileIdentity {
   username: string | null;
   displayName: string | null;
   avatarUrl: string | null;
+  /** Whether this viewer is restricted to the private-account notice. */
   isPrivate: boolean;
+  /** Saved profile visibility, including when the viewer is the owner. */
+  visibility?: "public" | "private";
   createdAt: string | null;
   /** 1-based signup order among profiles. */
   memberNumber?: number | null;
