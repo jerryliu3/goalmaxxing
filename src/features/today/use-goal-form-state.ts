@@ -42,6 +42,7 @@ export function useGoalFormState(goalId?: string) {
   const router = useAppRouter();
   const [state, setState] = useState<GoalFormState>(defaultGoalFormState);
   const [selectedLinkTarget, setSelectedLinkTarget] = useState<string>("none");
+  const [savedLinkTarget, setSavedLinkTarget] = useState<string>("none");
   const [availableGoals, setAvailableGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
@@ -97,6 +98,7 @@ export function useGoalFormState(goalId?: string) {
                 .select("*")
                 .eq("owner_id", user.id)
                 .eq("source_goal_id", goalId)
+                .order("target_goal_id")
             : Promise.resolve({ data: null, error: null } as const),
           fetchProgressContext({ asOfDate: toLocalDateString() }),
           supabase
@@ -178,11 +180,13 @@ export function useGoalFormState(goalId?: string) {
 
         if (!linksResponse.error) {
           const existingLinks = (linksResponse.data ?? []) as GoalLink[];
-          if (existingLinks.length > 0) {
-            setSelectedLinkTarget(existingLinks[0].target_goal_id);
-          } else {
-            setSelectedLinkTarget("none");
-          }
+          const loadedLinkTarget =
+            existingLinks.length > 0 ? existingLinks[0].target_goal_id : "none";
+          setSavedLinkTarget(loadedLinkTarget);
+          setSelectedLinkTarget(loadedLinkTarget);
+        } else {
+          setSavedLinkTarget("none");
+          setSelectedLinkTarget("none");
         }
       }
 
@@ -277,6 +281,7 @@ export function useGoalFormState(goalId?: string) {
     setState,
     selectedLinkTarget,
     setSelectedLinkTarget,
+    savedLinkTarget,
     loading,
     editingGoal,
     linkTargetsReady,

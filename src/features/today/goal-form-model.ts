@@ -190,3 +190,22 @@ export function buildGoalMutationArgs({
         : undefined,
   };
 }
+
+/**
+ * Creating a goal always records its one outgoing link, including "none".
+ * Editing rewrites that link only when the selected target changed. An
+ * unrelated edit must not call replace_goal_source_link, because that RPC
+ * deletes every outgoing link and the editor only displays one of them.
+ */
+export function shouldReplaceGoalSourceLink({
+  isEditing,
+  savedLinkTarget,
+  selectedLinkTarget,
+}: {
+  isEditing: boolean;
+  savedLinkTarget: string;
+  selectedLinkTarget: string;
+}) {
+  if (!isEditing) return true;
+  return savedLinkTarget !== selectedLinkTarget;
+}

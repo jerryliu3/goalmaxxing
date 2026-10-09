@@ -45,6 +45,7 @@ export function GoalCardEditor({ goalId, onExit, onDismiss }: { goalId: string; 
     goalId,
     state,
     selectedLinkTarget,
+    savedLinkTarget: form.savedLinkTarget,
     isPlannerTask: false,
     linkTargetsReady: form.linkTargetsReady,
     linkTargetsError: form.linkTargetsError,
