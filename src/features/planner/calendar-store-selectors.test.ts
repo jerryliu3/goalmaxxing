@@ -167,6 +167,30 @@ describe("calendar store selectors", () => {
     expect(projection.entriesByDate.get("2026-08-05")?.[0]).toMatchObject({
       originalGoalId: "goal-a",
       hasLinkedTargets: true,
+      hasIncomingLinks: false,
+    });
+  });
+
+  it("marks target entries that another goal counts toward", () => {
+    const context = buildContext(
+      [unit({ goalId: "goal-b", unitKey: "total:1", scheduledDate: "2026-08-05" })],
+      [{
+        sourceGoalId: "goal-a",
+        targetGoalId: "goal-b",
+      }]
+    );
+    const projection = selectPlannerCalendarStoreProjection({
+      context,
+      effectivePreview: context.preview,
+      draftCommandState: commandState([]),
+      activeGoalsByPlanGoalId: new Map(),
+      activeGoalsByOriginalGoalId: new Map(),
+    });
+
+    expect(projection.entriesByDate.get("2026-08-05")?.[0]).toMatchObject({
+      originalGoalId: "goal-b",
+      hasLinkedTargets: false,
+      hasIncomingLinks: true,
     });
   });
 

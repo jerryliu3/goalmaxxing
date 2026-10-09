@@ -96,6 +96,9 @@ export function selectPlannerCalendarStoreProjection({
     linkedTargetSourceGoalIds: new Set(
       (context?.links ?? []).map((link) => link.sourceGoalId)
     ),
+    linkedParentGoalIds: new Set(
+      (context?.links ?? []).map((link) => link.targetGoalId)
+    ),
     draftItemEdits: effectiveDraftItemEdits,
     draftCommands: effectiveDraftCommands,
     letGoEntryKeys,

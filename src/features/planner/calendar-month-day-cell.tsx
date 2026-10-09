@@ -1,7 +1,8 @@
 "use client";
 
 import { format, parse } from "date-fns";
-import { Check, Link2 } from "lucide-react";
+import { Check } from "lucide-react";
+import { LinkedGoalMarks } from "@/features/planner/linked-goal-marks";
 import { Fragment, useRef, type PointerEvent, type ReactNode } from "react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
 import { CalendarPartnerChip } from "@/features/planner/calendar-partner-chip";
@@ -58,6 +59,7 @@ export interface CalendarMonthCellEntryBase {
   draftDiffToDate: string | null;
   draftGhost: boolean;
   hasLinkedTargets?: boolean;
+  hasIncomingLinks?: boolean;
 }
 
 export interface CalendarCompletionFactMarkerBase {
@@ -421,12 +423,11 @@ export function CalendarMonthDayCell<
             >
               {compactTitle}
             </CompletionTitle>
-            {entry.hasLinkedTargets ? (
-              <Link2
-                className="size-3 shrink-0"
-                aria-label="Links this subgoal to a main goal"
-              />
-            ) : null}
+            <LinkedGoalMarks
+              outgoing={Boolean(entry.hasLinkedTargets)}
+              incoming={Boolean(entry.hasIncomingLinks)}
+              compact
+            />
           </div>
         )}
       </PlannerDraggableEntry>

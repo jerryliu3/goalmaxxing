@@ -47,6 +47,7 @@ export function buildEntriesByDateProjection({
   activeGoalsByOriginalGoalId,
   goalTitles,
   linkedTargetSourceGoalIds,
+  linkedParentGoalIds,
   draftItemEdits,
   draftCommands = [],
   letGoEntryKeys,
@@ -57,11 +58,16 @@ export function buildEntriesByDateProjection({
   activeGoalsByOriginalGoalId: Map<string, PlannerActiveGoalSnapshot>;
   goalTitles: Record<string, string> | undefined;
   linkedTargetSourceGoalIds?: ReadonlySet<string>;
+  linkedParentGoalIds?: ReadonlySet<string>;
   draftItemEdits: Record<string, DraftItemEdit>;
   draftCommands?: readonly PlannerDraftCommand[];
   /** Sessions recovery mode staged as let go: drawn as removed from their day. */
   letGoEntryKeys?: ReadonlySet<string>;
 }) {
+  const linkedGoalFlags = (goalId: string) => ({
+    hasLinkedTargets: linkedTargetSourceGoalIds?.has(goalId) ?? false,
+    hasIncomingLinks: linkedParentGoalIds?.has(goalId) ?? false,
+  });
   const byDate = new Map<string, Map<string, PlannerDayDetailEntry>>();
   const entryByKey = new Map<string, PlannerDayDetailEntry>();
   const entryDayByKey = new Map<string, string>();
@@ -145,8 +151,7 @@ export function buildEntriesByDateProjection({
       draftDiffFromDate: null,
       draftDiffToDate: null,
       draftGhost: false,
-      hasLinkedTargets:
-        linkedTargetSourceGoalIds?.has(unit.originalGoalId) ?? false,
+      ...linkedGoalFlags(unit.originalGoalId),
       goalDefaultLocalTime: resolvedTime.goalDefaultLocalTime,
       scheduledTimeOverride: resolvedTime.scheduledTimeOverride,
       effectiveScheduledLocalTime: resolvedTime.effectiveScheduledLocalTime,
@@ -232,8 +237,7 @@ export function buildEntriesByDateProjection({
       draftDiffFromDate: null,
       draftDiffToDate: null,
       draftGhost: false,
-      hasLinkedTargets:
-        linkedTargetSourceGoalIds?.has(originalGoalId) ?? false,
+      ...linkedGoalFlags(originalGoalId),
       goalDefaultLocalTime: null,
       scheduledTimeOverride: item.scheduled_time_override ?? null,
       effectiveScheduledLocalTime: item.effective_scheduled_local_time ?? null,
@@ -356,8 +360,7 @@ export function buildEntriesByDateProjection({
       draftDiffFromDate: diffEntry.date,
       draftDiffToDate: diffEntry.counterpartDate,
       draftGhost: true,
-      hasLinkedTargets:
-        linkedTargetSourceGoalIds?.has(diffEntry.goalId) ?? false,
+      ...linkedGoalFlags(diffEntry.goalId),
       scheduledTimeOverride: unit?.scheduledTimeOverride ?? null,
       effectiveScheduledLocalTime: unit?.effectiveScheduledLocalTime ?? null,
     });
