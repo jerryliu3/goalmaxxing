@@ -68,7 +68,7 @@ export const HUE_TONES: readonly { id: HueTone; label: string }[] = [
   { id: "ink", label: "Ink" },
 ];
 
-/** Production today: identity does every job and navigation marks in ink. */
+/** Production before the second hue: identity does every job and navigation marks in ink. */
 export const SHIPPED_MIX: HueMix = {
   act: "identity",
   place: "ink",
@@ -101,7 +101,7 @@ export const HUE_MIXES: readonly HueMixOption[] = [
   {
     id: "shipped",
     name: "One hue",
-    premise: "As shipped. Identity does every job; navigation marks the destination in ink.",
+    premise: "Before the second hue shipped. Identity does every job; navigation marks the destination in ink.",
     mix: SHIPPED_MIX,
   },
   {
@@ -130,9 +130,9 @@ export const HUE_MIXES: readonly HueMixOption[] = [
   },
   {
     id: "proposal",
-    name: "Proposal",
+    name: "Proposal · shipped",
     premise:
-      "Accent marks where you are; shade sits behind what you picked, solid where it would vanish. Original, Gazetteer, and Bloodstone drop the accent.",
+      "What production ships. Accent marks where you are; shade sits behind what you picked, solid where it would vanish. Original, Gazetteer, and Bloodstone drop the accent.",
     mix: PROPOSED_MIX,
   },
 ];

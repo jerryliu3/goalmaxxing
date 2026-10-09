@@ -1,7 +1,9 @@
 # Second hue study
 
-Status: **Exploratory, not a lock.** Lab: `/ux/brand/second-hue`.
-Production is unchanged; PR #1161 stays a draft until a mix locks.
+Status: **Exploratory, not a lock.** Lab: `/ux/brand/second-hue`. The
+round 2 proposal is applied in production (see "Applied in production");
+PR #1161 is superseded. "Where things stand" records the state before that
+change.
 
 A second hue is worth adding. The open question is which jobs it takes, in
 which form, and whether one answer holds across every registered theme.
@@ -226,6 +228,30 @@ and is used for navigation only.
 
 Updated proposal: What you picked is "Shade or solid"; the drafts row is
 dropped, and the quick-add composer follows focus.
+
+### Applied in production
+
+The proposal ships through the existing roles plus one new role:
+
+- `selection` / `selectionForeground` mark where you are: the phone tab
+  pill, the planner and Insights view switchers, and default in-page tabs.
+  Undertow, Kiln, Centre Court, Opaline, and Pitlane keep their registry
+  accent; Original and Gazetteer use their identity shade with ink labels;
+  Bloodstone uses solid identity (`selection: "primary"` on the skin).
+- `selectionLine` (new) is the rule and frame form: the desktop tab rule,
+  Gazetteer's phone tab frame, and line tabs (check-in Recap / Next).
+  Original and Gazetteer use identity; study skins derive the lightest blend
+  of the accent toward ink that reaches 3:1 on the page.
+- `daySelected` / `daySelectedForeground` mark the selected agenda row: the
+  identity shade, or solid identity on Opaline and Bloodstone. The row now
+  draws its labels and meta in that foreground.
+- Today, done, actions, focus, and the selected month day stay identity.
+  Drafts keep their category colors.
+
+Production limits: the shared `Tabs` root still keys its horizontal layout
+on `data-horizontal`, which Radix never sets, so line tabs supply their own
+rule geometry (as the check-in does). Fixing that selector changes every
+horizontal `Tabs` layout and is left for its own change.
 
 ## Hypotheses
 

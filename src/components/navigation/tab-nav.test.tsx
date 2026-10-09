@@ -62,11 +62,13 @@ describe("TabNav", () => {
       "nav.social"
     );
     expect(screen.queryByRole("link", { name: /^Profile$/i })).toBeNull();
-    // Desktop marks the destination with ink, not a brand-colored fill.
+    // Desktop keeps the label in ink; the rule under it takes the selection line.
     expect(screen.getByRole("link", { name: /Community/i })).toHaveClass(
       "text-foreground"
     );
-    expect(container.querySelectorAll("[data-motion='tab-nav-highlight']")).toHaveLength(1);
+    const highlights = container.querySelectorAll("[data-motion='tab-nav-highlight']");
+    expect(highlights).toHaveLength(1);
+    expect(highlights[0]).toHaveClass("bg-selection-line");
   });
 
   it("keeps one indicator mounted on a fixed local baseline after scrolling and changing tabs", () => {

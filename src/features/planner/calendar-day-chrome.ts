@@ -106,8 +106,10 @@ export function planSelectedWorkRowClass(selected: boolean) {
   if (!selected) {
     return "";
   }
-  // The row's left edge carries its goal colour, so selection is the fill alone.
-  return "bg-day-selected";
+  // The row's left edge carries its goal colour, so selection is the fill
+  // alone. Some themes fill it solid, so labels and secondary text follow
+  // the fill's own foreground.
+  return "bg-day-selected text-day-selected-foreground [--muted-foreground:color-mix(in_srgb,var(--gm-day-selected-foreground)_72%,transparent)]";
 }
 
 export const planLedgerTitleClass =

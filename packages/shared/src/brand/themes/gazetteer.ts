@@ -1,8 +1,11 @@
 import { GAZETTEER, GAZETTEER_HEATMAP_SCALE } from "../gazetteer";
 import { DEFAULT_GHOST_COLORS, type ThemeDefinition } from "../roles";
 
+/** Stamp washed toward the page: 18% on paper, 40% on the dark page. */
+const GAZETTEER_SHADE = { light: "#ead9cc", dark: "#614433" } as const;
+
 /**
- * The surveyor's ledger: warm paper, walnut ink, stamp rust, sage selection,
+ * The surveyor's ledger: warm paper, walnut ink, stamp rust and its shade,
  * Newsreader names, Source Sans 3 labels and figures, Nest marks. Swatches
  * shared with category and planner colors come from the GAZETTEER palette.
  *
@@ -54,11 +57,14 @@ export const GAZETTEER_THEME = {
     recover: GAZETTEER.recover,
     warning: GAZETTEER.recover,
     warningFill: "#fef9c3",
-    selection: GAZETTEER.sage,
-    selectionForeground: GAZETTEER.paper,
+    // No second hue: where you are and what you picked share the stamp
+    // shade (rust 18% over the page), with ink labels and rust rules.
+    selection: GAZETTEER_SHADE.light,
+    selectionForeground: "var(--foreground)",
+    selectionLine: "var(--primary)",
     today: "var(--gm-heatmap-1)",
     todayForeground: "var(--foreground)",
-    daySelected: "color-mix(in srgb, var(--gm-selection) 28%, var(--background))",
+    daySelected: GAZETTEER_SHADE.light,
     daySelectedForeground: "var(--foreground)",
     // Opaque Zinc 300, one step darker than Original so the grey reads on paper.
     adjacent: "#d4d4d8",
@@ -95,11 +101,12 @@ export const GAZETTEER_THEME = {
     recover: "#facc15",
     warning: "#facc15",
     warningFill: "color-mix(in srgb, #facc15 22%, var(--background))",
-    selection: "#8aa396",
-    selectionForeground: "#1c1610",
+    selection: GAZETTEER_SHADE.dark,
+    selectionForeground: "var(--foreground)",
+    selectionLine: "var(--primary)",
     today: "var(--gm-heatmap-1)",
     todayForeground: "var(--foreground)",
-    daySelected: "color-mix(in srgb, var(--gm-selection) 70%, var(--background))",
+    daySelected: GAZETTEER_SHADE.dark,
     daySelectedForeground: "var(--foreground)",
     adjacent: "#52525b",
     adjacentForeground: "oklch(0.92 0.003 286)",

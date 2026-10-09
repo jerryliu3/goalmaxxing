@@ -14,9 +14,11 @@ import {
   GAZETTEER_THEME,
   getTheme,
   isThemeId,
+  ORIGINAL_THEME,
   THEME_IDS,
   THEMES,
 } from "./themes";
+import { contrastRatio, MIN_SHADE_SEPARATION } from "./themes/study";
 
 const ROLES = [...SURFACE_COLOR_ROLES, ...APP_COLOR_ROLES, ...SCALE_COLOR_ROLES];
 const ALL_THEMES: readonly ThemeDefinition[] = THEMES;
@@ -92,6 +94,60 @@ describe("theme registry", () => {
     expect(colorRoleVariable("cardForeground")).toBe("--card-foreground");
     expect(colorRoleVariable("warningFill")).toBe("--gm-warning-fill");
     expect(colorRoleVariable("heatmap3")).toBe("--gm-heatmap-3");
+  });
+});
+
+describe("second hue roles", () => {
+  const STUDY_THEMES = ALL_THEMES.filter((theme) => theme.status === "study");
+
+  it("gives the live themes no second hue: both selections are the identity shade", () => {
+    for (const [theme, shade] of [
+      [ORIGINAL_THEME, "#d0dff1"],
+      [GAZETTEER_THEME, "#ead9cc"],
+    ] as const) {
+      expect(theme.colors.selection, theme.id).toBe(shade);
+      expect(theme.colors.daySelected, theme.id).toBe(shade);
+      expect(theme.colors.selectionForeground).toBe("var(--foreground)");
+      expect(theme.colors.daySelectedForeground).toBe("var(--foreground)");
+      expect(theme.colors.selectionLine).toBe("var(--primary)");
+    }
+  });
+
+  it("keeps the registry accent where it stays in balance, and Bloodstone on its identity", () => {
+    expect(getTheme("undertow").colors.selection).toBe("#b4a6ee");
+    expect(getTheme("kiln").colors.selection).toBe("#a8c1f5");
+    expect(getTheme("court").colors.selection).toBe("#dced65");
+    expect(getTheme("opaline").colors.selection).toBe("#86d6ce");
+    expect(getTheme("pitlane").colors.selection).toBe("#deef79");
+    const bloodstone = getTheme("bloodstone").colors;
+    expect(bloodstone.selection).toBe(bloodstone.primary);
+    expect(bloodstone.selectionForeground).toBe(bloodstone.primaryForeground);
+  });
+
+  it("fills the selected row solid only where the shade would vanish into the card", () => {
+    for (const theme of STUDY_THEMES) {
+      const { daySelected, primary, card } = theme.colors;
+      const solid = theme.id === "opaline" || theme.id === "bloodstone";
+      expect(daySelected === primary, theme.id).toBe(solid);
+      if (!solid) {
+        expect(contrastRatio(daySelected, card), theme.id).toBeGreaterThanOrEqual(MIN_SHADE_SEPARATION);
+      }
+    }
+  });
+
+  it("keeps every study selection legible: labels at 4.5:1, rules at 3:1 on the page", () => {
+    for (const theme of STUDY_THEMES) {
+      const colors = theme.colors;
+      expect(contrastRatio(colors.selectionForeground, colors.selection), theme.id).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(colors.daySelectedForeground, colors.daySelected), theme.id).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(colors.selectionLine, colors.page), theme.id).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("derives a darker rule only where the accent is too pale to draw one", () => {
+    expect(getTheme("pitlane").colors.selectionLine).toBe("#deef79");
+    expect(getTheme("court").colors.selectionLine).not.toBe("#dced65");
+    expect(getTheme("opaline").colors.selectionLine).not.toBe("#86d6ce");
   });
 });
 
