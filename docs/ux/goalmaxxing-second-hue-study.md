@@ -1,9 +1,7 @@
 # Second hue study
 
-Status: **Exploratory, not a lock.** Lab: `/ux/brand/second-hue`. Part of
-the theme identity study (`docs/ux/goalmaxxing-theme-identity-study.md`,
-question 7). Production is unchanged; PR #1161 stays a draft until a mix
-locks.
+Status: **Exploratory, not a lock.** Lab: `/ux/brand/second-hue`.
+Production is unchanged; PR #1161 stays a draft until a mix locks.
 
 A second hue is worth adding. The open question is which jobs it takes, in
 which form, and whether one answer holds across every registered theme.
