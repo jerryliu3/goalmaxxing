@@ -110,7 +110,12 @@ describe("plan calendar day chrome", () => {
     expect(planSelectedWorkRowClass(false)).toBe("");
     expect(planSelectedWorkRowClass(true)).toContain("bg-day-selected");
     expect(planSelectedWorkRowClass(true)).not.toContain("inset_3px_0_0");
-    expect(planSelectedWorkRowClass(true)).not.toContain("text-day-selected-foreground");
+  });
+
+  it("draws a selected row's labels in its fill's own foreground, solid fills included", () => {
+    const selected = planSelectedWorkRowClass(true);
+    expect(selected).toContain("text-day-selected-foreground");
+    expect(selected).toContain("[--muted-foreground:color-mix(in_srgb,var(--gm-day-selected-foreground)_72%,transparent)]");
   });
 
   it("keeps ledger titles slightly smaller than body text", () => {

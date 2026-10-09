@@ -81,12 +81,13 @@ describe("second hue color math", () => {
   });
 
   it("resolves theme roles through var() references and oklch", () => {
-    expect(themeHex("original", "selection")).toBe("#0f64bf");
+    expect(themeHex("original", "selectionLine")).toBe("#0f64bf");
     expect(contrastRatio(themeHex("original", "primary")!, themeHex("original", "page")!)).toBeGreaterThan(5);
   });
 
-  it("finds that Original's registry accent is its identity", () => {
-    expect(hueReadout("original", resolvePalette("original", "registry")).separation).toBe(1);
+  it("reads the shipped registry: Original's selection is its shade, Bloodstone's its identity", () => {
+    expect(resolvePalette("original", "registry").accent.fill).toBe(resolvePalette("original", "none").shade.fill);
+    expect(hueReadout("bloodstone", resolvePalette("bloodstone", "registry")).separation).toBe(1);
   });
 
   it("derives a drawable line where the registry accent is fill-only", () => {

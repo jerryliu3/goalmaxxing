@@ -30,5 +30,7 @@ export const BLOODSTONE_THEME = studyTheme({
     onSecondHue: "#213546",
     border: "#765258",
   },
+  // Steel blue reads 3.4× louder than the oxblood on this page; navigation stays red.
+  selection: "primary",
   pageBackgroundImage: "radial-gradient(ellipse at 72% 23%, #35151d, #130f12 60%)",
 });

@@ -21,7 +21,7 @@ export interface StudyPalette {
   muted: string;
   primary: string;
   onPrimary: string;
-  /** The skin's second hue; it marks the selection, as sage does in Gazetteer. */
+  /** The skin's second hue; it marks where you are unless `selection` says otherwise. */
   secondHue: string;
   onSecondHue: string;
   border: string;
@@ -36,6 +36,11 @@ export interface StudySkin<Id extends string = string> {
   text: ThemeText;
   radiusPx: number;
   palette: StudyPalette;
+  /**
+   * What marks where you are (tabs, view switchers). Defaults to the second
+   * hue; a skin whose second hue would out-shout its identity uses primary.
+   */
+  selection?: "second-hue" | "primary";
   pageBackgroundImage: string;
 }
 
@@ -61,7 +66,33 @@ function isDark(hex: string) {
   return 0.299 * red + 0.587 * green + 0.114 * blue < 128;
 }
 
-function studyColors({ palette, appearance }: StudySkin): ThemeColors {
+function luminance(hex: string) {
+  const [red, green, blue] = channels(hex).map((channel) => {
+    const value = channel / 255;
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+}
+
+/** WCAG contrast ratio between two hex colors. */
+export function contrastRatio(first: string, second: string): number {
+  const [high, low] = [luminance(first), luminance(second)].sort((a, b) => b - a);
+  return (high + 0.05) / (low + 0.05);
+}
+
+/** Below this contrast against the card, a shaded selected row reads as unselected. */
+export const MIN_SHADE_SEPARATION = 1.2;
+
+/** The lightest blend of `fill` toward `ink` that reads as a rule (3:1) on `page`. */
+function lineFor(fill: string, page: string, ink: string) {
+  for (let step = 0; step <= 10; step += 1) {
+    const candidate = mixHex(ink, fill, step / 10);
+    if (contrastRatio(candidate, page) >= 3) return candidate;
+  }
+  return ink;
+}
+
+function studyColors({ palette, appearance, selection = "second-hue" }: StudySkin): ThemeColors {
   const { page, ink, primary } = palette;
   const dark = appearance === "dark";
   // Several studies invert their cards (light cards on a dark page, or the
@@ -71,6 +102,17 @@ function studyColors({ palette, appearance }: StudySkin): ThemeColors {
     isDark(palette.surface) === isDark(page)
       ? { surface: palette.surface, ink: palette.surfaceInk }
       : { surface: mixHex(ink, page, 0.06), ink };
+  const place =
+    selection === "primary"
+      ? { fill: primary, on: palette.onPrimary }
+      : { fill: palette.secondHue, on: palette.onSecondHue };
+  // What you picked is identity washed toward the page, solid where that
+  // wash would vanish into the card.
+  const shade = mixHex(primary, page, dark ? 0.4 : 0.18);
+  const picked =
+    contrastRatio(shade, card.surface) >= MIN_SHADE_SEPARATION
+      ? { fill: shade, on: ink }
+      : { fill: primary, on: palette.onPrimary };
   return {
     background: page,
     foreground: ink,
@@ -95,12 +137,13 @@ function studyColors({ palette, appearance }: StudySkin): ThemeColors {
     recover: dark ? "#facc15" : "#eab308",
     warning: dark ? "#facc15" : "#eab308",
     warningFill: mixHex(dark ? "#facc15" : "#eab308", page, 0.22),
-    selection: palette.secondHue,
-    selectionForeground: palette.onSecondHue,
+    selection: place.fill,
+    selectionForeground: place.on,
+    selectionLine: lineFor(place.fill, page, ink),
     today: mixHex(primary, page, 0.28),
     todayForeground: ink,
-    daySelected: mixHex(palette.secondHue, page, dark ? 0.35 : 0.28),
-    daySelectedForeground: ink,
+    daySelected: picked.fill,
+    daySelectedForeground: picked.on,
     adjacent: mixHex(ink, page, 0.14),
     adjacentForeground: palette.muted,
     stampLight: mixHex(primary, page, 0.6),

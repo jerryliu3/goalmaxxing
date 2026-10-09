@@ -2,6 +2,24 @@ import { describe, expect, it } from "vitest";
 import { tabChromeClasses, tabGridClass } from "./tab-chrome";
 
 describe("tabChromeClasses", () => {
+  it("marks the destination with the selection roles, never primary", () => {
+    const pillsPhone = tabChromeClasses("pills", true, "grid-cols-4");
+    expect(pillsPhone.highlight).toContain("bg-selection");
+    expect(pillsPhone.linkActive).toBe("text-selection-foreground");
+    expect(tabChromeClasses("underline", true, "grid-cols-4").highlight).toContain(
+      "border-selection-line"
+    );
+    for (const chrome of ["underline", "pills"] as const) {
+      const desktop = tabChromeClasses(chrome, false, "grid-cols-4");
+      expect(desktop.highlight).toContain("bg-selection-line");
+      expect(desktop.linkActive).toBe("text-foreground");
+      for (const mobile of [true, false]) {
+        const { highlight, linkActive } = tabChromeClasses(chrome, mobile, "grid-cols-4");
+        expect(`${highlight} ${linkActive}`).not.toMatch(/primary/);
+      }
+    }
+  });
+
   it("frames the whole tab on the phone bar, in every chrome", () => {
     for (const chrome of ["underline", "pills"] as const) {
       const highlight = tabChromeClasses(chrome, true, "grid-cols-4").highlight.split(" ");

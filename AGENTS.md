@@ -183,11 +183,11 @@ surfaces. The default is to simplify and reuse what already exists.
   (see its README) and generated into `src/app/themes.css` with
  `pnpm themes:css`. Components reference roles only: no hex values,
  family names, or one theme's font variable outside that directory.
- Which jobs (act, place, pick, today, done, focus) take each theme's second
- hue, and in which form (fill, label, line), is studied in
+ Identity marks acting, today, done, and focus. Where you are (tabs, view
+ switchers, in-page tabs) uses `selection*` fills and `selectionLine`
+ rules; what you picked (the selected row) uses `daySelected*`. The rules
+ per theme are in the brand README; the study behind them is
  `docs/ux/goalmaxxing-second-hue-study.md` and `/ux/brand/second-hue`.
- It is exploratory, not a lock; the selection roles stay unused in
- production until a mix locks.
   First-principles interaction studies live in
   `docs/ux/goalmaxxing-first-principles-interface-study.md` and
   `/ux/first-principles`. They are divergent exploration, not a product lock.

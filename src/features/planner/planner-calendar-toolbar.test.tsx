@@ -59,11 +59,11 @@ describe("PlannerCalendarToolbar", () => {
       "true"
     );
     expect(within(viewGroup).queryByRole("button", { name: "3 Day" })).toBeNull();
-    // Selection is a raised neutral thumb with an ink label, not a brand-colored fill.
-    expect(screen.getByTestId("plan-view-mode-thumb")).toHaveClass("bg-background");
+    // The current view takes the selection pair; primary stays for actions.
+    expect(screen.getByTestId("plan-view-mode-thumb")).toHaveClass("bg-selection");
     expect(screen.getByTestId("plan-view-mode-thumb")).not.toHaveClass("bg-primary");
     expect(within(viewGroup).getByRole("button", { name: "Week" })).toHaveClass(
-      "text-foreground"
+      "text-selection-foreground"
     );
   });
 
