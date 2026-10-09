@@ -9,7 +9,7 @@ export const PLAN_ACTION_BUTTON_CLASS = "h-9 rounded-full px-3.5";
 /**
  * The one place a pending plan change is kept or thrown away: a bar floating
  * at the bottom of the screen, above the phone tab bar, so Save stays in reach
- * while scrolling a month. Planning mode and recovery mode share it.
+ * while scrolling a month. Planning and Recovery share it.
  */
 export function PlanActionBar({
   label,
@@ -45,7 +45,7 @@ export function PlanActionBar({
   );
 }
 
-/** Planning mode's bar: the unsaved draft, with Discard and Save plan. */
+/** Planning's bar: the unsaved draft, with Discard and Save plan. */
 export function PlanningActionBar({
   canSave,
   saveLabel,
@@ -65,10 +65,10 @@ export function PlanningActionBar({
 }) {
   return (
     <PlanActionBar
-      label="Planning mode"
+      label="Planning"
       testId="planner-preview-mode-badge"
-      title="Planning mode"
-      detail={saveBlockedMessage ?? "Unsaved changes"}
+      title="Planning"
+      detail={saveBlockedMessage}
       dotClassName="bg-primary"
     >
       <Button
