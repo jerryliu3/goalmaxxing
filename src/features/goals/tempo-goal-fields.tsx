@@ -302,7 +302,7 @@ export function TempoGoalFields({
         onStep={go}
         canVisit={canVisit}
         disabled={disabled}
-        skip={isPlannerTask || furthestStep < DETAILS ? [DETAILS] : undefined}
+        showDetails={!isPlannerTask && furthestStep >= DETAILS}
       />
       {step === REVIEW && !isPlannerTask ? (
         // The review labels each part of the plaque it is about to create (read-only).

@@ -3,10 +3,7 @@
 import { createContext, useContext } from "react";
 
 export const TempoMethodContext = createContext<(() => void) | null>(null);
-/**
- * The steps a goal needs, numbered; "More details" is optional, so it sits apart unnumbered
- * (and the caller leaves it out until the person opens it).
- */
+/** The steps a goal needs, numbered; "More details" is optional, so it sits apart unnumbered. */
 const steps = ["Start", "Intention", "Rhythm", "Schedule", "Review", "More details"];
 const OPTIONAL_STEP = steps.length - 1;
 
@@ -15,19 +12,19 @@ export function TempoStepNavigation({
   onStep,
   canVisit = [],
   disabled = false,
-  skip = [],
+  showDetails = false,
 }: {
   step: number;
   onStep?: (step: number) => void;
   canVisit?: boolean[];
   disabled?: boolean;
-  /** Wizard steps (0 = Intention) this flow leaves out, e.g. a task has no details. */
-  skip?: number[];
+  /** More details joins the bar only once the person opens them (tasks never have them). */
+  showDetails?: boolean;
 }) {
   const chooseMethod = useContext(TempoMethodContext);
   return (
     <nav className="tempo-steps" aria-label="Goal creation steps">
-      {steps.map((name, index) => skip.includes(index - 1) ? null : (
+      {steps.map((name, index) => index === OPTIONAL_STEP && !showDetails ? null : (
         <button
           type="button"
           key={name}
