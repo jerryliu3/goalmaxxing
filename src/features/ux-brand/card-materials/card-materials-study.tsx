@@ -38,7 +38,7 @@ export function CardMaterialsStudy() {
         <header className={styles.hero}>
           <p className={styles.eyebrow}>MATERIAL STUDY / CARDS & OBJECTS</p>
           <h1>Something you<br /><em>want to hold.</em></h1>
-          <p>Twelve material directions, now extended into a system. Explore goal-responsive finishes, application formats cut from the same materials, and sculptural rewards that turn progress into an object.</p>
+          <p>{MATERIALS.length} material directions, now extended into a system. Compare five dark monochrome prototypes alongside the original finishes, application formats, and sculptural rewards.</p>
           <Link className={styles.back} href="/ux/brand/card-rewards">Explore reward transformations <ArrowUpRight size={15} aria-hidden="true" /></Link>
           {view === "cards" && <nav aria-label="Card materials">{MATERIALS.map(item => <a key={item.id} href={`#${item.id}`}>{item.name}<ArrowUpRight size={13} /></a>)}</nav>}
         </header>
@@ -72,7 +72,7 @@ export function CardMaterialsStudy() {
         <aside className={styles.recommendation}>
           <p className={styles.eyebrow}>THE PREMIUM EDIT</p>
           <h2>One material language.<br />More than one kind of reward.</h2>
-          <p>Prismatic Pearl, Chromatic Foil, and Anodized Alloy carry category color through light, foil, or metal. Embossed card lettering rises from the surface, with a material face and closely spaced depth layers. Thickness follows the same perspective as the card. Compare depths from 2px to 12px, engraved surface shading, and printed type. Only the number, period, and title rise; category stays printed. Lettering sits against the material, like a finely stamped membership card. The application and object studies test how far that language can stretch.</p>
+          <p>Black Pearl, Smoked Platinum, Carbon Foil, Obsidian Lacquer, and Graphite Silk explore premium dark surfaces in pure grayscale. Their coatings, edges, and lettering stay neutral as categories change. Prismatic Pearl, Chromatic Foil, and Anodized Alloy carry category color through light, foil, or metal. Embossed card lettering rises from the surface, with a material face and closely spaced depth layers. Thickness follows the same perspective as the card. Compare depths from 2px to 12px, engraved surface shading, and printed type. Only the number, period, and title rise; category stays printed. Lettering sits against the material, like a finely stamped membership card. The application and object studies test how far that language can stretch.</p>
           <Link href="/demo/insights/folios">Try the folio opening <ArrowUpRight size={15} /></Link>
         </aside>
         <footer className={styles.footer}>Goalmaxxing · Material system study · Cards, identity, and earned objects</footer>

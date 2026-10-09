@@ -46,3 +46,25 @@
 @media (max-width: 680px) { .grid { grid-template-columns: 1fr; gap: 2.5rem; } .stage { min-height: 410px; } }
 @media (prefers-reduced-motion: reduce) { .object { transform: none; } }
 @media (forced-colors: active) { .stage { --metal-light: Canvas; --metal-mid: CanvasText; --metal-dark: CanvasText; --engraving: Canvas; --enamel: Canvas; --enamel-light: Canvas; --dial-ink: CanvasText; } .reflection { display: none; } }
+
+/* Grayscale counterparts for every finish offered by the shared picker. */
+.stage[data-color-mode="achromatic"] {
+  --metal-light: #eeeeee; --metal-mid: #888888; --metal-dark: #222222;
+  --enamel: #222222; --enamel-light: #555555; --engraving: #171717; --dial-ink: #eeeeee;
+  --pearl-a: #cccccc; --pearl-b: #aaaaaa;
+  --ribbon: #555555; --ribbon-dark: #222222; --ribbon-light: #888888;
+}
+.stage[data-color-mode="achromatic"] .sculpture { filter: grayscale(1); }
+.stage[data-material="black-pearl"] { --metal-mid: #777777; --enamel-light: #666666; }
+.stage[data-material="smoked-platinum"] { --metal-mid: #999999; --metal-dark: #333333; --enamel-light: #777777; }
+.stage[data-material="carbon-foil"] { --metal-light: #ffffff; --metal-mid: #999999; --metal-dark: #131313; --enamel: #131313; }
+.stage[data-material="obsidian-lacquer"] { --metal-mid: #666666; --metal-dark: #080808; --enamel: #080808; --enamel-light: #444444; }
+.stage[data-material="graphite-silk"] { --metal-light: #dddddd; --metal-mid: #777777; --enamel-light: #444444; }
+.stage:is([data-material="black-pearl"],[data-material="graphite-silk"]) .reflection { opacity: calc(var(--shine-strength) * .25); }
+@media (forced-colors: active) {
+  .stage[data-color-mode="achromatic"] {
+    --metal-light: Canvas; --metal-mid: Canvas; --metal-dark: CanvasText;
+    --enamel: Canvas; --enamel-light: Canvas; --dial-ink: CanvasText; --engraving: CanvasText;
+  }
+  .stage[data-color-mode="achromatic"] .sculpture { filter: none; }
+}

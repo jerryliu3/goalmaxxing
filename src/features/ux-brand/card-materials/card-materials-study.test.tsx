@@ -82,7 +82,7 @@ describe("card material comparison", () => {
   it("lets keyboard users pose and restore each new premium card", async () => {
     const user = userEvent.setup();
     render(<CardMaterialsStudy />);
-    for (const name of ["Pearl Reserve", "Ruby Cabochon", "Sapphire Prism", "Platinum Mirror"]) {
+    for (const name of ["Pearl Reserve", "Ruby Cabochon", "Sapphire Prism", "Platinum Mirror", "Black Pearl", "Smoked Platinum", "Carbon Foil", "Obsidian Lacquer", "Graphite Silk"]) {
       const region = screen.getByRole("region", { name });
       expect(within(region).getByRole("article", { name: "Goal card preview" })).toHaveClass("tempo-card");
       const tilt = within(region).getByRole("button", { name: `Tilt ${name}` });
@@ -144,6 +144,49 @@ describe("card material comparison", () => {
     await user.click(screen.getByRole("checkbox", { name: "Still mode" }));
     for (const button of screen.getAllByRole("button", { name: /^Tilt / })) expect(button).toBeDisabled();
     expect(screen.getByRole("combobox", { name: "Material" })).toHaveDisplayValue("Sapphire Prism");
+  });
+
+  it("keeps dark editions achromatic while sample content and completion change", async () => {
+    const user = userEvent.setup();
+    render(<CardMaterialsStudy />);
+    for (const sample of ["0", "1", "2"]) {
+      await user.selectOptions(screen.getByRole("combobox", { name: "Sample goal" }), sample);
+      for (const material of MATERIALS.filter(item => "colorMode" in item)) {
+        expect(screen.getByRole("link", { name: material.name })).toHaveAttribute("href", `#${material.id}`);
+        const region = screen.getByRole("region", { name: material.name });
+        const card = within(region).getByRole("article", { name: "Goal card preview" });
+        const stage = card.closest<HTMLElement>("[data-material]")!;
+        expect(stage).toHaveAttribute("data-color-mode", "achromatic");
+        expect(stage.style.getPropertyValue("--material-color")).toBe("#a3a3a3");
+        expect(card.style.getPropertyValue("--goal-color")).toBe("#a3a3a3");
+        expect(stage.querySelector("[data-card-solid]")).not.toBeNull();
+      }
+    }
+    await user.click(screen.getByRole("checkbox", { name: "Completed goal" }));
+    for (const material of MATERIALS.filter(item => "colorMode" in item)) {
+      const region = screen.getByRole("region", { name: material.name });
+      expect(within(region).getByText("A goal you accomplished")).toBeInTheDocument();
+      expect(within(region).getByRole("article")).toHaveAttribute("aria-label", "A little more room for the things that make me feel like myself. goal card");
+    }
+  });
+
+  it("offers dark editions across application and object formats with neutral optical inputs", async () => {
+    const user = userEvent.setup();
+    render(<CardMaterialsStudy />);
+    for (const view of ["02 In the app", "03 Trophies & objects"]) {
+      await user.click(screen.getByRole("tab", { name: view }));
+      await user.selectOptions(screen.getByRole("combobox", { name: "Category color" }), "1");
+      for (const material of MATERIALS.filter(item => "colorMode" in item)) {
+        await user.selectOptions(screen.getByRole("combobox", { name: "Material" }), String(MATERIALS.indexOf(material)));
+        expect(screen.getByRole("combobox", { name: "Material" })).toHaveDisplayValue(material.name);
+        const stages = document.querySelectorAll<HTMLElement>(`[data-material="${material.id}"]`);
+        expect(stages).toHaveLength(4);
+        for (const stage of stages) {
+          expect(stage).toHaveAttribute("data-color-mode", "achromatic");
+          expect(stage.style.getPropertyValue("--material-color")).toBe("#a3a3a3");
+        }
+      }
+    }
   });
 
 });
