@@ -115,7 +115,7 @@ export function CalendarDayPreviewList<
   const [threadGoalId, setThreadGoalId] = useState<string | null>(null);
   const [thread, setThread] = useState<{
     height: number;
-    segments: Array<{ x1: number; y1: number; x2: number; y2: number }>;
+    paths: string[];
   } | null>(null);
   useLayoutEffect(() => {
     const root = listRef.current;
@@ -127,29 +127,32 @@ export function CalendarDayPreviewList<
     const rows = [...root.querySelectorAll<HTMLElement>("[data-plan-goal-id]")];
     const focusRows = rows.filter((row) => row.dataset.planGoalId === threadGoalId);
     const rootRect = root.getBoundingClientRect();
-    const center = (node: HTMLElement) => {
+    const anchor = (node: HTMLElement) => {
       const mark = node.querySelector<HTMLElement>("[data-plan-link-mark]") ?? node;
       const rect = mark.getBoundingClientRect();
       return {
-        x: rect.left + rect.width / 2 - rootRect.left + root.scrollLeft,
+        x: rect.right - rootRect.left + root.scrollLeft,
         y: rect.top + rect.height / 2 - rootRect.top + root.scrollTop,
       };
     };
-    const segments = focusRows.flatMap((from) => {
-      const start = center(from);
+    const paths = focusRows.flatMap((from) => {
+      const start = anchor(from);
       return rows.flatMap((to) => {
         const goalId = to.dataset.planGoalId;
         if (!goalId || !related.has(goalId)) return [];
-        const end = center(to);
-        return [{ x1: start.x, y1: start.y, x2: end.x, y2: end.y }];
+        const end = anchor(to);
+        const bulge = Math.max(start.x, end.x) + 18;
+        return [`M ${start.x} ${start.y} C ${bulge} ${start.y}, ${bulge} ${end.y}, ${end.x} ${end.y}`];
       });
     });
-    setThread(segments.length > 0 ? { height: root.scrollHeight, segments } : null);
-  }, [entries, links, threadGoalId]);
+    setThread(paths.length > 0 ? { height: root.scrollHeight, paths } : null);
+    // Re-measure once the right gutter is in the layout. The boolean stays
+    // stable after that, so path updates do not measure again.
+  }, [entries, links, threadGoalId, thread !== null]);
   return (
     <div
       ref={listRef}
-      className={`relative overflow-x-hidden [&>svg+*]:border-t-0 ${
+      className={`relative overflow-x-hidden [&>svg+*]:border-t-0 ${thread ? "pr-7" : ""} ${
         expanded
           ? "divide-y"
           : "max-h-44 space-y-1.5 overflow-y-auto overscroll-y-auto text-xs [touch-action:pan-y] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
@@ -161,16 +164,8 @@ export function CalendarDayPreviewList<
           height={thread.height}
           aria-hidden="true"
         >
-          {thread.segments.map((segment, index) => (
-            <line
-              key={`${segment.x1}-${segment.y1}-${segment.x2}-${segment.y2}-${index}`}
-              x1={segment.x1}
-              y1={segment.y1}
-              x2={segment.x2}
-              y2={segment.y2}
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
+          {thread.paths.map((path) => (
+            <path key={path} d={path} className={styles.linkThread} />
           ))}
         </svg>
       ) : null}
