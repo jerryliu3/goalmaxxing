@@ -6,10 +6,7 @@ import type {
   PlannerDayDetailEntry,
 } from "@/features/planner/calendar-surface.types";
 import type { MoveSourceCandidate } from "@/features/planner/planner-move-source-options";
-import type {
-  PlannerGoalLinkSummary,
-  PlannerWorkUnit,
-} from "@cadence/shared/planner/context";
+import type { PlannerWorkUnit } from "@cadence/shared/planner/context";
 
 export function useCalendarSurfaceDayEntryViews({
   focusedDay,
@@ -74,7 +71,6 @@ export function useCalendarSurfaceSelectedEventState({
   effectiveDraftItemEdits,
   draftWindowUnitByEntryKey,
   effectiveSelectedDay,
-  linkedTargetIndexes,
 }: {
   selectedEventEntryKey: string | null;
   entryByKey: Map<string, PlannerDayDetailEntry>;
@@ -88,9 +84,6 @@ export function useCalendarSurfaceSelectedEventState({
   >;
   draftWindowUnitByEntryKey: Map<string, PlannerWorkUnit>;
   effectiveSelectedDay: string | null;
-  linkedTargetIndexes: {
-    linksBySourceGoalId: Map<string, PlannerGoalLinkSummary[]>;
-  };
 }) {
   const selectedEventEntry = selectedEventEntryKey
     ? entryByKey.get(selectedEventEntryKey) ?? null
@@ -112,22 +105,12 @@ export function useCalendarSurfaceSelectedEventState({
       : selectedEventDraftEdit?.scheduledTimeOverride ??
         selectedEventBaselineUnit?.scheduledTimeOverride ??
         "";
-  const selectedEventLinkedTargets = useMemo(
-    () =>
-      selectedEventEntry
-        ? linkedTargetIndexes.linksBySourceGoalId.get(
-            selectedEventEntry.originalGoalId
-          ) ?? []
-        : [],
-    [linkedTargetIndexes.linksBySourceGoalId, selectedEventEntry]
-  );
 
   return {
     selectedEventEntry,
     selectedEventBaselineUnit,
     selectedEventDraftScheduledDate,
     selectedEventDraftTimeInputValue,
-    selectedEventLinkedTargets,
   };
 }
 

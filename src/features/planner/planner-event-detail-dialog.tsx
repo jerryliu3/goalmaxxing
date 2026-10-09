@@ -1,7 +1,5 @@
 "use client";
 
-import type { PlannerGoalLinkSummary } from "@cadence/shared/planner/context";
-
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 
 import { GoalProgressCard } from "@/features/goals/goal-progress-card";
@@ -18,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import Link from "next/link";
 import { getEntryDraftDiffSummary, isEntryCredited } from "@/features/planner/calendar-format";
-import { LinkedTargetsNote } from "@/features/planner/linked-targets-note";
 import type { PlannerDayDetailEntry } from "@/features/planner/calendar-surface.types";
 import { QuestFact, WorkQuestCard } from "@/features/planner/work-quest-card";
 import {
@@ -45,11 +42,9 @@ export interface PlannerEventDetailDialogCallbacks {
 
 interface PlannerEventDetailDialogProps {
   selectedEventEntry: PlannerDayDetailEntry | null;
-  selectedEventLinkedTargets: PlannerGoalLinkSummary[];
   selectedEventGoal: Goal | null;
   selectedEventPresentation: ChecklistGoalPresentation | null;
   selectedEventProgress?: ProgressContextSummary | null;
-  goalTitles: Record<string, string>;
   selectedEventBaselineUnit:
     | {
         effectiveScheduledLocalTime?: string | null;
@@ -73,11 +68,9 @@ interface PlannerEventDetailDialogProps {
 
 export function PlannerEventDetailDialog({
   selectedEventEntry,
-  selectedEventLinkedTargets,
   selectedEventGoal,
   selectedEventPresentation,
   selectedEventProgress,
-  goalTitles,
   selectedEventBaselineUnit,
   selectedEventDraftScheduledDate,
   selectedEventDraftTimeInputValue,
@@ -217,12 +210,6 @@ export function PlannerEventDetailDialog({
         trailingNav={trailingNav}
       >
         <div className="min-w-0 space-y-2 text-sm">
-          {selectedEventEntry.hasLinkedTargets ? (
-            <LinkedTargetsNote
-              linkedTargets={selectedEventLinkedTargets}
-              goalTitles={goalTitles}
-            />
-          ) : null}
           {draftDiffSummary ? (
             <p className="text-sm text-muted-foreground">{draftDiffSummary}</p>
           ) : null}

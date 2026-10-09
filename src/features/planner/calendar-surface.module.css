@@ -108,6 +108,13 @@
   transition: none;
 }
 
+.linkThreadHalo {
+  fill: none;
+  stroke: var(--background);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
 .linkThread {
   fill: none;
   stroke: currentColor;

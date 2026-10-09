@@ -406,7 +406,6 @@ export function CalendarSurface({
     saveAvailability,
     viewWindow,
     eligibilityNotices,
-    linkedTargetIndexes,
   } = usePlannerCalendarModel({
     context,
     draftPreview,
@@ -526,14 +525,12 @@ export function CalendarSurface({
     selectedEventBaselineUnit,
     selectedEventDraftScheduledDate,
     selectedEventDraftTimeInputValue,
-    selectedEventLinkedTargets,
   } = useCalendarSurfaceSelectedEventState({
     selectedEventEntryKey,
     entryByKey,
     effectiveDraftItemEdits,
     draftWindowUnitByEntryKey,
     effectiveSelectedDay,
-    linkedTargetIndexes,
   });
 
   const {
@@ -1239,7 +1236,6 @@ export function CalendarSurface({
     setMoveDialogSourceEntryKey,
     submitMoveDialog,
     selectedEventEntry,
-    selectedEventLinkedTargets,
     selectedEventBaselineUnit,
     selectedEventDraftScheduledDate,
     selectedEventDraftTimeInputValue,

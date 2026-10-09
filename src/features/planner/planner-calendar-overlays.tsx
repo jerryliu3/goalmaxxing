@@ -1,7 +1,5 @@
 "use client";
 
-import type { PlannerGoalLinkSummary } from "@cadence/shared/planner/context";
-
 import type { ProgressContextSummary } from "@cadence/shared/goals/progress-context";
 
 import type { ReactNode } from "react";
@@ -59,11 +57,9 @@ export interface PlannerCalendarOverlaysProps {
   onMoveDialogCancel: () => void;
   onMoveDialogSubmit: () => void;
   selectedEventEntry: PlannerDayDetailEntry | null;
-  selectedEventLinkedTargets: PlannerGoalLinkSummary[];
   selectedEventGoal: Goal | null;
   selectedEventPresentation: ChecklistGoalPresentation | null;
   selectedEventProgress?: ProgressContextSummary | null;
-  goalTitles: Record<string, string>;
   selectedEventBaselineUnit:
     | {
         effectiveScheduledLocalTime?: string | null;
@@ -125,11 +121,9 @@ export function PlannerCalendarOverlays({
   onMoveDialogCancel,
   onMoveDialogSubmit,
   selectedEventEntry,
-  selectedEventLinkedTargets,
   selectedEventGoal,
   selectedEventPresentation,
   selectedEventProgress,
-  goalTitles,
   selectedEventBaselineUnit,
   selectedEventDraftScheduledDate,
   selectedEventDraftTimeInputValue,
@@ -203,11 +197,9 @@ export function PlannerCalendarOverlays({
 
           <PlannerEventDetailDialog
             selectedEventEntry={selectedEventEntry}
-            selectedEventLinkedTargets={selectedEventLinkedTargets}
             selectedEventGoal={selectedEventGoal}
             selectedEventPresentation={selectedEventPresentation}
         selectedEventProgress={selectedEventProgress}
-            goalTitles={goalTitles}
             selectedEventBaselineUnit={selectedEventBaselineUnit}
             selectedEventDraftScheduledDate={selectedEventDraftScheduledDate}
             selectedEventDraftTimeInputValue={selectedEventDraftTimeInputValue}
