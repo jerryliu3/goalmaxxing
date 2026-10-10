@@ -6,6 +6,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import { useMediaQuery } from "@/lib/ui/use-media-query";
 import {
   CalendarMonthDayCell,
   COMPACT_MONTH_MAX_VISIBLE_GOALS,
@@ -144,6 +145,10 @@ export function usePlannerCalendarDayCellRenderer({
   visibleCells,
   dayPreviewInteractions,
 }: UsePlannerCalendarDayCellRendererArgs) {
+  const portraitPhone = useMediaQuery(
+    "(max-width: 767px) and (orientation: portrait)"
+  );
+  const compactMonth = viewMode === "month" && portraitPhone && !expandedMonthRows;
   const {
     renderTaskComposer,
     clearHoverPreviewTimer,
@@ -195,7 +200,8 @@ export function usePlannerCalendarDayCellRenderer({
         <CalendarMonthDayCell
           key={`${viewMode}-${cell.date}`}
           day={cell.date}
-          taskComposer={renderTaskComposer?.(cell.date)}
+          compactMonth={compactMonth}
+          taskComposer={compactMonth ? null : renderTaskComposer?.(cell.date)}
           inMonth={cell.inMonth}
           monthContextLabel={monthContextLabel}
           isToday={isToday}
@@ -392,6 +398,7 @@ export function usePlannerCalendarDayCellRenderer({
     },
     [
       renderTaskComposer,
+      compactMonth,
       calendarToday,
       canMutateEntryOnDay,
       clearHoverPreviewCloseTimer,

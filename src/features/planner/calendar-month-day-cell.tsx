@@ -2,6 +2,7 @@
 
 import { format, parse } from "date-fns";
 import { Check } from "lucide-react";
+import { CalendarMonthMapSummary } from "@/features/planner/calendar-month-map-summary";
 import { LinkedGoalMarks } from "@/features/planner/linked-goal-marks";
 import { Fragment, useRef, type PointerEvent, type ReactNode } from "react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
@@ -75,6 +76,7 @@ interface CalendarMonthDayCellProps<
 > {
   day: string;
   taskComposer?: ReactNode;
+  compactMonth?: boolean;
   inMonth: boolean;
   monthContextLabel?: string | null;
   isToday: boolean;
@@ -148,6 +150,7 @@ export function CalendarMonthDayCell<
 >({
   day,
   taskComposer,
+  compactMonth = false,
   inMonth,
   monthContextLabel = null,
   isToday,
@@ -610,6 +613,7 @@ export function CalendarMonthDayCell<
           aria-label={ariaLabel}
           aria-current={isToday ? "date" : undefined}
           aria-pressed={isSelected}
+          data-month-map={compactMonth}
           data-no-swipe="true"
           data-day-cell="true"
           data-day={day}
@@ -636,45 +640,62 @@ export function CalendarMonthDayCell<
               </span>
             ) : null}
           </div>
-          {taskComposer}
-          {hasVisibleContent ? (
-            <div className="space-y-1.5">
-              <PlannerSortableDayList
-                day={day}
-                surface="calendar"
-                entryKeys={visibleEntries.map((entry) => entry.key)}
-              >
-                {visibleEntries.map((entry, entryIndex) =>
-                  renderEntry(entry, entryIndex)
-                )}
-              </PlannerSortableDayList>
-              {visibleCompletionFactMarkers.map((marker) => {
-                const statusCopy =
-                  marker.scheduledDate && marker.scheduledDate !== day
-                    ? `Marked done here, currently credited from the ${marker.scheduledDate} scheduled session.`
-                    : "Marked done on this date.";
-                return (
-                <div
-                  key={`completion-fact-${marker.key}`}
-                  className={cn(styles.sessionTile, "border border-primary/15 bg-primary/5 text-foreground")}
-                  aria-label={`${marker.goalTitle}. ${statusCopy}`}
-                >
-                  <Check className="size-3 shrink-0" aria-hidden="true" />
-                  <CompletionTitle completed treatment="quiet" className="truncate">{marker.goalTitle}</CompletionTitle>
-                </div>
-                );
-              })}
-              {partnerCompletionFactMarkers.map((marker) => (
-                <CalendarPartnerChip
-                  key={`completion-fact-${marker.key}`}
-                  title={marker.goalTitle}
-                  completed
-                />
-              ))}
-              {monthOverflowLabel}
-            </div>
+          {compactMonth ? (
+            <CalendarMonthMapSummary
+              entries={entriesForDay}
+              recordedCount={completionFactMarkersForDay.length}
+              isEntryCredited={(entry) =>
+                overlayCurrentlyCredited(
+                  isEntryCredited(entry),
+                  optimisticCompletionFacts,
+                  entry.originalGoalId,
+                  day
+                )
+              }
+            />
           ) : (
-            <div>{monthOverflowLabel}</div>
+            <>
+              {taskComposer}
+              {hasVisibleContent ? (
+                <div className="space-y-1.5">
+                  <PlannerSortableDayList
+                    day={day}
+                    surface="calendar"
+                    entryKeys={visibleEntries.map((entry) => entry.key)}
+                  >
+                    {visibleEntries.map((entry, entryIndex) =>
+                      renderEntry(entry, entryIndex)
+                    )}
+                  </PlannerSortableDayList>
+                  {visibleCompletionFactMarkers.map((marker) => {
+                    const statusCopy =
+                      marker.scheduledDate && marker.scheduledDate !== day
+                        ? `Marked done here, currently credited from the ${marker.scheduledDate} scheduled session.`
+                        : "Marked done on this date.";
+                    return (
+                    <div
+                      key={`completion-fact-${marker.key}`}
+                      className={cn(styles.sessionTile, "border border-primary/15 bg-primary/5 text-foreground")}
+                      aria-label={`${marker.goalTitle}. ${statusCopy}`}
+                    >
+                      <Check className="size-3 shrink-0" aria-hidden="true" />
+                      <CompletionTitle completed treatment="quiet" className="truncate">{marker.goalTitle}</CompletionTitle>
+                    </div>
+                    );
+                  })}
+                  {partnerCompletionFactMarkers.map((marker) => (
+                    <CalendarPartnerChip
+                      key={`completion-fact-${marker.key}`}
+                      title={marker.goalTitle}
+                      completed
+                    />
+                  ))}
+                  {monthOverflowLabel}
+                </div>
+              ) : (
+                <div>{monthOverflowLabel}</div>
+              )}
+            </>
           )}
         </div>
       )}

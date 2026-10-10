@@ -327,7 +327,10 @@ export function PlannerCalendarBoard({
                     {focusedWeekCells.map(renderCalendarDayCell)}
                   </ol>
                 ) : (
-                  <div className="w-full">
+                  <div
+                    className={`w-full ${styles.monthCalendar}`}
+                    data-month-expanded={expandedMonthRows}
+                  >
                     {shouldShowAdjacentMonthToggle({
                       hasAdjacentWeeks: hasPreviousMonthWeeks,
                       adjacentShown: showPreviousMonth,
@@ -395,15 +398,15 @@ export function PlannerCalendarBoard({
                                   previous: showPreviousMonth,
                                   next: showNextMonth,
                                 });
+                                // Unshown weeks have no interaction surface. Do not mount
+                                // their cells or draggable work just to hide them with CSS.
+                                if (!visible) return null;
                                 return (
                                   <div
                                     key={`month-week-${week[0]?.date ?? weekIndex}`}
-                                    className={visible ? "contents" : "hidden"}
-                                    aria-hidden={!visible}
+                                    className="contents"
                                     data-month-week-band={band}
-                                    data-month-week-visible={
-                                      visible ? "true" : "false"
-                                    }
+                                    data-month-week-visible="true"
                                   >
                                     {week.map((cell) => (
                                       <Fragment key={cell.date}>
