@@ -32,13 +32,19 @@ export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: { 
     onOpenChange?.(Boolean(enabled && account && phase !== "closed"));
   }, [enabled, account?.loading, account?.error, phase, onOpenChange]);
   useEffect(() => {
-    const setup = () => { if (!progress || account?.error) { setPhase(null); setError(null); account?.reload(); return; } setReplay(Boolean(progress.completed_at)); setPhase("setup"); setError(null); };
+    const setup = () => {
+      setReplay(!progress || Boolean(progress.completed_at));
+      setPhase("setup");
+      setError(null);
+      if (!progress || account?.error) account?.reload();
+    };
     const tabs = () => { if (!progress?.completed_at) return; setReplay(true); setPhase("tabs"); setError(null); };
     window.addEventListener(JOURNEY_INTRO_OPEN_EVENT, setup);
     window.addEventListener(TAB_TOUR_OPEN_EVENT, tabs);
     return () => { window.removeEventListener(JOURNEY_INTRO_OPEN_EVENT, setup); window.removeEventListener(TAB_TOUR_OPEN_EVENT, tabs); };
   }, [progress, account?.error, account?.reload]);
   if (!enabled || !account || account.loading || phase === "closed" || (!phase && !account.error)) return null;
+  if (phase === "setup" && !progress && !account.error) return null;
   const save = async (action: Parameters<typeof account.save>[0], next: () => void) => {
     if (saving) return;
     setSaving(true); setError(null);

@@ -68,6 +68,24 @@ describe("setup and optional tours", () => {
     expect(await screen.findByRole("button", { name: "Try again" })).toBeInTheDocument();
   });
 
+  it("opens requested Settings replay after a successful load retry", async () => {
+    mocks.error = "Getting started could not be loaded.";
+    mocks.progress.completed_at = "2026-10-08T12:00:00Z";
+    mocks.progress.tours["app.tabs"] = "skipped";
+    const onOpenChange = vi.fn();
+    const { rerender } = render(
+      <JourneyIntroOverlay userId="user-1" onOpenChange={onOpenChange} />
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Continue to app" }));
+    act(() => requestJourneyIntroOpen());
+    expect(mocks.reload).toHaveBeenCalledTimes(1);
+    mocks.error = null;
+    rerender(<JourneyIntroOverlay userId="user-1" onOpenChange={onOpenChange} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Finish replay" }));
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+
   it("retains Retry when onboarding is unavailable", async () => {
     mocks.error = "Getting started could not be loaded.";
     render(<JourneyIntroOverlay userId="user-1" />);
