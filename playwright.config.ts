@@ -10,9 +10,12 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
+  // Stop a broken CI run after a small set of failures instead of repeating
+  // the same regression across every browser. Healthy runs keep full coverage.
+  maxFailures: process.env.CI ? 5 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI
-    ? [["list"], ["html", { open: "never" }]]
+    ? [["list"], ["github"], ["html", { open: "never" }]]
     : [["list"]],
   use: {
     baseURL,
