@@ -323,10 +323,6 @@ function SettingsSectionEditor({
     return <DigestSettings />;
   }
 
-  if (settingsSection === "appearance") {
-    return <AppearanceSettings />;
-  }
-
   if (settingsSection === "integrations") {
     return <ExternalAppConnections />;
   }
