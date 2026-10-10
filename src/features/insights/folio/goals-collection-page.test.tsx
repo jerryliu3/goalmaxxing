@@ -25,7 +25,7 @@ function openBook(name: string) {
 
 function loadCollection() {
   const goal = buildGoal({ title: "Write six chapters", target_basis: "lifetime", target_count: 6, reward_text: "A weekend away" });
-  mocks.data.mockReturnValue({ loading: false, loadError: null, reload: vi.fn(), state: { userId: "user-1", goals: [goal], progress: { summaries: [summary(goal.id, { creditedUnitCount: 2, expectedUnitCount: 6, placementTerminal: false, lifecycle: "active", outcome: "in_progress" })] } } });
+  mocks.data.mockReturnValue({ loading: false, loadError: null, reload: vi.fn(), state: { userId: "user-1", asOfDate: "2026-10-08", goals: [goal], progress: { summaries: [summary(goal.id, { creditedUnitCount: 2, expectedUnitCount: 6, placementTerminal: false, lifecycle: "active", outcome: "in_progress" })] } } });
 }
 
 describe("goal library journey", () => {
@@ -63,7 +63,7 @@ describe("goal library journey", () => {
     const ended = buildGoal({ owner_id: "user-1", start_date: "2026-08-01", end_date: "2026-09-30" });
     const older = buildGoal({ id: "older-goal", owner_id: "user-1", title: "Read 12 books", start_date: "2025-03-01", end_date: "2026-02-01" });
     mocks.data.mockReturnValue({ loading: false, loadError: null, reload: vi.fn(), state: {
-      userId: "user-1", goals: [ended, older], progress: { summaries: [summary(ended.id), summary(older.id)] },
+      userId: "user-1", asOfDate: "2026-10-08", goals: [ended, older], progress: { summaries: [summary(ended.id), summary(older.id)] },
     } });
     render(<GoalsCollectionPage />);
     expect(screen.getByRole("link", { name: "New Goal" })).toBeInTheDocument();
@@ -95,7 +95,7 @@ describe("goal library journey", () => {
     const ended = buildGoal({ owner_id: "user-1", title: "Run a 10k", end_date: "2026-09-30" });
     const archived = buildGoal({ id: "archived-goal", owner_id: "user-1", title: "Learn the cello", archived_at: "2026-09-15T00:00:00Z", end_date: "2027-01-01" });
     mocks.data.mockReturnValue({ loading: false, loadError: null, reload: vi.fn(), state: {
-      userId: "user-1", goals: [ended, archived],
+      userId: "user-1", asOfDate: "2026-10-08", goals: [ended, archived],
       progress: { summaries: [summary(ended.id), summary(archived.id, { lifecycle: "archived", outcome: "in_progress" })] },
     } });
     render(<GoalsCollectionPage />);
@@ -115,7 +115,7 @@ describe("goal library journey", () => {
       loadError: null,
       reload: vi.fn(),
       state: {
-        userId: "user-1",
+        userId: "user-1", asOfDate: "2026-10-08",
         goals: [goal],
         progress: {
           summaries: [summary(goal.id, {
@@ -142,7 +142,7 @@ describe("goal library journey", () => {
     navigation.pathname = "/demo/goals";
     const ended = buildGoal({ owner_id: "user-1", end_date: "2026-09-30" });
     mocks.data.mockReturnValue({ loading: false, loadError: null, reload: vi.fn(), state: {
-      userId: "user-1", goals: [ended], progress: { summaries: [summary(ended.id)] },
+      userId: "user-1", asOfDate: "2026-10-08", goals: [ended], progress: { summaries: [summary(ended.id)] },
     } });
     render(<GoalsCollectionPage />);
     fireEvent.click(within(openBook("Open August 2026, 1 goal")).getByRole("button", { name: "See details" }));

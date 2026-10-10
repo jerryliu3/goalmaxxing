@@ -176,6 +176,7 @@ describe("TempoGoalFields creation flow", () => {
     await openDetails();
 
     expect(await screen.findByRole("heading", { name: "A few more settings." })).toBeInTheDocument();
+    await waitFor(() => expect(previewScene()).toHaveAttribute("data-back", "true"));
     expect(screen.queryByRole("textbox", { name: /^Your reward/ })).toBeNull();
     expect(screen.getByRole("button", { name: /Why it matters/ })).toBeVisible();
     expect(screen.queryByRole("button", { name: /Your reward/ })).toBeNull();

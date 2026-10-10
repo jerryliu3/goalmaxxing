@@ -43,7 +43,7 @@ export function CardsConcept({ variant }: { variant: number }) {
           ))}
         </div>
         <p className="rf-muted mt-6">
-          The material changes with progress. Your goal's name and completion
+          The material changes with progress. Your goal&apos;s name and completion
           count have a stable home.
         </p>
       </div>
@@ -218,7 +218,7 @@ export function CopyConcept() {
           completion history are still available.
         </p>
         <p className="mt-6">
-          When available, you can replay today's check-in here and choose
+          When available, you can replay today&apos;s check-in here and choose
           whether to show the opening prompt.
         </p>
       </StudyDialog>

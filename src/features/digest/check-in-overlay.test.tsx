@@ -110,13 +110,14 @@ describe("CheckInOverlay", () => {
     vi.clearAllMocks();
   });
 
-  it("does not auto-open before onboarding is finished", async () => {
+  it("does not auto-open before onboarding is finished", () => {
     render(<CheckInOverlay />);
-    await waitFor(() => expect(mocks.getJson).toHaveBeenCalled());
+    expect(mocks.getJson).not.toHaveBeenCalled();
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("stays hidden when check-ins are disabled", async () => {
+    finishOnboarding();
     mocks.getJson.mockRejectedValue(new Error("digest_disabled"));
     render(<CheckInOverlay />);
     await waitFor(() => expect(mocks.getJson).toHaveBeenCalled());

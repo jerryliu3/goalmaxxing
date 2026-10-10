@@ -94,7 +94,7 @@ describe("InsightsLedgerPanel", () => {
       );
     });
 
-    expect(renderedText(root)).toContain("Aggregate of selected goals");
+    expect(renderedText(root)).toContain("All selected goals together");
     expect(
       root.root.findAll(
         (node: ReactTestInstance) => String(node.type) === "pressable"
@@ -110,7 +110,7 @@ describe("InsightsLedgerPanel", () => {
       liftButton.props.onPress();
     });
 
-    expect(renderedText(root)).toContain("Hold a past or today cell");
+    expect(renderedText(root)).toContain("Hold a day to log or remove a completion");
     const pastDay = root.root.find(
       (node: ReactTestInstance) =>
         String(node.type) === "pressable" &&

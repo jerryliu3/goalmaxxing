@@ -2700,7 +2700,6 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
-          profile_card_configured: boolean
           blackout_ranges: Json
           calendar_feed_token_version: number
           created_at: string
@@ -2710,6 +2709,7 @@ export type Database = {
           notification_preferences: Json
           onboarding_completed_at: string | null
           planner_primary_tab: string
+          profile_card_configured: boolean
           rest_weekdays: number[]
           social_activity_visible: boolean
           timezone: string
@@ -2720,7 +2720,6 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
-          profile_card_configured?: boolean
           blackout_ranges?: Json
           calendar_feed_token_version?: number
           created_at?: string
@@ -2730,6 +2729,7 @@ export type Database = {
           notification_preferences?: Json
           onboarding_completed_at?: string | null
           planner_primary_tab?: string
+          profile_card_configured?: boolean
           rest_weekdays?: number[]
           social_activity_visible?: boolean
           timezone?: string
@@ -2740,7 +2740,6 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
-          profile_card_configured?: boolean
           blackout_ranges?: Json
           calendar_feed_token_version?: number
           created_at?: string
@@ -2750,6 +2749,7 @@ export type Database = {
           notification_preferences?: Json
           onboarding_completed_at?: string | null
           planner_primary_tab?: string
+          profile_card_configured?: boolean
           rest_weekdays?: number[]
           social_activity_visible?: boolean
           timezone?: string
