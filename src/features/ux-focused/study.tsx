@@ -9,7 +9,8 @@ import { BASELINE_COMMIT, type FocusedStudy } from "./catalog";
 import { TeamBaseline } from "./team";
 import { TeamRound } from "./round/team";
 import { MonthRound, MonthBaseline } from "./round/month";
-import { LandingStudy, LandingBaseline } from "./landing";
+import { LandingBaseline } from "./landing";
+import { LandingRound } from "./round/landing";
 import { TrackerStudy, TrackerBaseline } from "./tracker";
 import { ProfileStudy, ProfileBaseline } from "./profile";
 import { CollectionStudy, CollectionBaseline } from "./collection";
@@ -26,7 +27,7 @@ function Proposal({ slug, variant }: { slug: string; variant: number }) {
   if (slug === "profile") return <ProfileStudy />;
   if (slug === "goal-collection") return <CollectionStudy />;
   if (slug === "phone-agenda") return <MonthRound variant={variant} />;
-  if (slug === "mobile-landing") return <LandingStudy variant={variant} />;
+  if (slug === "mobile-landing") return <LandingRound variant={variant} />;
   return <TeamRound variant={variant} />;
 }
 
@@ -138,7 +139,8 @@ export function FocusedStudyPage({
             </p>
           </div>
           <p className="fc-muted mb-5">
-            Fictional October 8 sample. All actions stay in memory. Baseline
+            Fictional October 8 sample. Sample mutations stay in memory.
+            Marketing conversion links open the existing product. Baseline
             panels reconstruct the relevant current source with the same sample;
             they are not screenshots. Phone width changes the canvas; dialogs
             use your browser viewport.

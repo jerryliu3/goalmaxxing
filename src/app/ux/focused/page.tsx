@@ -16,10 +16,11 @@ export default function FocusedIndex() {
             Concrete interactions.
           </h1>
           <p>
-            The new Team round starts from main at d33e11e9. Each study names
-            the exact change, shows the relevant existing structure, and makes
-            its tradeoff explicit. Fictional data; account actions are never
-            sent.
+            Nine new prototypes cover Team, mobile Month, and the mobile landing
+            page from main at d33e11e9. Earlier tracker, Profile and goal-search
+            studies remain below. Each study names the exact change, shows the
+            relevant existing structure, and makes its tradeoff explicit.
+            Fictional data; account actions are never sent.
           </p>
         </div>
         <div className="rf-grid">
