@@ -1418,7 +1418,7 @@ export function LandingPlannerPreview() {
               flight?.moveKey === activeMove ? (
                 <motion.div
                   data-moving-task={activeMove}
-                  className={`pointer-events-none absolute z-20 ${taskChipLayoutClassName} shadow-[0_10px_24px_rgba(37,99,235,0.25)] ${toneClassName(
+                  className={`${styles.monthPill} pointer-events-none absolute z-20 ${taskChipLayoutClassName} shadow-[0_10px_24px_rgba(37,99,235,0.25)] ${toneClassName(
                     activeMove === "past" ? tempoTask.tone : strengthTask.tone
                   )}`}
                   initial={{ x: 0, y: 0, scale: 1 }}
@@ -1434,10 +1434,13 @@ export function LandingPlannerPreview() {
                     minHeight: flight.height,
                   }}
                 >
-                  <span className="truncate">
+                  <span className={`${styles.label} truncate`}>
                     {activeMove === "past"
                       ? tempoTask.label
                       : strengthTask.label}
+                  </span>
+                  <span className={styles.symbol} aria-hidden="true">
+                    {landingCalendarSymbol(activeMove === "past" ? tempoTask.label : strengthTask.label)}
                   </span>
                 </motion.div>
               ) : null}
