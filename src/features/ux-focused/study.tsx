@@ -6,7 +6,8 @@ import { useUiStyle } from "@/components/brand/ui-style-provider";
 import { StudyThemeAssets } from "@/components/brand/study-theme-assets";
 import { Action, PreviewTheme } from "@/features/ux-refresh/primitives";
 import { BASELINE_COMMIT, type FocusedStudy } from "./catalog";
-import { TeamStudy, TeamBaseline } from "./team";
+import { TeamBaseline } from "./team";
+import { TeamRound } from "./round/team";
 import { MobileStudy, MobileBaseline } from "./mobile";
 import { LandingStudy, LandingBaseline } from "./landing";
 import { TrackerStudy, TrackerBaseline } from "./tracker";
@@ -26,7 +27,7 @@ function Proposal({ slug, variant }: { slug: string; variant: number }) {
   if (slug === "goal-collection") return <CollectionStudy />;
   if (slug === "phone-agenda") return <MobileStudy variant={variant} />;
   if (slug === "mobile-landing") return <LandingStudy variant={variant} />;
-  return <TeamStudy variant={variant} />;
+  return <TeamRound variant={variant} />;
 }
 
 export function FocusedStudyPage({
@@ -38,7 +39,7 @@ export function FocusedStudyPage({
 }) {
   const { styleId, options } = useUiStyle();
   const [theme, setTheme] = useState<ThemeId>(styleId);
-  const [compare, setCompare] = useState(true);
+  const [compare, setCompare] = useState(false);
   const [phone, setPhone] = useState(
     study.slug === "phone-agenda" || study.slug === "mobile-landing",
   );
@@ -62,11 +63,11 @@ export function FocusedStudyPage({
             <strong className="type-item">Why this is here</strong>
             <p>{study.evidence}</p>
             <a
-              href={`https://github.com/jerryliu3/goalmaxxing/blob/${BASELINE_COMMIT}/${study.source}`}
+              href={`https://github.com/jerryliu3/goalmaxxing/blob/${study.baselineCommit ?? BASELINE_COMMIT}/${study.source}`}
               target="_blank"
               rel="noreferrer"
             >
-              Source baseline · {BASELINE_COMMIT} ↗
+              Source baseline · {study.baselineCommit ?? BASELINE_COMMIT} ↗
             </a>
           </div>
           <div className="rf-toolbar mt-6">
@@ -76,7 +77,7 @@ export function FocusedStudyPage({
                   key={item.name}
                   prefetch={false}
                   aria-current={i === variant ? "page" : undefined}
-                  href={`/ux/focused/${study.slug}${i ? "?variant=b" : ""}`}
+                  href={`/ux/focused/${study.slug}${i ? `?variant=${String.fromCharCode(97 + i)}` : ""}`}
                 >
                   {String.fromCharCode(65 + i)} · {item.name}
                 </Link>
