@@ -53,4 +53,27 @@ describe("setup and optional tours", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(mocks.save).toHaveBeenLastCalledWith({ action: "tour", key: "planner.calendar", status: "skipped" });
   });
+  it("lets a failed onboarding load release the app without saving completion", async () => {
+    mocks.error = "Getting started could not be loaded.";
+    const onOpenChange = vi.fn();
+    const { rerender } = render(<JourneyIntroOverlay userId="user-1" onOpenChange={onOpenChange} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Continue to app" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    expect(mocks.save).not.toHaveBeenCalled();
+    rerender(<JourneyIntroOverlay userId="user-1" onOpenChange={onOpenChange} />);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    act(() => requestJourneyIntroOpen());
+    expect(mocks.reload).toHaveBeenCalledTimes(1);
+    expect(await screen.findByRole("button", { name: "Try again" })).toBeInTheDocument();
+  });
+
+  it("retains Retry when onboarding is unavailable", async () => {
+    mocks.error = "Getting started could not be loaded.";
+    render(<JourneyIntroOverlay userId="user-1" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Try again" }));
+    expect(mocks.reload).toHaveBeenCalledTimes(1);
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+
 });
