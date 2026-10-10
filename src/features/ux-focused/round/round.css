@@ -641,3 +641,405 @@
   min-width: 42rem;
   grid-template-columns: repeat(7, minmax(0, 1fr));
 }
+
+/* Three mobile-first marketing entrances; proof remains readable without animation. */
+.rd-landing {
+  padding: 0;
+}
+.rd-marketing-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.rd-marketing-nav .type-wordmark {
+  font-size: 19px;
+}
+.rd-editorial-hero,
+.rd-lesson-hero,
+.rd-chooser-hero {
+  padding: 40px 24px 28px;
+}
+.rd-landing h2 {
+  font-size: clamp(36px, 7cqi, 64px);
+  line-height: 1.07;
+  letter-spacing: -0.025em;
+  margin: 16px 0 22px;
+}
+.rd-landing h3.type-title {
+  font-size: clamp(28px, 5cqi, 42px);
+  margin: 16px 0;
+}
+.rd-editorial-hero {
+  background: var(--muted);
+}
+.rd-editorial-hero > .rd-landing-art {
+  margin-top: 40px;
+}
+.rd-landing-art {
+  max-width: 260px;
+  margin: 24px auto;
+}
+.rd-landing-art .rf-caption {
+  font-size: 14px;
+}
+.rd-conversion {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+.rd-conversion > a:not(.rd-app-link) {
+  flex: 1 1 140px;
+}
+.rd-app-link {
+  display: block;
+  width: 100%;
+  text-decoration: underline;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.rd-landing-chapter {
+  padding: 36px 24px;
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 32px;
+  align-items: start;
+}
+.rd-landing-chapter > header > p:last-child {
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+.rd-target-choice {
+  margin: 24px 0;
+}
+.rd-target-choice legend {
+  margin-bottom: 12px;
+}
+.rd-target-choice .rd-scopes {
+  margin-bottom: 8px;
+}
+.rd-target-choice small {
+  display: block;
+  font-size: 11px;
+  margin-top: 5px;
+}
+.rd-contract {
+  padding: 16px;
+  border-left: 2px solid var(--gm-selection-line);
+  background: var(--muted);
+  margin: 20px 0;
+}
+.rd-lesson-plan {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  background: var(--card);
+  color: var(--card-foreground);
+}
+.rd-lesson-plan h4 {
+  font-size: 19px;
+}
+.rd-lesson-plan ul {
+  margin-top: 16px;
+}
+.rd-lesson-plan li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+.rd-lesson-plan li[data-changed="true"] {
+  border-left: 2px dashed var(--primary);
+  padding-left: 10px;
+}
+.rd-lesson-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 32px;
+  flex-shrink: 0;
+}
+.rd-lesson-date small {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+.rd-lesson-date strong {
+  font-size: 23px;
+  line-height: 1.3;
+}
+.rd-lesson-title {
+  flex: 1;
+  min-width: 0;
+}
+.rd-lesson-title strong {
+  display: block;
+  line-height: 1.4;
+  font-size: 15px;
+}
+.rd-lesson-title small {
+  display: block;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  margin-top: 4px;
+}
+.rd-lesson-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+}
+.rd-lesson-move {
+  margin-top: 20px;
+}
+.rd-lesson-move > button {
+  white-space: normal;
+  height: auto;
+  min-height: 48px;
+  width: 100%;
+}
+.rd-lesson-review {
+  background: var(--muted);
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gm-selection-line);
+}
+.rd-lesson-review > p + p {
+  font-size: 13px;
+  margin: 8px 0 16px;
+}
+.rd-lesson-review .rf-actions > button {
+  flex: 1 1 120px;
+}
+.rd-record-receipt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--muted);
+  border-radius: var(--radius-lg);
+}
+.rd-record-receipt svg {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+.rd-horizon-proof {
+  margin: 28px 24px;
+}
+.rd-landing-chapter .rd-horizon-proof {
+  margin: 0;
+}
+.rd-horizon-proof h4 {
+  font-size: 20px;
+}
+.rd-horizon-detail {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--muted);
+  border-radius: var(--radius-md);
+}
+.rd-horizon-detail p {
+  font-size: 14px;
+  margin-top: 8px;
+}
+.rd-marketing-team {
+  margin: 28px 24px;
+}
+.rd-marketing-team h3 {
+  font-size: 28px;
+  margin: 16px 0;
+}
+.rd-marketing-team button {
+  width: 100%;
+}
+.rd-coach-proof {
+  margin: 28px 24px;
+  padding: 24px;
+  background: var(--muted);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+}
+.rd-landing-chapter .rd-coach-proof,
+.rd-guided-lesson .rd-coach-proof {
+  margin: 0 0 20px;
+}
+.rd-coach-proof blockquote {
+  margin: 16px 0;
+  padding: 16px;
+  background: var(--card);
+  color: var(--card-foreground);
+  border-radius: var(--radius-lg);
+}
+.rd-coach-answer {
+  border-left: 2px solid var(--primary);
+  padding: 0 0 0 16px;
+  margin-bottom: 16px;
+}
+.rd-coach-answer button {
+  margin-top: 16px;
+  white-space: normal;
+  min-height: 44px;
+  height: auto;
+}
+.rd-guided-lesson {
+  margin: 4px 24px 28px;
+  padding: 24px;
+  border: 1px solid var(--gm-selection-line);
+  background: var(--card);
+  border-radius: var(--radius-xl);
+}
+.rd-guided-lesson > header {
+  margin-bottom: 24px;
+}
+.rd-guided-lesson > button {
+  margin-top: 20px;
+}
+.rd-story-choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 24px 28px;
+}
+.rd-story-choices button {
+  text-align: left;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 110px;
+}
+.rd-story-choices button[aria-pressed="true"] {
+  background: var(--gm-selection);
+  color: var(--gm-selection-foreground);
+  border-color: var(--gm-selection-line);
+}
+.rd-story-choices small {
+  font-size: 12px;
+}
+.rd-chosen-story {
+  padding: 28px 24px;
+  border-block: 1px solid var(--border);
+  background: var(--muted);
+}
+.rd-chosen-art {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+}
+.rd-secondary-path {
+  padding: 32px 24px;
+  border-top: 1px solid var(--border);
+}
+.rd-secondary-path h3 {
+  font-size: 24px;
+}
+.rd-secondary-path p {
+  margin: 16px 0;
+}
+.rd-landing-details {
+  border-block: 1px solid var(--border);
+  padding: 36px 24px;
+}
+.rd-landing-details details {
+  border-top: 1px solid var(--border);
+}
+.rd-landing-details summary {
+  cursor: pointer;
+  padding: 16px 0;
+  min-height: 56px;
+}
+.rd-landing-details details > p {
+  color: var(--muted-foreground);
+  padding-bottom: 20px;
+  font-size: 14px;
+}
+.rd-privacy {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  margin-top: 20px;
+}
+.rd-landing-close {
+  text-align: center;
+  padding: 40px 24px;
+}
+.rd-marketing-footer {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.rd-marketing-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 13px;
+}
+@container (max-width: 600px) {
+  .rd-landing-chapter,
+  .rd-chosen-art {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .rd-story-choices {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rd-story-choices button {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 20px;
+    min-height: 80px;
+    gap: 6px 12px;
+  }
+  .rd-story-choices button small {
+    grid-row: 2;
+  }
+  .rd-story-choices svg {
+    grid-row: 1/3;
+    grid-column: 2;
+  }
+  .rd-guided-lesson {
+    padding: 20px 16px;
+  }
+}
+@container (max-width: 360px) {
+  .rd-marketing-nav {
+    padding: 14px;
+  }
+  .rd-marketing-nav .type-wordmark {
+    font-size: 17px;
+  }
+  .rd-editorial-hero,
+  .rd-lesson-hero,
+  .rd-chooser-hero,
+  .rd-landing-chapter,
+  .rd-chosen-story {
+    padding-inline: 18px;
+  }
+  .rd-guided-lesson,
+  .rd-story-choices,
+  .rd-marketing-team,
+  .rd-horizon-proof,
+  .rd-coach-proof {
+    margin-inline: 18px;
+  }
+  .rd-lesson-plan {
+    padding: 14px;
+  }
+  .rd-lesson-status {
+    max-width: 46px;
+  }
+}

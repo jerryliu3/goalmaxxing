@@ -50,3 +50,31 @@ Recommendation for discussion: A is the strongest default to explore for phone M
 - `/ux/focused/phone-agenda?variant=c` — C
 
 This shares a single local reducer across all alternatives and reuses the production shared `buildMonthCells` calendar utility. It does not replace the production planner or add duplicate planner mutations. Before adoption, wire the chosen presentation to the canonical planner session/projection, ownership, completion, linked-goal and recovery paths. Only visible presentation state belongs in these new components.
+
+## Mobile landing: three entrances into the same product truth
+
+These are full mobile page concepts, not just a headline and a miniature week. Each keeps readable product proof, optional interaction, account/demo/app entrances, feature explanations, a final CTA and the current Contact/Privacy/Terms destinations. All conversion links point to existing routes. No testimonials, fabricated usage metrics, automatic AI plan application or new subscription/pricing claims are introduced.
+
+| Option                  | First decision                 | Experience                                                                                                                                                       | Main cost                                                                                                    |
+| ----------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| A Editorial journey     | Scroll or start                | A real goal card leads into target, full-month orientation, adaptation, progress, partner support and coach proposal chapters                                    | Longest narrative; more scrolling. Useful as the default when visitors want to understand before trying.     |
+| B Product lesson        | Explore Shape / Adapt / Record | One consistent local plan survives step changes; targets change the example, coach proposals stage moves, Save is explicit, recorded progress uses hold controls | Participation exposes all states; starts readable and allows direct step access rather than a forced wizard. |
+| C Choose your intention | Rhythm / Project / Together    | Three meaningful goal stories with their own placed work, target, ownership and progress; switching changes the sample coherently                                | A choice before detailed proof. Best if visitors often mistake the product for a daily habit tracker.        |
+
+All examples use the same lesson reducer, actual goal-card renderer, production hold-completion control and shared Month calendar. Eight/twelve is an October running target, not a claim that all months contain exactly four weeks. The sample week shows two/three placements accordingly. Film examples use six October sessions; only a subset is shown. Monday is already recorded; past or present own sessions can be recorded and undone; future and partner work cannot. A saved move cannot be undone by an unsaved-change control. Reset example is explicitly separate.
+
+Coach text is a deterministic sample suggestion driven by the selected story. It never calls an AI service or changes the plan on arrival. Review stages the same move as the manual control and Save remains explicit. The broader explanations retain recurring rhythms, deadlines, units, milestones/rewards, eligible recovery review and privacy. They do not promise the Team rendezvous concept as an existing capability.
+
+Recommendation for discussion: A is the clearest default story. B is a strong optional interactive proof embedded after a concise hero. C earns its extra choice when versatility is the main positioning problem. These are hypotheses, not conversion findings.
+
+### Review routes
+
+- `/ux/focused/mobile-landing` — A
+- `/ux/focused/mobile-landing?variant=b` — B
+- `/ux/focused/mobile-landing?variant=c` — C
+
+## Scope and delivery
+
+The existing `/ux/focused` comparison/theme/reset framework is reused; A/B/C links resolve independently. New navigation uses registry selection roles and selected dates use day-selection roles; no palette/typeface values are introduced. Original Team/week-excerpt/landing studies and their obsolete journey tests are removed as their replacements land. Earlier tracker/Profile/goal-search concepts remain unchanged.
+
+The three PRs form a linear stack rooted on current main: Team and shared lab, full mobile Month, then mobile landing. Functional model and journey coverage is written as code. No test, typecheck, lint, build, browser verification or CI run is included. Production adoption is a later decision: choose a purpose and presentation, then connect that choice to the existing canonical services rather than shipping these fixture reducers.

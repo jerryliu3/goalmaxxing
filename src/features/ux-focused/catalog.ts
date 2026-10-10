@@ -80,27 +80,35 @@ export const FOCUSED_STUDIES: readonly FocusedStudy[] = [
   },
   {
     slug: "mobile-landing",
-    title: "Show the product at a readable size",
+    title: "A readable mobile product story",
     question:
-      "Can a phone visitor understand goal → plan → adjustment without deciphering a miniature desktop?",
+      "Which entrance helps a phone visitor understand a real goal, its plan, and the control they keep over changes?",
     evidence:
-      "Marketing was not included in the original browser audit. Current source places the planner overview below the hero. These are exploratory mobile narratives, not validated findings about conversion or the live landing page.",
+      "Marketing source uses the hero, planner preview, product tour, adaptive-planning/coach proof and feature narrative. This round recomposes that story for a phone without claiming conversion evidence or a fresh browser audit.",
     source: "src/components/landing/landing-page.tsx",
-    task: "Follow one running goal into its week. Move Thursday's run to Friday and save the example. In B, also change the rhythm and inspect the different plan.",
+    baselineCommit: "d33e11e9",
+    task: "Compare understanding without touching anything. Then change the October running target, inspect a date in the month, review a Thursday → Friday move, undo and save, and record past work. In C, try project and shared-goal stories and confirm partner/future work stays read only. Expand the feature details and use the existing conversion/privacy routes.",
     variants: [
       {
-        name: "Readable chapters",
+        name: "Editorial journey",
         change:
-          "Interleave three short explanations with a real goal-card rendering, full-width sessions and an explicit move/review/save example. Keep primary conversion separate from the example.",
+          "One intention carries a complete scroll narrative: real goal card, target, fitted month, explicit adaptation, recorded progress, partner encouragement, and reviewed coach suggestion. Full-size proof is interleaved with brief explanations.",
         tradeoff:
-          "The product story is understandable without interaction, but takes more scrolling. This studies the hero and primary proof, not a wholesale rewrite of the landing page.",
+          "Understandable without interaction and gives the material/card identity room to read. Longest page; optional controls enrich the explanation rather than gate it. A fitted month is orientation, never a shrunken desktop checklist.",
       },
       {
-        name: "Make a little plan",
+        name: "Product lesson",
         change:
-          "Let the visitor choose two or three weekly runs, reveal the example sessions, then move one and explicitly save. Keep the same goal and message as A.",
+          "Lead with the outcome, then a self-contained Shape / Adapt / Record lesson. Steps preserve one local goal/plan state; every step is directly accessible. Broader month, partner, reward and privacy explanations follow.",
         tradeoff:
-          "Cause and effect is tangible, but visitors must act to see the full example. It is deterministic sample data, not AI generation or a real goal-creation flow.",
+          "The most direct experience of cause and effect. Requires some participation to inspect every state, but starts with legible proof and hides no primary CTA. No mock AI stream or fake account creation.",
+      },
+      {
+        name: "Choose your intention",
+        change:
+          "A visitor chooses rhythm, project, or a shared goal and gets a corresponding goal card, placed work, editable plan and progress. Their chosen story sets the proof; subsequent feature details preserve the broader product.",
+        tradeoff:
+          "Best for showing this is more than a habit tracker. Adds a choice and needs consistent scenarios; switching stories explicitly resets only the fictional example. The collaboration copy points to existing Team/Duo roles, not a promised new check-in feature.",
       },
     ],
   },
