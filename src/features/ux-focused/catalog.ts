@@ -4,6 +4,7 @@ export type FocusedStudy = {
   question: string;
   evidence: string;
   source: string;
+  baselineCommit?: string;
   task: string;
   variants: readonly { name: string; change: string; tradeoff: string }[];
 };
@@ -11,27 +12,35 @@ export type FocusedStudy = {
 export const FOCUSED_STUDIES: readonly FocusedStudy[] = [
   {
     slug: "team",
-    title: "A team worth coming back to",
+    title: "A partnership home, beyond Duo",
     question:
-      "Can you tell what you and your partner are working on, and get to the right work?",
+      "What deserves its own Team destination when shared planning and progress already exist elsewhere?",
     evidence:
-      "The current Team week strip colors elapsed weekdays rather than activity. All shared-goal links open the same week calendar. This is confirmed in source; the new round has not been visually verified.",
+      "Current main gives Team partner management, XP, a weekday strip and shared-goal links. Duo already supplies shared calendar and progress views. This round explores a dedicated partnership purpose, rather than expanding the same calendar.",
     source: "src/features/social/team/team-panel.tsx",
-    task: "Inspect Thursday, open the corresponding shared goal, then try No partner → invite → pending → paired. Compare the two entrances using the same sessions.",
+    baselineCommit: "d33e11e9",
+    task: "Compare the three purposes. Inspect the film contributions, record your rough cut with the hold control, send a nudge, inspect the partner, and try every relationship state. In C, publish/edit a check-in and acknowledge Alex’s note. The other-person controls are clearly marked simulations.",
     variants: [
       {
-        name: "Shared week",
+        name: "Partnership brief",
         change:
-          "Lead with dated activity for each partner; open the exact day's work below. Keep shared goals and partner management one action away.",
+          "A pair chooses one shared weekly focus. Its finite brief connects attributed contributions to that focus’s next work. A nudge is the main social action; no calendar or ranked progress board.",
         tradeoff:
-          "Best for checking in on each other; retrieving a particular goal starts farther down the page.",
+          "The lightest collaboration addition: a team-owned weekly focus choice plus context from visible work and existing nudges. The focus choice needs persistence before adoption. Its value depends on having genuinely relevant shared activity; an empty team gets a direct shared-goal entrance.",
       },
       {
-        name: "Goal desk",
+        name: "Shared-goal dossiers",
         change:
-          "Lead with shared goals and who is doing the next session. Select a goal to focus its week and next owner/date inline; partner actions stay reachable.",
+          "Each team goal has a joint home with contributions, next work, and finished-goal keepsakes. The film dossier adds an explicit editing → ready for partner → reviewed handoff. Team history sits alongside present work rather than a feed.",
         tradeoff:
-          "Best for a joint project; individual activity is less prominent. Neither direction replaces Agenda's Duo planning board.",
+          "Best when the shared goal is the reason for the partnership. More goal-centric than A, but distinct from Duo’s personal goal comparison. The handoff is a new team-goal capability needing persistence and permissions; it never changes dates or grants completion credit. Historical availability also needs confirmation.",
+      },
+      {
+        name: "Weekly rendezvous",
+        change:
+          "Each person shares one focus and an optional support request. Read acknowledgements close the loop, while goals, nudges, XP and membership remain accessible.",
+        tradeoff:
+          "Creates a reason to return that Duo cannot provide. This introduces a new optional weekly-note capability and would need persistence/visibility rules. Reading a note does not change plans, log completion, or promise attendance.",
       },
     ],
   },
@@ -155,4 +164,9 @@ export const FOCUSED_STUDIES: readonly FocusedStudy[] = [
 export const BASELINE_COMMIT = "63efc13e";
 export function focusedStudy(slug: string) {
   return FOCUSED_STUDIES.find((study) => study.slug === slug);
+}
+
+export function focusedVariant(value: string | undefined, count: number) {
+  const index = value?.length === 1 ? "abcde".indexOf(value) : 0;
+  return index >= 0 && index < count ? index : 0;
 }

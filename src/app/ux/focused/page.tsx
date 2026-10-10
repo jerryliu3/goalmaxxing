@@ -9,13 +9,14 @@ export default function FocusedIndex() {
       </header>
       <div className="rf-main">
         <div className="rf-intro">
-          <p className="type-eyebrow">Replaces the first audit round</p>
+          <p className="type-eyebrow">Team · Month · Mobile landing</p>
           <h1 className="type-hero">
-            Fewer proposals.
-            <br />A clearer reason for each.
+            Distinct purposes.
+            <br />
+            Concrete interactions.
           </h1>
           <p>
-            Task-based comparisons against main at 63efc13e. Each study names
+            The new Team round starts from main at d33e11e9. Each study names
             the exact change, shows the relevant existing structure, and makes
             its tradeoff explicit. Fictional data; account actions are never
             sent.
@@ -34,7 +35,9 @@ export default function FocusedIndex() {
               </span>
               <h2 className="type-heading">{study.title}</h2>
               <p>{study.question}</p>
-              <footer>{study.variants.map((v) => v.name).join(" / ")} ↗</footer>
+              <footer>
+                {study.variants.map((v) => v.name).join(" / ")} ↗
+              </footer>
             </Link>
           ))}
         </div>
