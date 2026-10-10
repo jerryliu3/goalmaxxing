@@ -932,6 +932,8 @@ test("portrait month expands to full work and retains selection across rotation"
 }) => {
   await page.setViewportSize({ width: 844, height: 390 });
   await openCalendar(page);
+  // openCalendar expands rows for drag tests; this journey starts compact.
+  await page.getByRole("button", { name: "Compact rows", exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   const track = page.locator('[data-calendar-grid-track="true"]');
   const viewport = page.locator('[data-calendar-horizontal-viewport="true"]');

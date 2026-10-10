@@ -13,6 +13,8 @@ for (const scenario of ["projected-source", "legacy-credit", "credited-old-place
     const goalId = randomUUID();
     const sourceId = randomUUID();
     const title = `E2E saved session ${goalId.slice(0, 8)}`;
+    // Linked rows include the relationship badge in their accessible name.
+    const sessionRow = page.getByRole("button", { name: new RegExp(`^${title}(?:$| )`) });
     const today = new Date().toISOString().slice(0, 10);
     const now = new Date(`${today}T12:00:00Z`);
     const date = (monthOffset: number, day: number) => new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + monthOffset, day, 12)).toISOString().slice(0, 10);
@@ -71,7 +73,7 @@ for (const scenario of ["projected-source", "legacy-credit", "credited-old-place
         throw new Error("Expected planner preview work unit total:1 to be present.");
       }
       const moveToDestination = async (fromDate: string) => {
-        await page.getByRole("button", { name: title, exact: true }).click();
+        await sessionRow.click({ timeout: 15_000 });
         const editor = page.getByRole("region", { name: "Edit planned session" });
         await editor.getByRole("button", { name: new RegExp(new Date(`${fromDate}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric" })) }).click();
         await editor.getByLabel("Date", { exact: true }).fill(destination);
@@ -86,7 +88,7 @@ for (const scenario of ["projected-source", "legacy-credit", "credited-old-place
       };
       if (scenario === "credited-old-placement") {
         expect(unit.creditState).toBe("completed_elsewhere");
-        await expect(page.getByRole("button", { name: title, exact: true })).toHaveCount(0);
+        await expect(sessionRow).toHaveCount(0);
         // Today's completion date is outside this save's window, so a sibling
         // move must leave the credited row on its saved date.
         await page.goto(`/calendar?view=day&month=${month}&day=${later}`);
@@ -102,16 +104,24 @@ for (const scenario of ["projected-source", "legacy-credit", "credited-old-place
         expect(rows.map((row) => row.scheduled_date)).toContain(later);
         await page.reload();
         await expect(page.getByRole("button", { name: /Scheduled goals/ })).toBeVisible({ timeout: 30_000 });
-        await expect(page.getByRole("button", { name: title, exact: true })).toHaveCount(0);
+        await expect(sessionRow).toHaveCount(0);
         await expect(page.getByTestId("planner-preview-mode-badge")).toBeHidden();
       }
       const facts = await db.query("select completed_on::text, planner_unit_key from public.completions where goal_id = $1", [goalId]);
       expect(facts.rows).toEqual(scenario === "projected-source" ? [] : [{ completed_on: today, planner_unit_key: scenario === "legacy-credit" ? null : "total:1" }]);
     } finally {
       // The prepare stub may still be awaiting its context read at teardown.
-      await page.unrouteAll({ behavior: "ignoreErrors" });
-      await db.query("delete from public.goals where id = any($1::uuid[]) and owner_id = $2", [[sourceId, goalId], ownerId]);
-      await db.end();
+      try {
+        if (!page.isClosed()) {
+          await page.unrouteAll({ behavior: "ignoreErrors" });
+        }
+      } finally {
+        try {
+          await db.query("delete from public.goals where id = any($1::uuid[]) and owner_id = $2", [[sourceId, goalId], ownerId]);
+        } finally {
+          await db.end();
+        }
+      }
     }
   });
 }
