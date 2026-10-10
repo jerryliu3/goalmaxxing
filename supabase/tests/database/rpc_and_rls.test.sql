@@ -116,6 +116,16 @@ set
   source_goal_id = excluded.source_goal_id,
   target_goal_id = excluded.target_goal_id;
 
+-- The seed logs direct completions on these goals, and undo keeps a direct
+-- completion on the target, so start the date clean.
+delete from public.completions
+where user_id = '11111111-1111-4111-8111-111111111111'
+  and goal_id in (
+    '10000000-0000-4000-8000-000000000003',
+    '10000000-0000-4000-8000-000000000004'
+  )
+  and completed_on = current_date;
+
 reset role;
 set local role authenticated;
 select set_config(
