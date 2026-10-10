@@ -1,5 +1,5 @@
 .symbol {
-display: none;
+  display: none;
 }
 
 /* Month tiles keep the same symbols at every width and orientation.
