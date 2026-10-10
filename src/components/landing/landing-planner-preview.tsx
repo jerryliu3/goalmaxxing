@@ -704,12 +704,16 @@ function TaskTile({
 }) {
   return (
     <p
-      className={`${taskChipLayoutClassName} whitespace-normal ${toneClassName(
+      data-calendar-tile="true"
+      title={task.label}
+      aria-label={`${task.label}. ${completed ? "Completed" : "Planned"}`}
+      className={`${styles.calendarTile} ${taskChipLayoutClassName} whitespace-normal ${toneClassName(
         task.tone
       )}`}
     >
       {completed ? <Check className="size-2.5 shrink-0 text-gain" /> : null}
-      <span>{task.label}</span>
+      <span className={styles.label}>{task.label}</span>
+      <span className={styles.symbol} aria-hidden="true">{landingCalendarSymbol(task.label)}</span>
     </p>
   );
 }
@@ -725,11 +729,12 @@ function MonthPill({
 }) {
   return (
     <div
+      data-calendar-tile="true"
       data-month-entry={task.id}
       data-month-entry-variant={variant}
       title={task.label}
       aria-label={`${task.label}. ${completed ? "Completed" : "Planned"}${variant === "ghost" ? ". Moved from this day" : variant === "new" ? ". Draft placement" : ""}`}
-      className={`${styles.monthPill} ${taskChipLayoutClassName} overflow-hidden ${
+      className={`${styles.calendarTile} ${taskChipLayoutClassName} overflow-hidden ${
         variant === "ghost"
           ? "border-dashed border-border bg-page text-muted-foreground line-through shadow-none"
           : variant === "new"
@@ -848,15 +853,18 @@ function PartnerNudgeComposer({
 function PartnerPill({
   label,
   completed = false,
+  calendarTile = false,
 }: {
   label: string;
   completed?: boolean;
+  calendarTile?: boolean;
 }) {
   return (
     <div
+      data-calendar-tile={calendarTile || undefined}
       data-owner="partner"
       title={label}
-      className={`${styles.partnerPill} ${taskChipLayoutClassName} overflow-hidden ${
+      className={`${calendarTile ? styles.calendarTile : ""} ${taskChipLayoutClassName} overflow-hidden ${
         completed
           ? "border-2 border-primary bg-transparent text-primary shadow-none"
           : "border border-primary/40 bg-muted/60 text-foreground shadow-none"
@@ -1222,7 +1230,7 @@ export function LandingPlannerPreview() {
         </p>
       </CardHeader>
 
-      <CardContent className="h-[430px] sm:h-[448px]">
+      <CardContent className={`${styles.calendar} h-[430px] sm:h-[448px]`}>
         <div
           data-demo-calendar-stage
           className="relative h-full min-h-0 overflow-hidden"
@@ -1380,6 +1388,7 @@ export function LandingPlannerPreview() {
                                 }
                               >
                                 <PartnerPill
+                                  calendarTile
                                   label={entry.label}
                                   completed={isPartnerGoalCompleted(entry.day)}
                                 />
@@ -1418,7 +1427,7 @@ export function LandingPlannerPreview() {
               flight?.moveKey === activeMove ? (
                 <motion.div
                   data-moving-task={activeMove}
-                  className={`${styles.monthPill} pointer-events-none absolute z-20 ${taskChipLayoutClassName} shadow-[0_10px_24px_rgba(37,99,235,0.25)] ${toneClassName(
+                  className={`${styles.calendarTile} pointer-events-none absolute z-20 ${taskChipLayoutClassName} shadow-[0_10px_24px_rgba(37,99,235,0.25)] ${toneClassName(
                     activeMove === "past" ? tempoTask.tone : strengthTask.tone
                   )}`}
                   initial={{ x: 0, y: 0, scale: 1 }}
@@ -1522,6 +1531,7 @@ export function LandingPlannerPreview() {
                             Boolean(day.isToday)
                           ).map((entry) => (
                               <PartnerPill
+                                calendarTile
                                 key={entry.id}
                                 label={entry.label}
                                 completed={isPartnerGoalCompleted(entry.day)}

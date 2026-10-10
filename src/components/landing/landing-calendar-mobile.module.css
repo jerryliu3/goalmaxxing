@@ -1,26 +1,31 @@
+.calendar {
+  container-type: inline-size;
+  container-name: landing-calendar;
+}
+
 .symbol {
   display: none;
 }
 
-/* Month tiles keep the same symbols at every width and orientation.
- Full names remain accessible; Week keeps its readable work rows. */
-.monthPill,
-:global([data-calendar-view="month"]) .partnerPill {
-  justify-content: center;
-  padding-inline: 1px;
-  gap: 0;
-  font-size: 0.875rem;
-  line-height: 1;
-}
+/* Use one label treatment across Month/Week and Solo/Duo/Partner. Text stays
+   visible unless the portrait phone's calendar is too narrow for full labels. */
+@media (max-width: 767px) and (orientation: portrait) {
+  @container landing-calendar (max-width: 42rem) {
+    .calendarTile {
+      justify-content: center;
+      padding-inline: 1px;
+      gap: 0;
+      font-size: 0.875rem;
+      line-height: 1;
+    }
 
-.monthPill > svg,
-.monthPill > .label,
-:global([data-calendar-view="month"]) .partnerPill > svg,
-:global([data-calendar-view="month"]) .partnerPill > .label {
-  display: none;
-}
+    .calendarTile > svg,
+    .calendarTile > .label {
+      display: none;
+    }
 
-.monthPill > .symbol,
-:global([data-calendar-view="month"]) .partnerPill > .symbol {
-  display: inline;
+    .calendarTile > .symbol {
+      display: inline;
+    }
+  }
 }

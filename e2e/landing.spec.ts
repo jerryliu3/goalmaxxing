@@ -164,23 +164,42 @@ test.describe("marketing landing", () => {
   });
 });
 
-test.describe("portrait marketing month", () => {
-  test.use({ storageState: { cookies: [], origins: [] }, viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
-  test("keeps the original page and uses unclipped symbols in month cells", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Achieve your goals using one focused system" })).toBeVisible();
-    const entry = page.locator('[data-month-entry="tempo"]').first();
-    await expect(entry).toBeVisible();
-    await expect(entry).toHaveAttribute("aria-label", /Tempo run/);
-    await expect(entry.locator('span[aria-hidden="true"]')).toBeVisible();
-    const symbol = await entry.locator('span[aria-hidden="true"]').boundingBox();
-    const cell = await entry.locator('xpath=ancestor::*[@data-month-day-cell]').boundingBox();
-    expect(symbol!.x + symbol!.width).toBeLessThanOrEqual(cell!.x + cell!.width + 1);
-    await page.setViewportSize({ width: 844, height: 390 });
-    await expect(entry.getByText("Tempo run", { exact: true })).toBeHidden();
-    await expect(entry.locator('span[aria-hidden="true"]')).toBeVisible();
-    await page.setViewportSize({ width: 1280, height: 900 });
-    await expect(entry.getByText("Tempo run", { exact: true })).toBeHidden();
-    await expect(entry.locator('span[aria-hidden="true"]')).toBeVisible();
-  });
+test.describe("responsive marketing calendar labels", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  for (const mode of ["Solo", "Duo", "Partner"]) {
+    test(`${mode} uses symbols only when the portrait calendar is narrow`, async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto("/");
+      await revealPlannerDemo(page);
+      await page.getByRole("radio", { name: mode, exact: true }).click();
+
+      // Check both animated views under the same sizing rule.
+      for (const view of ["month", "week"]) {
+        const grid = page.locator(`[data-calendar-view="${view}"]`);
+        await expect(grid).toBeVisible({ timeout: 30_000 });
+        const tile = grid.locator('[data-calendar-tile="true"]').first();
+        const symbol = tile.locator('span[aria-hidden="true"]');
+        const label = tile.locator('span:not([aria-hidden])');
+        await expect(symbol).toBeVisible();
+        await expect(label).toBeHidden();
+        await expect(tile).toHaveAttribute("aria-label", /Planned|Completed|marked this done/);
+        const tileBox = await tile.boundingBox();
+        const symbolBox = await symbol.boundingBox();
+        expect(symbolBox!.x + symbolBox!.width).toBeLessThanOrEqual(tileBox!.x + tileBox!.width + 1);
+
+        // Rotation restores readable text consistently in either view.
+        await page.setViewportSize({ width: 844, height: 390 });
+        await expect(label).toBeVisible();
+        await expect(symbol).toBeHidden();
+        await page.setViewportSize({ width: 1280, height: 900 });
+        await expect(label).toBeVisible();
+        await expect(symbol).toBeHidden();
+        await page.setViewportSize({ width: 820, height: 1180 });
+        await expect(label).toBeVisible();
+        await expect(symbol).toBeHidden();
+        await page.setViewportSize({ width: 390, height: 844 });
+      }
+    });
+  }
 });
