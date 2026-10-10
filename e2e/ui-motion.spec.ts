@@ -39,16 +39,16 @@ test("motion overlays do not create mobile viewport overflow", async ({
     page.getByRole("navigation", { name: "Main navigation" })
   ).toBeVisible();
 
+  const rewardOverlay = page.locator("[data-motion='xp-reward-overlay']");
+  await expect(rewardOverlay).toBeAttached();
+  await expect(rewardOverlay).toHaveCSS("pointer-events", "none");
+
   const dimensions = await page.evaluate(() => ({
     viewportWidth: window.innerWidth,
     documentWidth: document.documentElement.scrollWidth,
-    rewardOverlayPointerEvents: window.getComputedStyle(
-      document.querySelector("[data-motion='xp-reward-overlay']")!
-    ).pointerEvents,
   }));
 
   expect(dimensions.documentWidth).toBeLessThanOrEqual(
     dimensions.viewportWidth
   );
-  expect(dimensions.rewardOverlayPointerEvents).toBe("none");
 });

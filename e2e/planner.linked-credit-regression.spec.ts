@@ -76,9 +76,16 @@ for (const scenario of ["projected-source", "legacy-credit", "credited-old-place
         await sessionRow.click({ timeout: 15_000 });
         const editor = page.getByRole("region", { name: "Edit planned session" });
         await editor.getByRole("button", { name: new RegExp(new Date(`${fromDate}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric" })) }).click();
-        await editor.getByLabel("Date", { exact: true }).fill(destination);
+        const dateInput = editor.getByLabel("Date", { exact: true });
         const save = page.getByRole("button", { name: "Save plan", exact: true });
-        await expect(save).toBeEnabled();
+        // Wait for the controlled date edit to stage a draft. Mobile WebKit
+        // can reset the field while the editor finishes rendering.
+        await expect(async () => {
+          await dateInput.fill(destination);
+          await dateInput.blur();
+          await expect(dateInput).toHaveValue(destination);
+          await expect(save).toBeEnabled();
+        }).toPass({ timeout: 15_000 });
         const saved = page.waitForResponse((response) => response.url().endsWith("/api/planner/save") && response.request().method() === "POST");
         await save.click();
         const response = await saved;
