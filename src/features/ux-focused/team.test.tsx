@@ -1,34 +1,28 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { TeamStudy } from "./team";
-
-describe("focused Team journeys", () => {
-  it("takes an unpaired user through invitation, cancellation and sample acceptance", () => {
-    render(<TeamStudy variant={0} />);
+import { TeamRound } from "./round/team";
+describe("dedicated Team journeys", () => {
+  it("takes an unpaired user through invite, cancellation and sample acceptance", () => {
+    render(<TeamRound variant={0} />);
     fireEvent.change(screen.getByRole("combobox", { name: "Sample state" }), {
       target: { value: "No partner" },
     });
-    const invite = screen.getByRole("button", { name: "Invite partner" });
-    expect(invite).toBeDisabled();
-    fireEvent.change(screen.getByLabelText("Partner's username"), {
+    fireEvent.change(screen.getByLabelText("Partner’s username"), {
       target: { value: "alexlee" },
     });
-    fireEvent.click(invite);
-    expect(screen.getByText("Waiting for @alexlee")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Cancel invitation" }));
-    expect(
-      screen.getByRole("button", { name: "Invite partner" }),
-    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Invite partner" }));
-    fireEvent.click(
-      screen.getByRole("button", { name: "Sample: accept invitation" }),
-    );
     expect(
-      screen.getByRole("heading", { name: "Maya & Alex" }),
+      screen.getByText("Invitation pending · @alexlee"),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel invitation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Invite partner" }));
+    fireEvent.click(screen.getByRole("button", { name: "Alex accepts" }));
+    expect(
+      screen.getByRole("heading", { name: "You & Alex" }),
     ).toBeInTheDocument();
   });
-  it("opens the chosen goal rather than a generic calendar destination", () => {
-    render(<TeamStudy variant={0} />);
+  it("opens the chosen team goal and only allows recording your current work", () => {
+    render(<TeamRound variant={0} />);
     fireEvent.click(
       screen.getByRole("button", { name: /Finish the short film Six editing/ }),
     );
@@ -36,19 +30,43 @@ describe("focused Team journeys", () => {
     expect(
       within(dialog).getByRole("heading", { name: "Finish the short film" }),
     ).toBeInTheDocument();
-    expect(within(dialog).getByText("Build the rough cut")).toBeInTheDocument();
     expect(within(dialog).queryByText("Long run")).not.toBeInTheDocument();
-  });
-  it("focuses the week on the chosen goal in Goal desk", () => {
-    render(<TeamStudy variant={1} />);
-    const film = screen.getByRole("button", {
-      name: /Finish the short film Six editing/,
-    });
-    fireEvent.click(film);
-    expect(film).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByText("Build the rough cut")).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /Easy run/ }),
+      within(dialog).getByRole("button", {
+        name: "Complete Review the rough cut",
+      }),
+    ).toBeDisabled();
+    fireEvent.keyDown(
+      within(dialog).getByRole("button", {
+        name: "Complete Build the rough cut",
+      }),
+      { key: "Enter" },
+    );
+    expect(
+      within(dialog).queryByRole("button", {
+        name: "Complete Build the rough cut",
+      }),
     ).not.toBeInTheDocument();
+    expect(within(dialog).getByText("Build the rough cut")).toBeInTheDocument();
+  });
+  it("publishes a support request and distinguishes a read acknowledgement from scheduling", () => {
+    render(<TeamRound variant={2} />);
+    fireEvent.click(screen.getByRole("button", { name: "Share my check-in" }));
+    expect(screen.getByText("Waiting for Alex to read")).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Alex reads my check-in" }),
+    );
+    expect(screen.getByText("Alex has read your check-in")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Edit my check-in" }));
+    fireEvent.change(screen.getByLabelText("My focus this week"), {
+      target: { value: "Review the final sound mix" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Share my check-in" }));
+    expect(screen.getByText("Waiting for Alex to read")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Acknowledges the note. Does not book a session or promise attendance.",
+      ),
+    ).toBeInTheDocument();
   });
 });
