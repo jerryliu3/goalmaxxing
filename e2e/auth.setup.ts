@@ -4,7 +4,10 @@ import { expect, test as setup } from "@playwright/test";
 
 const authStatePath = path.resolve("playwright/.auth/alice.json");
 
-setup("authenticate seeded Alice account", async ({ page }) => {
+setup("authenticate seeded Alice account", async ({ page, baseURL }) => {
+  // Tour progress is persisted for the seeded account, so never use this
+  // fixture against an account on a remote application.
+  expect(new URL(baseURL!).hostname).toMatch(/^(127\.0\.0\.1|localhost)$/);
   await page.goto("/login");
   const email = page.getByLabel("Email");
   const password = page.getByLabel("Password");
@@ -26,32 +29,20 @@ setup("authenticate seeded Alice account", async ({ page }) => {
     page.getByRole("navigation", { name: "Main navigation" })
   ).toBeVisible();
 
+  // Onboarding now reads account progress, not browser-local completion flags.
+  // The seed completes setup; skip the optional tours through the canonical API.
+  const onboardingResponse = await page.request.post("/api/onboarding", {
+    data: { action: "skip-tours" },
+  });
+  expect(onboardingResponse.status(), await onboardingResponse.text()).toBe(200);
+
   await page.evaluate(() => {
-    const now = new Date();
-    const yyyy = String(now.getFullYear());
-    const mm = String(now.getMonth() + 1).padStart(2, "0");
-    const dd = String(now.getDate()).padStart(2, "0");
-    window.localStorage.setItem(
-      "cadence.journey_intro_seen.v1",
-      `${yyyy}-${mm}-${dd}`
-    );
-    window.localStorage.setItem(
-      "cadence.journey_onboarding_completed.v1",
-      "done"
-    );
-    for (const onboardingKey of [
-      "insights.main",
-      "planner.calendar",
-      "social.main",
-    ]) {
-      window.localStorage.setItem(
-        `cadence.tab_onboarding_completed.v1:${onboardingKey}`,
-        "done"
-      );
-    }
     window.sessionStorage.setItem("gm-boot-ready", "1");
     window.localStorage.setItem("gm-boot-ready", "1");
   });
+  await page.reload();
+  await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Your space is ready." })).toHaveCount(0);
   await mkdir(path.dirname(authStatePath), { recursive: true });
   await page.context().storageState({ path: authStatePath });
 });

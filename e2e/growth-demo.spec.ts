@@ -5,14 +5,6 @@ const mainNavigation = (page: import("@playwright/test").Page) =>
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    for (const key of ["insights.main", "planner.calendar"]) {
-      localStorage.setItem(`cadence.tab_onboarding_completed.v1:${key}`, "done");
-    }
-  });
-});
-
 test("Growth has one home for each section and Settings has no score or stats", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));

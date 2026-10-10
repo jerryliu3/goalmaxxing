@@ -46,7 +46,7 @@ describe("mobile Month journeys", () => {
       screen.getByRole("button", { name: /Complete Alex’s easy run/ }),
     ).toBeDisabled();
     fireEvent.click(
-      screen.getByRole("button", { name: /^Alex’s easy run 18:30/ }),
+      screen.getByRole("button", { name: /^Alex’s easy run/ }),
     );
     expect(screen.getByRole("dialog")).toHaveTextContent(
       "cannot move or complete it",

@@ -26,7 +26,7 @@ describe("mobile landing journeys", () => {
   it("offers a distinct shared-goal story and protects partner work", () => {
     render(<LandingRound variant={2} />);
     fireEvent.click(
-      screen.getByRole("button", { name: /Grow together Make a film/ }),
+      screen.getByRole("button", { name: /^Grow together/ }),
     );
     const story = screen.getByLabelText("Selected goal story");
     expect(
