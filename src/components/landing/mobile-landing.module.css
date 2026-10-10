@@ -1,0 +1,190 @@
+.mobile {
+  display: none;
+  max-width: 40rem;
+  margin-inline: auto;
+}
+
+.hero {
+  padding: 2.5rem 1.25rem 3rem;
+}
+
+.chapter {
+  border-top: 1px solid var(--border);
+  padding: 2.75rem 1.25rem;
+}
+
+.anchor {
+  scroll-margin-top: 5rem;
+}
+
+.goalProof {
+  margin-top: 2.5rem;
+  padding-inline: 0.5rem;
+  max-width: 26rem;
+  margin-inline: auto;
+}
+
+.targetChoice {
+  min-height: 5.5rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 0.5rem;
+  text-align: left;
+  background: var(--card);
+  transition:
+    background-color 180ms var(--motion-ease-standard),
+    box-shadow 180ms var(--motion-ease-standard);
+}
+
+.targetChoice[aria-pressed="true"] {
+  background: var(--gm-selection);
+  color: var(--gm-selection-foreground);
+  box-shadow: inset 0 0 0 1px var(--gm-selection-line);
+}
+
+.monthProof,
+.moveProof,
+.recordProof,
+.supportProof {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem;
+  background: var(--card);
+}
+
+.monthWeekdays,
+.monthGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.monthWeekdays {
+  margin-bottom: 0.5rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
+
+.monthDate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: 3.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color 180ms var(--motion-ease-standard),
+    box-shadow 180ms var(--motion-ease-standard);
+}
+
+.monthDate[data-in-month="false"] {
+  color: var(--muted-foreground);
+}
+
+.monthDate[aria-current="date"] > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--gm-today);
+  color: var(--gm-today-foreground);
+}
+
+.monthDate[aria-pressed="true"] {
+  background: var(--gm-day-selected);
+  color: var(--gm-day-selected-foreground);
+  box-shadow: inset 0 0 0 1px var(--gm-selection-line);
+}
+
+.monthDate > small {
+  height: 0.625rem;
+  font-size: 0.75rem;
+  line-height: 0.625rem;
+}
+
+.dayDetail {
+  min-height: 7.5rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.sessionDate {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 2.5rem;
+  flex-shrink: 0;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.supportProof {
+  margin-top: 1.5rem;
+}
+
+.progress {
+  display: block;
+  width: 100%;
+  height: 0.5rem;
+  margin-top: 0.75rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: var(--muted);
+  accent-color: var(--primary);
+}
+
+.progress::-webkit-progress-bar {
+  background: var(--muted);
+}
+
+.progress::-webkit-progress-value {
+  background: var(--primary);
+  transition: width 220ms var(--motion-ease-standard);
+}
+
+.progress::-moz-progress-bar {
+  background: var(--primary);
+}
+
+.details {
+  padding-block: 1rem;
+}
+
+.details > summary {
+  min-height: 2.75rem;
+  align-content: center;
+  cursor: pointer;
+}
+
+.targetChoice:focus-visible,
+.monthDate:focus-visible,
+.details > summary:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+@media (max-width: 767px) and (orientation: portrait) {
+  .mobile {
+    display: block;
+  }
+  .desktop {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .targetChoice,
+  .monthDate,
+  .progress::-webkit-progress-value {
+    transition: none;
+  }
+}

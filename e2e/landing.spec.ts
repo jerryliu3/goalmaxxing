@@ -9,7 +9,7 @@ async function revealPlannerDemo(page: Page) {
 }
 
 test.describe("marketing landing", () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
+  test.use({ storageState: { cookies: [], origins: [] }, viewport: { width: 1280, height: 900 } });
 
   test("shows hero CTAs and no authenticated app shell", async ({ page }) => {
     await page.goto("/");
@@ -124,8 +124,8 @@ test.describe("marketing landing", () => {
     );
   });
 
-  test("keeps moved month entries inside their mobile day cells", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+  test("keeps moved month entries inside their landscape day cells", async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 });
     await page.goto("/");
     await revealPlannerDemo(page);
 

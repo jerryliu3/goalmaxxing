@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LandingPage } from "@/components/landing/landing-page";
 
@@ -15,7 +15,9 @@ afterEach(cleanup);
 function primaryCtaLinks() {
   return [
     ...screen.getAllByRole("link", { name: "Create account" }),
-    screen.getByRole("link", { name: /go to app/i }),
+    within(screen.getByTestId("desktop-landing")).getByRole("link", {
+      name: /go to app/i,
+    }),
   ];
 }
 
@@ -23,7 +25,9 @@ describe("LandingPage", () => {
   it("exposes a visual style picker on marketing chrome", () => {
     render(<LandingPage />);
 
-    expect(screen.getByRole("combobox", { name: "Visual style" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: "Visual style" }),
+    ).toBeInTheDocument();
   });
 
   it("places the climb chapter after Inside Goalmaxxing", () => {
