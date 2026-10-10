@@ -1,7 +1,7 @@
 "use client";
 
 import { CircleHelp, Settings, SlidersHorizontal } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -50,34 +50,49 @@ interface PlannerCalendarToolbarProps {
   onSearchQueryChange: (query: string) => void;
 }
 
+type PlanViewOption = PlannerCalendarViewMode | "goals";
+
 function PlanViewModeSwitch({
   viewMode,
   goalViewOpen,
-  loading,
   onViewModeChange,
   onGoalViewOpenChange,
 }: {
   viewMode: PlannerCalendarViewMode;
   goalViewOpen: boolean;
-  loading: boolean;
   onViewModeChange: (viewMode: PlannerCalendarViewMode) => void;
   onGoalViewOpenChange: (open: boolean) => void;
 }) {
   const resolvedViewMode = viewMode === "three_day" ? "week" : viewMode;
+  // The thumb answers the click on the next frame. The view switches once that
+  // frame has painted: re-rendering the planner and building its morph take
+  // longer than a frame, and until then the click would show nothing.
+  const [pending, setPending] = useState<PlanViewOption | null>(null);
+  const latest = useRef<PlanViewOption | null>(null);
+  const select = (value: PlanViewOption) => {
+    if (value === "goals") {
+      onGoalViewOpenChange(true);
+      return;
+    }
+    onGoalViewOpenChange(false);
+    onViewModeChange(value);
+  };
   return (
     <SegmentedControl
       label="Plan view mode"
       thumbTestId="plan-view-mode-thumb"
       options={PLAN_VIEW_OPTIONS}
-      value={goalViewOpen ? "goals" : resolvedViewMode}
-      disabled={loading}
+      value={pending ?? (goalViewOpen ? "goals" : resolvedViewMode)}
       onChange={(value) => {
-        if (value === "goals") {
-          onGoalViewOpenChange(true);
-          return;
-        }
-        onGoalViewOpenChange(false);
-        onViewModeChange(value);
+        latest.current = value;
+        setPending(value);
+        requestAnimationFrame(() => setTimeout(() => {
+          // Quick successive clicks switch once, to the last one.
+          if (latest.current !== value) return;
+          latest.current = null;
+          setPending(null);
+          select(value);
+        }));
       }}
     />
   );
@@ -142,7 +157,6 @@ export function PlannerCalendarToolbar({
           <PlanViewModeSwitch
             viewMode={viewMode}
             goalViewOpen={goalViewOpen}
-            loading={loading}
             onViewModeChange={onViewModeChange}
             onGoalViewOpenChange={onGoalViewOpenChange}
           />
