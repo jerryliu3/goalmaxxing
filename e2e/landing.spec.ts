@@ -163,3 +163,21 @@ test.describe("marketing landing", () => {
     expect(results.violations).toEqual([]);
   });
 });
+
+test.describe("portrait marketing month", () => {
+  test.use({ storageState: { cookies: [], origins: [] }, viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
+  test("keeps the original page and uses unclipped symbols in month cells", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "Achieve your goals using one focused system" })).toBeVisible();
+    const entry = page.locator('[data-month-entry="tempo"]').first();
+    await expect(entry).toBeVisible();
+    await expect(entry).toHaveAttribute("aria-label", /Tempo run/);
+    await expect(entry.locator('span[aria-hidden="true"]')).toBeVisible();
+    const symbol = await entry.locator('span[aria-hidden="true"]').boundingBox();
+    const cell = await entry.locator('xpath=ancestor::*[@data-month-day-cell]').boundingBox();
+    expect(symbol!.x + symbol!.width).toBeLessThanOrEqual(cell!.x + cell!.width + 1);
+    await page.setViewportSize({ width: 844, height: 390 });
+    await expect(entry.getByText("Tempo run", { exact: true })).toBeVisible();
+    await expect(entry.locator('span[aria-hidden="true"]')).toBeHidden();
+  });
+});

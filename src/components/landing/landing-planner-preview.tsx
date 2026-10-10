@@ -1,5 +1,8 @@
 "use client";
 
+import styles from "./landing-calendar-mobile.module.css";
+import { landingCalendarSymbol } from "./landing-calendar-symbol";
+
 import {
   useCallback,
   useEffect,
@@ -725,7 +728,8 @@ function MonthPill({
       data-month-entry={task.id}
       data-month-entry-variant={variant}
       title={task.label}
-      className={`${taskChipLayoutClassName} overflow-hidden ${
+      aria-label={`${task.label}. ${completed ? "Completed" : "Planned"}${variant === "ghost" ? ". Moved from this day" : variant === "new" ? ". Draft placement" : ""}`}
+      className={`${styles.monthPill} ${taskChipLayoutClassName} overflow-hidden ${
         variant === "ghost"
           ? "border-dashed border-border bg-page text-muted-foreground line-through shadow-none"
           : variant === "new"
@@ -734,7 +738,8 @@ function MonthPill({
       }`}
     >
       {completed ? <Check className="size-2.5 shrink-0 text-gain" /> : null}
-      <span className="min-w-0 truncate">{task.label}</span>
+      <span className={`${styles.label} min-w-0 truncate`}>{task.label}</span>
+      <span className={styles.symbol} aria-hidden="true">{landingCalendarSymbol(task.label)}</span>
     </div>
   );
 }
@@ -851,7 +856,7 @@ function PartnerPill({
     <div
       data-owner="partner"
       title={label}
-      className={`${taskChipLayoutClassName} overflow-hidden ${
+      className={`${styles.partnerPill} ${taskChipLayoutClassName} overflow-hidden ${
         completed
           ? "border-2 border-primary bg-transparent text-primary shadow-none"
           : "border border-primary/40 bg-muted/60 text-foreground shadow-none"
@@ -861,7 +866,8 @@ function PartnerPill({
       }
     >
       {completed ? <StyleCompletionMark done className="size-2.5 shrink-0" /> : null}
-      <span className="min-w-0 truncate">{label}</span>
+      <span className={`${styles.label} min-w-0 truncate`}>{label}</span>
+      <span className={styles.symbol} aria-hidden="true">{landingCalendarSymbol(label)}</span>
     </div>
   );
 }
