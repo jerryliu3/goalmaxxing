@@ -168,7 +168,7 @@ test.describe("responsive marketing calendar labels", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   for (const mode of ["Solo", "Duo", "Partner"]) {
-    test(`${mode} uses short text only when the portrait calendar is narrow`, async ({ page }) => {
+    test(`${mode} uses emoji plus one word only when the portrait calendar is narrow`, async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto("/");
       await revealPlannerDemo(page);
@@ -182,7 +182,7 @@ test.describe("responsive marketing calendar labels", () => {
         const shortLabel = tile.locator('span[aria-hidden="true"]');
         const label = tile.locator('span:not([aria-hidden])');
         await expect(shortLabel).toBeVisible();
-        await expect(shortLabel).toHaveText(/^[A-Za-z]+$/);
+        await expect(shortLabel).toHaveText(/^\S+ [A-Za-z]+$/u);
         await expect(label).toBeHidden();
         await expect(tile).toHaveAttribute("aria-label", /Planned|Completed|marked this done/);
         const tileBox = await tile.boundingBox();
