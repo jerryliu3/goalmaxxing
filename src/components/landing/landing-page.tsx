@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { MobileLanding } from "./mobile-landing";
-import styles from "./mobile-landing.module.css";
 import { ArrowDown, ArrowRight, SquareArrowOutUpRight } from "lucide-react";
 import { LandingFeatureBento } from "@/components/landing/landing-feature-bento";
 import { LandingFeatureNarrative } from "@/components/landing/landing-feature-narrative";
@@ -35,80 +33,73 @@ export function LandingPage() {
       </header>
 
       <main>
-        <MobileLanding />
-        <div className={styles.desktop} data-testid="desktop-landing">
-          <section className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:items-center md:py-10">
-            <div className="max-w-xl space-y-6">
-              <h1 className="type-hero text-[2rem] leading-[1.1] tracking-tight sm:text-[2.75rem]">
-                Achieve your goals using one focused system
-              </h1>
-              <p className="text-base text-muted-foreground sm:text-lg">
-                Deeply customizable goals beyond basic habits. Fully adjustable
-                sessions for when plans and priorities change.
-              </p>
-              <div className="flex flex-col items-start gap-3">
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button asChild size="lg" className={primaryCtaClassName}>
-                    <Link href="/calendar">
-                      Go to app
-                      <ArrowRight className="size-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg">
-                    <Link
-                      href="/demo"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Try demo
-                      <SquareArrowOutUpRight className="size-4" />
-                    </Link>
-                  </Button>
-                </div>
+        <section className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:items-center md:py-10">
+          <div className="max-w-xl space-y-6">
+            <h1 className="type-hero text-[2rem] leading-[1.1] tracking-tight sm:text-[2.75rem]">
+              Achieve your goals using one focused system
+            </h1>
+            <p className="text-base text-muted-foreground sm:text-lg">
+              Deeply customizable goals beyond basic habits. Fully adjustable
+              sessions for when plans and priorities change.
+            </p>
+            <div className="flex flex-col items-start gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <Button asChild size="lg" className={primaryCtaClassName}>
+                  <Link href="/calendar">
+                    Go to app
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
                 <Button asChild variant="outline" size="lg">
-                  <Link href="#why-goalmaxxing">
-                    Read why this was built
-                    <ArrowDown className="size-4" />
+                  <Link href="/demo" target="_blank" rel="noopener noreferrer">
+                    Try demo
+                    <SquareArrowOutUpRight className="size-4" />
                   </Link>
                 </Button>
               </div>
-            </div>
-
-            <LandingPlannerPreview />
-          </section>
-
-          <LandingProductTour />
-          <LandingWowChapter />
-          <LandingFeatureBento />
-          <LandingFeatureNarrative />
-
-          <section className="mx-auto w-full max-w-6xl px-4 py-16 text-center sm:px-6">
-            <h2 className="type-hero text-2xl tracking-tight sm:text-3xl">
-              Build momentum across weeks, not just days.
-            </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
-              Start with a clear weekly plan, track the execution signals that
-              matter, and keep long-term goals in view.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Button asChild size="lg" className={primaryCtaClassName}>
-                <Link href="/signup">Create account</Link>
-              </Button>
-              <Button asChild size="lg" variant="ghost">
-                <Link href="/login">Log in</Link>
-              </Button>
-              <Button asChild size="lg" variant="ghost">
-                <Link href="/demo" target="_blank" rel="noopener noreferrer">
-                  Try demo
+              <Button asChild variant="outline" size="lg">
+                <Link href="#why-goalmaxxing">
+                  Read why this was built
+                  <ArrowDown className="size-4" />
                 </Link>
               </Button>
             </div>
-          </section>
-        </div>
+          </div>
+
+          <LandingPlannerPreview />
+        </section>
+
+        <LandingProductTour />
+        <LandingWowChapter />
+        <LandingFeatureBento />
+        <LandingFeatureNarrative />
+
+        <section className="mx-auto w-full max-w-6xl px-4 py-16 text-center sm:px-6">
+          <h2 className="type-hero text-2xl tracking-tight sm:text-3xl">
+            Build momentum across weeks, not just days.
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
+            Start with a clear weekly plan, track the execution signals that matter, and
+            keep long-term goals in view.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Button asChild size="lg" className={primaryCtaClassName}>
+              <Link href="/signup">Create account</Link>
+            </Button>
+            <Button asChild size="lg" variant="ghost">
+              <Link href="/login">Log in</Link>
+            </Button>
+            <Button asChild size="lg" variant="ghost">
+              <Link href="/demo" target="_blank" rel="noopener noreferrer">
+                Try demo
+              </Link>
+            </Button>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t py-6">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-4 text-sm text-muted-foreground sm:px-6">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 text-sm text-muted-foreground sm:px-6">
           <span>Goalmaxxing</span>
           <div className="flex items-center gap-3">
             <Button asChild variant="outline" size="sm">
