@@ -142,32 +142,31 @@ describe("PlannerCalendarToolbar", () => {
     expect(screen.queryByRole("button", { name: "Preview" })).toBeNull();
   });
 
-  it("places plan help beside the Plan title", () => {
+  it("places agenda help beside the Agenda title", () => {
     renderToolbar();
 
     const title = screen.getByRole("heading", { name: "Agenda" });
-    const helpButton = screen.getByRole("button", { name: "Open planner help" });
+    const helpButton = screen.getByRole("button", { name: "Open agenda help" });
     expect(title.parentElement).toContainElement(helpButton);
+    expect(helpButton).toHaveAttribute("title", "Agenda help");
   });
 
-  it("renders the status slot in the heading row, not save controls", () => {
+  it("renders the slipped-sessions prompt beside the Agenda title", () => {
     renderToolbar({ status: <button type="button">3 sessions slipped · Review</button> });
 
     const heading = screen.getByRole("heading", { name: "Agenda" });
     const status = screen.getByRole("button", { name: "3 sessions slipped · Review" });
-    expect(
-      heading.compareDocumentPosition(status) & Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy();
+    expect(heading.parentElement).toContainElement(status);
     expect(screen.queryByRole("button", { name: "Save plan" })).toBeNull();
     expect(screen.queryByTestId("planner-preview-mode-badge")).toBeNull();
   });
 
-  it("keeps planner help focused on planning controls", async () => {
+  it("keeps agenda help focused on scheduling controls", async () => {
     renderToolbar();
-    fireEvent.click(screen.getByRole("button", { name: "Open planner help" }));
-    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(screen.getByRole("button", { name: "Open agenda help" }));
+    const dialog = await screen.findByRole("dialog", { name: "Agenda help" });
     expect(within(dialog).queryByRole("button", { name: "See hidden goals" })).toBeNull();
     expect(within(dialog).getByText("Switch between day, week, and month views.")).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "Back to plan" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Back to agenda" })).toBeInTheDocument();
   });
 });

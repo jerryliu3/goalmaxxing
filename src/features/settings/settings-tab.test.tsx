@@ -244,10 +244,11 @@ describe("SettingsTab", () => {
     expect(screen.getByRole("button", { name: "Preferences" }).parentElement).toHaveClass("bg-card", "rounded-2xl");
   });
 
-  it("titles the page Profile and says what each setting holds", () => {
+  it("says what each setting holds without a page title", () => {
     render(<SettingsTab />);
 
-    expect(screen.getByRole("heading", { level: 1, name: "Profile" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1, name: "Profile" })).not.toBeInTheDocument();
+    expect(screen.queryByText("How others see you, and how Goalmaxxing works for you.")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preferences" })).toHaveAccessibleDescription(
       "Timezone, first day of the week, and activity privacy."
     );

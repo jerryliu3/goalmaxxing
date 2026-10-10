@@ -31,11 +31,11 @@ describe("resolveSettingsSection", () => {
     ]);
     expect(SETTINGS_GROUPS.flatMap((group) => group.items.map((item) => item.key))).toEqual([
       "preferences",
+      "appearance",
       "onboarding",
       "digest",
       "notifications",
       "integrations",
-      "appearance",
       "password",
       "report-issue",
     ]);

@@ -63,7 +63,7 @@ export function RecoveryPrompt({ review }: { review: RecoveryReview }) {
   if (review.state.reviewing || review.count === 0) return null;
   const text = recoveryPromptText(review.count);
   return (
-    <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1" data-testid="recovery-entry">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1" data-testid="recovery-entry">
       {review.blocked ? <p className="text-xs text-muted-foreground">{RECOVERY_BLOCKED_NOTE}</p> : null}
       <button
         type="button"

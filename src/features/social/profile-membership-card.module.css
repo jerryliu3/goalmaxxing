@@ -280,11 +280,12 @@ button.portrait:focus-visible {
   justify-content: flex-end;
   gap: .2rem;
   container-type: inline-size;
-  overflow: hidden;
 }
 .metrics strong {
-  font: clamp(1.15rem, 38cqw, 3.35rem)/.8 var(--font-display);
-  letter-spacing: -.04em;
+  /* Size to the column so values like 100% and two-digit levels stay inside
+     the line box. The old 0.8 line-height plus overflow clipping cut the glyphs. */
+  font: clamp(1rem, 22cqw, 2.4rem)/1.05 var(--font-display);
+  letter-spacing: -.03em;
 }
 .metric > span {
   font-size: .68rem;
@@ -372,7 +373,6 @@ button.portrait:focus-visible {
 }
 .embed :global([data-layout="landscape"]) .titleCompose { font-size: 2.55rem; }
 .embed :global([data-layout="landscape"]) .metrics { padding: .45rem 0 .02rem; }
-.embed :global([data-layout="landscape"]) .metrics strong { font-size: 3rem; }
 
 
 /* Sealed Cameo is confined to the portrait arch; the card stays Pearl Reserve. */

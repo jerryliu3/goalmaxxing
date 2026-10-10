@@ -1,10 +1,10 @@
 export const SETTINGS_SECTIONS = [
   "preferences",
+  "appearance",
   "notifications",
   "integrations",
   "onboarding",
   "digest",
-  "appearance",
   "password",
   "report-issue",
 ] as const;
@@ -24,6 +24,11 @@ export const SETTINGS_GROUPS: Array<{
         key: "preferences",
         label: "Preferences",
         description: "Timezone, first day of the week, and activity privacy.",
+      },
+      {
+        key: "appearance",
+        label: "Appearance",
+        description: "Choose how Goalmaxxing looks on this device.",
       },
       {
         key: "onboarding",
@@ -57,11 +62,6 @@ export const SETTINGS_GROUPS: Array<{
     key: "account",
     label: "Account",
     items: [
-      {
-        key: "appearance",
-        label: "Appearance",
-        description: "Choose how Goalmaxxing looks on this device.",
-      },
       {
         key: "password",
         label: "Change password",

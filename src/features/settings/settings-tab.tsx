@@ -124,10 +124,6 @@ export function SettingsTab() {
       data-settings-pane={settingsPanelOpen ? "open" : "closed"}
       className="min-w-0 space-y-5"
     >
-      <header>
-        <h1 className="type-title text-2xl">Profile</h1>
-        <p className="text-sm text-muted-foreground">How others see you, and how Goalmaxxing works for you.</p>
-      </header>
       <SettingsProfileBox bundle={presence} session={profileSession} />
       {SETTINGS_GROUPS.map((group) => (
         <section key={group.key} className="space-y-1">

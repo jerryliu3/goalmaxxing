@@ -29,7 +29,7 @@ const PLAN_VIEW_OPTIONS: ReadonlyArray<SegmentedControlOption<PlannerCalendarVie
 
 interface PlannerCalendarToolbarProps {
   plannerReadOnly: boolean;
-  /** Right of the Agenda title: the recovery prompt when sessions slipped. */
+  /** Beside the Agenda title: the recovery prompt when sessions slipped. */
   status?: ReactNode;
   loading: boolean;
   viewMode: PlannerCalendarViewMode;
@@ -127,31 +127,27 @@ export function PlannerCalendarToolbar({
     >
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h2 className="type-title text-lg tracking-tight">Agenda</h2>
-              <Tooltip content="Planner help" side="top" align="center">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-round"
-                  aria-label="Open planner help"
-                  title="Planner help"
-                  onClick={() => setHelpOpen(true)}
-                >
-                  <CircleHelp />
-                </Button>
-              </Tooltip>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            {plannerReadOnly ? (
-              <span className="text-xs text-muted-foreground">
-                Partner completions (view only)
-              </span>
-            ) : null}
+          <div className="flex w-max max-w-full flex-wrap items-center gap-1">
+            <h2 className="type-title text-lg tracking-tight">Agenda</h2>
+            <Tooltip content="Agenda help" side="top" align="start" className="shrink-0">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-round"
+                aria-label="Open agenda help"
+                title="Agenda help"
+                onClick={() => setHelpOpen(true)}
+              >
+                <CircleHelp />
+              </Button>
+            </Tooltip>
             {status}
           </div>
+          {plannerReadOnly ? (
+            <span className="text-xs text-muted-foreground">
+              Partner completions (view only)
+            </span>
+          ) : null}
         </div>
         <div data-onboarding="planner.calendar.controls" className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1">
           <PlanViewModeSwitch
@@ -231,7 +227,7 @@ export function PlannerCalendarToolbar({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Planner help</DialogTitle>
+            <DialogTitle>Agenda help</DialogTitle>
             <DialogDescription>
               Try scheduling changes on the calendar. Nothing is saved until you press Save plan.
             </DialogDescription>
@@ -244,7 +240,7 @@ export function PlannerCalendarToolbar({
               <li>Refresh calendar in Settings rebalances unlocked sessions onto open days.</li>
             </ul>
             <Button type="button" variant="outline" size="sm" onClick={() => setHelpOpen(false)}>
-              Back to plan
+              Back to agenda
             </Button>
           </div>
         </DialogContent>
