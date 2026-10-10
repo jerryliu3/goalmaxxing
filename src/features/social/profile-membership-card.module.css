@@ -119,9 +119,12 @@
   opacity: .6;
 }
 .identityArt {
+  /* The arch stretches beside the name and records. Keep the rings in
+     that opening instead of pinned to the crown. */
   position: relative;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   min-height: 0;
   padding: .55rem 0;
   border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
@@ -359,6 +362,9 @@ button.portrait:focus-visible {
   flex: 0 1 auto;
   min-height: 0;
   max-height: 100%;
+  /* A touch below the arch's midpoint, so the face sits in the body
+     of the curve rather than on its center line. */
+  transform: translate3d(0, .85rem, 0);
 }
 .embed :global([data-layout="landscape"]) .horizon {
   height: 100%;
