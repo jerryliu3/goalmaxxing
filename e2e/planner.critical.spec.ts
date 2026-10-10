@@ -927,7 +927,7 @@ test.describe("planner critical rails", () => {
   });
 });
 
-test("portrait month fits seven days and rotation retains selection", async ({
+test("portrait month expands to full work and retains selection across rotation", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 844, height: 390 });
@@ -951,10 +951,24 @@ test("portrait month fits seven days and rotation retains selection", async ({
   const selectedNode = await date.elementHandle();
   await expect(
     page.getByRole("button", { name: /Expand rows|Compact rows/ }),
-  ).toBeHidden();
+  ).toBeVisible();
   expect(
     await viewport.evaluate((node) => node.scrollWidth <= node.clientWidth + 1),
   ).toBe(true);
+
+  await expect(date).toHaveAttribute("data-month-map", "true");
+  await page.getByRole("button", { name: "Expand rows", exact: true }).click();
+  await expect(date).toHaveAttribute("data-month-map", "false");
+  await expect
+    .poll(async () => track.evaluate((node) => node.getBoundingClientRect().width))
+    .toBeGreaterThanOrEqual(672);
+  await expect(date).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Compact rows", exact: true }).click();
+  await expect(date).toHaveAttribute("data-month-map", "true");
+  await expect
+    .poll(async () => track.evaluate((node) => node.getBoundingClientRect().width))
+    .toBeLessThanOrEqual(390);
+  expect(await selectedNode!.evaluate((node) => node.isConnected)).toBe(true);
 
   await page.setViewportSize({ width: 844, height: 390 });
   await expect(

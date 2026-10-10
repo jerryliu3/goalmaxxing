@@ -153,36 +153,31 @@
   }
 }
 
-/* One calendar DOM and one selection/draft state across rotation. Only its
-   presentation changes; landscape retains the full, movable work pills. */
-.monthMapSummary,
-.monthMapHint {
-  display: none;
-}
-
+/* Date cells and plan state stay in place across rotation and expansion.
+   A minimized portrait month uses summaries; other layouts show work pills. */
 @media (max-width: 767px) and (orientation: portrait) {
-  .monthCalendar .monthGridTrack {
+  .monthCalendar[data-month-expanded="false"] .monthGridTrack {
     min-width: 0;
   }
 
-  .monthCalendar .monthGridScrollViewport {
+  .monthCalendar[data-month-expanded="false"] .monthGridScrollViewport {
     max-height: none;
     overflow-y: visible;
   }
 
-  .monthCell {
+  .monthCell[data-month-map="true"] {
     min-height: 5.5rem;
     padding: 0.5rem 0.25rem;
   }
 
-  .monthCell .dateHeader {
+  .monthCell[data-month-map="true"] .dateHeader {
     justify-content: center;
     flex-wrap: wrap;
     gap: 0.125rem;
     margin-bottom: 0.375rem;
   }
 
-  .monthCell .dayNumber {
+  .monthCell[data-month-map="true"] .dayNumber {
     display: inline-flex;
     width: 1.75rem;
     height: 1.75rem;
@@ -193,23 +188,21 @@
     letter-spacing: 0;
   }
 
-  .monthCell[aria-current="date"] .dayNumber {
+  .monthCell[data-month-map="true"][aria-current="date"] .dayNumber {
     background: var(--gm-today);
     color: var(--gm-today-foreground);
   }
 
-  .monthCell[aria-pressed="true"] {
+  .monthCell[data-month-map="true"][aria-pressed="true"] {
     background: var(--gm-day-selected);
     color: var(--gm-day-selected-foreground);
   }
 
-  .monthCell[aria-pressed="true"]:not([aria-current="date"]) .dayNumber {
+  .monthCell[data-month-map="true"][aria-pressed="true"]:not(
+      [aria-current="date"]
+    )
+    .dayNumber {
     color: inherit;
-  }
-
-  .monthCellWork,
-  .monthExpandControl {
-    display: none;
   }
 
   .monthMapSummary {
@@ -243,14 +236,6 @@
     font-size: 0.6875rem;
     line-height: 1.25;
     font-variant-numeric: tabular-nums;
-  }
-
-  .monthMapHint {
-    display: block;
-    margin-bottom: 0.75rem;
-    font-size: 0.8125rem;
-    text-align: center;
-    color: var(--muted-foreground);
   }
 
   .monthCalendar .weekdayGrid {

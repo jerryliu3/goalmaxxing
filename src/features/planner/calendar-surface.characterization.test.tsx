@@ -287,38 +287,28 @@ describe("CalendarSurface characterization", () => {
       );
     });
 
-    expect(
-      document.querySelector('[data-day-cell="true"][data-day="2026-07-01"]')
-    ).toBeInstanceOf(HTMLElement);
-    expect(
-      document.querySelector('[data-day-cell="true"][data-day="2026-09-30"]')
-    ).toBeInstanceOf(HTMLElement);
-    expect(
-      document.querySelector('[data-month-context-label="Jul"]')
-    ).toBeInstanceOf(HTMLElement);
-    expect(
-      document.querySelector('[data-month-context-label="Sep"]')
-    ).toBeInstanceOf(HTMLElement);
-
-    const julySlot = document.querySelector(
+    const previousDay = () => document.querySelector(
       '[data-month-week-band="previous"] [data-day="2026-07-01"]'
-    )?.closest("[data-month-week-band]");
-    const septemberOverlap = document.querySelector(
-      '[data-month-week-band="current"] [data-day="2026-09-01"]'
-    )?.closest("[data-month-week-band]");
-    const lateSeptemberSlot = document.querySelector(
+    );
+    const nextDay = () => document.querySelector(
       '[data-month-week-band="next"] [data-day="2026-09-30"]'
-    )?.closest("[data-month-week-band]");
-    expect(julySlot).toHaveAttribute("data-month-week-visible", "false");
-    expect(septemberOverlap).toHaveAttribute("data-month-week-visible", "true");
-    expect(lateSeptemberSlot).toHaveAttribute("data-month-week-visible", "false");
+    );
+    expect(previousDay()).toBeNull();
+    expect(nextDay()).toBeNull();
+    expect(document.querySelector(
+      '[data-month-week-band="current"] [data-day="2026-09-01"]'
+    )).toBeInstanceOf(HTMLElement);
 
     fireEvent.click(screen.getByRole("button", { name: "Show previous month" }));
-    expect(julySlot).toHaveAttribute("data-month-week-visible", "true");
+    expect(previousDay()).toBeInstanceOf(HTMLElement);
+    expect(document.querySelector('[data-month-context-label="Jul"]'))
+      .toBeInstanceOf(HTMLElement);
     fireEvent.click(screen.getByRole("button", { name: "Hide previous month" }));
-    expect(julySlot).toHaveAttribute("data-month-week-visible", "false");
+    expect(previousDay()).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Show next month" }));
-    expect(lateSeptemberSlot).toHaveAttribute("data-month-week-visible", "true");
+    expect(nextDay()).toBeInstanceOf(HTMLElement);
+    expect(document.querySelector('[data-month-context-label="Sep"]'))
+      .toBeInstanceOf(HTMLElement);
   });
 
   it.each(["month", "week"] as const)(

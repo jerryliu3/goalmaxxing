@@ -121,6 +121,61 @@ describe("calendar surface extracted components", () => {
     );
   });
 
+  it("mounts full work only when the portrait month is expanded", () => {
+    const cellProps = {
+      day: "2026-08-06",
+      inMonth: true,
+      isToday: false,
+      isPastInMonth: false,
+      isSelected: true,
+      ariaLabel: "Thursday, August 6, 2026. 1 planned item.",
+      entriesForDay: [sampleEntry],
+      completionFactMarkersForDay: [sampleMarker],
+      isAnyEntryDragging: false,
+      getEntryDisplayTitle: (entry: typeof sampleEntry) => entry.label,
+      isEntryCredited: () => false,
+      isEntryImmovableForDraft: () => false,
+      onEntryClick: vi.fn(),
+      onCellClick: vi.fn(),
+      onCellDoubleClick: vi.fn(),
+      onCellMouseEnter: vi.fn(),
+      onCellMouseLeave: vi.fn(),
+      onCellPointerDown: vi.fn(),
+      onCellPointerUp: vi.fn(),
+      onCellPointerCancel: vi.fn(),
+      onCellPointerLeave: vi.fn(),
+      onEntryPointerStart: vi.fn(),
+      onEntryPointerEnd: vi.fn(),
+    };
+    const renderCell = (compactMonth: boolean) => (
+      <PlannerDndProvider
+        getEntryLabel={(key) => key}
+        getDayLabel={(day) => day}
+        onEntryDragStart={() => {}}
+        onEntryDragEnd={() => {}}
+        onEntryDragCancel={() => {}}
+      >
+        <CalendarMonthDayCell {...cellProps} compactMonth={compactMonth} />
+      </PlannerDndProvider>
+    );
+    const view = render(renderCell(true));
+    const cell = screen.getByRole("button", { name: /thursday, august 6/i });
+    expect(cell.querySelector("[data-month-map-summary]")).not.toBeNull();
+    expect(view.container.querySelector("[data-calendar-day-entry]")).toBeNull();
+    expect(screen.queryByText("Stretch")).not.toBeInTheDocument();
+
+    view.rerender(renderCell(false));
+    expect(screen.getByText("Easy run")).toBeInTheDocument();
+    expect(screen.getByText("Stretch")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /thursday, august 6/i })).toBe(cell);
+    expect(cell).toHaveAttribute("aria-pressed", "true");
+    expect(cell.querySelector("[data-month-map-summary]")).toBeNull();
+
+    view.rerender(renderCell(true));
+    expect(view.container.querySelector("[data-calendar-day-entry]")).toBeNull();
+    expect(cell).toHaveAttribute("aria-pressed", "true");
+  });
+
   it("contrasts adjacent months, today, and the selected day", () => {
     const cellProps = {
       entriesForDay: [] as typeof sampleEntry[],
