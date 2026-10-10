@@ -124,10 +124,6 @@ export function SettingsTab() {
       data-settings-pane={settingsPanelOpen ? "open" : "closed"}
       className="min-w-0 space-y-5"
     >
-      <header>
-        <h1 className="type-title text-2xl">Profile</h1>
-        <p className="text-sm text-muted-foreground">How others see you, and how Goalmaxxing works for you.</p>
-      </header>
       <SettingsProfileBox bundle={presence} session={profileSession} />
       {SETTINGS_GROUPS.map((group) => (
         <section key={group.key} className="space-y-1">
@@ -255,6 +251,15 @@ function SettingsSectionEditor({
         />
         <div className="space-y-3 border-t pt-4">
           <div className="space-y-1">
+            <p className="text-sm font-medium">Appearance</p>
+            <p className="text-xs text-muted-foreground">
+              Choose how Goalmaxxing looks on this device.
+            </p>
+          </div>
+          <AppearanceSettings />
+        </div>
+        <div className="space-y-3 border-t pt-4">
+          <div className="space-y-1">
             <p className="text-sm font-medium">Privacy</p>
             <p className="text-xs text-muted-foreground">
               Control whether your activity appears in feed, leaderboards, and your
@@ -316,10 +321,6 @@ function SettingsSectionEditor({
 
   if (settingsSection === "digest") {
     return <DigestSettings />;
-  }
-
-  if (settingsSection === "appearance") {
-    return <AppearanceSettings />;
   }
 
   if (settingsSection === "integrations") {

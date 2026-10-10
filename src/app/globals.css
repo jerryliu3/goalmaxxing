@@ -398,25 +398,6 @@ body {
   pointer-events: none;
 }
 
-/* The floating Planning / Recovery bar. Panels that rest on it stack from
-   these, so the two can never drift apart. */
-:root {
-  --plan-action-bar-height: 3.25rem;
-  --plan-action-bar-bottom: max(env(safe-area-inset-bottom), 0.75rem);
-}
-
-@media (width >= 48rem) {
-  :root {
-    --plan-action-bar-bottom: 1rem;
-  }
-}
-
-/* On phones the bar takes the tab bar's place: finish or cancel the change
-   before leaving the tab. */
-body:has([data-plan-action-bar]) [data-mobile-tab-nav] {
-  display: none;
-}
-
 @property --plan-selected-border-angle-a {
   syntax: "<angle>";
   initial-value: 0deg;

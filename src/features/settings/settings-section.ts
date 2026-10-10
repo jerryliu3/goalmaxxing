@@ -4,7 +4,6 @@ export const SETTINGS_SECTIONS = [
   "integrations",
   "onboarding",
   "digest",
-  "appearance",
   "password",
   "report-issue",
 ] as const;
@@ -23,7 +22,7 @@ export const SETTINGS_GROUPS: Array<{
       {
         key: "preferences",
         label: "Preferences",
-        description: "Timezone, first day of the week, and activity privacy.",
+        description: "Timezone, first day of the week, appearance, and activity privacy.",
       },
       {
         key: "onboarding",
@@ -58,11 +57,6 @@ export const SETTINGS_GROUPS: Array<{
     label: "Account",
     items: [
       {
-        key: "appearance",
-        label: "Appearance",
-        description: "Choose how Goalmaxxing looks on this device.",
-      },
-      {
         key: "password",
         label: "Change password",
         description: "Confirm your current password and choose a new one.",
@@ -81,6 +75,10 @@ export function resolveSettingsSection(
 ): SettingsSection | null {
   if (!value) {
     return null;
+  }
+  // Appearance lives inside Preferences. Keep the old tab so existing links open that panel.
+  if (value === "appearance") {
+    return "preferences";
   }
   return (SETTINGS_SECTIONS as readonly string[]).includes(value)
     ? (value as SettingsSection)

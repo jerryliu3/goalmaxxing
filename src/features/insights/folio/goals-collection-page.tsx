@@ -29,7 +29,7 @@ export function GoalsCollectionPage({ subjectUserId, readOnly = false, anchorSec
   // Until that date arrives, ask for the UTC year so the first request has a window.
   const [selectedYear, setSelectedYear] = useState(() => getDateInTimezone(new Date(), "UTC").slice(0, 4));
   const { state, loading, loadError, reload } = useInsightsData({ subjectUserId, selectedYear, failClosed: readOnly });
-  const profileYear = state.asOfDate.slice(0, 4);
+  const profileYear = (state.asOfDate ?? "").slice(0, 4);
   useEffect(() => {
     if (profileYear && profileYear !== selectedYear) setSelectedYear(profileYear);
   }, [profileYear, selectedYear]);

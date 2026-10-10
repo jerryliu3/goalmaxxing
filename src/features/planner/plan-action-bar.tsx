@@ -3,13 +3,15 @@
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import styles from "./plan-action-bar.module.css";
 
 export const PLAN_ACTION_BUTTON_CLASS = "h-9 rounded-full px-3.5";
 
 /**
  * The one place a pending plan change is kept or thrown away: a bar floating
- * at the bottom of the screen, standing in for the phone tab bar, so Save
- * stays in reach while scrolling a month. Planning and Recovery share it.
+ * just above the phone tab bar (and near the bottom edge once tabs move into
+ * the header), so Save stays in reach while scrolling a month. Planning and
+ * Recovery share it.
  */
 export function PlanActionBar({
   label,
@@ -28,7 +30,7 @@ export function PlanActionBar({
 }) {
   return (
     // m-0: a parent's space-y margin would otherwise lift the fixed bar off the offset panels stack from.
-    <div className="pointer-events-none fixed inset-x-0 bottom-(--plan-action-bar-bottom) z-40 m-0 flex justify-center px-3">
+    <div className={cn("pointer-events-none fixed inset-x-0 z-40 m-0 flex justify-center px-3", styles.anchor)}>
       <div
         role="region"
         aria-label={label}

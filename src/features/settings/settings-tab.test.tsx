@@ -191,13 +191,14 @@ describe("SettingsTab", () => {
     expect(screen.getByRole("dialog", { name: "Integrations" })).toBeInTheDocument();
   });
 
-  it("opens appearance from the tab query", () => {
+  it("opens appearance inside preferences from the old tab query", () => {
     mockSearch = "tab=appearance";
     render(<SettingsTab />);
 
-    expect(screen.getByRole("dialog", { name: "Appearance" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Preferences" })).toBeInTheDocument();
     expect(screen.getByTestId("settings-side-panel")).toHaveClass("rounded-none");
     expect(screen.getByText("Appearance body")).toBeInTheDocument();
+    expect(screen.getByText("Preferences body")).toBeInTheDocument();
   });
 
   it("opens digest settings from the tab query", () => {
@@ -236,7 +237,7 @@ describe("SettingsTab", () => {
     expect(screen.getByRole("heading", { name: "Connected" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Account" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preferences" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Appearance" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Appearance" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
     expect(screen.queryByText("Primary planner tab")).not.toBeInTheDocument();
@@ -244,12 +245,13 @@ describe("SettingsTab", () => {
     expect(screen.getByRole("button", { name: "Preferences" }).parentElement).toHaveClass("bg-card", "rounded-2xl");
   });
 
-  it("titles the page Profile and says what each setting holds", () => {
+  it("says what each setting holds without a page title", () => {
     render(<SettingsTab />);
 
-    expect(screen.getByRole("heading", { level: 1, name: "Profile" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1, name: "Profile" })).not.toBeInTheDocument();
+    expect(screen.queryByText("How others see you, and how Goalmaxxing works for you.")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preferences" })).toHaveAccessibleDescription(
-      "Timezone, first day of the week, and activity privacy."
+      "Timezone, first day of the week, appearance, and activity privacy."
     );
   });
 

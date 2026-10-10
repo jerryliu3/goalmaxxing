@@ -12,7 +12,6 @@ describe("resolveSettingsSection", () => {
     expect(resolveSettingsSection("integrations")).toBe("integrations");
     expect(resolveSettingsSection("onboarding")).toBe("onboarding");
     expect(resolveSettingsSection("digest")).toBe("digest");
-    expect(resolveSettingsSection("appearance")).toBe("appearance");
     expect(resolveSettingsSection("password")).toBe("password");
     expect(resolveSettingsSection("report-issue")).toBe("report-issue");
   });
@@ -21,6 +20,10 @@ describe("resolveSettingsSection", () => {
     expect(resolveSettingsSection(undefined)).toBeNull();
     expect(resolveSettingsSection("profile")).toBeNull();
     expect(resolveSettingsSection("unknown")).toBeNull();
+  });
+
+  it("opens the preferences panel for the old appearance tab", () => {
+    expect(resolveSettingsSection("appearance")).toBe("preferences");
   });
 
   it("groups existing controls into Plan, Connected, and Account", () => {
@@ -35,14 +38,11 @@ describe("resolveSettingsSection", () => {
       "digest",
       "notifications",
       "integrations",
-      "appearance",
       "password",
       "report-issue",
     ]);
-    expect(getSettingsSectionCopy("appearance")).toEqual({
-      key: "appearance",
-      label: "Appearance",
-      description: "Choose how Goalmaxxing looks on this device.",
-    });
+    expect(getSettingsSectionCopy("preferences").description).toBe(
+      "Timezone, first day of the week, appearance, and activity privacy."
+    );
   });
 });

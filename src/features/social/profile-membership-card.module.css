@@ -119,9 +119,12 @@
   opacity: .6;
 }
 .identityArt {
+  /* The arch stretches beside the name and records. Keep the rings in
+     that opening instead of pinned to the crown. */
   position: relative;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   min-height: 0;
   padding: .55rem 0;
   border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
@@ -280,11 +283,12 @@ button.portrait:focus-visible {
   justify-content: flex-end;
   gap: .2rem;
   container-type: inline-size;
-  overflow: hidden;
 }
 .metrics strong {
-  font: clamp(1.15rem, 38cqw, 3.35rem)/.8 var(--font-display);
-  letter-spacing: -.04em;
+  /* Size to the column so values like 100% and two-digit levels stay inside
+     the line box. The old 0.8 line-height plus overflow clipping cut the glyphs. */
+  font: clamp(1rem, 22cqw, 2.4rem)/1.05 var(--font-display);
+  letter-spacing: -.03em;
 }
 .metric > span {
   font-size: .68rem;
@@ -358,6 +362,9 @@ button.portrait:focus-visible {
   flex: 0 1 auto;
   min-height: 0;
   max-height: 100%;
+  /* Halfway between the crown and the lowered seat: centered in the
+     arch, then back up a little. */
+  transform: translate3d(0, -.7rem, 0);
 }
 .embed :global([data-layout="landscape"]) .horizon {
   height: 100%;
@@ -372,7 +379,6 @@ button.portrait:focus-visible {
 }
 .embed :global([data-layout="landscape"]) .titleCompose { font-size: 2.55rem; }
 .embed :global([data-layout="landscape"]) .metrics { padding: .45rem 0 .02rem; }
-.embed :global([data-layout="landscape"]) .metrics strong { font-size: 3rem; }
 
 
 /* Sealed Cameo is confined to the portrait arch; the card stays Pearl Reserve. */
