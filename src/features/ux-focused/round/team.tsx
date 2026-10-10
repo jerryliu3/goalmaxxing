@@ -48,6 +48,8 @@ export function TeamRound({ variant }: { variant: number }) {
           setDialog(null);
           setGoalId(null);
           setCheckIn(INITIAL_CHECK_IN);
+          team.setFocusGoal("film");
+          team.setHandoff("editing");
         }}
       />
       <ProductHeader

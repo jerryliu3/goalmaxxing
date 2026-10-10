@@ -73,3 +73,45 @@ describe("dedicated Team journeys", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("team coordination beyond Duo", () => {
+  it("changes the shared focus without changing recorded work", () => {
+    render(<TeamRound variant={0} />);
+    fireEvent.change(
+      screen.getByRole("combobox", { name: "Our focus this week" }),
+      { target: { value: "run" } },
+    );
+    expect(
+      screen.getByRole("heading", { name: "Your next step together." }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Long run")).toBeInTheDocument();
+  });
+  it("gates a partner handoff on the owner’s actual recorded session and keeps review separate", () => {
+    render(<TeamRound variant={1} />);
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Record the rough-cut session first",
+      }),
+    );
+    const dialog = screen.getByRole("dialog");
+    fireEvent.keyDown(
+      within(dialog).getByRole("button", {
+        name: "Complete Build the rough cut",
+      }),
+      { key: "Enter" },
+    );
+    fireEvent.click(within(dialog).getByRole("button", { name: "Done" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Mark ready for Alex’s review" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Alex leaves a review" }),
+    );
+    expect(screen.getByText("Alex reviewed the rough cut")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "A handoff status never completes a session or changes its date.",
+      ),
+    ).toBeInTheDocument();
+  });
+});

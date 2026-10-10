@@ -24,16 +24,16 @@ export const FOCUSED_STUDIES: readonly FocusedStudy[] = [
       {
         name: "Partnership brief",
         change:
-          "A finite weekly brief connects attributed contributions to the next shared-goal handoff. A nudge is the main social action; no calendar or ranked progress board.",
+          "A pair chooses one shared weekly focus. Its finite brief connects attributed contributions to that focus’s next work. A nudge is the main social action; no calendar or ranked progress board.",
         tradeoff:
-          "The smallest production change: derives context from team-visible work and existing nudges. Its value depends on having genuinely relevant shared activity; an empty team gets a direct shared-goal entrance.",
+          "The lightest collaboration addition: a team-owned weekly focus choice plus context from visible work and existing nudges. The focus choice needs persistence before adoption. Its value depends on having genuinely relevant shared activity; an empty team gets a direct shared-goal entrance.",
       },
       {
         name: "Shared-goal dossiers",
         change:
-          "Each team goal has a joint home with an attributed contribution record, next contribution, and finished-goal keepsakes. Team history sits alongside present work rather than a feed.",
+          "Each team goal has a joint home with contributions, next work, and finished-goal keepsakes. The film dossier adds an explicit editing → ready for partner → reviewed handoff. Team history sits alongside present work rather than a feed.",
         tradeoff:
-          "Best when the shared goal is the reason for the partnership. More goal-centric than A, but distinct from Duo’s personal goal comparison. The historical keepsake is illustrative; history availability must be confirmed before shipping.",
+          "Best when the shared goal is the reason for the partnership. More goal-centric than A, but distinct from Duo’s personal goal comparison. The handoff is a new team-goal capability needing persistence and permissions; it never changes dates or grants completion credit. Historical availability also needs confirmation.",
       },
       {
         name: "Weekly rendezvous",

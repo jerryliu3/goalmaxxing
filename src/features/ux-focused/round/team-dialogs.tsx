@@ -96,6 +96,7 @@ export function TeamDialogs({ team }: { team: TeamRoundState }) {
                   setRelationship("No partner");
                   setDialog(null);
                   setCheckIn(INITIAL_CHECK_IN);
+                  team.setHandoff("editing");
                   setMessage("You left the sample team.");
                 }}
               >

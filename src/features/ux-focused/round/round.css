@@ -286,3 +286,38 @@
   color: var(--gm-selection-foreground);
   border-color: var(--gm-selection-line);
 }
+
+.rd-team-focus {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--gm-selection-line);
+  border-radius: var(--radius-lg);
+}
+.rd-team-focus .rd-field {
+  margin: 0 0 10px;
+}
+.rd-goal-handoff {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+  margin: 16px 0 24px;
+}
+.rd-goal-handoff > .type-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rd-goal-handoff > p + p {
+  margin-top: 10px;
+}
+.rd-goal-handoff > button {
+  margin-top: 16px;
+}
+.rd-goal-handoff blockquote {
+  background: var(--muted);
+  padding: 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  margin-top: 14px;
+}

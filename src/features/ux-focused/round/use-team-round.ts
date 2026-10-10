@@ -21,6 +21,10 @@ export function useTeamRound() {
   const [nudge, setNudge] = useState("");
   const [message, setMessage] = useState("");
   const [checkIn, setCheckIn] = useState(INITIAL_CHECK_IN);
+  const [focusGoal, setFocusGoal] = useState("film");
+  const [handoff, setHandoff] = useState<"editing" | "ready" | "reviewed">(
+    "editing",
+  );
   const paired =
     relationship === "Paired" || relationship === "No shared goals";
   const noGoals = relationship === "No shared goals";
@@ -47,6 +51,10 @@ export function useTeamRound() {
     setMessage,
     checkIn,
     setCheckIn,
+    focusGoal,
+    setFocusGoal,
+    handoff,
+    setHandoff,
     paired,
     noGoals,
     work,

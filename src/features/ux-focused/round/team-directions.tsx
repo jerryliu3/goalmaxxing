@@ -5,6 +5,7 @@ import { Action, PersonMark } from "../common";
 import { TEAM_GOALS, dateLabel } from "../model";
 import { publishCheckIn } from "./team-model";
 import { SessionReceipts, PartnerAcknowledgement } from "./team-parts";
+import { TeamFocus, TeamHandoff } from "./team-coordination";
 import type { TeamRoundState } from "./use-team-round";
 export function TeamDirections({
   team,
@@ -17,6 +18,10 @@ export function TeamDirections({
 }) {
   const { work, brief, openGoal, setDialog, noGoals, checkIn, setCheckIn } =
     team;
+  const focus =
+    TEAM_GOALS.find(
+      (g) => g.id === team.focusGoal && work.some((s) => s.goal === g.id),
+    ) ?? TEAM_GOALS.find((g) => work.some((s) => s.goal === g.id));
   return (
     <>
       {" "}
@@ -44,6 +49,7 @@ export function TeamDirections({
                 first story.
               </p>
             )}
+            <TeamFocus team={team} />
             <div className="rd-contributions">
               {brief.people.map((p) => (
                 <div key={p.person}>
@@ -64,19 +70,19 @@ export function TeamDirections({
           <section className="rd-section">
             <p className="type-eyebrow">The next connection</p>
             <h3 className="type-heading">
-              {work.some((s) => s.goal === "film")
+              {focus?.id === "film"
                 ? "From your rough cut to Alex’s review."
                 : "Your next step together."}
             </h3>
             <p className="rd-muted">
-              See the two next film sessions together. A reason to check in,
-              without opening two plans.
+              {focus?.id === "film"
+                ? "See the next film sessions together. A reason to check in, without opening two plans."
+                : "Keep the next contribution to your chosen focus in view together."}
             </p>
             <SessionReceipts
-              sessions={(work.some((s) => s.goal === "film")
-                ? brief.next.filter((s) => s.goal === "film")
-                : brief.next
-              ).slice(0, 2)}
+              sessions={brief.next
+                .filter((s) => s.goal === focus?.id)
+                .slice(0, 2)}
               onGoal={openGoal}
             />
             {!work.length && <p>No shared sessions yet.</p>}
@@ -146,6 +152,12 @@ export function TeamDirections({
                           </p>
                         )}
                       </div>
+                      {g.id === "film" && (
+                        <TeamHandoff
+                          team={team}
+                          onOpen={() => openGoal(g.id)}
+                        />
+                      )}
                       <Action variant="outline" onClick={() => openGoal(g.id)}>
                         Open the shared-goal dossier <ArrowUpRight size={16} />
                       </Action>
