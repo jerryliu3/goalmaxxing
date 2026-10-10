@@ -26,19 +26,25 @@ export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: { 
   const [error, setError] = useState<string | null>(null);
   const progress = account?.progress;
   useEffect(() => {
-    if (enabled && progress && phase === null) setPhase(!progress.completed_at ? "setup" : !progress.tours["app.tabs"] ? "invite" : "closed");
-  }, [enabled, progress, phase]);
+    if (enabled && !account?.error && progress && phase === null) setPhase(!progress.completed_at ? "setup" : !progress.tours["app.tabs"] ? "invite" : "closed");
+  }, [enabled, account?.error, progress, phase]);
   useEffect(() => {
-    onOpenChange?.(Boolean(enabled && account && (account.loading || account.error || phase !== "closed")));
+    onOpenChange?.(Boolean(enabled && account && phase !== "closed"));
   }, [enabled, account?.loading, account?.error, phase, onOpenChange]);
   useEffect(() => {
-    const setup = () => { if (!progress) return; setReplay(Boolean(progress.completed_at)); setPhase("setup"); setError(null); };
+    const setup = () => {
+      setReplay(!progress || Boolean(progress.completed_at));
+      setPhase("setup");
+      setError(null);
+      if (!progress || account?.error) account?.reload();
+    };
     const tabs = () => { if (!progress?.completed_at) return; setReplay(true); setPhase("tabs"); setError(null); };
     window.addEventListener(JOURNEY_INTRO_OPEN_EVENT, setup);
     window.addEventListener(TAB_TOUR_OPEN_EVENT, tabs);
     return () => { window.removeEventListener(JOURNEY_INTRO_OPEN_EVENT, setup); window.removeEventListener(TAB_TOUR_OPEN_EVENT, tabs); };
-  }, [progress]);
+  }, [progress, account?.error, account?.reload]);
   if (!enabled || !account || account.loading || phase === "closed" || (!phase && !account.error)) return null;
+  if (phase === "setup" && !progress && !account.error) return null;
   const save = async (action: Parameters<typeof account.save>[0], next: () => void) => {
     if (saving) return;
     setSaving(true); setError(null);
@@ -46,12 +52,12 @@ export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: { 
     catch (cause) { setError(getApiErrorMessage(cause, "Your guide progress could not be saved. Try again.")); }
     finally { setSaving(false); }
   };
-  if (phase === "setup" && progress) return <JourneySetupWizard key={`${userId}:${replay}`} userId={userId} replay={replay}
+  if (!account.error && phase === "setup" && progress) return <JourneySetupWizard key={`${userId}:${replay}`} userId={userId} replay={replay}
     onCancelReplay={() => setPhase("closed")} onDone={() => { setPhase(replay ? "closed" : "invite"); }} />;
-  if (phase === "tabs") return <OnboardingTourBody onboardingKey="app.tabs" steps={APP_TAB_TOUR_STEPS} label="Tab tour" saving={saving} error={error}
+  if (!account.error && phase === "tabs") return <OnboardingTourBody onboardingKey="app.tabs" steps={APP_TAB_TOUR_STEPS} label="Tab tour" saving={saving} error={error}
     onClose={status => { void save({ action: "tour", key: "app.tabs", status }, () => setPhase(replay || progress?.tours["planner.calendar"] ? "closed" : "page-invite")); }} />;
   const startPage = () => { setPhase("closed"); router.push("/calendar?onboarding=planner.calendar"); };
-  return <Dialog open onOpenChange={open => { if (!open && !saving && !account.error) void save(phase === "page-invite" ? { action: "tour", key: "planner.calendar", status: "skipped" } : { action: "skip-tours" }, () => setPhase("closed")); }}>
+  return <Dialog open onOpenChange={open => { if (!open && !saving) { if (account.error) { setPhase("closed"); return; } void save(phase === "page-invite" ? { action: "tour", key: "planner.calendar", status: "skipped" } : { action: "skip-tours" }, () => setPhase("closed")); } }}>
     <DialogContent className="z-[80]" overlayClassName="z-[80]" showCloseButton={false} onInteractOutside={event => event.preventDefault()}>
       <DialogHeader>
         <p className="type-eyebrow text-muted-foreground">{account.error ? "Getting started" : phase === "page-invite" ? "Optional · Agenda tour" : "Setup complete"}</p>
@@ -59,7 +65,10 @@ export function JourneyIntroOverlay({ userId, enabled = true, onOpenChange }: { 
         <DialogDescription>{account.error ?? (phase === "page-invite" ? "A short guide to Agenda. Skip it whenever you like." : "Want a quick look around?")}</DialogDescription>
       </DialogHeader>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      {account.error ? <Button onClick={account.reload}>Try again</Button> : <>
+      {account.error ? <DialogFooter>
+        <Button variant="outline" onClick={() => setPhase("closed")}>Continue to app</Button>
+        <Button onClick={account.reload}>Try again</Button>
+      </DialogFooter> : <>
         <DialogFooter>
           <Button variant="ghost" disabled={saving} onClick={() => void save(phase === "page-invite" ? { action: "tour", key: "planner.calendar", status: "skipped" } : { action: "skip-tours" }, () => setPhase("closed"))}>{phase === "page-invite" ? "Skip Agenda tour" : "Skip all tours"}</Button>
           <Button disabled={saving || !progress} onClick={() => { if (phase === "page-invite") startPage(); else { setReplay(false); setPhase("tabs"); } }}>{phase === "page-invite" ? "Take Agenda tour" : "Take tab tour"}</Button>
