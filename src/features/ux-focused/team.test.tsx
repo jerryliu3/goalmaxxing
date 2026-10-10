@@ -28,7 +28,10 @@ describe("dedicated Team journeys", () => {
     );
     const dialog = screen.getByRole("dialog");
     expect(
-      within(dialog).getByRole("heading", { name: "Finish the short film" }),
+      within(dialog).getByRole("heading", {
+        name: "Finish the short film",
+        level: 2,
+      }),
     ).toBeInTheDocument();
     expect(within(dialog).queryByText("Long run")).not.toBeInTheDocument();
     expect(
