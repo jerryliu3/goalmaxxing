@@ -177,7 +177,10 @@ test.describe("portrait marketing month", () => {
     const cell = await entry.locator('xpath=ancestor::*[@data-month-day-cell]').boundingBox();
     expect(symbol!.x + symbol!.width).toBeLessThanOrEqual(cell!.x + cell!.width + 1);
     await page.setViewportSize({ width: 844, height: 390 });
-    await expect(entry.getByText("Tempo run", { exact: true })).toBeVisible();
-    await expect(entry.locator('span[aria-hidden="true"]')).toBeHidden();
+    await expect(entry.getByText("Tempo run", { exact: true })).toBeHidden();
+    await expect(entry.locator('span[aria-hidden="true"]')).toBeVisible();
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await expect(entry.getByText("Tempo run", { exact: true })).toBeHidden();
+    await expect(entry.locator('span[aria-hidden="true"]')).toBeVisible();
   });
 });

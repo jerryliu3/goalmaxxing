@@ -1,28 +1,26 @@
 .symbol {
+display: none;
+}
+
+/* Month tiles keep the same symbols at every width and orientation.
+ Full names remain accessible; Week keeps its readable work rows. */
+.monthPill,
+:global([data-calendar-view="month"]) .partnerPill {
+  justify-content: center;
+  padding-inline: 1px;
+  gap: 0;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.monthPill > svg,
+.monthPill > .label,
+:global([data-calendar-view="month"]) .partnerPill > svg,
+:global([data-calendar-view="month"]) .partnerPill > .label {
   display: none;
 }
 
-/* Keep the current story and its measured movement geometry. Only the labels
-   inside narrow month cells change; full names remain accessible. */
-@media (max-width: 767px) and (orientation: portrait) {
-  .monthPill,
-  :global([data-calendar-view="month"]) .partnerPill {
-    justify-content: center;
-    padding-inline: 1px;
-    gap: 0;
-    font-size: 0.875rem;
-    line-height: 1;
-  }
-
-  .monthPill > svg,
-  .monthPill > .label,
-  :global([data-calendar-view="month"]) .partnerPill > svg,
-  :global([data-calendar-view="month"]) .partnerPill > .label {
-    display: none;
-  }
-
-  .monthPill > .symbol,
-  :global([data-calendar-view="month"]) .partnerPill > .symbol {
-    display: inline;
-  }
+.monthPill > .symbol,
+:global([data-calendar-view="month"]) .partnerPill > .symbol {
+  display: inline;
 }
