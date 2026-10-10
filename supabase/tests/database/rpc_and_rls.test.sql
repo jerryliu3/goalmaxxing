@@ -135,13 +135,15 @@ select set_config(
 );
 select set_config('request.jwt.claim.role', 'authenticated', true);
 
+-- Seed already records a manual completion for the linked goal on today.
+-- Undo keeps that row, so this check uses a day the cascade itself writes.
 select public.mark_goal_complete(
   '10000000-0000-4000-8000-000000000003',
-  current_date
+  current_date - 3
 );
 select public.mark_goal_complete(
   '10000000-0000-4000-8000-000000000003',
-  current_date
+  current_date - 3
 );
 
 select is(
@@ -150,7 +152,7 @@ select is(
     from public.completions
     where goal_id = '10000000-0000-4000-8000-000000000003'
       and user_id = '11111111-1111-4111-8111-111111111111'
-      and completed_on = current_date
+      and completed_on = current_date - 3
   ),
   1::bigint,
   'mark_goal_complete is idempotent for a direct completion'
@@ -162,7 +164,8 @@ select is(
     from public.completions
     where goal_id = '10000000-0000-4000-8000-000000000004'
       and user_id = '11111111-1111-4111-8111-111111111111'
-      and completed_on = current_date
+      and completed_on = current_date - 3
+      and source = 'linked_cascade'
   ),
   1::bigint,
   'linked completion cascade creates the expected fact exactly once'
@@ -170,7 +173,7 @@ select is(
 
 select public.unmark_goal_complete(
   '10000000-0000-4000-8000-000000000003',
-  current_date
+  current_date - 3
 );
 
 select is(
@@ -179,7 +182,7 @@ select is(
     from public.completions
     where goal_id = '10000000-0000-4000-8000-000000000003'
       and user_id = '11111111-1111-4111-8111-111111111111'
-      and completed_on = current_date
+      and completed_on = current_date - 3
   ),
   0::bigint,
   'unmark_goal_complete clears the direct completion'
@@ -191,7 +194,7 @@ select is(
     from public.completions
     where goal_id = '10000000-0000-4000-8000-000000000004'
       and user_id = '11111111-1111-4111-8111-111111111111'
-      and completed_on = current_date
+      and completed_on = current_date - 3
   ),
   0::bigint,
   'unmark_goal_complete clears the linked completion'
