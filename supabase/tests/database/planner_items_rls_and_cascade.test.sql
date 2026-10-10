@@ -58,8 +58,8 @@ values
     'recurring',
     'weekly',
     6,
-    (date_trunc('month', current_date) - interval '3 month')::date,
-    (date_trunc('month', current_date) - interval '1 day')::date
+    date_trunc('month', current_date)::date,
+    (date_trunc('month', current_date) + interval '3 month - 1 day')::date
   ),
   (
     '91600000-0000-4000-8000-000000000003',
@@ -71,8 +71,8 @@ values
     'recurring',
     'weekly',
     6,
-    (date_trunc('month', current_date) - interval '3 month')::date,
-    (date_trunc('month', current_date) - interval '1 day')::date
+    date_trunc('month', current_date)::date,
+    (date_trunc('month', current_date) + interval '3 month - 1 day')::date
   );
 
 insert into public.goal_links (
