@@ -425,6 +425,39 @@ describe("view switch hand-offs", () => {
     run.cancel();
   });
 
+  it("measures every glyph before removing the ones it does not need", () => {
+    const twoSessions = (mode: "week" | "day") => {
+      const root = mount(`<div data-plan-view="${mode}">
+        <div data-testid="plan-calendar-split-calendar"><ol><li data-calendar-week-row="true" data-day="2026-09-14">
+          <button data-day-cell="true" data-day="2026-09-14"></button>
+          <div data-planner-entry-key="goal-1:cadence:0"><span data-testid="completion-title">Read</span></div>
+          <div data-planner-entry-key="goal-2:cadence:0"><span data-testid="completion-title">Run</span></div>
+        </li></ol></div></div>`);
+      return { root, scene: capturePlanScene(root, "week") };
+    };
+    const from = twoSessions("week");
+    const to = twoSessions("day");
+    const events: string[] = [];
+    const measure = Range.prototype.getClientRects;
+    Range.prototype.getClientRects = function (this: Range) {
+      events.push("measure");
+      return measure.call(this);
+    };
+    const remove = Element.prototype.remove;
+    vi.spyOn(Element.prototype, "remove").mockImplementation(function (this: Element) {
+      events.push("remove");
+      remove.call(this);
+    });
+
+    const run = animatePlanScene(from.root, from.root.firstElementChild as HTMLElement, from.scene, to.scene, () => {});
+
+    // A removal between two measurements forces the next one to lay out the whole overlay.
+    expect(events.filter((event) => event === "remove")).toHaveLength(2);
+    expect(events.slice(events.indexOf("remove"))).not.toContain("measure");
+    expect(glyphs(from.root)).toHaveLength(1);
+    run.cancel();
+  });
+
   it("carries the completion mark as its own gliding piece, hidden inside the row clones", () => {
     const circle = `<svg data-completion-mark="circle" aria-hidden="true"></svg>`;
     const from = weekScene("week", "quiet", circle);

@@ -458,12 +458,12 @@ function glyph(parent: HTMLElement, m: Mark, origin: Box): Glyph | null {
     parent.append(el);
     return { el, own: ORIGIN, origin, size: m.type.size };
 }
-/** Measures an appended glyph; null (and removed) when it has no painted text. */
-function measureGlyph(g: Glyph | null, overlay: DOMRect): Glyph | null {
+/** Measures an appended glyph; null (its node queued in `unused`) when it has no painted text. */
+function measureGlyph(g: Glyph | null, overlay: DOMRect, unused: HTMLElement[]): Glyph | null {
     if (!g) return null;
     const measured = glyphBox(g.el, overlay);
     if (!measured) {
-        g.el.remove();
+        unused.push(g.el);
         return null;
     }
     g.own = shift(measured, -g.origin.x, -g.origin.y);
@@ -702,16 +702,20 @@ export function animatePlanScene(root: HTMLElement, content: HTMLElement, from: 
                 auxiliaryFrom: auxiliaryFrom ?? null, auxiliaryTo: auxiliaryTo ?? null, singleGlyph, controls, chrome, borders });
         }
     }
-    // One layout for every glyph, now that all of them are in place.
+    // One layout for every glyph, now that all of them are in place. Nothing is
+    // removed until all are measured: a removal between two measurements makes
+    // the next one lay out the whole overlay again.
+    const unused: HTMLElement[] = [];
     for (const tr of tracks) {
-        tr.fromGlyph = measureGlyph(tr.fromGlyph, overlayRect);
-        tr.toGlyph = measureGlyph(tr.toGlyph, overlayRect);
+        tr.fromGlyph = measureGlyph(tr.fromGlyph, overlayRect, unused);
+        tr.toGlyph = measureGlyph(tr.toGlyph, overlayRect, unused);
         if (tr.singleGlyph && tr.fromGlyph && tr.toGlyph) {
             tr.fromGlyph.destinationOwn = tr.toGlyph.own;
-            tr.toGlyph.el.remove();
+            unused.push(tr.toGlyph.el);
             tr.toGlyph = null;
         }
     }
+    unused.forEach(el => el.remove());
     const aside = from.aside ?? to.aside;
     let asideNode: HTMLElement | null = null, asideFrom: Box | undefined, asideTo: Box | undefined;
     if (aside) {
