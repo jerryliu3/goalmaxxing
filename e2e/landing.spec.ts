@@ -163,3 +163,44 @@ test.describe("marketing landing", () => {
     expect(results.violations).toEqual([]);
   });
 });
+
+test.describe("responsive marketing calendar labels", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  for (const mode of ["Solo", "Duo", "Partner"]) {
+    test(`${mode} uses emoji plus one word only when the portrait calendar is narrow`, async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto("/");
+      await revealPlannerDemo(page);
+      await page.getByRole("radio", { name: mode, exact: true }).click();
+
+      // Check both animated views under the same sizing rule.
+      for (const view of ["month", "week"]) {
+        const grid = page.locator(`[data-calendar-view="${view}"]`);
+        await expect(grid).toBeVisible({ timeout: 30_000 });
+        const tile = grid.locator('[data-calendar-tile="true"]').first();
+        const shortLabel = tile.locator('span[aria-hidden="true"]');
+        const label = tile.locator('span:not([aria-hidden])');
+        await expect(shortLabel).toBeVisible();
+        await expect(shortLabel).toHaveText(/^\S+ [A-Za-z]+$/u);
+        await expect(label).toBeHidden();
+        await expect(tile).toHaveAttribute("aria-label", /Planned|Completed|marked this done/);
+        const tileBox = await tile.boundingBox();
+        const shortBox = await shortLabel.boundingBox();
+        expect(shortBox!.x + shortBox!.width).toBeLessThanOrEqual(tileBox!.x + tileBox!.width + 1);
+
+        // Rotation restores readable text consistently in either view.
+        await page.setViewportSize({ width: 844, height: 390 });
+        await expect(label).toBeVisible();
+        await expect(shortLabel).toBeHidden();
+        await page.setViewportSize({ width: 1280, height: 900 });
+        await expect(label).toBeVisible();
+        await expect(shortLabel).toBeHidden();
+        await page.setViewportSize({ width: 820, height: 1180 });
+        await expect(label).toBeVisible();
+        await expect(shortLabel).toBeHidden();
+        await page.setViewportSize({ width: 390, height: 844 });
+      }
+    });
+  }
+});

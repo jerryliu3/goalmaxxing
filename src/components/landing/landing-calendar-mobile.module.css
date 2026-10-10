@@ -1,0 +1,39 @@
+.calendar {
+  container-type: inline-size;
+  container-name: landing-calendar;
+}
+
+.shortLabel {
+  display: none;
+}
+
+/* Use one label treatment across Month/Week and Solo/Duo/Partner. Text stays
+   visible unless the portrait phone's calendar is too narrow for full labels. */
+@media (max-width: 767px) and (orientation: portrait) {
+  @container landing-calendar (max-width: 42rem) {
+    .calendarDay {
+      padding-inline: 2px;
+    }
+
+    .calendarTile {
+      justify-content: center;
+      padding-inline: 1px;
+      gap: 0;
+      font-size: 0.5625rem;
+      line-height: 1.2;
+    }
+
+    .calendarTile > svg,
+    .calendarTile > .label {
+      display: none;
+    }
+
+    .calendarTile > .shortLabel {
+      display: block;
+      max-width: 100%;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      text-align: center;
+    }
+  }
+}

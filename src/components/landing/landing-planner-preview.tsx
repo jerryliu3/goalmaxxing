@@ -1,5 +1,8 @@
 "use client";
 
+import styles from "./landing-calendar-mobile.module.css";
+import { landingCalendarShortLabel } from "./landing-calendar-label";
+
 import {
   useCallback,
   useEffect,
@@ -701,12 +704,17 @@ function TaskTile({
 }) {
   return (
     <p
-      className={`${taskChipLayoutClassName} whitespace-normal ${toneClassName(
+      data-calendar-tile="true"
+      role="img"
+      title={task.label}
+      aria-label={`${task.label}. ${completed ? "Completed" : "Planned"}`}
+      className={`${styles.calendarTile} ${taskChipLayoutClassName} whitespace-normal ${toneClassName(
         task.tone
       )}`}
     >
       {completed ? <Check className="size-2.5 shrink-0 text-gain" /> : null}
-      <span>{task.label}</span>
+      <span className={styles.label}>{task.label}</span>
+      <span className={styles.shortLabel} aria-hidden="true">{landingCalendarShortLabel(task.label)}</span>
     </p>
   );
 }
@@ -722,10 +730,13 @@ function MonthPill({
 }) {
   return (
     <div
+      data-calendar-tile="true"
+      role="img"
       data-month-entry={task.id}
       data-month-entry-variant={variant}
       title={task.label}
-      className={`${taskChipLayoutClassName} overflow-hidden ${
+      aria-label={`${task.label}. ${completed ? "Completed" : "Planned"}${variant === "ghost" ? ". Moved from this day" : variant === "new" ? ". Draft placement" : ""}`}
+      className={`${styles.calendarTile} ${taskChipLayoutClassName} overflow-hidden ${
         variant === "ghost"
           ? "border-dashed border-border bg-page text-muted-foreground line-through shadow-none"
           : variant === "new"
@@ -734,7 +745,8 @@ function MonthPill({
       }`}
     >
       {completed ? <Check className="size-2.5 shrink-0 text-gain" /> : null}
-      <span className="min-w-0 truncate">{task.label}</span>
+      <span className={`${styles.label} min-w-0 truncate`}>{task.label}</span>
+      <span className={styles.shortLabel} aria-hidden="true">{landingCalendarShortLabel(task.label)}</span>
     </div>
   );
 }
@@ -843,15 +855,19 @@ function PartnerNudgeComposer({
 function PartnerPill({
   label,
   completed = false,
+  calendarTile = false,
 }: {
   label: string;
   completed?: boolean;
+  calendarTile?: boolean;
 }) {
   return (
     <div
+      data-calendar-tile={calendarTile || undefined}
+      role="img"
       data-owner="partner"
       title={label}
-      className={`${taskChipLayoutClassName} overflow-hidden ${
+      className={`${calendarTile ? styles.calendarTile : ""} ${taskChipLayoutClassName} overflow-hidden ${
         completed
           ? "border-2 border-primary bg-transparent text-primary shadow-none"
           : "border border-primary/40 bg-muted/60 text-foreground shadow-none"
@@ -861,7 +877,8 @@ function PartnerPill({
       }
     >
       {completed ? <StyleCompletionMark done className="size-2.5 shrink-0" /> : null}
-      <span className="min-w-0 truncate">{label}</span>
+      <span className={`${styles.label} min-w-0 truncate`}>{label}</span>
+      <span className={styles.shortLabel} aria-hidden="true">{landingCalendarShortLabel(label)}</span>
     </div>
   );
 }
@@ -1216,7 +1233,7 @@ export function LandingPlannerPreview() {
         </p>
       </CardHeader>
 
-      <CardContent className="h-[430px] sm:h-[448px]">
+      <CardContent className={`${styles.calendar} h-[430px] sm:h-[448px]`}>
         <div
           data-demo-calendar-stage
           className="relative h-full min-h-0 overflow-hidden"
@@ -1288,7 +1305,7 @@ export function LandingPlannerPreview() {
                     <div
                       key={`${date ?? "empty"}-${index}`}
                       data-month-day-cell={date ?? undefined}
-                      className={`relative flex min-h-0 flex-col overflow-hidden rounded-md border p-0.5 ${
+                      className={`${styles.calendarDay} relative flex min-h-0 flex-col overflow-hidden rounded-md border p-0.5 ${
                         date
                           ? isToday
                             ? "border-primary/40 bg-muted/80"
@@ -1374,6 +1391,7 @@ export function LandingPlannerPreview() {
                                 }
                               >
                                 <PartnerPill
+                                  calendarTile
                                   label={entry.label}
                                   completed={isPartnerGoalCompleted(entry.day)}
                                 />
@@ -1412,7 +1430,7 @@ export function LandingPlannerPreview() {
               flight?.moveKey === activeMove ? (
                 <motion.div
                   data-moving-task={activeMove}
-                  className={`pointer-events-none absolute z-20 ${taskChipLayoutClassName} shadow-[0_10px_24px_rgba(37,99,235,0.25)] ${toneClassName(
+                  className={`${styles.calendarTile} pointer-events-none absolute z-20 ${taskChipLayoutClassName} shadow-[0_10px_24px_rgba(37,99,235,0.25)] ${toneClassName(
                     activeMove === "past" ? tempoTask.tone : strengthTask.tone
                   )}`}
                   initial={{ x: 0, y: 0, scale: 1 }}
@@ -1428,10 +1446,13 @@ export function LandingPlannerPreview() {
                     minHeight: flight.height,
                   }}
                 >
-                  <span className="truncate">
+                  <span className={`${styles.label} truncate`}>
                     {activeMove === "past"
                       ? tempoTask.label
                       : strengthTask.label}
+                  </span>
+                  <span className={styles.shortLabel} aria-hidden="true">
+                    {landingCalendarShortLabel(activeMove === "past" ? tempoTask.label : strengthTask.label)}
                   </span>
                 </motion.div>
               ) : null}
@@ -1448,7 +1469,7 @@ export function LandingPlannerPreview() {
                 {seededDays.map((day) => (
                   <div
                     key={day.id}
-                    className={`relative min-w-0 overflow-hidden rounded-lg border p-1.5 ${
+                    className={`${styles.calendarDay} relative min-w-0 overflow-hidden rounded-lg border p-1.5 ${
                       day.isToday
                         ? "border-primary/40 bg-muted/80"
                         : "bg-muted/20"
@@ -1513,6 +1534,7 @@ export function LandingPlannerPreview() {
                             Boolean(day.isToday)
                           ).map((entry) => (
                               <PartnerPill
+                                calendarTile
                                 key={entry.id}
                                 label={entry.label}
                                 completed={isPartnerGoalCompleted(entry.day)}
