@@ -53,10 +53,7 @@ jobs:
   verify-integration-full:
     name: verify-integration-full
     runs-on: ${{ vars.CI_RUNNER == 'self-hosted' && fromJSON('["self-hosted", "macOS", "cadence-ci"]') || 'ubuntu-latest' }}
-    # This job runs the full E2E suite serially across Chromium, WebKit, and
-    # mobile WebKit, with CI retries enabled. Keep enough time for all projects
-    # to finish so the run reports test failures instead of being canceled mid-suite.
-    timeout-minutes: 120
+    timeout-minutes: 40
 
     steps:
       - name: Check out repository
@@ -221,7 +218,8 @@ jobs:
           export PLAYWRIGHT_PORT
           export NEXT_PUBLIC_APP_URL="http://localhost:${PLAYWRIGHT_PORT}"
           echo "Running Playwright against ${NEXT_PUBLIC_APP_URL}."
-          pnpm test:e2e
+          # Stop inside Playwright so it can write its report before the job cap.
+          pnpm test:e2e --global-timeout=1800000
 
       - name: Upload Playwright report
         if: failure()
