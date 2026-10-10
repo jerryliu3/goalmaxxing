@@ -1,0 +1,16 @@
+/* Clears the phone tab bar with a small gap.
+   From md up the tabs move into the header, so the bar rests near the screen edge. */
+:root {
+  --plan-action-bar-height: 3.25rem;
+  --plan-action-bar-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --plan-action-bar-bottom: 1rem;
+  }
+}
+
+.anchor {
+  bottom: var(--plan-action-bar-bottom);
+}

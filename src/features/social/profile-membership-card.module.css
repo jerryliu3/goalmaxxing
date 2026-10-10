@@ -362,9 +362,9 @@ button.portrait:focus-visible {
   flex: 0 1 auto;
   min-height: 0;
   max-height: 100%;
-  /* A touch below the arch's midpoint, so the face sits in the body
-     of the curve rather than on its center line. */
-  transform: translate3d(0, .85rem, 0);
+  /* Halfway between the crown and the lowered seat: centered in the
+     arch, then back up a little. */
+  transform: translate3d(0, -.7rem, 0);
 }
 .embed :global([data-layout="landscape"]) .horizon {
   height: 100%;
