@@ -8,7 +8,7 @@ import { Action, PreviewTheme } from "@/features/ux-refresh/primitives";
 import { BASELINE_COMMIT, type FocusedStudy } from "./catalog";
 import { TeamBaseline } from "./team";
 import { TeamRound } from "./round/team";
-import { MobileStudy, MobileBaseline } from "./mobile";
+import { MonthRound, MonthBaseline } from "./round/month";
 import { LandingStudy, LandingBaseline } from "./landing";
 import { TrackerStudy, TrackerBaseline } from "./tracker";
 import { ProfileStudy, ProfileBaseline } from "./profile";
@@ -17,7 +17,7 @@ function Baseline({ slug }: { slug: string }) {
   if (slug === "tracker") return <TrackerBaseline />;
   if (slug === "profile") return <ProfileBaseline />;
   if (slug === "goal-collection") return <CollectionBaseline />;
-  if (slug === "phone-agenda") return <MobileBaseline />;
+  if (slug === "phone-agenda") return <MonthBaseline />;
   if (slug === "mobile-landing") return <LandingBaseline />;
   return <TeamBaseline />;
 }
@@ -25,7 +25,7 @@ function Proposal({ slug, variant }: { slug: string; variant: number }) {
   if (slug === "tracker") return <TrackerStudy variant={variant} />;
   if (slug === "profile") return <ProfileStudy />;
   if (slug === "goal-collection") return <CollectionStudy />;
-  if (slug === "phone-agenda") return <MobileStudy variant={variant} />;
+  if (slug === "phone-agenda") return <MonthRound variant={variant} />;
   if (slug === "mobile-landing") return <LandingStudy variant={variant} />;
   return <TeamRound variant={variant} />;
 }

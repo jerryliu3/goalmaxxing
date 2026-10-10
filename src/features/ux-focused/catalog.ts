@@ -46,27 +46,35 @@ export const FOCUSED_STUDIES: readonly FocusedStudy[] = [
   },
   {
     slug: "phone-agenda",
-    title: "Find the work, then act on it",
+    title: "A whole month that works on a phone",
     question:
-      "On a phone, can you read today's sessions and move one without losing date context?",
+      "Which mobile Month representation best preserves the horizon while making every session readable and actionable?",
     evidence:
-      "The original phone audit found truncated month-cell titles and competing horizontal controls. This is a targeted layout hypothesis, not a claim that horizontal calendars are inherently wrong. The baseline reconstructs the relevant current structure.",
-    source: "src/features/planner/calendar-month-day-cell.tsx",
-    task: "Read today's three sessions. Move Build the rough cut to Friday, inspect the unsaved change, undo it, then repeat and save. Filter to a single goal. Compare finding Saturday's run.",
+      "Current main uses a seven-column month track with a 42rem minimum width. This explores three deliberate mobile alternatives using a complete month and the same work. Mobile Week remains unchanged; no browser-verified usability claim is made.",
+    source: "src/features/planner/calendar-surface.module.css",
+    baselineCommit: "d33e11e9",
+    task: "Inspect October 8’s five Solo sessions, including the long title and linked session. Move October 31’s film work into November, change filters before saving, then undo or save. Switch to Partner and inspect the read-only work. Return to Today, record and unrecord a session, then explicitly Review the missed lifetime-goal session.",
     variants: [
       {
-        name: "Calendar + day",
+        name: "Month map + day",
         change:
-          "Retain horizontal date browsing, but pair it with one full-width selected-day list. Consolidate filters into a labeled entry and keep the existing hold completion gesture.",
+          "Fit all seven dates across the phone. Small goal initials and recorded/placed counts give each date meaning; select a date to read its full-width work below. The month stays a map rather than a miniature checklist.",
         tradeoff:
-          "Preserves spatial browsing and the selected day, but neighboring days' session titles take a tap to reveal. The sample isolates one week; production must retain month navigation.",
+          "The best overall month orientation and shortest overview. Session titles require a tap, and the compact initials need a key. Busy dates remain readable in the day pane rather than expanding the grid.",
       },
       {
-        name: "Date-grouped agenda",
+        name: "Readable calendar window",
         change:
-          "Read today and upcoming placed work in date groups, with earlier days folded below. Opening and moving a session use the same interactions as A.",
+          "Keep a complete horizontal seven-column month with stable readable columns and visible scrolling affordance. Select a date to inspect the same full-width day work below; large cells expose up to three full titles.",
         tradeoff:
-          "Full titles and successive days are easy to scan; the calendar's spatial overview is reduced. This is an optional representation, not a new default or a replacement for Week.",
+          "Closest to the present spatial model. Preserves titles in context, but requires sideways browsing and a longer month; the selected column is brought into the horizontal viewport.",
+      },
+      {
+        name: "Month chapters",
+        change:
+          "Show every week in the chosen month as a compact dated chapter with workload totals and seven date entrances. Expand a chapter to act on a full-width day list; move between chapters without switching to Week.",
+        tradeoff:
+          "Good for understanding monthly workload on a narrow screen. Sacrifices continuous grid geometry and adds expansion state. This is a Month representation, not a redesign of the existing vertical Week view.",
       },
     ],
   },
