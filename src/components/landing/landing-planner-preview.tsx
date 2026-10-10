@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "./landing-calendar-mobile.module.css";
-import { landingCalendarSymbol } from "./landing-calendar-symbol";
+import { landingCalendarShortLabel } from "./landing-calendar-label";
 
 import {
   useCallback,
@@ -714,7 +714,7 @@ function TaskTile({
     >
       {completed ? <Check className="size-2.5 shrink-0 text-gain" /> : null}
       <span className={styles.label}>{task.label}</span>
-      <span className={styles.symbol} aria-hidden="true">{landingCalendarSymbol(task.label)}</span>
+      <span className={styles.shortLabel} aria-hidden="true">{landingCalendarShortLabel(task.label)}</span>
     </p>
   );
 }
@@ -746,7 +746,7 @@ function MonthPill({
     >
       {completed ? <Check className="size-2.5 shrink-0 text-gain" /> : null}
       <span className={`${styles.label} min-w-0 truncate`}>{task.label}</span>
-      <span className={styles.symbol} aria-hidden="true">{landingCalendarSymbol(task.label)}</span>
+      <span className={styles.shortLabel} aria-hidden="true">{landingCalendarShortLabel(task.label)}</span>
     </div>
   );
 }
@@ -878,7 +878,7 @@ function PartnerPill({
     >
       {completed ? <StyleCompletionMark done className="size-2.5 shrink-0" /> : null}
       <span className={`${styles.label} min-w-0 truncate`}>{label}</span>
-      <span className={styles.symbol} aria-hidden="true">{landingCalendarSymbol(label)}</span>
+      <span className={styles.shortLabel} aria-hidden="true">{landingCalendarShortLabel(label)}</span>
     </div>
   );
 }
@@ -1305,7 +1305,7 @@ export function LandingPlannerPreview() {
                     <div
                       key={`${date ?? "empty"}-${index}`}
                       data-month-day-cell={date ?? undefined}
-                      className={`relative flex min-h-0 flex-col overflow-hidden rounded-md border p-0.5 ${
+                      className={`${styles.calendarDay} relative flex min-h-0 flex-col overflow-hidden rounded-md border p-0.5 ${
                         date
                           ? isToday
                             ? "border-primary/40 bg-muted/80"
@@ -1451,8 +1451,8 @@ export function LandingPlannerPreview() {
                       ? tempoTask.label
                       : strengthTask.label}
                   </span>
-                  <span className={styles.symbol} aria-hidden="true">
-                    {landingCalendarSymbol(activeMove === "past" ? tempoTask.label : strengthTask.label)}
+                  <span className={styles.shortLabel} aria-hidden="true">
+                    {landingCalendarShortLabel(activeMove === "past" ? tempoTask.label : strengthTask.label)}
                   </span>
                 </motion.div>
               ) : null}
@@ -1469,7 +1469,7 @@ export function LandingPlannerPreview() {
                 {seededDays.map((day) => (
                   <div
                     key={day.id}
-                    className={`relative min-w-0 overflow-hidden rounded-lg border p-1.5 ${
+                    className={`${styles.calendarDay} relative min-w-0 overflow-hidden rounded-lg border p-1.5 ${
                       day.isToday
                         ? "border-primary/40 bg-muted/80"
                         : "bg-muted/20"

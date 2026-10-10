@@ -168,7 +168,7 @@ test.describe("responsive marketing calendar labels", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   for (const mode of ["Solo", "Duo", "Partner"]) {
-    test(`${mode} uses symbols only when the portrait calendar is narrow`, async ({ page }) => {
+    test(`${mode} uses short text only when the portrait calendar is narrow`, async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto("/");
       await revealPlannerDemo(page);
@@ -179,25 +179,26 @@ test.describe("responsive marketing calendar labels", () => {
         const grid = page.locator(`[data-calendar-view="${view}"]`);
         await expect(grid).toBeVisible({ timeout: 30_000 });
         const tile = grid.locator('[data-calendar-tile="true"]').first();
-        const symbol = tile.locator('span[aria-hidden="true"]');
+        const shortLabel = tile.locator('span[aria-hidden="true"]');
         const label = tile.locator('span:not([aria-hidden])');
-        await expect(symbol).toBeVisible();
+        await expect(shortLabel).toBeVisible();
+        await expect(shortLabel).toHaveText(/^[A-Za-z]+$/);
         await expect(label).toBeHidden();
         await expect(tile).toHaveAttribute("aria-label", /Planned|Completed|marked this done/);
         const tileBox = await tile.boundingBox();
-        const symbolBox = await symbol.boundingBox();
-        expect(symbolBox!.x + symbolBox!.width).toBeLessThanOrEqual(tileBox!.x + tileBox!.width + 1);
+        const shortBox = await shortLabel.boundingBox();
+        expect(shortBox!.x + shortBox!.width).toBeLessThanOrEqual(tileBox!.x + tileBox!.width + 1);
 
         // Rotation restores readable text consistently in either view.
         await page.setViewportSize({ width: 844, height: 390 });
         await expect(label).toBeVisible();
-        await expect(symbol).toBeHidden();
+        await expect(shortLabel).toBeHidden();
         await page.setViewportSize({ width: 1280, height: 900 });
         await expect(label).toBeVisible();
-        await expect(symbol).toBeHidden();
+        await expect(shortLabel).toBeHidden();
         await page.setViewportSize({ width: 820, height: 1180 });
         await expect(label).toBeVisible();
-        await expect(symbol).toBeHidden();
+        await expect(shortLabel).toBeHidden();
         await page.setViewportSize({ width: 390, height: 844 });
       }
     });
