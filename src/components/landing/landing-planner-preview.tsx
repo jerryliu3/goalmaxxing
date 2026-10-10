@@ -705,6 +705,7 @@ function TaskTile({
   return (
     <p
       data-calendar-tile="true"
+      role="img"
       title={task.label}
       aria-label={`${task.label}. ${completed ? "Completed" : "Planned"}`}
       className={`${styles.calendarTile} ${taskChipLayoutClassName} whitespace-normal ${toneClassName(
@@ -730,6 +731,7 @@ function MonthPill({
   return (
     <div
       data-calendar-tile="true"
+      role="img"
       data-month-entry={task.id}
       data-month-entry-variant={variant}
       title={task.label}
@@ -862,6 +864,7 @@ function PartnerPill({
   return (
     <div
       data-calendar-tile={calendarTile || undefined}
+      role="img"
       data-owner="partner"
       title={label}
       className={`${calendarTile ? styles.calendarTile : ""} ${taskChipLayoutClassName} overflow-hidden ${
