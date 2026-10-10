@@ -926,3 +926,52 @@ test.describe("planner critical rails", () => {
     ).toBeVisible({ timeout: 10_000 });
   });
 });
+
+test("portrait month fits seven days and rotation retains selection", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 844, height: 390 });
+  await openCalendar(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const track = page.locator('[data-calendar-grid-track="true"]');
+  const viewport = page.locator('[data-calendar-horizontal-viewport="true"]');
+  await expect
+    .poll(async () =>
+      track.evaluate((node) => node.getBoundingClientRect().width),
+    )
+    .toBeLessThanOrEqual(390);
+  const date = page.locator('[data-day-cell="true"]:visible').nth(10);
+  const day = await date.getAttribute("data-day");
+  await date.click();
+  await expect(date).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator('[data-testid="plan-day-pane"]')).toHaveAttribute(
+    "data-plan-day",
+    day!,
+  );
+  const selectedNode = await date.elementHandle();
+  await expect(
+    page.getByRole("button", { name: /Expand rows|Compact rows/ }),
+  ).toBeHidden();
+  expect(
+    await viewport.evaluate((node) => node.scrollWidth <= node.clientWidth + 1),
+  ).toBe(true);
+
+  await page.setViewportSize({ width: 844, height: 390 });
+  await expect(
+    page.getByRole("button", { name: /Expand rows|Compact rows/ }),
+  ).toBeVisible();
+  await expect(date).toHaveAttribute("aria-pressed", "true");
+  expect(await selectedNode!.evaluate((node) => node.isConnected)).toBe(true);
+  await expect
+    .poll(async () =>
+      track.evaluate((node) => node.getBoundingClientRect().width),
+    )
+    .toBeGreaterThanOrEqual(672);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(date).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator('[data-testid="plan-day-pane"]')).toHaveAttribute(
+    "data-plan-day",
+    day!,
+  );
+});

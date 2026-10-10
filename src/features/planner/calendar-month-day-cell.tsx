@@ -2,6 +2,7 @@
 
 import { format, parse } from "date-fns";
 import { Check } from "lucide-react";
+import { CalendarMonthMapSummary } from "@/features/planner/calendar-month-map-summary";
 import { LinkedGoalMarks } from "@/features/planner/linked-goal-marks";
 import { Fragment, useRef, type PointerEvent, type ReactNode } from "react";
 import { CompletionToggle } from "@/components/ui/completion-toggle";
@@ -636,6 +637,14 @@ export function CalendarMonthDayCell<
               </span>
             ) : null}
           </div>
+          <CalendarMonthMapSummary
+            entries={entriesForDay}
+            recordedCount={completionFactMarkersForDay.length}
+            isEntryCredited={(entry) => overlayCurrentlyCredited(
+              isEntryCredited(entry), optimisticCompletionFacts, entry.originalGoalId, day
+            )}
+          />
+          <div className={styles.monthCellWork}>
           {taskComposer}
           {hasVisibleContent ? (
             <div className="space-y-1.5">
@@ -676,6 +685,7 @@ export function CalendarMonthDayCell<
           ) : (
             <div>{monthOverflowLabel}</div>
           )}
+          </div>
         </div>
       )}
     </PlannerDroppableDay>

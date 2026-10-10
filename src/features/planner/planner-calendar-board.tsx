@@ -327,7 +327,8 @@ export function PlannerCalendarBoard({
                     {focusedWeekCells.map(renderCalendarDayCell)}
                   </ol>
                 ) : (
-                  <div className="w-full">
+                  <div className={`w-full ${styles.monthCalendar}`}>
+                    <p className={styles.monthMapHint}>Tap a day for its full list. Numbers show placed work; ✓ shows recorded work. Move sessions from the list below.</p>
                     {shouldShowAdjacentMonthToggle({
                       hasAdjacentWeeks: hasPreviousMonthWeeks,
                       adjacentShown: showPreviousMonth,

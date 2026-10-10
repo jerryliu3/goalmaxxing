@@ -1,5 +1,6 @@
 "use client";
 
+import styles from "@/features/planner/calendar-surface.module.css";
 import { Loader2, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PeriodStepper } from "@/components/ui/period-stepper";
@@ -60,6 +61,7 @@ export function PlannerViewWindowHeader({
                 variant="ghost"
                 size="icon-round"
                 disabled={loading}
+                className={styles.monthExpandControl}
                 aria-label={expandedMonthRows ? "Compact rows" : "Expand rows"}
                 title={expandedMonthRows ? "Compact rows" : "Expand rows"}
                 onClick={onToggleExpandedMonthRows}
