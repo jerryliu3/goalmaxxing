@@ -11,8 +11,6 @@ const ONBOARDING_DEFAULT_GOAL_TITLES = [
   "Invite your first teammate",
 ] as const;
 
-const JOURNEY_ONBOARDING_COMPLETED_KEY = "cadence.journey_onboarding_completed.v1";
-
 test.use({ storageState: { cookies: [], origins: [] } });
 
 async function signIn(page: Page, emailAddress: string, passwordValue: string) {
@@ -35,11 +33,6 @@ test("seeded onboarding demo account exposes default goals and pending team invi
   page,
 }) => {
   await signIn(page, ONBOARDING_DEMO_USER.email, ONBOARDING_DEMO_USER.password);
-
-  // Keep this test API-focused by bypassing intro modal interactions.
-  await page.evaluate((storageKey) => {
-    window.localStorage.setItem(storageKey, "done");
-  }, JOURNEY_ONBOARDING_COMPLETED_KEY);
 
   const verification = await page.evaluate(async (expectedGoalTitles) => {
     const today = new Intl.DateTimeFormat("en-CA", {
