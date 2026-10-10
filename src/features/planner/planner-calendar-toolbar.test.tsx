@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlannerCalendarToolbar } from "@/features/planner/planner-calendar-toolbar";
@@ -75,14 +75,45 @@ describe("PlannerCalendarToolbar", () => {
     });
   });
 
-  it("switches to the continuous Goal View and back to Today", () => {
+  it("switches to the continuous Goal View and back to Today", async () => {
     const props = renderToolbar({ goalViewOpen: true });
     const group = screen.getByRole("group", { name: "Plan view mode" });
     expect(within(group).getByRole("button", { name: "Goal View" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByTestId("plan-view-mode-thumb")).toHaveStyle({ transform: "translateX(300%)" });
     fireEvent.click(within(group).getByRole("button", { name: "Day" }));
+    await waitFor(() => expect(props.onViewModeChange).toHaveBeenCalledWith("day"));
     expect(props.onGoalViewOpenChange).toHaveBeenCalledWith(false);
-    expect(props.onViewModeChange).toHaveBeenCalledWith("day");
+  });
+
+  it("moves the thumb on the click, before the planner switches views", async () => {
+    const props = renderToolbar({ viewMode: "month" });
+    const group = screen.getByRole("group", { name: "Plan view mode" });
+
+    fireEvent.click(within(group).getByRole("button", { name: "Goal View" }));
+
+    expect(within(group).getByRole("button", { name: "Goal View" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("plan-view-mode-thumb")).toHaveStyle({ transform: "translateX(300%)" });
+    expect(props.onGoalViewOpenChange).not.toHaveBeenCalled();
+    await waitFor(() => expect(props.onGoalViewOpenChange).toHaveBeenCalledWith(true));
+  });
+
+  it("switches views while the planner is loading", async () => {
+    const props = renderToolbar({ loading: true });
+
+    fireEvent.click(screen.getByRole("button", { name: "Month" }));
+
+    await waitFor(() => expect(props.onViewModeChange).toHaveBeenCalledWith("month"));
+  });
+
+  it("switches once, to the last of quick successive clicks", async () => {
+    const props = renderToolbar();
+
+    fireEvent.click(screen.getByRole("button", { name: "Month" }));
+    fireEvent.click(screen.getByRole("button", { name: "Goal View" }));
+
+    await waitFor(() => expect(props.onGoalViewOpenChange).toHaveBeenCalledWith(true));
+    expect(props.onViewModeChange).not.toHaveBeenCalled();
+    expect(props.onGoalViewOpenChange).toHaveBeenCalledOnce();
   });
 
   it("puts the goals dropdown beside the search bar and reports selections", () => {
@@ -103,10 +134,10 @@ describe("PlannerCalendarToolbar", () => {
     expect(screen.queryByRole("button", { name: "Filter by goal" })).toBeNull();
   });
 
-  it("opens Goal View without changing the calendar view mode", () => {
+  it("opens Goal View without changing the calendar view mode", async () => {
     const props = renderToolbar();
     fireEvent.click(screen.getByRole("button", { name: "Goal View" }));
-    expect(props.onGoalViewOpenChange).toHaveBeenCalledWith(true);
+    await waitFor(() => expect(props.onGoalViewOpenChange).toHaveBeenCalledWith(true));
     expect(props.onViewModeChange).not.toHaveBeenCalled();
     expect(screen.queryByRole("button", { name: "Preview" })).toBeNull();
   });

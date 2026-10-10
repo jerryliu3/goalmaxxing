@@ -715,9 +715,11 @@ describe("CalendarSurface characterization", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Week" }));
 
-    expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-20", "push", "week", {
-      alignMonth: true,
-    });
+    await waitFor(() =>
+      expect(onSelectedDayChange).toHaveBeenCalledWith("2026-08-20", "push", "week", {
+        alignMonth: true,
+      })
+    );
   });
 
   it("keeps month weekday labels and tiles on one horizontal track", async () => {
