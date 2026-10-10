@@ -24,7 +24,7 @@ describe("dedicated Team journeys", () => {
   it("opens the chosen team goal and only allows recording your current work", () => {
     render(<TeamRound variant={0} />);
     fireEvent.click(
-      screen.getByRole("button", { name: /Finish the short film Six editing/ }),
+      screen.getByRole("button", { name: /^Finish the short film/ }),
     );
     const dialog = screen.getByRole("dialog");
     expect(
