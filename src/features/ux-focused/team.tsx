@@ -302,7 +302,7 @@ export function TeamStudy({ variant }: { variant: number }) {
             <div>
               <h3 className="type-title">Keep showing up, together.</h3>
               <p>
-                Follow shared goals, see each other's progress, and send a
+                Follow shared goals, see each other&apos;s progress, and send a
                 little encouragement. Your private goals stay private.
               </p>
               <ul>
@@ -321,7 +321,7 @@ export function TeamStudy({ variant }: { variant: number }) {
               }}
             >
               <label className="rf-field">
-                Partner's username
+                Partner&apos;s username
                 <input
                   required
                   value={invite}

@@ -279,8 +279,7 @@ describe("calendar surface extracted components", () => {
     const row = document.querySelector('[data-plan-work-row="ledger"]');
     expect(row).toBeInstanceOf(HTMLElement);
     expect(row).toHaveAttribute("aria-current", "true");
-    expect(row).toHaveClass("bg-day-selected");
-    expect(row).not.toHaveClass("text-day-selected-foreground");
+    expect(row).toHaveClass("bg-day-selected", "text-day-selected-foreground");
     expect(row).not.toHaveClass("rounded-[10px]");
     expect(screen.getByText("Run").closest("[data-plan-drag-handle]")).toHaveClass("py-3");
     expect(screen.getByText("Run").closest("p")).toHaveClass("type-item");

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import {
   Action,
@@ -45,10 +46,10 @@ export function AgendaConcept({ variant }: { variant: number }) {
         <Heading eyebrow="Thursday, October 8" title="Agenda">
           <div className="rf-actions">
             <Action variant="outline" asChild>
-              <a href="/ux/refresh/recovery-actions">
+              <Link href="/ux/refresh/recovery-actions">
                 Review 2 slipped sessions
                 <ArrowRight aria-hidden size={16} />
-              </a>
+              </Link>
             </Action>
           </div>
         </Heading>

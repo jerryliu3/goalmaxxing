@@ -41,7 +41,7 @@ export function MobileBaseline() {
         ))}
       </div>
       <p className="fc-muted mt-4">
-        Same week's placed work; this reconstruction isolates the dense calendar
+        Same week&apos;s placed work; this reconstruction isolates the dense calendar
         and control groups.
       </p>
     </div>
@@ -316,7 +316,7 @@ export function MobileStudy({ variant }: { variant: number }) {
       >
         {selected?.done ? (
           <p className="my-5">
-            This session is complete. Its completion is separate from the plan's
+            This session is complete. Its completion is separate from the plan&apos;s
             placement.
           </p>
         ) : (

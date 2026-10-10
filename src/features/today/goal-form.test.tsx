@@ -75,6 +75,7 @@ vi.mock("@/lib/supabase/client", () => ({
       if (table === "goal_links") {
         const query = {
           eq: vi.fn().mockReturnThis(),
+          order: vi.fn().mockReturnThis(),
           then: (
             resolve: (value: unknown) => unknown,
             reject: (reason: unknown) => unknown,

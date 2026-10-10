@@ -111,7 +111,7 @@ export function CommunityConcept() {
         >
           <p className="mt-6">
             A production implementation should open the existing shared-goal
-            workflow, respecting each goal's visibility and ownership. This
+            workflow, respecting each goal&apos;s visibility and ownership. This
             study does not add an invitation or sharing mutation.
           </p>
           <Action variant="outline" className="mt-6" asChild>

@@ -135,7 +135,7 @@ describe("InsightsTab goal ledger", () => {
     );
     expect(layout.parentElement).toHaveClass("@container");
     expect(layout).not.toHaveClass("flex-col-reverse");
-    const goalsHeading = screen.getByRole("heading", { name: /Goals/ });
+    const goalsHeading = screen.getByRole("heading", { name: /Selected goals/ });
     expect(
       layout.compareDocumentPosition(goalsHeading) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
@@ -272,7 +272,7 @@ describe("InsightsTab goal ledger", () => {
     const help = screen.getByText(
       "All selected goals together. Tap a day to see its completions."
     );
-    const goalsHeading = screen.getByRole("heading", { name: /Goals/ });
+    const goalsHeading = screen.getByRole("heading", { name: /Selected goals/ });
     expect(screen.queryByRole("heading", { name: "Progress Tracker" })).toBeNull();
     expect(screen.queryByText("September 2026")).not.toBeInTheDocument();
     expect(screen.getByTestId("progress-ledger-layout")).toHaveClass("space-y-3");

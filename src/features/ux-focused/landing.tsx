@@ -50,7 +50,7 @@ export function LandingBaseline() {
         </div>
       </div>
       <p className="fc-muted mt-4">
-        Reconstruction of the hero's overview-first proof, using the same
+        Reconstruction of the hero&apos;s overview-first proof, using the same
         running goal as the proposal.
       </p>
     </div>
@@ -149,10 +149,10 @@ export function LandingStudy({ variant }: { variant: number }) {
             <div className="fc-chapter-copy">
               <span className="type-eyebrow">03 / Keep it workable</span>
               <h3 className="type-title">
-                Thursday changed. Your goal didn't.
+                Thursday changed. Your goal didn&apos;t.
               </h3>
               <p>
-                Move Thursday's easy run to Friday, review the change, and save
+                Move Thursday&apos;s easy run to Friday, review the change, and save
                 when you are ready.
               </p>
             </div>
@@ -271,7 +271,7 @@ function MoveActions({
         </>
       ) : (
         <Action variant="outline" onClick={onMove}>
-          Move Thursday's run to Friday <ArrowRight size={16} />
+          Move Thursday&apos;s run to Friday <ArrowRight size={16} />
         </Action>
       )}
       {saved && (
